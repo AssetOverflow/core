@@ -51,32 +51,42 @@ def _all_blades():
 _BLADES = _all_blades()  # index -> tuple of basis vector indices
 _BLADE_TO_IDX = {b: i for i, b in enumerate(_BLADES)}
 
-def _blade_product(blade_a, blade_b):
-    """Compute geometric product of two basis blades. Returns (sign, result_blade_tuple)."""
-    # Concatenate and bubble-sort, tracking sign flips and metric contractions
-    seq = list(blade_a) + list(blade_b)
+
+def _compute_blade_product(blade_a, blade_b):
+    """
+    Compute the geometric product of two canonical basis blades.
+
+    For blades A=e_{a1}...e_{am} and B=e_{b1}...e_{bn}, the sign is the
+    parity of swaps required to move the concatenated basis list into
+    canonical order, multiplied by the metric contractions for repeated
+    basis vectors. The resulting blade is the symmetric difference of the
+    two blade basis sets.
+
+    This implementation is deliberately bit/set based rather than mutating
+    a bubble-sort list while contracting; the previous list mutation path
+    corrupted multi-contractions and produced an invalid multiplication
+    table.
+    """
     sign = 1
-    # Bubble sort to canonical order, tracking swaps
-    n = len(seq)
-    for i in range(n):
-        for j in range(n - i - 1):
-            if seq[j] > seq[j + 1]:
-                seq[j], seq[j + 1] = seq[j + 1], seq[j]
-                sign *= -1
-            elif seq[j] == seq[j + 1]:
-                # Metric contraction: e_i^2 = signature[i]
-                metric = int(SIGNATURE[seq[j]])
-                sign *= metric
-                seq.pop(j)
-                seq.pop(j)  # second element now at same index after first pop
-                n -= 2
-                break
-        else:
-            continue
-        break
-    # After contraction there may still be duplicates — recurse
-    result = tuple(sorted(set(seq)))  # this is wrong for multi-contraction; use proper loop
-    return sign, tuple(seq)
+
+    # Anticommutation sign: each pair (a_i, b_j) with a_i > b_j requires
+    # one swap to canonicalize A followed by B.
+    swaps = 0
+    for a in blade_a:
+        for b in blade_b:
+            if a > b:
+                swaps += 1
+    if swaps % 2:
+        sign *= -1
+
+    # Metric contractions for duplicate basis vectors.
+    common = set(blade_a).intersection(blade_b)
+    for idx in common:
+        sign *= int(SIGNATURE[idx])
+
+    result_blade = tuple(sorted(set(blade_a).symmetric_difference(blade_b)))
+    return sign, result_blade
+
 
 def _build_multiplication_table():
     """Precompute full 32x32 geometric product table."""
@@ -86,40 +96,10 @@ def _build_multiplication_table():
     for i, blade_a in enumerate(_BLADES):
         for j, blade_b in enumerate(_BLADES):
             sign, result_blade = _compute_blade_product(blade_a, blade_b)
-            result_idx = _BLADE_TO_IDX.get(result_blade, 0)
-            table_idx[i, j] = result_idx
+            table_idx[i, j] = _BLADE_TO_IDX[result_blade]
             table_sign[i, j] = sign
 
     return table_idx, table_sign
-
-def _compute_blade_product(blade_a, blade_b):
-    """Compute geometric product of two basis blades via bubble sort + metric."""
-    seq = list(blade_a) + list(blade_b)
-    sign = 1
-    i = 0
-    while i < len(seq) - 1:
-        j = i
-        while j < len(seq) - 1:
-            if seq[j] == seq[j + 1]:
-                # Contract: e_k^2 = signature[k]
-                sign *= int(SIGNATURE[seq[j]])
-                seq.pop(j)
-                seq.pop(j)
-                if j > 0:
-                    i = max(0, j - 1)
-                break
-            elif seq[j] > seq[j + 1]:
-                seq[j], seq[j + 1] = seq[j + 1], seq[j]
-                sign *= -1
-                j += 1
-            else:
-                j += 1
-        else:
-            i += 1
-    result_blade = tuple(seq)
-    if result_blade not in _BLADE_TO_IDX:
-        return 0, ()
-    return sign, result_blade
 
 _TABLE_IDX, _TABLE_SIGN = _build_multiplication_table()
 
@@ -131,12 +111,14 @@ def geometric_product(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     B = np.asarray(B, dtype=np.float32)
     result = np.zeros(N_COMPONENTS, dtype=np.float32)
     for i in range(N_COMPONENTS):
-        if A[i] == 0.0:
+        ai = A[i]
+        if ai == 0.0:
             continue
         for j in range(N_COMPONENTS):
-            if B[j] == 0.0:
+            bj = B[j]
+            if bj == 0.0:
                 continue
-            result[_TABLE_IDX[i, j]] += _TABLE_SIGN[i, j] * A[i] * B[j]
+            result[_TABLE_IDX[i, j]] += _TABLE_SIGN[i, j] * ai * bj
     return result
 
 def reverse(A: np.ndarray) -> np.ndarray:
