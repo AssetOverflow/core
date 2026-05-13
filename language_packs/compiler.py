@@ -142,4 +142,18 @@ def load_pack_entries(pack_id: str) -> list[LexicalEntry]:
     for line in lexicon_path.read_text(encoding="utf-8").splitlines():
         if line.strip():
             entries.append(_parse_entry(json.loads(line)))
+    _validate_morphology_links(pack_id, entries)
     return entries
+
+
+def _validate_morphology_links(pack_id: str, entries: list[LexicalEntry]) -> None:
+    morphology_ids = [entry.morphology_id for entry in entries if entry.morphology_id]
+    if not morphology_ids:
+        return
+
+    from morphology.registry import load_morphology
+
+    registry = load_morphology(pack_id)
+    missing = [morphology_id for morphology_id in morphology_ids if registry.get(morphology_id) is None]
+    if missing:
+        raise ValueError(f"{pack_id}: dangling morphology_id link(s): {', '.join(missing)}")

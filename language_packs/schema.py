@@ -75,6 +75,7 @@ class MorphologyEntry:
     be preserved exactly.
     """
 
+    morphology_id: str
     surface: str
     lemma: str
     language: str
@@ -83,6 +84,16 @@ class MorphologyEntry:
     stem: str | None = None
     inflection: Mapping[str, str] = field(default_factory=dict)
     suffix_chain: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self) -> None:
+        if not self.morphology_id:
+            raise ValueError("MorphologyEntry.morphology_id is required.")
+        if not self.surface:
+            raise ValueError("MorphologyEntry.surface is required.")
+        if not self.lemma:
+            raise ValueError("MorphologyEntry.lemma is required.")
+        if not self.language:
+            raise ValueError("MorphologyEntry.language is required.")
 
 
 @dataclass(frozen=True, slots=True)
