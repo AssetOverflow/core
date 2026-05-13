@@ -5,6 +5,8 @@ import numpy as np
 from algebra.cga import cga_inner
 from algebra.holonomy import holonomy_encode, holonomy_similarity
 from language_packs import load_pack
+from language_packs.compiler import compile_entries_to_manifold, load_pack_entries
+from morphology.registry import load_morphology
 
 
 def _encode(manifold, tokens: list[str]) -> np.ndarray:
@@ -58,3 +60,24 @@ def test_word_order_permutation_changes_holonomy():
     a = _encode(en, ["word", "truth", "light", "life"])
     b = _encode(en, ["life", "word", "truth", "light"])
     assert abs(holonomy_similarity(a, b) - holonomy_similarity(a, a)) > 1e-4
+
+
+def test_same_root_hebrew_forms_land_closer_than_unrelated_noun():
+    _, he = load_pack("he_logos_micro_v1")
+
+    singular = he.get_versor("דבר")
+    plural = he.get_versor("דברים")
+    unrelated = he.get_versor("ראשית")
+
+    assert cga_inner(singular, plural) > cga_inner(singular, unrelated)
+
+
+def test_structured_morphology_improves_same_root_hebrew_resonance():
+    entries = load_pack_entries("he_logos_micro_v1")
+    tag_only = compile_entries_to_manifold(entries)
+    structured = compile_entries_to_manifold(entries, load_morphology("he_logos_micro_v1"))
+
+    tag_only_score = cga_inner(tag_only.get_versor("דבר"), tag_only.get_versor("דברים"))
+    structured_score = cga_inner(structured.get_versor("דבר"), structured.get_versor("דברים"))
+
+    assert structured_score > tag_only_score
