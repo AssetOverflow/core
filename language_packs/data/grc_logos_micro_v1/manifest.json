@@ -1,0 +1,13 @@
+{
+  "pack_id": "grc_logos_micro_v1",
+  "language": "grc",
+  "role": "depth_relation",
+  "script": "Greek",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "grc_logos_micro_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "cf8930df2a4faf1b8d87916fb707d44fa3034685a7f14b56fcde1bef794547c8",
+  "version": "1.0.0",
+  "gate_engaged": false,
+  "oov_policy": "fail_closed"
+}

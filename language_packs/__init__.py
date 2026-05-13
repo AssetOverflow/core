@@ -16,6 +16,12 @@ from .schema import (
     MorphologyEntry,
     OOVPolicy,
 )
+from .compiler import (
+    compile_entries_to_manifold,
+    compile_entries_to_modality_vocab,
+    load_pack,
+    load_pack_entries,
+)
 
 __all__ = [
     "AlignmentEdge",
@@ -26,4 +32,8 @@ __all__ = [
     "LexicalEntry",
     "MorphologyEntry",
     "OOVPolicy",
+    "compile_entries_to_manifold",
+    "compile_entries_to_modality_vocab",
+    "load_pack",
+    "load_pack_entries",
 ]

@@ -94,7 +94,9 @@ class LexicalEntry:
     lemma: str
     language: str
     part_of_speech: str | None = None
+    pos: str | None = None
     morphology_id: str | None = None
+    morphology_tags: tuple[str, ...] = field(default_factory=tuple)
     semantic_domains: tuple[str, ...] = field(default_factory=tuple)
     manifold_point_checksum: str | None = None
     provenance_ids: tuple[str, ...] = field(default_factory=tuple)

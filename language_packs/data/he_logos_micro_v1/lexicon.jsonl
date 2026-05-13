@@ -1,0 +1,7 @@
+{"entry_id":"he-001","surface":"דבר","lemma":"דבר","language":"he","pos":"NOUN","semantic_domains":["logos","word"],"morphology_tags":["root:DBR","noun"]}
+{"entry_id":"he-002","surface":"ראשית","lemma":"ראשית","language":"he","pos":"NOUN","semantic_domains":["logos","beginning"],"morphology_tags":["root:RASH","noun"]}
+{"entry_id":"he-003","surface":"אור","lemma":"אור","language":"he","pos":"NOUN","semantic_domains":["logos","light"],"morphology_tags":["root:AWR","noun"]}
+{"entry_id":"he-004","surface":"חיים","lemma":"חיים","language":"he","pos":"NOUN","semantic_domains":["logos","life"],"morphology_tags":["root:CHYY","noun"]}
+{"entry_id":"he-005","surface":"אמת","lemma":"אמת","language":"he","pos":"NOUN","semantic_domains":["logos","truth"],"morphology_tags":["root:AMT","noun"]}
+{"entry_id":"he-006","surface":"רוח","lemma":"רוח","language":"he","pos":"NOUN","semantic_domains":["logos","spirit"],"morphology_tags":["root:RWH","noun"]}
+{"entry_id":"he-007","surface":"ברא","lemma":"ברא","language":"he","pos":"VERB","semantic_domains":["logos","create"],"morphology_tags":["root:BRA","verb","qal"]}

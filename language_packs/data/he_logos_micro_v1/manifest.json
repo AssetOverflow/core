@@ -1,0 +1,13 @@
+{
+  "pack_id": "he_logos_micro_v1",
+  "language": "he",
+  "role": "depth_root",
+  "script": "Hebrew",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "he_logos_micro_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "ef21e0cf2b15663603e64f94bdd42634acfde969280e556e915c1fbacc055921",
+  "version": "1.0.0",
+  "gate_engaged": false,
+  "oov_policy": "fail_closed"
+}

@@ -1,0 +1,7 @@
+{"entry_id":"grc-001","surface":"λόγος","lemma":"λόγος","language":"grc","pos":"NOUN","semantic_domains":["logos","word"],"morphology_tags":["noun","nominative","singular"]}
+{"entry_id":"grc-002","surface":"ἀρχή","lemma":"ἀρχή","language":"grc","pos":"NOUN","semantic_domains":["logos","beginning"],"morphology_tags":["noun","nominative","singular"]}
+{"entry_id":"grc-003","surface":"φῶς","lemma":"φῶς","language":"grc","pos":"NOUN","semantic_domains":["logos","light"],"morphology_tags":["noun","nominative","singular"]}
+{"entry_id":"grc-004","surface":"ζωή","lemma":"ζωή","language":"grc","pos":"NOUN","semantic_domains":["logos","life"],"morphology_tags":["noun","nominative","singular"]}
+{"entry_id":"grc-005","surface":"ἀλήθεια","lemma":"ἀλήθεια","language":"grc","pos":"NOUN","semantic_domains":["logos","truth"],"morphology_tags":["noun","nominative","singular"]}
+{"entry_id":"grc-006","surface":"πνεῦμα","lemma":"πνεῦμα","language":"grc","pos":"NOUN","semantic_domains":["logos","spirit"],"morphology_tags":["noun","nominative","singular"]}
+{"entry_id":"grc-007","surface":"κτίζω","lemma":"κτίζω","language":"grc","pos":"VERB","semantic_domains":["logos","create"],"morphology_tags":["verb","present","active"]}
