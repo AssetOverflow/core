@@ -50,7 +50,11 @@ class TextProjectionHead:
     modality:      Modality = Modality.TEXT
     embedding_dim: int      = CL41_DIM
 
-    def __init__(self, vocabulary: ModalityVocabulary, oov_policy: OOVPolicy) -> None:
+    def __init__(
+        self,
+        vocabulary: ModalityVocabulary,
+        oov_policy: OOVPolicy = OOVPolicy.TAGGED_FALLBACK,
+    ) -> None:
         self._vocab = vocabulary
         self._oov_policy = oov_policy
 
