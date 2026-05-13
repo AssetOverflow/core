@@ -1,5 +1,5 @@
 [project]
-name = "core-ai"
+name = "core-versor"
 version = "0.1.0"
 description = "Versor Engine: cognitive field system on Cl(4,1) Conformal Geometric Algebra"
 requires-python = ">=3.11"
