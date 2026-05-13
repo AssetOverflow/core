@@ -8,14 +8,18 @@ it describes a transformation being applied, not a property of the vocabulary.
 
 import numpy as np
 from .cl41 import geometric_product, reverse
-from .versor import normalize_to_versor
+from .versor import unitize_versor
 
 
 def word_transition_rotor(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """
     Compute the rotor R that rotates versor A toward versor B in Cl(4,1).
 
-        R = normalize(1 + B * reverse(A))
+        R = unitize(1 + B * reverse(A))
+
+    This is a pure construction operation — building a new algebraic object
+    from two input versors. unitize_versor() is the correct primitive here,
+    not normalize_to_versor() (which is reserved for the injection gate).
 
     This is a pure operator — it transforms a field state, it does not
     encode a position. Call this from algebra-aware field logic; never
@@ -26,9 +30,9 @@ def word_transition_rotor(A: np.ndarray, B: np.ndarray) -> np.ndarray:
         B: Target versor, shape (32,), grade-normed to ±1.
 
     Returns:
-        R: Normalized rotor in Cl(4,1), shape (32,).
+        R: Unitized rotor in Cl(4,1), shape (32,).
     """
     R = geometric_product(B, reverse(A))
     R = R.copy()
     R[0] += 1.0
-    return normalize_to_versor(R)
+    return unitize_versor(R)

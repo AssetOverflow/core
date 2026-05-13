@@ -8,10 +8,16 @@ M = T * R where:
 Applying persona: F_voiced = M * F * reverse(M)
 This is a versor product. Persona application is algebraically closed.
 No weight overlay. No post-hoc bias. No separate correction pass.
+
+Normalization doctrine:
+  All calls here use unitize_versor() — the construction primitive.
+  These are all construction-time operations: building motors from raw
+  component arrays, composing two existing motors. None of these are
+  gate injection operations, so normalize_to_versor() is forbidden here.
 """
 
 import numpy as np
-from algebra.versor import versor_apply, normalize_to_versor
+from algebra.versor import versor_apply, unitize_versor
 from algebra.cl41 import geometric_product, reverse, basis_vector, N_COMPONENTS
 
 
@@ -22,7 +28,7 @@ class PersonaMotor:
         rotor:      a versor encoding rotational character
         Both must satisfy versor_condition < 1e-6.
         """
-        self.M = normalize_to_versor(
+        self.M = unitize_versor(
             geometric_product(
                 np.asarray(translator, dtype=np.float32),
                 np.asarray(rotor, dtype=np.float32),
@@ -39,7 +45,7 @@ class PersonaMotor:
         Used to blend persona layers (base persona + session persona).
         """
         result = PersonaMotor.__new__(PersonaMotor)
-        result.M = normalize_to_versor(geometric_product(self.M, other.M))
+        result.M = unitize_versor(geometric_product(self.M, other.M))
         return result
 
     @classmethod
@@ -74,6 +80,6 @@ class PersonaMotor:
         rotor[0] = 1.0
 
         return cls(
-            normalize_to_versor(translator),
-            normalize_to_versor(rotor),
+            unitize_versor(translator),
+            unitize_versor(rotor),
         )

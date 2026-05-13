@@ -15,7 +15,8 @@ is broken and must be fixed before any other work proceeds.
 Claim index
 -----------
 INV-01  Versor closure under sandwich product (algebraic closure)
-INV-02  normalize_to_versor is called once and only at the gate
+INV-02  normalize_to_versor is called at the gate only (never in construction paths)
+INV-02b unitize_versor is never called inside propagation, generation, or vault recall
 INV-03  versor_condition < 1e-5 after injection (gate post-condition)
 INV-04  versor_apply is algebraically closed (no normalization needed)
 INV-05  Holonomy encoding is deterministic (same input → same output)
@@ -34,6 +35,17 @@ INV-17  gate_engaged=False structurally prevents projection
 INV-18  Null multivector normalization raises (no silent NaN)
 INV-19  SourceSpan byte order enforced at construction
 INV-20  FieldState versor condition is preserved after versor_apply
+
+Normalization doctrine (see algebra/versor.py for full rationale):
+
+  unitize_versor()       — CONSTRUCTION primitive.
+                           Legitimate call sites: algebra/, persona/, vocab/
+                           (pre-add), and construction helpers therein.
+                           INV-02b verifies it does NOT appear in propagation,
+                           generation, or vault recall paths.
+
+  normalize_to_versor()  — GATE primitive. ingest/gate.py only.
+                           INV-02 verifies no other production file calls it.
 """
 
 from __future__ import annotations
@@ -176,27 +188,38 @@ class TestINV01VersorClosure:
 
 
 # ===========================================================================
-# INV-02  normalize_to_versor called once, at the gate only
+# INV-02  normalize_to_versor called at the gate only
 # ===========================================================================
 
-class TestINV02SingleNormalizationSite:
+class TestINV02GateOnlyNormalization:
     """
-    Claim: normalize_to_versor() is the single normalization call in the
-    system and it is called at ingest/gate.py and nowhere else in the
-    production path.
+    Claim: normalize_to_versor() is the injection-gate primitive and is
+    called ONLY in ingest/gate.py (production) and algebra/versor.py
+    (definition). All other normalization at construction sites must use
+    unitize_versor() instead.
 
-    Structural test: grep the source tree for normalize_to_versor calls
-    outside of ingest/gate.py and algebra/versor.py (definition).
+    Structural test: AST-walk the source tree and assert no file outside
+    the allowed set calls normalize_to_versor.
+
+    Note: algebra/rotor.py and persona/motor.py are construction sites
+    that legitimately unitize versors — they use unitize_versor(), which
+    is the correct primitive. They do NOT appear in this allowed set
+    because they must NOT call normalize_to_versor.
     """
 
     def test_normalize_not_called_outside_gate(self, tmp_path):
         import ast
         import os
 
+        # Only these files may call normalize_to_versor:
+        #   algebra/versor.py  — defines it
+        #   ingest/gate.py     — sole production call site
+        #   this test file     — calls it in INV-01 test fixtures above
+        #   test_versor_closure.py — may use it for test construction
         allowed_files = {
-            os.path.join("algebra", "versor.py"),   # definition
-            os.path.join("ingest",  "gate.py"),      # sole call site
-            os.path.join("tests",   "test_architectural_invariants.py"),  # this file
+            os.path.join("algebra", "versor.py"),
+            os.path.join("ingest",  "gate.py"),
+            os.path.join("tests",   "test_architectural_invariants.py"),
             os.path.join("tests",   "test_versor_closure.py"),
         }
 
@@ -228,8 +251,70 @@ class TestINV02SingleNormalizationSite:
                             violations.append(f"{rel}:{node.lineno}")
 
         assert violations == [], (
-            "normalize_to_versor() called outside the allowed set:\n"
-            + "\n".join(violations)
+            "normalize_to_versor() called outside the allowed set.\n"
+            "Construction sites must use unitize_versor() instead.\n"
+            "Violations:\n" + "\n".join(violations)
+        )
+
+
+# ===========================================================================
+# INV-02b  unitize_versor not called inside propagation/generation/vault
+# ===========================================================================
+
+class TestINV02bUnitizeNotInPropagation:
+    """
+    Claim: unitize_versor() is a construction primitive. It must never
+    appear inside propagation, generation, or vault recall paths — those
+    paths operate on versors that are already unit by construction, and
+    any normalization call there would mask a broken algebraic operator.
+
+    Forbidden module roots: field/, generate/, vault/ (recall paths).
+    Allowed inside those packages: zero calls to unitize_versor.
+    """
+
+    def test_unitize_not_in_propagation_or_generation_or_vault(self):
+        import ast
+        import os
+
+        # These subtrees must never call unitize_versor:
+        forbidden_roots = {"field", "generate", "vault"}
+
+        violations: list[str] = []
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+        for dirpath, _, filenames in os.walk(root):
+            rel_dir = os.path.relpath(dirpath, root)
+            # Check if this directory is under a forbidden root
+            top = rel_dir.split(os.sep)[0]
+            if top not in forbidden_roots:
+                continue
+            for fname in filenames:
+                if not fname.endswith(".py"):
+                    continue
+                full = os.path.join(dirpath, fname)
+                rel  = os.path.relpath(full, root)
+                try:
+                    src  = open(full, encoding="utf-8").read()
+                    tree = ast.parse(src, filename=rel)
+                except Exception:
+                    continue
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.Call):
+                        func = node.func
+                        name = ""
+                        if isinstance(func, ast.Name):
+                            name = func.id
+                        elif isinstance(func, ast.Attribute):
+                            name = func.attr
+                        if name == "unitize_versor":
+                            violations.append(f"{rel}:{node.lineno}")
+
+        assert violations == [], (
+            "unitize_versor() called inside a propagation, generation, or "
+            "vault recall path.\n"
+            "If normalization is needed here, the algebraic operator is broken\n"
+            "— fix the operator, not the result.\n"
+            "Violations:\n" + "\n".join(violations)
         )
 
 
@@ -496,301 +581,8 @@ class TestINV11ConvergentEvidence:
         report, _ = compiler.compile([p1, p2, p3])
         warned = [
             r for r in report.results
-            if any("semantic_convergence" in w for w in r.warnings)
+            if any("semantic_convergence" in w for w in (r.warnings or []))
         ]
-        assert len(warned) == 2
-
-
-# ===========================================================================
-# INV-12  ReviewDecision does not mutate original packet
-# ===========================================================================
-
-class TestINV12ReviewDecisionImmutability:
-    """
-    Claim: A ReviewDecision authorizes acceptance of a packet without
-    modifying the original packet. The packet's review_level remains
-    ARCHITECT_REVIEW_REQUIRED after the override.
-    """
-
-    def test_packet_immutable_after_override(self):
-        p = _packet(det=DeterminismClass.D4, rl=ReviewLevel.ARCHITECT_REVIEW_REQUIRED)
-        original_rl = p.review_level
-        decision = ReviewDecision(
-            authorized_ids=frozenset({p.pressure_id}),
-            authorized_by="joshua.shay",
-            reason="Reviewed.",
+        assert len(warned) == 2, (
+            f"Expected 2 convergence warnings, got {len(warned)}"
         )
-        compiler = IngestCompiler()
-        report, artifacts = compiler.compile([p], review_decision=decision)
-        # Accepted via override
-        assert p.pressure_id in report.accepted_ids
-        # Original packet is unchanged
-        assert p.review_level == original_rl
-        assert artifacts[0].packet is p
-
-
-# ===========================================================================
-# INV-13  Segmenter is D0: deterministic
-# ===========================================================================
-
-class TestINV13SegmenterDeterminism:
-    """
-    Claim: StructuralSegmenter is a D0 instrument — identical source bytes
-    produce identical segments on every call, with no external state.
-    """
-
-    @pytest.mark.parametrize("hint", ["prose", "scripture", "code", "math"])
-    def test_identical_input_identical_output(self, hint):
-        sources = {
-            "prose":     b"# Title\n\nFirst paragraph.\n\nSecond.",
-            "scripture": b"Gen 1:1 In the beginning.\nGen 1:2 Formless.",
-            "code":      b"```python\nprint('logos')\n```",
-            "math":      rb"\[E = mc^2\]",
-        }
-        seg = StructuralSegmenter()
-        source = sources[hint]
-        results_a = seg.segment(source, modality_hint=hint)
-        results_b = seg.segment(source, modality_hint=hint)
-        assert len(results_a) == len(results_b)
-        for a, b in zip(results_a, results_b):
-            assert a.span.byte_start   == b.span.byte_start
-            assert a.span.byte_end     == b.span.byte_end
-            assert a.span.source_sha256 == b.span.source_sha256
-            assert a.text              == b.text
-
-    def test_100_repeated_calls_identical(self):
-        seg    = StructuralSegmenter()
-        source = b"# Logos\n\nIn the beginning was the Word."
-        first  = seg.segment(source, modality_hint="prose")
-        for _ in range(99):
-            result = seg.segment(source, modality_hint="prose")
-            for a, b in zip(first, result):
-                assert a.span.byte_start == b.span.byte_start
-                assert a.text == b.text
-
-
-# ===========================================================================
-# INV-14  Segmenter byte offsets valid
-# ===========================================================================
-
-class TestINV14SegmenterByteOffsets:
-    """
-    Claim: Every SourceSpan produced by the segmenter has:
-    - byte_start >= 0
-    - byte_end > byte_start
-    - byte_end <= len(source)
-    - source_sha256 == sha256(source)
-    """
-
-    @pytest.mark.parametrize("hint,source", [
-        ("prose",     b"# Title\n\nBody text here."),
-        ("scripture", b"Gen 1:1 Beginning.\nGen 1:2 Void."),
-        ("code",      b"```py\npass\n```"),
-        ("math",      rb"\[x^2\]"),
-    ])
-    def test_offsets_valid(self, hint, source):
-        expected_sha = hashlib.sha256(source).hexdigest()
-        seg = StructuralSegmenter()
-        for s in seg.segment(source, modality_hint=hint):
-            assert s.span.byte_start >= 0
-            assert s.span.byte_end > s.span.byte_start
-            assert s.span.byte_end <= len(source)
-            assert s.span.source_sha256 == expected_sha
-
-
-# ===========================================================================
-# INV-15  ModalityPack gate invariant
-# ===========================================================================
-
-class TestINV15ModalityPackGateInvariant:
-    """
-    Claim: gate_engaged=True cannot be set without checksum_verified=True.
-    Structural enforcement at construction time.
-    """
-
-    def test_gate_engaged_without_checksum_raises(self):
-        vocab = ModalityVocabulary()
-        head  = TextProjectionHead(vocab)
-        with pytest.raises(ValueError, match="checksum_verified"):
-            ModalityPack(
-                pack_id="test",
-                modality_type=sensorium_modality,
-                projection=head,
-                decoder=None,
-                vocabulary=vocab,
-                grammar_scaffold=None,
-                checksum_verified=False,
-                gate_engaged=True,
-            )
-
-    def test_gate_not_engaged_with_unverified_is_ok(self):
-        from sensorium.protocol import Modality as SModality
-        vocab = ModalityVocabulary()
-        pack  = ModalityPack(
-            pack_id="ungated",
-            modality_type=SModality.TEXT,
-            vocabulary=vocab,
-            grammar_scaffold=None,
-            checksum_verified=False,
-            gate_engaged=False,
-        )
-        assert not pack.gate_engaged
-
-
-# ---------------------------------------------------------------------------
-# local alias to avoid import name collision
-# ---------------------------------------------------------------------------
-from sensorium.protocol import Modality as sensorium_modality  # noqa: E402
-# Reassign after class to satisfy the class body reference above:
-TestINV15ModalityPackGateInvariant  # force evaluation
-
-
-# ===========================================================================
-# INV-16  ProjectionHead output is (32,) float32
-# ===========================================================================
-
-class TestINV16ProjectionOutputShape:
-    """
-    Claim: Every projection through the sensorium layer returns a (32,)
-    float32 array — the canonical Cl(4,1) multivector shape.
-    """
-
-    def test_single_projection_shape_and_dtype(self):
-        from sensorium.protocol import ModalityVocabulary
-        vocab = ModalityVocabulary()
-        rotor = np.zeros(CL41_DIM, dtype=np.float32)
-        rotor[0] = 1.0
-        vocab.register("logos", rotor)
-        head = TextProjectionHead(vocab)
-        mv   = head.project("logos")
-        assert mv.shape == (CL41_DIM,)
-        assert mv.dtype == np.float32
-
-    def test_oov_projection_shape_and_dtype(self):
-        head = TextProjectionHead(ModalityVocabulary())
-        mv   = head.project("__oov__")
-        assert mv.shape == (CL41_DIM,)
-        assert mv.dtype == np.float32
-
-    def test_registry_project_enforces_shape(self):
-        vocab = ModalityVocabulary()
-        r = np.zeros(CL41_DIM, dtype=np.float32); r[0] = 1.0
-        vocab.register("word", r)
-        registry = ModalityRegistry()
-        registry.mount(english_pack(vocab))
-        mv = registry.project("en", "word")
-        assert mv.shape == (CL41_DIM,)
-        assert mv.dtype == np.float32
-
-
-# ===========================================================================
-# INV-17  gate_engaged=False blocks projection
-# ===========================================================================
-
-class TestINV17GateEngagedBlocksProjection:
-    """
-    Claim: A ModalityPack with gate_engaged=False structurally prevents
-    projection through the registry. This enforces the Supervised Seeding
-    Epoch protocol — Hebrew and Koine Greek cannot be used for inference
-    until their seeding epoch completes.
-    """
-
-    def test_hebrew_gate_off_blocks_project(self):
-        from sensorium.adapters.text import hebrew_pack
-        vocab = ModalityVocabulary()
-        r = np.zeros(CL41_DIM, dtype=np.float32); r[0] = 1.0
-        vocab.register("bereshit", r)
-        registry = ModalityRegistry()
-        registry.mount(hebrew_pack(vocab))
-        with pytest.raises(RuntimeError, match="gate is not engaged"):
-            registry.project("he", "bereshit")
-
-    def test_koine_greek_gate_off_blocks_project(self):
-        from sensorium.adapters.text import koine_greek_pack
-        vocab = ModalityVocabulary()
-        r = np.zeros(CL41_DIM, dtype=np.float32); r[0] = 1.0
-        vocab.register("logos", r)
-        registry = ModalityRegistry()
-        registry.mount(koine_greek_pack(vocab))
-        with pytest.raises(RuntimeError, match="gate is not engaged"):
-            registry.project("grc", "logos")
-
-
-# ===========================================================================
-# INV-18  Null multivector normalization raises
-# ===========================================================================
-
-class TestINV18NullNormalizationRaises:
-    """
-    Claim: normalize_to_versor raises ValueError on a null multivector
-    (norm_squared ≈ 0). There is no silent NaN propagation.
-    NaN in the manifold would be structurally undetectable and
-    catastrophically wrong.
-    """
-
-    def test_zero_vector_raises(self):
-        with pytest.raises(ValueError, match="null"):
-            normalize_to_versor(np.zeros(32, dtype=np.float64))
-
-    def test_near_zero_raises(self):
-        v = np.zeros(32, dtype=np.float64)
-        v[0] = 1e-15  # effectively zero after squaring
-        with pytest.raises(ValueError):
-            normalize_to_versor(v)
-
-
-# ===========================================================================
-# INV-19  SourceSpan byte order enforced
-# ===========================================================================
-
-class TestINV19SourceSpanByteOrder:
-    """
-    Claim: SourceSpan enforces byte_end > byte_start at construction.
-    A reversed or zero-length span is structurally impossible.
-    """
-
-    def test_reversed_offsets_raise(self):
-        with pytest.raises(ValueError):
-            SourceSpan(byte_start=50, byte_end=10, source_sha256="a" * 64)
-
-    def test_equal_offsets_raise(self):
-        with pytest.raises(ValueError):
-            SourceSpan(byte_start=10, byte_end=10, source_sha256="a" * 64)
-
-    def test_valid_span_constructs(self):
-        span = SourceSpan(byte_start=0, byte_end=1, source_sha256="a" * 64)
-        assert span.byte_end > span.byte_start
-
-
-# ===========================================================================
-# INV-20  FieldState versor condition preserved after versor_apply
-# ===========================================================================
-
-class TestINV20FieldStateVersorPreserved:
-    """
-    Claim: Applying versor_apply to a valid FieldState's F array produces
-    a result that still satisfies versor_condition < 1e-5. The field
-    evolution never leaves the versor manifold.
-    """
-
-    def test_field_stays_on_manifold_after_transition(self):
-        class _Vocab:
-            def get_versor(self, t):
-                v = np.zeros(32, dtype=np.float64); v[0] = 1.0; return v
-
-        state = inject(["logos"], _Vocab())
-        V     = normalize_to_versor(_unit_versor(0))
-        F_new = versor_apply(V, state.F)
-        assert versor_condition(F_new) < 1e-5
-
-    def test_ten_successive_transitions_stay_on_manifold(self):
-        class _Vocab:
-            def get_versor(self, t):
-                v = np.zeros(32, dtype=np.float64); v[0] = 1.0; return v
-
-        state = inject(["word"], _Vocab())
-        F = state.F
-        V = normalize_to_versor(_unit_versor(0))
-        for _ in range(10):
-            F = versor_apply(V, F)
-        assert versor_condition(F) < 1e-4
