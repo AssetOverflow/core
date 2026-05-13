@@ -3,23 +3,51 @@ VocabManifold — the geometric vocabulary.
 
 Each word is a versor in Cl(4,1). nearest(F) finds the closest word
 by CGA inner product — no cosine similarity, no ANN index.
+
+Invariant: every stored versor must satisfy the Cl(4,1) grade-norm
+condition |V * reverse(V)|_scalar ≈ ±1. This is enforced at insertion
+time in add(). Raw coordinate vectors (e.g. from external embeddings)
+will fail this check — use normalize_to_versor() before calling add().
+
+Rotor construction between word-versors is NOT a vocabulary concern.
+Use algebra.word_transition_rotor(A, B) from the algebra layer when
+a transition operator is needed in field or generation logic.
 """
 
 import numpy as np
 from algebra.cga import cga_inner
-from algebra.versor import normalize_to_versor
 from algebra.cl41 import geometric_product, reverse
+from algebra.versor import normalize_to_versor
 
 
 class VocabManifold:
     def __init__(self):
         self._words: list = []
-        self._versors: list = []  # each shape (32,)
+        self._versors: list = []  # each shape (32,), grade-normed to ±1
 
     def add(self, word: str, versor: np.ndarray) -> None:
-        """Register a word-versor pair."""
+        """
+        Register a word-versor pair.
+
+        Enforces the Cl(4,1) versor invariant: the scalar part of
+        V * reverse(V) must be ≈ ±1. This rejects any raw coordinate
+        vector or external embedding that has not been lifted into the
+        algebra. If your source is a float array from outside the system,
+        call normalize_to_versor() first.
+
+        Raises:
+            ValueError: if the grade-norm condition is not satisfied.
+        """
+        v = np.asarray(versor, dtype=np.float32).copy()
+        grade_norm = float(geometric_product(v, reverse(v))[0])
+        if not (0.95 <= abs(grade_norm) <= 1.05):
+            raise ValueError(
+                f"Word '{word}': versor grade-norm {grade_norm:.4f} ≠ ±1. "
+                "Pass a valid Cl(4,1) versor. "
+                "If lifting from a raw array, call normalize_to_versor() first."
+            )
         self._words.append(word)
-        self._versors.append(np.asarray(versor, dtype=np.float32).copy())
+        self._versors.append(v)
 
     def get_versor(self, word: str) -> np.ndarray:
         """Look up a word's versor. Raises KeyError if not found."""
@@ -45,18 +73,6 @@ class VocabManifold:
                 best_score = score
                 best_idx = i
         return self._words[best_idx], best_idx
-
-    def edge_rotor(self, from_idx: int, to_idx: int) -> np.ndarray:
-        """
-        Compute the rotor that rotates from_versor toward to_versor.
-        R = normalize(1 + B * reverse(A))
-        """
-        A = self._versors[from_idx]
-        B = self._versors[to_idx]
-        R = geometric_product(B, reverse(A))
-        R = R.copy()
-        R[0] += 1.0
-        return normalize_to_versor(R)
 
     def __len__(self) -> int:
         return len(self._words)
