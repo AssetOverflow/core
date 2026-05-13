@@ -4,6 +4,21 @@ The single injection gate.
 The ONLY point where raw data enters the versor manifold.
 normalize_to_versor() is called here and nowhere else in production code.
 
+Normalization doctrine (three-tier):
+
+  unitize_versor()       algebra/versor.py — construction primitive.
+                         Allowed in: algebra/, persona/, vocab/ (pre-add).
+                         Purpose: build valid rotors/motors/manifold entries.
+
+  inject()               THIS function — gate operation, once per raw input.
+                         Calls normalize_to_versor() internally at the
+                         holonomy-to-field boundary.
+
+  FORBIDDEN:             normalization inside propagation, generation,
+                         vault recall, or as post-hoc repair after a
+                         supposedly closed transition. If normalization is
+                         needed there, fix the operator — not the result.
+
 Contract:
   Input:  raw token sequence + VocabManifold
   Output: FieldState with F satisfying versor_condition(F) < 1e-6
@@ -21,7 +36,7 @@ def inject(tokens: list, vocab) -> FieldState:
     Steps:
     1. Look up each token's versor in the vocab manifold
     2. Encode via holonomy walk
-    3. Normalize to versor (the single allowed normalization call)
+    3. normalize_to_versor() — the single allowed gate normalization call
     4. Assert versor condition before returning
     """
     word_versors = [vocab.get_versor(t) for t in tokens]
