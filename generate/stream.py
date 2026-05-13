@@ -16,22 +16,50 @@ F is always on the manifold. nearest() is exact.
 """
 
 from __future__ import annotations
+from collections import deque
+
 from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import word_transition_rotor
 from generate.result import GenerationResult
 
+_RECENT_WINDOW = 3
+_STOP_TOKENS = frozenset({"it", "to", "word"})
 
-def _nearest_next(vocab, F_voiced, current_node: int) -> tuple[str, int]:
+
+def _nearest_next(
+    vocab,
+    F_voiced,
+    current_node: int,
+    recent_nodes: tuple[int, ...] = (),
+    stop_nodes: frozenset[int] = frozenset(),
+) -> tuple[str, int]:
     """
-    Select the nearest non-current vocabulary point when possible.
+    Select the nearest vocabulary point while avoiding short loops.
 
     Allowing the current node to win makes V = transition(A, A), which is an
     identity-like transition and can stall generation forever on one token.
-    VocabManifold already exposes exclude_idx for this exact seam.
+    Recent-node exclusion reduces two- and three-token attractor cycles.
+    Stop-node exclusion keeps function-word wells from dominating when more
+    informative neighbors are available.
     """
-    exclude_idx = current_node if len(vocab) > 1 else -1
-    return vocab.nearest(F_voiced, exclude_idx=exclude_idx)
+    if len(vocab) <= 1:
+        return vocab.nearest(F_voiced)
+
+    recent = set(recent_nodes)
+    stop = set(stop_nodes)
+    fallback_orders = (
+        recent | stop,
+        stop,
+        recent,
+        set(),
+    )
+    for extra in fallback_orders:
+        try:
+            return vocab.nearest(F_voiced, exclude_idx=current_node, exclude_indices=extra)
+        except ValueError:
+            continue
+    return vocab.nearest(F_voiced, exclude_idx=current_node)
 
 
 def generate(
@@ -59,10 +87,22 @@ def generate(
     tokens = []
     trajectory = [] if record_trajectory else None
     current = state
+    recent_nodes = deque([state.node], maxlen=_RECENT_WINDOW)
+    stop_nodes = frozenset(
+        vocab.index_of(token)
+        for token in _STOP_TOKENS
+        if token in {vocab.get_word_at(i) for i in range(len(vocab))}
+    )
 
     for _ in range(max_tokens):
         F_voiced = persona.apply(current.F)
-        word, word_idx = _nearest_next(vocab, F_voiced, current.node)
+        word, word_idx = _nearest_next(
+            vocab,
+            F_voiced,
+            current.node,
+            recent_nodes=tuple(recent_nodes),
+            stop_nodes=stop_nodes,
+        )
         tokens.append(word)
 
         if record_trajectory:
@@ -74,6 +114,7 @@ def generate(
 
         current = propagate_step(current, V)
         current = FieldState(F=current.F, node=word_idx, step=current.step, holonomy=current.holonomy)
+        recent_nodes.append(word_idx)
 
     return GenerationResult(
         tokens=tokens,
@@ -99,9 +140,21 @@ async def agenerate(
     Yields: str (one token per iteration)
     """
     current = state
+    recent_nodes = deque([state.node], maxlen=_RECENT_WINDOW)
+    stop_nodes = frozenset(
+        vocab.index_of(token)
+        for token in _STOP_TOKENS
+        if token in {vocab.get_word_at(i) for i in range(len(vocab))}
+    )
     for _ in range(max_tokens):
         F_voiced = persona.apply(current.F)
-        word, word_idx = _nearest_next(vocab, F_voiced, current.node)
+        word, word_idx = _nearest_next(
+            vocab,
+            F_voiced,
+            current.node,
+            recent_nodes=tuple(recent_nodes),
+            stop_nodes=stop_nodes,
+        )
         yield word
 
         A = vocab.get_versor_at(current.node)
@@ -110,3 +163,4 @@ async def agenerate(
 
         current = propagate_step(current, V)
         current = FieldState(F=current.F, node=word_idx, step=current.step, holonomy=current.holonomy)
+        recent_nodes.append(word_idx)

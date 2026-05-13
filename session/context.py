@@ -30,7 +30,14 @@ class SessionContext:
 
     def ingest(self, tokens: list) -> FieldState:
         """Inject a prompt. Sets self.state. Stores the user field in vault."""
-        self.state = inject(tokens, self.vocab)
+        state = inject(tokens, self.vocab)
+        node_idx = self.vocab.index_of(tokens[0])
+        self.state = FieldState(
+            F=state.F,
+            node=node_idx,
+            step=state.step,
+            holonomy=state.holonomy,
+        )
         self.vault.store(self.state.F, {"turn": self.turn, "role": "user"})
         return self.state
 

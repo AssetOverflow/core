@@ -4,7 +4,6 @@ import re
 
 from language_packs import OOVPolicy, load_pack, load_pack_entries
 from persona.motor import PersonaMotor
-from field.state import FieldState
 from session.context import SessionContext
 
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
@@ -58,13 +57,6 @@ class ChatRuntime:
         if not filtered:
             return ""
         self._context.ingest(filtered)
-        node_idx = self._context.vocab.index_of(filtered[0])
-        self._context.state = FieldState(
-            F=self._context.state.F,
-            node=node_idx,
-            step=self._context.state.step,
-            holonomy=self._context.state.holonomy,
-        )
         result = self._context.respond(max_tokens=max_tokens)
         guarded = self._syntactic_guard(result.tokens)
         return " ".join(guarded)

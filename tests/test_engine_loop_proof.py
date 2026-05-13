@@ -95,6 +95,7 @@ def test_minimum_engine_loop_is_deterministic_and_stores_generated_state() -> No
 def test_session_context_respond_preserves_and_vaults_final_state() -> None:
     session = SessionContext(vocab=_minimal_vocab())
     initial = session.ingest(["logos", "arche"])
+    assert initial.node == session.vocab.index_of("logos")
 
     result = session.respond(max_tokens=3)
 

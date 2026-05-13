@@ -92,7 +92,12 @@ class VocabManifold:
         except ValueError:
             raise KeyError(f"Word '{word}' not in vocabulary.")
 
-    def nearest(self, F: np.ndarray, exclude_idx: int = -1) -> tuple[str, int]:
+    def nearest(
+        self,
+        F: np.ndarray,
+        exclude_idx: int = -1,
+        exclude_indices: set[int] | frozenset[int] | None = None,
+    ) -> tuple[str, int]:
         """
         Find the word whose versor is closest to F by CGA inner product.
         Returns (word, index). O(|vocab|), exact, no approximation.
@@ -100,15 +105,21 @@ class VocabManifold:
 
         Hot path: cga_inner routes through algebra.backend.
         """
+        blocked = set(exclude_indices or ())
+        if exclude_idx >= 0:
+            blocked.add(exclude_idx)
+
         best_score = -np.inf
-        best_idx = 0
+        best_idx = -1
         for i, v in enumerate(self._versors):
-            if i == exclude_idx:
+            if i in blocked:
                 continue
             score = cga_inner(F, v)
             if score > best_score:
                 best_score = score
                 best_idx = i
+        if best_idx < 0:
+            raise ValueError("No candidate word available after exclusions.")
         return self._words[best_idx], best_idx
 
     def __len__(self) -> int:
