@@ -1,33 +1,22 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://assetoverflow.dev/core/schemas/probe",
   "title": "CORE Probe Record",
-  "description": "A deterministic probe for pack validation. Probes are the executable assertions that verify a pack's contract against real inputs.",
+  "description": "A deterministic test case for a language pack gate.",
   "type": "object",
   "required": ["probe_id", "kind", "input", "expected"],
   "properties": {
     "probe_id": {
       "type": "string",
-      "description": "Stable unique identifier. Convention: {lang}:{gate}:{probe-name}."
+      "description": "Unique identifier in the form '<lang>:<gate>:<label>'."
     },
     "kind": {
       "type": "string",
-      "description": "Which gate this probe tests. One of: 'schema', 'lexical', 'morphology', 'lift', 'readback', 'determinism', 'alignment', 'coverage'.",
-      "enum": ["schema", "lexical", "morphology", "lift", "readback", "determinism", "alignment", "coverage"]
+      "enum": ["normalize", "lift", "readback", "alignment", "determinism"]
     },
-    "input": {
-      "description": "The input to the operation under test. Shape depends on kind."
-    },
-    "expected": {
-      "description": "The expected output or outcome. Shape depends on kind."
-    },
+    "input": {},
+    "expected": {},
     "tolerance": {
-      "type": ["number", "null"],
-      "description": "For numeric comparisons, the acceptable deviation. Null for exact-match probes."
-    },
-    "notes": {
-      "type": ["string", "null"],
-      "description": "Optional commentary on what this probe is checking and why."
+      "type": ["number", "null"]
     }
   },
   "additionalProperties": false

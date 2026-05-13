@@ -1,43 +1,70 @@
 {
-  "anchor_set_id": "core-foundation-v0",
-  "description": "Trilingual alignment anchors for EN/HE/EL. Each anchor is a shared semantic concept that must be expressible in all three packs and must map to the same CORE field target. These are the hardest-gate coherence check: if these cannot be aligned, the pack is not ready.",
+  "anchor_set_id": "core-trilingual-foundation",
   "version": "0.1.0",
+  "description": "Canonical cross-language anchor set for EN, HE, and EL. Each anchor defines a formal semantic equivalence across all three packs, scoped by stated constraints. These anchors are the minimum required for the Alignment gate to pass.",
   "anchors": [
     {
-      "anchor_id": "logos-word-speech",
-      "field_target": "speech.creative",
-      "en": {"lemma_id": "en:word", "gloss": "word, speech"},
-      "he": {"lemma_id": "he:dabar", "gloss": "word, speech, matter"},
-      "el": {"lemma_id": "el:logos", "gloss": "word, reason, speech"},
-      "reference": "John 1:1-2",
-      "notes": "The primary trilingual anchor. Logos/Dabar/Word — the creative speech act through which the universe was spoken into existence. This anchor is the theological and architectural foundation of the three-language choice. All three must map to speech.creative with equal coherence."
+      "anchor_id": "logos-word-creative-speech",
+      "field_target": "logos.articulation.creative",
+      "en": {
+        "lemma_id": "en:word",
+        "sense_id": "en:word:creative-utterance",
+        "notes": "English 'word' in the creative/declarative sense — 'the word went forth'."
+      },
+      "he": {
+        "lemma_id": "he:dabar",
+        "sense_id": "he:dabar:spoken-creative-word",
+        "notes": "דבר as divine or authoritative speech-act. Carries both the act of speaking and the thing spoken. The word is the event."
+      },
+      "el": {
+        "lemma_id": "el:logos",
+        "sense_id": "el:logos:creative-word",
+        "notes": "λόγος in John 1:1 sense — the rational, creative, pre-existent Word. Not merely speech or reason in isolation but both unified. John articulated in Greek what the Hebrew already carried."
+      },
+      "constraints": ["creative-or-authoritative-context"],
+      "tolerance": null
     },
     {
-      "anchor_id": "existence-being",
-      "field_target": "existence.state",
-      "en": {"lemma_id": "en:be", "gloss": "be"},
-      "he": {"lemma_id": "he:haya", "gloss": "be, become, exist"},
-      "el": {"lemma_id": "el:eimi", "gloss": "be, exist, am"},
-      "reference": "Exodus 3:14 / John 8:58",
-      "notes": "Copular existence anchor. The 'I AM' — hayah in Hebrew, eimi in Greek, the copula in English. Semantically the deepest single point of alignment across all three packs."
+      "anchor_id": "existence-being-copular",
+      "field_target": "existence.state.identity",
+      "en": {
+        "lemma_id": "en:be",
+        "sense_id": "en:be:existence",
+        "notes": null
+      },
+      "he": {
+        "lemma_id": "he:haya",
+        "sense_id": "he:haya:existence",
+        "notes": "היה — to be, to become, to exist. The Hebrew copula is often implicit; when present it carries aspectual and ontological weight beyond mere predication."
+      },
+      "el": {
+        "lemma_id": "el:eimi",
+        "sense_id": "el:eimi:existence",
+        "notes": "εἰμί — to be. In John 1:1 ἦν (imperfect) signals continuous pre-existent being, not merely occurrence at a point in time."
+      },
+      "constraints": ["copular-frame"],
+      "tolerance": null
     },
     {
-      "anchor_id": "light",
-      "field_target": "illumination.emanation",
-      "en": {"lemma_id": "en:light", "gloss": "light"},
-      "he": {"lemma_id": "he:or", "gloss": "light"},
-      "el": {"lemma_id": "el:phos", "gloss": "light"},
-      "reference": "Genesis 1:3 / John 1:4-5",
-      "notes": "Illumination anchor. Or/Phos/Light — the first spoken creation and a central semantic pole across the canon."
-    },
-    {
-      "anchor_id": "beginning-origin",
-      "field_target": "time.origin",
-      "en": {"lemma_id": "en:beginning", "gloss": "beginning, origin"},
-      "he": {"lemma_id": "he:reshit", "gloss": "beginning, first, chief"},
-      "el": {"lemma_id": "el:arche", "gloss": "beginning, origin, rule"},
-      "reference": "Genesis 1:1 / John 1:1",
-      "notes": "Origin anchor. Reshit/Arche — both John and Genesis open with this concept. In Koine Greek arche carries both temporal and ruling senses, which the field primitive must preserve."
+      "anchor_id": "beginning-origin-temporal-absolute",
+      "field_target": "time.origin.absolute",
+      "en": {
+        "lemma_id": "en:beginning",
+        "sense_id": "en:beginning:absolute-origin",
+        "notes": null
+      },
+      "he": {
+        "lemma_id": "he:reshit",
+        "sense_id": "he:reshit:absolute-origin",
+        "notes": "רֵאשִׁית — first, beginning, chief. In Gen 1:1 בְּרֵאשִׁית is anarthrous (no article), signaling primordial commencement before time itself was a container."
+      },
+      "el": {
+        "lemma_id": "el:arche",
+        "sense_id": "el:arche:absolute-origin",
+        "notes": "ἀρχή — beginning, origin, first principle. In John 1:1 ἐν ἀρχῇ is a direct echo of Gen 1:1, placing the Logos at the same primordial coordinate. Both point to the same zero-point."
+      },
+      "constraints": ["absolute-temporal-or-ontological-context"],
+      "tolerance": null
     }
   ]
 }
