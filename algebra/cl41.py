@@ -17,7 +17,7 @@ import numpy as np
 
 N_DIMS = 5
 N_COMPONENTS = 32
-SIGNATURE = np.array([1, 1, 1, 1, -1], dtype=np.float64)
+SIGNATURE = np.array([1, 1, 1, -1, 1], dtype=np.float64)
 
 # --- Grade offset table ---
 
@@ -107,9 +107,12 @@ _TABLE_IDX, _TABLE_SIGN = _build_multiplication_table()
 
 def geometric_product(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """Full geometric product in Cl(4,1)."""
-    A = np.asarray(A, dtype=np.float32)
-    B = np.asarray(B, dtype=np.float32)
-    result = np.zeros(N_COMPONENTS, dtype=np.float32)
+    dtype = np.result_type(A, B)
+    if dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+        dtype = np.dtype(np.float32)
+    A = np.asarray(A, dtype=dtype)
+    B = np.asarray(B, dtype=dtype)
+    result = np.zeros(N_COMPONENTS, dtype=dtype)
     for i in range(N_COMPONENTS):
         ai = A[i]
         if ai == 0.0:
@@ -127,7 +130,10 @@ def reverse(A: np.ndarray) -> np.ndarray:
     Grade-k blades pick up sign (-1)^(k*(k-1)/2).
     Grade 0,1: +1.  Grade 2,3: -1.  Grade 4,5: +1.
     """
-    A = np.asarray(A, dtype=np.float32).copy()
+    dtype = np.asarray(A).dtype
+    if dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+        dtype = np.dtype(np.float32)
+    A = np.asarray(A, dtype=dtype).copy()
     # Grade 2: indices 6-15
     A[6:16] *= -1.0
     # Grade 3: indices 16-25
@@ -136,7 +142,10 @@ def reverse(A: np.ndarray) -> np.ndarray:
 
 def grade_project(A: np.ndarray, k: int) -> np.ndarray:
     """Extract grade-k part of A."""
-    result = np.zeros(N_COMPONENTS, dtype=np.float32)
+    dtype = np.asarray(A).dtype
+    if dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+        dtype = np.dtype(np.float32)
+    result = np.zeros(N_COMPONENTS, dtype=dtype)
     start, count = _GRADE_OFFSETS[k]
     result[start:start + count] = A[start:start + count]
     return result

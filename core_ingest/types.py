@@ -191,6 +191,8 @@ class CandidateGeometricPressure:
             canonical = json.dumps(parsed, sort_keys=True, separators=(",", ":"))
         except json.JSONDecodeError as exc:
             raise ValueError(f"payload_json is not valid JSON: {exc}") from exc
+        if parsed == {}:
+            raise ValueError("payload_json must contain at least one field")
         # Bypass frozen to set the normalized payload and computed fields
         object.__setattr__(self, "payload_json", canonical)
 
@@ -209,8 +211,17 @@ class CandidateGeometricPressure:
         pid = make_pressure_id(
             kind=self.kind,
             modality=self.modality.value,
-            provenance=[(s.byte_start, s.byte_end, s.source_sha256) for s in self.provenance],
+            provenance=[
+                {
+                    "byte_start": s.byte_start,
+                    "byte_end": s.byte_end,
+                    "source_sha256": s.source_sha256,
+                    "region": s.region,
+                }
+                for s in self.provenance
+            ],
             frontend_id=self.frontend.instrument_id,
+            frontend_version=self.frontend.version,
             determinism=self.frontend.determinism.value,
             review_level=self.review_level.value,
             confidence=self.confidence,

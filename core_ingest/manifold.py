@@ -37,6 +37,11 @@ class ManifoldEntry:
     spans:         tuple[SourceSpan, ...]
     instrument_id: str
 
+    def __getattr__(self, name: str):
+        if name in {"byte_start", "byte_end", "source_sha256", "page", "region"} and self.spans:
+            return getattr(self.spans[0], name)
+        raise AttributeError(name)
+
 
 class SegmentManifold:
     """
@@ -72,6 +77,10 @@ class SegmentManifold:
                 instrument_id=packet.frontend.instrument_id,
             )
             self._index[packet.semantic_key].append(entry)
+
+    def record(self, packet: CandidateGeometricPressure) -> None:
+        """Register one packet into the manifold."""
+        self.register([packet])
 
     def lookup(self, semantic_key: str) -> list[ManifoldEntry]:
         """

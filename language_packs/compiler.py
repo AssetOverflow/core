@@ -3,19 +3,22 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from algebra.cl41 import geometric_product
+from algebra.cl41 import N_COMPONENTS, geometric_product
 from algebra.versor import unitize_versor
 from language_packs.schema import LanguagePackManifest, LanguageRole, LexicalEntry, OOVPolicy
-from sensorium.protocol import CL41_DIM, ModalityVocabulary
 from vocab.manifold import VocabManifold
+
+if TYPE_CHECKING:
+    from sensorium.protocol import ModalityVocabulary
 
 
 def _hash_to_blade(name: str, salt: str) -> int:
     digest = hashlib.sha256(f"{salt}:{name}".encode("utf-8")).digest()
-    return int.from_bytes(digest[:2], "big") % CL41_DIM
+    return int.from_bytes(digest[:2], "big") % N_COMPONENTS
 
 
 def _hash_unit(name: str, salt: str) -> float:
@@ -24,17 +27,17 @@ def _hash_unit(name: str, salt: str) -> float:
 
 
 def _feature_rotor(name: str, salt: str, weight: float) -> np.ndarray:
-    # Grade-2 block indices 6..15.
-    idx = 6 + (_hash_to_blade(name, f"{salt}:biv") % 10)
+    negative_bivectors = (6, 7, 9, 10, 12, 14)
+    idx = negative_bivectors[_hash_to_blade(name, f"{salt}:biv") % len(negative_bivectors)]
     theta = (0.2 + 0.8 * _hash_unit(name, f"{salt}:angle")) * weight
-    rotor = np.zeros(CL41_DIM, dtype=np.float32)
+    rotor = np.zeros(N_COMPONENTS, dtype=np.float32)
     rotor[0] = np.cos(theta)
     rotor[idx] = np.sin(theta)
     return rotor
 
 
 def _entry_to_coordinate(entry: LexicalEntry) -> np.ndarray:
-    vec = np.zeros(CL41_DIM, dtype=np.float32)
+    vec = np.zeros(N_COMPONENTS, dtype=np.float32)
     vec[0] = 1.0
 
     pos = (entry.pos or entry.part_of_speech or "").lower()
@@ -60,7 +63,9 @@ def compile_entries_to_manifold(entries: list[LexicalEntry]) -> VocabManifold:
     return manifold
 
 
-def compile_entries_to_modality_vocab(entries: list[LexicalEntry]) -> ModalityVocabulary[str]:
+def compile_entries_to_modality_vocab(entries: list[LexicalEntry]) -> "ModalityVocabulary[str]":
+    from sensorium.protocol import ModalityVocabulary
+
     vocab: ModalityVocabulary[str] = ModalityVocabulary()
     for entry in entries:
         point = _entry_to_coordinate(entry)

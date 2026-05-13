@@ -50,4 +50,4 @@ def inject(tokens: list, vocab) -> FieldState:
             "Check holonomy_encode() and normalize_to_versor()."
         )
 
-    return FieldState(F=F, node=0, step=0)
+    return FieldState(F=F, node=0, step=0, holonomy=H)

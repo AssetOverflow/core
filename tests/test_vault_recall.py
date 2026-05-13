@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
 
-from algebra.versor import normalize_to_versor
+from algebra.versor import unitize_versor
 from algebra.cga import is_null
 from vault.store import VaultStore
 
 
 def _random_versor(seed=0) -> np.ndarray:
     rng = np.random.default_rng(seed)
-    return normalize_to_versor(rng.standard_normal(32).astype(np.float32))
+    return unitize_versor(rng.standard_normal(32).astype(np.float32))
 
 
 def test_store_and_recall_top1():

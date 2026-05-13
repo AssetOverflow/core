@@ -47,7 +47,12 @@ class ChatRuntime:
             return ""
         self._context.ingest(filtered)
         node_idx = self._index_by_surface.get(filtered[0], 0)
-        self._context.state = FieldState(F=self._context.state.F, node=node_idx, step=self._context.state.step)
+        self._context.state = FieldState(
+            F=self._context.state.F,
+            node=node_idx,
+            step=self._context.state.step,
+            holonomy=self._context.state.holonomy,
+        )
         result = self._context.respond(max_tokens=max_tokens)
         guarded = self._syntactic_guard(result.tokens)
         return " ".join(guarded)

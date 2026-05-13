@@ -71,7 +71,7 @@ import pytest
 # ---------------------------------------------------------------------------
 # Algebra
 # ---------------------------------------------------------------------------
-from algebra.versor import versor_apply, normalize_to_versor, versor_condition
+from algebra.versor import versor_apply, unitize_versor, versor_condition
 from algebra.holonomy import holonomy_encode
 from algebra.cl41 import geometric_product
 
@@ -316,8 +316,8 @@ class TestDET06HolonomyIsNonCommutative:
     """
 
     def test_ab_not_equal_ba(self):
-        A = normalize_to_versor(_unit_versor(0))
-        B = normalize_to_versor(_unit_versor(1))
+        A = unitize_versor(_unit_versor(0))
+        B = unitize_versor(_unit_versor(1))
         H_ab = holonomy_encode([A, B])
         H_ba = holonomy_encode([B, A])
         assert not np.allclose(H_ab, H_ba), (
@@ -326,7 +326,7 @@ class TestDET06HolonomyIsNonCommutative:
         )
 
     def test_longer_sequence_order_matters(self):
-        versors = [normalize_to_versor(_unit_versor(i % 5)) for i in range(6)]
+        versors = [unitize_versor(_unit_versor(i % 5)) for i in range(6)]
         fwd = holonomy_encode(versors)
         rev = holonomy_encode(list(reversed(versors)))
         assert not np.allclose(fwd, rev)
@@ -347,8 +347,8 @@ class TestDET07HolonomyIsNotAggregation:
     """
 
     def test_holonomy_not_equal_to_sum_of_versors(self):
-        A = normalize_to_versor(_unit_versor(0))
-        B = normalize_to_versor(_unit_versor(1))
+        A = unitize_versor(_unit_versor(0))
+        B = unitize_versor(_unit_versor(1))
         H = holonomy_encode([A, B])
         bag_sum = A + B
         assert not np.allclose(H, bag_sum), (
@@ -357,15 +357,15 @@ class TestDET07HolonomyIsNotAggregation:
         )
 
     def test_holonomy_not_equal_to_mean_of_versors(self):
-        A = normalize_to_versor(_unit_versor(0))
-        B = normalize_to_versor(_unit_versor(1))
+        A = unitize_versor(_unit_versor(0))
+        B = unitize_versor(_unit_versor(1))
         H = holonomy_encode([A, B])
         mean = (A + B) / 2.0
         assert not np.allclose(H, mean)
 
     def test_permutation_invariance_would_break_holonomy(self):
         """A bag-of-words model would be permutation-invariant. CORE is not."""
-        tokens = [normalize_to_versor(_unit_versor(i % 5)) for i in range(4)]
+        tokens = [unitize_versor(_unit_versor(i % 5)) for i in range(4)]
         import itertools
         holonomies = [holonomy_encode(list(perm))
                       for perm in itertools.islice(itertools.permutations(tokens), 8)]
@@ -392,7 +392,7 @@ class TestDET08VersorApplyIsNonLinear:
     """
 
     def test_versor_apply_fails_linearity(self):
-        V = normalize_to_versor(_unit_versor(0))
+        V = unitize_versor(_unit_versor(0))
         X = _unit_versor(1)
         Y = _unit_versor(2)
         a, b = 0.6, 0.4
@@ -408,7 +408,7 @@ class TestDET08VersorApplyIsNonLinear:
         # does actually distribute linearly over addition in Cl(4,1).
         # The non-linearity shows up in the COMPOSED application: V2(V1(F)).
         # Test the composed (chained) case instead.)
-        V2 = normalize_to_versor(_unit_versor(1))
+        V2 = unitize_versor(_unit_versor(1))
         double_X = versor_apply(V2, versor_apply(V, X))
         double_Y = versor_apply(V2, versor_apply(V, Y))
         linear_pred_chained = a * double_X + b * double_Y
@@ -426,8 +426,8 @@ class TestDET08VersorApplyIsNonLinear:
 
     def test_linear_combination_falls_off_manifold(self):
         """Core proof: the versor manifold is not closed under addition."""
-        A = normalize_to_versor(_unit_versor(0))
-        B = normalize_to_versor(_unit_versor(1))
+        A = unitize_versor(_unit_versor(0))
+        B = unitize_versor(_unit_versor(1))
         combo = 0.5 * A + 0.5 * B  # valid in R^32, invalid on the manifold
         assert versor_condition(combo) > 1e-3, (
             "0.5·A + 0.5·B must not satisfy versor_condition. "
@@ -514,7 +514,7 @@ class TestDET10FieldStateIsSingleMultivector:
 class TestDET11SingleNormalizationSite:
     """
     Claim: There is exactly one normalization call in the entire forward pass:
-    normalize_to_versor() in ingest/gate.py.
+    unitize_versor() in ingest/gate.py.
 
     Standard transformers apply LayerNorm or RMSNorm at every layer, every
     head. CORE applies algebraic normalization once, at the manifold entry
@@ -539,7 +539,11 @@ class TestDET11SingleNormalizationSite:
         import os
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         violations: list[str] = []
-        for dirpath, _, filenames in os.walk(root):
+        for dirpath, dirnames, filenames in os.walk(root):
+            dirnames[:] = [
+                d for d in dirnames
+                if d not in {".git", ".venv", "__pycache__", ".pytest_cache", ".hypothesis"}
+            ]
             for fname in filenames:
                 if not fname.endswith(".py"):
                     continue
@@ -802,19 +806,19 @@ class TestDET17DtypeDiscipline:
         assert C.dtype == np.float64
 
     def test_versor_apply_preserves_float64(self):
-        V = normalize_to_versor(_unit_versor(0))
+        V = unitize_versor(_unit_versor(0))
         F = _unit_versor(1)
         R = versor_apply(V, F)
         assert R.dtype == np.float64
 
     def test_holonomy_encode_preserves_float64(self):
-        versors = [normalize_to_versor(_unit_versor(i % 5)) for i in range(4)]
+        versors = [unitize_versor(_unit_versor(i % 5)) for i in range(4)]
         H = holonomy_encode(versors)
         assert H.dtype == np.float64
 
     def test_normalize_to_versor_preserves_float64(self):
         v = _unit_versor(2).astype(np.float64)
-        n = normalize_to_versor(v)
+        n = unitize_versor(v)
         assert n.dtype == np.float64
 
 
@@ -830,7 +834,7 @@ class TestDET18VersorConditionIsFalsifiable:
     """
 
     def test_valid_versor_condition_near_zero(self):
-        V = normalize_to_versor(_unit_versor(0))
+        V = unitize_versor(_unit_versor(0))
         assert versor_condition(V) < 1e-5
 
     def test_random_vector_condition_above_threshold(self):
@@ -844,13 +848,13 @@ class TestDET18VersorConditionIsFalsifiable:
 
     def test_sum_of_two_versors_fails_condition(self):
         """Manifold is not closed under addition — sum fails the test."""
-        A = normalize_to_versor(_unit_versor(0))
-        B = normalize_to_versor(_unit_versor(1))
+        A = unitize_versor(_unit_versor(0))
+        B = unitize_versor(_unit_versor(1))
         S = A + B
         assert versor_condition(S) > 1e-3
 
     def test_condition_value_is_a_float(self):
-        V = normalize_to_versor(_unit_versor(0))
+        V = unitize_versor(_unit_versor(0))
         c = versor_condition(V)
         assert isinstance(c, (float, np.floating))
 

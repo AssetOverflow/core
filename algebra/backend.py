@@ -40,13 +40,6 @@ def versor_condition(F: np.ndarray) -> float:
     return _vc(F)
 
 
-def normalize_to_versor(F: np.ndarray) -> np.ndarray:
-    if _RUST:
-        return np.asarray(_rs.normalize_to_versor(F), dtype=np.float32)
-    from algebra.versor import normalize_to_versor as _nv
-    return _nv(F)
-
-
 def cga_inner(X: np.ndarray, Y: np.ndarray) -> float:
     if _RUST:
         return float(_rs.cga_inner(X, Y))
@@ -61,11 +54,13 @@ def vault_recall(versors: list, query: np.ndarray, top_k: int = 5) -> list:
     Python path: sequential list comprehension.
     """
     if _RUST:
-        results = _rs.vault_recall(versors, query, top_k)
-        # results: list of (index, score)
-        return results
-    from algebra.cga import cga_inner as _ci
-    scores = [(i, _ci(query, v)) for i, v in enumerate(versors)]
+        try:
+            results = _rs.vault_recall(versors, query, top_k)
+            return results
+        except Exception:
+            pass
+    q = np.asarray(query)
+    scores = [(i, -float(np.sum((q - np.asarray(v)) ** 2))) for i, v in enumerate(versors)]
     scores.sort(key=lambda x: -x[1])
     return scores[:top_k]
 

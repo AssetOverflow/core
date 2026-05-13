@@ -16,13 +16,6 @@ from .schema import (
     MorphologyEntry,
     OOVPolicy,
 )
-from .compiler import (
-    compile_entries_to_manifold,
-    compile_entries_to_modality_vocab,
-    load_pack,
-    load_pack_entries,
-)
-
 __all__ = [
     "AlignmentEdge",
     "GrammarAttractor",
@@ -32,8 +25,27 @@ __all__ = [
     "LexicalEntry",
     "MorphologyEntry",
     "OOVPolicy",
-    "compile_entries_to_manifold",
-    "compile_entries_to_modality_vocab",
-    "load_pack",
-    "load_pack_entries",
 ]
+
+
+def __getattr__(name: str):
+    if name in {
+        "compile_entries_to_manifold",
+        "compile_entries_to_modality_vocab",
+        "load_pack",
+        "load_pack_entries",
+    }:
+        from .compiler import (
+            compile_entries_to_manifold,
+            compile_entries_to_modality_vocab,
+            load_pack,
+            load_pack_entries,
+        )
+
+        return {
+            "compile_entries_to_manifold": compile_entries_to_manifold,
+            "compile_entries_to_modality_vocab": compile_entries_to_modality_vocab,
+            "load_pack": load_pack,
+            "load_pack_entries": load_pack_entries,
+        }[name]
+    raise AttributeError(name)

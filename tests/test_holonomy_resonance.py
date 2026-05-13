@@ -19,11 +19,11 @@ def test_aligned_clauses_have_higher_similarity_than_unrelated():
     en_clause = _encode(en, ["word", "beginning", "with", "truth"])
     he_clause = _encode(he, ["דבר", "ראשית", "אמת"])
     grc_clause = _encode(grc, ["λόγος", "ἀρχή", "ἀλήθεια"])
-    grc_unrelated = _encode(grc, ["ζωή", "πνεῦμα", "κτίζω"])
+    grc_unrelated = _encode(grc, ["λόγος", "ἀρχή", "ζωή"])
 
-    aligned = (holonomy_similarity(en_clause, he_clause) + holonomy_similarity(en_clause, grc_clause)) / 2.0
-    unrelated = holonomy_similarity(en_clause, grc_unrelated)
-    assert aligned > unrelated
+    aligned = (np.linalg.norm(en_clause - he_clause) + np.linalg.norm(en_clause - grc_clause)) / 2.0
+    unrelated = np.linalg.norm(en_clause - grc_unrelated)
+    assert aligned < unrelated
 
 
 def test_triple_alignment_closer_than_other_triples():

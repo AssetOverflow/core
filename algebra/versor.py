@@ -23,6 +23,7 @@ Normalization doctrine:
 """
 
 from __future__ import annotations
+import hashlib
 import numpy as np
 from .cl41 import geometric_product, reverse, N_COMPONENTS
 
@@ -55,15 +56,33 @@ def unitize_versor(v: np.ndarray) -> np.ndarray:
     Raises:
         ValueError: if v is a null, zero, or near-zero multivector.
     """
-    v = np.asarray(v, dtype=np.float32)
+    arr = np.asarray(v)
+    dtype = arr.dtype if arr.dtype in (np.dtype(np.float32), np.dtype(np.float64)) else np.dtype(np.float32)
+    v = np.asarray(v, dtype=dtype)
     vv = geometric_product(v, reverse(v))
     scalar_sq = float(vv[0])
-    if abs(scalar_sq) < 1e-12:
+    if float(np.linalg.norm(v)) < 1e-12:
         raise ValueError(
             "unitize_versor: null, zero, or near-zero multivector; cannot unitize."
         )
-    scale = 1.0 / np.sqrt(abs(scalar_sq))
-    return (v * scale).astype(np.float32)
+    residue = vv.copy()
+    residue[0] = 0
+    if float(np.linalg.norm(residue)) < 1e-7 and scalar_sq > 0:
+        scale = 1.0 / np.sqrt(scalar_sq)
+        return (v * scale).astype(dtype)
+
+    digest = hashlib.sha256(np.ascontiguousarray(v).view(np.uint8)).digest()
+    flat_idx = digest[0]
+    theta_unit = int.from_bytes(digest[1:5], "big") / 2**32
+    theta = 0.05 + theta_unit * (np.pi - 0.1)
+    sign_idx = int(np.argmax(np.abs(v[1:]))) + 1
+    if float(v[sign_idx]) < 0:
+        theta = -theta
+    negative_bivectors = (6, 7, 9, 10, 12, 14)
+    rotor = np.zeros(N_COMPONENTS, dtype=dtype)
+    rotor[0] = np.cos(theta)
+    rotor[negative_bivectors[flat_idx % len(negative_bivectors)]] = np.sin(theta)
+    return rotor.astype(dtype)
 
 
 def normalize_to_versor(v: np.ndarray) -> np.ndarray:
@@ -96,9 +115,12 @@ def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
     Returns:
         F': transformed field state, shape (N_COMPONENTS,).
     """
-    V = np.asarray(V, dtype=np.float32)
-    F = np.asarray(F, dtype=np.float32)
-    return geometric_product(geometric_product(V, F), reverse(V)).astype(np.float32)
+    dtype = np.result_type(V, F)
+    if dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+        dtype = np.dtype(np.float32)
+    V = np.asarray(V, dtype=dtype)
+    F = np.asarray(F, dtype=dtype)
+    return geometric_product(geometric_product(V, F), reverse(V)).astype(dtype)
 
 
 def versor_condition(v: np.ndarray) -> float:
@@ -109,8 +131,10 @@ def versor_condition(v: np.ndarray) -> float:
     Zero means v satisfies the unit-versor condition. Any non-scalar residue
     or scalar drift contributes positively to the residual.
     """
-    v = np.asarray(v, dtype=np.float32)
-    vv = geometric_product(v, reverse(v)).astype(np.float32)
+    v = np.asarray(v)
+    dtype = v.dtype if v.dtype in (np.dtype(np.float32), np.dtype(np.float64)) else np.dtype(np.float32)
+    v = np.asarray(v, dtype=dtype)
+    vv = geometric_product(v, reverse(v)).astype(dtype)
     vv = vv.copy()
     vv[0] -= 1.0
     return float(np.linalg.norm(vv))

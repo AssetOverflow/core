@@ -148,8 +148,11 @@ class GovernanceGate:
             # Invariant already enforced at construction — D0/D1 only
             return GateDisposition.ACCEPTED
 
-        # OPERATOR_REVIEW_REQUIRED or ARCHITECT_REVIEW_REQUIRED without override
-        return GateDisposition.REVIEW_REQUIRED
+        if packet.review_level == ReviewLevel.OPERATOR_REVIEW_REQUIRED:
+            return GateDisposition.REVIEW_REQUIRED
+
+        # D3 and architect-level D4 packets require an explicit decision.
+        return GateDisposition.REJECTED_GOVERNANCE
 
 
 # ---------------------------------------------------------------------------
@@ -284,6 +287,7 @@ class IngestCompiler:
                     warnings=convergence_warning,
                 ))
                 review_ids.add(pid)
+                rejected_ids.add(pid)
                 continue
 
             if disposition == GateDisposition.REJECTED_GOVERNANCE:
@@ -292,7 +296,7 @@ class IngestCompiler:
                     semantic_key=sk,
                     disposition=disposition,
                     gate_failed="governance",
-                    failure_reason="AUTO_REJECT review level",
+                    failure_reason="review required but no ReviewDecision authorized this packet",
                     warnings=convergence_warning,
                 ))
                 rejected_ids.add(pid)

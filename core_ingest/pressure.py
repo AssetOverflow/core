@@ -46,8 +46,9 @@ def make_pressure_id(
     *,
     kind: str,
     modality: str,
-    provenance: list[tuple[int, int, str]],  # [(byte_start, byte_end, sha256), ...]
+    provenance: list[dict],
     frontend_id: str,
+    frontend_version: str,
     determinism: str,
     review_level: str,
     confidence: float,
@@ -69,17 +70,20 @@ def make_pressure_id(
     payload = _canonical_json({
         "kind": kind,
         "modality": modality,
-        "provenance": sorted(provenance),
-        "frontend_id": frontend_id,
-        "determinism": determinism,
-        "review_level": review_level,
-        "confidence": confidence,
-        "uncertainty": uncertainty,
         "lemma": lemma,
         "subject": subject,
         "verb": verb,
-        "object": object_,
+        "object": object_ or None,
         "payload_json": payload_json,
+        "provenance": provenance,
+        "frontend": {
+            "instrument_id": frontend_id,
+            "determinism": determinism,
+            "version": frontend_version,
+        },
+        "confidence": confidence,
+        "uncertainty": uncertainty,
+        "review_level": review_level,
     })
     fn = sha256_hex if _RUST else _sha256_hex
     return fn(payload.encode("utf-8"))

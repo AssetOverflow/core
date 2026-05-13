@@ -73,7 +73,7 @@ def generate(
         V = word_transition_rotor(A, B)
 
         current = propagate_step(current, V)
-        current = FieldState(F=current.F, node=word_idx, step=current.step)
+        current = FieldState(F=current.F, node=word_idx, step=current.step, holonomy=current.holonomy)
 
     return GenerationResult(
         tokens=tokens,
@@ -109,4 +109,4 @@ async def agenerate(
         V = word_transition_rotor(A, B)
 
         current = propagate_step(current, V)
-        current = FieldState(F=current.F, node=word_idx, step=current.step)
+        current = FieldState(F=current.F, node=word_idx, step=current.step, holonomy=current.holonomy)

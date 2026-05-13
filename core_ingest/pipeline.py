@@ -163,7 +163,7 @@ class IngestPipeline:
         manifold: SegmentManifold | None = None,
         config:   IngestPipelineConfig | None = None,
     ) -> None:
-        self._manifold  = manifold or SegmentManifold()
+        self._manifold  = manifold if manifold is not None else SegmentManifold()
         self._config    = config or IngestPipelineConfig()
         self._segmenter = StructuralSegmenter()
         self._compiler  = IngestCompiler()

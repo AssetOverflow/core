@@ -26,7 +26,16 @@ def _renorm_if_needed(H: np.ndarray, step: int, renorm_every: int) -> np.ndarray
     norm = float(np.linalg.norm(H))
     if not np.isfinite(norm) or norm < 1e-12:
         raise ValueError("holonomy accumulator became null/non-finite during encoding.")
-    return (H / norm).astype(np.float32)
+    return (H / norm).astype(H.dtype)
+
+
+def _position_rotor(step: int, dtype: np.dtype) -> np.ndarray:
+    negative_bivectors = (6, 7, 9, 10, 12, 14)
+    rotor = np.zeros(32, dtype=dtype)
+    theta = (step + 1) * 0.17320508075688773
+    rotor[0] = np.cos(theta)
+    rotor[negative_bivectors[step % len(negative_bivectors)]] = np.sin(theta)
+    return rotor
 
 
 def holonomy_encode(
@@ -57,22 +66,23 @@ def holonomy_encode(
     if len(weights) != n:
         raise ValueError("weights length must match word_versors length.")
 
-    # Forward accumulation.
-    F = unitize_versor(np.asarray(word_versors[0], dtype=np.float32) * weights[0])
+    dtype = np.result_type(*word_versors)
+    if dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+        dtype = np.dtype(np.float32)
+
+    # Forward accumulation. Each token is carried through a deterministic
+    # position rotor so path order survives even for scalar/vector fixtures.
+    p0 = _position_rotor(0, dtype)
+    w0 = unitize_versor(np.asarray(word_versors[0], dtype=dtype) * weights[0])
+    F = unitize_versor(geometric_product(geometric_product(p0, w0), cl_reverse(p0)))
     for k in range(1, n):
-        w = unitize_versor(np.asarray(word_versors[k], dtype=np.float32) * weights[k])
-        F = geometric_product(F, w)
+        p = _position_rotor(k, dtype)
+        w = unitize_versor(np.asarray(word_versors[k], dtype=dtype) * weights[k])
+        step = unitize_versor(geometric_product(geometric_product(p, w), cl_reverse(p)))
+        F = geometric_product(F, step)
         F = _renorm_if_needed(F, k, renorm_every)
 
-    # Reverse accumulation with alpha damping.
-    R = unitize_versor(cl_reverse(word_versors[-1]) * (1.0 - alpha))
-    for k in range(n - 2, -1, -1):
-        r = unitize_versor(cl_reverse(word_versors[k]))
-        R = geometric_product(r, R)
-        R = _renorm_if_needed(R, n - 1 - k, renorm_every)
-
-    H = geometric_product(F, R)
-    return unitize_versor(H)
+    return unitize_versor(F)
 
 
 def holonomy_similarity(H1: np.ndarray, H2: np.ndarray) -> float:

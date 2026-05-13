@@ -226,7 +226,11 @@ class TestINV02GateOnlyNormalization:
         violations: list[str] = []
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-        for dirpath, _, filenames in os.walk(root):
+        for dirpath, dirnames, filenames in os.walk(root):
+            dirnames[:] = [
+                d for d in dirnames
+                if d not in {".git", ".venv", "__pycache__", ".pytest_cache", ".hypothesis"}
+            ]
             for fname in filenames:
                 if not fname.endswith(".py"):
                     continue

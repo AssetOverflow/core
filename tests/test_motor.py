@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from algebra.versor import normalize_to_versor, versor_condition
+from algebra.versor import unitize_versor, versor_condition
 from persona.motor import PersonaMotor
 
 
 def _random_versor(seed=0) -> np.ndarray:
     rng = np.random.default_rng(seed)
-    return normalize_to_versor(rng.standard_normal(32).astype(np.float32))
+    return unitize_versor(rng.standard_normal(32).astype(np.float32))
 
 
 def test_identity_motor_no_change():
@@ -20,8 +20,8 @@ def test_identity_motor_no_change():
 
 def test_motor_application_stays_on_manifold():
     """Applying a motor keeps F on the versor manifold."""
-    t = normalize_to_versor(_random_versor(1))
-    r = normalize_to_versor(_random_versor(2))
+    t = unitize_versor(_random_versor(1))
+    r = unitize_versor(_random_versor(2))
     motor = PersonaMotor(t, r)
     F = _random_versor(3)
     result = motor.apply(F)
@@ -30,10 +30,10 @@ def test_motor_application_stays_on_manifold():
 
 def test_motor_composition_on_manifold():
     """Composing two motors produces a motor on the manifold."""
-    t1 = normalize_to_versor(_random_versor(0))
-    r1 = normalize_to_versor(_random_versor(1))
-    t2 = normalize_to_versor(_random_versor(2))
-    r2 = normalize_to_versor(_random_versor(3))
+    t1 = unitize_versor(_random_versor(0))
+    r1 = unitize_versor(_random_versor(1))
+    t2 = unitize_versor(_random_versor(2))
+    r2 = unitize_versor(_random_versor(3))
     m1 = PersonaMotor(t1, r1)
     m2 = PersonaMotor(t2, r2)
     composed = m1.compose(m2)

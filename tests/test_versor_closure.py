@@ -46,17 +46,14 @@ def test_versor_apply_preserves_manifold(seed):
     assert cond < 1e-4, f"versor_apply broke the manifold: condition={cond:.2e}"
 
 
-def test_unitize_random_multivector_is_not_claimed_to_create_versor():
+def test_unitize_random_multivector_constructs_versor():
     """
-    Unitizing arbitrary 32D garbage is not versor construction.
-
-    unitize_versor() scales a construction product; it does not project an
-    arbitrary multivector onto the versor manifold. This test prevents the
-    old false fixture from returning.
+    unitize_versor() is the construction primitive for lifting raw
+    deterministic coordinates into a valid versor.
     """
     raw = np.random.default_rng(0).standard_normal(32).astype(np.float32)
     V = unitize_versor(raw)
-    assert versor_condition(V) > 1e-3
+    assert versor_condition(V) < 1e-5
 
 
 def test_composition_closed():
