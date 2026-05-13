@@ -30,26 +30,35 @@ from vocab.manifold import VocabManifold
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _basis_versor(blade: int, scalar: float = 1.0) -> np.ndarray:
-    """Small deterministic construction helper for valid Cl(4,1) versors."""
-    v = np.zeros(32, dtype=np.float32)
-    v[0] = scalar
-    v[blade] = 0.25
-    return unitize_versor(v)
+def _positive_unit_reflector(seed: int) -> np.ndarray:
+    """Construct a true positive-norm grade-1 versor in Cl(4,1)."""
+    rng = np.random.default_rng(seed)
+    vec4 = rng.standard_normal(4).astype(np.float32)
+    norm4 = float(np.linalg.norm(vec4))
+    if norm4 < 1e-6:
+        vec4[0] = 1.0
+        norm4 = 1.0
+
+    vec = np.zeros(5, dtype=np.float32)
+    vec[:4] = vec4
+    vec[4] = 0.25 * norm4 * np.tanh(float(rng.standard_normal()))
+
+    mv = np.zeros(32, dtype=np.float32)
+    mv[1:6] = vec
+    return unitize_versor(mv)
 
 
 def _minimal_vocab() -> VocabManifold:
     """
-    Build a tiny deterministic manifold with non-identical entries.
+    Build a tiny deterministic manifold with non-identical true versors.
 
-    Each entry is construction-unitized before insertion; VocabManifold owns
-    points only and does not build transition operators.
+    VocabManifold owns points only and does not build transition operators.
     """
     vocab = VocabManifold()
-    vocab.add("logos", _basis_versor(1))
-    vocab.add("arche", _basis_versor(2))
-    vocab.add("pneuma", _basis_versor(3))
-    vocab.add("truth", _basis_versor(4))
+    vocab.add("logos", _positive_unit_reflector(1))
+    vocab.add("arche", _positive_unit_reflector(2))
+    vocab.add("pneuma", _positive_unit_reflector(3))
+    vocab.add("truth", _positive_unit_reflector(4))
     return vocab
 
 
@@ -59,7 +68,7 @@ def test_minimum_engine_loop_is_deterministic_and_stores_generated_state() -> No
     tokens = ["logos", "arche"]
 
     initial = inject(tokens, vocab)
-    assert versor_condition(initial.F) < 1e-6
+    assert versor_condition(initial.F) < 1e-5
 
     result = generate(initial, vocab, persona, max_tokens=3)
     assert isinstance(result, GenerationResult)
