@@ -6,7 +6,7 @@ by CGA inner product — no cosine similarity, no ANN index.
 
 Invariant: every stored versor must satisfy the Cl(4,1) grade-norm
 condition |V * reverse(V)|_scalar ≈ ±1. This is enforced at insertion
-time in add().
+time in add() and at replacement time in update().
 
 Normalization doctrine for this module:
   - Raw coordinate vectors (e.g. from external embeddings) must be
@@ -64,6 +64,32 @@ class VocabManifold:
             )
         self._words.append(word)
         self._versors.append(v)
+
+    def update(self, word: str, versor: np.ndarray) -> None:
+        """
+        Replace the versor for an existing word in-place.
+
+        Used by the alignment correction pass after compilation to nudge
+        cross-language aligned pairs toward each other without rebuilding
+        the full manifold. The grade-norm invariant is enforced identically
+        to add().
+
+        Raises:
+            KeyError:   if the word is not already in the manifold.
+            ValueError: if the grade-norm condition is not satisfied.
+        """
+        try:
+            idx = self._words.index(word)
+        except ValueError:
+            raise KeyError(f"Word '{word}' not in vocabulary; use add() for new entries.")
+        v = np.asarray(versor, dtype=np.float32).copy()
+        grade_norm = float(geometric_product(v, reverse(v))[0])
+        if not (0.95 <= abs(grade_norm) <= 1.05):
+            raise ValueError(
+                f"Word '{word}': replacement versor grade-norm {grade_norm:.4f} ≠ ±1. "
+                "Call algebra.versor.unitize_versor() before update()."
+            )
+        self._versors[idx] = v
 
     def get_versor(self, word: str) -> np.ndarray:
         """Look up a word's versor by string. Raises KeyError if not found."""

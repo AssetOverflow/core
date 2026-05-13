@@ -22,6 +22,12 @@ if TYPE_CHECKING:
     from morphology.registry import MorphologyRegistry
     from sensorium.protocol import ModalityVocabulary
 
+# Strength of the cross-language alignment nudge applied in load_pack().
+# Each aligned pair's source versor is rotated by this fraction of the
+# geodesic arc toward the target versor. Small enough to preserve
+# intra-pack geometry; large enough to pull cross-lang pairs into proximity.
+_ALIGNMENT_NUDGE_STRENGTH: float = 0.06
+
 
 def _hash_to_blade(name: str, salt: str) -> int:
     digest = hashlib.sha256(f"{salt}:{name}".encode("utf-8")).digest()
@@ -207,15 +213,76 @@ def _resolved_morphology(
     return morphology_registry.get(entry.morphology_id)
 
 
+def _alignment_nudge_rotor(
+    source: np.ndarray,
+    target: np.ndarray,
+    strength: float,
+) -> np.ndarray:
+    """
+    Build a rotor that rotates *source* a fraction *strength* of the way
+    toward *target* along the geodesic arc between them.
+
+    Uses the geometric product of target and reverse(source) to find the
+    full-arc rotor, then scales the bivector angle by *strength* via slerp.
+    Falls back to identity if source and target are anti-parallel (degenerate).
+    """
+    # Full-arc rotor: R = target * reverse(source)
+    from algebra.cl41 import reverse as cl_reverse
+    R_full = geometric_product(target, cl_reverse(source))
+
+    # Extract scalar and bivector norm to find the full rotation angle
+    scalar = float(R_full[0])
+    # Clamp to valid acos domain
+    scalar = max(-1.0, min(1.0, scalar))
+    theta_full = float(np.arccos(scalar))  # half-angle of full rotation
+
+    if abs(theta_full) < 1e-6:
+        # Already aligned — identity rotor
+        identity = np.zeros(N_COMPONENTS, dtype=np.float32)
+        identity[0] = 1.0
+        return identity
+
+    # Bivector part of R_full (components 1..N_COMPONENTS-1)
+    biv = R_full.copy()
+    biv[0] = 0.0
+    biv_norm = float(np.linalg.norm(biv))
+
+    if biv_norm < 1e-6:
+        identity = np.zeros(N_COMPONENTS, dtype=np.float32)
+        identity[0] = 1.0
+        return identity
+
+    # Unit bivector
+    biv_unit = biv / biv_norm
+
+    # Scale angle by strength
+    theta_nudge = theta_full * strength
+
+    nudge = np.zeros(N_COMPONENTS, dtype=np.float32)
+    nudge[0] = float(np.cos(theta_nudge))
+    nudge += (biv_unit * float(np.sin(theta_nudge))).astype(np.float32)
+    return nudge
+
+
 def compile_entries_to_manifold(
     entries: list[LexicalEntry],
     morphology_registry: "MorphologyRegistry | None" = None,
-) -> VocabManifold:
+) -> tuple[VocabManifold, dict[str, str]]:
+    """
+    Compile entries into a VocabManifold.
+
+    Returns:
+        (manifold, entry_id_to_surface): the compiled manifold and a mapping
+        from entry_id to surface string, used by the alignment correction pass
+        in load_pack() to resolve AlignmentEdge source/target IDs.
+    """
     manifold = VocabManifold()
+    entry_id_to_surface: dict[str, str] = {}
     for entry in entries:
         versor = _entry_to_coordinate(entry, _resolved_morphology(entry, morphology_registry))
         manifold.add(entry.surface, versor)
-    return manifold
+        entry_id_to_surface[entry.entry_id] = entry.surface
+    return manifold, entry_id_to_surface
 
 
 def compile_entries_to_modality_vocab(
@@ -247,6 +314,43 @@ def _parse_entry(payload: dict) -> LexicalEntry:
     )
 
 
+def _apply_alignment_corrections(
+    home_manifold: VocabManifold,
+    home_id_map: dict[str, str],
+    foreign_manifold: VocabManifold,
+    foreign_id_map: dict[str, str],
+    pack_id: str,
+) -> None:
+    """
+    Load alignment edges for *pack_id* and nudge each source versor toward
+    its aligned foreign target versor.
+
+    Modifies *home_manifold* in-place via VocabManifold.update().
+    Silently skips edges whose source or target cannot be resolved —
+    alignment is best-effort; missing entries must not block compilation.
+    """
+    from alignment.graph import load_alignment
+
+    graph = load_alignment(pack_id)
+    if len(graph) == 0:
+        return
+
+    for edge in graph.aligned_pairs("cross_lang"):
+        source_surface = home_id_map.get(edge.source_id)
+        target_surface = foreign_id_map.get(edge.target_id)
+        if source_surface is None or target_surface is None:
+            continue
+        try:
+            source_v = home_manifold.get_versor(source_surface)
+            target_v = foreign_manifold.get_versor(target_surface)
+        except KeyError:
+            continue
+
+        nudge = _alignment_nudge_rotor(source_v, target_v, edge.weight * _ALIGNMENT_NUDGE_STRENGTH)
+        corrected = unitize_versor(geometric_product(nudge, source_v))
+        home_manifold.update(source_surface, corrected)
+
+
 def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
     pack_dir = Path(__file__).parent / "data" / pack_id
     manifest_path = pack_dir / "manifest.json"
@@ -262,7 +366,6 @@ def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
     morphology_registry = None
     if any(entry.morphology_id for entry in entries):
         from morphology.registry import load_morphology
-
         morphology_registry = load_morphology(pack_id)
 
     manifest = LanguagePackManifest(
@@ -278,7 +381,65 @@ def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
         gate_engaged=manifest_payload.get("gate_engaged", False),
         oov_policy=OOVPolicy(manifest_payload.get("oov_policy", OOVPolicy.FAIL_CLOSED.value)),
     )
-    return manifest, compile_entries_to_manifold(entries, morphology_registry=morphology_registry)
+
+    home_manifold, home_id_map = compile_entries_to_manifold(
+        entries, morphology_registry=morphology_registry
+    )
+
+    # Alignment correction pass: load the sibling pack(s) referenced by
+    # this pack's alignment.jsonl and nudge aligned pairs into proximity.
+    # This is only attempted when a sibling pack exists on disk; missing
+    # sibling packs are silently skipped so packs remain independently loadable.
+    from alignment.graph import load_alignment
+    alignment_graph = load_alignment(pack_id)
+    if len(alignment_graph) > 0:
+        # Collect all foreign pack_ids referenced by this pack's edges
+        foreign_pack_ids = _infer_foreign_pack_ids(pack_id, alignment_graph)
+        for foreign_pack_id in foreign_pack_ids:
+            foreign_pack_dir = Path(__file__).parent / "data" / foreign_pack_id
+            if not foreign_pack_dir.exists():
+                continue
+            foreign_entries = load_pack_entries(foreign_pack_id)
+            foreign_morph_registry = None
+            if any(e.morphology_id for e in foreign_entries):
+                from morphology.registry import load_morphology
+                foreign_morph_registry = load_morphology(foreign_pack_id)
+            foreign_manifold, foreign_id_map = compile_entries_to_manifold(
+                foreign_entries, morphology_registry=foreign_morph_registry
+            )
+            _apply_alignment_corrections(
+                home_manifold, home_id_map,
+                foreign_manifold, foreign_id_map,
+                pack_id,
+            )
+
+    return manifest, home_manifold
+
+
+def _infer_foreign_pack_ids(
+    home_pack_id: str,
+    graph: "alignment.graph.AlignmentGraph",
+) -> list[str]:
+    """
+    Derive foreign pack_ids from target_id prefixes in the alignment graph.
+
+    Convention: target_id is "<lang_prefix>-NNN" where lang_prefix maps to
+    a known pack directory name. Currently supports he ↔ grc cross-links.
+    """
+    from alignment.graph import AlignmentGraph  # local import to avoid cycle
+
+    _PREFIX_TO_PACK: dict[str, str] = {
+        "he": "he_logos_micro_v1",
+        "grc": "grc_logos_micro_v1",
+        "en": "en_minimal_v1",
+    }
+    foreign: set[str] = set()
+    for edge in graph.edges:
+        prefix = edge.target_id.split("-")[0]
+        pack = _PREFIX_TO_PACK.get(prefix)
+        if pack and pack != home_pack_id:
+            foreign.add(pack)
+    return sorted(foreign)
 
 
 def load_pack_entries(pack_id: str) -> list[LexicalEntry]:
