@@ -5,9 +5,12 @@ Each step: F <- versor_apply(V, F)
 
 V is the rotor for the current node's outgoing edge in the vocab manifold.
 No correction. No normalization. No conditional branching. The loop is tight.
+
+Hot path routes through algebra.backend, which dispatches to the Rust
+extension (core_rs) when available and falls back to pure Python silently.
 """
 
-from algebra.versor import versor_apply
+from algebra.backend import versor_apply
 from field.state import FieldState
 
 

@@ -21,10 +21,13 @@ Indexed access:
   get_word_at(idx)    — returns the word string by integer index.
   These are the primitives generation uses; VocabManifold does not build
   operators. Algebra builds operators. Vocab stores points.
+
+Hot path: nearest() routes cga_inner through algebra.backend, which
+dispatches to the Rust extension when available.
 """
 
 import numpy as np
-from algebra.cga import cga_inner
+from algebra.backend import cga_inner
 from algebra.cl41 import geometric_product, reverse
 
 
@@ -86,6 +89,8 @@ class VocabManifold:
         Find the word whose versor is closest to F by CGA inner product.
         Returns (word, index). O(|vocab|), exact, no approximation.
         cga_inner(X, Y) = -d^2 / 2 for null vectors: maximizing = minimizing distance.
+
+        Hot path: cga_inner routes through algebra.backend.
         """
         best_score = -np.inf
         best_idx = 0

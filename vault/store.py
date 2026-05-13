@@ -4,10 +4,19 @@ VaultStore — exact memory via CGA inner product scan.
 No HNSW. No approximate nearest neighbor. No index rebuild.
 Recall is exact: argmax_i { cga_inner(query, X_i) } over stored versors.
 Periodic null_project() prevents floating-point null-cone drift in long sessions.
+
+Hot path: recall() routes through algebra.backend.vault_recall(), which
+dispatches to a Rayon parallel scan (releases GIL) when core_rs is available
+and falls back to a sequential Python scan silently. Public result shape
+is unchanged: list of {versor, score, metadata, index}.
+
+null_project() remains on algebra.cga — it is not the recall hot path
+and does not benefit from the same batching pattern.
 """
 
 import numpy as np
-from algebra.cga import cga_inner, null_project
+from algebra.backend import vault_recall
+from algebra.cga import null_project
 
 
 class VaultStore:
@@ -30,25 +39,31 @@ class VaultStore:
         """
         Return top_k closest stored versors by CGA inner product.
         Each result: {versor, score, metadata, index}
+
+        Routes through algebra.backend.vault_recall():
+          Rust path  — Rayon parallel scan, GIL released.
+          Python path — sequential, behaviorally identical.
         """
         if not self._versors:
             return []
-        scores = [cga_inner(query, v) for v in self._versors]
-        top_indices = sorted(range(len(scores)), key=lambda i: -scores[i])[:top_k]
+
+        ranked = vault_recall(self._versors, query, top_k)
+
         return [
             {
                 "versor": self._versors[i],
-                "score": scores[i],
+                "score": float(score),
                 "metadata": self._metadata[i],
                 "index": i,
             }
-            for i in top_indices
+            for i, score in ranked
         ]
 
     def reproject(self) -> None:
         """
         Re-project all stored versors onto the null cone.
         Corrects floating-point drift. Run between turns or asynchronously.
+        null_project stays on algebra.cga — not the recall hot path.
         """
         self._versors = [null_project(v) for v in self._versors]
 
