@@ -27,6 +27,21 @@ Distance metric:   algebra/cga.py::cga_inner(X, Y)        ->  -d^2 / 2
 
 These are the only primitives. Everything else is built from them.
 
+## Language Pack Checksum Rule (Critical)
+
+Manifest checksums MUST be computed by reading back the bytes actually
+written to disk — never from an in-memory string before serialization:
+
+    # CORRECT — hash what disk holds
+    checksum = hashlib.sha256(Path(lexicon_path).read_bytes()).hexdigest()
+
+    # WRONG — Python str != unicode-escaped JSON bytes on disk
+    checksum = hashlib.sha256(content_str.encode('utf-8')).hexdigest()
+
+The GitHub API (and git) store JSON with unicode escapes (\u05d3, not ד).
+Python json.dumps() with ensure_ascii=False produces different bytes.
+Always write the file first, then read_bytes() to get the checksum.
+
 ## Implementation Order
 
 Do not skip steps. Run the invariant test after each step before writing the next.
@@ -42,6 +57,7 @@ Do not skip steps. Run the invariant test after each step before writing the nex
 9. persona/motor.py          ->  tests/test_motor.py must pass
 10. generate/stream.py
 11. session/context.py
+12. language_packs/compiler.py  ->  tests/test_holonomy_resonance.py must pass
 
 ## Architecture in One Sentence
 

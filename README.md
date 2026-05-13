@@ -19,7 +19,7 @@ Software should understand the machine it runs on, not fight it. CORE is designe
 
 ### II. Semantic Rigor
 
-Every term used in this system has a precise, non-negotiable meaning. A versor is a versor — not an approximation of one, not a vector that behaves like one under certain conditions. CGA distance is exact. Vault recall is exact. The vocabulary projection is exact. There are no thresholds tuned for "good enough." Rigor is not a style; it is what separates an engine from a heuristic.
+Every term used in this system has a precise, non-negotiable meaning. A versor is a versor — not an approximation of one, not a vector that behaves like one under certain conditions. CGA distance is exact. Vault recall is exact. The vocabulary projection is exact. There are no thresholds tuned for “good enough.” Rigor is not a style; it is what separates an engine from a heuristic.
 
 ### III. Third Door
 
@@ -35,9 +35,9 @@ CORE is rooted in three human languages. This is a philosophical and architectur
 |---|---|
 | **English** | The default base language of the current model. Any natural language could serve this function in a custom CORE instance — English is the chosen starting point, not a requirement. |
 | **Hebrew** | One of two depth languages. Hebrew carries a density of meaning in its root structures, prefixes, and suffixes that Euclidean string matching cannot capture. The field representation is designed to hold this depth. |
-| **Koine Greek** | One of two depth languages. The language of the New Testament, particularly John's Gospel — the document that opens with the most precise and consequential statement about language and reality ever written. |
+| **Koine Greek** | One of two depth languages. The language of the New Testament, particularly John’s Gospel — the document that opens with the most precise and consequential statement about language and reality ever written. |
 
-> *"In the beginning was the Logos, and the Logos was with God, and the Logos was God."*
+> *“In the beginning was the Logos, and the Logos was with God, and the Logos was God.”*
 > — John 1:1
 
 The choice of Hebrew and Koine Greek is not incidental. John 1:1–2 articulates the Logos in Greek while grounding it in the Hebrew creation account — the universe spoken into existence, word by word. This is not metaphor. It is the claim that language is not a layer on top of reality; language **is** the structuring principle of reality made manifest. CORE-Logos is built on that claim.
@@ -76,7 +76,7 @@ raw input -> ingest/gate.py       (normalize once)
 | `algebra/` | Cl(4,1) multivector math, versor ops, CGA, holonomy |
 | `ingest/` | Single injection gate — the only normalization site |
 | `field/` | FieldState dataclass and propagation loop |
-| `vocab/` | Word-to-versor manifold, edge rotors |
+| `vocab/` | Surface-token manifold points; indexed access for algebraic transition construction |
 | `vault/` | Exact CGA inner product memory store |
 | `persona/` | Persona as CGA motor (screw motion) |
 | `generate/` | Token streaming loop |
