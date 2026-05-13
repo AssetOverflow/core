@@ -14,6 +14,29 @@ Two paths:
 
 The gate (ingest/gate.py) is NEVER imported or modified from this package.
 This package is upstream of the gate, not a replacement for it.
+
+Typical usage (durable path via IngestPipeline)
+-----------------------------------------------
+    from core_ingest import IngestPipeline, SegmentManifold
+
+    manifold = SegmentManifold()
+    pipeline = IngestPipeline(manifold=manifold)
+
+    report, artifacts = pipeline.run(
+        source=b"In the beginning was the Word...",
+        modality_hint="prose",
+    )
+
+    # Reconstruction: recover provenance spans for any vault recall hit
+    spans = manifold.spans_for(artifacts[0].packet.semantic_key)
+
+Direct compiler usage (when you already have candidate packets)
+---------------------------------------------------------------
+    from core_ingest import IngestCompiler, SegmentManifold
+
+    manifold  = SegmentManifold()
+    compiler  = IngestCompiler()
+    report, artifacts = compiler.compile(packets, manifold=manifold)
 """
 
 from core_ingest.types import (
@@ -23,6 +46,7 @@ from core_ingest.types import (
     SourceSpan,
     FrontendTrace,
     CandidateGeometricPressure,
+    GateDisposition,
     ValidationResult,
     ValidationReport,
     LearningArtifact,
@@ -30,8 +54,9 @@ from core_ingest.types import (
 )
 from core_ingest.pressure import make_pressure_id, make_semantic_key
 from core_ingest.compiler import IngestCompiler
-from core_ingest.segmenter import StructuralSegmenter, SegmentKind
-from core_ingest.manifold import SegmentManifold
+from core_ingest.segmenter import Segment, SegmentKind, StructuralSegmenter
+from core_ingest.manifold import ManifoldEntry, SegmentManifold
+from core_ingest.pipeline import IngestPipeline, IngestPipelineConfig
 
 __all__ = [
     # types
@@ -41,6 +66,7 @@ __all__ = [
     "SourceSpan",
     "FrontendTrace",
     "CandidateGeometricPressure",
+    "GateDisposition",
     "ValidationResult",
     "ValidationReport",
     "LearningArtifact",
@@ -51,8 +77,13 @@ __all__ = [
     # compiler
     "IngestCompiler",
     # segmenter
-    "StructuralSegmenter",
+    "Segment",
     "SegmentKind",
+    "StructuralSegmenter",
     # manifold index
+    "ManifoldEntry",
     "SegmentManifold",
+    # pipeline
+    "IngestPipeline",
+    "IngestPipelineConfig",
 ]

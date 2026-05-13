@@ -16,6 +16,8 @@ The compiler:
   - applies ReviewDecision overrides without mutating the original packet
   - produces a ValidationReport alongside the original immutable packets
   - exports accepted packets as LearningArtifact objects
+  - optionally registers accepted packets into a SegmentManifold when one
+    is provided (eliminates the need for a manual manifold.register() call)
 
 Ingest/gate.py is NOT imported or called here.
 """
@@ -23,7 +25,7 @@ Ingest/gate.py is NOT imported or called here.
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence
 
 from core_ingest.types import (
     CandidateGeometricPressure,
@@ -35,6 +37,9 @@ from core_ingest.types import (
     ValidationReport,
     ValidationResult,
 )
+
+if TYPE_CHECKING:
+    from core_ingest.manifold import SegmentManifold
 
 
 # ---------------------------------------------------------------------------
@@ -124,7 +129,7 @@ class GovernanceGate:
     - AUTO_ACCEPT_ELIGIBLE is only claimed by D0/D1 frontends
       (enforced at packet construction; double-checked here)
     - AUTO_REJECT packets are always rejected
-    - D2–D4 packets not covered by a ReviewDecision land in review_required
+    - D2-D4 packets not covered by a ReviewDecision land in review_required
     """
 
     def check(
@@ -159,7 +164,12 @@ class IngestCompiler:
     Usage
     -----
     compiler = IngestCompiler()
-    report, artifacts = compiler.compile(packets, review_decision=decision)
+    report, artifacts = compiler.compile(packets)
+
+    # With automatic manifold registration:
+    manifold = SegmentManifold()
+    report, artifacts = compiler.compile(packets, manifold=manifold)
+    # Accepted packets are now registered in manifold — no manual call needed.
     """
 
     def __init__(self) -> None:
@@ -171,6 +181,7 @@ class IngestCompiler:
         self,
         packets: Sequence[CandidateGeometricPressure],
         review_decision: ReviewDecision | None = None,
+        manifold: "SegmentManifold | None" = None,
     ) -> tuple[ValidationReport, list[LearningArtifact]]:
         """
         Validate a batch of candidate packets.
@@ -182,6 +193,10 @@ class IngestCompiler:
                           whose pressure_id appears in
                           review_decision.authorized_ids are accepted
                           regardless of their ReviewLevel.
+        manifold        : Optional SegmentManifold. When provided, accepted
+                          packets are registered automatically after
+                          compilation — callers do not need a manual
+                          manifold.register() call.
 
         Returns
         -------
@@ -300,4 +315,9 @@ class IngestCompiler:
             rejected_ids=frozenset(rejected_ids),
             review_ids=frozenset(review_ids),
         )
+
+        # Auto-register accepted packets into the manifold if provided
+        if manifold is not None and artifacts:
+            manifold.register([art.packet for art in artifacts])
+
         return report, artifacts
