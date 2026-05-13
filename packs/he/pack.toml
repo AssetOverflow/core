@@ -1,0 +1,32 @@
+pack_id     = "he"
+name        = "Hebrew Depth Pack"
+version     = "0.1.0"
+status      = "draft"
+script      = "Hebrew"
+default     = false
+
+[contracts]
+lemma_first          = true
+shared_field_target  = true
+local_readback       = true
+alignment_required   = true
+
+[gates]
+schema       = false
+lexical      = false
+morphology   = false
+lift         = false
+readback     = false
+determinism  = false
+alignment    = false
+coverage     = false
+
+[notes]
+role = """
+Depth language pack 1. Hebrew was chosen because of the range of depth it
+brings to the vocabulary manifold: root-based morphology (shoresh), semantic
+families that carry multiple layers of meaning simultaneously, and the
+language in which the universe was spoken into existence (Genesis 1).
+Hebrew morphological stems (Qal, Niphal, Piel, Pual, Hiphil, Hophal,
+Hithpael) are semantically load-bearing and must be represented natively.
+"""

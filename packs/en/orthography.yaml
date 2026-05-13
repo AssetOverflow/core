@@ -1,0 +1,21 @@
+language: en
+script: Latin
+
+normalization:
+  unicode_normal_form: NFC
+  lowercase_for_lookup: true
+  strip_diacritics: false
+
+punctuation:
+  strategy: preserve
+  sentence_terminals: [".", "!", "?"]
+  quotation_marks: ["\u201c", "\u201d", "\u2018", "\u2019"]
+
+spacing:
+  strategy: whitespace-delimited
+  collapse_multiple_spaces: true
+
+special_forms:
+  contractions: expand
+  # "don't" -> "do not" before lemmatization
+  # "it's"  -> "it is" before lemmatization

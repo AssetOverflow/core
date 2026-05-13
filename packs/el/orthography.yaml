@@ -1,0 +1,27 @@
+language: el
+script: Greek
+dialect: koine
+
+normalization:
+  unicode_normal_form: NFC
+  lowercase_for_lookup: true
+  strip_diacritics: configurable
+  # Polytonic diacritics (breathing marks, accents, iota subscript) are
+  # preserved for morphological disambiguation but stripped for lemma lookup
+  polytonic_policy: preserve_for_morphology
+  diacritic_strip_for_lookup: true
+
+punctuation:
+  strategy: preserve
+  ano_teleia: "\u00b7"  # Greek semicolon (middle dot)
+  erotimatiko: ";"
+
+spacing:
+  strategy: whitespace-delimited
+
+aspect:
+  # Koine Greek verbal aspect is semantically load-bearing and must be
+  # distinguished from tense. Morphological analysis must surface aspect
+  # independently of temporal reference.
+  explicit_in_features: true
+  aspect_values: ["aorist", "present", "perfect", "imperfect", "pluperfect", "future"]

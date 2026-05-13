@@ -1,0 +1,27 @@
+language: he
+script: Hebrew
+direction: rtl
+
+normalization:
+  unicode_normal_form: NFC
+  lowercase_for_lookup: false  # Hebrew has no case
+  strip_diacritics: configurable
+  # Nikkud (vowel pointing) is stripped by default for lemma lookup
+  # but preserved when semantically load-bearing (e.g. Qere/Ketiv distinction)
+  nikkud_policy: strip_for_lookup
+  cantillation_marks: strip
+
+punctuation:
+  strategy: preserve
+  paragraph_marker: "\u05c0"  # paseq
+  section_marker: "\u05c3"    # sof pasuq
+
+spacing:
+  strategy: whitespace-delimited
+  maqaf_handling: preserve
+  # maqaf (\u05be) connects words syntactically; preserve as a unit marker
+
+shoresh:
+  # Root-based morphology. Lemma lookup resolves to 3- or 4-letter root.
+  # Morphological analysis must identify shoresh before feature extraction.
+  extraction_required: true

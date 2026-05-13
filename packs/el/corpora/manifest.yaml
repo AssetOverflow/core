@@ -1,0 +1,15 @@
+corpus_id: el-tier0
+status: draft
+
+sources: []
+
+license_review: pending
+hashes: []
+
+notes: |
+  Populate with vetted Koine Greek source manifests.
+  Priority tier-0 sources: SBL Greek New Testament (SBLGNT) or
+  Nestle-Aland 28th edition morphologically tagged text.
+  Both have verse-level D0 boundary markers.
+  Each source must include: title, edition, license, SHA-256, and
+  segmentation strategy. No LLM-extracted content.

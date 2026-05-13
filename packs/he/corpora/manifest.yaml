@@ -1,0 +1,15 @@
+corpus_id: he-tier0
+status: draft
+
+sources: []
+
+license_review: pending
+hashes: []
+
+notes: |
+  Populate with vetted Hebrew source manifests.
+  Priority tier-0 sources: Biblia Hebraica Stuttgartensia (BHS) or
+  Westminster Leningrad Codex (WLC) — both have well-established structural
+  segmentation (book/chapter/verse = D0 boundary markers).
+  Each source must include: title, edition, license, SHA-256, and
+  segmentation strategy. No LLM-extracted content.

@@ -1,0 +1,33 @@
+pack_id     = "el"
+name        = "Koine Greek Depth Pack"
+version     = "0.1.0"
+status      = "draft"
+script      = "Greek"
+default     = false
+
+[contracts]
+lemma_first          = true
+shared_field_target  = true
+local_readback       = true
+alignment_required   = true
+
+[gates]
+schema       = false
+lexical      = false
+morphology   = false
+lift         = false
+readback     = false
+determinism  = false
+alignment    = false
+coverage     = false
+
+[notes]
+role = """
+Depth language pack 2. Koine Greek was chosen because John articulated the
+Logos — the creative speech act through which all things were made — in
+Koine Greek (John 1:1-2), which must have been a nod from the Holy Spirit.
+Koine Greek carries semantic depth in its verbal aspect system (aorist,
+perfect, present) that is distinct from tense and must be represented
+natively. The aorist of egeneto (\u03b5\u03b3\u03ad\u03bd\u03b5\u03c4\u03bf) — 'it came into being' — is not
+the same field state as the present of eimi (\u03b5\u03b9\u03bc\u03b9) — 'I am'.
+"""
