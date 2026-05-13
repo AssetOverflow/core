@@ -6,7 +6,7 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "en_minimal_v1.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "6feb2fb5e7ea71b007dabb36478a702c714f219f23eec3d68bfd3d58d9ba4850",
+  "checksum": "eca36a3d400e5cad94f51af2eb68b730fe3f9f20c4c4dea71794ced89e8f38fe",
   "version": "1.1.0",
   "gate_engaged": true,
   "oov_policy": "tagged_fallback"
