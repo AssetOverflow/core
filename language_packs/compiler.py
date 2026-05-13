@@ -36,13 +36,30 @@ def _feature_rotor(name: str, salt: str, weight: float) -> np.ndarray:
     return rotor
 
 
+def _domain_features(domain: str) -> list[tuple[str, float]]:
+    """
+    Lift hierarchical semantic domains into a small feature chain.
+
+    A domain like ``logos.illumination.photon`` contributes the trunk
+    (``logos``), then the branch (``logos.illumination``), then the leaf.
+    This reduces accidental hash collisions where unrelated surfaces land
+    close together despite having disjoint semantic structure.
+    """
+    parts = domain.lower().split(".")
+    return [
+        (".".join(parts[: depth + 1]), 0.45 / (depth + 1))
+        for depth in range(len(parts))
+    ]
+
+
 def _entry_to_coordinate(entry: LexicalEntry) -> np.ndarray:
     vec = np.zeros(N_COMPONENTS, dtype=np.float32)
     vec[0] = 1.0
 
     pos = (entry.pos or entry.part_of_speech or "").lower()
     for domain in entry.semantic_domains:
-        vec = geometric_product(vec, _feature_rotor(domain.lower(), "domain", 0.7))
+        for feature, weight in _domain_features(domain):
+            vec = geometric_product(vec, _feature_rotor(feature, "domain", weight))
 
     if pos:
         vec = geometric_product(vec, _feature_rotor(pos, "pos", 0.35))
