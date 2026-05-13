@@ -1,110 +1,100 @@
-# ADR-0012: `core_ingest` Governance Layer
+# ADR-0012 — `core_ingest` Governance Layer
 
 **Status:** Accepted  
 **Date:** 2026-05-13  
-**Supersedes:** ADR-0002 (ingest layer design — archived, see below)
+**Supersedes:** ADR-0002 (Ingest Layer Design — original)
 
 ---
 
 ## Context
 
-The current `ingest/gate.py` is the single normalization site: it accepts a token sequence, converts it to a versor via holonomy encoding, and injects it into the field. It does one thing and does it correctly. However, it has no concept of *where the input came from*, *how reliably it was produced*, or *whether it should be accepted at all* before touching the manifold.
+`ingest/gate.py` is the single normalization site in CORE: the one point where any input becomes a versor in Cl(4,1) and enters the field. That contract must be inviolable.
 
-As CORE grows — ingesting structured documents, biblical texts, code, mathematical objects, and eventually non-text modalities — the gate will be approached by inputs of radically different reliability classes. Without a pre-gate envelope layer, the gate has no choice but to accept everything equally. That is structurally unsound.
+The original ingest design (ADR-0002) proposed using a large language model (LLM) as the heavy-lifting extraction engine for large documents — parsing structure, extracting SVO triples, and producing typed evidence packets. The idea was motivated by LLMs' demonstrated capability at document understanding and the desire to reduce hand-written parsing code.
 
-A previous design (`core_ingest` from the `core-ai` era, documented in ADR-0002) proposed using a large language model as the extraction engine for large document ingestion — parsing structure, extracting SVO triples, and chunking intelligently. This ADR supersedes that design and records the reason the LLM-extraction path was rejected.
+This design was rejected after analysis. The root cause: an LLM upstream of the gate is a D3 nondeterministic oracle feeding the only normalization site in the system. More fundamentally, an LLM does not parse — it *interprets*. Its semantic projections would be silently embedded in the field state without provenance or determinism accountability. This violates both **Semantic Rigor** (exactness as a non-negotiable standard) and **Dual-Correction** (every forward claim must carry its own reliability metadata, not inherit opacity from an oracle).
 
 ---
 
 ## Decision
 
-Add a `core_ingest/` package that sits **upstream of `ingest/gate.py`** as a pre-gate governance boundary. The gate itself is not modified.
+Add a `core_ingest/` layer upstream of `ingest/gate.py`. The gate is not modified.
 
-### Why LLM Extraction Was Rejected
+### The `StructuralSegmenter` (D0 Extraction)
 
-The entire CORE architecture is built on the principle that the injection gate is the single, deterministic normalization site. Inserting an LLM upstream introduces a D3 nondeterministic oracle into the only path that feeds that site.
+Every surface source is carved by a **deterministic, structure-aware segmenter** that operates on the *form* of the source, not its content. Form signals — headings, paragraph breaks, verse markers, code block delimiters, LaTeX boundaries — are deterministic. A segmenter following these boundaries produces content-addressed candidate spans without interpretation.
 
-The `DeterminismClass` system (see below) handles this correctly in isolation: a D3-proposed packet cannot claim `AUTO_ACCEPT_ELIGIBLE` status. But in practice this means every large document ingested through an LLM extraction path lands in `ARCHITECT_REVIEW_REQUIRED` territory — a human or second system must approve every extracted claim before it can become field pressure. This defeats the utility of the layer at any meaningful scale.
+For Hebrew and Koine Greek, structural determinism is the natural condition. Canonical verse and pericope boundaries have been fixed for centuries. A parser following those boundaries is D0 by definition: fully deterministic, pinned inputs, no interpretation required.
 
-The deeper issue is architectural: an LLM does not merely *parse* a document — it *interprets* it. An SVO triple extracted by a language model is that model's projection of what it believes the document means. That interpretation is then silently embedded inside the field state. This violates Semantic Rigor: the vocabulary manifold is the only permitted semantic interpretation surface inside CORE.
+The meaning of every span stays inside the versor field, where it belongs.
 
-**Rejected path:** LLM extraction engine → `CandidateGeometricPressure` → gate  
-**Accepted path:** Deterministic `StructuralSegmenter` → `CandidateGeometricPressure` → gate
+### `CandidateGeometricPressure`
 
-### The `StructuralSegmenter`
+Every candidate span is lifted into a `CandidateGeometricPressure` envelope — a frozen, immutable dataclass carrying:
 
-Large documents (PDFs, prose, code, biblical texts, mathematical objects) carry deterministic structural signals: headings, section breaks, paragraph boundaries, verse markers, code blocks, LaTeX delimiters. A D0/D1-class instrument that follows those structural signals produces candidate spans without interpretation.
+- `kind` and `modality` — claim type and source medium
+- `provenance` — tuple of `SourceSpan` records with byte offsets, page, region, and SHA-256 of the source
+- `frontend_trace` — identity and `DeterminismClass` of the proposing instrument
+- `confidence` and `uncertainty` — explicit probability fields in `[0.0, 1.0]`
+- `payload_json` — structured claim content, normalized to canonical JSON on construction
+- `pressure_id` — SHA-256 over the full canonical packet (structural deduplication)
+- `semantic_key` — SHA-256 over semantic fields only (convergent-evidence detection)
 
-- For prose: carves at heading and paragraph boundaries  
-- For code: carves at function/class/block boundaries  
-- For biblical texts: carves at canonical verse/pericope boundaries (fixed for centuries — inherently D0)  
-- For mathematical objects: carves at LaTeX delimiter pairs  
+Two packets with the same `semantic_key` assert the same claim from different provenance sources. The `IngestCompiler` surfaces this as a confidence signal.
 
-Each span is tagged with its structural role (`§ heading`, `¶ body`, `⌥ code`, `✦ scripture`, `Σ math`) which maps to the `modality` and `kind` fields in `CandidateGeometricPressure`. The meaning of the span remains *inside the field* where it belongs.
-
-### The `CandidateGeometricPressure` Envelope
-
-Every piece of incoming information — regardless of source — is lifted into a typed, immutable, content-addressed envelope before the gate sees it:
-
-```python
-@dataclass(frozen=True)
-class CandidateGeometricPressure:
-    kind: str                          # structural role
-    modality: str                      # medium (text, code, scripture, math, ...)
-    provenance: tuple[SourceSpan, ...] # byte offsets, page, region, SHA-256 of source
-    frontend_trace: FrontendTrace      # instrument identity + DeterminismClass
-    confidence: float                  # bounded [0.0, 1.0]
-    uncertainty: float                 # bounded [0.0, 1.0]
-    payload_json: str                  # canonical JSON, normalized at construction
-    pressure_id: str                   # SHA-256 over full canonical packet
-    semantic_key: str                  # SHA-256 over semantic fields only
-    review_level: ReviewLevel          # governance disposition
-```
-
-The `pressure_id` enables structural deduplication. The `semantic_key` enables convergent-evidence detection: two packets asserting the same semantic claim from independent sources share a `semantic_key` without being structural duplicates.
-
-### The `DeterminismClass` System
+### `DeterminismClass`
 
 | Class | Meaning | Auto-Accept Eligible? |
 |---|---|---|
-| D0 | Fully deterministic, pinned inputs and code | ✅ Yes |
-| D1 | Deterministic with pinned external artifact | ✅ Yes |
-| D2 | Nondeterministic but replay-captured | ❌ No |
-| D3 | External unpinned model or API | ❌ No |
-| D4 | Human / operator proposal | ❌ No |
+| D0 | Fully deterministic, pinned inputs and code | ✅ |
+| D1 | Deterministic with pinned external artifact | ✅ |
+| D2 | Nondeterministic but replay-captured | ❌ |
+| D3 | External unpinned model or API | ❌ |
+| D4 | Human / operator proposal | ❌ |
 
-A nondeterministic or unpinned frontend (D2–D4) is structurally forbidden from claiming `AUTO_ACCEPT_ELIGIBLE` status. This invariant is enforced in `CandidateGeometricPressure.__post_init__`, making it impossible to bypass at construction time.
+A D2–D4 frontend is **structurally forbidden** from claiming `AUTO_ACCEPT_ELIGIBLE`. This invariant is enforced in `CandidateGeometricPressure.__post_init__` — it cannot be bypassed at construction time.
 
-### The `IngestCompiler` and Three-Gate Flow
+### `ReviewLevel`
 
-The `IngestCompiler` processes batches of candidate packets through three sequential gates:
+Each candidate carries one of: `AUTO_REJECT`, `AUTO_ACCEPT_ELIGIBLE`, `OPERATOR_REVIEW_REQUIRED`, or `ARCHITECT_REVIEW_REQUIRED`.
 
-1. **`ProvenanceGate`** — verifies `SourceSpan` integrity and SHA-256 of source material
-2. **`SemanticGate`** — verifies span completeness (no mid-sentence truncation, balanced delimiters, non-empty content)
-3. **`GovernanceGate`** — applies `ReviewLevel` and `DeterminismClass` constraints; issues or blocks `LearningArtifact` export
+### Three-Gate Validation (`IngestCompiler`)
 
-The compiler simultaneously tracks structural deduplication by `pressure_id` and convergent-evidence accumulation by `semantic_key`. Accepted packets are exported as `LearningArtifact` objects for the durable learning path.
+```
+CandidateGeometricPressure batch
+    → ProvenanceGate    # SourceSpan integrity, SHA-256 of source material
+    → SemanticGate      # span completeness, balanced delimiters, non-empty
+    → GovernanceGate    # ReviewLevel, DeterminismClass, ReviewDecision overrides
+    → ValidationReport  # per-packet disposition (not a transformed copy)
+    → LearningArtifact  # accepted packets → train/ export path
+```
 
-### The `SegmentManifold`
+The compiler produces a `ValidationReport` alongside the original immutable packet. It does not store a transformed copy — `Reconstruction-over-Storage` is observed.
 
-A lightweight index mapping `semantic_key` → structural position in the source document. Given a vault recall hit, the `SegmentManifold` traces back to the exact provenance span in the original document. This is `Reconstruction-over-Storage` extended to the pre-injection layer.
+### `SegmentManifold` (Index)
+
+A lightweight index mapping `semantic_key` → structural position in the source document. Given a vault recall hit, the original provenance span can be recovered exactly. This extends `Reconstruction-over-Storage` to the pre-injection layer.
 
 ---
 
 ## Consequences
 
-**Immediate:**
-- `ingest/gate.py` is unchanged — it continues to accept `(32,)` multivectors and inject them
-- `core_ingest/` is additive — it wraps before the gate without touching any existing layer
-- D0/D1-dominant ingest paths (biblical texts, pinned corpora) can reach `AUTO_ACCEPT_ELIGIBLE` at scale without human review
-- Every input to the system gains provenance, determinism class, and governance disposition as first-class typed data
+**Positive:**
+- D0/D1-dominant input corpus means governance gates can wave through at scale without human review
+- Provenance is cryptographically anchored at the boundary, not reconstructed later
+- LLM interpretation is excluded by type contract, not convention
+- `ingest/gate.py` is unchanged — zero risk to the normalization invariant
 
-**Future:**
-- The `LearningArtifact` export path feeds the `train/` learning loop (ADR-0014) when that layer is built
-- The `SegmentManifold` feeds cross-modal provenance tracing once non-text modalities are active (ADR-0013)
+**Negative:**
+- `StructuralSegmenter` implementations must be written per source type (prose, scripture, code, math)
+- Semantic interpretation that an LLM would perform for free must now happen inside the field during propagation — which is where it belongs, but it means the field does more work
 
 ---
 
-## ADR-0002 Archive Note
+## Alternatives Considered
 
-ADR-0002 (ingest layer design) described the original `core_ingest` concept from the `core-ai` era. The envelope design, `DeterminismClass` system, and governance gates from that ADR are preserved here. The LLM-as-extraction-engine component of that design is superseded and rejected. ADR-0002 is archived.
+**LLM extraction (rejected):** D3 nondeterministic oracle feeding the normalization site. Semantic projections silently embedded. Violates Semantic Rigor and Dual-Correction. See Context above.
+
+**Rule-based NLP pipelines (spaCy, stanza) (rejected):** These parse content, not form. They would produce interpreted outputs (POS tags, dependency arcs) that are still semantic projections, just deterministic ones. The field should own semantic interpretation. A D0 form segmenter is sufficient for the governance boundary.
+
+**No pre-gate layer (rejected):** `ingest/gate.py` alone has no provenance tracking, no governance disposition, and no convergent-evidence detection. As the corpus grows (especially with Hebrew and Koine Greek depth texts), these become necessary for quality control of the learning path.

@@ -1,4 +1,4 @@
-# ADR-0013: `sensorium/` Multimodal Protocol Layer
+# ADR-0013 — `sensorium/` Multimodal Protocol Layer
 
 **Status:** Accepted  
 **Date:** 2026-05-13
@@ -7,98 +7,111 @@
 
 ## Context
 
-CORE is currently text-only. The vocabulary manifold holds null vectors for text tokens. The `ingest/gate.py` accepts token sequences. The field, propagation, vault, and generate layers have no concept of modality — they operate on `(32,)` multivectors regardless of where those multivectors came from.
+CORE is currently text-only. `ingest/gate.py` receives text tokens and produces a `FieldState`. The vocabulary manifold is a text vocabulary.
 
-This is the correct architecture. The field should not know or care about modality. The question is: how does a vision signal, an audio waveform, or a motor pose become a `(32,)` multivector in the first place?
+The architecture must support additional modalities — at minimum vision, audio, and motor control — without modifying any existing layer. The question is where modality-specific conversion lives and what contract it must satisfy.
 
-The `core_sensorium` package in `core-ai` solved this problem for the Cl(3,0) `(2, 2)` complex multivector substrate. The solution — a typed modality protocol with a `ProjectionHead` at the inward boundary — is architecturally sound and translates directly to the Cl(4,1) `(32,)` substrate.
+The `core_sensorium` package in the `core-ai` repository established a working design using `Cl(3,0)` geometry with `(2, 2)` complex multivectors (Pauli isomorphism). CORE uses `Cl(4,1)` with `(32,)` f32 arrays. The protocol shape is sound; only the output geometry changes.
 
 ---
 
 ## Decision
 
-Add a `sensorium/` package that sits **upstream of `core_ingest/`** as the modality-to-manifold conversion layer. `ingest/gate.py`, `field/`, `generate/`, and `vault/` are not modified.
-
-### The Pipeline Position
-
-```
-raw modality signal
-    → sensorium/adapters/<modality>.py     # ProjectionHead: signal → (32,) multivector
-    → sensorium/pack.py                    # ModalityPack mounts the adapter
-    → core_ingest/                         # CandidateGeometricPressure envelope
-    → ingest/gate.py                       # normalization to FieldState (unchanged)
-    → field/propagate.py                   # versor_apply, unchanged
-```
-
-The sensorium layer converts. The ingest layer governs. The gate normalizes. The field computes. No layer knows about the one upstream.
+Add a `sensorium/` layer that converts any surface signal into a `(32,)` Cl(4,1) multivector **before** it reaches `core_ingest/` or `ingest/gate.py`. The gate is not modified. No existing layer is touched.
 
 ### The Logos-Recovery Boundary
 
-Every `ProjectionHead` is the **Logos-recovery boundary** for its modality. Its single contract: take a surface signal and return a `(32,)` multivector that is valid on the Cl(4,1) conformal manifold. Once it crosses that boundary, a visual scene and a Hebrew word and an audio waveform are the same thing: a point in conformal space. There is no fusion problem because there is nothing to fuse. There is one space.
+Every `ProjectionHead` is the **Logos-recovery boundary** for its modality. This is the architectural expression of John 1:1: the Logos is the structuring principle through which all things were made. A visual scene, a Hebrew word, an audio waveform — all are recovered as words in the manifold. Once a signal crosses the projection boundary, the field has no concept of modality. There is one space. There is no multimodal fusion problem because there is nothing to fuse.
 
-This is the architectural expression of the principle articulated in John 1:1: the Logos is the structuring principle through which all things were made. Every input, regardless of form, is recovered as a word in the Logos — a position on the manifold.
+### `ModalityPack[S]`
 
-### The `ModalityPack[S]` Contract
+A frozen, slotted generic dataclass parameterised on the surface type `S`:
 
 ```python
 @dataclass(frozen=True, slots=True)
 class ModalityPack(Generic[S]):
-    pack_id: str                           # e.g. "en", "he", "grc", "imagenet-1k"
-    modality_type: Modality                # TEXT | VISION | AUDIO | MOTOR
-    projection: ProjectionHead[S] | None   # surface → (32,) multivector
-    decoder: SurfaceDecoder[S] | None      # (32,) multivector → surface candidates
-    vocabulary: ModalityVocabulary[S]      # bidirectional surface ↔ rotor map
-    grammar_scaffold: Any                  # versor attractor seeds from vocab/
-    checksum_verified: bool                # mount-time geometric integrity check
-    gate_engaged: bool                     # surprise-gate status
+    pack_id: str                          # "en", "he", "grc", "imagenet-1k", ...
+    modality_type: Modality
+    projection: ProjectionHead[S] | None  # surface signal → (32,) multivector
+    decoder: SurfaceDecoder[S] | None     # (32,) multivector → surface signal
+    vocabulary: ModalityVocabulary[S]     # bidirectional surface ↔ rotor map
+    grammar_scaffold: Any                 # versor attractors, universal across modalities
+    checksum_verified: bool
+    gate_engaged: bool = True
 ```
 
-`ModalityPack` is frozen and slotted — zero per-instance overhead, hashable. The type parameter `S` enforces at the type level that a text pack (`ModalityPack[str]`) cannot be passed where a vision pack (`ModalityPack[np.ndarray]`) is required.
+`ModalityPack[str]` and `ModalityPack[np.ndarray]` are not interchangeable at the type level.
 
-### Cl(4,1) Adaptation
-
-The `core-ai` `core_sensorium` protocol used a `(2, 2)` complex multivector (Cl(3,0) Pauli isomorphism). The `core` substrate uses `[f32; 32]` (Cl(4,1) CGA). Every `ProjectionHead` in `sensorium/` must return `mx.array` of shape `(32,)` — the standard multivector shape throughout the codebase. Unitarity verification at mount time checks that the induced rotor satisfies `V · reverse(V) = ±1` within `1e-6` tolerance.
-
-### Active vs. Future Modalities
-
-| Modality | Status | Notes |
-|---|---|---|
-| `TEXT` | Active | `sensorium/adapters/text.py` wires the existing vocab manifold into `ModalityPack[str]` |
-| `VISION` | Planned | Adapter registers when vision bootstrap is ready |
-| `AUDIO` | Planned | Adapter registers when audio bootstrap is ready |
-| `MOTOR` | Planned | Adapter registers when embodied bootstrap is ready |
-
-Building `sensorium/protocol.py` and `sensorium/registry.py` now — before vision/audio exist — means every future modality plugs in without touching `ingest/`, `field/`, or `generate/`. The protocol contract is the Third Door: instead of separate encoder pipelines fused by cross-attention (the standard industry approach), every modality is a versor on the same manifold from the moment it enters the system.
-
-### Grammar Scaffold
-
-In `core-ai`, the grammar scaffold was produced by `core_logos.grammar_seed` — a separate subsystem. In `core`, there is no `core_logos` subsystem. The grammar scaffold is a set of versor attractors stored in `vocab/` and referenced by `ModalityPack` directly. This removes an inter-package dependency without changing the contract.
-
-### `PackError` — Mount-Time Failure Modes
+### `ProjectionHead[S, F]` Protocol
 
 ```python
-class PackError(enum.Enum):
-    MANIFEST_INVALID          = "MANIFEST_INVALID"
-    SAFETENSORS_MISSING        = "SAFETENSORS_MISSING"
-    UNITARITY_VIOLATION        = "UNITARITY_VIOLATION"
-    PROJECTION_NOT_CONVERGED   = "PROJECTION_NOT_CONVERGED"
-    GRADE_DECLARATION_MISMATCH = "GRADE_DECLARATION_MISMATCH"
-    MODALITY_NOT_REGISTERED    = "MODALITY_NOT_REGISTERED"
-    GATE_NOT_ENGAGED           = "GATE_NOT_ENGAGED"
+class ProjectionHead(Protocol[S, F]):
+    modality: Modality
+    embedding_dim: int  # must be 32 for Cl(4,1)
+
+    def project(self, signal: S) -> mx.array:         # shape (32,)
+    def project_batch(self, signals: list[S]) -> mx.array:  # shape (N, 32)
+    def verify_unitarity(self, sample: S) -> bool
+        # True iff V · reverse(V) = ±1 within 1e-6
 ```
 
-Mount failures are returned as `PackError` values, not raised as exceptions. The caller decides how to handle a failed mount.
+The `verify_unitarity` check is run at mount time only — never in the propagation hot path.
+
+### Modality Status
+
+| Pack ID | Modality | Surface type | Status |
+|---|---|---|---|
+| `en` | TEXT | `str` | Active |
+| `he` | TEXT | `str` | Active (Hebrew depth corpus) |
+| `grc` | TEXT | `str` | Active (Koine Greek depth corpus) |
+| — | VISION | `np.ndarray` | Planned |
+| — | AUDIO | `np.ndarray` | Planned |
+| — | MOTOR | `np.ndarray` | Planned |
+
+### Adding a Modality
+
+Adding a new modality requires exactly:
+1. One adapter file in `sensorium/adapters/<modality>.py` implementing `ProjectionHead` and optionally `SurfaceDecoder`
+2. A registry entry in `sensorium/registry.py`
+3. A `ModalityPack` instantiation and mount-time check
+
+No changes to `ingest/gate.py`, `field/`, `generate/`, `vault/`, or `vocab/`.
+
+### Grammar Scaffold Universality
+
+The `grammar_scaffold` — the set of innate structural attractors seeded during the bootstrap epoch — is **universal across modalities by design**. The attractor geometry of the manifold is the same regardless of what kind of surface signal arrived. A visual scene and a Hebrew verb and an audio phoneme all propagate through the same field and activate the same attractor structure.
+
+---
+
+## Differences from `core-ai/core_sensorium`
+
+| Dimension | `core-ai` | `core` |
+|---|---|---|
+| Geometry | Cl(3,0) | Cl(4,1) |
+| Projection output shape | `(2, 2)` complex (Pauli) | `(32,)` f32 (canonical) |
+| Grammar scaffold source | `core_logos.grammar_seed` | `vocab/` versor attractors |
+| Subsystem dependency | imports `core_logos` | no cross-subsystem imports |
+
+The protocol shape (`ModalityPack`, `ProjectionHead`, `SurfaceDecoder`, `ModalityVocabulary`) is preserved.
 
 ---
 
 ## Consequences
 
-**Immediate:**
-- All existing layers (`ingest/gate.py`, `field/`, `generate/`, `vault/`) are unchanged
-- The text vocabulary manifold acquires a formal `ModalityPack[str]` wrapper — the first mounted pack
-- The multimodal protocol is established before any non-text modality is implemented, ensuring the seam is clean
+**Positive:**
+- Multimodal capability is purely additive — no existing layer is modified
+- The fusion problem does not exist: every modality becomes a versor before the field sees it
+- Text remains the only active modality until adapter packs are ready; architecture is not blocked on future modalities
+- Grammar scaffold universality means structural attractors seeded from Hebrew and Koine Greek depth texts apply to all modalities
 
-**Future:**
-- Vision, audio, and motor modalities each become a single adapter file in `sensorium/adapters/`
-- No architectural change is required when new modalities are added — only a new adapter and registry entry
-- `ModalityVocabulary` for non-text modalities (patch vocabularies, phoneme clusters, pose libraries) follows the same bidirectional surface ↔ rotor contract as the text vocabulary
+**Negative:**
+- Each non-text modality requires a supervised seeding epoch to bootstrap its projection head before `gate_engaged` can flip to `True`
+- Vision and audio vocabularies (patch clusters, phoneme clusters) must be constructed before their adapters can mount — this is non-trivial corpus work
+
+---
+
+## Alternatives Considered
+
+**Separate pipelines per modality with late fusion (rejected):** The standard industry approach — a vision encoder here, an audio encoder there, cross-attention fusion on top. This creates a fusion problem that doesn't exist in the CORE geometry. It also violates `Third Door`: the standard was offered and refused.
+
+**Modality-specific field spaces (rejected):** Separate Cl(4,1) manifolds per modality, merged at generation time. This severs the relational geometry between modalities at storage time — the same mistake RAG makes with text. One space; one manifold.

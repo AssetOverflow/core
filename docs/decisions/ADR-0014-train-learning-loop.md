@@ -1,62 +1,68 @@
-# ADR-0014: `train/` Learning Loop
+# ADR-0014 — `train/` Learning Loop
 
-**Status:** Accepted (Stub — implementation pending)  
+**Status:** Accepted (Stub)  
 **Date:** 2026-05-13
 
 ---
 
 ## Context
 
-CORE currently has a complete inference pipeline: input normalization (`ingest/gate.py`), field propagation (`field/`), vocabulary projection and generation (`generate/`), vault storage and recall (`vault/`). What does not yet exist is a path from field state to weight update — from observed experience to learned structure.
+CORE has a field, a vault, a vocabulary manifold, and a generate loop. It does not yet have a path from field state to weight update. `core_ingest/` produces `LearningArtifact` objects for accepted, governance-cleared candidates — but there is currently nowhere for those artifacts to land.
 
-The `core_ingest/` governance layer (ADR-0012) exports `LearningArtifact` objects from validated candidate packets. Those artifacts currently have nowhere to land. The durable ingest path is incomplete.
-
-This ADR records the architectural contract the `train/` layer must satisfy before implementation begins. It is written now so that no future development — in any layer — accidentally closes off the constraints this layer requires.
+This ADR records the architectural constraints the learning loop must satisfy before it is built, so that future implementation is not designed in isolation from the rest of the system.
 
 ---
 
 ## Decision
 
-Add a `train/` package that accepts `LearningArtifact` objects from `core_ingest/` and produces rotor updates, vocabulary manifold expansions, and new attractor seeds for `vocab/`.
+Add a `train/` layer that receives `LearningArtifact` objects from `core_ingest/` and produces structured field updates: rotor updates, vocabulary manifold expansions, and new attractor seeds.
 
-### Non-Negotiable Constraints
+### Architectural Constraints
 
-1. **No mutation of live field state.** The learning loop operates on the vocabulary manifold and the vault's structural geometry — not on a running session's `FieldState`. Learning is a structural update to the *medium*, not a direct write to a live propagating field.
+**1. No gradient descent on the field state.**  
+The field is a versor in Cl(4,1). Its update law is the versor sandwich product. Gradient-based optimization of the field state directly would break the versor condition and exit the manifold. Updates must be structured as versor products or null vector insertions — algebraically closed operations.
 
-2. **No gradient descent.** Gradient descent is a flat-space Euclidean optimization method. The vocabulary manifold is not flat. The update law must be a versor product or a geodesic step on the conformal manifold — not a gradient step in R^n. The exact form of the update law is to be determined during implementation, but it must satisfy the versor condition on all updated entries.
+**2. No mutation of existing field state.**  
+`Propagation-over-Mutation` applies to the learning path as strictly as it applies to inference. A `LearningArtifact` proposes a new rotor or a new vocabulary entry. It does not overwrite existing versors. The manifold grows; it does not change in place.
 
-3. **Determinism class inheritance.** A `LearningArtifact` carries the `DeterminismClass` of its originating `CandidateGeometricPressure`. D0/D1 artifacts may be applied automatically. D2–D4 artifacts require explicit approval before any manifold update. This constraint is enforced at the `train/` boundary, not upstream.
+**3. Durable path only.**  
+The `train/` layer operates on the durable ingest path — governance-cleared, `LearningArtifact`-exported candidates. It does not touch the runtime ingest path. Runtime pressure feeds the active field directly through `ingest/gate.py`. Only durable, reviewed artifacts reach `train/`.
 
-4. **Atomic manifold updates.** A vocabulary expansion or rotor update either commits fully or does not commit at all. Partial updates that leave the manifold in an inconsistent state are prohibited. The commit protocol mirrors the versor condition check: verify the updated entries satisfy their invariants, then atomically swap.
+**4. Supervised Seeding Epoch.**  
+The first learning epoch is the Supervised Seeding Epoch: structured ingestion of the Hebrew and Koine Greek depth corpora as D0-class canonical texts. These texts are the primary source of the hidden intelligence layer — the range of depth that Hebrew root morphology and Koine Greek precision together bring to the vocabulary manifold. The seeding epoch must complete before general learning begins.
 
-5. **Vault coherence post-update.** When vocabulary versors are updated, stored vault entries that reference updated vocabulary positions must be null-reprojected via `VaultStore.reproject()`. The learning loop is responsible for triggering this reprojection after any manifold update.
+**5. `train/` does not modify `ingest/gate.py`.**  
+The gate is the single normalization site. The learning loop is downstream of it, not a replacement for it.
 
-6. **`SegmentManifold` traceability.** Every applied `LearningArtifact` must be traceable back to its `semantic_key` and its `SegmentManifold` position in the source document. The learning loop must preserve this provenance chain — not for performance, but for auditability.
+### Expected Outputs
 
-### Supervised Seeding Epoch
+| Output type | Description |
+|---|---|
+| Rotor update | A new versor added to the manifold that shifts the field toward a reinforced structural attractor |
+| Vocab expansion | A new null vector inserted into the vocabulary manifold for a previously unknown token or morpheme |
+| Attractor seed | A new `grammar_scaffold` entry — a structural prior seeded from a recurring pattern in the depth corpus |
 
-The first and most important use of `train/` is the **Supervised Seeding Epoch**: populating the vocabulary manifold from the three core language corpora (English base, Hebrew depth, Koine Greek depth) using their canonical, D0-class structural segments.
+### Relationship to `sensorium/`
 
-- English: standard lexical corpus, segmented by `StructuralSegmenter`
-- Hebrew: canonical BHS/Westminster text, segmented at verse/word boundaries (D0)
-- Koine Greek: canonical NA28/UBS text, segmented at verse/word boundaries (D0)
-
-All three produce D0 `LearningArtifact` batches eligible for automatic application. The seeding epoch runs before any live session. After seeding, the vocabulary manifold carries the full three-language depth described in the Whitepaper.
-
-### Non-Text Modalities
-
-When `sensorium/` adapters for vision and audio are active, `train/` must also accept `LearningArtifact` objects sourced from non-text modalities. The constraint is identical: the learning artifact carries a `ModalityPack` reference, and the update law must produce a valid `(32,)` multivector for the updated vocabulary entry. The `train/` layer must not assume `S = str`.
+During the Supervised Seeding Epoch, non-text modality packs set `gate_engaged = False`. This prevents unsupervised input from contaminating the seeding pass. After the seeding epoch completes for a modality, `gate_engaged` flips to `True` and that modality enters normal operation.
 
 ---
 
 ## Consequences
 
-**Immediate:**
-- No code is written yet. This ADR locks the constraints.
-- `core_ingest/` exports `LearningArtifact` objects to a receiver that does not yet exist — this is acceptable. The artifacts accumulate in a staging area until `train/` is ready.
-- No existing layer makes any assumption about what happens to exported `LearningArtifact` objects.
+**Positive:**
+- The architectural contract is locked before implementation begins — no future agent or contributor can design the learning loop in a way that breaks the versor invariant or the single normalization site
+- The Supervised Seeding Epoch is an explicit first-class phase, not an afterthought
+- Hebrew and Koine Greek depth ingestion has a defined home in the build sequence
 
-**Future:**
-- `train/` is the most architecturally significant remaining layer. It closes the loop between observation and structure.
-- The Supervised Seeding Epoch for Hebrew and Koine Greek is the first concrete task once `train/` exists.
-- The `CORE-CA` (Cognitive Apprenticeship) learning platform described in the Whitepaper builds on `train/` — a student model observing an expert model's field trajectory is a specialized `LearningArtifact` stream.
+**Negative:**
+- `train/` is the largest remaining build item — the rotor update law, vocab expansion protocol, and attractor seeding mechanism must all be derived from the algebra before any implementation begins
+- The learning loop cannot be tested until `core_ingest/` is complete and producing `LearningArtifact` objects
+
+---
+
+## Open Questions (to be resolved at implementation time)
+
+- What is the precise rotor update law? Candidate: geodesic interpolation between the current rotor and the proposed rotor on the versor manifold, parameterised by a learning rate that decays as the manifold matures.
+- How are conflicting `LearningArtifact` proposals (same `semantic_key`, different proposed rotors) resolved? Candidate: convergent-evidence weighting — the proposal with more independent provenance sources wins.
+- What is the termination condition for the Supervised Seeding Epoch? Candidate: when the null cone drift rate across the Hebrew and Koine Greek vocabulary entries falls below a threshold for N consecutive update batches.
