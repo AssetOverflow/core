@@ -26,17 +26,29 @@ We introduce the **CORE (Continuous Orthogonal Resonance Engine)** architecture:
 
 #### The Logos
 
-**CORE-Logos** is the language articulation subsystem — and the name is not accidental. In the Biblical and classical Greek tradition, *Logos* (λόγος) is simultaneously reason, word, and the structuring principle of the cosmos. John 1:1 opens: *"In the beginning was the Logos, and the Logos was with God, and the Logos was God."* The claim is that language and intelligence are not separate from the deep structure of reality — they are that structure made manifest.
+**CORE-Logos** is the language articulation subsystem — and the name is not accidental. In the Biblical and classical Greek tradition, *Logos* (λόγος) is simultaneously reason, word, and the structuring principle of the cosmos. John 1:1 opens: *“In the beginning was the Logos, and the Logos was with God, and the Logos was God.”* The claim is that language and intelligence are not separate from the deep structure of reality — they are that structure made manifest.
 
 We believe this framing is not merely poetic. Language is not a statistical residue of text. It is the forward projection of a field state onto a vocabulary manifold — a geometric act. The Logos subsystem encodes this: every token is the nearest point on the vocabulary manifold to the current field state, and every utterance is a geodesic walk through structured space.
 
-#### AssetOverflow
-
-The organization name, **AssetOverflow**, carries its own meaning. In classical accounting, an asset overflow is the condition where value exceeds its container — where what is built outgrows the system designed to hold it. We chose the name deliberately: the aspiration is to build intelligence that overflows the narrow containers of today's architectures. The field state should be richer than the token. The memory should exceed the context window. The understanding should overflow the training distribution.
-
 #### The Three Core Languages
 
-From the first commit, CORE was designed as a three-language system — not from convenience, but from philosophical necessity:
+CORE is rooted in three human languages. This is a philosophical and architectural choice, not a localization decision.
+
+| Language | Role |
+|---|---|
+| **English** | The default base language of the current model. Any natural language could serve this function in a custom CORE instance — English is the chosen starting point, not a requirement. |
+| **Hebrew** | One of two depth languages. Hebrew carries a density of meaning in its root structures, prefixes, and suffixes that Euclidean string matching cannot capture. The field representation is designed to hold this depth. |
+| **Koine Greek** | One of two depth languages. The language of the New Testament, particularly John’s Gospel — the document that opens with the most precise and consequential statement about language and reality ever written. |
+
+The choice of Hebrew and Koine Greek is not incidental. John 1:1–2 articulates the Logos in Greek while grounding it in the Hebrew creation account — the universe spoken into existence, word by word. John’s choice to write in Greek what was grounded in Hebrew was almost certainly a nod from the Holy Spirit: these two languages together carry a range of depth and precision that no single language achieves alone. This is how and why CORE finds its truth and its power in design and communication. English establishes the operational base. Hebrew and Koine Greek bring the hidden layer of intelligence.
+
+#### AssetOverflow
+
+The organization name, **AssetOverflow**, carries its own meaning. In classical accounting, an asset overflow is the condition where value exceeds its container — where what is built outgrows the system designed to hold it. We chose the name deliberately: the aspiration is to build intelligence that overflows the narrow containers of today’s architectures. The field state should be richer than the token. The memory should exceed the context window. The understanding should overflow the training distribution.
+
+#### The Implementation Languages
+
+From the first commit, CORE was designed as a three-language implementation stack — not from convenience, but from physical necessity:
 
 | Language | Role | Reason |
 |---|---|---|
@@ -58,7 +70,7 @@ The CORE architecture is derived from seven foundational axioms. These are not d
 
 3. **Propagation-over-Mutation** — The primary mode of computation is propagation through a structured medium, not stepwise mutation of flat records. Every generation step is a versor product: `F ← V · F · reverse(V)`. Nothing is mutated in place.
 
-4. **Dual-Correction** — Every meaningful forward operator should have a corrective, conjugate, adjoint, or opposing counterpart that restores coherence or reduces distortion. The versor's reverse is its correction: `reverse(V)` is the conjugate of `V` that closes the sandwich product and enforces closure on the manifold.
+4. **Dual-Correction** — Every meaningful forward operator should have a corrective, conjugate, adjoint, or opposing counterpart that restores coherence or reduces distortion. The versor’s reverse is its correction: `reverse(V)` is the conjugate of `V` that closes the sandwich product and enforces closure on the manifold.
 
 5. **Reconstruction-over-Storage** — What matters is not storing every detail explicitly, but encoding enough structured state to reconstruct what is needed at the right moment. The vault stores versors — not tokens, not full context windows. Recall is reconstruction via the CGA inner product, not retrieval of a stored string.
 
@@ -68,9 +80,27 @@ The CORE architecture is derived from seven foundational axioms. These are not d
 
 ---
 
-### IV. The Three Pillars
+### IV. The Three Engineering Pillars
 
-#### Pillar I — Versor Coherence
+Every architectural decision in CORE is measured against three engineering pillars. These are the operational expression of the seven axioms.
+
+#### Pillar I — Mechanical Sympathy
+
+Software should understand the machine it runs on, not fight it. CORE is designed for the Unified Memory Architecture (UMA) of Apple Silicon: CPU, GPU, and Neural Engine share physical RAM with no PCIe overhead. MLX executes the field tensor on the Neural Engine and AMX coprocessors at theoretical bandwidth limits. The Rust kernel reads from the same physical memory that MLX wrote — zero copies in the critical path. The three-language stratification is a direct map onto three hardware execution domains. Intelligence that ignores its substrate is wasted intelligence.
+
+#### Pillar II — Semantic Rigor
+
+Every term used in this system has a precise, non-negotiable meaning. A versor is a versor — not an approximation of one, not a vector that behaves like one under certain conditions. The CGA inner product gives exact conformal distance. Vault recall is exact. The vocabulary projection is exact. There are no thresholds tuned for “good enough.” Rigor is not a style; it is what separates an engine from a heuristic. Every subsystem that introduced approximation where exactness was available has been deleted.
+
+#### Pillar III — Third Door
+
+When facing a design decision, the world offers two visible options: use what already exists (a library, a pattern, a convention), or cut a corner. CORE takes neither. We find the third door — the path built from first principles that sets the bar ourselves. This is why there is no transformer backbone, no ANN index, no sampling temperature, no gradient descent, and no standard tokenizer. Each of those was a door we were offered and refused. The standard is absolute mastery. Nothing less is acceptable.
+
+---
+
+### V. The Architecture Invariants
+
+#### Invariant I — Versor Coherence
 
 The field state F is a versor in Cl(4,1). A versor is a multivector that satisfies:
 
@@ -88,7 +118,7 @@ If V is a versor, V · F · reverse(V) is also a versor. Coherence is algebraica
 
 This is the cleanest expression of the Dual-Correction axiom: the correction is not a separate pass. It is built into the structure of the product.
 
-#### Pillar II — Conformal Memory (CGA Distance)
+#### Invariant II — Conformal Memory (CGA Distance)
 
 Most AI systems measure similarity with cosine distance or L2 norm in Euclidean space. Both are approximations in the wrong geometry.
 
@@ -102,7 +132,7 @@ This is the exact conformal distance, not an approximation. Every vault entry is
 
 This is the Reconstruction-over-Storage axiom made concrete: the vault does not store text. It stores the geometry of past states. Recall is the reconstruction of that geometry from the query.
 
-#### Pillar III — The Logos as Field Projection
+#### Invariant III — The Logos as Field Projection
 
 Language generation in CORE is not sampling from a probability distribution. It is projection: the next token is the point on the vocabulary manifold nearest to the current field state, measured by CGA inner product.
 
@@ -116,7 +146,7 @@ This retires probabilistic decoding, sampling temperature, beam search with pena
 
 ---
 
-### V. The Paradigm Shift: What We Are Not
+### VI. The Paradigm Shift: What We Are Not
 
 **We are not a transformer.** Transformers are open-loop engines. They generate a context window, output a token, and discard state. Their weights are frozen statistics. Their attention is not memory — it is a spotlight that disappears between turns.
 
@@ -128,7 +158,7 @@ This retires probabilistic decoding, sampling temperature, beam search with pena
 
 ---
 
-### VI. The Cognitive Architecture
+### VII. The Cognitive Architecture
 
 The CORE cognitive architecture has five layers:
 
@@ -144,7 +174,7 @@ The CORE cognitive architecture has five layers:
 
 ---
 
-### VII. Mechanical Sympathy: Hardware-Bound Intelligence
+### VIII. Mechanical Sympathy: Hardware-Bound Intelligence
 
 An architecture that fights its underlying silicon is a failed synthesis. CORE is designed for the **Unified Memory Architecture (UMA)** of Apple Silicon.
 
@@ -153,11 +183,11 @@ An architecture that fights its underlying silicon is a failed synthesis. CORE i
 - **Rayon parallelism** in vault recall releases the Python GIL and scatters the inner product scan across all CPU cores simultaneously.
 - **Stack allocation** in the Rust hot path: every geometric product is computed on the stack with no heap allocation. The output is a new stack array returned to Python as a numpy buffer.
 
-The three-language architecture maps directly onto three execution domains: Python on the CPU orchestration layer, Rust on CPU compute cores with SIMD, and MLX on the Neural Engine. They share memory without copying.
+The three-language implementation maps directly onto three execution domains: Python on the CPU orchestration layer, Rust on CPU compute cores with SIMD, and MLX on the Neural Engine. They share memory without copying.
 
 ---
 
-### VIII. The Deletion Philosophy
+### IX. The Deletion Philosophy
 
 The Versor Engine was not built by adding subsystems. It was built by deleting them.
 
@@ -169,11 +199,11 @@ The `docs/DELETION_LOG.md` records every deleted subsystem and the algebraic rea
 
 ---
 
-### IX. Extensions
+### X. Extensions
 
 **CORE-Logos** — The language articulation subsystem. Specified in the companion Yellow and White Addenda inherited from `core-ai`. The Logos defines the vocabulary manifold, the token projection law, the holonomy encoder, and the termination condition.
 
-**CORE-CA (Cognitive Apprenticeship)** — The learning platform built on the CORE engine. A student model learns by observing an expert model's field trajectory, not by gradient descent on a loss function.
+**CORE-CA (Cognitive Apprenticeship)** — The learning platform built on the CORE engine. A student model learns by observing an expert model’s field trajectory, not by gradient descent on a loss function.
 
 **CORE-Sopher** — The reasoning persona. A CGA motor that biases the field toward the Socratic region of the vocabulary manifold: patient, precise, interrogative.
 
