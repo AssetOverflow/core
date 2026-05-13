@@ -1,7 +1,7 @@
 """
 Generation loop — token streaming from the versor manifold.
 
-Every token:  nearest word to current F via CGA inner product.
+Every token:  nearest non-current word to current F via CGA inner product.
 Every step:   F <- versor_apply(V, F) where V = word_transition_rotor(A, B).
 
 Architectural boundaries enforced here:
@@ -12,7 +12,7 @@ Architectural boundaries enforced here:
     structurally by versor_apply() and the closed algebra.
 
 No confidence gates. No IDK fallback. No attractor clamping.
-F is always on the manifold. nearest() is always exact.
+F is always on the manifold. nearest() is exact.
 """
 
 from __future__ import annotations
@@ -20,6 +20,18 @@ from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import word_transition_rotor
 from generate.result import GenerationResult
+
+
+def _nearest_next(vocab, F_voiced, current_node: int) -> tuple[str, int]:
+    """
+    Select the nearest non-current vocabulary point when possible.
+
+    Allowing the current node to win makes V = transition(A, A), which is an
+    identity-like transition and can stall generation forever on one token.
+    VocabManifold already exposes exclude_idx for this exact seam.
+    """
+    exclude_idx = current_node if len(vocab) > 1 else -1
+    return vocab.nearest(F_voiced, exclude_idx=exclude_idx)
 
 
 def generate(
@@ -34,7 +46,7 @@ def generate(
 
     Loop:
     1. Apply persona motor to current field
-    2. Find nearest vocab node via CGA inner product
+    2. Find nearest non-current vocab node via CGA inner product
     3. Emit token
     4. Build transition rotor: V = word_transition_rotor(A, B)
        where A = versor at current node, B = versor at nearest node
@@ -50,7 +62,7 @@ def generate(
 
     for _ in range(max_tokens):
         F_voiced = persona.apply(current.F)
-        word, word_idx = vocab.nearest(F_voiced)
+        word, word_idx = _nearest_next(vocab, F_voiced, current.node)
         tokens.append(word)
 
         if record_trajectory:
@@ -89,7 +101,7 @@ async def agenerate(
     current = state
     for _ in range(max_tokens):
         F_voiced = persona.apply(current.F)
-        word, word_idx = vocab.nearest(F_voiced)
+        word, word_idx = _nearest_next(vocab, F_voiced, current.node)
         yield word
 
         A = vocab.get_versor_at(current.node)
