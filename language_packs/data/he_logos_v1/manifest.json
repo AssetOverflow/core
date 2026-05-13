@@ -1,0 +1,13 @@
+{
+  "pack_id": "he_logos_v1",
+  "language": "he",
+  "role": "depth_root",
+  "script": "Hebrew",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "he_logos_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "7d8f8d0104742925ee64a635ac2087ad69e152912126438336126b472e1f9407",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "fail_closed"
+}
