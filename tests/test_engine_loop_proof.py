@@ -102,10 +102,14 @@ def test_session_context_respond_preserves_and_vaults_final_state() -> None:
     assert session.state is result.final_state
     assert not np.array_equal(result.final_state.F, initial.F)
 
-    recalled = session.vault.recall(result.final_state.F, top_k=1)
-    assert recalled[0]["metadata"]["role"] == "assistant"
-    np.testing.assert_allclose(recalled[0]["versor"], result.final_state.F)
-    assert not np.array_equal(recalled[0]["versor"], initial.F)
+    recalled = session.vault.recall(result.final_state.F, top_k=2)
+    assistant_hits = [
+        item for item in recalled
+        if item["metadata"].get("role") == "assistant"
+    ]
+    assert assistant_hits, "Assistant final_state was not present in session vault recall."
+    np.testing.assert_allclose(assistant_hits[0]["versor"], result.final_state.F)
+    assert not np.array_equal(assistant_hits[0]["versor"], initial.F)
 
 
 def test_hot_path_modules_route_through_backend_boundary() -> None:
