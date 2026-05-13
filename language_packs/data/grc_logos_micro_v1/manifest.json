@@ -6,7 +6,7 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "grc_logos_micro_v1.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "462d0aee88714f04e003d0a3f9d9015f460ba39657c4b8dff8dfd2ed24d75a3f",
+  "checksum": "e37370305d379e4282bc156e355bc41496e9ca79a1618bb0bd66268b7a9b3176",
   "version": "1.0.0",
   "gate_engaged": true,
   "oov_policy": "fail_closed"
