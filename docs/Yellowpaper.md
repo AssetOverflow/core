@@ -209,7 +209,7 @@ Verified in `tests/test_holonomy.py` via property-based testing with Hypothesis.
 The vocabulary manifold is a finite set of null vectors {v_w} ⊂ Cl(4,1), one per token w in the vocabulary.
 
 **Construction:** Each word w is embedded as a null vector via the CGA point embedding:
-1. Obtain a 3D semantic coordinate p_w (from a frozen static embedding or from the manifold's coordinate frame)
+1. Obtain a 3D semantic coordinate p_w (from a frozen static embedding or from the manifold’s coordinate frame)
 2. Embed: `v_w = p_w_x·e1 + p_w_y·e2 + p_w_z·e3 + (1/2)|p_w|²·e4 + e5`
 3. Verify: `v_w · v_w = 0` (null condition)
 
@@ -223,7 +223,124 @@ This is a nearest-null-vector scan. For vocabularies up to ~50,000 tokens it is 
 
 ---
 
-### VI. Persona as CGA Motor
+### VI. The Sensorium — Modality Protocol Specification
+
+The `sensorium/` layer converts any surface signal into a `(32,)` Cl(4,1) multivector before it reaches `ingest/gate.py`. Every `ProjectionHead` is the Logos-recovery boundary for its modality.
+
+#### `Modality` Enum
+
+```python
+class Modality(enum.Enum):
+    TEXT   = "text"
+    VISION = "vision"
+    AUDIO  = "audio"
+    MOTOR  = "motor"
+```
+
+New modalities must be added here AND register a projection head in `sensorium/registry.py` before any pack can mount.
+
+#### `ProjectionHead[S, F]` Protocol
+
+```python
+class ProjectionHead(Protocol[S, F]):
+    modality: Modality
+    embedding_dim: int  # must be 32 for Cl(4,1)
+
+    def project(self, signal: S) -> mx.array:         # shape (32,)
+    def project_batch(self, signals: list[S]) -> mx.array:  # shape (N, 32)
+    def verify_unitarity(self, sample: S) -> bool
+        # True iff V · reverse(V) = ±1 within 1e-6
+```
+
+Note: `core-ai` used shape `(2, 2)` complex (Cl(3,0) Pauli isomorphism). `core` uses shape `(32,)` f32 (Cl(4,1) canonical layout).
+
+#### `ModalityPack[S]` Dataclass
+
+```python
+@dataclass(frozen=True, slots=True)
+class ModalityPack(Generic[S]):
+    pack_id: str                          # "en", "he", "grc", "imagenet-1k", ...
+    modality_type: Modality
+    projection: ProjectionHead[S] | None  # None for articulation-only modalities
+    decoder: SurfaceDecoder[S] | None     # None for perception-only modalities
+    vocabulary: ModalityVocabulary[S]     # bidirectional surface ↔ rotor map
+    grammar_scaffold: Any                 # versor attractors from vocab/
+    checksum_verified: bool
+    gate_engaged: bool = True
+```
+
+Frozen + slotted: zero per-instance dict overhead, hashable. Type-parameterised: `ModalityPack[str]` and `ModalityPack[np.ndarray]` are not interchangeable at the type level.
+
+#### Mount-Time Failure Modes
+
+| Error | Meaning |
+|---|---|
+| `MANIFEST_INVALID` | Pack manifest fails integrity check |
+| `UNITARITY_VIOLATION` | Projection head produces non-unitary rotor |
+| `PROJECTION_NOT_CONVERGED` | Projection head did not converge during validation |
+| `GRADE_DECLARATION_MISMATCH` | Declared grades do not match produced grades |
+| `MODALITY_NOT_REGISTERED` | Modality not in `sensorium/registry.py` |
+| `GATE_NOT_ENGAGED` | Surprise-gate not active (non-text modality during seeding) |
+
+#### Active Modalities
+
+| Pack ID | Modality | Surface type `S` | Status |
+|---|---|---|---|
+| `en` | TEXT | `str` | Active |
+| `he` | TEXT | `str` | Active (Hebrew depth corpus) |
+| `grc` | TEXT | `str` | Active (Koine Greek depth corpus) |
+| vision adapters | VISION | `np.ndarray` | Planned |
+| audio adapters | AUDIO | `np.ndarray` | Planned |
+| motor adapters | MOTOR | `np.ndarray` | Planned |
+
+See ADR-0013 for the full protocol specification.
+
+---
+
+### VII. The `core_ingest` Governance Layer — Pre-Gate Specification
+
+The `core_ingest/` layer wraps upstream of `ingest/gate.py`. The gate is not modified.
+
+#### `DeterminismClass`
+
+| Class | Meaning | Auto-Accept Eligible? |
+|---|---|---|
+| D0 | Fully deterministic, pinned inputs and code | ✅ |
+| D1 | Deterministic with pinned external artifact | ✅ |
+| D2 | Nondeterministic but replay-captured | ❌ |
+| D3 | External unpinned model or API | ❌ |
+| D4 | Human / operator proposal | ❌ |
+
+A D2–D4 frontend is structurally forbidden from claiming `AUTO_ACCEPT_ELIGIBLE`. Enforced in `CandidateGeometricPressure.__post_init__`.
+
+#### `CandidateGeometricPressure` Content-Addressing
+
+```
+pressure_id  = SHA-256(full canonical packet)    # structural deduplication
+semantic_key = SHA-256(kind + modality + lemma + subject + verb + object + payload)
+                                                  # convergent-evidence detection
+```
+
+Two packets with the same `semantic_key` assert the same claim from different provenance sources. Convergence is tracked by the `IngestCompiler` and surfaced as a confidence signal to downstream consumers.
+
+#### Three-Gate Validation Flow
+
+```
+CandidateGeometricPressure batch
+    → ProvenanceGate    # SourceSpan integrity, SHA-256 of source material
+    → SemanticGate      # span completeness, balanced delimiters, non-empty
+    → GovernanceGate    # ReviewLevel, DeterminismClass, ReviewDecision overrides
+    → ValidationReport  # per-packet disposition
+    → LearningArtifact  # accepted packets → train/ export path
+```
+
+#### `StructuralSegmenter` — Why, Not What
+
+LLM extraction was rejected: a language model upstream of the gate is a D3 nondeterministic oracle whose semantic projections would be silently embedded in the field state. The `StructuralSegmenter` carves at *form* boundaries only — the meaning of a span stays inside the field where it belongs. Biblical texts (Hebrew, Koine Greek) are D0 by construction: canonical verse boundaries are fixed. See ADR-0012.
+
+---
+
+### VIII. Persona as CGA Motor
 
 A CGA **motor** is a versor that encodes a screw motion: a combined rotation and translation in conformal space.
 
@@ -238,7 +355,7 @@ Persona application:
 F_biased = M · F · reverse(M)
 ```
 
-This rotates and translates the field state within the conformal manifold, biasing generation toward the persona's characteristic region of the vocabulary manifold. It is a single versor product — algebraically closed, no weight overlay, no post-hoc bias vector.
+This rotates and translates the field state within the conformal manifold, biasing generation toward the persona’s characteristic region of the vocabulary manifold. It is a single versor product — algebraically closed, no weight overlay, no post-hoc bias vector.
 
 **Motor composition:**
 ```
@@ -249,7 +366,7 @@ Personas compose. Two persona motors can be combined into a single motor before 
 
 ---
 
-### VII. The Three-Language Contract
+### IX. The Three-Language Contract
 
 | Layer | Language | Entry point | Invariant |
 |---|---|---|---|
@@ -270,7 +387,7 @@ Personas compose. Two persona motors can be combined into a single motor before 
 
 ---
 
-### VIII. Verification Invariants (The Implementation Gate)
+### X. Verification Invariants (The Implementation Gate)
 
 These are testable predicates. Every invariant has a corresponding test in `tests/`.
 
@@ -282,12 +399,14 @@ These are testable predicates. Every invariant has a corresponding test in `test
 | Motor condition | `\|\|M·reverse(M) - 1\|\|_F` | < 1e-6 | (in `test_versor_closure.py`) |
 | CGA distance symmetry | `cga_inner(X,Y) == cga_inner(Y,X)` | exact | `test_cga.py` |
 | Vault recall self | `recall(V_i, top_k=1)[0] == i` | exact | `test_vault_recall.py` |
+| Projection unitarity | `\|\|V·reverse(V) - 1\|\|_F` (sensorium mount) | < 1e-6 | `test_sensorium_mount.py` |
+| Ingest D-class gate | D2–D4 ↛ AUTO_ACCEPT_ELIGIBLE (construction) | exact | `test_core_ingest.py` |
 
 These are structural contracts, not regression tests. A failing invariant means the algebra is broken, not the behavior.
 
 ---
 
-### IX. The Rust Acceleration Contract
+### XI. The Rust Acceleration Contract
 
 **Performance-critical operations in Rust:**
 
@@ -309,7 +428,7 @@ cargo test
 
 ---
 
-### X. What Was Deleted and Why
+### XII. What Was Deleted and Why
 
 The formal record is in `docs/DELETION_LOG.md`. The summary:
 

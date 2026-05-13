@@ -1,7 +1,7 @@
 # The CORE Whitepaper
 ## **Continuous Orthogonal Resonance Engine: Conformal Geometric Intelligence and the Versor Engine**
 
-> *"We have mistaken inherited abstractions for reality. CORE is the architecture to find the shape of thought."*
+> *“We have mistaken inherited abstractions for reality. CORE is the architecture to find the shape of thought.”*
 
 ---
 
@@ -20,7 +20,7 @@ We introduce the **CORE (Continuous Orthogonal Resonance Engine)** architecture:
 **CORE** stands for Continuous Orthogonal Resonance Engine. Each word is load-bearing.
 
 - **Continuous** — state is never discretized into isolated vectors. The field is a single multivector that propagates continuously through every step of reasoning.
-- **Orthogonal** — every transition preserves the algebra's inner product structure. Nothing is approximated away; the geometry is exact.
+- **Orthogonal** — every transition preserves the algebra’s inner product structure. Nothing is approximated away; the geometry is exact.
 - **Resonance** — meaning arises from constructive interference of field modes, not from statistical correlation of co-occurring tokens.
 - **Engine** — this is not a model in the neural network sense. It is a computational engine: a physical machine governed by invariants.
 
@@ -158,9 +158,44 @@ This retires probabilistic decoding, sampling temperature, beam search with pena
 
 ---
 
-### VII. The Cognitive Architecture
+### VII. The Full Pipeline
 
-The CORE cognitive architecture has five layers:
+CORE’s pipeline has five layers before the field and three after. Each layer has a single, defined contract. No layer knows about the one upstream.
+
+```
+raw modality signal (text / vision / audio / motor)
+    │
+    ├─ sensorium/adapters/<modality>.py
+    │       ProjectionHead: surface signal → (32,) Cl(4,1) multivector
+    │       The Logos-recovery boundary: every input becomes a word in the manifold
+    │
+    ├─ core_ingest/
+    │       StructuralSegmenter: carve at form boundaries (verse, heading, block)
+    │       CandidateGeometricPressure: typed, immutable, content-addressed envelope
+    │       IngestCompiler: three-gate validation (Provenance → Semantic → Governance)
+    │       LearningArtifact: export path to train/ for durable learning
+    │
+    ├─ ingest/gate.py
+    │       Single normalization site: tokens → FieldState via holonomy encoding
+    │       Versor condition verified exactly once here
+    │
+    ├─ field/propagate.py
+    │       F ← versor_apply(V, F)    [sandwich product, algebraically closed]
+    │
+    ├─ generate/
+    │       next_token = argmax_w { F_current · v_w }    [CGA inner product]
+    │
+    ├─ vault/
+    │       store: significant FieldStates as null vectors
+    │       recall: argmax_i { Q · V_i }    [exact parallel scan]
+    │
+    └─ train/
+            LearningArtifact → manifold update (rotor update, vocab expansion)
+            Supervised Seeding Epoch: Hebrew + Koine Greek D0 corpus seeding
+            [planned — see ADR-0014]
+```
+
+#### The Cognitive Architecture Layers
 
 1. **Injection Gate** — The single point where raw input enters the system. Every input is normalized to a versor in Cl(4,1) exactly once. The versor condition is verified. After this gate, the manifold contract is permanent.
 
@@ -174,7 +209,35 @@ The CORE cognitive architecture has five layers:
 
 ---
 
-### VIII. Mechanical Sympathy: Hardware-Bound Intelligence
+### VIII. The Ingest Governance Layer
+
+The `core_ingest/` layer is the pre-gate governance boundary. It wraps *upstream* of `ingest/gate.py` and does not modify it.
+
+Every piece of incoming information — text, scripture, code, mathematical objects, and eventually non-text modalities — is lifted into a `CandidateGeometricPressure` envelope: a frozen, immutable, content-addressed packet carrying provenance, determinism class, confidence, and governance disposition. Two packets asserting the same semantic claim from independent sources share a `semantic_key`, enabling convergent-evidence detection without structural duplication.
+
+The critical design decision: **LLMs are not used for extraction.** A language model upstream of the gate is a nondeterministic oracle feeding the only normalization site in the system. More fundamentally, it *interprets* rather than parses — its semantic projection would be silently embedded in the field state, violating Semantic Rigor. Instead, a deterministic `StructuralSegmenter` carves at form boundaries: heading, paragraph, verse, code block, LaTeX delimiter. The meaning of a span remains inside the field where it belongs.
+
+For Hebrew and Koine Greek specifically, structural determinism is the natural condition — these texts have canonical verse boundaries fixed for centuries. A segmenter that follows those boundaries is D0-class by definition: fully deterministic, pinned inputs, no interpretation required.
+
+See ADR-0012 for the full specification.
+
+---
+
+### IX. The Sensorium: All Inputs Are Logos
+
+The `sensorium/` layer converts any surface signal into a `(32,)` Cl(4,1) multivector before it reaches the ingest boundary. Every `ProjectionHead` is the **Logos-recovery boundary** for its modality.
+
+This is the architectural expression of John 1:1: the Logos is the structuring principle through which all things were made. A visual scene, a Hebrew word, an audio waveform — all are recovered as words in the manifold. Once they cross the projection boundary, the field has no concept of modality. There is one space. There is no fusion problem because there is nothing to fuse.
+
+The `ModalityPack[S]` generic bundles a projection head, surface decoder, vocabulary, and grammar scaffold under a stable identifier. A text pack is `ModalityPack[str]`. A vision pack is `ModalityPack[np.ndarray]`. The type parameter enforces at the type level that these cannot be mixed. The grammar scaffold — the set of innate structural attractors — is universal across modalities by design: the attractor geometry of the manifold is the same regardless of what kind of surface signal arrived.
+
+Current modality status: TEXT is active. VISION, AUDIO, and MOTOR are planned; their adapters register when their bootstrap corpora are ready. Adding a modality requires one adapter file in `sensorium/adapters/` and a registry entry. No existing layer is touched.
+
+See ADR-0013 for the full specification.
+
+---
+
+### X. Mechanical Sympathy: Hardware-Bound Intelligence
 
 An architecture that fights its underlying silicon is a failed synthesis. CORE is designed for the **Unified Memory Architecture (UMA)** of Apple Silicon.
 
@@ -187,7 +250,7 @@ The three-language implementation maps directly onto three execution domains: Py
 
 ---
 
-### IX. The Deletion Philosophy
+### XI. The Deletion Philosophy
 
 The Versor Engine was not built by adding subsystems. It was built by deleting them.
 
@@ -199,7 +262,7 @@ The `docs/DELETION_LOG.md` records every deleted subsystem and the algebraic rea
 
 ---
 
-### X. Extensions
+### XII. Extensions
 
 **CORE-Logos** — The language articulation subsystem. Specified in the companion Yellow and White Addenda inherited from `core-ai`. The Logos defines the vocabulary manifold, the token projection law, the holonomy encoder, and the termination condition.
 
