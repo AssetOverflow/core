@@ -1,0 +1,8 @@
+{"record_id":"en:be:present:1sg","lemma_id":"en:be","surface_form":"am","features":{"tense":"present","person":"1","number":"sg"},"notes":"Suppletive form. Primary copula for I AM (cf. Exodus 3:14 / John 8:58)."}
+{"record_id":"en:be:present:2sg","lemma_id":"en:be","surface_form":"are","features":{"tense":"present","person":"2","number":"sg"},"notes":null}
+{"record_id":"en:be:present:3sg","lemma_id":"en:be","surface_form":"is","features":{"tense":"present","person":"3","number":"sg"},"notes":"Used in John 1:1: 'the Word was God' — past tense 'was' is en:be:past:3sg."}
+{"record_id":"en:be:past:3sg","lemma_id":"en:be","surface_form":"was","features":{"tense":"past","person":"3","number":"sg"},"notes":"John 1:1 — 'In the beginning was the Word.'"}
+{"record_id":"en:word:singular","lemma_id":"en:word","surface_form":"word","features":{"number":"sg","case":"common"},"notes":null}
+{"record_id":"en:word:plural","lemma_id":"en:word","surface_form":"words","features":{"number":"pl","case":"common"},"notes":null}
+{"record_id":"en:light:uninflected","lemma_id":"en:light","surface_form":"light","features":{"number":"uncountable"},"notes":"Mass noun; no plural in primary sense."}
+{"record_id":"en:beginning:singular","lemma_id":"en:beginning","surface_form":"beginning","features":{"number":"sg","case":"common"},"notes":"John 1:1: 'In the beginning' — en arche / bereshit."}

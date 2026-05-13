@@ -1,0 +1,10 @@
+{"sense_id":"el:logos:speech","lemma_id":"el:logos","field_target":"speech.referential","constraints":[],"rank":1}
+{"sense_id":"el:logos:creative-speech","lemma_id":"el:logos","field_target":"speech.creative","constraints":["divine-context","logos-anchor"],"rank":2}
+{"sense_id":"el:logos:reason","lemma_id":"el:logos","field_target":"reason.cosmic","constraints":["philosophical-context"],"rank":3}
+{"sense_id":"el:eimi:existence","lemma_id":"el:eimi","field_target":"existence.state","constraints":["copular-frame"],"rank":1}
+{"sense_id":"el:eimi:divine-identity","lemma_id":"el:eimi","field_target":"identity.divine","constraints":["divine-context","absolute-use"],"rank":2}
+{"sense_id":"el:ginomai:becoming","lemma_id":"el:ginomai","field_target":"creation.coming-into-being","constraints":["aorist-aspect"],"rank":1}
+{"sense_id":"el:arche:temporal","lemma_id":"el:arche","field_target":"time.origin","constraints":[],"rank":1}
+{"sense_id":"el:arche:rule","lemma_id":"el:arche","field_target":"hierarchy.rule","constraints":["non-temporal-context"],"rank":2}
+{"sense_id":"el:phos:physical","lemma_id":"el:phos","field_target":"illumination.emanation","constraints":[],"rank":1}
+{"sense_id":"el:phos:metaphorical","lemma_id":"el:phos","field_target":"illumination.metaphorical","constraints":["divine-context"],"rank":2}

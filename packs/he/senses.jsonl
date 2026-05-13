@@ -1,0 +1,10 @@
+{"sense_id":"he:dabar:speech","lemma_id":"he:dabar","field_target":"speech.referential","constraints":[],"rank":1}
+{"sense_id":"he:dabar:creative-speech","lemma_id":"he:dabar","field_target":"speech.creative","constraints":["divine-context","logos-anchor"],"rank":2}
+{"sense_id":"he:dabar:matter","lemma_id":"he:dabar","field_target":"agency.communicative","constraints":["non-speech-context"],"rank":3}
+{"sense_id":"he:haya:existence","lemma_id":"he:haya","field_target":"existence.state","constraints":["copular-frame"],"rank":1}
+{"sense_id":"he:haya:event","lemma_id":"he:haya","field_target":"event.occurrence","constraints":["active-frame"],"rank":2}
+{"sense_id":"he:bara:creation","lemma_id":"he:bara","field_target":"creation.ex-nihilo","constraints":["agent-must-be-divine"],"rank":1}
+{"sense_id":"he:or:physical","lemma_id":"he:or","field_target":"illumination.emanation","constraints":[],"rank":1}
+{"sense_id":"he:or:metaphorical","lemma_id":"he:or","field_target":"illumination.metaphorical","constraints":["divine-context"],"rank":2}
+{"sense_id":"he:reshit:temporal","lemma_id":"he:reshit","field_target":"time.origin","constraints":[],"rank":1}
+{"sense_id":"he:reshit:chief","lemma_id":"he:reshit","field_target":"hierarchy.chief","constraints":["non-temporal-context"],"rank":2}
