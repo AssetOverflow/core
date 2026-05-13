@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://assetoverflow.dev/core/schemas/morphology",
+  "title": "CORE Morphology Record",
+  "description": "A single inflected surface form derived from a lemma, with an explicit morphological feature bundle.",
+  "type": "object",
+  "required": ["record_id", "lemma_id", "surface_form", "features"],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "description": "Stable unique identifier. Convention: {lemma_id}:{feature-summary} e.g. 'he:haya:qatal:3ms'."
+    },
+    "lemma_id": {
+      "type": "string",
+      "description": "Foreign key to the lemma record."
+    },
+    "surface_form": {
+      "type": "string",
+      "description": "The inflected surface form in the pack's native script. Unicode NFC."
+    },
+    "features": {
+      "type": "object",
+      "description": "Morphological feature bundle. Keys vary by language and part of speech. Examples for Hebrew verbs: stem, aspect, person, gender, number. Examples for Greek verbs: tense, voice, mood, person, number. Examples for English: tense, person, number."
+    },
+    "notes": {
+      "type": ["string", "null"],
+      "description": "Optional notes on irregular forms, defective paradigms, or disambiguation."
+    }
+  },
+  "additionalProperties": false
+}

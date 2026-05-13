@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://assetoverflow.dev/core/schemas/sense",
+  "title": "CORE Sense Record",
+  "description": "A single sense of a lemma: a specific mapping from a lemma to a CORE field target, valid under specified constraints.",
+  "type": "object",
+  "required": ["sense_id", "lemma_id", "field_target"],
+  "properties": {
+    "sense_id": {
+      "type": "string",
+      "description": "Stable unique identifier. Convention: {lemma_id}:{sense-name} e.g. 'el:logos:cosmic-speech'."
+    },
+    "lemma_id": {
+      "type": "string",
+      "description": "Foreign key to the lemma record."
+    },
+    "field_target": {
+      "type": "string",
+      "description": "The CORE shared field primitive this sense maps to. Must exist in the shared primitive vocabulary. E.g. 'speech.creative', 'existence.state', 'identity.relational'."
+    },
+    "constraints": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Conditions under which this sense is valid. E.g. 'copular-frame', 'divine-context', 'temporal-aspect:aorist'."
+    },
+    "rank": {
+      "type": ["number", "integer"],
+      "description": "Priority rank for this sense when multiple senses could apply. 1 is primary sense.",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

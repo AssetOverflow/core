@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://assetoverflow.dev/core/schemas/lemma",
+  "title": "CORE Lemma Record",
+  "description": "A single lexical entry in the pack's lemma inventory. Lemmas are the stable unit of the field-state layer — tokens are surface realizations of lemmas, not the other way around.",
+  "type": "object",
+  "required": ["lemma_id", "language", "script_form", "pos", "morph_class", "semantic_family"],
+  "properties": {
+    "lemma_id": {
+      "type": "string",
+      "description": "Stable unique identifier. Convention: {lang}:{base_form} e.g. 'he:dabar', 'el:logos'."
+    },
+    "language": {
+      "type": "string",
+      "enum": ["en", "he", "el"],
+      "description": "Pack language code."
+    },
+    "script_form": {
+      "type": "string",
+      "description": "Canonical script form in the pack's native script. Unicode NFC. For Hebrew: unpointed unless pointing is semantically load-bearing."
+    },
+    "transliteration": {
+      "type": ["string", "null"],
+      "description": "Latin-script transliteration for non-Latin packs. Null for English."
+    },
+    "gloss_seed": {
+      "type": ["string", "null"],
+      "description": "A minimal English gloss seed. Not a definition — just a stable orientation anchor for alignment and debugging."
+    },
+    "pos": {
+      "type": "string",
+      "description": "Part of speech. Use lowercase: 'noun', 'verb', 'adjective', 'particle', 'pronoun', 'preposition', 'conjunction', 'adverb', 'interjection'."
+    },
+    "morph_class": {
+      "type": "string",
+      "description": "Morphological class within the pack. For Hebrew: Qal, Niphal, Piel, etc. For Greek: thematic, athematic, etc. For English: regular, copular, modal, etc."
+    },
+    "semantic_family": {
+      "type": "string",
+      "description": "Shared semantic family name. This is the cross-language alignment handle. Must be a string that can be matched against the same field in other packs."
+    },
+    "field_hooks": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "List of CORE field primitive names this lemma connects to. These must exist in the shared field primitive vocabulary."
+    },
+    "readback_priority": {
+      "type": ["number", "integer"],
+      "description": "When multiple lemmas could realize a field state, higher priority wins. Integer. 1 is highest priority.",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

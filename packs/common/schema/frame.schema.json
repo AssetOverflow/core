@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://assetoverflow.dev/core/schemas/frame",
+  "title": "CORE Frame Record",
+  "description": "A predicate frame template. Frames define the argument structure of predicates — what roles are required, optional, or forbidden.",
+  "type": "object",
+  "required": ["frame_id", "language", "predicate_type", "slots"],
+  "properties": {
+    "frame_id": {
+      "type": "string",
+      "description": "Stable unique identifier. Convention: {lang}:{predicate-name} e.g. 'he:copular-basic'."
+    },
+    "language": {
+      "type": "string",
+      "enum": ["en", "he", "el"]
+    },
+    "predicate_type": {
+      "type": "string",
+      "description": "Class of predicate. Examples: 'copular', 'transitive', 'ditransitive', 'intransitive', 'causative', 'stative'."
+    },
+    "slots": {
+      "type": "array",
+      "description": "Ordered list of argument slots in this frame.",
+      "items": {
+        "type": "object",
+        "required": ["name", "required"],
+        "properties": {
+          "name": {"type": "string"},
+          "required": {"type": "boolean"},
+          "semantic_role": {"type": "string"},
+          "constraints": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Frame-level constraints that apply regardless of slot. E.g. 'agreement-required', 'no-passive'."
+    },
+    "field_target": {
+      "type": ["string", "null"],
+      "description": "The shared CORE field primitive this frame maps to when activated."
+    }
+  },
+  "additionalProperties": false
+}
