@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache/
+.hypothesis/
+
+core-rs/target/
+core-rs/Cargo.lock
+
+uv.lock
