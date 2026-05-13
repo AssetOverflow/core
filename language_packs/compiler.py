@@ -165,12 +165,6 @@ def _apply_morphology(vec: np.ndarray, morphology: MorphologyEntry) -> np.ndarra
     return vec
 
 
-def _apply_morphology_tags(vec: np.ndarray, tags: tuple[str, ...], weight: float) -> np.ndarray:
-    for tag in tags:
-        vec = geometric_product(vec, _feature_rotor(tag.lower(), "morph", weight))
-    return vec
-
-
 def _entry_to_coordinate(
     entry: LexicalEntry,
     morphology: MorphologyEntry | None = None,
@@ -188,19 +182,10 @@ def _entry_to_coordinate(
 
     if morphology is not None:
         vec = _apply_morphology(vec, morphology)
-    else:
-        vec = _apply_morphology_tags(vec, entry.morphology_tags, 0.15)
 
     vec = geometric_product(vec, _feature_rotor(entry.lemma.lower(), "lemma", 0.1))
     vec = geometric_product(vec, _feature_rotor(entry.surface.lower(), "surface", 0.05))
     return unitize_versor(vec)
-
-
-def _uses_legacy_root_tags(entry: LexicalEntry) -> bool:
-    return any(
-        tag.startswith("root:") or tag.startswith("triliteral:")
-        for tag in entry.morphology_tags
-    )
 
 
 def _resolved_morphology(
@@ -208,8 +193,6 @@ def _resolved_morphology(
     morphology_registry: "MorphologyRegistry | None",
 ) -> MorphologyEntry | None:
     if morphology_registry is None or not entry.morphology_id:
-        return None
-    if _uses_legacy_root_tags(entry):
         return None
     return morphology_registry.get(entry.morphology_id)
 
