@@ -4,7 +4,7 @@ FieldState — the complete cognitive field at one moment.
 Invariant: versor_condition(F) < 1e-6 always.
 This is checked at injection and maintained structurally by versor_apply().
 
-FieldState is immutable by design (frozen=True).
+FieldState is immutable by design (frozen=True, slots=True).
 The np.ndarray F is copied and validated at construction — the copy() call
 is the explicit contract boundary. Callers must not retain a mutable
 reference to the array passed in and expect coherence.
@@ -17,7 +17,7 @@ import numpy as np
 _EXPECTED_COMPONENTS = 32
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FieldState:
     F: np.ndarray   # shape (32,) float32 — Cl(4,1) multivector on the versor manifold
     node: int = 0   # current node index in the vocabulary manifold
@@ -28,6 +28,7 @@ class FieldState:
         # Enforce copy + dtype + shape at the construction boundary.
         # frozen=True prevents reassignment, but ndarray contents are still
         # mutable via the array object; copy() here is the defence.
+        # slots=True closes __dict__ so no incidental attributes can be added.
         F = np.array(self.F, dtype=np.float32).copy()
         if F.shape != (_EXPECTED_COMPONENTS,):
             raise ValueError(

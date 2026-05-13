@@ -63,6 +63,7 @@ import hashlib
 import json
 import struct
 from copy import deepcopy
+from dataclasses import fields
 from typing import Any
 
 import numpy as np
@@ -498,7 +499,7 @@ class TestDET10FieldStateIsSingleMultivector:
         """FieldState must not hold a copy of the input tokens."""
         state = inject(["in", "the", "beginning"], _PinVocab())
         # No attribute should store the original token list
-        for attr in vars(state).values():
+        for attr in (getattr(state, field.name) for field in fields(state)):
             if isinstance(attr, (list, tuple)):
                 # Allow small metadata tuples but not token-length sequences
                 assert len(attr) <= 4, (
