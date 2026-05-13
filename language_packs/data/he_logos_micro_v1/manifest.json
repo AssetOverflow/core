@@ -6,7 +6,7 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "he_logos_micro_v1.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "a419d50f0bd9e326969e358d9f83ac7c56f0ed82cf1c3caba05cda7e06c5fbe0",
+  "checksum": "2740950b37671b0a2f7de117e3e8ff5dfde049abcea32a6a2a97cb5b199d7b61",
   "version": "1.0.0",
   "gate_engaged": true,
   "oov_policy": "fail_closed"

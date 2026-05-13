@@ -87,12 +87,52 @@ def _compact_root(root: str) -> str:
     return root.replace("-", "")
 
 
+_HEBREW_ROOT_ROMANIZATION = {
+    "א": "A",
+    "ב": "B",
+    "ג": "G",
+    "ד": "D",
+    "ה": "H",
+    "ו": "W",
+    "ז": "Z",
+    "ח": "H",
+    "ט": "T",
+    "י": "Y",
+    "כ": "K",
+    "ך": "K",
+    "ל": "L",
+    "מ": "M",
+    "ם": "M",
+    "נ": "N",
+    "ן": "N",
+    "ס": "S",
+    "ע": "A",
+    "פ": "P",
+    "ף": "P",
+    "צ": "TS",
+    "ץ": "TS",
+    "ק": "Q",
+    "ר": "R",
+    "ש": "SH",
+    "ת": "T",
+}
+
+
+def _triliteral_root(root: str) -> str:
+    parts = [part for part in root.split("-") if part]
+    romanized = [_HEBREW_ROOT_ROMANIZATION.get(part, part.upper()) for part in parts]
+    return "-".join(romanized) if romanized else _compact_root(root).upper()
+
+
 def _apply_morphology(vec: np.ndarray, morphology: MorphologyEntry) -> np.ndarray:
     if morphology.root:
-        vec = geometric_product(vec, _feature_rotor(morphology.root.lower(), "morph:root", 0.08))
         vec = geometric_product(
             vec,
-            _feature_rotor(f"root:{_compact_root(morphology.root).lower()}", "morph", 0.12),
+            _feature_rotor(f"triliteral:{_triliteral_root(morphology.root).lower()}", "morph", 0.13),
+        )
+        vec = geometric_product(
+            vec,
+            _feature_rotor(f"root:{_compact_root(morphology.root).lower()}", "morph", 0.17),
         )
 
     for idx, prefix in enumerate(morphology.prefix_chain):
@@ -103,16 +143,16 @@ def _apply_morphology(vec: np.ndarray, morphology: MorphologyEntry) -> np.ndarra
         )
 
     if morphology.stem:
-        vec = geometric_product(vec, _feature_rotor(morphology.stem.lower(), "morph:stem", 0.05))
+        vec = geometric_product(vec, _feature_rotor(morphology.stem.lower(), "morph:stem", 0.10))
 
     for key, value in _ordered_inflection_items(dict(morphology.inflection)):
         vec = geometric_product(
             vec,
-            _feature_rotor(key.lower(), "morph:infl-role", 0.01),
+            _feature_rotor(key.lower(), "morph:infl-role", 0.02),
         )
         vec = geometric_product(
             vec,
-            _feature_rotor(value.lower(), "morph", 0.035),
+            _feature_rotor(value.lower(), "morph", 0.05),
         )
 
     for idx, suffix in enumerate(morphology.suffix_chain):
