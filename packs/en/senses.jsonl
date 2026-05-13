@@ -1,8 +1,8 @@
-{"sense_id":"en:word:speech-act","lemma_id":"en:word","field_target":"speech.referential","constraints":[],"rank":1}
-{"sense_id":"en:word:creative-speech","lemma_id":"en:word","field_target":"speech.creative","constraints":["divine-context","logos-anchor"],"rank":2}
-{"sense_id":"en:be:existence","lemma_id":"en:be","field_target":"existence.state","constraints":["copular-frame"],"rank":1}
-{"sense_id":"en:be:identity","lemma_id":"en:be","field_target":"identity.relational","constraints":["copular-frame","predicate-nominal"],"rank":2}
-{"sense_id":"en:light:physical","lemma_id":"en:light","field_target":"illumination.emanation","constraints":[],"rank":1}
-{"sense_id":"en:light:metaphorical","lemma_id":"en:light","field_target":"illumination.metaphorical","constraints":["divine-context"],"rank":2}
-{"sense_id":"en:beginning:temporal","lemma_id":"en:beginning","field_target":"time.origin","constraints":[],"rank":1}
-{"sense_id":"en:beginning:causal","lemma_id":"en:beginning","field_target":"causation.first","constraints":["divine-context"],"rank":2}
+{"sense_id":"en:word:creative-utterance","lemma_id":"en:word","field_target":"logos.articulation.creative","constraints":["creative-or-authoritative-context"],"rank":1}
+{"sense_id":"en:word:spoken","lemma_id":"en:word","field_target":"logos.articulation.spoken","constraints":[],"rank":2}
+{"sense_id":"en:be:existence","lemma_id":"en:be","field_target":"existence.state.identity","constraints":["copular-frame"],"rank":1}
+{"sense_id":"en:be:occurrence","lemma_id":"en:be","field_target":"existence.state","constraints":["existential-frame"],"rank":2}
+{"sense_id":"en:beginning:absolute-origin","lemma_id":"en:beginning","field_target":"time.origin.absolute","constraints":["absolute-temporal-or-ontological-context"],"rank":1}
+{"sense_id":"en:beginning:sequential","lemma_id":"en:beginning","field_target":"time.origin","constraints":[],"rank":2}
+{"sense_id":"en:with:accompaniment","lemma_id":"en:with","field_target":"relation.accompaniment","constraints":[],"rank":1}
+{"sense_id":"en:god:divine-identity","lemma_id":"en:god","field_target":"divine.identity","constraints":[],"rank":1}
