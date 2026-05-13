@@ -9,10 +9,17 @@ import numpy as np
 
 from algebra.cl41 import N_COMPONENTS, geometric_product
 from algebra.versor import unitize_versor
-from language_packs.schema import LanguagePackManifest, LanguageRole, LexicalEntry, OOVPolicy
+from language_packs.schema import (
+    LanguagePackManifest,
+    LanguageRole,
+    LexicalEntry,
+    MorphologyEntry,
+    OOVPolicy,
+)
 from vocab.manifold import VocabManifold
 
 if TYPE_CHECKING:
+    from morphology.registry import MorphologyRegistry
     from sensorium.protocol import ModalityVocabulary
 
 
@@ -52,7 +59,82 @@ def _domain_features(domain: str) -> list[tuple[str, float]]:
     ]
 
 
-def _entry_to_coordinate(entry: LexicalEntry) -> np.ndarray:
+_INFLECTION_PRIORITY = (
+    "pos",
+    "binyan",
+    "declension",
+    "tense",
+    "voice",
+    "mood",
+    "aspect",
+    "person",
+    "gender",
+    "number",
+    "case",
+    "state",
+)
+
+
+def _ordered_inflection_items(inflection: dict[str, str]) -> list[tuple[str, str]]:
+    priority = {key: idx for idx, key in enumerate(_INFLECTION_PRIORITY)}
+    return sorted(
+        inflection.items(),
+        key=lambda item: (priority.get(item[0], len(_INFLECTION_PRIORITY)), item[0]),
+    )
+
+
+def _compact_root(root: str) -> str:
+    return root.replace("-", "")
+
+
+def _apply_morphology(vec: np.ndarray, morphology: MorphologyEntry) -> np.ndarray:
+    if morphology.root:
+        vec = geometric_product(vec, _feature_rotor(morphology.root.lower(), "morph:root", 0.08))
+        vec = geometric_product(
+            vec,
+            _feature_rotor(f"root:{_compact_root(morphology.root).lower()}", "morph", 0.12),
+        )
+
+    for idx, prefix in enumerate(morphology.prefix_chain):
+        weight = 0.05 / (idx + 1)
+        vec = geometric_product(
+            vec,
+            _feature_rotor(f"{idx}:{prefix.lower()}", "morph:prefix", weight),
+        )
+
+    if morphology.stem:
+        vec = geometric_product(vec, _feature_rotor(morphology.stem.lower(), "morph:stem", 0.05))
+
+    for key, value in _ordered_inflection_items(dict(morphology.inflection)):
+        vec = geometric_product(
+            vec,
+            _feature_rotor(key.lower(), "morph:infl-role", 0.01),
+        )
+        vec = geometric_product(
+            vec,
+            _feature_rotor(value.lower(), "morph", 0.035),
+        )
+
+    for idx, suffix in enumerate(morphology.suffix_chain):
+        weight = 0.04 / (idx + 1)
+        vec = geometric_product(
+            vec,
+            _feature_rotor(f"{idx}:{suffix.lower()}", "morph:suffix", weight),
+        )
+
+    return vec
+
+
+def _apply_morphology_tags(vec: np.ndarray, tags: tuple[str, ...], weight: float) -> np.ndarray:
+    for tag in tags:
+        vec = geometric_product(vec, _feature_rotor(tag.lower(), "morph", weight))
+    return vec
+
+
+def _entry_to_coordinate(
+    entry: LexicalEntry,
+    morphology: MorphologyEntry | None = None,
+) -> np.ndarray:
     vec = np.zeros(N_COMPONENTS, dtype=np.float32)
     vec[0] = 1.0
 
@@ -64,28 +146,54 @@ def _entry_to_coordinate(entry: LexicalEntry) -> np.ndarray:
     if pos:
         vec = geometric_product(vec, _feature_rotor(pos, "pos", 0.35))
 
-    for tag in entry.morphology_tags:
-        vec = geometric_product(vec, _feature_rotor(tag.lower(), "morph", 0.15))
+    if morphology is not None:
+        vec = _apply_morphology(vec, morphology)
+    else:
+        vec = _apply_morphology_tags(vec, entry.morphology_tags, 0.15)
 
     vec = geometric_product(vec, _feature_rotor(entry.lemma.lower(), "lemma", 0.1))
     vec = geometric_product(vec, _feature_rotor(entry.surface.lower(), "surface", 0.05))
     return unitize_versor(vec)
 
 
-def compile_entries_to_manifold(entries: list[LexicalEntry]) -> VocabManifold:
+def _uses_legacy_root_tags(entry: LexicalEntry) -> bool:
+    return any(
+        tag.startswith("root:") or tag.startswith("triliteral:")
+        for tag in entry.morphology_tags
+    )
+
+
+def _resolved_morphology(
+    entry: LexicalEntry,
+    morphology_registry: "MorphologyRegistry | None",
+) -> MorphologyEntry | None:
+    if morphology_registry is None or not entry.morphology_id:
+        return None
+    if _uses_legacy_root_tags(entry):
+        return None
+    return morphology_registry.get(entry.morphology_id)
+
+
+def compile_entries_to_manifold(
+    entries: list[LexicalEntry],
+    morphology_registry: "MorphologyRegistry | None" = None,
+) -> VocabManifold:
     manifold = VocabManifold()
     for entry in entries:
-        versor = _entry_to_coordinate(entry)
+        versor = _entry_to_coordinate(entry, _resolved_morphology(entry, morphology_registry))
         manifold.add(entry.surface, versor)
     return manifold
 
 
-def compile_entries_to_modality_vocab(entries: list[LexicalEntry]) -> "ModalityVocabulary[str]":
+def compile_entries_to_modality_vocab(
+    entries: list[LexicalEntry],
+    morphology_registry: "MorphologyRegistry | None" = None,
+) -> "ModalityVocabulary[str]":
     from sensorium.protocol import ModalityVocabulary
 
     vocab: ModalityVocabulary[str] = ModalityVocabulary()
     for entry in entries:
-        point = _entry_to_coordinate(entry)
+        point = _entry_to_coordinate(entry, _resolved_morphology(entry, morphology_registry))
         vocab.register_point(entry.surface, point)
     return vocab
 
@@ -118,6 +226,11 @@ def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
         raise ValueError(f"Checksum mismatch for {pack_id}: {checksum} != {manifest_payload['checksum']}")
 
     entries = load_pack_entries(pack_id)
+    morphology_registry = None
+    if any(entry.morphology_id for entry in entries):
+        from morphology.registry import load_morphology
+
+        morphology_registry = load_morphology(pack_id)
 
     manifest = LanguagePackManifest(
         pack_id=manifest_payload["pack_id"],
@@ -132,7 +245,7 @@ def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
         gate_engaged=manifest_payload.get("gate_engaged", False),
         oov_policy=OOVPolicy(manifest_payload.get("oov_policy", OOVPolicy.FAIL_CLOSED.value)),
     )
-    return manifest, compile_entries_to_manifold(entries)
+    return manifest, compile_entries_to_manifold(entries, morphology_registry=morphology_registry)
 
 
 def load_pack_entries(pack_id: str) -> list[LexicalEntry]:
