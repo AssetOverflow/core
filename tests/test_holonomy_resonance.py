@@ -33,11 +33,6 @@ def test_triple_alignment_closer_than_other_triples():
     _, he = load_pack("he_logos_micro_v1")
     _, grc = load_pack("grc_logos_micro_v1")
 
-    word_trip = [
-        en.get_versor("word"),
-        he.get_versor("דבר"),
-        grc.get_versor("λόγος"),
-    ]
     aligned_score = np.mean(
         [
             cga_inner(en.get_versor("word"), he.get_versor("דבר")),
@@ -74,10 +69,13 @@ def test_same_root_hebrew_forms_land_closer_than_unrelated_noun():
 
 def test_structured_morphology_improves_same_root_hebrew_resonance():
     entries = load_pack_entries("he_logos_micro_v1")
-    tag_only = compile_entries_to_manifold(entries)
+    no_morphology = compile_entries_to_manifold(entries)
     structured = compile_entries_to_manifold(entries, load_morphology("he_logos_micro_v1"))
 
-    tag_only_score = cga_inner(tag_only.get_versor("דבר"), tag_only.get_versor("דברים"))
+    no_morph_score = cga_inner(no_morphology.get_versor("דבר"), no_morphology.get_versor("דברים"))
     structured_score = cga_inner(structured.get_versor("דבר"), structured.get_versor("דברים"))
 
-    assert structured_score > tag_only_score
+    assert structured_score > no_morph_score, (
+        f"Structured morphology should bring same-root forms closer: "
+        f"structured={structured_score:.6f}, no_morphology={no_morph_score:.6f}"
+    )

@@ -118,6 +118,11 @@ _HEBREW_ROOT_ROMANIZATION = {
 }
 
 
+def _is_hebrew_root(root: str) -> bool:
+    """Return True if the root string contains Hebrew script characters."""
+    return any(ch in _HEBREW_ROOT_ROMANIZATION for ch in root.replace("-", ""))
+
+
 def _triliteral_root(root: str) -> str:
     parts = [part for part in root.split("-") if part]
     romanized = [_HEBREW_ROOT_ROMANIZATION.get(part, part.upper()) for part in parts]
@@ -126,10 +131,15 @@ def _triliteral_root(root: str) -> str:
 
 def _apply_morphology(vec: np.ndarray, morphology: MorphologyEntry) -> np.ndarray:
     if morphology.root:
-        vec = geometric_product(
-            vec,
-            _feature_rotor(f"triliteral:{_triliteral_root(morphology.root).lower()}", "morph", 0.13),
-        )
+        if _is_hebrew_root(morphology.root):
+            vec = geometric_product(
+                vec,
+                _feature_rotor(
+                    f"triliteral:{_triliteral_root(morphology.root).lower()}",
+                    "morph",
+                    0.13,
+                ),
+            )
         vec = geometric_product(
             vec,
             _feature_rotor(f"root:{_compact_root(morphology.root).lower()}", "morph", 0.17),
