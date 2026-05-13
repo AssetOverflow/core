@@ -1,16 +1,22 @@
 import numpy as np
-import pytest
 
-from algebra.versor import normalize_to_versor, versor_condition
+from algebra.versor import unitize_versor, versor_condition
 from algebra.holonomy import holonomy_encode, holonomy_similarity
 
 
-def _random_versors(n: int, seed: int = 0) -> list:
+def _unit_reflector(seed: int) -> np.ndarray:
+    """Construct a true grade-1 versor/reflector in Cl(4,1)."""
     rng = np.random.default_rng(seed)
-    return [
-        normalize_to_versor(rng.standard_normal(32).astype(np.float32))
-        for _ in range(n)
-    ]
+    vec = rng.standard_normal(5).astype(np.float32)
+    if abs(float(np.dot(vec[:4], vec[:4]) - vec[4] * vec[4])) < 1e-4:
+        vec[0] += 1.0
+    mv = np.zeros(32, dtype=np.float32)
+    mv[1:6] = vec
+    return unitize_versor(mv)
+
+
+def _random_versors(n: int, seed: int = 0) -> list:
+    return [_unit_reflector(seed + i) for i in range(n)]
 
 
 def test_holonomy_is_versor():
@@ -30,6 +36,7 @@ def test_holonomy_bounded_long():
     words = _random_versors(100)
     H = holonomy_encode(words)
     norm = float(np.linalg.norm(H))
+    assert np.isfinite(norm)
     assert 0.1 < norm < 10.0, f"Long holonomy norm out of range: {norm}"
 
 
