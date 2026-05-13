@@ -20,11 +20,13 @@ head recovers it.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
 
 import numpy as np
+
+from language_packs.schema import LanguageRole, OOVPolicy
 
 # Surface type variable
 S = TypeVar("S")
@@ -73,36 +75,49 @@ class SurfaceDecoder(Protocol[S]):
 
 class ModalityVocabulary(Generic[S]):
     """
-    Bidirectional map: surface token ↔ rotor (null vector in Cl(4,1)).
+    Bidirectional map: surface token ↔ manifold multivector.
 
-    This is a base class; each modality provides its own implementation.
-    The vocabulary is built during the Supervised Seeding Epoch for each
-    modality and is frozen afterward.
+    Vocabulary entries are positions/points in the field, not transition
+    rotors. Operators are constructed separately by the algebra layer.
+    Legacy get_rotor/register names remain as compatibility aliases while
+    new code should use get_point/register_point.
     """
 
     def __init__(self) -> None:
-        self._token_to_rotor: dict[Any, np.ndarray] = {}
-        self._rotor_keys: list[Any] = []  # ordered token list
+        self._token_to_point: dict[Any, np.ndarray] = {}
+        self._point_keys: list[Any] = []  # ordered token list
+        # Compatibility aliases for older tests/callers.
+        self._token_to_rotor = self._token_to_point
+        self._rotor_keys = self._point_keys
 
-    def register(self, token: S, rotor: np.ndarray) -> None:
-        """Register a surface token → rotor mapping."""
-        if rotor.shape != (CL41_DIM,):
+    def register_point(self, token: S, point: np.ndarray) -> None:
+        """Register a surface token → manifold point mapping."""
+        if point.shape != (CL41_DIM,):
             raise ValueError(
-                f"Rotor must have shape ({CL41_DIM},), got {rotor.shape}"
+                f"Manifold point must have shape ({CL41_DIM},), got {point.shape}"
             )
-        self._token_to_rotor[token] = rotor.astype(np.float32)
-        if token not in self._rotor_keys:
-            self._rotor_keys.append(token)
+        self._token_to_point[token] = point.astype(np.float32)
+        if token not in self._point_keys:
+            self._point_keys.append(token)
+
+    def get_point(self, token: S) -> np.ndarray:
+        """Look up the manifold point for a surface token."""
+        return self._token_to_point[token]
+
+    # Compatibility aliases. Prefer register_point/get_point in new code.
+    def register(self, token: S, rotor: np.ndarray) -> None:
+        """Compatibility alias for register_point()."""
+        self.register_point(token, rotor)
 
     def get_rotor(self, token: S) -> np.ndarray:
-        """Look up the rotor for a surface token. Raises KeyError if absent."""
-        return self._token_to_rotor[token]
+        """Compatibility alias for get_point()."""
+        return self.get_point(token)
 
     def __len__(self) -> int:
-        return len(self._token_to_rotor)
+        return len(self._token_to_point)
 
     def __contains__(self, token: object) -> bool:
-        return token in self._token_to_rotor
+        return token in self._token_to_point
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,6 +127,8 @@ class ModalityPack(Generic[S]):
 
     pack_id          — stable identifier ("en", "he", "grc", "imagenet-1k", …)
     modality_type    — Modality enum value
+    language_role    — role in CORE-Logos (English articulation, Hebrew root depth, etc.)
+    oov_policy       — unknown-token behavior; depth packs fail closed by default
     projection       — ProjectionHead for this modality (None = not yet built)
     decoder          — SurfaceDecoder (None = decode not supported)
     vocabulary       — ModalityVocabulary for this modality
@@ -122,6 +139,8 @@ class ModalityPack(Generic[S]):
     Invariants (enforced at construction)
     - embedding_dim of projection must equal CL41_DIM if projection is provided
     - gate_engaged=True requires checksum_verified=True
+    - engaged depth packs must fail closed on OOV so unknown Hebrew/Greek forms
+      never collapse to a shared fallback point
     """
     pack_id:           str
     modality_type:     Modality
@@ -131,6 +150,8 @@ class ModalityPack(Generic[S]):
     projection:        Any | None = None  # ProjectionHead[S] — Any for frozen slot compat
     decoder:           Any | None = None  # SurfaceDecoder[S]
     gate_engaged:      bool = True
+    language_role:     LanguageRole | None = None
+    oov_policy:        OOVPolicy = OOVPolicy.TAGGED_FALLBACK
 
     def __post_init__(self) -> None:
         if self.projection is not None:
@@ -143,4 +164,13 @@ class ModalityPack(Generic[S]):
             raise ValueError(
                 "gate_engaged=True requires checksum_verified=True. "
                 "Run verify_unitarity() on the ProjectionHead before engaging the gate."
+            )
+        if (
+            self.gate_engaged
+            and self.language_role in {LanguageRole.DEPTH_ROOT, LanguageRole.DEPTH_RELATION}
+            and self.oov_policy is not OOVPolicy.FAIL_CLOSED
+        ):
+            raise ValueError(
+                "Engaged depth language packs must use OOVPolicy.FAIL_CLOSED. "
+                "Unknown Hebrew/Greek surfaces must not collapse to a fallback point."
             )
