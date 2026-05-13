@@ -1,15 +1,17 @@
 corpus_id: he-tier0
 status: draft
-
-sources: []
-
 license_review: pending
+sources:
+  - id: wlc
+    name: Westminster Leningrad Codex
+    description: >-
+      The authoritative digitized text of the Hebrew Bible with full
+      nikud and teamim. Public domain.
+    license: public-domain
+    url: https://github.com/openscriptures/morphhb
+    hash: pending
 hashes: []
-
-notes: |
-  Populate with vetted Hebrew source manifests.
-  Priority tier-0 sources: Biblia Hebraica Stuttgartensia (BHS) or
-  Westminster Leningrad Codex (WLC) — both have well-established structural
-  segmentation (book/chapter/verse = D0 boundary markers).
-  Each source must include: title, edition, license, SHA-256, and
-  segmentation strategy. No LLM-extracted content.
+notes: >
+  WLC is the canonical source for Biblical Hebrew. Hash to be
+  recorded after pinned download. Additional sources require
+  license review before inclusion.

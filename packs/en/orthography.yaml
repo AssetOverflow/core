@@ -3,19 +3,19 @@ script: Latin
 
 normalization:
   unicode_normal_form: NFC
-  lowercase_for_lookup: true
+  lowercase_for_indexing: true
+  # Surface forms preserve original casing.
+  # Indexing and lemma lookup use lowercased forms.
   strip_diacritics: false
+  # English retains diacritics in loanwords (naïve, résumé).
 
 punctuation:
   strategy: preserve
-  sentence_terminals: [".", "!", "?"]
-  quotation_marks: ["\u201c", "\u201d", "\u2018", "\u2019"]
+  # Punctuation is preserved in normalization output.
+  # Lift rules are responsible for ignoring or consuming it appropriately.
 
 spacing:
-  strategy: whitespace-delimited
-  collapse_multiple_spaces: true
+  strategy: whitespace-split
+  # Standard whitespace tokenization. No special boundary rules.
 
-special_forms:
-  contractions: expand
-  # "don't" -> "do not" before lemmatization
-  # "it's"  -> "it is" before lemmatization
+script_direction: ltr

@@ -1,15 +1,24 @@
 corpus_id: el-tier0
 status: draft
-
-sources: []
-
 license_review: pending
+sources:
+  - id: sblgnt
+    name: SBL Greek New Testament
+    description: >-
+      The Society of Biblical Literature Greek New Testament.
+      A critically edited text of the Greek New Testament.
+    license: review-required
+    url: https://github.com/LogosBible/SBLGNT
+    hash: pending
+  - id: byzantine
+    name: Byzantine Majority Text
+    description: >-
+      Robinson-Pierpont Byzantine Majority Text. Public domain.
+    license: public-domain
+    url: https://github.com/byztxt/byzantine-majority-text
+    hash: pending
 hashes: []
-
-notes: |
-  Populate with vetted Koine Greek source manifests.
-  Priority tier-0 sources: SBL Greek New Testament (SBLGNT) or
-  Nestle-Aland 28th edition morphologically tagged text.
-  Both have verse-level D0 boundary markers.
-  Each source must include: title, edition, license, SHA-256, and
-  segmentation strategy. No LLM-extracted content.
+notes: >
+  SBLGNT license requires review before use in training data.
+  Byzantine text is public domain and may proceed after hash pin.
+  All hashes must be recorded before the Coverage gate is run.

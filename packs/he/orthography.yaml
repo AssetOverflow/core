@@ -1,27 +1,28 @@
 language: he
 script: Hebrew
-direction: rtl
 
 normalization:
   unicode_normal_form: NFC
-  lowercase_for_lookup: false  # Hebrew has no case
-  strip_diacritics: configurable
-  # Nikkud (vowel pointing) is stripped by default for lemma lookup
-  # but preserved when semantically load-bearing (e.g. Qere/Ketiv distinction)
-  nikkud_policy: strip_for_lookup
-  cantillation_marks: strip
+  # Hebrew Unicode: use precomposed forms where available.
+  # Full nikud (vowel points) are preserved in normalization.
+  # Qere/Ketiv variants must be tracked separately in the lemma record.
+  strip_nikud_for_indexing: false
+  # Nikud is semantically relevant for disambiguation in many cases.
+  # Do not strip it during normalization. Lemma lookup may index
+  # both pointed and unpointed forms.
+  strip_teamim: true
+  # Cantillation marks (teamim) are stripped during normalization.
+  # They carry liturgical meaning but are not part of semantic lift.
+  final_forms: preserve
+  # Final letter forms (ךםןףץ) are preserved exactly.
 
 punctuation:
   strategy: preserve
-  paragraph_marker: "\u05c0"  # paseq
-  section_marker: "\u05c3"    # sof pasuq
+  maqaf: preserve
+  # The maqaf (־) is a Hebrew hyphen connecting words into
+  # a single accentual unit. It is preserved and handled by frame rules.
 
 spacing:
-  strategy: whitespace-delimited
-  maqaf_handling: preserve
-  # maqaf (\u05be) connects words syntactically; preserve as a unit marker
+  strategy: whitespace-split
 
-shoresh:
-  # Root-based morphology. Lemma lookup resolves to 3- or 4-letter root.
-  # Morphological analysis must identify shoresh before feature extraction.
-  extraction_required: true
+script_direction: rtl

@@ -1,30 +1,30 @@
-pack_id     = "en"
-name        = "English Base Pack"
-version     = "0.1.0"
-status      = "draft"
-script      = "Latin"
-default     = true
+pack_id = "en"
+name = "English Base Pack"
+version = "0.1.0"
+status = "draft"
+script = "Latin"
+normalization = "deterministic"
+default = true
+
+# English is the default articulation base. Any CORE model instance
+# may designate a different language as its base, but English is the
+# canonical default until explicitly overridden in the model config.
 
 [contracts]
-lemma_first          = true
-shared_field_target  = true
-local_readback       = true
-alignment_required   = true
+lemma_first = true
+shared_field_target = true
+local_readback = true
+alignment_required = true
 
 [gates]
-schema       = false
-lexical      = false
-morphology   = false
-lift         = false
-readback     = false
-determinism  = false
-alignment    = false
-coverage     = false
+schema = false
+lexical = false
+morphology = false
+lift = false
+readback = false
+determinism = false
+alignment = false
+coverage = false
 
-[notes]
-role = """
-Default articulation base. English is chosen as the default for practical
-reasons (current primary working language) but the contract does not privilege
-it semantically. Any language could serve this role in a custom CORE instance.
-The default flag controls surface output, not field-layer priority.
-"""
+# Gates are false until the gate runner confirms passage.
+# Do not manually set these to true.

@@ -1,13 +1,9 @@
 corpus_id: en-tier0
 status: draft
-
-sources: []
-
 license_review: pending
+sources: []
 hashes: []
-
-notes: |
-  Populate with vetted, deterministically segmentable source manifests.
-  Each source must include: title, origin, license, SHA-256 of raw file,
-  and structural segmentation strategy (e.g. paragraph-boundary, sentence-boundary).
-  No LLM-extracted content. Segmentation must be D0 or D1.
+notes: >
+  Populate with vetted, deterministic source manifests before
+  the Coverage gate is run. Sources must be public domain or
+  explicitly licensed for use in CORE training and validation.

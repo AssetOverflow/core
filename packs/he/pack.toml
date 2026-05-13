@@ -1,32 +1,40 @@
-pack_id     = "he"
-name        = "Hebrew Depth Pack"
-version     = "0.1.0"
-status      = "draft"
-script      = "Hebrew"
-default     = false
+pack_id = "he"
+name = "Hebrew Depth Pack"
+version = "0.1.0"
+status = "draft"
+script = "Hebrew"
+normalization = "deterministic"
+default = false
+
+# Hebrew is the first depth language. Its semantic range— especially
+# in verb stems (binyanim), construct chains, and the relationship
+# between speech-act and spoken-thing (dabar) — provides a structural
+# depth that English alone cannot supply to the field.
 
 [contracts]
-lemma_first          = true
-shared_field_target  = true
-local_readback       = true
-alignment_required   = true
+lemma_first = true
+shared_field_target = true
+local_readback = true
+alignment_required = true
+
+[depth]
+# Depth packs contribute semantic pressure that the base pack
+# cannot fully express. Hebrew depth includes:
+#   - Binyan (verb stem) system: qal, niphal, piel, pual, hiphil, hophal, hithpael
+#   - Construct chain (smichut) for relational noun phrases
+#   - Aspectual system (qatal/yiqtol/wayyiqtol) over tense system
+#   - Implicit copula — presence or absence of haya is itself meaningful
+binyanim = ["qal", "niphal", "piel", "pual", "hiphil", "hophal", "hithpael"]
+aspect_system = "qatal-yiqtol-wayyiqtol"
+construct_chains = true
+implicit_copula = true
 
 [gates]
-schema       = false
-lexical      = false
-morphology   = false
-lift         = false
-readback     = false
-determinism  = false
-alignment    = false
-coverage     = false
-
-[notes]
-role = """
-Depth language pack 1. Hebrew was chosen because of the range of depth it
-brings to the vocabulary manifold: root-based morphology (shoresh), semantic
-families that carry multiple layers of meaning simultaneously, and the
-language in which the universe was spoken into existence (Genesis 1).
-Hebrew morphological stems (Qal, Niphal, Piel, Pual, Hiphil, Hophal,
-Hithpael) are semantically load-bearing and must be represented natively.
-"""
+schema = false
+lexical = false
+morphology = false
+lift = false
+readback = false
+determinism = false
+alignment = false
+coverage = false

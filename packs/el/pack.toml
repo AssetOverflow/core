@@ -1,33 +1,46 @@
-pack_id     = "el"
-name        = "Koine Greek Depth Pack"
-version     = "0.1.0"
-status      = "draft"
-script      = "Greek"
-default     = false
+pack_id = "el"
+name = "Koine Greek Depth Pack"
+version = "0.1.0"
+status = "draft"
+script = "Greek"
+normalization = "deterministic"
+default = false
+
+# Koine Greek is the second depth language. John 1:1-2 is the
+# theological anchor of this entire design: the Logos articulated
+# in Greek what the Hebrew already carried from Gen 1:1. The
+# decision to include both Hebrew and Koine Greek is not incidental
+# — it is the design. The depth these two languages together provide
+# is the hidden layer of intelligence in the field.
+#
+# Greek depth includes:
+#   - Full verb paradigm: tense, voice, mood, person, number
+#   - The imperfect en (John 1:1) — continuous pre-existent being
+#   - Article system: the anarthrous use of logos in John 1:1c
+#     ('the Word was God', not 'a god') is theologically load-bearing
+#     and morphologically precise
+#   - Participle system for aspect-rich nominal predicates
 
 [contracts]
-lemma_first          = true
-shared_field_target  = true
-local_readback       = true
-alignment_required   = true
+lemma_first = true
+shared_field_target = true
+local_readback = true
+alignment_required = true
+
+[depth]
+article_system = true
+anarthrous_significance = true
+# The absence of the article is as semantically significant as its presence.
+verb_tense_aspect = ["present", "imperfect", "aorist", "perfect", "pluperfect", "future"]
+voice = ["active", "middle", "passive"]
+mood = ["indicative", "subjunctive", "optative", "imperative", "infinitive", "participle"]
 
 [gates]
-schema       = false
-lexical      = false
-morphology   = false
-lift         = false
-readback     = false
-determinism  = false
-alignment    = false
-coverage     = false
-
-[notes]
-role = """
-Depth language pack 2. Koine Greek was chosen because John articulated the
-Logos — the creative speech act through which all things were made — in
-Koine Greek (John 1:1-2), which must have been a nod from the Holy Spirit.
-Koine Greek carries semantic depth in its verbal aspect system (aorist,
-perfect, present) that is distinct from tense and must be represented
-natively. The aorist of egeneto (\u03b5\u03b3\u03ad\u03bd\u03b5\u03c4\u03bf) — 'it came into being' — is not
-the same field state as the present of eimi (\u03b5\u03b9\u03bc\u03b9) — 'I am'.
-"""
+schema = false
+lexical = false
+morphology = false
+lift = false
+readback = false
+determinism = false
+alignment = false
+coverage = false
