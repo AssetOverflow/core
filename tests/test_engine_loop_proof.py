@@ -90,7 +90,7 @@ def test_session_context_respond_preserves_and_vaults_final_state() -> None:
     result = session.respond(max_tokens=3)
 
     assert isinstance(result, GenerationResult)
-    assert session.state == result.final_state
+    assert session.state is result.final_state
     assert not np.array_equal(result.final_state.F, initial.F)
 
     recalled = session.vault.recall(result.final_state.F, top_k=1)
