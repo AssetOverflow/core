@@ -19,6 +19,7 @@ Normalization doctrine for this module:
 Indexed access:
   get_versor_at(idx)  — returns a copy of the stored versor by integer index.
   get_word_at(idx)    — returns the word string by integer index.
+  index_of(word)       — returns the integer index for a stored word.
   These are the primitives generation uses; VocabManifold does not build
   operators. Algebra builds operators. Vocab stores points.
 
@@ -83,6 +84,13 @@ class VocabManifold:
     def get_word_at(self, idx: int) -> str:
         """Return the word string at integer index."""
         return self._words[idx]
+
+    def index_of(self, word: str) -> int:
+        """Return the integer index for a stored word. Raises KeyError if missing."""
+        try:
+            return self._words.index(word)
+        except ValueError:
+            raise KeyError(f"Word '{word}' not in vocabulary.")
 
     def nearest(self, F: np.ndarray, exclude_idx: int = -1) -> tuple[str, int]:
         """

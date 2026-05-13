@@ -17,7 +17,10 @@ def field_walk(seed: str, steps: int = 4) -> list[str]:
 
 def main() -> None:
     while True:
-        text = input("> ").strip()
+        try:
+            text = input("> ").strip()
+        except EOFError:
+            break
         if text in {"quit", "exit"}:
             break
         try:
