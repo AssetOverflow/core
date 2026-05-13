@@ -53,14 +53,14 @@ def unitize_versor(v: np.ndarray) -> np.ndarray:
         Scaled copy of v satisfying |V * ~V|_scalar ≈ 1.
 
     Raises:
-        ValueError: if v is a zero or near-zero multivector.
+        ValueError: if v is a null, zero, or near-zero multivector.
     """
     v = np.asarray(v, dtype=np.float32)
     vv = geometric_product(v, reverse(v))
     scalar_sq = float(vv[0])
     if abs(scalar_sq) < 1e-12:
         raise ValueError(
-            "unitize_versor: multivector is zero or near-zero, cannot unitize."
+            "unitize_versor: null, zero, or near-zero multivector; cannot unitize."
         )
     scale = 1.0 / np.sqrt(abs(scalar_sq))
     return (v * scale).astype(np.float32)
@@ -103,12 +103,14 @@ def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
 
 def versor_condition(v: np.ndarray) -> float:
     """
-    Measure how far v is from being a unit versor.
+    Full residual distance from the unit-versor condition.
 
-    Returns |scalar_part(v * reverse(v)) - 1|.
-    At zero, v is exactly a unit versor.
-    Used at the injection gate to assert the invariant before returning.
+    Computes ||v * reverse(v) - 1||_F, not a signed scalar shortcut.
+    Zero means v satisfies the unit-versor condition. Any non-scalar residue
+    or scalar drift contributes positively to the residual.
     """
     v = np.asarray(v, dtype=np.float32)
-    vv = geometric_product(v, reverse(v))
-    return float(abs(vv[0]) - 1.0)
+    vv = geometric_product(v, reverse(v)).astype(np.float32)
+    vv = vv.copy()
+    vv[0] -= 1.0
+    return float(np.linalg.norm(vv))
