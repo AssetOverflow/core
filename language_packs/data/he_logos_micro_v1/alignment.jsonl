@@ -1,0 +1,7 @@
+{"source_id": "he-001", "target_id": "grc-001", "relation": "cross_lang.logos.utterance", "weight": 0.95, "evidence_ids": ["John1:1", "Gen1:1"]}
+{"source_id": "he-002", "target_id": "grc-002", "relation": "cross_lang.logos.genesis", "weight": 0.93, "evidence_ids": ["John1:1", "Gen1:1"]}
+{"source_id": "he-003", "target_id": "grc-003", "relation": "cross_lang.logos.illumination", "weight": 0.95, "evidence_ids": ["John1:4", "Gen1:3"]}
+{"source_id": "he-004", "target_id": "grc-004", "relation": "cross_lang.logos.vitality", "weight": 0.92, "evidence_ids": ["John1:4"]}
+{"source_id": "he-005", "target_id": "grc-005", "relation": "cross_lang.logos.aletheia", "weight": 0.94, "evidence_ids": ["John14:6"]}
+{"source_id": "he-006", "target_id": "grc-006", "relation": "cross_lang.logos.pneuma", "weight": 0.96, "evidence_ids": ["Gen1:2", "John3:8"]}
+{"source_id": "he-007", "target_id": "grc-007", "relation": "cross_lang.logos.ktizo", "weight": 0.91, "evidence_ids": ["Gen1:1", "John1:3"]}
