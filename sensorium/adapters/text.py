@@ -1,43 +1,41 @@
 """
 sensorium/adapters/text.py — Text modality adapter.
 
-The text adapter wires the existing vocab/ manifold into the sensorium
-protocol. It is the only active adapter during the Supervised Seeding
-Epoch (Hebrew and Koine Greek D0 corpus ingestion).
-
-ProjectionHead implementation:
-  project(token: str) → (32,) float32
-    Looks up the token's versor in the ModalityVocabulary.
-    Falls back to a normalized zero-seeded versor for unknown tokens
-    (OOV handling — does not raise; logs a miss).
+The text adapter wires language-pack vocabulary points into the sensorium
+protocol. It remains intentionally shallow until compiled language packs
+provide morphology, grammar attractors, and holonomy alignment manifests.
 
 Three pack_ids are defined:
-  "en"   — English (default base language)
-  "he"   — Hebrew (depth corpus; gate_engaged=False until seeding epoch)
-  "grc"  — Koine Greek (depth corpus; gate_engaged=False until seeding epoch)
+  "en"   — English (operational base / articulation surface)
+  "he"   — Hebrew (depth-root language; gate closed until seeding epoch)
+  "grc"  — Koine Greek (depth-relation language; gate closed until seeding epoch)
+
+OOV doctrine:
+  English may use a tagged fallback during early articulation.
+  Hebrew and Koine Greek fail closed by default. Unknown depth-language forms
+  must become vocab-expansion proposals, not collapse to a shared e1 point.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import numpy as np
 
+from language_packs.schema import LanguageRole, OOVPolicy
 from sensorium.protocol import (
     CL41_DIM,
     Modality,
     ModalityPack,
     ModalityVocabulary,
-    ProjectionHead,
 )
 
 log = logging.getLogger(__name__)
 
-# A canonical OOV rotor: e1 basis vector in Cl(4,1), normalized.
-# Component 1 of the 32-dim array corresponds to the e1 blade.
-_OOV_ROTOR = np.zeros(CL41_DIM, dtype=np.float32)
-_OOV_ROTOR[1] = 1.0  # e1 blade
+# A canonical English-only OOV point: e1 basis vector in Cl(4,1).
+# Depth packs do not use this fallback; they fail closed.
+_OOV_POINT = np.zeros(CL41_DIM, dtype=np.float32)
+_OOV_POINT[1] = 1.0  # e1 blade
 
 
 class TextProjectionHead:
@@ -52,20 +50,33 @@ class TextProjectionHead:
     modality:      Modality = Modality.TEXT
     embedding_dim: int      = CL41_DIM
 
-    def __init__(self, vocabulary: ModalityVocabulary) -> None:
+    def __init__(self, vocabulary: ModalityVocabulary, oov_policy: OOVPolicy) -> None:
         self._vocab = vocabulary
+        self._oov_policy = oov_policy
 
     def project(self, signal: str) -> np.ndarray:
         """
         Project a single text token to a (32,) Cl(4,1) multivector.
 
-        Uses the registered rotor for `signal`. Falls back to the
-        canonical OOV rotor with a log warning if the token is absent.
+        Uses the registered manifold point for `signal`. OOV behavior is
+        pack-specific: English may use a tagged fallback; depth packs fail
+        closed so unknown Hebrew/Greek forms do not collapse together.
         """
         if signal in self._vocab:
-            return self._vocab.get_rotor(signal).astype(np.float32)
-        log.warning("OOV token '%s' — using canonical OOV rotor (e1 blade)", signal)
-        return _OOV_ROTOR.copy()
+            return self._vocab.get_point(signal).astype(np.float32)
+
+        if self._oov_policy is OOVPolicy.FAIL_CLOSED:
+            raise KeyError(
+                f"OOV token '{signal}' and OOVPolicy.FAIL_CLOSED is active. "
+                "Route this surface form through the vocab-expansion path."
+            )
+        if self._oov_policy is OOVPolicy.PROPOSE_VOCAB_EXPANSION:
+            raise KeyError(
+                f"OOV token '{signal}' requires a vocab-expansion proposal."
+            )
+
+        log.warning("OOV token '%s' — using tagged English fallback point", signal)
+        return _OOV_POINT.copy()
 
     def project_batch(self, signals: list[str]) -> np.ndarray:
         """Project a list of tokens. Returns (N, 32) float32."""
@@ -73,7 +84,7 @@ class TextProjectionHead:
 
     def verify_unitarity(self, sample: str) -> bool:
         """
-        Verify that the projected rotor satisfies V · reverse(V) = ±1.
+        Verify that the projected multivector satisfies V · reverse(V) = ±1.
 
         Uses algebra.versor.versor_condition — the canonical check.
         Passes if condition < 1e-6.
@@ -83,8 +94,7 @@ class TextProjectionHead:
             mv = self.project(sample)
             return versor_condition(mv) < 1e-6
         except Exception:
-            # algebra not yet importable during early scaffold — pass
-            return True
+            return False
 
 
 def make_text_pack(
@@ -92,6 +102,8 @@ def make_text_pack(
     vocabulary: ModalityVocabulary | None = None,
     gate_engaged: bool = True,
     checksum_verified: bool = True,
+    language_role: LanguageRole | None = None,
+    oov_policy: OOVPolicy = OOVPolicy.TAGGED_FALLBACK,
 ) -> ModalityPack:
     """
     Construct a ModalityPack for a text modality.
@@ -102,11 +114,12 @@ def make_text_pack(
     vocabulary       : Pre-built ModalityVocabulary. A fresh empty one is
                        created if None.
     gate_engaged     : False for Hebrew/Koine Greek until seeding epoch.
-    checksum_verified: Set False if the vocabulary is not yet seeded;
-                       the registry mount will run the unitarity check.
+    checksum_verified: Set False if the vocabulary is not yet seeded.
+    language_role    : Architectural role in CORE-Logos.
+    oov_policy       : Pack-specific unknown-token behavior.
     """
     vocab = vocabulary if vocabulary is not None else ModalityVocabulary()
-    head  = TextProjectionHead(vocab)
+    head  = TextProjectionHead(vocab, oov_policy=oov_policy)
     return ModalityPack(
         pack_id=pack_id,
         modality_type=Modality.TEXT,
@@ -116,6 +129,8 @@ def make_text_pack(
         grammar_scaffold=None,  # populated during Supervised Seeding Epoch
         checksum_verified=checksum_verified,
         gate_engaged=gate_engaged,
+        language_role=language_role,
+        oov_policy=oov_policy,
     )
 
 
@@ -124,26 +139,34 @@ def make_text_pack(
 # ---------------------------------------------------------------------------
 
 def english_pack(vocabulary: ModalityVocabulary | None = None) -> ModalityPack:
-    """English pack — default base language. gate_engaged=True."""
-    return make_text_pack("en", vocabulary=vocabulary, gate_engaged=True)
+    """English pack — operational base and articulation surface."""
+    return make_text_pack(
+        "en",
+        vocabulary=vocabulary,
+        gate_engaged=True,
+        language_role=LanguageRole.OPERATIONAL_BASE,
+        oov_policy=OOVPolicy.TAGGED_FALLBACK,
+    )
 
 
 def hebrew_pack(vocabulary: ModalityVocabulary | None = None) -> ModalityPack:
     """
-    Hebrew pack — depth language.
+    Hebrew pack — depth-root language.
     gate_engaged=False until Supervised Seeding Epoch completes.
     """
     return make_text_pack(
         "he",
         vocabulary=vocabulary,
         gate_engaged=False,
-        checksum_verified=True,  # unitarity holds for OOV rotor
+        checksum_verified=True,
+        language_role=LanguageRole.DEPTH_ROOT,
+        oov_policy=OOVPolicy.FAIL_CLOSED,
     )
 
 
 def koine_greek_pack(vocabulary: ModalityVocabulary | None = None) -> ModalityPack:
     """
-    Koine Greek pack — depth language.
+    Koine Greek pack — depth-relation language.
     gate_engaged=False until Supervised Seeding Epoch completes.
     """
     return make_text_pack(
@@ -151,4 +174,6 @@ def koine_greek_pack(vocabulary: ModalityVocabulary | None = None) -> ModalityPa
         vocabulary=vocabulary,
         gate_engaged=False,
         checksum_verified=True,
+        language_role=LanguageRole.DEPTH_RELATION,
+        oov_policy=OOVPolicy.FAIL_CLOSED,
     )
