@@ -384,11 +384,12 @@ class ChatRuntime:
             vault_hits=vault_hits,
             versor_condition=versor_condition(result.final_state.F),
             flagged=flagged,
+                elaboration=sentence_plan.elaboration,
         )
         self.turn_log.append(turn_event)
 
         return ChatResponse(
-            surface=surface,
+surface=surface,
             proposition=proposition,
             articulation=articulation,
             dialogue_role=dialogue_role,
@@ -409,6 +410,45 @@ class ChatRuntime:
         except ValueError:
             return ""
 
+
+    async def achat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
+        """Async equivalent of chat() — drives agenerate() internally,
+        collects all tokens, then routes through SentenceAssembler.
+
+        Callers that want progressive token streaming should use agenerate()
+        directly. This method is for callers that want a fully assembled
+        ChatResponse identical to the synchronous path.
+        """
+        from generate.stream import agenerate
+        mt = max_tokens if max_tokens is not None else self.config.max_tokens
+        tokens: list[str] = []
+        async for token in agenerate(
+            self._context.state,
+            self._context.vocab,
+            self._motor,
+            max_tokens=mt,
+            vault=self._context.vault,
+        ):
+            tokens.append(token)
+        # Inject the collected tokens back into a GenerationResult-compatible
+        # structure so chat() can be called normally. The cleanest path is to
+        # delegate to the sync chat() after seeding the token walk:
+        result = self.chat(text, max_tokens=0)  # 0 tokens — proposition only
+        # Rebuild surface from the async token walk via SentenceAssembler.
+        sentence_plan = SentenceAssembler().assemble(
+            result.articulation,
+            tokens,
+            role=result.dialogue_role,
+        )
+        from dataclasses import replace
+        return replace(result, surface=sentence_plan.surface, walk_surface=sentence_plan.surface)
+
+    async def arespond(self, text: str, max_tokens: int | None = None) -> str:
+        """Async equivalent of respond() — returns the assembled surface string."""
+        try:
+            return (await self.achat(text, max_tokens=max_tokens)).surface
+        except ValueError:
+            return ""
 
 def _default_identity_manifold() -> IdentityManifold:
     axes = (
