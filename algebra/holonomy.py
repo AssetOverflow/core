@@ -5,9 +5,11 @@ A prompt w1, w2, ..., wn is encoded as the geometric holonomy of its
 forward+reverse versor walk. The walk closes, producing a bounded algebraic
 summary of the prompt path.
 
-The input word objects must already be valid construction-time versors.
-Holonomy may unitize intermediate construction products to prevent float32
-scale blow-up, but never repairs propagation state.
+The input word objects are vocabulary manifold points: mixed-grade conformal
+points with arbitrary Euclidean norm, NOT pure-grade rotors. They must be
+projected to the unit sphere with _to_unit_rotor() before any rotor algebra.
+Holonomy may unitize construction products to prevent float32 scale blow-up,
+but never repairs propagation state.
 """
 
 from __future__ import annotations
@@ -17,6 +19,8 @@ import numpy as np
 from .cl41 import geometric_product, reverse as cl_reverse
 from .versor import unitize_versor
 from .cga import cga_inner
+
+_L2_NORM_TOL = 1e-9
 
 
 def _renorm_if_needed(H: np.ndarray, step: int, renorm_every: int) -> np.ndarray:
@@ -38,6 +42,24 @@ def _position_rotor(step: int, dtype: np.dtype) -> np.ndarray:
     return rotor
 
 
+def _to_unit_rotor(v: np.ndarray, weight: float, dtype: np.dtype) -> np.ndarray:
+    """
+    Project a vocabulary manifold point onto the unit sphere, apply weight,
+    then unitize as a rotor construction input.
+
+    Vocabulary versors are mixed-grade conformal points. L2-normalizing first
+    gives a unit-sphere point whose V*~V product is scalar-dominant, making
+    it a valid input for unitize_versor().
+    """
+    v = np.asarray(v, dtype=dtype)
+    norm = float(np.linalg.norm(v))
+    if norm < _L2_NORM_TOL:
+        raise ValueError("_to_unit_rotor: zero or near-zero vocab versor.")
+    unit = (v / norm)
+    scaled = unit * float(weight)
+    return unitize_versor(scaled)
+
+
 def holonomy_encode(
     word_versors: list,
     alpha: float = 0.5,
@@ -51,9 +73,10 @@ def holonomy_encode(
     Reverse walk:  R = (1-alpha) * reverse(wn) * ... * reverse(w1)
     Holonomy:      H = F * R
 
-    Construction-time unitization is used at the boundary and at the final
-    product. A bounded Euclidean renormalization is also applied every
-    `renorm_every` steps to prevent long prompt overflow in float32.
+    Each word versor is projected to the unit sphere via _to_unit_rotor()
+    before entering rotor algebra. Construction-time unitization is used at
+    intermediate steps and the final product. A bounded Euclidean renorm is
+    also applied every `renorm_every` steps to prevent long prompt overflow.
     """
     if not word_versors:
         raise ValueError("Cannot encode empty prompt.")
@@ -73,11 +96,11 @@ def holonomy_encode(
     # Forward accumulation. Each token is carried through a deterministic
     # position rotor so path order survives even for scalar/vector fixtures.
     p0 = _position_rotor(0, dtype)
-    w0 = unitize_versor(np.asarray(word_versors[0], dtype=dtype) * weights[0])
+    w0 = _to_unit_rotor(word_versors[0], weights[0], dtype)
     F = unitize_versor(geometric_product(geometric_product(p0, w0), cl_reverse(p0)))
     for k in range(1, n):
         p = _position_rotor(k, dtype)
-        w = unitize_versor(np.asarray(word_versors[k], dtype=dtype) * weights[k])
+        w = _to_unit_rotor(word_versors[k], weights[k], dtype)
         step = unitize_versor(geometric_product(geometric_product(p, w), cl_reverse(p)))
         F = geometric_product(F, step)
         F = _renorm_if_needed(F, k, renorm_every)
