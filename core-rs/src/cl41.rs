@@ -1,6 +1,6 @@
-//! Cl(4,1) geometric product via fully unrolled precomputed table.
+//! Cl(4,1) geometric product via precomputed table.
 //!
-//! Signature: (+,+,+,+,-). 32-component f32 multivectors.
+//! Signature: (+,+,+,-,+). 32-component f32 multivectors.
 //! The multiplication table is computed once at program start using
 //! const evaluation and stored as two [u8;1024] and [i8;1024] arrays
 //! (index and sign for each of the 32x32 blade pairs).
@@ -20,10 +20,8 @@ pub enum Cl41Error {
 // We encode each blade as a bitmask over 5 bits (bit k = basis vector k+1 present)
 // The mapping from bitmask to component index follows grade-ascending, lex order.
 
-const N: usize = 32;
-
-// Signature: e1^2=+1, e2^2=+1, e3^2=+1, e4^2=+1, e5^2=-1
-const SIG: [i8; 5] = [1, 1, 1, 1, -1];
+// Signature: e1^2=+1, e2^2=+1, e3^2=+1, e4^2=-1, e5^2=+1
+const SIG: [i8; 5] = [1, 1, 1, -1, 1];
 
 // Precomputed at compile time via const fn
 const BLADE_MASKS: [u8; 32] = build_blade_masks();
@@ -68,62 +66,42 @@ const fn popcount5(x: u8) -> u8 {
 }
 
 // Multiply two basis blades given as bitmasks. Returns (result_mask, sign).
-// Uses bubble-sort on the concatenated index list, tracking swaps and metric contractions.
+// The sign is the parity of swaps needed to canonicalize A followed by B,
+// multiplied by the metric contractions for repeated basis vectors.
 const fn blade_product(a: u8, b: u8) -> (u8, i8) {
-    // Expand masks into sorted index sequences
-    let mut seq = [0u8; 10];
-    let mut len = 0usize;
-
-    let mut bit = 0u8;
-    while bit < 5 {
-        if (a >> bit) & 1 == 1 { seq[len] = bit; len += 1; }
-        bit += 1;
-    }
-    bit = 0;
-    while bit < 5 {
-        if (b >> bit) & 1 == 1 { seq[len] = bit; len += 1; }
-        bit += 1;
-    }
-
     let mut sign: i8 = 1;
 
-    // Bubble sort + contract duplicates
-    let mut changed = true;
-    while changed {
-        changed = false;
-        let mut i = 0usize;
-        while i + 1 < len {
-            if seq[i] == seq[i + 1] {
-                // Contract: e_k^2 = SIG[k]
-                sign *= SIG[seq[i] as usize];
-                // Remove both elements at i and i+1
-                let mut j = i;
-                while j + 2 < len { seq[j] = seq[j + 2]; j += 1; }
-                len -= 2;
-                changed = true;
-                if i > 0 { i -= 1; } // re-check from one step back
-            } else if seq[i] > seq[i + 1] {
-                let tmp = seq[i]; seq[i] = seq[i + 1]; seq[i + 1] = tmp;
-                sign *= -1;
-                changed = true;
-                i += 1;
-            } else {
-                i += 1;
+    // Anticommutation sign: every pair (a_i, b_j) with a_i > b_j swaps once.
+    let mut swaps = 0u8;
+    let mut ai = 0u8;
+    while ai < 5 {
+        if (a >> ai) & 1 == 1 {
+            let mut bj = 0u8;
+            while bj < 5 {
+                if (b >> bj) & 1 == 1 && ai > bj {
+                    swaps += 1;
+                }
+                bj += 1;
             }
         }
+        ai += 1;
+    }
+    if swaps % 2 == 1 {
+        sign *= -1;
     }
 
-    // Build result mask
-    let mut result = 0u8;
-    let mut i = 0usize;
-    while i < len { result |= 1 << seq[i]; i += 1; }
+    // Metric contractions for duplicate basis vectors.
+    let common = a & b;
+    let mut bit = 0u8;
+    while bit < 5 {
+        if (common >> bit) & 1 == 1 {
+            sign *= SIG[bit as usize];
+        }
+        bit += 1;
+    }
 
-    (result, sign)
+    (a ^ b, sign)
 }
-
-// Full 32x32 product table — computed once at startup (not const due to complexity)
-// TABLE_IDX[i][j] = component index of blade_i * blade_j
-// TABLE_SIGN[i][j] = sign (+1 or -1) of blade_i * blade_j
 
 struct Table {
     idx:  [[u8; 32]; 32],
