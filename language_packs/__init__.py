@@ -6,6 +6,8 @@ linguistic manifolds: surface forms, morphology, grammar attractors,
 cross-language resonances, and holonomy resonance proofs.
 """
 
+from pathlib import Path
+
 from .schema import (
     AlignmentEdge,
     GrammarAttractor,
@@ -16,6 +18,23 @@ from .schema import (
     MorphologyEntry,
     OOVPolicy,
 )
+
+_DATA_DIR = Path(__file__).parent / "data"
+
+
+def list_packs() -> list[str]:
+    """Return available compiled language-pack ids."""
+    if not _DATA_DIR.exists():
+        return []
+    return sorted(
+        path.name
+        for path in _DATA_DIR.iterdir()
+        if path.is_dir()
+        and (path / "manifest.json").exists()
+        and (path / "lexicon.jsonl").exists()
+    )
+
+
 __all__ = [
     "AlignmentEdge",
     "GrammarAttractor",
@@ -25,6 +44,7 @@ __all__ = [
     "LexicalEntry",
     "MorphologyEntry",
     "OOVPolicy",
+    "list_packs",
 ]
 
 
