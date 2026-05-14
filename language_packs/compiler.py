@@ -58,10 +58,22 @@ def _feature_rotor(name: str, salt: str, weight: float) -> np.ndarray:
 
 
 def _unit_feature_versor(vec: np.ndarray) -> np.ndarray:
-    versor = unitize_versor(vec)
-    if float(versor[0]) < 0.0:
-        versor = -versor
-    return versor.astype(np.float32, copy=False)
+    """
+    Normalize a mixed-grade conformal manifold point to unit Euclidean norm
+    and canonical positive scalar orientation.
+
+    Vocabulary coordinates are built by chaining _apply_feature rotations
+    on a scalar seed — they are mixed-grade conformal points, not pure-grade
+    rotors. The rotor invariant guard in unitize_versor() does not apply here.
+    Use direct Euclidean normalization instead.
+    """
+    norm = float(np.linalg.norm(vec))
+    if norm < 1e-9:
+        raise ValueError("_unit_feature_versor: zero or near-zero vector; cannot normalize.")
+    out = (vec / norm).astype(np.float32)
+    if float(out[0]) < 0.0:
+        out = -out
+    return out
 
 
 def _blend_feature_versors(source: np.ndarray, target: np.ndarray, strength: float) -> np.ndarray:

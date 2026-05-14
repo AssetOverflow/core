@@ -5,9 +5,10 @@ Normalization doctrine:
 
   unitize_versor(v)      — CONSTRUCTION primitive.
                            Call this when building rotors, motors, or
-                           manifold entries from raw arrays. It is the
-                           algebra layer's legitimate construction operation.
+                           other pure-grade algebraic objects from raw arrays.
                            May be called in: algebra/, persona/, vocab/ (pre-add).
+                           NOT for mixed-grade conformal manifold points —
+                           use Euclidean normalization for those.
 
   normalize_to_versor(v) — GATE primitive. Internal to ingest/gate.py.
                            Normalizes raw holonomy output to a versor at
@@ -36,7 +37,10 @@ __all__ = [
     # Import it explicitly only if you are ingest/gate.py.
 ]
 
-_RESIDUE_TOL = 1e-7
+# _RESIDUE_TOL: float32 Cl(4,1) geometric_product accumulates ~1e-7 noise
+# across 41 components. Set to 2e-6 to reject genuine non-scalar residues
+# (which are >>1e-6) while ignoring float32 arithmetic noise.
+_RESIDUE_TOL = 2e-6
 _NORM_TOL = 1e-12
 
 
@@ -45,8 +49,12 @@ def unitize_versor(v: np.ndarray) -> np.ndarray:
     Construction-time algebra primitive.
 
     Scale v so that the scalar part of v * reverse(v) equals +1.
-    Use this when building rotors, motors, or vocabulary entries
+    Use this when building rotors, motors, or other pure-grade versors
     from raw computed arrays.
+
+    This is NOT the right primitive for mixed-grade conformal manifold
+    points (vocabulary coordinates). For those, use direct Euclidean
+    normalization — the rotor invariant guard does not apply.
 
     This is not a repair operation. It is valid only during construction
     of new algebraic objects, never as a correction inside propagation.
@@ -58,7 +66,8 @@ def unitize_versor(v: np.ndarray) -> np.ndarray:
         Scaled copy of v satisfying |V * ~V|_scalar ≈ 1.
 
     Raises:
-        ValueError: if v is zero, null, anti-unit, or has non-scalar residue.
+        ValueError: if v is zero, null, anti-unit, or has non-scalar residue
+                    exceeding float32 accumulation tolerance (2e-6).
     """
     arr = np.asarray(v)
     dtype = arr.dtype if arr.dtype in (np.dtype(np.float32), np.dtype(np.float64)) else np.dtype(np.float32)
