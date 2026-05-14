@@ -38,6 +38,12 @@ _MORPHOLOGY_CLUSTER_NUDGE_STRENGTH: float = 0.55
 # trunk overlap from outranking exact cross-language concept agreement.
 _PRIMARY_SEMANTIC_DOMAIN_WEIGHT: float = 0.55
 
+# A clause built from Logos-domain tokens should not collapse toward a token
+# path that merely shares noun/position geometry. This separates explicit
+# Logos participants from non-Logos entries while preserving normal domain
+# features inside each group.
+_LOGOS_PARTICIPATION_WEIGHT: float = 0.75
+
 
 def _hash_to_blade(name: str, salt: str) -> int:
     digest = hashlib.sha256(f"{salt}:{name}".encode("utf-8")).digest()
@@ -91,6 +97,14 @@ def _domain_features(domain: str) -> list[tuple[str, float]]:
         (".".join(parts[: depth + 1]), 0.30 / (depth + 1))
         for depth in range(len(parts))
     ]
+
+
+def _has_logos_participation(domains: tuple[str, ...]) -> bool:
+    """Return true when an entry explicitly participates in the Logos field."""
+    return any(
+        domain_lower == "logos.core" or domain_lower.startswith("logos.")
+        for domain_lower in (domain.lower() for domain in domains)
+    )
 
 
 _INFLECTION_PRIORITY = (
@@ -228,6 +242,16 @@ def _entry_to_coordinate(
     for domain in entry.semantic_domains:
         for feature, weight in _domain_features(domain):
             vec = geometric_product(vec, _feature_rotor(feature, "domain", weight))
+
+    logos_participation = "logos" if _has_logos_participation(entry.semantic_domains) else "nonlogos"
+    vec = geometric_product(
+        vec,
+        _feature_rotor(
+            f"logos-participation:{logos_participation}",
+            "domain:logos-participation",
+            _LOGOS_PARTICIPATION_WEIGHT,
+        ),
+    )
 
     if entry.semantic_domains:
         primary_domain = entry.semantic_domains[0].lower()
