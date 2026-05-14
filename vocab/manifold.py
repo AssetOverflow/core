@@ -4,9 +4,10 @@ VocabManifold — the geometric vocabulary.
 Each word is a versor in Cl(4,1). nearest(F) finds the closest word
 by CGA inner product — no cosine similarity, no ANN index.
 
-Invariant: every stored versor must satisfy the Cl(4,1) grade-norm
-condition |V * reverse(V)|_scalar ≈ ±1. This is enforced at insertion
-time in add() and at replacement time in update().
+Invariant: every stored versor must satisfy the full Cl(4,1) unit-versor
+condition V * reverse(V) ≈ ±1. This rejects non-scalar construction residue,
+not merely scalar grade-norm drift, and is enforced at insertion time in
+add() and at replacement time in update().
 
 Normalization doctrine for this module:
   - Raw coordinate vectors (e.g. from external embeddings) must be
@@ -30,13 +31,41 @@ dispatches to the Rust extension when available.
 import numpy as np
 from algebra.backend import cga_inner
 from algebra.cl41 import geometric_product, reverse
+from algebra.versor import versor_unit_residual
 from language_packs.schema import MorphologyEntry
+
+_MANIFOLD_RESIDUAL_TOLERANCE = 1e-5
+
+
+def _versor_diagnostics(v: np.ndarray) -> tuple[float, float, float]:
+    product = geometric_product(v, reverse(v))
+    scalar = float(product[0])
+    residue = product.copy()
+    residue[0] = 0.0
+    residue_norm = float(np.linalg.norm(residue))
+    residual = versor_unit_residual(v, allow_negative=True)
+    return residual, scalar, residue_norm
+
+
+def _assert_manifold_versor(word: str, versor: np.ndarray, *, replacement: bool = False) -> None:
+    residual, scalar, residue_norm = _versor_diagnostics(versor)
+    if residual > _MANIFOLD_RESIDUAL_TOLERANCE:
+        noun = "replacement versor" if replacement else "versor"
+        action = "Call algebra.versor.unitize_versor() before update()." if replacement else (
+            "If lifting from a raw array, call algebra.versor.unitize_versor() first."
+        )
+        raise ValueError(
+            f"Word '{word}': {noun} residual {residual:.4e} exceeds "
+            f"{_MANIFOLD_RESIDUAL_TOLERANCE:.1e}; scalar={scalar:.4f}, "
+            f"non_scalar_residue={residue_norm:.4e}. Pass a clean Cl(4,1) "
+            f"unit versor satisfying V*reverse(V)≈±1. {action}"
+        )
 
 
 class VocabManifold:
     def __init__(self):
         self._words: list[str] = []
-        self._versors: list[np.ndarray] = []  # each shape (32,), grade-normed to ±1
+        self._versors: list[np.ndarray] = []  # each shape (32,), unit-versor ±1
         self._morphology_by_word: dict[str, MorphologyEntry] = {}
         self._language_by_word: dict[str, str] = {}
         self._transient_words: set[str] = set()
@@ -52,10 +81,10 @@ class VocabManifold:
         """
         Register a word-versor pair.
 
-        Enforces the Cl(4,1) versor invariant: the scalar part of
-        V * reverse(V) must be ≈ ±1. This rejects any raw coordinate
-        vector or external embedding that has not been lifted into the
-        algebra.
+        Enforces the Cl(4,1) manifold invariant: V * reverse(V) must be
+        approximately +1 or -1 as a full multivector residual, not merely
+        in its scalar component. This rejects raw coordinates, external
+        embeddings, and dirty construction products.
 
         If your source is a raw float array, call
         algebra.versor.unitize_versor() first — that is the construction-time
@@ -63,16 +92,10 @@ class VocabManifold:
         that function is reserved for the injection gate.
 
         Raises:
-            ValueError: if the grade-norm condition is not satisfied.
+            ValueError: if the full unit-versor residual is not satisfied.
         """
         v = np.asarray(versor, dtype=np.float32).copy()
-        grade_norm = float(geometric_product(v, reverse(v))[0])
-        if not (0.95 <= abs(grade_norm) <= 1.05):
-            raise ValueError(
-                f"Word '{word}': versor grade-norm {grade_norm:.4f} ≠ ±1. "
-                "Pass a valid Cl(4,1) versor. "
-                "If lifting from a raw array, call algebra.versor.unitize_versor() first."
-            )
+        _assert_manifold_versor(word, v)
         self._words.append(word)
         self._versors.append(v)
         resolved_language = language or (morphology.language if morphology is not None else None)
@@ -134,24 +157,19 @@ class VocabManifold:
 
         Used by the alignment correction pass after compilation to nudge
         cross-language aligned pairs toward each other without rebuilding
-        the full manifold. The grade-norm invariant is enforced identically
-        to add().
+        the full manifold. The full unit-versor residual is enforced
+        identically to add().
 
         Raises:
             KeyError:   if the word is not already in the manifold.
-            ValueError: if the grade-norm condition is not satisfied.
+            ValueError: if the full unit-versor residual is not satisfied.
         """
         try:
             idx = self._words.index(word)
         except ValueError:
             raise KeyError(f"Word '{word}' not in vocabulary; use add() for new entries.")
         v = np.asarray(versor, dtype=np.float32).copy()
-        grade_norm = float(geometric_product(v, reverse(v))[0])
-        if not (0.95 <= abs(grade_norm) <= 1.05):
-            raise ValueError(
-                f"Word '{word}': replacement versor grade-norm {grade_norm:.4f} ≠ ±1. "
-                "Call algebra.versor.unitize_versor() before update()."
-            )
+        _assert_manifold_versor(word, v, replacement=True)
         self._versors[idx] = v
 
     def get_versor(self, word: str) -> np.ndarray:

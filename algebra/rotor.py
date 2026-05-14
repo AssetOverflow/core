@@ -25,12 +25,22 @@ def word_transition_rotor(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     encode a position. Call this from algebra-aware field logic; never
     store the result on a vocabulary structure.
 
+    Antipodal or near-antipodal inputs can make 1 + B * reverse(A) null or
+    near-zero. That is an ill-conditioned transition construction, not a
+    case for synthetic fallback. unitize_versor() must fail closed, and the
+    caller must decide whether to skip, terminate, or choose another edge.
+
     Args:
         A: Source versor, shape (32,), grade-normed to ±1.
         B: Target versor, shape (32,), grade-normed to ±1.
 
     Returns:
         R: Unitized rotor in Cl(4,1), shape (32,).
+
+    Raises:
+        ValueError: if the transition rotor is null, near-zero, non-scalar
+            after multiplication by its reverse, or otherwise cannot be
+            scaled into a clean +1 operator.
     """
     R = geometric_product(B, reverse(A))
     R = R.copy()

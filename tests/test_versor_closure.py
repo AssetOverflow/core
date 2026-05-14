@@ -4,10 +4,17 @@ It verifies the core algebraic invariant of the entire system.
 """
 
 import numpy as np
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from algebra.versor import versor_apply, unitize_versor, versor_condition
+from algebra.rotor import word_transition_rotor
+from algebra.versor import (
+    unitize_versor,
+    versor_apply,
+    versor_condition,
+    versor_unit_residual,
+)
 
 
 def _positive_unit_reflector(seed=None) -> np.ndarray:
@@ -16,8 +23,7 @@ def _positive_unit_reflector(seed=None) -> np.ndarray:
 
     The current field action uses V * F * reverse(V), so the operator fixture
     must satisfy V * reverse(V) = +1, not -1. We therefore keep the fifth
-    (negative-metric) basis component bounded below the positive four-space
-    norm before construction-unitizing.
+    basis component bounded below the positive four-space norm.
     """
     rng = np.random.default_rng(seed)
     vec4 = rng.standard_normal(4).astype(np.float32)
@@ -38,7 +44,6 @@ def _positive_unit_reflector(seed=None) -> np.ndarray:
 @given(st.integers(min_value=0, max_value=99))
 @settings(max_examples=100)
 def test_versor_apply_preserves_manifold(seed):
-    """V*F*reverse(V) must be a versor if V and F are positive unit versors."""
     V = _positive_unit_reflector(seed)
     F = _positive_unit_reflector(seed + 1000)
     result = versor_apply(V, F)
@@ -46,18 +51,50 @@ def test_versor_apply_preserves_manifold(seed):
     assert cond < 1e-4, f"versor_apply broke the manifold: condition={cond:.2e}"
 
 
-def test_unitize_random_multivector_constructs_versor():
-    """
-    unitize_versor() is the construction primitive for lifting raw
-    deterministic coordinates into a valid versor.
-    """
-    raw = np.random.default_rng(0).standard_normal(32).astype(np.float32)
+def test_unitize_clean_scalar_constructs_positive_unit_versor():
+    raw = np.zeros(32, dtype=np.float32)
+    raw[0] = 2.0
     V = unitize_versor(raw)
-    assert versor_condition(V) < 1e-5
+    assert np.allclose(V[0], 1.0, atol=1e-7)
+    assert versor_condition(V) < 1e-7
+
+
+def test_unitize_rejects_non_scalar_residue_instead_of_hash_fallback():
+    dirty = np.zeros(32, dtype=np.float32)
+    dirty[0] = np.sqrt(0.5)
+    dirty[1] = np.sqrt(0.5)
+
+    with pytest.raises(ValueError, match="bad_residue"):
+        unitize_versor(dirty)
+
+
+def test_unitize_rejects_non_positive_scalar_norm():
+    negative_norm = np.zeros(32, dtype=np.float32)
+    negative_norm[5] = 1.0
+
+    with pytest.raises(ValueError, match="bad_scalar"):
+        unitize_versor(negative_norm)
+
+
+def test_versor_unit_residual_can_accept_signed_manifold_versors():
+    negative_norm = np.zeros(32, dtype=np.float32)
+    negative_norm[5] = 1.0
+
+    assert versor_condition(negative_norm) > 1.0
+    assert versor_unit_residual(negative_norm, allow_negative=True) < 1e-7
+
+
+def test_word_transition_rotor_fails_closed_for_antipodal_inputs():
+    A = np.zeros(32, dtype=np.float32)
+    A[0] = 1.0
+    B = np.zeros(32, dtype=np.float32)
+    B[0] = -1.0
+
+    with pytest.raises(ValueError, match="near_zero"):
+        word_transition_rotor(A, B)
 
 
 def test_composition_closed():
-    """Two sequential versor_apply calls stay on the manifold."""
     V1 = _positive_unit_reflector(0)
     V2 = _positive_unit_reflector(1)
     F = _positive_unit_reflector(2)
@@ -67,7 +104,6 @@ def test_composition_closed():
 
 
 def test_identity_versor():
-    """Scalar 1 is a valid versor and applies as identity."""
     identity = np.zeros(32, dtype=np.float32)
     identity[0] = 1.0
     F = _positive_unit_reflector(42)
