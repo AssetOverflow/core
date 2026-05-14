@@ -14,6 +14,7 @@ from .dialogue import (
     trajectory_blade,
 )
 from .stream import generate, agenerate
+from .surface import SentenceAssembler, SentencePlan, assemble as assemble_surface
 
 __all__ = [
     "DialogueRole",
@@ -29,4 +30,7 @@ __all__ = [
     "propose",
     "propose_dialogue",
     "trajectory_blade",
+    "SentenceAssembler",
+    "SentencePlan",
+    "assemble_surface",
 ]
