@@ -23,66 +23,108 @@ Normalization doctrine:
 """
 
 from __future__ import annotations
-import hashlib
+
 import numpy as np
-from .cl41 import geometric_product, reverse, N_COMPONENTS
+from .cl41 import geometric_product, reverse
 
 __all__ = [
     "unitize_versor",
     "versor_apply",
     "versor_condition",
+    "versor_unit_residual",
     # normalize_to_versor is intentionally NOT in __all__.
     # Import it explicitly only if you are ingest/gate.py.
 ]
+
+_CONSTRUCTION_RESIDUE_TOLERANCE = 1e-7
+_NEAR_ZERO_TOLERANCE = 1e-12
+
+
+def _array_dtype(v: np.ndarray) -> np.dtype:
+    arr = np.asarray(v)
+    return (
+        arr.dtype
+        if arr.dtype in (np.dtype(np.float32), np.dtype(np.float64))
+        else np.dtype(np.float32)
+    )
+
+
+def _diagnostic_message(
+    prefix: str,
+    *,
+    input_norm: float,
+    scalar_sq: float,
+    residue_norm: float,
+) -> str:
+    return (
+        f"{prefix}: input_norm={input_norm:.6e}, "
+        f"scalar_sq={scalar_sq:.6e}, residue_norm={residue_norm:.6e}"
+    )
 
 
 def unitize_versor(v: np.ndarray) -> np.ndarray:
     """
     Construction-time algebra primitive.
 
-    Scale v so that the scalar part of v * reverse(v) equals +1.
-    Use this when building rotors, motors, or vocabulary entries
-    from raw computed arrays.
+    Scale v so that v * reverse(v) is scalar +1. Use this only when
+    building rotors, motors, or vocabulary entries from already-clean
+    algebraic construction formulas.
 
-    This is not a repair operation. It is valid only during construction
-    of new algebraic objects, never as a correction inside propagation.
+    This is not a repair operation. If v * reverse(v) has non-scalar
+    residue, construction is ill-formed and fails closed with diagnostics.
+    It must never synthesize a replacement rotor unrelated to the input.
 
     Args:
-        v: shape (N_COMPONENTS,) float32 multivector.
+        v: shape (N_COMPONENTS,) float32/float64 multivector.
 
     Returns:
-        Scaled copy of v satisfying |V * ~V|_scalar ≈ 1.
+        Scaled copy of v satisfying V * reverse(V) ≈ +1.
 
     Raises:
-        ValueError: if v is a null, zero, or near-zero multivector.
+        ValueError: if v is near-zero, has non-positive scalar norm, or
+            carries non-scalar residue in v * reverse(v).
     """
-    arr = np.asarray(v)
-    dtype = arr.dtype if arr.dtype in (np.dtype(np.float32), np.dtype(np.float64)) else np.dtype(np.float32)
+    dtype = _array_dtype(v)
     v = np.asarray(v, dtype=dtype)
-    vv = geometric_product(v, reverse(v))
-    scalar_sq = float(vv[0])
-    if float(np.linalg.norm(v)) < 1e-12:
+    input_norm = float(np.linalg.norm(v))
+    if input_norm < _NEAR_ZERO_TOLERANCE:
         raise ValueError(
-            "unitize_versor: null, zero, or near-zero multivector; cannot unitize."
+            _diagnostic_message(
+                "unitize_versor: null, zero, or near-zero multivector; cannot unitize",
+                input_norm=input_norm,
+                scalar_sq=0.0,
+                residue_norm=0.0,
+            )
         )
+
+    vv = geometric_product(v, reverse(v)).astype(dtype)
+    scalar_sq = float(vv[0])
     residue = vv.copy()
     residue[0] = 0
-    if float(np.linalg.norm(residue)) < 1e-7 and scalar_sq > 0:
-        scale = 1.0 / np.sqrt(scalar_sq)
-        return (v * scale).astype(dtype)
+    residue_norm = float(np.linalg.norm(residue))
 
-    digest = hashlib.sha256(np.ascontiguousarray(v).view(np.uint8)).digest()
-    flat_idx = digest[0]
-    theta_unit = int.from_bytes(digest[1:5], "big") / 2**32
-    theta = 0.05 + theta_unit * (np.pi - 0.1)
-    sign_idx = int(np.argmax(np.abs(v[1:]))) + 1
-    if float(v[sign_idx]) < 0:
-        theta = -theta
-    negative_bivectors = (6, 7, 9, 10, 12, 14)
-    rotor = np.zeros(N_COMPONENTS, dtype=dtype)
-    rotor[0] = np.cos(theta)
-    rotor[negative_bivectors[flat_idx % len(negative_bivectors)]] = np.sin(theta)
-    return rotor.astype(dtype)
+    if residue_norm >= _CONSTRUCTION_RESIDUE_TOLERANCE:
+        raise ValueError(
+            _diagnostic_message(
+                "unitize_versor: non-scalar construction residue; operator is not a clean versor candidate",
+                input_norm=input_norm,
+                scalar_sq=scalar_sq,
+                residue_norm=residue_norm,
+            )
+        )
+
+    if scalar_sq <= 0.0:
+        raise ValueError(
+            _diagnostic_message(
+                "unitize_versor: non-positive scalar norm; cannot scale to +1 over real Cl(4,1)",
+                input_norm=input_norm,
+                scalar_sq=scalar_sq,
+                residue_norm=residue_norm,
+            )
+        )
+
+    scale = 1.0 / np.sqrt(scalar_sq)
+    return (v * scale).astype(dtype)
 
 
 def normalize_to_versor(v: np.ndarray) -> np.ndarray:
@@ -123,18 +165,36 @@ def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
     return geometric_product(geometric_product(V, F), reverse(V)).astype(dtype)
 
 
-def versor_condition(v: np.ndarray) -> float:
+def versor_unit_residual(v: np.ndarray, *, allow_negative: bool = False) -> float:
     """
-    Full residual distance from the unit-versor condition.
+    Full residual from the unit-versor condition.
 
-    Computes ||v * reverse(v) - 1||_F, not a signed scalar shortcut.
-    Zero means v satisfies the unit-versor condition. Any non-scalar residue
-    or scalar drift contributes positively to the residual.
+    Field states use the stricter +1 convention. Manifold entries may opt
+    into ±1 by passing allow_negative=True, matching the mathematical versor
+    condition while still rejecting non-scalar residue.
     """
-    v = np.asarray(v)
-    dtype = v.dtype if v.dtype in (np.dtype(np.float32), np.dtype(np.float64)) else np.dtype(np.float32)
+    dtype = _array_dtype(v)
     v = np.asarray(v, dtype=dtype)
     vv = geometric_product(v, reverse(v)).astype(dtype)
-    vv = vv.copy()
-    vv[0] -= 1.0
-    return float(np.linalg.norm(vv))
+
+    plus = vv.copy()
+    plus[0] -= 1.0
+    plus_residual = float(np.linalg.norm(plus))
+    if not allow_negative:
+        return plus_residual
+
+    minus = vv.copy()
+    minus[0] += 1.0
+    minus_residual = float(np.linalg.norm(minus))
+    return min(plus_residual, minus_residual)
+
+
+def versor_condition(v: np.ndarray) -> float:
+    """
+    Full residual distance from the positive unit-versor condition.
+
+    Computes ||v * reverse(v) - 1||_F, not a signed scalar shortcut.
+    Zero means v satisfies the +1 field-state condition. Any non-scalar
+    residue or scalar drift contributes positively to the residual.
+    """
+    return versor_unit_residual(v, allow_negative=False)
