@@ -25,7 +25,6 @@ _SEED_ALIASES = {
     "arche": "ἀρχή",
     "aletheia": "ἀλήθεια",
 }
-_PROPOSITION_SURFACE_RELATION_THRESHOLD = 1e-4
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,7 +139,13 @@ class ChatRuntime:
 
         field_state = self._context.ingest(filtered)
         reference_blade = self._dialogue_reference()
-        base_proposition = propose(field_state, None, self._context.vocab, self._frame_registry)
+        base_proposition = propose(
+            field_state,
+            None,
+            self._context.vocab,
+            self._frame_registry,
+            output_lang=self.config.output_language,
+        )
         dialogue_role = classify_dialogue_blade(
             base_proposition.relation,
             reference_blade,
@@ -151,6 +156,7 @@ class ChatRuntime:
             self._context.vocab,
             self._frame_registry,
             reference_blade,
+            output_lang=self.config.output_language,
         )
         self._context.record_dialogue(proposition)
 
@@ -172,14 +178,8 @@ class ChatRuntime:
         self._context.turn += 1
         guarded = self._syntactic_guard(result.tokens)
         walk_surface = " ".join(guarded)
-        relation_norm = float(np.linalg.norm(proposition.relation))
-        surface = (
-            proposition.surface
-            if relation_norm > _PROPOSITION_SURFACE_RELATION_THRESHOLD
-            else walk_surface
-        )
         return ChatResponse(
-            surface=surface,
+            surface=proposition.surface,
             proposition=proposition,
             dialogue_role=dialogue_role,
             versor_condition=versor_condition(result.final_state.F),
