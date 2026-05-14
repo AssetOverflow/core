@@ -77,13 +77,25 @@ def realize(
       2. restrict candidates to the configured output language
       3. choose nearest manifold point by CGA inner product through VocabManifold
       4. return MorphologyEntry.lemma when available, else surface
+
+    Falls back to proposition.surface when subject or predicate slot versors are
+    absent (e.g. OOV-heavy input where grounding partially failed), rather than
+    raising and crashing ChatRuntime.chat().
     """
     subject = _resolve_slot(proposition.subject_versor, vocab, output_language)
     predicate = _resolve_slot(proposition.predicate_versor, vocab, output_language)
     object_ = _resolve_slot(proposition.object_versor, vocab, output_language)
 
     if subject is None or predicate is None:
-        raise ValueError("Articulation requires subject and predicate slot versors.")
+        # Graceful fallback: slot versors unavailable, use proposition surface directly.
+        return ArticulationPlan(
+            subject=proposition.subject or "",
+            predicate=proposition.predicate or "",
+            object=proposition.object_ if hasattr(proposition, "object_") else None,
+            surface=proposition.surface,
+            output_language=output_language,
+            frame_id=proposition.frame_id,
+        )
 
     return ArticulationPlan(
         subject=subject,
