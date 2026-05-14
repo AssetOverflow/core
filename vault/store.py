@@ -31,7 +31,7 @@ class VaultStore:
         self._versors.append(np.asarray(F, dtype=np.float32).copy())
         self._metadata.append(metadata or {})
         self._store_count += 1
-        if self._store_count % self._reproject_interval == 0:
+        if self._reproject_interval > 0 and self._store_count % self._reproject_interval == 0:
             self.reproject()
         return len(self._versors) - 1
 
@@ -66,6 +66,16 @@ class VaultStore:
         null_project stays on algebra.cga — not the recall hot path.
         """
         self._versors = [null_project(v) for v in self._versors]
+
+    @property
+    def reproject_interval(self) -> int:
+        """Return the configured auto-reprojection cadence in store operations."""
+        return self._reproject_interval
+
+    @property
+    def store_count(self) -> int:
+        """Return how many store() operations have occurred in this vault."""
+        return self._store_count
 
     def __len__(self) -> int:
         return len(self._versors)
