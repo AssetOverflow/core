@@ -33,7 +33,6 @@ import numpy as np
 from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import word_transition_rotor
-from algebra.versor import unitize_versor
 from generate.attention import AttentionOperator
 from generate.result import GenerationResult
 from generate.salience import SalienceOperator
@@ -168,12 +167,13 @@ def _voiced_state(state: FieldState, persona) -> FieldState:
     ))
 
 
-def _recall_state(state: FieldState, vault, top_k: int) -> FieldState:
+def _recall_state(state: FieldState, vault, top_k: int) -> tuple[FieldState, int]:
     """
     Feed exact vault recall back into the field as sequential operators.
 
     Recall returns stored versors ranked by the vault's exact metric. Each hit
-    is treated as an additional operator in the propagation path.
+    is treated as an additional operator in the propagation path, and each
+    applied hit is counted for deterministic runtime telemetry.
 
     IMPORTANT: current.F must be unit before passing to word_transition_rotor
     as input A. We normalize at entry and after each step so that recall hits
@@ -181,9 +181,10 @@ def _recall_state(state: FieldState, vault, top_k: int) -> FieldState:
     have small drift; recalled_F is unitized before use.
     """
     if vault is None or top_k <= 0:
-        return state
+        return state, 0
 
     current = _renorm(state)
+    hits_applied = 0
     for hit in vault.recall(current.F, top_k=top_k):
         recalled_F = np.asarray(hit["versor"], dtype=np.float64)
         r_norm = float(np.linalg.norm(recalled_F))
@@ -199,7 +200,8 @@ def _recall_state(state: FieldState, vault, top_k: int) -> FieldState:
             energy=state.energy,
             valence=state.valence,
         )
-    return current
+        hits_applied += 1
+    return current, hits_applied
 
 
 def _candidate_indices_for_language(vocab, output_lang: str | None) -> np.ndarray | None:
@@ -269,10 +271,11 @@ def generate(
 
     Returns:
         GenerationResult with tokens, final_state, optional trajectory,
-        and salience telemetry when attention is enabled.
+        real vault-hit count, and salience telemetry when attention is enabled.
     """
     tokens = []
     trajectory = [] if record_trajectory else None
+    vault_hits = 0
     current = _renorm(state)
     recent_nodes = deque([state.node], maxlen=_RECENT_WINDOW)
     language_candidates = None if allow_cross_language_generation else _candidate_indices_for_language(vocab, output_lang)
@@ -296,7 +299,8 @@ def generate(
 
     token_budget = min(max_tokens, int(candidates_used)) if candidates_used is not None else max_tokens
     for _ in range(token_budget):
-        current = _recall_state(_voiced_state(current, persona), vault, recall_top_k)
+        current, hits_applied = _recall_state(_voiced_state(current, persona), vault, recall_top_k)
+        vault_hits += hits_applied
         word, word_idx = _nearest_next(
             vocab,
             current.F,
@@ -331,6 +335,7 @@ def generate(
         trajectory=trajectory,
         salience_top_k=salience_budget,
         candidates_used=candidates_used,
+        vault_hits=vault_hits,
     )
 
 
@@ -365,7 +370,11 @@ async def agenerate(
         if token in {vocab.get_word_at(i) for i in range(len(vocab))}
     )
     for _ in range(max_tokens):
-        current = _recall_state(_voiced_state(current, persona), vault, recall_top_k)
+        current, _hits_applied = _recall_state(
+            _voiced_state(current, persona),
+            vault,
+            recall_top_k,
+        )
         word, word_idx = _nearest_next(
             vocab,
             current.F,

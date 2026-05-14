@@ -11,6 +11,7 @@ Contracts:
   final_state   — FieldState after the last propagation step
   trajectory    — optional ordered list of intermediate FieldStates;
                    None unless the caller explicitly requests it (expensive)
+  vault_hits    — exact number of vault recall hits applied during generation
   identity_score — IdentityScore from IdentityCheck; None if not evaluated
 """
 
@@ -27,6 +28,7 @@ class GenerationResult:
     trajectory: tuple | None = None  # (FieldState, ...) or None
     salience_top_k: int | None = None
     candidates_used: int | None = None
+    vault_hits: int = 0
     identity_score: Optional[object] = None  # IdentityScore | None
 
     def __post_init__(self) -> None:
