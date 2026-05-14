@@ -8,6 +8,9 @@ import numpy as np
 
 from algebra.versor import versor_condition
 from core.config import DEFAULT_CONFIG, RuntimeConfig
+from core.physics.drive import GradientField, ValueAxis
+from core.physics.exertion import CycleCost, ExertionMeter
+from core.physics.identity import IdentityManifold
 from generate.articulation import ArticulationPlan, realize
 from generate.dialogue import DialogueRole, classify_dialogue_blade, propose_dialogue
 from generate.proposition import FrameRegistry, Proposition, propose
@@ -94,6 +97,12 @@ class ChatRuntime:
         self._pos_by_surface = {
             e.surface: (e.pos or e.part_of_speech or "X") for e in entries
         }
+        self.identity_manifold = _default_identity_manifold()
+        self.exertion_meter = ExertionMeter(capacity_ceiling=128.0)
+        self.drive_gradients = tuple(
+            GradientField(axis=axis, magnitude=0.75)
+            for axis in self.identity_manifold.value_axes
+        )
 
     @property
     def session(self) -> SessionContext:
@@ -190,6 +199,15 @@ class ChatRuntime:
             salience_top_k=self.config.salience_top_k,
             inhibition_threshold=self.config.inhibition_threshold,
         )
+        self.exertion_meter.record(
+            CycleCost(
+                cycle_index=self._context.turn,
+                attention_cost=float(result.candidates_used or 0),
+                inhibition_cost=float(self.config.inhibition_threshold),
+                digest_cost=0.0,
+                trajectory_cost=float(len(result.trajectory or ())),
+            )
+        )
         self._context.state = result.final_state
         self._context.vault.store(
             result.final_state.F,
@@ -216,3 +234,31 @@ class ChatRuntime:
             return self.chat(text, max_tokens=max_tokens).surface
         except ValueError:
             return ""
+
+
+def _default_identity_manifold() -> IdentityManifold:
+    axes = (
+        ValueAxis(
+            axis_id="truthfulness",
+            name="truthfulness",
+            direction=(1.0, 0.0, 0.0),
+            theological_note="Truth is treated as a fixed value axis, not a prompt preference.",
+        ),
+        ValueAxis(
+            axis_id="coherence",
+            name="coherence",
+            direction=(0.0, 1.0, 0.0),
+            theological_note="Operations must preserve field coherence under propagation.",
+        ),
+        ValueAxis(
+            axis_id="reverence",
+            name="reverence",
+            direction=(0.0, 0.0, 1.0),
+            theological_note="Depth-language handling remains bounded by source structure.",
+        ),
+    )
+    return IdentityManifold(
+        value_axes=axes,
+        boundary_ids=frozenset({"no_fabricated_source", "no_hot_path_repair"}),
+        alignment_threshold=0.75,
+    )

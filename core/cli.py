@@ -95,7 +95,10 @@ def cmd_chat(args: argparse.Namespace) -> int:
 def cmd_test(args: argparse.Namespace) -> int:
     """Run pytest. Extra args are forwarded unchanged."""
     default_args = ["-q", "--tb=short"]
-    return _run(sys.executable, "-m", "pytest", *(args.args or default_args))
+    forwarded = list(args.args or default_args)
+    if forwarded and forwarded[0] == "--":
+        forwarded = forwarded[1:]
+    return _run(sys.executable, "-m", "pytest", *forwarded)
 
 
 def cmd_check(args: argparse.Namespace) -> int:
@@ -276,6 +279,31 @@ def cmd_pack_verify(args: argparse.Namespace) -> int:
     return _run(sys.executable, "-m", "language_packs", "verify", args.pack_id)
 
 
+def cmd_pack_validate(args: argparse.Namespace) -> int:
+    """Run executable source-pack validation gates."""
+    import importlib.util
+
+    pack_dir = _REPO_ROOT / "packs" / args.pack_id
+    validator_path = pack_dir / "validators.py"
+    if not validator_path.exists():
+        _die(f"source-pack validator not found: {validator_path}", code=1)
+    spec = importlib.util.spec_from_file_location(f"{args.pack_id}_validators", validator_path)
+    if spec is None or spec.loader is None:
+        _die(f"cannot load source-pack validator: {validator_path}", code=1)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    report = module.validate_pack()
+    if args.json:
+        print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(f"pack_id: {report['pack_id']}")
+        print(f"active : {report['active']}")
+        for name, result in report["gates"].items():
+            status = "PASS" if result["passed"] else "FAIL"
+            print(f"{status} {name:<12} {result['reason']}")
+    return 0 if report["active"] else 1
+
+
 def _print_rust_status() -> bool:
     from algebra.backend import using_rust
 
@@ -434,6 +462,10 @@ def build_parser() -> argparse.ArgumentParser:
     pack_verify = pack_sub.add_parser("verify", help="verify a pack checksum")
     pack_verify.add_argument("pack_id", help="pack id, e.g. en_minimal_v1")
     pack_verify.set_defaults(func=cmd_pack_verify)
+    pack_validate = pack_sub.add_parser("validate", help="validate a source pack under packs/")
+    pack_validate.add_argument("pack_id", help="source pack id, e.g. en, he, grc, el")
+    pack_validate.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    pack_validate.set_defaults(func=cmd_pack_validate)
 
     rust = subparsers.add_parser(
         "rust",

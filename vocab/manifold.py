@@ -32,6 +32,8 @@ import numpy as np
 from algebra.backend import cga_inner
 from algebra.cl41 import geometric_product, reverse
 from algebra.versor import versor_unit_residual
+from core.physics.energy import EnergyProfile
+from core.physics.valence import ValenceBundle
 from language_packs.schema import MorphologyEntry
 
 _MANIFOLD_RESIDUAL_TOLERANCE = 1e-5
@@ -68,6 +70,8 @@ class VocabManifold:
         self._versors: list[np.ndarray] = []  # each shape (32,), unit-versor ±1
         self._morphology_by_word: dict[str, MorphologyEntry] = {}
         self._language_by_word: dict[str, str] = {}
+        self._energy_by_word: dict[str, EnergyProfile] = {}
+        self._valence_by_word: dict[str, ValenceBundle] = {}
         self._transient_words: set[str] = set()
         self._unknown_token_log: list[dict[str, object]] = []
 
@@ -77,6 +81,8 @@ class VocabManifold:
         versor: np.ndarray,
         morphology: MorphologyEntry | None = None,
         language: str | None = None,
+        energy: EnergyProfile | None = None,
+        valence: ValenceBundle | None = None,
     ) -> None:
         """
         Register a word-versor pair.
@@ -103,6 +109,10 @@ class VocabManifold:
             self._language_by_word[word] = resolved_language
         if morphology is not None:
             self._morphology_by_word[word] = morphology
+        if energy is not None:
+            self._energy_by_word[word] = energy
+        if valence is not None:
+            self._valence_by_word[word] = valence
 
     def insert_transient(self, word: str, versor: np.ndarray) -> None:
         """
@@ -202,6 +212,14 @@ class VocabManifold:
     def morphology_for_word(self, word: str) -> MorphologyEntry | None:
         """Return structured morphology for a stored surface, if the pack provided it."""
         return self._morphology_by_word.get(word)
+
+    def energy_for_word(self, word: str) -> EnergyProfile | None:
+        """Return ADR-0006 energy profile for a stored surface, when available."""
+        return self._energy_by_word.get(word)
+
+    def valence_for_word(self, word: str) -> ValenceBundle | None:
+        """Return ADR-0007 valence bundle for a stored surface, when available."""
+        return self._valence_by_word.get(word)
 
     def language_for_word(self, word: str) -> str | None:
         """Return the language code for a stored surface, if known."""

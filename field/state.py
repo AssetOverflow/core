@@ -12,7 +12,12 @@ reference to the array passed in and expect coherence.
 
 from __future__ import annotations
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 import numpy as np
+
+if TYPE_CHECKING:
+    from core.physics.energy import EnergyProfile
+    from core.physics.valence import ValenceBundle
 
 _EXPECTED_COMPONENTS = 32
 
@@ -23,6 +28,8 @@ class FieldState:
     node: int = 0   # current node index in the vocabulary manifold
     step: int = 0   # number of propagation steps taken
     holonomy: np.ndarray | None = None
+    energy: EnergyProfile | None = None
+    valence: ValenceBundle | None = None
 
     def __post_init__(self) -> None:
         # Enforce copy + dtype + shape at the construction boundary.
@@ -54,4 +61,11 @@ class FieldState:
 
     def advance(self, new_F: np.ndarray, new_node: int) -> FieldState:
         """Return a new FieldState after one propagation step."""
-        return FieldState(F=new_F, node=new_node, step=self.step + 1, holonomy=self.holonomy)
+        return FieldState(
+            F=new_F,
+            node=new_node,
+            step=self.step + 1,
+            holonomy=self.holonomy,
+            energy=self.energy,
+            valence=self.valence,
+        )

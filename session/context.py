@@ -46,6 +46,8 @@ class SessionContext:
                 node=node_idx,
                 step=injected.step,
                 holonomy=injected.holonomy,
+                energy=injected.energy,
+                valence=injected.valence,
             )
         else:
             self.state = FieldState(
@@ -53,6 +55,8 @@ class SessionContext:
                 node=node_idx,
                 step=self.state.step + 1,
                 holonomy=injected.holonomy,
+                energy=injected.energy,
+                valence=injected.valence,
             )
         self.vault.store(self.state.F, {"turn": self.turn, "role": "user"})
         return self.state

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from algebra.backend import cga_inner
+from core.physics.salience import FieldRegion, SalienceOperator as CurvatureSalienceOperator
 from field.state import FieldState
 from vocab.manifold import VocabManifold
 
@@ -23,13 +24,11 @@ class SalienceMap:
 
 class SalienceOperator:
     """
-    Compute geometric salience of manifold points relative to current FieldState.
+    Compute generation-facing salience from ADR-0008 field curvature.
 
-    Salience is field-relative CGA activation:
-        salience(v_i) = |cga_inner(F, v_i)| / (||F|| * ||v_i||)
-
-    No learned weights. No softmax. Pure geometry routed through algebra.backend,
-    which uses core_rs when active.
+    The live API still returns manifold indices for generation, but the score is
+    now a local curvature magnitude from core.physics.salience rather than
+    normalized proximity to the query field.
     """
 
     def compute(self, field: FieldState, vocab: VocabManifold, top_k: int = 16) -> SalienceMap:
@@ -38,15 +37,26 @@ class SalienceOperator:
         if len(vocab) == 0:
             return SalienceMap(indices=np.asarray([], dtype=np.int64), scores=np.asarray([], dtype=np.float32), budget=0)
 
-        query = np.asarray(field.F, dtype=np.float32)
-        query_norm = max(float(np.linalg.norm(query)), 1e-8)
-        scores: list[float] = []
+        active = vocab.get_versor_at(field.node)
+        regions: list[FieldRegion] = []
         for idx in range(len(vocab)):
             v = vocab.get_versor_at(idx)
-            denom = query_norm * max(float(np.linalg.norm(v)), 1e-8)
-            scores.append(abs(float(cga_inner(query, v))) / denom)
+            energy = vocab.energy_for_word(vocab.get_word_at(idx))
+            baseline = energy.raw if energy is not None else 0.1
+            active_distance = max(0.0, -2.0 * float(cga_inner(active, v)))
+            pressure = baseline + (1.0 / (1.0 + active_distance))
+            regions.append(
+                FieldRegion(
+                    region_id=str(idx),
+                    coordinates=tuple(float(x) for x in np.asarray(v, dtype=np.float32)),
+                    pressure_magnitude=pressure,
+                )
+            )
 
-        scores_arr = np.asarray(scores, dtype=np.float32)
+        curvature = CurvatureSalienceOperator().compute(tuple(regions), cycle_index=field.step)
+        scores_arr = np.zeros(len(vocab), dtype=np.float32)
+        for entry in curvature.entries:
+            scores_arr[int(entry.region_id)] = float(entry.curvature_magnitude)
         k = min(int(top_k), len(vocab))
         order = np.argsort(-scores_arr, kind="stable")[:k]
         return SalienceMap(indices=order.astype(np.int64), scores=scores_arr[order], budget=k)

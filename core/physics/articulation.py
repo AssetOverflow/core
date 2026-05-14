@@ -7,6 +7,7 @@ Each output segment carries full field provenance.
 """
 
 from __future__ import annotations
+import hashlib
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Tuple
@@ -51,4 +52,55 @@ class ArticulationPlanner:
         trajectory,
         modality: OutputModality,
     ) -> ArticulationPlan:
-        raise NotImplementedError("ArticulationPlanner.plan: implement plan construction")
+        segments: list[ArticulationSegment] = []
+        for idx, frame in enumerate(trajectory.frames):
+            confidence = max(0.0, min(1.0, float(frame.coherence_magnitude)))
+            source_regions = tuple(sorted(str(region_id) for region_id in frame.region_ids))
+            segment_id = _segment_id(trajectory.trajectory_id, frame.frame_id, idx)
+            segments.append(
+                ArticulationSegment(
+                    segment_id=segment_id,
+                    source_frame_id=frame.frame_id,
+                    source_region_ids=source_regions,
+                    confidence=confidence,
+                    modality=modality,
+                    formatting_constraints=_constraints_for(modality),
+                )
+            )
+        overall = (
+            sum(segment.confidence for segment in segments) / len(segments)
+            if segments
+            else 0.0
+        )
+        return ArticulationPlan(
+            plan_id=_plan_id(trajectory.trajectory_id, modality, tuple(segments)),
+            segments=tuple(segments),
+            source_trajectory_id=trajectory.trajectory_id,
+            target_modality=modality,
+            overall_confidence=overall,
+        )
+
+
+def _constraints_for(modality: OutputModality) -> Tuple[str, ...]:
+    if modality is OutputModality.CODE:
+        return ("preserve_syntax", "monospace")
+    if modality is OutputModality.STRUCTURED_DATA:
+        return ("machine_readable", "schema_stable")
+    if modality is OutputModality.HEBREW:
+        return ("rtl", "preserve_script")
+    if modality is OutputModality.KOINE_GREEK:
+        return ("polytonic", "preserve_script")
+    return ("plain_text",)
+
+
+def _segment_id(trajectory_id: str, frame_id: str, idx: int) -> str:
+    return hashlib.sha256(f"{trajectory_id}:{frame_id}:{idx}".encode("utf-8")).hexdigest()
+
+
+def _plan_id(trajectory_id: str, modality: OutputModality, segments: Tuple[ArticulationSegment, ...]) -> str:
+    h = hashlib.sha256()
+    h.update(trajectory_id.encode("utf-8"))
+    h.update(modality.name.encode("ascii"))
+    for segment in segments:
+        h.update(segment.segment_id.encode("utf-8"))
+    return h.hexdigest()

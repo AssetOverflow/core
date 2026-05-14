@@ -30,6 +30,8 @@ import numpy as np
 
 from algebra.cl41 import geometric_product
 from algebra.versor import normalize_to_versor, versor_condition
+from core.physics.energy import FieldEnergyOperator, EnergyClass
+from core.physics.valence import ValenceBundle
 from algebra.holonomy import holonomy_encode
 from field.state import FieldState
 from language_packs.schema import MorphologyEntry
@@ -225,6 +227,66 @@ def _lookup_or_ground(token: str, vocab) -> np.ndarray:
         return _ground_unknown_token(token, vocab)
 
 
+def _field_energy(tokens: list, vocab) -> object | None:
+    energy_for_word = getattr(vocab, "energy_for_word", None)
+    morphology_for_word = getattr(vocab, "morphology_for_word", None)
+    if energy_for_word is None:
+        return None
+    profiles = [energy_for_word(token) for token in tokens]
+    profiles = [profile for profile in profiles if profile is not None]
+    features: dict[str, object] = {}
+    if morphology_for_word is not None:
+        for token in tokens:
+            morphology = morphology_for_word(token)
+            if morphology is not None:
+                features.update(dict(morphology.inflection))
+                if morphology.stem:
+                    features.setdefault("stem", morphology.stem)
+    if not profiles and not features:
+        return None
+    max_class = max((profile.energy_class for profile in profiles), default=EnergyClass.E0, key=lambda cls: int(cls.value[1]))
+    residual = max((profile.coherence_residual for profile in profiles), default=0.0)
+    convergence = sum(profile.convergence_density for profile in profiles) or len(tokens)
+    activation = sum(profile.activation_count for profile in profiles) or 1
+    anchor_adjacent = any(profile.anchor_adjacent for profile in profiles)
+    computed = FieldEnergyOperator().compute(
+        convergence_density=convergence,
+        activation_count=activation,
+        morphology_features=features,
+        anchor_adjacent=anchor_adjacent,
+        coherence_residual=residual,
+    )
+    return computed if int(computed.energy_class.value[1]) >= int(max_class.value[1]) else max(profiles, key=lambda profile: int(profile.energy_class.value[1]))
+
+
+def _field_valence(tokens: list, vocab) -> ValenceBundle | None:
+    valence_for_word = getattr(vocab, "valence_for_word", None)
+    if valence_for_word is None:
+        return None
+    bundles = [valence_for_word(token) for token in tokens]
+    bundles = [bundle for bundle in bundles if bundle is not None]
+    if not bundles:
+        return None
+    affective: set[str] = set()
+    for bundle in bundles:
+        affective.update(bundle.affective)
+    strongest = max(
+        bundles,
+        key=lambda bundle: (
+            bundle.force.value != "declarative",
+            bundle.emphasis.degree in {"strong", "absolute"},
+            len(bundle.affective),
+        ),
+    )
+    return ValenceBundle(
+        affective=frozenset(affective),
+        force=strongest.force,
+        emphasis=strongest.emphasis,
+        polarity=strongest.polarity,
+        orientation=strongest.orientation,
+    )
+
+
 def inject(tokens: list, vocab) -> FieldState:
     """
     Encode a token sequence and inject into the versor manifold.
@@ -246,4 +308,4 @@ def inject(tokens: list, vocab) -> FieldState:
             "Check holonomy_encode() and normalize_to_versor()."
         )
 
-    return FieldState(F=F, node=0, step=0, holonomy=H)
+    return FieldState(F=F, node=0, step=0, holonomy=H, energy=_field_energy(tokens, vocab), valence=_field_valence(tokens, vocab))

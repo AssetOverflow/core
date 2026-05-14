@@ -80,15 +80,46 @@ def _nearest_next(
     )
     for extra in fallback_orders:
         try:
-            return vocab.nearest(
+            return _nearest_with_optional_candidates(
+                vocab,
                 F_voiced,
-                exclude_idx=current_node,
-                exclude_indices=extra,
-                candidate_indices=candidate_indices,
+                current_node,
+                extra,
+                candidate_indices,
             )
         except ValueError:
             continue
-    return vocab.nearest(F_voiced, candidate_indices=candidate_indices)
+    return _nearest_with_optional_candidates(
+        vocab,
+        F_voiced,
+        -1,
+        set(),
+        candidate_indices,
+    )
+
+
+def _nearest_with_optional_candidates(
+    vocab,
+    F_voiced,
+    current_node: int,
+    exclude_indices: set[int],
+    candidate_indices: np.ndarray | None,
+) -> tuple[str, int]:
+    try:
+        return vocab.nearest(
+            F_voiced,
+            exclude_idx=current_node,
+            exclude_indices=exclude_indices,
+            candidate_indices=candidate_indices,
+        )
+    except TypeError:
+        if candidate_indices is not None:
+            raise
+        return vocab.nearest(
+            F_voiced,
+            exclude_idx=current_node,
+            exclude_indices=exclude_indices,
+        )
 
 
 def _voiced_state(state: FieldState, persona) -> FieldState:
@@ -98,6 +129,8 @@ def _voiced_state(state: FieldState, persona) -> FieldState:
         node=state.node,
         step=state.step,
         holonomy=state.holonomy,
+        energy=state.energy,
+        valence=state.valence,
     )
 
 
@@ -121,6 +154,8 @@ def _recall_state(state: FieldState, vault, top_k: int) -> FieldState:
             node=state.node,
             step=current.step,
             holonomy=state.holonomy,
+            energy=state.energy,
+            valence=state.valence,
         )
     return current
 
@@ -207,7 +242,7 @@ def generate(
     )
     candidate_indices = _intersect_candidates(language_candidates, salience_candidates)
     if candidate_indices is not None and len(candidate_indices) == 0:
-        candidate_indices = language_candidates if language_candidates is not None else salience_candidates
+        candidate_indices = salience_candidates if salience_candidates is not None else language_candidates
         candidates_used = None if candidate_indices is None else len(candidate_indices)
 
     stop_nodes = frozenset(
@@ -237,7 +272,14 @@ def generate(
         V = word_transition_rotor(A, B)
 
         current = propagate_step(current, V)
-        current = FieldState(F=current.F, node=word_idx, step=current.step, holonomy=current.holonomy)
+        current = FieldState(
+            F=current.F,
+            node=word_idx,
+            step=current.step,
+            holonomy=current.holonomy,
+            energy=current.energy,
+            valence=current.valence,
+        )
         recent_nodes.append(word_idx)
 
     return GenerationResult(
@@ -288,5 +330,12 @@ async def agenerate(
         V = word_transition_rotor(A, B)
 
         current = propagate_step(current, V)
-        current = FieldState(F=current.F, node=word_idx, step=current.step, holonomy=current.holonomy)
+        current = FieldState(
+            F=current.F,
+            node=word_idx,
+            step=current.step,
+            holonomy=current.holonomy,
+            energy=current.energy,
+            valence=current.valence,
+        )
         recent_nodes.append(word_idx)

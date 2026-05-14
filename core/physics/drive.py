@@ -8,7 +8,7 @@ into a combined gradient landscape.
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Dict, Tuple
+from typing import Tuple
 
 
 @dataclass(frozen=True)
@@ -35,4 +35,12 @@ class DriveGradientMap:
 
     def combined_bias(self, coordinates: Tuple[float, ...]) -> Tuple[float, ...]:
         """Return the additive gradient bias vector at the given field coordinates."""
-        raise NotImplementedError("DriveGradientMap.combined_bias: implement gradient composition")
+        if not coordinates:
+            return ()
+        bias = [0.0 for _ in coordinates]
+        for gradient in self.gradients:
+            if not gradient.active:
+                continue
+            for idx, component in enumerate(gradient.axis.direction[: len(bias)]):
+                bias[idx] += float(component) * float(gradient.magnitude)
+        return tuple(bias)

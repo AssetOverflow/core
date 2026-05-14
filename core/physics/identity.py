@@ -43,7 +43,28 @@ class IdentityCheck:
     """Checks a ReasoningTrajectory against an IdentityManifold."""
 
     def check(self, trajectory, manifold: IdentityManifold) -> IdentityScore:
-        raise NotImplementedError("IdentityCheck.check: implement manifold alignment check")
+        if not manifold.value_axes:
+            return IdentityScore(
+                score=1.0,
+                flagged=False,
+                deviation_axes=frozenset(),
+                trajectory_id=trajectory.trajectory_id,
+            )
+        confidence = getattr(trajectory, "total_coherence_delta", 0.0)
+        if trajectory.frames:
+            confidence += sum(float(frame.coherence_magnitude) for frame in trajectory.frames) / len(trajectory.frames)
+        score = max(0.0, min(1.0, 0.5 + (confidence / 2.0)))
+        deviations = frozenset(
+            axis.axis_id
+            for axis in manifold.value_axes
+            if score < manifold.alignment_threshold
+        )
+        return IdentityScore(
+            score=score,
+            flagged=score < manifold.alignment_threshold,
+            deviation_axes=deviations,
+            trajectory_id=trajectory.trajectory_id,
+        )
 
 
 @dataclass(frozen=True)

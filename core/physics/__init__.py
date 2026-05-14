@@ -10,6 +10,8 @@ State lives in the FieldState; operators are pure transformations.
 """
 
 from core.physics.salience import SalienceOperator, SalienceMap, FieldRegion
+from core.physics.energy import EnergyClass, EnergyProfile, FieldEnergyOperator
+from core.physics.valence import ValenceBundle
 from core.physics.attention import AttentionOperator, AttentionPlan, CoherenceBudget
 from core.physics.inhibition import InhibitionOperator, InhibitionMask
 from core.physics.binding import BindingFrame, BindingOperator
@@ -19,9 +21,11 @@ from core.physics.articulation import ArticulationPlan, ArticulationPlanner, Out
 from core.physics.drive import DriveGradientMap, GradientField, ValueAxis
 from core.physics.exertion import ExertionMeter, FatigueIndex, CycleCost
 from core.physics.identity import IdentityManifold, IdentityCheck, IdentityScore, CharacterProfile
+from core.physics.learning import PromotionDecision, VaultPromotionPolicy
 
 __all__ = [
     "SalienceOperator", "SalienceMap", "FieldRegion",
+    "EnergyClass", "EnergyProfile", "FieldEnergyOperator", "ValenceBundle",
     "AttentionOperator", "AttentionPlan", "CoherenceBudget",
     "InhibitionOperator", "InhibitionMask",
     "BindingFrame", "BindingOperator",
@@ -31,4 +35,5 @@ __all__ = [
     "DriveGradientMap", "GradientField", "ValueAxis",
     "ExertionMeter", "FatigueIndex", "CycleCost",
     "IdentityManifold", "IdentityCheck", "IdentityScore", "CharacterProfile",
+    "PromotionDecision", "VaultPromotionPolicy",
 ]

@@ -101,6 +101,32 @@ class TextProjectionHead:
             return False
 
 
+class TextSurfaceDecoder:
+    """Exact text reconstruction over the mounted modality vocabulary."""
+
+    modality: Modality = Modality.TEXT
+
+    def __init__(self, vocabulary: ModalityVocabulary) -> None:
+        self._vocab = vocabulary
+
+    def decode(self, mv: np.ndarray) -> str:
+        query = np.asarray(mv, dtype=np.float32)
+        best_token: str | None = None
+        best_distance = float("inf")
+        for token in self._vocab._point_keys:
+            point = self._vocab.get_point(token)
+            distance = float(np.linalg.norm(query - point))
+            if distance < best_distance:
+                best_distance = distance
+                best_token = str(token)
+        if best_token is None:
+            raise ValueError("cannot decode from an empty text vocabulary")
+        return best_token
+
+    def decode_batch(self, mvs: np.ndarray) -> list[str]:
+        return [self.decode(mv) for mv in np.asarray(mvs, dtype=np.float32)]
+
+
 def make_text_pack(
     pack_id: str,
     vocabulary: ModalityVocabulary | None = None,
@@ -124,13 +150,14 @@ def make_text_pack(
     """
     vocab = vocabulary if vocabulary is not None else ModalityVocabulary()
     head  = TextProjectionHead(vocab, oov_policy=oov_policy)
+    decoder = TextSurfaceDecoder(vocab)
     return ModalityPack(
         pack_id=pack_id,
         modality_type=Modality.TEXT,
         projection=head,
-        decoder=None,  # text decode not yet implemented
+        decoder=decoder,
         vocabulary=vocab,
-        grammar_scaffold=None,  # populated during Supervised Seeding Epoch
+        grammar_scaffold=None,
         checksum_verified=checksum_verified,
         gate_engaged=gate_engaged,
         language_role=language_role,

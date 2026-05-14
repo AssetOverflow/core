@@ -29,7 +29,6 @@ from typing import TYPE_CHECKING, Sequence
 
 from core_ingest.types import (
     CandidateGeometricPressure,
-    DeterminismClass,
     GateDisposition,
     LearningArtifact,
     ReviewDecision,
@@ -90,9 +89,20 @@ class SemanticGate:
     def check(self, packet: CandidateGeometricPressure) -> str | None:
         import json
         from core_ingest.types import Modality
+        from core.physics.energy import EnergyClass
 
         if packet.payload_json in ("{}", ""):
             return "payload_json is empty — no content to ingest"
+        payload = json.loads(packet.payload_json)
+        if "energy_class_hint" in payload:
+            try:
+                EnergyClass(str(payload["energy_class_hint"]))
+            except ValueError:
+                return f"invalid energy_class_hint: {payload['energy_class_hint']!r}"
+        if "valence" in payload:
+            failure = _validate_valence_payload(payload["valence"])
+            if failure is not None:
+                return failure
 
         # Require non-empty lemma for text / scripture
         if packet.modality in (Modality.TEXT, Modality.SCRIPTURE) and not packet.lemma:
@@ -137,7 +147,16 @@ class GovernanceGate:
         packet: CandidateGeometricPressure,
         authorized_ids: frozenset[str],
     ) -> GateDisposition:
+        import json
+
         if packet.review_level == ReviewLevel.AUTO_REJECT:
+            return GateDisposition.REJECTED_GOVERNANCE
+        payload = json.loads(packet.payload_json)
+        if payload.get("energy_class_hint") == "E4":
+            if packet.review_level != ReviewLevel.ARCHITECT_REVIEW_REQUIRED:
+                return GateDisposition.REJECTED_GOVERNANCE
+            if packet.pressure_id in authorized_ids:
+                return GateDisposition.OVERRIDE_ACCEPTED
             return GateDisposition.REJECTED_GOVERNANCE
 
         # Override: an authorized ReviewDecision accepts regardless of level
@@ -153,6 +172,21 @@ class GovernanceGate:
 
         # D3 and architect-level D4 packets require an explicit decision.
         return GateDisposition.REJECTED_GOVERNANCE
+
+
+def _validate_valence_payload(valence: object) -> str | None:
+    if not isinstance(valence, dict):
+        return "valence must be an object"
+    required = {"affective", "force", "emphasis", "polarity", "orientation"}
+    missing = required - set(valence)
+    if missing:
+        return f"valence missing required channel(s): {', '.join(sorted(missing))}"
+    if not isinstance(valence["affective"], list):
+        return "valence.affective must be a list"
+    for key in ("emphasis", "polarity", "orientation"):
+        if not isinstance(valence[key], dict):
+            return f"valence.{key} must be an object"
+    return None
 
 
 # ---------------------------------------------------------------------------

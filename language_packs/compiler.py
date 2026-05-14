@@ -9,6 +9,8 @@ import numpy as np
 
 from algebra.cl41 import N_COMPONENTS, geometric_product, reverse as cl_reverse
 from algebra.versor import unitize_versor
+from core.physics.energy import FieldEnergyOperator
+from core.physics.valence import lift_valence
 from language_packs.schema import (
     LanguagePackManifest,
     LanguageRole,
@@ -28,6 +30,7 @@ _MORPHOLOGY_CLUSTER_NUDGE_STRENGTH: float = 0.40
 _PRIMARY_SEMANTIC_DOMAIN_WEIGHT: float = 0.55
 _LOGOS_PARTICIPATION_WEIGHT: float = 0.25
 _FEATURE_COMPONENTS: tuple[int, ...] = (6, 7, 9, 10, 12, 14)
+_ENERGY = FieldEnergyOperator()
 
 
 def _hash_to_blade(name: str, salt: str) -> int:
@@ -271,7 +274,28 @@ def compile_entries_to_manifold(entries: list[LexicalEntry], morphology_registry
     for entry in entries:
         morphology = _resolved_morphology(entry, morphology_registry)
         versor = _entry_to_coordinate(entry, morphology)
-        manifold.add(entry.surface, versor, morphology=morphology, language=entry.language)
+        features = dict(morphology.inflection) if morphology is not None else {}
+        if morphology is not None and morphology.stem:
+            features.setdefault("stem", morphology.stem)
+        energy = _ENERGY.compute(
+            convergence_density=max(1, len(entry.provenance_ids)),
+            activation_count=1,
+            morphology_features=features,
+            anchor_adjacent=_has_logos_participation(entry.semantic_domains),
+        )
+        valence = lift_valence(
+            lemma=entry.lemma or entry.surface,
+            language=entry.language,
+            features=features,
+        )
+        manifold.add(
+            entry.surface,
+            versor,
+            morphology=morphology,
+            language=entry.language,
+            energy=energy,
+            valence=valence,
+        )
         entry_id_to_surface[entry.entry_id] = entry.surface
 
     if morphology_registry is not None:
@@ -403,6 +427,8 @@ def load_mounted_packs(pack_ids: tuple[str, ...] | list[str]) -> VocabManifold:
                 manifold.get_versor_at(idx),
                 morphology=manifold.morphology_for_word(surface),
                 language=None if entry is None else entry.language,
+                energy=manifold.energy_for_word(surface),
+                valence=manifold.valence_for_word(surface),
             )
             if entry is not None and entry.semantic_domains:
                 primary_groups.setdefault(entry.semantic_domains[0].lower(), []).append(

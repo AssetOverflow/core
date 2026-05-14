@@ -28,6 +28,27 @@ class InhibitionOperator:
     """
 
     def mask(self, attention_plan, field_state, cycle_index: int) -> InhibitionMask:
-        raise NotImplementedError(
-            "InhibitionOperator.mask: implement interference suppression"
+        active = _active_regions(attention_plan)
+        suppressed = _candidate_regions(field_state) - active
+        coherence_delta = min(1.0, 0.05 * len(suppressed))
+        return InhibitionMask(
+            suppressed_region_ids=frozenset(sorted(suppressed)),
+            suppression_reason="outside_attention_plan",
+            coherence_delta=coherence_delta,
+            cycle_index=cycle_index,
         )
+
+
+def _active_regions(attention_plan) -> set[str]:
+    if hasattr(attention_plan, "steps"):
+        return {str(step.region_id) for step in attention_plan.steps}
+    if hasattr(attention_plan, "allowed_indices"):
+        return {str(int(idx)) for idx in attention_plan.allowed_indices}
+    return set()
+
+
+def _candidate_regions(field_state) -> set[str]:
+    candidates = getattr(field_state, "candidate_region_ids", None)
+    if candidates is None:
+        return set()
+    return {str(region_id) for region_id in candidates}

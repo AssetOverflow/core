@@ -7,8 +7,11 @@ of neighboring regions — when it bends the field around itself.
 """
 
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Dict, Tuple
+import hashlib
+from dataclasses import dataclass
+from typing import Tuple
+
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -55,12 +58,51 @@ class SalienceOperator:
     """
 
     def compute(self, regions: Tuple[FieldRegion, ...], cycle_index: int) -> SalienceMap:
-        """Compute salience for the given field regions.
-
-        Stub: full curvature kernel implemented in Rust hot-path.
-        Python fallback uses pairwise pressure gradient approximation.
-        """
-        raise NotImplementedError(
-            "SalienceOperator.compute is a Rust hot-path stub. "
-            "Implement in core_rs::physics::salience or provide Python fallback."
+        """Compute local curvature by pairwise pressure-gradient deflection."""
+        if not regions:
+            return SalienceMap(entries=(), cycle_index=cycle_index, content_address=_salience_address(()))
+        coords = [np.asarray(region.coordinates, dtype=np.float64) for region in regions]
+        entries: list[SalienceEntry] = []
+        for idx, region in enumerate(regions):
+            gradient = np.zeros_like(coords[idx], dtype=np.float64)
+            curvature = 0.0
+            radius_num = 0.0
+            radius_den = 0.0
+            for jdx, neighbor in enumerate(regions):
+                if idx == jdx:
+                    continue
+                delta = coords[jdx] - coords[idx]
+                distance = max(float(np.linalg.norm(delta)), 1e-8)
+                pressure_delta = abs(float(neighbor.pressure_magnitude) - float(region.pressure_magnitude))
+                contribution = pressure_delta / (distance * distance)
+                direction = delta / distance
+                gradient += direction * contribution
+                curvature += contribution
+                radius_num += distance * contribution
+                radius_den += contribution
+            gradient_tuple = tuple(float(v) for v in gradient)
+            entries.append(
+                SalienceEntry(
+                    region_id=region.region_id,
+                    curvature_magnitude=float(curvature),
+                    gradient_vector=gradient_tuple,
+                    influence_radius=float(radius_num / radius_den) if radius_den > 0.0 else 0.0,
+                )
+            )
+        ordered = tuple(
+            sorted(entries, key=lambda entry: (-entry.curvature_magnitude, entry.region_id))
         )
+        return SalienceMap(
+            entries=ordered,
+            cycle_index=cycle_index,
+            content_address=_salience_address(ordered),
+        )
+
+
+def _salience_address(entries: Tuple[SalienceEntry, ...]) -> str:
+    h = hashlib.sha256()
+    for entry in entries:
+        h.update(entry.region_id.encode("utf-8"))
+        h.update(f":{entry.curvature_magnitude:.12f}:".encode("ascii"))
+        h.update(",".join(f"{v:.12f}" for v in entry.gradient_vector).encode("ascii"))
+    return h.hexdigest()

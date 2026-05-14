@@ -48,4 +48,27 @@ class AttentionOperator:
     """Produces an AttentionPlan from a SalienceMap and CoherenceBudget."""
 
     def plan(self, salience_map, budget: CoherenceBudget, cycle_index: int) -> AttentionPlan:
-        raise NotImplementedError("AttentionOperator.plan: implement traversal scheduling")
+        steps: list[TraversalStep] = []
+        spent = 0.0
+        max_curvature = max(
+            (float(entry.curvature_magnitude) for entry in salience_map.entries),
+            default=0.0,
+        )
+        if max_curvature <= 0.0:
+            return AttentionPlan(steps=(), total_cost=0.0, cycle_index=cycle_index)
+        for entry in salience_map.entries:
+            depth = max(0.0, min(1.0, float(entry.curvature_magnitude) / max_curvature))
+            duration = max(1.0, float(entry.influence_radius))
+            cost = depth * duration
+            if spent + cost > budget.available:
+                break
+            steps.append(
+                TraversalStep(
+                    region_id=entry.region_id,
+                    depth=depth,
+                    duration=duration,
+                    cost=cost,
+                )
+            )
+            spent += cost
+        return AttentionPlan(steps=tuple(steps), total_cost=spent, cycle_index=cycle_index)
