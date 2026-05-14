@@ -1,13 +1,17 @@
 use core_rs::versor::{normalize_to_versor_raw, versor_apply_raw, versor_condition_raw};
 
 fn random_versor(seed: u64) -> [f32; 32] {
-    let mut state = seed ^ 0xdeadbeef_cafebabe;
-    let mut raw = [0f32; 32];
-    for x in raw.iter_mut() {
-        state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
-        *x = ((state >> 33) as f32) / (u32::MAX as f32) * 2.0 - 1.0;
-    }
-    normalize_to_versor_raw(&raw).expect("normalize failed")
+    let theta = ((seed * 17 + 3) % 101) as f32 / 100.0;
+    let mut v = [0f32; 32];
+    v[0] = theta.cos();
+    
+    // Choose a bivector with negative square, e.g. e12
+    // e1^2 = 1, e2^2 = 1 => (e1 e2)^2 = -e1^2 e2^2 = -1
+    // MASK_TO_IDX for e1e2: e1 is bit 0, e2 is bit 1 => mask 3
+    // MASK_TO_IDX[3] = 6 (grade 2 starts at 6)
+    v[6] = theta.sin();
+    
+    v
 }
 
 #[test]

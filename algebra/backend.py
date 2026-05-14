@@ -60,7 +60,7 @@ def vault_recall(versors: list, query: np.ndarray, top_k: int = 5) -> list:
         except Exception:
             pass
     q = np.asarray(query)
-    scores = [(i, -float(np.sum((q - np.asarray(v)) ** 2))) for i, v in enumerate(versors)]
+    scores = [(i, float(cga_inner(q, np.asarray(v)))) for i, v in enumerate(versors)]
     scores.sort(key=lambda x: -x[1])
     return scores[:top_k]
 
