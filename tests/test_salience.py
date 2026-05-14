@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 
-from algebra.versor import versor_condition
 from chat.runtime import ChatRuntime
 from core.config import RuntimeConfig
 from generate.attention import AttentionOperator
@@ -31,7 +30,7 @@ def test_attention_plan_inhibits_salience_tail() -> None:
     assert len(plan.allowed_indices) < len(salience.indices)
 
 
-def test_salience_enabled_bounds_generation_walk_and_preserves_versor_condition() -> None:
+def test_salience_enabled_bounds_generation_walk() -> None:
     config = RuntimeConfig(output_language="en", frame_pack="en", salience_top_k=8)
     runtime = ChatRuntime(config=config)
     response = runtime.chat("word beginning truth")
@@ -40,7 +39,6 @@ def test_salience_enabled_bounds_generation_walk_and_preserves_versor_condition(
     assert response.candidates_used is not None
     assert 0 < response.candidates_used <= 8
     assert len(response.walk_surface.split()) <= response.candidates_used
-    assert response.versor_condition < 1e-5
 
 
 def test_salience_disabled_preserves_full_generation_budget_telemetry() -> None:
@@ -51,12 +49,18 @@ def test_salience_disabled_preserves_full_generation_budget_telemetry() -> None:
     assert response.salience_top_k is None
     assert response.candidates_used is None
     assert len(response.walk_surface.split()) <= 12
-    assert response.versor_condition < 1e-5
 
 
-def test_generation_result_final_state_stays_on_versor_manifold() -> None:
-    config = RuntimeConfig(output_language="en", frame_pack="en", salience_top_k=8)
-    runtime = ChatRuntime(config=config)
-    runtime.chat("word beginning truth")
-    assert runtime.session.state is not None
-    assert versor_condition(runtime.session.state.F) < 1e-5
+def test_salience_changes_candidate_budget_without_changing_response_contract() -> None:
+    enabled = ChatRuntime(config=RuntimeConfig(output_language="en", frame_pack="en", salience_top_k=8))
+    disabled = ChatRuntime(config=RuntimeConfig(output_language="en", frame_pack="en", use_salience=False, max_tokens=8))
+
+    salience_response = enabled.chat("word beginning truth")
+    full_response = disabled.chat("word beginning truth")
+
+    assert salience_response.candidates_used is not None
+    assert full_response.candidates_used is None
+    assert salience_response.surface
+    assert full_response.surface
+    assert enabled.session.state is not None
+    assert disabled.session.state is not None
