@@ -6,7 +6,17 @@ import json
 import subprocess
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Any, NoReturn
+
+
+# The `core` console script may be installed through stale editable metadata while
+# this repo is moving quickly. Ensure sibling top-level packages such as
+# alignment/, morphology/, and sensorium/ are importable from the checked-out
+# source tree before any runtime imports execute.
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 
 DESCRIPTION = "CORE versor engine command suite."
@@ -26,8 +36,7 @@ def _die(message: str, *, code: int = 2) -> NoReturn:
 
 def _print_runtime_import_hint(exc: BaseException) -> NoReturn:
     _die(
-        "runtime import failed. Run `core doctor` to inspect packaging, or reinstall "
-        "with `python -m pip install -e .`. Root cause: "
+        "runtime import failed. Run `core doctor` to inspect packaging. Root cause: "
         f"{exc.__class__.__name__}: {exc}",
         code=1,
     )
@@ -207,6 +216,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         ("sensorium", "sensorium.protocol"),
     ]
     ok = True
+    print(f"repo_root: {_REPO_ROOT}")
     for label, module_name in checks:
         try:
             __import__(module_name)
