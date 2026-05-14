@@ -130,9 +130,8 @@ def _runtime_for_trace(args: argparse.Namespace):
 
 
 def _trace_payload(text: str, resp: Any, runtime: Any) -> dict[str, Any]:
-    import numpy as np
-
     proposition = resp.proposition
+    articulation = resp.articulation
     payload: dict[str, Any] = {
         "input": text,
         "surface": resp.surface,
@@ -141,13 +140,21 @@ def _trace_payload(text: str, resp: Any, runtime: Any) -> dict[str, Any]:
         "frame_pack": resp.frame_pack,
         "dialogue_role": str(resp.dialogue_role),
         "versor_condition": float(resp.versor_condition),
+        "articulation": {
+            "surface": articulation.surface,
+            "frame_id": articulation.frame_id,
+            "subject": articulation.subject,
+            "predicate": articulation.predicate,
+            "object": articulation.object,
+            "output_language": articulation.output_language,
+        },
         "proposition": {
             "surface": proposition.surface,
             "frame_id": proposition.frame_id,
             "subject": proposition.subject,
             "predicate": proposition.predicate,
             "object": proposition.object_,
-            "relation_norm": float(np.linalg.norm(proposition.relation)),
+            "relation_norm": proposition.relation_norm,
         },
         "vault_entries": len(runtime.session.vault),
         "oov_grounded": list(getattr(runtime.session.vocab, "unknown_token_log", [])),
@@ -158,11 +165,17 @@ def _trace_payload(text: str, resp: Any, runtime: Any) -> dict[str, Any]:
 def _print_trace(payload: dict[str, Any]) -> None:
     print(f"input          : {payload['input']}")
     print(f"surface        : {payload['surface']}")
-    print(f"walk_surface   : {payload['walk_surface']}")
+    print(f"raw_walk       : {payload['walk_surface']}")
     print(f"output_language: {payload['output_language']}")
     print(f"frame_pack     : {payload['frame_pack']}")
     print(f"dialogue_role  : {payload['dialogue_role']}")
     print(f"versor_cond    : {payload['versor_condition']:.2e}")
+    articulation = payload["articulation"]
+    print(f"articulation   : {articulation['surface']!r}")
+    print(f"  subject      : {articulation['subject']!r}")
+    print(f"  predicate    : {articulation['predicate']!r}")
+    if articulation.get("object"):
+        print(f"  object       : {articulation['object']!r}")
     proposition = payload["proposition"]
     print(f"proposition    : {proposition['surface']!r}")
     print(f"  frame_id     : {proposition['frame_id']}")
