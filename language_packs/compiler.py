@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from algebra.cl41 import N_COMPONENTS, geometric_product
+from algebra.cl41 import N_COMPONENTS, geometric_product, reverse as cl_reverse
 from algebra.versor import unitize_versor
 from language_packs.schema import (
     LanguagePackManifest,
@@ -19,14 +19,15 @@ from language_packs.schema import (
 from vocab.manifold import VocabManifold
 
 if TYPE_CHECKING:
+    from alignment.graph import AlignmentGraph
     from morphology.registry import MorphologyRegistry
     from sensorium.protocol import ModalityVocabulary
 
-# Strength of the cross-language alignment nudge applied in load_pack().
-# Each aligned pair's source versor is rotated by this fraction of the
-# geodesic arc toward the target versor. Small enough to preserve
-# intra-pack geometry; large enough to pull cross-lang pairs into proximity.
-_ALIGNMENT_NUDGE_STRENGTH: float = 0.06
+_ALIGNMENT_NUDGE_STRENGTH: float = 0.02
+_MORPHOLOGY_CLUSTER_NUDGE_STRENGTH: float = 0.70
+_PRIMARY_SEMANTIC_DOMAIN_WEIGHT: float = 0.55
+_LOGOS_PARTICIPATION_WEIGHT: float = 0.75
+_FEATURE_COMPONENTS: tuple[int, ...] = (6, 7, 9, 10, 12, 14)
 
 
 def _hash_to_blade(name: str, salt: str) -> int:
@@ -39,30 +40,50 @@ def _hash_unit(name: str, salt: str) -> float:
     return int.from_bytes(digest[:4], "big") / 2**32
 
 
+def _feature_component(name: str, salt: str) -> int:
+    return _FEATURE_COMPONENTS[_hash_to_blade(name, f"{salt}:component") % len(_FEATURE_COMPONENTS)]
+
+
+def _feature_sign(name: str, salt: str) -> float:
+    return 1.0 if _hash_unit(name, f"{salt}:sign") >= 0.5 else -1.0
+
+
 def _feature_rotor(name: str, salt: str, weight: float) -> np.ndarray:
-    negative_bivectors = (6, 7, 9, 10, 12, 14)
-    idx = negative_bivectors[_hash_to_blade(name, f"{salt}:biv") % len(negative_bivectors)]
-    theta = (0.2 + 0.8 * _hash_unit(name, f"{salt}:angle")) * weight
+    idx = _feature_component(name, salt)
+    theta = _feature_sign(name, salt) * weight
     rotor = np.zeros(N_COMPONENTS, dtype=np.float32)
     rotor[0] = np.cos(theta)
     rotor[idx] = np.sin(theta)
     return rotor
 
 
-def _domain_features(domain: str) -> list[tuple[str, float]]:
-    """
-    Lift hierarchical semantic domains into a small feature chain.
+def _unit_feature_versor(vec: np.ndarray) -> np.ndarray:
+    versor = unitize_versor(vec)
+    if float(versor[0]) < 0.0:
+        versor = -versor
+    return versor.astype(np.float32, copy=False)
 
-    A domain like ``logos.illumination.photon`` contributes the trunk
-    (``logos``), then the branch (``logos.illumination``), then the leaf.
-    This reduces accidental hash collisions where unrelated surfaces land
-    close together despite having disjoint semantic structure.
-    """
+
+def _blend_feature_versors(source: np.ndarray, target: np.ndarray, strength: float) -> np.ndarray:
+    strength = max(0.0, min(1.0, float(strength)))
+    nudge = _alignment_nudge_rotor(source, target, strength)
+    return _unit_feature_versor(geometric_product(nudge, source))
+
+
+def _apply_feature(vec: np.ndarray, name: str, salt: str, weight: float) -> np.ndarray:
+    return geometric_product(vec, _feature_rotor(name, salt, weight))
+
+
+def _domain_features(domain: str) -> list[tuple[str, float]]:
     parts = domain.lower().split(".")
-    return [
-        (".".join(parts[: depth + 1]), 0.45 / (depth + 1))
-        for depth in range(len(parts))
-    ]
+    return [(".".join(parts[: depth + 1]), 0.30 / (depth + 1)) for depth in range(len(parts))]
+
+
+def _has_logos_participation(domains: tuple[str, ...]) -> bool:
+    return any(
+        domain == "logos.core" or domain.startswith("logos.")
+        for domain in (d.lower() for d in domains)
+    )
 
 
 _INFLECTION_PRIORITY = (
@@ -83,10 +104,7 @@ _INFLECTION_PRIORITY = (
 
 def _ordered_inflection_items(inflection: dict[str, str]) -> list[tuple[str, str]]:
     priority = {key: idx for idx, key in enumerate(_INFLECTION_PRIORITY)}
-    return sorted(
-        inflection.items(),
-        key=lambda item: (priority.get(item[0], len(_INFLECTION_PRIORITY)), item[0]),
-    )
+    return sorted(inflection.items(), key=lambda item: (priority.get(item[0], len(_INFLECTION_PRIORITY)), item[0]))
 
 
 def _compact_root(root: str) -> str:
@@ -94,38 +112,15 @@ def _compact_root(root: str) -> str:
 
 
 _HEBREW_ROOT_ROMANIZATION = {
-    "\u05d0": "A",
-    "\u05d1": "B",
-    "\u05d2": "G",
-    "\u05d3": "D",
-    "\u05d4": "H",
-    "\u05d5": "W",
-    "\u05d6": "Z",
-    "\u05d7": "H",
-    "\u05d8": "T",
-    "\u05d9": "Y",
-    "\u05db": "K",
-    "\u05da": "K",
-    "\u05dc": "L",
-    "\u05de": "M",
-    "\u05dd": "M",
-    "\u05e0": "N",
-    "\u05df": "N",
-    "\u05e1": "S",
-    "\u05e2": "A",
-    "\u05e4": "P",
-    "\u05e3": "P",
-    "\u05e6": "TS",
-    "\u05e5": "TS",
-    "\u05e7": "Q",
-    "\u05e8": "R",
-    "\u05e9": "SH",
-    "\u05ea": "T",
+    "\u05d0": "A", "\u05d1": "B", "\u05d2": "G", "\u05d3": "D", "\u05d4": "H", "\u05d5": "W",
+    "\u05d6": "Z", "\u05d7": "H", "\u05d8": "T", "\u05d9": "Y", "\u05db": "K", "\u05da": "K",
+    "\u05dc": "L", "\u05de": "M", "\u05dd": "M", "\u05e0": "N", "\u05df": "N", "\u05e1": "S",
+    "\u05e2": "A", "\u05e4": "P", "\u05e3": "P", "\u05e6": "TS", "\u05e5": "TS", "\u05e7": "Q",
+    "\u05e8": "R", "\u05e9": "SH", "\u05ea": "T",
 }
 
 
 def _is_hebrew_root(root: str) -> bool:
-    """Return True if the root string contains Hebrew script characters."""
     return any(ch in _HEBREW_ROOT_ROMANIZATION for ch in root.replace("-", ""))
 
 
@@ -135,112 +130,76 @@ def _triliteral_root(root: str) -> str:
     return "-".join(romanized) if romanized else _compact_root(root).upper()
 
 
-def _apply_morphology(vec: np.ndarray, morphology: MorphologyEntry) -> np.ndarray:
-    # Weight hierarchy:
-    #   triliteral root  0.22  — shared abstract identity, strongest anchor
-    #   root             0.30  — primary root geometry
-    #   stem             0.18  — same-root forms cluster here
-    #   inflection role  0.015 — key label, minimal perturbation
-    #   inflection value 0.03  — number/gender/etc, perturbation only
-    #   prefix           0.03/pos — small positional perturbation
-    #   suffix           0.02/pos — smallest, inflectional tail only
+def _apply_morphology(vec: np.ndarray, morphology: MorphologyEntry) -> None:
     if morphology.root:
         if _is_hebrew_root(morphology.root):
-            vec = geometric_product(
+            vec[:] = _apply_feature(
                 vec,
-                _feature_rotor(
-                    f"triliteral:{_triliteral_root(morphology.root).lower()}",
-                    "morph",
-                    0.22,
-                ),
+                f"triliteral:{_triliteral_root(morphology.root).lower()}",
+                "morph",
+                0.30,
             )
-        vec = geometric_product(
+        vec[:] = _apply_feature(
             vec,
-            _feature_rotor(f"root:{_compact_root(morphology.root).lower()}", "morph", 0.30),
+            f"root:{_compact_root(morphology.root).lower()}",
+            "morph",
+            0.40,
         )
 
     for idx, prefix in enumerate(morphology.prefix_chain):
-        weight = 0.03 / (idx + 1)
-        vec = geometric_product(
-            vec,
-            _feature_rotor(f"{idx}:{prefix.lower()}", "morph:prefix", weight),
-        )
+        vec[:] = _apply_feature(vec, f"{idx}:{prefix.lower()}", "morph:prefix", 0.03 / (idx + 1))
 
     if morphology.stem:
-        vec = geometric_product(vec, _feature_rotor(morphology.stem.lower(), "morph:stem", 0.18))
+        vec[:] = _apply_feature(vec, morphology.stem.lower(), "morph:stem", 0.24)
 
     for key, value in _ordered_inflection_items(dict(morphology.inflection)):
-        vec = geometric_product(
-            vec,
-            _feature_rotor(key.lower(), "morph:infl-role", 0.015),
-        )
-        vec = geometric_product(
-            vec,
-            _feature_rotor(value.lower(), "morph", 0.03),
-        )
+        vec[:] = _apply_feature(vec, key.lower(), "morph:infl-role", 0.02)
+        vec[:] = _apply_feature(vec, value.lower(), "morph:infl-value", 0.04)
 
     for idx, suffix in enumerate(morphology.suffix_chain):
-        weight = 0.02 / (idx + 1)
-        vec = geometric_product(
-            vec,
-            _feature_rotor(f"{idx}:{suffix.lower()}", "morph:suffix", weight),
-        )
-
-    return vec
+        vec[:] = _apply_feature(vec, f"{idx}:{suffix.lower()}", "morph:suffix", 0.02 / (idx + 1))
 
 
-def _entry_to_coordinate(
-    entry: LexicalEntry,
-    morphology: MorphologyEntry | None = None,
-) -> np.ndarray:
+def _entry_to_coordinate(entry: LexicalEntry, morphology: MorphologyEntry | None = None) -> np.ndarray:
     vec = np.zeros(N_COMPONENTS, dtype=np.float32)
     vec[0] = 1.0
 
     pos = (entry.pos or entry.part_of_speech or "").lower()
     for domain in entry.semantic_domains:
         for feature, weight in _domain_features(domain):
-            vec = geometric_product(vec, _feature_rotor(feature, "domain", weight))
+            vec = _apply_feature(vec, feature, "domain", weight)
+
+    logos_participation = "logos" if _has_logos_participation(entry.semantic_domains) else "nonlogos"
+    vec = _apply_feature(
+        vec,
+        f"logos-participation:{logos_participation}",
+        "domain:logos-participation",
+        _LOGOS_PARTICIPATION_WEIGHT,
+    )
+
+    if entry.semantic_domains:
+        vec = _apply_feature(
+            vec,
+            f"primary:{entry.semantic_domains[0].lower()}",
+            "domain:primary",
+            _PRIMARY_SEMANTIC_DOMAIN_WEIGHT,
+        )
 
     if pos:
-        vec = geometric_product(vec, _feature_rotor(pos, "pos", 0.35))
+        vec = _apply_feature(vec, pos, "pos", 0.20)
 
     if morphology is not None:
-        vec = _apply_morphology(vec, morphology)
+        _apply_morphology(vec, morphology)
 
-    vec = geometric_product(vec, _feature_rotor(entry.lemma.lower(), "lemma", 0.1))
-    vec = geometric_product(vec, _feature_rotor(entry.surface.lower(), "surface", 0.05))
-    return unitize_versor(vec)
-
-
-def _resolved_morphology(
-    entry: LexicalEntry,
-    morphology_registry: "MorphologyRegistry | None",
-) -> MorphologyEntry | None:
-    if morphology_registry is None or not entry.morphology_id:
-        return None
-    return morphology_registry.get(entry.morphology_id)
+    vec = _apply_feature(vec, entry.lemma.lower(), "lemma", 0.10)
+    vec = _apply_feature(vec, entry.surface.lower(), "surface", 0.05)
+    return _unit_feature_versor(vec)
 
 
-def _alignment_nudge_rotor(
-    source: np.ndarray,
-    target: np.ndarray,
-    strength: float,
-) -> np.ndarray:
-    """
-    Build a rotor that rotates *source* a fraction *strength* of the way
-    toward *target* along the geodesic arc between them.
-
-    Uses the geometric product of target and reverse(source) to find the
-    full-arc rotor, then scales the bivector angle by *strength* via slerp.
-    Falls back to identity if source and target are anti-parallel (degenerate).
-    """
-    from algebra.cl41 import reverse as cl_reverse
+def _alignment_nudge_rotor(source: np.ndarray, target: np.ndarray, strength: float) -> np.ndarray:
     R_full = geometric_product(target, cl_reverse(source))
-
-    scalar = float(R_full[0])
-    scalar = max(-1.0, min(1.0, scalar))
+    scalar = max(-1.0, min(1.0, float(R_full[0])))
     theta_full = float(np.arccos(scalar))
-
     if abs(theta_full) < 1e-6:
         identity = np.zeros(N_COMPONENTS, dtype=np.float32)
         identity[0] = 1.0
@@ -249,46 +208,75 @@ def _alignment_nudge_rotor(
     biv = R_full.copy()
     biv[0] = 0.0
     biv_norm = float(np.linalg.norm(biv))
-
     if biv_norm < 1e-6:
         identity = np.zeros(N_COMPONENTS, dtype=np.float32)
         identity[0] = 1.0
         return identity
 
-    biv_unit = biv / biv_norm
-    theta_nudge = theta_full * strength
-
+    theta_nudge = theta_full * max(0.0, min(1.0, float(strength)))
     nudge = np.zeros(N_COMPONENTS, dtype=np.float32)
     nudge[0] = float(np.cos(theta_nudge))
-    nudge += (biv_unit * float(np.sin(theta_nudge))).astype(np.float32)
+    nudge += (biv / biv_norm * float(np.sin(theta_nudge))).astype(np.float32)
     return nudge
 
 
-def compile_entries_to_manifold(
-    entries: list[LexicalEntry],
-    morphology_registry: "MorphologyRegistry | None" = None,
-) -> tuple[VocabManifold, dict[str, str]]:
-    """
-    Compile entries into a VocabManifold.
+def _resolved_morphology(entry: LexicalEntry, morphology_registry: "MorphologyRegistry | None") -> MorphologyEntry | None:
+    if morphology_registry is None or not entry.morphology_id:
+        return None
+    return morphology_registry.get(entry.morphology_id)
 
-    Returns:
-        (manifold, entry_id_to_surface): the compiled manifold and a mapping
-        from entry_id to surface string, used by the alignment correction pass
-        in load_pack() to resolve AlignmentEdge source/target IDs.
-    """
+
+def _morphology_cluster_key(morphology: MorphologyEntry) -> str | None:
+    if morphology.root:
+        return f"root:{_compact_root(morphology.root).lower()}"
+    if morphology.stem:
+        return f"stem:{morphology.stem.lower()}"
+    return None
+
+
+def _apply_morphology_cluster_corrections(manifold: VocabManifold, entries: list[LexicalEntry], morphology_registry: "MorphologyRegistry") -> None:
+    groups: dict[str, list[tuple[str, MorphologyEntry]]] = {}
+    for entry in entries:
+        morphology = _resolved_morphology(entry, morphology_registry)
+        if morphology is None:
+            continue
+        key = _morphology_cluster_key(morphology)
+        if key is not None:
+            groups.setdefault(key, []).append((entry.surface, morphology))
+
+    for members in groups.values():
+        if len(members) < 2:
+            continue
+        prototype_surface = next((surface for surface, morphology in members if surface == morphology.lemma), members[0][0])
+        try:
+            prototype = manifold.get_versor(prototype_surface)
+        except KeyError:
+            continue
+        for surface, _ in members:
+            if surface == prototype_surface:
+                continue
+            try:
+                source = manifold.get_versor(surface)
+            except KeyError:
+                continue
+            manifold.update(surface, _blend_feature_versors(source, prototype, _MORPHOLOGY_CLUSTER_NUDGE_STRENGTH))
+
+
+def compile_entries_to_manifold(entries: list[LexicalEntry], morphology_registry: "MorphologyRegistry | None" = None) -> tuple[VocabManifold, dict[str, str]]:
     manifold = VocabManifold()
     entry_id_to_surface: dict[str, str] = {}
     for entry in entries:
         versor = _entry_to_coordinate(entry, _resolved_morphology(entry, morphology_registry))
         manifold.add(entry.surface, versor)
         entry_id_to_surface[entry.entry_id] = entry.surface
+
+    if morphology_registry is not None:
+        _apply_morphology_cluster_corrections(manifold, entries, morphology_registry)
+
     return manifold, entry_id_to_surface
 
 
-def compile_entries_to_modality_vocab(
-    entries: list[LexicalEntry],
-    morphology_registry: "MorphologyRegistry | None" = None,
-) -> "ModalityVocabulary[str]":
+def compile_entries_to_modality_vocab(entries: list[LexicalEntry], morphology_registry: "MorphologyRegistry | None" = None) -> "ModalityVocabulary[str]":
     from sensorium.protocol import ModalityVocabulary
 
     vocab: ModalityVocabulary[str] = ModalityVocabulary()
@@ -314,21 +302,7 @@ def _parse_entry(payload: dict) -> LexicalEntry:
     )
 
 
-def _apply_alignment_corrections(
-    home_manifold: VocabManifold,
-    home_id_map: dict[str, str],
-    foreign_manifold: VocabManifold,
-    foreign_id_map: dict[str, str],
-    pack_id: str,
-) -> None:
-    """
-    Load alignment edges for *pack_id* and nudge each source versor toward
-    its aligned foreign target versor.
-
-    Modifies *home_manifold* in-place via VocabManifold.update().
-    Silently skips edges whose source or target cannot be resolved —
-    alignment is best-effort; missing entries must not block compilation.
-    """
+def _apply_alignment_corrections(home_manifold: VocabManifold, home_id_map: dict[str, str], foreign_manifold: VocabManifold, foreign_id_map: dict[str, str], pack_id: str) -> None:
     from alignment.graph import load_alignment
 
     graph = load_alignment(pack_id)
@@ -345,9 +319,7 @@ def _apply_alignment_corrections(
             target_v = foreign_manifold.get_versor(target_surface)
         except KeyError:
             continue
-
-        nudge = _alignment_nudge_rotor(source_v, target_v, edge.weight * _ALIGNMENT_NUDGE_STRENGTH)
-        corrected = unitize_versor(geometric_product(nudge, source_v))
+        corrected = _blend_feature_versors(source_v, target_v, edge.weight * _ALIGNMENT_NUDGE_STRENGTH)
         home_manifold.update(source_surface, corrected)
 
 
@@ -382,9 +354,7 @@ def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
         oov_policy=OOVPolicy(manifest_payload.get("oov_policy", OOVPolicy.FAIL_CLOSED.value)),
     )
 
-    home_manifold, home_id_map = compile_entries_to_manifold(
-        entries, morphology_registry=morphology_registry
-    )
+    home_manifold, home_id_map = compile_entries_to_manifold(entries, morphology_registry=morphology_registry)
 
     from alignment.graph import load_alignment
     alignment_graph = load_alignment(pack_id)
@@ -399,30 +369,13 @@ def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
             if any(e.morphology_id for e in foreign_entries):
                 from morphology.registry import load_morphology
                 foreign_morph_registry = load_morphology(foreign_pack_id)
-            foreign_manifold, foreign_id_map = compile_entries_to_manifold(
-                foreign_entries, morphology_registry=foreign_morph_registry
-            )
-            _apply_alignment_corrections(
-                home_manifold, home_id_map,
-                foreign_manifold, foreign_id_map,
-                pack_id,
-            )
+            foreign_manifold, foreign_id_map = compile_entries_to_manifold(foreign_entries, morphology_registry=foreign_morph_registry)
+            _apply_alignment_corrections(home_manifold, home_id_map, foreign_manifold, foreign_id_map, pack_id)
 
     return manifest, home_manifold
 
 
-def _infer_foreign_pack_ids(
-    home_pack_id: str,
-    graph: "alignment.graph.AlignmentGraph",
-) -> list[str]:
-    """
-    Derive foreign pack_ids from target_id prefixes in the alignment graph.
-
-    Convention: target_id is "<lang_prefix>-NNN" where lang_prefix maps to
-    a known pack directory name. Currently supports he <-> grc cross-links.
-    """
-    from alignment.graph import AlignmentGraph  # noqa: F401  local import to avoid cycle
-
+def _infer_foreign_pack_ids(home_pack_id: str, graph: "AlignmentGraph") -> list[str]:
     _PREFIX_TO_PACK: dict[str, str] = {
         "he": "he_logos_micro_v1",
         "grc": "grc_logos_micro_v1",
