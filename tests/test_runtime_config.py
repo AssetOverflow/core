@@ -49,7 +49,7 @@ def test_greek_output_language_emits_greek_surface() -> None:
     assert response.proposition.frame_id.startswith(("grc:", "el:"))
 
 
-def test_chat_response_surface_uses_proposition_when_relation_nonzero() -> None:
+def test_chat_response_surface_uses_articulation_plan() -> None:
     runtime = ChatRuntime(config=RuntimeConfig(output_language="en", frame_pack="en"))
     response = runtime.chat("word beginning truth")
-    assert response.surface == response.proposition.surface
+    assert response.surface == response.articulation.surface
