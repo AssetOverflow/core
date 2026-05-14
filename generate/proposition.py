@@ -128,7 +128,25 @@ class FrameRegistry:
         return len(self._frames)
 
 
-def propose(field_state: FieldState, vault, vocab, frame_registry: FrameRegistry) -> Proposition:
+def _candidate_indices_for_language(vocab, output_lang: str | None) -> np.ndarray | None:
+    if output_lang is None:
+        return None
+    indices_for_language = getattr(vocab, "indices_for_language", None)
+    if indices_for_language is None:
+        return None
+    indices = indices_for_language(output_lang)
+    if len(indices) == 0:
+        raise ValueError(f"No proposition candidates for output language {output_lang!r}.")
+    return indices
+
+
+def propose(
+    field_state: FieldState,
+    vault,
+    vocab,
+    frame_registry: FrameRegistry,
+    output_lang: str | None = None,
+) -> Proposition:
     """
     Generate one structured proposition from the live field.
 
@@ -141,17 +159,20 @@ def propose(field_state: FieldState, vault, vocab, frame_registry: FrameRegistry
     prompt = _prompt_versor(field_state)
     relation = outer_product(prompt, field_state.F)
     frame = frame_registry.select(relation)
+    candidate_indices = _candidate_indices_for_language(vocab, output_lang)
 
     subject_word, subject_idx = _nearest_content_word(
         vocab,
         prompt,
         exclude_indices=frozenset(),
         preferred_pos=frozenset({"noun", "pronoun"}),
+        candidate_indices=candidate_indices,
     )
     predicate_word, predicate_idx = _nearest_content_word(
         vocab,
         field_state.F,
         exclude_indices=frozenset({subject_idx}),
+        candidate_indices=candidate_indices,
     )
 
     object_word: str | None = None
@@ -162,6 +183,7 @@ def propose(field_state: FieldState, vault, vocab, frame_registry: FrameRegistry
             relation,
             exclude_indices=frozenset({subject_idx, predicate_idx}),
             preferred_pos=frozenset({"noun", "pronoun"}),
+            candidate_indices=candidate_indices,
         )
         object_versor = vocab.get_versor_at(object_idx)
 
@@ -273,6 +295,7 @@ def _nearest_content_word(
     query: np.ndarray,
     exclude_indices: frozenset[int],
     preferred_pos: frozenset[str] = frozenset(),
+    candidate_indices: np.ndarray | None = None,
 ) -> tuple[str, int]:
     stop_indices = {
         vocab.index_of(surface)
@@ -281,13 +304,13 @@ def _nearest_content_word(
     }
     blocked = set(exclude_indices) | stop_indices
     if preferred_pos:
-        selected = _nearest_by_pos(vocab, query, blocked, preferred_pos)
+        selected = _nearest_by_pos(vocab, query, blocked, preferred_pos, candidate_indices)
         if selected is not None:
             return selected
     try:
-        return vocab.nearest(query, exclude_indices=blocked)
+        return vocab.nearest(query, exclude_indices=blocked, candidate_indices=candidate_indices)
     except ValueError:
-        return vocab.nearest(query, exclude_indices=set(exclude_indices))
+        return vocab.nearest(query, exclude_indices=set(exclude_indices), candidate_indices=candidate_indices)
 
 
 def _nearest_by_pos(
@@ -295,10 +318,12 @@ def _nearest_by_pos(
     query: np.ndarray,
     blocked: set[int],
     preferred_pos: frozenset[str],
+    candidate_indices: np.ndarray | None = None,
 ) -> tuple[str, int] | None:
     best_score = -np.inf
     best: tuple[str, int] | None = None
-    for idx in range(len(vocab)):
+    candidates = range(len(vocab)) if candidate_indices is None else [int(idx) for idx in candidate_indices]
+    for idx in candidates:
         if idx in blocked:
             continue
         word = vocab.get_word_at(idx)

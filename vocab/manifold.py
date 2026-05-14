@@ -38,10 +38,17 @@ class VocabManifold:
         self._words: list[str] = []
         self._versors: list[np.ndarray] = []  # each shape (32,), grade-normed to ±1
         self._morphology_by_word: dict[str, MorphologyEntry] = {}
+        self._language_by_word: dict[str, str] = {}
         self._transient_words: set[str] = set()
         self._unknown_token_log: list[dict[str, object]] = []
 
-    def add(self, word: str, versor: np.ndarray, morphology: MorphologyEntry | None = None) -> None:
+    def add(
+        self,
+        word: str,
+        versor: np.ndarray,
+        morphology: MorphologyEntry | None = None,
+        language: str | None = None,
+    ) -> None:
         """
         Register a word-versor pair.
 
@@ -68,6 +75,9 @@ class VocabManifold:
             )
         self._words.append(word)
         self._versors.append(v)
+        resolved_language = language or (morphology.language if morphology is not None else None)
+        if resolved_language:
+            self._language_by_word[word] = resolved_language
         if morphology is not None:
             self._morphology_by_word[word] = morphology
 
@@ -175,11 +185,28 @@ class VocabManifold:
         """Return structured morphology for a stored surface, if the pack provided it."""
         return self._morphology_by_word.get(word)
 
+    def language_for_word(self, word: str) -> str | None:
+        """Return the language code for a stored surface, if known."""
+        morphology = self._morphology_by_word.get(word)
+        if morphology is not None:
+            return morphology.language
+        return self._language_by_word.get(word)
+
+    def indices_for_language(self, lang: str) -> np.ndarray:
+        """Return manifold indices whose language matches lang."""
+        matches = [
+            idx
+            for idx, word in enumerate(self._words)
+            if self.language_for_word(word) == lang
+        ]
+        return np.asarray(matches, dtype=np.int64)
+
     def nearest(
         self,
         F: np.ndarray,
         exclude_idx: int = -1,
         exclude_indices: set[int] | frozenset[int] | None = None,
+        candidate_indices: np.ndarray | list[int] | tuple[int, ...] | None = None,
     ) -> tuple[str, int]:
         """
         Find the word whose versor is closest to F by CGA inner product.
@@ -192,12 +219,17 @@ class VocabManifold:
         if exclude_idx >= 0:
             blocked.add(exclude_idx)
 
+        if candidate_indices is None:
+            candidates = range(len(self._versors))
+        else:
+            candidates = [int(idx) for idx in candidate_indices]
+
         best_score = -np.inf
         best_idx = -1
-        for i, v in enumerate(self._versors):
+        for i in candidates:
             if i in blocked:
                 continue
-            score = cga_inner(F, v)
+            score = cga_inner(F, self._versors[i])
             if score > best_score:
                 best_score = score
                 best_idx = i

@@ -268,7 +268,7 @@ def compile_entries_to_manifold(entries: list[LexicalEntry], morphology_registry
     for entry in entries:
         morphology = _resolved_morphology(entry, morphology_registry)
         versor = _entry_to_coordinate(entry, morphology)
-        manifold.add(entry.surface, versor, morphology=morphology)
+        manifold.add(entry.surface, versor, morphology=morphology, language=entry.language)
         entry_id_to_surface[entry.entry_id] = entry.surface
 
     if morphology_registry is not None:
@@ -394,12 +394,13 @@ def load_mounted_packs(pack_ids: tuple[str, ...] | list[str]) -> VocabManifold:
             surface = manifold.get_word_at(idx)
             if surface in seen:
                 continue
+            entry = entry_by_surface.get(surface)
             mounted.add(
                 surface,
                 manifold.get_versor_at(idx),
                 morphology=manifold.morphology_for_word(surface),
+                language=None if entry is None else entry.language,
             )
-            entry = entry_by_surface.get(surface)
             if entry is not None and entry.semantic_domains:
                 primary_groups.setdefault(entry.semantic_domains[0].lower(), []).append(
                     (entry.language, surface)

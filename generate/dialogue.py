@@ -94,13 +94,14 @@ def propose_dialogue(
     vocab,
     frame_registry: FrameRegistry,
     reference_blade: np.ndarray | None = None,
+    output_lang: str | None = None,
 ) -> Proposition:
     """
     Generate a proposition through a dialogue-role constrained frame choice.
     """
-    base = propose(field_state, None, vocab, frame_registry)
+    base = propose(field_state, None, vocab, frame_registry, output_lang=output_lang)
     role = classify_dialogue_blade(base.relation, reference_blade)
     frame = frame_registry.select_dialogue(base.relation, role)
     role_registry = FrameRegistry((frame,))
-    proposition = propose(field_state, vault, vocab, role_registry)
+    proposition = propose(field_state, vault, vocab, role_registry, output_lang=output_lang)
     return proposition
