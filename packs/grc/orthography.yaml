@@ -1,0 +1,29 @@
+language: el
+script: Greek
+
+normalization:
+  unicode_normal_form: NFC
+  # Greek Unicode: precomposed forms.
+  # Polytonic diacritics (breathing marks, accents, iota subscript)
+  # are preserved. These carry morphological and semantic information
+  # in Koine Greek that must not be stripped.
+  strip_breathing_marks: false
+  strip_accents_for_indexing: false
+  # Accents in Greek affect meaning and morphological parsing.
+  # They are never stripped from the canonical form.
+  lowercase_for_indexing: true
+  # Lemma lookup uses lowercased forms.
+  # Surface forms preserve original casing.
+  lunate_sigma: false
+  # Use standard sigma/final-sigma (σ/ς) not lunate (ϲ).
+  # Final sigma is morphologically relevant.
+
+punctuation:
+  strategy: preserve
+  ano_teleia: preserve
+  # The ano teleia (·) is the Greek semicolon and must be preserved.
+
+spacing:
+  strategy: whitespace-split
+
+script_direction: ltr

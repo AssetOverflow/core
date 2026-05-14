@@ -27,6 +27,21 @@ _RECENT_WINDOW = 3
 _STOP_TOKENS = frozenset({"it", "to", "word"})
 
 
+def _articulate(vocab, word: str) -> str:
+    """
+    Recover the emitted surface through MorphologyEntry when available.
+
+    The manifold walk selects a vocabulary point. Articulation then returns
+    the structured surface carried by that point, preserving script and
+    inflection without introducing a corrective pass.
+    """
+    morphology_for_word = getattr(vocab, "morphology_for_word", None)
+    if morphology_for_word is None:
+        return word
+    morphology = morphology_for_word(word)
+    return morphology.surface if morphology is not None else word
+
+
 def _nearest_next(
     vocab,
     F_voiced,
@@ -103,7 +118,7 @@ def generate(
             recent_nodes=tuple(recent_nodes),
             stop_nodes=stop_nodes,
         )
-        tokens.append(word)
+        tokens.append(_articulate(vocab, word))
 
         if record_trajectory:
             trajectory.append(current)
@@ -155,7 +170,7 @@ async def agenerate(
             recent_nodes=tuple(recent_nodes),
             stop_nodes=stop_nodes,
         )
-        yield word
+        yield _articulate(vocab, word)
 
         A = vocab.get_versor_at(current.node)
         B = vocab.get_versor_at(word_idx)

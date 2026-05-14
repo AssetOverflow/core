@@ -3,13 +3,13 @@ from __future__ import annotations
 import pytest
 
 from chat.runtime import ChatRuntime
-from language_packs import load_pack
+from language_packs import load_pack, load_pack_entries
 
 
 def test_load_pack_and_vocab_size():
     manifest, manifold = load_pack("en_minimal_v1")
     assert manifest.pack_id == "en_minimal_v1"
-    assert len(manifold) == 60
+    assert len(manifold) == len(load_pack_entries("en_minimal_v1"))
 
 
 def test_light_neighborhood_not_negation():

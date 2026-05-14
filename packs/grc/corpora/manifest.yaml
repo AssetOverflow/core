@@ -1,0 +1,24 @@
+corpus_id: el-tier0
+status: draft
+license_review: pending
+sources:
+  - id: sblgnt
+    name: SBL Greek New Testament
+    description: >-
+      The Society of Biblical Literature Greek New Testament.
+      A critically edited text of the Greek New Testament.
+    license: review-required
+    url: https://github.com/LogosBible/SBLGNT
+    hash: pending
+  - id: byzantine
+    name: Byzantine Majority Text
+    description: >-
+      Robinson-Pierpont Byzantine Majority Text. Public domain.
+    license: public-domain
+    url: https://github.com/byztxt/byzantine-majority-text
+    hash: pending
+hashes: []
+notes: >
+  SBLGNT license requires review before use in training data.
+  Byzantine text is public domain and may proceed after hash pin.
+  All hashes must be recorded before the Coverage gate is run.

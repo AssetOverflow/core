@@ -5,7 +5,7 @@ import numpy as np
 from algebra.cga import cga_inner
 from algebra.holonomy import holonomy_encode, holonomy_similarity
 from language_packs import load_pack
-from language_packs.compiler import compile_entries_to_manifold, load_pack_entries
+from language_packs.compiler import compile_entries_to_manifold, load_mounted_packs, load_pack_entries
 from morphology.registry import load_morphology
 
 
@@ -48,6 +48,27 @@ def test_triple_alignment_closer_than_other_triples():
         ]
     )
     assert aligned_score > misaligned_score
+
+
+def test_light_alignment_clusters_across_mounted_trilingual_field():
+    manifold = load_mounted_packs(("en_minimal_v1", "he_logos_micro_v1", "grc_logos_micro_v1"))
+
+    aligned_score = np.mean(
+        [
+            cga_inner(manifold.get_versor("light"), manifold.get_versor("אוֹר")),
+            cga_inner(manifold.get_versor("light"), manifold.get_versor("φῶς")),
+            cga_inner(manifold.get_versor("אוֹר"), manifold.get_versor("φῶς")),
+        ]
+    )
+    unrelated_score = np.mean(
+        [
+            cga_inner(manifold.get_versor("light"), manifold.get_versor("דבר")),
+            cga_inner(manifold.get_versor("light"), manifold.get_versor("ἀρχή")),
+            cga_inner(manifold.get_versor("אוֹר"), manifold.get_versor("ζωή")),
+        ]
+    )
+
+    assert aligned_score > unrelated_score
 
 
 def test_word_order_permutation_changes_holonomy():

@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import numpy as np
+
+from field.state import FieldState
+from generate.stream import _articulate, generate
 from generate.stream import _nearest_next
+from persona.motor import PersonaMotor
 
 
 class _StubVocab:
@@ -19,6 +24,29 @@ class _StubVocab:
                 continue
             return word, idx
         raise ValueError("No candidate word available after exclusions.")
+
+
+class _Morphology:
+    def __init__(self, surface: str) -> None:
+        self.surface = surface
+
+
+class _MorphVocab(_StubVocab):
+    def __init__(self):
+        super().__init__(["seed", "אוֹר"])
+        self._versors = [np.eye(1, 32, 0, dtype=np.float32)[0], np.eye(1, 32, 0, dtype=np.float32)[0]]
+
+    def morphology_for_word(self, word: str):
+        return _Morphology("אוֹר") if word == "אוֹר" else None
+
+    def get_versor_at(self, idx: int):
+        return self._versors[idx]
+
+    def index_of(self, word: str) -> int:
+        return self._words.index(word)
+
+    def get_word_at(self, idx: int) -> str:
+        return self._words[idx]
 
 
 def test_nearest_next_excludes_recent_and_stop_nodes_when_possible():
@@ -52,3 +80,18 @@ def test_nearest_next_relaxes_recent_window_before_stop_tokens():
         (0, frozenset({1, 2})),
         (0, frozenset({1})),
     ]
+
+
+def test_articulate_uses_structured_morphology_surface():
+    vocab = _MorphVocab()
+
+    assert _articulate(vocab, "אוֹר") == "אוֹר"
+
+
+def test_generate_emits_morphology_surface():
+    vocab = _MorphVocab()
+    state = FieldState(F=vocab.get_versor_at(0), node=0)
+
+    result = generate(state, vocab, PersonaMotor.identity(), max_tokens=1)
+
+    assert result.tokens == ("אוֹר",)

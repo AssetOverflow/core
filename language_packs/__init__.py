@@ -32,12 +32,14 @@ def __getattr__(name: str):
     if name in {
         "compile_entries_to_manifold",
         "compile_entries_to_modality_vocab",
+        "load_mounted_packs",
         "load_pack",
         "load_pack_entries",
     }:
         from .compiler import (
             compile_entries_to_manifold,
             compile_entries_to_modality_vocab,
+            load_mounted_packs,
             load_pack,
             load_pack_entries,
         )
@@ -45,6 +47,7 @@ def __getattr__(name: str):
         return {
             "compile_entries_to_manifold": compile_entries_to_manifold,
             "compile_entries_to_modality_vocab": compile_entries_to_modality_vocab,
+            "load_mounted_packs": load_mounted_packs,
             "load_pack": load_pack,
             "load_pack_entries": load_pack_entries,
         }[name]

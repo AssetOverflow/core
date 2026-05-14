@@ -15,18 +15,18 @@ from language_packs import load_pack
 # Alignment graph loading
 # ---------------------------------------------------------------------------
 
-def test_load_he_alignment_returns_seven_edges():
+def test_load_he_alignment_returns_depth_and_english_anchor_edges():
     graph = load_alignment("he_logos_micro_v1")
-    assert len(graph) == 7
+    assert len(graph) == 11
     for edge in graph.edges:
         assert isinstance(edge, AlignmentEdge)
         assert 0.0 <= edge.weight <= 1.0
         assert edge.relation.startswith("cross_lang.")
 
 
-def test_load_grc_alignment_returns_seven_edges():
+def test_load_grc_alignment_returns_depth_and_english_anchor_edges():
     graph = load_alignment("grc_logos_micro_v1")
-    assert len(graph) == 7
+    assert len(graph) == 9
 
 
 def test_load_en_alignment_returns_empty_graph():
@@ -48,18 +48,17 @@ def test_aligned_pairs_by_relation_prefix():
     """aligned_pairs() should filter by relation prefix correctly."""
     graph = load_alignment("he_logos_micro_v1")
     all_cross = graph.aligned_pairs("cross_lang.logos")
-    assert len(all_cross) == 7
+    assert len(all_cross) == 11
 
     logos_only = graph.aligned_pairs("cross_lang.logos.utterance")
-    assert len(logos_only) == 1
-    assert logos_only[0].source_id == "he-001"
+    assert {edge.target_id for edge in logos_only} == {"grc-001", "en-024"}
+    assert all(edge.source_id == "he-001" for edge in logos_only)
 
 
 def test_edges_from_source():
     graph = load_alignment("grc_logos_micro_v1")
     edges = graph.edges_from("grc-001")
-    assert len(edges) == 1
-    assert edges[0].target_id == "he-001"
+    assert {edge.target_id for edge in edges} == {"he-001", "en-024"}
 
 
 # ---------------------------------------------------------------------------

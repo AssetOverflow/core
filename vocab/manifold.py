@@ -30,14 +30,16 @@ dispatches to the Rust extension when available.
 import numpy as np
 from algebra.backend import cga_inner
 from algebra.cl41 import geometric_product, reverse
+from language_packs.schema import MorphologyEntry
 
 
 class VocabManifold:
     def __init__(self):
         self._words: list[str] = []
         self._versors: list[np.ndarray] = []  # each shape (32,), grade-normed to ±1
+        self._morphology_by_word: dict[str, MorphologyEntry] = {}
 
-    def add(self, word: str, versor: np.ndarray) -> None:
+    def add(self, word: str, versor: np.ndarray, morphology: MorphologyEntry | None = None) -> None:
         """
         Register a word-versor pair.
 
@@ -64,6 +66,8 @@ class VocabManifold:
             )
         self._words.append(word)
         self._versors.append(v)
+        if morphology is not None:
+            self._morphology_by_word[word] = morphology
 
     def update(self, word: str, versor: np.ndarray) -> None:
         """
@@ -117,6 +121,10 @@ class VocabManifold:
             return self._words.index(word)
         except ValueError:
             raise KeyError(f"Word '{word}' not in vocabulary.")
+
+    def morphology_for_word(self, word: str) -> MorphologyEntry | None:
+        """Return structured morphology for a stored surface, if the pack provided it."""
+        return self._morphology_by_word.get(word)
 
     def nearest(
         self,

@@ -21,3 +21,10 @@ def test_repl_exits_cleanly_on_stdin_eof(monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "[field walk:" in out
     assert "light" in out
+
+
+def test_field_walk_crosses_language_boundary_from_logos_alias():
+    walk = repl.field_walk("logos", steps=6)
+
+    assert walk[0] == "logos"
+    assert {"λόγος", "דבר"} & set(walk)

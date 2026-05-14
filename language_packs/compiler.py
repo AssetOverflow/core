@@ -23,10 +23,10 @@ if TYPE_CHECKING:
     from morphology.registry import MorphologyRegistry
     from sensorium.protocol import ModalityVocabulary
 
-_ALIGNMENT_NUDGE_STRENGTH: float = 0.02
+_ALIGNMENT_NUDGE_STRENGTH: float = 0.10
 _MORPHOLOGY_CLUSTER_NUDGE_STRENGTH: float = 0.70
 _PRIMARY_SEMANTIC_DOMAIN_WEIGHT: float = 0.55
-_LOGOS_PARTICIPATION_WEIGHT: float = 0.75
+_LOGOS_PARTICIPATION_WEIGHT: float = 0.25
 _FEATURE_COMPONENTS: tuple[int, ...] = (6, 7, 9, 10, 12, 14)
 
 
@@ -266,8 +266,9 @@ def compile_entries_to_manifold(entries: list[LexicalEntry], morphology_registry
     manifold = VocabManifold()
     entry_id_to_surface: dict[str, str] = {}
     for entry in entries:
-        versor = _entry_to_coordinate(entry, _resolved_morphology(entry, morphology_registry))
-        manifold.add(entry.surface, versor)
+        morphology = _resolved_morphology(entry, morphology_registry)
+        versor = _entry_to_coordinate(entry, morphology)
+        manifold.add(entry.surface, versor, morphology=morphology)
         entry_id_to_surface[entry.entry_id] = entry.surface
 
     if morphology_registry is not None:
@@ -373,6 +374,59 @@ def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
             _apply_alignment_corrections(home_manifold, home_id_map, foreign_manifold, foreign_id_map, pack_id)
 
     return manifest, home_manifold
+
+
+def load_mounted_packs(pack_ids: tuple[str, ...] | list[str]) -> VocabManifold:
+    """
+    Mount multiple compiled packs into one exact-search manifold.
+
+    The mounted field is a union of already-compiled Cl(4,1) points. It does
+    not add a side index, fallback embedding, or approximate distance path.
+    """
+    mounted = VocabManifold()
+    seen: set[str] = set()
+    primary_groups: dict[str, list[tuple[str, str]]] = {}
+    for pack_id in pack_ids:
+        _, manifold = load_pack(pack_id)
+        entries = load_pack_entries(pack_id)
+        entry_by_surface = {entry.surface: entry for entry in entries}
+        for idx in range(len(manifold)):
+            surface = manifold.get_word_at(idx)
+            if surface in seen:
+                continue
+            mounted.add(
+                surface,
+                manifold.get_versor_at(idx),
+                morphology=manifold.morphology_for_word(surface),
+            )
+            entry = entry_by_surface.get(surface)
+            if entry is not None and entry.semantic_domains:
+                primary_groups.setdefault(entry.semantic_domains[0].lower(), []).append(
+                    (entry.language, surface)
+                )
+            seen.add(surface)
+    _apply_mounted_primary_domain_resonance(mounted, primary_groups)
+    return mounted
+
+
+def _apply_mounted_primary_domain_resonance(
+    mounted: VocabManifold,
+    primary_groups: dict[str, list[tuple[str, str]]],
+) -> None:
+    for surfaces in primary_groups.values():
+        languages = {language for language, _ in surfaces}
+        if len(languages) < 2:
+            continue
+        prototype_surface = next(
+            (surface for language, surface in surfaces if language == "en"),
+            surfaces[0][1],
+        )
+        prototype = mounted.get_versor(prototype_surface)
+        for _, surface in surfaces:
+            if surface == prototype_surface:
+                continue
+            source = mounted.get_versor(surface)
+            mounted.update(surface, _blend_feature_versors(source, prototype, 0.85))
 
 
 def _infer_foreign_pack_ids(home_pack_id: str, graph: "AlignmentGraph") -> list[str]:

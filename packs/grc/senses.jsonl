@@ -1,0 +1,9 @@
+{"sense_id":"el:logos:creative-word","lemma_id":"el:logos","field_target":"logos.articulation.creative","constraints":["creative-or-authoritative-context"],"rank":1}
+{"sense_id":"el:logos:reason","lemma_id":"el:logos","field_target":"logos.reason","constraints":["philosophical-context"],"rank":2}
+{"sense_id":"el:logos:person","lemma_id":"el:logos","field_target":"logos.person","constraints":["johannine-context"],"rank":3}
+{"sense_id":"el:eimi:existence","lemma_id":"el:eimi","field_target":"existence.state.identity","constraints":["copular-frame"],"rank":1}
+{"sense_id":"el:eimi:continuous-being","lemma_id":"el:eimi","field_target":"existence.state.continuous","constraints":["existential-imperfect-frame"],"rank":2}
+{"sense_id":"el:arche:absolute-origin","lemma_id":"el:arche","field_target":"time.origin.absolute","constraints":["absolute-temporal-or-ontological-context"],"rank":1}
+{"sense_id":"el:arche:first-principle","lemma_id":"el:arche","field_target":"logos.first-principle","constraints":["philosophical-context"],"rank":2}
+{"sense_id":"el:theos:divine-identity","lemma_id":"el:theos","field_target":"divine.identity","constraints":[],"rank":1}
+{"sense_id":"el:pros:presence-toward","lemma_id":"el:pros","field_target":"relation.presence-toward","constraints":["pros-governs-accusative"],"rank":1}
