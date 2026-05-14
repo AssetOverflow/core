@@ -94,33 +94,33 @@ def _compact_root(root: str) -> str:
 
 
 _HEBREW_ROOT_ROMANIZATION = {
-    "א": "A",
-    "ב": "B",
-    "ג": "G",
-    "ד": "D",
-    "ה": "H",
-    "ו": "W",
-    "ז": "Z",
-    "ח": "H",
-    "ט": "T",
-    "י": "Y",
-    "כ": "K",
-    "ך": "K",
-    "ל": "L",
-    "מ": "M",
-    "ם": "M",
-    "נ": "N",
-    "ן": "N",
-    "ס": "S",
-    "ע": "A",
-    "פ": "P",
-    "ף": "P",
-    "צ": "TS",
-    "ץ": "TS",
-    "ק": "Q",
-    "ר": "R",
-    "ש": "SH",
-    "ת": "T",
+    "\u05d0": "A",
+    "\u05d1": "B",
+    "\u05d2": "G",
+    "\u05d3": "D",
+    "\u05d4": "H",
+    "\u05d5": "W",
+    "\u05d6": "Z",
+    "\u05d7": "H",
+    "\u05d8": "T",
+    "\u05d9": "Y",
+    "\u05db": "K",
+    "\u05da": "K",
+    "\u05dc": "L",
+    "\u05de": "M",
+    "\u05dd": "M",
+    "\u05e0": "N",
+    "\u05df": "N",
+    "\u05e1": "S",
+    "\u05e2": "A",
+    "\u05e4": "P",
+    "\u05e3": "P",
+    "\u05e6": "TS",
+    "\u05e5": "TS",
+    "\u05e7": "Q",
+    "\u05e8": "R",
+    "\u05e9": "SH",
+    "\u05ea": "T",
 }
 
 
@@ -136,6 +136,14 @@ def _triliteral_root(root: str) -> str:
 
 
 def _apply_morphology(vec: np.ndarray, morphology: MorphologyEntry) -> np.ndarray:
+    # Weight hierarchy:
+    #   triliteral root  0.22  — shared abstract identity, strongest anchor
+    #   root             0.30  — primary root geometry
+    #   stem             0.18  — same-root forms cluster here
+    #   inflection role  0.015 — key label, minimal perturbation
+    #   inflection value 0.03  — number/gender/etc, perturbation only
+    #   prefix           0.03/pos — small positional perturbation
+    #   suffix           0.02/pos — smallest, inflectional tail only
     if morphology.root:
         if _is_hebrew_root(morphology.root):
             vec = geometric_product(
@@ -143,36 +151,36 @@ def _apply_morphology(vec: np.ndarray, morphology: MorphologyEntry) -> np.ndarra
                 _feature_rotor(
                     f"triliteral:{_triliteral_root(morphology.root).lower()}",
                     "morph",
-                    0.13,
+                    0.22,
                 ),
             )
         vec = geometric_product(
             vec,
-            _feature_rotor(f"root:{_compact_root(morphology.root).lower()}", "morph", 0.17),
+            _feature_rotor(f"root:{_compact_root(morphology.root).lower()}", "morph", 0.30),
         )
 
     for idx, prefix in enumerate(morphology.prefix_chain):
-        weight = 0.05 / (idx + 1)
+        weight = 0.03 / (idx + 1)
         vec = geometric_product(
             vec,
             _feature_rotor(f"{idx}:{prefix.lower()}", "morph:prefix", weight),
         )
 
     if morphology.stem:
-        vec = geometric_product(vec, _feature_rotor(morphology.stem.lower(), "morph:stem", 0.10))
+        vec = geometric_product(vec, _feature_rotor(morphology.stem.lower(), "morph:stem", 0.18))
 
     for key, value in _ordered_inflection_items(dict(morphology.inflection)):
         vec = geometric_product(
             vec,
-            _feature_rotor(key.lower(), "morph:infl-role", 0.02),
+            _feature_rotor(key.lower(), "morph:infl-role", 0.015),
         )
         vec = geometric_product(
             vec,
-            _feature_rotor(value.lower(), "morph", 0.05),
+            _feature_rotor(value.lower(), "morph", 0.03),
         )
 
     for idx, suffix in enumerate(morphology.suffix_chain):
-        weight = 0.04 / (idx + 1)
+        weight = 0.02 / (idx + 1)
         vec = geometric_product(
             vec,
             _feature_rotor(f"{idx}:{suffix.lower()}", "morph:suffix", weight),
@@ -226,23 +234,18 @@ def _alignment_nudge_rotor(
     full-arc rotor, then scales the bivector angle by *strength* via slerp.
     Falls back to identity if source and target are anti-parallel (degenerate).
     """
-    # Full-arc rotor: R = target * reverse(source)
     from algebra.cl41 import reverse as cl_reverse
     R_full = geometric_product(target, cl_reverse(source))
 
-    # Extract scalar and bivector norm to find the full rotation angle
     scalar = float(R_full[0])
-    # Clamp to valid acos domain
     scalar = max(-1.0, min(1.0, scalar))
-    theta_full = float(np.arccos(scalar))  # half-angle of full rotation
+    theta_full = float(np.arccos(scalar))
 
     if abs(theta_full) < 1e-6:
-        # Already aligned — identity rotor
         identity = np.zeros(N_COMPONENTS, dtype=np.float32)
         identity[0] = 1.0
         return identity
 
-    # Bivector part of R_full (components 1..N_COMPONENTS-1)
     biv = R_full.copy()
     biv[0] = 0.0
     biv_norm = float(np.linalg.norm(biv))
@@ -252,10 +255,7 @@ def _alignment_nudge_rotor(
         identity[0] = 1.0
         return identity
 
-    # Unit bivector
     biv_unit = biv / biv_norm
-
-    # Scale angle by strength
     theta_nudge = theta_full * strength
 
     nudge = np.zeros(N_COMPONENTS, dtype=np.float32)
@@ -386,14 +386,9 @@ def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
         entries, morphology_registry=morphology_registry
     )
 
-    # Alignment correction pass: load the sibling pack(s) referenced by
-    # this pack's alignment.jsonl and nudge aligned pairs into proximity.
-    # This is only attempted when a sibling pack exists on disk; missing
-    # sibling packs are silently skipped so packs remain independently loadable.
     from alignment.graph import load_alignment
     alignment_graph = load_alignment(pack_id)
     if len(alignment_graph) > 0:
-        # Collect all foreign pack_ids referenced by this pack's edges
         foreign_pack_ids = _infer_foreign_pack_ids(pack_id, alignment_graph)
         for foreign_pack_id in foreign_pack_ids:
             foreign_pack_dir = Path(__file__).parent / "data" / foreign_pack_id
@@ -424,9 +419,9 @@ def _infer_foreign_pack_ids(
     Derive foreign pack_ids from target_id prefixes in the alignment graph.
 
     Convention: target_id is "<lang_prefix>-NNN" where lang_prefix maps to
-    a known pack directory name. Currently supports he ↔ grc cross-links.
+    a known pack directory name. Currently supports he <-> grc cross-links.
     """
-    from alignment.graph import AlignmentGraph  # local import to avoid cycle
+    from alignment.graph import AlignmentGraph  # noqa: F401  local import to avoid cycle
 
     _PREFIX_TO_PACK: dict[str, str] = {
         "he": "he_logos_micro_v1",
