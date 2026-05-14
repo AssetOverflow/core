@@ -275,7 +275,7 @@ def _print_rust_status() -> bool:
 
         print(f"core_rs module: {getattr(core_rs, '__file__', '<built-in>')}")
     else:
-        print("activation    : run `core rust build` or `uv run --with maturin maturin develop --release --manifest-path core-rs/Cargo.toml`")
+        print("activation    : run `core rust build`")
     return active
 
 
@@ -289,27 +289,18 @@ def cmd_rust_build(args: argparse.Namespace) -> int:
     if not _CORE_RS_MANIFEST.exists():
         _die(f"core-rs manifest not found: {_CORE_RS_MANIFEST}", code=1)
     if shutil.which("uv") is not None:
-        cmd = [
-            "uv",
-            "run",
-            "--with",
-            "maturin",
-            "maturin",
-            "develop",
-            "--release",
-            "--manifest-path",
-            str(_CORE_RS_MANIFEST),
-        ]
-    else:
-        cmd = [
-            sys.executable,
-            "-m",
-            "maturin",
-            "develop",
-            "--release",
-            "--manifest-path",
-            str(_CORE_RS_MANIFEST),
-        ]
+        rc = _run("uv", "pip", "install", "maturin")
+        if rc != 0:
+            return rc
+    cmd = [
+        sys.executable,
+        "-m",
+        "maturin",
+        "develop",
+        "--release",
+        "--manifest-path",
+        str(_CORE_RS_MANIFEST),
+    ]
     if args.skip_auditwheel:
         cmd.append("--skip-auditwheel")
     return _run(*cmd)
