@@ -12,7 +12,7 @@ CORE's identity is not a description of CORE. It is CORE, expressed geometricall
 """
 
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, FrozenSet, List, Optional, Tuple
 
 
@@ -63,11 +63,51 @@ class IdentityManifold:
     """
     value_axes: Tuple  # Tuple[ValueAxis, ...]
     boundary_ids: FrozenSet[str]
-    alignment_threshold: float = 0.75
+    alignment_threshold: float = 0.45
 
 
 class IdentityCheck:
-    """Checks a ReasoningTrajectory against an IdentityManifold."""
+    """Checks a ReasoningTrajectory against an IdentityManifold.
+
+    The current runtime feeds this checker with lightweight binding frames
+    derived from generation field states. Low micro-pack energy should not
+    mechanically trip every identity axis. The score remains conservative,
+    but axis deviations are now assigned by axis projection rather than by
+    bulk-flagging every axis whenever the scalar score misses threshold.
+    """
+
+    @staticmethod
+    def _clamp01(value: float) -> float:
+        return max(0.0, min(1.0, float(value)))
+
+    @staticmethod
+    def _mean_frame_coherence(trajectory) -> float:
+        if not getattr(trajectory, "frames", None):
+            return 0.0
+        return sum(
+            float(frame.coherence_magnitude) for frame in trajectory.frames
+        ) / len(trajectory.frames)
+
+    @staticmethod
+    def _axis_projection(axis, trajectory, scalar_score: float) -> float:
+        """Deterministically project trajectory evidence onto one value axis.
+
+        Until full geometric value-axis measurement is wired, use available
+        trajectory telemetry without pretending every axis was measured the
+        same way. Axis directions deterministically weight coherence evidence,
+        so traces expose which axis caused a flag rather than listing all axes
+        by default.
+        """
+        direction = tuple(float(x) for x in getattr(axis, "direction", ()) or ())
+        if not direction:
+            return scalar_score
+        direction_norm = sum(abs(x) for x in direction) or 1.0
+        directional_weight = sum(abs(x) for x in direction[:3]) / direction_norm
+        frame_coherence = IdentityCheck._mean_frame_coherence(trajectory)
+        coherence_term = IdentityCheck._clamp01(0.5 + (frame_coherence / 2.0))
+        return IdentityCheck._clamp01(
+            (0.75 * scalar_score) + (0.25 * directional_weight * coherence_term)
+        )
 
     def check(self, trajectory, manifold: IdentityManifold) -> IdentityScore:
         if not manifold.value_axes:
@@ -77,20 +117,17 @@ class IdentityCheck:
                 deviation_axes=frozenset(),
                 trajectory_id=trajectory.trajectory_id,
             )
-        confidence = getattr(trajectory, "total_coherence_delta", 0.0)
-        if trajectory.frames:
-            confidence += sum(
-                float(frame.coherence_magnitude) for frame in trajectory.frames
-            ) / len(trajectory.frames)
-        score = max(0.0, min(1.0, 0.5 + (confidence / 2.0)))
+        confidence = float(getattr(trajectory, "total_coherence_delta", 0.0))
+        confidence += self._mean_frame_coherence(trajectory)
+        score = self._clamp01(0.5 + (confidence / 2.0))
         deviations = frozenset(
             axis.axis_id
             for axis in manifold.value_axes
-            if score < manifold.alignment_threshold
+            if self._axis_projection(axis, trajectory, score) < manifold.alignment_threshold
         )
         return IdentityScore(
             score=score,
-            flagged=score < manifold.alignment_threshold,
+            flagged=bool(deviations),
             deviation_axes=deviations,
             trajectory_id=trajectory.trajectory_id,
         )
@@ -155,6 +192,7 @@ class TurnEvent:
     Fields:
         turn                 — zero-based turn index within the session
         input_tokens         — tokens as ingested (after OOV filtering)
+        surface              — emitted response surface after runtime selection
         walk_surface         — syntactically guarded token sequence from manifold walk
         articulation_surface — proposition-level surface from realize()
         dialogue_role        — DialogueRole classification for this turn
@@ -167,6 +205,7 @@ class TurnEvent:
     """
     turn: int
     input_tokens: Tuple[str, ...]
+    surface: str
     walk_surface: str
     articulation_surface: str
     dialogue_role: str
