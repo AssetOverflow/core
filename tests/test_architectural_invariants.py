@@ -64,6 +64,7 @@ import pytest
 from algebra.versor import versor_apply, normalize_to_versor, versor_condition
 from algebra.holonomy import holonomy_encode
 from algebra.cl41 import geometric_product, reverse
+from algebra.cga import embed_point
 
 # ---------------------------------------------------------------------------
 # Ingest imports
@@ -431,21 +432,7 @@ class TestINV06NullConePreservation:
 
     def _null_vector(self) -> np.ndarray:
         """Construct the canonical o (origin) null vector in CGA Cl(4,1)."""
-        # In CGA: o = (e_minus - e_plus) / 2 where e_minus^2=-1, e_plus^2=+1
-        # Using the Cl(4,1) blade indexing from algebra/cl41.py:
-        # blade 3 = e3, blade 4 = e4 (the extra CGA basis vectors)
-        # A simple null vector: e1 + e_inf where e_inf = e4+e3 (metric-dependent)
-        # For this test we construct numerically.
-        v = np.zeros(32, dtype=np.float64)
-        v[1] = 1.0   # e1
-        v[2] = 1.0   # e2
-        # Make null: x*x = 0 requires careful construction per the metric.
-        # Use a known null vector from the CGA embedding instead.
-        # e_o = 0.5*(e_minus - e_plus): in our 32-dim basis this is blade index 3+4
-        v = np.zeros(32, dtype=np.float64)
-        v[3] =  0.5   # e3 component
-        v[4] = -0.5   # e4 component (opposite sign for null condition in Cl(4,1))
-        return v
+        return embed_point(np.zeros(3, dtype=np.float64)).astype(np.float64)
 
     def test_null_vector_self_product_is_zero(self):
         n = self._null_vector()

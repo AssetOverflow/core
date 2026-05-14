@@ -207,7 +207,7 @@ def propose(
         relation=relation,
     )
     if vault is not None:
-        vault.store(field_state.F, {"kind": "proposition", "proposition": proposition})
+        vault.store(proposition.subject_versor, {"kind": "proposition", "proposition": proposition})
     return proposition
 
 
@@ -363,6 +363,8 @@ def _render_surface(
 ) -> str:
     if frame.language == "he" and frame.predicate_type == "copular":
         return f"{subject} {predicate}"
+    if frame.predicate_type == "copular-qualitative":
+        return f"{predicate} {subject}"
     if object_surface is not None:
         return f"{subject} {predicate} {object_surface}"
     if frame.predicate_type.startswith("copular"):

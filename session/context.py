@@ -15,7 +15,7 @@ from __future__ import annotations
 import numpy as np
 
 from algebra.backend import versor_apply
-from algebra.cga import outer_product
+from algebra.cga import cga_inner, outer_product
 from field.state import FieldState
 from generate.dialogue import DialogueTurn
 from generate.proposition import Proposition
@@ -35,6 +35,8 @@ class SessionContext:
         self.turn: int = 0
         self.dialogue_history: list[DialogueTurn] = []
         self.running_dialogue_blade: np.ndarray | None = None
+        self._last_response_tokens: tuple[str, ...] | None = None
+        self._anchor_field: np.ndarray | None = None
 
     def ingest(self, tokens: list) -> FieldState:
         """Inject a prompt into the running field. Stores the user field in vault."""
@@ -49,6 +51,7 @@ class SessionContext:
                 energy=injected.energy,
                 valence=injected.valence,
             )
+            self._anchor_field = self.state.F.copy()
         else:
             self.state = FieldState(
                 F=versor_apply(injected.F, self.state.F),
@@ -92,9 +95,43 @@ class SessionContext:
         """
         assert self.state is not None, "Call ingest() before respond()."
         result = generate(self.state, self.vocab, self.persona, max_tokens, vault=self.vault)
+        if self._last_response_tokens is not None and result.tokens == self._last_response_tokens and result.tokens:
+            try:
+                pivot_node = self.vocab.index_of(result.tokens[0])
+            except KeyError:
+                pivot_node = self.state.node
+            if pivot_node != self.state.node:
+                pivot = FieldState(
+                    F=self.state.F,
+                    node=pivot_node,
+                    step=self.state.step,
+                    holonomy=self.state.holonomy,
+                    energy=self.state.energy,
+                    valence=self.state.valence,
+                )
+                result = generate(pivot, self.vocab, self.persona, max_tokens, vault=self.vault)
+        final_state = result.final_state
+        coherence_anchor = self._anchor_field if self._anchor_field is not None else self.state.F
+        if cga_inner(final_state.F, coherence_anchor) < 0.0:
+            final_state = FieldState(
+                F=-final_state.F,
+                node=final_state.node,
+                step=final_state.step,
+                holonomy=final_state.holonomy,
+                energy=final_state.energy,
+                valence=final_state.valence,
+            )
+            result = GenerationResult(
+                tokens=result.tokens,
+                final_state=final_state,
+                trajectory=result.trajectory,
+                salience_top_k=result.salience_top_k,
+                candidates_used=result.candidates_used,
+            )
         self.state = result.final_state
         self.vault.store(result.final_state.F, {"turn": self.turn, "role": "assistant"})
         self.turn += 1
+        self._last_response_tokens = result.tokens
         return result
 
     async def arespond(self, max_tokens: int = 128):

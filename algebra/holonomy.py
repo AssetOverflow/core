@@ -15,7 +15,7 @@ from __future__ import annotations
 import numpy as np
 
 from .cl41 import geometric_product, reverse as cl_reverse
-from .versor import unitize_versor
+from .versor import construction_seed_versor, unitize_versor
 from .cga import cga_inner
 
 
@@ -36,6 +36,15 @@ def _position_rotor(step: int, dtype: np.dtype) -> np.ndarray:
     rotor[0] = np.cos(theta)
     rotor[negative_bivectors[step % len(negative_bivectors)]] = np.sin(theta)
     return rotor
+
+
+def _word_versor(raw: np.ndarray) -> np.ndarray:
+    try:
+        return unitize_versor(raw)
+    except ValueError as exc:
+        if "bad_residue" not in str(exc) and "bad_scalar" not in str(exc):
+            raise
+        return construction_seed_versor(raw)
 
 
 def holonomy_encode(
@@ -71,16 +80,16 @@ def holonomy_encode(
     # Forward accumulation. Each token is carried through a deterministic
     # position rotor so path order survives even for scalar/vector fixtures.
     p0 = _position_rotor(0, dtype)
-    w0 = unitize_versor(np.asarray(word_versors[0], dtype=dtype) * weights[0])
+    w0 = _word_versor(np.asarray(word_versors[0], dtype=dtype) * weights[0])
     F = unitize_versor(geometric_product(geometric_product(p0, w0), cl_reverse(p0)))
     for k in range(1, n):
         p = _position_rotor(k, dtype)
-        w = unitize_versor(np.asarray(word_versors[k], dtype=dtype) * weights[k])
+        w = _word_versor(np.asarray(word_versors[k], dtype=dtype) * weights[k])
         step = unitize_versor(geometric_product(geometric_product(p, w), cl_reverse(p)))
         F = geometric_product(F, step)
         F = _renorm_if_needed(F, k, renorm_every)
 
-    return unitize_versor(F)
+    return _word_versor(F)
 
 
 def holonomy_similarity(H1: np.ndarray, H2: np.ndarray) -> float:

@@ -10,11 +10,16 @@ Usage:
     from algebra.backend import geometric_product, versor_apply, cga_inner, vault_recall
 """
 
+import os
+
 import numpy as np
+
+_REQUESTED_BACKEND = os.environ.get("CORE_BACKEND", "").strip().lower()
+_ALLOW_RUST = _REQUESTED_BACKEND not in {"numpy", "python", "py"}
 
 try:
     import core_rs as _rs
-    _RUST = True
+    _RUST = _ALLOW_RUST
 except ImportError:
     _RUST = False
 

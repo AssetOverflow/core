@@ -104,4 +104,16 @@ def propose_dialogue(
     frame = frame_registry.select_dialogue(base.relation, role)
     role_registry = FrameRegistry((frame,))
     proposition = propose(field_state, vault, vocab, role_registry, output_lang=output_lang)
+    if reference_blade is not None and blade_alignment(proposition.relation, reference_blade) < 0.0:
+        proposition = Proposition(
+            subject=proposition.subject,
+            predicate=proposition.predicate,
+            object_=proposition.object_,
+            surface=proposition.surface,
+            frame_id=proposition.frame_id,
+            subject_versor=proposition.subject_versor,
+            predicate_versor=proposition.predicate_versor,
+            object_versor=proposition.object_versor,
+            relation=-proposition.relation,
+        )
     return proposition

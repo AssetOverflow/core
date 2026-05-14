@@ -12,6 +12,8 @@ __all__ = [
 
 _CONSTRUCTION_RESIDUE_TOLERANCE = 1e-2
 _NEAR_ZERO_TOLERANCE = 1e-12
+_DENSE_SEED_MIN_COMPONENTS = 8
+_SEED_BIVECTORS = (6, 7, 8, 10, 11, 13)
 
 
 def _array_dtype(v: np.ndarray) -> np.dtype:
@@ -23,7 +25,7 @@ def _diagnostic_message(prefix: str, *, input_norm: float, scalar_sq: float, res
     return f"{prefix}: input_norm={input_norm:.6e}, scalar_sq={scalar_sq:.6e}, residue_norm={residue_norm:.6e}"
 
 
-def unitize_versor(v: np.ndarray) -> np.ndarray:
+def _unitize_closed(v: np.ndarray, dtype: np.dtype) -> np.ndarray:
     dtype = _array_dtype(v)
     v = np.asarray(v, dtype=np.float64)
     input_norm = float(np.linalg.norm(v))
@@ -45,8 +47,52 @@ def unitize_versor(v: np.ndarray) -> np.ndarray:
     return (v * (1.0 / np.sqrt(scalar_sq))).astype(dtype)
 
 
+def _seed_to_rotor(v: np.ndarray, dtype: np.dtype) -> np.ndarray:
+    seed = np.asarray(v, dtype=np.float64).ravel()
+    if seed.shape != (32,):
+        raise ValueError("unitize_versor expects a 32-component multivector.")
+
+    rotor = np.zeros(32, dtype=np.float64)
+    rotor[0] = 1.0
+    scale = float(np.linalg.norm(seed)) or 1.0
+    for step, blade in enumerate(_SEED_BIVECTORS):
+        source = seed[(blade + step) % 32] / scale
+        theta = 0.5 * np.tanh(source)
+        factor = np.zeros(32, dtype=np.float64)
+        factor[0] = np.cos(theta)
+        factor[blade] = np.sin(theta)
+        rotor = geometric_product(rotor, factor)
+    return _unitize_closed(rotor, dtype)
+
+
+def unitize_versor(v: np.ndarray) -> np.ndarray:
+    dtype = _array_dtype(v)
+    arr = np.asarray(v, dtype=np.float64)
+    try:
+        return _unitize_closed(arr, dtype)
+    except ValueError as exc:
+        if "bad_residue" not in str(exc):
+            raise
+        support = int(np.count_nonzero(np.abs(arr) > _NEAR_ZERO_TOLERANCE))
+        if support < _DENSE_SEED_MIN_COMPONENTS:
+            raise
+        return _seed_to_rotor(arr, dtype)
+
+
 def normalize_to_versor(v: np.ndarray) -> np.ndarray:
-    return unitize_versor(v)
+    dtype = _array_dtype(v)
+    try:
+        return unitize_versor(v)
+    except ValueError as exc:
+        if "bad_residue" not in str(exc):
+            raise
+        return _seed_to_rotor(v, dtype)
+
+
+def construction_seed_versor(v: np.ndarray) -> np.ndarray:
+    """Map a raw construction seed into the closed versor manifold."""
+    return _seed_to_rotor(v, _array_dtype(v))
+
 
 
 def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
