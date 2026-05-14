@@ -296,14 +296,20 @@ async def agenerate(
     vocab,
     persona,
     max_tokens: int = 128,
+    vault=None,
+    recall_top_k: int = 3,
 ):
     """
     Async streaming version — yields one token at a time.
 
-    The caller must await the generator and can retrieve final_state
-    by calling .athrow() or by consuming the StopAsyncIteration value.
-    For the final state, prefer the synchronous generate() path or
-    wrap in an async collector that reads the return value.
+    Maintains parity with the synchronous generate() path:
+      - Persona motor applied via _voiced_state() every step
+      - Vault recall fed back into field via _recall_state() every step
+      - Recent-node and stop-node exclusion applied
+
+    The caller receives tokens as they are emitted. For the full
+    GenerationResult (final_state, trajectory), use the synchronous
+    generate() path or wrap this generator in an async collector.
 
     Yields: str (one token per iteration)
     """
@@ -315,7 +321,7 @@ async def agenerate(
         if token in {vocab.get_word_at(i) for i in range(len(vocab))}
     )
     for _ in range(max_tokens):
-        current = _voiced_state(current, persona)
+        current = _recall_state(_voiced_state(current, persona), vault, recall_top_k)
         word, word_idx = _nearest_next(
             vocab,
             current.F,
