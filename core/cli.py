@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from collections.abc import Sequence
@@ -18,14 +19,16 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+_CORE_RS_DIR = _REPO_ROOT / "core-rs"
+_CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test tests/test_alignment_graph.py -q"
+EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test tests/test_alignment_graph.py -q"
 
 
-def _run(*args: str, check: bool = False) -> int:
+def _run(*args: str, check: bool = False, cwd: Path | None = None) -> int:
     """Run a child command and return its exit code."""
-    completed = subprocess.run(args, check=check, text=True)
+    completed = subprocess.run(args, check=check, text=True, cwd=cwd)
     return int(completed.returncode)
 
 
@@ -260,6 +263,56 @@ def cmd_pack_verify(args: argparse.Namespace) -> int:
     return _run(sys.executable, "-m", "language_packs", "verify", args.pack_id)
 
 
+def _print_rust_status() -> bool:
+    from algebra.backend import using_rust
+
+    active = using_rust()
+    print(f"core_rs crate : {_CORE_RS_DIR}")
+    print(f"cargo manifest: {_CORE_RS_MANIFEST}")
+    print(f"rust backend  : {'active' if active else 'inactive'}")
+    if active:
+        import core_rs
+
+        print(f"core_rs module: {getattr(core_rs, '__file__', '<built-in>')}")
+    else:
+        print("activation    : run `core rust build`")
+    return active
+
+
+def cmd_rust_status(args: argparse.Namespace) -> int:
+    """Print Rust backend activation status."""
+    return 0 if _print_rust_status() or not args.require_active else 1
+
+
+def cmd_rust_build(args: argparse.Namespace) -> int:
+    """Build/install core_rs into the active Python environment."""
+    if not _CORE_RS_MANIFEST.exists():
+        _die(f"core-rs manifest not found: {_CORE_RS_MANIFEST}", code=1)
+    if shutil.which("uv") is not None:
+        rc = _run("uv", "pip", "install", "maturin")
+        if rc != 0:
+            return rc
+    cmd = [
+        sys.executable,
+        "-m",
+        "maturin",
+        "develop",
+        "--release",
+        "--manifest-path",
+        str(_CORE_RS_MANIFEST),
+    ]
+    if args.skip_auditwheel:
+        cmd.append("--skip-auditwheel")
+    return _run(*cmd)
+
+
+def cmd_rust_test(args: argparse.Namespace) -> int:
+    """Run Rust crate tests."""
+    if shutil.which("cargo") is None:
+        _die("cargo not found. Install a Rust toolchain first.", code=1)
+    return _run("cargo", "test", "--release", cwd=_CORE_RS_DIR)
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
     """Inspect import/package health for the CLI runtime path."""
     checks = [
@@ -296,6 +349,10 @@ def cmd_doctor(args: argparse.Namespace) -> int:
                     print(f"  {pack_id}")
             else:
                 print("  none found")
+    if args.rust:
+        rust_active = _print_rust_status()
+        if args.require_rust and not rust_active:
+            ok = False
     return 0 if ok else 1
 
 
@@ -361,8 +418,25 @@ def build_parser() -> argparse.ArgumentParser:
     pack_verify.add_argument("pack_id", help="pack id, e.g. en_minimal_v1")
     pack_verify.set_defaults(func=cmd_pack_verify)
 
+    rust = subparsers.add_parser(
+        "rust",
+        help="build, test, and inspect the Rust backend",
+        description="build, test, and inspect the Rust backend",
+    )
+    rust_sub = rust.add_subparsers(dest="rust_command", metavar="rust-command", required=True)
+    rust_status = rust_sub.add_parser("status", help="show whether core_rs is active")
+    rust_status.add_argument("--require-active", action="store_true", help="exit nonzero if core_rs is inactive")
+    rust_status.set_defaults(func=cmd_rust_status)
+    rust_build = rust_sub.add_parser("build", help="build/install core_rs with maturin")
+    rust_build.add_argument("--skip-auditwheel", action="store_true", help="pass --skip-auditwheel to maturin")
+    rust_build.set_defaults(func=cmd_rust_build)
+    rust_test = rust_sub.add_parser("test", help="run cargo test --release for core-rs")
+    rust_test.set_defaults(func=cmd_rust_test)
+
     doctor = subparsers.add_parser("doctor", help="check runtime imports and packaging health")
     doctor.add_argument("--packs", action="store_true", help="also list discovered language packs")
+    doctor.add_argument("--rust", action="store_true", help="also show Rust backend activation status")
+    doctor.add_argument("--require-rust", action="store_true", help="exit nonzero when --rust shows inactive backend")
     doctor.set_defaults(func=cmd_doctor)
 
     return parser

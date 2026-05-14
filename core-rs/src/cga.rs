@@ -1,7 +1,17 @@
 //! CGA inner product and null-cone operations.
 //!
-//! cga_inner(X, Y) = 0.5 * scalar_part(X*Y + Y*X)
-//!                 = -d^2 / 2  for null vectors X, Y
+//! Signature: (+,+,+,-,+), with Euclidean coordinates on e1,e2,e3.
+//! The conformal null directions are:
+//!
+//!   n_o   = 0.5 * (e4 - e5)   # origin, n_o^2 = 0
+//!   n_inf = e4 + e5           # infinity, n_inf^2 = 0
+//!   n_o · n_inf = -1
+//!
+//! A Euclidean point x embeds as:
+//!
+//!   X = x + n_o + 0.5 * |x|^2 * n_inf
+//!
+//! Then X·X = 0 and X·Y = -0.5 * ||x-y||^2.
 //!
 //! This is the ONLY distance metric in CORE-AI.
 
@@ -20,37 +30,30 @@ pub enum CgaError {
 pub fn cga_inner_raw(x: &[f32; 32], y: &[f32; 32]) -> Result<f32, CgaError> {
     let xy = geometric_product_raw(x, y)?;
     let yx = geometric_product_raw(y, x)?;
-    // scalar part is index 0
     Ok(0.5 * (xy[0] + yx[0]))
 }
 
-/// Check if X is on the null cone: |X*X| < tol.
+/// Check if X is on the null cone: |X·X| < tol.
 pub fn is_null_raw(x: &[f32; 32], tol: f32) -> Result<bool, CgaError> {
     Ok(cga_inner_raw(x, x)?.abs() < tol)
 }
 
-/// Re-project X onto the null cone.
-/// Extract Euclidean components (indices 1-3), recompute e+ = 0.5*|x|^2, e- = 1.
+/// Re-project X onto the null cone by extracting Euclidean components
+/// and re-embedding with the canonical CGA point map.
 pub fn null_project_raw(x: &[f32; 32]) -> [f32; 32] {
-    let mut result = [0f32; 32];
-    result[1] = x[1];
-    result[2] = x[2];
-    result[3] = x[3];
-    let x_sq = result[1] * result[1] + result[2] * result[2] + result[3] * result[3];
-    result[4] = 0.5 * x_sq; // e+ coefficient
-    result[5] = 1.0;         // e- coefficient
-    result
+    embed_point_raw(&[x[1], x[2], x[3]])
 }
 
 /// Embed a Euclidean point [x, y, z] into the CGA null cone.
-/// X = x*e1 + y*e2 + z*e3 + (1/2)|x|^2 * e+ + e-
+/// X = x + n_o + 0.5|x|^2 n_inf
+/// where n_o = 0.5(e4 - e5), n_inf = e4 + e5.
 pub fn embed_point_raw(p: &[f32; 3]) -> [f32; 32] {
     let mut result = [0f32; 32];
     result[1] = p[0];
     result[2] = p[1];
     result[3] = p[2];
-    let r2 = p[0]*p[0] + p[1]*p[1] + p[2]*p[2];
-    result[4] = 0.5 * r2;
-    result[5] = 1.0;
+    let r2 = p[0] * p[0] + p[1] * p[1] + p[2] * p[2];
+    result[4] = 0.5 * (r2 + 1.0);
+    result[5] = 0.5 * (r2 - 1.0);
     result
 }

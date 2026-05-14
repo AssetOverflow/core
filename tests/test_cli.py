@@ -12,6 +12,7 @@ def test_top_level_help_exits_without_runtime_import(capsys: pytest.CaptureFixtu
     out = capsys.readouterr().out
     assert "CORE versor engine command suite" in out
     assert "core trace" in out
+    assert "core rust" in out
 
 
 def test_trace_help_exits_without_runtime_import(capsys: pytest.CaptureFixture[str]) -> None:
@@ -24,6 +25,25 @@ def test_trace_help_exits_without_runtime_import(capsys: pytest.CaptureFixture[s
     assert "--output-language" in out
     assert "--frame-pack" in out
     assert "--json" in out
+
+
+def test_rust_help_exits_without_building(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        build_parser().parse_args(["rust", "-h"])
+    assert excinfo.value.code == 0
+    out = capsys.readouterr().out
+    assert "build, test, and inspect the Rust backend" in out
+    assert "status" in out
+    assert "build" in out
+    assert "test" in out
+
+
+def test_rust_status_reports_backend_state(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["rust", "status"]) in {0, 1}
+    out = capsys.readouterr().out
+    assert "core_rs crate" in out
+    assert "cargo manifest" in out
+    assert "rust backend" in out
 
 
 def test_main_without_args_prints_help(capsys: pytest.CaptureFixture[str]) -> None:
@@ -47,6 +67,12 @@ def test_doctor_imports_runtime_support_modules(capsys: pytest.CaptureFixture[st
     assert "OK   alignment" in out
     assert "OK   morphology" in out
     assert "OK   sensorium" in out
+
+
+def test_doctor_rust_reports_backend_state(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["doctor", "--rust"]) == 0
+    out = capsys.readouterr().out
+    assert "rust backend" in out
 
 
 def test_trace_formats_real_runtime_payload(capsys: pytest.CaptureFixture[str]) -> None:

@@ -8,33 +8,27 @@
 //!   - vault_recall        (parallel top-k scan)
 //!
 //! All multivectors are f32 arrays of length 32, passed as numpy arrays.
-//! Zero-copy: we read directly from numpy buffer pointers.
 
-use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
 
-mod cl41;
-mod versor;
-mod cga;
-mod vault;
+pub mod cga;
+pub mod cl41;
+pub mod vault;
+pub mod versor;
 
-use cl41::{geometric_product_raw, reverse_raw};
-use versor::{versor_apply_raw, versor_condition_raw, normalize_to_versor_raw};
 use cga::cga_inner_raw;
+use cl41::geometric_product_raw;
 use vault::vault_recall_raw;
+use versor::{normalize_to_versor_raw, versor_apply_raw, versor_condition_raw};
 
-// Re-export Python-facing functions
-
-/// Geometric product in Cl(4,1). Accepts two numpy f32 arrays of length 32.
+/// Geometric product in Cl(4,1). Accepts two numpy-compatible f32 arrays of length 32.
 #[pyfunction]
-fn geometric_product<'py>(
-    py: Python<'py>,
+fn geometric_product(
+    py: Python<'_>,
     a: &pyo3::types::PyAny,
     b: &pyo3::types::PyAny,
-) -> PyResult<pyo3::Bound<'py, pyo3::types::PyAny>> {
-    let a_buf = a.call_method0("__array__")?;
-    let b_buf = b.call_method0("__array__")?;
-    // Extract raw f32 slices via buffer protocol
+) -> PyResult<PyObject> {
     let a_slice = extract_f32_slice(a)?;
     let b_slice = extract_f32_slice(b)?;
     let result = geometric_product_raw(&a_slice, &b_slice)
@@ -42,13 +36,13 @@ fn geometric_product<'py>(
     f32_array_to_numpy(py, &result)
 }
 
-/// Sandwich product V*F*reverse(V). Zero-copy on input arrays.
+/// Sandwich product V*F*reverse(V).
 #[pyfunction]
-fn versor_apply<'py>(
-    py: Python<'py>,
+fn versor_apply(
+    py: Python<'_>,
     v: &pyo3::types::PyAny,
     f: &pyo3::types::PyAny,
-) -> PyResult<pyo3::Bound<'py, pyo3::types::PyAny>> {
+) -> PyResult<PyObject> {
     let v_slice = extract_f32_slice(v)?;
     let f_slice = extract_f32_slice(f)?;
     let result = versor_apply_raw(&v_slice, &f_slice)
@@ -65,10 +59,10 @@ fn versor_condition(f: &pyo3::types::PyAny) -> PyResult<f32> {
 
 /// Project F onto versor manifold: F / sqrt(|F*rev(F)|).
 #[pyfunction]
-fn normalize_to_versor<'py>(
-    py: Python<'py>,
+fn normalize_to_versor(
+    py: Python<'_>,
     f: &pyo3::types::PyAny,
-) -> PyResult<pyo3::Bound<'py, pyo3::types::PyAny>> {
+) -> PyResult<PyObject> {
     let f_slice = extract_f32_slice(f)?;
     let result = normalize_to_versor_raw(&f_slice)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
@@ -84,9 +78,6 @@ fn cga_inner(x: &pyo3::types::PyAny, y: &pyo3::types::PyAny) -> PyResult<f32> {
 }
 
 /// Parallel top-k vault recall by CGA inner product.
-/// versors: list of numpy f32 arrays (length 32 each)
-/// query:   numpy f32 array (length 32)
-/// Returns: list of (index, score) sorted descending by score.
 #[pyfunction]
 fn vault_recall(
     versors: Vec<&pyo3::types::PyAny>,
@@ -96,42 +87,35 @@ fn vault_recall(
     let query_slice = extract_f32_slice(query)?;
     let mut slices: Vec<[f32; 32]> = Vec::with_capacity(versors.len());
     for v in &versors {
-        let s = extract_f32_slice(v)?;
-        slices.push(s);
+        slices.push(extract_f32_slice(v)?);
     }
     vault_recall_raw(&slices, &query_slice, top_k)
         .map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
-// --- Helpers ---
-
 fn extract_f32_slice(obj: &pyo3::types::PyAny) -> PyResult<[f32; 32]> {
-    // Use numpy's buffer protocol for zero-copy read
     let np = obj.py().import("numpy")?;
     let arr = np.call_method1("asarray", (obj, "float32"))?;
     let flat = arr.call_method0("flatten")?;
     let list: Vec<f32> = flat.extract()?;
     if list.len() != 32 {
-        return Err(PyValueError::new_err(
-            format!("Expected array of length 32, got {}", list.len())
-        ));
+        return Err(PyValueError::new_err(format!(
+            "Expected array of length 32, got {}",
+            list.len()
+        )));
     }
     let mut out = [0f32; 32];
     out.copy_from_slice(&list);
     Ok(out)
 }
 
-fn f32_array_to_numpy<'py>(
-    py: Python<'py>,
-    data: &[f32; 32],
-) -> PyResult<pyo3::Bound<'py, pyo3::types::PyAny>> {
+fn f32_array_to_numpy(py: Python<'_>, data: &[f32; 32]) -> PyResult<PyObject> {
     let np = py.import("numpy")?;
     let list: Vec<f32> = data.to_vec();
     let arr = np.call_method1("array", (list, "float32"))?;
-    Ok(arr.into())
+    Ok(arr.into_py(py))
 }
 
-/// Module registration
 #[pymodule]
 fn core_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(geometric_product, m)?)?;
