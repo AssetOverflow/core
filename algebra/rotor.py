@@ -8,31 +8,38 @@ it describes a transformation being applied, not a property of the vocabulary.
 
 import numpy as np
 from .cl41 import geometric_product, reverse
-from .versor import unitize_versor
+from .versor import versor_condition
+
+_TRANSITION_CONDITION_TOL = 1e-4
 
 
 def word_transition_rotor(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """
-    Compute the rotor R that rotates versor A toward versor B in Cl(4,1).
+    Construct the closed transition operator from source word-versor A to B.
 
-        R = unitize(1 + B * reverse(A))
+        R = B * reverse(A)
 
-    This is a pure construction operation — building a new algebraic object
-    from two input versors. unitize_versor() is the correct primitive here,
-    not normalize_to_versor() (which is reserved for the injection gate).
+    VocabManifold stores grade-normed Cl(4,1) versors, not arbitrary raw
+    vectors. The product of two valid versors is itself a valid versor, so the
+    direct product is the closed transition operator. This avoids the unstable
+    half-angle shortcut `unitize(1 + B * reverse(A))`, which can collapse into
+    a deterministic fallback rotor when the candidate has non-scalar residue.
 
-    This is a pure operator — it transforms a field state, it does not
-    encode a position. Call this from algebra-aware field logic; never
-    store the result on a vocabulary structure.
-
-    Args:
-        A: Source versor, shape (32,), grade-normed to ±1.
-        B: Target versor, shape (32,), grade-normed to ±1.
-
-    Returns:
-        R: Unitized rotor in Cl(4,1), shape (32,).
+    This is construction-time algebra, not propagation repair. No
+    normalization is applied here. If the returned operator fails the versor
+    condition, one of the inputs is not a valid vocabulary versor and the
+    caller should fail fast.
     """
-    R = geometric_product(B, reverse(A))
-    R = R.copy()
-    R[0] += 1.0
-    return unitize_versor(R)
+    dtype = np.result_type(A, B)
+    if dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+        dtype = np.dtype(np.float32)
+    source = np.asarray(A, dtype=dtype)
+    target = np.asarray(B, dtype=dtype)
+    rotor = geometric_product(target, reverse(source)).astype(dtype)
+    condition = versor_condition(rotor)
+    if condition > _TRANSITION_CONDITION_TOL:
+        raise ValueError(
+            "word_transition_rotor: transition operator is not a unit versor; "
+            f"condition={condition:.3e}. Check vocabulary versor invariants."
+        )
+    return rotor
