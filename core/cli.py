@@ -105,9 +105,9 @@ def _trace_payload(text: str, resp: Any, runtime: Any) -> dict[str, Any]:
         "proposition": {
             "surface": proposition.surface,
             "frame_id": proposition.frame_id,
-            "subject": proposition.subject_surface,
-            "predicate": proposition.predicate_surface,
-            "object": getattr(proposition, "object_surface", None),
+            "subject": proposition.subject,
+            "predicate": proposition.predicate,
+            "object": proposition.object_,
             "relation_norm": float(np.linalg.norm(proposition.relation)),
         },
         "vault_entries": len(runtime.session.vault),
