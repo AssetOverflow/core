@@ -10,6 +10,7 @@ import numpy as np
 from algebra.versor import versor_condition
 from core.config import DEFAULT_CONFIG, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField, ValueAxis
+from core.physics.energy import EnergyProfile
 from core.physics.exertion import CycleCost, ExertionMeter
 from core.physics.identity import (
     CharacterProfile,
@@ -40,6 +41,28 @@ _SEED_ALIASES = {
     "aletheia": "ἀλήθεια",
 }
 
+
+# ---------------------------------------------------------------------------
+# Helper: safely extract a float from energy — handles EnergyProfile or float
+# ---------------------------------------------------------------------------
+
+def _energy_scalar(energy_obj) -> float:
+    """Return a plain float from a FieldState.energy value.
+
+    FieldState.energy is typed as EnergyProfile | None.  Older call sites
+    passed a raw float as a fallback default; both cases are handled here so
+    the caller never needs to branch.
+    """
+    if energy_obj is None:
+        return 1.0
+    if isinstance(energy_obj, EnergyProfile):
+        return float(energy_obj.raw)
+    try:
+        return float(energy_obj)
+    except (TypeError, ValueError):
+        return 1.0
+
+
 # ---------------------------------------------------------------------------
 # Stub BindingFrame for IdentityCheck — allows check() to run without a full
 # reasoning pipeline being wired. Carries the minimum contract that
@@ -60,19 +83,13 @@ def _make_trajectory_from_result(
     result,
     turn: int,
 ) -> ReasoningTrajectory:
-    """Build a ReasoningTrajectory from a GenerationResult for IdentityCheck.
-
-    If the result carries a recorded trajectory (FieldState sequence), each
-    state is mapped to a stub BindingFrame using its energy as coherence_magnitude.
-    Otherwise a single-frame fallback is used so IdentityCheck always has
-    something to evaluate.
-    """
+    """Build a ReasoningTrajectory from a GenerationResult for IdentityCheck."""
     operator = TrajectoryOperator()
     if result.trajectory:
         frames = [
             _StubBindingFrame(
                 frame_id=f"t{turn}_s{i}",
-                coherence_magnitude=float(getattr(fs, "energy", 1.0)),
+                coherence_magnitude=_energy_scalar(getattr(fs, "energy", None)),
                 region_ids=frozenset({str(getattr(fs, "node", 0))}),
                 cycle_index=turn,
             )
@@ -82,7 +99,7 @@ def _make_trajectory_from_result(
         frames = [
             _StubBindingFrame(
                 frame_id=f"t{turn}_s0",
-                coherence_magnitude=float(getattr(result.final_state, "energy", 1.0)),
+                coherence_magnitude=_energy_scalar(getattr(result.final_state, "energy", None)),
                 region_ids=frozenset({str(getattr(result.final_state, "node", 0))}),
                 cycle_index=turn,
             )
@@ -239,16 +256,8 @@ class ChatRuntime:
         return blade
 
     def _apply_drive_bias(self, field_state: FieldState) -> FieldState:
-        """Nudge field F by the combined drive gradient before generation.
-
-        The bias is computed from DriveGradientMap.combined_bias() using the
-        first three components of F as the current coordinates. The resulting
-        perturbation is added to F[:3] and the state is returned unchanged
-        apart from F. Magnitude is bounded by the current fatigue level so
-        exhausted sessions receive progressively less drive pressure.
-        """
+        """Nudge field F by the combined drive gradient before generation."""
         fatigue = self.exertion_meter.fatigue(at_cycle=self._context.turn)
-        # Drive pressure is attenuated by fatigue: more tired = weaker nudge.
         available = 1.0 - fatigue.value
         if available < 1e-4:
             return field_state
@@ -260,7 +269,7 @@ class ChatRuntime:
 
         nudged_F = field_state.F.copy()
         for i, b in enumerate(bias[:3]):
-            nudged_F[i] += b * available * 0.1  # scale keeps perturbation small
+            nudged_F[i] += b * available * 0.1
         return FieldState(
             F=nudged_F,
             node=field_state.node,
@@ -277,8 +286,6 @@ class ChatRuntime:
             raise ValueError("ChatRuntime.chat() received no in-vocabulary tokens.")
 
         field_state = self._context.ingest(filtered)
-
-        # Apply drive gradient bias before generation.
         field_state = self._apply_drive_bias(field_state)
 
         reference_blade = self._dialogue_reference()
@@ -340,7 +347,6 @@ class ChatRuntime:
         )
         self.exertion_meter.record(cycle_cost)
 
-        # Update CharacterProfile with current fatigue.
         fatigue = self.exertion_meter.fatigue(at_cycle=self._context.turn)
         self.character_profile = CharacterProfile.from_manifold(
             self.identity_manifold,
@@ -358,7 +364,6 @@ class ChatRuntime:
         )
         self._context.turn += 1
 
-        # Assemble a coherent sentence from the articulation plan + walk tokens.
         sentence_plan: SentencePlan = SentenceAssembler().assemble(
             articulation,
             result.tokens,
@@ -366,13 +371,10 @@ class ChatRuntime:
         )
         walk_surface = sentence_plan.surface
 
-        # If identity check flagged the response, fall back to bare articulation surface.
         surface = articulation.surface if flagged else walk_surface
 
-        # Count vault hits that fired this turn (recall_top_k is the ceiling).
         vault_hits = 3 if self.config.allow_cross_language_recall else 0
 
-        # --- Provenance: append TurnEvent ---
         turn_event = TurnEvent(
             turn=self._context.turn - 1,
             input_tokens=tuple(filtered),
@@ -384,12 +386,12 @@ class ChatRuntime:
             vault_hits=vault_hits,
             versor_condition=versor_condition(result.final_state.F),
             flagged=flagged,
-                elaboration=sentence_plan.elaboration,
+            elaboration=sentence_plan.elaboration,
         )
         self.turn_log.append(turn_event)
 
         return ChatResponse(
-surface=surface,
+            surface=surface,
             proposition=proposition,
             articulation=articulation,
             dialogue_role=dialogue_role,
@@ -410,15 +412,8 @@ surface=surface,
         except ValueError:
             return ""
 
-
     async def achat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
-        """Async equivalent of chat() — drives agenerate() internally,
-        collects all tokens, then routes through SentenceAssembler.
-
-        Callers that want progressive token streaming should use agenerate()
-        directly. This method is for callers that want a fully assembled
-        ChatResponse identical to the synchronous path.
-        """
+        """Async equivalent of chat() — drives agenerate() internally."""
         from generate.stream import agenerate
         mt = max_tokens if max_tokens is not None else self.config.max_tokens
         tokens: list[str] = []
@@ -430,11 +425,7 @@ surface=surface,
             vault=self._context.vault,
         ):
             tokens.append(token)
-        # Inject the collected tokens back into a GenerationResult-compatible
-        # structure so chat() can be called normally. The cleanest path is to
-        # delegate to the sync chat() after seeding the token walk:
-        result = self.chat(text, max_tokens=0)  # 0 tokens — proposition only
-        # Rebuild surface from the async token walk via SentenceAssembler.
+        result = self.chat(text, max_tokens=0)
         sentence_plan = SentenceAssembler().assemble(
             result.articulation,
             tokens,
@@ -444,11 +435,12 @@ surface=surface,
         return replace(result, surface=sentence_plan.surface, walk_surface=sentence_plan.surface)
 
     async def arespond(self, text: str, max_tokens: int | None = None) -> str:
-        """Async equivalent of respond() — returns the assembled surface string."""
+        """Async equivalent of respond()."""
         try:
             return (await self.achat(text, max_tokens=max_tokens)).surface
         except ValueError:
             return ""
+
 
 def _default_identity_manifold() -> IdentityManifold:
     axes = (
