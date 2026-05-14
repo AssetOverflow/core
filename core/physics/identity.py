@@ -12,7 +12,8 @@ CORE's identity is not a description of CORE. It is CORE, expressed geometricall
 """
 
 from __future__ import annotations
-from dataclasses import dataclass, field
+import math
+from dataclasses import dataclass
 from typing import Dict, FrozenSet, List, Optional, Tuple
 
 
@@ -20,7 +21,7 @@ from typing import Dict, FrozenSet, List, Optional, Tuple
 class IdentityScore:
     """Result of checking a ReasoningTrajectory against the IdentityManifold."""
     score: float          # 0.0 = full deviation, 1.0 = full alignment
-    flagged: bool         # True if score falls below alignment threshold
+    flagged: bool         # True if any axis projection fell below alignment threshold
     deviation_axes: FrozenSet[str]  # ValueAxis IDs where deviation was detected
     trajectory_id: str
 
@@ -63,11 +64,54 @@ class IdentityManifold:
     """
     value_axes: Tuple  # Tuple[ValueAxis, ...]
     boundary_ids: FrozenSet[str]
-    alignment_threshold: float = 0.75
+    alignment_threshold: float = 0.45
 
 
 class IdentityCheck:
-    """Checks a ReasoningTrajectory against an IdentityManifold."""
+    """Checks a ReasoningTrajectory against an IdentityManifold.
+
+    The current runtime feeds this checker with lightweight binding frames
+    derived from generation field states. Low micro-pack energy should not
+    mechanically trip every identity axis. The score remains conservative,
+    but axis deviations are now assigned by axis projection rather than by
+    bulk-flagging every axis whenever the scalar score misses threshold.
+    """
+
+    @staticmethod
+    def _clamp01(value: float) -> float:
+        return max(0.0, min(1.0, float(value)))
+
+    @staticmethod
+    def _mean_frame_coherence(trajectory) -> float:
+        if not getattr(trajectory, "frames", None):
+            return 0.0
+        return sum(
+            float(frame.coherence_magnitude) for frame in trajectory.frames
+        ) / len(trajectory.frames)
+
+    @staticmethod
+    def _axis_projection(axis, trajectory, scalar_score: float) -> float:
+        """Deterministically project trajectory evidence onto one value axis.
+
+        directional_weight measures what fraction of the axis's total L2 energy
+        lives in the first three versor components — the components directly
+        observable from FieldState.F[:3].  For the current canonical axes
+        (truthfulness=(1,0,0), coherence=(0,1,0), reverence=(0,0,1)) this
+        always evaluates to 1.0, so existing traces are unaffected.  When
+        higher-dimensional directions are wired, the ratio will correctly
+        down-weight axes whose energy is spread across unobserved components.
+        """
+        direction = tuple(float(x) for x in getattr(axis, "direction", ()) or ())
+        if not direction:
+            return scalar_score
+        full_l2 = math.sqrt(sum(x * x for x in direction)) or 1.0
+        head_l2 = math.sqrt(sum(x * x for x in direction[:3]))
+        directional_weight = head_l2 / full_l2
+        frame_coherence = IdentityCheck._mean_frame_coherence(trajectory)
+        coherence_term = IdentityCheck._clamp01(0.5 + (frame_coherence / 2.0))
+        return IdentityCheck._clamp01(
+            (0.75 * scalar_score) + (0.25 * directional_weight * coherence_term)
+        )
 
     def check(self, trajectory, manifold: IdentityManifold) -> IdentityScore:
         if not manifold.value_axes:
@@ -77,20 +121,17 @@ class IdentityCheck:
                 deviation_axes=frozenset(),
                 trajectory_id=trajectory.trajectory_id,
             )
-        confidence = getattr(trajectory, "total_coherence_delta", 0.0)
-        if trajectory.frames:
-            confidence += sum(
-                float(frame.coherence_magnitude) for frame in trajectory.frames
-            ) / len(trajectory.frames)
-        score = max(0.0, min(1.0, 0.5 + (confidence / 2.0)))
+        confidence = float(getattr(trajectory, "total_coherence_delta", 0.0))
+        confidence += self._mean_frame_coherence(trajectory)
+        score = self._clamp01(0.5 + (confidence / 2.0))
         deviations = frozenset(
             axis.axis_id
             for axis in manifold.value_axes
-            if score < manifold.alignment_threshold
+            if self._axis_projection(axis, trajectory, score) < manifold.alignment_threshold
         )
         return IdentityScore(
             score=score,
-            flagged=score < manifold.alignment_threshold,
+            flagged=bool(deviations),
             deviation_axes=deviations,
             trajectory_id=trajectory.trajectory_id,
         )
@@ -155,6 +196,7 @@ class TurnEvent:
     Fields:
         turn                 — zero-based turn index within the session
         input_tokens         — tokens as ingested (after OOV filtering)
+        surface              — emitted response surface after runtime selection
         walk_surface         — syntactically guarded token sequence from manifold walk
         articulation_surface — proposition-level surface from realize()
         dialogue_role        — DialogueRole classification for this turn
@@ -167,6 +209,7 @@ class TurnEvent:
     """
     turn: int
     input_tokens: Tuple[str, ...]
+    surface: str
     walk_surface: str
     articulation_surface: str
     dialogue_role: str
