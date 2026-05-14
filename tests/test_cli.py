@@ -21,6 +21,8 @@ def test_trace_help_exits_without_runtime_import(capsys: pytest.CaptureFixture[s
     out = capsys.readouterr().out
     assert "trace one chat turn" in out
     assert "--pack" in out
+    assert "--output-language" in out
+    assert "--frame-pack" in out
     assert "--json" in out
 
 
@@ -51,6 +53,8 @@ def test_trace_formats_real_runtime_payload(capsys: pytest.CaptureFixture[str]) 
     assert main(["trace", "--pack", "en_minimal_v1", "word", "beginning", "truth"]) == 0
     out = capsys.readouterr().out
     assert "input          : word beginning truth" in out
+    assert "output_language: en" in out
+    assert "frame_pack     : en" in out
     assert "proposition" in out
     assert "subject" in out
     assert "predicate" in out
@@ -60,6 +64,8 @@ def test_trace_json_formats_real_runtime_payload(capsys: pytest.CaptureFixture[s
     assert main(["trace", "--pack", "en_minimal_v1", "--json", "word", "beginning", "truth"]) == 0
     out = capsys.readouterr().out
     assert '"input": "word beginning truth"' in out
+    assert '"output_language": "en"' in out
+    assert '"frame_pack": "en"' in out
     assert '"proposition"' in out
     assert '"subject"' in out
     assert '"predicate"' in out
