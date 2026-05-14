@@ -101,6 +101,7 @@ class ChatRuntime:
                     for manifest in self._manifests
                 ):
                     raise KeyError(f"OOV token requires vocab proposal: {token}")
+                kept.append(token)
         return kept
 
     def _syntactic_guard(self, tokens: tuple[str, ...]) -> list[str]:
@@ -135,7 +136,7 @@ class ChatRuntime:
         )
         proposition = propose_dialogue(
             field_state,
-            None,
+            self._context.vault,
             self._context.vocab,
             self._frame_registry,
             reference_blade,

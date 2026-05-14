@@ -21,3 +21,13 @@ def test_chat_runtime_keeps_live_session_across_two_turns() -> None:
     assert second.versor_condition < 1e-6
     assert second.dialogue_role in {"elaborate", "assert"}
     assert not np.array_equal(second_field, first_field)
+
+
+def test_chat_runtime_keeps_groundable_oov_tokens_in_open_pack() -> None:
+    runtime = ChatRuntime()
+
+    response = runtime.chat("what is דברית", max_tokens=4)
+
+    assert response.surface.strip()
+    assert runtime.session.state is not None
+    assert runtime.session.vault.recall(runtime.session.state.F, top_k=1)
