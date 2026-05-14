@@ -23,8 +23,7 @@ def _positive_unit_reflector(seed=None) -> np.ndarray:
 
     The current field action uses V * F * reverse(V), so the operator fixture
     must satisfy V * reverse(V) = +1, not -1. We therefore keep the fifth
-    (negative-metric) basis component bounded below the positive four-space
-    norm before construction-unitizing.
+    basis component bounded below the positive four-space norm.
     """
     rng = np.random.default_rng(seed)
     vec4 = rng.standard_normal(4).astype(np.float32)
@@ -45,7 +44,6 @@ def _positive_unit_reflector(seed=None) -> np.ndarray:
 @given(st.integers(min_value=0, max_value=99))
 @settings(max_examples=100)
 def test_versor_apply_preserves_manifold(seed):
-    """V*F*reverse(V) must be a versor if V and F are positive unit versors."""
     V = _positive_unit_reflector(seed)
     F = _positive_unit_reflector(seed + 1000)
     result = versor_apply(V, F)
@@ -54,7 +52,6 @@ def test_versor_apply_preserves_manifold(seed):
 
 
 def test_unitize_clean_scalar_constructs_positive_unit_versor():
-    """unitize_versor() scales a clean scalar candidate without changing meaning."""
     raw = np.zeros(32, dtype=np.float32)
     raw[0] = 2.0
     V = unitize_versor(raw)
@@ -63,29 +60,23 @@ def test_unitize_clean_scalar_constructs_positive_unit_versor():
 
 
 def test_unitize_rejects_non_scalar_residue_instead_of_hash_fallback():
-    """
-    A dirty construction product must fail closed instead of being replaced
-    by a deterministic but geometrically unrelated rotor.
-    """
     dirty = np.zeros(32, dtype=np.float32)
     dirty[0] = np.sqrt(0.5)
     dirty[1] = np.sqrt(0.5)
 
-    with pytest.raises(ValueError, match="non-scalar construction residue"):
+    with pytest.raises(ValueError, match="bad_residue"):
         unitize_versor(dirty)
 
 
 def test_unitize_rejects_non_positive_scalar_norm():
-    """A clean negative-norm candidate cannot be scaled to +1 over real arrays."""
     negative_norm = np.zeros(32, dtype=np.float32)
     negative_norm[5] = 1.0
 
-    with pytest.raises(ValueError, match="non-positive scalar norm"):
+    with pytest.raises(ValueError, match="bad_scalar"):
         unitize_versor(negative_norm)
 
 
 def test_versor_unit_residual_can_accept_signed_manifold_versors():
-    """The helper names the +1 field-state vs ±1 manifold-entry distinction."""
     negative_norm = np.zeros(32, dtype=np.float32)
     negative_norm[5] = 1.0
 
@@ -94,18 +85,16 @@ def test_versor_unit_residual_can_accept_signed_manifold_versors():
 
 
 def test_word_transition_rotor_fails_closed_for_antipodal_inputs():
-    """Antipodal inputs make 1 + B*reverse(A) near-zero; no fallback is allowed."""
     A = np.zeros(32, dtype=np.float32)
     A[0] = 1.0
     B = np.zeros(32, dtype=np.float32)
     B[0] = -1.0
 
-    with pytest.raises(ValueError, match="near-zero multivector"):
+    with pytest.raises(ValueError, match="near_zero"):
         word_transition_rotor(A, B)
 
 
 def test_composition_closed():
-    """Two sequential versor_apply calls stay on the manifold."""
     V1 = _positive_unit_reflector(0)
     V2 = _positive_unit_reflector(1)
     F = _positive_unit_reflector(2)
@@ -115,7 +104,6 @@ def test_composition_closed():
 
 
 def test_identity_versor():
-    """Scalar 1 is a valid versor and applies as identity."""
     identity = np.zeros(32, dtype=np.float32)
     identity[0] = 1.0
     F = _positive_unit_reflector(42)
