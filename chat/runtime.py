@@ -7,6 +7,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from algebra.versor import versor_condition
+from core.config import DEFAULT_CONFIG, RuntimeConfig
 from generate.dialogue import DialogueRole, classify_dialogue_blade, propose_dialogue
 from generate.proposition import FrameRegistry, Proposition, propose
 from generate.stream import generate
@@ -15,7 +16,6 @@ from persona.motor import PersonaMotor
 from session.context import SessionContext
 
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
-_DEFAULT_PACKS = ("en_minimal_v1", "he_logos_micro_v1", "grc_logos_micro_v1")
 _SEED_ALIASES = {
     "logos": "λόγος",
     "dabar": "דבר",
@@ -25,6 +25,7 @@ _SEED_ALIASES = {
     "arche": "ἀρχή",
     "aletheia": "ἀλήθεια",
 }
+_PROPOSITION_SURFACE_RELATION_THRESHOLD = 1e-4
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,16 +34,34 @@ class ChatResponse:
     proposition: Proposition
     dialogue_role: DialogueRole
     versor_condition: float
+    output_language: str
+    frame_pack: str
+    walk_surface: str
 
 
 class ChatRuntime:
     def __init__(
         self,
-        pack_id: str | Sequence[str] = _DEFAULT_PACKS,
+        pack_id: str | Sequence[str] | None = None,
         *,
         frame_pack: str | None = None,
+        config: RuntimeConfig = DEFAULT_CONFIG,
     ) -> None:
-        pack_ids = (pack_id,) if isinstance(pack_id, str) else tuple(pack_id)
+        if pack_id is not None or frame_pack is not None:
+            pack_ids = (pack_id,) if isinstance(pack_id, str) else tuple(pack_id or config.input_packs)
+            resolved_config = RuntimeConfig(
+                input_packs=pack_ids,
+                output_language=config.output_language,
+                frame_pack=frame_pack or config.frame_pack,
+                max_tokens=config.max_tokens,
+                allow_cross_language_recall=config.allow_cross_language_recall,
+                allow_cross_language_generation=config.allow_cross_language_generation,
+            )
+        else:
+            resolved_config = config
+            pack_ids = tuple(config.input_packs)
+
+        self.config = resolved_config
         manifests = []
         manifolds = []
         entries = []
@@ -56,7 +75,7 @@ class ChatRuntime:
         self._manifests = tuple(manifests)
         self._context = SessionContext(manifold, persona=PersonaMotor.identity())
         self._frame_registry = FrameRegistry.from_pack(
-            frame_pack or self._default_frame_pack(pack_ids),
+            resolved_config.frame_pack,
             self._context.vocab,
         )
         self._surface_by_fold = {e.surface.casefold(): e.surface for e in entries}
@@ -68,14 +87,6 @@ class ChatRuntime:
     @property
     def session(self) -> SessionContext:
         return self._context
-
-    @staticmethod
-    def _default_frame_pack(pack_ids: tuple[str, ...]) -> str:
-        if any(pack_id.startswith("grc_") for pack_id in pack_ids):
-            return "grc"
-        if any(pack_id.startswith("he_") for pack_id in pack_ids):
-            return "he"
-        return "en"
 
     def _tokenize(self, text: str) -> list[str]:
         tokens: list[str] = []
@@ -121,7 +132,7 @@ class ChatRuntime:
             return None
         return blade
 
-    def chat(self, text: str, max_tokens: int = 32) -> ChatResponse:
+    def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
         tokens = self._tokenize(text)
         filtered = self._apply_oov_policy(tokens)
         if not filtered:
@@ -147,8 +158,11 @@ class ChatRuntime:
             field_state,
             self._context.vocab,
             self._context.persona,
-            max_tokens=max_tokens,
+            max_tokens=self.config.max_tokens if max_tokens is None else max_tokens,
             vault=self._context.vault,
+            recall_top_k=3 if self.config.allow_cross_language_recall else 0,
+            output_lang=self.config.output_language,
+            allow_cross_language_generation=self.config.allow_cross_language_generation,
         )
         self._context.state = result.final_state
         self._context.vault.store(
@@ -157,15 +171,24 @@ class ChatRuntime:
         )
         self._context.turn += 1
         guarded = self._syntactic_guard(result.tokens)
-        surface = " ".join(guarded)
+        walk_surface = " ".join(guarded)
+        relation_norm = float(np.linalg.norm(proposition.relation))
+        surface = (
+            proposition.surface
+            if relation_norm > _PROPOSITION_SURFACE_RELATION_THRESHOLD
+            else walk_surface
+        )
         return ChatResponse(
             surface=surface,
             proposition=proposition,
             dialogue_role=dialogue_role,
             versor_condition=versor_condition(result.final_state.F),
+            output_language=self.config.output_language,
+            frame_pack=self.config.frame_pack,
+            walk_surface=walk_surface,
         )
 
-    def respond(self, text: str, max_tokens: int = 32) -> str:
+    def respond(self, text: str, max_tokens: int | None = None) -> str:
         try:
             return self.chat(text, max_tokens=max_tokens).surface
         except ValueError:
