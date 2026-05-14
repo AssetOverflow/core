@@ -256,11 +256,27 @@ class SentenceAssembler:
             if w
         )
         elab_tokens = _elaboration_tokens(tokens, used_slots)
+      
+        # Empty-slot guard: if slot versors were missing, both subject and
+        # predicate will be empty. Fall back to the raw articulation surface
+        # rather than emitting a bare ".".
+        if not subject and not predicate:
+            fallback = plan.surface or " ".join(t for t in tokens if t)
+            return SentencePlan(
+                subject="",
+                predicate_phrase="",
+                object_phrase=object_,
+                elaboration=None,
+                dialogue_role=role_str,
+                output_language=lang,
+                surface=fallback,
+            )
 
         # Language dispatch
         if lang == "he":
             surface = _assemble_he(subject, predicate, object_, elab_tokens, role_str)
-        elif lang == "grc":
+          
+elif lang == "grc":
             surface = _assemble_grc(subject, predicate, object_, elab_tokens, role_str)
         else:
             surface = _assemble_en(subject, predicate, object_, elab_tokens, role_str)
