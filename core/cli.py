@@ -20,7 +20,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --pack en_minimal_v1 --json \"word beginning truth\"\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test tests/test_alignment_graph.py -q"
+EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test tests/test_alignment_graph.py -q"
 
 
 def _run(*args: str, check: bool = False) -> int:
@@ -42,9 +42,47 @@ def _print_runtime_import_hint(exc: BaseException) -> NoReturn:
     )
 
 
+def _runtime_config_from_args(args: argparse.Namespace):
+    from core.config import DEFAULT_CONFIG, RuntimeConfig
+
+    output_language = args.output_language
+    frame_pack = args.frame_pack or output_language
+    input_packs = tuple(args.pack) if getattr(args, "pack", None) else DEFAULT_CONFIG.input_packs
+    return RuntimeConfig(
+        input_packs=input_packs,
+        output_language=output_language,
+        frame_pack=frame_pack,
+        max_tokens=args.max_tokens,
+        allow_cross_language_recall=not args.no_cross_language_recall,
+        allow_cross_language_generation=args.allow_cross_language_generation,
+    )
+
+
 def cmd_chat(args: argparse.Namespace) -> int:
-    """Launch the readline REPL backed by ChatRuntime."""
-    return _run(sys.executable, "-m", "chat", *args.args)
+    """Launch a readline REPL backed by ChatRuntime."""
+    try:
+        from chat.runtime import ChatRuntime
+    except Exception as exc:  # pragma: no cover - exercised by CLI in broken envs
+        _print_runtime_import_hint(exc)
+
+    runtime = ChatRuntime(config=_runtime_config_from_args(args))
+    while True:
+        try:
+            text = input("> ").strip()
+        except EOFError:
+            print()
+            break
+        if text in {"quit", "exit"}:
+            break
+        if not text:
+            continue
+        try:
+            response = runtime.chat(text)
+        except (KeyError, ValueError) as exc:
+            print(f"[{exc}]", file=sys.stderr)
+            continue
+        print(response.surface)
+    return 0
 
 
 def cmd_test(args: argparse.Namespace) -> int:
@@ -75,15 +113,13 @@ def cmd_check(args: argparse.Namespace) -> int:
     return _run(sys.executable, "-m", "ruff", "check", *targets)
 
 
-def _runtime_for_trace(pack: list[str] | None):
+def _runtime_for_trace(args: argparse.Namespace):
     try:
         from chat.runtime import ChatRuntime
     except Exception as exc:  # pragma: no cover - exercised by CLI in broken envs
         _print_runtime_import_hint(exc)
-    pack_arg: str | tuple[str, ...]
-    pack_arg = tuple(pack) if pack else ("en_minimal_v1", "he_logos_micro_v1", "grc_logos_micro_v1")
     try:
-        return ChatRuntime(pack_arg)
+        return ChatRuntime(config=_runtime_config_from_args(args))
     except Exception as exc:
         _die(
             "failed to initialize ChatRuntime. Check mounted language packs with "
@@ -100,6 +136,9 @@ def _trace_payload(text: str, resp: Any, runtime: Any) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "input": text,
         "surface": resp.surface,
+        "walk_surface": resp.walk_surface,
+        "output_language": resp.output_language,
+        "frame_pack": resp.frame_pack,
         "dialogue_role": str(resp.dialogue_role),
         "versor_condition": float(resp.versor_condition),
         "proposition": {
@@ -119,6 +158,9 @@ def _trace_payload(text: str, resp: Any, runtime: Any) -> dict[str, Any]:
 def _print_trace(payload: dict[str, Any]) -> None:
     print(f"input          : {payload['input']}")
     print(f"surface        : {payload['surface']}")
+    print(f"walk_surface   : {payload['walk_surface']}")
+    print(f"output_language: {payload['output_language']}")
+    print(f"frame_pack     : {payload['frame_pack']}")
     print(f"dialogue_role  : {payload['dialogue_role']}")
     print(f"versor_cond    : {payload['versor_condition']:.2e}")
     proposition = payload["proposition"]
@@ -143,7 +185,7 @@ def cmd_trace(args: argparse.Namespace) -> int:
     if not text:
         _die("trace requires input text. Try: core trace \"word beginning truth\"")
 
-    runtime = _runtime_for_trace(args.pack)
+    runtime = _runtime_for_trace(args)
     try:
         response = runtime.chat(text, max_tokens=args.max_tokens)
     except Exception as exc:
@@ -165,7 +207,7 @@ def cmd_oov(args: argparse.Namespace) -> int:
     except Exception as exc:  # pragma: no cover - exercised by CLI in broken envs
         _print_runtime_import_hint(exc)
 
-    runtime = ChatRuntime(tuple(args.pack) if args.pack else ("en_minimal_v1", "he_logos_micro_v1", "grc_logos_micro_v1"))
+    runtime = ChatRuntime(config=_runtime_config_from_args(args))
     vocab = runtime.session.vocab
 
     try:
@@ -244,6 +286,23 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def _add_runtime_policy_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--pack", action="append", help="language pack to mount; repeat for multiple packs")
+    parser.add_argument("--output-language", default="en", help="target output language code; default: en")
+    parser.add_argument("--frame-pack", help="frame pack to use; defaults to output language")
+    parser.add_argument("--max-tokens", type=int, default=32, help="maximum generated tokens; default: 32")
+    parser.add_argument(
+        "--allow-cross-language-generation",
+        action="store_true",
+        help="allow generated walk tokens from any mounted language",
+    )
+    parser.add_argument(
+        "--no-cross-language-recall",
+        action="store_true",
+        help="disable vault recall during generation",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="core",
@@ -255,7 +314,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", metavar="command")
 
     chat = subparsers.add_parser("chat", help="start the interactive chat REPL")
-    chat.add_argument("args", nargs=argparse.REMAINDER, help="arguments forwarded to python -m chat")
+    _add_runtime_policy_args(chat)
     chat.set_defaults(func=cmd_chat)
 
     test = subparsers.add_parser("test", help="run pytest with sane defaults")
@@ -271,14 +330,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="trace one chat turn with field telemetry",
         description="trace one chat turn with field telemetry",
     )
-    trace.add_argument("--pack", action="append", help="language pack to mount; repeat for multiple packs")
-    trace.add_argument("--max-tokens", type=int, default=32, help="maximum generated tokens; default: 32")
+    _add_runtime_policy_args(trace)
     trace.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     trace.add_argument("text", nargs=argparse.REMAINDER, help="input text to trace")
     trace.set_defaults(func=cmd_trace)
 
     oov = subparsers.add_parser("oov", help="ground or inspect one token")
-    oov.add_argument("--pack", action="append", help="language pack to mount; repeat for multiple packs")
+    _add_runtime_policy_args(oov)
     oov.add_argument("token", help="token to inspect or ground")
     oov.set_defaults(func=cmd_oov)
 
