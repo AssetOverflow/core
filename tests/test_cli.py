@@ -55,6 +55,8 @@ def test_trace_formats_real_runtime_payload(capsys: pytest.CaptureFixture[str]) 
     assert "input          : word beginning truth" in out
     assert "output_language: en" in out
     assert "frame_pack     : en" in out
+    assert "articulation" in out
+    assert "raw_walk" in out
     assert "proposition" in out
     assert "subject" in out
     assert "predicate" in out
@@ -66,6 +68,8 @@ def test_trace_json_formats_real_runtime_payload(capsys: pytest.CaptureFixture[s
     assert '"input": "word beginning truth"' in out
     assert '"output_language": "en"' in out
     assert '"frame_pack": "en"' in out
+    assert '"articulation"' in out
+    assert '"walk_surface"' in out
     assert '"proposition"' in out
     assert '"subject"' in out
     assert '"predicate"' in out
