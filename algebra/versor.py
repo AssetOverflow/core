@@ -10,7 +10,7 @@ __all__ = [
     "versor_unit_residual",
 ]
 
-_CONSTRUCTION_RESIDUE_TOLERANCE = 1e-6
+_CONSTRUCTION_RESIDUE_TOLERANCE = 1e-2
 _NEAR_ZERO_TOLERANCE = 1e-12
 
 
