@@ -77,24 +77,59 @@ def _nearest_next(
     return vocab.nearest(F_voiced, exclude_idx=current_node)
 
 
+def _voiced_state(state: FieldState, persona) -> FieldState:
+    """Compose the session persona motor into the live field path."""
+    return FieldState(
+        F=persona.apply(state.F),
+        node=state.node,
+        step=state.step,
+        holonomy=state.holonomy,
+    )
+
+
+def _recall_state(state: FieldState, vault, top_k: int) -> FieldState:
+    """
+    Feed exact vault recall back into the field as sequential operators.
+
+    Recall returns stored versors ranked by the vault's exact metric. Each hit
+    is treated as an additional operator in the propagation path.
+    """
+    if vault is None or top_k <= 0:
+        return state
+
+    current = state
+    for hit in vault.recall(current.F, top_k=top_k):
+        current = propagate_step(current, hit["versor"])
+        current = FieldState(
+            F=current.F,
+            node=state.node,
+            step=current.step,
+            holonomy=state.holonomy,
+        )
+    return current
+
+
 def generate(
     state: FieldState,
     vocab,
     persona,
     max_tokens: int = 128,
     record_trajectory: bool = False,
+    vault=None,
+    recall_top_k: int = 3,
 ) -> GenerationResult:
     """
     Generate a token sequence from an initial FieldState.
 
     Loop:
-    1. Apply persona motor to current field
-    2. Find nearest non-current vocab node via CGA inner product
-    3. Emit token
-    4. Build transition rotor: V = word_transition_rotor(A, B)
+    1. Compose the persistent persona motor into the current field
+    2. Propagate exact vault recall hits into the current field
+    3. Find nearest non-current vocab node via CGA inner product
+    4. Emit token
+    5. Build transition rotor: V = word_transition_rotor(A, B)
        where A = versor at current node, B = versor at nearest node
-    5. Propagate: F <- versor_apply(V, F)
-    6. Advance node pointer
+    6. Propagate: F <- versor_apply(V, F)
+    7. Advance node pointer
 
     Returns:
         GenerationResult with tokens, final_state, and optional trajectory.
@@ -110,10 +145,10 @@ def generate(
     )
 
     for _ in range(max_tokens):
-        F_voiced = persona.apply(current.F)
+        current = _recall_state(_voiced_state(current, persona), vault, recall_top_k)
         word, word_idx = _nearest_next(
             vocab,
-            F_voiced,
+            current.F,
             current.node,
             recent_nodes=tuple(recent_nodes),
             stop_nodes=stop_nodes,
@@ -162,10 +197,10 @@ async def agenerate(
         if token in {vocab.get_word_at(i) for i in range(len(vocab))}
     )
     for _ in range(max_tokens):
-        F_voiced = persona.apply(current.F)
+        current = _voiced_state(current, persona)
         word, word_idx = _nearest_next(
             vocab,
-            F_voiced,
+            current.F,
             current.node,
             recent_nodes=tuple(recent_nodes),
             stop_nodes=stop_nodes,

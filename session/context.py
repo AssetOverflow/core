@@ -18,6 +18,7 @@ from persona.motor import PersonaMotor
 from ingest.gate import inject
 from generate.stream import generate
 from generate.result import GenerationResult
+from algebra.backend import versor_apply
 
 
 class SessionContext:
@@ -29,15 +30,23 @@ class SessionContext:
         self.turn: int = 0
 
     def ingest(self, tokens: list) -> FieldState:
-        """Inject a prompt. Sets self.state. Stores the user field in vault."""
-        state = inject(tokens, self.vocab)
+        """Inject a prompt into the running field. Stores the user field in vault."""
+        injected = inject(tokens, self.vocab)
         node_idx = self.vocab.index_of(tokens[0])
-        self.state = FieldState(
-            F=state.F,
-            node=node_idx,
-            step=state.step,
-            holonomy=state.holonomy,
-        )
+        if self.state is None:
+            self.state = FieldState(
+                F=injected.F,
+                node=node_idx,
+                step=injected.step,
+                holonomy=injected.holonomy,
+            )
+        else:
+            self.state = FieldState(
+                F=versor_apply(injected.F, self.state.F),
+                node=node_idx,
+                step=self.state.step + 1,
+                holonomy=injected.holonomy,
+            )
         self.vault.store(self.state.F, {"turn": self.turn, "role": "user"})
         return self.state
 
@@ -49,7 +58,7 @@ class SessionContext:
             GenerationResult carrying emitted tokens and final_state.
         """
         assert self.state is not None, "Call ingest() before respond()."
-        result = generate(self.state, self.vocab, self.persona, max_tokens)
+        result = generate(self.state, self.vocab, self.persona, max_tokens, vault=self.vault)
         self.state = result.final_state
         self.vault.store(result.final_state.F, {"turn": self.turn, "role": "assistant"})
         self.turn += 1
@@ -64,7 +73,7 @@ class SessionContext:
         yielding the surface tokens.
         """
         assert self.state is not None, "Call ingest() before arespond()."
-        result = generate(self.state, self.vocab, self.persona, max_tokens)
+        result = generate(self.state, self.vocab, self.persona, max_tokens, vault=self.vault)
         for token in result.tokens:
             yield token
         self.state = result.final_state
