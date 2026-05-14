@@ -70,4 +70,7 @@ def versor_unit_residual(v: np.ndarray, *, allow_negative: bool = False) -> floa
     minus = vv.copy()
     minus[0] += 1.0
     return min(plus_residual, float(np.linalg.norm(minus)))
+
+
+def versor_condition(v: np.ndarray) -> float:
     return versor_unit_residual(v, allow_negative=False)
