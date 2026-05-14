@@ -135,14 +135,12 @@ def _assemble_en(
         return base + "."
 
     if role == "question":
-        # "Does subject predicate object?"
         parts = ["Does", subject, predicate]
         if obj:
             parts.append(obj)
         return " ".join(parts) + "?"
 
     if role == "refute":
-        # "Subject does not predicate object."
         parts = [subj, "does not", predicate]
         if obj:
             parts.append(obj)
@@ -256,7 +254,7 @@ class SentenceAssembler:
             if w
         )
         elab_tokens = _elaboration_tokens(tokens, used_slots)
-      
+
         # Empty-slot guard: if slot versors were missing, both subject and
         # predicate will be empty. Fall back to the raw articulation surface
         # rather than emitting a bare ".".
@@ -275,8 +273,7 @@ class SentenceAssembler:
         # Language dispatch
         if lang == "he":
             surface = _assemble_he(subject, predicate, object_, elab_tokens, role_str)
-          
-elif lang == "grc":
+        elif lang == "grc":
             surface = _assemble_grc(subject, predicate, object_, elab_tokens, role_str)
         else:
             surface = _assemble_en(subject, predicate, object_, elab_tokens, role_str)
