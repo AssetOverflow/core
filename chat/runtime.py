@@ -24,6 +24,7 @@ from generate.articulation import ArticulationPlan, realize
 from generate.dialogue import DialogueRole, classify_dialogue_blade, propose_dialogue
 from generate.proposition import FrameRegistry, Proposition, propose
 from generate.stream import generate
+from generate.surface import SentenceAssembler, SentencePlan
 from language_packs import OOVPolicy, load_mounted_packs, load_pack, load_pack_entries
 from persona.motor import PersonaMotor
 from session.context import SessionContext
@@ -357,11 +358,16 @@ class ChatRuntime:
         )
         self._context.turn += 1
 
-        guarded = self._syntactic_guard(result.tokens)
-        walk_surface = " ".join(guarded)
+        # Assemble a coherent sentence from the articulation plan + walk tokens.
+        sentence_plan: SentencePlan = SentenceAssembler().assemble(
+            articulation,
+            result.tokens,
+            role=dialogue_role,
+        )
+        walk_surface = sentence_plan.surface
 
-        # If flagged, suppress walk and fall back to articulation surface.
-        surface = articulation.surface if flagged else (articulation.surface or walk_surface)
+        # If identity check flagged the response, fall back to bare articulation surface.
+        surface = articulation.surface if flagged else walk_surface
 
         # Count vault hits that fired this turn (recall_top_k is the ceiling).
         vault_hits = 3 if self.config.allow_cross_language_recall else 0
