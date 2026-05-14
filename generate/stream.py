@@ -62,6 +62,10 @@ def _nearest_next(
     Recent-node exclusion reduces two- and three-token attractor cycles.
     Stop-node exclusion keeps function-word wells from dominating when more
     informative neighbors are available.
+
+    If attention/language filtering leaves only the current node available,
+    the final fallback deliberately permits that singleton candidate instead
+    of crashing. That keeps inhibition fail-closed to the attended region.
     """
     if len(vocab) <= 1:
         return vocab.nearest(F_voiced, candidate_indices=candidate_indices)
@@ -84,7 +88,7 @@ def _nearest_next(
             )
         except ValueError:
             continue
-    return vocab.nearest(F_voiced, exclude_idx=current_node, candidate_indices=candidate_indices)
+    return vocab.nearest(F_voiced, candidate_indices=candidate_indices)
 
 
 def _voiced_state(state: FieldState, persona) -> FieldState:
