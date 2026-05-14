@@ -1,30 +1,20 @@
 from __future__ import annotations
 
-from language_packs import load_mounted_packs
-
-_TRILINGUAL_PACKS = ("en_minimal_v1", "he_logos_micro_v1", "grc_logos_micro_v1")
-_SEED_ALIASES = {
-    "logos": "λόγος",
-    "dabar": "דבר",
-    "or": "אור",
-    "phos": "φῶς",
-    "zoe": "ζωή",
-    "arche": "ἀρχή",
-    "aletheia": "ἀλήθεια",
-}
+from chat.runtime import ChatRuntime
 
 
 def field_walk(seed: str, steps: int = 4) -> list[str]:
-    vocab = load_mounted_packs(_TRILINGUAL_PACKS)
-    surface = _SEED_ALIASES.get(seed.casefold(), seed)
-    F = vocab.get_versor(surface)
-    walk = [seed] if surface == seed else [seed, surface]
-    idx = vocab.index_of(surface)
-    for _ in range(max(0, steps - len(walk))):
-        word, idx = vocab.nearest(F, exclude_idx=idx)
-        walk.append(word)
-        F = vocab.get_versor(word)
-    return walk
+    runtime = ChatRuntime()
+    injected_terms = runtime.tokenize(seed)
+    response = runtime.chat(seed, max_tokens=max(1, steps))
+    proposition_terms = [
+        response.proposition.subject,
+        response.proposition.predicate,
+    ]
+    if response.proposition.object_ is not None:
+        proposition_terms.append(response.proposition.object_)
+    walk = [seed, *injected_terms, *proposition_terms, *response.surface.split()]
+    return walk[: max(1, steps)]
 
 
 def main() -> None:
@@ -37,7 +27,7 @@ def main() -> None:
             break
         try:
             chain = field_walk(text)
-            print(f"[field walk: {' → '.join(chain)}]")
+            print(f"[field walk: {' -> '.join(chain)}]")
         except KeyError:
             print("[unknown token]")
 
