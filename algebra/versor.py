@@ -23,9 +23,10 @@ Normalization doctrine:
 """
 
 from __future__ import annotations
-import hashlib
+
 import numpy as np
-from .cl41 import geometric_product, reverse, N_COMPONENTS
+
+from .cl41 import geometric_product, reverse
 
 __all__ = [
     "unitize_versor",
@@ -34,6 +35,9 @@ __all__ = [
     # normalize_to_versor is intentionally NOT in __all__.
     # Import it explicitly only if you are ingest/gate.py.
 ]
+
+_RESIDUE_TOL = 1e-7
+_NORM_TOL = 1e-12
 
 
 def unitize_versor(v: np.ndarray) -> np.ndarray:
@@ -54,35 +58,33 @@ def unitize_versor(v: np.ndarray) -> np.ndarray:
         Scaled copy of v satisfying |V * ~V|_scalar ≈ 1.
 
     Raises:
-        ValueError: if v is a null, zero, or near-zero multivector.
+        ValueError: if v is zero, null, anti-unit, or has non-scalar residue.
     """
     arr = np.asarray(v)
     dtype = arr.dtype if arr.dtype in (np.dtype(np.float32), np.dtype(np.float64)) else np.dtype(np.float32)
     v = np.asarray(v, dtype=dtype)
-    vv = geometric_product(v, reverse(v))
+    if float(np.linalg.norm(v)) < _NORM_TOL:
+        raise ValueError("unitize_versor: zero or near-zero multivector; cannot unitize.")
+
+    vv = geometric_product(v, reverse(v)).astype(dtype)
     scalar_sq = float(vv[0])
-    if float(np.linalg.norm(v)) < 1e-12:
-        raise ValueError(
-            "unitize_versor: null, zero, or near-zero multivector; cannot unitize."
-        )
     residue = vv.copy()
     residue[0] = 0
-    if float(np.linalg.norm(residue)) < 1e-7 and scalar_sq > 0:
-        scale = 1.0 / np.sqrt(scalar_sq)
-        return (v * scale).astype(dtype)
+    residue_norm = float(np.linalg.norm(residue))
 
-    digest = hashlib.sha256(np.ascontiguousarray(v).view(np.uint8)).digest()
-    flat_idx = digest[0]
-    theta_unit = int.from_bytes(digest[1:5], "big") / 2**32
-    theta = 0.05 + theta_unit * (np.pi - 0.1)
-    sign_idx = int(np.argmax(np.abs(v[1:]))) + 1
-    if float(v[sign_idx]) < 0:
-        theta = -theta
-    negative_bivectors = (6, 7, 9, 10, 12, 14)
-    rotor = np.zeros(N_COMPONENTS, dtype=dtype)
-    rotor[0] = np.cos(theta)
-    rotor[negative_bivectors[flat_idx % len(negative_bivectors)]] = np.sin(theta)
-    return rotor.astype(dtype)
+    if residue_norm >= _RESIDUE_TOL:
+        raise ValueError(
+            "unitize_versor: non-scalar V*reverse(V) residue; cannot fabricate a unit versor. "
+            f"residue_norm={residue_norm:.3e}"
+        )
+    if scalar_sq <= _NORM_TOL:
+        raise ValueError(
+            "unitize_versor: non-positive scalar norm; cannot unitize. "
+            f"scalar_sq={scalar_sq:.3e}"
+        )
+
+    scale = 1.0 / np.sqrt(scalar_sq)
+    return (v * scale).astype(dtype)
 
 
 def normalize_to_versor(v: np.ndarray) -> np.ndarray:
