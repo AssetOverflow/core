@@ -63,16 +63,19 @@ class Proposition:
     predicate_versor: np.ndarray
     object_versor: np.ndarray | None = None
     relation: np.ndarray = field(default_factory=lambda: np.zeros(32, dtype=np.float32))
+    relation_norm: float = 0.0
 
     def __post_init__(self) -> None:
         subject_versor = np.asarray(self.subject_versor, dtype=np.float32).copy()
         predicate_versor = np.asarray(self.predicate_versor, dtype=np.float32).copy()
+        relation = np.asarray(self.relation, dtype=np.float32).copy()
         object.__setattr__(self, "subject_versor", subject_versor)
         object.__setattr__(self, "predicate_versor", predicate_versor)
         if self.object_versor is not None:
             object_versor = np.asarray(self.object_versor, dtype=np.float32).copy()
             object.__setattr__(self, "object_versor", object_versor)
-        object.__setattr__(self, "relation", np.asarray(self.relation, dtype=np.float32).copy())
+        object.__setattr__(self, "relation", relation)
+        object.__setattr__(self, "relation_norm", float(np.linalg.norm(relation)))
 
 
 class FrameRegistry:
