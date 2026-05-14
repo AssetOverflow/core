@@ -83,3 +83,37 @@ class PersonaMotor:
             unitize_versor(translator),
             unitize_versor(rotor),
         )
+
+    @classmethod
+    def from_identity_manifold(cls, manifold) -> "PersonaMotor":
+        """
+        Build a persona motor from a live IdentityManifold.
+
+        Each value_axis carries a direction tuple in R^3. The axes are
+        composed additively into a single concept vector, then passed to
+        from_concept_vector() to produce the CGA translator that encodes
+        CORE's character as a geometric displacement in concept space.
+
+        The resulting motor is non-identity: it biases every field walk
+        toward the manifold's value directions without overriding the
+        algebraic propagation rules.
+
+        Falls back to identity() if the manifold has no value_axes or if
+        all directions are zero — preserving safe-default behavior.
+        """
+        if not manifold.value_axes:
+            return cls.identity()
+
+        combined = np.zeros(3, dtype=np.float32)
+        for axis in manifold.value_axes:
+            direction = np.asarray(axis.direction[:3], dtype=np.float32)
+            if np.linalg.norm(direction) > 1e-8:
+                combined += direction
+
+        if np.linalg.norm(combined) < 1e-8:
+            return cls.identity()
+
+        # Normalize so the motor magnitude is consistent regardless of
+        # how many axes are present.
+        combined /= np.linalg.norm(combined)
+        return cls.from_concept_vector(combined)
