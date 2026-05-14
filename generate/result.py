@@ -23,6 +23,8 @@ class GenerationResult:
     tokens: tuple          # decoded token sequence, immutable
     final_state: FieldState
     trajectory: tuple | None = None  # (FieldState, ...) or None
+    salience_top_k: int | None = None
+    candidates_used: int | None = None
 
     def __post_init__(self) -> None:
         # Coerce list inputs to tuple for immutability.
