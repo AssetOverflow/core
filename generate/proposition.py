@@ -41,6 +41,7 @@ class PropositionFrame:
     frame_id: str
     language: str
     predicate_type: str
+    dialogue_role: str
     slots: tuple[FrameSlot, ...]
     constraints: tuple[str, ...] = field(default_factory=tuple)
     relation: np.ndarray = field(default_factory=lambda: np.zeros(32, dtype=np.float32))
@@ -112,6 +113,13 @@ class FrameRegistry:
     def select(self, relation: np.ndarray) -> PropositionFrame:
         relation = np.asarray(relation, dtype=np.float32)
         return max(self._frames, key=lambda frame: cga_inner(relation, frame.relation))
+
+    def select_dialogue(self, relation: np.ndarray, dialogue_role: str) -> PropositionFrame:
+        relation = np.asarray(relation, dtype=np.float32)
+        candidates = tuple(frame for frame in self._frames if frame.dialogue_role == dialogue_role)
+        if not candidates:
+            candidates = self._frames
+        return max(candidates, key=lambda frame: cga_inner(relation, frame.relation))
 
     def __iter__(self):
         return iter(self._frames)
@@ -193,6 +201,7 @@ def _parse_frame(payload: dict, vocab) -> PropositionFrame:
         frame_id=payload["frame_id"],
         language=payload["language"],
         predicate_type=payload["predicate_type"],
+        dialogue_role=payload.get("dialogue_role", "assert"),
         slots=slots,
         constraints=tuple(payload.get("constraints", ())),
         relation=relation,

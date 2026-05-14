@@ -3,7 +3,7 @@
   "title": "CORE Frame Record",
   "description": "A syntactic-semantic frame template defining participant structure for a predicate type.",
   "type": "object",
-  "required": ["frame_id", "language", "predicate_type", "slots"],
+  "required": ["frame_id", "language", "predicate_type", "dialogue_role", "slots"],
   "properties": {
     "frame_id": {
       "type": "string",
@@ -16,6 +16,11 @@
     "predicate_type": {
       "type": "string",
       "description": "The predicate class this frame serves. Examples: copular, transitive, ditransitive, existential, causative."
+    },
+    "dialogue_role": {
+      "type": "string",
+      "enum": ["assert", "elaborate", "question", "refute"],
+      "description": "Dialogue move kind selected from relation-blade geometry."
     },
     "slots": {
       "type": "array",
@@ -34,6 +39,9 @@
     "constraints": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "notes": {
+      "type": "string"
     }
   },
   "additionalProperties": false

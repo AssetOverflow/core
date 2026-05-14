@@ -21,4 +21,4 @@ def propagate_step(state: FieldState, V) -> FieldState:
     Returns a new FieldState one step forward on the manifold.
     """
     new_F = versor_apply(V, state.F)
-    return FieldState(F=new_F, node=state.node, step=state.step + 1)
+    return FieldState(F=new_F, node=state.node, step=state.step + 1, holonomy=state.holonomy)
