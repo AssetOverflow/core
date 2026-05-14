@@ -100,7 +100,7 @@ class FieldEnergyOperator:
             energy_class = EnergyClass.E4
         elif raw >= 0.62:
             energy_class = EnergyClass.E3
-        elif raw >= 0.38:
+        elif raw >= 0.37:
             energy_class = EnergyClass.E2
         elif raw >= 0.16:
             energy_class = EnergyClass.E1
