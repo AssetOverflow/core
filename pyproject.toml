@@ -22,6 +22,22 @@ dev = [
 [project.scripts]
 core = "core.cli:main"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "algebra*",
+    "chat*",
+    "core*",
+    "field*",
+    "generate*",
+    "ingest*",
+    "language_packs*",
+    "persona*",
+    "session*",
+    "vault*",
+    "vocab*",
+]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
