@@ -7,14 +7,16 @@ field state before generation; discarding it means the vault stores
 the prompt field, not the assistant response field.
 
 Contracts:
-  tokens       — the decoded token sequence in emission order
-  final_state  — FieldState after the last propagation step
-  trajectory   — optional ordered list of intermediate FieldStates;
-                 None unless the caller explicitly requests it (expensive)
+  tokens        — the decoded token sequence in emission order
+  final_state   — FieldState after the last propagation step
+  trajectory    — optional ordered list of intermediate FieldStates;
+                   None unless the caller explicitly requests it (expensive)
+  identity_score — IdentityScore from IdentityCheck; None if not evaluated
 """
 
 from __future__ import annotations
 from dataclasses import dataclass
+from typing import Optional
 from field.state import FieldState
 
 
@@ -25,6 +27,7 @@ class GenerationResult:
     trajectory: tuple | None = None  # (FieldState, ...) or None
     salience_top_k: int | None = None
     candidates_used: int | None = None
+    identity_score: Optional[object] = None  # IdentityScore | None
 
     def __post_init__(self) -> None:
         # Coerce list inputs to tuple for immutability.
