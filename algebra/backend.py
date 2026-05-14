@@ -27,7 +27,7 @@ def geometric_product(A: np.ndarray, B: np.ndarray) -> np.ndarray:
 
 
 def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
-    if _RUST:
+    if _RUST and np.result_type(V, F) != np.dtype(np.float64):
         return np.asarray(_rs.versor_apply(V, F), dtype=np.float32)
     from algebra.versor import versor_apply as _va
     return _va(V, F)

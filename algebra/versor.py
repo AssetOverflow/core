@@ -25,12 +25,12 @@ def _diagnostic_message(prefix: str, *, input_norm: float, scalar_sq: float, res
 
 def unitize_versor(v: np.ndarray) -> np.ndarray:
     dtype = _array_dtype(v)
-    v = np.asarray(v, dtype=dtype)
+    v = np.asarray(v, dtype=np.float64)
     input_norm = float(np.linalg.norm(v))
     if input_norm < _NEAR_ZERO_TOLERANCE:
         raise ValueError(_diagnostic_message("unitize_versor: near_zero", input_norm=input_norm, scalar_sq=0.0, residue_norm=0.0))
 
-    vv = geometric_product(v, reverse(v)).astype(dtype)
+    vv = geometric_product(v, reverse(v)).astype(np.float64)
     scalar_sq = float(vv[0])
     residue = vv.copy()
     residue[0] = 0
@@ -59,9 +59,8 @@ def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
 
 
 def versor_unit_residual(v: np.ndarray, *, allow_negative: bool = False) -> float:
-    dtype = _array_dtype(v)
-    v = np.asarray(v, dtype=dtype)
-    vv = geometric_product(v, reverse(v)).astype(dtype)
+    v = np.asarray(v, dtype=np.float64)
+    vv = geometric_product(v, reverse(v)).astype(np.float64)
     plus = vv.copy()
     plus[0] -= 1.0
     plus_residual = float(np.linalg.norm(plus))

@@ -66,9 +66,7 @@ def holonomy_encode(
     if len(weights) != n:
         raise ValueError("weights length must match word_versors length.")
 
-    dtype = np.result_type(*word_versors)
-    if dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
-        dtype = np.dtype(np.float32)
+    dtype = np.float64
 
     # Forward accumulation. Each token is carried through a deterministic
     # position rotor so path order survives even for scalar/vector fixtures.

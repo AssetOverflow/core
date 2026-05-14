@@ -1,7 +1,7 @@
 """
 Conformal Geometric Algebra geometry on Cl(4,1).
 
-Signature: (+,+,+,-,+), with Euclidean coordinates on e1,e2,e3.
+Signature: (+,+,+,+,-), with Euclidean coordinates on e1,e2,e3.
 The two conformal null directions are built from e4 and e5:
 
     n_o   = 0.5 * (e4 - e5)   # origin, n_o^2 = 0
@@ -77,8 +77,8 @@ def embed_point(x: np.ndarray) -> np.ndarray:
     result[1:4] = x
 
     # n_o + 0.5|x|^2 n_inf
-    # e4 coefficient:  0.5 + 0.5|x|^2
-    # e5 coefficient: -0.5 + 0.5|x|^2
-    result[_E4_IDX] = 0.5 * (x_sq + 1.0)
-    result[_E5_IDX] = 0.5 * (x_sq - 1.0)
+    # e4 coefficient: -0.5 + 0.5|x|^2
+    # e5 coefficient:  0.5 + 0.5|x|^2
+    result[_E4_IDX] = 0.5 * (x_sq - 1.0)
+    result[_E5_IDX] = 0.5 * (x_sq + 1.0)
     return result

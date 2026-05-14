@@ -17,7 +17,7 @@ import numpy as np
 
 N_DIMS = 5
 N_COMPONENTS = 32
-SIGNATURE = np.array([1, 1, 1, -1, 1], dtype=np.float64)
+SIGNATURE = np.array([1, 1, 1, 1, -1], dtype=np.float64)
 
 # --- Grade offset table ---
 

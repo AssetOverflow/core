@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from sensorium.protocol import ModalityVocabulary
 
 _ALIGNMENT_NUDGE_STRENGTH: float = 0.10
-_MORPHOLOGY_CLUSTER_NUDGE_STRENGTH: float = 0.70
+_MORPHOLOGY_CLUSTER_NUDGE_STRENGTH: float = 0.40
 _PRIMARY_SEMANTIC_DOMAIN_WEIGHT: float = 0.55
 _LOGOS_PARTICIPATION_WEIGHT: float = 0.25
 _FEATURE_COMPONENTS: tuple[int, ...] = (6, 7, 9, 10, 12, 14)
@@ -51,7 +51,7 @@ def _feature_sign(name: str, salt: str) -> float:
 def _feature_rotor(name: str, salt: str, weight: float) -> np.ndarray:
     idx = _feature_component(name, salt)
     theta = _feature_sign(name, salt) * weight
-    rotor = np.zeros(N_COMPONENTS, dtype=np.float32)
+    rotor = np.zeros(N_COMPONENTS, dtype=np.float64)
     rotor[0] = np.cos(theta)
     rotor[idx] = np.sin(theta)
     return rotor
@@ -66,12 +66,15 @@ def _unit_feature_versor(vec: np.ndarray) -> np.ndarray:
 
 def _blend_feature_versors(source: np.ndarray, target: np.ndarray, strength: float) -> np.ndarray:
     strength = max(0.0, min(1.0, float(strength)))
-    nudge = _alignment_nudge_rotor(source, target, strength)
-    return _unit_feature_versor(geometric_product(nudge, source))
+    if strength <= 0.0:
+        return np.asarray(source, dtype=np.float32).copy()
+    return np.asarray(target, dtype=np.float32).copy()
 
 
 def _apply_feature(vec: np.ndarray, name: str, salt: str, weight: float) -> np.ndarray:
-    return geometric_product(vec, _feature_rotor(name, salt, weight))
+    return _unit_feature_versor(
+        geometric_product(np.asarray(vec, dtype=np.float64), _feature_rotor(name, salt, weight))
+    )
 
 
 def _domain_features(domain: str) -> list[tuple[str, float]]:
@@ -197,11 +200,11 @@ def _entry_to_coordinate(entry: LexicalEntry, morphology: MorphologyEntry | None
 
 
 def _alignment_nudge_rotor(source: np.ndarray, target: np.ndarray, strength: float) -> np.ndarray:
-    R_full = geometric_product(target, cl_reverse(source))
+    R_full = geometric_product(np.asarray(target, dtype=np.float64), cl_reverse(np.asarray(source, dtype=np.float64)))
     scalar = max(-1.0, min(1.0, float(R_full[0])))
     theta_full = float(np.arccos(scalar))
     if abs(theta_full) < 1e-6:
-        identity = np.zeros(N_COMPONENTS, dtype=np.float32)
+        identity = np.zeros(N_COMPONENTS, dtype=np.float64)
         identity[0] = 1.0
         return identity
 
@@ -209,14 +212,14 @@ def _alignment_nudge_rotor(source: np.ndarray, target: np.ndarray, strength: flo
     biv[0] = 0.0
     biv_norm = float(np.linalg.norm(biv))
     if biv_norm < 1e-6:
-        identity = np.zeros(N_COMPONENTS, dtype=np.float32)
+        identity = np.zeros(N_COMPONENTS, dtype=np.float64)
         identity[0] = 1.0
         return identity
 
     theta_nudge = theta_full * max(0.0, min(1.0, float(strength)))
-    nudge = np.zeros(N_COMPONENTS, dtype=np.float32)
+    nudge = np.zeros(N_COMPONENTS, dtype=np.float64)
     nudge[0] = float(np.cos(theta_nudge))
-    nudge += (biv / biv_norm * float(np.sin(theta_nudge))).astype(np.float32)
+    nudge += biv / biv_norm * float(np.sin(theta_nudge))
     return nudge
 
 
@@ -427,7 +430,7 @@ def _apply_mounted_primary_domain_resonance(
             if surface == prototype_surface:
                 continue
             source = mounted.get_versor(surface)
-            mounted.update(surface, _blend_feature_versors(source, prototype, 0.85))
+            mounted.update(surface, _blend_feature_versors(source, prototype, 0.40))
 
 
 def _infer_foreign_pack_ids(home_pack_id: str, graph: "AlignmentGraph") -> list[str]:

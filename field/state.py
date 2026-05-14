@@ -19,7 +19,7 @@ _EXPECTED_COMPONENTS = 32
 
 @dataclass(frozen=True, slots=True)
 class FieldState:
-    F: np.ndarray   # shape (32,) float32 — Cl(4,1) multivector on the versor manifold
+    F: np.ndarray   # shape (32,) float32/float64 — Cl(4,1) multivector on the versor manifold
     node: int = 0   # current node index in the vocabulary manifold
     step: int = 0   # number of propagation steps taken
     holonomy: np.ndarray | None = None
@@ -29,7 +29,10 @@ class FieldState:
         # frozen=True prevents reassignment, but ndarray contents are still
         # mutable via the array object; copy() here is the defence.
         # slots=True closes __dict__ so no incidental attributes can be added.
-        F = np.array(self.F, dtype=np.float32).copy()
+        f_dtype = np.asarray(self.F).dtype
+        if f_dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+            f_dtype = np.dtype(np.float32)
+        F = np.array(self.F, dtype=f_dtype).copy()
         if F.shape != (_EXPECTED_COMPONENTS,):
             raise ValueError(
                 f"FieldState.F must have shape ({_EXPECTED_COMPONENTS},), "
@@ -38,7 +41,10 @@ class FieldState:
         # Bypass frozen to store the validated copy.
         object.__setattr__(self, "F", F)
         if self.holonomy is not None:
-            H = np.array(self.holonomy, dtype=np.float32).copy()
+            h_dtype = np.asarray(self.holonomy).dtype
+            if h_dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+                h_dtype = np.dtype(np.float32)
+            H = np.array(self.holonomy, dtype=h_dtype).copy()
             if H.shape != (_EXPECTED_COMPONENTS,):
                 raise ValueError(
                     f"FieldState.holonomy must have shape ({_EXPECTED_COMPONENTS},), "

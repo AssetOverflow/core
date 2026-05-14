@@ -192,6 +192,7 @@ def _ground_unknown_token(token: str, vocab) -> np.ndarray:
     root_used, prefixes, suffixes = _best_decomposition(token, vocab, morphology_entries)
     root_versor = vocab.get_versor(root_used)
     versor, operators_applied = _compose_delta(root_versor, prefixes, suffixes)
+    versor = normalize_to_versor(versor)
     condition = versor_condition(versor)
     if condition > 1e-6:
         raise RuntimeError(

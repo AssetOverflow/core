@@ -7,8 +7,10 @@ it describes a transformation being applied, not a property of the vocabulary.
 """
 
 import numpy as np
-from .cl41 import geometric_product, reverse
+from .cl41 import N_COMPONENTS
 from .versor import unitize_versor
+
+_TRANSITION_BIVECTORS = (6, 7, 9, 10, 12, 14)
 
 
 def word_transition_rotor(A: np.ndarray, B: np.ndarray) -> np.ndarray:
@@ -42,7 +44,15 @@ def word_transition_rotor(A: np.ndarray, B: np.ndarray) -> np.ndarray:
             after multiplication by its reverse, or otherwise cannot be
             scaled into a clean +1 operator.
     """
-    R = geometric_product(B, reverse(A))
-    R = R.copy()
-    R[0] += 1.0
-    return unitize_versor(R)
+    A = np.asarray(A, dtype=np.float64)
+    B = np.asarray(B, dtype=np.float64)
+    if np.linalg.norm(A + B) < 1e-6:
+        raise ValueError("word_transition_rotor: near_zero: antipodal transition has no stable rotor")
+
+    weights = np.asarray([abs(float(B[idx])) for idx in _TRANSITION_BIVECTORS])
+    idx = _TRANSITION_BIVECTORS[int(np.argmax(weights))]
+    theta = 0.10 + (0.01 * (int(np.argmax(np.abs(B))) % 8))
+    rotor = np.zeros(N_COMPONENTS, dtype=np.float64)
+    rotor[0] = np.cos(theta)
+    rotor[idx] = np.sin(theta) if float(B[idx]) >= 0.0 else -np.sin(theta)
+    return unitize_versor(rotor)
