@@ -49,6 +49,24 @@ def _feature_rotor(name: str, salt: str, weight: float) -> np.ndarray:
     return rotor
 
 
+def _canonicalize_versor(vec: np.ndarray) -> np.ndarray:
+    """
+    Unitize a construction-time coordinate and choose a deterministic rotor
+    hemisphere.
+
+    In Cl(4,1), ``R`` and ``-R`` encode the same rotor action. The language
+    pack compiler compares entries with scalar/inner-product probes, so
+    leaving the double-cover sign arbitrary can make same-root or aligned
+    entries appear anti-resonant after otherwise legitimate construction
+    changes. Canonicalizing on the scalar component preserves the geometry
+    while making resonance comparisons deterministic.
+    """
+    versor = unitize_versor(vec)
+    if float(versor[0]) < 0.0:
+        versor = -versor
+    return versor.astype(np.float32, copy=False)
+
+
 def _domain_features(domain: str) -> list[tuple[str, float]]:
     """
     Lift hierarchical semantic domains into a small feature chain.
@@ -209,7 +227,7 @@ def _entry_to_coordinate(
 
     vec = geometric_product(vec, _feature_rotor(entry.lemma.lower(), "lemma", 0.1))
     vec = geometric_product(vec, _feature_rotor(entry.surface.lower(), "surface", 0.05))
-    return unitize_versor(vec)
+    return _canonicalize_versor(vec)
 
 
 def _resolved_morphology(
@@ -347,7 +365,7 @@ def _apply_alignment_corrections(
             continue
 
         nudge = _alignment_nudge_rotor(source_v, target_v, edge.weight * _ALIGNMENT_NUDGE_STRENGTH)
-        corrected = unitize_versor(geometric_product(nudge, source_v))
+        corrected = _canonicalize_versor(geometric_product(nudge, source_v))
         home_manifold.update(source_surface, corrected)
 
 
