@@ -38,6 +38,8 @@ class VocabManifold:
         self._words: list[str] = []
         self._versors: list[np.ndarray] = []  # each shape (32,), grade-normed to ±1
         self._morphology_by_word: dict[str, MorphologyEntry] = {}
+        self._transient_words: set[str] = set()
+        self._unknown_token_log: list[dict[str, object]] = []
 
     def add(self, word: str, versor: np.ndarray, morphology: MorphologyEntry | None = None) -> None:
         """
@@ -68,6 +70,53 @@ class VocabManifold:
         self._versors.append(v)
         if morphology is not None:
             self._morphology_by_word[word] = morphology
+
+    def insert_transient(self, word: str, versor: np.ndarray) -> None:
+        """
+        Register a session-local ad hoc word-versor pair.
+
+        Transient entries live only in this manifold instance. They use the
+        same storage as compiled entries so nearest() and get_versor() remain
+        exact manifold operations, but no language pack persistence path ever
+        sees them.
+        """
+        if word in self._words and word not in self._transient_words:
+            raise ValueError(f"Word '{word}' already exists as a compiled manifold entry.")
+        if word in self._transient_words:
+            self.update(word, versor)
+            return
+        self.add(word, versor)
+        self._transient_words.add(word)
+
+    def is_transient(self, word: str) -> bool:
+        """Return True when word was inserted as a session-local transient."""
+        return word in self._transient_words
+
+    def morphology_entries(self) -> tuple[MorphologyEntry, ...]:
+        """Return morphology entries carried by compiled manifold surfaces."""
+        return tuple(self._morphology_by_word.values())
+
+    def record_unknown_token(
+        self,
+        token: str,
+        root_used: str,
+        operators_applied: tuple[str, ...],
+        versor_condition_score: float,
+    ) -> None:
+        """Append an audit record for gate-constructed unknown-token grounding."""
+        self._unknown_token_log.append(
+            {
+                "token": token,
+                "root_used": root_used,
+                "operators_applied": operators_applied,
+                "versor_condition_score": versor_condition_score,
+            }
+        )
+
+    @property
+    def unknown_token_log(self) -> tuple[dict[str, object], ...]:
+        """Session-local audit trail of ad hoc unknown-token constructions."""
+        return tuple(dict(entry) for entry in self._unknown_token_log)
 
     def update(self, word: str, versor: np.ndarray) -> None:
         """
