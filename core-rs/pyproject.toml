@@ -5,4 +5,3 @@ build-backend = "maturin"
 [tool.maturin]
 features = ["extension-module"]
 module-name = "core_rs"
-python-source = "python"
