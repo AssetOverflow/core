@@ -42,17 +42,8 @@ _SEED_ALIASES = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Helper: safely extract a float from energy — handles EnergyProfile or float
-# ---------------------------------------------------------------------------
-
 def _energy_scalar(energy_obj) -> float:
-    """Return a plain float from a FieldState.energy value.
-
-    FieldState.energy is typed as EnergyProfile | None.  Older call sites
-    passed a raw float as a fallback default; both cases are handled here so
-    the caller never needs to branch.
-    """
+    """Return a plain float from a FieldState.energy value."""
     if energy_obj is None:
         return 1.0
     if isinstance(energy_obj, EnergyProfile):
@@ -61,14 +52,6 @@ def _energy_scalar(energy_obj) -> float:
         return float(energy_obj)
     except (TypeError, ValueError):
         return 1.0
-
-
-# ---------------------------------------------------------------------------
-# Stub BindingFrame for IdentityCheck — allows check() to run without a full
-# reasoning pipeline being wired. Carries the minimum contract that
-# ReasoningTrajectory.frames requires: frame_id, coherence_magnitude,
-# region_ids, cycle_index.
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -165,10 +148,7 @@ class ChatRuntime:
         manifold = manifolds[0] if len(pack_ids) == 1 else load_mounted_packs(pack_ids)
         self._manifests = tuple(manifests)
 
-        # --- Identity manifold (built first; persona motor derived from it) ---
         self.identity_manifold = _default_identity_manifold()
-
-        # --- Persona motor: non-identity, derived from value_axes directions ---
         persona_motor = PersonaMotor.from_identity_manifold(self.identity_manifold)
 
         self._context = SessionContext(
@@ -186,7 +166,6 @@ class ChatRuntime:
             e.surface: (e.pos or e.part_of_speech or "X") for e in entries
         }
 
-        # --- Physics ---
         self.exertion_meter = ExertionMeter(capacity_ceiling=128.0)
         self.drive_gradients = tuple(
             GradientField(axis=axis, magnitude=0.75)
@@ -194,7 +173,6 @@ class ChatRuntime:
         )
         self._drive_map = DriveGradientMap(gradients=self.drive_gradients)
 
-        # --- CharacterProfile: populated from live manifold at init ---
         self.character_profile = CharacterProfile.from_manifold(
             self.identity_manifold,
             drive_summaries={
@@ -202,11 +180,7 @@ class ChatRuntime:
             },
             fatigue_index=0.0,
         )
-
-        # --- Identity checker ---
         self._identity_check = IdentityCheck()
-
-        # --- Provenance log: append-only list of TurnEvents ---
         self.turn_log: List[TurnEvent] = []
 
     @property
@@ -332,7 +306,6 @@ class ChatRuntime:
             inhibition_threshold=self.config.inhibition_threshold,
         )
 
-        # --- IdentityCheck gate ---
         reasoning_trajectory = _make_trajectory_from_result(result, self._context.turn)
         identity_score = self._identity_check.check(
             reasoning_trajectory,
@@ -373,7 +346,6 @@ class ChatRuntime:
         )
         walk_surface = sentence_plan.surface
 
-        # Identity flags are telemetry. They must not hide the manifold walk.
         surface = walk_surface or articulation.surface
         vault_hits = int(result.vault_hits)
 
@@ -418,26 +390,14 @@ class ChatRuntime:
             return ""
 
     async def achat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
-        """Async equivalent of chat() — drives agenerate() internally."""
-        from generate.stream import agenerate
-        mt = max_tokens if max_tokens is not None else self.config.max_tokens
-        tokens: list[str] = []
-        async for token in agenerate(
-            self._context.state,
-            self._context.vocab,
-            self._context.persona,
-            max_tokens=mt,
-            vault=self._context.vault,
-        ):
-            tokens.append(token)
-        result = self.chat(text, max_tokens=0)
-        sentence_plan = SentenceAssembler().assemble(
-            result.articulation,
-            tokens,
-            role=result.dialogue_role,
-        )
-        from dataclasses import replace
-        return replace(result, surface=sentence_plan.surface, walk_surface=sentence_plan.surface)
+        """Async equivalent of chat().
+
+        The synchronous chat path owns ingest, drive bias, generation,
+        identity telemetry, vault storage, and turn-log accounting.  Reusing it
+        keeps async semantics identical while avoiding an uninitialized
+        SessionContext.state on the first async turn.
+        """
+        return self.chat(text, max_tokens=max_tokens)
 
     async def arespond(self, text: str, max_tokens: int | None = None) -> str:
         """Async equivalent of respond()."""
