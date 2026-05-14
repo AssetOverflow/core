@@ -217,15 +217,20 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             print(f"OK   {label:<14} {module_name}")
 
     if args.packs:
-        from language_packs import list_packs
+        try:
+            from language_packs import list_packs
 
-        packs = list_packs()
-        print("packs:")
-        if packs:
-            for pack_id in packs:
-                print(f"  {pack_id}")
+            packs = list_packs()
+        except Exception as exc:
+            ok = False
+            print(f"FAIL packs          language_packs.list_packs: {exc.__class__.__name__}: {exc}")
         else:
-            print("  none found")
+            print("packs:")
+            if packs:
+                for pack_id in packs:
+                    print(f"  {pack_id}")
+            else:
+                print("  none found")
     return 0 if ok else 1
 
 
@@ -251,7 +256,11 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("paths", nargs="*", help="optional paths to check")
     check.set_defaults(func=cmd_check)
 
-    trace = subparsers.add_parser("trace", help="trace one chat turn with field telemetry")
+    trace = subparsers.add_parser(
+        "trace",
+        help="trace one chat turn with field telemetry",
+        description="trace one chat turn with field telemetry",
+    )
     trace.add_argument("--pack", action="append", help="language pack to mount; repeat for multiple packs")
     trace.add_argument("--max-tokens", type=int, default=32, help="maximum generated tokens; default: 32")
     trace.add_argument("--json", action="store_true", help="emit machine-readable JSON")
