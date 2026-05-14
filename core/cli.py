@@ -427,7 +427,11 @@ def build_parser() -> argparse.ArgumentParser:
     pack_verify.add_argument("pack_id", help="pack id, e.g. en_minimal_v1")
     pack_verify.set_defaults(func=cmd_pack_verify)
 
-    rust = subparsers.add_parser("rust", help="build, test, and inspect the Rust backend")
+    rust = subparsers.add_parser(
+        "rust",
+        help="build, test, and inspect the Rust backend",
+        description="build, test, and inspect the Rust backend",
+    )
     rust_sub = rust.add_subparsers(dest="rust_command", metavar="rust-command", required=True)
     rust_status = rust_sub.add_parser("status", help="show whether core_rs is active")
     rust_status.add_argument("--require-active", action="store_true", help="exit nonzero if core_rs is inactive")
