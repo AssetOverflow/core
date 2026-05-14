@@ -1,35 +1,99 @@
+"""probe/repl.py — Live conversational REPL for the CORE Versor Engine.
+
+Usage:
+    python probe/repl.py
+    python probe/repl.py --verbose          # also prints TurnEvent trace
+    python probe/repl.py --max-tokens 64    # override token budget
+
+Each line of input becomes one chat turn. The assembled surface sentence
+(ChatResponse.surface) is printed as CORE's response. Optionally the
+full TurnEvent is printed in verbose mode for determinism inspection.
+
+Type 'quit' or 'exit' (or hit Ctrl-D) to end the session.
+"""
 from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+# Ensure repo root on sys.path when run directly.
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 from chat.runtime import ChatRuntime
 
 
-def field_walk(seed: str, steps: int = 4) -> list[str]:
-    runtime = ChatRuntime()
-    injected_terms = runtime.tokenize(seed)
-    response = runtime.chat(seed, max_tokens=max(1, steps))
-    proposition_terms = [
-        response.proposition.subject,
-        response.proposition.predicate,
-    ]
-    if response.proposition.object_ is not None:
-        proposition_terms.append(response.proposition.object_)
-    walk = [seed, *injected_terms, *proposition_terms, *response.surface.split()]
-    return walk[: max(1, steps)]
+def _make_runtime(max_tokens: int) -> ChatRuntime:
+    """Construct a ChatRuntime with default config and the requested token budget."""
+    from core.config import RuntimeConfig
+    config = RuntimeConfig(max_tokens=max_tokens)
+    return ChatRuntime(config=config)
+
+
+def run_repl(max_tokens: int = 32, verbose: bool = False) -> None:
+    """Start the interactive REPL loop."""
+    runtime = _make_runtime(max_tokens)
+    print("CORE Versor Engine — conversational REPL")
+    print(f"  max_tokens={max_tokens}  verbose={verbose}")
+    print("  Type 'quit' or 'exit' or Ctrl-D to end.")
+    print()
+
+    while True:
+        # Read user input
+        try:
+            text = input("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+
+        if not text:
+            continue
+        if text.lower() in {"quit", "exit"}:
+            break
+
+        # Generate response
+        try:
+            response = runtime.chat(text, max_tokens=max_tokens)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[error: {exc}]")
+            continue
+
+        # Print the assembled surface sentence
+        role_tag = str(response.dialogue_role)
+        flag_tag = " [flagged]" if response.flagged else ""
+        print(f"CORE ({role_tag}{flag_tag}): {response.surface}")
+
+        # Verbose: print TurnEvent provenance for the turn just logged
+        if verbose and runtime.turn_log:
+            ev = runtime.turn_log[-1]
+            print(f"  versor_condition : {ev.versor_condition:.6f}")
+            if ev.identity_score is not None:
+                print(f"  identity_score   : {ev.identity_score.score:.4f}")
+                print(f"  flagged          : {ev.flagged}")
+            if ev.elaboration:
+                print(f"  elaboration      : {ev.elaboration}")
+            print(f"  cycle_cost       : {ev.cycle_cost_total:.4f}")
+            print(f"  vault_hits       : {ev.vault_hits}")
+
+        print()
 
 
 def main() -> None:
-    while True:
-        try:
-            text = input("> ").strip()
-        except EOFError:
-            break
-        if text in {"quit", "exit"}:
-            break
-        try:
-            chain = field_walk(text)
-            print(f"[field walk: {' -> '.join(chain)}]")
-        except KeyError:
-            print("[unknown token]")
+    parser = argparse.ArgumentParser(
+        description="CORE Versor Engine — conversational REPL",
+    )
+    parser.add_argument(
+        "--max-tokens", type=int, default=32, metavar="N",
+        help="Maximum tokens per response (default: 32)",
+    )
+    parser.add_argument(
+        "--verbose", action="store_true",
+        help="Print TurnEvent provenance after each response",
+    )
+    args = parser.parse_args()
+    run_repl(max_tokens=args.max_tokens, verbose=args.verbose)
 
 
 if __name__ == "__main__":
