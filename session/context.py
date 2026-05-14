@@ -27,10 +27,10 @@ from vault.store import VaultStore
 
 
 class SessionContext:
-    def __init__(self, vocab, persona=None, vault=None):
+    def __init__(self, vocab, persona=None, vault=None, vault_reproject_interval: int = 100):
         self.vocab = vocab
         self.persona = persona or PersonaMotor.identity()
-        self.vault = vault or VaultStore()
+        self.vault = vault or VaultStore(reproject_interval=vault_reproject_interval)
         self.state: FieldState | None = None
         self.turn: int = 0
         self.dialogue_history: list[DialogueTurn] = []

@@ -23,7 +23,9 @@ import numpy as np
 from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import word_transition_rotor
+from generate.attention import AttentionOperator
 from generate.result import GenerationResult
+from generate.salience import SalienceOperator
 
 _RECENT_WINDOW = 3
 _STOP_TOKENS = frozenset({"it", "to", "word"})
@@ -60,6 +62,10 @@ def _nearest_next(
     Recent-node exclusion reduces two- and three-token attractor cycles.
     Stop-node exclusion keeps function-word wells from dominating when more
     informative neighbors are available.
+
+    If attention/language filtering leaves only the current node available,
+    the final fallback deliberately permits that singleton candidate instead
+    of crashing. That keeps inhibition fail-closed to the attended region.
     """
     if len(vocab) <= 1:
         return vocab.nearest(F_voiced, candidate_indices=candidate_indices)
@@ -82,7 +88,7 @@ def _nearest_next(
             )
         except ValueError:
             continue
-    return vocab.nearest(F_voiced, exclude_idx=current_node, candidate_indices=candidate_indices)
+    return vocab.nearest(F_voiced, candidate_indices=candidate_indices)
 
 
 def _voiced_state(state: FieldState, persona) -> FieldState:
@@ -131,6 +137,31 @@ def _candidate_indices_for_language(vocab, output_lang: str | None) -> np.ndarra
     return indices
 
 
+def _intersect_candidates(a: np.ndarray | None, b: np.ndarray | None) -> np.ndarray | None:
+    if a is None:
+        return b
+    if b is None:
+        return a
+    if len(a) == 0 or len(b) == 0:
+        return np.asarray([], dtype=np.int64)
+    b_set = {int(idx) for idx in b}
+    return np.asarray([int(idx) for idx in a if int(idx) in b_set], dtype=np.int64)
+
+
+def _attention_candidates(
+    state: FieldState,
+    vocab,
+    use_salience: bool,
+    salience_top_k: int,
+    inhibition_threshold: float,
+) -> tuple[np.ndarray | None, int | None, int | None]:
+    if not use_salience:
+        return None, None, None
+    salience = SalienceOperator().compute(state, vocab, top_k=salience_top_k)
+    attention = AttentionOperator(inhibition_threshold).plan(salience, vocab)
+    return attention.allowed_indices, salience.budget, len(attention.allowed_indices)
+
+
 def generate(
     state: FieldState,
     vocab,
@@ -141,6 +172,9 @@ def generate(
     recall_top_k: int = 3,
     output_lang: str | None = None,
     allow_cross_language_generation: bool = True,
+    use_salience: bool = False,
+    salience_top_k: int = 16,
+    inhibition_threshold: float = 0.3,
 ) -> GenerationResult:
     """
     Generate a token sequence from an initial FieldState.
@@ -156,20 +190,34 @@ def generate(
     7. Advance node pointer
 
     Returns:
-        GenerationResult with tokens, final_state, and optional trajectory.
+        GenerationResult with tokens, final_state, optional trajectory,
+        and salience telemetry when attention is enabled.
     """
     tokens = []
     trajectory = [] if record_trajectory else None
     current = state
     recent_nodes = deque([state.node], maxlen=_RECENT_WINDOW)
-    candidate_indices = None if allow_cross_language_generation else _candidate_indices_for_language(vocab, output_lang)
+    language_candidates = None if allow_cross_language_generation else _candidate_indices_for_language(vocab, output_lang)
+    salience_candidates, salience_budget, candidates_used = _attention_candidates(
+        state,
+        vocab,
+        use_salience=use_salience,
+        salience_top_k=salience_top_k,
+        inhibition_threshold=inhibition_threshold,
+    )
+    candidate_indices = _intersect_candidates(language_candidates, salience_candidates)
+    if candidate_indices is not None and len(candidate_indices) == 0:
+        candidate_indices = language_candidates if language_candidates is not None else salience_candidates
+        candidates_used = None if candidate_indices is None else len(candidate_indices)
+
     stop_nodes = frozenset(
         vocab.index_of(token)
         for token in _STOP_TOKENS
         if token in {vocab.get_word_at(i) for i in range(len(vocab))}
     )
 
-    for _ in range(max_tokens):
+    token_budget = min(max_tokens, int(candidates_used)) if candidates_used is not None else max_tokens
+    for _ in range(token_budget):
         current = _recall_state(_voiced_state(current, persona), vault, recall_top_k)
         word, word_idx = _nearest_next(
             vocab,
@@ -196,6 +244,8 @@ def generate(
         tokens=tokens,
         final_state=current,
         trajectory=trajectory,
+        salience_top_k=salience_budget,
+        candidates_used=candidates_used,
     )
 
 

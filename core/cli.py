@@ -58,6 +58,10 @@ def _runtime_config_from_args(args: argparse.Namespace):
         max_tokens=args.max_tokens,
         allow_cross_language_recall=not args.no_cross_language_recall,
         allow_cross_language_generation=args.allow_cross_language_generation,
+        vault_reproject_interval=args.vault_reproject_interval,
+        use_salience=not args.no_salience,
+        salience_top_k=args.salience_top_k,
+        inhibition_threshold=args.inhibition_threshold,
     )
 
 
@@ -135,6 +139,7 @@ def _runtime_for_trace(args: argparse.Namespace):
 def _trace_payload(text: str, resp: Any, runtime: Any) -> dict[str, Any]:
     proposition = resp.proposition
     articulation = resp.articulation
+    vault = runtime.session.vault
     payload: dict[str, Any] = {
         "input": text,
         "surface": resp.surface,
@@ -143,6 +148,8 @@ def _trace_payload(text: str, resp: Any, runtime: Any) -> dict[str, Any]:
         "frame_pack": resp.frame_pack,
         "dialogue_role": str(resp.dialogue_role),
         "versor_condition": float(resp.versor_condition),
+        "salience_top_k": resp.salience_top_k,
+        "candidates_used": resp.candidates_used,
         "articulation": {
             "surface": articulation.surface,
             "frame_id": articulation.frame_id,
@@ -159,7 +166,9 @@ def _trace_payload(text: str, resp: Any, runtime: Any) -> dict[str, Any]:
             "object": proposition.object_,
             "relation_norm": proposition.relation_norm,
         },
-        "vault_entries": len(runtime.session.vault),
+        "vault_entries": len(vault),
+        "vault_reproject_every": vault.reproject_interval,
+        "vault_store_count": vault.store_count,
         "oov_grounded": list(getattr(runtime.session.vocab, "unknown_token_log", [])),
     }
     return payload
@@ -171,6 +180,8 @@ def _print_trace(payload: dict[str, Any]) -> None:
     print(f"raw_walk       : {payload['walk_surface']}")
     print(f"output_language: {payload['output_language']}")
     print(f"frame_pack     : {payload['frame_pack']}")
+    print(f"salience_top_k : {payload['salience_top_k']}")
+    print(f"candidates_used: {payload['candidates_used']}")
     print(f"dialogue_role  : {payload['dialogue_role']}")
     print(f"versor_cond    : {payload['versor_condition']:.2e}")
     articulation = payload["articulation"]
@@ -188,6 +199,8 @@ def _print_trace(payload: dict[str, Any]) -> None:
         print(f"  object       : {proposition['object']!r}")
     print(f"  relation_norm: {proposition['relation_norm']:.4f}")
     print(f"vault_entries  : {payload['vault_entries']}")
+    print(f"vault_reproject_every: {payload['vault_reproject_every']}")
+    print(f"vault_store_count    : {payload['vault_store_count']}")
     oov_entries = payload["oov_grounded"]
     if oov_entries:
         print(f"oov_grounded   : {len(oov_entries)} token(s)")
@@ -361,6 +374,10 @@ def _add_runtime_policy_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--output-language", default="en", help="target output language code; default: en")
     parser.add_argument("--frame-pack", help="frame pack to use; defaults to output language")
     parser.add_argument("--max-tokens", type=int, default=32, help="maximum generated tokens; default: 32")
+    parser.add_argument("--vault-reproject-interval", type=int, default=20, help="vault null-cone reprojection cadence; default: 20 stores")
+    parser.add_argument("--salience-top-k", type=int, default=16, help="salience candidate budget; default: 16")
+    parser.add_argument("--inhibition-threshold", type=float, default=0.3, help="attention inhibition threshold; default: 0.3")
+    parser.add_argument("--no-salience", action="store_true", help="disable salience attention and use full-manifold generation")
     parser.add_argument(
         "--allow-cross-language-generation",
         action="store_true",

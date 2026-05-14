@@ -24,6 +24,8 @@ def test_trace_help_exits_without_runtime_import(capsys: pytest.CaptureFixture[s
     assert "--pack" in out
     assert "--output-language" in out
     assert "--frame-pack" in out
+    assert "--salience-top-k" in out
+    assert "--no-salience" in out
     assert "--json" in out
 
 
@@ -76,11 +78,15 @@ def test_doctor_rust_reports_backend_state(capsys: pytest.CaptureFixture[str]) -
 
 
 def test_trace_formats_real_runtime_payload(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["trace", "--pack", "en_minimal_v1", "word", "beginning", "truth"]) == 0
+    assert main(["trace", "--pack", "en_minimal_v1", "--salience-top-k", "8", "word", "beginning", "truth"]) == 0
     out = capsys.readouterr().out
     assert "input          : word beginning truth" in out
     assert "output_language: en" in out
     assert "frame_pack     : en" in out
+    assert "salience_top_k : 8" in out
+    assert "candidates_used:" in out
+    assert "vault_reproject_every:" in out
+    assert "vault_store_count" in out
     assert "articulation" in out
     assert "raw_walk" in out
     assert "proposition" in out
@@ -89,13 +95,24 @@ def test_trace_formats_real_runtime_payload(capsys: pytest.CaptureFixture[str]) 
 
 
 def test_trace_json_formats_real_runtime_payload(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["trace", "--pack", "en_minimal_v1", "--json", "word", "beginning", "truth"]) == 0
+    assert main(["trace", "--pack", "en_minimal_v1", "--json", "--salience-top-k", "8", "word", "beginning", "truth"]) == 0
     out = capsys.readouterr().out
     assert '"input": "word beginning truth"' in out
     assert '"output_language": "en"' in out
     assert '"frame_pack": "en"' in out
+    assert '"salience_top_k": 8' in out
+    assert '"candidates_used"' in out
+    assert '"vault_reproject_every"' in out
+    assert '"vault_store_count"' in out
     assert '"articulation"' in out
     assert '"walk_surface"' in out
     assert '"proposition"' in out
     assert '"subject"' in out
     assert '"predicate"' in out
+
+
+def test_trace_json_no_salience_has_null_salience_telemetry(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["trace", "--pack", "en_minimal_v1", "--json", "--no-salience", "word", "beginning", "truth"]) == 0
+    out = capsys.readouterr().out
+    assert '"salience_top_k": null' in out
+    assert '"candidates_used": null' in out

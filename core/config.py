@@ -11,6 +11,10 @@ class RuntimeConfig:
     max_tokens: int = 32
     allow_cross_language_recall: bool = True
     allow_cross_language_generation: bool = False
+    vault_reproject_interval: int = 20
+    use_salience: bool = True
+    salience_top_k: int = 16
+    inhibition_threshold: float = 0.3
 
 
 DEFAULT_CONFIG = RuntimeConfig()

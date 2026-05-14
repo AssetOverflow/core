@@ -38,6 +38,8 @@ class ChatResponse:
     output_language: str
     frame_pack: str
     walk_surface: str
+    salience_top_k: int | None
+    candidates_used: int | None
 
 
 class ChatRuntime:
@@ -57,6 +59,10 @@ class ChatRuntime:
                 max_tokens=config.max_tokens,
                 allow_cross_language_recall=config.allow_cross_language_recall,
                 allow_cross_language_generation=config.allow_cross_language_generation,
+                vault_reproject_interval=config.vault_reproject_interval,
+                use_salience=config.use_salience,
+                salience_top_k=config.salience_top_k,
+                inhibition_threshold=config.inhibition_threshold,
             )
         else:
             resolved_config = config
@@ -74,7 +80,11 @@ class ChatRuntime:
 
         manifold = manifolds[0] if len(pack_ids) == 1 else load_mounted_packs(pack_ids)
         self._manifests = tuple(manifests)
-        self._context = SessionContext(manifold, persona=PersonaMotor.identity())
+        self._context = SessionContext(
+            manifold,
+            persona=PersonaMotor.identity(),
+            vault_reproject_interval=resolved_config.vault_reproject_interval,
+        )
         self._frame_registry = FrameRegistry.from_pack(
             resolved_config.frame_pack,
             self._context.vocab,
@@ -176,6 +186,9 @@ class ChatRuntime:
             recall_top_k=3 if self.config.allow_cross_language_recall else 0,
             output_lang=self.config.output_language,
             allow_cross_language_generation=self.config.allow_cross_language_generation,
+            use_salience=self.config.use_salience,
+            salience_top_k=self.config.salience_top_k,
+            inhibition_threshold=self.config.inhibition_threshold,
         )
         self._context.state = result.final_state
         self._context.vault.store(
@@ -194,6 +207,8 @@ class ChatRuntime:
             output_language=self.config.output_language,
             frame_pack=self.config.frame_pack,
             walk_surface=walk_surface,
+            salience_top_k=result.salience_top_k,
+            candidates_used=result.candidates_used,
         )
 
     def respond(self, text: str, max_tokens: int | None = None) -> str:
