@@ -20,10 +20,17 @@ fn test_e1_squared_is_plus1() {
 }
 
 #[test]
-fn test_e5_squared_is_minus1() {
+fn test_e4_squared_is_minus1() {
+    let e4 = basis(3);
+    let r = geometric_product_raw(&e4, &e4).unwrap();
+    assert!((r[0] + 1.0).abs() < 1e-6, "e4^2 should be -1, got {}", r[0]);
+}
+
+#[test]
+fn test_e5_squared_is_plus1() {
     let e5 = basis(4);
     let r = geometric_product_raw(&e5, &e5).unwrap();
-    assert!((r[0] + 1.0).abs() < 1e-6, "e5^2 should be -1, got {}", r[0]);
+    assert!((r[0] - 1.0).abs() < 1e-6, "e5^2 should be +1, got {}", r[0]);
 }
 
 #[test]
