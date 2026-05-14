@@ -45,3 +45,21 @@ def test_doctor_imports_runtime_support_modules(capsys: pytest.CaptureFixture[st
     assert "OK   alignment" in out
     assert "OK   morphology" in out
     assert "OK   sensorium" in out
+
+
+def test_trace_formats_real_runtime_payload(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["trace", "--pack", "en_minimal_v1", "word", "beginning", "truth"]) == 0
+    out = capsys.readouterr().out
+    assert "input          : word beginning truth" in out
+    assert "proposition" in out
+    assert "subject" in out
+    assert "predicate" in out
+
+
+def test_trace_json_formats_real_runtime_payload(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["trace", "--pack", "en_minimal_v1", "--json", "word", "beginning", "truth"]) == 0
+    out = capsys.readouterr().out
+    assert '"input": "word beginning truth"' in out
+    assert '"proposition"' in out
+    assert '"subject"' in out
+    assert '"predicate"' in out
