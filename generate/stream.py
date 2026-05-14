@@ -18,6 +18,8 @@ F is always on the manifold. nearest() is exact.
 from __future__ import annotations
 from collections import deque
 
+import numpy as np
+
 from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import word_transition_rotor
@@ -48,6 +50,7 @@ def _nearest_next(
     current_node: int,
     recent_nodes: tuple[int, ...] = (),
     stop_nodes: frozenset[int] = frozenset(),
+    candidate_indices: np.ndarray | None = None,
 ) -> tuple[str, int]:
     """
     Select the nearest vocabulary point while avoiding short loops.
@@ -59,7 +62,7 @@ def _nearest_next(
     informative neighbors are available.
     """
     if len(vocab) <= 1:
-        return vocab.nearest(F_voiced)
+        return vocab.nearest(F_voiced, candidate_indices=candidate_indices)
 
     recent = set(recent_nodes)
     stop = set(stop_nodes)
@@ -71,10 +74,15 @@ def _nearest_next(
     )
     for extra in fallback_orders:
         try:
-            return vocab.nearest(F_voiced, exclude_idx=current_node, exclude_indices=extra)
+            return vocab.nearest(
+                F_voiced,
+                exclude_idx=current_node,
+                exclude_indices=extra,
+                candidate_indices=candidate_indices,
+            )
         except ValueError:
             continue
-    return vocab.nearest(F_voiced, exclude_idx=current_node)
+    return vocab.nearest(F_voiced, exclude_idx=current_node, candidate_indices=candidate_indices)
 
 
 def _voiced_state(state: FieldState, persona) -> FieldState:
@@ -111,6 +119,18 @@ def _recall_state(state: FieldState, vault, top_k: int) -> FieldState:
     return current
 
 
+def _candidate_indices_for_language(vocab, output_lang: str | None) -> np.ndarray | None:
+    if output_lang is None:
+        return None
+    indices_for_language = getattr(vocab, "indices_for_language", None)
+    if indices_for_language is None:
+        return None
+    indices = indices_for_language(output_lang)
+    if len(indices) == 0:
+        raise ValueError(f"No generation candidates for output language {output_lang!r}.")
+    return indices
+
+
 def generate(
     state: FieldState,
     vocab,
@@ -119,6 +139,8 @@ def generate(
     record_trajectory: bool = False,
     vault=None,
     recall_top_k: int = 3,
+    output_lang: str | None = None,
+    allow_cross_language_generation: bool = True,
 ) -> GenerationResult:
     """
     Generate a token sequence from an initial FieldState.
@@ -140,6 +162,7 @@ def generate(
     trajectory = [] if record_trajectory else None
     current = state
     recent_nodes = deque([state.node], maxlen=_RECENT_WINDOW)
+    candidate_indices = None if allow_cross_language_generation else _candidate_indices_for_language(vocab, output_lang)
     stop_nodes = frozenset(
         vocab.index_of(token)
         for token in _STOP_TOKENS
@@ -154,6 +177,7 @@ def generate(
             current.node,
             recent_nodes=tuple(recent_nodes),
             stop_nodes=stop_nodes,
+            candidate_indices=candidate_indices,
         )
         tokens.append(_articulate(vocab, word))
 
