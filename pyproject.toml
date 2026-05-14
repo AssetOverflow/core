@@ -26,13 +26,16 @@ core = "core.cli:main"
 where = ["."]
 include = [
     "algebra*",
+    "alignment*",
     "chat*",
     "core*",
     "field*",
     "generate*",
     "ingest*",
     "language_packs*",
+    "morphology*",
     "persona*",
+    "sensorium*",
     "session*",
     "vault*",
     "vocab*",
