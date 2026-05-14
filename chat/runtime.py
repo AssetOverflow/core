@@ -8,6 +8,7 @@ import numpy as np
 
 from algebra.versor import versor_condition
 from core.config import DEFAULT_CONFIG, RuntimeConfig
+from generate.articulation import ArticulationPlan, realize
 from generate.dialogue import DialogueRole, classify_dialogue_blade, propose_dialogue
 from generate.proposition import FrameRegistry, Proposition, propose
 from generate.stream import generate
@@ -31,6 +32,7 @@ _SEED_ALIASES = {
 class ChatResponse:
     surface: str
     proposition: Proposition
+    articulation: ArticulationPlan
     dialogue_role: DialogueRole
     versor_condition: float
     output_language: str
@@ -158,6 +160,11 @@ class ChatRuntime:
             reference_blade,
             output_lang=self.config.output_language,
         )
+        articulation = realize(
+            proposition,
+            self._context.vocab,
+            output_language=self.config.output_language,
+        )
         self._context.record_dialogue(proposition)
 
         result = generate(
@@ -179,8 +186,9 @@ class ChatRuntime:
         guarded = self._syntactic_guard(result.tokens)
         walk_surface = " ".join(guarded)
         return ChatResponse(
-            surface=proposition.surface,
+            surface=articulation.surface,
             proposition=proposition,
+            articulation=articulation,
             dialogue_role=dialogue_role,
             versor_condition=versor_condition(result.final_state.F),
             output_language=self.config.output_language,
