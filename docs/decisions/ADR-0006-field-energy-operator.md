@@ -1,7 +1,8 @@
 # ADR-0006 — The Field Energy Operator (Hamiltonian Companion Field)
 
-**Status:** Accepted  
+**Status:** Implemented  
 **Date:** 2026-05-12  
+**Implemented:** 2026-05-14  
 **Authors:** AssetOverflow Architecture
 
 ---
@@ -83,6 +84,52 @@ A region transitions from field-active to vault-candidate when it drops from E2 
 
 **Phase transition detection**
 When `H` returns E4 for a region that contains or is adjacent to a trilingual anchor (defined in `packs/common/anchors/`), this is a topological event candidate. The anchor invariants define the fixed-point structure of the meaning space. Displacement of an anchor is not a smooth field update — it is a phase transition that changes the fundamental geometry. E4 on an anchor-adjacent region triggers the highest governance tier.
+
+---
+
+## Implementation
+
+### Files
+
+| File | Role |
+|---|---|
+| `core/physics/energy.py` | `EnergyClass`, `EnergyProfile`, `FieldEnergyOperator`, `aspect_weight()` |
+| `field/state.py` | `FieldState.energy: EnergyProfile \| None` slot |
+| `field/propagate.py` | `propagate_step()` recomputes `EnergyProfile` after each versor step |
+| `tests/test_energy.py` | Full operator coverage: thresholds, aspect weights, governance, propagation |
+
+### Operator weights
+
+```
+raw = 0.35 * convergence + 0.25 * recency + 0.20 * residual + 0.20 * aspect
+```
+
+- `convergence = min(log1p(density) / log1p(8), 1.0)`
+- `recency = min(activation_count, 8) / 8.0 * exp(-age / 12.0)`  where `age = current_cycle - last_activation_cycle`
+- `residual = clamp(coherence_residual, 0, 1)`
+- `aspect = aspect_weight(morphology_features)` — table-driven from ADR-0006 spec
+
+### Class thresholds
+
+| raw | anchor_adjacent | Class |
+|---|---|---|
+| < 0.16 | any | E0 |
+| [0.16, 0.38) | any | E1 |
+| [0.38, 0.62) | any | E2 |
+| [0.62, 0.82) | False | E3 |
+| [0.72, 1.0] | True | E4 (escalated) |
+| [0.82, 1.0] | any | E4 |
+
+### Propagation recomputation policy
+
+`propagate_step()` updates `EnergyProfile` on every step:
+- `activation_count` increments by 1 (field is actively propagating)
+- `current_cycle` = new step index
+- `coherence_residual` = 0.0 (propagation is not a corrective pass)
+- `convergence_density` and `anchor_adjacent` are inherited from injection
+- `aspect_weight` is preserved verbatim from injection (baked at gate, not re-derived)
+
+The cooling effect emerges naturally: as steps accumulate without new injection, the exponential decay term `exp(-age/12)` in the recency component continuously reduces the contribution of past activation. A field region that has not received new injection pressure for 12+ steps will see its energy class descend toward E0.
 
 ---
 
