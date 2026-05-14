@@ -99,7 +99,9 @@ def _recall_state(state: FieldState, vault, top_k: int) -> FieldState:
 
     current = state
     for hit in vault.recall(current.F, top_k=top_k):
-        current = propagate_step(current, hit["versor"])
+        recalled_F = hit["versor"]
+        V = word_transition_rotor(current.F, recalled_F)
+        current = propagate_step(current, V)
         current = FieldState(
             F=current.F,
             node=state.node,

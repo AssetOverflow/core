@@ -148,7 +148,7 @@ class ChatRuntime:
             self._context.vocab,
             self._context.persona,
             max_tokens=max_tokens,
-            vault=None,
+            vault=self._context.vault,
         )
         self._context.state = result.final_state
         self._context.vault.store(
