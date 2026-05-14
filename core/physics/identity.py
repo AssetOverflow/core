@@ -134,6 +134,7 @@ class TurnEvent:
         vault_hits      — number of vault recall hits that fired during generate()
         versor_condition — versor_condition(final_state.F) after generation
         flagged         — True if identity_score.flagged (shortcut for filtering)
+            elaboration       — woven walk tokens used in elaborate role (None otherwise)
     """
     turn: int
     input_tokens: Tuple[str, ...]
@@ -145,3 +146,4 @@ class TurnEvent:
     vault_hits: int
     versor_condition: float
     flagged: bool
+        elaboration: Optional[str] = None    # woven walk tokens; populated by SentenceAssembler
