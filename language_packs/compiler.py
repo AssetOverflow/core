@@ -26,7 +26,17 @@ if TYPE_CHECKING:
 # Each aligned pair's source versor is rotated by this fraction of the
 # geodesic arc toward the target versor. Small enough to preserve
 # intra-pack geometry; large enough to pull cross-lang pairs into proximity.
-_ALIGNMENT_NUDGE_STRENGTH: float = 0.06
+_ALIGNMENT_NUDGE_STRENGTH: float = 0.18
+
+# Same-root morphology must operate as a shared anchor, not merely another
+# perturbation chain. This local post-pass is only used when a morphology
+# registry exists and keeps inflected forms near their lemma/root prototype.
+_MORPHOLOGY_CLUSTER_NUDGE_STRENGTH: float = 0.55
+
+# Exact first semantic domain is the concept identity anchor. Broader shared
+# trunks such as logos/logos.core still contribute, but this prevents generic
+# trunk overlap from outranking exact cross-language concept agreement.
+_PRIMARY_SEMANTIC_DOMAIN_WEIGHT: float = 0.55
 
 
 def _hash_to_blade(name: str, salt: str) -> int:
@@ -71,14 +81,14 @@ def _domain_features(domain: str) -> list[tuple[str, float]]:
     """
     Lift hierarchical semantic domains into a small feature chain.
 
-    A domain like ``logos.illumination.photon`` contributes the trunk
-    (``logos``), then the branch (``logos.illumination``), then the leaf.
-    This reduces accidental hash collisions where unrelated surfaces land
-    close together despite having disjoint semantic structure.
+    A domain like ``logos.illumination.photon`` contributes the trunk,
+    branch, and leaf. The later primary-domain anchor carries exact concept
+    identity; this chain preserves surrounding semantic context without
+    letting broad trunks dominate exact concept agreement.
     """
     parts = domain.lower().split(".")
     return [
-        (".".join(parts[: depth + 1]), 0.45 / (depth + 1))
+        (".".join(parts[: depth + 1]), 0.30 / (depth + 1))
         for depth in range(len(parts))
     ]
 
@@ -219,6 +229,17 @@ def _entry_to_coordinate(
         for feature, weight in _domain_features(domain):
             vec = geometric_product(vec, _feature_rotor(feature, "domain", weight))
 
+    if entry.semantic_domains:
+        primary_domain = entry.semantic_domains[0].lower()
+        vec = geometric_product(
+            vec,
+            _feature_rotor(
+                f"primary:{primary_domain}",
+                "domain:primary",
+                _PRIMARY_SEMANTIC_DOMAIN_WEIGHT,
+            ),
+        )
+
     if pos:
         vec = geometric_product(vec, _feature_rotor(pos, "pos", 0.35))
 
@@ -282,6 +303,69 @@ def _alignment_nudge_rotor(
     return nudge
 
 
+def _morphology_cluster_key(morphology: MorphologyEntry) -> str | None:
+    if morphology.root:
+        return f"root:{_compact_root(morphology.root).lower()}"
+    if morphology.stem:
+        return f"stem:{morphology.stem.lower()}"
+    return None
+
+
+def _apply_morphology_cluster_corrections(
+    manifold: VocabManifold,
+    entries: list[LexicalEntry],
+    morphology_registry: "MorphologyRegistry",
+) -> None:
+    """
+    Pull same-root morphology groups toward their lemma/root prototype.
+
+    The per-entry morphology rotors encode root, stem, inflection, prefix,
+    and suffix structure. This second pass enforces the intended higher-level
+    invariant: forms sharing a root/stem must remain closer to each other than
+    to unrelated nouns, while still preserving their surface perturbations.
+    """
+    groups: dict[str, list[tuple[str, MorphologyEntry]]] = {}
+    for entry in entries:
+        morphology = _resolved_morphology(entry, morphology_registry)
+        if morphology is None:
+            continue
+        key = _morphology_cluster_key(morphology)
+        if key is None:
+            continue
+        groups.setdefault(key, []).append((entry.surface, morphology))
+
+    for members in groups.values():
+        if len(members) < 2:
+            continue
+        prototype_surface = next(
+            (
+                surface
+                for surface, morphology in members
+                if surface == morphology.lemma
+            ),
+            members[0][0],
+        )
+        try:
+            prototype = manifold.get_versor(prototype_surface)
+        except KeyError:
+            continue
+
+        for surface, _ in members:
+            if surface == prototype_surface:
+                continue
+            try:
+                source = manifold.get_versor(surface)
+            except KeyError:
+                continue
+            nudge = _alignment_nudge_rotor(
+                source,
+                prototype,
+                _MORPHOLOGY_CLUSTER_NUDGE_STRENGTH,
+            )
+            corrected = _canonicalize_versor(geometric_product(nudge, source))
+            manifold.update(surface, corrected)
+
+
 def compile_entries_to_manifold(
     entries: list[LexicalEntry],
     morphology_registry: "MorphologyRegistry | None" = None,
@@ -300,6 +384,10 @@ def compile_entries_to_manifold(
         versor = _entry_to_coordinate(entry, _resolved_morphology(entry, morphology_registry))
         manifold.add(entry.surface, versor)
         entry_id_to_surface[entry.entry_id] = entry.surface
+
+    if morphology_registry is not None:
+        _apply_morphology_cluster_corrections(manifold, entries, morphology_registry)
+
     return manifold, entry_id_to_surface
 
 
