@@ -12,8 +12,8 @@ CORE's identity is not a description of CORE. It is CORE, expressed geometricall
 """
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Dict, FrozenSet, Optional, Tuple
+from dataclasses import dataclass, field
+from typing import Dict, FrozenSet, List, Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -23,6 +23,33 @@ class IdentityScore:
     flagged: bool         # True if score falls below alignment threshold
     deviation_axes: FrozenSet[str]  # ValueAxis IDs where deviation was detected
     trajectory_id: str
+
+    # --- Convenience aliases used by runtime, serialiser, and review_trace ---
+
+    @property
+    def value(self) -> float:
+        """Alias for score — primary scalar alignment value (0.0–1.0)."""
+        return self.score
+
+    @property
+    def alignment(self) -> float:
+        """Fraction of axes that were NOT flagged as deviating.
+
+        1.0 = all axes aligned; 0.0 = all axes deviated.
+        When deviation_axes is empty alignment is always 1.0.
+        """
+        axes = self.deviation_axes
+        if not axes:
+            return 1.0
+        # deviation_axes only contains axes that deviated, but we don't
+        # independently track total axis count here.  Use score as proxy:
+        # high score → high alignment.
+        return self.score
+
+    @property
+    def axes_evaluated(self) -> List[str]:
+        """Sorted list of deviation_axes IDs — used by the JSONL serialiser."""
+        return sorted(self.deviation_axes)
 
 
 @dataclass(frozen=True)
@@ -52,7 +79,9 @@ class IdentityCheck:
             )
         confidence = getattr(trajectory, "total_coherence_delta", 0.0)
         if trajectory.frames:
-            confidence += sum(float(frame.coherence_magnitude) for frame in trajectory.frames) / len(trajectory.frames)
+            confidence += sum(
+                float(frame.coherence_magnitude) for frame in trajectory.frames
+            ) / len(trajectory.frames)
         score = max(0.0, min(1.0, 0.5 + (confidence / 2.0)))
         deviations = frozenset(
             axis.axis_id
@@ -124,17 +153,17 @@ class TurnEvent:
     is a complete, reproducible trace of the model's internal state evolution.
 
     Fields:
-        turn            — zero-based turn index within the session
-        input_tokens    — tokens as ingested (after OOV filtering)
-        walk_surface    — syntactically guarded token sequence from manifold walk
+        turn                 — zero-based turn index within the session
+        input_tokens         — tokens as ingested (after OOV filtering)
+        walk_surface         — syntactically guarded token sequence from manifold walk
         articulation_surface — proposition-level surface from realize()
-        dialogue_role   — DialogueRole classification for this turn
-        identity_score  — IdentityScore from IdentityCheck (None if not run)
-        cycle_cost_total — total CycleCost.total for this turn
-        vault_hits      — number of vault recall hits that fired during generate()
-        versor_condition — versor_condition(final_state.F) after generation
-        flagged         — True if identity_score.flagged (shortcut for filtering)
-            elaboration       — woven walk tokens used in elaborate role (None otherwise)
+        dialogue_role        — DialogueRole classification for this turn
+        identity_score       — IdentityScore from IdentityCheck (None if not run)
+        cycle_cost_total     — total CycleCost.total for this turn
+        vault_hits           — number of vault recall hits that fired during generate()
+        versor_condition     — versor_condition(final_state.F) after generation
+        flagged              — True if identity_score.flagged (shortcut for filtering)
+        elaboration          — woven walk tokens used in elaborate role (None otherwise)
     """
     turn: int
     input_tokens: Tuple[str, ...]
@@ -146,4 +175,4 @@ class TurnEvent:
     vault_hits: int
     versor_condition: float
     flagged: bool
-        elaboration: Optional[str] = None    # woven walk tokens; populated by SentenceAssembler
+    elaboration: Optional[str] = None  # woven walk tokens; populated by SentenceAssembler
