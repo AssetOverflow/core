@@ -20,6 +20,7 @@ from collections import deque
 
 import numpy as np
 
+from algebra.backend import versor_apply
 from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import word_transition_rotor
@@ -103,25 +104,31 @@ def _voiced_state(state: FieldState, persona) -> FieldState:
 
 def _recall_state(state: FieldState, vault, top_k: int) -> FieldState:
     """
-    Feed exact vault recall back into the field as sequential operators.
+    Feed exact vault recall back into the field.
 
-    Recall returns stored versors ranked by the vault's exact metric. Each hit
-    is treated as an additional operator in the propagation path.
+    Recall hits are stored field states, not vocabulary word endpoints.
+    They must not go through word_transition_rotor(), whose contract is
+    word-versor -> word-versor. Apply valid recalled field operators directly
+    via versor_apply(); skip records that cannot act as operators.
     """
     if vault is None or top_k <= 0:
         return state
 
     current = state
     for hit in vault.recall(current.F, top_k=top_k):
-        recalled_F = hit["versor"]
-        V = word_transition_rotor(current.F, recalled_F)
-        current = propagate_step(current, V)
+        recalled_F = np.asarray(hit["versor"], dtype=current.F.dtype)
+        try:
+            new_F = versor_apply(recalled_F, current.F)
+        except (TypeError, ValueError):
+            continue
+
         current = FieldState(
-            F=current.F,
+            F=new_F,
             node=state.node,
-            step=current.step,
+            step=current.step + 1,
             holonomy=state.holonomy,
         )
+
     return current
 
 
