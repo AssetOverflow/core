@@ -119,6 +119,7 @@ class ChatResponse:
     walk_surface: str
     salience_top_k: int | None
     candidates_used: int | None
+    vault_hits: int
     identity_score: IdentityScore | None
     character_profile: CharacterProfile
     flagged: bool
@@ -371,13 +372,14 @@ class ChatRuntime:
         )
         walk_surface = sentence_plan.surface
 
-        surface = articulation.surface if flagged else walk_surface
-
-        vault_hits = 3 if self.config.allow_cross_language_recall else 0
+        # Identity flags remain telemetry; they must not hide the manifold walk.
+        surface = walk_surface or articulation.surface
+        vault_hits = int(result.vault_hits)
 
         turn_event = TurnEvent(
             turn=self._context.turn - 1,
             input_tokens=tuple(filtered),
+            surface=surface,
             walk_surface=walk_surface,
             articulation_surface=articulation.surface,
             dialogue_role=str(dialogue_role),
@@ -401,6 +403,7 @@ class ChatRuntime:
             walk_surface=walk_surface,
             salience_top_k=result.salience_top_k,
             candidates_used=result.candidates_used,
+            vault_hits=vault_hits,
             identity_score=identity_score,
             character_profile=self.character_profile,
             flagged=flagged,
@@ -420,7 +423,7 @@ class ChatRuntime:
         async for token in agenerate(
             self._context.state,
             self._context.vocab,
-            self._motor,
+            self._context.persona,
             max_tokens=mt,
             vault=self._context.vault,
         ):
@@ -466,5 +469,5 @@ def _default_identity_manifold() -> IdentityManifold:
     return IdentityManifold(
         value_axes=axes,
         boundary_ids=frozenset({"no_fabricated_source", "no_hot_path_repair"}),
-        alignment_threshold=0.75,
+        alignment_threshold=0.45,
     )
