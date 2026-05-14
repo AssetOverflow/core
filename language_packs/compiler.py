@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from algebra.cl41 import N_COMPONENTS
+from algebra.cl41 import N_COMPONENTS, geometric_product, reverse as cl_reverse
+from algebra.versor import unitize_versor
 from language_packs.schema import (
     LanguagePackManifest,
     LanguageRole,
@@ -18,13 +19,15 @@ from language_packs.schema import (
 from vocab.manifold import VocabManifold
 
 if TYPE_CHECKING:
+    from alignment.graph import AlignmentGraph
     from morphology.registry import MorphologyRegistry
     from sensorium.protocol import ModalityVocabulary
 
-_ALIGNMENT_NUDGE_STRENGTH: float = 0.18
-_MORPHOLOGY_CLUSTER_NUDGE_STRENGTH: float = 0.45
+_ALIGNMENT_NUDGE_STRENGTH: float = 0.02
+_MORPHOLOGY_CLUSTER_NUDGE_STRENGTH: float = 0.70
 _PRIMARY_SEMANTIC_DOMAIN_WEIGHT: float = 0.55
-_FEATURE_COMPONENTS: tuple[int, ...] = (1, 2, 3, 5)
+_LOGOS_PARTICIPATION_WEIGHT: float = 0.75
+_FEATURE_COMPONENTS: tuple[int, ...] = (6, 7, 9, 10, 12, 14)
 
 
 def _hash_to_blade(name: str, salt: str) -> int:
@@ -45,27 +48,42 @@ def _feature_sign(name: str, salt: str) -> float:
     return 1.0 if _hash_unit(name, f"{salt}:sign") >= 0.5 else -1.0
 
 
-def _add_feature(vec: np.ndarray, name: str, salt: str, weight: float) -> None:
-    vec[_feature_component(name, salt)] += np.float32(_feature_sign(name, salt) * weight)
+def _feature_rotor(name: str, salt: str, weight: float) -> np.ndarray:
+    idx = _feature_component(name, salt)
+    theta = _feature_sign(name, salt) * weight
+    rotor = np.zeros(N_COMPONENTS, dtype=np.float32)
+    rotor[0] = np.cos(theta)
+    rotor[idx] = np.sin(theta)
+    return rotor
 
 
 def _unit_feature_versor(vec: np.ndarray) -> np.ndarray:
-    norm_sq = float(sum(float(vec[idx]) ** 2 for idx in _FEATURE_COMPONENTS))
-    if norm_sq < 1e-12:
-        fallback = np.zeros(N_COMPONENTS, dtype=np.float32)
-        fallback[_FEATURE_COMPONENTS[0]] = 1.0
-        return fallback
-    return (vec / np.sqrt(norm_sq)).astype(np.float32)
+    versor = unitize_versor(vec)
+    if float(versor[0]) < 0.0:
+        versor = -versor
+    return versor.astype(np.float32, copy=False)
 
 
 def _blend_feature_versors(source: np.ndarray, target: np.ndarray, strength: float) -> np.ndarray:
     strength = max(0.0, min(1.0, float(strength)))
-    return _unit_feature_versor(((1.0 - strength) * source + strength * target).astype(np.float32))
+    nudge = _alignment_nudge_rotor(source, target, strength)
+    return _unit_feature_versor(geometric_product(nudge, source))
+
+
+def _apply_feature(vec: np.ndarray, name: str, salt: str, weight: float) -> np.ndarray:
+    return geometric_product(vec, _feature_rotor(name, salt, weight))
 
 
 def _domain_features(domain: str) -> list[tuple[str, float]]:
     parts = domain.lower().split(".")
     return [(".".join(parts[: depth + 1]), 0.30 / (depth + 1)) for depth in range(len(parts))]
+
+
+def _has_logos_participation(domains: tuple[str, ...]) -> bool:
+    return any(
+        domain == "logos.core" or domain.startswith("logos.")
+        for domain in (d.lower() for d in domains)
+    )
 
 
 _INFLECTION_PRIORITY = (
@@ -115,43 +133,91 @@ def _triliteral_root(root: str) -> str:
 def _apply_morphology(vec: np.ndarray, morphology: MorphologyEntry) -> None:
     if morphology.root:
         if _is_hebrew_root(morphology.root):
-            _add_feature(vec, f"triliteral:{_triliteral_root(morphology.root).lower()}", "morph", 0.30)
-        _add_feature(vec, f"root:{_compact_root(morphology.root).lower()}", "morph", 0.40)
+            vec[:] = _apply_feature(
+                vec,
+                f"triliteral:{_triliteral_root(morphology.root).lower()}",
+                "morph",
+                0.30,
+            )
+        vec[:] = _apply_feature(
+            vec,
+            f"root:{_compact_root(morphology.root).lower()}",
+            "morph",
+            0.40,
+        )
 
     for idx, prefix in enumerate(morphology.prefix_chain):
-        _add_feature(vec, f"{idx}:{prefix.lower()}", "morph:prefix", 0.03 / (idx + 1))
+        vec[:] = _apply_feature(vec, f"{idx}:{prefix.lower()}", "morph:prefix", 0.03 / (idx + 1))
 
     if morphology.stem:
-        _add_feature(vec, morphology.stem.lower(), "morph:stem", 0.24)
+        vec[:] = _apply_feature(vec, morphology.stem.lower(), "morph:stem", 0.24)
 
     for key, value in _ordered_inflection_items(dict(morphology.inflection)):
-        _add_feature(vec, key.lower(), "morph:infl-role", 0.02)
-        _add_feature(vec, value.lower(), "morph:infl-value", 0.04)
+        vec[:] = _apply_feature(vec, key.lower(), "morph:infl-role", 0.02)
+        vec[:] = _apply_feature(vec, value.lower(), "morph:infl-value", 0.04)
 
     for idx, suffix in enumerate(morphology.suffix_chain):
-        _add_feature(vec, f"{idx}:{suffix.lower()}", "morph:suffix", 0.02 / (idx + 1))
+        vec[:] = _apply_feature(vec, f"{idx}:{suffix.lower()}", "morph:suffix", 0.02 / (idx + 1))
 
 
 def _entry_to_coordinate(entry: LexicalEntry, morphology: MorphologyEntry | None = None) -> np.ndarray:
     vec = np.zeros(N_COMPONENTS, dtype=np.float32)
+    vec[0] = 1.0
 
     pos = (entry.pos or entry.part_of_speech or "").lower()
     for domain in entry.semantic_domains:
         for feature, weight in _domain_features(domain):
-            _add_feature(vec, feature, "domain", weight)
+            vec = _apply_feature(vec, feature, "domain", weight)
+
+    logos_participation = "logos" if _has_logos_participation(entry.semantic_domains) else "nonlogos"
+    vec = _apply_feature(
+        vec,
+        f"logos-participation:{logos_participation}",
+        "domain:logos-participation",
+        _LOGOS_PARTICIPATION_WEIGHT,
+    )
 
     if entry.semantic_domains:
-        _add_feature(vec, f"primary:{entry.semantic_domains[0].lower()}", "domain:primary", _PRIMARY_SEMANTIC_DOMAIN_WEIGHT)
+        vec = _apply_feature(
+            vec,
+            f"primary:{entry.semantic_domains[0].lower()}",
+            "domain:primary",
+            _PRIMARY_SEMANTIC_DOMAIN_WEIGHT,
+        )
 
     if pos:
-        _add_feature(vec, pos, "pos", 0.20)
+        vec = _apply_feature(vec, pos, "pos", 0.20)
 
     if morphology is not None:
         _apply_morphology(vec, morphology)
 
-    _add_feature(vec, entry.lemma.lower(), "lemma", 0.10)
-    _add_feature(vec, entry.surface.lower(), "surface", 0.05)
+    vec = _apply_feature(vec, entry.lemma.lower(), "lemma", 0.10)
+    vec = _apply_feature(vec, entry.surface.lower(), "surface", 0.05)
     return _unit_feature_versor(vec)
+
+
+def _alignment_nudge_rotor(source: np.ndarray, target: np.ndarray, strength: float) -> np.ndarray:
+    R_full = geometric_product(target, cl_reverse(source))
+    scalar = max(-1.0, min(1.0, float(R_full[0])))
+    theta_full = float(np.arccos(scalar))
+    if abs(theta_full) < 1e-6:
+        identity = np.zeros(N_COMPONENTS, dtype=np.float32)
+        identity[0] = 1.0
+        return identity
+
+    biv = R_full.copy()
+    biv[0] = 0.0
+    biv_norm = float(np.linalg.norm(biv))
+    if biv_norm < 1e-6:
+        identity = np.zeros(N_COMPONENTS, dtype=np.float32)
+        identity[0] = 1.0
+        return identity
+
+    theta_nudge = theta_full * max(0.0, min(1.0, float(strength)))
+    nudge = np.zeros(N_COMPONENTS, dtype=np.float32)
+    nudge[0] = float(np.cos(theta_nudge))
+    nudge += (biv / biv_norm * float(np.sin(theta_nudge))).astype(np.float32)
+    return nudge
 
 
 def _resolved_morphology(entry: LexicalEntry, morphology_registry: "MorphologyRegistry | None") -> MorphologyEntry | None:
@@ -309,9 +375,7 @@ def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
     return manifest, home_manifold
 
 
-def _infer_foreign_pack_ids(home_pack_id: str, graph: "alignment.graph.AlignmentGraph") -> list[str]:
-    from alignment.graph import AlignmentGraph  # noqa: F401  local import to avoid cycle
-
+def _infer_foreign_pack_ids(home_pack_id: str, graph: "AlignmentGraph") -> list[str]:
     _PREFIX_TO_PACK: dict[str, str] = {
         "he": "he_logos_micro_v1",
         "grc": "grc_logos_micro_v1",
