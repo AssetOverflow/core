@@ -13,6 +13,23 @@ from .versor import unitize_versor
 _TRANSITION_BIVECTORS = (6, 7, 9, 10, 12, 14)
 
 
+def make_rotor_from_angle(angle: float, bivector_idx: int = 6) -> np.ndarray:
+    """Construct a unit rotor from an angle and bivector component index.
+
+    Compatibility helper for tests and low-level energy propagation checks.
+    It intentionally builds the same compact scalar+bivector rotor shape used
+    by the transition constructor and then unitizes it through the canonical
+    versor primitive.
+    """
+    if not 0 <= int(bivector_idx) < N_COMPONENTS:
+        raise ValueError(f"bivector_idx out of range: {bivector_idx!r}")
+    rotor = np.zeros(N_COMPONENTS, dtype=np.float64)
+    half_angle = float(angle) / 2.0
+    rotor[0] = np.cos(half_angle)
+    rotor[int(bivector_idx)] = np.sin(half_angle)
+    return unitize_versor(rotor)
+
+
 def word_transition_rotor(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """
     Compute the rotor R that rotates versor A toward versor B in Cl(4,1).
