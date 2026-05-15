@@ -13,6 +13,7 @@ CORE's identity is not a description of CORE. It is CORE, expressed geometricall
 
 from __future__ import annotations
 import math
+import warnings
 from dataclasses import dataclass
 from typing import Dict, FrozenSet, List, Optional, Tuple
 
@@ -74,14 +75,21 @@ class IdentityManifold:
 class IdentityCheck:
     """Checks a ReasoningTrajectory against an IdentityManifold.
 
-    Supports both the current explicit call style:
+    Canonical call style:
         IdentityCheck().check(trajectory, manifold)
 
-    and the older fixture style still used by some tests:
+    Deprecated compatibility style:
         IdentityCheck(manifold=manifold).check(trajectory)
     """
 
     def __init__(self, manifold: IdentityManifold | None = None) -> None:
+        if manifold is not None:
+            warnings.warn(
+                "IdentityCheck(manifold=...) is deprecated; use "
+                "IdentityCheck().check(trajectory, manifold).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self._manifold = manifold
 
     @staticmethod
