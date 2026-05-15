@@ -34,11 +34,18 @@ def geometric_product(A: np.ndarray, B: np.ndarray) -> np.ndarray:
 def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
     """Apply a versor through the canonical algebra closure boundary.
 
-    The Rust extension's raw sandwich path is intentionally bypassed here
-    until it enforces the same closure semantics as algebra.versor.  Runtime
-    invariants depend on this operator returning a closed field; generation,
-    propagation, and vault recall are not allowed to repair it downstream.
+    When CORE_BACKEND=rust is set and the Rust extension exposes
+    versor_apply_with_closure, Rust handles the full closure path
+    (null-vector preservation, unitize, seed fallback). Otherwise
+    falls back to pure Python algebra.versor.
     """
+    if _RUST and _REQUESTED_BACKEND == "rust":
+        try:
+            return np.asarray(
+                _rs.versor_apply_with_closure(V, F), dtype=np.float32
+            )
+        except (AttributeError, Exception):
+            pass
     from algebra.versor import versor_apply as _va
     return _va(V, F)
 

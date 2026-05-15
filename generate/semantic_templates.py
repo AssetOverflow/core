@@ -18,12 +18,12 @@ from generate.intent import IntentTag
 
 _INTENT_TEMPLATES: dict[IntentTag, str] = {
     IntentTag.DEFINITION: "{subject} is defined as {obj}",
-    IntentTag.CAUSE: "{subject} is caused by {obj}",
-    IntentTag.PROCEDURE: "{subject} has the following steps: {obj}",
-    IntentTag.COMPARISON: "{subject} and {secondary} are contrasted by {predicate_h}",
+    IntentTag.CAUSE: "{subject} is grounded in {obj}",
+    IntentTag.PROCEDURE: "first, {obj}; then, {subject} follows",
+    IntentTag.COMPARISON: "{subject} and {secondary} are distinguished: {subject} {predicate_h} {secondary}",
     IntentTag.CORRECTION: "correction: {subject} {predicate_h} {obj}",
-    IntentTag.RECALL: "{subject} recalls {obj}",
-    IntentTag.VERIFICATION: "{subject} is verified as {obj}",
+    IntentTag.RECALL: "recalling {subject}: {obj}",
+    IntentTag.VERIFICATION: "{subject} is verified: {obj}",
     IntentTag.UNKNOWN: "{subject} {predicate_h} {obj}",
 }
 
@@ -46,6 +46,14 @@ _PREDICATE_HUMANIZE: dict[str, str] = {
     "follows": "follows",
     "belongs_to": "belongs to",
     "answers": "answers",
+    "is_grounded_in": "is grounded in",
+    "is_distinguished_from": "is distinguished from",
+    "implies": "implies",
+    "entails": "entails",
+    "requires": "requires",
+    "verifies": "verifies",
+    "evidences": "evidences",
+    "orders": "orders",
 }
 
 

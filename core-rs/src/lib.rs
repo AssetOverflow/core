@@ -20,7 +20,7 @@ pub mod versor;
 use cga::cga_inner_raw;
 use cl41::geometric_product_raw;
 use vault::vault_recall_raw;
-use versor::{normalize_to_versor_raw, versor_apply_raw, versor_condition_raw};
+use versor::{normalize_to_versor_raw, versor_apply_closed, versor_apply_raw, versor_condition_raw};
 
 /// Geometric product in Cl(4,1). Accepts two numpy-compatible f32 arrays of length 32.
 #[pyfunction]
@@ -46,6 +46,21 @@ fn versor_apply(
     let v_slice = extract_f32_slice(v)?;
     let f_slice = extract_f32_slice(f)?;
     let result = versor_apply_raw(&v_slice, &f_slice)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    f32_array_to_numpy(py, &result)
+}
+
+/// Sandwich product V*F*reverse(V) with closure semantics.
+/// Preserves null vectors, applies unit-versor closure with seed fallback.
+#[pyfunction]
+fn versor_apply_with_closure(
+    py: Python<'_>,
+    v: &pyo3::types::PyAny,
+    f: &pyo3::types::PyAny,
+) -> PyResult<PyObject> {
+    let v_slice = extract_f32_slice(v)?;
+    let f_slice = extract_f32_slice(f)?;
+    let result = versor_apply_closed(&v_slice, &f_slice)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     f32_array_to_numpy(py, &result)
 }
@@ -120,6 +135,7 @@ fn f32_array_to_numpy(py: Python<'_>, data: &[f32; 32]) -> PyResult<PyObject> {
 fn core_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(geometric_product, m)?)?;
     m.add_function(wrap_pyfunction!(versor_apply, m)?)?;
+    m.add_function(wrap_pyfunction!(versor_apply_with_closure, m)?)?;
     m.add_function(wrap_pyfunction!(versor_condition, m)?)?;
     m.add_function(wrap_pyfunction!(normalize_to_versor, m)?)?;
     m.add_function(wrap_pyfunction!(cga_inner, m)?)?;

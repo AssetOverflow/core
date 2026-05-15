@@ -114,4 +114,4 @@ def test_pack_entries_are_deterministic() -> None:
     assert [entry.entry_id for entry in entries_a] == [entry.entry_id for entry in entries_b]
     assert [entry.surface for entry in entries_a] == [entry.surface for entry in entries_b]
     assert entries_a[0].entry_id == "en-core-cog-001"
-    assert entries_a[-1].entry_id == "en-core-cog-055"
+    assert entries_a[-1].entry_id == "en-core-cog-070"

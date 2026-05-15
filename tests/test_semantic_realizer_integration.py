@@ -115,7 +115,7 @@ class TestRealizeSemantic:
         target = plan_articulation(graph)
         plan = realize_semantic(target, graph)
         assert plan.surface
-        assert "is caused by" in plan.surface.lower()
+        assert "is grounded in" in plan.surface.lower()
 
     def test_empty_target_returns_empty_plan(self) -> None:
         from generate.graph_planner import ArticulationTarget

@@ -1,9 +1,12 @@
 //! Cl(4,1) geometric product via precomputed table.
 //!
-//! Signature: (+,+,+,-,+). 32-component f32 multivectors.
+//! Signature: (+,+,+,+,-). 32-component f32 multivectors.
 //! The multiplication table is computed once at program start using
 //! const evaluation and stored as two [u8;1024] and [i8;1024] arrays
 //! (index and sign for each of the 32x32 blade pairs).
+//!
+//! Blade ordering matches Python's itertools.combinations(range(5), k)
+//! lexicographic tuple order within each grade.
 //!
 //! geometric_product_raw is the inner loop called by every higher-level op.
 //! It is deliberately kept allocation-free: inputs and output are [f32;32].
@@ -20,31 +23,30 @@ pub enum Cl41Error {
 // We encode each blade as a bitmask over 5 bits (bit k = basis vector k+1 present)
 // The mapping from bitmask to component index follows grade-ascending, lex order.
 
-// Signature: e1^2=+1, e2^2=+1, e3^2=+1, e4^2=-1, e5^2=+1
-const SIG: [i8; 5] = [1, 1, 1, -1, 1];
+// Signature: e1^2=+1, e2^2=+1, e3^2=+1, e4^2=+1, e5^2=-1
+const SIG: [i8; 5] = [1, 1, 1, 1, -1];
 
 // Precomputed at compile time via const fn
 const BLADE_MASKS: [u8; 32] = build_blade_masks();
 const MASK_TO_IDX: [u8; 32] = build_mask_to_idx();
 
 const fn build_blade_masks() -> [u8; 32] {
-    // Grade-ascending, lex order over 5 bits
-    let mut masks = [0u8; 32];
-    let mut pos = 0usize;
-    let mut k = 0u8;
-    while k <= 5 {
-        // Iterate over all 5-bit masks with popcount == k
-        let mut mask = 0u8;
-        while mask < 32 {
-            if popcount5(mask) == k {
-                masks[pos] = mask;
-                pos += 1;
-            }
-            mask += 1;
-        }
-        k += 1;
-    }
-    masks
+    // Must match Python's itertools.combinations(range(5), k) order.
+    // Hardcoded to guarantee exact parity with Python cl41.py.
+    [
+        // grade 0: ()
+        0b00000,
+        // grade 1: (0,), (1,), (2,), (3,), (4,)
+        0b00001, 0b00010, 0b00100, 0b01000, 0b10000,
+        // grade 2: (0,1), (0,2), (0,3), (0,4), (1,2), (1,3), (1,4), (2,3), (2,4), (3,4)
+        0b00011, 0b00101, 0b01001, 0b10001, 0b00110, 0b01010, 0b10010, 0b01100, 0b10100, 0b11000,
+        // grade 3: (0,1,2), (0,1,3), (0,1,4), (0,2,3), (0,2,4), (0,3,4), (1,2,3), (1,2,4), (1,3,4), (2,3,4)
+        0b00111, 0b01011, 0b10011, 0b01101, 0b10101, 0b11001, 0b01110, 0b10110, 0b11010, 0b11100,
+        // grade 4: (0,1,2,3), (0,1,2,4), (0,1,3,4), (0,2,3,4), (1,2,3,4)
+        0b01111, 0b10111, 0b11011, 0b11101, 0b11110,
+        // grade 5: (0,1,2,3,4)
+        0b11111,
+    ]
 }
 
 const fn build_mask_to_idx() -> [u8; 32] {
@@ -128,6 +130,25 @@ fn table() -> &'static Table {
     TABLE.get_or_init(build_table)
 }
 
+/// Full geometric product in Cl(4,1) with f64 precision.
+/// Used by versor closure where residue checks need high accuracy.
+pub fn geometric_product_f64(a: &[f64; 32], b: &[f64; 32]) -> [f64; 32] {
+    let t = table();
+    let mut result = [0f64; 32];
+    for i in 0..32 {
+        let ai = a[i];
+        if ai == 0.0 { continue; }
+        for j in 0..32 {
+            let bj = b[j];
+            if bj == 0.0 { continue; }
+            let k = t.idx[i][j] as usize;
+            let s = t.sign[i][j] as f64;
+            result[k] += s * ai * bj;
+        }
+    }
+    result
+}
+
 /// Full geometric product in Cl(4,1).
 /// Both inputs are [f32; 32]. Returns [f32; 32]. Allocation-free.
 pub fn geometric_product_raw(a: &[f32; 32], b: &[f32; 32]) -> Result<[f32; 32], Cl41Error> {
@@ -152,9 +173,15 @@ pub fn geometric_product_raw(a: &[f32; 32], b: &[f32; 32]) -> Result<[f32; 32], 
 /// Grade 0,1: +1.  Grade 2,3: -1.  Grade 4,5: +1.
 pub fn reverse_raw(a: &[f32; 32]) -> [f32; 32] {
     let mut r = *a;
-    // Grade 2: indices 6..=15
     for i in 6..=15 { r[i] = -r[i]; }
-    // Grade 3: indices 16..=25
+    for i in 16..=25 { r[i] = -r[i]; }
+    r
+}
+
+/// Reverse anti-automorphism (f64).
+pub fn reverse_f64(a: &[f64; 32]) -> [f64; 32] {
+    let mut r = *a;
+    for i in 6..=15 { r[i] = -r[i]; }
     for i in 16..=25 { r[i] = -r[i]; }
     r
 }

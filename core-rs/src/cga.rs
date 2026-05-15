@@ -1,15 +1,13 @@
 //! CGA inner product and null-cone operations.
 //!
-//! Signature: (+,+,+,-,+), with Euclidean coordinates on e1,e2,e3.
-//! The conformal null directions are:
-//!
-//!   n_o   = 0.5 * (e4 - e5)   # origin, n_o^2 = 0
-//!   n_inf = e4 + e5           # infinity, n_inf^2 = 0
-//!   n_o · n_inf = -1
+//! Signature: (+,+,+,+,-), with Euclidean coordinates on e1,e2,e3.
+//! e4^2 = +1, e5^2 = -1.
 //!
 //! A Euclidean point x embeds as:
 //!
 //!   X = x + n_o + 0.5 * |x|^2 * n_inf
+//!
+//! with e4 coeff = 0.5*(|x|^2 - 1), e5 coeff = 0.5*(|x|^2 + 1).
 //!
 //! Then X·X = 0 and X·Y = -0.5 * ||x-y||^2.
 //!
@@ -53,7 +51,7 @@ pub fn embed_point_raw(p: &[f32; 3]) -> [f32; 32] {
     result[2] = p[1];
     result[3] = p[2];
     let r2 = p[0] * p[0] + p[1] * p[1] + p[2] * p[2];
-    result[4] = 0.5 * (r2 + 1.0);
-    result[5] = 0.5 * (r2 - 1.0);
+    result[4] = 0.5 * (r2 - 1.0);
+    result[5] = 0.5 * (r2 + 1.0);
     result
 }

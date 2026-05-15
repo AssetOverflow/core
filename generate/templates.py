@@ -34,6 +34,14 @@ _PREDICATE_DISPLAY: dict[str, str] = {
     "follows": "follows",
     "belongs_to": "belongs to",
     "answers": "answers",
+    "is_grounded_in": "is grounded in",
+    "is_distinguished_from": "is distinguished from",
+    "implies": "implies",
+    "entails": "entails",
+    "requires": "requires",
+    "verifies": "verifies",
+    "evidences": "evidences",
+    "orders": "orders",
 }
 
 

@@ -4,7 +4,7 @@
 //! normalize_to_versor F/sqrt(|F*rev(F)|) — called once at injection gate
 //! versor_condition   ||F*rev(F)-1||_F   — used in tests and gate only
 
-use crate::cl41::{geometric_product_raw, reverse_raw, Cl41Error};
+use crate::cl41::{geometric_product_f64, geometric_product_raw, reverse_f64, reverse_raw, Cl41Error};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -15,8 +15,104 @@ pub enum VersorError {
     NullVersor(f32),
 }
 
-/// Sandwich product V * F * reverse(V).
-/// Allocation-free. This is the hot path — called every generation step.
+const NEAR_ZERO_TOL: f64 = 1e-12;
+const NULL_SCALAR_TOL: f64 = 1e-9;
+const CONSTRUCTION_RESIDUE_TOL: f64 = 1e-2;
+const SEED_BIVECTORS: [usize; 6] = [6, 7, 8, 10, 11, 13];
+
+fn is_null_vector(v: &[f32; 32]) -> bool {
+    use crate::cga::cga_inner_raw;
+    // Generous tolerance: the f32 sandwich product introduces ~1e-6 error
+    // on null vectors; 1e-5 correctly classifies them without false positives
+    // on actual versors (which have cga_inner >> 0.1).
+    match cga_inner_raw(v, v) {
+        Ok(inner) => (inner as f64).abs() < 1e-5,
+        Err(_) => false,
+    }
+}
+
+fn unitize_closed(v: &[f64; 32]) -> Result<[f64; 32], ()> {
+    let input_norm: f64 = v.iter().map(|x| x * x).sum::<f64>().sqrt();
+    if input_norm < NEAR_ZERO_TOL {
+        return Err(());
+    }
+
+    let rev = reverse_f64(v);
+    let vv = geometric_product_f64(v, &rev);
+
+    let scalar_sq = vv[0];
+    let residue_norm: f64 = vv[1..].iter().map(|x| x * x).sum::<f64>().sqrt();
+
+    if residue_norm >= CONSTRUCTION_RESIDUE_TOL {
+        return Err(());
+    }
+    if scalar_sq <= 0.0 {
+        return Err(());
+    }
+
+    let inv = 1.0 / scalar_sq.sqrt();
+    let mut result = *v;
+    for x in result.iter_mut() { *x *= inv; }
+    Ok(result)
+}
+
+fn seed_to_rotor(v: &[f64; 32]) -> Result<[f64; 32], ()> {
+    let scale: f64 = v.iter().map(|x| x * x).sum::<f64>().sqrt();
+    let scale = if scale == 0.0 { 1.0 } else { scale };
+
+    let mut rotor = [0f64; 32];
+    rotor[0] = 1.0;
+
+    for (step, &blade) in SEED_BIVECTORS.iter().enumerate() {
+        let source = v[(blade + step) % 32] / scale;
+        let theta = 0.5 * source.tanh();
+        let mut factor = [0f64; 32];
+        factor[0] = theta.cos();
+        factor[blade] = theta.sin();
+
+        rotor = geometric_product_f64(&rotor, &factor);
+    }
+
+    unitize_closed(&rotor)
+}
+
+fn close_applied_versor(v: &[f32; 32]) -> [f32; 32] {
+    if is_null_vector(v) {
+        return crate::cga::null_project_raw(v);
+    }
+
+    let v_f64: [f64; 32] = {
+        let mut arr = [0f64; 32];
+        for i in 0..32 { arr[i] = v[i] as f64; }
+        arr
+    };
+
+    if let Ok(closed) = unitize_closed(&v_f64) {
+        let mut result = [0f32; 32];
+        for i in 0..32 { result[i] = closed[i] as f32; }
+        return result;
+    }
+
+    if let Ok(seeded) = seed_to_rotor(&v_f64) {
+        let mut result = [0f32; 32];
+        for i in 0..32 { result[i] = seeded[i] as f32; }
+        return result;
+    }
+
+    *v
+}
+
+/// Sandwich product V * F * reverse(V) with closure semantics.
+/// Preserves null vectors as null vectors. Applies unit-versor closure
+/// with construction seed fallback for non-null results.
+pub fn versor_apply_closed(v: &[f32; 32], f: &[f32; 32]) -> Result<[f32; 32], VersorError> {
+    let rev_v = reverse_raw(v);
+    let vf = geometric_product_raw(v, f)?;
+    let vfrv = geometric_product_raw(&vf, &rev_v)?;
+    Ok(close_applied_versor(&vfrv))
+}
+
+/// Raw sandwich product V * F * reverse(V) without closure.
 pub fn versor_apply_raw(v: &[f32; 32], f: &[f32; 32]) -> Result<[f32; 32], VersorError> {
     let rev_v = reverse_raw(v);
     let vf    = geometric_product_raw(v, f)?;
@@ -47,4 +143,51 @@ pub fn versor_condition_raw(f: &[f32; 32]) -> Result<f32, VersorError> {
     frv[0] -= 1.0; // subtract identity
     let norm_sq: f32 = frv.iter().map(|x| x * x).sum();
     Ok(norm_sq.sqrt())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn identity_versor() -> [f32; 32] {
+        let mut v = [0f32; 32];
+        v[0] = 1.0;
+        v
+    }
+
+    fn simple_reflector() -> [f32; 32] {
+        let mut v = [0f32; 32];
+        v[1] = 1.0;
+        v
+    }
+
+    #[test]
+    fn closed_identity_is_identity() {
+        let id = identity_versor();
+        let f = simple_reflector();
+        let result = versor_apply_closed(&id, &f).unwrap();
+        for i in 0..32 {
+            assert!((result[i] - f[i]).abs() < 1e-5, "component {} diverged", i);
+        }
+    }
+
+    #[test]
+    fn closed_preserves_versor_condition() {
+        let v = simple_reflector();
+        let f = identity_versor();
+        let result = versor_apply_closed(&v, &f).unwrap();
+        let cond = versor_condition_raw(&result).unwrap();
+        assert!(cond < 1e-4, "condition {} too large", cond);
+    }
+
+    #[test]
+    fn closed_matches_raw_for_identity() {
+        let id = identity_versor();
+        let f = simple_reflector();
+        let raw = versor_apply_raw(&id, &f).unwrap();
+        let closed = versor_apply_closed(&id, &f).unwrap();
+        for i in 0..32 {
+            assert!((raw[i] - closed[i]).abs() < 1e-5);
+        }
+    }
 }
