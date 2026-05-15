@@ -5,7 +5,12 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class RuntimeConfig:
-    input_packs: tuple[str, ...] = ("en_minimal_v1", "he_logos_micro_v1", "grc_logos_micro_v1")
+    input_packs: tuple[str, ...] = (
+        "en_minimal_v1",
+        "en_core_cognition_v1",
+        "he_logos_micro_v1",
+        "grc_logos_micro_v1",
+    )
     output_language: str = "en"
     frame_pack: str = "en"
     max_tokens: int = 32
