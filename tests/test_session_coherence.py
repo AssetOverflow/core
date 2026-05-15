@@ -25,6 +25,19 @@ def _positive_unit_reflector(seed: int) -> np.ndarray:
     return unitize_versor(mv)
 
 
+def _random_rotor(seed: int) -> np.ndarray:
+    """Build a random even-grade versor (rotor) for CGA inner-product comparison.
+
+    Field states are even-grade (grade 0+2+4). Reflectors are grade-1 and
+    orthogonal under cga_inner, so we need rotors to get nonzero scores.
+    """
+    a = _positive_unit_reflector(seed)
+    b = _positive_unit_reflector(seed + 10000)
+    from algebra.cl41 import geometric_product as gp
+    rotor = gp(a, b)
+    return unitize_versor(rotor)
+
+
 def _vocab() -> VocabManifold:
     vocab = VocabManifold()
     vocab.add("logos", _positive_unit_reflector(1))
@@ -37,8 +50,8 @@ def _vocab() -> VocabManifold:
 
 def _farther_unrelated(result_F: np.ndarray, prompt_F: np.ndarray, start_seed: int) -> np.ndarray:
     prompt_score = cga_inner(result_F, prompt_F)
-    for seed in range(start_seed, start_seed + 256):
-        candidate = _positive_unit_reflector(seed)
+    for seed in range(start_seed, start_seed + 2048):
+        candidate = _random_rotor(seed)
         if prompt_score > cga_inner(result_F, candidate):
             return candidate
     raise AssertionError("Could not construct a deterministic farther unrelated versor.")
