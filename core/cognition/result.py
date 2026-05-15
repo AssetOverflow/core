@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from field.state import FieldState
 from generate.articulation import ArticulationPlan
 from generate.dialogue import DialogueRole
+from generate.graph_planner import ArticulationTarget, PropositionGraph
+from generate.intent import DialogueIntent
 from generate.proposition import Proposition
 from core.physics.identity import IdentityScore
 
@@ -48,6 +50,11 @@ class CognitiveTurnResult:
     # --- vault / memory ---
     vault_hits: int
 
+    # --- intent / graph telemetry ---
+    intent: DialogueIntent | None = None
+    proposition_graph: PropositionGraph | None = None
+    articulation_target: ArticulationTarget | None = None
+
     # --- invariant bookkeeping ---
-    versor_condition: float     # must be < 1e-6
-    trace_hash: str             # SHA-256 over deterministic key fields
+    versor_condition: float = 0.0   # must be < 1e-6
+    trace_hash: str = ""            # SHA-256 over deterministic key fields

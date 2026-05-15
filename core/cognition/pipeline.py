@@ -18,6 +18,8 @@ from __future__ import annotations
 from field.state import FieldState
 from core.cognition.result import CognitiveTurnResult
 from core.cognition.trace import compute_trace_hash
+from generate.intent import classify_intent
+from generate.graph_planner import graph_from_intent, plan_articulation
 
 
 class CognitiveTurnPipeline:
@@ -29,6 +31,7 @@ class CognitiveTurnPipeline:
 
     def __init__(self, runtime) -> None:  # runtime: ChatRuntime (no import cycle)
         self.runtime = runtime
+        self._last_node_id: str | None = None
 
     # ------------------------------------------------------------------
     # Public API
@@ -40,10 +43,20 @@ class CognitiveTurnPipeline:
         # 1. LISTEN — capture pre-turn field state
         field_state_before: FieldState | None = self._capture_field_state()
 
+        # 1b. CLASSIFY — intent and proposition graph (deterministic, pre-chat)
+        intent = classify_intent(text)
+        prior_node_id = self._last_node_id
+        graph = graph_from_intent(intent, prior_node_id=prior_node_id)
+        target = plan_articulation(graph)
+
         # 2–7. INGEST / UNDERSTAND / RECALL / THINK / ARTICULATE / LEARN
         #       Delegated to ChatRuntime.chat() in Phase 1.
         #       ChatResponse is the stable contract surface.
         response = self.runtime.chat(text, max_tokens=max_tokens)
+
+        # Track last node id for correction-intent chaining
+        if graph.nodes:
+            self._last_node_id = graph.nodes[-1].node_id
 
         # 8. CAPTURE post-turn field state
         field_state_after: FieldState = self.runtime.session.state
@@ -69,6 +82,7 @@ class CognitiveTurnPipeline:
             dialogue_role=str(response.dialogue_role),
             versor_condition=response.versor_condition,
             vault_hits=response.vault_hits,
+            intent_tag=intent.tag.value,
         )
 
         return CognitiveTurnResult(
@@ -85,6 +99,9 @@ class CognitiveTurnPipeline:
             dialogue_role=response.dialogue_role,
             identity_score=response.identity_score,
             vault_hits=response.vault_hits,
+            intent=intent,
+            proposition_graph=graph,
+            articulation_target=target,
             versor_condition=response.versor_condition,
             trace_hash=trace_hash,
         )
