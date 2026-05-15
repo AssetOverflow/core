@@ -1,12 +1,8 @@
 """
 Tests for CognitiveTurnPipeline — the cognitive spine.
 
-Five tests, no micro-test explosion:
-  1. test_pipeline_known_token_turn         — happy-path turn with known tokens
-  2. test_pipeline_unknown_token_grounding  — OOV token handled; field still valid
-  3. test_pipeline_two_turn_memory_continuity — field evolves across turns
-  4. test_pipeline_trace_hash_deterministic — identical inputs → identical hash
-  5. test_pipeline_preserves_versor_closure — versor_condition < 1e-6 per turn
+Tests 1-5: original pipeline contract tests.
+Tests 6-10: intent-proposition graph wiring tests.
 """
 
 from __future__ import annotations
@@ -17,6 +13,8 @@ import pytest
 from chat.runtime import ChatRuntime
 from core.cognition import CognitiveTurnPipeline, CognitiveTurnResult
 from core.cognition.trace import trace_hash_from_result
+from generate.intent import IntentTag
+from generate.graph_planner import RhetoricalMove
 
 
 # ---------------------------------------------------------------------------
@@ -147,3 +145,98 @@ def test_pipeline_preserves_versor_closure(pipeline: CognitiveTurnPipeline) -> N
         )
         # Field state invariant: shape must be intact
         assert result.field_state_after.F.shape == (32,)
+
+
+# ---------------------------------------------------------------------------
+# 6. Definition intent recorded
+# ---------------------------------------------------------------------------
+
+def test_pipeline_records_definition_intent(pipeline: CognitiveTurnPipeline) -> None:
+    """A 'what is' prompt should produce a DEFINITION intent in the result."""
+    result = pipeline.run("what is light", max_tokens=6)
+
+    assert result.intent is not None
+    assert result.intent.tag is IntentTag.DEFINITION
+    assert "light" in result.intent.subject.lower()
+
+    assert result.proposition_graph is not None
+    assert len(result.proposition_graph.nodes) == 1
+    assert result.proposition_graph.nodes[0].predicate == "is_defined_as"
+
+    assert result.articulation_target is not None
+    assert len(result.articulation_target.steps) == 1
+    assert result.articulation_target.source_intent is IntentTag.DEFINITION
+
+
+# ---------------------------------------------------------------------------
+# 7. Comparison graph recorded
+# ---------------------------------------------------------------------------
+
+def test_pipeline_records_comparison_graph(pipeline: CognitiveTurnPipeline) -> None:
+    """A comparison prompt produces a 2-node graph with a CONTRAST edge."""
+    result = pipeline.run("compare light and truth", max_tokens=6)
+
+    assert result.intent is not None
+    assert result.intent.tag is IntentTag.COMPARISON
+
+    graph = result.proposition_graph
+    assert graph is not None
+    assert len(graph.nodes) == 2
+    assert len(graph.edges) == 1
+    assert graph.edges[0].relation.value == "contrast"
+
+    target = result.articulation_target
+    assert target is not None
+    moves = [s.move for s in target.steps]
+    assert RhetoricalMove.CONTRAST in moves
+
+
+# ---------------------------------------------------------------------------
+# 8. Articulation target recorded
+# ---------------------------------------------------------------------------
+
+def test_pipeline_records_articulation_target(pipeline: CognitiveTurnPipeline) -> None:
+    """Every turn produces an ArticulationTarget with at least one step."""
+    result = pipeline.run("logos truth", max_tokens=6)
+
+    assert result.articulation_target is not None
+    assert len(result.articulation_target.steps) >= 1
+    step = result.articulation_target.steps[0]
+    assert step.move is RhetoricalMove.ASSERT
+    assert step.node_id == "p0"
+
+
+# ---------------------------------------------------------------------------
+# 9. Trace hash changes with intent
+# ---------------------------------------------------------------------------
+
+def test_pipeline_trace_hash_changes_with_intent() -> None:
+    """Different intent classifications produce different trace hashes."""
+    rt1 = ChatRuntime()
+    rt2 = ChatRuntime()
+
+    r1 = CognitiveTurnPipeline(rt1).run("what is light", max_tokens=6)
+    r2 = CognitiveTurnPipeline(rt2).run("why light", max_tokens=6)
+
+    assert r1.intent.tag is IntentTag.DEFINITION
+    assert r2.intent.tag is IntentTag.CAUSE
+    assert r1.trace_hash != r2.trace_hash
+
+
+# ---------------------------------------------------------------------------
+# 10. ChatResponse contract unchanged
+# ---------------------------------------------------------------------------
+
+def test_pipeline_chat_response_contract_unchanged(pipeline: CognitiveTurnPipeline) -> None:
+    """Adding intent fields must not break the existing ChatResponse contract."""
+    result = pipeline.run("light logos", max_tokens=8)
+
+    assert isinstance(result.surface, str) and result.surface.strip()
+    assert isinstance(result.walk_surface, str)
+    assert isinstance(result.articulation_surface, str)
+    assert result.dialogue_role in {"assert", "elaborate", "question", "refute"}
+    assert isinstance(result.versor_condition, float)
+    assert isinstance(result.trace_hash, str) and len(result.trace_hash) == 64
+    assert isinstance(result.vault_hits, int)
+    assert result.proposition is not None
+    assert result.articulation is not None

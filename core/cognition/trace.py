@@ -33,6 +33,7 @@ def compute_trace_hash(
     dialogue_role: str,
     versor_condition: float,
     vault_hits: int,
+    intent_tag: str = "unknown",
 ) -> str:
     """Return a deterministic SHA-256 hex digest over the turn's key outputs.
 
@@ -48,6 +49,7 @@ def compute_trace_hash(
         "dialogue_role": str(dialogue_role),
         "versor_condition": _round_float(versor_condition),
         "vault_hits": int(vault_hits),
+        "intent_tag": intent_tag,
     }
     serialized = json.dumps(payload, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
@@ -55,6 +57,7 @@ def compute_trace_hash(
 
 def trace_hash_from_result(result: "CognitiveTurnResult") -> str:
     """Convenience wrapper — compute the hash directly from a result object."""
+    intent_tag = result.intent.tag.value if result.intent is not None else "unknown"
     return compute_trace_hash(
         input_text=result.input_text,
         filtered_tokens=result.filtered_tokens,
@@ -64,4 +67,5 @@ def trace_hash_from_result(result: "CognitiveTurnResult") -> str:
         dialogue_role=str(result.dialogue_role),
         versor_condition=result.versor_condition,
         vault_hits=result.vault_hits,
+        intent_tag=intent_tag,
     )
