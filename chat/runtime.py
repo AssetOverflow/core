@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import re
 from collections.abc import Sequence
 from typing import List
@@ -369,19 +369,19 @@ class ChatRuntime:
         )
         self._context.turn += 1
 
+        surface = _terminate_surface(
+            articulation.surface,
+            role=dialogue_role,
+            output_language=self.config.output_language,
+        )
+        articulation = replace(articulation, surface=surface)
         sentence_plan: SentencePlan = SentenceAssembler().assemble(
             articulation,
             result.tokens,
             role=dialogue_role,
         )
         walk_surface = sentence_plan.surface
-
-        surface = _terminate_surface(
-            articulation.surface,
-            role=dialogue_role,
-            output_language=self.config.output_language,
-        )
-        articulation_surface = surface
+        articulation_surface = articulation.surface
         vault_hits = int(result.vault_hits)
 
         turn_event = TurnEvent(
