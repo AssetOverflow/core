@@ -118,7 +118,70 @@ Important modules:
 - `generate/realizer.py` / `generate/templates.py` — deterministic realization.
 - `teaching/*` — reviewed teaching/correction lifecycle.
 - `language_packs/data/en_core_cognition_v1` — compact cognition seed pack.
+- `evals/*` — deterministic cognition evidence harness.
+- `calibration/*` — bounded replay-based operator calibration.
 - `docs/runtime_contracts.md` — runtime response, memory, identity, and testing contracts.
+
+## Efficiency and Performance Doctrine
+
+Performance is an architectural property.  Do not treat it as an afterthought
+that will be cleaned up after features land.
+
+Before modifying hot paths, identify whether the change touches:
+
+- algebra backend dispatch (`algebra/backend.py`)
+- versor application / closure (`algebra/versor.py`)
+- propagation (`field/propagate.py`)
+- injection / OOV grounding (`ingest/gate.py`)
+- vault recall/storage (`vault/store.py`)
+- session turn loop (`session/context.py`)
+- runtime/eval loops (`chat/runtime.py`, `core/cognition/*`, `evals/*`)
+
+Required approach:
+
+1. Prefer semantics-preserving cleanup before new knobs.
+2. Route hot-path algebra through `algebra.backend` when semantics are identical.
+3. Hoist repeated imports and repeated structure-building out of tight loops.
+4. Cache only deterministic, immutable, or safely copied structures.
+5. Keep exact CGA recall exact; optimize scans with batching/vectorization, not approximation.
+6. Prove speed-oriented changes through existing CLI lanes and, when practical, small benchmark/eval evidence.
+
+Never improve speed by:
+
+- weakening `versor_condition` thresholds
+- skipping closure checks at construction boundaries
+- adding hot-path repair/normalization
+- replacing exact CGA with cosine/ANN/HNSW
+- hiding failures behind retry loops without telemetry
+- mutating shared cached state unsafely
+
+For test speed, prefer better validation lanes, small-case eval tests, fixture reuse where safe, and pack/load caching with immutability guarantees.  Do not delete meaningful tests just because the full suite is slow.
+
+## Security and Trust-Boundary Doctrine
+
+Every agent must identify user-controlled input and dynamic execution surfaces.
+Security hardening should be built into the same PRs that touch those surfaces.
+
+High-risk surfaces:
+
+- `core pack validate` dynamic validator execution
+- language/source pack loading
+- OOV token grounding and logs
+- CLI commands that echo user input
+- report/eval output paths
+- pack mutation proposals
+- any future file/network/database integration
+
+Required approach:
+
+1. Make arbitrary-code execution explicit and opt-in.
+2. Reject path traversal and unsafe pack IDs before filesystem access.
+3. Centralize display/log handling for user-controlled strings when expanding logging.
+4. Keep pack mutation proposal-only unless an explicit reviewed path applies it.
+5. Avoid leaking raw sensitive tokens in errors/reports unless the command is explicitly local/debug.
+6. Preserve deterministic replay evidence for security-relevant decisions.
+
+Do not add hidden background execution, dynamic imports from untrusted paths, shell passthroughs, or broad filesystem writes without an explicit trust boundary and tests.
 
 ## Chat Surface Contract
 
@@ -171,11 +234,12 @@ Never compute a manifest checksum from a pre-serialization Python string.
 
 Current capability sequence:
 
-1. Keep CLI test suites green.
-2. Integrate semantic seed surfaces into realizer/cognition quality.
-3. Add cognitive eval harness.
-4. Add operator calibration from deterministic replay evidence.
-5. Expand curriculum teaching only after the loop remains deterministic.
+1. Keep CLI test suites and `core eval cognition` green.
+2. Tighten hot-path backend consistency and semantics-preserving performance.
+3. Harden pack/OOV/logging trust boundaries.
+4. Add exact vault recall indexing/batching without approximate search.
+5. Add Rust backend parity only after Python semantics are locked by tests.
+6. Expand curriculum teaching only after replay/eval/calibration remain deterministic.
 
 Do not add dashboards, broad infra, or large test matrices unless they directly
 protect or unlock one of the above capabilities.
@@ -192,6 +256,7 @@ core test --suite packs -q
 core test --suite runtime -q
 core test --suite algebra -q
 core test --suite full -q
+core eval cognition
 ```
 
 For targeted work, run the smallest relevant suite first, then `full` before
@@ -206,6 +271,9 @@ Good tests protect:
 - identity protection
 - reviewed correction safety
 - semantic pack loadability and deterministic ordering
+- eval/calibration determinism
+- hot-path performance semantics
+- explicit security trust boundaries
 
 Bad tests preserve private helper shapes, stale constructors, punctuation trivia
 outside documented contracts, or legacy behavior that contradicts the current
@@ -216,10 +284,11 @@ architecture.
 Every PR must answer:
 
 ```text
-What cognitive capability did this add or protect?
+What cognitive capability, performance property, or security boundary did this add or protect?
 What invariant proves it did not corrupt the field?
-Which CLI suite proves the relevant lane?
-Did it avoid hidden normalization, stochastic fallback, and unreviewed mutation?
+Which CLI suite/eval proves the relevant lane?
+Did it avoid hidden normalization, stochastic fallback, approximate recall, and unreviewed mutation?
+If it touches user input, files, dynamic imports, or logs, what trust boundary was enforced?
 ```
 
 Prefer small, load-bearing PRs.  Do not mix baseline fixes, feature work, and
@@ -230,4 +299,4 @@ large reorganization unless the coupling is unavoidable.
 Raw input becomes a closed versor field once; thought evolves through exact
 versor transitions and CGA recall; cognition is structured as intent,
 proposition graph, articulation target, deterministic realization, reviewed
-memory, and replayable trace.
+memory, eval/calibration replay, and traceable evidence.
