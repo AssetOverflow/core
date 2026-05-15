@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -330,6 +331,22 @@ def _parse_entry(payload: dict) -> LexicalEntry:
     )
 
 
+def _clone_manifold(source: VocabManifold) -> VocabManifold:
+    """Return a mutable defensive copy of a cached compiled manifold."""
+    clone = VocabManifold()
+    for idx in range(len(source)):
+        surface = source.get_word_at(idx)
+        clone.add(
+            surface,
+            source.get_versor_at(idx),
+            morphology=source.morphology_for_word(surface),
+            language=source.language_for_word(surface),
+            energy=source.energy_for_word(surface),
+            valence=source.valence_for_word(surface),
+        )
+    return clone
+
+
 def _apply_alignment_corrections(home_manifold: VocabManifold, home_id_map: dict[str, str], foreign_manifold: VocabManifold, foreign_id_map: dict[str, str], pack_id: str) -> None:
     from alignment.graph import load_alignment
 
@@ -351,7 +368,8 @@ def _apply_alignment_corrections(home_manifold: VocabManifold, home_id_map: dict
         home_manifold.update(source_surface, corrected)
 
 
-def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
+@lru_cache(maxsize=None)
+def _load_pack_cached(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
     pack_dir = Path(__file__).parent / "data" / pack_id
     manifest_path = pack_dir / "manifest.json"
     lexicon_path = pack_dir / "lexicon.jsonl"
@@ -403,13 +421,14 @@ def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
     return manifest, home_manifold
 
 
-def load_mounted_packs(pack_ids: tuple[str, ...] | list[str]) -> VocabManifold:
-    """
-    Mount multiple compiled packs into one exact-search manifold.
+def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
+    manifest, manifold = _load_pack_cached(pack_id)
+    return manifest, _clone_manifold(manifold)
 
-    The mounted field is a union of already-compiled Cl(4,1) points. It does
-    not add a side index, fallback embedding, or approximate distance path.
-    """
+
+@lru_cache(maxsize=None)
+def _load_mounted_packs_cached(pack_ids: tuple[str, ...]) -> VocabManifold:
+    """Compile a mounted pack union once; callers receive defensive copies."""
     mounted = VocabManifold()
     seen: set[str] = set()
     primary_groups: dict[str, list[tuple[str, str]]] = {}
@@ -437,6 +456,16 @@ def load_mounted_packs(pack_ids: tuple[str, ...] | list[str]) -> VocabManifold:
             seen.add(surface)
     _apply_mounted_primary_domain_resonance(mounted, primary_groups)
     return mounted
+
+
+def load_mounted_packs(pack_ids: tuple[str, ...] | list[str]) -> VocabManifold:
+    """
+    Mount multiple compiled packs into one exact-search manifold.
+
+    The mounted field is a union of already-compiled Cl(4,1) points. It does
+    not add a side index, fallback embedding, or approximate distance path.
+    """
+    return _clone_manifold(_load_mounted_packs_cached(tuple(pack_ids)))
 
 
 def _apply_mounted_primary_domain_resonance(
@@ -474,7 +503,8 @@ def _infer_foreign_pack_ids(home_pack_id: str, graph: "AlignmentGraph") -> list[
     return sorted(foreign)
 
 
-def load_pack_entries(pack_id: str) -> list[LexicalEntry]:
+@lru_cache(maxsize=None)
+def _load_pack_entries_cached(pack_id: str) -> tuple[LexicalEntry, ...]:
     pack_dir = Path(__file__).parent / "data" / pack_id
     lexicon_path = pack_dir / "lexicon.jsonl"
     entries: list[LexicalEntry] = []
@@ -482,7 +512,11 @@ def load_pack_entries(pack_id: str) -> list[LexicalEntry]:
         if line.strip():
             entries.append(_parse_entry(json.loads(line)))
     _validate_morphology_links(pack_id, entries)
-    return entries
+    return tuple(entries)
+
+
+def load_pack_entries(pack_id: str) -> list[LexicalEntry]:
+    return list(_load_pack_entries_cached(pack_id))
 
 
 def _validate_morphology_links(pack_id: str, entries: list[LexicalEntry]) -> None:
