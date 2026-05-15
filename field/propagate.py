@@ -55,38 +55,10 @@ def propagate_step(state: FieldState, V) -> FieldState:
             current_cycle=new_step,
             last_activation_cycle=ep.last_activation_cycle,
             coherence_residual=0.0,
-            morphology_features=None,   # aspect weight baked at injection; not re-read here
+            morphology_features=None,
             anchor_adjacent=ep.anchor_adjacent,
+            carry_aspect_weight=ep.aspect_weight,
         )
-        # Carry the baked aspect_weight forward: the operator won't re-derive
-        # it from morphology_features=None, so we patch the raw score to
-        # preserve the aspect contribution that was set at the gate.
-        if ep.aspect_weight > 0.0:
-            from dataclasses import replace as _replace
-            # Recompute with the original aspect weight patched back in:
-            # raw already accounts for convergence/recency/residual from above.
-            # We rebuild raw adding the aspect component the operator lost.
-            patched_raw = new_energy.raw + 0.20 * ep.aspect_weight
-            patched_raw = min(patched_raw, 1.0)
-            from core.physics.energy import EnergyClass as _EC
-            if ep.anchor_adjacent and patched_raw >= 0.72:
-                patched_class = _EC.E4
-            elif patched_raw >= 0.82:
-                patched_class = _EC.E4
-            elif patched_raw >= 0.62:
-                patched_class = _EC.E3
-            elif patched_raw >= 0.38:
-                patched_class = _EC.E2
-            elif patched_raw >= 0.16:
-                patched_class = _EC.E1
-            else:
-                patched_class = _EC.E0
-            new_energy = _replace(
-                new_energy,
-                raw=patched_raw,
-                energy_class=patched_class,
-                aspect_weight=ep.aspect_weight,
-            )
     else:
         new_energy = None
 

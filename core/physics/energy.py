@@ -87,12 +87,13 @@ class FieldEnergyOperator:
         coherence_residual: float = 0.0,
         morphology_features: Mapping[str, object] | None = None,
         anchor_adjacent: bool = False,
+        carry_aspect_weight: float = 0.0,
     ) -> EnergyProfile:
         convergence = min(log1p(max(0, convergence_density)) / log1p(8), 1.0)
         age = max(0, int(current_cycle) - int(last_activation_cycle))
         recency = min(max(0, activation_count), 8) / 8.0 * exp(-age / 12.0)
         residual = min(max(0.0, float(coherence_residual)), 1.0)
-        aspect = aspect_weight(morphology_features)
+        aspect = carry_aspect_weight if carry_aspect_weight > 0.0 else aspect_weight(morphology_features)
         raw = (0.35 * convergence) + (0.25 * recency) + (0.20 * residual) + (0.20 * aspect)
         if anchor_adjacent and raw >= 0.72:
             energy_class = EnergyClass.E4

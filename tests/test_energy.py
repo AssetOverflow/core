@@ -345,6 +345,48 @@ class TestPropagateStepEnergyRecomputation:
 
 
 # ---------------------------------------------------------------------------
+# carry_aspect_weight consolidation
+# ---------------------------------------------------------------------------
+
+class TestCarryAspectWeight:
+    def test_carry_aspect_matches_morphology_derived(self):
+        """carry_aspect_weight produces identical raw/class as morphology-derived aspect."""
+        base_kw = dict(
+            convergence_density=4,
+            activation_count=4,
+            current_cycle=1,
+            last_activation_cycle=0,
+            coherence_residual=0.0,
+            anchor_adjacent=False,
+        )
+        from_morph = _op.compute(**base_kw, morphology_features={"mood": "imperative"})
+        from_carry = _op.compute(**base_kw, carry_aspect_weight=0.90)
+        assert from_carry.raw == pytest.approx(from_morph.raw)
+        assert from_carry.energy_class is from_morph.energy_class
+        assert from_carry.aspect_weight == pytest.approx(from_morph.aspect_weight)
+
+    def test_carry_zero_falls_back_to_morphology(self):
+        ep = _op.compute(
+            morphology_features={"aspect": "yiqtol"},
+            carry_aspect_weight=0.0,
+        )
+        assert ep.aspect_weight == pytest.approx(0.65)
+
+    def test_propagate_step_preserves_baked_aspect_weight(self):
+        """Aspect weight injected at the gate survives propagation via carry."""
+        ep = _op.compute(
+            convergence_density=4,
+            activation_count=2,
+            current_cycle=0,
+            morphology_features={"mood": "imperative"},
+        )
+        state = FieldState(F=_clean_versor(), node=0, step=0, energy=ep)
+        new_state = propagate_step(state, _identity_rotor())
+        assert new_state.energy.aspect_weight == pytest.approx(0.90)
+        assert new_state.energy.raw > 0.0
+
+
+# ---------------------------------------------------------------------------
 # EnergyProfile field storage round-trip on FieldState
 # ---------------------------------------------------------------------------
 

@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from algebra.backend import versor_apply
-from algebra.cga import cga_inner, outer_product
+from algebra.backend import cga_inner, versor_apply
+from algebra.cga import outer_product
 from field.state import FieldState
 from generate.dialogue import DialogueTurn
 from generate.proposition import Proposition
