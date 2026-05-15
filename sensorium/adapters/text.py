@@ -22,6 +22,9 @@ import logging
 
 import numpy as np
 
+import hashlib
+
+from algebra.versor import construction_seed_versor, versor_condition
 from language_packs.schema import LanguageRole, OOVPolicy
 from sensorium.protocol import (
     CL41_DIM,
@@ -208,3 +211,29 @@ def koine_greek_pack(vocabulary: ModalityVocabulary | None = None) -> ModalityPa
         language_role=LanguageRole.DEPTH_RELATION,
         oov_policy=OOVPolicy.FAIL_CLOSED,
     )
+
+
+# ---------------------------------------------------------------------------
+# Deterministic hash-to-versor stub for testing without vocabulary
+# ---------------------------------------------------------------------------
+
+
+def deterministic_hash_versor(text: str) -> np.ndarray:
+    """Map an arbitrary string to a valid Cl(4,1) versor, deterministically.
+
+    Uses SHA-256 bytes mapped to bounded [-1, 1] floats to fill a dense
+    32-component seed, then constructs a closed versor via the seed-to-rotor
+    path (construction tier).
+    """
+    digest = hashlib.sha256(text.encode("utf-8")).digest()
+    seed = np.array(
+        [(b / 127.5) - 1.0 for b in digest],
+        dtype=np.float64,
+    )
+    full_seed = np.zeros(32, dtype=np.float64)
+    full_seed[:32] = seed[:32]
+    versor = construction_seed_versor(full_seed)
+    vc = versor_condition(versor)
+    if vc >= 1e-6:
+        raise ValueError(f"deterministic_hash_versor: versor_condition {vc:.2e} >= 1e-6")
+    return versor.astype(np.float32)

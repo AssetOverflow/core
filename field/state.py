@@ -69,3 +69,54 @@ class FieldState:
             energy=self.energy,
             valence=self.valence,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class ManifoldState:
+    """Field over a graph topology — one versor per node, with edge connectivity.
+
+    Invariant: versor_condition(fields[i]) < 1e-6 for every node i.
+    """
+
+    fields: np.ndarray  # (N, 32) float32 — one Cl(4,1) versor per node
+    edges: np.ndarray   # (E, 2) int32 — directed edge list
+    step: int = 0
+
+    def __post_init__(self) -> None:
+        from algebra.backend import versor_condition
+
+        F = np.array(self.fields, dtype=np.float32).copy()
+        if F.ndim != 2 or F.shape[1] != _EXPECTED_COMPONENTS:
+            raise ValueError(
+                f"ManifoldState.fields must have shape (N, {_EXPECTED_COMPONENTS}), "
+                f"got {F.shape}."
+            )
+        object.__setattr__(self, "fields", F)
+
+        E = np.array(self.edges, dtype=np.int32).copy()
+        if E.ndim != 2 or E.shape[1] != 2:
+            raise ValueError(
+                f"ManifoldState.edges must have shape (E, 2), got {E.shape}."
+            )
+        n_nodes = F.shape[0]
+        if E.size > 0 and (E.min() < 0 or E.max() >= n_nodes):
+            raise ValueError(
+                f"Edge indices must be in [0, {n_nodes}), "
+                f"got range [{E.min()}, {E.max()}]."
+            )
+        object.__setattr__(self, "edges", E)
+
+        for i in range(n_nodes):
+            vc = versor_condition(F[i])
+            if vc >= 1e-6:
+                raise ValueError(
+                    f"ManifoldState.fields[{i}] violates versor_condition: {vc:.2e} >= 1e-6."
+                )
+
+    def with_fields(self, new_fields: np.ndarray) -> ManifoldState:
+        """Return a new ManifoldState with updated field values."""
+        return ManifoldState(fields=new_fields, edges=self.edges, step=self.step)
+
+    def advance(self) -> ManifoldState:
+        """Return a new ManifoldState one step forward."""
+        return ManifoldState(fields=self.fields, edges=self.edges, step=self.step + 1)
