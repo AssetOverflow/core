@@ -20,6 +20,7 @@ from core.cognition.result import CognitiveTurnResult
 from core.cognition.trace import compute_trace_hash
 from generate.intent import classify_intent
 from generate.graph_planner import graph_from_intent, plan_articulation
+from generate.realizer import realize_semantic
 from teaching.correction import CorrectionCandidate, extract_correction
 from teaching.review import ReviewedTeachingExample, review_correction
 from teaching.store import PackMutationProposal, TeachingStore
@@ -55,10 +56,22 @@ class CognitiveTurnPipeline:
         graph = graph_from_intent(intent, prior_node_id=prior_node_id)
         target = plan_articulation(graph)
 
+        # 1c. REALIZE — semantic realization from graph + intent
+        realized_plan = realize_semantic(target, graph)
+
         # 2–7. INGEST / UNDERSTAND / RECALL / THINK / ARTICULATE / LEARN
-        #       Delegated to ChatRuntime.chat() in Phase 1.
+        #       Delegated to ChatRuntime.chat().
         #       ChatResponse is the stable contract surface.
         response = self.runtime.chat(text, max_tokens=max_tokens)
+
+        # Override surfaces when semantic realizer produced a result.
+        # The ChatResponse contract fields are preserved; we select
+        # the better articulation surface from the semantic path.
+        surface = response.surface
+        articulation_surface = response.articulation_surface
+        if realized_plan.surface:
+            surface = realized_plan.surface
+            articulation_surface = realized_plan.surface
 
         # Track last node id for correction-intent chaining
         if graph.nodes:
@@ -84,7 +97,7 @@ class CognitiveTurnPipeline:
 
         # Advance turn counter and remember surface for next correction binding
         self._turn_number += 1
-        self._prior_surface = response.surface
+        self._prior_surface = surface
 
         # 11. TRACE — deterministic hash (includes teaching IDs when present)
         review_hash = reviewed_example.review_hash if reviewed_example is not None else ""
@@ -92,9 +105,9 @@ class CognitiveTurnPipeline:
         trace_hash = compute_trace_hash(
             input_text=text,
             filtered_tokens=filtered_tokens,
-            surface=response.surface,
+            surface=surface,
             walk_surface=response.walk_surface,
-            articulation_surface=response.articulation_surface,
+            articulation_surface=articulation_surface,
             dialogue_role=str(response.dialogue_role),
             versor_condition=response.versor_condition,
             vault_hits=response.vault_hits,
@@ -111,9 +124,9 @@ class CognitiveTurnPipeline:
             field_state_after=field_state_after,
             proposition=response.proposition,
             articulation=response.articulation,
-            surface=response.surface,
+            surface=surface,
             walk_surface=response.walk_surface,
-            articulation_surface=response.articulation_surface,
+            articulation_surface=articulation_surface,
             dialogue_role=response.dialogue_role,
             identity_score=response.identity_score,
             vault_hits=response.vault_hits,
