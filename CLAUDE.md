@@ -22,6 +22,7 @@ CognitiveTurnPipeline
   -> deterministic realizer
   -> generation walk telemetry
   -> reviewed teaching loop
+  -> deterministic eval/calibration replay
   -> deterministic trace hash
 ```
 
@@ -99,7 +100,70 @@ runtime path.  Vault recall is exact and deterministic.
 - `generate/realizer.py` and `generate/templates.py` — deterministic surface realization.
 - `teaching/correction.py`, `teaching/review.py`, `teaching/store.py` — reviewed teaching loop.
 - `language_packs/data/en_core_cognition_v1` — core cognition semantic seed pack.
+- `evals/*` — deterministic cognition eval harness.
+- `calibration/*` — bounded replay-based calibration.
 - `docs/runtime_contracts.md` — response, telemetry, memory, identity, and testing contracts.
+
+## Efficiency and Performance Doctrine
+
+Performance is part of correctness for this project because slow feedback hides
+regressions and encourages unsafe shortcuts.  Do not defer obvious hot-path or
+validation-lane issues until “later.”
+
+Before changing hot paths, identify whether the change touches:
+
+- algebra backend dispatch
+- versor application / closure
+- propagation
+- injection / OOV grounding
+- vault recall/storage
+- session turn loop
+- runtime/eval loops
+
+Required approach:
+
+1. Prefer semantics-preserving cleanup before new knobs.
+2. Use `algebra.backend` for hot-path algebra when semantics are identical.
+3. Hoist repeated imports and repeated structure-building out of tight loops.
+4. Cache deterministic immutable data only, or return safe copies.
+5. Keep exact CGA recall exact; use batching/vectorization, not approximation.
+6. Validate speed-oriented changes through CLI lanes and `core eval cognition`.
+
+Never improve speed by weakening closure thresholds, skipping construction
+checks, adding hot-path repair, replacing exact CGA with approximate metrics, or
+mutating shared cached state unsafely.
+
+For test speed, prefer curated CLI lanes, small-case eval tests, safe fixture
+reuse, and immutable pack/load caching.  Do not delete meaningful tests just
+because the full suite is slow.
+
+## Security and Trust Boundaries
+
+Any change that touches user-controlled text, filesystem paths, dynamic imports,
+reports, pack validators, or logs must state the trust boundary.
+
+High-risk surfaces:
+
+- `core pack validate` dynamic validator execution.
+- language/source pack loading.
+- OOV token grounding and error messages.
+- CLI commands that echo user content.
+- eval/report output paths.
+- pack mutation proposals.
+- future file/network/database integrations.
+
+Required approach:
+
+1. Make arbitrary-code execution explicit and opt-in.
+2. Reject path traversal and unsafe pack IDs before filesystem access.
+3. Centralize safe display/log handling before increasing logging.
+4. Keep pack mutation proposal-only unless a reviewed path applies it.
+5. Avoid leaking raw sensitive tokens unless the command is explicitly local/debug.
+6. Preserve deterministic replay evidence for security-relevant decisions.
+
+Do not add hidden background execution, dynamic imports from untrusted paths,
+shell passthroughs, or broad filesystem writes without tests and a documented
+trust boundary.
 
 ## Runtime Surface Contract
 
@@ -155,6 +219,7 @@ core test --suite packs -q
 core test --suite runtime -q
 core test --suite algebra -q
 core test --suite full -q
+core eval cognition
 ```
 
 Run the smallest relevant suite first, then `full` before merge when practical.
@@ -163,11 +228,12 @@ Run the smallest relevant suite first, then `full` before merge when practical.
 
 Current near-term sequence:
 
-1. Keep CLI lanes green.
-2. Integrate semantic seed relations into realizer/cognition quality.
-3. Add cognitive eval harness.
-4. Add deterministic operator calibration from replay evidence.
-5. Expand curriculum teaching after the loop is stable.
+1. Keep CLI lanes and `core eval cognition` green.
+2. Tighten hot-path backend consistency and semantics-preserving performance.
+3. Harden pack/OOV/logging trust boundaries.
+4. Add exact vault recall indexing/batching without approximate search.
+5. Add Rust backend parity only after Python semantics are locked by tests.
+6. Expand curriculum teaching after replay/eval/calibration remain deterministic.
 
 Avoid broad docs-first churn, dashboard work, or large infrastructure unless it
 unlocks one of these steps.
@@ -177,10 +243,11 @@ unlocks one of these steps.
 Before opening or merging, answer:
 
 ```text
-What capability did this add or protect?
+What capability, performance property, or security boundary did this add/protect?
 Which invariant proves the field remains valid?
-Which CLI suite proves the lane?
-Did this avoid hidden normalization, stochastic fallback, and unreviewed mutation?
+Which CLI suite/eval proves the lane?
+Did this avoid hidden normalization, stochastic fallback, approximate recall, and unreviewed mutation?
+If it touches user input, files, dynamic imports, or logs, what trust boundary was enforced?
 ```
 
 Prefer small, load-bearing PRs with clear evidence.
