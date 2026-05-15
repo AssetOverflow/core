@@ -17,6 +17,9 @@ from generate.graph_planner import ArticulationTarget, PropositionGraph
 from generate.intent import DialogueIntent
 from generate.proposition import Proposition
 from core.physics.identity import IdentityScore
+from teaching.correction import CorrectionCandidate
+from teaching.review import ReviewedTeachingExample
+from teaching.store import PackMutationProposal
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,6 +57,11 @@ class CognitiveTurnResult:
     intent: DialogueIntent | None = None
     proposition_graph: PropositionGraph | None = None
     articulation_target: ArticulationTarget | None = None
+
+    # --- teaching loop ---
+    teaching_candidate: CorrectionCandidate | None = None
+    reviewed_teaching_example: ReviewedTeachingExample | None = None
+    pack_mutation_proposal: PackMutationProposal | None = None
 
     # --- invariant bookkeeping ---
     versor_condition: float = 0.0   # must be < 1e-6
