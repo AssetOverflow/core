@@ -23,9 +23,18 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite smoke -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core eval cognition\n  core eval cognition --json"
+EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite fast -q\n  core test --suite smoke -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core eval cognition\n  core eval cognition --json"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
+    "fast": (
+        "tests/test_cli_test_suites.py",
+        "tests/test_runtime_config.py",
+        "tests/test_core_semantic_seed_pack.py",
+        "tests/test_intent_proposition_graph.py",
+        "tests/test_articulation_realizer_v2.py",
+        "tests/test_reviewed_teaching_loop.py",
+        "tests/test_cognitive_eval_harness.py",
+    ),
     "smoke": (
         "tests/test_chat_runtime.py",
         "tests/test_achat.py",
