@@ -40,6 +40,8 @@ _SEED_ALIASES = {
     "arche": "ἀρχή",
     "aletheia": "ἀλήθεια",
 }
+_QUESTION_WORDS = frozenset({"what", "who", "how", "why", "when", "where", "which"})
+_TERMINALS = frozenset({".", "?", ";", "!"})
 
 
 def _energy_scalar(energy_obj) -> float:
@@ -52,6 +54,33 @@ def _energy_scalar(energy_obj) -> float:
         return float(energy_obj)
     except (TypeError, ValueError):
         return 1.0
+
+
+def _is_question_input(raw_text: str, tokens: Sequence[str]) -> bool:
+    if raw_text.strip().endswith("?"):
+        return True
+    return bool(tokens and tokens[0].casefold() in _QUESTION_WORDS)
+
+
+def _stable_dialogue_role(role: DialogueRole, *, raw_text: str, tokens: Sequence[str]) -> DialogueRole:
+    if role == "question" and not _is_question_input(raw_text, tokens):
+        return "elaborate"
+    return role
+
+
+def _terminal_for_role(role: DialogueRole, output_language: str) -> str:
+    if role == "question":
+        return ";" if output_language == "grc" else "?"
+    return "."
+
+
+def _terminate_surface(surface: str, *, role: DialogueRole, output_language: str) -> str:
+    stripped = surface.strip()
+    if not stripped:
+        return stripped
+    if stripped[-1] in _TERMINALS:
+        return stripped
+    return f"{stripped}{_terminal_for_role(role, output_language)}"
 
 
 @dataclass
@@ -272,9 +301,10 @@ class ChatRuntime:
             self._frame_registry,
             output_lang=self.config.output_language,
         )
-        dialogue_role = classify_dialogue_blade(
-            base_proposition.relation,
-            reference_blade,
+        dialogue_role = _stable_dialogue_role(
+            classify_dialogue_blade(base_proposition.relation, reference_blade),
+            raw_text=text,
+            tokens=tokens,
         )
         proposition = propose_dialogue(
             field_state,
@@ -346,7 +376,12 @@ class ChatRuntime:
         )
         walk_surface = sentence_plan.surface
 
-        surface = articulation.surface
+        surface = _terminate_surface(
+            articulation.surface,
+            role=dialogue_role,
+            output_language=self.config.output_language,
+        )
+        articulation_surface = surface
         vault_hits = int(result.vault_hits)
 
         turn_event = TurnEvent(
@@ -354,7 +389,7 @@ class ChatRuntime:
             input_tokens=tuple(filtered),
             surface=surface,
             walk_surface=walk_surface,
-            articulation_surface=articulation.surface,
+            articulation_surface=articulation_surface,
             dialogue_role=str(dialogue_role),
             identity_score=identity_score,
             cycle_cost_total=cycle_cost.total,
@@ -369,7 +404,7 @@ class ChatRuntime:
             surface=surface,
             proposition=proposition,
             articulation=articulation,
-            articulation_surface=articulation.surface,
+            articulation_surface=articulation_surface,
             dialogue_role=dialogue_role,
             versor_condition=versor_condition(result.final_state.F),
             output_language=self.config.output_language,
