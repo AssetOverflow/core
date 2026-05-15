@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite smoke -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q"
+EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite smoke -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core eval cognition\n  core eval cognition --json"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "smoke": (
@@ -44,6 +44,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_cognitive_turn_pipeline.py",
         "tests/test_articulation_realizer_v2.py",
         "tests/test_semantic_realizer_integration.py",
+        "tests/test_cognitive_eval_harness.py",
     ),
     "teaching": (
         "tests/test_reviewed_teaching_loop.py",
@@ -450,6 +451,45 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_eval_cognition(args: argparse.Namespace) -> int:
+    """Run the cognition eval harness."""
+    from evals.run_cognition_eval import load_cases, run_eval
+
+    cases = load_cases()
+    report = run_eval(cases)
+
+    if args.json:
+        print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(f"cases          : {report.total}")
+        print(f"intent_accuracy: {report.intent_accuracy:.1%}")
+        print(f"term_capture   : {report.term_capture_rate:.1%}")
+        print(f"surface_ground : {report.surface_groundedness:.1%}")
+        print(f"versor_closure : {report.versor_closure_rate:.1%}")
+        print(f"det_traces     : {report.deterministic_traces}")
+        failures = [c for c in report.cases if not c.intent_correct or not c.versor_closure]
+        if failures:
+            print(f"\nfailures ({len(failures)}):")
+            for c in failures:
+                issues = []
+                if not c.intent_correct:
+                    issues.append("intent")
+                if not c.versor_closure:
+                    issues.append(f"versor={c.versor_condition:.2e}")
+                print(f"  {c.case_id}: {', '.join(issues)}")
+
+    if args.report:
+        report_path = Path(args.report)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(
+            json.dumps(report.as_dict(), ensure_ascii=False, indent=2, sort_keys=True)
+        )
+        print(f"\nreport written: {report_path}")
+
+    all_pass = report.intent_accuracy == 1.0 and report.versor_closure_rate == 1.0
+    return 0 if all_pass else 1
+
+
 def _add_runtime_policy_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--pack", action="append", help="language pack to mount; repeat for multiple packs")
     parser.add_argument("--output-language", default="en", help="target output language code; default: en")
@@ -536,6 +576,13 @@ def build_parser() -> argparse.ArgumentParser:
     rust_build.set_defaults(func=cmd_rust_build)
     rust_test = rust_sub.add_parser("test", help="run cargo test --release for core-rs")
     rust_test.set_defaults(func=cmd_rust_test)
+
+    eval_cmd = subparsers.add_parser("eval", help="run eval harnesses")
+    eval_sub = eval_cmd.add_subparsers(dest="eval_command", metavar="eval-command", required=True)
+    eval_cognition = eval_sub.add_parser("cognition", help="run the cognition eval harness")
+    eval_cognition.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    eval_cognition.add_argument("--report", metavar="PATH", help="write JSON report to file")
+    eval_cognition.set_defaults(func=cmd_eval_cognition)
 
     doctor = subparsers.add_parser("doctor", help="check runtime imports and packaging health")
     doctor.add_argument("--packs", action="store_true", help="also list discovered language packs")
