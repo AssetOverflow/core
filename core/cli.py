@@ -43,6 +43,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_intent_proposition_graph.py",
         "tests/test_cognitive_turn_pipeline.py",
         "tests/test_articulation_realizer_v2.py",
+        "tests/test_semantic_realizer_integration.py",
     ),
     "teaching": (
         "tests/test_reviewed_teaching_loop.py",

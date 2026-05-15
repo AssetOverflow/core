@@ -24,6 +24,16 @@ _PREDICATE_DISPLAY: dict[str, str] = {
     "recalls": "recalls",
     "is_verified_as": "is verified as",
     "addresses": "addresses",
+    "defines": "defines",
+    "means": "means",
+    "grounds": "grounds",
+    "supports": "supports",
+    "causes": "causes",
+    "reveals": "reveals",
+    "precedes": "precedes",
+    "follows": "follows",
+    "belongs_to": "belongs to",
+    "answers": "answers",
 }
 
 
