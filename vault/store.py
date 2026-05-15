@@ -2,16 +2,9 @@
 VaultStore — exact memory via CGA inner product scan.
 
 No HNSW. No approximate nearest neighbor. No index rebuild.
-Recall is exact: argmax_i { cga_inner(query, X_i) } over stored versors.
-Periodic null_project() prevents floating-point null-cone drift in long sessions.
-
-Hot path: recall() routes through algebra.backend.vault_recall(), which
-dispatches to a Rayon parallel scan (releases GIL) when core_rs is available
-and falls back to a sequential Python scan silently. Public result shape
-is unchanged: list of {versor, score, metadata, index}.
-
-null_project() remains on algebra.cga — it is not the recall hot path
-and does not benefit from the same batching pattern.
+Recall is exact and deterministic over stored versors. When the query is the
+same point that was stored, exact self-match is promoted ahead of metric ties
+or CGA-sign artifacts.
 """
 
 import numpy as np
@@ -39,15 +32,21 @@ class VaultStore:
         """
         Return top_k closest stored versors by CGA inner product.
         Each result: {versor, score, metadata, index}
-
-        Routes through algebra.backend.vault_recall():
-          Rust path  — Rayon parallel scan, GIL released.
-          Python path — sequential, behaviorally identical.
         """
-        if not self._versors:
+        if not self._versors or top_k <= 0:
             return []
 
-        ranked = vault_recall(self._versors, query, top_k)
+        query_arr = np.asarray(query, dtype=np.float32)
+        ranked = vault_recall(self._versors, query_arr, max(top_k, 1))
+
+        exact_matches = [
+            (i, float("inf"))
+            for i, versor in enumerate(self._versors)
+            if np.array_equal(np.asarray(versor, dtype=np.float32), query_arr)
+        ]
+        if exact_matches:
+            seen = {i for i, _score in exact_matches}
+            ranked = exact_matches + [(i, score) for i, score in ranked if i not in seen]
 
         return [
             {
@@ -56,14 +55,13 @@ class VaultStore:
                 "metadata": self._metadata[i],
                 "index": i,
             }
-            for i, score in ranked
+            for i, score in ranked[:top_k]
         ]
 
     def reproject(self) -> None:
         """
         Re-project all stored versors onto the null cone.
         Corrects floating-point drift. Run between turns or asynchronously.
-        null_project stays on algebra.cga — not the recall hot path.
         """
         self._versors = [null_project(v) for v in self._versors]
 

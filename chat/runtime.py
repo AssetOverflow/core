@@ -346,7 +346,7 @@ class ChatRuntime:
         )
         walk_surface = sentence_plan.surface
 
-        surface = walk_surface or articulation.surface
+        surface = articulation.surface
         vault_hits = int(result.vault_hits)
 
         turn_event = TurnEvent(

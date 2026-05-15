@@ -3,26 +3,6 @@ Generation loop — token streaming from the versor manifold.
 
 Every token:  nearest non-current word to current F via CGA inner product.
 Every step:   F <- versor_apply(V, F) where V = word_transition_rotor(A, B).
-
-Architectural boundaries enforced here:
-  - VocabManifold owns manifold points only (get_versor_at, nearest).
-  - algebra.rotor.word_transition_rotor constructs the transition operator.
-  - Generation returns GenerationResult carrying final_state, not list[str].
-  - F is renormalized after every propagate_step so versor_condition stays
-    near zero. The closed-algebra invariant holds only when both rotor inputs
-    are unit versors; _recall_state feeds live F as one input, so we must
-    normalize there too. See ADR note below.
-
-ADR note — why normalize here:
-    word_transition_rotor(A, B) requires both A and B to be unit versors.
-    Inside the main loop A is always vocab.get_versor_at(node) (safe).
-    Inside _recall_state A is current.F which drifts under repeated
-    sandwiching. Each non-unit rotor multiplies the field norm by a factor
-    > 1; over 8 steps this compounds to ~1e8 (observed in traces).
-    Renormalization after propagate_step and at the top of _recall_state
-    keeps versor_condition < 1e-4 across all tested scenarios.
-
-No confidence gates. No IDK fallback. No attractor clamping.
 """
 
 from __future__ import annotations
@@ -33,6 +13,7 @@ import numpy as np
 from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import word_transition_rotor
+from algebra.versor import normalize_to_versor, unitize_versor
 from generate.attention import AttentionOperator
 from generate.result import GenerationResult
 from generate.salience import SalienceOperator
@@ -41,21 +22,21 @@ _RECENT_WINDOW = 3
 _STOP_TOKENS = frozenset({"it", "to", "word"})
 
 
-def _renorm(state: FieldState) -> FieldState:
-    """
-    Return state with F renormalized to unit versor norm.
+def _closed_F(F: np.ndarray) -> np.ndarray:
+    arr = np.asarray(F, dtype=np.float64)
+    try:
+        return unitize_versor(arr)
+    except ValueError:
+        return normalize_to_versor(arr)
 
-    This is called after every propagate_step to keep F on the manifold.
-    If F is already unit (norm within 1e-9 of 1.0) the copy is skipped and
-    the original state is returned unchanged.
-    """
-    norm = float(np.linalg.norm(state.F))
-    if norm < 1e-12:
-        return state
-    if abs(norm - 1.0) < 1e-9:
+
+def _renorm(state: FieldState) -> FieldState:
+    """Return state with F reclosed onto the versor manifold."""
+    closed = _closed_F(state.F)
+    if np.allclose(closed, state.F, atol=1e-12, rtol=1e-12):
         return state
     return FieldState(
-        F=state.F / norm,
+        F=closed,
         node=state.node,
         step=state.step,
         holonomy=state.holonomy,
@@ -65,13 +46,6 @@ def _renorm(state: FieldState) -> FieldState:
 
 
 def _articulate(vocab, word: str) -> str:
-    """
-    Recover the emitted surface through MorphologyEntry when available.
-
-    The manifold walk selects a vocabulary point. Articulation then returns
-    the structured surface carried by that point, preserving script and
-    inflection without introducing a corrective pass.
-    """
     morphology_for_word = getattr(vocab, "morphology_for_word", None)
     if morphology_for_word is None:
         return word
@@ -87,19 +61,6 @@ def _nearest_next(
     stop_nodes: frozenset[int] = frozenset(),
     candidate_indices: np.ndarray | None = None,
 ) -> tuple[str, int]:
-    """
-    Select the nearest vocabulary point while avoiding short loops.
-
-    Allowing the current node to win makes V = transition(A, A), which is an
-    identity-like transition and can stall generation forever on one token.
-    Recent-node exclusion reduces two- and three-token attractor cycles.
-    Stop-node exclusion keeps function-word wells from dominating when more
-    informative neighbors are available.
-
-    If attention/language filtering leaves only the current node available,
-    the final fallback deliberately permits that singleton candidate instead
-    of crashing. That keeps inhibition fail-closed to the attended region.
-    """
     if len(vocab) <= 1:
         return vocab.nearest(F_voiced, candidate_indices=candidate_indices)
 
@@ -156,7 +117,6 @@ def _nearest_with_optional_candidates(
 
 
 def _voiced_state(state: FieldState, persona) -> FieldState:
-    """Compose the session persona motor into the live field path."""
     return _renorm(FieldState(
         F=persona.apply(state.F),
         node=state.node,
@@ -168,28 +128,13 @@ def _voiced_state(state: FieldState, persona) -> FieldState:
 
 
 def _recall_state(state: FieldState, vault, top_k: int) -> tuple[FieldState, int]:
-    """
-    Feed exact vault recall back into the field as sequential operators.
-
-    Recall returns stored versors ranked by the vault's exact metric. Each hit
-    is treated as an additional operator in the propagation path, and each
-    applied hit is counted for deterministic runtime telemetry.
-
-    IMPORTANT: current.F must be unit before passing to word_transition_rotor
-    as input A. We normalize at entry and after each step so that recall hits
-    don't compound norm drift. The vault stores raw F arrays which may also
-    have small drift; recalled_F is unitized before use.
-    """
     if vault is None or top_k <= 0:
         return state, 0
 
     current = _renorm(state)
     hits_applied = 0
     for hit in vault.recall(current.F, top_k=top_k):
-        recalled_F = np.asarray(hit["versor"], dtype=np.float64)
-        r_norm = float(np.linalg.norm(recalled_F))
-        if r_norm > 1e-12:
-            recalled_F = recalled_F / r_norm
+        recalled_F = _closed_F(np.asarray(hit["versor"], dtype=np.float64))
         V = word_transition_rotor(current.F, recalled_F)
         current = _renorm(propagate_step(current, V))
         current = FieldState(
@@ -255,24 +200,6 @@ def generate(
     salience_top_k: int = 16,
     inhibition_threshold: float = 0.3,
 ) -> GenerationResult:
-    """
-    Generate a token sequence from an initial FieldState.
-
-    Loop:
-    1. Compose the persistent persona motor into the current field
-    2. Propagate exact vault recall hits into the current field
-    3. Find nearest non-current vocab node via CGA inner product
-    4. Emit token
-    5. Build transition rotor: V = word_transition_rotor(A, B)
-       where A = versor at current node (always unit), B = versor at nearest node
-    6. Propagate: F <- versor_apply(V, F)
-    7. Renormalize F to keep it on the manifold (versor_condition < 1e-4)
-    8. Advance node pointer
-
-    Returns:
-        GenerationResult with tokens, final_state, optional trajectory,
-        real vault-hit count, and salience telemetry when attention is enabled.
-    """
     tokens = []
     trajectory = [] if record_trajectory else None
     vault_hits = 0
@@ -331,7 +258,7 @@ def generate(
 
     return GenerationResult(
         tokens=tokens,
-        final_state=current,
+        final_state=_renorm(current),
         trajectory=trajectory,
         salience_top_k=salience_budget,
         candidates_used=candidates_used,
@@ -347,21 +274,6 @@ async def agenerate(
     vault=None,
     recall_top_k: int = 3,
 ):
-    """
-    Async streaming version — yields one token at a time.
-
-    Maintains parity with the synchronous generate() path:
-      - Persona motor applied via _voiced_state() every step
-      - Vault recall fed back into field via _recall_state() every step
-      - Recent-node and stop-node exclusion applied
-      - F renormalized after every propagate_step (parity with sync path)
-
-    The caller receives tokens as they are emitted. For the full
-    GenerationResult (final_state, trajectory), use the synchronous
-    generate() path or wrap this generator in an async collector.
-
-    Yields: str (one token per iteration)
-    """
     current = _renorm(state)
     recent_nodes = deque([state.node], maxlen=_RECENT_WINDOW)
     stop_nodes = frozenset(
