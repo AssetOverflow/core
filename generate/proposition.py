@@ -5,10 +5,6 @@ A proposition is the first structured assertion above the surface walk:
 prompt and field form a grade-2 relation blade; a frame is selected by exact
 CGA inner product against that relation; vocabulary points then instantiate
 the frame slots.
-
-No normalization happens here. This module consumes already-closed field and
-vocabulary versors and uses only outer_product() plus cga_inner() for relation
-and distance.
 """
 
 from __future__ import annotations
@@ -88,12 +84,6 @@ class FrameRegistry:
 
     @classmethod
     def from_pack(cls, pack: str, vocab) -> "FrameRegistry":
-        """
-        Load frames from packs/<pack>/frames.jsonl.
-
-        The shipped Koine directory is named both `el` and `grc` in different
-        layers; this accepts either spelling and reads the project pack files.
-        """
         pack_dir = _PROJECT_ROOT / "packs" / pack
         if not pack_dir.exists() and pack == "el":
             pack_dir = _PROJECT_ROOT / "packs" / "grc"
@@ -150,15 +140,7 @@ def propose(
     frame_registry: FrameRegistry,
     output_lang: str | None = None,
 ) -> Proposition:
-    """
-    Generate one structured proposition from the live field.
-
-    The prompt field is `holonomy` when injection supplied it; otherwise the
-    current field is used. The selected subject is nearest the prompt. The
-    predicate is nearest the current field with the subject and trivial stop
-    wells excluded. The resulting proposition can be stored directly in the
-    vault metadata while its `surface` remains the emitted text.
-    """
+    """Generate one structured proposition from the live field."""
     prompt = _prompt_versor(field_state)
     relation = outer_product(prompt, field_state.F)
     frame = frame_registry.select(relation)
@@ -171,9 +153,12 @@ def propose(
         preferred_pos=frozenset({"noun", "pronoun"}),
         candidate_indices=candidate_indices,
     )
+    # Predicate selection must remain anchored to the prompt field, not a
+    # recall-contaminated or drive-biased current field, so slot evidence stays
+    # closer to prompt than unrelated vault points.
     predicate_word, predicate_idx = _nearest_content_word(
         vocab,
-        field_state.F,
+        prompt,
         exclude_indices=frozenset({subject_idx}),
         candidate_indices=candidate_indices,
     )
