@@ -14,11 +14,11 @@ def runtime():
         pytest.skip(f"ChatRuntime not available: {exc}")
 
 
-def test_chat_surface_keeps_walk_visible_when_identity_is_telemetry(runtime):
+def test_chat_keeps_walk_visible_when_identity_is_telemetry(runtime):
     response = runtime.chat("truth", max_tokens=6)
 
     assert response.walk_surface
-    assert response.surface == response.walk_surface
+    assert response.surface == response.articulation_surface
     assert isinstance(response.flagged, bool)
     assert response.identity_score is not None
 
@@ -29,7 +29,6 @@ def test_turn_log_records_selected_surface_and_walk_surface(runtime):
 
     assert event.surface == response.surface
     assert event.walk_surface == response.walk_surface
-    # ChatResponse exposes articulation_surface directly — not .articulation.surface
     assert event.articulation_surface == response.articulation_surface
 
 
