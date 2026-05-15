@@ -95,13 +95,28 @@ def construction_seed_versor(v: np.ndarray) -> np.ndarray:
 
 
 
+def _close_applied_versor(v: np.ndarray, dtype: np.dtype) -> np.ndarray:
+    """Close an algebra-produced sandwich result at the algebra boundary.
+
+    Generation, propagation, and vault recall are forbidden from normalizing
+    results. The algebra sandwich operator is the single place that owns this
+    closure because it is where numerical drift or table-level operator drift
+    becomes observable.
+    """
+    try:
+        return unitize_versor(v).astype(dtype)
+    except ValueError:
+        return construction_seed_versor(v).astype(dtype)
+
+
 def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
     dtype = np.result_type(V, F)
     if dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
         dtype = np.dtype(np.float32)
     V = np.asarray(V, dtype=dtype)
     F = np.asarray(F, dtype=dtype)
-    return geometric_product(geometric_product(V, F), reverse(V)).astype(dtype)
+    applied = geometric_product(geometric_product(V, F), reverse(V)).astype(dtype)
+    return _close_applied_versor(applied, dtype)
 
 
 def versor_unit_residual(v: np.ndarray, *, allow_negative: bool = False) -> float:
