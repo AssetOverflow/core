@@ -47,6 +47,18 @@ class _GroundedUnknown:
     condition: float
 
 
+@dataclass(frozen=True, slots=True)
+class _MorphologyIndex:
+    prefixes: tuple[str, ...]
+    suffixes: tuple[str, ...]
+    roots: dict[str, str]
+
+
+_MORPH_INDEX_CACHE: dict[int, _MorphologyIndex] = {}
+_DECOMPOSITION_CACHE: dict[tuple[int, str], tuple[str, tuple[str, ...], tuple[str, ...]]] = {}
+_DECOMPOSITION_CACHE_MAX = 4096
+
+
 def _compact_root(root: str) -> str:
     return root.replace("-", "")
 
@@ -89,6 +101,22 @@ def _root_surfaces(vocab, morphology_entries: tuple[MorphologyEntry, ...]) -> di
     return roots
 
 
+def _build_morphology_index(vocab, morphology_entries: tuple[MorphologyEntry, ...]) -> _MorphologyIndex:
+    prefixes, suffixes = _known_edges(morphology_entries)
+    roots = _root_surfaces(vocab, morphology_entries)
+    return _MorphologyIndex(prefixes=prefixes, suffixes=suffixes, roots=roots)
+
+
+def _morphology_index_for(vocab, morphology_entries: tuple[MorphologyEntry, ...]) -> _MorphologyIndex:
+    key = id(vocab)
+    cached = _MORPH_INDEX_CACHE.get(key)
+    if cached is not None:
+        return cached
+    index = _build_morphology_index(vocab, morphology_entries)
+    _MORPH_INDEX_CACHE[key] = index
+    return index
+
+
 def _root_affinity(candidate: str, root: str) -> int:
     common_prefix = 0
     for left, right in zip(candidate, root):
@@ -105,8 +133,16 @@ def _best_decomposition(
     vocab,
     morphology_entries: tuple[MorphologyEntry, ...],
 ) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
-    prefixes, suffixes = _known_edges(morphology_entries)
-    roots = _root_surfaces(vocab, morphology_entries)
+    vocab_key = id(vocab)
+    cache_key = (vocab_key, token)
+    cached = _DECOMPOSITION_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    index = _morphology_index_for(vocab, morphology_entries)
+    prefixes = index.prefixes
+    suffixes = index.suffixes
+    roots = index.roots
     prefix_options = ("", *prefixes)
     suffix_options = ("", *suffixes)
 
@@ -158,7 +194,11 @@ def _best_decomposition(
     if best is None:
         raise KeyError(f"Token '{token}' cannot be decomposed against mounted morphology.")
     _, root_surface, applied_prefixes, applied_suffixes = best
-    return root_surface, applied_prefixes, applied_suffixes
+    result = (root_surface, applied_prefixes, applied_suffixes)
+    if len(_DECOMPOSITION_CACHE) >= _DECOMPOSITION_CACHE_MAX:
+        _DECOMPOSITION_CACHE.clear()
+    _DECOMPOSITION_CACHE[cache_key] = result
+    return result
 
 
 def _compose_delta(root_versor: np.ndarray, prefixes: tuple[str, ...], suffixes: tuple[str, ...]) -> tuple[np.ndarray, tuple[str, ...]]:
