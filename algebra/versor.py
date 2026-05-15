@@ -14,6 +14,7 @@ _CONSTRUCTION_RESIDUE_TOLERANCE = 1e-2
 _NEAR_ZERO_TOLERANCE = 1e-12
 _DENSE_SEED_MIN_COMPONENTS = 8
 _SEED_BIVECTORS = (6, 7, 8, 10, 11, 13)
+_NULL_SCALAR_TOLERANCE = 1e-9
 
 
 def _array_dtype(v: np.ndarray) -> np.dtype:
@@ -95,18 +96,25 @@ def construction_seed_versor(v: np.ndarray) -> np.ndarray:
 
 
 
-def _close_applied_versor(v: np.ndarray, dtype: np.dtype) -> np.ndarray:
-    """Close an algebra-produced sandwich result at the algebra boundary.
+def _is_null_vector(v: np.ndarray) -> bool:
+    product = geometric_product(v, v).astype(np.float64)
+    return float(np.linalg.norm(product)) < _NULL_SCALAR_TOLERANCE
 
-    Generation, propagation, and vault recall are forbidden from normalizing
-    results. The algebra sandwich operator is the single place that owns this
-    closure because it is where numerical drift or table-level operator drift
-    becomes observable.
+
+def _close_applied_versor(v: np.ndarray, dtype: np.dtype) -> np.ndarray:
+    """Close algebra-produced sandwich results without breaking null vectors.
+
+    CGA sandwiching must preserve null vectors as null vectors. Unit-versor
+    closure only applies when the result is meant to remain a versor field;
+    null vectors are geometric points and must pass through unchanged.
     """
+    arr = np.asarray(v, dtype=dtype)
+    if _is_null_vector(arr):
+        return arr.astype(dtype)
     try:
-        return unitize_versor(v).astype(dtype)
+        return unitize_versor(arr).astype(dtype)
     except ValueError:
-        return construction_seed_versor(v).astype(dtype)
+        return construction_seed_versor(arr).astype(dtype)
 
 
 def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:

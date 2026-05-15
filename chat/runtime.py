@@ -63,7 +63,7 @@ def _is_question_input(raw_text: str, tokens: Sequence[str]) -> bool:
 
 
 def _stable_dialogue_role(role: DialogueRole, *, raw_text: str, tokens: Sequence[str]) -> DialogueRole:
-    if role == "question" and not _is_question_input(raw_text, tokens):
+    if role in {"question", "refute"} and not _is_question_input(raw_text, tokens):
         return "elaborate"
     return role
 
@@ -81,6 +81,38 @@ def _terminate_surface(surface: str, *, role: DialogueRole, output_language: str
     if stripped[-1] in _TERMINALS:
         return stripped
     return f"{stripped}{_terminal_for_role(role, output_language)}"
+
+
+def _prefer_prompt_anchor(
+    articulation: ArticulationPlan,
+    filtered_tokens: Sequence[str],
+    *,
+    output_language: str,
+) -> ArticulationPlan:
+    """Keep minimal English question responses sensitive to prompt target.
+
+    The current micro-pack can collapse multiple questions onto the same
+    nearest proposition slots. Until PropositionGraph lands, preserve a direct
+    lexical anchor for English question answers so distinct prompts do not
+    produce identical surfaces.
+    """
+    if output_language != "en" or len(filtered_tokens) < 2:
+        return articulation
+    content_tokens = [
+        token
+        for token in filtered_tokens
+        if token.casefold() not in _QUESTION_WORDS and token.casefold() not in {"is", "are", "was", "were"}
+    ]
+    if not content_tokens:
+        return articulation
+    anchor = content_tokens[-1]
+    if anchor == articulation.subject:
+        return articulation
+    return replace(
+        articulation,
+        subject=anchor,
+        surface=" ".join(part for part in (anchor, articulation.predicate, articulation.object) if part),
+    )
 
 
 @dataclass
@@ -317,6 +349,11 @@ class ChatRuntime:
         articulation = realize(
             proposition,
             self._context.vocab,
+            output_language=self.config.output_language,
+        )
+        articulation = _prefer_prompt_anchor(
+            articulation,
+            filtered,
             output_language=self.config.output_language,
         )
         self._context.record_dialogue(proposition)
