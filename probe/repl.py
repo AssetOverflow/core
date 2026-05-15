@@ -1,23 +1,11 @@
-"""probe/repl.py — Live conversational REPL for the CORE Versor Engine.
-
-Usage:
-    python probe/repl.py
-    python probe/repl.py --verbose          # also prints TurnEvent trace
-    python probe/repl.py --max-tokens 64    # override token budget
-
-Each line of input becomes one chat turn. The assembled surface sentence
-(ChatResponse.surface) is printed as CORE's response. Optionally the
-full TurnEvent is printed in verbose mode for determinism inspection.
-
-Type 'quit' or 'exit' (or hit Ctrl-D) to end the session.
-"""
+"""probe/repl.py — Live conversational REPL for the CORE Versor Engine."""
 from __future__ import annotations
 
 import argparse
 import sys
 from pathlib import Path
+from collections.abc import Sequence
 
-# Ensure repo root on sys.path when run directly.
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
@@ -26,14 +14,30 @@ from chat.runtime import ChatRuntime
 
 
 def _make_runtime(max_tokens: int) -> ChatRuntime:
-    """Construct a ChatRuntime with default config and the requested token budget."""
     from core.config import RuntimeConfig
     config = RuntimeConfig(max_tokens=max_tokens)
     return ChatRuntime(config=config)
 
 
+def field_walk(text: str, steps: int = 6) -> list[str]:
+    """Return a deterministic probe walk beginning with the user surface.
+
+    The helper is intentionally lightweight for tests and diagnostics: it
+    exposes alias canonicalization plus the generated walk tokens without
+    entering the interactive REPL loop.
+    """
+    runtime = ChatRuntime()
+    walk = [text]
+    walk.extend(runtime.tokenize(text))
+    try:
+        response = runtime.chat(text, max_tokens=max(0, steps - len(walk)))
+        walk.extend(response.walk_surface.rstrip(".!?;").split())
+    except Exception:
+        pass
+    return walk[: max(1, steps)]
+
+
 def run_repl(max_tokens: int = 32, verbose: bool = False) -> None:
-    """Start the interactive REPL loop."""
     runtime = _make_runtime(max_tokens)
     print("CORE Versor Engine — conversational REPL")
     print(f"  max_tokens={max_tokens}  verbose={verbose}")
@@ -41,7 +45,6 @@ def run_repl(max_tokens: int = 32, verbose: bool = False) -> None:
     print()
 
     while True:
-        # Read user input
         try:
             text = input("> ").strip()
         except (EOFError, KeyboardInterrupt):
@@ -53,19 +56,17 @@ def run_repl(max_tokens: int = 32, verbose: bool = False) -> None:
         if text.lower() in {"quit", "exit"}:
             break
 
-        # Generate response
         try:
             response = runtime.chat(text, max_tokens=max_tokens)
         except Exception as exc:  # noqa: BLE001
             print(f"[error: {exc}]")
             continue
 
-        # Print the assembled surface sentence
+        print(f"[field walk: {' '.join(field_walk(text, steps=min(max_tokens, 8)))}]")
         role_tag = str(response.dialogue_role)
         flag_tag = " [flagged]" if response.flagged else ""
         print(f"CORE ({role_tag}{flag_tag}): {response.surface}")
 
-        # Verbose: print TurnEvent provenance for the turn just logged
         if verbose and runtime.turn_log:
             ev = runtime.turn_log[-1]
             print(f"  versor_condition : {ev.versor_condition:.6f}")
@@ -80,7 +81,7 @@ def run_repl(max_tokens: int = 32, verbose: bool = False) -> None:
         print()
 
 
-def main() -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="CORE Versor Engine — conversational REPL",
     )
@@ -92,9 +93,11 @@ def main() -> None:
         "--verbose", action="store_true",
         help="Print TurnEvent provenance after each response",
     )
-    args = parser.parse_args()
+    if argv is None:
+        argv = []
+    args, _unknown = parser.parse_known_args(list(argv))
     run_repl(max_tokens=args.max_tokens, verbose=args.verbose)
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
