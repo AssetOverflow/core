@@ -20,6 +20,9 @@ from core.cognition.result import CognitiveTurnResult
 from core.cognition.trace import compute_trace_hash
 from generate.intent import classify_intent
 from generate.graph_planner import graph_from_intent, plan_articulation
+from teaching.correction import CorrectionCandidate, extract_correction
+from teaching.review import ReviewedTeachingExample, review_correction
+from teaching.store import PackMutationProposal, TeachingStore
 
 
 class CognitiveTurnPipeline:
@@ -29,9 +32,12 @@ class CognitiveTurnPipeline:
     a place to plug in.  No new intelligence is added here.
     """
 
-    def __init__(self, runtime) -> None:  # runtime: ChatRuntime (no import cycle)
+    def __init__(self, runtime, teaching_store: TeachingStore | None = None) -> None:  # runtime: ChatRuntime (no import cycle)
         self.runtime = runtime
         self._last_node_id: str | None = None
+        self.teaching_store = teaching_store or TeachingStore()
+        self._prior_surface: str | None = None
+        self._turn_number: int = 0
 
     # ------------------------------------------------------------------
     # Public API
@@ -64,15 +70,25 @@ class CognitiveTurnPipeline:
         # 9. Reconstruct input-layer tokens from the turn log
         #    (turn_log is appended inside chat(); last entry matches this turn)
         last_turn = self.runtime.turn_log[-1]
-        input_tokens = last_turn.input_tokens          # already filtered
-        filtered_tokens = last_turn.input_tokens       # same at Phase 1
+        filtered_tokens = last_turn.input_tokens
 
         # Raw tokenization is identical to filtered for Phase 1 — the
         # runtime's _tokenize() runs before _apply_oov_policy().  We
         # expose input_tokens separately so Phase 2 can diverge them.
         raw_tokens = tuple(self.runtime.tokenize(text))
 
-        # 10. TRACE — deterministic hash
+        # 10. TEACHING — correction capture, review, and store
+        teaching_candidate, reviewed_example, proposal = self._run_teaching(
+            text, intent, self._turn_number,
+        )
+
+        # Advance turn counter and remember surface for next correction binding
+        self._turn_number += 1
+        self._prior_surface = response.surface
+
+        # 11. TRACE — deterministic hash (includes teaching IDs when present)
+        review_hash = reviewed_example.review_hash if reviewed_example is not None else ""
+        proposal_id = proposal.proposal_id if proposal is not None else ""
         trace_hash = compute_trace_hash(
             input_text=text,
             filtered_tokens=filtered_tokens,
@@ -83,6 +99,8 @@ class CognitiveTurnPipeline:
             versor_condition=response.versor_condition,
             vault_hits=response.vault_hits,
             intent_tag=intent.tag.value,
+            teaching_review_hash=review_hash,
+            teaching_proposal_id=proposal_id,
         )
 
         return CognitiveTurnResult(
@@ -102,6 +120,9 @@ class CognitiveTurnPipeline:
             intent=intent,
             proposition_graph=graph,
             articulation_target=target,
+            teaching_candidate=teaching_candidate,
+            reviewed_teaching_example=reviewed_example,
+            pack_mutation_proposal=proposal,
             versor_condition=response.versor_condition,
             trace_hash=trace_hash,
         )
@@ -109,6 +130,33 @@ class CognitiveTurnPipeline:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def _run_teaching(
+        self,
+        text: str,
+        intent: object,
+        turn_number: int,
+    ) -> tuple[
+        CorrectionCandidate | None,
+        ReviewedTeachingExample | None,
+        PackMutationProposal | None,
+    ]:
+        """Run correction capture → review → store if this turn is a CORRECTION."""
+        if self._prior_surface is None:
+            return None, None, None
+
+        candidate = extract_correction(
+            correction_text=text,
+            intent=intent,  # type: ignore[arg-type]
+            prior_surface=self._prior_surface,
+            prior_turn=turn_number - 1,
+        )
+        if candidate is None:
+            return None, None, None
+
+        reviewed = review_correction(candidate)
+        proposal = self.teaching_store.add(reviewed)
+        return candidate, reviewed, proposal
 
     def _capture_field_state(self) -> FieldState | None:
         """Return current session field state, or None if not yet initialised."""
