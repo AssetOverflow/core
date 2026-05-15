@@ -87,7 +87,7 @@ class TestIdentityScore:
             assert isinstance(axis_id, str)
 
     def test_legacy_constructor_emits_deprecation_warning(self):
-        with pytest.deprecated_call(match="IdentityCheck\(manifold=\.\.\.\) is deprecated"):
+        with pytest.deprecated_call(match=r"IdentityCheck\(manifold=\.\.\.\) is deprecated"):
             check = IdentityCheck(manifold=_make_manifold())
         score = check.check(_make_trajectory())
         assert isinstance(score, IdentityScore)
