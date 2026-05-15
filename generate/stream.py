@@ -3,6 +3,11 @@ Generation loop — token streaming from the versor manifold.
 
 Every token:  nearest non-current word to current F via CGA inner product.
 Every step:   F <- versor_apply(V, F) where V = word_transition_rotor(A, B).
+
+Generation is not a normalization boundary. Raw prompt normalization belongs
+at ingest/gate.py; construction normalization belongs in algebra/vocab/persona.
+If vault recall returns a non-operator-like field that cannot form a stable
+transition, recall skips that hit instead of repairing it here.
 """
 
 from __future__ import annotations
@@ -13,36 +18,12 @@ import numpy as np
 from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import word_transition_rotor
-from algebra.versor import normalize_to_versor, unitize_versor
 from generate.attention import AttentionOperator
 from generate.result import GenerationResult
 from generate.salience import SalienceOperator
 
 _RECENT_WINDOW = 3
 _STOP_TOKENS = frozenset({"it", "to", "word"})
-
-
-def _closed_F(F: np.ndarray) -> np.ndarray:
-    arr = np.asarray(F, dtype=np.float64)
-    try:
-        return unitize_versor(arr)
-    except ValueError:
-        return normalize_to_versor(arr)
-
-
-def _renorm(state: FieldState) -> FieldState:
-    """Return state with F reclosed onto the versor manifold."""
-    closed = _closed_F(state.F)
-    if np.allclose(closed, state.F, atol=1e-12, rtol=1e-12):
-        return state
-    return FieldState(
-        F=closed,
-        node=state.node,
-        step=state.step,
-        holonomy=state.holonomy,
-        energy=state.energy,
-        valence=state.valence,
-    )
 
 
 def _articulate(vocab, word: str) -> str:
@@ -117,26 +98,33 @@ def _nearest_with_optional_candidates(
 
 
 def _voiced_state(state: FieldState, persona) -> FieldState:
-    return _renorm(FieldState(
+    return FieldState(
         F=persona.apply(state.F),
         node=state.node,
         step=state.step,
         holonomy=state.holonomy,
         energy=state.energy,
         valence=state.valence,
-    ))
+    )
 
 
 def _recall_state(state: FieldState, vault, top_k: int) -> tuple[FieldState, int]:
     if vault is None or top_k <= 0:
         return state, 0
 
-    current = _renorm(state)
+    current = state
     hits_applied = 0
     for hit in vault.recall(current.F, top_k=top_k):
-        recalled_F = _closed_F(np.asarray(hit["versor"], dtype=np.float64))
-        V = word_transition_rotor(current.F, recalled_F)
-        current = _renorm(propagate_step(current, V))
+        recalled_F = np.asarray(hit["versor"], dtype=np.float64)
+        try:
+            V = word_transition_rotor(current.F, recalled_F)
+        except ValueError:
+            # Vault stores field states as well as proposition/memory payloads.
+            # Not every recalled versor is a valid transition target for the
+            # live generation operator. Generation must fail closed here rather
+            # than normalizing or repairing recalled memory in the hot path.
+            continue
+        current = propagate_step(current, V)
         current = FieldState(
             F=current.F,
             node=state.node,
@@ -203,7 +191,7 @@ def generate(
     tokens = []
     trajectory = [] if record_trajectory else None
     vault_hits = 0
-    current = _renorm(state)
+    current = state
     recent_nodes = deque([state.node], maxlen=_RECENT_WINDOW)
     language_candidates = None if allow_cross_language_generation else _candidate_indices_for_language(vocab, output_lang)
     salience_candidates, salience_budget, candidates_used = _attention_candidates(
@@ -245,7 +233,7 @@ def generate(
         B = vocab.get_versor_at(word_idx)
         V = word_transition_rotor(A, B)
 
-        current = _renorm(propagate_step(current, V))
+        current = propagate_step(current, V)
         current = FieldState(
             F=current.F,
             node=word_idx,
@@ -258,7 +246,7 @@ def generate(
 
     return GenerationResult(
         tokens=tokens,
-        final_state=_renorm(current),
+        final_state=current,
         trajectory=trajectory,
         salience_top_k=salience_budget,
         candidates_used=candidates_used,
@@ -274,7 +262,7 @@ async def agenerate(
     vault=None,
     recall_top_k: int = 3,
 ):
-    current = _renorm(state)
+    current = state
     recent_nodes = deque([state.node], maxlen=_RECENT_WINDOW)
     stop_nodes = frozenset(
         vocab.index_of(token)
@@ -300,7 +288,7 @@ async def agenerate(
         B = vocab.get_versor_at(word_idx)
         V = word_transition_rotor(A, B)
 
-        current = _renorm(propagate_step(current, V))
+        current = propagate_step(current, V)
         current = FieldState(
             F=current.F,
             node=word_idx,

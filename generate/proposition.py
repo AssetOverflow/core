@@ -153,9 +153,6 @@ def propose(
         preferred_pos=frozenset({"noun", "pronoun"}),
         candidate_indices=candidate_indices,
     )
-    # Predicate selection must remain anchored to the prompt field, not a
-    # recall-contaminated or drive-biased current field, so slot evidence stays
-    # closer to prompt than unrelated vault points.
     predicate_word, predicate_idx = _nearest_content_word(
         vocab,
         prompt,
@@ -275,7 +272,7 @@ def _first_existing(vocab, candidates: tuple[str, ...]) -> str | None:
 
 
 def _prompt_versor(field_state: FieldState) -> np.ndarray:
-    return field_state.holonomy if field_state.holonomy is not None else field_state.F
+    return field_state.F
 
 
 def _nearest_content_word(
