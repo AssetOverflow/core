@@ -1,65 +1,233 @@
-# CORE-AI Agent Instructions
+# CORE Agent Instructions
 
-## The Invariant (Read Before Touching Any Code)
+This repository is building a deterministic cognitive engine, not a transformer
+wrapper and not a demo chatbot.  Every agent must preserve the geometric
+runtime while moving the system toward teachable cognitive chat.
 
-Every field state F must satisfy:
+## North Star
 
-    ||F * reverse(F) - 1||_F < 1e-6
+CORE should become capable of:
 
-This is checked by algebra/versor.py::versor_condition().
+```text
+listen -> comprehend -> recall -> think -> articulate -> learn from reviewed correction -> replay deterministically
+```
 
-## What You Must Never Add
+The current path is intentionally staged:
 
-- Any normalization call outside ingest/gate.py
-- Grade guards, grade monitors, or grade projection in the hot path
-- Drift correction, correction thresholds, or correction timers
-- ANN indexes, HNSW, cosine similarity, or approximate distance
-- Field energy measurement or pseudoscalar accumulation checks
-- Any function whose only job is to watch or repair another function
+1. Maintain algebra/runtime invariants.
+2. Use `CognitiveTurnPipeline` as the spine.
+3. Classify intent and build proposition graphs.
+4. Plan articulation targets and realize them deterministically.
+5. Capture reviewed teaching corrections safely.
+6. Seed compact semantic packs for cognition vocabulary.
+7. Evaluate through CLI lanes, not ad hoc test fragments.
+8. Calibrate bounded operators only from replayable evidence.
 
-If you think you need one of these, you have an unclosed operation upstream.
-Find it and close it.
+Do not skip ahead by adding opaque models, stochastic generation, or broad
+infrastructure that hides whether CORE itself is improving.
 
-## The Two Allowed Primitives
+## Philosophical and Architectural Stance
 
-Field transition:  algebra/versor.py::versor_apply(V, F)  ->  V*F*reverse(V)
-Distance metric:   algebra/cga.py::cga_inner(X, Y)        ->  -d^2 / 2
+Truth is coherent.  CORE's work is to preserve coherent structure from input to
+field state to articulation to memory.  Treat identity, truthfulness, and
+replayability as architectural commitments rather than prompt preferences.
 
-These are the only primitives. Everything else is built from them.
+The system's intelligence should come from inspectable geometric state,
+structured propositions, deterministic recall, reviewed teaching, and bounded
+calibration.  Avoid nihilistic or purely statistical framing in code comments,
+agent plans, and docs.  Prefer responsibility, provenance, and stable meaning.
 
-## Language Pack Checksum Rule (Critical)
+## The Hard Field Invariant
 
-Manifest checksums MUST be computed by reading back the bytes actually
-written to disk — never from an in-memory string before serialization:
+Every runtime field state `F` must satisfy:
 
-    # CORRECT — hash what disk holds
-    checksum = hashlib.sha256(Path(lexicon_path).read_bytes()).hexdigest()
+```text
+versor_condition(F) < 1e-6
+```
 
-    # WRONG — Python str != unicode-escaped JSON bytes on disk
-    checksum = hashlib.sha256(content_str.encode('utf-8')).hexdigest()
+This is checked by `algebra/versor.py::versor_condition()`.
 
-The GitHub API (and git) store JSON with unicode escapes (\u05d3, not ד).
-Python json.dumps() with ensure_ascii=False produces different bytes.
-Always write the file first, then read_bytes() to get the checksum.
+If a propagation path violates this invariant, fix the operator path or the
+explicit algebra/construction boundary that owns the transition.  Do not hide
+violations by changing tests, silently weakening thresholds, or normalizing in
+hot-path modules.
 
-## Implementation Order
+## Normalization and Closure Rules
 
-Do not skip steps. Run the invariant test after each step before writing the next.
+Allowed closure/construction boundaries:
 
-1. algebra/cl41.py
-2. algebra/versor.py         ->  tests/test_versor_closure.py must pass
-3. algebra/cga.py            ->  tests/test_null_cone.py must pass
-4. algebra/holonomy.py       ->  tests/test_holonomy.py must pass
-5. ingest/gate.py
-6. vocab/manifold.py
-7. field/state.py + field/propagate.py
-8. vault/store.py            ->  tests/test_vault_recall.py must pass
-9. persona/motor.py          ->  tests/test_motor.py must pass
-10. generate/stream.py
-11. session/context.py
-12. language_packs/compiler.py  ->  tests/test_holonomy_resonance.py must pass
+- `ingest/gate.py` for raw prompt injection.
+- `language_packs/compiler.py` / vocabulary construction.
+- `algebra/versor.py` where algebraic sandwich output closure belongs.
+
+Forbidden hot-path repair sites:
+
+- `generate/stream.py`
+- `field/propagate.py`
+- `vault/store.py`
+- runtime telemetry/logging layers
+
+Do not add normalization, unitization, grade projection, drift monitors, repair
+timers, or watchdog functions outside a documented construction/algebra boundary.
+If you think you need one, an upstream operator is unclosed.
+
+CGA null vectors are geometric points and must remain null.  Do not force null
+vectors into unit-versor closure.
+
+## The Two Core Primitives
+
+Field transition:
+
+```text
+algebra/versor.py::versor_apply(V, F) -> V * F * reverse(V)
+```
+
+Distance/recall metric:
+
+```text
+algebra/cga.py::cga_inner(X, Y)
+```
+
+Do not add ANN, HNSW, cosine similarity, approximate nearest-neighbor recall,
+or non-CGA ranking to runtime memory.  Vault recall is exact and deterministic.
+
+## Current Runtime/Cognition Shape
+
+The live cognitive path is now:
+
+```text
+ChatRuntime / CognitiveTurnPipeline
+  -> tokenize / OOV policy / inject
+  -> intent classification
+  -> PropositionGraph
+  -> ArticulationTarget
+  -> deterministic realizer / articulation surface
+  -> generation walk telemetry
+  -> identity + energy telemetry
+  -> reviewed teaching capture when correction intent appears
+  -> deterministic trace hash
+```
+
+Important modules:
+
+- `core/cognition/pipeline.py` — cognitive turn spine.
+- `core/cognition/result.py` — canonical turn result shape.
+- `core/cognition/trace.py` — deterministic trace hashing.
+- `generate/intent.py` — deterministic intent classification.
+- `generate/graph_planner.py` — proposition graph and articulation target planning.
+- `generate/realizer.py` / `generate/templates.py` — deterministic realization.
+- `teaching/*` — reviewed teaching/correction lifecycle.
+- `language_packs/data/en_core_cognition_v1` — compact cognition seed pack.
+- `docs/runtime_contracts.md` — runtime response, memory, identity, and testing contracts.
+
+## Chat Surface Contract
+
+Do not collapse these fields:
+
+- `surface` — selected user-facing response.
+- `walk_surface` — raw manifold/token-walk evidence.
+- `articulation_surface` — proposition/realizer surface.
+
+Current policy:
+
+```text
+surface = articulation_surface
+walk_surface = retained telemetry/evidence
+```
+
+If this changes, update `docs/runtime_contracts.md` and contract tests in the
+same PR.
+
+## Teaching and Memory Safety
+
+Learning is controlled mutation, not storing everything.
+
+Rules:
+
+- Session memory can be immediate and local.
+- Reviewed memory must go through the teaching loop.
+- Pack mutation is proposal-only until reviewed.
+- User correction must not mutate identity axes, runtime policy, or operator code.
+- Identity override attempts must be rejected, not learned.
+
+Use the teaching modules for correction capture/review/store.  Do not invent a
+parallel correction mechanism inside chat runtime or generation.
+
+## Semantic Pack Rule
+
+Use compact, curated semantic packs.  Do not dump broad corpora into runtime.
+The core cognition seed pack is meant to provide thought vocabulary, operations,
+and relation predicates, not to impersonate large-scale pretraining.
+
+Manifest checksums must be computed from bytes actually written to disk:
+
+```python
+checksum = hashlib.sha256(Path(lexicon_path).read_bytes()).hexdigest()
+```
+
+Never compute a manifest checksum from a pre-serialization Python string.
+
+## Development Priorities
+
+Current capability sequence:
+
+1. Keep CLI test suites green.
+2. Integrate semantic seed surfaces into realizer/cognition quality.
+3. Add cognitive eval harness.
+4. Add operator calibration from deterministic replay evidence.
+5. Expand curriculum teaching only after the loop remains deterministic.
+
+Do not add dashboards, broad infra, or large test matrices unless they directly
+protect or unlock one of the above capabilities.
+
+## Test Discipline
+
+Use the CLI lanes as the standard validation interface:
+
+```bash
+core test --suite smoke -q
+core test --suite cognition -q
+core test --suite teaching -q
+core test --suite packs -q
+core test --suite runtime -q
+core test --suite algebra -q
+core test --suite full -q
+```
+
+For targeted work, run the smallest relevant suite first, then `full` before
+merge when practical.
+
+Good tests protect:
+
+- versor closure
+- deterministic replay / trace hash stability
+- runtime surface contracts
+- exact memory/recall behavior
+- identity protection
+- reviewed correction safety
+- semantic pack loadability and deterministic ordering
+
+Bad tests preserve private helper shapes, stale constructors, punctuation trivia
+outside documented contracts, or legacy behavior that contradicts the current
+architecture.
+
+## PR Standard
+
+Every PR must answer:
+
+```text
+What cognitive capability did this add or protect?
+What invariant proves it did not corrupt the field?
+Which CLI suite proves the relevant lane?
+Did it avoid hidden normalization, stochastic fallback, and unreviewed mutation?
+```
+
+Prefer small, load-bearing PRs.  Do not mix baseline fixes, feature work, and
+large reorganization unless the coupling is unavoidable.
 
 ## Architecture in One Sentence
 
-Raw input -> inject once -> versor on the manifold -> versor_apply every step ->
-CGA inner product for recall and decoding -> persona motor for voicing -> done.
+Raw input becomes a closed versor field once; thought evolves through exact
+versor transitions and CGA recall; cognition is structured as intent,
+proposition graph, articulation target, deterministic realization, reviewed
+memory, and replayable trace.
