@@ -23,7 +23,44 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test tests/test_alignment_graph.py -q"
+EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite smoke\n  core test --suite cognition\n  core test -- tests/test_alignment_graph.py -q"
+
+_TEST_SUITES: dict[str, tuple[str, ...]] = {
+    "smoke": (
+        "tests/test_chat_runtime.py",
+        "tests/test_achat.py",
+        "tests/test_runtime_config.py",
+        "tests/test_cognitive_turn_pipeline.py",
+    ),
+    "runtime": (
+        "tests/test_chat_runtime.py",
+        "tests/test_achat.py",
+        "tests/test_runtime_config.py",
+        "tests/test_chat_identity_telemetry.py",
+        "tests/test_session_coherence.py",
+    ),
+    "cognition": (
+        "tests/test_intent_proposition_graph.py",
+        "tests/test_cognitive_turn_pipeline.py",
+        "tests/test_articulation_realizer_v2.py",
+    ),
+    "teaching": (
+        "tests/test_reviewed_teaching_loop.py",
+        "tests/test_pipeline_teaching_integration.py",
+    ),
+    "packs": (
+        "tests/test_core_semantic_seed_pack.py",
+    ),
+    "algebra": (
+        "tests/test_versor_closure.py",
+        "tests/test_holonomy.py",
+        "tests/test_holonomy_resonance.py",
+        "tests/test_energy.py",
+        "tests/test_motor.py",
+        "tests/test_null_cone.py",
+    ),
+    "full": ("tests/",),
+}
 
 
 def _run(*args: str, check: bool = False, cwd: Path | None = None) -> int:
@@ -92,12 +129,27 @@ def cmd_chat(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_test(args: argparse.Namespace) -> int:
-    """Run pytest. Extra args are forwarded unchanged."""
-    default_args = ["-q", "--tb=short"]
-    forwarded = list(args.args or default_args)
+def _pytest_args_for_suite(suite: str, extra_args: Sequence[str]) -> list[str]:
+    paths = _TEST_SUITES[suite]
+    forwarded = list(extra_args)
     if forwarded and forwarded[0] == "--":
         forwarded = forwarded[1:]
+    return [*paths, *forwarded]
+
+
+def cmd_test(args: argparse.Namespace) -> int:
+    """Run pytest through curated suite aliases or direct passthrough args."""
+    default_args = ["-q", "--tb=short"]
+    if args.list_suites:
+        for name in sorted(_TEST_SUITES):
+            print(name)
+        return 0
+    if args.suite:
+        forwarded = _pytest_args_for_suite(args.suite, args.args or default_args)
+    else:
+        forwarded = list(args.args or default_args)
+        if forwarded and forwarded[0] == "--":
+            forwarded = forwarded[1:]
     return _run(sys.executable, "-m", "pytest", *forwarded)
 
 
@@ -432,7 +484,9 @@ def build_parser() -> argparse.ArgumentParser:
     _add_runtime_policy_args(chat)
     chat.set_defaults(func=cmd_chat)
 
-    test = subparsers.add_parser("test", help="run pytest with sane defaults")
+    test = subparsers.add_parser("test", help="run pytest with curated suite aliases or direct passthrough")
+    test.add_argument("--suite", choices=sorted(_TEST_SUITES), help="curated suite alias to run")
+    test.add_argument("--list-suites", action="store_true", help="list curated test suite aliases and exit")
     test.add_argument("args", nargs=argparse.REMAINDER, help="arguments forwarded to pytest")
     test.set_defaults(func=cmd_test)
 
