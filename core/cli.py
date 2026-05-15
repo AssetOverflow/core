@@ -342,15 +342,60 @@ def cmd_pack_verify(args: argparse.Namespace) -> int:
     return _run(sys.executable, "-m", "language_packs", "verify", args.pack_id)
 
 
+def _safe_pack_id(pack_id: str) -> str:
+    """Reject pack IDs containing path traversal or separator characters."""
+    if not pack_id:
+        _die("pack_id is required", code=2)
+
+    path = Path(pack_id)
+
+    if path.is_absolute():
+        _die("pack_id must not be an absolute path", code=2)
+
+    if pack_id in {".", ".."}:
+        _die("pack_id must name a pack, not a relative path", code=2)
+
+    if any(part in {"", ".", ".."} for part in path.parts):
+        _die("pack_id must not contain path traversal", code=2)
+
+    if "/" in pack_id or "\\" in pack_id:
+        _die("pack_id must be a simple pack id, not a path", code=2)
+
+    return pack_id
+
+
 def cmd_pack_validate(args: argparse.Namespace) -> int:
     """Run executable source-pack validation gates."""
-    import importlib.util
-
-    pack_dir = _REPO_ROOT / "packs" / args.pack_id
+    pack_id = _safe_pack_id(args.pack_id)
+    pack_dir = _REPO_ROOT / "packs" / pack_id
     validator_path = pack_dir / "validators.py"
+
     if not validator_path.exists():
         _die(f"source-pack validator not found: {validator_path}", code=1)
-    spec = importlib.util.spec_from_file_location(f"{args.pack_id}_validators", validator_path)
+
+    if getattr(args, "dry_run", False):
+        if args.json:
+            print(json.dumps({
+                "pack_id": pack_id,
+                "validator_path": str(validator_path),
+                "would_execute": False,
+                "exists": True,
+            }, ensure_ascii=False, indent=2, sort_keys=True))
+        else:
+            print(f"dry-run: pack_id={pack_id}")
+            print(f"validator: {validator_path}")
+            print("status: validator exists, would not execute")
+        return 0
+
+    if not getattr(args, "allow_arbitrary_code", False):
+        _die(
+            "dynamic validator execution requires --allow-arbitrary-code",
+            code=2,
+        )
+
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(f"{pack_id}_validators", validator_path)
     if spec is None or spec.loader is None:
         _die(f"cannot load source-pack validator: {validator_path}", code=1)
     module = importlib.util.module_from_spec(spec)
@@ -569,6 +614,12 @@ def build_parser() -> argparse.ArgumentParser:
     pack_validate = pack_sub.add_parser("validate", help="validate a source pack under packs/")
     pack_validate.add_argument("pack_id", help="source pack id, e.g. en, he, grc, el")
     pack_validate.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    pack_validate.add_argument("--dry-run", action="store_true", help="check validator exists without executing")
+    pack_validate.add_argument(
+        "--allow-arbitrary-code",
+        action="store_true",
+        help="permit dynamic validator execution (required to run validators)",
+    )
     pack_validate.set_defaults(func=cmd_pack_validate)
 
     rust = subparsers.add_parser(
