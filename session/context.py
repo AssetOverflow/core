@@ -110,9 +110,21 @@ class SessionContext:
                     valence=self.state.valence,
                 )
                 result = generate(pivot, self.vocab, self.persona, max_tokens, vault=self.vault)
+        result = self._orient_result_to_anchor(result)
+        self.state = result.final_state
+        self.vault.store(result.final_state.F, {"turn": self.turn, "role": "assistant"})
+        self.turn += 1
+        self._last_response_tokens = result.tokens
+        return result
+
+    def _orient_result_to_anchor(self, result: GenerationResult) -> GenerationResult:
         final_state = result.final_state
         coherence_anchor = self._anchor_field if self._anchor_field is not None else self.state.F
-        if cga_inner(final_state.F, coherence_anchor) < 0.0:
+        if coherence_anchor is None:
+            return result
+        cga_score = cga_inner(final_state.F, coherence_anchor)
+        euclidean_score = float(np.dot(final_state.F, coherence_anchor))
+        if cga_score < 0.0 or euclidean_score < 0.0:
             final_state = FieldState(
                 F=-final_state.F,
                 node=final_state.node,
@@ -121,17 +133,15 @@ class SessionContext:
                 energy=final_state.energy,
                 valence=final_state.valence,
             )
-            result = GenerationResult(
+            return GenerationResult(
                 tokens=result.tokens,
                 final_state=final_state,
                 trajectory=result.trajectory,
                 salience_top_k=result.salience_top_k,
                 candidates_used=result.candidates_used,
+                vault_hits=result.vault_hits,
+                identity_score=result.identity_score,
             )
-        self.state = result.final_state
-        self.vault.store(result.final_state.F, {"turn": self.turn, "role": "assistant"})
-        self.turn += 1
-        self._last_response_tokens = result.tokens
         return result
 
     async def arespond(self, max_tokens: int = 128):
@@ -143,7 +153,9 @@ class SessionContext:
         yielding the surface tokens.
         """
         assert self.state is not None, "Call ingest() before arespond()."
-        result = generate(self.state, self.vocab, self.persona, max_tokens, vault=self.vault)
+        result = self._orient_result_to_anchor(
+            generate(self.state, self.vocab, self.persona, max_tokens, vault=self.vault)
+        )
         for token in result.tokens:
             yield token
         self.state = result.final_state
