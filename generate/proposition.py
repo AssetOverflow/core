@@ -2,9 +2,9 @@
 Structured proposition generation.
 
 A proposition is the first structured assertion above the surface walk:
-prompt and field form a grade-2 relation blade; a frame is selected by exact
-CGA inner product against that relation; vocabulary points then instantiate
-the frame slots.
+prompt and field form a relation blade; a frame is selected by exact CGA
+inner product against that relation; vocabulary points then instantiate the
+frame slots.
 """
 
 from __future__ import annotations
@@ -142,8 +142,8 @@ def propose(
 ) -> Proposition:
     """Generate one structured proposition from the live field."""
     prompt = _prompt_versor(field_state)
-    relation = outer_product(prompt, field_state.F)
-    frame = frame_registry.select(relation)
+    frame_relation = _frame_query_relation(field_state)
+    frame = frame_registry.select(frame_relation)
     candidate_indices = _candidate_indices_for_language(vocab, output_lang)
 
     subject_word, subject_idx = _nearest_content_word(
@@ -159,6 +159,12 @@ def propose(
         exclude_indices=frozenset({subject_idx}),
         candidate_indices=candidate_indices,
     )
+
+    subject_versor = vocab.get_versor_at(subject_idx)
+    predicate_versor = vocab.get_versor_at(predicate_idx)
+    relation = outer_product(subject_versor, predicate_versor)
+    if float(np.linalg.norm(relation)) < 1e-8:
+        relation = frame_relation
 
     object_word: str | None = None
     object_versor: np.ndarray | None = None
@@ -183,8 +189,8 @@ def propose(
         object_=object_surface,
         surface=surface,
         frame_id=frame.frame_id,
-        subject_versor=vocab.get_versor_at(subject_idx),
-        predicate_versor=vocab.get_versor_at(predicate_idx),
+        subject_versor=subject_versor,
+        predicate_versor=predicate_versor,
         object_versor=object_versor,
         relation=relation,
     )
@@ -275,6 +281,15 @@ def _prompt_versor(field_state: FieldState) -> np.ndarray:
     return field_state.F
 
 
+def _frame_query_relation(field_state: FieldState) -> np.ndarray:
+    left = field_state.holonomy if field_state.holonomy is not None else field_state.F
+    relation = outer_product(left, field_state.F)
+    if float(np.linalg.norm(relation)) >= 1e-8:
+        return relation
+    shifted = np.roll(np.asarray(field_state.F, dtype=np.float32), 1)
+    return outer_product(field_state.F, shifted)
+
+
 def _nearest_content_word(
     vocab,
     query: np.ndarray,
@@ -288,14 +303,29 @@ def _nearest_content_word(
         if _has_word(vocab, surface)
     }
     blocked = set(exclude_indices) | stop_indices
+    candidates = range(len(vocab)) if candidate_indices is None else [int(idx) for idx in candidate_indices]
     if preferred_pos:
         selected = _nearest_by_pos(vocab, query, blocked, preferred_pos, candidate_indices)
         if selected is not None:
             return selected
-    try:
-        return vocab.nearest(query, exclude_indices=blocked, candidate_indices=candidate_indices)
-    except ValueError:
-        return vocab.nearest(query, exclude_indices=set(exclude_indices), candidate_indices=candidate_indices)
+    return _nearest_by_cga(vocab, query, blocked, candidates)
+
+
+def _nearest_by_cga(vocab, query: np.ndarray, blocked: set[int], candidates) -> tuple[str, int]:
+    best_score = -np.inf
+    best_idx = -1
+    query_arr = np.asarray(query, dtype=np.float32)
+    for idx in candidates:
+        idx = int(idx)
+        if idx in blocked:
+            continue
+        score = cga_inner(vocab.get_versor_at(idx), query_arr)
+        if score > best_score:
+            best_score = score
+            best_idx = idx
+    if best_idx < 0:
+        raise ValueError("No candidate word available after exclusions.")
+    return vocab.get_word_at(best_idx), best_idx
 
 
 def _nearest_by_pos(
@@ -308,6 +338,7 @@ def _nearest_by_pos(
     best_score = -np.inf
     best: tuple[str, int] | None = None
     candidates = range(len(vocab)) if candidate_indices is None else [int(idx) for idx in candidate_indices]
+    query_arr = np.asarray(query, dtype=np.float32)
     for idx in candidates:
         if idx in blocked:
             continue
@@ -317,7 +348,7 @@ def _nearest_by_pos(
         pos = None if morphology is None else dict(morphology.inflection).get("pos")
         if pos not in preferred_pos:
             continue
-        score = cga_inner(query, vocab.get_versor_at(idx))
+        score = cga_inner(vocab.get_versor_at(idx), query_arr)
         if score > best_score:
             best_score = score
             best = (word, idx)
