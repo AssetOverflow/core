@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 
 from chat.runtime import ChatRuntime
+from core.config import RuntimeConfig
 from core.cognition.pipeline import CognitiveTurnPipeline
 from evals.metrics import CaseResult, EvalReport
 from generate.intent import IntentTag
@@ -64,14 +65,17 @@ def _run_case(case: dict, pipeline: CognitiveTurnPipeline) -> CaseResult:
     )
 
 
-def run_eval(cases: list[dict] | None = None) -> EvalReport:
+def run_eval(
+    cases: list[dict] | None = None,
+    config: RuntimeConfig | None = None,
+) -> EvalReport:
     if cases is None:
         cases = load_cases()
 
     report = EvalReport()
 
     for case in cases:
-        runtime = ChatRuntime()
+        runtime = ChatRuntime(config=config) if config else ChatRuntime()
         pipeline = CognitiveTurnPipeline(runtime)
         case_result = _run_case(case, pipeline)
 
