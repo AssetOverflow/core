@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite smoke\n  core test --suite cognition\n  core test -- tests/test_alignment_graph.py -q"
+EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite smoke -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "smoke": (
@@ -556,7 +556,12 @@ def _print_version() -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
-    args = parser.parse_args(list(argv) if argv is not None else None)
+    raw_args = list(argv) if argv is not None else sys.argv[1:]
+    args, unknown = parser.parse_known_args(raw_args)
+    if unknown:
+        if getattr(args, "command", None) != "test":
+            parser.error(f"unrecognized arguments: {' '.join(unknown)}")
+        args.args = [*(getattr(args, "args", None) or ()), *unknown]
     if args.version:
         _print_version()
         return 0

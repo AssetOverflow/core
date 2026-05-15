@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from core import cli
 
 
@@ -38,6 +40,27 @@ def test_core_test_suite_expands_to_expected_pytest_paths(monkeypatch) -> None:
     assert "-q" in command
 
 
+def test_core_test_suite_accepts_pytest_flags_without_separator(monkeypatch) -> None:
+    calls: list[tuple[str, ...]] = []
+
+    def fake_run(*args: str, check: bool = False, cwd=None) -> int:
+        calls.append(args)
+        return 0
+
+    monkeypatch.setattr(cli, "_run", fake_run)
+
+    rc = cli.main(["test", "--suite", "packs", "-q"])
+
+    assert rc == 0
+    assert calls[0] == (
+        cli.sys.executable,
+        "-m",
+        "pytest",
+        "tests/test_core_semantic_seed_pack.py",
+        "-q",
+    )
+
+
 def test_core_test_passthrough_still_accepts_arbitrary_pytest_args(monkeypatch) -> None:
     calls: list[tuple[str, ...]] = []
 
@@ -57,3 +80,8 @@ def test_core_test_passthrough_still_accepts_arbitrary_pytest_args(monkeypatch) 
         "tests/test_core_semantic_seed_pack.py",
         "-q",
     )
+
+
+def test_non_test_commands_still_reject_unknown_args() -> None:
+    with pytest.raises(SystemExit):
+        cli.main(["pack", "list", "-q"])
