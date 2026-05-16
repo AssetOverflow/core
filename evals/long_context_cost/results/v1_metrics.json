@@ -1,0 +1,28 @@
+{
+  "case_count": 3,
+  "n_values": [
+    1000,
+    10000,
+    100000
+  ],
+  "log_log_slope": 0.9908,
+  "log_log_intercept": -8.4459,
+  "asymptotic_class": "linear",
+  "curve": [
+    {
+      "n": 1000,
+      "latency_median_ms": 0.217
+    },
+    {
+      "n": 10000,
+      "latency_median_ms": 1.7006
+    },
+    {
+      "n": 100000,
+      "latency_median_ms": 20.7954
+    }
+  ],
+  "all_recalls_succeeded": true,
+  "overall_pass": true,
+  "total_wall_clock_s": 0.71
+}

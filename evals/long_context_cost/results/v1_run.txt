@@ -1,0 +1,32 @@
+n=   1000  median=    0.217ms  p95=    0.236ms  max=    0.291ms  wall=0.03s
+n=  10000  median=    1.701ms  p95=    1.859ms  max=    1.871ms  wall=0.10s
+n= 100000  median=   20.795ms  p95=   22.189ms  max=   24.438ms  wall=0.58s
+
+metrics: {
+  "case_count": 3,
+  "n_values": [
+    1000,
+    10000,
+    100000
+  ],
+  "log_log_slope": 0.9908,
+  "log_log_intercept": -8.4459,
+  "asymptotic_class": "linear",
+  "curve": [
+    {
+      "n": 1000,
+      "latency_median_ms": 0.217
+    },
+    {
+      "n": 10000,
+      "latency_median_ms": 1.7006
+    },
+    {
+      "n": 100000,
+      "latency_median_ms": 20.7954
+    }
+  ],
+  "all_recalls_succeeded": true,
+  "overall_pass": true,
+  "total_wall_clock_s": 0.71
+}

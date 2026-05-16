@@ -1,0 +1,15 @@
+{
+  "kind": "structural_zero",
+  "lane": "long_context_cost",
+  "metrics": {
+    "log_log_slope": null,
+    "asymptotic_class": null,
+    "all_recalls_succeeded": false,
+    "overall_pass": false
+  },
+  "model_id": "frontier-structural-zero",
+  "note": "Frontier LLMs do not expose a vault-as-such — context is a single attention window. The notion 'recall latency as a function of stored-entry count' has no direct frontier analog; see docs/frontier_baselines.md",
+  "rationale": "CORE's exact-CGA vault is a typed deterministic store with O(N) inner-product scan over Cl(4,1) versors. Frontier systems use attention over a fixed-size context window plus opaque KV-cache; their 'long-context' scaling is dominated by attention's quadratic-in-tokens cost, not a typed-store recall cost. The two architectures are not on the same axis.",
+  "timestamp": "2026-05-16T00:00:00+00:00",
+  "version": "v1"
+}

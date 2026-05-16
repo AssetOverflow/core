@@ -23,6 +23,31 @@ except ImportError:
     _RUST = False
 
 
+def _build_cga_inner_metric() -> np.ndarray:
+    """Derive the Cl(4,1) inner-product metric vector from cga_inner.
+
+    For Cl(p,q) basis blades, e_i * e_j is scalar only when i == j, so
+    cga_inner(X, Y) reduces to a diagonal weighted dot product:
+        cga_inner(X, Y) = sum_i metric[i] * X[i] * Y[i]
+    where metric[i] = cga_inner(e_i, e_i) is ±1.  Computing the metric
+    once at import time lets vault recall scan via vectorised NumPy
+    ops while preserving the scalar path's serial reduction order
+    bit-for-bit.
+    """
+    from algebra.cga import cga_inner as _ci
+    from algebra.cl41 import N_COMPONENTS
+
+    metric = np.zeros(N_COMPONENTS, dtype=np.float32)
+    for i in range(N_COMPONENTS):
+        e_i = np.zeros(N_COMPONENTS, dtype=np.float32)
+        e_i[i] = 1.0
+        metric[i] = _ci(e_i, e_i)
+    return metric
+
+
+_CGA_INNER_METRIC: np.ndarray = _build_cga_inner_metric()
+
+
 def geometric_product(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     if _RUST:
         return np.asarray(_rs.geometric_product(A, B), dtype=np.float32)
@@ -61,21 +86,50 @@ def cga_inner(X: np.ndarray, Y: np.ndarray) -> float:
 
 
 def vault_recall(versors: list, query: np.ndarray, top_k: int = 5) -> list:
-    """
-    Top-k CGA inner product recall.
+    """Top-k CGA inner product recall.
+
     Rust path: parallel Rayon scan when explicitly enabled.
-    Python path: sequential list comprehension.
+    Python path: vectorised exact scan via the diagonal CGA inner-
+    product metric.  Bit-identical to the scalar `cga_inner` path
+    because the per-versor sum is folded in the same serial component
+    order; the only thing the vectorisation replaces is the
+    per-element Python dispatch loop.  ADR-0019 Stage 1.
     """
     if _RUST:
         try:
-            results = _rs.vault_recall(versors, query, top_k)
-            return results
+            return _rs.vault_recall(versors, query, top_k)
         except Exception:
             pass
-    q = np.asarray(query)
-    scores = [(i, float(cga_inner(q, np.asarray(v)))) for i, v in enumerate(versors)]
-    scores.sort(key=lambda x: -x[1])
-    return scores[:top_k]
+    if not versors:
+        return []
+    q = np.asarray(query, dtype=np.float32)
+    M = np.asarray(versors, dtype=np.float32)
+    if M.ndim != 2:
+        # Heterogeneous shapes — fall back to the scalar path rather
+        # than coerce silently.
+        scores_list = [(i, float(cga_inner(q, np.asarray(v)))) for i, v in enumerate(versors)]
+        scores_list.sort(key=lambda x: -x[1])
+        return scores_list[:top_k]
+    scores = np.zeros(M.shape[0], dtype=np.float32)
+    for i in range(M.shape[1]):
+        scores += (_CGA_INNER_METRIC[i] * M[:, i]) * q[i]
+    k = min(top_k, scores.shape[0])
+    if k <= 0:
+        return []
+    # argpartition gives unordered top-k; finalize the order with a
+    # stable sort by descending score, then ascending index for ties
+    # (mirrors the scalar path's stable enumerate order under
+    # list.sort with a strict key).
+    if k < scores.shape[0]:
+        cand = np.argpartition(-scores, k - 1)[:k]
+    else:
+        cand = np.arange(scores.shape[0])
+    # Stable order: primary key -scores ascending (= score descending),
+    # tiebreak ascending index to match scalar path's enumerate + stable
+    # list.sort ordering.
+    order = np.lexsort((cand, -scores[cand]))
+    cand = cand[order]
+    return [(int(i), float(scores[i])) for i in cand]
 
 
 def unitize_expmap(v: np.ndarray) -> np.ndarray:
