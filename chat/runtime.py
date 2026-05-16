@@ -19,33 +19,36 @@ from core.physics.identity import (
     IdentityScore,
     TurnEvent,
 )
-from core.physics.reasoning import ReasoningTrajectory, TrajectoryOperator
 from field.state import FieldState
 from generate.articulation import ArticulationPlan, realize
 from generate.dialogue import DialogueRole, classify_dialogue_blade, propose_dialogue
 from generate.proposition import FrameRegistry, Proposition, propose
+from generate.result import GenerationResult
 from generate.stream import generate
-from generate.surface import SentenceAssembler, SentencePlan
+from generate.surface import SentenceAssembler, SentencePlan, SurfaceContext
+from ingest.gate import inject
 from language_packs import OOVPolicy, load_mounted_packs, load_pack, load_pack_entries
 from persona.motor import PersonaMotor
 from session.context import SessionContext
+from session.correction import CorrectionPass
+from vault.decompose import default_decomposer, default_gate
 
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 _SEED_ALIASES = {
-    "logos": "λόγος",
-    "dabar": "דבר",
-    "or": "אור",
-    "phos": "φῶς",
-    "zoe": "ζωή",
-    "arche": "ἀρχή",
-    "aletheia": "ἀλήθεια",
+    "logos": "\u03bb\u03cc\u03b3\u03bf\u03c2",
+    "dabar": "\u05d3\u05d1\u05e8",
+    "or": "\u05d0\u05d5\u05e8",
+    "phos": "\u03c6\u03c9\u03c2",
+    "zoe": "\u03b6\u03c9\u03ae",
+    "arche": "\u1f00\u03c1\u03c7\u03ae",
+    "aletheia": "\u1f00\u03bb\u03ae\u03b8\u03b5\u03b9\u03b1",
 }
 _QUESTION_WORDS = frozenset({"what", "who", "how", "why", "when", "where", "which"})
 _TERMINALS = frozenset({".", "?", ";", "!"})
+_UNKNOWN_DOMAIN_SURFACE = "I don't have field coordinates for that yet."
 
 
 def _energy_scalar(energy_obj) -> float:
-    """Return a plain float from a FieldState.energy value."""
     if energy_obj is None:
         return 1.0
     if isinstance(energy_obj, EnergyProfile):
@@ -89,13 +92,6 @@ def _prefer_prompt_anchor(
     *,
     output_language: str,
 ) -> ArticulationPlan:
-    """Keep minimal English question responses sensitive to prompt target.
-
-    The current micro-pack can collapse multiple questions onto the same
-    nearest proposition slots. Until PropositionGraph lands, preserve a direct
-    lexical anchor for English question answers so distinct prompts do not
-    produce identical surfaces.
-    """
     if output_language != "en" or len(filtered_tokens) < 2:
         return articulation
     content_tokens = [
@@ -123,31 +119,20 @@ class _StubBindingFrame:
     cycle_index: int
 
 
-def _make_trajectory_from_result(
-    result,
-    turn: int,
-) -> ReasoningTrajectory:
-    """Build a ReasoningTrajectory from a GenerationResult for IdentityCheck."""
+def _make_trajectory_from_result(result, turn: int):
+    from core.physics.reasoning import TrajectoryOperator
+
     operator = TrajectoryOperator()
-    if result.trajectory:
-        frames = [
-            _StubBindingFrame(
-                frame_id=f"t{turn}_s{i}",
-                coherence_magnitude=_energy_scalar(getattr(fs, "energy", None)),
-                region_ids=frozenset({str(getattr(fs, "node", 0))}),
-                cycle_index=turn,
-            )
-            for i, fs in enumerate(result.trajectory)
-        ]
-    else:
-        frames = [
-            _StubBindingFrame(
-                frame_id=f"t{turn}_s0",
-                coherence_magnitude=_energy_scalar(getattr(result.final_state, "energy", None)),
-                region_ids=frozenset({str(getattr(result.final_state, "node", 0))}),
-                cycle_index=turn,
-            )
-        ]
+    states = result.trajectory or (result.final_state,)
+    frames = [
+        _StubBindingFrame(
+            frame_id=f"t{turn}_s{i}",
+            coherence_magnitude=_energy_scalar(getattr(fs, "energy", None)),
+            region_ids=frozenset({str(getattr(fs, "node", 0))}),
+            cycle_index=turn,
+        )
+        for i, fs in enumerate(states)
+    ]
     return operator.build(frames, trajectory_id=f"turn_{turn}")
 
 
@@ -208,52 +193,36 @@ class ChatRuntime:
 
         manifold = manifolds[0] if len(pack_ids) == 1 else load_mounted_packs(pack_ids)
         self._manifests = tuple(manifests)
-
         self.identity_manifold = _default_identity_manifold()
         persona_motor = PersonaMotor.from_identity_manifold(self.identity_manifold)
-
         self._context = SessionContext(
             manifold,
             persona=persona_motor,
             vault_reproject_interval=resolved_config.vault_reproject_interval,
         )
-        self._frame_registry = FrameRegistry.from_pack(
-            resolved_config.frame_pack,
-            self._context.vocab,
-        )
+        self._frame_registry = FrameRegistry.from_pack(resolved_config.frame_pack, self._context.vocab)
         self._surface_by_fold = {e.surface.casefold(): e.surface for e in entries}
         self._surface_by_fold.update(_SEED_ALIASES)
-        self._pos_by_surface = {
-            e.surface: (e.pos or e.part_of_speech or "X") for e in entries
-        }
-
+        self._pos_by_surface = {e.surface: (e.pos or e.part_of_speech or "X") for e in entries}
         self.exertion_meter = ExertionMeter(capacity_ceiling=128.0)
-        self.drive_gradients = tuple(
-            GradientField(axis=axis, magnitude=0.75)
-            for axis in self.identity_manifold.value_axes
-        )
+        self.drive_gradients = tuple(GradientField(axis=axis, magnitude=0.75) for axis in self.identity_manifold.value_axes)
         self._drive_map = DriveGradientMap(gradients=self.drive_gradients)
-
         self.character_profile = CharacterProfile.from_manifold(
             self.identity_manifold,
-            drive_summaries={
-                g.axis.name: g.magnitude for g in self.drive_gradients
-            },
+            drive_summaries={g.axis.name: g.magnitude for g in self.drive_gradients},
             fatigue_index=0.0,
         )
         self._identity_check = IdentityCheck()
         self.turn_log: List[TurnEvent] = []
+        self._correction_pass = CorrectionPass()
+        self._last_valence: float = 0.0
 
     @property
     def session(self) -> SessionContext:
         return self._context
 
     def _tokenize(self, text: str) -> list[str]:
-        tokens: list[str] = []
-        for match in _TOKEN_RE.finditer(text):
-            raw = match.group(0)
-            tokens.append(self._surface_by_fold.get(raw.casefold(), raw))
-        return tokens
+        return [self._surface_by_fold.get(m.group(0).casefold(), m.group(0)) for m in _TOKEN_RE.finditer(text)]
 
     def tokenize(self, text: str) -> list[str]:
         return self._tokenize(text)
@@ -267,10 +236,7 @@ class ChatRuntime:
             except KeyError:
                 if all(manifest.oov_policy is OOVPolicy.FAIL_CLOSED for manifest in self._manifests):
                     raise
-                if any(
-                    manifest.oov_policy is OOVPolicy.PROPOSE_VOCAB_EXPANSION
-                    for manifest in self._manifests
-                ):
+                if any(manifest.oov_policy is OOVPolicy.PROPOSE_VOCAB_EXPANSION for manifest in self._manifests):
                     raise KeyError(f"OOV token requires vocab proposal: {token}")
                 kept.append(token)
         return kept
@@ -293,17 +259,14 @@ class ChatRuntime:
         return blade
 
     def _apply_drive_bias(self, field_state: FieldState) -> FieldState:
-        """Nudge field F by the combined drive gradient before generation."""
         fatigue = self.exertion_meter.fatigue(at_cycle=self._context.turn)
         available = 1.0 - fatigue.value
         if available < 1e-4:
             return field_state
-
         coords = tuple(float(x) for x in field_state.F[:3])
         bias = self._drive_map.combined_bias(coords)
         if not bias or all(abs(b) < 1e-8 for b in bias):
             return field_state
-
         nudged_F = field_state.F.copy()
         for i, b in enumerate(bias[:3]):
             nudged_F[i] += b * available * 0.1
@@ -316,15 +279,85 @@ class ChatRuntime:
             valence=field_state.valence,
         )
 
+    def _build_surface_context(self, identity_score, current_valence: float) -> SurfaceContext:
+        active = self._context.referents.active_referent()
+        alignment = float(identity_score.alignment) if identity_score is not None else 1.0
+        return SurfaceContext(
+            active_referent_surface=active.surface if active is not None else "",
+            active_referent_slot=active.slot if active is not None else "neut_sg",
+            identity_alignment=alignment,
+            valence_delta=current_valence - self._last_valence,
+            elab_conjunction="",
+        )
+
+    def _stub_response(self, field_state: FieldState) -> ChatResponse:
+        zero = np.zeros(field_state.F.shape, dtype=np.float32)
+        prop = Proposition(
+            subject="",
+            predicate="",
+            object_=None,
+            surface=_UNKNOWN_DOMAIN_SURFACE,
+            frame_id="unknown_domain",
+            subject_versor=zero,
+            predicate_versor=zero,
+            object_versor=None,
+            relation=zero,
+        )
+        art = ArticulationPlan(
+            subject="",
+            predicate="",
+            object=None,
+            surface=_UNKNOWN_DOMAIN_SURFACE,
+            output_language=self.config.output_language,
+            frame_id="unknown_domain",
+        )
+        return ChatResponse(
+            surface=_UNKNOWN_DOMAIN_SURFACE,
+            proposition=prop,
+            articulation=art,
+            articulation_surface=_UNKNOWN_DOMAIN_SURFACE,
+            dialogue_role="assert",
+            versor_condition=versor_condition(field_state.F),
+            output_language=self.config.output_language,
+            frame_pack=self.config.frame_pack,
+            walk_surface=_UNKNOWN_DOMAIN_SURFACE,
+            salience_top_k=None,
+            candidates_used=None,
+            vault_hits=0,
+            identity_score=None,
+            character_profile=self.character_profile,
+            flagged=False,
+        )
+
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
         tokens = self._tokenize(text)
         filtered = self._apply_oov_policy(tokens)
         if not filtered:
             raise ValueError("ChatRuntime.chat() received no in-vocabulary tokens.")
 
-        field_state = self._context.ingest(filtered)
-        field_state = self._apply_drive_bias(field_state)
+        probe_state = self._context.probe_ingest(filtered)
+        direct_hits = self._context.vault.recall(probe_state.F, top_k=3)
+        direct_best = max((h["score"] for h in direct_hits), default=0.0)
+        gate_decision = default_gate.check(
+            direct_best,
+            vault=self._context.vault,
+            query=probe_state.F,
+            decomposer=default_decomposer,
+        )
+        if gate_decision.fire:
+            committed = self._context.commit_ingest(filtered)
+            empty_result = GenerationResult(tokens=(), final_state=committed, vault_hits=0)
+            self._context.finalize_turn(
+                empty_result,
+                tokens_in=tuple(filtered),
+                input_versor=committed.F,
+                dialogue_role="assert",
+                metadata={"unknown": True, "unknown_source": gate_decision.source},
+            )
+            return self._stub_response(committed)
 
+        field_state = self._context.commit_ingest(filtered)
+        field_state = self._apply_drive_bias(field_state)
         reference_blade = self._dialogue_reference()
         base_proposition = propose(
             field_state,
@@ -346,16 +379,8 @@ class ChatRuntime:
             reference_blade,
             output_lang=self.config.output_language,
         )
-        articulation = realize(
-            proposition,
-            self._context.vocab,
-            output_language=self.config.output_language,
-        )
-        articulation = _prefer_prompt_anchor(
-            articulation,
-            filtered,
-            output_language=self.config.output_language,
-        )
+        articulation = realize(proposition, self._context.vocab, output_language=self.config.output_language)
+        articulation = _prefer_prompt_anchor(articulation, filtered, output_language=self.config.output_language)
         self._context.record_dialogue(proposition)
 
         result = generate(
@@ -372,14 +397,9 @@ class ChatRuntime:
             salience_top_k=self.config.salience_top_k,
             inhibition_threshold=self.config.inhibition_threshold,
         )
-
         reasoning_trajectory = _make_trajectory_from_result(result, self._context.turn)
-        identity_score = self._identity_check.check(
-            reasoning_trajectory,
-            self.identity_manifold,
-        )
+        identity_score = self._identity_check.check(reasoning_trajectory, self.identity_manifold)
         flagged = identity_score.flagged
-
         cycle_cost = CycleCost(
             cycle_index=self._context.turn,
             attention_cost=float(result.candidates_used or 0),
@@ -388,45 +408,37 @@ class ChatRuntime:
             trajectory_cost=float(len(result.trajectory or ())),
         )
         self.exertion_meter.record(cycle_cost)
-
         fatigue = self.exertion_meter.fatigue(at_cycle=self._context.turn)
         self.character_profile = CharacterProfile.from_manifold(
             self.identity_manifold,
-            drive_summaries={
-                g.axis.name: g.magnitude * (1.0 - fatigue.value)
-                for g in self.drive_gradients
-            },
+            drive_summaries={g.axis.name: g.magnitude * (1.0 - fatigue.value) for g in self.drive_gradients},
             fatigue_index=fatigue.value,
         )
 
-        self._context.state = result.final_state
-        self._context.vault.store(
-            result.final_state.F,
-            {"turn": self._context.turn, "role": "assistant"},
+        self._context.finalize_turn(
+            result,
+            tokens_in=tuple(filtered),
+            dialogue_role=str(dialogue_role),
         )
-        self._context.turn += 1
-
-        surface = _terminate_surface(
-            articulation.surface,
-            role=dialogue_role,
-            output_language=self.config.output_language,
-        )
+        current_valence = _energy_scalar(getattr(result.final_state, "valence", None))
+        surface_ctx = self._build_surface_context(identity_score, current_valence)
+        self._last_valence = current_valence
+        surface = _terminate_surface(articulation.surface, role=dialogue_role, output_language=self.config.output_language)
         articulation = replace(articulation, surface=surface)
         sentence_plan: SentencePlan = SentenceAssembler().assemble(
             articulation,
             result.tokens,
             role=dialogue_role,
+            context=surface_ctx,
         )
         walk_surface = sentence_plan.surface
-        articulation_surface = articulation.surface
         vault_hits = int(result.vault_hits)
-
         turn_event = TurnEvent(
             turn=self._context.turn - 1,
             input_tokens=tuple(filtered),
             surface=surface,
             walk_surface=walk_surface,
-            articulation_surface=articulation_surface,
+            articulation_surface=articulation.surface,
             dialogue_role=str(dialogue_role),
             identity_score=identity_score,
             cycle_cost_total=cycle_cost.total,
@@ -436,12 +448,11 @@ class ChatRuntime:
             elaboration=sentence_plan.elaboration,
         )
         self.turn_log.append(turn_event)
-
         return ChatResponse(
-            surface=surface,
+            surface=walk_surface,
             proposition=proposition,
             articulation=articulation,
-            articulation_surface=articulation_surface,
+            articulation_surface=articulation.surface,
             dialogue_role=dialogue_role,
             versor_condition=versor_condition(result.final_state.F),
             output_language=self.config.output_language,
@@ -455,6 +466,26 @@ class ChatRuntime:
             flagged=flagged,
         )
 
+    def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:
+        return self._stub_response(field_state)
+
+    def correct(self, text: str, target_turn: int = -1, max_tokens: int | None = None) -> ChatResponse:
+        tokens = self._tokenize(text)
+        filtered = self._apply_oov_policy(tokens)
+        if not filtered:
+            raise ValueError("correct() received no in-vocabulary tokens.")
+        correction_state = inject(filtered, self._context.vocab)
+        correction_result = self._correction_pass.apply(
+            self._context.graph,
+            correction_state.F,
+            from_turn=target_turn,
+        )
+        self._context.apply_corrected_outputs(correction_result.records)
+        regen_tokens = self._context.last_input_tokens
+        if not regen_tokens:
+            return self._stub_response(correction_state)
+        return self.chat(" ".join(regen_tokens), max_tokens=max_tokens)
+
     def respond(self, text: str, max_tokens: int | None = None) -> str:
         try:
             return self.chat(text, max_tokens=max_tokens).surface
@@ -462,17 +493,9 @@ class ChatRuntime:
             return ""
 
     async def achat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
-        """Async equivalent of chat().
-
-        The synchronous chat path owns ingest, drive bias, generation,
-        identity telemetry, vault storage, and turn-log accounting.  Reusing it
-        keeps async semantics identical while avoiding an uninitialized
-        SessionContext.state on the first async turn.
-        """
         return self.chat(text, max_tokens=max_tokens)
 
     async def arespond(self, text: str, max_tokens: int | None = None) -> str:
-        """Async equivalent of respond()."""
         try:
             return (await self.achat(text, max_tokens=max_tokens)).surface
         except ValueError:

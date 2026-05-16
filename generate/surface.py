@@ -1,36 +1,4 @@
-"""generate/surface.py — SentenceAssembler (ADR-0012)
-
-Bridges ArticulationPlan + GenerationResult.tokens into a fully coherent
-surface sentence. This is the final realisation stage: every prior layer
-(field walk, proposition formation, articulation) feeds here.
-
-Contract:
-  Input:  ArticulationPlan           — subject / predicate / object slots
-          Sequence[str]              — ordered token walk from generate()
-          DialogueRole               — assert | elaborate | question | refute
-          output_language: str       — BCP-47 language tag (default "en")
-  Output: str                        — a single grammatical sentence
-
-Determinism guarantee:
-  Identical (plan, tokens, role, language) → identical output string.
-  No randomness, no model calls, no state mutation.
-
-Sentence templates by DialogueRole (English):
-  assert    →  "{Subject} {predicate} {object}."
-  elaborate →  "{Subject} {predicate} {object} — {elaboration}."
-  question  →  "Does {subject} {predicate} {object}?"
-  refute    →  "{Subject} does not {predicate} {object}."
-
-Elaboration material is drawn from the walk tokens that survive
-_STOP_SURFACES filtering, deduplicated, capped at _MAX_ELAB_TOKENS, and
-joined with commas. This keeps elaboration grounded in the actual
-manifold walk rather than invented content.
-
-Language routing:
-  Hebrew (he)  — VSO order following articulation.py convention
-  Greek  (grc) — SOV order following articulation.py convention
-  All others   — SVO (English default)
-"""
+"""generate/surface.py — deterministic sentence assembly."""
 
 from __future__ import annotations
 
@@ -40,11 +8,6 @@ from typing import Sequence
 from generate.articulation import ArticulationPlan
 from generate.dialogue import DialogueRole
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
-# Tokens that carry no propositional content; excluded from elaboration.
 _STOP_SURFACES: frozenset[str] = frozenset({
     "it", "to", "a", "an", "the", "and", "or", "but", "in", "on",
     "at", "of", "for", "with", "by", "from", "is", "are", "was",
@@ -53,52 +16,48 @@ _STOP_SURFACES: frozenset[str] = frozenset({
     "might", "shall", "can", "word", "what", "who", "how",
     "why", "when", "which", "that", "this", "these", "those",
 })
+_MAX_ELAB_TOKENS: int = 4
+HEDGE_STRONG_THRESHOLD: float = 0.4
+HEDGE_SOFT_THRESHOLD: float = 0.5
+CONTRAST_THRESHOLD: float = 0.3
+_SLOT_PRONOUN: dict[str, str] = {
+    "neut_sg": "it",
+    "plural": "they",
+    "masc_sg": "he",
+    "fem_sg": "she",
+}
 
-_MAX_ELAB_TOKENS: int = 4   # max walk tokens woven into elaboration
 
+@dataclass(frozen=True, slots=True)
+class SurfaceContext:
+    active_referent_surface: str = ""
+    active_referent_slot: str = "neut_sg"
+    identity_alignment: float = 1.0
+    valence_delta: float = 0.0
+    elab_conjunction: str = ""
 
-# ---------------------------------------------------------------------------
-# SentencePlan — immutable record of the assembled sentence components
-# ---------------------------------------------------------------------------
 
 @dataclass(frozen=True, slots=True)
 class SentencePlan:
-    """Fully resolved sentence before punctuation is appended."""
     subject: str
     predicate_phrase: str
     object_phrase: str | None
-    elaboration: str | None          # None unless role == "elaborate"
+    elaboration: str | None
     dialogue_role: str
     output_language: str
-    surface: str                     # the final rendered sentence
+    surface: str
 
-
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
 
 def _cap(word: str) -> str:
-    """Capitalise the first codepoint; leave the rest as-is."""
-    if not word:
-        return word
-    return word[0].upper() + word[1:]
+    return word[0].upper() + word[1:] if word else word
 
 
-def _elaboration_tokens(
-    tokens: Sequence[str],
-    already_used: frozenset[str],
-) -> list[str]:
-    """Pick walk tokens that add propositional content beyond the slots."""
+def _elaboration_tokens(tokens: Sequence[str], already_used: frozenset[str]) -> list[str]:
     seen: set[str] = set()
     result: list[str] = []
     for tok in tokens:
         low = tok.lower()
-        if (
-            low in _STOP_SURFACES
-            or low in already_used
-            or low in seen
-            or not tok.isalpha()
-        ):
+        if low in _STOP_SURFACES or low in already_used or low in seen or not tok.isalpha():
             continue
         seen.add(low)
         result.append(tok)
@@ -107,60 +66,105 @@ def _elaboration_tokens(
     return result
 
 
+def _join_elab(elab_tokens: list[str], conjunction: str) -> str:
+    if not elab_tokens:
+        return ""
+    if len(elab_tokens) == 1:
+        return elab_tokens[0]
+    return f"{', '.join(elab_tokens[:-1])} {conjunction} {elab_tokens[-1]}"
+
+
+def _pick_conjunction(valence_delta: float, override: str) -> str:
+    return override or ("but" if valence_delta < 0 else "and")
+
+
+def _elaboration_string(elab_tokens: list[str], ctx: SurfaceContext | None) -> str:
+    return _join_elab(
+        elab_tokens,
+        _pick_conjunction(
+            ctx.valence_delta if ctx else 0.0,
+            ctx.elab_conjunction if ctx else "",
+        ),
+    )
+
+
+def _coref_subject(subject: str, ctx: SurfaceContext | None) -> str:
+    if ctx is None or not ctx.active_referent_surface:
+        return subject
+    if subject.casefold() == ctx.active_referent_surface.casefold():
+        return _SLOT_PRONOUN.get(ctx.active_referent_slot, "it")
+    return subject
+
+
+def _lower_first(surface: str) -> str:
+    return surface[0].lower() + surface[1:] if surface else surface
+
+
+def _apply_hedge(surface: str, alignment: float) -> str:
+    if alignment < HEDGE_STRONG_THRESHOLD:
+        return f"It seems that {_lower_first(surface)}"
+    if alignment < HEDGE_SOFT_THRESHOLD:
+        return f"Perhaps {_lower_first(surface)}"
+    return surface
+
+
+def _apply_contrast(surface: str, valence_delta: float) -> str:
+    if valence_delta < -CONTRAST_THRESHOLD:
+        return f"However, {_lower_first(surface)}"
+    return surface
+
+
+def _apply_subordination(surface: str, role: str, ctx: SurfaceContext | None, lang: str) -> str:
+    if lang != "en" or role != "question" or ctx is None or not ctx.active_referent_surface:
+        return surface
+    return f"Given that {ctx.active_referent_surface}, {_lower_first(surface)}"
+
+
 def _assemble_en(
     subject: str,
     predicate: str,
     object_: str | None,
-    elab_tokens: list[str],
+    elaboration: str,
     role: str,
+    ctx: SurfaceContext | None,
 ) -> str:
-    """English SVO sentence assembly."""
-    subj = _cap(subject)
+    subj_out = _coref_subject(subject, ctx)
+    subj = _cap(subj_out)
     obj = object_ or ""
-
     if role == "assert":
         parts = [subj, predicate]
         if obj:
             parts.append(obj)
-        return " ".join(parts) + "."
-
-    if role == "elaborate":
+        surface = " ".join(parts) + "."
+    elif role == "elaborate":
         parts = [subj, predicate]
         if obj:
             parts.append(obj)
         base = " ".join(parts)
-        if elab_tokens:
-            elab = ", ".join(elab_tokens)
-            return f"{base} — {elab}."
-        return base + "."
-
-    if role == "question":
-        parts = ["Does", subject, predicate]
+        surface = f"{base} — {elaboration}." if elaboration else base + "."
+    elif role == "question":
+        parts = ["Does", subj_out, predicate]
         if obj:
             parts.append(obj)
-        return " ".join(parts) + "?"
-
-    if role == "refute":
+        surface = " ".join(parts) + "?"
+    elif role == "refute":
         parts = [subj, "does not", predicate]
         if obj:
             parts.append(obj)
-        return " ".join(parts) + "."
+        surface = " ".join(parts) + "."
+    else:
+        parts = [subj, predicate]
+        if obj:
+            parts.append(obj)
+        surface = " ".join(parts) + "."
+    surface = _apply_subordination(surface, role, ctx, lang="en")
+    if ctx is not None:
+        surface = _apply_contrast(surface, ctx.valence_delta)
+        surface = _apply_hedge(surface, ctx.identity_alignment)
+    return surface
 
-    # fallback — treat as assert
-    parts = [subj, predicate]
-    if obj:
-        parts.append(obj)
-    return " ".join(parts) + "."
 
-
-def _assemble_he(
-    subject: str,
-    predicate: str,
-    object_: str | None,
-    elab_tokens: list[str],
-    role: str,
-) -> str:
-    """Hebrew VSO — verb precedes subject, object follows."""
+def _assemble_he(subject: str, predicate: str, object_: str | None, elaboration: str, role: str) -> str:
     obj = object_ or ""
     if role == "question":
         parts = ["\u05d4\u05d0\u05dd", predicate, subject]
@@ -176,20 +180,10 @@ def _assemble_he(
     if obj:
         parts.append(obj)
     base = " ".join(parts)
-    if role == "elaborate" and elab_tokens:
-        elab = ", ".join(elab_tokens)
-        return f"{base} \u2014 {elab}."
-    return base + "."
+    return f"{base} \u2014 {elaboration}." if role == "elaborate" and elaboration else base + "."
 
 
-def _assemble_grc(
-    subject: str,
-    predicate: str,
-    object_: str | None,
-    elab_tokens: list[str],
-    role: str,
-) -> str:
-    """Ancient Greek SOV — subject, object, verb."""
+def _assemble_grc(subject: str, predicate: str, object_: str | None, elaboration: str, role: str) -> str:
     subj = _cap(subject)
     obj = object_ or ""
     if role == "question":
@@ -199,8 +193,7 @@ def _assemble_grc(
         parts.append(predicate)
         return " ".join(parts) + ";"
     if role == "refute":
-        neg = "\u03bf\u1f50"   # ou
-        parts = [subj, neg]
+        parts = [subj, "\u03bf\u1f50"]
         if obj:
             parts.append(obj)
         parts.append(predicate)
@@ -210,86 +203,45 @@ def _assemble_grc(
         parts.append(obj)
     parts.append(predicate)
     base = " ".join(parts)
-    if role == "elaborate" and elab_tokens:
-        elab = ", ".join(elab_tokens)
-        return f"{base} \u2014 {elab}."
-    return base + "."
+    return f"{base} \u2014 {elaboration}." if role == "elaborate" and elaboration else base + "."
 
-
-# ---------------------------------------------------------------------------
-# SentenceAssembler — public API
-# ---------------------------------------------------------------------------
 
 class SentenceAssembler:
-    """Stateless assembler: maps (plan, tokens, role) to a surface sentence.
-
-    No field state is held. All inputs are consumed read-only.
-    The same instance may be shared across sessions.
-    """
-
     def assemble(
         self,
         plan: ArticulationPlan,
         tokens: Sequence[str],
         role: DialogueRole = "assert",
+        context: SurfaceContext | None = None,
     ) -> SentencePlan:
-        """Produce a SentencePlan (with .surface) from an ArticulationPlan.
-
-        Steps:
-          1. Extract slot strings from the plan.
-          2. Filter elaboration tokens from the walk.
-          3. Route to language-specific assembler.
-          4. Return an immutable SentencePlan.
-        """
         subject = plan.subject or ""
         predicate = plan.predicate or ""
         object_ = plan.object or None
         lang = plan.output_language or "en"
         role_str = str(role)
-
-        # Collect slots already present so elaboration doesn't repeat them.
-        used_slots: frozenset[str] = frozenset(
-            w.lower()
-            for w in [subject, predicate, object_]
-            if w
-        )
+        used_slots = frozenset(w.lower() for w in [subject, predicate, object_] if w)
         elab_tokens = _elaboration_tokens(tokens, used_slots)
-
-        # Empty-slot guard: if slot versors were missing, both subject and
-        # predicate will be empty. Fall back to the raw articulation surface
-        # rather than emitting a bare ".".
+        elaboration = _elaboration_string(elab_tokens, context) if elab_tokens else ""
         if not subject and not predicate:
             fallback = plan.surface or " ".join(t for t in tokens if t)
-            return SentencePlan(
-                subject="",
-                predicate_phrase="",
-                object_phrase=object_,
-                elaboration=None,
-                dialogue_role=role_str,
-                output_language=lang,
-                surface=fallback,
-            )
-
-        # Language dispatch
+            return SentencePlan("", "", object_, None, role_str, lang, fallback)
         if lang == "he":
-            surface = _assemble_he(subject, predicate, object_, elab_tokens, role_str)
+            surface = _assemble_he(subject, predicate, object_, elaboration, role_str)
         elif lang == "grc":
-            surface = _assemble_grc(subject, predicate, object_, elab_tokens, role_str)
+            surface = _assemble_grc(subject, predicate, object_, elaboration, role_str)
         else:
-            surface = _assemble_en(subject, predicate, object_, elab_tokens, role_str)
-
+            surface = _assemble_en(subject, predicate, object_, elaboration, role_str, context)
         return SentencePlan(
             subject=subject,
             predicate_phrase=predicate,
             object_phrase=object_,
-            elaboration=", ".join(elab_tokens) if elab_tokens else None,
+            elaboration=elaboration or None,
             dialogue_role=role_str,
             output_language=lang,
             surface=surface,
         )
 
 
-# Module-level default instance (stateless — safe to share)
 default_assembler = SentenceAssembler()
 
 
@@ -297,6 +249,6 @@ def assemble(
     plan: ArticulationPlan,
     tokens: Sequence[str],
     role: DialogueRole = "assert",
+    context: SurfaceContext | None = None,
 ) -> str:
-    """Convenience wrapper returning only the surface string."""
-    return default_assembler.assemble(plan, tokens, role).surface
+    return default_assembler.assemble(plan, tokens, role, context).surface
