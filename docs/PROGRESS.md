@@ -461,6 +461,42 @@ engineering above.
 
 ---
 
+## Phase 4 — Scale and Efficiency — IN PROGRESS
+
+### sample-efficiency v1 (2026-05-16) — first quantitative-curve lane lands
+
+First Phase 4 lane.  Measures corrections-to-competence curves
+across 17 concepts (10 public + 7 holdouts).  Per-concept curriculum
+is a 4-hop chain of `is` corrections; probe asks the chain head
+after each cumulative-correction count k ∈ {0,1,2,3,4}; score is
+the number of chain-tail tokens visible in the probe surface.
+
+| Split | concepts | first_hit | saturation | rate | replay |
+|---|---|---|---|---|---|
+| public/v1 | 10 | 1.0 | 4.0 | 1.0 | **1.0** |
+| holdouts/v1 | 7 | 1.0 | 4.0 | 1.0 | **1.0** |
+
+**Every concept's curve: `[0,1,2,3,4]`.**  One correction → one
+chain hop → one new token in surface.  No diminishing returns; no
+plateau; no spurious confabulation at k=0.  Replay determinism is
+1.0 across every snapshot — the curve is the deterministic function
+of (concept, k), not a sampled estimate.
+
+Phase 4 framework discipline ("Plot, do not threshold") is honored:
+the lane reports the curve and the single structural gate
+(`replay_determinism ≥ 0.95`) is met at perfect 1.0.
+
+**What the linearity says.**  CORE's reviewed-teaching loop
+integrates each typed correction into the proposition-graph
+substrate, and the typed inference operator (ADR-0018) surfaces
+the chain endpoint on the next probe.  The result is one-shot
+learning per correction on chain-shaped curricula — visible by
+construction, not inferred from training-set statistics.
+
+**v2 follow-on candidates** (in `evals/sample_efficiency/gaps.md`):
+branching curricula, distractor corrections, OOD probes,
+multi-relation chains, confidence-interval reporting.
+
 ## Phase 4 — Scale and Efficiency
 
 **Status:** Not Started

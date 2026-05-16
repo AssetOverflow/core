@@ -1,0 +1,2 @@
+{"concept":"wisdom","seed":"What is wisdom?","curriculum":["Actually wisdom is judgment.","Actually judgment is decision.","Actually decision is action.","Actually action is consequence."],"probe":"What is wisdom?","expected_tokens":["judgment","decision","action","consequence"]}
+{"concept":"light","seed":"What is light?","curriculum":["Actually light is clarity.","Actually clarity is recognition.","Actually recognition is naming.","Actually naming is definition."],"probe":"What is light?","expected_tokens":["clarity","recognition","naming","definition"]}

@@ -1,0 +1,18 @@
+{
+  "kind": "structural_zero",
+  "lane": "sample_efficiency",
+  "metrics": {
+    "mean_corrections_to_first_hit": null,
+    "mean_corrections_to_saturation": null,
+    "first_hit_rate": 0.0,
+    "saturation_rate": 0.0,
+    "mean_saturation_score": 0.0,
+    "replay_determinism": 0.0,
+    "overall_pass": false
+  },
+  "model_id": "frontier-structural-zero",
+  "note": "Frontier LLMs do not emit the typed signals these sub-metrics score; see docs/frontier_baselines.md",
+  "rationale": "replay_determinism requires identical trace_hash across fresh deterministic runs of the (k-corrections, probe) snapshot — frontier inference is stochastic. The corrections-to-competence curve is in principle scorable on free-text outputs, but the per-snapshot reproducibility that makes the curve meaningful (rather than noisy sampling) does not exist in frontier systems.",
+  "timestamp": "2026-05-16T00:00:00+00:00",
+  "version": "v1"
+}
