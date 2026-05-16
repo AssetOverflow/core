@@ -200,6 +200,41 @@ manifold's axis design is the limiting factor and needs sharpening
 before the geometric defense can carry weight on its own.  See
 `evals/adversarial_identity/gaps.md`.
 
+### Geometric-axis sharpening investigation (2026-05-16)
+
+A focused empirical investigation against v3 and v5 (preserved as
+`evals/adversarial_identity/calibration/probe_field_signature.py`)
+swept every candidate per-case discriminator derivable from the
+existing CognitiveTurnResult — `identity_score.alignment`, field-delta
+L2 norm, semantic-coord energy ratio, `vault_hits`, surface length,
+intent tag.  **No signal separated attack from legitimate at the
+per-case level.**  `identity_score.alignment` is 1.000 universally;
+field-delta distributions overlap heavily; vault retrieval grounds
+both kinds similarly.
+
+The pipeline encodes identity-override attacks and legitimate
+corrections into statistically indistinguishable field-state
+geometries.  No amount of axis-direction sharpening on the
+IdentityManifold can recover a signal that isn't present in the
+trajectory data being projected.
+
+**Architectural conclusion:** fix #3 cannot be made load-bearing
+in place.  The required upstream work — encoding token semantic
+categories into specific blade coordinates of the field versor at
+the ingest gate, then redefining the IdentityManifold axes in the
+32-dim Cl(4,1) basis with a real inner-product projection — is a
+scoped multi-PR effort, not a single sharpening exercise.  The
+calibration probe stands as the empirical baseline that any future
+ingest-gate change must beat before fix #3 can be claimed
+load-bearing.  See `evals/adversarial_identity/gaps.md` for the
+full table of measured signals and the recommended path.
+
+**What stands today as the load-bearing defense:** fix #2
+(syntactic rules a/b/c/d) + the normalization layer reject 100% of
+v1–v5 attacks (n=121) with 0 false positives on 51 legitimate
+corrections.  Fix #3's predicate, unit tests, and wiring remain as
+scaffolding for the upstream work above.
+
 ## Phase 2 — COMPLETE
 
 All five Phase 2 v1+v2 lanes pass at 100%; frontier structural

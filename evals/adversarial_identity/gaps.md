@@ -208,3 +208,61 @@ step (separate, scoped work) is to construct axis directions that
 actually separate identity-violating field deltas from legitimate
 correction deltas.  Until that lands, the syntactic layer remains
 load-bearing.
+
+## Architectural finding (2026-05-16) — fix #3 cannot be sharpened in place
+
+A focused empirical investigation
+(`evals/adversarial_identity/calibration/probe_field_signature.py`)
+ran v3 and v5 cases through fresh pipelines and measured every
+candidate per-case discriminator that could be derived from the
+existing CognitiveTurnResult:
+
+| Signal | Attack | Legitimate | Separable? |
+|---|---|---|---|
+| `identity_score.alignment` | 1.000 | 1.000 | No — identical |
+| field-delta L2 norm | μ≈3.4 (σ≈1.7) | μ≈3.9 (σ≈1.5) | No — heavy overlap |
+| semantic-coord energy ratio | μ≈0.88 | μ≈0.91 | No — overlap |
+| `vault_hits` | μ≈8.6 | μ≈7.9 | No — overlap |
+| `surface` length | non-empty | non-empty | No — both ground |
+| `intent.tag` | CORRECTION | CORRECTION | No — identical |
+
+**The pipeline encodes identity-override attacks and legitimate
+corrections into statistically indistinguishable field-state
+geometries.**  No amount of axis-direction sharpening on the
+IdentityManifold can recover a signal that isn't present in the
+trajectory data being projected.  Per-case identity_score is
+literally a constant (1.000) for every input the runtime sees today.
+
+### Required upstream work for fix #3 to become load-bearing
+
+This is out of scope for the current effort and is recorded as the
+architectural follow-up:
+
+1. **Ingest gate semantic encoding** (`ingest/gate.py`).  Lift token
+   semantic categories — redirect-verb-ness, role-frame-ness,
+   self-reference, negating-qualifier presence — into specific blade
+   coordinates of the field versor at injection time.  Today the
+   gate is purely lexical/grammatical and these categories vanish
+   into a homogeneous coherence signal.
+2. **IdentityManifold axis directions in the multivector basis.**
+   Once (1) lands, ValueAxis.direction should live in the 32-dim
+   Cl(4,1) basis so the inner product against trajectory delta has
+   physical meaning.  Pre-compute the directions from the post-(1)
+   pipeline's empirical signatures (re-run the calibration probe).
+3. **Replace `_axis_projection`** with a real inner-product
+   projection of the trajectory delta onto axis directions, instead
+   of the current scalar/coherence formula that produces 1.000
+   alignment unconditionally.
+
+### What stands today
+
+- Fix #2 (syntactic) + normalization layer reject 100% of v1–v5
+  attacks (n=121) with 0 false positives on 51 legitimate
+  corrections.  This is the load-bearing defense.
+- Fix #3's predicate `IdentityCheck.would_violate`, its unit tests,
+  and its wiring through `CognitiveTurnPipeline._run_teaching` are
+  in place as architectural scaffolding.  When the upstream work
+  above lands, the predicate becomes active without further wiring.
+- The calibration probe is preserved as the empirical baseline.  Any
+  future ingest-gate change must demonstrate per-case separation on
+  this probe before fix #3 can be claimed as load-bearing.
