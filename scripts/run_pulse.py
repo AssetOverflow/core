@@ -1,23 +1,25 @@
 """
 Vertical slice: one cognitive pulse from injection to token recall.
 
-V2 — live semantic manifold.
+V3 — per-token manifold topology with input-driven output node.
 
-Uses the English Supervised Seeding Epoch (language_packs.en_seeder) to
-replace the mock 10-word hash vault.  Every word is a geometrically valid
-Cl(4,1) unit versor derived from a GloVe-50 embedding via the structured
-CGA lift, so vault_recall now returns semantically meaningful neighbours.
+Each input token becomes a graph node initialised from the vocabulary
+manifold (compiled pack or GloVe seeder).  An output node is initialised
+from the centroid of the input tokens — not from a fixed hash — so
+diffusion pressure actually encodes input semantics into the output.
+
+Recall searches the full VocabManifold by CGA inner product.
 
 Usage:
-    # First run downloads GloVe (~822 MB) and caches it.
-    python -m scripts.run_pulse
-    python -m scripts.run_pulse "what is truth"
-    python -m scripts.run_pulse --top-k 5 "grace and peace"
+    python -m scripts.run_pulse "What is truth?"
+    python -m scripts.run_pulse --top-k 10 "Compare knowledge and wisdom"
+    python -m scripts.run_pulse --no-glove "light"   # compiled pack only, no download
 
 Flags:
     --top-k N     Return N nearest vault words (default 5)
     --max-words N Load at most N words from GloVe (default 50000)
-    --no-glove    Fall back to deterministic hash vault (no download)
+    --no-glove    Use compiled en_core_cognition_v1 pack (70 words, no download)
+    -v            Verbose logging
 """
 
 from __future__ import annotations
@@ -25,124 +27,130 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from typing import List, Tuple
 
 import numpy as np
 
-from algebra.backend import vault_recall
+from algebra.backend import cga_inner
+from algebra.versor import construction_seed_versor
 from field.operators import GraphDiffusionOperator
 from field.state import ManifoldState
 from sensorium.adapters.text import deterministic_hash_versor
+from vocab.manifold import VocabManifold
 
 log = logging.getLogger(__name__)
 
 CONVERGENCE_THRESHOLD = 1e-6
 MAX_STEPS = 2000
-
-# ---------------------------------------------------------------------------
-# Hash-based mock vault (kept for --no-glove fallback)
-# ---------------------------------------------------------------------------
-_MOCK_VOCAB = [
-    "truth", "light", "wisdom", "peace", "knowledge",
-    "word", "path", "life", "grace", "hope",
-]
+TOP_K = 5
+COMPILED_PACK_ID = "en_core_cognition_v1"
 
 
-def _build_mock_vault() -> Tuple[List[np.ndarray], List[str]]:
-    versors = [deterministic_hash_versor(w) for w in _MOCK_VOCAB]
-    return versors, list(_MOCK_VOCAB)
+def _load_manifold(use_glove: bool, max_words: int) -> VocabManifold:
+    if use_glove:
+        from language_packs.en_seeder import seed_english_manifold
+        log.info("[pulse] Seeding English manifold (max_words=%d) …", max_words)
+        manifold = seed_english_manifold(max_words=max_words)
+        log.info("[pulse] Manifold ready: %d words", len(manifold))
+        return manifold
 
-
-# ---------------------------------------------------------------------------
-# Live semantic vault from VocabManifold
-# ---------------------------------------------------------------------------
-
-def _build_live_vault(max_words: int = 50_000):
-    """Return a seeded VocabManifold for use in nearest() recall."""
-    from language_packs.en_seeder import seed_english_manifold
-    log.info("[pulse] Seeding English manifold (max_words=%d) …", max_words)
-    manifold = seed_english_manifold(max_words=max_words)
-    log.info("[pulse] Manifold ready: %d words", len(manifold))
+    from language_packs.compiler import load_pack
+    _, manifold = load_pack(COMPILED_PACK_ID)
     return manifold
 
 
-# ---------------------------------------------------------------------------
-# Manifold construction and pulse loop
-# ---------------------------------------------------------------------------
-
-def _build_initial_manifold(prompt_versor: np.ndarray) -> ManifoldState:
-    context_versor = deterministic_hash_versor("__context__")
-    output_versor  = deterministic_hash_versor("__output__")
-    fields = np.stack([prompt_versor, context_versor, output_versor], axis=0)
-    edges  = np.array([[0, 1], [1, 2], [0, 2]], dtype=np.int32)
-    return ManifoldState(fields=fields, edges=edges)
+def _inject_token(token: str, manifold: VocabManifold) -> np.ndarray:
+    """Project one token into Cl(4,1). Manifold lookup first, hash fallback."""
+    try:
+        return manifold.get_versor(token.lower()).astype(np.float64)
+    except KeyError:
+        return deterministic_hash_versor(token).astype(np.float64)
 
 
-def _inject_prompt(text: str, manifold=None) -> np.ndarray:
+def _build_manifold(
+    text: str,
+    manifold: VocabManifold,
+) -> tuple[ManifoldState, list[str]]:
+    """Build a per-token graph with an input-driven output node.
+
+    Topology:
+      - Each input token → one node (versor from manifold or hash fallback)
+      - One output node → initialised from centroid of input versors
+      - Star edges: every input node → output node
+      - Chain edges: sequential input nodes for adjacency pressure
     """
-    Project the prompt text into Cl(4,1).
+    tokens = text.strip().lower().split()
+    if not tokens:
+        tokens = ["__empty__"]
 
-    If a seeded VocabManifold is provided, tokenise by whitespace and average
-    the per-token versors that exist in the manifold.  Tokens absent from the
-    manifold fall back to deterministic_hash_versor so no word is silently
-    dropped.
-    """
-    if manifold is None:
-        return deterministic_hash_versor(text)
+    token_versors = [_inject_token(t, manifold) for t in tokens]
 
-    tokens = text.lower().split()
-    versors = []
-    for tok in tokens:
-        try:
-            versors.append(manifold.get_versor(tok).astype(np.float64))
-        except KeyError:
-            log.debug("[pulse] OOV token %r — using hash versor", tok)
-            versors.append(deterministic_hash_versor(tok).astype(np.float64))
-
-    if not versors:
-        return deterministic_hash_versor(text)
-
-    # Centroid in embedding space, then re-close onto versor manifold.
-    from algebra.versor import construction_seed_versor
-    centroid = np.mean(versors, axis=0)
-    # Scale to (-0.9, 0.9) before seed construction.
+    centroid = np.mean(token_versors, axis=0)
     max_abs = float(np.max(np.abs(centroid)))
     if max_abs > 1e-9:
         centroid = centroid * (0.9 / max_abs)
-    return construction_seed_versor(centroid).astype(np.float32)
+    output_versor = construction_seed_versor(centroid).astype(np.float64)
+
+    node_labels = list(tokens) + ["__output__"]
+    fields = np.stack(
+        [np.asarray(v, dtype=np.float32) for v in token_versors]
+        + [output_versor.astype(np.float32)],
+        axis=0,
+    )
+
+    output_idx = len(tokens)
+    edges: list[list[int]] = []
+    for i in range(len(tokens)):
+        edges.append([i, output_idx])
+    for i in range(len(tokens) - 1):
+        edges.append([i, i + 1])
+
+    edge_array = (
+        np.array(edges, dtype=np.int32)
+        if edges
+        else np.empty((0, 2), dtype=np.int32)
+    )
+    return ManifoldState(fields=fields, edges=edge_array), node_labels
+
+
+def _recall_from_manifold(
+    output_versor: np.ndarray,
+    manifold: VocabManifold,
+    top_k: int,
+) -> list[tuple[str, float]]:
+    """Top-k words from VocabManifold by CGA inner product."""
+    exclude: set[int] = set()
+    results: list[tuple[str, float]] = []
+    for _ in range(top_k):
+        try:
+            word, idx = manifold.nearest(
+                output_versor, exclude_indices=frozenset(exclude),
+            )
+        except ValueError:
+            break
+        score = float(cga_inner(output_versor, manifold.get_versor_at(idx)))
+        exclude.add(idx)
+        results.append((word, score))
+    return results
 
 
 def run_pulse(
     text: str,
     *,
-    top_k: int = 5,
+    top_k: int = TOP_K,
     max_words: int = 50_000,
     use_glove: bool = True,
-) -> List[str]:
-    """
-    Execute a single cognitive pulse over the manifold and return the
-    top-k nearest vault words to the stabilised output-node versor.
-
-    Returns
-    -------
-    List of resolved word strings, length <= top_k.
-    """
-    # --- Build vault ---------------------------------------------------------
-    if use_glove:
-        manifold = _build_live_vault(max_words=max_words)
-    else:
-        manifold = None
-
-    # --- Inject prompt -------------------------------------------------------
-    prompt_versor = _inject_prompt(text, manifold)
-    state = _build_initial_manifold(prompt_versor)
+) -> list[str]:
+    """Execute one cognitive pulse and return top-k recalled words."""
+    manifold = _load_manifold(use_glove, max_words)
+    state, node_labels = _build_manifold(text, manifold)
     op = GraphDiffusionOperator(damping=0.5)
 
-    print(f"[pulse] input  : {text!r}")
-    print(f"[pulse] nodes  : {state.fields.shape[0]}, edges: {state.edges.shape[0]}")
+    n_input = len(node_labels) - 1
+    print(f"[pulse] input : {text!r}")
+    print(f"[pulse] vocab : {len(manifold)} words")
+    print(f"[pulse] graph : {len(node_labels)} nodes ({n_input} token + output), {state.edges.shape[0]} edges")
 
-    # --- Propagation loop ----------------------------------------------------
-    step  = 0
+    step = 0
     delta = float("inf")
     while step < MAX_STEPS:
         state, delta = op.forward(state)
@@ -155,28 +163,16 @@ def run_pulse(
     else:
         print(f"[pulse] WARNING: max_steps ({MAX_STEPS}) reached — delta={delta:.2e}")
 
-    # --- Recall --------------------------------------------------------------
-    output_versor = state.fields[2]  # output node
-    resolved: List[str] = []
+    output_idx = len(node_labels) - 1
+    output_versor = state.fields[output_idx]
+    results = _recall_from_manifold(output_versor, manifold, top_k)
 
-    if manifold is not None:
-        # Use VocabManifold.nearest() directly — semantically grounded.
-        exclude: set[int] = set()
-        for rank in range(top_k):
-            try:
-                word, idx = manifold.nearest(output_versor, exclude_indices=frozenset(exclude))
-                exclude.add(idx)
-                resolved.append(word)
-            except ValueError:
-                break
-    else:
-        vault_versors, vault_words = _build_mock_vault()
-        results = vault_recall(vault_versors, output_versor, top_k=top_k)
-        for idx, score in results:
-            resolved.append(vault_words[idx])
+    print(f"[pulse] output -> top-{top_k} recall:")
+    for rank, (word, score) in enumerate(results, 1):
+        marker = " <-" if word in [t.lower() for t in node_labels[:-1]] else ""
+        print(f"[pulse]   {rank}. {word!r:20s} score={score:+.6f}{marker}")
 
-    print(f"[pulse] top-{top_k} recall: {resolved}")
-    return resolved
+    return [w for w, _ in results]
 
 
 # ---------------------------------------------------------------------------
@@ -184,12 +180,12 @@ def run_pulse(
 # ---------------------------------------------------------------------------
 
 def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="CORE cognitive pulse (V2 — live manifold)")
-    p.add_argument("text", nargs="*", default=["hello world"])
-    p.add_argument("--top-k",    type=int, default=5,      metavar="N")
-    p.add_argument("--max-words",type=int, default=50_000, metavar="N")
+    p = argparse.ArgumentParser(description="CORE cognitive pulse (V3)")
+    p.add_argument("text", nargs="*", default=["What is truth?"])
+    p.add_argument("--top-k", type=int, default=5, metavar="N")
+    p.add_argument("--max-words", type=int, default=50_000, metavar="N")
     p.add_argument("--no-glove", action="store_true",
-                   help="Use deterministic hash vault instead of GloVe manifold")
+                   help="Use compiled pack only (no GloVe download)")
     p.add_argument("-v", "--verbose", action="store_true")
     return p.parse_args()
 
