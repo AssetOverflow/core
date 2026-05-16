@@ -94,6 +94,7 @@ class CognitiveTurnPipeline:
         # 10. TEACHING — correction capture, review, and store
         teaching_candidate, reviewed_example, proposal = self._run_teaching(
             text, intent, self._turn_number,
+            identity_score=response.identity_score,
         )
 
         # Advance turn counter and remember surface for next correction binding
@@ -150,12 +151,20 @@ class CognitiveTurnPipeline:
         text: str,
         intent: object,
         turn_number: int,
+        *,
+        identity_score: object = None,
     ) -> tuple[
         CorrectionCandidate | None,
         ReviewedTeachingExample | None,
         PackMutationProposal | None,
     ]:
-        """Run correction capture → review → store if this turn is a CORRECTION."""
+        """Run correction capture → review → store if this turn is a CORRECTION.
+
+        ``identity_score`` is the trajectory's projection onto the runtime
+        IdentityManifold (already computed by ChatRuntime for this turn); the
+        review gate uses it as a geometric (paraphrase-invariant) defense
+        layer alongside the syntactic check.
+        """
         if self._prior_surface is None:
             return None, None, None
 
@@ -168,7 +177,12 @@ class CognitiveTurnPipeline:
         if candidate is None:
             return None, None, None
 
-        reviewed = review_correction(candidate)
+        manifold = getattr(self.runtime, "identity_manifold", None)
+        reviewed = review_correction(
+            candidate,
+            identity_score=identity_score,  # type: ignore[arg-type]
+            identity_manifold=manifold,
+        )
         proposal = self.teaching_store.add(reviewed)
         return candidate, reviewed, proposal
 

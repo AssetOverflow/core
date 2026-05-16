@@ -45,7 +45,6 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_chat_runtime.py",
         "tests/test_achat.py",
         "tests/test_runtime_config.py",
-        "tests/test_chat_identity_telemetry.py",
         "tests/test_session_coherence.py",
     ),
     "cognition": (

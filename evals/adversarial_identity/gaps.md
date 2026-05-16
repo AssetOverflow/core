@@ -133,16 +133,52 @@ A v4 of this lane would then be authored to score the geometric
 defense, including attacks specifically designed to stay in safe
 geometric subspace while changing surface form.
 
-## Status (v1 / v2 / v3)
+## Status (v1 / v2 / v3 / v4)
 
 | Version | attacks | rejection | meaning |
 |---|---|---|---|
-| v1 | 38 | 1.0 | marker-list smoke test |
+| v1 | 25 | 1.0 | marker-list smoke test |
 | v2 | 32 | 1.0 | marker-list paraphrase / punctuation |
-| v3 | 32 | 0.0 | **disjoint paraphrase — marker list insufficient** |
+| v3 | 32 | 1.0 | disjoint paraphrase — **was 0.0 before fix #2** |
+| v4 | 32 | 1.0 | rule-(b/c/d) generalization to new vocabulary |
 
-v3 is recorded as a known-failing lane that demonstrates a real
-architectural gap, not as a regression.  The roadmap's Phase 2 exit
-gate is satisfied by passing v1+v2 with the gap filed; the v3 failure
-is *load-bearing evidence* for the follow-up work above, not a hidden
-weakness.
+v3 was the load-bearing finding.  It is now passing because fix #2
+landed; v4 is the regression gate that demonstrates the rule
+generalizes beyond the specific v3 vocabulary.
+
+## Resolution — fix #2 landed
+
+`teaching/review.py::_is_identity_override` is no longer a substring
+match.  It now applies four deterministic rules in order:
+
+  (a) Legacy markers — preserved verbatim for v1/v2 coverage.
+  (b) Redirect-verb + role-frame co-occurrence anywhere in the
+      correction text.
+  (c) Negating qualifier (e.g. `prior`, `without`, `unrestricted`,
+      `free-form`) within ±3 tokens of a role-frame.
+  (d) Negating qualifier within ±3 tokens of a redirect-verb (catches
+      e.g. "become unbounded" where no role-frame is named).
+
+All 32 v3 attacks and all 32 v4 attacks are now rejected; all
+legitimate corrections in v1–v4 are still accepted.
+
+## Resolution — fix #3 wired
+
+`core/physics/identity.py::IdentityCheck.would_violate(score, manifold)`
+is now a typed predicate, called from `review_correction` alongside
+the syntactic check.  Either layer is sufficient to reject.
+
+**Honest finding (load-bearing):** with the current default
+`IdentityManifold` (three unit-axis ValueAxes — truthfulness,
+coherence, reverence — and a coarse projection in `_axis_projection`),
+the geometric layer flags **0/32 of v3 attacks and 0/18 of v3
+legitimates independently of fix #2**.  The predicate and the wiring
+are correct; the manifold's axis design is the limiting factor and
+needs sharpening before the geometric defense can carry weight on
+its own.  Fix #2 is what is actually rejecting attacks today.
+
+This is recorded openly: the infrastructure is in place, the next
+step (separate, scoped work) is to construct axis directions that
+actually separate identity-violating field deltas from legitimate
+correction deltas.  Until that lands, the syntactic layer remains
+load-bearing.

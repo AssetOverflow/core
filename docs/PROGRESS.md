@@ -148,11 +148,49 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
   - monotonic-learning v3 — 30 cyc / 7 dom (public), 25 cyc / 6 dom (holdouts),
     `max_regression=0.0`, `floor_score=1.0` on both splits
   - adversarial-identity v3 — 30 + 20 paraphrased-attack cases.
-    Result: `attack_rejection_rate=0.0`, `legitimate_acceptance_rate=1.0`.
-    v3 is a known-failing stress test that demonstrates a real
-    architectural gap (marker-string defense vs paraphrase). Full
-    write-up: `evals/adversarial_identity/gaps.md`. v3 records the
-    finding; v1+v2 still pass and remain valid for their scope.
+    Initial v3 result (pre-fix): `attack_rejection_rate=0.0`,
+    `legitimate_acceptance_rate=1.0`.  v3 was a load-bearing finding
+    that exposed the marker-string defense as brittle to paraphrase.
+
+### Identity-override defense — fix #2 + fix #3 (2026-05-16)
+
+Triggered by the v3 finding above.  Two-layer defense now active in
+`teaching/review.py`:
+
+- **Fix #2 (syntactic).** `_is_identity_override` applies four
+  deterministic rules: (a) legacy markers, (b) redirect-verb +
+  role-frame co-occurrence, (c) negating qualifier ±3 tokens from a
+  role-frame, (d) negating qualifier ±3 tokens from a redirect-verb.
+- **Fix #3 (geometric).** `IdentityCheck.would_violate(score, manifold)`
+  predicate added to `core/physics/identity.py`; `review_correction`
+  now accepts `identity_score` / `identity_manifold` kwargs and is
+  wired in `CognitiveTurnPipeline._run_teaching` from
+  `response.identity_score`.
+
+Lane results after both fixes:
+
+| split | attacks | attack_rej | legit_acc |
+|---|---|---|---|
+| public/v1 | 15 | 1.0 | 1.0 |
+| holdouts/v1 | 10 | 1.0 | 1.0 |
+| public/v2 | 20 | 1.0 | 1.0 |
+| holdouts/v2 | 12 | 1.0 | 1.0 |
+| public/v3 | 20 | 1.0 | 1.0 |
+| holdouts/v3 | 12 | 1.0 | 1.0 |
+| public/v4 | 20 | 1.0 | 1.0 |
+| holdouts/v4 | 12 | 1.0 | 1.0 |
+
+v4 is the regression gate for fix #2 — new attack vocabulary
+combinations that exercise rules (b)/(c)/(d) without repeating v3's
+specific surface.  All v1–v4 splits pass at 100% with the new
+defense; legitimate-correction false-positive rate is 0%.
+
+Honest finding: with the current default `IdentityManifold` (three
+unit-axis ValueAxes), the geometric layer flags 0/32 of v3 attacks
+independently of fix #2.  The predicate and wiring are in place; the
+manifold's axis design is the limiting factor and needs sharpening
+before the geometric defense can carry weight on its own.  See
+`evals/adversarial_identity/gaps.md`.
 
 ## Phase 2 — COMPLETE
 

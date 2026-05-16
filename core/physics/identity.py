@@ -147,6 +147,30 @@ class IdentityCheck:
             trajectory_id=trajectory_id,
         )
 
+    @staticmethod
+    def would_violate(
+        score: IdentityScore | None,
+        manifold: IdentityManifold | None = None,
+    ) -> bool:
+        """Geometric identity-violation predicate (ADR-0010).
+
+        Returns True when the trajectory's projection onto the IdentityManifold
+        shows any value-axis falling below the manifold's alignment threshold,
+        OR when the overall alignment scalar itself drops below threshold.
+
+        This is the paraphrase-invariant defense: an identity-override attempt
+        is recognised by the geometry of the field-state delta it induces, not
+        by lexical surface.  Reviewers wire this in addition to (not instead
+        of) any syntactic guard so the two layers remain independent.
+        """
+        if score is None:
+            return False
+        if score.flagged:
+            return True
+        if manifold is not None and score.score < manifold.alignment_threshold:
+            return True
+        return False
+
 
 @dataclass(frozen=True)
 class CharacterProfile:

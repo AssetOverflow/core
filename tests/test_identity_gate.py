@@ -112,6 +112,53 @@ class TestTurnEventFields:
         assert "flagged" in fields
 
 
+class TestWouldViolatePredicate:
+    """Contract for IdentityCheck.would_violate (ADR-0010 geometric defense)."""
+
+    def test_none_score_is_not_a_violation(self):
+        assert IdentityCheck.would_violate(None) is False
+        assert IdentityCheck.would_violate(None, _make_manifold()) is False
+
+    def test_flagged_score_is_a_violation(self):
+        score = IdentityScore(
+            score=0.2,
+            flagged=True,
+            deviation_axes=frozenset({"truthfulness"}),
+            trajectory_id="t",
+        )
+        assert IdentityCheck.would_violate(score) is True
+        assert IdentityCheck.would_violate(score, _make_manifold()) is True
+
+    def test_unflagged_but_low_alignment_violates_with_manifold(self):
+        manifold = IdentityManifold(value_axes=(), alignment_threshold=0.9)
+        score = IdentityScore(
+            score=0.5,
+            flagged=False,
+            deviation_axes=frozenset(),
+            trajectory_id="t",
+        )
+        assert IdentityCheck.would_violate(score, manifold) is True
+
+    def test_unflagged_high_alignment_is_not_a_violation(self):
+        manifold = _make_manifold()
+        score = IdentityScore(
+            score=0.95,
+            flagged=False,
+            deviation_axes=frozenset(),
+            trajectory_id="t",
+        )
+        assert IdentityCheck.would_violate(score, manifold) is False
+
+    def test_predicate_is_deterministic(self):
+        score = IdentityScore(
+            score=0.3,
+            flagged=True,
+            deviation_axes=frozenset({"coherence"}),
+            trajectory_id="t",
+        )
+        assert IdentityCheck.would_violate(score) == IdentityCheck.would_violate(score)
+
+
 class TestChatRuntimeBaseline:
     @pytest.fixture(autouse=True)
     def runtime(self):
