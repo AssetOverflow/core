@@ -127,21 +127,49 @@ def _close_final_state(state: FieldState) -> FieldState:
     )
 
 
+def _softmax(scores: list[float]) -> list[float]:
+    """Numerically stable softmax over a list of floats."""
+    if not scores:
+        return []
+    arr = np.asarray(scores, dtype=np.float64)
+    arr -= arr.max()
+    exp = np.exp(arr)
+    total = float(exp.sum())
+    if total < 1e-12:
+        return [1.0 / len(scores)] * len(scores)
+    return (exp / total).tolist()
+
+
 def _recall_state(state: FieldState, vault, top_k: int) -> tuple[FieldState, int]:
     if vault is None or top_k <= 0:
         return state, 0
 
+    hits = vault.recall(state.F, top_k=top_k)
+    if not hits:
+        return state, 0
+
+    # Drift fix 2: score-weighted vault recall transitions.
+    #
+    # Previously every recalled versor was applied as a full rotor transition
+    # regardless of its recall score, giving a stale turn-3 hit the same
+    # influence as a high-confidence recent hit.
+    #
+    # Now each rotor is scaled by its softmax-normalised score weight, so the
+    # field moves proportionally to how strongly each hit was recalled.
+    # Hits with infinite score (exact self-matches) receive full weight 1.0
+    # and short-circuit the softmax path.
+    finite_hits = [h for h in hits if h["score"] != float("inf")]
+    exact_hits = [h for h in hits if h["score"] == float("inf")]
+
     current = state
     hits_applied = 0
-    for hit in vault.recall(current.F, top_k=top_k):
+
+    # Exact self-matches are applied at full weight first.
+    for hit in exact_hits:
         recalled_F = np.asarray(hit["versor"], dtype=np.float64)
         try:
             V = word_transition_rotor(current.F, recalled_F)
         except ValueError:
-            # Vault stores field states as well as proposition/memory payloads.
-            # Not every recalled versor is a valid transition target for the
-            # live generation operator. Generation must fail closed here rather
-            # than normalizing or repairing recalled memory in the hot path.
             continue
         current = propagate_step(current, V)
         current = FieldState(
@@ -153,6 +181,31 @@ def _recall_state(state: FieldState, vault, top_k: int) -> tuple[FieldState, int
             valence=state.valence,
         )
         hits_applied += 1
+
+    if finite_hits:
+        raw_scores = [h["score"] for h in finite_hits]
+        weights = _softmax(raw_scores)
+        for hit, weight in zip(finite_hits, weights):
+            recalled_F = np.asarray(hit["versor"], dtype=np.float64)
+            try:
+                V = word_transition_rotor(current.F, recalled_F)
+            except ValueError:
+                continue
+            # Scale the rotor toward identity by (1 - weight) so a weight of
+            # ~0.0 leaves the field nearly unchanged and weight ~1.0 applies
+            # the full transition.
+            V_scaled = weight * V + (1.0 - weight) * np.eye(V.shape[0], dtype=V.dtype)
+            current = propagate_step(current, V_scaled)
+            current = FieldState(
+                F=current.F,
+                node=state.node,
+                step=current.step,
+                holonomy=state.holonomy,
+                energy=state.energy,
+                valence=state.valence,
+            )
+            hits_applied += 1
+
     return current, hits_applied
 
 
