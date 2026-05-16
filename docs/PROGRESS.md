@@ -53,12 +53,12 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
   - [x] Implement v1 dev/public (~41/36 items)
   - [x] Implement holdout (52 items) — 100% pass
   - [x] Engineer `realizer.py` to pass v1 (dev=100%, public=100%, holdout=100%)
-  - [ ] Generate v2 on pass
-  - [ ] Hebrew pack
-  - [ ] Koine Greek pack
-- [ ] **zero-code-domain-acquisition** lane
-  - [ ] Define 3 surprise domains
-  - [ ] Build pack-only authoring kits
+  - [x] Hebrew pack (`he_core_cognition_v1` with binyanim support)
+  - [x] Koine Greek pack (`grc_logos_cognition_v1` with Greek morphology)
+  - [ ] Generate v2 on pass (deeper nesting, longer sentences)
+- [ ] **zero-code-domain-acquisition** lane (in progress)
+  - [x] Define 3 surprise domains (kinship, calendar, color)
+  - [x] Build pack-only authoring kits (vocabulary, relations, axioms, teaching examples, prompts)
   - [ ] Test: author brings CORE to >=80% without Python edits
   - [ ] Log engineering gaps
 - [ ] **identity-divergence** lane
