@@ -1,0 +1,24 @@
+{"id":"CAL-PUB-001","expected_class":"no_grounding","prime":[],"prompt":"What is a qubit?"}
+{"id":"CAL-PUB-002","expected_class":"no_grounding","prime":[],"prompt":"Explain photosynthesis."}
+{"id":"CAL-PUB-003","expected_class":"no_grounding","prime":[],"prompt":"What is the mitochondria?"}
+{"id":"CAL-PUB-004","expected_class":"no_grounding","prime":[],"prompt":"Compare RNA and DNA replication."}
+{"id":"CAL-PUB-005","expected_class":"no_grounding","prime":[],"prompt":"What is entropy?"}
+{"id":"CAL-PUB-006","expected_class":"no_grounding","prime":[],"prompt":"How does a transistor work?"}
+{"id":"CAL-PUB-007","expected_class":"no_grounding","prime":[],"prompt":"What is the derivative of a polynomial?"}
+{"id":"CAL-PUB-008","expected_class":"no_grounding","prime":[],"prompt":"What is truth?"}
+{"id":"CAL-PUB-009","expected_class":"coherent","prime":["What is truth?","What is truth?"],"prompt":"What is truth?"}
+{"id":"CAL-PUB-010","expected_class":"coherent","prime":["What is wisdom?","What is wisdom?"],"prompt":"What is wisdom?"}
+{"id":"CAL-PUB-011","expected_class":"coherent","prime":["What is knowledge?","What is knowledge?"],"prompt":"What is knowledge?"}
+{"id":"CAL-PUB-012","expected_class":"coherent","prime":["What is light?","What is light?"],"prompt":"What is light?"}
+{"id":"CAL-PUB-013","expected_class":"coherent","prime":["What is creation?","What is creation?"],"prompt":"What is creation?"}
+{"id":"CAL-PUB-014","expected_class":"coherent","prime":["What is meaning?","What is meaning?"],"prompt":"What is meaning?"}
+{"id":"CAL-PUB-015","expected_class":"coherent","prime":["What is identity?","What is identity?"],"prompt":"What is identity?"}
+{"id":"CAL-PUB-016","expected_class":"coherent","prime":["What is memory?","What is memory?"],"prompt":"What is memory?"}
+{"id":"CAL-PUB-017","expected_class":"correction_proposed","prime":["What is truth?"],"prompt":"Actually that is not quite right."}
+{"id":"CAL-PUB-018","expected_class":"correction_proposed","prime":["What is wisdom?"],"prompt":"No, wisdom is different from that."}
+{"id":"CAL-PUB-019","expected_class":"correction_proposed","prime":["What is knowledge?"],"prompt":"Actually knowledge is not what you described."}
+{"id":"CAL-PUB-020","expected_class":"correction_proposed","prime":["What is light?"],"prompt":"No, that is incorrect."}
+{"id":"CAL-PUB-021","expected_class":"correction_proposed","prime":["What is creation?"],"prompt":"Actually creation does not work that way."}
+{"id":"CAL-PUB-022","expected_class":"correction_proposed","prime":["What is meaning?"],"prompt":"No, meaning is more than that."}
+{"id":"CAL-PUB-023","expected_class":"correction_proposed","prime":["What is life?"],"prompt":"Actually that misses the point."}
+{"id":"CAL-PUB-024","expected_class":"correction_proposed","prime":["What is reason?"],"prompt":"No, reason requires a correction here."}

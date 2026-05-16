@@ -96,7 +96,17 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
   - [x] v1 dev (10 cycles), v1 public (12 cycles, 3 domains), v1 holdouts (12 cycles, 2 distinct domains)
   - [x] All splits: max_regression=0.00, floor_score=1.00, overall_pass=true
   - [x] Structural win demonstrated: zero regression across 34 total cycles / 7 distinct domains
-- [ ] **calibration** lane
+- [x] **calibration** lane (v1 complete)
+  - [x] Define contract: typed signals for no_grounding / coherent / correction_proposed
+  - [x] Classification from `CognitiveTurnResult` (vault_hits + pack_mutation_proposal)
+  - [x] Runner with per-case fresh pipeline (avoids cross-case field drift)
+  - [x] v1 dev (12/12), v1 public (24/24), v1 holdouts (18/18) — all 100% pass
+  - [x] Sub-metrics: no_grounding=1.0, coherent=1.0, correction_proposed=1.0
+  - [x] Architectural finding documented (`evals/calibration/gaps.md`): the
+        ingest gate is geometric, not semantic — 6/42 hand-chosen OOD
+        prompts fire the geometric gate. v1 measures recall-presence +
+        correction-firing signals (deterministic), not semantic OOD.
+        Pipeline override of gate's safety surface is a separate gap.
 - [ ] **symbolic-logic** lane
 - [ ] **adversarial-identity** lane
 - [ ] Frontier baselines computed for all lanes

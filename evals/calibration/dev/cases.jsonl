@@ -1,0 +1,12 @@
+{"id":"CAL-DEV-001","expected_class":"no_grounding","prime":[],"prompt":"What is a qubit?"}
+{"id":"CAL-DEV-002","expected_class":"no_grounding","prime":[],"prompt":"Explain photosynthesis."}
+{"id":"CAL-DEV-003","expected_class":"no_grounding","prime":[],"prompt":"What is the mitochondria?"}
+{"id":"CAL-DEV-004","expected_class":"no_grounding","prime":[],"prompt":"What is truth?"}
+{"id":"CAL-DEV-005","expected_class":"coherent","prime":["What is truth?","What is truth?"],"prompt":"What is truth?"}
+{"id":"CAL-DEV-006","expected_class":"coherent","prime":["What is wisdom?","What is wisdom?"],"prompt":"What is wisdom?"}
+{"id":"CAL-DEV-007","expected_class":"coherent","prime":["What is knowledge?","What is knowledge?"],"prompt":"What is knowledge?"}
+{"id":"CAL-DEV-008","expected_class":"coherent","prime":["What is light?","What is light?"],"prompt":"What is light?"}
+{"id":"CAL-DEV-009","expected_class":"correction_proposed","prime":["What is truth?"],"prompt":"Actually that is not quite right."}
+{"id":"CAL-DEV-010","expected_class":"correction_proposed","prime":["What is wisdom?"],"prompt":"No, wisdom is different from that."}
+{"id":"CAL-DEV-011","expected_class":"correction_proposed","prime":["What is knowledge?"],"prompt":"Actually knowledge is not what you described."}
+{"id":"CAL-DEV-012","expected_class":"correction_proposed","prime":["What is light?"],"prompt":"No, that is incorrect."}

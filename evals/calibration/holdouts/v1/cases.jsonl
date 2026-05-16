@@ -1,0 +1,18 @@
+{"id":"CAL-HLD-001","expected_class":"no_grounding","prime":[],"prompt":"What is the Krebs cycle?"}
+{"id":"CAL-HLD-002","expected_class":"no_grounding","prime":[],"prompt":"Explain quantum entanglement."}
+{"id":"CAL-HLD-003","expected_class":"no_grounding","prime":[],"prompt":"What is a genome?"}
+{"id":"CAL-HLD-004","expected_class":"no_grounding","prime":[],"prompt":"How does Fourier analysis work?"}
+{"id":"CAL-HLD-005","expected_class":"no_grounding","prime":[],"prompt":"What is a Turing machine?"}
+{"id":"CAL-HLD-006","expected_class":"no_grounding","prime":[],"prompt":"What is thought?"}
+{"id":"CAL-HLD-007","expected_class":"coherent","prime":["What is thought?","What is thought?"],"prompt":"What is thought?"}
+{"id":"CAL-HLD-008","expected_class":"coherent","prime":["What is principle?","What is principle?"],"prompt":"What is principle?"}
+{"id":"CAL-HLD-009","expected_class":"coherent","prime":["What is evidence?","What is evidence?"],"prompt":"What is evidence?"}
+{"id":"CAL-HLD-010","expected_class":"coherent","prime":["What is order?","What is order?"],"prompt":"What is order?"}
+{"id":"CAL-HLD-011","expected_class":"coherent","prime":["What is inference?","What is inference?"],"prompt":"What is inference?"}
+{"id":"CAL-HLD-012","expected_class":"coherent","prime":["What is spirit?","What is spirit?"],"prompt":"What is spirit?"}
+{"id":"CAL-HLD-013","expected_class":"correction_proposed","prime":["What is thought?"],"prompt":"Actually that does not capture it."}
+{"id":"CAL-HLD-014","expected_class":"correction_proposed","prime":["What is evidence?"],"prompt":"No, evidence is different from that."}
+{"id":"CAL-HLD-015","expected_class":"correction_proposed","prime":["What is memory?"],"prompt":"Actually memory works differently."}
+{"id":"CAL-HLD-016","expected_class":"correction_proposed","prime":["What is order?"],"prompt":"No, that is not correct."}
+{"id":"CAL-HLD-017","expected_class":"correction_proposed","prime":["What is spirit?"],"prompt":"Actually that misses the point entirely."}
+{"id":"CAL-HLD-018","expected_class":"correction_proposed","prime":["What is identity?"],"prompt":"No, identity is more nuanced."}

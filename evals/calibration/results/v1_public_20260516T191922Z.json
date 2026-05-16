@@ -1,0 +1,208 @@
+{
+  "metrics": {
+    "no_grounding_accuracy": 1.0,
+    "coherent_accuracy": 1.0,
+    "correction_proposed_accuracy": 1.0,
+    "overall_accuracy": 1.0,
+    "class_counts": {
+      "no_grounding": 8,
+      "coherent": 8,
+      "correction_proposed": 8
+    },
+    "overall_pass": true
+  },
+  "case_details": [
+    {
+      "id": "CAL-PUB-001",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-002",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-003",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-004",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-005",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-006",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-007",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-008",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-009",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-010",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-011",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-012",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 5,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-013",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-014",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-015",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-016",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-017",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 9,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-018",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 8,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-019",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 9,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-020",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 9,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-021",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 7,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-022",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 6,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-023",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 9,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-PUB-024",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 5,
+      "proposal_present": true,
+      "passed": true
+    }
+  ]
+}
