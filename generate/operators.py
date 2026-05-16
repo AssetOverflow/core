@@ -114,6 +114,58 @@ def transitive_walk(
     )
 
 
+def multi_relation_walk(
+    triples: tuple[tuple[str, str, str], ...],
+    head: str,
+    *,
+    max_hops: int = _DEFAULT_MAX_HOPS,
+) -> WalkResult:
+    """Walk any outgoing edge from ``head``, regardless of relation label.
+
+    Used when the probe's relation does not match any stored relation
+    label rooted at ``head`` — i.e. the chain in the teaching store
+    spans multiple relation types and the probe asks about the *end*
+    of the chain rather than a single relation's reach.  This is the
+    operator the multi-step-reasoning ``mixed_relation_*`` and
+    compositionality ``composed_predicate`` patterns need to close.
+
+    Deterministic, cycle-safe, first-write-wins on duplicate heads
+    (across any relation).  The returned ``relation`` field is the
+    sentinel ``"<mixed>"`` so the operator-invocation record makes the
+    cross-relation provenance explicit in trace_hash.
+    """
+    if max_hops < 1:
+        return WalkResult(head=head, relation="<mixed>", path=(head,), truncated=False)
+
+    head_lc = _normalize(head)
+    edges: dict[str, str] = {}
+    for h, _r, t in triples:
+        edges.setdefault(_normalize(h), _normalize(t))
+
+    path: list[str] = [head_lc]
+    visited = {head_lc}
+    cursor = head_lc
+    truncated = False
+    for _ in range(max_hops):
+        nxt = edges.get(cursor)
+        if nxt is None:
+            break
+        if nxt in visited:
+            break
+        path.append(nxt)
+        visited.add(nxt)
+        cursor = nxt
+    else:
+        truncated = edges.get(cursor) is not None
+
+    return WalkResult(
+        head=head_lc,
+        relation="<mixed>",
+        path=tuple(path),
+        truncated=truncated,
+    )
+
+
 def path_recall(
     triples: tuple[tuple[str, str, str], ...],
     entity: str,

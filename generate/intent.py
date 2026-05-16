@@ -42,14 +42,14 @@ _COMPARE_RE = re.compile(
 )
 
 # Transitive-query forms (ADR-0018):
-#   "What does X precede/cause/ground/reveal/mean/follow?"  -> (X, R)
-#   "Where does X belong?"                                  -> (X, belongs_to)
-# The trailing-?-and-optional-trailing-tokens form keeps the pattern total.
+#   "What does X <verb>?"   -> (X, R) where R is any verb-like word
+#   "Where does X belong?"  -> (X, belongs_to)
+# The verb slot accepts any single word — `multi_relation_walk` in the
+# operator layer handles unrecognised relations by falling back to a
+# cross-relation traversal (rather than a strict literal-relation match).
 _TRANSITIVE_QUERY_RE = re.compile(
     r"^what\s+does\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
-    r"(?P<relation>precede|precedes|cause|causes|ground|grounds|reveal|reveals|"
-    r"mean|means|follow|follows|contrast(?:_with|s_with|s\s+with)?|"
-    r"produce|produces)\b",
+    r"(?P<relation>[a-z][a-z\-]*)\b",
     re.IGNORECASE,
 )
 _BELONG_QUERY_RE = re.compile(

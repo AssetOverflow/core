@@ -3,7 +3,12 @@ from __future__ import annotations
 
 import pytest
 
-from generate.operators import WalkResult, path_recall, transitive_walk
+from generate.operators import (
+    WalkResult,
+    multi_relation_walk,
+    path_recall,
+    transitive_walk,
+)
 from teaching.relation_parse import parse_triple
 
 
@@ -130,6 +135,51 @@ class TestTransitiveWalk:
         r = transitive_walk(triples, "a", "is")
         # First triple wins; "z" is ignored under "is" from "a"
         assert r.path[1] == "b"
+
+
+# ---------------------------------------------------------------------------
+# multi_relation_walk
+# ---------------------------------------------------------------------------
+
+class TestMultiRelationWalk:
+    def test_single_relation_chain_still_walks(self):
+        triples = (("a", "is", "b"), ("b", "is", "c"))
+        r = multi_relation_walk(triples, "a")
+        assert r.path == ("a", "b", "c")
+        assert r.relation == "<mixed>"
+
+    def test_walks_across_relation_types(self):
+        triples = (
+            ("light", "grounds", "clarity"),
+            ("clarity", "causes", "recognition"),
+            ("recognition", "precedes", "naming"),
+        )
+        r = multi_relation_walk(triples, "light")
+        assert r.path == ("light", "clarity", "recognition", "naming")
+        assert not r.truncated
+
+    def test_unrelated_head_returns_singleton(self):
+        triples = (("a", "is", "b"),)
+        assert multi_relation_walk(triples, "x").path == ("x",)
+
+    def test_cycle_terminates(self):
+        triples = (("a", "is", "b"), ("b", "precedes", "a"))
+        r = multi_relation_walk(triples, "a")
+        assert r.path == ("a", "b")
+
+    def test_max_hops_truncates(self):
+        triples = (
+            ("a", "is", "b"),
+            ("b", "causes", "c"),
+            ("c", "precedes", "d"),
+        )
+        r = multi_relation_walk(triples, "a", max_hops=2)
+        assert r.path == ("a", "b", "c")
+        assert r.truncated
+
+    def test_deterministic(self):
+        triples = (("a", "is", "b"), ("b", "grounds", "c"))
+        assert multi_relation_walk(triples, "a") == multi_relation_walk(triples, "a")
 
 
 # ---------------------------------------------------------------------------

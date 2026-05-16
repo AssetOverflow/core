@@ -22,7 +22,7 @@ from generate.intent import classify_intent
 from generate.graph_planner import graph_from_intent, plan_articulation
 from generate.realizer import realize_semantic
 from generate.intent import IntentTag
-from generate.operators import WalkResult, transitive_walk
+from generate.operators import WalkResult, multi_relation_walk, transitive_walk
 from teaching.correction import CorrectionCandidate, extract_correction
 from teaching.review import ReviewedTeachingExample, review_correction
 from teaching.store import PackMutationProposal, TeachingStore
@@ -203,19 +203,32 @@ class CognitiveTurnPipeline:
         return candidate, reviewed, proposal
 
     def _maybe_transitive_walk(self, intent) -> WalkResult | None:
-        """Invoke ``transitive_walk`` when the intent shape calls for it.
+        """Invoke a typed deterministic walk operator when the intent shape
+        calls for it (ADR-0018).
 
-        Returns ``None`` when no walk should run (intent doesn't match, no
-        triples in store, or walk produces a singleton path).  Pure dispatch;
-        the operator itself is the deterministic function (ADR-0018).
+        Dispatch order, by precision:
+          1. Relation-typed `transitive_walk` if the intent carries a
+             relation and a same-relation chain exists from the head.
+          2. Cross-relation `multi_relation_walk` fallback when (1)
+             returns a singleton — this is what closes the
+             mixed_relation / composed_predicate residuals.
+
+        DEFINITION intents only attempt step 1 with the implicit "is"
+        relation; they do not fall back to a multi-relation walk
+        (which would be too permissive for plain "What is X?").
         """
         triples = self.teaching_store.triples()
         if not triples:
             return None
         if intent.tag is IntentTag.TRANSITIVE_QUERY and intent.relation:
-            return transitive_walk(triples, intent.subject, intent.relation)
+            result = transitive_walk(triples, intent.subject, intent.relation)
+            if len(result.path) > 1:
+                return result
+            multi = multi_relation_walk(triples, intent.subject)
+            if len(multi.path) > 1:
+                return multi
+            return None
         if intent.tag is IntentTag.DEFINITION:
-            # "What is X?" → walk the "is" relation if any chain exists.
             result = transitive_walk(triples, intent.subject, "is")
             if len(result.path) > 1:
                 return result
