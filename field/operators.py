@@ -32,6 +32,10 @@ from typing import Protocol
 
 import numpy as np
 
+from algebra.backend import (
+    diffusion_step as _rust_diffusion_step,
+    unitize_expmap as _rust_unitize,
+)
 from algebra.cl41 import geometric_product, reverse
 from field.state import ManifoldState
 
@@ -68,10 +72,12 @@ def _unitize_f32(v: np.ndarray) -> np.ndarray:
     Builds a proper rotor from the bivector content, ensuring
     R·reverse(R) = 1 exactly in float64, then casts to float32.
 
-    Works in float64 throughout because algebra.backend's Rust
-    geometric_product silently returns float32 regardless of input dtype,
-    which would corrupt precision during the rotor accumulation loop.
+    Uses the Rust backend when available for the hot path.
     """
+    rust_result = _rust_unitize(np.asarray(v, dtype=np.float32))
+    if rust_result is not None:
+        return rust_result
+
     v64 = np.asarray(v, dtype=np.float64)
     norm = float(np.linalg.norm(v64))
     if norm < 1e-12:
@@ -161,6 +167,12 @@ class GraphDiffusionOperator:
         self._damping = damping
 
     def forward(self, state: ManifoldState) -> tuple[ManifoldState, float]:
+        # Try Rust batch path first
+        rust_result = _rust_diffusion_step(state.fields, state.edges, self._damping)
+        if rust_result is not None:
+            new_fields, delta = rust_result
+            return ManifoldState(fields=new_fields, edges=state.edges, step=state.step + 1), delta
+
         old_fields = state.fields
 
         neighbors: dict[int, list[int]] = defaultdict(list)

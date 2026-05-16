@@ -82,6 +82,41 @@ def vault_recall(versors: list, query: np.ndarray, top_k: int = 5) -> list:
     return scores[:top_k]
 
 
+def unitize_expmap(v: np.ndarray) -> np.ndarray:
+    """Unitize a multivector via the Cl(4,1) exponential map.
+
+    Distinguishes boost planes (cosh/sinh) from rotation planes (cos/sin).
+    Returns f32 array of length 32.
+    """
+    if _RUST:
+        try:
+            return np.asarray(_rs.unitize_expmap(v), dtype=np.float32)
+        except (AttributeError, Exception):
+            pass
+    return None  # caller must fall back to Python implementation
+
+
+def diffusion_step(
+    fields: np.ndarray, edges: np.ndarray, damping: float,
+) -> tuple[np.ndarray, float] | None:
+    """One forward step of graph diffusion via Rust.
+
+    Returns (new_fields, delta) or None if Rust is unavailable.
+    """
+    if _RUST:
+        try:
+            n_nodes = fields.shape[0]
+            fields_flat = fields.astype(np.float32).flatten().tolist()
+            edges_flat = edges.astype(np.int32).flatten().tolist()
+            new_fields, delta = _rs.diffusion_step(
+                fields_flat, edges_flat, n_nodes, float(damping),
+            )
+            return np.asarray(new_fields, dtype=np.float32), float(delta)
+        except (AttributeError, Exception):
+            pass
+    return None
+
+
 def using_rust() -> bool:
     """Returns True if the Rust extension is loaded."""
     return _RUST

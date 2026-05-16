@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite fast -q\n  core test --suite smoke -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core eval cognition\n  core eval cognition --json"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core eval cognition\n  core eval cognition --json"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -69,6 +69,13 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_energy.py",
         "tests/test_motor.py",
         "tests/test_null_cone.py",
+    ),
+    "pulse": (
+        "tests/test_pulse_integration.py",
+        "tests/test_graph_diffusion.py",
+    ),
+    "proof": (
+        "tests/test_proof_properties.py",
     ),
     "full": ("tests/",),
 }
@@ -544,6 +551,65 @@ def cmd_eval_cognition(args: argparse.Namespace) -> int:
     return 0 if all_pass else 1
 
 
+def cmd_pulse(args: argparse.Namespace) -> int:
+    """Run a cognitive pulse and display recalled words + realized surface."""
+    from scripts.run_pulse import run_pulse
+
+    text = " ".join(args.text) if args.text else "What is truth?"
+    result = run_pulse(
+        text,
+        top_k=args.top_k,
+        use_glove=not args.no_glove,
+        use_correction=not args.no_correction,
+        correction_rate=args.correction_rate,
+    )
+
+    if args.json:
+        import json as _json
+        print(_json.dumps({
+            "prompt": text,
+            "recalled_words": list(result.recalled_words),
+            "surface": result.surface,
+            "steps": result.steps,
+            "converged": result.converged,
+        }, ensure_ascii=False, indent=2))
+    else:
+        print(f"\nsurface: {result.surface}")
+        print(f"steps  : {result.steps}  converged: {result.converged}")
+
+    return 0
+
+
+def cmd_bench(args: argparse.Namespace) -> int:
+    """Run benchmark harness."""
+    from benchmarks.run_benchmarks import run_benchmarks
+
+    report = run_benchmarks(
+        suite=args.suite,
+        runs=args.runs,
+    )
+
+    if args.json:
+        print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
+    else:
+        for r in report.results:
+            status = "PASS" if r.passed else "FAIL"
+            print(f"  [{status}] {r.name:25s}  {r.metric:>12.4f} {r.unit}")
+            print(f"         {r.detail}")
+        all_pass = all(r.passed for r in report.results)
+        print(f"\n{'ALL PASSED' if all_pass else 'FAILURES DETECTED'}")
+
+    if args.report:
+        report_path = Path(args.report)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(
+            json.dumps(report.as_dict(), ensure_ascii=False, indent=2)
+        )
+        print(f"report written: {report_path}")
+
+    return 0 if all(r.passed for r in report.results) else 1
+
+
 def _add_runtime_policy_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--pack", action="append", help="language pack to mount; repeat for multiple packs")
     parser.add_argument("--output-language", default="en", help="target output language code; default: en")
@@ -636,6 +702,31 @@ def build_parser() -> argparse.ArgumentParser:
     rust_build.set_defaults(func=cmd_rust_build)
     rust_test = rust_sub.add_parser("test", help="run cargo test --release for core-rs")
     rust_test.set_defaults(func=cmd_rust_test)
+
+    pulse = subparsers.add_parser(
+        "pulse",
+        help="run a cognitive pulse from injection to realized surface",
+        description="run a cognitive pulse from injection to realized surface",
+    )
+    pulse.add_argument("text", nargs="*", default=["What is truth?"])
+    pulse.add_argument("--top-k", type=int, default=5, metavar="N")
+    pulse.add_argument("--no-glove", action="store_true", help="use compiled pack only (no GloVe download)")
+    pulse.add_argument("--no-correction", action="store_true", help="disable correction (V3 mode)")
+    pulse.add_argument("--correction-rate", type=float, default=0.3, metavar="R")
+    pulse.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    pulse.set_defaults(func=cmd_pulse)
+
+    bench = subparsers.add_parser(
+        "bench",
+        help="run benchmark harness (determinism, latency, speedup, versor audit)",
+        description="run benchmark harness",
+    )
+    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer"],
+                       help="run a specific benchmark suite")
+    bench.add_argument("--runs", type=int, default=20, metavar="N", help="run count for determinism benchmark")
+    bench.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    bench.add_argument("--report", metavar="PATH", help="write JSON report to file")
+    bench.set_defaults(func=cmd_bench)
 
     eval_cmd = subparsers.add_parser("eval", help="run eval harnesses")
     eval_sub = eval_cmd.add_subparsers(dest="eval_command", metavar="eval-command", required=True)

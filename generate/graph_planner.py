@@ -206,6 +206,33 @@ def graph_from_intent(
     return graph.add_node(root)
 
 
+def ground_graph(
+    graph: PropositionGraph,
+    recalled_words: tuple[str, ...],
+) -> PropositionGraph:
+    """Fill <pending> obj slots with recalled words from vault recall.
+
+    Each node whose obj is '<pending>' gets the next available recalled
+    word. If there are more nodes than words, remaining slots stay as
+    '<pending>'. Comparison nodes get paired words when available.
+    """
+    words = list(recalled_words)
+    new_nodes: list[GraphNode] = []
+    for node in graph.nodes:
+        if node.obj == "<pending>" and words:
+            obj = words.pop(0)
+            new_nodes.append(GraphNode(
+                node_id=node.node_id,
+                subject=node.subject,
+                predicate=node.predicate,
+                obj=obj,
+                source_intent=node.source_intent,
+            ))
+        else:
+            new_nodes.append(node)
+    return PropositionGraph(nodes=tuple(new_nodes), edges=graph.edges)
+
+
 def plan_articulation(graph: PropositionGraph) -> ArticulationTarget:
     """Walk *graph* in topological order and emit an articulation target."""
     node_map = {n.node_id: n for n in graph.nodes}

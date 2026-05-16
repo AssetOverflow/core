@@ -6,7 +6,7 @@ Covers both V3 pure-diffusion mode and V4 coupled dual-correction.
 import numpy as np
 import pytest
 
-from scripts.run_pulse import run_pulse, _build_manifold
+from scripts.run_pulse import run_pulse, _build_manifold, PulseResult
 from language_packs.compiler import load_pack
 from field.operators import (
     ConstraintCorrectionOperator,
@@ -26,10 +26,11 @@ def compiled_manifold():
 
 class TestPulseDiffusion:
     def test_full_cycle_completes(self) -> None:
-        words = run_pulse("hello world", use_glove=False)
-        assert isinstance(words, list)
-        assert len(words) > 0
-        assert all(isinstance(w, str) for w in words)
+        result = run_pulse("hello world", use_glove=False)
+        assert isinstance(result, PulseResult)
+        assert len(result.recalled_words) > 0
+        assert all(isinstance(w, str) for w in result.recalled_words)
+        assert result.surface  # realizer produced output
 
     def test_output_node_changes(self, compiled_manifold) -> None:
         state, labels, _ = _build_manifold("test input", compiled_manifold)
@@ -42,13 +43,13 @@ class TestPulseDiffusion:
         assert not np.allclose(state.fields[output_idx], initial_output, atol=1e-7)
 
     def test_different_inputs_produce_different_output(self) -> None:
-        w1 = run_pulse("alpha", use_glove=False)
-        w2 = run_pulse("omega", use_glove=False)
-        assert isinstance(w1, list) and isinstance(w2, list)
+        r1 = run_pulse("alpha", use_glove=False)
+        r2 = run_pulse("omega", use_glove=False)
+        assert isinstance(r1, PulseResult) and isinstance(r2, PulseResult)
 
     def test_recall_returns_known_vocab(self, compiled_manifold) -> None:
-        words = run_pulse("wisdom seeker", use_glove=False)
-        for w in words:
+        result = run_pulse("wisdom seeker", use_glove=False)
+        for w in result.recalled_words:
             try:
                 compiled_manifold.get_versor(w)
             except KeyError:
@@ -56,8 +57,8 @@ class TestPulseDiffusion:
 
     def test_no_correction_mode_matches_v3(self) -> None:
         """--no-correction flag reproduces V3 pure-diffusion semantics."""
-        words = run_pulse("truth", use_glove=False, use_correction=False)
-        assert len(words) > 0
+        result = run_pulse("truth", use_glove=False, use_correction=False)
+        assert len(result.recalled_words) > 0
 
 
 # ---------------------------------------------------------------------------
@@ -66,24 +67,27 @@ class TestPulseDiffusion:
 
 class TestConstraintCorrectionOperator:
     def test_correction_pulls_toward_target(self, compiled_manifold) -> None:
-        """After N correction steps, output node is closer to target than before."""
+        """After diffusion perturbs the output, correction pulls it back toward target."""
         state, labels, target_versor = _build_manifold("grace", compiled_manifold)
         output_idx = len(labels) - 1
 
-        op = ConstraintCorrectionOperator(
+        diffusion_op = GraphDiffusionOperator(damping=0.5)
+        for _ in range(20):
+            state, _ = diffusion_op.forward(state)
+
+        perturbed = state.fields[output_idx].astype(np.float64)
+        target64 = target_versor.astype(np.float64)
+        dist_before = float(np.linalg.norm(perturbed - target64))
+        assert dist_before > 1e-4, "Diffusion did not perturb output from target"
+
+        correction_op = ConstraintCorrectionOperator(
             target_versor=target_versor,
             correction_rate=0.3,
             node_index=output_idx,
         )
 
-        # Distance before
-        initial = state.fields[output_idx].astype(np.float64)
-        target64 = target_versor.astype(np.float64)
-        dist_before = float(np.linalg.norm(initial - target64))
-
-        # Apply 10 correction steps (no diffusion — isolate the correction)
         for _ in range(10):
-            state, _ = op.adjoint_pass(state)
+            state, _ = correction_op.adjoint_pass(state)
 
         corrected = state.fields[output_idx].astype(np.float64)
         dist_after = float(np.linalg.norm(corrected - target64))
@@ -103,7 +107,7 @@ class TestConstraintCorrectionOperator:
             correction_rate=0.3,
             node_index=output_idx,
         )
-        state, delta = op.adjoint_pass(state)
+        state, _delta = op.adjoint_pass(state)
 
         corrected = state.fields[output_idx].astype(np.float64)
         target64  = target_versor.astype(np.float64)
@@ -117,7 +121,7 @@ class TestConstraintCorrectionOperator:
 
     def test_correction_rate_zero_raises(self) -> None:
         """rate=0.0 is explicitly rejected (identity — use no_correction flag)."""
-        state, labels, target_versor = _build_manifold(
+        _, _, target_versor = _build_manifold(
             "test", load_pack("en_core_cognition_v1")[1]
         )
         with pytest.raises(ValueError, match="correction_rate"):
@@ -166,15 +170,17 @@ class TestConstraintCorrectionOperator:
 
 class TestCoupledPulse:
     def test_coupled_loop_converges(self) -> None:
-        """Full V4 pulse with correction converges and returns recall."""
-        words = run_pulse(
+        """Full V4 pulse with correction converges and returns recall + surface."""
+        result = run_pulse(
             "what is truth",
             use_glove=False,
             use_correction=True,
             correction_rate=0.3,
         )
-        assert len(words) > 0
-        assert all(isinstance(w, str) for w in words)
+        assert len(result.recalled_words) > 0
+        assert all(isinstance(w, str) for w in result.recalled_words)
+        assert result.surface
+        assert "truth" in result.surface.lower()
 
     def test_correction_changes_recall_vs_pure_diffusion(self) -> None:
         """With correction enabled, recall may differ from pure-diffusion mode.
@@ -182,14 +188,14 @@ class TestCoupledPulse:
         Both must return valid vocab words.  We don't assert they differ
         (they may agree on some inputs), but both paths must complete.
         """
-        words_v3 = run_pulse(
+        r_v3 = run_pulse(
             "wisdom", use_glove=False, use_correction=False,
         )
-        words_v4 = run_pulse(
+        r_v4 = run_pulse(
             "wisdom", use_glove=False, use_correction=True, correction_rate=0.3,
         )
-        assert len(words_v3) > 0
-        assert len(words_v4) > 0
+        assert len(r_v3.recalled_words) > 0
+        assert len(r_v4.recalled_words) > 0
 
     def test_high_correction_rate_biases_toward_target(self, compiled_manifold) -> None:
         """With correction_rate=0.9, the output node should be very close
@@ -220,3 +226,37 @@ class TestCoupledPulse:
         assert dist < 0.5, (
             f"High correction_rate=0.9 did not pull output close to target: dist={dist:.4f}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Surface realizer join
+# ---------------------------------------------------------------------------
+
+class TestRealizerJoin:
+    def test_definition_produces_sentence(self) -> None:
+        """'What is truth?' should produce a surface containing 'is defined as'."""
+        result = run_pulse("What is truth?", use_glove=False)
+        assert "is defined as" in result.surface.lower()
+        assert "truth" in result.surface.lower()
+
+    def test_comparison_produces_sentence(self) -> None:
+        """'Compare knowledge and wisdom' surfaces both terms."""
+        result = run_pulse("Compare knowledge and wisdom", use_glove=False)
+        assert "knowledge" in result.surface.lower()
+        assert "wisdom" in result.surface.lower()
+
+    def test_cause_produces_sentence(self) -> None:
+        """'Why does light exist?' surfaces 'light' with a causal frame."""
+        result = run_pulse("Why does light exist?", use_glove=False)
+        assert "light" in result.surface.lower()
+
+    def test_unknown_intent_still_produces_surface(self) -> None:
+        """Even unstructured input gets a surface from recalled words."""
+        result = run_pulse("truth", use_glove=False)
+        assert result.surface
+
+    def test_surface_is_deterministic(self) -> None:
+        """Same input produces identical surface on repeat."""
+        r1 = run_pulse("What is wisdom?", use_glove=False)
+        r2 = run_pulse("What is wisdom?", use_glove=False)
+        assert r1.surface == r2.surface

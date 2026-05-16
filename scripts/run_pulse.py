@@ -39,8 +39,13 @@ from algebra.backend import cga_inner
 from algebra.versor import construction_seed_versor
 from field.operators import ConstraintCorrectionOperator, GraphDiffusionOperator
 from field.state import ManifoldState
+from generate.graph_planner import graph_from_intent, ground_graph, plan_articulation
+from generate.intent import classify_intent
+from generate.realizer import realize_semantic
 from sensorium.adapters.text import deterministic_hash_versor
 from vocab.manifold import VocabManifold
+
+from dataclasses import dataclass
 
 log = logging.getLogger(__name__)
 
@@ -48,6 +53,14 @@ CONVERGENCE_THRESHOLD = 1e-6
 MAX_STEPS = 2000
 TOP_K = 5
 COMPILED_PACK_ID = "en_core_cognition_v1"
+
+
+@dataclass(frozen=True, slots=True)
+class PulseResult:
+    recalled_words: tuple[str, ...]
+    surface: str
+    steps: int
+    converged: bool
 
 
 # ---------------------------------------------------------------------------
@@ -171,8 +184,8 @@ def run_pulse(
     use_glove: bool = True,
     use_correction: bool = True,
     correction_rate: float = 0.3,
-) -> list[str]:
-    """Execute one cognitive pulse and return top-k recalled words.
+) -> PulseResult:
+    """Execute one cognitive pulse and return recalled words + realized surface.
 
     Parameters
     ----------
@@ -201,6 +214,7 @@ def run_pulse(
     step       = 0
     delta_fwd  = float("inf")
     delta_corr = float("inf") if use_correction else 0.0
+    converged  = False
 
     while step < MAX_STEPS:
         # --- Forward pass (diffusion) ---
@@ -217,8 +231,8 @@ def run_pulse(
             else:
                 print(f"[pulse] step {step:4d}  delta={delta_fwd:.2e}")
 
-        converged = delta_fwd < CONVERGENCE_THRESHOLD and delta_corr < CONVERGENCE_THRESHOLD
-        if converged:
+        if delta_fwd < CONVERGENCE_THRESHOLD and delta_corr < CONVERGENCE_THRESHOLD:
+            converged = True
             print(f"[pulse] converged at step {step} "
                   f"(Δ_fwd={delta_fwd:.2e}, Δ_corr={delta_corr:.2e})")
             break
@@ -229,13 +243,29 @@ def run_pulse(
     output_idx    = len(node_labels) - 1
     output_versor = state.fields[output_idx]
     results = _recall_from_manifold(output_versor, manifold, top_k)
+    recalled_words = tuple(w for w, _ in results)
 
     print(f"[pulse] output -> top-{top_k} recall:")
     for rank, (word, score) in enumerate(results, 1):
         marker = " <-" if word in [t.lower() for t in node_labels[:-1]] else ""
         print(f"[pulse]   {rank}. {word!r:20s} score={score:+.6f}{marker}")
 
-    return [w for w, _ in results]
+    # --- Surface realizer join ---
+    intent = classify_intent(text)
+    graph = graph_from_intent(intent)
+    grounded = ground_graph(graph, recalled_words)
+    target = plan_articulation(grounded)
+    plan = realize_semantic(target, grounded)
+    surface = plan.surface
+
+    print(f"[pulse] surface    : {surface}")
+
+    return PulseResult(
+        recalled_words=recalled_words,
+        surface=surface,
+        steps=step,
+        converged=converged,
+    )
 
 
 # ---------------------------------------------------------------------------

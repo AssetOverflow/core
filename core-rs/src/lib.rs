@@ -14,11 +14,13 @@ use pyo3::prelude::*;
 
 pub mod cga;
 pub mod cl41;
+pub mod diffusion;
 pub mod vault;
 pub mod versor;
 
 use cga::cga_inner_raw;
 use cl41::geometric_product_raw;
+use diffusion::{graph_diffusion_step, unitize_f32};
 use vault::vault_recall_raw;
 use versor::{normalize_to_versor_raw, versor_apply_closed, versor_apply_raw, versor_condition_raw};
 
@@ -108,6 +110,58 @@ fn vault_recall(
         .map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
+/// Unitize a multivector via the Cl(4,1) exponential map.
+/// Distinguishes boost planes (cosh/sinh) from rotation planes (cos/sin).
+#[pyfunction]
+fn unitize_expmap(
+    py: Python<'_>,
+    v: &pyo3::types::PyAny,
+) -> PyResult<PyObject> {
+    let v_slice = extract_f32_slice(v)?;
+    let result = unitize_f32(&v_slice);
+    f32_array_to_numpy(py, &result)
+}
+
+/// One forward step of graph diffusion.
+/// Takes fields (N x 32 flat), edges (E x 2 flat), damping.
+/// Returns (new_fields_flat, delta).
+#[pyfunction]
+fn diffusion_step(
+    py: Python<'_>,
+    fields_flat: Vec<f32>,
+    edges_flat: Vec<i32>,
+    n_nodes: usize,
+    damping: f64,
+) -> PyResult<(PyObject, f64)> {
+    if fields_flat.len() != n_nodes * 32 {
+        return Err(PyValueError::new_err(format!(
+            "fields_flat length {} != n_nodes * 32 = {}",
+            fields_flat.len(), n_nodes * 32,
+        )));
+    }
+
+    let mut fields: Vec<[f32; 32]> = Vec::with_capacity(n_nodes);
+    for i in 0..n_nodes {
+        let mut arr = [0f32; 32];
+        arr.copy_from_slice(&fields_flat[i * 32..(i + 1) * 32]);
+        fields.push(arr);
+    }
+
+    let n_edges = edges_flat.len() / 2;
+    let mut edges: Vec<[i32; 2]> = Vec::with_capacity(n_edges);
+    for i in 0..n_edges {
+        edges.push([edges_flat[i * 2], edges_flat[i * 2 + 1]]);
+    }
+
+    let (new_fields, delta) = graph_diffusion_step(&fields, &edges, damping);
+
+    let flat: Vec<f32> = new_fields.into_iter().flat_map(|a| a.into_iter()).collect();
+    let np = py.import("numpy")?;
+    let arr = np.call_method1("array", (flat, "float32"))?;
+    let reshaped = arr.call_method1("reshape", ((n_nodes, 32),))?;
+    Ok((reshaped.into_py(py), delta))
+}
+
 fn extract_f32_slice(obj: &pyo3::types::PyAny) -> PyResult<[f32; 32]> {
     let np = obj.py().import("numpy")?;
     let arr = np.call_method1("asarray", (obj, "float32"))?;
@@ -140,5 +194,7 @@ fn core_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(normalize_to_versor, m)?)?;
     m.add_function(wrap_pyfunction!(cga_inner, m)?)?;
     m.add_function(wrap_pyfunction!(vault_recall, m)?)?;
+    m.add_function(wrap_pyfunction!(unitize_expmap, m)?)?;
+    m.add_function(wrap_pyfunction!(diffusion_step, m)?)?;
     Ok(())
 }
