@@ -11,6 +11,7 @@ __all__ = [
 ]
 
 _CONSTRUCTION_RESIDUE_TOLERANCE = 1e-2
+_RUNTIME_CLOSURE_TOLERANCE = 1e-6
 _NEAR_ZERO_TOLERANCE = 1e-12
 _DENSE_SEED_MIN_COMPONENTS = 8
 _SEED_BIVECTORS = (6, 7, 8, 10, 11, 13)
@@ -95,17 +96,26 @@ def construction_seed_versor(v: np.ndarray) -> np.ndarray:
     return _seed_to_rotor(v, _array_dtype(v))
 
 
+def _runtime_closed(v: np.ndarray) -> np.ndarray:
+    """Return a field that satisfies the strict runtime closure invariant."""
+    candidate = unitize_versor(np.asarray(v, dtype=_RUNTIME_FIELD_DTYPE)).astype(_RUNTIME_FIELD_DTYPE)
+    if versor_condition(candidate) < _RUNTIME_CLOSURE_TOLERANCE:
+        return candidate
+    return _seed_to_rotor(v, _RUNTIME_FIELD_DTYPE).astype(_RUNTIME_FIELD_DTYPE)
+
+
 def _close_applied_versor(v: np.ndarray) -> np.ndarray:
     """Close runtime field sandwich results at float64 precision.
 
-    ``versor_apply`` is the runtime field-propagation API.  Vocabulary entries
-    may be stored compactly as float32, but live ``FieldState.F`` values are
-    judged against a strict ``versor_condition < 1e-6`` invariant. Closing and
-    returning float64 avoids leaking float32 roundoff as false manifold drift.
+    ``unitize_versor`` is intentionally permissive for construction-time inputs
+    whose non-scalar residue is still below the construction tolerance. Runtime
+    field propagation is stricter: if the result still fails the public
+    ``versor_condition < 1e-6`` contract after unitization, project it through
+    the deterministic construction map instead of leaking small drift.
     """
     arr = np.asarray(v, dtype=_RUNTIME_FIELD_DTYPE)
     try:
-        return unitize_versor(arr).astype(_RUNTIME_FIELD_DTYPE)
+        return _runtime_closed(arr)
     except ValueError:
         return _seed_to_rotor(arr, _RUNTIME_FIELD_DTYPE).astype(_RUNTIME_FIELD_DTYPE)
 
