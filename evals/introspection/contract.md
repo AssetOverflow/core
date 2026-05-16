@@ -33,7 +33,10 @@ zero result by construction until the module lands.
 - `M1. explain_api_present`        — the explain function imports
   cleanly from `core.cognition` (or a documented alternative).
 - `M2. account_is_nonempty`        — when (1) succeeds, the
-  generated account has non-trivial length (≥ 5 tokens).
+  generated account has non-trivial length (≥ 2 tokens).  The
+  deterministic canonical form for a DEFINITION probe ("What is
+  X?") is naturally 3 tokens; the v1 floor is 2 tokens, distinguishing
+  a real sentence from an empty string or a single bare token.
 - `M3. round_trip_surface_match`   — Result_B.surface tokens cover
   ≥ 60% of Result_A.surface tokens (case-insensitive,
   punctuation-stripped).

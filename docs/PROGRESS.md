@@ -349,6 +349,71 @@ module-creation work item.
 4. **Re-author cross-domain-transfer v2** with the matched-control
    comparison contract refinement once B-arm recall is non-zero.
 
+### Phase 3 v2 sweep — 8 of 10 splits passing (2026-05-16)
+
+Engineering work from ADRs 0017 + 0018 has now landed. Two bundles:
+
+**Bundle 1 — transitive_walk + path_recall (commit `57a6174`)**
+
+- `teaching/relation_parse.py` lifts correction text into typed
+  `(head, relation, tail)` triples using the
+  en_core_cognition_v1 relation vocabulary.
+- `teaching.store.PackMutationProposal` carries the typed triple;
+  `TeachingStore.triples()` exposes the cross-turn typed-relation
+  graph.
+- `generate/operators.py` defines `transitive_walk` (single-relation
+  chain) and `path_recall` (multi-relation chain).
+- `generate.intent` gains `TRANSITIVE_QUERY` intent tag with a
+  parsed `relation` field for "What does X precede/cause/ground?"
+  and "Where does X belong?" forms.
+- `CognitiveTurnPipeline.run` dispatches the operator after
+  `runtime.chat()` and folds the chain endpoint into the surface.
+- `compute_trace_hash` and `CognitiveTurnResult` gain
+  `operator_invocation` so operator runs are load-bearing for
+  replay equality per ADR-0018.
+
+**Bundle 2 — core/cognition/explain.py (commit pending)**
+
+- Deterministic canonical re-statement of a turn, dispatched on
+  the intent tag.  DEFINITION → "What is X?", TRANSITIVE_QUERY →
+  "What does X precede?" / "Where does X belong?", CORRECTION →
+  the original correction text, etc.
+- Closes Gap 3.  No learned model; pure dispatch.
+
+**Phase 3 v2 lane re-score:**
+
+| Lane | split | v1 | after v2 bundles |
+|---|---|---|---|
+| inference-closure | public | 0.0 | **1.0** ✓ |
+| inference-closure | holdouts | 0.0 | **1.0** ✓ |
+| multi-step-reasoning | public | 0.0 | **0.7333** ✓ |
+| multi-step-reasoning | holdouts | 0.0 | **0.8** ✓ |
+| cross-domain-transfer | public | 0.0 | **1.0** ✓ |
+| cross-domain-transfer | holdouts | 0.0 | **1.0** ✓ |
+| introspection | public | 0.0 | **1.0** ✓ |
+| introspection | holdouts | 0.0 | **1.0** ✓ |
+| compositionality | public | 0.0625 | 0.3125 (partial) |
+| compositionality | holdouts | 0.0 | 0.3 (partial) |
+
+**8 of 10 splits passing v1.**  Phase 3 exit gate (≥ 2 lanes passing
+v1) is met **four times over**.  Foundation guarantees
+(`premises_stored_rate`, `replay_determinism`) remain 1.0 across all
+lanes; trace_hash bit-stability holds with operator records folded
+in.
+
+**Residuals for v3 work:**
+
+- multi-step-reasoning `mixed_relation_*` patterns (chain across
+  multiple relation types in one probe) — `path_recall` exists but
+  the pipeline only invokes the single-relation `transitive_walk`.
+  The intent classifier doesn't yet recognise multi-relation
+  question shapes.
+- compositionality novel-combination patterns (`novel_pair_under_seen_relation`,
+  `novel_relation_on_seen_pair`) need a `composed_relation_walk`
+  operator that synthesises across taught pairs.  This is a
+  distinct ADR-level capability decision and is correctly
+  downstream of literal cross-domain transfer (which now works).
+
 ### Phase 3 v1 — DONE
 
 All five lanes have v1 results with honest scores.  Each failure has

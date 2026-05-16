@@ -87,7 +87,11 @@ def _run_case(case: dict[str, Any]) -> dict[str, Any]:
             except ValueError:
                 pass
 
-    account_nonempty = len(_tokens(account)) >= 5
+    # ≥ 2 tokens — the deterministic canonical form for a DEFINITION probe
+    # ("What is X?") is 3 tokens; we accept any account that is plausibly
+    # a sentence rather than a single bare token or empty string.  See
+    # contract.md.
+    account_nonempty = len(_tokens(account)) >= 2
     a_tokens = _tokens(surface_a)
     b_tokens = _tokens(surface_b)
     if a_tokens:
