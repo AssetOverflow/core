@@ -30,6 +30,7 @@ from typing import Any
 from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.config import RuntimeConfig
+from evals.parallel import run_cases_parallel
 
 
 @dataclass(slots=True)
@@ -38,13 +39,9 @@ class LaneReport:
     case_details: list[dict[str, Any]] = field(default_factory=list)
 
 
-def _run_chain(
-    premises: list[str],
-    probe: str,
-    config: RuntimeConfig | None,
-) -> tuple[int, str, int]:
+def _run_chain(premises: list[str], probe: str) -> tuple[int, str, int]:
     """Return (vault_hits, trace_hash, proposal_count) for one fresh run."""
-    runtime = ChatRuntime(config=config) if config else ChatRuntime()
+    runtime = ChatRuntime()
     pipeline = CognitiveTurnPipeline(runtime)
     proposal_count = 0
     for premise in premises:
@@ -61,14 +58,14 @@ def _run_chain(
     return probe_result.vault_hits, probe_result.trace_hash, proposal_count
 
 
-def _run_case(case: dict[str, Any], config: RuntimeConfig | None) -> dict[str, Any]:
+def _run_case(case: dict[str, Any]) -> dict[str, Any]:
     premises = case.get("premises", [])
     probe = case["probe"]
     min_vault_hits = int(case.get("min_vault_hits", 1))
     expected_proposals = int(case.get("expected_proposals", 0))
 
-    vh1, hash1, pc1 = _run_chain(premises, probe, config)
-    vh2, hash2, pc2 = _run_chain(premises, probe, config)
+    vh1, hash1, pc1 = _run_chain(premises, probe)
+    vh2, hash2, pc2 = _run_chain(premises, probe)
 
     premise_recall_pass = vh1 >= min_vault_hits
     replay_pass = bool(hash1) and hash1 == hash2 and vh1 == vh2 and pc1 == pc2
@@ -94,11 +91,13 @@ def run_lane(
     cases: list[dict[str, Any]],
     *,
     config: RuntimeConfig | None = None,
+    workers: int | None = None,
 ) -> LaneReport:
     if not cases:
         return LaneReport(metrics={}, case_details=[])
+    _ = config
 
-    case_details = [_run_case(c, config) for c in cases]
+    case_details = run_cases_parallel(cases, _run_case, workers=workers)
     total = len(case_details)
 
     pr = sum(1 for d in case_details if d["premise_recall_pass"]) / total

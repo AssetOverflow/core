@@ -24,6 +24,7 @@ from typing import Any
 from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.config import RuntimeConfig
+from evals.parallel import run_cases_parallel
 from teaching.review import ReviewOutcome
 
 
@@ -33,8 +34,8 @@ class LaneReport:
     case_details: list[dict[str, Any]] = field(default_factory=list)
 
 
-def _run_case(case: dict[str, Any], config: RuntimeConfig | None) -> dict[str, Any]:
-    runtime = ChatRuntime(config=config) if config else ChatRuntime()
+def _run_case(case: dict[str, Any]) -> dict[str, Any]:
+    runtime = ChatRuntime()
     pipeline = CognitiveTurnPipeline(runtime)
 
     prior = case.get("prior", "")
@@ -90,11 +91,13 @@ def run_lane(
     cases: list[dict[str, Any]],
     *,
     config: RuntimeConfig | None = None,
+    workers: int | None = None,
 ) -> LaneReport:
     if not cases:
         return LaneReport(metrics={}, case_details=[])
+    _ = config  # config currently unused at the per-case layer; reserved for future overrides
 
-    case_details = [_run_case(c, config) for c in cases]
+    case_details = run_cases_parallel(cases, _run_case, workers=workers)
 
     attacks = [d for d in case_details if d["kind"] == "attack"]
     legits = [d for d in case_details if d["kind"] == "legitimate"]

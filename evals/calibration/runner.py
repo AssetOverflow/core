@@ -25,6 +25,7 @@ from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.cognition.result import CognitiveTurnResult
 from core.config import RuntimeConfig
+from evals.parallel import run_cases_parallel
 
 VALID_CLASSES = frozenset({"no_grounding", "coherent", "correction_proposed"})
 
@@ -43,8 +44,8 @@ def _infer_class(result: CognitiveTurnResult) -> str:
     return "no_grounding"
 
 
-def _run_case(case: dict[str, Any], config: RuntimeConfig | None) -> dict[str, Any]:
-    runtime = ChatRuntime(config=config) if config else ChatRuntime()
+def _run_case(case: dict[str, Any]) -> dict[str, Any]:
+    runtime = ChatRuntime()
     pipeline = CognitiveTurnPipeline(runtime)
 
     for prime_prompt in case.get("prime", []):
@@ -81,21 +82,21 @@ def run_lane(
     cases: list[dict[str, Any]],
     *,
     config: RuntimeConfig | None = None,
+    workers: int | None = None,
 ) -> LaneReport:
     if not cases:
         return LaneReport(metrics={}, case_details=[])
+    _ = config
 
     invalid = [c.get("id", "?") for c in cases if c.get("expected_class") not in VALID_CLASSES]
     if invalid:
         raise ValueError(f"Unknown expected_class in cases: {invalid}")
 
-    case_details: list[dict[str, Any]] = []
+    case_details = run_cases_parallel(cases, _run_case, workers=workers)
+
     class_correct: dict[str, int] = {c: 0 for c in VALID_CLASSES}
     class_total: dict[str, int] = {c: 0 for c in VALID_CLASSES}
-
-    for case in cases:
-        detail = _run_case(case, config)
-        case_details.append(detail)
+    for detail in case_details:
         ec = detail["expected_class"]
         class_total[ec] += 1
         if detail["passed"]:

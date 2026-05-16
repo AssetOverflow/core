@@ -138,8 +138,22 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
   - [x] `StructuralZeroBaseline` adapter in `evals/baseline_runner.py`
         — deterministic floor; live-API adapters can be added when
         keys are configured
-- [ ] v2 lanes (provenance, monotonic-learning, calibration, symbolic-logic, adversarial-identity)
+- [x] v2 lanes: monotonic-learning, provenance, adversarial-identity (all 100% pass)
+- [ ] v2 lanes: calibration, symbolic-logic
 - [ ] **Exit gate:** All five v1+v2 with baselines; at least two have v3
+
+### Parallel eval infrastructure (2026-05-16)
+
+- `evals/parallel.py` — `run_cases_parallel()` helper using
+  `multiprocessing.Pool` with the `"spawn"` start method (avoids
+  forking heavy parent state).  Default workers = `min(cpu_count, 8)`.
+- Wired into the four per-case lanes (provenance, calibration,
+  symbolic-logic, adversarial-identity).  `run_lane(..., workers=N)`
+  controls parallelism; `workers=1` forces serial for debugging.
+- Empirical speedup (adversarial-identity public/v1, 25 cases):
+  serial 14.1s → parallel 3.1s (~4.5x).
+- Monotonic-learning intentionally stays serial within a split
+  (shared longitudinal session by design).
 
 ---
 

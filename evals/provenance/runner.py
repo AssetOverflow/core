@@ -24,6 +24,7 @@ from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.cognition.provenance import Provenance, compute_provenance
 from core.config import RuntimeConfig
+from evals.parallel import run_cases_parallel
 from generate.intent import IntentTag
 
 _KNOWN_INTENT_TAGS: frozenset[str] = frozenset(t.value for t in IntentTag)
@@ -49,11 +50,9 @@ class LaneReport:
 
 def _run_pipeline_for_case(
     case: dict[str, Any],
-    *,
-    config: RuntimeConfig | None,
 ) -> tuple[Provenance, ChatRuntime, CognitiveTurnPipeline]:
     """Build a fresh runtime, replay any prime prompts, then run the scored prompt."""
-    runtime = ChatRuntime(config=config) if config else ChatRuntime()
+    runtime = ChatRuntime()
     pipeline = CognitiveTurnPipeline(runtime)
 
     for prime_prompt in case.get("prime", []):
@@ -104,20 +103,16 @@ def _attribution_pass(provenance: Provenance, expected_sources: list[str]) -> bo
     return all(expected in present for expected in expected_sources)
 
 
-def _run_case(
-    case: dict[str, Any],
-    *,
-    config: RuntimeConfig | None,
-) -> CaseRun:
+def _run_case(case: dict[str, Any]) -> CaseRun:
     expected = tuple(case.get("expected_sources", []))
 
     # First run — collect provenance, runtime, pipeline for validity check.
-    prov_a, runtime_a, pipeline_a = _run_pipeline_for_case(case, config=config)
+    prov_a, runtime_a, pipeline_a = _run_pipeline_for_case(case)
     attribution_pass = _attribution_pass(prov_a, list(expected))
     validity_pass = _validate_provenance(prov_a, pipeline_a, runtime_a)
 
     # Second run — fresh runtime — must reproduce trace_hash.
-    prov_b, _, _ = _run_pipeline_for_case(case, config=config)
+    prov_b, _, _ = _run_pipeline_for_case(case)
     replay_pass = prov_a.turn_trace_hash == prov_b.turn_trace_hash
 
     return CaseRun(
@@ -136,11 +131,11 @@ def run_lane(
     cases: list[dict[str, Any]],
     *,
     config: RuntimeConfig | None = None,
+    workers: int | None = None,
 ) -> LaneReport:
     """Run all provenance cases and aggregate metrics."""
-    case_runs: list[CaseRun] = []
-    for case in cases:
-        case_runs.append(_run_case(case, config=config))
+    _ = config
+    case_runs: list[CaseRun] = run_cases_parallel(cases, _run_case, workers=workers)
 
     total = len(case_runs)
     if total == 0:
