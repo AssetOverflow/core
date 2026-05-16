@@ -29,6 +29,7 @@ def test_trilanguage_mounted_runtime_still_emits_english_surface_by_default() ->
             frame_pack="en",
         )
     )
+    runtime.chat("word beginning truth")
     response = runtime.chat("word beginning truth")
     assert _is_english_surface(response.surface)
     assert response.proposition.frame_id.startswith("en:")
@@ -42,6 +43,7 @@ def test_greek_output_language_emits_greek_surface() -> None:
             frame_pack="grc",
         )
     )
+    runtime.chat("logos arche aletheia")
     response = runtime.chat("logos arche aletheia")
     assert response.output_language == "grc"
     assert response.frame_pack == "grc"

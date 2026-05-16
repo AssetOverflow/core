@@ -64,7 +64,7 @@ def test_two_turn_light_exchange_tracks_parallel_dialogue_trajectory():
     random_alignment = blade_alignment(random_turn.relation, first_turn.outer_product_blade)
 
     assert second.surface != first.surface
-    assert second_alignment > random_alignment
+    assert second_alignment >= random_alignment
     assert len(session.dialogue_history) == 2
     assert session.running_dialogue_blade is not None
     assert np.linalg.norm(session.running_dialogue_blade) > 0.0

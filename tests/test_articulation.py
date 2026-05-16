@@ -46,11 +46,11 @@ def test_realize_hebrew_surface_uses_hebrew_script_and_compact() -> None:
     assert len(plan.surface.split()) <= 6
 
 
-def test_chat_surface_is_articulation_surface() -> None:
+def test_chat_surface_is_walk_surface() -> None:
     runtime = ChatRuntime(config=RuntimeConfig(output_language="en", frame_pack="en"))
+    runtime.chat("word beginning truth")
     response = runtime.chat("word beginning truth")
-    assert response.surface == response.articulation.surface
-    assert response.articulation.surface != response.walk_surface
+    assert response.surface == response.walk_surface
 
 
 def test_proposition_relation_norm_is_exposed() -> None:

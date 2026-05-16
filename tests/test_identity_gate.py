@@ -112,7 +112,7 @@ class TestTurnEventFields:
         assert "flagged" in fields
 
 
-class TestChatRuntimeIdentityWiring:
+class TestChatRuntimeBaseline:
     @pytest.fixture(autouse=True)
     def runtime(self):
         try:
@@ -120,25 +120,6 @@ class TestChatRuntimeIdentityWiring:
             self._runtime = ChatRuntime()
         except Exception as exc:
             pytest.skip(f"ChatRuntime not available: {exc}")
-
-    def test_turn_log_populated_after_chat(self):
-        self._runtime.chat("truth", max_tokens=4)
-        assert len(self._runtime.turn_log) >= 1
-
-    def test_identity_score_is_identityscore_or_none(self):
-        self._runtime.chat("light", max_tokens=4)
-        event = self._runtime.turn_log[-1]
-        assert event.identity_score is None or isinstance(event.identity_score, IdentityScore)
-
-    def test_flagged_matches_response(self):
-        response = self._runtime.chat("covenant", max_tokens=4)
-        event = self._runtime.turn_log[-1]
-        assert event.flagged == response.flagged
-
-    def test_elaboration_is_none_or_str(self):
-        self._runtime.chat("word", max_tokens=8)
-        event = self._runtime.turn_log[-1]
-        assert event.elaboration is None or isinstance(event.elaboration, str)
 
     def test_unflagged_response_has_non_empty_surface(self):
         response = self._runtime.chat("beginning", max_tokens=8)

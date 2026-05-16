@@ -43,7 +43,10 @@ class _MorphVocab(_StubVocab):
         return self._versors[idx]
 
     def index_of(self, word: str) -> int:
-        return self._words.index(word)
+        try:
+            return self._words.index(word)
+        except ValueError:
+            raise KeyError(word)
 
     def get_word_at(self, idx: int) -> str:
         return self._words[idx]
