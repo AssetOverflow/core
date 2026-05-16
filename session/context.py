@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 
 from algebra.backend import cga_inner, versor_apply
-from algebra.versor import versor_condition as _versor_condition
+from algebra.versor import unitize_versor, versor_condition as _versor_condition
 from field.state import FieldState
 from generate.dialogue import DialogueTurn
 from generate.proposition import Proposition
@@ -22,6 +22,45 @@ from persona.motor import PersonaMotor
 from session.graph import SessionGraph
 from session.referents import ReferentRegistry
 from vault.store import VaultStore
+
+# Dialogue blade EMA decay — how much the running blade "remembers" prior turns.
+# α=0.15 means each new confirmed turn adds 15% of its blade to the accumulator,
+# so a concept confirmed N times builds proportionally stronger attractor force.
+_BLADE_EMA_ALPHA: float = 0.15
+
+# Anchor pull strength — how hard each finalized turn is pulled back toward the
+# session anchor field. 0.05 is intentionally mild: it corrects slow angular
+# drift without distorting the response field for single-turn queries.
+_ANCHOR_PULL_ALPHA: float = 0.05
+
+
+def _slerp_toward(
+    F: np.ndarray,
+    target: np.ndarray,
+    alpha: float,
+) -> np.ndarray:
+    """Spherical-linear interpolation of F toward target by fraction alpha.
+
+    When the inner product is near ±1 (nearly parallel/antiparallel versors),
+    falls back to linear interpolation to avoid numerical instability.
+    """
+    f_norm = float(np.linalg.norm(F))
+    t_norm = float(np.linalg.norm(target))
+    if f_norm < 1e-10 or t_norm < 1e-10:
+        return F
+    f_unit = F / f_norm
+    t_unit = target / t_norm
+    cos_theta = float(np.clip(np.dot(f_unit.ravel(), t_unit.ravel()), -1.0, 1.0))
+    theta = float(np.arccos(abs(cos_theta)))
+    if theta < 1e-6:
+        # Nearly parallel — linear blend is numerically identical
+        result = (1.0 - alpha) * F + alpha * target
+    else:
+        sin_theta = float(np.sin(theta))
+        w_f = float(np.sin((1.0 - alpha) * theta)) / sin_theta
+        w_t = float(np.sin(alpha * theta)) / sin_theta
+        result = w_f * F + w_t * target
+    return np.asarray(result, dtype=F.dtype)
 
 
 class SessionContext:
@@ -93,8 +132,7 @@ class SessionContext:
         snapshot_sources = self.referents.consumed_turns()
         snapshot_slots = self.referents.consumed_slots()
         candidate, _ = self._field_from_tokens(tokens, resolve_referents=True)
-        # Restore consumed metadata because probe must not define graph edges.
-        self.referents._last_resolved_sources = snapshot_sources  # internal rollback by design
+        self.referents._last_resolved_sources = snapshot_sources
         self.referents._last_resolved_slots = snapshot_slots
         return candidate
 
@@ -120,12 +158,29 @@ class SessionContext:
         blade = proposition.relation
         turn = _DT(proposition=proposition, outer_product_blade=blade)
         self._dialogue_history_compat.append(turn)
+
         if self.running_dialogue_blade is None:
+            # First turn: initialise the accumulator at full blade magnitude.
             self.running_dialogue_blade = blade.copy()
         else:
-            alpha = cga_inner(self.running_dialogue_blade, blade)
-            sign = 1.0 if alpha >= 0.0 else -1.0
-            self.running_dialogue_blade = sign * blade
+            # Drift fix 1: magnitude-preserving EMA accumulation.
+            #
+            # Previously: running_blade = sign(inner) * new_blade
+            # This reset magnitude to 1 on every turn, discarding how many
+            # prior turns had confirmed the same concept direction.
+            #
+            # Now: running_blade = (1 - α) * running_blade + α * new_blade
+            # when the new blade is aligned (inner ≥ 0), or
+            #        running_blade = (1 - α) * running_blade - α * new_blade
+            # when anti-aligned, so the accumulator always reinforces the
+            # dominant direction and grows in magnitude with each confirmation.
+            alpha = _BLADE_EMA_ALPHA
+            alignment = cga_inner(self.running_dialogue_blade, blade)
+            sign = 1.0 if float(alignment) >= 0.0 else -1.0
+            self.running_dialogue_blade = (
+                (1.0 - alpha) * self.running_dialogue_blade + alpha * sign * blade
+            )
+
         return turn
 
     @property
@@ -160,6 +215,29 @@ class SessionContext:
             valence=field_state.valence,
         )
 
+    def _anchor_pull(self, field_state: FieldState) -> FieldState:
+        """Drift fix 3: mild slerp toward the session anchor field.
+
+        Applied after hemisphere correction. Provides continuous conjugate
+        correction against slow angular drift that stays within the hemisphere
+        but gradually moves away from the session concept attractor.
+
+        α=0.05 is intentionally mild — it corrects accumulated drift over many
+        turns without distorting single-turn response fields.
+        """
+        if self._anchor_field is None:
+            return field_state
+        pulled_F = _slerp_toward(field_state.F, self._anchor_field, _ANCHOR_PULL_ALPHA)
+        pulled_F = unitize_versor(pulled_F)
+        return FieldState(
+            F=pulled_F,
+            node=field_state.node,
+            step=field_state.step,
+            holonomy=field_state.holonomy,
+            energy=field_state.energy,
+            valence=field_state.valence,
+        )
+
     def finalize_turn(
         self,
         result: GenerationResult,
@@ -185,7 +263,9 @@ class SessionContext:
         self._register_result_referent(result)
         active_slots = self.referents.active_slots() | active_slots
 
+        # Drift fix 3: hemisphere correction + anchor pull (conjugate correction).
         oriented_state = self._hemisphere_consistent_field(result.final_state)
+        oriented_state = self._anchor_pull(oriented_state)
 
         self.graph.add_turn(
             turn_idx=self.turn,
