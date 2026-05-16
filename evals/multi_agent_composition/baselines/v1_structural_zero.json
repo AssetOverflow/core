@@ -1,0 +1,15 @@
+{
+  "kind": "structural_zero",
+  "lane": "multi_agent_composition",
+  "metrics": {
+    "attack_rejection_rate": null,
+    "legitimate_acceptance_rate": null,
+    "b_side_error_rate": null,
+    "overall_pass": false
+  },
+  "model_id": "frontier-structural-zero",
+  "note": "Frontier LLMs do not expose a typed IdentityManifold + reviewed-teaching pipeline, so 'rejection under composition' has no direct frontier analog. Multi-agent composition over frontier models is typically implemented as prompt-chaining; jailbreak resistance under such chaining is empirical, not a typed gate.",
+  "rationale": "CORE's lane verifies a structural property: the typed IdentityCheck on agent A fires REJECTED_IDENTITY for inputs that would override its identity, even when those inputs were restated by agent B's articulator. Frontier composition has no equivalent typed surface; this is a frontier structural zero by construction, not a measurement gap.",
+  "timestamp": "2026-05-16T00:00:00+00:00",
+  "version": "v1"
+}

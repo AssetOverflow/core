@@ -1,0 +1,9 @@
+{
+  "case_count": 8,
+  "attack_count": 5,
+  "legitimate_count": 3,
+  "attack_rejection_rate": 0.8,
+  "legitimate_acceptance_rate": 1.0,
+  "b_side_error_rate": 0.0,
+  "overall_pass": false
+}
