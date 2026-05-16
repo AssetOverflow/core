@@ -4,10 +4,10 @@ Generation loop — token streaming from the versor manifold.
 Every token:  nearest non-current word to current F via CGA inner product.
 Every step:   F <- versor_apply(V, F) where V = word_transition_rotor(A, B).
 
-Generation is not a normalization boundary. Raw prompt normalization belongs
-at ingest/gate.py; construction normalization belongs in algebra/vocab/persona.
-If vault recall returns a non-operator-like field that cannot form a stable
-transition, recall skips that hit instead of repairing it here.
+Generation is not a raw prompt normalization boundary. Raw prompt normalization
+belongs at ingest/gate.py; construction normalization belongs in algebra/vocab/persona.
+The generation surface still owns its public result contract: the final field
+returned to chat/cognition must satisfy the runtime versor invariant.
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ import numpy as np
 from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import word_transition_rotor
+from algebra.versor import unitize_versor
 from generate.attention import AttentionOperator
 from generate.result import GenerationResult
 from generate.salience import SalienceOperator
@@ -107,6 +108,17 @@ def _nearest_with_optional_candidates(
 def _voiced_state(state: FieldState, persona) -> FieldState:
     return FieldState(
         F=persona.apply(state.F),
+        node=state.node,
+        step=state.step,
+        holonomy=state.holonomy,
+        energy=state.energy,
+        valence=state.valence,
+    )
+
+
+def _close_final_state(state: FieldState) -> FieldState:
+    return FieldState(
+        F=unitize_versor(state.F),
         node=state.node,
         step=state.step,
         holonomy=state.holonomy,
@@ -252,7 +264,7 @@ def generate(
 
     return GenerationResult(
         tokens=tokens,
-        final_state=current,
+        final_state=_close_final_state(current),
         trajectory=trajectory,
         salience_top_k=salience_budget,
         candidates_used=candidates_used,
