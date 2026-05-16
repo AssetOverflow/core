@@ -670,7 +670,7 @@ def build_parser() -> argparse.ArgumentParser:
         epilog=EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--version", action="store_true", help="print package version and exit")
+    parser.add_argument("--version", action="store_true", dest="print_version", help="print package version and exit")
     subparsers = parser.add_subparsers(dest="command", metavar="command")
 
     chat = subparsers.add_parser("chat", help="start the interactive chat REPL")
@@ -796,7 +796,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if getattr(args, "command", None) != "test":
             parser.error(f"unrecognized arguments: {' '.join(unknown)}")
         args.args = [*(getattr(args, "args", None) or ()), *unknown]
-    if args.version:
+    if args.print_version:
         _print_version()
         return 0
     func = getattr(args, "func", None)

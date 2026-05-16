@@ -7,8 +7,9 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
 
 ## Phase 0 — Benchmark Methodology Lock-in
 
-**Status:** In Progress
+**Status:** Complete
 **Started:** 2026-05-15
+**Completed:** 2026-05-16
 
 - [x] Promote roadmap to ADR-0016
 - [x] Extract `docs/eval_methodology.md` from roadmap Part I
@@ -23,7 +24,7 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
 - [x] Generalize `core eval <lane>` CLI (dynamic lane discovery)
 - [x] Implement holdout runner scaffold
 - [x] Implement baseline runner scaffold
-- [ ] **Exit gate:** `core eval cognition` runs under new convention with v1 public + holdout + baseline
+- [x] **Exit gate:** `core eval cognition` runs under new convention with v1 public + holdout + baseline
 
 ### Methodology issues discovered (Phase 0 audit)
 
@@ -32,8 +33,11 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
    stub without appending. Fixed with fallback to tokenizer output.
 2. **Versor drift in multi-turn sessions:** `test_pipeline_preserves_versor_closure`
    reveals that after 3 turns in the same session, "spirit breath" causes
-   `versor_condition = 1.12e-04` (threshold: 1e-6). Pre-existing; not caused by
-   eval restructuring. Needs operator/construction boundary investigation.
+   `versor_condition = 1.12e-04` (threshold: 1e-6). Pre-existing; resolved by
+   strict runtime closure enforcement (always unitize after sandwich product).
+3. **Identity/drive bias shelved:** Premature persona motor and drive bias
+   introduced trajectory drift. Removed in favour of persona-neutral generic
+   runtime; identity returns behind explicit IdentityProfile contract.
 
 ---
 
