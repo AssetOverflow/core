@@ -1,0 +1,807 @@
+{
+  "cases": [
+    {
+      "cycle": 0,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 0,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 0,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 0,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 0,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 0,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 0,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 0,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 0,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 1,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 1,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 1,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 1,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 1,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 1,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 1,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 1,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 1,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 2,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 2,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 2,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 2,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 2,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 2,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 2,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 2,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 2,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 3,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 3,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 3,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 3,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 3,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 3,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 3,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 3,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 3,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 4,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 4,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 4,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 4,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 4,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 4,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 4,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 4,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 4,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 5,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 5,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 5,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 5,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 5,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 5,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 5,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 5,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 5,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 6,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 6,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 6,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 6,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 6,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 6,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 6,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 6,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 6,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 7,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 7,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 7,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 7,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 7,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 7,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 7,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 7,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 7,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 8,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 8,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 8,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 8,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 8,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 8,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 8,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 8,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 8,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 9,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 9,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 9,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 9,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 9,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 9,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 9,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 9,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 9,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 10,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 10,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 10,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 10,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 10,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 10,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 10,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 10,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 10,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 11,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 11,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 11,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 11,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 11,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 11,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 11,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 11,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 11,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    },
+    {
+      "cycle": 12,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-1"
+    },
+    {
+      "cycle": 12,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-2"
+    },
+    {
+      "cycle": 12,
+      "domain": "light",
+      "passed": true,
+      "probe_id": "PL-3"
+    },
+    {
+      "cycle": 12,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-1"
+    },
+    {
+      "cycle": 12,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-2"
+    },
+    {
+      "cycle": 12,
+      "domain": "truth",
+      "passed": true,
+      "probe_id": "PT-3"
+    },
+    {
+      "cycle": 12,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-1"
+    },
+    {
+      "cycle": 12,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-2"
+    },
+    {
+      "cycle": 12,
+      "domain": "wisdom",
+      "passed": true,
+      "probe_id": "PW-3"
+    }
+  ],
+  "lane": "monotonic_learning",
+  "metrics": {
+    "cycle_count": 12,
+    "cycle_pass": true,
+    "domains": [
+      "light",
+      "truth",
+      "wisdom"
+    ],
+    "first_taught": {
+      "light": 2,
+      "truth": 1,
+      "wisdom": 3
+    },
+    "floor_score": 1.0,
+    "max_regression": 0.0,
+    "overall_pass": true,
+    "per_cycle_scores": [
+      {
+        "cycle": 0,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 1,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 2,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 3,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 4,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 5,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 6,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 7,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 8,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 9,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 10,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 11,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 12,
+        "light": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      }
+    ]
+  },
+  "split": "public",
+  "timestamp": "2026-05-16T18:49:54.380020+00:00",
+  "version": "v1"
+}

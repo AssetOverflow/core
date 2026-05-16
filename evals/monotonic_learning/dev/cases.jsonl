@@ -1,0 +1,54 @@
+{"cycle": 0, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 0, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 0, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 0, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 1, "op": "teach", "domain": "truth", "prime": ["What is truth?"], "prompt": "Actually truth is more than that."}
+{"cycle": 1, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 1, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 1, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 1, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 2, "op": "teach", "domain": "light", "prime": ["What is light?"], "prompt": "Actually light is more than that."}
+{"cycle": 2, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 2, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 2, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 2, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 3, "op": "teach", "domain": "truth", "prime": ["What is truth?"], "prompt": "No, truth requires deeper understanding."}
+{"cycle": 3, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 3, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 3, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 3, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 4, "op": "teach", "domain": "light", "prime": ["What is light?"], "prompt": "No, light requires deeper understanding."}
+{"cycle": 4, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 4, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 4, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 4, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 5, "op": "teach", "domain": "truth", "prime": ["What is truth?"], "prompt": "Actually truth relates to coherence."}
+{"cycle": 5, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 5, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 5, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 5, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 6, "op": "teach", "domain": "light", "prime": ["What is light?"], "prompt": "Actually light relates to coherence."}
+{"cycle": 6, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 6, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 6, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 6, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 7, "op": "teach", "domain": "truth", "prime": ["What is truth?"], "prompt": "Actually truth is more than that."}
+{"cycle": 7, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 7, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 7, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 7, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 8, "op": "teach", "domain": "light", "prime": ["What is light?"], "prompt": "Actually light is more than that."}
+{"cycle": 8, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 8, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 8, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 8, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 9, "op": "teach", "domain": "truth", "prime": ["What is truth?"], "prompt": "No, truth requires deeper understanding."}
+{"cycle": 9, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 9, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 9, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 9, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 10, "op": "teach", "domain": "light", "prime": ["What is light?"], "prompt": "No, light requires deeper understanding."}
+{"cycle": 10, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 10, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 10, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 10, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}

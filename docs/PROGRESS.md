@@ -87,7 +87,15 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
   - [x] v1 dev (10/10), v1 public (20/20), v1 holdouts (15/15) — all 100% pass
   - [x] Sub-metrics: replay_determinism=1.0, source_attribution=1.0, source_validity=1.0, input_sensitivity=1.0
   - [x] Fixed shape regression in `generate/stream.py` score-weighted recall (np.eye → multivector identity)
-- [ ] **monotonic-learning** lane
+  - [x] Replaced linear-blend rotor scaling with manifold-preserving `rotor_power` (`algebra/rotor.py`); 41 closure-preservation tests
+  - [x] Restored `respond()`/`result.final_state` identity contract after anchor pull
+- [x] **monotonic-learning** lane (v1 complete)
+  - [x] Define contract: longitudinal regression check across ≥10 teaching cycles
+  - [x] Implement runner: shared session, sorted ops, per-(cycle, domain) accuracy table
+  - [x] Generator (`scripts/generate_monotonic_cases.py`) for cycle/probe corpora
+  - [x] v1 dev (10 cycles), v1 public (12 cycles, 3 domains), v1 holdouts (12 cycles, 2 distinct domains)
+  - [x] All splits: max_regression=0.00, floor_score=1.00, overall_pass=true
+  - [x] Structural win demonstrated: zero regression across 34 total cycles / 7 distinct domains
 - [ ] **calibration** lane
 - [ ] **symbolic-logic** lane
 - [ ] **adversarial-identity** lane

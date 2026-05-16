@@ -1,0 +1,558 @@
+{
+  "cases": [
+    {
+      "cycle": 0,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 0,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 0,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 0,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 0,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 0,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 1,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 1,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 1,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 1,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 1,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 1,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 2,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 2,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 2,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 2,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 2,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 2,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 3,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 3,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 3,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 3,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 3,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 3,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 4,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 4,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 4,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 4,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 4,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 4,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 5,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 5,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 5,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 5,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 5,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 5,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 6,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 6,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 6,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 6,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 6,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 6,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 7,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 7,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 7,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 7,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 7,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 7,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 8,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 8,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 8,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 8,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 8,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 8,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 9,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 9,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 9,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 9,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 9,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 9,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 10,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 10,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 10,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 10,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 10,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 10,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 11,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 11,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 11,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 11,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 11,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 11,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    },
+    {
+      "cycle": 12,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-1"
+    },
+    {
+      "cycle": 12,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-2"
+    },
+    {
+      "cycle": 12,
+      "domain": "creation",
+      "passed": true,
+      "probe_id": "PC-3"
+    },
+    {
+      "cycle": 12,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-1"
+    },
+    {
+      "cycle": 12,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-2"
+    },
+    {
+      "cycle": 12,
+      "domain": "knowledge",
+      "passed": true,
+      "probe_id": "PK-3"
+    }
+  ],
+  "lane": "monotonic_learning",
+  "metrics": {
+    "cycle_count": 12,
+    "cycle_pass": true,
+    "domains": [
+      "creation",
+      "knowledge"
+    ],
+    "first_taught": {
+      "creation": 1,
+      "knowledge": 2
+    },
+    "floor_score": 1.0,
+    "max_regression": 0.0,
+    "overall_pass": true,
+    "per_cycle_scores": [
+      {
+        "creation": 1.0,
+        "cycle": 0,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 1,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 2,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 3,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 4,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 5,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 6,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 7,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 8,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 9,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 10,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 11,
+        "knowledge": 1.0
+      },
+      {
+        "creation": 1.0,
+        "cycle": 12,
+        "knowledge": 1.0
+      }
+    ]
+  },
+  "split": "holdouts",
+  "timestamp": "2026-05-16T18:53:52.305522+00:00",
+  "version": "v1"
+}
