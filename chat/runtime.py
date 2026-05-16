@@ -259,25 +259,13 @@ class ChatRuntime:
         return blade
 
     def _apply_drive_bias(self, field_state: FieldState) -> FieldState:
-        fatigue = self.exertion_meter.fatigue(at_cycle=self._context.turn)
-        available = 1.0 - fatigue.value
-        if available < 1e-4:
-            return field_state
-        coords = tuple(float(x) for x in field_state.F[:3])
-        bias = self._drive_map.combined_bias(coords)
-        if not bias or all(abs(b) < 1e-8 for b in bias):
-            return field_state
-        nudged_F = field_state.F.copy()
-        for i, b in enumerate(bias[:3]):
-            nudged_F[i] += b * available * 0.1
-        return FieldState(
-            F=nudged_F,
-            node=field_state.node,
-            step=field_state.step,
-            holonomy=field_state.holonomy,
-            energy=field_state.energy,
-            valence=field_state.valence,
-        )
+        """Generic runtime keeps motivation/drive disabled.
+
+        Motivation is an identity-profile concern, not a free runtime field
+        mutation. Keeping this a no-op preserves the neutral baseline while
+        generic chat closure and cognition evals are being stabilized.
+        """
+        return field_state
 
     def _build_surface_context(self, identity_score, current_valence: float) -> SurfaceContext:
         active = self._context.referents.active_referent()
