@@ -29,6 +29,11 @@ class Operator(Protocol):
         ...
 
 
+# Cl(4,1) bivector blade classification for the exponential map.
+# Blades 9, 12, 14, 15 square to +1 (boost/hyperbolic planes involving e5).
+# Blades 6-8, 10-11, 13 square to -1 (rotation planes).
+# Use cosh/sinh for boosts, cos/sin for rotations — mixing them makes
+# re-unitization diverge.
 _BOOST_INDICES = frozenset({9, 12, 14, 15})
 
 
@@ -37,6 +42,9 @@ def _unitize_f32(v: np.ndarray) -> np.ndarray:
 
     Builds a proper rotor from the bivector content, ensuring
     R·reverse(R) = 1 exactly in float64, then casts to float32.
+
+    Works in float64 throughout because algebra.backend's Rust
+    geometric_product silently returns float32 regardless of input dtype.
     """
     v64 = np.asarray(v, dtype=np.float64)
     norm = float(np.linalg.norm(v64))
