@@ -1,0 +1,16 @@
+{
+  "kind": "structural_zero",
+  "lane": "cross_domain_transfer",
+  "metrics": {
+    "transfer_endpoint_recall_rate": null,
+    "domain_a_stored_rate": 0.0,
+    "domain_b_stored_rate": 0.0,
+    "replay_determinism": 0.0,
+    "overall_pass": false
+  },
+  "model_id": "frontier-structural-zero",
+  "note": "Frontier LLMs do not emit the typed signals these sub-metrics score; see docs/frontier_baselines.md",
+  "rationale": "Storage rates and replay determinism require typed pipeline emissions that frontier has no analog for.",
+  "timestamp": "2026-05-16T00:00:00+00:00",
+  "version": "v1"
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "structural_zero",
+  "lane": "introspection",
+  "metrics": {
+    "explain_api_present_rate": 0.0,
+    "round_trip_surface_match_rate": null,
+    "round_trip_trace_match_rate": 0.0,
+    "overall_pass": false
+  },
+  "model_id": "frontier-structural-zero",
+  "note": "Frontier LLMs do not emit the typed signals these sub-metrics score; see docs/frontier_baselines.md",
+  "rationale": "round_trip_trace_match_rate requires identical trace_hash across fresh deterministic runs. explain_api_present_rate is a structural check for a CORE module. Frontier has no analog of either signal.",
+  "timestamp": "2026-05-16T00:00:00+00:00",
+  "version": "v1"
+}

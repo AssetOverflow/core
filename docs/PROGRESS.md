@@ -294,6 +294,69 @@ implementation surface.  Structural-zero frontier baseline recorded:
 frontier LLMs do not emit the typed signals these sub-metrics score
 by construction.
 
+### Phase 3 v1 sweep complete (2026-05-16) — all five lanes scored
+
+| Lane | split | primary signal | foundation (stored / replay) |
+|---|---|---|---|
+| inference-closure | public | derived_recall = **0.0** | 1.0 / 1.0 |
+| inference-closure | holdouts | 0.0 | 1.0 / 1.0 |
+| compositionality | public | compositional = **0.0625** (1/16, fluke) | 1.0 / 1.0 |
+| compositionality | holdouts | 0.0 | 1.0 / 1.0 |
+| multi-step-reasoning | public | endpoint = **0.0** | 1.0 / 1.0 |
+| multi-step-reasoning | holdouts | 0.0 | 1.0 / 1.0 |
+| introspection | public | explain_api_present = **0.0** | n/a |
+| introspection | holdouts | 0.0 | n/a |
+| cross-domain-transfer | public | transfer = **0.0** | 1.0 / 1.0 |
+| cross-domain-transfer | holdouts | 0.0 | 1.0 / 1.0 |
+
+**The signal across all five lanes is unanimous:** Phase 2 storage
++ replay guarantees hold at this depth (1.0 across the board); the
+reasoning-depth signal is uniformly zero.  The five lanes
+triangulate the same architectural gap from five angles:
+
+- **Gap 1: `generate/graph_planner.py` has no transitive
+  composition.**  `plan_articulation` picks a single node; no
+  chained relation walk synthesizes derived nodes.
+- **Gap 2: `field/propagate.py` has no derivable-but-not-asserted
+  recall.**  Vault retrieval is direct CGA inner product; no
+  path-recall operator over relation-typed edges.
+- **Gap 3: no `core/cognition/explain.py` module.**  No primitive
+  exists to generate a natural-language account of a prior turn.
+- **Gap 4: no structural-pattern recogniser.**  Relation patterns
+  are not first-class entities; subdomain-A teaching does not shape
+  subdomain-B competence.
+
+Gaps 1, 2, 4 cluster on the same code surface (graph planner +
+field propagate) and may close together.  Gap 3 is a distinct
+module-creation work item.
+
+### Phase 3 v2 work plan (recommended sequence)
+
+1. **Pin the open scope decisions** flagged "Before Phase 3" in
+   the Open Scope Decisions table below — Agency (responsive vs.
+   goal-directed) and Tool use (typed deterministic operators).
+   Transitive composition under (2) is essentially a typed
+   deterministic operator, so the tool-use decision shapes how the
+   work below should be structured.
+2. **Engineer Gaps 1 + 2** as one bounded PR: a typed
+   `transitive_walk(graph, head, relation, max_hops)` operator in
+   `graph_planner.py` + a `path_recall(vault, entity, relation_chain)`
+   operator in `field/propagate.py`.  Both deterministic, both
+   exact-CGA.  Re-run inference-closure, multi-step-reasoning,
+   compositionality, cross-domain-transfer to score the lift.
+3. **Engineer Gap 3** independently: `core/cognition/explain.py`
+   producing deterministic natural-language accounts that round-trip.
+4. **Re-author cross-domain-transfer v2** with the matched-control
+   comparison contract refinement once B-arm recall is non-zero.
+
+### Phase 3 v1 — DONE
+
+All five lanes have v1 results with honest scores.  Each failure has
+a documented architectural deferral (`gaps.md` per lane).  Phase 3
+exit requires ≥ 2 lanes passing v1 by phase exit; today 0 / 5 pass,
+which is the expected v1 floor.  Phase 3 exit is gated on the v2
+engineering above.
+
 ## Phase 3 — Reasoning Depth
 
 **Status:** Not Started
