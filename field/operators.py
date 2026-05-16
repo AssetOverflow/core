@@ -1,9 +1,28 @@
 """
-Manifold-level field operators — graph diffusion and protocol.
+Manifold-level field operators — graph diffusion and dual-correction.
 
-Operators transform ManifoldState through algebraic transitions.
-Diffusion computes a weighted average of each node with its neighbors
-in Cl(4,1) component space, then re-unitizes to the versor manifold.
+Two operators implement Axiom 4 (Dual-Correction):
+
+  GraphDiffusionOperator   — forward pass: spread context pressure across
+                             edges via damped blending + exponential-map
+                             re-unitization.  Self-adjoint.
+
+  ConstraintCorrectionOperator — adjoint pass: apply an incremental
+                             correction rotor on the output node, pulling
+                             it toward the intent-target versor built from
+                             the prompt centroid.  Non-self-adjoint.
+
+Coupled loop (V4 pulse):
+
+    while not converged:
+        state, delta_fwd  = diffusion_op.forward(state)
+        state, delta_corr = correction_op.adjoint_pass(state)
+        converged = delta_fwd < eps and delta_corr < eps
+
+The target is always the same centroid versor that initialised the output
+node — diffusion spreads context away from it; correction pulls it back
+while incorporating neighbour pressure.  The system argues with itself
+until both forces balance.
 """
 
 from __future__ import annotations
@@ -13,7 +32,7 @@ from typing import Protocol
 
 import numpy as np
 
-from algebra.cl41 import geometric_product
+from algebra.cl41 import geometric_product, reverse
 from field.state import ManifoldState
 
 
@@ -24,16 +43,22 @@ class Operator(Protocol):
         """Apply operator, return (new_state, delta_norm)."""
         ...
 
-    def adjoint(self) -> Operator:
+    def adjoint(self) -> "Operator":
         """Return the adjoint operator."""
         ...
 
 
-# Cl(4,1) bivector blade classification for the exponential map.
+# ---------------------------------------------------------------------------
+# Blade classification for the exponential map in Cl(4,1).
+#
 # Blades 9, 12, 14, 15 square to +1 (boost/hyperbolic planes involving e5).
 # Blades 6-8, 10-11, 13 square to -1 (rotation planes).
-# Use cosh/sinh for boosts, cos/sin for rotations — mixing them makes
-# re-unitization diverge.
+# Use cosh/sinh for boosts, cos/sin for rotations.
+# Mixing them causes re-unitization to diverge rather than converge.
+# This set was determined empirically by checking which blades satisfy
+# e_i * e_i = +1 under the Cl(4,1) metric (+,+,+,+,-) and the specific
+# basis ordering used in algebra/cl41.py.
+# ---------------------------------------------------------------------------
 _BOOST_INDICES = frozenset({9, 12, 14, 15})
 
 
@@ -44,7 +69,8 @@ def _unitize_f32(v: np.ndarray) -> np.ndarray:
     R·reverse(R) = 1 exactly in float64, then casts to float32.
 
     Works in float64 throughout because algebra.backend's Rust
-    geometric_product silently returns float32 regardless of input dtype.
+    geometric_product silently returns float32 regardless of input dtype,
+    which would corrupt precision during the rotor accumulation loop.
     """
     v64 = np.asarray(v, dtype=np.float64)
     norm = float(np.linalg.norm(v64))
@@ -86,6 +112,38 @@ def _unitize_f32(v: np.ndarray) -> np.ndarray:
     return rotor.astype(np.float32)
 
 
+def _incremental_correction_rotor(
+    current: np.ndarray,
+    target: np.ndarray,
+    rate: float,
+) -> np.ndarray:
+    """Build a small rotor that nudges `current` incrementally toward `target`.
+
+    Rather than computing the full transition rotor (which would jump the
+    output node all the way to the target in one step and destroy context
+    pressure from diffusion), we build an incremental step:
+
+        blended = (1 - rate) * current + rate * target
+
+    then close the blend via the exponential map.  The correction_rate
+    controls how much the output node is pulled per iteration.  At rate=0
+    the output is unchanged; at rate=1 the output node collapses to the
+    target immediately (collapsing context — not useful).
+
+    This is intentionally the same blend-then-unitize pattern used in
+    GraphDiffusionOperator.forward(), which is why both operators converge
+    to the same fixed-point attractor when their forces balance.
+    """
+    c64 = np.asarray(current, dtype=np.float64)
+    t64 = np.asarray(target,  dtype=np.float64)
+    blended = (1.0 - rate) * c64 + rate * t64
+    return _unitize_f32(blended)
+
+
+# ---------------------------------------------------------------------------
+# GraphDiffusionOperator — forward pass, self-adjoint
+# ---------------------------------------------------------------------------
+
 class GraphDiffusionOperator:
     """Propagate geometric pressure across graph edges via damped blending.
 
@@ -122,5 +180,98 @@ class GraphDiffusionOperator:
         delta = float(np.linalg.norm(new_fields - old_fields))
         return ManifoldState(fields=new_fields, edges=state.edges, step=state.step + 1), delta
 
-    def adjoint(self) -> GraphDiffusionOperator:
+    def adjoint(self) -> "GraphDiffusionOperator":
+        return self
+
+
+# ---------------------------------------------------------------------------
+# ConstraintCorrectionOperator — adjoint pass, non-self-adjoint
+# ---------------------------------------------------------------------------
+
+class ConstraintCorrectionOperator:
+    """Pull the output node toward the intent-target versor.
+
+    This is the non-trivial adjoint operator that implements Axiom 4
+    (Dual-Correction).  GraphDiffusionOperator spreads context pressure
+    outward across the graph; ConstraintCorrectionOperator restores
+    intent coherence by pulling the designated output node back toward
+    the target established from the input prompt.
+
+    Unlike GraphDiffusionOperator, this operator is NOT self-adjoint:
+    it has a preferred direction (toward the target).  Its adjoint() is
+    the identity (no forward pass — it only acts on the adjoint path).
+
+    The coupling of these two operators in the pulse loop is the closed
+    loop described in CORE architecture docs:
+      - Diffusion spreads context (breaks intent coherence slightly)
+      - Correction restores intent (breaks pure diffusion symmetry)
+      - They converge to a fixed-point that balances both pressures
+
+    Parameters
+    ----------
+    target_versor   : The intent target — the centroid versor built from
+                      the prompt tokens.  This is the same versor that
+                      initialises the output node before diffusion begins.
+    correction_rate : Blend weight toward target per adjoint_pass call.
+                      In (0, 1].  Default 0.3.  Lower = smoother correction,
+                      more steps to converge.  Higher = faster but risks
+                      overriding context pressure from diffusion.
+    node_index      : Which node in the ManifoldState to correct.
+                      Default -1 (last node = output node in V4 topology).
+    """
+
+    def __init__(
+        self,
+        target_versor: np.ndarray,
+        correction_rate: float = 0.3,
+        node_index: int = -1,
+    ) -> None:
+        if not 0.0 < correction_rate <= 1.0:
+            raise ValueError(
+                f"correction_rate must be in (0, 1], got {correction_rate}"
+            )
+        self._target = np.asarray(target_versor, dtype=np.float32).copy()
+        self._rate   = float(correction_rate)
+        self._node   = int(node_index)
+
+    @property
+    def target_versor(self) -> np.ndarray:
+        """Return a copy of the intent-target versor."""
+        return self._target.copy()
+
+    def adjoint_pass(
+        self, state: ManifoldState
+    ) -> tuple[ManifoldState, float]:
+        """Apply one incremental correction step to the output node.
+
+        Computes a blended versor between the current output-node field
+        and the intent target, closes it via _unitize_f32, and replaces
+        the output node in a new ManifoldState.
+
+        Returns (new_state, delta) where delta is the L2 norm of the
+        change on the output node only.  Convergence is signalled when
+        delta < threshold, meaning the output node has settled into a
+        stable compromise between context pressure and intent pull.
+        """
+        node_idx = self._node % state.fields.shape[0]
+        old_fields  = state.fields
+        current = old_fields[node_idx]
+
+        corrected = _incremental_correction_rotor(current, self._target, self._rate)
+
+        new_fields = old_fields.copy()
+        new_fields[node_idx] = corrected
+
+        delta = float(np.linalg.norm(corrected.astype(np.float64) - current.astype(np.float64)))
+        return (
+            ManifoldState(fields=new_fields, edges=state.edges, step=state.step),
+            delta,
+        )
+
+    def forward(self, state: ManifoldState) -> tuple[ManifoldState, float]:
+        """Identity forward pass — correction acts only on the adjoint path."""
+        return state, 0.0
+
+    def adjoint(self) -> "ConstraintCorrectionOperator":
+        """Return self — the operator IS the adjoint pass."""
         return self

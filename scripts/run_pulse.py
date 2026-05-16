@@ -1,38 +1,43 @@
 """
 Vertical slice: one cognitive pulse from injection to token recall.
 
-V3 — per-token manifold topology with input-driven output node.
+V4 — coupled forward-correction loop (Threshold 2: Dual-Correction).
 
-Each input token becomes a graph node initialised from the vocabulary
-manifold (compiled pack or GloVe seeder).  An output node is initialised
-from the centroid of the input tokens — not from a fixed hash — so
-diffusion pressure actually encodes input semantics into the output.
+Two operators run in lockstep each iteration:
 
-Recall searches the full VocabManifold by CGA inner product.
+  GraphDiffusionOperator       — spreads context pressure across token edges
+  ConstraintCorrectionOperator — pulls the output node toward the intent target
+
+Both must converge (delta < threshold) before the pulse ends.
+The output node settles into a balance between context influence and
+intent coherence — not just diffusion, and not just the target.
 
 Usage:
     python -m scripts.run_pulse "What is truth?"
     python -m scripts.run_pulse --top-k 10 "Compare knowledge and wisdom"
-    python -m scripts.run_pulse --no-glove "light"   # compiled pack only, no download
+    python -m scripts.run_pulse --no-glove "light"
+    python -m scripts.run_pulse --no-correction "grace"   # V3 pure-diffusion mode
+    python -m scripts.run_pulse --correction-rate 0.1 "the beginning"  # soft correction
 
 Flags:
-    --top-k N     Return N nearest vault words (default 5)
-    --max-words N Load at most N words from GloVe (default 50000)
-    --no-glove    Use compiled en_core_cognition_v1 pack (70 words, no download)
-    -v            Verbose logging
+    --top-k N            Return N nearest vault words (default 5)
+    --max-words N        Load at most N words from GloVe (default 50000)
+    --no-glove           Use compiled en_core_cognition_v1 pack (no download)
+    --no-correction      Disable ConstraintCorrectionOperator (V3 mode)
+    --correction-rate R  Blend weight toward target per step (default 0.3)
+    -v                   Verbose logging
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
-import sys
 
 import numpy as np
 
 from algebra.backend import cga_inner
 from algebra.versor import construction_seed_versor
-from field.operators import GraphDiffusionOperator
+from field.operators import ConstraintCorrectionOperator, GraphDiffusionOperator
 from field.state import ManifoldState
 from sensorium.adapters.text import deterministic_hash_versor
 from vocab.manifold import VocabManifold
@@ -44,6 +49,10 @@ MAX_STEPS = 2000
 TOP_K = 5
 COMPILED_PACK_ID = "en_core_cognition_v1"
 
+
+# ---------------------------------------------------------------------------
+# Manifold loading
+# ---------------------------------------------------------------------------
 
 def _load_manifold(use_glove: bool, max_words: int) -> VocabManifold:
     if use_glove:
@@ -58,6 +67,10 @@ def _load_manifold(use_glove: bool, max_words: int) -> VocabManifold:
     return manifold
 
 
+# ---------------------------------------------------------------------------
+# Token injection and graph construction
+# ---------------------------------------------------------------------------
+
 def _inject_token(token: str, manifold: VocabManifold) -> np.ndarray:
     """Project one token into Cl(4,1). Manifold lookup first, hash fallback."""
     try:
@@ -69,8 +82,17 @@ def _inject_token(token: str, manifold: VocabManifold) -> np.ndarray:
 def _build_manifold(
     text: str,
     manifold: VocabManifold,
-) -> tuple[ManifoldState, list[str]]:
+) -> tuple[ManifoldState, list[str], np.ndarray]:
     """Build a per-token graph with an input-driven output node.
+
+    Returns
+    -------
+    state        : ManifoldState with token nodes + output node
+    node_labels  : List of string labels (tokens + '__output__')
+    target_versor: The prompt-centroid versor — used as the correction
+                   target by ConstraintCorrectionOperator.  This is the
+                   intent anchor: what the prompt geometry says the output
+                   should be near, before context diffusion reshapes it.
 
     Topology:
       - Each input token → one node (versor from manifold or hash fallback)
@@ -88,12 +110,12 @@ def _build_manifold(
     max_abs = float(np.max(np.abs(centroid)))
     if max_abs > 1e-9:
         centroid = centroid * (0.9 / max_abs)
-    output_versor = construction_seed_versor(centroid).astype(np.float64)
+    target_versor = construction_seed_versor(centroid).astype(np.float32)
 
     node_labels = list(tokens) + ["__output__"]
     fields = np.stack(
         [np.asarray(v, dtype=np.float32) for v in token_versors]
-        + [output_versor.astype(np.float32)],
+        + [target_versor],
         axis=0,
     )
 
@@ -109,8 +131,12 @@ def _build_manifold(
         if edges
         else np.empty((0, 2), dtype=np.int32)
     )
-    return ManifoldState(fields=fields, edges=edge_array), node_labels
+    return ManifoldState(fields=fields, edges=edge_array), node_labels, target_versor
 
+
+# ---------------------------------------------------------------------------
+# Recall
+# ---------------------------------------------------------------------------
 
 def _recall_from_manifold(
     output_versor: np.ndarray,
@@ -133,37 +159,74 @@ def _recall_from_manifold(
     return results
 
 
+# ---------------------------------------------------------------------------
+# Pulse loop
+# ---------------------------------------------------------------------------
+
 def run_pulse(
     text: str,
     *,
     top_k: int = TOP_K,
     max_words: int = 50_000,
     use_glove: bool = True,
+    use_correction: bool = True,
+    correction_rate: float = 0.3,
 ) -> list[str]:
-    """Execute one cognitive pulse and return top-k recalled words."""
+    """Execute one cognitive pulse and return top-k recalled words.
+
+    Parameters
+    ----------
+    use_correction  : Enable ConstraintCorrectionOperator (default True).
+                      Set False to reproduce V3 pure-diffusion behaviour.
+    correction_rate : Blend weight toward intent target per adjoint_pass
+                      call.  Lower = softer correction, more steps.
+    """
     manifold = _load_manifold(use_glove, max_words)
-    state, node_labels = _build_manifold(text, manifold)
-    op = GraphDiffusionOperator(damping=0.5)
+    state, node_labels, target_versor = _build_manifold(text, manifold)
+
+    diffusion_op  = GraphDiffusionOperator(damping=0.5)
+    correction_op = ConstraintCorrectionOperator(
+        target_versor=target_versor,
+        correction_rate=correction_rate,
+        node_index=-1,
+    ) if use_correction else None
 
     n_input = len(node_labels) - 1
-    print(f"[pulse] input : {text!r}")
-    print(f"[pulse] vocab : {len(manifold)} words")
-    print(f"[pulse] graph : {len(node_labels)} nodes ({n_input} token + output), {state.edges.shape[0]} edges")
+    print(f"[pulse] input      : {text!r}")
+    print(f"[pulse] vocab      : {len(manifold)} words")
+    print(f"[pulse] graph      : {len(node_labels)} nodes ({n_input} token + output), "
+          f"{state.edges.shape[0]} edges")
+    print(f"[pulse] correction : {'enabled (rate=%.2f)' % correction_rate if use_correction else 'disabled (V3 mode)'}")
 
-    step = 0
-    delta = float("inf")
+    step       = 0
+    delta_fwd  = float("inf")
+    delta_corr = float("inf") if use_correction else 0.0
+
     while step < MAX_STEPS:
-        state, delta = op.forward(state)
+        # --- Forward pass (diffusion) ---
+        state, delta_fwd = diffusion_op.forward(state)
         step = state.step
+
+        # --- Adjoint pass (correction) ---
+        if correction_op is not None:
+            state, delta_corr = correction_op.adjoint_pass(state)
+
         if step <= 5 or step % 50 == 0:
-            print(f"[pulse] step {step:4d}  delta={delta:.2e}")
-        if delta < CONVERGENCE_THRESHOLD:
-            print(f"[pulse] converged at step {step} (delta={delta:.2e})")
+            if use_correction:
+                print(f"[pulse] step {step:4d}  Δ_fwd={delta_fwd:.2e}  Δ_corr={delta_corr:.2e}")
+            else:
+                print(f"[pulse] step {step:4d}  delta={delta_fwd:.2e}")
+
+        converged = delta_fwd < CONVERGENCE_THRESHOLD and delta_corr < CONVERGENCE_THRESHOLD
+        if converged:
+            print(f"[pulse] converged at step {step} "
+                  f"(Δ_fwd={delta_fwd:.2e}, Δ_corr={delta_corr:.2e})")
             break
     else:
-        print(f"[pulse] WARNING: max_steps ({MAX_STEPS}) reached — delta={delta:.2e}")
+        print(f"[pulse] WARNING: max_steps ({MAX_STEPS}) reached — "
+              f"Δ_fwd={delta_fwd:.2e}  Δ_corr={delta_corr:.2e}")
 
-    output_idx = len(node_labels) - 1
+    output_idx    = len(node_labels) - 1
     output_versor = state.fields[output_idx]
     results = _recall_from_manifold(output_versor, manifold, top_k)
 
@@ -180,13 +243,16 @@ def run_pulse(
 # ---------------------------------------------------------------------------
 
 def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="CORE cognitive pulse (V3)")
+    p = argparse.ArgumentParser(description="CORE cognitive pulse (V4 — dual correction)")
     p.add_argument("text", nargs="*", default=["What is truth?"])
-    p.add_argument("--top-k", type=int, default=5, metavar="N")
-    p.add_argument("--max-words", type=int, default=50_000, metavar="N")
-    p.add_argument("--no-glove", action="store_true",
+    p.add_argument("--top-k",           type=int,   default=5,      metavar="N")
+    p.add_argument("--max-words",       type=int,   default=50_000, metavar="N")
+    p.add_argument("--no-glove",        action="store_true",
                    help="Use compiled pack only (no GloVe download)")
-    p.add_argument("-v", "--verbose", action="store_true")
+    p.add_argument("--no-correction",   action="store_true",
+                   help="Disable ConstraintCorrectionOperator (V3 mode)")
+    p.add_argument("--correction-rate", type=float, default=0.3,    metavar="R")
+    p.add_argument("-v", "--verbose",   action="store_true")
     return p.parse_args()
 
 
@@ -202,4 +268,6 @@ if __name__ == "__main__":
         top_k=args.top_k,
         max_words=args.max_words,
         use_glove=not args.no_glove,
+        use_correction=not args.no_correction,
+        correction_rate=args.correction_rate,
     )
