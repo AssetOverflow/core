@@ -142,7 +142,7 @@ def _make_trajectory_from_result(result, turn: int):
 def _drive_bias_operator(bias: Sequence[float], available: float) -> np.ndarray:
     operator = np.zeros(N_COMPONENTS, dtype=np.float32)
     operator[0] = 1.0
-    for component, bivector_idx in zip(bias[:3], _DRIVE_BIAS_BIVECTORS, strict=False):
+    for component, bivector_idx in zip(bias[:3], _DRIVE_BIAS_BIVECTORS):
         theta = float(component) * float(available) * _DRIVE_BIAS_SCALE
         if abs(theta) < 1e-8:
             continue
