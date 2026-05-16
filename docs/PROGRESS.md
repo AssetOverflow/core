@@ -406,7 +406,7 @@ engineering above.
 
 | Decision | Status | Deadline |
 |----------|--------|----------|
-| Agency (responsive vs. goal-directed) | Open | Before Phase 3 |
-| Tool use (typed deterministic operators) | Open | Before Phase 3 |
+| Agency (responsive vs. goal-directed) | **Resolved 2026-05-16 — ADR-0017** (responsive-with-axiology) | Before Phase 3 ✓ |
+| Tool use (typed deterministic operators) | **Resolved 2026-05-16 — ADR-0018** (typed deterministic operators, no external IO) | Before Phase 3 ✓ |
 | Code generation (first-class target) | Open | Before Phase 5 |
 | Embodiment (sensorium gates) | Open | Phase 5 |
