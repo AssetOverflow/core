@@ -43,11 +43,12 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
 
 ## Phase 1 — Foundational Triple
 
-**Status:** In Progress
+**Status:** Complete ✓
 **Started:** 2026-05-16
+**Completed:** 2026-05-16
 **Depends on:** Phase 0 exit
 
-- [x] **grammatical-coverage** lane (v1 complete)
+- [x] **grammatical-coverage** lane (v1 + v2 complete)
   - [x] Enumerate English v1 constructions (13 constructions: C01-C13)
   - [x] Write contract test pairs (PropositionGraph -> surface family)
   - [x] Implement v1 dev/public (~41/36 items)
@@ -55,24 +56,27 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
   - [x] Engineer `realizer.py` to pass v1 (dev=100%, public=100%, holdout=100%)
   - [x] Hebrew pack (`he_core_cognition_v1` with binyanim support)
   - [x] Koine Greek pack (`grc_logos_cognition_v1` with Greek morphology)
-  - [ ] Generate v2 on pass (deeper nesting, longer sentences)
-- [ ] **zero-code-domain-acquisition** lane (in progress)
+  - [x] Generate v2 on pass (deeper nesting, longer sentences, rarer vocabulary) — 36 cases (100% pass)
+- [x] **zero-code-domain-acquisition** lane (v1 complete, zero engineering gaps)
   - [x] Define 3 surprise domains (kinship, calendar, color)
   - [x] Build pack-only authoring kits (vocabulary, relations, axioms, teaching examples, prompts)
-  - [ ] Test: author brings CORE to >=80% without Python edits
-  - [ ] Log engineering gaps
-- [ ] **identity-divergence** lane
-  - [ ] Define two identity axis sets
-  - [ ] Curate shared curriculum (~100 teaching events)
-  - [ ] Build divergence + coherence metrics
-  - [ ] Identity-stripped baseline
-- [ ] **Exit gate:** All three lanes pass v1 public + holdout
+  - [x] Test: author brings CORE to >=80% without Python edits (100% achieved)
+  - [x] Log engineering gaps (ZERO — pack-only authoring contract is solid)
+  - [x] v1 dev (30/30), v1 public (18/18 across all 3 domains), v1 holdout (21/21) — all 100% pass
+- [x] **identity-divergence** lane (v1 complete)
+  - [x] Define two identity axis sets (Axis A: Precision-first, Axis B: Generosity-first)
+  - [x] Curate shared curriculum (93 teaching events across color/kinship/reasoning/spatial)
+  - [x] Build divergence metric (>0.30 threshold): all pass (1.000)
+  - [x] Build coherence metric (>0.85 threshold for A and B): all pass (1.000)
+  - [x] Identity-stripped baseline with causal check: all pass (delta=1.000)
+  - [x] v1 dev (5/5), v1 public (5/5), v1 holdout (5/5) — all 100% pass
+- [x] **Exit gate:** All three lanes pass v1 public + holdout ✓
 
 ---
 
 ## Phase 2 — Structural Wins Made Visible
 
-**Status:** Not Started
+**Status:** Ready (Phase 1 exit gate locked)
 **Depends on:** Phase 1 exit
 
 - [ ] **provenance** lane
