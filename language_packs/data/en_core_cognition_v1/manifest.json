@@ -6,8 +6,8 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "en_core_cognition_v1.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "994e63c5d72053691a09502bcac0fc6f863cd5af08372022399c95b1606ad5b3",
-  "version": "1.1.0",
+  "checksum": "cf16e96afac62c0b409dbb2e3209d79a816951890444aa5908838aabcf2ace75",
+  "version": "1.2.0",
   "gate_engaged": true,
   "oov_policy": "tagged_fallback"
 }
