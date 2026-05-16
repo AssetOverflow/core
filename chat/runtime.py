@@ -19,29 +19,34 @@ from core.physics.identity import (
     IdentityScore,
     TurnEvent,
 )
-from core.physics.reasoning import ReasoningTrajectory, TrajectoryOperator
 from field.state import FieldState
 from generate.articulation import ArticulationPlan, realize
 from generate.dialogue import DialogueRole, classify_dialogue_blade, propose_dialogue
 from generate.proposition import FrameRegistry, Proposition, propose
 from generate.stream import generate
-from generate.surface import SentenceAssembler, SentencePlan
+from generate.surface import SentenceAssembler, SentencePlan, SurfaceContext
+from ingest.gate import inject
 from language_packs import OOVPolicy, load_mounted_packs, load_pack, load_pack_entries
 from persona.motor import PersonaMotor
 from session.context import SessionContext
+from session.correction import CorrectionPass
+from vault.decompose import default_decomposer, default_gate
 
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 _SEED_ALIASES = {
-    "logos": "λόγος",
-    "dabar": "דבר",
-    "or": "אור",
-    "phos": "φῶς",
-    "zoe": "ζωή",
-    "arche": "ἀρχή",
-    "aletheia": "ἀλήθεια",
+    "logos": "\u03bb\u03cc\u03b3\u03bf\u03c2",
+    "dabar": "\u05d3\u05d1\u05e8",
+    "or": "\u05d0\u05d5\u05e8",
+    "phos": "\u03c6\u03c9\u03c2",
+    "zoe": "\u03b6\u03c9\u03ae",
+    "arche": "\u1f00\u03c1\u03c7\u03ae",
+    "aletheia": "\u1f00\u03bb\u03ae\u03b8\u03b5\u03b9\u03b1",
 }
 _QUESTION_WORDS = frozenset({"what", "who", "how", "why", "when", "where", "which"})
 _TERMINALS = frozenset({".", "?", ";", "!"})
+
+#: Surface returned when the UnknownDomainGate fires.
+_UNKNOWN_DOMAIN_SURFACE = "I don't have field coordinates for that yet."
 
 
 def _energy_scalar(energy_obj) -> float:
@@ -89,13 +94,6 @@ def _prefer_prompt_anchor(
     *,
     output_language: str,
 ) -> ArticulationPlan:
-    """Keep minimal English question responses sensitive to prompt target.
-
-    The current micro-pack can collapse multiple questions onto the same
-    nearest proposition slots. Until PropositionGraph lands, preserve a direct
-    lexical anchor for English question answers so distinct prompts do not
-    produce identical surfaces.
-    """
     if output_language != "en" or len(filtered_tokens) < 2:
         return articulation
     content_tokens = [
@@ -126,8 +124,8 @@ class _StubBindingFrame:
 def _make_trajectory_from_result(
     result,
     turn: int,
-) -> ReasoningTrajectory:
-    """Build a ReasoningTrajectory from a GenerationResult for IdentityCheck."""
+):
+    from core.physics.reasoning import ReasoningTrajectory, TrajectoryOperator
     operator = TrajectoryOperator()
     if result.trajectory:
         frames = [
@@ -243,6 +241,8 @@ class ChatRuntime:
         )
         self._identity_check = IdentityCheck()
         self.turn_log: List[TurnEvent] = []
+        self._correction_pass = CorrectionPass()
+        self._last_valence: float = 0.0
 
     @property
     def session(self) -> SessionContext:
@@ -316,6 +316,25 @@ class ChatRuntime:
             valence=field_state.valence,
         )
 
+    def _build_surface_context(
+        self,
+        identity_score,
+        current_valence: float,
+    ) -> SurfaceContext:
+        """Build the SurfaceContext for the compositional surface assembler."""
+        active = self._context.referents.active_referent()
+        referent_surface = active.surface if active is not None else ""
+        referent_slot = active.slot if active is not None else "neut_sg"
+        alignment = float(identity_score.alignment) if identity_score is not None else 1.0
+        valence_delta = current_valence - self._last_valence
+        return SurfaceContext(
+            active_referent_surface=referent_surface,
+            active_referent_slot=referent_slot,
+            identity_alignment=alignment,
+            valence_delta=valence_delta,
+            elab_conjunction="",
+        )
+
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
         tokens = self._tokenize(text)
         filtered = self._apply_oov_policy(tokens)
@@ -323,6 +342,36 @@ class ChatRuntime:
             raise ValueError("ChatRuntime.chat() received no in-vocabulary tokens.")
 
         field_state = self._context.ingest(filtered)
+
+        # ------------------------------------------------------------------
+        # UnknownDomainGate — check before proposition formation
+        # ------------------------------------------------------------------
+        direct_hits = self._context.vault.recall(field_state.F, top_k=3)
+        direct_best = max((h["score"] for h in direct_hits), default=0.0)
+        gate_decision = default_gate.check(
+            direct_best,
+            vault=self._context.vault,
+            query=field_state.F,
+            decomposer=default_decomposer,
+        )
+        if gate_decision.fire:
+            # Record a minimal turn so graph/vault stay consistent
+            self._context.vault.store(
+                field_state.F,
+                {"turn": self._context.turn, "role": "assistant", "unknown": True},
+            )
+            self._context.graph.add_turn(
+                turn_idx=self._context.turn,
+                input_versor=field_state.F,
+                output_versor=field_state.F,
+                tokens_in=tuple(filtered),
+                tokens_out=(),
+                dialogue_role="assert",
+            )
+            self._context.turn += 1
+            # Return a minimal ChatResponse with the unknown-domain surface
+            return self._unknown_domain_response(field_state, filtered)
+
         field_state = self._apply_drive_bias(field_state)
 
         reference_blade = self._dialogue_reference()
@@ -373,6 +422,7 @@ class ChatRuntime:
             inhibition_threshold=self.config.inhibition_threshold,
         )
 
+        from core.physics.reasoning import ReasoningTrajectory
         reasoning_trajectory = _make_trajectory_from_result(result, self._context.turn)
         identity_score = self._identity_check.check(
             reasoning_trajectory,
@@ -399,12 +449,57 @@ class ChatRuntime:
             fatigue_index=fatigue.value,
         )
 
+        # ------------------------------------------------------------------
+        # Referent registration after generation
+        # ------------------------------------------------------------------
+        if result.tokens:
+            versors: dict[str, np.ndarray] = {}
+            for tok in result.tokens:
+                try:
+                    versors[tok] = self._context.vocab.get_versor(tok)
+                except KeyError:
+                    pass
+            self._context.referents.register_from_tokens(
+                result.tokens, versors, turn=self._context.turn
+            )
+
+        # ------------------------------------------------------------------
+        # Session graph turn record
+        # ------------------------------------------------------------------
+        backward_edges = [
+            entry.turn
+            for entry in self._context.referents.history()
+            if entry.turn < self._context.turn
+        ]
+        active_slots = {
+            entry.slot: entry.turn
+            for entry in self._context.referents.history()
+            if entry.turn <= self._context.turn
+        }
+        self._context.graph.add_turn(
+            turn_idx=self._context.turn,
+            input_versor=field_state.F,
+            output_versor=result.final_state.F,
+            tokens_in=tuple(filtered),
+            tokens_out=tuple(result.tokens or []),
+            dialogue_role=str(dialogue_role),
+            referent_slots=active_slots,
+            backward_edges=list(dict.fromkeys(backward_edges)),
+        )
+
         self._context.state = result.final_state
         self._context.vault.store(
             result.final_state.F,
             {"turn": self._context.turn, "role": "assistant"},
         )
         self._context.turn += 1
+
+        # ------------------------------------------------------------------
+        # Surface assembly with SurfaceContext
+        # ------------------------------------------------------------------
+        current_valence = _energy_scalar(getattr(result.final_state, "valence", None))
+        surface_ctx = self._build_surface_context(identity_score, current_valence)
+        self._last_valence = current_valence
 
         surface = _terminate_surface(
             articulation.surface,
@@ -416,6 +511,7 @@ class ChatRuntime:
             articulation,
             result.tokens,
             role=dialogue_role,
+            context=surface_ctx,
         )
         walk_surface = sentence_plan.surface
         articulation_surface = articulation.surface
@@ -438,7 +534,7 @@ class ChatRuntime:
         self.turn_log.append(turn_event)
 
         return ChatResponse(
-            surface=surface,
+            surface=walk_surface,
             proposition=proposition,
             articulation=articulation,
             articulation_surface=articulation_surface,
@@ -455,6 +551,78 @@ class ChatRuntime:
             flagged=flagged,
         )
 
+    def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> "ChatResponse":
+        """Minimal ChatResponse emitted when the UnknownDomainGate fires."""
+        from generate.proposition import Proposition
+        from generate.articulation import ArticulationPlan
+        stub_prop = Proposition(
+            subject="",
+            predicate="",
+            object="",
+            relation=np.zeros(field_state.F.shape, dtype=np.float32),
+            output_lang=self.config.output_language,
+        )
+        stub_art = ArticulationPlan(
+            subject="",
+            predicate="",
+            object="",
+            surface=_UNKNOWN_DOMAIN_SURFACE,
+            output_language=self.config.output_language,
+        )
+        return ChatResponse(
+            surface=_UNKNOWN_DOMAIN_SURFACE,
+            proposition=stub_prop,
+            articulation=stub_art,
+            articulation_surface=_UNKNOWN_DOMAIN_SURFACE,
+            dialogue_role="assert",
+            versor_condition=versor_condition(field_state.F),
+            output_language=self.config.output_language,
+            frame_pack=self.config.frame_pack,
+            walk_surface=_UNKNOWN_DOMAIN_SURFACE,
+            salience_top_k=None,
+            candidates_used=None,
+            vault_hits=0,
+            identity_score=None,
+            character_profile=self.character_profile,
+            flagged=False,
+        )
+
+    def correct(
+        self,
+        text: str,
+        target_turn: int = -1,
+        max_tokens: int | None = None,
+    ) -> ChatResponse:
+        """
+        Apply a correction: parse *text* as a correction versor, propagate
+        it backward through the session graph via CorrectionPass, then
+        re-ingest and generate a fresh response from the corrected state.
+
+        Parameters
+        ----------
+        text        : the user's corrective input (e.g. "no, I meant light")
+        target_turn : which turn to start the backward walk from (-1 = latest)
+        max_tokens  : passed through to generation
+        """
+        tokens = self._tokenize(text)
+        filtered = self._apply_oov_policy(tokens)
+        if not filtered:
+            raise ValueError("correct() received no in-vocabulary tokens.")
+
+        # Build correction versor from ingest (does not advance turn)
+        correction_state = inject(filtered, self._context.vocab)
+        correction_versor = correction_state.F
+
+        # Backward propagation through session graph
+        self._correction_pass.apply(
+            self._context.graph,
+            correction_versor,
+            from_turn=target_turn,
+        )
+
+        # Re-ingest and respond from corrected context
+        return self.chat(text, max_tokens=max_tokens)
+
     def respond(self, text: str, max_tokens: int | None = None) -> str:
         try:
             return self.chat(text, max_tokens=max_tokens).surface
@@ -462,13 +630,7 @@ class ChatRuntime:
             return ""
 
     async def achat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
-        """Async equivalent of chat().
-
-        The synchronous chat path owns ingest, drive bias, generation,
-        identity telemetry, vault storage, and turn-log accounting.  Reusing it
-        keeps async semantics identical while avoiding an uninitialized
-        SessionContext.state on the first async turn.
-        """
+        """Async equivalent of chat()."""
         return self.chat(text, max_tokens=max_tokens)
 
     async def arespond(self, text: str, max_tokens: int | None = None) -> str:
