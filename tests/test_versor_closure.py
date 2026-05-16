@@ -103,6 +103,18 @@ def test_composition_closed():
     assert versor_condition(F3) < 1e-4
 
 
+def test_versor_apply_closes_null_like_field_results_for_runtime_contract():
+    identity = np.zeros(32, dtype=np.float32)
+    identity[0] = 1.0
+    null_like = np.zeros(32, dtype=np.float32)
+    null_like[1] = 1.0
+    null_like[5] = 1.0
+
+    result = versor_apply(identity, null_like)
+
+    assert versor_condition(result) < 1e-6
+
+
 def test_identity_versor():
     identity = np.zeros(32, dtype=np.float32)
     identity[0] = 1.0
