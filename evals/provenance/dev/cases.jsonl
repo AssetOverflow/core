@@ -1,0 +1,10 @@
+{"id": "PROV-DEV-001", "category": "pack_axiom", "prime": [], "prompt": "What is truth?", "expected_sources": ["pack"]}
+{"id": "PROV-DEV-002", "category": "pack_axiom", "prime": [], "prompt": "Why does light reveal?", "expected_sources": ["pack"]}
+{"id": "PROV-DEV-003", "category": "pack_axiom", "prime": [], "prompt": "Compare knowledge and wisdom", "expected_sources": ["pack"]}
+{"id": "PROV-DEV-004", "category": "pack_axiom", "prime": [], "prompt": "How do I learn truth?", "expected_sources": ["pack"]}
+{"id": "PROV-DEV-005", "category": "vault_recall", "prime": ["What is logos?"], "prompt": "What is logos?", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-DEV-006", "category": "vault_recall", "prime": ["What is wisdom?", "What is knowledge?"], "prompt": "Compare wisdom and knowledge", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-DEV-007", "category": "teaching", "prime": ["What is truth?"], "prompt": "No, that's not quite right.", "expected_sources": ["pack", "teaching"]}
+{"id": "PROV-DEV-008", "category": "teaching", "prime": ["What is wisdom?"], "prompt": "Actually wisdom is applied knowledge.", "expected_sources": ["pack", "teaching"]}
+{"id": "PROV-DEV-009", "category": "mixed", "prime": ["What is light?", "What is truth?"], "prompt": "Actually light is also revelation.", "expected_sources": ["pack", "vault", "teaching"]}
+{"id": "PROV-DEV-010", "category": "mixed", "prime": ["What is creation?"], "prompt": "Why does creation matter?", "expected_sources": ["pack", "vault"]}

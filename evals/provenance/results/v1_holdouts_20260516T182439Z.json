@@ -1,0 +1,248 @@
+{
+  "cases": [
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-001",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "4eac70da4fa40afad098fe26d3842f792ebe6922d79f89f005d0f9564ba00a15",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-002",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "9f3109266455af31f9d92af46d2054fd888720848b69f1fb6609dc4449c01309",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-003",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "a4f0216eda268f0ec84d438252acbdd96622c32ee16ffdc265960a4b7666b117",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-004",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "e8835c45db84377be154affe5c549e6b87296d153f5bb5ba7a05ca0c674aa4f4",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-005",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "374a4e5b261f7cd4544d6eb41166cecfce103ed2153ec98cdd25fa7fbb15ddb3",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-006",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "bcfe84103ff2fd2a0f7e686ce0fe9d801b66669fb28b4538c7a12ed0a9733884",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-007",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "1878db26cd24ba96ae49518c6bd9c07bd85b76edf8e0de33eb299f088c94f817",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-008",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "c8da733f553e56c6879c4ba21a13c9e7a200aaa34656d41a226d44c04185fd56",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-009",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "2a0083f267530064f4b2502da11eb00a2e42342f4b95fdec1591e0b73ff7b718",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-010",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "22a9c7f941cb48a36ef4286e3f254bb5221e1c2bc2cda2d14aca2678838f50ad",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-011",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "7fc359aaa8fbb717002e92de7ce91e62d3b03ddb66eb0a10f66884b1321d0534",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-012",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "3ff6238337539883a32539bf1259653a36b37280e88fd3de53f76bb8a3a04686",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-013",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching"
+      ],
+      "replay_pass": true,
+      "trace_hash": "b7cd6a17379337873b5f9cf057ae91194db0be1332f3bf6a85e61d1a5bc11427",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-014",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "c8f549f36db8e866b44c768f3898693739637e72495cad15c0a22356fea83769",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-H1-015",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "27ce78b6680ee54805c4d1711c1d566bba196ce56577096e660fa752b32cbe79",
+      "validity_pass": true
+    }
+  ],
+  "lane": "provenance",
+  "metrics": {
+    "input_sensitivity": 1.0,
+    "overall_pass": true,
+    "replay_determinism": 1.0,
+    "source_attribution": 1.0,
+    "source_validity": 1.0,
+    "total": 15
+  },
+  "split": "holdouts",
+  "timestamp": "2026-05-16T18:24:39.626929+00:00",
+  "version": "v1"
+}

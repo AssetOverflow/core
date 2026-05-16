@@ -1,0 +1,321 @@
+{
+  "cases": [
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-001",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "4e046d32f3490e70253b7b8187a51c34ca6077e9595d41bd3f4f086eb70184d9",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-002",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "914181fb0fca479a5a346e80d2c0feefa42a1a9012f9228b7e483eb9464c7458",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-003",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "a1b2a1bf0c475ad8ce1404d5a2004f650b54ebe704d89a28ca5f3efebaaebf7c",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-004",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "8ec69e84d8300f5957495fab0d2d5637bc49be2bc08011be2b9df55416097ae1",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-005",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "95e49c7a4af65bd53fab84e80eb2aacb21f1cab94a21302ac36ce24ddcd05421",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-006",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "d52ebfd3bafa5fc610c8695cc3926853e786a876a0fed0b168ab91b9d9f42526",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-007",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "7b03352b7ed3330ad5c878b97795017220611e15bea141867f428408c316c4af",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-008",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "5300181277eab4f56ba71b7d03677b08a8895ede3297a2d8b814df61bca208d6",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-009",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "b211860c12931a941fe414f8a11e5f4078f6d96d563ddf0e43afb687bdb778ef",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-010",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "replay_pass": true,
+      "trace_hash": "d02e7b26687f8acc9463189b809247d531503c872cd63d6c7e9e49eaf6ce66ac",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-011",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "464cf3b3bae54882d97b0d49de772d1f0733a15d2882e768218ac173ee06aabf",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-012",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "3aef6c12f1c6467161bdb6834123fc9a128a7b6655642c086437e7d20bd348fc",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-013",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "2e332034c341b037c5cf0f97ca75c8227f7fdad04f1501cc923c6d3598afd1aa",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-014",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "d2c787c9ed560b743b991f883b711b086c4553e11e17e176422e5e8269477601",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-015",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "6f2ea35fabcce0dc7b525f05fb14ae641c93f10ffc91881f78e2f6af6f2cfcd3",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-016",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "6181ed93f758ac7894a10e4811712421a29d5cec3bff361446af7f01ce78f889",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-017",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "43034d78b72abbae094f7f1148f75555cfc94560c9e7c2ad561e5deff41f7a33",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-018",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "a0225546f2185d0ffe4d0297b8a26087c98cb56972a011461eb9f4d9eee56029",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-019",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "3996b46560eba4b824dbed7476567fb038f7b45d5291aa4c394559f7f6224188",
+      "validity_pass": true
+    },
+    {
+      "attribution_pass": true,
+      "case_id": "PROV-V1-020",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "replay_pass": true,
+      "trace_hash": "accc770325479640bffa2497ed185b22196df1fffc31fd9b92ea6edf4369c87d",
+      "validity_pass": true
+    }
+  ],
+  "lane": "provenance",
+  "metrics": {
+    "input_sensitivity": 1.0,
+    "overall_pass": true,
+    "replay_determinism": 1.0,
+    "source_attribution": 1.0,
+    "source_validity": 1.0,
+    "total": 20
+  },
+  "split": "public",
+  "timestamp": "2026-05-16T18:23:44.643592+00:00",
+  "version": "v1"
+}

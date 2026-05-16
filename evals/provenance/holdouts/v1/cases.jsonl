@@ -1,0 +1,15 @@
+{"id": "PROV-H1-001", "category": "pack_axiom", "prime": [], "prompt": "What is knowledge?", "expected_sources": ["pack"]}
+{"id": "PROV-H1-002", "category": "pack_axiom", "prime": [], "prompt": "What is distinction?", "expected_sources": ["pack"]}
+{"id": "PROV-H1-003", "category": "pack_axiom", "prime": [], "prompt": "Why does learning matter?", "expected_sources": ["pack"]}
+{"id": "PROV-H1-004", "category": "pack_axiom", "prime": [], "prompt": "How do I distinguish truth?", "expected_sources": ["pack"]}
+{"id": "PROV-H1-005", "category": "pack_axiom", "prime": [], "prompt": "Compare knowledge and understanding", "expected_sources": ["pack"]}
+{"id": "PROV-H1-006", "category": "pack_axiom", "prime": [], "prompt": "Does wisdom require knowledge?", "expected_sources": ["pack"]}
+{"id": "PROV-H1-007", "category": "vault_recall", "prime": ["What is knowledge?"], "prompt": "What is knowledge?", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-H1-008", "category": "vault_recall", "prime": ["What is distinction?"], "prompt": "Why does distinction matter?", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-H1-009", "category": "vault_recall", "prime": ["What is understanding?", "What is wisdom?"], "prompt": "Compare understanding and wisdom", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-H1-010", "category": "vault_recall", "prime": ["What is correction?"], "prompt": "Is correction necessary?", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-H1-011", "category": "teaching", "prime": ["What is knowledge?"], "prompt": "No, knowledge alone is not wisdom.", "expected_sources": ["pack", "teaching"]}
+{"id": "PROV-H1-012", "category": "teaching", "prime": ["What is distinction?"], "prompt": "Actually distinction requires comparison.", "expected_sources": ["pack", "teaching"]}
+{"id": "PROV-H1-013", "category": "teaching", "prime": ["What is correction?"], "prompt": "No, correction needs review first.", "expected_sources": ["pack", "teaching"]}
+{"id": "PROV-H1-014", "category": "mixed", "prime": ["What is light?", "What is creation?"], "prompt": "Actually light is part of creation.", "expected_sources": ["pack", "vault", "teaching"]}
+{"id": "PROV-H1-015", "category": "mixed", "prime": ["What is wisdom?"], "prompt": "How do I cultivate wisdom?", "expected_sources": ["pack", "vault"]}

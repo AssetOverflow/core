@@ -1,0 +1,20 @@
+{"id": "PROV-V1-001", "category": "pack_axiom", "prime": [], "prompt": "What is light?", "expected_sources": ["pack"]}
+{"id": "PROV-V1-002", "category": "pack_axiom", "prime": [], "prompt": "What is wisdom?", "expected_sources": ["pack"]}
+{"id": "PROV-V1-003", "category": "pack_axiom", "prime": [], "prompt": "What is creation?", "expected_sources": ["pack"]}
+{"id": "PROV-V1-004", "category": "pack_axiom", "prime": [], "prompt": "Why does word matter?", "expected_sources": ["pack"]}
+{"id": "PROV-V1-005", "category": "pack_axiom", "prime": [], "prompt": "Why does correction help?", "expected_sources": ["pack"]}
+{"id": "PROV-V1-006", "category": "pack_axiom", "prime": [], "prompt": "How do I find wisdom?", "expected_sources": ["pack"]}
+{"id": "PROV-V1-007", "category": "pack_axiom", "prime": [], "prompt": "Compare light and darkness", "expected_sources": ["pack"]}
+{"id": "PROV-V1-008", "category": "pack_axiom", "prime": [], "prompt": "Compare truth and falsehood", "expected_sources": ["pack"]}
+{"id": "PROV-V1-009", "category": "pack_axiom", "prime": [], "prompt": "Is wisdom valuable?", "expected_sources": ["pack"]}
+{"id": "PROV-V1-010", "category": "pack_axiom", "prime": [], "prompt": "Is truth absolute?", "expected_sources": ["pack"]}
+{"id": "PROV-V1-011", "category": "vault_recall", "prime": ["What is wisdom?"], "prompt": "What is wisdom?", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-V1-012", "category": "vault_recall", "prime": ["What is light?"], "prompt": "Why does light reveal?", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-V1-013", "category": "vault_recall", "prime": ["What is creation?", "What is word?"], "prompt": "Compare creation and word", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-V1-014", "category": "vault_recall", "prime": ["What is logos?", "What is dabar?"], "prompt": "Compare logos and dabar", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-V1-015", "category": "vault_recall", "prime": ["What is truth?"], "prompt": "Is truth coherent?", "expected_sources": ["pack", "vault"]}
+{"id": "PROV-V1-016", "category": "teaching", "prime": ["What is truth?"], "prompt": "No, that is incomplete.", "expected_sources": ["pack", "teaching"]}
+{"id": "PROV-V1-017", "category": "teaching", "prime": ["What is creation?"], "prompt": "Actually creation includes word.", "expected_sources": ["pack", "teaching"]}
+{"id": "PROV-V1-018", "category": "teaching", "prime": ["What is light?"], "prompt": "No, that misses revelation.", "expected_sources": ["pack", "teaching"]}
+{"id": "PROV-V1-019", "category": "mixed", "prime": ["What is wisdom?", "What is knowledge?"], "prompt": "Actually wisdom is more than knowledge.", "expected_sources": ["pack", "vault", "teaching"]}
+{"id": "PROV-V1-020", "category": "mixed", "prime": ["What is light?", "What is truth?"], "prompt": "Why does light relate to truth?", "expected_sources": ["pack", "vault"]}

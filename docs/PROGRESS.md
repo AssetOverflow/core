@@ -76,10 +76,17 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
 
 ## Phase 2 — Structural Wins Made Visible
 
-**Status:** Ready (Phase 1 exit gate locked)
+**Status:** In Progress
+**Started:** 2026-05-16
 **Depends on:** Phase 1 exit
 
-- [ ] **provenance** lane
+- [x] **provenance** lane (v1 complete)
+  - [x] Define Provenance dataclass + compute_provenance() (`core/cognition/provenance.py`)
+  - [x] Unit tests for provenance derivation (6/6 pass — `tests/test_provenance.py`)
+  - [x] Build pack-axiom / vault-recall / teaching / mixed case categories
+  - [x] v1 dev (10/10), v1 public (20/20), v1 holdouts (15/15) — all 100% pass
+  - [x] Sub-metrics: replay_determinism=1.0, source_attribution=1.0, source_validity=1.0, input_sensitivity=1.0
+  - [x] Fixed shape regression in `generate/stream.py` score-weighted recall (np.eye → multivector identity)
 - [ ] **monotonic-learning** lane
 - [ ] **calibration** lane
 - [ ] **symbolic-logic** lane
