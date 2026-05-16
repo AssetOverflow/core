@@ -1,10 +1,9 @@
 """
-Backend dispatch: use Rust extension (core_rs) when available,
-fall back to pure Python (algebra/cl41.py etc.) transparently.
+Backend dispatch.
 
-This module is the single switch. All algebra modules import from here
-for performance-critical ops. Pure Python is always the fallback —
-the system is never broken by a missing Rust build.
+Pure Python is the deterministic default.  Rust is an explicit opt-in backend
+via CORE_BACKEND=rust/core_rs.  This avoids silently bypassing Python-side
+closure semantics when a local core_rs build happens to be importable.
 
 Usage:
     from algebra.backend import geometric_product, versor_apply, cga_inner, vault_recall
@@ -15,7 +14,7 @@ import os
 import numpy as np
 
 _REQUESTED_BACKEND = os.environ.get("CORE_BACKEND", "").strip().lower()
-_ALLOW_RUST = _REQUESTED_BACKEND not in {"numpy", "python", "py"}
+_ALLOW_RUST = _REQUESTED_BACKEND in {"rust", "core_rs", "rs"}
 
 try:
     import core_rs as _rs
@@ -34,16 +33,13 @@ def geometric_product(A: np.ndarray, B: np.ndarray) -> np.ndarray:
 def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
     """Apply a versor through the canonical algebra closure boundary.
 
-    When CORE_BACKEND=rust is set and the Rust extension exposes
-    versor_apply_with_closure, Rust handles the full closure path
-    (null-vector preservation, unitize, seed fallback). Otherwise
-    falls back to pure Python algebra.versor.
+    The Python implementation is the default source of truth for runtime
+    closure semantics.  The Rust closure path is used only when explicitly
+    requested with CORE_BACKEND=rust/core_rs.
     """
-    if _RUST and _REQUESTED_BACKEND == "rust":
+    if _RUST:
         try:
-            return np.asarray(
-                _rs.versor_apply_with_closure(V, F), dtype=np.float32
-            )
+            return np.asarray(_rs.versor_apply_with_closure(V, F), dtype=np.float64)
         except (AttributeError, Exception):
             pass
     from algebra.versor import versor_apply as _va
@@ -67,7 +63,7 @@ def cga_inner(X: np.ndarray, Y: np.ndarray) -> float:
 def vault_recall(versors: list, query: np.ndarray, top_k: int = 5) -> list:
     """
     Top-k CGA inner product recall.
-    Rust path: parallel Rayon scan (releases GIL, true multithreaded).
+    Rust path: parallel Rayon scan when explicitly enabled.
     Python path: sequential list comprehension.
     """
     if _RUST:
@@ -101,7 +97,7 @@ def diffusion_step(
 ) -> tuple[np.ndarray, float] | None:
     """One forward step of graph diffusion via Rust.
 
-    Returns (new_fields, delta) or None if Rust is unavailable.
+    Returns (new_fields, delta) or None if Rust is unavailable or not explicitly enabled.
     """
     if _RUST:
         try:
@@ -118,5 +114,5 @@ def diffusion_step(
 
 
 def using_rust() -> bool:
-    """Returns True if the Rust extension is loaded."""
+    """Returns True if the Rust extension is explicitly enabled and loaded."""
     return _RUST
