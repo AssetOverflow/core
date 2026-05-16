@@ -592,8 +592,10 @@ Vault indexing strategy is decided (ADR-0019: Stage 1 now, Stages
 
 ## Phase 5 — Curriculum Era
 
-**Status:** Not Started
-**Depends on:** Phase 4 exit
+**Status:** IN PROGRESS (opened 2026-05-16, ADR-0020 Option C)
+**Depends on:** Phase 4 exit (✓ 2026-05-16)
+**Parallel track:** Rust backend parity port, per-surface
+  bit-identity gated.  First port: `vault_recall`.
 
 - [ ] 5.1 English fluency (grammatical-coverage v5 OOD)
 - [ ] 5.2 Hebrew fluency

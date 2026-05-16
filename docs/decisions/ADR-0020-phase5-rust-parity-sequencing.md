@@ -1,6 +1,6 @@
 # ADR-0020 — Phase 5 / Rust Parity Sequencing
 
-**Status:** Proposed (decision pending user confirmation)
+**Status:** Accepted (2026-05-16)
 **Date:** 2026-05-16
 **Authors:** Joshua Shay
 **Depends on:** ADR-0016 (Capability Roadmap), ADR-0019 (Exact
@@ -127,11 +127,10 @@ governs sequencing.
 
 ## Decision
 
-**Pending user confirmation.**  Three options laid out above;
-recommendation is Option C.  This ADR moves to *Accepted* once
-the sequencing is confirmed.
+**Option C — parallel, with explicit ordering.**  Confirmed
+2026-05-16.
 
-## Consequences (if Option C is accepted)
+## Consequences
 
 - `docs/PROGRESS.md` opens Phase 5 with "Status: IN PROGRESS"
   on the same date this ADR is accepted.
