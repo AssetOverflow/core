@@ -22,6 +22,7 @@ from core.physics.identity import (
 from field.state import FieldState
 from generate.articulation import ArticulationPlan, realize
 from generate.dialogue import DialogueRole, classify_dialogue_blade, propose_dialogue
+from generate.intent_bridge import articulate_with_intent
 from generate.proposition import FrameRegistry, Proposition, propose
 from generate.result import GenerationResult
 from generate.stream import generate
@@ -387,6 +388,22 @@ class ChatRuntime:
             salience_top_k=self.config.salience_top_k,
             inhibition_threshold=self.config.inhibition_threshold,
         )
+
+        # --- Articulation fidelity: replace bare S-P-O join with intent-aware surface ---
+        # articulate_with_intent() classifies the input intent, builds a proposition
+        # graph grounded on the generation result's recalled tokens, and calls the
+        # realize_semantic() path (13-construction realizer) that was previously
+        # implemented but never connected to the chat hot path.
+        # Falls back to the existing articulation.surface when bridge returns "".
+        if self.config.output_language == "en":
+            recalled_words = tuple(
+                tok for tok in (result.tokens or ()) if tok and tok.isalpha()
+            )
+            intent_surface = articulate_with_intent(text, articulation, recalled_words)
+            if intent_surface:
+                articulation = replace(articulation, surface=intent_surface)
+        # --- end articulation fidelity fix ---
+
         reasoning_trajectory = _make_trajectory_from_result(result, self._context.turn)
         identity_score = self._identity_check.check(reasoning_trajectory, self.identity_manifold)
         flagged = identity_score.flagged
