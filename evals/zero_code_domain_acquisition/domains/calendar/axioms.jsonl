@@ -1,0 +1,17 @@
+{"subject":"Monday","predicate":"precedes","object":"Tuesday"}
+{"subject":"Tuesday","predicate":"precedes","object":"Wednesday"}
+{"subject":"Wednesday","predicate":"precedes","object":"Thursday"}
+{"subject":"Thursday","predicate":"precedes","object":"Friday"}
+{"subject":"Friday","predicate":"precedes","object":"Saturday"}
+{"subject":"Saturday","predicate":"precedes","object":"Sunday"}
+{"subject":"January","predicate":"precedes","object":"February"}
+{"subject":"February","predicate":"precedes","object":"March"}
+{"subject":"March","predicate":"precedes","object":"April"}
+{"subject":"April","predicate":"precedes","object":"May"}
+{"subject":"May","predicate":"precedes","object":"June"}
+{"subject":"spring","predicate":"precedes","object":"summer"}
+{"subject":"summer","predicate":"precedes","object":"autumn"}
+{"subject":"autumn","predicate":"precedes","object":"winter"}
+{"subject":"Monday","predicate":"occurs_in","object":"week"}
+{"subject":"January","predicate":"occurs_in","object":"year"}
+{"subject":"spring","predicate":"occurs_in","object":"year"}

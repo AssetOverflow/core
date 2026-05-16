@@ -1,0 +1,15 @@
+{"subject":"mother","predicate":"is_parent_of","object":"son"}
+{"subject":"mother","predicate":"is_parent_of","object":"daughter"}
+{"subject":"father","predicate":"is_parent_of","object":"son"}
+{"subject":"father","predicate":"is_parent_of","object":"daughter"}
+{"subject":"son","predicate":"is_child_of","object":"mother"}
+{"subject":"son","predicate":"is_child_of","object":"father"}
+{"subject":"daughter","predicate":"is_child_of","object":"mother"}
+{"subject":"daughter","predicate":"is_child_of","object":"father"}
+{"subject":"sister","predicate":"is_sibling_of","object":"brother"}
+{"subject":"brother","predicate":"is_sibling_of","object":"sister"}
+{"subject":"husband","predicate":"is_spouse_of","object":"wife"}
+{"subject":"wife","predicate":"is_spouse_of","object":"husband"}
+{"subject":"grandmother","predicate":"is_ancestor_of","object":"grandson"}
+{"subject":"grandfather","predicate":"is_ancestor_of","object":"grandson"}
+{"subject":"grandfather","predicate":"is_ancestor_of","object":"granddaughter"}

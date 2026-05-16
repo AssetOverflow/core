@@ -1,0 +1,13 @@
+{
+  "pack_id": "grc_logos_cognition_v1",
+  "language": "grc",
+  "role": "depth_relation",
+  "script": "Greek",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "grc_logos_cognition_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "b45bcf581cee1fa2449854d20c46ed121ca3fd36fc50289282b8df0faf472351",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "fail_closed"
+}

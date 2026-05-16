@@ -47,12 +47,12 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
 **Started:** 2026-05-16
 **Depends on:** Phase 0 exit
 
-- [ ] **grammatical-coverage** lane
+- [x] **grammatical-coverage** lane (v1 complete)
   - [x] Enumerate English v1 constructions (13 constructions: C01-C13)
   - [x] Write contract test pairs (PropositionGraph -> surface family)
   - [x] Implement v1 dev/public (~41/36 items)
-  - [ ] Implement holdout (~50 items)
-  - [ ] Engineer `realizer.py` to pass v1 (baseline: dev=24%, public=19%)
+  - [x] Implement holdout (52 items) — 100% pass
+  - [x] Engineer `realizer.py` to pass v1 (dev=100%, public=100%, holdout=100%)
   - [ ] Generate v2 on pass
   - [ ] Hebrew pack
   - [ ] Koine Greek pack

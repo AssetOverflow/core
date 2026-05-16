@@ -1,0 +1,20 @@
+{"id":"teach_cal_001","subject":"Monday","predicate":"precedes","object":"Tuesday","correction":"Monday precedes Tuesday in the weekly cycle","accepted":true}
+{"id":"teach_cal_002","subject":"Tuesday","predicate":"precedes","object":"Wednesday","correction":"Tuesday precedes Wednesday in the weekly cycle","accepted":true}
+{"id":"teach_cal_003","subject":"Wednesday","predicate":"precedes","object":"Thursday","correction":"Wednesday precedes Thursday in the weekly cycle","accepted":true}
+{"id":"teach_cal_004","subject":"Thursday","predicate":"precedes","object":"Friday","correction":"Thursday precedes Friday in the weekly cycle","accepted":true}
+{"id":"teach_cal_005","subject":"Friday","predicate":"precedes","object":"Saturday","correction":"Friday precedes Saturday in the weekly cycle","accepted":true}
+{"id":"teach_cal_006","subject":"Saturday","predicate":"precedes","object":"Sunday","correction":"Saturday precedes Sunday in the weekly cycle","accepted":true}
+{"id":"teach_cal_007","subject":"January","predicate":"precedes","object":"February","correction":"January precedes February in the annual cycle","accepted":true}
+{"id":"teach_cal_008","subject":"February","predicate":"precedes","object":"March","correction":"February precedes March in the annual cycle","accepted":true}
+{"id":"teach_cal_009","subject":"March","predicate":"precedes","object":"April","correction":"March precedes April in the annual cycle","accepted":true}
+{"id":"teach_cal_010","subject":"April","predicate":"precedes","object":"May","correction":"April precedes May in the annual cycle","accepted":true}
+{"id":"teach_cal_011","subject":"May","predicate":"precedes","object":"June","correction":"May precedes June in the annual cycle","accepted":true}
+{"id":"teach_cal_012","subject":"spring","predicate":"precedes","object":"summer","correction":"Spring precedes summer in the seasonal cycle","accepted":true}
+{"id":"teach_cal_013","subject":"summer","predicate":"precedes","object":"autumn","correction":"Summer precedes autumn in the seasonal cycle","accepted":true}
+{"id":"teach_cal_014","subject":"autumn","predicate":"precedes","object":"winter","correction":"Autumn precedes winter in the seasonal cycle","accepted":true}
+{"id":"teach_cal_015","subject":"winter","predicate":"precedes","object":"spring","correction":"Winter precedes spring in the seasonal cycle","accepted":true}
+{"id":"teach_cal_016","subject":"Monday","predicate":"occurs_in","object":"week","correction":"Monday occurs in a week","accepted":true}
+{"id":"teach_cal_017","subject":"January","predicate":"occurs_in","object":"year","correction":"January occurs in a year","accepted":true}
+{"id":"teach_cal_018","subject":"spring","predicate":"occurs_in","object":"year","correction":"Spring occurs in a year","accepted":true}
+{"id":"teach_cal_019","subject":"summer","predicate":"occurs_in","object":"year","correction":"Summer occurs in a year","accepted":true}
+{"id":"teach_cal_020","subject":"week","predicate":"occurs_in","object":"year","correction":"A week occurs in a year","accepted":true}

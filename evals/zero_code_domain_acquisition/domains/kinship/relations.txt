@@ -1,0 +1,7 @@
+is_parent_of
+is_child_of
+is_sibling_of
+is_spouse_of
+is_ancestor_of
+is_descendant_of
+is_relative_of

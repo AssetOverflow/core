@@ -1,0 +1,7 @@
+is_warmer_than
+is_cooler_than
+is_lighter_than
+is_darker_than
+is_opposite_of
+is_similar_to
+contains

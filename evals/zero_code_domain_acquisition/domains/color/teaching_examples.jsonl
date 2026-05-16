@@ -1,0 +1,20 @@
+{"id":"teach_col_001","subject":"red","predicate":"is_warmer_than","object":"blue","correction":"Red is warmer than blue on the color temperature scale","accepted":true}
+{"id":"teach_col_002","subject":"orange","predicate":"is_warmer_than","object":"green","correction":"Orange is warmer than green in color perception","accepted":true}
+{"id":"teach_col_003","subject":"yellow","predicate":"is_warmer_than","object":"purple","correction":"Yellow is warmer than purple in the warmth spectrum","accepted":true}
+{"id":"teach_col_004","subject":"blue","predicate":"is_cooler_than","object":"red","correction":"Blue is cooler than red on the color temperature scale","accepted":true}
+{"id":"teach_col_005","subject":"green","predicate":"is_cooler_than","object":"orange","correction":"Green is cooler than orange in color perception","accepted":true}
+{"id":"teach_col_006","subject":"purple","predicate":"is_cooler_than","object":"yellow","correction":"Purple is cooler than yellow in the coolness spectrum","accepted":true}
+{"id":"teach_col_007","subject":"white","predicate":"is_lighter_than","object":"gray","correction":"White is lighter than gray in value","accepted":true}
+{"id":"teach_col_008","subject":"gray","predicate":"is_lighter_than","object":"black","correction":"Gray is lighter than black in brightness","accepted":true}
+{"id":"teach_col_009","subject":"pink","predicate":"is_lighter_than","object":"red","correction":"Pink is lighter than red because it contains more white","accepted":true}
+{"id":"teach_col_010","subject":"black","predicate":"is_darker_than","object":"gray","correction":"Black is darker than gray in value","accepted":true}
+{"id":"teach_col_011","subject":"gray","predicate":"is_darker_than","object":"white","correction":"Gray is darker than white in brightness","accepted":true}
+{"id":"teach_col_012","subject":"red","predicate":"is_darker_than","object":"pink","correction":"Red is darker than pink because pink is a lightened tint","accepted":true}
+{"id":"teach_col_013","subject":"red","predicate":"is_opposite_of","object":"cyan","correction":"Red is opposite cyan on the color wheel","accepted":true}
+{"id":"teach_col_014","subject":"blue","predicate":"is_opposite_of","object":"orange","correction":"Blue is opposite orange on the color wheel","accepted":true}
+{"id":"teach_col_015","subject":"red","predicate":"is_similar_to","object":"orange","correction":"Red is similar to orange as adjacent warm colors","accepted":true}
+{"id":"teach_col_016","subject":"blue","predicate":"is_similar_to","object":"purple","correction":"Blue is similar to purple as adjacent cool colors","accepted":true}
+{"id":"teach_col_017","subject":"yellow","predicate":"is_similar_to","object":"gold","correction":"Yellow is similar to gold in the warm spectrum","accepted":true}
+{"id":"teach_col_018","subject":"white","predicate":"contains","object":"light","correction":"White contains maximum light in its value","accepted":true}
+{"id":"teach_col_019","subject":"red","predicate":"contains","object":"hue","correction":"Red contains hue as a fundamental color property","accepted":true}
+{"id":"teach_col_020","subject":"brown","predicate":"contains","object":"red","correction":"Brown contains red as part of its composite nature","accepted":true}
