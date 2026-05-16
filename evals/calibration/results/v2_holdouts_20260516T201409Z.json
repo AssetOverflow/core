@@ -1,0 +1,208 @@
+{
+  "metrics": {
+    "no_grounding_accuracy": 1.0,
+    "coherent_accuracy": 1.0,
+    "correction_proposed_accuracy": 1.0,
+    "overall_accuracy": 1.0,
+    "class_counts": {
+      "coherent": 8,
+      "correction_proposed": 8,
+      "no_grounding": 8
+    },
+    "overall_pass": true
+  },
+  "case_details": [
+    {
+      "id": "CAL-V2-HLD-001",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-002",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-003",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-004",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-005",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-006",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-007",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-008",
+      "expected_class": "no_grounding",
+      "inferred_class": "no_grounding",
+      "vault_hits": 0,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-009",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-010",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 6,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-011",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-012",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-013",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-014",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-015",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 9,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-016",
+      "expected_class": "coherent",
+      "inferred_class": "coherent",
+      "vault_hits": 7,
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-017",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 0,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-018",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 6,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-019",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 11,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-020",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 9,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-021",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 0,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-022",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 9,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-023",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 10,
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "CAL-V2-HLD-024",
+      "expected_class": "correction_proposed",
+      "inferred_class": "correction_proposed",
+      "vault_hits": 7,
+      "proposal_present": true,
+      "passed": true
+    }
+  ]
+}

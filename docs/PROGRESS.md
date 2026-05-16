@@ -138,9 +138,13 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
   - [x] `StructuralZeroBaseline` adapter in `evals/baseline_runner.py`
         — deterministic floor; live-API adapters can be added when
         keys are configured
-- [x] v2 lanes: monotonic-learning, provenance, adversarial-identity (all 100% pass)
-- [ ] v2 lanes: calibration, symbolic-logic
-- [ ] **Exit gate:** All five v1+v2 with baselines; at least two have v3
+- [x] v2 lanes: all five at 100% pass
+  - monotonic-learning v2 — 20 cyc / 5 dom (public), 18 cyc / 4 dom (holdouts)
+  - provenance v2 — 30 + 20 cases, all sub-metrics 1.0
+  - adversarial-identity v2 — 35 + 22 cases, all 1.0
+  - calibration v2 — 33 + 24 cases, all class accuracies 1.0
+  - symbolic-logic v2 — 24 + 16 cases (chains up to 5 hops), all 1.0
+- [ ] **Exit gate:** v3 lanes for at least two of the five
 
 ### Parallel eval infrastructure (2026-05-16)
 

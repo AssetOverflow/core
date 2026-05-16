@@ -1,0 +1,33 @@
+{"id":"CAL-V2-001","expected_class":"no_grounding","prime":[],"prompt":"What is a qubit?"}
+{"id":"CAL-V2-002","expected_class":"no_grounding","prime":[],"prompt":"Explain photosynthesis at the cellular level."}
+{"id":"CAL-V2-003","expected_class":"no_grounding","prime":[],"prompt":"What is the role of the mitochondria?"}
+{"id":"CAL-V2-004","expected_class":"no_grounding","prime":[],"prompt":"Compare RNA and DNA replication mechanisms."}
+{"id":"CAL-V2-005","expected_class":"no_grounding","prime":[],"prompt":"What is entropy in thermodynamics?"}
+{"id":"CAL-V2-006","expected_class":"no_grounding","prime":[],"prompt":"How does a transistor switch states?"}
+{"id":"CAL-V2-007","expected_class":"no_grounding","prime":[],"prompt":"What is a derivative in calculus?"}
+{"id":"CAL-V2-008","expected_class":"no_grounding","prime":[],"prompt":"What is truth?"}
+{"id":"CAL-V2-009","expected_class":"no_grounding","prime":[],"prompt":"What is wisdom?"}
+{"id":"CAL-V2-010","expected_class":"no_grounding","prime":[],"prompt":"What is reason?"}
+{"id":"CAL-V2-011","expected_class":"no_grounding","prime":[],"prompt":"What is creation?"}
+{"id":"CAL-V2-012","expected_class":"coherent","prime":["What is truth?","What is truth?","What is truth?"],"prompt":"What is truth?"}
+{"id":"CAL-V2-013","expected_class":"coherent","prime":["What is wisdom?","What is wisdom?","What is wisdom?"],"prompt":"What is wisdom?"}
+{"id":"CAL-V2-014","expected_class":"coherent","prime":["What is knowledge?","What is knowledge?","What is knowledge?"],"prompt":"What is knowledge?"}
+{"id":"CAL-V2-015","expected_class":"coherent","prime":["What is light?","What is light?","What is light?"],"prompt":"What is light?"}
+{"id":"CAL-V2-016","expected_class":"coherent","prime":["What is creation?","What is creation?","What is creation?"],"prompt":"What is creation?"}
+{"id":"CAL-V2-017","expected_class":"coherent","prime":["What is meaning?","What is meaning?","What is meaning?"],"prompt":"What is meaning?"}
+{"id":"CAL-V2-018","expected_class":"coherent","prime":["What is identity?","What is identity?","What is identity?"],"prompt":"What is identity?"}
+{"id":"CAL-V2-019","expected_class":"coherent","prime":["What is memory?","What is memory?","What is memory?"],"prompt":"What is memory?"}
+{"id":"CAL-V2-020","expected_class":"coherent","prime":["What is order?","What is order?","What is order?"],"prompt":"What is order?"}
+{"id":"CAL-V2-021","expected_class":"coherent","prime":["What is principle?","What is principle?","What is principle?"],"prompt":"What is principle?"}
+{"id":"CAL-V2-022","expected_class":"coherent","prime":["What is evidence?","What is evidence?","What is evidence?"],"prompt":"What is evidence?"}
+{"id":"CAL-V2-023","expected_class":"correction_proposed","prime":["What is truth?"],"prompt":"Actually that is not quite right."}
+{"id":"CAL-V2-024","expected_class":"correction_proposed","prime":["What is wisdom?"],"prompt":"No, wisdom is different from that."}
+{"id":"CAL-V2-025","expected_class":"correction_proposed","prime":["What is knowledge?"],"prompt":"Actually knowledge is not what you described."}
+{"id":"CAL-V2-026","expected_class":"correction_proposed","prime":["What is light?"],"prompt":"No, that misses the point."}
+{"id":"CAL-V2-027","expected_class":"correction_proposed","prime":["What is creation?"],"prompt":"Actually creation does not work that way."}
+{"id":"CAL-V2-028","expected_class":"correction_proposed","prime":["What is meaning?"],"prompt":"No, meaning is more than that."}
+{"id":"CAL-V2-029","expected_class":"correction_proposed","prime":["What is life?"],"prompt":"Actually that misses the point."}
+{"id":"CAL-V2-030","expected_class":"correction_proposed","prime":["What is reason?"],"prompt":"No, reason requires a correction here."}
+{"id":"CAL-V2-031","expected_class":"correction_proposed","prime":["What is identity?"],"prompt":"Actually identity is more nuanced."}
+{"id":"CAL-V2-032","expected_class":"correction_proposed","prime":["What is memory?"],"prompt":"No, memory works differently."}
+{"id":"CAL-V2-033","expected_class":"correction_proposed","prime":["What is order?"],"prompt":"Actually order is not just sequence."}
