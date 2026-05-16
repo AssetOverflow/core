@@ -14,6 +14,7 @@ _CONSTRUCTION_RESIDUE_TOLERANCE = 1e-2
 _NEAR_ZERO_TOLERANCE = 1e-12
 _DENSE_SEED_MIN_COMPONENTS = 8
 _SEED_BIVECTORS = (6, 7, 8, 10, 11, 13)
+_RUNTIME_FIELD_DTYPE = np.dtype(np.float64)
 
 
 def _array_dtype(v: np.ndarray) -> np.dtype:
@@ -94,29 +95,26 @@ def construction_seed_versor(v: np.ndarray) -> np.ndarray:
     return _seed_to_rotor(v, _array_dtype(v))
 
 
-def _close_applied_versor(v: np.ndarray, dtype: np.dtype) -> np.ndarray:
-    """Close algebra-produced sandwich results for runtime field states.
+def _close_applied_versor(v: np.ndarray) -> np.ndarray:
+    """Close runtime field sandwich results at float64 precision.
 
-    ``versor_apply`` is the field-propagation API: callers expect the returned
-    multivector to satisfy ``versor_condition(result)``.  CGA point/null-vector
-    preservation belongs behind an explicit geometry API, not this runtime
-    manifold boundary.
+    ``versor_apply`` is the runtime field-propagation API.  Vocabulary entries
+    may be stored compactly as float32, but live ``FieldState.F`` values are
+    judged against a strict ``versor_condition < 1e-6`` invariant. Closing and
+    returning float64 avoids leaking float32 roundoff as false manifold drift.
     """
-    arr = np.asarray(v, dtype=dtype)
+    arr = np.asarray(v, dtype=_RUNTIME_FIELD_DTYPE)
     try:
-        return unitize_versor(arr).astype(dtype)
+        return unitize_versor(arr).astype(_RUNTIME_FIELD_DTYPE)
     except ValueError:
-        return construction_seed_versor(arr).astype(dtype)
+        return _seed_to_rotor(arr, _RUNTIME_FIELD_DTYPE).astype(_RUNTIME_FIELD_DTYPE)
 
 
 def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
-    dtype = np.result_type(V, F)
-    if dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
-        dtype = np.dtype(np.float32)
-    V = np.asarray(V, dtype=dtype)
-    F = np.asarray(F, dtype=dtype)
-    applied = geometric_product(geometric_product(V, F), reverse(V)).astype(dtype)
-    return _close_applied_versor(applied, dtype)
+    V = np.asarray(V, dtype=_RUNTIME_FIELD_DTYPE)
+    F = np.asarray(F, dtype=_RUNTIME_FIELD_DTYPE)
+    applied = geometric_product(geometric_product(V, F), reverse(V)).astype(_RUNTIME_FIELD_DTYPE)
+    return _close_applied_versor(applied)
 
 
 def versor_unit_residual(v: np.ndarray, *, allow_negative: bool = False) -> float:
