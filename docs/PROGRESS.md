@@ -43,14 +43,16 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
 
 ## Phase 1 — Foundational Triple
 
-**Status:** Not Started
+**Status:** In Progress
+**Started:** 2026-05-16
 **Depends on:** Phase 0 exit
 
 - [ ] **grammatical-coverage** lane
-  - [ ] Enumerate English v1 constructions
-  - [ ] Write contract test pairs (PropositionGraph -> surface family)
-  - [ ] Implement v1 dev/public/holdout (~50/50/50 items)
-  - [ ] Engineer `realizer.py` to pass v1
+  - [x] Enumerate English v1 constructions (13 constructions: C01-C13)
+  - [x] Write contract test pairs (PropositionGraph -> surface family)
+  - [x] Implement v1 dev/public (~41/36 items)
+  - [ ] Implement holdout (~50 items)
+  - [ ] Engineer `realizer.py` to pass v1 (baseline: dev=24%, public=19%)
   - [ ] Generate v2 on pass
   - [ ] Hebrew pack
   - [ ] Koine Greek pack
