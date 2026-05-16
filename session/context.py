@@ -325,7 +325,12 @@ class SessionContext:
                 )
                 result = generate(pivot, self.vocab, self.persona, max_tokens, vault=self.vault)
         self.finalize_turn(result, input_versor=input_versor, dialogue_role="assert")
-        return result
+        # Drift fix 3 may have rotated/pulled the state inside finalize_turn;
+        # re-bind result.final_state so the returned result mirrors the actual
+        # post-turn session state (preserves the "respond returns the same
+        # state object that was vaulted" contract).
+        from dataclasses import replace as _replace
+        return _replace(result, final_state=self.state)
 
     def recall(self, query_tokens: list, top_k: int = 5) -> list:
         query_state = inject(query_tokens, self.vocab)

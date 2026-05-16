@@ -17,7 +17,7 @@ import numpy as np
 
 from field.state import FieldState
 from field.propagate import propagate_step
-from algebra.rotor import word_transition_rotor
+from algebra.rotor import rotor_power, word_transition_rotor
 from algebra.versor import unitize_versor
 from generate.attention import AttentionOperator
 from generate.result import GenerationResult
@@ -191,10 +191,11 @@ def _recall_state(state: FieldState, vault, top_k: int) -> tuple[FieldState, int
                 V = word_transition_rotor(current.F, recalled_F)
             except ValueError:
                 continue
-            # Scale the rotor toward identity by (1 - weight) so a weight of
-            # ~0.0 leaves the field nearly unchanged and weight ~1.0 applies
-            # the full transition.
-            V_scaled = weight * V + (1.0 - weight) * np.eye(V.shape[0], dtype=V.dtype)
+            # Scale the rotor toward identity by raising it to the (weight)
+            # power on the rotor manifold. ``rotor_power`` stays on the manifold
+            # by construction (versor_condition stays < 1e-6), unlike a linear
+            # blend ``weight·V + (1-weight)·identity`` which violates closure.
+            V_scaled = rotor_power(V, float(weight))
             current = propagate_step(current, V_scaled)
             current = FieldState(
                 F=current.F,
