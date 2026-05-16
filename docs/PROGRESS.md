@@ -259,6 +259,41 @@ close).
 
 ---
 
+## Phase 3 — Reasoning Depth — IN PROGRESS
+
+### inference-closure v1 (2026-05-16) — honest failure, gap filed
+
+First Phase 3 lane built and run.  Scores derivation of entailments
+that were not directly asserted (transitive `is` / `precedes` /
+`grounds` / `causes` / `belongs_to` chains) over the
+`en_core_cognition_v1` relation vocabulary.
+
+| split | n | derived_recall_rate | premises_stored_rate | replay_determinism | overall_pass |
+|---|---|---|---|---|---|
+| public/v1 | 20 | **0.0** | 1.0 | 1.0 | False |
+| holdouts/v1 | 12 | **0.0** | 1.0 | 1.0 | False |
+
+**v1 is the expected honest failure** per the roadmap.  Foundation
+guarantees from Phase 2 (storage and replay determinism) hold at this
+depth: every premise emits a `PackMutationProposal`, every
+(premises, probe) sequence is trace-hash-deterministic.  The
+inference-closure step itself does not yet exist in CORE.
+
+**Architectural gaps filed
+(`evals/inference_closure/gaps.md`):**
+
+1. `generate/graph_planner.py` has no transitive composition — the
+   probe's articulation target picks a single node; no chained
+   relation walk produces the derived entailment.
+2. `field/propagate.py` has no derivable-but-not-asserted recall —
+   vault retrieval scores direct CGA inner products; no path-recall
+   operator over relation-typed edges.
+
+Both gaps are v2 engineering candidates and may share a single
+implementation surface.  Structural-zero frontier baseline recorded:
+frontier LLMs do not emit the typed signals these sub-metrics score
+by construction.
+
 ## Phase 3 — Reasoning Depth
 
 **Status:** Not Started

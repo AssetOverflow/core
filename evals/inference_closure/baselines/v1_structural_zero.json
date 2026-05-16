@@ -1,0 +1,16 @@
+{
+  "kind": "structural_zero",
+  "lane": "inference_closure",
+  "metrics": {
+    "derived_recall_rate": null,
+    "premises_stored_rate": 0.0,
+    "replay_determinism": 0.0,
+    "all_pass_rate": 0.0,
+    "overall_pass": false
+  },
+  "model_id": "frontier-structural-zero",
+  "note": "Frontier LLMs do not emit the typed signals these sub-metrics score; see docs/frontier_baselines.md",
+  "rationale": "premises_stored_rate requires per-premise PackMutationProposal records from the teaching pipeline (frontier has no analog). replay_determinism requires identical trace_hash across fresh deterministic runs (frontier inference is stochastic). derived_recall_rate would in principle be scorable on free text, but the M1/M2 evidence is defined in terms of CORE's articulation_surface / walk_surface tokens — typed signals frontier does not emit.",
+  "timestamp": "2026-05-16T00:00:00+00:00",
+  "version": "v1"
+}
