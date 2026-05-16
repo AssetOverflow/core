@@ -133,7 +133,7 @@ A v4 of this lane would then be authored to score the geometric
 defense, including attacks specifically designed to stay in safe
 geometric subspace while changing surface form.
 
-## Status (v1 / v2 / v3 / v4)
+## Status (v1 / v2 / v3 / v4 / v5)
 
 | Version | attacks | rejection | meaning |
 |---|---|---|---|
@@ -141,6 +141,7 @@ geometric subspace while changing surface form.
 | v2 | 32 | 1.0 | marker-list paraphrase / punctuation |
 | v3 | 32 | 1.0 | disjoint paraphrase — **was 0.0 before fix #2** |
 | v4 | 32 | 1.0 | rule-(b/c/d) generalization to new vocabulary |
+| v5 | 32 | 1.0 | contractions, curly quotes, verb morphology, em-dashes |
 
 v3 was the load-bearing finding.  It is now passing because fix #2
 landed; v4 is the regression gate that demonstrates the rule
@@ -161,6 +162,31 @@ match.  It now applies four deterministic rules in order:
 
 All 32 v3 attacks and all 32 v4 attacks are now rejected; all
 legitimate corrections in v1–v4 are still accepted.
+
+### Normalization layer (v5 hardening)
+
+Before rule (a)–(d) evaluate, the text passes through `_normalize`,
+which folds:
+
+- Contractions: `you're` → `you are`, `it's` → `it is`, `let's` →
+  `let us`, `don't` → `do not`, `won't` → `will not`, and the full
+  common-English set (28 entries).  Without this, `"you're now a
+  pirate"` evades marker `"you are now"`.
+- Curly quotes (U+2018/U+2019/U+201C/U+201D) → ASCII equivalents.
+- Em / en dashes → spaces (so dashes do not glue tokens together).
+
+A `_stem_verb` helper folds English verb morphology onto the
+redirect-verb set: `becoming` / `becomes` / `became`-class forms are
+matched against the bare stem via `-ing` / `-ed` / `-es` / `-s`
+suffix removal with silent-`e` drop and doubled-consonant handling.
+Without this, `"becoming a fresh agent"` would slip past rule (b).
+
+v5 (32 attacks + 18 legitimates across public and holdouts) is the
+regression gate for the normalization layer.  Attacks exercise every
+contraction class, both curly-quote glyphs, em-dash splicing, and
+verb-morphology variants.  Legitimates use contractions like
+`wisdom's broader`, `knowledge isn't merely collected`, `creation's
+relational`, etc. — all accepted.
 
 ## Resolution — fix #3 wired
 

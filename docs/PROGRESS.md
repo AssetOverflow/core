@@ -179,11 +179,19 @@ Lane results after both fixes:
 | holdouts/v3 | 12 | 1.0 | 1.0 |
 | public/v4 | 20 | 1.0 | 1.0 |
 | holdouts/v4 | 12 | 1.0 | 1.0 |
+| public/v5 | 20 | 1.0 | 1.0 |
+| holdouts/v5 | 12 | 1.0 | 1.0 |
 
 v4 is the regression gate for fix #2 — new attack vocabulary
 combinations that exercise rules (b)/(c)/(d) without repeating v3's
-specific surface.  All v1–v4 splits pass at 100% with the new
-defense; legitimate-correction false-positive rate is 0%.
+specific surface.  v5 is the regression gate for the normalization
+layer — contractions (`you're`/`it's`/`let's`/`don't`), curly quotes
+(U+2018/U+2019), em-dashes, and verb morphology (`becoming` /
+`transformed` / `dropped` / `becomes`) — all now folded before rule
+evaluation.  All v1–v5 splits pass at 100%; legitimate-correction
+false-positive rate is 0% (including legitimates that themselves
+use contractions: `wisdom's broader`, `knowledge isn't merely
+collected`, etc.).
 
 Honest finding: with the current default `IdentityManifold` (three
 unit-axis ValueAxes), the geometric layer flags 0/32 of v3 attacks

@@ -87,19 +87,101 @@ _NEGATING_QUALIFIERS: frozenset[str] = frozenset({
 
 _TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9'\-]*")
 
+# Contractions relevant to identity-override surface forms.  Expanded before
+# marker matching and tokenisation so "you're now a pirate" is treated
+# identically to "you are now a pirate".
+_CONTRACTIONS: dict[str, str] = {
+    "you're": "you are",
+    "you've": "you have",
+    "you'd": "you would",
+    "you'll": "you will",
+    "you'r": "you are",          # tolerate the common typo
+    "it's": "it is",
+    "let's": "let us",
+    "i'm": "i am",
+    "i've": "i have",
+    "i'd": "i would",
+    "we're": "we are",
+    "we've": "we have",
+    "they're": "they are",
+    "don't": "do not",
+    "doesn't": "does not",
+    "didn't": "did not",
+    "won't": "will not",
+    "wouldn't": "would not",
+    "shouldn't": "should not",
+    "couldn't": "could not",
+    "can't": "cannot",
+    "isn't": "is not",
+    "aren't": "are not",
+    "wasn't": "was not",
+    "weren't": "were not",
+    "haven't": "have not",
+    "hasn't": "has not",
+    "hadn't": "had not",
+}
 
-def _tokenize(text: str) -> list[str]:
-    return _TOKEN_RE.findall(text.lower())
+_CONTRACTION_RE = re.compile(
+    r"\b(" + "|".join(re.escape(k) for k in _CONTRACTIONS) + r")\b"
+)
+
+
+def _normalize(text: str) -> str:
+    """Fold contractions and Unicode punctuation to a canonical ASCII form.
+
+    Pre-step for both rule (a) substring matching and rule (b/c/d) tokenisation
+    so contractions, curly quotes, and em-dashes do not create override
+    bypasses.
+    """
+    # Curly single / double quotes -> ASCII
+    text = (
+        text.replace("’", "'")
+            .replace("‘", "'")
+            .replace("“", '"')
+            .replace("”", '"')
+    )
+    # Em / en dashes -> space (so dashes do not glue tokens together)
+    text = text.replace("—", " ").replace("–", " ")
+    lower = text.lower()
+    return _CONTRACTION_RE.sub(lambda m: _CONTRACTIONS[m.group(1)], lower)
+
+
+def _stem_verb(tok: str) -> str:
+    """Lightweight deterministic English verb-form folding for redirect-verb
+    lookup.  Handles bare form, -s, -es, -ed, -ing with the standard
+    consonant-doubling and silent-e patterns.  Returns the bare form if a
+    match is found, otherwise the original token.
+    """
+    if tok in _REDIRECT_VERBS:
+        return tok
+    for suffix in ("ing", "ed", "es", "s"):
+        if not tok.endswith(suffix) or len(tok) <= len(suffix) + 1:
+            continue
+        candidate = tok[: -len(suffix)]
+        if candidate in _REDIRECT_VERBS:
+            return candidate
+        # Silent-e drop: "becoming" -> "becom" -> "become"
+        if (candidate + "e") in _REDIRECT_VERBS:
+            return candidate + "e"
+        # Doubled consonant: "dropping" -> "dropp" -> "drop"
+        if (
+            len(candidate) >= 2
+            and candidate[-1] == candidate[-2]
+            and candidate[:-1] in _REDIRECT_VERBS
+        ):
+            return candidate[:-1]
+    return tok
 
 
 def _is_identity_override(text: str) -> bool:
-    lower = text.lower().strip()
-    # Rule (a): legacy substring markers (v1/v2 coverage).
-    if any(marker in lower for marker in _IDENTITY_MARKERS):
+    normalized = _normalize(text).strip()
+    # Rule (a): legacy substring markers (v1/v2 coverage), now contraction-aware.
+    if any(marker in normalized for marker in _IDENTITY_MARKERS):
         return True
 
-    tokens = _tokenize(text)
-    has_verb = any(t in _REDIRECT_VERBS for t in tokens)
+    tokens = _TOKEN_RE.findall(normalized)
+    stems = [_stem_verb(t) for t in tokens]
+    has_verb = any(s in _REDIRECT_VERBS for s in stems)
     has_frame = any(t in _ROLE_FRAMES for t in tokens)
 
     # Rule (b): a redirect-verb and a role-frame co-occur in the correction.
@@ -113,10 +195,13 @@ def _is_identity_override(text: str) -> bool:
     for i, tok in enumerate(tokens):
         if tok not in _NEGATING_QUALIFIERS:
             continue
-        window = tokens[max(0, i - 3):i + 4]
-        if any(w in _ROLE_FRAMES for w in window):
+        start = max(0, i - 3)
+        end = i + 4
+        window_tokens = tokens[start:end]
+        window_stems = stems[start:end]
+        if any(w in _ROLE_FRAMES for w in window_tokens):
             return True
-        if any(w in _REDIRECT_VERBS for w in window):
+        if any(w in _REDIRECT_VERBS for w in window_stems):
             return True
 
     return False
