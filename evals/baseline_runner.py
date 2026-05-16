@@ -58,6 +58,33 @@ class StubBaseline:
         return {"passed": False, "reason": "baseline model not configured"}
 
 
+class StructuralZeroBaseline:
+    """Structural-zero frontier baseline.
+
+    Encodes the architectural fact that frontier LLMs do not emit the
+    typed signals CORE's lane rubrics score against (Provenance.sources,
+    pack_mutation_proposal, vault_hits, REJECTED_IDENTITY outcome,
+    deterministic trace_hash).  Every case scores ``passed=False`` with
+    a reason identifying the missing typed evidence.
+
+    This is not a stub: it is the deterministic floor against which any
+    live-API baseline (if/when configured) must be compared.  See
+    ``docs/frontier_baselines.md`` for the full analysis.
+    """
+
+    _REASON = (
+        "frontier outputs do not emit the typed signal this rubric scores "
+        "(see docs/frontier_baselines.md)"
+    )
+
+    @property
+    def model_id(self) -> str:
+        return "frontier-structural-zero"
+
+    def score_case(self, case: dict[str, Any]) -> dict[str, Any]:
+        return {"passed": False, "reason": self._REASON}
+
+
 def write_baseline(
     lane_root: Path,
     result: BaselineResult,

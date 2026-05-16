@@ -1,0 +1,16 @@
+{
+  "kind": "structural_zero",
+  "lane": "monotonic_learning",
+  "metrics": {
+    "cycle_pass": null,
+    "floor_score": null,
+    "max_regression": null,
+    "overall_pass": false,
+    "replay_determinism": 0.0
+  },
+  "model_id": "frontier-structural-zero",
+  "note": "Frontier LLMs do not emit the typed signals these sub-metrics score; see docs/frontier_baselines.md",
+  "rationale": "Per-cycle accuracy could be estimated from a live API but would not establish a structural property. Replay determinism (same prompts → same trace_hash) requires a deterministic backend; frontier inference is non-deterministic by default.",
+  "timestamp": "2026-05-16T19:44:44.245649+00:00",
+  "version": "v1"
+}

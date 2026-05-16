@@ -128,7 +128,16 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
   - [x] Sub-metrics: attack_rejection_rate=1.0, legitimate_acceptance_rate=1.0
   - [x] v1 dev (10/10), v1 public (25/25), v1 holdouts (18/18) — all 100% pass
 - [x] **All five Phase 2 v1 lanes passing** ✓
-- [ ] Frontier baselines computed for all lanes
+- [x] Frontier baselines computed for all lanes (structural-zero floor)
+  - [x] `docs/frontier_baselines.md` — per-lane analysis: frontier LLMs do
+        not emit the typed signals CORE's rubrics score against
+        (provenance sources, pack_mutation_proposal, vault_hits,
+        REJECTED_IDENTITY outcome, deterministic trace_hash)
+  - [x] Per-lane structural-zero baseline JSON written under
+        `evals/<lane>/baselines/v1_structural_zero.json`
+  - [x] `StructuralZeroBaseline` adapter in `evals/baseline_runner.py`
+        — deterministic floor; live-API adapters can be added when
+        keys are configured
 - [ ] v2 lanes (provenance, monotonic-learning, calibration, symbolic-logic, adversarial-identity)
 - [ ] **Exit gate:** All five v1+v2 with baselines; at least two have v3
 
