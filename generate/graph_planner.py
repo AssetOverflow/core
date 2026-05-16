@@ -21,6 +21,10 @@ class Relation(Enum):
     CONTRAST = "contrast"
     SEQUENCE = "sequence"
     CORRECTION = "correction"
+    CONJUNCTION = "conjunction"
+    DISJUNCTION = "disjunction"
+    COMPLEMENT = "complement"
+    RELATIVE = "relative"
 
 
 @unique
@@ -112,6 +116,10 @@ class ArticulationStep:
     move: RhetoricalMove
     predicate: str
     subject: str
+    negated: bool = False
+    quantifier: str | None = None
+    tense: str | None = None
+    aspect: str | None = None
 
     def as_dict(self) -> dict[str, str]:
         return {

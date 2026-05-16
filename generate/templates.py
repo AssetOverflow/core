@@ -13,6 +13,7 @@ consumes these as constraints rather than final output.
 from __future__ import annotations
 
 from generate.graph_planner import RhetoricalMove
+from generate.morphology import base_form, past_participle, past_tense, present_participle
 
 
 _PREDICATE_DISPLAY: dict[str, str] = {
@@ -58,18 +59,55 @@ _MOVE_TEMPLATES: dict[RhetoricalMove, str] = {
 }
 
 
+def _inflect_predicate(
+    predicate_h: str,
+    *,
+    negated: bool = False,
+    tense: str | None = None,
+    aspect: str | None = None,
+) -> str:
+    """Apply tense/aspect/negation to a humanized predicate."""
+    verb = predicate_h
+    base = base_form(verb)
+
+    match (aspect, tense, negated):
+        case ("perfective", _, _):
+            return f"has {past_participle(verb)}"
+        case ("imperfective", _, _):
+            return f"is {present_participle(verb)}"
+        case (_, "past", True):
+            return f"did not {base}"
+        case (_, "past", False):
+            return past_tense(verb)
+        case (_, "future", True):
+            return f"will not {base}"
+        case (_, "future", False):
+            return f"will {base}"
+        case (_, _, True):
+            return f"does not {base}"
+        case _:
+            return verb
+
+
 def render_step(
     move: RhetoricalMove,
     subject: str,
     predicate: str,
     obj: str,
+    *,
+    negated: bool = False,
+    quantifier: str | None = None,
+    tense: str | None = None,
+    aspect: str | None = None,
 ) -> str:
     """Render a single articulation step into a surface fragment."""
     template = _MOVE_TEMPLATES[move]
     predicate_h = _humanize_predicate(predicate)
+    predicate_h = _inflect_predicate(predicate_h, negated=negated, tense=tense, aspect=aspect)
     obj_display = obj if obj != "<pending>" else "..."
+    subject_display = f"{quantifier} {subject}" if quantifier else subject
     return template.format(
-        subject=subject,
+        subject=subject_display,
         predicate_h=predicate_h,
         obj=obj_display,
     )

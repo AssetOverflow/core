@@ -29,11 +29,6 @@ class LaneReport:
     case_details: list[dict[str, Any]] = field(default_factory=list)
 
 
-def _is_subsequence(needles: list[str], haystack: list[str]) -> bool:
-    it = iter(haystack)
-    return all(word in it for word in needles)
-
-
 def _check_word_order(order: list[str], surface_words: list[str]) -> bool:
     positions = []
     for word in order:
@@ -72,10 +67,10 @@ def _realize_from_graph(case: dict[str, Any]) -> str:
     edges_data = graph_data.get("edges", [])
 
     _RELATION_MAP = {
-        "conjunction": Relation.ELABORATION,
-        "disjunction": Relation.CONTRAST,
-        "complement": Relation.ELABORATION,
-        "relative": Relation.ELABORATION,
+        "conjunction": Relation.CONJUNCTION,
+        "disjunction": Relation.DISJUNCTION,
+        "complement": Relation.COMPLEMENT,
+        "relative": Relation.RELATIVE,
         "sequence": Relation.SEQUENCE,
         "cause": Relation.CAUSE,
         "contrast": Relation.CONTRAST,
@@ -104,13 +99,19 @@ def _realize_from_graph(case: dict[str, Any]) -> str:
 
     graph = PropositionGraph(nodes=tuple(nodes), edges=tuple(edges))
 
+    node_features = {nd["node_id"]: nd for nd in nodes_data}
     steps = []
     for node in nodes:
+        nd = node_features[node.node_id]
         steps.append(ArticulationStep(
             node_id=node.node_id,
             subject=node.subject,
             predicate=node.predicate,
             move=RhetoricalMove.ASSERT,
+            negated=nd.get("negated", False),
+            quantifier=nd.get("quantifier"),
+            tense=nd.get("tense"),
+            aspect=nd.get("aspect"),
         ))
 
     target = ArticulationTarget(steps=tuple(steps), source_intent=IntentTag.UNKNOWN)
