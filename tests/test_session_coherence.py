@@ -57,6 +57,35 @@ def _farther_unrelated(result_F: np.ndarray, prompt_F: np.ndarray, start_seed: i
     raise AssertionError("Could not construct a deterministic farther unrelated versor.")
 
 
+def test_finalize_turn_enforces_cga_hemisphere_consistency() -> None:
+    """Vault entries must share the anchor's CGA hemisphere for recall to rank correctly."""
+    from generate.result import GenerationResult
+    from field.state import FieldState
+
+    vocab = _vocab()
+    session = SessionContext(vocab=vocab)
+    session.ingest(["logos"])
+    anchor = session._anchor_field.copy()
+
+    anti_F = -session.state.F
+    anti_state = FieldState(
+        F=anti_F,
+        node=session.state.node,
+        step=session.state.step,
+        holonomy=session.state.holonomy,
+        energy=session.state.energy,
+        valence=session.state.valence,
+    )
+    anti_result = GenerationResult(tokens=("arche",), final_state=anti_state, vault_hits=0)
+    assert cga_inner(anti_F, anchor) < 0.0, "precondition: anti-hemisphere field"
+
+    session.finalize_turn(anti_result, dialogue_role="assert")
+
+    assert cga_inner(session.state.F, anchor) >= 0.0, (
+        "finalize_turn must flip anti-hemisphere fields to keep vault recall consistent"
+    )
+
+
 def test_repeated_prompt_accumulates_field_and_stays_prompt_coherent() -> None:
     session = SessionContext(vocab=_vocab())
     prompt = ["logos", "arche"]

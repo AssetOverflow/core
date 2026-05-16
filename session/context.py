@@ -145,6 +145,21 @@ class SessionContext:
                 pass
         self.referents.register_from_tokens(result.tokens, versors, turn=self.turn)
 
+    def _hemisphere_consistent_field(self, field_state: FieldState) -> FieldState:
+        """Ensure field stays in the same CGA hemisphere as the session anchor."""
+        if self._anchor_field is None:
+            return field_state
+        if cga_inner(field_state.F, self._anchor_field) >= 0.0:
+            return field_state
+        return FieldState(
+            F=-field_state.F,
+            node=field_state.node,
+            step=field_state.step,
+            holonomy=field_state.holonomy,
+            energy=field_state.energy,
+            valence=field_state.valence,
+        )
+
     def finalize_turn(
         self,
         result: GenerationResult,
@@ -168,24 +183,25 @@ class SessionContext:
         active_slots = self.referents.active_slots()
 
         self._register_result_referent(result)
-        # Include any newly registered output referent in the turn metadata.
         active_slots = self.referents.active_slots() | active_slots
+
+        oriented_state = self._hemisphere_consistent_field(result.final_state)
 
         self.graph.add_turn(
             turn_idx=self.turn,
             input_versor=input_F,
-            output_versor=result.final_state.F,
+            output_versor=oriented_state.F,
             tokens_in=turn_tokens,
             tokens_out=tuple(result.tokens or []),
             dialogue_role=dialogue_role,
             referent_slots=active_slots,
             backward_edges=backward_edges,
         )
-        self.state = result.final_state
+        self.state = oriented_state
         payload = {"turn": self.turn, "role": "assistant"}
         if metadata:
             payload.update(metadata)
-        self.vault.store(result.final_state.F, payload)
+        self.vault.store(oriented_state.F, payload)
         self.turn += 1
         self._last_response_tokens = result.tokens
 
@@ -228,46 +244,8 @@ class SessionContext:
                     valence=self.state.valence,
                 )
                 result = generate(pivot, self.vocab, self.persona, max_tokens, vault=self.vault)
-        result = self._orient_result_to_anchor(result)
         self.finalize_turn(result, input_versor=input_versor, dialogue_role="assert")
         return result
-
-    def _orient_result_to_anchor(self, result: GenerationResult) -> GenerationResult:
-        final_state = result.final_state
-        coherence_anchor = self._anchor_field if self._anchor_field is not None else (self.state.F if self.state is not None else None)
-        if coherence_anchor is None:
-            return result
-        cga_score = cga_inner(final_state.F, coherence_anchor)
-        euclidean_score = float(np.dot(final_state.F, coherence_anchor))
-        if cga_score < 0.0 or euclidean_score < 0.0:
-            final_state = FieldState(
-                F=-final_state.F,
-                node=final_state.node,
-                step=final_state.step,
-                holonomy=final_state.holonomy,
-                energy=final_state.energy,
-                valence=final_state.valence,
-            )
-            return GenerationResult(
-                tokens=result.tokens,
-                final_state=final_state,
-                trajectory=result.trajectory,
-                salience_top_k=result.salience_top_k,
-                candidates_used=result.candidates_used,
-                vault_hits=result.vault_hits,
-                identity_score=result.identity_score,
-            )
-        return result
-
-    async def arespond(self, max_tokens: int = 128):
-        assert self.state is not None, "Call ingest() before arespond()."
-        input_versor = self._last_input_versor.copy() if self._last_input_versor is not None else self.state.F.copy()
-        result = self._orient_result_to_anchor(
-            generate(self.state, self.vocab, self.persona, max_tokens, vault=self.vault)
-        )
-        for token in result.tokens:
-            yield token
-        self.finalize_turn(result, input_versor=input_versor, dialogue_role="assert")
 
     def recall(self, query_tokens: list, top_k: int = 5) -> list:
         query_state = inject(query_tokens, self.vocab)
