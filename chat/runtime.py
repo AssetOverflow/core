@@ -194,7 +194,9 @@ class ChatRuntime:
         manifold = manifolds[0] if len(pack_ids) == 1 else load_mounted_packs(pack_ids)
         self._manifests = tuple(manifests)
         self.identity_manifold = _default_identity_manifold()
-        persona_motor = PersonaMotor.from_identity_manifold(self.identity_manifold)
+        # Keep the generic runtime neutral. Identity/persona motivation belongs
+        # behind an explicit IdentityProfile contract, not the baseline chat path.
+        persona_motor = PersonaMotor.identity()
         self._context = SessionContext(
             manifold,
             persona=persona_motor,
