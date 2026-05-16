@@ -1,0 +1,145 @@
+{
+  "cases": [
+    {
+      "case_id": "cause_correction_033",
+      "category": "cause",
+      "intent_correct": true,
+      "surface": "does correction help learning is grounded in ...",
+      "surface_contains_pass": true,
+      "trace_hash": "2367658577ab3b81aa3203b778b93716f4e195e314a8058b2febd9775d772b00",
+      "versor_closure": true,
+      "versor_condition": 4.6e-08
+    },
+    {
+      "case_id": "cause_creation_008",
+      "category": "cause",
+      "intent_correct": true,
+      "surface": "does creation matter is grounded in ...",
+      "surface_contains_pass": true,
+      "trace_hash": "c5faca9ac4bca85db94e6712322269d75462f456d68f6c0360fff9c5fb15913a",
+      "versor_closure": true,
+      "versor_condition": 2.3e-08
+    },
+    {
+      "case_id": "comparison_knowledge_wisdom_029",
+      "category": "comparison",
+      "intent_correct": true,
+      "surface": "knowledge and wisdom are distinguished: knowledge contrasts with wisdom.",
+      "surface_contains_pass": true,
+      "trace_hash": "c4978154841408a8042543f7d695cc955d4db4fae7d35c72b53ebd6ca3547d90",
+      "versor_closure": true,
+      "versor_condition": 3.6e-08
+    },
+    {
+      "case_id": "correction_basic_014",
+      "category": "correction",
+      "intent_correct": true,
+      "surface": "correction: , that's wrong corrects ...",
+      "surface_contains_pass": true,
+      "trace_hash": "e60494fa456e164a7c0c70e8e1df57b50570c2b31bf5ba192241ced66c82b6c5",
+      "versor_closure": true,
+      "versor_condition": 7.9e-08
+    },
+    {
+      "case_id": "definition_distinction_025",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "distinction is defined as ...",
+      "surface_contains_pass": true,
+      "trace_hash": "9f3109266455af31f9d92af46d2054fd888720848b69f1fb6609dc4449c01309",
+      "versor_closure": true,
+      "versor_condition": 4e-08
+    },
+    {
+      "case_id": "definition_evidence_021",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "evidence is defined as ...",
+      "surface_contains_pass": true,
+      "trace_hash": "5b1d6e80fab2803692b1f5cc42ba977905890ed022efc477026f8dff69dac8ec",
+      "versor_closure": true,
+      "versor_condition": 7.8e-08
+    },
+    {
+      "case_id": "definition_identity_027",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "identity is defined as ...",
+      "surface_contains_pass": true,
+      "trace_hash": "ca3c8034bef70d673cb22434218dfdfd59964f362919a4978eacf772024041da",
+      "versor_closure": true,
+      "versor_condition": 3.8e-08
+    },
+    {
+      "case_id": "definition_inference_022",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "inference is defined as ...",
+      "surface_contains_pass": true,
+      "trace_hash": "87085dd7b03cc219b8e5fcd12088bd95aa894552f9182a10e8291d077a74a018",
+      "versor_closure": true,
+      "versor_condition": 7.4e-08
+    },
+    {
+      "case_id": "definition_judgment_044",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "judgment is defined as ...",
+      "surface_contains_pass": true,
+      "trace_hash": "a4acf019714a00f8b6248539024441fcad63108b6e9dcef4023a904218ba22d6",
+      "versor_closure": true,
+      "versor_condition": 1.97e-07
+    },
+    {
+      "case_id": "procedure_compare_011",
+      "category": "procedure",
+      "intent_correct": true,
+      "surface": "first, ...; then, compare two terms follows.",
+      "surface_contains_pass": true,
+      "trace_hash": "2d0f92a3c6658dad82764987e38bafe0c0a5e585d6d66aa7250cc08c85b9c196",
+      "versor_closure": true,
+      "versor_condition": 8.5e-08
+    },
+    {
+      "case_id": "recall_knowledge_039",
+      "category": "recall",
+      "intent_correct": true,
+      "surface": "recalling knowledge: ...",
+      "surface_contains_pass": true,
+      "trace_hash": "a559305401ad6df5e2f8274e73b2f83fa5ec3d4c5e48c958e2287d93623000b9",
+      "versor_closure": true,
+      "versor_condition": 5.9e-08
+    },
+    {
+      "case_id": "unknown_evidence_042",
+      "category": "unknown",
+      "intent_correct": true,
+      "surface": "evidence reason addresses ...",
+      "surface_contains_pass": true,
+      "trace_hash": "0a64e1f960e442f8532ce18d77eb72d363412d9479357ce1b019a8e4572e1365",
+      "versor_closure": true,
+      "versor_condition": 2e-08
+    },
+    {
+      "case_id": "verification_light_017",
+      "category": "verification",
+      "intent_correct": true,
+      "surface": "Is light real? is verified: ...",
+      "surface_contains_pass": true,
+      "trace_hash": "1ccb995e445e9ca4b19e29799c83de6dfceba3325553f14889649dfc724b1a32",
+      "versor_closure": true,
+      "versor_condition": 9.2e-08
+    }
+  ],
+  "lane": "cognition",
+  "metrics": {
+    "intent_accuracy": 1.0,
+    "surface_groundedness": 1.0,
+    "term_capture_rate": 1.0,
+    "total": 13,
+    "versor_closure_rate": 1.0
+  },
+  "split": "dev",
+  "timestamp": "2026-05-16T05:33:56.442050+00:00",
+  "version": "v1"
+}

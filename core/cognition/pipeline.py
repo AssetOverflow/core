@@ -82,13 +82,14 @@ class CognitiveTurnPipeline:
 
         # 9. Reconstruct input-layer tokens from the turn log
         #    (turn_log is appended inside chat(); last entry matches this turn)
-        last_turn = self.runtime.turn_log[-1]
-        filtered_tokens = last_turn.input_tokens
-
-        # Raw tokenization is identical to filtered for Phase 1 — the
-        # runtime's _tokenize() runs before _apply_oov_policy().  We
-        # expose input_tokens separately so Phase 2 can diverge them.
+        #    When the unknown-domain gate fires, chat() returns a stub without
+        #    appending to turn_log — fall back to the tokenizer.
         raw_tokens = tuple(self.runtime.tokenize(text))
+        if self.runtime.turn_log:
+            last_turn = self.runtime.turn_log[-1]
+            filtered_tokens = last_turn.input_tokens
+        else:
+            filtered_tokens = raw_tokens
 
         # 10. TEACHING — correction capture, review, and store
         teaching_candidate, reviewed_example, proposal = self._run_teaching(

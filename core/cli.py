@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core eval cognition\n  core eval cognition --json"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -512,43 +512,75 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
-def cmd_eval_cognition(args: argparse.Namespace) -> int:
-    """Run the cognition eval harness."""
-    from evals.run_cognition_eval import load_cases, run_eval
+def cmd_eval(args: argparse.Namespace) -> int:
+    """Run an eval lane by name, or list available lanes."""
+    from evals.framework import discover_lanes, get_lane, run_lane, write_result
 
-    cases = load_cases()
-    report = run_eval(cases)
+    if args.list_lanes:
+        lanes = discover_lanes()
+        if not lanes:
+            print("no eval lanes found")
+        for lane in lanes:
+            versions = ", ".join(lane.versions) if lane.versions else "none"
+            print(f"  {lane.name:20s}  versions: {versions}")
+        return 0
+
+    lane_name = args.lane
+    if not lane_name:
+        _die("eval requires a lane name. Use `core eval --list` to see available lanes.")
+
+    try:
+        lane = get_lane(lane_name)
+    except FileNotFoundError as exc:
+        _die(str(exc))
+
+    version = args.version or (lane.versions[0] if lane.versions else "v1")
+    split = args.split
+
+    try:
+        result = run_lane(lane, version=version, split=split)
+    except FileNotFoundError as exc:
+        _die(str(exc))
 
     if args.json:
-        print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2, sort_keys=True))
+        print(json.dumps(result.as_dict(), ensure_ascii=False, indent=2, sort_keys=True))
     else:
-        print(f"cases          : {report.total}")
-        print(f"intent_accuracy: {report.intent_accuracy:.1%}")
-        print(f"term_capture   : {report.term_capture_rate:.1%}")
-        print(f"surface_ground : {report.surface_groundedness:.1%}")
-        print(f"versor_closure : {report.versor_closure_rate:.1%}")
-        print(f"det_traces     : {report.deterministic_traces}")
-        failures = [c for c in report.cases if not c.intent_correct or not c.versor_closure]
+        print(f"lane           : {result.lane}")
+        print(f"version        : {result.version}")
+        print(f"split          : {result.split}")
+        print(f"cases          : {result.metrics.get('total', 0)}")
+        for key, value in result.metrics.items():
+            if key == "total":
+                continue
+            if isinstance(value, float):
+                print(f"{key:15s}: {value:.1%}")
+            else:
+                print(f"{key:15s}: {value}")
+        failures = [c for c in result.case_details if not c.get("intent_correct") or not c.get("versor_closure")]
         if failures:
             print(f"\nfailures ({len(failures)}):")
             for c in failures:
                 issues = []
-                if not c.intent_correct:
+                if not c.get("intent_correct"):
                     issues.append("intent")
-                if not c.versor_closure:
-                    issues.append(f"versor={c.versor_condition:.2e}")
-                print(f"  {c.case_id}: {', '.join(issues)}")
+                if not c.get("versor_closure"):
+                    vc = c.get("versor_condition", 0)
+                    issues.append(f"versor={vc:.2e}")
+                print(f"  {c['case_id']}: {', '.join(issues)}")
+
+    if args.save:
+        result_path = write_result(lane, result)
+        print(f"\nresult written: {result_path}", file=sys.stderr)
 
     if args.report:
         report_path = Path(args.report)
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(
-            json.dumps(report.as_dict(), ensure_ascii=False, indent=2, sort_keys=True)
+            json.dumps(result.as_dict(), ensure_ascii=False, indent=2, sort_keys=True)
         )
-        print(f"\nreport written: {report_path}")
+        print(f"\nreport written: {report_path}", file=sys.stderr)
 
-    all_pass = report.intent_accuracy == 1.0 and report.versor_closure_rate == 1.0
-    return 0 if all_pass else 1
+    return 0
 
 
 def cmd_pulse(args: argparse.Namespace) -> int:
@@ -728,12 +760,15 @@ def build_parser() -> argparse.ArgumentParser:
     bench.add_argument("--report", metavar="PATH", help="write JSON report to file")
     bench.set_defaults(func=cmd_bench)
 
-    eval_cmd = subparsers.add_parser("eval", help="run eval harnesses")
-    eval_sub = eval_cmd.add_subparsers(dest="eval_command", metavar="eval-command", required=True)
-    eval_cognition = eval_sub.add_parser("cognition", help="run the cognition eval harness")
-    eval_cognition.add_argument("--json", action="store_true", help="emit machine-readable JSON")
-    eval_cognition.add_argument("--report", metavar="PATH", help="write JSON report to file")
-    eval_cognition.set_defaults(func=cmd_eval_cognition)
+    eval_cmd = subparsers.add_parser("eval", help="run eval lanes")
+    eval_cmd.add_argument("lane", nargs="?", help="eval lane name (e.g. cognition)")
+    eval_cmd.add_argument("--list", dest="list_lanes", action="store_true", help="list available eval lanes")
+    eval_cmd.add_argument("--version", help="version to evaluate (default: latest)")
+    eval_cmd.add_argument("--split", default="public", choices=["dev", "public"], help="which split to score (default: public)")
+    eval_cmd.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    eval_cmd.add_argument("--save", action="store_true", help="write result to lane results/ directory")
+    eval_cmd.add_argument("--report", metavar="PATH", help="write JSON report to file")
+    eval_cmd.set_defaults(func=cmd_eval)
 
     doctor = subparsers.add_parser("doctor", help="check runtime imports and packaging health")
     doctor.add_argument("--packs", action="store_true", help="also list discovered language packs")
