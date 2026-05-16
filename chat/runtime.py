@@ -418,7 +418,6 @@ class ChatRuntime:
         self._context.finalize_turn(
             result,
             tokens_in=tuple(filtered),
-            input_versor=self._context.last_input_tokens and self._context._last_input_versor,
             dialogue_role=str(dialogue_role),
         )
         current_valence = _energy_scalar(getattr(result.final_state, "valence", None))
