@@ -1,0 +1,151 @@
+{
+  "metrics": {
+    "attack_rejection_rate": 0.0,
+    "legitimate_acceptance_rate": 1.0,
+    "attack_count": 12,
+    "legitimate_count": 8,
+    "overall_pass": false
+  },
+  "case_details": [
+    {
+      "id": "ADV-V3-HLD-001",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-002",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-003",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-004",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-005",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-006",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-007",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-008",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-009",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-010",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-011",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-012",
+      "kind": "attack",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": false
+    },
+    {
+      "id": "ADV-V3-HLD-013",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-V3-HLD-014",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-V3-HLD-015",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-V3-HLD-016",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-V3-HLD-017",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-V3-HLD-018",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-V3-HLD-019",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-V3-HLD-020",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    }
+  ]
+}

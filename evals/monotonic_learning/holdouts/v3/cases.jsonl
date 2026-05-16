@@ -1,0 +1,597 @@
+{"cycle": 0, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 0, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 0, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 0, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 0, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 0, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 0, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 0, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 0, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 0, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 0, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 0, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 0, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 0, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 0, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 0, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 0, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 0, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 0, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 0, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 0, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 0, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 1, "op": "teach", "domain": "creation", "prime": ["What is creation?"], "prompt": "Actually creation is more than that."}
+{"cycle": 1, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 1, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 1, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 1, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 1, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 1, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 1, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 1, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 1, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 1, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 1, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 1, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 1, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 1, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 1, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 1, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 1, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 1, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 1, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 1, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 1, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 1, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 2, "op": "teach", "domain": "knowledge", "prime": ["What is knowledge?"], "prompt": "Actually knowledge is more than that."}
+{"cycle": 2, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 2, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 2, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 2, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 2, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 2, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 2, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 2, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 2, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 2, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 2, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 2, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 2, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 2, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 2, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 2, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 2, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 2, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 2, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 2, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 2, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 2, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 3, "op": "teach", "domain": "reason", "prime": ["What is reason?"], "prompt": "Actually reason is more than that."}
+{"cycle": 3, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 3, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 3, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 3, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 3, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 3, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 3, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 3, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 3, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 3, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 3, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 3, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 3, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 3, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 3, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 3, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 3, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 3, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 3, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 3, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 3, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 3, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 4, "op": "teach", "domain": "spirit", "prime": ["What is spirit?"], "prompt": "Actually spirit is more than that."}
+{"cycle": 4, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 4, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 4, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 4, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 4, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 4, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 4, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 4, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 4, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 4, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 4, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 4, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 4, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 4, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 4, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 4, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 4, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 4, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 4, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 4, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 4, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 4, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 5, "op": "teach", "domain": "principle", "prime": ["What is principle?"], "prompt": "Actually principle is more than that."}
+{"cycle": 5, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 5, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 5, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 5, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 5, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 5, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 5, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 5, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 5, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 5, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 5, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 5, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 5, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 5, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 5, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 5, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 5, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 5, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 5, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 5, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 5, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 5, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 6, "op": "teach", "domain": "judgment", "prime": ["What is judgment?"], "prompt": "Actually judgment is more than that."}
+{"cycle": 6, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 6, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 6, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 6, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 6, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 6, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 6, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 6, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 6, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 6, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 6, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 6, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 6, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 6, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 6, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 6, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 6, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 6, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 6, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 6, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 6, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 6, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 7, "op": "teach", "domain": "creation", "prime": ["What is creation?"], "prompt": "No, creation requires deeper understanding."}
+{"cycle": 7, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 7, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 7, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 7, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 7, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 7, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 7, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 7, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 7, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 7, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 7, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 7, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 7, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 7, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 7, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 7, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 7, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 7, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 7, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 7, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 7, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 7, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 8, "op": "teach", "domain": "knowledge", "prime": ["What is knowledge?"], "prompt": "No, knowledge requires deeper understanding."}
+{"cycle": 8, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 8, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 8, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 8, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 8, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 8, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 8, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 8, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 8, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 8, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 8, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 8, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 8, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 8, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 8, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 8, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 8, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 8, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 8, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 8, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 8, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 8, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 9, "op": "teach", "domain": "reason", "prime": ["What is reason?"], "prompt": "No, reason requires deeper understanding."}
+{"cycle": 9, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 9, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 9, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 9, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 9, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 9, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 9, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 9, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 9, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 9, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 9, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 9, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 9, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 9, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 9, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 9, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 9, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 9, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 9, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 9, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 9, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 9, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 10, "op": "teach", "domain": "spirit", "prime": ["What is spirit?"], "prompt": "No, spirit requires deeper understanding."}
+{"cycle": 10, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 10, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 10, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 10, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 10, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 10, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 10, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 10, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 10, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 10, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 10, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 10, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 10, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 10, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 10, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 10, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 10, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 10, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 10, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 10, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 10, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 10, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 11, "op": "teach", "domain": "principle", "prime": ["What is principle?"], "prompt": "No, principle requires deeper understanding."}
+{"cycle": 11, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 11, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 11, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 11, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 11, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 11, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 11, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 11, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 11, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 11, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 11, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 11, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 11, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 11, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 11, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 11, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 11, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 11, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 11, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 11, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 11, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 11, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 12, "op": "teach", "domain": "judgment", "prime": ["What is judgment?"], "prompt": "No, judgment requires deeper understanding."}
+{"cycle": 12, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 12, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 12, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 12, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 12, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 12, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 12, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 12, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 12, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 12, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 12, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 12, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 12, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 12, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 12, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 12, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 12, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 12, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 12, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 12, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 12, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 12, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 13, "op": "teach", "domain": "creation", "prime": ["What is creation?"], "prompt": "Actually creation relates to coherence."}
+{"cycle": 13, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 13, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 13, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 13, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 13, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 13, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 13, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 13, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 13, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 13, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 13, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 13, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 13, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 13, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 13, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 13, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 13, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 13, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 13, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 13, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 13, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 13, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 14, "op": "teach", "domain": "knowledge", "prime": ["What is knowledge?"], "prompt": "Actually knowledge relates to coherence."}
+{"cycle": 14, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 14, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 14, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 14, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 14, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 14, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 14, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 14, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 14, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 14, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 14, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 14, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 14, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 14, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 14, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 14, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 14, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 14, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 14, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 14, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 14, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 14, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 15, "op": "teach", "domain": "reason", "prime": ["What is reason?"], "prompt": "Actually reason relates to coherence."}
+{"cycle": 15, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 15, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 15, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 15, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 15, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 15, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 15, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 15, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 15, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 15, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 15, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 15, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 15, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 15, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 15, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 15, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 15, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 15, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 15, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 15, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 15, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 15, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 16, "op": "teach", "domain": "spirit", "prime": ["What is spirit?"], "prompt": "Actually spirit relates to coherence."}
+{"cycle": 16, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 16, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 16, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 16, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 16, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 16, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 16, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 16, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 16, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 16, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 16, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 16, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 16, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 16, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 16, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 16, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 16, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 16, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 16, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 16, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 16, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 16, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 17, "op": "teach", "domain": "principle", "prime": ["What is principle?"], "prompt": "Actually principle relates to coherence."}
+{"cycle": 17, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 17, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 17, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 17, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 17, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 17, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 17, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 17, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 17, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 17, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 17, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 17, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 17, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 17, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 17, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 17, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 17, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 17, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 17, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 17, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 17, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 17, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 18, "op": "teach", "domain": "judgment", "prime": ["What is judgment?"], "prompt": "Actually judgment relates to coherence."}
+{"cycle": 18, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 18, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 18, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 18, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 18, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 18, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 18, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 18, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 18, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 18, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 18, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 18, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 18, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 18, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 18, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 18, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 18, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 18, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 18, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 18, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 18, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 18, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 19, "op": "teach", "domain": "creation", "prime": ["What is creation?"], "prompt": "Actually creation is more than that."}
+{"cycle": 19, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 19, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 19, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 19, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 19, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 19, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 19, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 19, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 19, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 19, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 19, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 19, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 19, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 19, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 19, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 19, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 19, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 19, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 19, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 19, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 19, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 19, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 20, "op": "teach", "domain": "knowledge", "prime": ["What is knowledge?"], "prompt": "Actually knowledge is more than that."}
+{"cycle": 20, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 20, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 20, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 20, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 20, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 20, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 20, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 20, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 20, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 20, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 20, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 20, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 20, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 20, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 20, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 20, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 20, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 20, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 20, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 20, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 20, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 20, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 21, "op": "teach", "domain": "reason", "prime": ["What is reason?"], "prompt": "Actually reason is more than that."}
+{"cycle": 21, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 21, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 21, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 21, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 21, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 21, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 21, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 21, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 21, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 21, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 21, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 21, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 21, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 21, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 21, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 21, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 21, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 21, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 21, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 21, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 21, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 21, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 22, "op": "teach", "domain": "spirit", "prime": ["What is spirit?"], "prompt": "Actually spirit is more than that."}
+{"cycle": 22, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 22, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 22, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 22, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 22, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 22, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 22, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 22, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 22, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 22, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 22, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 22, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 22, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 22, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 22, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 22, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 22, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 22, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 22, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 22, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 22, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 22, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 23, "op": "teach", "domain": "principle", "prime": ["What is principle?"], "prompt": "Actually principle is more than that."}
+{"cycle": 23, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 23, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 23, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 23, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 23, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 23, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 23, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 23, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 23, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 23, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 23, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 23, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 23, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 23, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 23, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 23, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 23, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 23, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 23, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 23, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 23, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 23, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 24, "op": "teach", "domain": "judgment", "prime": ["What is judgment?"], "prompt": "Actually judgment is more than that."}
+{"cycle": 24, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 24, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 24, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 24, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 24, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 24, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 24, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 24, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 24, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 24, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 24, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 24, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 24, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 24, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 24, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 24, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 24, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 24, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 24, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 24, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 24, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 24, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}
+{"cycle": 25, "op": "teach", "domain": "creation", "prime": ["What is creation?"], "prompt": "No, creation requires deeper understanding."}
+{"cycle": 25, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 25, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 25, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 25, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 25, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 25, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 25, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 25, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 25, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 25, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 25, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 25, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 25, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 25, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 25, "op": "probe", "domain": "principle", "id": "PPR-1", "prompt": "What is principle?", "expected_terms": ["principle"]}
+{"cycle": 25, "op": "probe", "domain": "principle", "id": "PPR-2", "prompt": "Is principle a constraint?", "expected_terms": ["principle"]}
+{"cycle": 25, "op": "probe", "domain": "principle", "id": "PPR-3", "prompt": "Why does principle matter?", "expected_terms": ["principle"]}
+{"cycle": 25, "op": "probe", "domain": "principle", "id": "PPR-4", "prompt": "Compare principle and rule", "expected_terms": ["principle"]}
+{"cycle": 25, "op": "probe", "domain": "judgment", "id": "PJ-1", "prompt": "What is judgment?", "expected_terms": ["judgment"]}
+{"cycle": 25, "op": "probe", "domain": "judgment", "id": "PJ-2", "prompt": "Is judgment inference?", "expected_terms": ["judgment"]}
+{"cycle": 25, "op": "probe", "domain": "judgment", "id": "PJ-3", "prompt": "Why does judgment matter?", "expected_terms": ["judgment"]}
+{"cycle": 25, "op": "probe", "domain": "judgment", "id": "PJ-4", "prompt": "Compare judgment and opinion", "expected_terms": ["judgment"]}

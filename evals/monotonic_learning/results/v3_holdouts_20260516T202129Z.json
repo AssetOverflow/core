@@ -1,0 +1,3695 @@
+{
+  "metrics": {
+    "cycle_count": 25,
+    "max_regression": 0.0,
+    "floor_score": 1.0,
+    "cycle_pass": true,
+    "overall_pass": true,
+    "domains": [
+      "creation",
+      "judgment",
+      "knowledge",
+      "principle",
+      "reason",
+      "spirit"
+    ],
+    "first_taught": {
+      "creation": 1,
+      "knowledge": 2,
+      "reason": 3,
+      "spirit": 4,
+      "principle": 5,
+      "judgment": 6
+    },
+    "per_cycle_scores": [
+      {
+        "cycle": 0,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 1,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 2,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 3,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 4,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 5,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 6,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 7,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 8,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 9,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 10,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 11,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 12,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 13,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 14,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 15,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 16,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 17,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 18,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 19,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 20,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 21,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 22,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 23,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 24,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      },
+      {
+        "cycle": 25,
+        "creation": 1.0,
+        "judgment": 1.0,
+        "knowledge": 1.0,
+        "principle": 1.0,
+        "reason": 1.0,
+        "spirit": 1.0
+      }
+    ]
+  },
+  "case_details": [
+    {
+      "cycle": 0,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 21,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 22,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 23,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 24,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "creation",
+      "probe_id": "PC-1",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "creation",
+      "probe_id": "PC-2",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "creation",
+      "probe_id": "PC-3",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "judgment",
+      "probe_id": "PJ-1",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "judgment",
+      "probe_id": "PJ-2",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "judgment",
+      "probe_id": "PJ-3",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "judgment",
+      "probe_id": "PJ-4",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "knowledge",
+      "probe_id": "PK-1",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "knowledge",
+      "probe_id": "PK-2",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "knowledge",
+      "probe_id": "PK-3",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "principle",
+      "probe_id": "PPR-1",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "principle",
+      "probe_id": "PPR-2",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "principle",
+      "probe_id": "PPR-3",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "principle",
+      "probe_id": "PPR-4",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "reason",
+      "probe_id": "PR-1",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "reason",
+      "probe_id": "PR-2",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "reason",
+      "probe_id": "PR-3",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "reason",
+      "probe_id": "PR-4",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "spirit",
+      "probe_id": "PS-1",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "spirit",
+      "probe_id": "PS-2",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "spirit",
+      "probe_id": "PS-3",
+      "passed": true
+    },
+    {
+      "cycle": 25,
+      "domain": "spirit",
+      "probe_id": "PS-4",
+      "passed": true
+    }
+  ]
+}

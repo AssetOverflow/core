@@ -1,0 +1,805 @@
+{"cycle": 0, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 0, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 0, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 0, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 0, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 0, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 0, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 0, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 0, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 0, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 0, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 0, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 0, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 0, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 0, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 0, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 0, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 0, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 0, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 0, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 0, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 0, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 0, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 0, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 0, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 1, "op": "teach", "domain": "truth", "prime": ["What is truth?"], "prompt": "Actually truth is more than that."}
+{"cycle": 1, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 1, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 1, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 1, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 1, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 1, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 1, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 1, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 1, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 1, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 1, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 1, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 1, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 1, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 1, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 1, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 1, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 1, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 1, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 1, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 1, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 1, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 1, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 1, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 1, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 2, "op": "teach", "domain": "light", "prime": ["What is light?"], "prompt": "Actually light is more than that."}
+{"cycle": 2, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 2, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 2, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 2, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 2, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 2, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 2, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 2, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 2, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 2, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 2, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 2, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 2, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 2, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 2, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 2, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 2, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 2, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 2, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 2, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 2, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 2, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 2, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 2, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 2, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 3, "op": "teach", "domain": "wisdom", "prime": ["What is wisdom?"], "prompt": "Actually wisdom is more than that."}
+{"cycle": 3, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 3, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 3, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 3, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 3, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 3, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 3, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 3, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 3, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 3, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 3, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 3, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 3, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 3, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 3, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 3, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 3, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 3, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 3, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 3, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 3, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 3, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 3, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 3, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 3, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 4, "op": "teach", "domain": "order", "prime": ["What is order?"], "prompt": "Actually order is more than that."}
+{"cycle": 4, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 4, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 4, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 4, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 4, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 4, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 4, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 4, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 4, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 4, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 4, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 4, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 4, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 4, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 4, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 4, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 4, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 4, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 4, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 4, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 4, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 4, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 4, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 4, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 4, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 5, "op": "teach", "domain": "memory", "prime": ["What is memory?"], "prompt": "Actually memory is more than that."}
+{"cycle": 5, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 5, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 5, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 5, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 5, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 5, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 5, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 5, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 5, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 5, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 5, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 5, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 5, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 5, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 5, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 5, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 5, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 5, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 5, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 5, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 5, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 5, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 5, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 5, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 5, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 6, "op": "teach", "domain": "meaning", "prime": ["What is meaning?"], "prompt": "Actually meaning is more than that."}
+{"cycle": 6, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 6, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 6, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 6, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 6, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 6, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 6, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 6, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 6, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 6, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 6, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 6, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 6, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 6, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 6, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 6, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 6, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 6, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 6, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 6, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 6, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 6, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 6, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 6, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 6, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 7, "op": "teach", "domain": "identity", "prime": ["What is identity?"], "prompt": "Actually identity is more than that."}
+{"cycle": 7, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 7, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 7, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 7, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 7, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 7, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 7, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 7, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 7, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 7, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 7, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 7, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 7, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 7, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 7, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 7, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 7, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 7, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 7, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 7, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 7, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 7, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 7, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 7, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 7, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 8, "op": "teach", "domain": "truth", "prime": ["What is truth?"], "prompt": "No, truth requires deeper understanding."}
+{"cycle": 8, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 8, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 8, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 8, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 8, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 8, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 8, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 8, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 8, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 8, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 8, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 8, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 8, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 8, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 8, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 8, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 8, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 8, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 8, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 8, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 8, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 8, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 8, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 8, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 8, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 9, "op": "teach", "domain": "light", "prime": ["What is light?"], "prompt": "No, light requires deeper understanding."}
+{"cycle": 9, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 9, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 9, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 9, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 9, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 9, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 9, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 9, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 9, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 9, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 9, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 9, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 9, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 9, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 9, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 9, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 9, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 9, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 9, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 9, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 9, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 9, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 9, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 9, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 9, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 10, "op": "teach", "domain": "wisdom", "prime": ["What is wisdom?"], "prompt": "No, wisdom requires deeper understanding."}
+{"cycle": 10, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 10, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 10, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 10, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 10, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 10, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 10, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 10, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 10, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 10, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 10, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 10, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 10, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 10, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 10, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 10, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 10, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 10, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 10, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 10, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 10, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 10, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 10, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 10, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 10, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 11, "op": "teach", "domain": "order", "prime": ["What is order?"], "prompt": "No, order requires deeper understanding."}
+{"cycle": 11, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 11, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 11, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 11, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 11, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 11, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 11, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 11, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 11, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 11, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 11, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 11, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 11, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 11, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 11, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 11, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 11, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 11, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 11, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 11, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 11, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 11, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 11, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 11, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 11, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 12, "op": "teach", "domain": "memory", "prime": ["What is memory?"], "prompt": "No, memory requires deeper understanding."}
+{"cycle": 12, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 12, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 12, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 12, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 12, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 12, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 12, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 12, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 12, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 12, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 12, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 12, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 12, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 12, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 12, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 12, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 12, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 12, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 12, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 12, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 12, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 12, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 12, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 12, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 12, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 13, "op": "teach", "domain": "meaning", "prime": ["What is meaning?"], "prompt": "No, meaning requires deeper understanding."}
+{"cycle": 13, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 13, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 13, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 13, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 13, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 13, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 13, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 13, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 13, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 13, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 13, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 13, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 13, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 13, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 13, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 13, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 13, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 13, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 13, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 13, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 13, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 13, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 13, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 13, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 13, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 14, "op": "teach", "domain": "identity", "prime": ["What is identity?"], "prompt": "No, identity requires deeper understanding."}
+{"cycle": 14, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 14, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 14, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 14, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 14, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 14, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 14, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 14, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 14, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 14, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 14, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 14, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 14, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 14, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 14, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 14, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 14, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 14, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 14, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 14, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 14, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 14, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 14, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 14, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 14, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 15, "op": "teach", "domain": "truth", "prime": ["What is truth?"], "prompt": "Actually truth relates to coherence."}
+{"cycle": 15, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 15, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 15, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 15, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 15, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 15, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 15, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 15, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 15, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 15, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 15, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 15, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 15, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 15, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 15, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 15, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 15, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 15, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 15, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 15, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 15, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 15, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 15, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 15, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 15, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 16, "op": "teach", "domain": "light", "prime": ["What is light?"], "prompt": "Actually light relates to coherence."}
+{"cycle": 16, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 16, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 16, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 16, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 16, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 16, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 16, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 16, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 16, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 16, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 16, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 16, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 16, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 16, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 16, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 16, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 16, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 16, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 16, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 16, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 16, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 16, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 16, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 16, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 16, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 17, "op": "teach", "domain": "wisdom", "prime": ["What is wisdom?"], "prompt": "Actually wisdom relates to coherence."}
+{"cycle": 17, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 17, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 17, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 17, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 17, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 17, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 17, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 17, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 17, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 17, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 17, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 17, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 17, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 17, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 17, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 17, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 17, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 17, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 17, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 17, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 17, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 17, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 17, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 17, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 17, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 18, "op": "teach", "domain": "order", "prime": ["What is order?"], "prompt": "Actually order relates to coherence."}
+{"cycle": 18, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 18, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 18, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 18, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 18, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 18, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 18, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 18, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 18, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 18, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 18, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 18, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 18, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 18, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 18, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 18, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 18, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 18, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 18, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 18, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 18, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 18, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 18, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 18, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 18, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 19, "op": "teach", "domain": "memory", "prime": ["What is memory?"], "prompt": "Actually memory relates to coherence."}
+{"cycle": 19, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 19, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 19, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 19, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 19, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 19, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 19, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 19, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 19, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 19, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 19, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 19, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 19, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 19, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 19, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 19, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 19, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 19, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 19, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 19, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 19, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 19, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 19, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 19, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 19, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 20, "op": "teach", "domain": "meaning", "prime": ["What is meaning?"], "prompt": "Actually meaning relates to coherence."}
+{"cycle": 20, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 20, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 20, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 20, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 20, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 20, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 20, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 20, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 20, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 20, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 20, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 20, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 20, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 20, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 20, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 20, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 20, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 20, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 20, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 20, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 20, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 20, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 20, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 20, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 20, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 21, "op": "teach", "domain": "identity", "prime": ["What is identity?"], "prompt": "Actually identity relates to coherence."}
+{"cycle": 21, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 21, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 21, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 21, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 21, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 21, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 21, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 21, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 21, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 21, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 21, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 21, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 21, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 21, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 21, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 21, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 21, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 21, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 21, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 21, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 21, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 21, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 21, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 21, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 21, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 22, "op": "teach", "domain": "truth", "prime": ["What is truth?"], "prompt": "Actually truth is more than that."}
+{"cycle": 22, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 22, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 22, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 22, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 22, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 22, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 22, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 22, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 22, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 22, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 22, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 22, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 22, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 22, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 22, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 22, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 22, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 22, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 22, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 22, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 22, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 22, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 22, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 22, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 22, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 23, "op": "teach", "domain": "light", "prime": ["What is light?"], "prompt": "Actually light is more than that."}
+{"cycle": 23, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 23, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 23, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 23, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 23, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 23, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 23, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 23, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 23, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 23, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 23, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 23, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 23, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 23, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 23, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 23, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 23, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 23, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 23, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 23, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 23, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 23, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 23, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 23, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 23, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 24, "op": "teach", "domain": "wisdom", "prime": ["What is wisdom?"], "prompt": "Actually wisdom is more than that."}
+{"cycle": 24, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 24, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 24, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 24, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 24, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 24, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 24, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 24, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 24, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 24, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 24, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 24, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 24, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 24, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 24, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 24, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 24, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 24, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 24, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 24, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 24, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 24, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 24, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 24, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 24, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 25, "op": "teach", "domain": "order", "prime": ["What is order?"], "prompt": "Actually order is more than that."}
+{"cycle": 25, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 25, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 25, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 25, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 25, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 25, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 25, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 25, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 25, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 25, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 25, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 25, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 25, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 25, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 25, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 25, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 25, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 25, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 25, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 25, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 25, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 25, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 25, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 25, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 25, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 26, "op": "teach", "domain": "memory", "prime": ["What is memory?"], "prompt": "Actually memory is more than that."}
+{"cycle": 26, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 26, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 26, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 26, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 26, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 26, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 26, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 26, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 26, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 26, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 26, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 26, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 26, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 26, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 26, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 26, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 26, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 26, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 26, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 26, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 26, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 26, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 26, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 26, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 26, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 27, "op": "teach", "domain": "meaning", "prime": ["What is meaning?"], "prompt": "Actually meaning is more than that."}
+{"cycle": 27, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 27, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 27, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 27, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 27, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 27, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 27, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 27, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 27, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 27, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 27, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 27, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 27, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 27, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 27, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 27, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 27, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 27, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 27, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 27, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 27, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 27, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 27, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 27, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 27, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 28, "op": "teach", "domain": "identity", "prime": ["What is identity?"], "prompt": "Actually identity is more than that."}
+{"cycle": 28, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 28, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 28, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 28, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 28, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 28, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 28, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 28, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 28, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 28, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 28, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 28, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 28, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 28, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 28, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 28, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 28, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 28, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 28, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 28, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 28, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 28, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 28, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 28, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 28, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 29, "op": "teach", "domain": "truth", "prime": ["What is truth?"], "prompt": "No, truth requires deeper understanding."}
+{"cycle": 29, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 29, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 29, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 29, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 29, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 29, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 29, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 29, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 29, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 29, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 29, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 29, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 29, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 29, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 29, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 29, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 29, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 29, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 29, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 29, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 29, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 29, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 29, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 29, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 29, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}
+{"cycle": 30, "op": "teach", "domain": "light", "prime": ["What is light?"], "prompt": "No, light requires deeper understanding."}
+{"cycle": 30, "op": "probe", "domain": "truth", "id": "PT-1", "prompt": "What is truth?", "expected_terms": ["truth"]}
+{"cycle": 30, "op": "probe", "domain": "truth", "id": "PT-2", "prompt": "Is truth coherent?", "expected_terms": ["truth"]}
+{"cycle": 30, "op": "probe", "domain": "truth", "id": "PT-3", "prompt": "Why does truth matter?", "expected_terms": ["truth"]}
+{"cycle": 30, "op": "probe", "domain": "light", "id": "PL-1", "prompt": "What is light?", "expected_terms": ["light"]}
+{"cycle": 30, "op": "probe", "domain": "light", "id": "PL-2", "prompt": "Why does light reveal?", "expected_terms": ["light"]}
+{"cycle": 30, "op": "probe", "domain": "light", "id": "PL-3", "prompt": "Is light revelation?", "expected_terms": ["light"]}
+{"cycle": 30, "op": "probe", "domain": "wisdom", "id": "PW-1", "prompt": "What is wisdom?", "expected_terms": ["wisdom"]}
+{"cycle": 30, "op": "probe", "domain": "wisdom", "id": "PW-2", "prompt": "Is wisdom valuable?", "expected_terms": ["wisdom"]}
+{"cycle": 30, "op": "probe", "domain": "wisdom", "id": "PW-3", "prompt": "Compare wisdom and knowledge", "expected_terms": ["wisdom", "knowledge"]}
+{"cycle": 30, "op": "probe", "domain": "order", "id": "PO-1", "prompt": "What is order?", "expected_terms": ["order"]}
+{"cycle": 30, "op": "probe", "domain": "order", "id": "PO-2", "prompt": "Is order coherence?", "expected_terms": ["order"]}
+{"cycle": 30, "op": "probe", "domain": "order", "id": "PO-3", "prompt": "Why does order matter?", "expected_terms": ["order"]}
+{"cycle": 30, "op": "probe", "domain": "order", "id": "PO-4", "prompt": "Compare order and chaos", "expected_terms": ["order"]}
+{"cycle": 30, "op": "probe", "domain": "memory", "id": "PM-1", "prompt": "What is memory?", "expected_terms": ["memory"]}
+{"cycle": 30, "op": "probe", "domain": "memory", "id": "PM-2", "prompt": "Is memory recall?", "expected_terms": ["memory"]}
+{"cycle": 30, "op": "probe", "domain": "memory", "id": "PM-3", "prompt": "Why does memory matter?", "expected_terms": ["memory"]}
+{"cycle": 30, "op": "probe", "domain": "memory", "id": "PM-4", "prompt": "Compare memory and forgetting", "expected_terms": ["memory"]}
+{"cycle": 30, "op": "probe", "domain": "meaning", "id": "PMG-1", "prompt": "What is meaning?", "expected_terms": ["meaning"]}
+{"cycle": 30, "op": "probe", "domain": "meaning", "id": "PMG-2", "prompt": "Is meaning identity?", "expected_terms": ["meaning"]}
+{"cycle": 30, "op": "probe", "domain": "meaning", "id": "PMG-3", "prompt": "Why does meaning matter?", "expected_terms": ["meaning"]}
+{"cycle": 30, "op": "probe", "domain": "meaning", "id": "PMG-4", "prompt": "Compare meaning and noise", "expected_terms": ["meaning"]}
+{"cycle": 30, "op": "probe", "domain": "identity", "id": "PID-1", "prompt": "What is identity?", "expected_terms": ["identity"]}
+{"cycle": 30, "op": "probe", "domain": "identity", "id": "PID-2", "prompt": "Is identity coherence?", "expected_terms": ["identity"]}
+{"cycle": 30, "op": "probe", "domain": "identity", "id": "PID-3", "prompt": "Why does identity matter?", "expected_terms": ["identity"]}
+{"cycle": 30, "op": "probe", "domain": "identity", "id": "PID-4", "prompt": "Compare identity and self", "expected_terms": ["identity"]}

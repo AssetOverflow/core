@@ -144,7 +144,24 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
   - adversarial-identity v2 — 35 + 22 cases, all 1.0
   - calibration v2 — 33 + 24 cases, all class accuracies 1.0
   - symbolic-logic v2 — 24 + 16 cases (chains up to 5 hops), all 1.0
-- [ ] **Exit gate:** v3 lanes for at least two of the five
+- [x] **Exit gate:** v3 lanes for at least two of the five ✓
+  - monotonic-learning v3 — 30 cyc / 7 dom (public), 25 cyc / 6 dom (holdouts),
+    `max_regression=0.0`, `floor_score=1.0` on both splits
+  - adversarial-identity v3 — 30 + 20 paraphrased-attack cases.
+    Result: `attack_rejection_rate=0.0`, `legitimate_acceptance_rate=1.0`.
+    v3 is a known-failing stress test that demonstrates a real
+    architectural gap (marker-string defense vs paraphrase). Full
+    write-up: `evals/adversarial_identity/gaps.md`. v3 records the
+    finding; v1+v2 still pass and remain valid for their scope.
+
+## Phase 2 — COMPLETE
+
+All five Phase 2 v1+v2 lanes pass at 100%; frontier structural
+baselines documented; v3 satisfies the exit-gate requirement (two
+lanes, one demonstrating a passing structural-depth test and one
+demonstrating an architectural vulnerability that the geometric
+identity-check fix in `evals/adversarial_identity/gaps.md` would
+close).
 
 ### Parallel eval infrastructure (2026-05-16)
 
