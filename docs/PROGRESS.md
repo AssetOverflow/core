@@ -107,7 +107,17 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
         prompts fire the geometric gate. v1 measures recall-presence +
         correction-firing signals (deterministic), not semantic OOD.
         Pipeline override of gate's safety surface is a separate gap.
-- [ ] **symbolic-logic** lane
+- [x] **symbolic-logic** lane (v1 complete)
+  - [x] Define contract: structural foundations for proposition-based inference
+  - [x] Patterns: modus_ponens_chain, modus_tollens_chain, syllogism, negation, chain_recall
+  - [x] Runner: per-case fresh pipeline + double-run replay check
+  - [x] Sub-metrics: premise_recall=1.0, replay_determinism=1.0, proposal_storage=1.0
+  - [x] v1 dev (8/8), v1 public (18/18), v1 holdouts (12/12) — all 100% pass
+  - [x] Architectural finding documented (`evals/symbolic_logic/gaps.md`): CORE
+        has no first-class inference operator yet. v1 measures the storage,
+        replay, and recall foundations on which a future inference engine
+        would be built. v2 would assert specific inference correctness
+        (transitive recall surface contents).
 - [ ] **adversarial-identity** lane
 - [ ] Frontier baselines computed for all lanes
 - [ ] **Exit gate:** All five v1+v2 with baselines; at least two have v3

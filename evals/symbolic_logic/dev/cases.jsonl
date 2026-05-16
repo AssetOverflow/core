@@ -1,0 +1,8 @@
+{"id":"SYM-DEV-001","pattern":"single_premise","premises":["What is truth?","Actually truth is wisdom."],"probe":"What is truth?","expected_proposals":1,"min_vault_hits":1}
+{"id":"SYM-DEV-002","pattern":"modus_ponens_chain","premises":["What is truth?","Actually truth is wisdom.","What is wisdom?","Actually wisdom is light."],"probe":"What is truth?","expected_proposals":2,"min_vault_hits":1}
+{"id":"SYM-DEV-003","pattern":"syllogism","premises":["What is knowledge?","Actually knowledge is wisdom.","What is wisdom?","Actually wisdom is truth."],"probe":"What is knowledge?","expected_proposals":2,"min_vault_hits":1}
+{"id":"SYM-DEV-004","pattern":"negation","premises":["What is truth?","Actually truth is not deception."],"probe":"What is truth?","expected_proposals":1,"min_vault_hits":1}
+{"id":"SYM-DEV-005","pattern":"chain_recall","premises":["What is light?","Actually light is meaning.","What is meaning?","Actually meaning is identity.","What is identity?","Actually identity is order."],"probe":"What is light?","expected_proposals":3,"min_vault_hits":1}
+{"id":"SYM-DEV-006","pattern":"modus_tollens_chain","premises":["What is wisdom?","Actually wisdom requires knowledge.","What is knowledge?","Actually knowledge is not opinion."],"probe":"What is wisdom?","expected_proposals":2,"min_vault_hits":1}
+{"id":"SYM-DEV-007","pattern":"chain_recall","premises":["What is creation?","Actually creation is order.","What is order?","Actually order is principle."],"probe":"What is creation?","expected_proposals":2,"min_vault_hits":1}
+{"id":"SYM-DEV-008","pattern":"single_premise","premises":["What is reason?","Actually reason is inference."],"probe":"What is reason?","expected_proposals":1,"min_vault_hits":1}
