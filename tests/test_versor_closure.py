@@ -84,14 +84,16 @@ def test_versor_unit_residual_can_accept_signed_manifold_versors():
     assert versor_unit_residual(negative_norm, allow_negative=True) < 1e-7
 
 
-def test_word_transition_rotor_fails_closed_for_antipodal_inputs():
+def test_word_transition_rotor_handles_antipodal_scalar_inputs_as_closed_transition():
     A = np.zeros(32, dtype=np.float32)
     A[0] = 1.0
     B = np.zeros(32, dtype=np.float32)
     B[0] = -1.0
 
-    with pytest.raises(ValueError, match="near_zero"):
-        word_transition_rotor(A, B)
+    R = word_transition_rotor(A, B)
+
+    assert np.allclose(R[0], -1.0, atol=1e-7)
+    assert versor_condition(R) < 1e-6
 
 
 def test_composition_closed():
