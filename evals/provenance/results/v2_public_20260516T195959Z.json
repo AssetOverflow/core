@@ -1,0 +1,497 @@
+{
+  "metrics": {
+    "total": 30,
+    "replay_determinism": 1.0,
+    "source_attribution": 0.9667,
+    "source_validity": 1.0,
+    "input_sensitivity": 1.0,
+    "overall_pass": true
+  },
+  "case_details": [
+    {
+      "case_id": "PROV-V2-001",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "9df51a5dfb4763ae5a3423f03479c16d56f69d8c5b844500e0d65bda14de8e29"
+    },
+    {
+      "case_id": "PROV-V2-002",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "ba7f8b8088647a19d7b65aa324c76c8048df42399305cfdd84f439309cc2b8ee"
+    },
+    {
+      "case_id": "PROV-V2-003",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "5b1d6e80fab2803692b1f5cc42ba977905890ed022efc477026f8dff69dac8ec"
+    },
+    {
+      "case_id": "PROV-V2-004",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "87085dd7b03cc219b8e5fcd12088bd95aa894552f9182a10e8291d077a74a018"
+    },
+    {
+      "case_id": "PROV-V2-005",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "491aa9335d80801d00f61024556913efa91cf7b3ddbbc1fdd20f373eecc5c37c"
+    },
+    {
+      "case_id": "PROV-V2-006",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "e790a418b7ec079876c8963196958b1b44f7b9015e62c71e00b914f4ff654761"
+    },
+    {
+      "case_id": "PROV-V2-007",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [],
+      "attribution_pass": false,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "2757acd8056fa3d2c9921fea3e211443698c4d2a31ad55d58a4acf08cf979426"
+    },
+    {
+      "case_id": "PROV-V2-008",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "2d323e03f9dddb09c78516afc384d7904b5750fb3391d9eaea05275ad97dfe55"
+    },
+    {
+      "case_id": "PROV-V2-009",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "dc09175b39f947c2fedb2c763ae18ef5372e21f1e437cdcac6711238c760312b"
+    },
+    {
+      "case_id": "PROV-V2-010",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "dabaeb0209da38819a901e9ceaca02d9d38f8b292f5f4daca0fc5a8f233e3452"
+    },
+    {
+      "case_id": "PROV-V2-011",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "2f7a5af5b683d7c1d0e9ad4905445776c22ac0e66b27888978a8c4ae744f52d0"
+    },
+    {
+      "case_id": "PROV-V2-012",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "8242278e958d975e83ca8c677f1ba6f543a53514b175a9c381bd66c266d98a4f"
+    },
+    {
+      "case_id": "PROV-V2-013",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "897b3f3a954327504c7feb6a6a1795f2dec656425ac66902300cfbb986ed6f29"
+    },
+    {
+      "case_id": "PROV-V2-014",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "0a8249c5bd91cea65221f6f9ad63c06143bef2542b57fee7fcd6a593fbbf887a"
+    },
+    {
+      "case_id": "PROV-V2-015",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "2087c13df87c3e4e55be9e091614eb5301e8f7f9deb1d6dbeeb3308a1ba304a2"
+    },
+    {
+      "case_id": "PROV-V2-016",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "c6bb1f2b67d60e3697655d7223d72cc639dafdac0508d9e75d542a456b72e982"
+    },
+    {
+      "case_id": "PROV-V2-017",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "fa6fbad2bf6765d5d70ef3ceb6b064d822acf290aace80ee82415b6206d2231b"
+    },
+    {
+      "case_id": "PROV-V2-018",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "704e613f1587692e655dc4d42bc2f2868bf52d0cbedcc2ab3b8bf831f8a2239b"
+    },
+    {
+      "case_id": "PROV-V2-019",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "19da83632520b370e3517904198facbd75ddd01b095d209935bf98539622924a"
+    },
+    {
+      "case_id": "PROV-V2-020",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "3d361e7e2bd2c226c8a07ee3a1e72c3bf7d0f133e710db945828ce10996d0732"
+    },
+    {
+      "case_id": "PROV-V2-021",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "c8e916a581b21783d8d84bb1da945ee04afa11f756c96d0c9468ffb161bd95a8"
+    },
+    {
+      "case_id": "PROV-V2-022",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "03d9e21ada841fc6a0f061727049250c888a1ff6aac3cd09990851b04692f488"
+    },
+    {
+      "case_id": "PROV-V2-023",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "4ee9026699492c1ecfc362986ab53b48a34af0b45216f4f29cf3bbd5c42318d9"
+    },
+    {
+      "case_id": "PROV-V2-024",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "6e385703aecbdf65fa1441a34505a6202dbf983cdf10651d48865e394778e47a"
+    },
+    {
+      "case_id": "PROV-V2-025",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "0c54053ac5223395c415f3893246f29c67e0e6d867b3b1effd4799a139ec8e7f"
+    },
+    {
+      "case_id": "PROV-V2-026",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "0653b4ae65ffb00ea34ebcfbe78bc1bdc73b5dd338028b9fcb0d9597a52b93d0"
+    },
+    {
+      "case_id": "PROV-V2-027",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "dbfb7249b2269776198f4f26a6803b6828aff4f5560b182c80d8acf273521f47"
+    },
+    {
+      "case_id": "PROV-V2-028",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "31a844dcf5db486d81dba3b88da146dd4e40a00fee53ae582bf73b00f84f7229"
+    },
+    {
+      "case_id": "PROV-V2-029",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "bda42208c2f1e9ab9851c042566c5283fa71907b069e81793f75828b787637bf"
+    },
+    {
+      "case_id": "PROV-V2-030",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "ae96f6867399778d8a0c9082c980aa94fb4d3f2e16c30770a950dc61590942ae"
+    }
+  ]
+}

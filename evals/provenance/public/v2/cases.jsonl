@@ -1,0 +1,30 @@
+{"id":"PROV-V2-001","category":"pack_axiom","prime":[],"prompt":"What is order?","expected_sources":["pack"]}
+{"id":"PROV-V2-002","category":"pack_axiom","prime":[],"prompt":"What is principle?","expected_sources":["pack"]}
+{"id":"PROV-V2-003","category":"pack_axiom","prime":[],"prompt":"What is evidence?","expected_sources":["pack"]}
+{"id":"PROV-V2-004","category":"pack_axiom","prime":[],"prompt":"What is inference?","expected_sources":["pack"]}
+{"id":"PROV-V2-005","category":"pack_axiom","prime":[],"prompt":"What is comparison?","expected_sources":["pack"]}
+{"id":"PROV-V2-006","category":"pack_axiom","prime":[],"prompt":"Why does memory matter?","expected_sources":["pack"]}
+{"id":"PROV-V2-007","category":"pack_axiom","prime":[],"prompt":"Why does verification matter?","expected_sources":["pack"]}
+{"id":"PROV-V2-008","category":"pack_axiom","prime":[],"prompt":"Compare reason and inference","expected_sources":["pack"]}
+{"id":"PROV-V2-009","category":"vault_recall","prime":["What is truth?","What is truth?","What is truth?"],"prompt":"What is truth?","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-010","category":"vault_recall","prime":["What is wisdom?","What is wisdom?","What is wisdom?"],"prompt":"What is wisdom?","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-011","category":"vault_recall","prime":["What is creation?","What is order?","What is principle?"],"prompt":"Compare creation and order","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-012","category":"vault_recall","prime":["What is light?","What is meaning?","What is identity?","What is memory?"],"prompt":"Why does light reveal?","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-013","category":"vault_recall","prime":["What is reason?","What is reason?","What is reason?","What is reason?"],"prompt":"What is reason?","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-014","category":"vault_recall","prime":["What is concept?","What is meaning?","What is identity?"],"prompt":"Compare concept and meaning","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-015","category":"vault_recall","prime":["What is principle?","What is principle?","What is order?","What is order?"],"prompt":"Compare principle and order","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-016","category":"vault_recall","prime":["What is judgment?","What is judgment?"],"prompt":"What is judgment?","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-017","category":"teaching","prime":["What is truth?"],"prompt":"Actually truth is more than that.","expected_sources":["pack","teaching"]}
+{"id":"PROV-V2-018","category":"teaching","prime":["What is wisdom?"],"prompt":"No, wisdom requires understanding.","expected_sources":["pack","teaching"]}
+{"id":"PROV-V2-019","category":"teaching","prime":["What is light?"],"prompt":"Actually light reveals more deeply.","expected_sources":["pack","teaching"]}
+{"id":"PROV-V2-020","category":"teaching","prime":["What is order?"],"prompt":"No, order is not just sequence.","expected_sources":["pack","teaching"]}
+{"id":"PROV-V2-021","category":"teaching","prime":["What is reason?"],"prompt":"Actually reason involves judgment.","expected_sources":["pack","teaching"]}
+{"id":"PROV-V2-022","category":"mixed","prime":["What is truth?","What is truth?","What is wisdom?"],"prompt":"Actually truth and wisdom relate deeply.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-023","category":"mixed","prime":["What is creation?","What is order?","What is principle?"],"prompt":"No, creation involves more than order.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-024","category":"mixed","prime":["What is light?","What is light?","What is meaning?","What is meaning?"],"prompt":"Actually light and meaning are entwined.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-025","category":"mixed","prime":["What is knowledge?","What is wisdom?","What is understanding?"],"prompt":"No, knowledge is not the same as wisdom.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-026","category":"mixed","prime":["What is reason?","What is inference?","What is judgment?"],"prompt":"Actually reason precedes inference.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-027","category":"mixed","prime":["What is identity?","What is identity?","What is coherence?"],"prompt":"No, identity requires coherence.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-028","category":"mixed","prime":["What is memory?","What is memory?","What is recall?"],"prompt":"Actually memory and recall differ.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-029","category":"mixed","prime":["What is spirit?","What is life?","What is being?"],"prompt":"No, spirit is more than life.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-030","category":"mixed","prime":["What is question?","What is answer?","What is verification?"],"prompt":"Actually questions ground answers.","expected_sources":["pack","vault","teaching"]}

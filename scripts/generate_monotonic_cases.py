@@ -108,6 +108,35 @@ _DOMAIN_KNOWLEDGE_PROBES = [
     ("PK-3", "Why does knowledge matter?", ["knowledge"]),
 ]
 
+# v2 additions — extra domains for deeper-cycle stress
+_DOMAIN_ORDER_PROBES = [
+    ("PO-1", "What is order?",             ["order"]),
+    ("PO-2", "Is order coherence?",        ["order"]),
+    ("PO-3", "Why does order matter?",     ["order"]),
+    ("PO-4", "Compare order and chaos",    ["order"]),
+]
+
+_DOMAIN_MEMORY_PROBES = [
+    ("PM-1", "What is memory?",            ["memory"]),
+    ("PM-2", "Is memory recall?",          ["memory"]),
+    ("PM-3", "Why does memory matter?",    ["memory"]),
+    ("PM-4", "Compare memory and forgetting", ["memory"]),
+]
+
+_DOMAIN_REASON_PROBES = [
+    ("PR-1", "What is reason?",            ["reason"]),
+    ("PR-2", "Is reason inference?",       ["reason"]),
+    ("PR-3", "Why does reason matter?",    ["reason"]),
+    ("PR-4", "Compare reason and intuition", ["reason"]),
+]
+
+_DOMAIN_SPIRIT_PROBES = [
+    ("PS-1", "What is spirit?",            ["spirit"]),
+    ("PS-2", "Is spirit life?",            ["spirit"]),
+    ("PS-3", "Why does spirit matter?",    ["spirit"]),
+    ("PS-4", "Compare spirit and matter",  ["spirit"]),
+]
+
 
 def _teach_steps_for(domain: str) -> list[tuple[list[str], str]]:
     """Three teaching examples per domain (rotated as cycles advance)."""
@@ -166,6 +195,41 @@ def main() -> None:
     print(f"wrote dev: {n_dev} rows")
     print(f"wrote public/v1: {n_public} rows")
     print(f"wrote holdouts/v1: {n_holdout} rows")
+
+    # v2 splits — deeper cycle counts, more domains, more probes.
+    # Public v2: five domains x ~3-4 probes, 20 cycles.
+    public_v2_domains = {
+        "truth":   _DOMAIN_TRUTH_PROBES,
+        "light":   _DOMAIN_LIGHT_PROBES,
+        "wisdom":  _DOMAIN_WISDOM_PROBES,
+        "order":   _DOMAIN_ORDER_PROBES,
+        "memory":  _DOMAIN_MEMORY_PROBES,
+    }
+    public_v2_teaching = {d: _teach_steps_for(d) for d in public_v2_domains}
+    n_public_v2 = build_split(
+        out_path=root / "public" / "v2" / "cases.jsonl",
+        probes_per_domain=public_v2_domains,
+        teaching_steps_per_domain=public_v2_teaching,
+        cycle_count=20,
+    )
+
+    # Holdouts v2: four distinct domains, 18 cycles.
+    holdouts_v2_domains = {
+        "creation":  _DOMAIN_CREATION_PROBES,
+        "knowledge": _DOMAIN_KNOWLEDGE_PROBES,
+        "reason":    _DOMAIN_REASON_PROBES,
+        "spirit":    _DOMAIN_SPIRIT_PROBES,
+    }
+    holdouts_v2_teaching = {d: _teach_steps_for(d) for d in holdouts_v2_domains}
+    n_holdouts_v2 = build_split(
+        out_path=root / "holdouts" / "v2" / "cases.jsonl",
+        probes_per_domain=holdouts_v2_domains,
+        teaching_steps_per_domain=holdouts_v2_teaching,
+        cycle_count=18,
+    )
+
+    print(f"wrote public/v2: {n_public_v2} rows")
+    print(f"wrote holdouts/v2: {n_holdouts_v2} rows")
 
 
 if __name__ == "__main__":

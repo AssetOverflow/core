@@ -1,0 +1,2337 @@
+{
+  "metrics": {
+    "cycle_count": 20,
+    "max_regression": 0.0,
+    "floor_score": 1.0,
+    "cycle_pass": true,
+    "overall_pass": true,
+    "domains": [
+      "light",
+      "memory",
+      "order",
+      "truth",
+      "wisdom"
+    ],
+    "first_taught": {
+      "truth": 1,
+      "light": 2,
+      "wisdom": 3,
+      "order": 4,
+      "memory": 5
+    },
+    "per_cycle_scores": [
+      {
+        "cycle": 0,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 1,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 2,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 3,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 4,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 5,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 6,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 7,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 8,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 9,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 10,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 11,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 12,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 13,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 14,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 15,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 16,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 17,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 18,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 19,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      },
+      {
+        "cycle": 20,
+        "light": 1.0,
+        "memory": 1.0,
+        "order": 1.0,
+        "truth": 1.0,
+        "wisdom": 1.0
+      }
+    ]
+  },
+  "case_details": [
+    {
+      "cycle": 0,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 0,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 1,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 2,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 3,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 4,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 5,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 6,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 7,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 8,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 9,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 10,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 11,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 12,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 13,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 14,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 15,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 16,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 17,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 18,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 19,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "light",
+      "probe_id": "PL-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "light",
+      "probe_id": "PL-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "light",
+      "probe_id": "PL-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "memory",
+      "probe_id": "PM-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "memory",
+      "probe_id": "PM-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "memory",
+      "probe_id": "PM-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "memory",
+      "probe_id": "PM-4",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "order",
+      "probe_id": "PO-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "order",
+      "probe_id": "PO-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "order",
+      "probe_id": "PO-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "order",
+      "probe_id": "PO-4",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "truth",
+      "probe_id": "PT-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "truth",
+      "probe_id": "PT-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "truth",
+      "probe_id": "PT-3",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "wisdom",
+      "probe_id": "PW-1",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "wisdom",
+      "probe_id": "PW-2",
+      "passed": true
+    },
+    {
+      "cycle": 20,
+      "domain": "wisdom",
+      "probe_id": "PW-3",
+      "passed": true
+    }
+  ]
+}

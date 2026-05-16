@@ -1,0 +1,337 @@
+{
+  "metrics": {
+    "total": 20,
+    "replay_determinism": 1.0,
+    "source_attribution": 1.0,
+    "source_validity": 1.0,
+    "input_sensitivity": 1.0,
+    "overall_pass": true
+  },
+  "case_details": [
+    {
+      "case_id": "PROV-V2-HLD-001",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "d066db3477f7af3a73abd990355ff6f0217a61c30b7f96b981a6a7b5349bd24b"
+    },
+    {
+      "case_id": "PROV-V2-HLD-002",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "9f3109266455af31f9d92af46d2054fd888720848b69f1fb6609dc4449c01309"
+    },
+    {
+      "case_id": "PROV-V2-HLD-003",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "3491ed3c1ef98ee27dd88c0ef0de0a30eb2d8e2947d5c5aa67200912d0262d3d"
+    },
+    {
+      "case_id": "PROV-V2-HLD-004",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "fe4fe3eeff58320db871563d7d129920eaf45988a16932e98194223071518a95"
+    },
+    {
+      "case_id": "PROV-V2-HLD-005",
+      "category": "pack_axiom",
+      "expected_sources": [
+        "pack"
+      ],
+      "provenance_kinds": [
+        "pack"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "f2f21ca8370c2768f5ee7e381c2b09f627a89a6a189d0d211a74e0451aa8d1fd"
+    },
+    {
+      "case_id": "PROV-V2-HLD-006",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "c0f7178a1c3dd20ac75fd8def405be0d92fec6d6998334f2660956052d2448f3"
+    },
+    {
+      "case_id": "PROV-V2-HLD-007",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "ccffc8346e1758909237d406619da8f562c47cd779bdf731472b11f2f9aa0a02"
+    },
+    {
+      "case_id": "PROV-V2-HLD-008",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "b3aef0384a22da00e662d75d7e6fa5cfc7d479d54109c3574d789ec71f98553a"
+    },
+    {
+      "case_id": "PROV-V2-HLD-009",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "6c18a23d29e3b021ff143bb7c179f91b325792dfe59df2935ba3be1ebb39bdb7"
+    },
+    {
+      "case_id": "PROV-V2-HLD-010",
+      "category": "vault_recall",
+      "expected_sources": [
+        "pack",
+        "vault"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "e8f29564696637529194c1a5fcf7f1eef0e026000c188643d613708b077ed236"
+    },
+    {
+      "case_id": "PROV-V2-HLD-011",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "b4632761170954e6e7aaf700e4de5f1c8f5eaa3c945b3eb4639164e2c351520d"
+    },
+    {
+      "case_id": "PROV-V2-HLD-012",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "121e9c38ccf0ab3edec26d8f9cf5a2720849ffbf5eeb662c49ba880d48855733"
+    },
+    {
+      "case_id": "PROV-V2-HLD-013",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "2dd7d0891bff1e1e42a597b73e2762e8c1214c78eb8f1960231eee0fe52c6027"
+    },
+    {
+      "case_id": "PROV-V2-HLD-014",
+      "category": "teaching",
+      "expected_sources": [
+        "pack",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "1dac31c027a801c0be5f2079a61b03d0e0ca2e6f4ade71db34764810714b369b"
+    },
+    {
+      "case_id": "PROV-V2-HLD-015",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "f1fac177b9e98cec531d0b14f1a27bbc5ea321a1dfc1baaa69fb042668022f89"
+    },
+    {
+      "case_id": "PROV-V2-HLD-016",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "f5c509ac97046d2c5ec8f9429157bdbf514fe2e651f5e1d0dee62e276c16e492"
+    },
+    {
+      "case_id": "PROV-V2-HLD-017",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "3a57404c73fe80755499b2f698a50dfb8bd91ffdd056f8595403d5d85b47d020"
+    },
+    {
+      "case_id": "PROV-V2-HLD-018",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "229eeb5721881bac67e2ef43298a0e3fc73464a4d05c56279d5ed3ed904c9793"
+    },
+    {
+      "case_id": "PROV-V2-HLD-019",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "25b63b0da6da561ac0307f036032e105680c5526e0f8419f7ca876c8592b692c"
+    },
+    {
+      "case_id": "PROV-V2-HLD-020",
+      "category": "mixed",
+      "expected_sources": [
+        "pack",
+        "vault",
+        "teaching"
+      ],
+      "provenance_kinds": [
+        "pack",
+        "teaching",
+        "vault"
+      ],
+      "attribution_pass": true,
+      "validity_pass": true,
+      "replay_pass": true,
+      "trace_hash": "62603222998c597bf498de9d7455e9eb7306b9ca309fd7db40075133e4ada65b"
+    }
+  ]
+}

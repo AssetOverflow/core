@@ -1,0 +1,284 @@
+{"cycle": 0, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 0, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 0, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 0, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 0, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 0, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 0, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 0, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 0, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 0, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 0, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 0, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 0, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 0, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 1, "op": "teach", "domain": "creation", "prime": ["What is creation?"], "prompt": "Actually creation is more than that."}
+{"cycle": 1, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 1, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 1, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 1, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 1, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 1, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 1, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 1, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 1, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 1, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 1, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 1, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 1, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 1, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 2, "op": "teach", "domain": "knowledge", "prime": ["What is knowledge?"], "prompt": "Actually knowledge is more than that."}
+{"cycle": 2, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 2, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 2, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 2, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 2, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 2, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 2, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 2, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 2, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 2, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 2, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 2, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 2, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 2, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 3, "op": "teach", "domain": "reason", "prime": ["What is reason?"], "prompt": "Actually reason is more than that."}
+{"cycle": 3, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 3, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 3, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 3, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 3, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 3, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 3, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 3, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 3, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 3, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 3, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 3, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 3, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 3, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 4, "op": "teach", "domain": "spirit", "prime": ["What is spirit?"], "prompt": "Actually spirit is more than that."}
+{"cycle": 4, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 4, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 4, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 4, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 4, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 4, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 4, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 4, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 4, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 4, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 4, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 4, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 4, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 4, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 5, "op": "teach", "domain": "creation", "prime": ["What is creation?"], "prompt": "No, creation requires deeper understanding."}
+{"cycle": 5, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 5, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 5, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 5, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 5, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 5, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 5, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 5, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 5, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 5, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 5, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 5, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 5, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 5, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 6, "op": "teach", "domain": "knowledge", "prime": ["What is knowledge?"], "prompt": "No, knowledge requires deeper understanding."}
+{"cycle": 6, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 6, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 6, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 6, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 6, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 6, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 6, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 6, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 6, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 6, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 6, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 6, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 6, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 6, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 7, "op": "teach", "domain": "reason", "prime": ["What is reason?"], "prompt": "No, reason requires deeper understanding."}
+{"cycle": 7, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 7, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 7, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 7, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 7, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 7, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 7, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 7, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 7, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 7, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 7, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 7, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 7, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 7, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 8, "op": "teach", "domain": "spirit", "prime": ["What is spirit?"], "prompt": "No, spirit requires deeper understanding."}
+{"cycle": 8, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 8, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 8, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 8, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 8, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 8, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 8, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 8, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 8, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 8, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 8, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 8, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 8, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 8, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 9, "op": "teach", "domain": "creation", "prime": ["What is creation?"], "prompt": "Actually creation relates to coherence."}
+{"cycle": 9, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 9, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 9, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 9, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 9, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 9, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 9, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 9, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 9, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 9, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 9, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 9, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 9, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 9, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 10, "op": "teach", "domain": "knowledge", "prime": ["What is knowledge?"], "prompt": "Actually knowledge relates to coherence."}
+{"cycle": 10, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 10, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 10, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 10, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 10, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 10, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 10, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 10, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 10, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 10, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 10, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 10, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 10, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 10, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 11, "op": "teach", "domain": "reason", "prime": ["What is reason?"], "prompt": "Actually reason relates to coherence."}
+{"cycle": 11, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 11, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 11, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 11, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 11, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 11, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 11, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 11, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 11, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 11, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 11, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 11, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 11, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 11, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 12, "op": "teach", "domain": "spirit", "prime": ["What is spirit?"], "prompt": "Actually spirit relates to coherence."}
+{"cycle": 12, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 12, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 12, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 12, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 12, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 12, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 12, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 12, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 12, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 12, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 12, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 12, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 12, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 12, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 13, "op": "teach", "domain": "creation", "prime": ["What is creation?"], "prompt": "Actually creation is more than that."}
+{"cycle": 13, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 13, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 13, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 13, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 13, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 13, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 13, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 13, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 13, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 13, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 13, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 13, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 13, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 13, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 14, "op": "teach", "domain": "knowledge", "prime": ["What is knowledge?"], "prompt": "Actually knowledge is more than that."}
+{"cycle": 14, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 14, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 14, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 14, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 14, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 14, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 14, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 14, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 14, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 14, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 14, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 14, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 14, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 14, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 15, "op": "teach", "domain": "reason", "prime": ["What is reason?"], "prompt": "Actually reason is more than that."}
+{"cycle": 15, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 15, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 15, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 15, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 15, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 15, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 15, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 15, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 15, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 15, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 15, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 15, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 15, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 15, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 16, "op": "teach", "domain": "spirit", "prime": ["What is spirit?"], "prompt": "Actually spirit is more than that."}
+{"cycle": 16, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 16, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 16, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 16, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 16, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 16, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 16, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 16, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 16, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 16, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 16, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 16, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 16, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 16, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 17, "op": "teach", "domain": "creation", "prime": ["What is creation?"], "prompt": "No, creation requires deeper understanding."}
+{"cycle": 17, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 17, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 17, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 17, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 17, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 17, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 17, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 17, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 17, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 17, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 17, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 17, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 17, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 17, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}
+{"cycle": 18, "op": "teach", "domain": "knowledge", "prime": ["What is knowledge?"], "prompt": "No, knowledge requires deeper understanding."}
+{"cycle": 18, "op": "probe", "domain": "creation", "id": "PC-1", "prompt": "What is creation?", "expected_terms": ["creation"]}
+{"cycle": 18, "op": "probe", "domain": "creation", "id": "PC-2", "prompt": "Why does creation matter?", "expected_terms": ["creation"]}
+{"cycle": 18, "op": "probe", "domain": "creation", "id": "PC-3", "prompt": "Is creation ongoing?", "expected_terms": ["creation"]}
+{"cycle": 18, "op": "probe", "domain": "knowledge", "id": "PK-1", "prompt": "What is knowledge?", "expected_terms": ["knowledge"]}
+{"cycle": 18, "op": "probe", "domain": "knowledge", "id": "PK-2", "prompt": "Is knowledge wisdom?", "expected_terms": ["knowledge"]}
+{"cycle": 18, "op": "probe", "domain": "knowledge", "id": "PK-3", "prompt": "Why does knowledge matter?", "expected_terms": ["knowledge"]}
+{"cycle": 18, "op": "probe", "domain": "reason", "id": "PR-1", "prompt": "What is reason?", "expected_terms": ["reason"]}
+{"cycle": 18, "op": "probe", "domain": "reason", "id": "PR-2", "prompt": "Is reason inference?", "expected_terms": ["reason"]}
+{"cycle": 18, "op": "probe", "domain": "reason", "id": "PR-3", "prompt": "Why does reason matter?", "expected_terms": ["reason"]}
+{"cycle": 18, "op": "probe", "domain": "reason", "id": "PR-4", "prompt": "Compare reason and intuition", "expected_terms": ["reason"]}
+{"cycle": 18, "op": "probe", "domain": "spirit", "id": "PS-1", "prompt": "What is spirit?", "expected_terms": ["spirit"]}
+{"cycle": 18, "op": "probe", "domain": "spirit", "id": "PS-2", "prompt": "Is spirit life?", "expected_terms": ["spirit"]}
+{"cycle": 18, "op": "probe", "domain": "spirit", "id": "PS-3", "prompt": "Why does spirit matter?", "expected_terms": ["spirit"]}
+{"cycle": 18, "op": "probe", "domain": "spirit", "id": "PS-4", "prompt": "Compare spirit and matter", "expected_terms": ["spirit"]}

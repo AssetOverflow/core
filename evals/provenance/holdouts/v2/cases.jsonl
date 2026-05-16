@@ -1,0 +1,20 @@
+{"id":"PROV-V2-HLD-001","category":"pack_axiom","prime":[],"prompt":"What is procedure?","expected_sources":["pack"]}
+{"id":"PROV-V2-HLD-002","category":"pack_axiom","prime":[],"prompt":"What is distinction?","expected_sources":["pack"]}
+{"id":"PROV-V2-HLD-003","category":"pack_axiom","prime":[],"prompt":"What is relation?","expected_sources":["pack"]}
+{"id":"PROV-V2-HLD-004","category":"pack_axiom","prime":[],"prompt":"What is understanding?","expected_sources":["pack"]}
+{"id":"PROV-V2-HLD-005","category":"pack_axiom","prime":[],"prompt":"Why does correction matter?","expected_sources":["pack"]}
+{"id":"PROV-V2-HLD-006","category":"vault_recall","prime":["What is thought?","What is thought?","What is thought?"],"prompt":"What is thought?","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-HLD-007","category":"vault_recall","prime":["What is spirit?","What is spirit?","What is life?"],"prompt":"Compare spirit and life","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-HLD-008","category":"vault_recall","prime":["What is verification?","What is evidence?","What is judgment?","What is inference?"],"prompt":"Compare verification and evidence","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-HLD-009","category":"vault_recall","prime":["What is comparison?","What is comparison?","What is distinction?"],"prompt":"What is comparison?","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-HLD-010","category":"vault_recall","prime":["What is procedure?","What is procedure?"],"prompt":"What is procedure?","expected_sources":["pack","vault"]}
+{"id":"PROV-V2-HLD-011","category":"teaching","prime":["What is thought?"],"prompt":"Actually thought precedes language.","expected_sources":["pack","teaching"]}
+{"id":"PROV-V2-HLD-012","category":"teaching","prime":["What is spirit?"],"prompt":"No, spirit is not a kind of matter.","expected_sources":["pack","teaching"]}
+{"id":"PROV-V2-HLD-013","category":"teaching","prime":["What is comparison?"],"prompt":"Actually comparison requires criteria.","expected_sources":["pack","teaching"]}
+{"id":"PROV-V2-HLD-014","category":"teaching","prime":["What is procedure?"],"prompt":"No, procedure is more than order.","expected_sources":["pack","teaching"]}
+{"id":"PROV-V2-HLD-015","category":"mixed","prime":["What is thought?","What is thought?","What is reason?"],"prompt":"Actually thought informs reason.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-HLD-016","category":"mixed","prime":["What is verification?","What is evidence?","What is judgment?"],"prompt":"No, verification depends on evidence.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-HLD-017","category":"mixed","prime":["What is spirit?","What is life?","What is being?","What is creation?"],"prompt":"Actually spirit is woven through life.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-HLD-018","category":"mixed","prime":["What is concept?","What is meaning?","What is identity?","What is coherence?"],"prompt":"No, concept presupposes coherence.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-HLD-019","category":"mixed","prime":["What is question?","What is answer?","What is verification?","What is judgment?"],"prompt":"Actually questions and judgments interlock.","expected_sources":["pack","vault","teaching"]}
+{"id":"PROV-V2-HLD-020","category":"mixed","prime":["What is distinction?","What is relation?","What is comparison?"],"prompt":"No, distinction requires relation.","expected_sources":["pack","vault","teaching"]}
