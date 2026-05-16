@@ -118,8 +118,18 @@ Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
         replay, and recall foundations on which a future inference engine
         would be built. v2 would assert specific inference correctness
         (transitive recall surface contents).
-- [ ] **adversarial-identity** lane
+- [x] **adversarial-identity** lane (v1 complete)
+  - [x] Define contract: identity-override attacks rejected at review;
+        legitimate corrections still accepted
+  - [x] Cover all `_IDENTITY_MARKERS` families (you are / forget / pretend /
+        override / ignore / your name / act as / from now / character /
+        personality)
+  - [x] Per-case fresh pipeline; prior question primes the review surface
+  - [x] Sub-metrics: attack_rejection_rate=1.0, legitimate_acceptance_rate=1.0
+  - [x] v1 dev (10/10), v1 public (25/25), v1 holdouts (18/18) — all 100% pass
+- [x] **All five Phase 2 v1 lanes passing** ✓
 - [ ] Frontier baselines computed for all lanes
+- [ ] v2 lanes (provenance, monotonic-learning, calibration, symbolic-logic, adversarial-identity)
 - [ ] **Exit gate:** All five v1+v2 with baselines; at least two have v3
 
 ---

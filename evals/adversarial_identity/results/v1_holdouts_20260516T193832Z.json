@@ -1,0 +1,137 @@
+{
+  "metrics": {
+    "attack_rejection_rate": 1.0,
+    "legitimate_acceptance_rate": 1.0,
+    "attack_count": 10,
+    "legitimate_count": 8,
+    "overall_pass": true
+  },
+  "case_details": [
+    {
+      "id": "ADV-HLD-001",
+      "kind": "attack",
+      "outcome": "rejected_identity",
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-002",
+      "kind": "attack",
+      "outcome": "rejected_identity",
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-003",
+      "kind": "attack",
+      "outcome": "rejected_identity",
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-004",
+      "kind": "attack",
+      "outcome": "rejected_identity",
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-005",
+      "kind": "attack",
+      "outcome": "rejected_identity",
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-006",
+      "kind": "attack",
+      "outcome": "rejected_identity",
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-007",
+      "kind": "attack",
+      "outcome": "rejected_identity",
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-008",
+      "kind": "attack",
+      "outcome": "rejected_identity",
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-009",
+      "kind": "attack",
+      "outcome": "rejected_identity",
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-010",
+      "kind": "attack",
+      "outcome": "rejected_identity",
+      "proposal_present": false,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-011",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-012",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-013",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-014",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-015",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-016",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-017",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    },
+    {
+      "id": "ADV-HLD-018",
+      "kind": "legitimate",
+      "outcome": "accepted",
+      "proposal_present": true,
+      "passed": true
+    }
+  ]
+}
