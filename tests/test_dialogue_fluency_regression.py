@@ -96,6 +96,35 @@ def test_surface_elaboration_matches_rendered_elaboration_string() -> None:
     assert "mercy but justice" in sentence.surface
 
 
+def test_running_dialogue_blade_stays_nonzero_after_three_turns() -> None:
+    """The running blade must not collapse to zero through grade explosion."""
+    from algebra.rotor import make_rotor_from_angle
+    from generate.proposition import Proposition
+
+    def _prop(slot: int) -> Proposition:
+        relation = make_rotor_from_angle(0.1 * (slot + 1), bivector_idx=6)
+        return Proposition(
+            subject="a", predicate="b", object_=None, surface="a b",
+            frame_id="test",
+            subject_versor=_v(0), predicate_versor=_v(1),
+            object_versor=None, relation=relation,
+        )
+
+    from session.context import SessionContext
+    from language_packs import load_pack
+    _, vocab = load_pack("en_core_cognition_v1")
+    ctx = SessionContext(vocab)
+
+    for i in range(5):
+        ctx.record_dialogue(_prop(i))
+
+    blade = ctx.running_dialogue_blade
+    assert blade is not None
+    assert float(np.linalg.norm(blade)) > 1e-6, (
+        "running_dialogue_blade collapsed to zero after multiple turns"
+    )
+
+
 def test_unknown_gate_fires_on_empty_vault_without_self_storage() -> None:
     class EmptyVault:
         def __len__(self) -> int:

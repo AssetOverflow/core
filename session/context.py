@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 
 from algebra.backend import cga_inner, versor_apply
-from algebra.cga import outer_product
+from algebra.versor import versor_condition as _versor_condition
 from field.state import FieldState
 from generate.dialogue import DialogueTurn
 from generate.proposition import Proposition
@@ -72,8 +72,14 @@ class SessionContext:
                 valence=injected.valence,
             )
         else:
+            composed_F = versor_apply(injected.F, self.state.F)
+            condition = _versor_condition(composed_F)
+            if condition > 1e-2:
+                raise RuntimeError(
+                    f"Cross-turn field composition violated versor condition: {condition:.3e}"
+                )
             candidate = FieldState(
-                F=versor_apply(injected.F, self.state.F),
+                F=composed_F,
                 node=node_idx,
                 step=self.state.step + 1,
                 holonomy=injected.holonomy,
@@ -117,7 +123,9 @@ class SessionContext:
         if self.running_dialogue_blade is None:
             self.running_dialogue_blade = blade.copy()
         else:
-            self.running_dialogue_blade = outer_product(self.running_dialogue_blade, blade)
+            alpha = cga_inner(self.running_dialogue_blade, blade)
+            sign = 1.0 if alpha >= 0.0 else -1.0
+            self.running_dialogue_blade = sign * blade
         return turn
 
     @property

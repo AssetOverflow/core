@@ -26,6 +26,13 @@ _RECENT_WINDOW = 3
 _STOP_TOKENS = frozenset({"it", "to", "word"})
 
 
+def _try_index(vocab, token: str) -> int | None:
+    try:
+        return vocab.index_of(token)
+    except (KeyError, IndexError):
+        return None
+
+
 def _articulate(vocab, word: str) -> str:
     morphology_for_word = getattr(vocab, "morphology_for_word", None)
     if morphology_for_word is None:
@@ -207,9 +214,8 @@ def generate(
         candidates_used = None if candidate_indices is None else len(candidate_indices)
 
     stop_nodes = frozenset(
-        vocab.index_of(token)
-        for token in _STOP_TOKENS
-        if token in {vocab.get_word_at(i) for i in range(len(vocab))}
+        idx for token in _STOP_TOKENS
+        if (idx := _try_index(vocab, token)) is not None
     )
 
     token_budget = min(max_tokens, int(candidates_used)) if candidates_used is not None else max_tokens
@@ -265,9 +271,8 @@ async def agenerate(
     current = state
     recent_nodes = deque([state.node], maxlen=_RECENT_WINDOW)
     stop_nodes = frozenset(
-        vocab.index_of(token)
-        for token in _STOP_TOKENS
-        if token in {vocab.get_word_at(i) for i in range(len(vocab))}
+        idx for token in _STOP_TOKENS
+        if (idx := _try_index(vocab, token)) is not None
     )
     for _ in range(max_tokens):
         current, _hits_applied = _recall_state(

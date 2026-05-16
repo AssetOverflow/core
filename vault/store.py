@@ -12,6 +12,8 @@ O(N) np.array_equal scans.
 
 from __future__ import annotations
 
+from collections import deque
+
 import numpy as np
 from algebra.backend import vault_recall
 from algebra.cga import null_project
@@ -27,8 +29,8 @@ class VaultStore:
         reproject_interval: int = 100,
         max_entries: int | None = None,
     ):
-        self._versors: list[np.ndarray] = []
-        self._metadata: list[dict] = []
+        self._versors: deque[np.ndarray] = deque(maxlen=max_entries)
+        self._metadata: deque[dict] = deque(maxlen=max_entries)
         self._store_count: int = 0
         self._reproject_interval = reproject_interval
         self._max_entries = max_entries
@@ -38,20 +40,20 @@ class VaultStore:
         """Store a versor. Returns its index. Auto-reprojects every N stores."""
         arr = np.asarray(F, dtype=np.float32).copy()
 
-        if self._max_entries is not None and len(self._versors) >= self._max_entries:
-            self._evict_oldest()
-
+        will_evict = self._max_entries is not None and len(self._versors) >= self._max_entries
         self._versors.append(arr)
         self._metadata.append(metadata or {})
-        idx = len(self._versors) - 1
-
-        key = _versor_key(arr)
-        self._exact_index.setdefault(key, []).append(idx)
+        if will_evict:
+            self._rebuild_index()
+        else:
+            idx = len(self._versors) - 1
+            key = _versor_key(arr)
+            self._exact_index.setdefault(key, []).append(idx)
 
         self._store_count += 1
         if self._reproject_interval > 0 and self._store_count % self._reproject_interval == 0:
             self.reproject()
-        return idx
+        return len(self._versors) - 1
 
     def recall(self, query: np.ndarray, top_k: int = 5) -> list:
         """
@@ -62,7 +64,7 @@ class VaultStore:
             return []
 
         query_arr = np.asarray(query, dtype=np.float32)
-        ranked = vault_recall(self._versors, query_arr, max(top_k, 1))
+        ranked = vault_recall(list(self._versors), query_arr, max(top_k, 1))
 
         key = _versor_key(query_arr)
         exact_indices = self._exact_index.get(key, [])
@@ -86,7 +88,8 @@ class VaultStore:
         Re-project all stored versors onto the null cone.
         Corrects floating-point drift. Run between turns or asynchronously.
         """
-        self._versors = [null_project(v) for v in self._versors]
+        reprojected = deque((null_project(v) for v in self._versors), maxlen=self._max_entries)
+        self._versors = reprojected
         self._rebuild_index()
 
     def _rebuild_index(self) -> None:
@@ -94,24 +97,6 @@ class VaultStore:
         for i, v in enumerate(self._versors):
             key = _versor_key(v)
             self._exact_index.setdefault(key, []).append(i)
-
-    def _evict_oldest(self) -> None:
-        """Remove the oldest entry. Deterministic FIFO eviction."""
-        if not self._versors:
-            return
-        evicted = self._versors.pop(0)
-        self._metadata.pop(0)
-        key = _versor_key(evicted)
-        indices = self._exact_index.get(key, [])
-        if indices:
-            indices.pop(0)
-            if not indices:
-                del self._exact_index[key]
-        self._reindex_after_eviction()
-
-    def _reindex_after_eviction(self) -> None:
-        """Rebuild index after front-removal shifts all indices by -1."""
-        self._rebuild_index()
 
     @property
     def reproject_interval(self) -> int:
