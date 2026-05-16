@@ -7,20 +7,62 @@ it describes a transformation being applied, not a property of the vocabulary.
 """
 
 import numpy as np
-from .cl41 import N_COMPONENTS
-from .versor import unitize_versor
 
-_TRANSITION_BIVECTORS = (6, 7, 9, 10, 12, 14)
+from .cl41 import N_COMPONENTS, geometric_product, reverse
+from .versor import unitize_versor, versor_condition
+
+_TRANSITION_CONDITION_TOL = 1e-4
+_NEAR_ZERO_TOL = 1e-12
+_SAME_POINT_TOL = 1e-6
+_STRICT_RESIDUE_TOL = 1e-2
+
+
+def _identity(dtype: np.dtype) -> np.ndarray:
+    rotor = np.zeros(N_COMPONENTS, dtype=dtype)
+    rotor[0] = 1.0
+    return rotor
+
+
+def _result_dtype(*arrays: np.ndarray) -> np.dtype:
+    dtype = np.result_type(*arrays)
+    return dtype if dtype in (np.dtype(np.float32), np.dtype(np.float64)) else np.dtype(np.float32)
+
+
+def _strict_unitize_versor(v: np.ndarray, dtype: np.dtype) -> np.ndarray:
+    """Unitize only already-closed versor candidates.
+
+    ``unitize_versor`` intentionally supports dense construction seeds for
+    ingest/compiler boundaries. Transition construction is not such a boundary:
+    if the product candidate is not already a closed versor, fabricating a
+    deterministic fallback rotor would sever the transition from its source and
+    target. This helper therefore fails closed instead of using construction
+    seed fallback semantics.
+    """
+    arr = np.asarray(v, dtype=np.float64)
+    input_norm = float(np.linalg.norm(arr))
+    if input_norm < _NEAR_ZERO_TOL:
+        raise ValueError("word_transition_rotor: near_zero candidate")
+
+    product = geometric_product(arr, reverse(arr)).astype(np.float64)
+    scalar_sq = float(product[0])
+    residue = product.copy()
+    residue[0] = 0.0
+    residue_norm = float(np.linalg.norm(residue))
+    if residue_norm >= _STRICT_RESIDUE_TOL:
+        raise ValueError(
+            "word_transition_rotor: non_closed candidate; "
+            f"residue_norm={residue_norm:.6e}"
+        )
+    if scalar_sq <= 0.0:
+        raise ValueError(
+            "word_transition_rotor: non_positive candidate; "
+            f"scalar_sq={scalar_sq:.6e}"
+        )
+    return (arr * (1.0 / np.sqrt(scalar_sq))).astype(dtype)
 
 
 def make_rotor_from_angle(angle: float, bivector_idx: int = 6) -> np.ndarray:
-    """Construct a unit rotor from an angle and bivector component index.
-
-    Compatibility helper for tests and low-level energy propagation checks.
-    It intentionally builds the same compact scalar+bivector rotor shape used
-    by the transition constructor and then unitizes it through the canonical
-    versor primitive.
-    """
+    """Construct a scalar+bivector unit rotor from an angle."""
     if not 0 <= int(bivector_idx) < N_COMPONENTS:
         raise ValueError(f"bivector_idx out of range: {bivector_idx!r}")
     rotor = np.zeros(N_COMPONENTS, dtype=np.float64)
@@ -32,44 +74,34 @@ def make_rotor_from_angle(angle: float, bivector_idx: int = 6) -> np.ndarray:
 
 def word_transition_rotor(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """
-    Compute the rotor R that rotates versor A toward versor B in Cl(4,1).
+    Compute the closed transition operator from source versor A to target B.
 
-        R = unitize(1 + B * reverse(A))
+        R = B * reverse(A)
 
-    This is a pure construction operation — building a new algebraic object
-    from two input versors. unitize_versor() is the correct primitive here,
-    not normalize_to_versor() (which is reserved for the injection gate).
-
-    This is a pure operator — it transforms a field state, it does not
-    encode a position. Call this from algebra-aware field logic; never
-    store the result on a vocabulary structure.
-
-    Antipodal or near-antipodal inputs can make 1 + B * reverse(A) null or
-    near-zero. That is an ill-conditioned transition construction, not a
-    case for synthetic fallback. unitize_versor() must fail closed, and the
-    caller must decide whether to skip, terminate, or choose another edge.
-
-    Args:
-        A: Source versor, shape (32,), grade-normed to ±1.
-        B: Target versor, shape (32,), grade-normed to ±1.
-
-    Returns:
-        R: Unitized rotor in Cl(4,1), shape (32,).
-
-    Raises:
-        ValueError: if the transition rotor is null, near-zero, non-scalar
-            after multiplication by its reverse, or otherwise cannot be
-            scaled into a clean +1 operator.
+    Vocabulary coordinates are expected to already be grade-normalized versors.
+    The transition between two such states is their closed product. This path
+    must never synthesize an unrelated fallback rotor from target components;
+    invalid inputs fail loudly so generation can preserve its field invariant.
     """
-    A = np.asarray(A, dtype=np.float64)
-    B = np.asarray(B, dtype=np.float64)
-    if np.linalg.norm(A + B) < 1e-6:
-        raise ValueError("word_transition_rotor: near_zero: antipodal transition has no stable rotor")
+    dtype = _result_dtype(A, B)
+    source = np.asarray(A, dtype=dtype)
+    target = np.asarray(B, dtype=dtype)
+    if source.shape != (N_COMPONENTS,) or target.shape != (N_COMPONENTS,):
+        raise ValueError(
+            "word_transition_rotor expects two 32-component multivectors; "
+            f"got {source.shape} and {target.shape}."
+        )
+    if float(np.linalg.norm(source)) < _NEAR_ZERO_TOL or float(np.linalg.norm(target)) < _NEAR_ZERO_TOL:
+        raise ValueError("word_transition_rotor: near_zero input")
+    if float(np.linalg.norm(target - source)) < _SAME_POINT_TOL:
+        return _identity(dtype)
 
-    weights = np.asarray([abs(float(B[idx])) for idx in _TRANSITION_BIVECTORS])
-    idx = _TRANSITION_BIVECTORS[int(np.argmax(weights))]
-    theta = 0.10 + (0.01 * (int(np.argmax(np.abs(B))) % 8))
-    rotor = np.zeros(N_COMPONENTS, dtype=np.float64)
-    rotor[0] = np.cos(theta)
-    rotor[idx] = np.sin(theta) if float(B[idx]) >= 0.0 else -np.sin(theta)
-    return unitize_versor(rotor)
+    candidate = geometric_product(target, reverse(source)).astype(dtype)
+    rotor = _strict_unitize_versor(candidate, dtype)
+    condition = versor_condition(rotor)
+    if condition > _TRANSITION_CONDITION_TOL:
+        raise ValueError(
+            "word_transition_rotor: transition rotor is not a unit versor; "
+            f"condition={condition:.3e}"
+        )
+    return rotor.astype(dtype, copy=False)
