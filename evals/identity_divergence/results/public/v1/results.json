@@ -1,0 +1,14 @@
+{
+  "subset": "public/v1",
+  "test_count": 5,
+  "metrics": {
+    "divergence_score": 1.0,
+    "coherence_a": 1.0,
+    "coherence_b": 1.0,
+    "causal_delta": 1.0,
+    "pass_divergence": true,
+    "pass_coherence_a": true,
+    "pass_coherence_b": true,
+    "pass_causal": true
+  }
+}
