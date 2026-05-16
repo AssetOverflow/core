@@ -36,11 +36,18 @@ def compute_trace_hash(
     intent_tag: str = "unknown",
     teaching_review_hash: str = "",
     teaching_proposal_id: str = "",
+    operator_invocation: str = "",
 ) -> str:
     """Return a deterministic SHA-256 hex digest over the turn's key outputs.
 
     Parameters match the subset of CognitiveTurnResult that is both
     semantically meaningful and stable across hardware.
+
+    ``operator_invocation`` is the deterministic serialisation of any typed
+    deterministic operator (ADR-0018) invoked during the turn — empty
+    string when no operator ran.  Folding it explicitly makes operator
+    invocation a load-bearing part of replay equality, not just an
+    indirect consequence of surface-change.
     """
     payload = {
         "input_text": input_text,
@@ -54,6 +61,7 @@ def compute_trace_hash(
         "intent_tag": intent_tag,
         "teaching_review_hash": teaching_review_hash,
         "teaching_proposal_id": teaching_proposal_id,
+        "operator_invocation": operator_invocation,
     }
     serialized = json.dumps(payload, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
@@ -84,4 +92,5 @@ def trace_hash_from_result(result: "CognitiveTurnResult") -> str:
         intent_tag=intent_tag,
         teaching_review_hash=review_hash,
         teaching_proposal_id=proposal_id,
+        operator_invocation=result.operator_invocation,
     )

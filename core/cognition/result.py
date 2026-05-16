@@ -63,6 +63,13 @@ class CognitiveTurnResult:
     reviewed_teaching_example: ReviewedTeachingExample | None = None
     pack_mutation_proposal: PackMutationProposal | None = None
 
+    # --- inference operators (ADR-0018) ---
+    # Deterministic serialisation of any typed operator invoked during the
+    # turn (e.g. transitive_walk over the teaching-store typed-relation
+    # graph).  Empty string when no operator ran.  Folded into trace_hash
+    # so operator invocation is a load-bearing part of replay equality.
+    operator_invocation: str = ""
+
     # --- invariant bookkeeping ---
     versor_condition: float = 0.0   # must be < 1e-6
     trace_hash: str = ""            # SHA-256 over deterministic key fields

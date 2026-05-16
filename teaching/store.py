@@ -18,13 +18,21 @@ from teaching.review import ReviewedTeachingExample
 
 @dataclass(frozen=True, slots=True)
 class PackMutationProposal:
-    """A proposed vocabulary manifold change, not yet applied."""
+    """A proposed vocabulary manifold change, not yet applied.
+
+    When the correction text parses into a typed (head, relation, tail)
+    triple via ``teaching.relation_parse.parse_triple``, the triple is
+    stored alongside the opaque text so the inference operators in
+    ``generate.operators`` can walk the typed-relation graph that the
+    teaching store represents (ADR-0018).
+    """
     proposal_id: str
     candidate_id: str
     subject: str
     correction_text: str
     prior_surface: str
     applied: bool = False
+    triple: tuple[str, str, str] | None = None
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -34,6 +42,7 @@ class PackMutationProposal:
             "correction_text": self.correction_text,
             "prior_surface": self.prior_surface,
             "applied": self.applied,
+            "triple": list(self.triple) if self.triple is not None else None,
         }
 
 
@@ -77,15 +86,29 @@ class TeachingStore:
 
         self._examples.append(example)
 
+        from teaching.relation_parse import parse_triple
+
+        triple = parse_triple(example.candidate.correction_text)
         proposal = PackMutationProposal(
             proposal_id=_proposal_id(example.candidate),
             candidate_id=example.candidate.candidate_id,
             subject=example.candidate.intent.subject,
             correction_text=example.candidate.correction_text,
             prior_surface=example.candidate.prior_surface,
+            triple=triple,
         )
         self._proposals.append(proposal)
         return proposal
+
+    def triples(self) -> tuple[tuple[str, str, str], ...]:
+        """Return all typed (head, relation, tail) triples currently stored.
+
+        Filters out proposals that did not parse cleanly.  Order is
+        append-order, which is the order corrections were reviewed in.
+        This is the substrate that ``generate.operators.transitive_walk``
+        walks (ADR-0018).
+        """
+        return tuple(p.triple for p in self._proposals if p.triple is not None)
 
     def retrieve(self, subject: str) -> tuple[ReviewedTeachingExample, ...]:
         """Retrieve all stored examples matching a subject (case-insensitive)."""

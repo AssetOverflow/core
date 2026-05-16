@@ -21,6 +21,7 @@ class IntentTag(Enum):
     CORRECTION = "correction"
     RECALL = "recall"
     VERIFICATION = "verification"
+    TRANSITIVE_QUERY = "transitive_query"
     UNKNOWN = "unknown"
 
 
@@ -29,6 +30,7 @@ class DialogueIntent:
     tag: IntentTag
     subject: str
     secondary_subject: str | None = None
+    relation: str | None = None  # populated for TRANSITIVE_QUERY (ADR-0018)
 
     def requires_prior_turn(self) -> bool:
         return self.tag is IntentTag.CORRECTION
@@ -38,6 +40,37 @@ _COMPARE_RE = re.compile(
     r"^compare\s+(.+?)\s+(?:and|vs\.?|versus|with)\s+(.+)",
     re.IGNORECASE,
 )
+
+# Transitive-query forms (ADR-0018):
+#   "What does X precede/cause/ground/reveal/mean/follow?"  -> (X, R)
+#   "Where does X belong?"                                  -> (X, belongs_to)
+# The trailing-?-and-optional-trailing-tokens form keeps the pattern total.
+_TRANSITIVE_QUERY_RE = re.compile(
+    r"^what\s+does\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
+    r"(?P<relation>precede|precedes|cause|causes|ground|grounds|reveal|reveals|"
+    r"mean|means|follow|follows|contrast(?:_with|s_with|s\s+with)?|"
+    r"produce|produces)\b",
+    re.IGNORECASE,
+)
+_BELONG_QUERY_RE = re.compile(
+    r"^where\s+does\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
+    r"belong(?:s?)\b",
+    re.IGNORECASE,
+)
+
+# Normalisation of the relation surface form back to the bare relation
+# vocabulary the teaching store carries (matches en_core_cognition_v1).
+_RELATION_NORMALIZE: dict[str, str] = {
+    "precede": "precedes", "precedes": "precedes",
+    "cause": "causes", "causes": "causes",
+    "ground": "grounds", "grounds": "grounds",
+    "reveal": "reveals", "reveals": "reveals",
+    "mean": "means", "means": "means",
+    "follow": "follows", "follows": "follows",
+    "contrast": "contrasts_with", "contrast_with": "contrasts_with",
+    "contrasts_with": "contrasts_with", "contrasts with": "contrasts_with",
+    "produce": "produces", "produces": "produces",
+}
 
 _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
     (re.compile(r"^what\s+(?:is|are)\s+", re.IGNORECASE), IntentTag.DEFINITION),
@@ -60,6 +93,24 @@ def classify_intent(prompt: str) -> DialogueIntent:
             tag=IntentTag.COMPARISON,
             subject=compare_match.group(1).strip(),
             secondary_subject=compare_match.group(2).strip(),
+        )
+
+    transitive_match = _TRANSITIVE_QUERY_RE.match(text)
+    if transitive_match:
+        raw_relation = transitive_match.group("relation").lower().strip()
+        relation = _RELATION_NORMALIZE.get(raw_relation, raw_relation)
+        return DialogueIntent(
+            tag=IntentTag.TRANSITIVE_QUERY,
+            subject=transitive_match.group("subject").strip(),
+            relation=relation,
+        )
+
+    belong_match = _BELONG_QUERY_RE.match(text)
+    if belong_match:
+        return DialogueIntent(
+            tag=IntentTag.TRANSITIVE_QUERY,
+            subject=belong_match.group("subject").strip(),
+            relation="belongs_to",
         )
 
     for pattern, tag in _RULES:

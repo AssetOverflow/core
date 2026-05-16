@@ -21,6 +21,8 @@ from core.cognition.trace import compute_trace_hash
 from generate.intent import classify_intent
 from generate.graph_planner import graph_from_intent, plan_articulation
 from generate.realizer import realize_semantic
+from generate.intent import IntentTag
+from generate.operators import WalkResult, transitive_walk
 from teaching.correction import CorrectionCandidate, extract_correction
 from teaching.review import ReviewedTeachingExample, review_correction
 from teaching.store import PackMutationProposal, TeachingStore
@@ -73,6 +75,16 @@ class CognitiveTurnPipeline:
             surface = realized_plan.surface
             articulation_surface = realized_plan.surface
 
+        # 7b. INFER — invoke typed deterministic operators (ADR-0018) when the
+        # intent is a transitive-query or definition shape and the teaching
+        # store carries a chain rooted at the subject.  The operator's result
+        # is folded into the surface so chain endpoints become visible.
+        walk_result: WalkResult | None = self._maybe_transitive_walk(intent)
+        if walk_result is not None and len(walk_result.path) > 1:
+            surface, articulation_surface = self._fold_walk_into_surface(
+                walk_result, surface, articulation_surface,
+            )
+
         # Track last node id for correction-intent chaining
         if graph.nodes:
             self._last_node_id = graph.nodes[-1].node_id
@@ -101,9 +113,11 @@ class CognitiveTurnPipeline:
         self._turn_number += 1
         self._prior_surface = surface
 
-        # 11. TRACE — deterministic hash (includes teaching IDs when present)
+        # 11. TRACE — deterministic hash (includes teaching IDs and any
+        # typed-operator invocation per ADR-0018).
         review_hash = reviewed_example.review_hash if reviewed_example is not None else ""
         proposal_id = proposal.proposal_id if proposal is not None else ""
+        operator_invocation = self._serialize_walk(walk_result)
         trace_hash = compute_trace_hash(
             input_text=text,
             filtered_tokens=filtered_tokens,
@@ -116,6 +130,7 @@ class CognitiveTurnPipeline:
             intent_tag=intent.tag.value,
             teaching_review_hash=review_hash,
             teaching_proposal_id=proposal_id,
+            operator_invocation=operator_invocation,
         )
 
         return CognitiveTurnResult(
@@ -138,6 +153,7 @@ class CognitiveTurnPipeline:
             teaching_candidate=teaching_candidate,
             reviewed_teaching_example=reviewed_example,
             pack_mutation_proposal=proposal,
+            operator_invocation=operator_invocation,
             versor_condition=response.versor_condition,
             trace_hash=trace_hash,
         )
@@ -185,6 +201,63 @@ class CognitiveTurnPipeline:
         )
         proposal = self.teaching_store.add(reviewed)
         return candidate, reviewed, proposal
+
+    def _maybe_transitive_walk(self, intent) -> WalkResult | None:
+        """Invoke ``transitive_walk`` when the intent shape calls for it.
+
+        Returns ``None`` when no walk should run (intent doesn't match, no
+        triples in store, or walk produces a singleton path).  Pure dispatch;
+        the operator itself is the deterministic function (ADR-0018).
+        """
+        triples = self.teaching_store.triples()
+        if not triples:
+            return None
+        if intent.tag is IntentTag.TRANSITIVE_QUERY and intent.relation:
+            return transitive_walk(triples, intent.subject, intent.relation)
+        if intent.tag is IntentTag.DEFINITION:
+            # "What is X?" → walk the "is" relation if any chain exists.
+            result = transitive_walk(triples, intent.subject, "is")
+            if len(result.path) > 1:
+                return result
+        return None
+
+    @staticmethod
+    def _serialize_walk(walk: WalkResult | None) -> str:
+        """Deterministic operator-invocation serialisation for trace_hash."""
+        if walk is None:
+            return ""
+        import json
+        return json.dumps(walk.as_dict(), sort_keys=True, ensure_ascii=False)
+
+    @staticmethod
+    def _fold_walk_into_surface(
+        walk: WalkResult,
+        surface: str,
+        articulation_surface: str,
+    ) -> tuple[str, str]:
+        """Compose a chain-aware surface from a non-trivial walk result.
+
+        Deterministic.  Replay-safe: identical (walk, prior surfaces) produce
+        identical output.  The chain endpoint is the load-bearing token for
+        the inference-closure / multi-step-reasoning eval lanes.
+        """
+        chain = " ".join(walk.path)
+        endpoint = walk.path[-1]
+        chain_surface = (
+            f"{walk.head} {walk.relation.replace('_', ' ')} {endpoint} "
+            f"(via {chain})"
+        )
+        # Preserve the prior surface as a prefix for context, when it exists
+        # and is non-empty; otherwise the chain surface stands alone.
+        if surface:
+            new_surface = f"{surface} — {chain_surface}"
+        else:
+            new_surface = chain_surface
+        if articulation_surface:
+            new_articulation = f"{articulation_surface} — {chain_surface}"
+        else:
+            new_articulation = chain_surface
+        return new_surface, new_articulation
 
     def _capture_field_state(self) -> FieldState | None:
         """Return current session field state, or None if not yet initialised."""
