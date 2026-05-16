@@ -7,7 +7,8 @@ from typing import List
 
 import numpy as np
 
-from algebra.versor import versor_condition
+from algebra.cl41 import N_COMPONENTS, geometric_product
+from algebra.versor import unitize_versor, versor_apply, versor_condition
 from core.config import DEFAULT_CONFIG, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField, ValueAxis
 from core.physics.energy import EnergyProfile
@@ -46,6 +47,8 @@ _SEED_ALIASES = {
 _QUESTION_WORDS = frozenset({"what", "who", "how", "why", "when", "where", "which"})
 _TERMINALS = frozenset({".", "?", ";", "!"})
 _UNKNOWN_DOMAIN_SURFACE = "I don't have field coordinates for that yet."
+_DRIVE_BIAS_SCALE = 0.1
+_DRIVE_BIAS_BIVECTORS = (6, 7, 9)
 
 
 def _energy_scalar(energy_obj) -> float:
@@ -134,6 +137,20 @@ def _make_trajectory_from_result(result, turn: int):
         for i, fs in enumerate(states)
     ]
     return operator.build(frames, trajectory_id=f"turn_{turn}")
+
+
+def _drive_bias_operator(bias: Sequence[float], available: float) -> np.ndarray:
+    operator = np.zeros(N_COMPONENTS, dtype=np.float32)
+    operator[0] = 1.0
+    for component, bivector_idx in zip(bias[:3], _DRIVE_BIAS_BIVECTORS, strict=False):
+        theta = float(component) * float(available) * _DRIVE_BIAS_SCALE
+        if abs(theta) < 1e-8:
+            continue
+        factor = np.zeros(N_COMPONENTS, dtype=np.float32)
+        factor[0] = np.cos(theta)
+        factor[bivector_idx] = np.sin(theta)
+        operator = geometric_product(operator, factor).astype(np.float32)
+    return unitize_versor(operator)
 
 
 @dataclass(frozen=True, slots=True)
@@ -267,9 +284,9 @@ class ChatRuntime:
         bias = self._drive_map.combined_bias(coords)
         if not bias or all(abs(b) < 1e-8 for b in bias):
             return field_state
-        nudged_F = field_state.F.copy()
-        for i, b in enumerate(bias[:3]):
-            nudged_F[i] += b * available * 0.1
+
+        drive_operator = _drive_bias_operator(bias, available)
+        nudged_F = versor_apply(drive_operator, field_state.F)
         return FieldState(
             F=nudged_F,
             node=field_state.node,
