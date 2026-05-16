@@ -1,16 +1,9 @@
 """
-SessionContext — binds field, vault, vocab, persona, referents, and session
-graph for one session.
+SessionContext — binds field, vault, vocab, persona, referents, and graph.
 
-One session = one field trajectory on the manifold.
-The vault accumulates versors across turns.
-The persona motor is fixed per session (or composable across sessions).
-The referent registry resolves pronouns before field injection.
-The session graph records every turn as a TurnNode with backward edges.
-
-Generation returns GenerationResult so the evolved field state is preserved.
-The assistant vault entry stores the generated final_state, not the prompt
-field that entered the turn.
+The ingest path is split into a non-mutating probe and a committing ingest so
+runtime gates can inspect the candidate field before durable vault writes.  All
+response paths finalize through one graph/vault/session-state method.
 """
 
 from __future__ import annotations
@@ -38,38 +31,31 @@ class SessionContext:
         self.vault = vault or VaultStore(reproject_interval=vault_reproject_interval)
         self.state: FieldState | None = None
         self.turn: int = 0
-        # Replaced flat list with SessionGraph; kept attribute name for
-        # back-compat with any code that reads .dialogue_history as a list.
         self.graph: SessionGraph = SessionGraph()
         self.referents: ReferentRegistry = ReferentRegistry()
         self.running_dialogue_blade: np.ndarray | None = None
         self._last_response_tokens: tuple[str, ...] | None = None
         self._anchor_field: np.ndarray | None = None
-        # Preserve the old list interface via a property so existing callers
-        # that iterate dialogue_history don't break.
         self._dialogue_history_compat: list[DialogueTurn] = []
-
-    # ------------------------------------------------------------------
-    # Back-compat property so old callers still work
-    # ------------------------------------------------------------------
+        self._last_input_tokens: tuple[str, ...] = ()
+        self._last_resolved_input_tokens: tuple[str, ...] = ()
+        self._last_input_versor: np.ndarray | None = None
 
     @property
     def dialogue_history(self) -> list[DialogueTurn]:
         return self._dialogue_history_compat
 
-    def ingest(self, tokens: list) -> FieldState:
-        """Inject a prompt into the running field.
+    @property
+    def last_input_tokens(self) -> tuple[str, ...]:
+        return self._last_input_tokens
 
-        Pronouns in *tokens* are resolved to their registered referent
-        surface forms before field injection so the field operates on the
-        correct versor rather than a bare pronoun node.
-        Stores the user field in vault.
-        """
-        # Resolve anaphoric pronouns via the referent registry
-        resolved_tokens = self.referents.resolve(tokens)
+    @property
+    def last_resolved_input_tokens(self) -> tuple[str, ...]:
+        return self._last_resolved_input_tokens
 
+    def _field_from_tokens(self, tokens: list[str], *, resolve_referents: bool) -> tuple[FieldState, list[str]]:
+        resolved_tokens = self.referents.resolve(tokens) if resolve_referents else list(tokens)
         injected = inject(resolved_tokens, self.vocab)
-        # node index from the original first token (pre-resolution surface)
         anchor_token = resolved_tokens[0] if resolved_tokens else (tokens[0] if tokens else "")
         try:
             node_idx = self.vocab.index_of(anchor_token)
@@ -77,7 +63,7 @@ class SessionContext:
             node_idx = self.vocab.index_of(tokens[0]) if tokens else 0
 
         if self.state is None:
-            self.state = FieldState(
+            candidate = FieldState(
                 F=injected.F,
                 node=node_idx,
                 step=injected.step,
@@ -85,9 +71,8 @@ class SessionContext:
                 energy=injected.energy,
                 valence=injected.valence,
             )
-            self._anchor_field = self.state.F.copy()
         else:
-            self.state = FieldState(
+            candidate = FieldState(
                 F=versor_apply(injected.F, self.state.F),
                 node=node_idx,
                 step=self.state.step + 1,
@@ -95,17 +80,37 @@ class SessionContext:
                 energy=injected.energy,
                 valence=injected.valence,
             )
-        self.vault.store(self.state.F, {"turn": self.turn, "role": "user"})
-        return self.state
+        return candidate, resolved_tokens
+
+    def probe_ingest(self, tokens: list[str]) -> FieldState:
+        """Build the candidate ingest field without mutating state or vault."""
+        snapshot_sources = self.referents.consumed_turns()
+        snapshot_slots = self.referents.consumed_slots()
+        candidate, _ = self._field_from_tokens(tokens, resolve_referents=True)
+        # Restore consumed metadata because probe must not define graph edges.
+        self.referents._last_resolved_sources = snapshot_sources  # internal rollback by design
+        self.referents._last_resolved_slots = snapshot_slots
+        return candidate
+
+    def commit_ingest(self, tokens: list[str]) -> FieldState:
+        """Resolve, inject, mutate live state, and store the user field."""
+        field_state, resolved_tokens = self._field_from_tokens(tokens, resolve_referents=True)
+        self.state = field_state
+        if self._anchor_field is None:
+            self._anchor_field = field_state.F.copy()
+        self._last_input_tokens = tuple(tokens)
+        self._last_resolved_input_tokens = tuple(resolved_tokens)
+        self._last_input_versor = field_state.F.copy()
+        self.vault.store(field_state.F, {"turn": self.turn, "role": "user"})
+        return field_state
+
+    def ingest(self, tokens: list[str]) -> FieldState:
+        """Backward-compatible committing ingest."""
+        return self.commit_ingest(tokens)
 
     def record_dialogue(self, proposition: Proposition) -> DialogueTurn:
-        """
-        Store a proposition as geometric dialogue state.
-
-        The transcript surface is deliberately not used as session memory here;
-        the retained object is the proposition paired with its relation blade.
-        """
         from generate.dialogue import DialogueTurn as _DT
+
         blade = proposition.relation
         turn = _DT(proposition=proposition, outer_product_blade=blade)
         self._dialogue_history_compat.append(turn)
@@ -121,16 +126,84 @@ class SessionContext:
             return None
         return self._dialogue_history_compat[-1].outer_product_blade.copy()
 
-    def respond(self, max_tokens: int = 128) -> GenerationResult:
-        """
-        Generate a response from current state and preserve the evolved field.
-        After generation, registers the last content token as the active
-        neut_sg referent so future pronouns resolve correctly.
+    def _register_result_referent(self, result: GenerationResult) -> None:
+        if not result.tokens:
+            return
+        versors: dict[str, np.ndarray] = {}
+        for tok in result.tokens:
+            try:
+                versors[tok] = self.vocab.get_versor(tok)
+            except KeyError:
+                pass
+        self.referents.register_from_tokens(result.tokens, versors, turn=self.turn)
 
-        Returns:
-            GenerationResult carrying emitted tokens and final_state.
-        """
+    def finalize_turn(
+        self,
+        result: GenerationResult,
+        *,
+        tokens_in: tuple[str, ...] | None = None,
+        dialogue_role: str = "assert",
+        input_versor: np.ndarray | None = None,
+        metadata: dict | None = None,
+    ) -> None:
+        """Finalize assistant output into referents, graph, vault, and state."""
+        if self.state is None and input_versor is None:
+            raise AssertionError("Call ingest() before finalize_turn().")
+
+        input_F = (
+            np.asarray(input_versor, dtype=np.float32).copy()
+            if input_versor is not None
+            else (self._last_input_versor.copy() if self._last_input_versor is not None else self.state.F.copy())
+        )
+        turn_tokens = tuple(tokens_in if tokens_in is not None else self._last_input_tokens)
+        backward_edges = self.referents.consumed_turns()
+        active_slots = self.referents.active_slots()
+
+        self._register_result_referent(result)
+        # Include any newly registered output referent in the turn metadata.
+        active_slots = self.referents.active_slots() | active_slots
+
+        self.graph.add_turn(
+            turn_idx=self.turn,
+            input_versor=input_F,
+            output_versor=result.final_state.F,
+            tokens_in=turn_tokens,
+            tokens_out=tuple(result.tokens or []),
+            dialogue_role=dialogue_role,
+            referent_slots=active_slots,
+            backward_edges=backward_edges,
+        )
+        self.state = result.final_state
+        payload = {"turn": self.turn, "role": "assistant"}
+        if metadata:
+            payload.update(metadata)
+        self.vault.store(result.final_state.F, payload)
+        self.turn += 1
+        self._last_response_tokens = result.tokens
+
+    def apply_corrected_outputs(self, records) -> None:
+        """Synchronize corrected graph records into live session recall surfaces."""
+        for record in records:
+            self.vault.store(
+                record.new_versor,
+                {"turn": record.turn_idx, "role": "assistant", "corrected": True},
+            )
+            self.referents.update_turn_versor(record.turn_idx, record.new_versor)
+        if records:
+            last = max(records, key=lambda r: r.turn_idx)
+            if self.state is not None:
+                self.state = FieldState(
+                    F=last.new_versor,
+                    node=self.state.node,
+                    step=self.state.step,
+                    holonomy=self.state.holonomy,
+                    energy=self.state.energy,
+                    valence=self.state.valence,
+                )
+
+    def respond(self, max_tokens: int = 128) -> GenerationResult:
         assert self.state is not None, "Call ingest() before respond()."
+        input_versor = self._last_input_versor.copy() if self._last_input_versor is not None else self.state.F.copy()
         result = generate(self.state, self.vocab, self.persona, max_tokens, vault=self.vault)
         if self._last_response_tokens is not None and result.tokens == self._last_response_tokens and result.tokens:
             try:
@@ -148,59 +221,12 @@ class SessionContext:
                 )
                 result = generate(pivot, self.vocab, self.persona, max_tokens, vault=self.vault)
         result = self._orient_result_to_anchor(result)
-
-        # ------------------------------------------------------------------
-        # Register the last content token in the output as the active referent
-        # so incoming pronouns on the next turn resolve correctly.
-        # ------------------------------------------------------------------
-        if result.tokens:
-            versors: dict[str, np.ndarray] = {}
-            for tok in result.tokens:
-                try:
-                    versors[tok] = self.vocab.get_versor(tok)
-                except KeyError:
-                    pass
-            self.referents.register_from_tokens(
-                result.tokens, versors, turn=self.turn
-            )
-
-        # ------------------------------------------------------------------
-        # Record turn in the session graph
-        # ------------------------------------------------------------------
-        input_versor = self.state.F  # already set by ingest
-        self.state = result.final_state
-        self.vault.store(result.final_state.F, {"turn": self.turn, "role": "assistant"})
-
-        # Collect backward edges: turns whose output versor was consumed as a
-        # referent during this turn's ingest (registered in referents.history).
-        backward_edges = [
-            entry.turn
-            for entry in self.referents.history()
-            if entry.turn < self.turn
-        ]
-        active_slots = {
-            entry.slot: entry.turn
-            for entry in self.referents.history()
-            if entry.turn <= self.turn
-        }
-        self.graph.add_turn(
-            turn_idx=self.turn,
-            input_versor=input_versor,
-            output_versor=result.final_state.F,
-            tokens_in=tuple(self.state_input_tokens if hasattr(self, "state_input_tokens") else []),
-            tokens_out=tuple(result.tokens or []),
-            dialogue_role="assert",
-            referent_slots=active_slots,
-            backward_edges=list(dict.fromkeys(backward_edges)),  # deduplicated
-        )
-
-        self.turn += 1
-        self._last_response_tokens = result.tokens
+        self.finalize_turn(result, input_versor=input_versor, dialogue_role="assert")
         return result
 
     def _orient_result_to_anchor(self, result: GenerationResult) -> GenerationResult:
         final_state = result.final_state
-        coherence_anchor = self._anchor_field if self._anchor_field is not None else self.state.F
+        coherence_anchor = self._anchor_field if self._anchor_field is not None else (self.state.F if self.state is not None else None)
         if coherence_anchor is None:
             return result
         cga_score = cga_inner(final_state.F, coherence_anchor)
@@ -226,44 +252,15 @@ class SessionContext:
         return result
 
     async def arespond(self, max_tokens: int = 128):
-        """
-        Async token-yielding response path.
-
-        The generation pass still returns a GenerationResult internally so
-        SessionContext can store the evolved assistant final_state after
-        yielding the surface tokens.
-        """
         assert self.state is not None, "Call ingest() before arespond()."
+        input_versor = self._last_input_versor.copy() if self._last_input_versor is not None else self.state.F.copy()
         result = self._orient_result_to_anchor(
             generate(self.state, self.vocab, self.persona, max_tokens, vault=self.vault)
         )
         for token in result.tokens:
             yield token
-
-        if result.tokens:
-            versors: dict[str, np.ndarray] = {}
-            for tok in result.tokens:
-                try:
-                    versors[tok] = self.vocab.get_versor(tok)
-                except KeyError:
-                    pass
-            self.referents.register_from_tokens(
-                result.tokens, versors, turn=self.turn
-            )
-
-        self.state = result.final_state
-        self.vault.store(result.final_state.F, {"turn": self.turn, "role": "assistant"})
-        self.graph.add_turn(
-            turn_idx=self.turn,
-            input_versor=self.state.F,
-            output_versor=result.final_state.F,
-            tokens_in=(),
-            tokens_out=tuple(result.tokens or []),
-            dialogue_role="assert",
-        )
-        self.turn += 1
+        self.finalize_turn(result, input_versor=input_versor, dialogue_role="assert")
 
     def recall(self, query_tokens: list, top_k: int = 5) -> list:
-        """Recall relevant past versors for a query."""
         query_state = inject(query_tokens, self.vocab)
         return self.vault.recall(query_state.F, top_k=top_k)
