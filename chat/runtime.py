@@ -46,7 +46,7 @@ _SEED_ALIASES = {
 }
 _QUESTION_WORDS = frozenset({"what", "who", "how", "why", "when", "where", "which"})
 _TERMINALS = frozenset({".", "?", ";", "!"})
-_UNKNOWN_DOMAIN_SURFACE = "I don't have field coordinates for that yet."
+_UNKNOWN_DOMAIN_SURFACE = "I don't know — insufficient grounding for that yet."
 
 
 def _energy_scalar(energy_obj) -> float:

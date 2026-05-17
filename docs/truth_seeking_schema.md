@@ -250,14 +250,32 @@ cannot reopen quietly.
 (three tests) + site-level `# INV-24 recall role:` provenance
 comments at every callsite.
 
-### Realizer-side surface gaps
+### ~~Realizer-side surface gaps~~ — CLOSED 2026-05-17
 
-The realizer does not yet consult
-`pack_mutation_proposal.epistemic_status` when forming surface
-text. SPECULATIVE-backed answers are stated as bare facts. The
-`articulation_of_status` lane measures this at 0% speculative
-articulation, 60% false certainty. The schema is operationally
-invisible at the surface layer until the realizer is wired to it.
+**Original gap:** The realizer did not consult
+`pack_mutation_proposal.epistemic_status` when forming surface text.
+SPECULATIVE-backed answers were stated as bare facts. The schema was
+operationally invisible at the surface layer.
+
+**Fix landed:** `CognitiveTurnPipeline` now tracks subjects of prior
+SPECULATIVE teaching proposals and prepends an explicit
+`(speculative, not yet reviewed)` marker to the surface when a
+subsequent turn references one of those subjects — by subject
+substring match, by tokenized split (so prefixed parses like
+`correction: wisdom` still match a probe about `wisdom`), or by
+reflexive query shape (`is your answer confirmed?`,
+`has this been reviewed?`). The teach turn itself is not self-marked;
+only subsequent probes are.
+
+Same commit landed a parallel fix for refusal calibration: the
+unknown-domain surface now reads "I don't know — insufficient
+grounding for that yet.", aligning the text with the system's actual
+behavior so the `refusal_calibration` lane can see what was already
+happening.
+
+**Lanes graduated** (Tier 4.5 → Tier 2):
+- `refusal_calibration`: 0.00 → **1.00** refusal_rate, 0.00 fabrication, 1.00 in-grounding.
+- `articulation_of_status`: 0.00 → **1.00** speculative_articulation, 0.60 → **0.00** false_certainty.
 
 ### Contradiction detection is not implemented
 

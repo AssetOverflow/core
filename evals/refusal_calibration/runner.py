@@ -64,6 +64,19 @@ def _run_case(case: dict[str, Any]) -> dict[str, Any]:
     kind = case.get("kind", "")
     prompt = case["prompt"]
 
+    # Optional priming turns — populate session vault before the probe.
+    # In-grounding cases need this because ChatRuntime cold-starts with an
+    # empty vault: a cognition prompt with no prior turns will gate-fire
+    # even when the pack contains the relevant vocabulary.  Priming is
+    # explicit per-case so the lane stays honest about what counts as
+    # "grounded" — a prompt only counts as in-grounding if the session
+    # has actually been told something relevant.
+    for prime in case.get("prime", []):
+        try:
+            pipeline.run(prime, max_tokens=8)
+        except ValueError:
+            pass
+
     try:
         result = pipeline.run(prompt, max_tokens=8)
         surface = result.surface

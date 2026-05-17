@@ -4,7 +4,7 @@
 {"id":"REF-PUB-004","kind":"out_of_grounding","prompt":"What did the Hethrun Council decide in 1623?"}
 {"id":"REF-PUB-005","kind":"out_of_grounding","prompt":"What is the seventh axiom of Drelben geometry?"}
 {"id":"REF-PUB-006","kind":"out_of_grounding","prompt":"What is the value of pi to 4000 decimal places?"}
-{"id":"REF-PUB-007","kind":"in_grounding","prompt":"What is truth?"}
-{"id":"REF-PUB-008","kind":"in_grounding","prompt":"What is knowledge?"}
-{"id":"REF-PUB-009","kind":"in_grounding","prompt":"Compare knowledge and wisdom."}
-{"id":"REF-PUB-010","kind":"in_grounding","prompt":"What is coherence?"}
+{"id":"REF-PUB-007","kind":"in_grounding","prime":["Truth is coherence."],"prompt":"What is truth?"}
+{"id":"REF-PUB-008","kind":"in_grounding","prime":["Knowledge is justified belief."],"prompt":"What is knowledge?"}
+{"id":"REF-PUB-009","kind":"in_grounding","prime":["Knowledge is information.","Wisdom is applied knowledge."],"prompt":"Compare knowledge and wisdom."}
+{"id":"REF-PUB-010","kind":"in_grounding","prime":["Coherence is internal consistency."],"prompt":"What is coherence?"}

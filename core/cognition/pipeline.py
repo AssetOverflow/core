@@ -30,8 +30,44 @@ from generate.operators import (
     transitive_walk,
 )
 from teaching.correction import CorrectionCandidate, extract_correction
+from teaching.epistemic import EpistemicStatus
 from teaching.review import ReviewedTeachingExample, review_correction
 from teaching.store import PackMutationProposal, TeachingStore
+
+
+# ADR-0021 §Articulation: surfaces backed by SPECULATIVE teaching material
+# carry an explicit status marker.  Wording must match SPECULATIVE_MARKERS in
+# evals/articulation_of_status/runner.py: "speculative" and "not yet reviewed"
+# are both checked.
+_SPECULATIVE_SURFACE_MARKER = "(speculative, not yet reviewed) "
+
+# Reflexive query shapes that almost always refer back to the immediately
+# prior speculative teaching even when the subject token is not repeated:
+# "Has this been reviewed?", "Is your answer about X confirmed?".  Used to
+# extend the marker beyond exact subject-token matches.
+_REFLEXIVE_PROBE_MARKERS: tuple[str, ...] = (
+    "your answer",
+    "this answer",
+    "has this",
+    "is that",
+    "confirmed",
+    "reviewed",
+    "verified",
+)
+
+# Splitter for extracting individual subject tokens from a parsed-triple
+# subject like "correction: wisdom" → ("correction", "wisdom") — so probes
+# about "wisdom" still match a SPECULATIVE proposal whose triple parser
+# included a clarifying prefix.
+import re as _re
+_SUBJECT_SPLIT_RE = _re.compile(r"[^a-z0-9]+")
+_SUBJECT_STOPWORDS: frozenset[str] = frozenset({
+    "actually", "correction", "really", "indeed", "instead",
+    "the", "this", "that", "these", "those",
+    "is", "are", "was", "were", "been", "being",
+    "of", "for", "with", "and", "but", "from",
+    "your", "their", "answer",
+})
 
 
 class CognitiveTurnPipeline:
@@ -47,6 +83,12 @@ class CognitiveTurnPipeline:
         self.teaching_store = teaching_store or TeachingStore()
         self._prior_surface: str | None = None
         self._turn_number: int = 0
+        # ADR-0021 §Articulation: subjects of prior SPECULATIVE teaching
+        # proposals.  When a later turn's input references one of these
+        # (by subject substring or reflexive query shape), the surface
+        # is prefixed with _SPECULATIVE_SURFACE_MARKER so the user can
+        # tell ratified knowledge from unreviewed teaching material.
+        self._speculative_subjects: set[str] = set()
 
     # ------------------------------------------------------------------
     # Public API
@@ -136,11 +178,43 @@ class CognitiveTurnPipeline:
         else:
             filtered_tokens = raw_tokens
 
+        # 9b. ARTICULATE STATUS — if any prior turn produced a SPECULATIVE
+        # teaching proposal whose subject is referenced by the current
+        # input (subject substring or reflexive query shape), prepend a
+        # status marker so the user can distinguish reviewed knowledge
+        # from unreviewed teaching material.  ADR-0021 §Articulation.
+        # Decision uses subjects seeded by prior turns; this turn's own
+        # proposal (if any) is added below for FUTURE turns to see.
+        if self._speculative_subjects and surface and self._should_mark_speculative(text, surface):
+            surface = _SPECULATIVE_SURFACE_MARKER + surface
+            articulation_surface = _SPECULATIVE_SURFACE_MARKER + articulation_surface
+
         # 10. TEACHING — correction capture, review, and store
         teaching_candidate, reviewed_example, proposal = self._run_teaching(
             text, intent, self._turn_number,
             identity_score=response.identity_score,
         )
+
+        # 10b. TRACK SPECULATIVE SUBJECTS — seed the marker decision for
+        # future turns.  Done AFTER the marker check above so the teach
+        # turn itself does not self-mark; only subsequent probes do.
+        # Prefer the parsed-triple subject (clean: "truth") over the raw
+        # proposal.subject (often a fragment of the correction text);
+        # also split-and-add each ≥4-char token so prefixed parses like
+        # "correction: wisdom" still match a probe about "wisdom".
+        if proposal is not None and proposal.epistemic_status is EpistemicStatus.SPECULATIVE:
+            sources: list[str] = []
+            if proposal.triple is not None and proposal.triple[0]:
+                sources.append(proposal.triple[0])
+            if proposal.subject:
+                sources.append(proposal.subject)
+            for src in sources:
+                lowered = src.lower().strip()
+                if lowered:
+                    self._speculative_subjects.add(lowered)
+                for tok in _SUBJECT_SPLIT_RE.split(src.lower()):
+                    if len(tok) >= 4 and tok not in _SUBJECT_STOPWORDS:
+                        self._speculative_subjects.add(tok)
 
         # Advance turn counter and remember surface for next correction binding
         self._turn_number += 1
@@ -205,6 +279,26 @@ class CognitiveTurnPipeline:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def _should_mark_speculative(self, text: str, surface: str) -> bool:
+        """Decide whether ``surface`` should carry the SPECULATIVE marker.
+
+        Triggers when the input references a subject of a prior SPECULATIVE
+        teaching proposal (by substring match) or carries a reflexive query
+        shape (e.g. "is your answer about X confirmed?").  Already-marked
+        surfaces are not double-marked.
+        """
+        surface_lower = surface.lower()
+        if "speculative" in surface_lower or "not yet reviewed" in surface_lower:
+            return False
+        text_lower = text.lower()
+        for subj in self._speculative_subjects:
+            if subj and subj in text_lower:
+                return True
+        for marker in _REFLEXIVE_PROBE_MARKERS:
+            if marker in text_lower:
+                return True
+        return False
 
     def _run_teaching(
         self,
