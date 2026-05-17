@@ -136,13 +136,23 @@ pub fn normalize_to_versor_raw(f: &[f32; 32]) -> Result<[f32; 32], VersorError> 
 }
 
 /// ||F * reverse(F) - 1||_F.
-/// Returns scalar f32. Used in tests and injection gate only.
+/// Returns scalar f32 truncation of an f64 fold.
+///
+/// The fold (geometric product, identity subtraction, Frobenius norm)
+/// is performed in f64 to match the Python source-of-truth
+/// `algebra.versor.versor_unit_residual`, which uses
+/// `dtype=np.float64` + `np.linalg.norm`. ADR-0020 parity gate
+/// `tests/test_versor_condition_rust_parity.py` asserts bit-identity
+/// of the returned f32; an all-f32 fold here drifts by 1 ULP on
+/// out-of-shell inputs.  Python is canonical per CLAUDE.md
+/// sequencing rule 5.
 pub fn versor_condition_raw(f: &[f32; 32]) -> Result<f32, VersorError> {
-    let rev_f = reverse_raw(f);
-    let mut frv = geometric_product_raw(f, &rev_f)?;
-    frv[0] -= 1.0; // subtract identity
-    let norm_sq: f32 = frv.iter().map(|x| x * x).sum();
-    Ok(norm_sq.sqrt())
+    let f64_in: [f64; 32] = core::array::from_fn(|i| f[i] as f64);
+    let rev_f = reverse_f64(&f64_in);
+    let mut frv = geometric_product_f64(&f64_in, &rev_f);
+    frv[0] -= 1.0;
+    let norm_sq: f64 = frv.iter().map(|x| x * x).sum();
+    Ok(norm_sq.sqrt() as f32)
 }
 
 #[cfg(test)]

@@ -74,6 +74,10 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_vault_recall.py",
         "tests/test_vault_recall_vectorised.py",
         "tests/test_vault_recall_rust_parity.py",
+        "tests/test_cga_inner_rust_parity.py",
+        "tests/test_geometric_product_rust_parity.py",
+        "tests/test_versor_condition_rust_parity.py",
+        "tests/test_versor_apply_rust_parity.py",
     ),
     "pulse": (
         "tests/test_pulse_integration.py",

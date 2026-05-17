@@ -59,14 +59,17 @@ def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
     """Apply a versor through the canonical algebra closure boundary.
 
     The Python implementation is the default source of truth for runtime
-    closure semantics.  The Rust closure path is used only when explicitly
-    requested with CORE_BACKEND=rust/core_rs.
+    closure semantics.
+
+    Rust dispatch is **disabled** for this surface pending an f64 parity
+    port.  The current Rust `versor_apply_closed` computes the sandwich
+    in f32 and applies a closure path whose null-vector branch and
+    fallback order differ structurally from Python's
+    `_close_applied_versor`.  The ADR-0020 gate
+    `tests/test_versor_apply_rust_parity.py` documents the divergence
+    and skips under the disabled dispatch; un-skip when the f64 port
+    lands.  Python is canonical per CLAUDE.md sequencing rule 5.
     """
-    if _RUST:
-        try:
-            return np.asarray(_rs.versor_apply_with_closure(V, F), dtype=np.float64)
-        except (AttributeError, Exception):
-            pass
     from algebra.versor import versor_apply as _va
     return _va(V, F)
 

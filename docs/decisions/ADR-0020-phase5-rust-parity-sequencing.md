@@ -142,6 +142,40 @@ governs sequencing.
   validates.  Any divergence is a test failure, not a feature
   request.
 
+## Parity status (live)
+
+| Surface              | Gate file                                              | Status            | Dispatch                |
+|----------------------|---------------------------------------------------------|-------------------|-------------------------|
+| `vault_recall`       | `tests/test_vault_recall_rust_parity.py`               | passing           | enabled                 |
+| `cga_inner`          | `tests/test_cga_inner_rust_parity.py`                  | passing           | enabled                 |
+| `geometric_product`  | `tests/test_geometric_product_rust_parity.py`          | passing           | enabled                 |
+| `versor_condition`   | `tests/test_versor_condition_rust_parity.py`           | passing (after f64 fold fix) | enabled       |
+| `versor_apply`       | `tests/test_versor_apply_rust_parity.py`               | **skipped**       | **disabled pending f64 port** |
+
+### Outstanding work: `versor_apply` f64 parity port
+
+The current Rust `versor_apply_closed` diverges from Python on two
+axes that the bit-identity gate exposes:
+
+1. **Precision** — Rust folds the sandwich (V·F·rev(V)) in f32; Python
+   in f64.
+2. **Closure structure** — Rust has a null-vector early branch and no
+   post-unitize `versor_condition < 1e-6` recheck; Python is the
+   inverse (no null branch; recheck + seed-rotor fallback).
+
+The f64 building blocks already exist in the Rust crate
+(`geometric_product_f64`, `reverse_f64`, `unitize_closed` in f64).
+A focused parity port replaces `versor_apply_closed` with an f64-
+throughout sandwich + a closure path mirroring Python's
+`_close_applied_versor` exactly, then un-skips
+`test_versor_apply_rust_parity.py` and removes the dispatch disable
+in `algebra/backend.py::versor_apply`.
+
+Until that port lands, `versor_apply` runs Python under any
+`CORE_BACKEND` setting.  This is the ADR's "default-off until parity
+passes" discipline applied: the surface is honestly disabled, the
+gate is honestly skipped, and the follow-up is documented here.
+
 ## What this ADR does NOT decide
 
 - Which Phase 5 curriculum to open *second* (Hebrew vs.
