@@ -1,0 +1,148 @@
+{
+  "metrics": {
+    "thresholds_swept": [
+      -1.0,
+      -0.5,
+      0.0,
+      0.1,
+      0.25,
+      0.5,
+      1.0
+    ],
+    "best_threshold": -1.0,
+    "best_separation_quality": 0.0,
+    "separation_quality_gate": 0.8,
+    "passes_separation_gate": false,
+    "total_correct_candidates": 0,
+    "total_incorrect_candidates": 0,
+    "overlap_ratio": 0.0,
+    "case_count": 9,
+    "skipped_count": 9,
+    "geometry_supports_static_threshold": false
+  },
+  "per_threshold": {
+    "-1.0": {
+      "TP": 0,
+      "FN": 0,
+      "FP": 0,
+      "TN": 0,
+      "TP_rate": 0.0,
+      "FP_rate": 0.0,
+      "FN_rate": 0.0,
+      "TN_rate": 0.0,
+      "separation_quality": 0.0
+    },
+    "-0.5": {
+      "TP": 0,
+      "FN": 0,
+      "FP": 0,
+      "TN": 0,
+      "TP_rate": 0.0,
+      "FP_rate": 0.0,
+      "FN_rate": 0.0,
+      "TN_rate": 0.0,
+      "separation_quality": 0.0
+    },
+    "0.0": {
+      "TP": 0,
+      "FN": 0,
+      "FP": 0,
+      "TN": 0,
+      "TP_rate": 0.0,
+      "FP_rate": 0.0,
+      "FN_rate": 0.0,
+      "TN_rate": 0.0,
+      "separation_quality": 0.0
+    },
+    "0.1": {
+      "TP": 0,
+      "FN": 0,
+      "FP": 0,
+      "TN": 0,
+      "TP_rate": 0.0,
+      "FP_rate": 0.0,
+      "FN_rate": 0.0,
+      "TN_rate": 0.0,
+      "separation_quality": 0.0
+    },
+    "0.25": {
+      "TP": 0,
+      "FN": 0,
+      "FP": 0,
+      "TN": 0,
+      "TP_rate": 0.0,
+      "FP_rate": 0.0,
+      "FN_rate": 0.0,
+      "TN_rate": 0.0,
+      "separation_quality": 0.0
+    },
+    "0.5": {
+      "TP": 0,
+      "FN": 0,
+      "FP": 0,
+      "TN": 0,
+      "TP_rate": 0.0,
+      "FP_rate": 0.0,
+      "FN_rate": 0.0,
+      "TN_rate": 0.0,
+      "separation_quality": 0.0
+    },
+    "1.0": {
+      "TP": 0,
+      "FN": 0,
+      "FP": 0,
+      "TN": 0,
+      "TP_rate": 0.0,
+      "FP_rate": 0.0,
+      "FN_rate": 0.0,
+      "TN_rate": 0.0,
+      "separation_quality": 0.0
+    }
+  },
+  "score_distributions": {
+    "correct": {
+      "count": 0
+    },
+    "incorrect": {
+      "count": 0
+    }
+  },
+  "case_details": [
+    {
+      "id": "FSC-PUB-001",
+      "skipped": true
+    },
+    {
+      "id": "FSC-DEV-001",
+      "skipped": true
+    },
+    {
+      "id": "FSC-DEV-002",
+      "skipped": true
+    },
+    {
+      "id": "FSC-DEV-003",
+      "skipped": true
+    },
+    {
+      "id": "FSC-DEV-004",
+      "skipped": true
+    },
+    {
+      "id": "FSC-DEV-005",
+      "skipped": true
+    },
+    {
+      "id": "FSC-DEV-006",
+      "skipped": true
+    },
+    {
+      "id": "FSC-DEV-007",
+      "skipped": true
+    },
+    {
+      "id": "FSC-DEV-008",
+      "skipped": true
+    }
+  ]
+}

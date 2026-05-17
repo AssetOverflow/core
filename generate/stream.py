@@ -279,6 +279,7 @@ def generate(
     region: AdmissibilityRegion | None = None,
     inner_loop_admissibility: bool = False,
     admissibility_threshold: float = 0.0,
+    inner_loop_force_admit: bool = False,
 ) -> GenerationResult:
     """Generate a token sequence.
 
@@ -299,6 +300,15 @@ def generate(
     byte-identical.  The rotor ``V`` is only constructed for the
     admitted candidate, so the ``versor_condition < 1e-6`` invariant
     is unaffected.
+
+    ``inner_loop_force_admit`` (Phase 2 null control) — only meaningful
+    when ``inner_loop_admissibility=True``.  Exercises the inner-loop
+    code path (same attempt-loop scaffolding, same telemetry side
+    effects) but force-breaks on the first candidate regardless of
+    verdict.  This isolates rejection as the causal factor: any
+    delta between boundary-only and inner-loop-on runs that vanishes
+    under the null control is attributable to code-path differences,
+    not to rejection.  Not exposed to RuntimeConfig — eval-only.
     """
     tokens = []
     trajectory = [] if record_trajectory else None
@@ -394,7 +404,13 @@ def generate(
                     region_label=effective_region_label,
                     reason="unconstrained",
                 )
-            if not inner_loop_active or verdict.admitted:
+            if not inner_loop_active or verdict.admitted or inner_loop_force_admit:
+                # `inner_loop_force_admit` is the Phase 2 null control:
+                # exercises the inner-loop code path (same attempt loop,
+                # same telemetry side effects) but force-breaks on the
+                # first candidate so any pass-rate delta vs the true
+                # inner-loop run is causally attributable to rejection,
+                # not to incidental code-path differences.
                 break
             # Inner loop is on and verdict rejected this candidate.
             rejected_attempts.append((int(word_idx), str(word), float(verdict.score)))

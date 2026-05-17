@@ -328,5 +328,39 @@ class TestInnerLoopDeterminism:
         assert h_off == h_on
 
 
+class TestInnerLoopNullControl:
+    """Phase 2 null control — exercises the inner-loop code path but
+    force-admits every candidate.  Used by the FSC corpus runner to
+    isolate rejection as the causal factor in any pass-rate delta.
+    """
+
+    def test_force_admit_selects_first_preferred_candidate_no_rejections(self) -> None:
+        # Without null control, this case rejects alpha and selects beta.
+        # With null control, the inner-loop path is exercised but the
+        # first candidate (alpha) is force-admitted — same outcome as
+        # boundary-only.
+        vocab = _ControllableVocab(
+            words=["seed", "alpha", "beta"],
+            preference=[1, 2],
+            versor_signs=[+1.0, -1.0, +1.0],
+        )
+        result = generate(
+            _initial_state(vocab),
+            vocab,
+            _IdentityPersona(),
+            max_tokens=1,
+            region=_positive_blade_region((1, 2)),
+            inner_loop_admissibility=True,
+            inner_loop_force_admit=True,
+        )
+        # Force-admit selects alpha (preferred) even though verdict is
+        # rejected — the breakout happens regardless.
+        assert result.tokens == ("alpha",)
+        step = result.admissibility_trace[0]
+        assert step.selected_word == "alpha"
+        # No rejections accumulated — first attempt breaks out.
+        assert step.rejected_attempts == ()
+
+
 if __name__ == "__main__":  # pragma: no cover
     pytest.main([__file__, "-v"])

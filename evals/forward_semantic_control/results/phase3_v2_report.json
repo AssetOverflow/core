@@ -1,0 +1,129 @@
+{
+  "metrics": {
+    "case_count": 5,
+    "skipped_count": 0,
+    "eligible_count": 5,
+    "pass_count": 5,
+    "pass_rate": 1.0,
+    "boundary_decoy_rate": 1.0,
+    "rejection_traced_rate": 1.0,
+    "mechanism_isolated": true
+  },
+  "case_details": [
+    {
+      "id": "FSC-PUB-V2-001",
+      "skipped": false,
+      "passed": true,
+      "semantic_pair": "question/answer",
+      "expected_endpoint": "question",
+      "forbidden_token": "answer",
+      "boundary_selected": "answer",
+      "boundary_picks_forbidden": true,
+      "boundary_verdict_rejects": true,
+      "inner_selected": "question",
+      "inner_admitted": true,
+      "inner_exhausted": false,
+      "rejection_in_trace": true,
+      "rejected_attempts": [
+        [
+          21,
+          "answer",
+          0.823794424533844
+        ]
+      ],
+      "rationale": "Field state from 'symbol' is geometrically nearer to 'answer' than 'question' (gap=+1.566), so boundary-only selects 'answer'. Blade=versor('question') admits 'question' at score 1.420 but rejects 'answer' at score 0.824. Threshold 1.122 sits between them."
+    },
+    {
+      "id": "FSC-PUB-V2-002",
+      "skipped": false,
+      "passed": true,
+      "semantic_pair": "truth/meaning",
+      "expected_endpoint": "truth",
+      "forbidden_token": "meaning",
+      "boundary_selected": "meaning",
+      "boundary_picks_forbidden": true,
+      "boundary_verdict_rejects": true,
+      "inner_selected": "truth",
+      "inner_admitted": true,
+      "inner_exhausted": false,
+      "rejection_in_trace": true,
+      "rejected_attempts": [
+        [
+          110,
+          "meaning",
+          0.7167291045188904
+        ]
+      ],
+      "rationale": "Field state from 'infer' is geometrically nearer to 'meaning' than 'truth' (gap=+2.193), so boundary-only selects 'meaning'. Blade=versor('truth') admits 'truth' at score 1.173 but rejects 'meaning' at score 0.717. Threshold 0.945 separates."
+    },
+    {
+      "id": "FSC-PUB-V2-003",
+      "skipped": false,
+      "passed": true,
+      "semantic_pair": "think/spirit",
+      "expected_endpoint": "think",
+      "forbidden_token": "spirit",
+      "boundary_selected": "spirit",
+      "boundary_picks_forbidden": true,
+      "boundary_verdict_rejects": true,
+      "inner_selected": "think",
+      "inner_admitted": true,
+      "inner_exhausted": false,
+      "rejection_in_trace": true,
+      "rejected_attempts": [
+        [
+          29,
+          "spirit",
+          -0.5510096549987793
+        ]
+      ],
+      "rationale": "Cognition vs. ineffable pole. Field state from 'corrects' is nearer to 'spirit' (gap=+2.711). Blade=versor('think') admits 'think' at score 12.72 and rejects 'spirit' at score -0.55. Wide blade gap (+13.27)."
+    },
+    {
+      "id": "FSC-PUB-V2-004",
+      "skipped": false,
+      "passed": true,
+      "semantic_pair": "understand/say",
+      "expected_endpoint": "understand",
+      "forbidden_token": "say",
+      "boundary_selected": "say",
+      "boundary_picks_forbidden": true,
+      "boundary_verdict_rejects": true,
+      "inner_selected": "understand",
+      "inner_admitted": true,
+      "inner_exhausted": false,
+      "rejection_in_trace": true,
+      "rejected_attempts": [
+        [
+          19,
+          "say",
+          2.3711442947387695
+        ]
+      ],
+      "rationale": "Intellection vs. utterance. Field state from 'corrects' is nearer to 'say'. Blade=versor('understand') admits 'understand' at score 5.74 and rejects 'say' at score 2.37."
+    },
+    {
+      "id": "FSC-PUB-V2-005",
+      "skipped": false,
+      "passed": true,
+      "semantic_pair": "thought/beginning",
+      "expected_endpoint": "thought",
+      "forbidden_token": "beginning",
+      "boundary_selected": "beginning",
+      "boundary_picks_forbidden": true,
+      "boundary_verdict_rejects": true,
+      "inner_selected": "thought",
+      "inner_admitted": true,
+      "inner_exhausted": false,
+      "rejection_in_trace": true,
+      "rejected_attempts": [
+        [
+          27,
+          "beginning",
+          1.616857886314392
+        ]
+      ],
+      "rationale": "Cognition vs. genesis. Field state from 'corrects' is nearer to 'beginning'. Blade=versor('thought') admits 'thought' at score 14.36 and rejects 'beginning' at score 1.62. Largest blade gap (+12.75)."
+    }
+  ]
+}

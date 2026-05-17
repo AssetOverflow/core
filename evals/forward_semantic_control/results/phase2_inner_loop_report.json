@@ -1,0 +1,532 @@
+{
+  "metrics": {
+    "per_condition": {
+      "boundary_only": {
+        "label": "boundary_only",
+        "pass_rate": 1.0,
+        "mean_rejection_count_per_turn": 0,
+        "non_empty_rejected_attempts_rate": 0.0,
+        "exhaustion_rate": 0.0,
+        "mean_admissibility_checks_per_turn": 3,
+        "mean_added_latency_ms": 0.0,
+        "p95_added_latency_ms": 0.0,
+        "trace_hash_stability_pass_rate": 0.0,
+        "case_count": 9
+      },
+      "null_control": {
+        "label": "null_control",
+        "pass_rate": 1.0,
+        "mean_rejection_count_per_turn": 0,
+        "non_empty_rejected_attempts_rate": 0.0,
+        "exhaustion_rate": 0.0,
+        "mean_admissibility_checks_per_turn": 3,
+        "mean_added_latency_ms": 0.0505,
+        "p95_added_latency_ms": 0.1467,
+        "trace_hash_stability_pass_rate": 0.0,
+        "case_count": 9
+      },
+      "inner_loop_t0": {
+        "label": "inner_loop_t0",
+        "pass_rate": 0.6667,
+        "mean_rejection_count_per_turn": 0.2222,
+        "non_empty_rejected_attempts_rate": 0.2222,
+        "exhaustion_rate": 0.3333,
+        "mean_admissibility_checks_per_turn": 2.4444,
+        "mean_added_latency_ms": 0.0064,
+        "p95_added_latency_ms": 0.0577,
+        "trace_hash_stability_pass_rate": 1.0,
+        "case_count": 9
+      },
+      "inner_loop_tpos": {
+        "label": "inner_loop_tpos",
+        "pass_rate": 0.4444,
+        "mean_rejection_count_per_turn": 0,
+        "non_empty_rejected_attempts_rate": 0.0,
+        "exhaustion_rate": 0.5556,
+        "mean_admissibility_checks_per_turn": 1.3333,
+        "mean_added_latency_ms": 0.0,
+        "p95_added_latency_ms": 0.0,
+        "trace_hash_stability_pass_rate": 0.0,
+        "case_count": 9
+      }
+    },
+    "rejection_effect": -0.3333,
+    "code_path_residual": 0.0,
+    "causal_attribution_valid": true,
+    "exhaustion_ceiling": 0.05,
+    "exhaustion_gate_pass": false,
+    "probe_threshold_positive": 0.25,
+    "case_count": 9,
+    "skipped_count": 0
+  },
+  "case_details": [
+    {
+      "id": "FSC-PUB-001",
+      "kind": "chain_three_hop",
+      "expected_endpoint": "delta",
+      "conditions": {
+        "boundary_only": {
+          "surface": "alpha gamma delta beta",
+          "rejections": 0,
+          "checks": 4,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 6.3321669986180495,
+          "exhausted": false,
+          "trace_hash": "f1749b663fdf0d85445d4ace27a2c4e492894445aad050e97cec8ea8a89650c5"
+        },
+        "null_control": {
+          "surface": "alpha gamma delta beta",
+          "rejections": 0,
+          "checks": 4,
+          "latency_ms": 0.07079200076987036,
+          "absolute_latency_ms": 6.40295899938792,
+          "exhausted": false,
+          "trace_hash": "f1749b663fdf0d85445d4ace27a2c4e492894445aad050e97cec8ea8a89650c5"
+        },
+        "inner_loop_t0": {
+          "surface": "alpha gamma delta alpha",
+          "rejections": 1,
+          "checks": 5,
+          "latency_ms": 0.05766700269305147,
+          "absolute_latency_ms": 6.389834001311101,
+          "exhausted": false,
+          "trace_hash": "a6c009be37a048c723dfa87b155f277f6d0c0ab0c0ab9355180e0a09ca014045"
+        },
+        "inner_loop_tpos": {
+          "surface": "",
+          "rejections": 0,
+          "checks": 0,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.3651670014951378,
+          "exhausted": true,
+          "trace_hash": "__exhausted__"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": false
+      }
+    },
+    {
+      "id": "FSC-DEV-001",
+      "kind": "chain_three_hop",
+      "expected_endpoint": "delta",
+      "conditions": {
+        "boundary_only": {
+          "surface": "alpha gamma delta beta",
+          "rejections": 0,
+          "checks": 4,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 6.53266700101085,
+          "exhausted": false,
+          "trace_hash": "81a5907ed8c58cba69648dff42f15b24547ac585b36db1ba178b5314908f0919"
+        },
+        "null_control": {
+          "surface": "alpha gamma delta beta",
+          "rejections": 0,
+          "checks": 4,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 6.400083999324124,
+          "exhausted": false,
+          "trace_hash": "81a5907ed8c58cba69648dff42f15b24547ac585b36db1ba178b5314908f0919"
+        },
+        "inner_loop_t0": {
+          "surface": "alpha gamma delta alpha",
+          "rejections": 1,
+          "checks": 5,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 6.458666000980884,
+          "exhausted": false,
+          "trace_hash": "afb66f361ebf275498956e51a92598c73ed29fc569949009c354ebe33414d286"
+        },
+        "inner_loop_tpos": {
+          "surface": "",
+          "rejections": 0,
+          "checks": 0,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.3585829983639996,
+          "exhausted": true,
+          "trace_hash": "__exhausted__"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": false
+      }
+    },
+    {
+      "id": "FSC-DEV-002",
+      "kind": "negative_control_no_chain",
+      "expected_endpoint": "beta",
+      "conditions": {
+        "boundary_only": {
+          "surface": "alpha beta",
+          "rejections": 0,
+          "checks": 2,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 2.8974999986530747,
+          "exhausted": false,
+          "trace_hash": "9ecd42e41d24f6167c7dbafdab07a309b5d5cf9d673d412bd6ab418c192095de"
+        },
+        "null_control": {
+          "surface": "alpha beta",
+          "rejections": 0,
+          "checks": 2,
+          "latency_ms": 0.08908300151233561,
+          "absolute_latency_ms": 2.9865830001654103,
+          "exhausted": false,
+          "trace_hash": "9ecd42e41d24f6167c7dbafdab07a309b5d5cf9d673d412bd6ab418c192095de"
+        },
+        "inner_loop_t0": {
+          "surface": "",
+          "rejections": 0,
+          "checks": 0,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 2.1187089987506624,
+          "exhausted": true,
+          "trace_hash": "__exhausted__"
+        },
+        "inner_loop_tpos": {
+          "surface": "",
+          "rejections": 0,
+          "checks": 0,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 0.6152080022729933,
+          "exhausted": true,
+          "trace_hash": "__exhausted__"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": false,
+        "inner_loop_tpos": false
+      }
+    },
+    {
+      "id": "FSC-DEV-003",
+      "kind": "frame_constraint_blocks_wrong_relation",
+      "expected_endpoint": "beta",
+      "conditions": {
+        "boundary_only": {
+          "surface": "alpha beta",
+          "rejections": 0,
+          "checks": 2,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 3.1092079989321064,
+          "exhausted": false,
+          "trace_hash": "f5f42fdb1b841368ccff2b9f4a0bdfc666001800076a72277298e91aa97b7cd1"
+        },
+        "null_control": {
+          "surface": "alpha beta",
+          "rejections": 0,
+          "checks": 2,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 3.086417000304209,
+          "exhausted": false,
+          "trace_hash": "f5f42fdb1b841368ccff2b9f4a0bdfc666001800076a72277298e91aa97b7cd1"
+        },
+        "inner_loop_t0": {
+          "surface": "",
+          "rejections": 0,
+          "checks": 0,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 2.2947910001676064,
+          "exhausted": true,
+          "trace_hash": "__exhausted__"
+        },
+        "inner_loop_tpos": {
+          "surface": "",
+          "rejections": 0,
+          "checks": 0,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 0.6693330033158418,
+          "exhausted": true,
+          "trace_hash": "__exhausted__"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": false,
+        "inner_loop_tpos": false
+      }
+    },
+    {
+      "id": "FSC-DEV-004",
+      "kind": "chain_two_hop_means",
+      "expected_endpoint": "omicron",
+      "conditions": {
+        "boundary_only": {
+          "surface": "mu nu omicron",
+          "rejections": 0,
+          "checks": 3,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 2.9942500004835892,
+          "exhausted": false,
+          "trace_hash": "48e86b2d95103d6218d4f01871d9b0a2d3ebbbcb8fc7583646bd19bf6570aa9d"
+        },
+        "null_control": {
+          "surface": "mu nu omicron",
+          "rejections": 0,
+          "checks": 3,
+          "latency_ms": 0.11316699965391308,
+          "absolute_latency_ms": 3.1074170001375023,
+          "exhausted": false,
+          "trace_hash": "48e86b2d95103d6218d4f01871d9b0a2d3ebbbcb8fc7583646bd19bf6570aa9d"
+        },
+        "inner_loop_t0": {
+          "surface": "mu nu omicron",
+          "rejections": 0,
+          "checks": 3,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 2.97054200200364,
+          "exhausted": false,
+          "trace_hash": "48e86b2d95103d6218d4f01871d9b0a2d3ebbbcb8fc7583646bd19bf6570aa9d"
+        },
+        "inner_loop_tpos": {
+          "surface": "mu nu omicron",
+          "rejections": 0,
+          "checks": 3,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 2.97287500143284,
+          "exhausted": false,
+          "trace_hash": "48e86b2d95103d6218d4f01871d9b0a2d3ebbbcb8fc7583646bd19bf6570aa9d"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-DEV-005",
+      "kind": "chain_three_hop_precedes",
+      "expected_endpoint": "tau",
+      "conditions": {
+        "boundary_only": {
+          "surface": "pi rho sigma tau",
+          "rejections": 0,
+          "checks": 4,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 3.3884170006786007,
+          "exhausted": false,
+          "trace_hash": "893e663ec87151db1538d090a2244c5a61cd40a8c64d6d16f9f1e39bece2479b"
+        },
+        "null_control": {
+          "surface": "pi rho sigma tau",
+          "rejections": 0,
+          "checks": 4,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 3.3558340001036413,
+          "exhausted": false,
+          "trace_hash": "893e663ec87151db1538d090a2244c5a61cd40a8c64d6d16f9f1e39bece2479b"
+        },
+        "inner_loop_t0": {
+          "surface": "pi rho sigma tau",
+          "rejections": 0,
+          "checks": 4,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 3.295792001154041,
+          "exhausted": false,
+          "trace_hash": "893e663ec87151db1538d090a2244c5a61cd40a8c64d6d16f9f1e39bece2479b"
+        },
+        "inner_loop_tpos": {
+          "surface": "pi rho sigma tau",
+          "rejections": 0,
+          "checks": 4,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 3.1976249993022066,
+          "exhausted": false,
+          "trace_hash": "893e663ec87151db1538d090a2244c5a61cd40a8c64d6d16f9f1e39bece2479b"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-DEV-006",
+      "kind": "chain_two_hop_part_of",
+      "expected_endpoint": "chi",
+      "conditions": {
+        "boundary_only": {
+          "surface": "phi chi upsilon",
+          "rejections": 0,
+          "checks": 3,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 3.3560420015419368,
+          "exhausted": false,
+          "trace_hash": "244373cd293ef544c1c4395218335c1c1f255d562a9697646b734041412d407f"
+        },
+        "null_control": {
+          "surface": "phi chi upsilon",
+          "rejections": 0,
+          "checks": 3,
+          "latency_ms": 0.1467080001020804,
+          "absolute_latency_ms": 3.502750001644017,
+          "exhausted": false,
+          "trace_hash": "244373cd293ef544c1c4395218335c1c1f255d562a9697646b734041412d407f"
+        },
+        "inner_loop_t0": {
+          "surface": "",
+          "rejections": 0,
+          "checks": 0,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 0.9736249994602986,
+          "exhausted": true,
+          "trace_hash": "__exhausted__"
+        },
+        "inner_loop_tpos": {
+          "surface": "",
+          "rejections": 0,
+          "checks": 0,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 0.9959999988495838,
+          "exhausted": true,
+          "trace_hash": "__exhausted__"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": false,
+        "inner_loop_tpos": false
+      }
+    },
+    {
+      "id": "FSC-DEV-007",
+      "kind": "adversarial_distractor_means_vs_cause",
+      "expected_endpoint": "omega",
+      "conditions": {
+        "boundary_only": {
+          "surface": "psi omega",
+          "rejections": 0,
+          "checks": 2,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.9424589991103858,
+          "exhausted": false,
+          "trace_hash": "8805362f4f24b1c50272287bbcb71f8300837adceb8c1214ab3fe7a5260307fd"
+        },
+        "null_control": {
+          "surface": "psi omega",
+          "rejections": 0,
+          "checks": 2,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.8285829974047374,
+          "exhausted": false,
+          "trace_hash": "8805362f4f24b1c50272287bbcb71f8300837adceb8c1214ab3fe7a5260307fd"
+        },
+        "inner_loop_t0": {
+          "surface": "psi omega",
+          "rejections": 0,
+          "checks": 2,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.8532499998400453,
+          "exhausted": false,
+          "trace_hash": "8805362f4f24b1c50272287bbcb71f8300837adceb8c1214ab3fe7a5260307fd"
+        },
+        "inner_loop_tpos": {
+          "surface": "psi omega",
+          "rejections": 0,
+          "checks": 2,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.8378329987172037,
+          "exhausted": false,
+          "trace_hash": "8805362f4f24b1c50272287bbcb71f8300837adceb8c1214ab3fe7a5260307fd"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-DEV-008",
+      "kind": "adversarial_distractor_chain_branching",
+      "expected_endpoint": "zeta",
+      "conditions": {
+        "boundary_only": {
+          "surface": "eta theta zeta",
+          "rejections": 0,
+          "checks": 3,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 3.0924999991839286,
+          "exhausted": false,
+          "trace_hash": "cedc7183c1ae90cae5eb538f1116b30231a98ed89f1d8c8728d4835df657323f"
+        },
+        "null_control": {
+          "surface": "eta theta zeta",
+          "rejections": 0,
+          "checks": 3,
+          "latency_ms": 0.034500000765547156,
+          "absolute_latency_ms": 3.1269999999494758,
+          "exhausted": false,
+          "trace_hash": "cedc7183c1ae90cae5eb538f1116b30231a98ed89f1d8c8728d4835df657323f"
+        },
+        "inner_loop_t0": {
+          "surface": "eta theta zeta",
+          "rejections": 0,
+          "checks": 3,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 2.940541999123525,
+          "exhausted": false,
+          "trace_hash": "cedc7183c1ae90cae5eb538f1116b30231a98ed89f1d8c8728d4835df657323f"
+        },
+        "inner_loop_tpos": {
+          "surface": "eta theta zeta",
+          "rejections": 0,
+          "checks": 3,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 3.039292001631111,
+          "exhausted": false,
+          "trace_hash": "cedc7183c1ae90cae5eb538f1116b30231a98ed89f1d8c8728d4835df657323f"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    }
+  ]
+}
