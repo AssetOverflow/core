@@ -24,35 +24,36 @@ same teaching store are inconsistent on inspection, and a coherence
 judgment can transition the conflicting pair to CONTESTED before
 they pollute downstream inference.
 
-## Current state — honest
+## Current state — graduated 2026-05-17
 
-The detection mechanism is **not implemented at v1**.
+Lane now passes overall: `contradiction_flag_rate=1.00`,
+`false_flag_rate=0.00`. `TeachingStore.add` runs a coherence checker
+on every new proposal:
 
-The teaching review path today admits both members of a contradictory
-pair at `EpistemicStatus.SPECULATIVE`. There is no coherence judgment
-that compares newly-admitted triples against existing store contents,
-and no automatic CONTESTED transition on conflict. The pipeline does
-not raise the versor-condition signal on the second teaching event.
+- **Typed path** — when the new proposal and a prior parse to triples
+  with the same relation, compare tails for negation/opposition
+  differential AND shared content tokens.
+- **Text fallback** — when one side fails to parse a triple (relation
+  predicate not in the cognition pack yet), compare raw correction
+  texts for polarity differential AND ≥2 shared non-discourse content
+  tokens. The ≥2 threshold prevents single-shared-subject false
+  positives.
 
-This lane exists *now* so the gap is visible and tracked. It will not
-pass until one of the following is built:
+On detection, BOTH the new proposal and the conflicting prior
+transition to `EpistemicStatus.CONTESTED` — neither is admissible as
+evidence until a coherence judgment ratifies one direction or
+falsifies the other.
 
-1. A coherence checker invoked at `TeachingStore.add` that detects
-   `(S, R, O)` ↔ `(S, R_negated, O)` pairs and transitions both to
-   CONTESTED.
-2. A geometric contradiction signal derived from versor-condition
-   delta when conflicting teachings are applied.
-
-ADR-0021 reserves `CONTESTED` and `FALSIFIED` precisely for this; the
-machinery to *enter* those states is not yet wired.
+The v1 versor-spike heuristic was retired in the same commit; the
+runner now reads the CONTESTED transition directly.
 
 ## Pass criteria
 
-| Metric | Definition | v1 threshold | Honest current expectation |
-|--------|-----------|--------------|----------------------------|
-| `contradiction_flag_rate` | Fraction of paired-contradiction cases where the second event surfaces a CONTESTED transition or versor spike | 0.90 | 0.00 |
-| `false_flag_rate` | Fraction of paired-consistent cases that are incorrectly flagged as contradictory | 0.00 | 0.00 (no flagger exists) |
-| `overall_pass` | flag_rate ≥ 0.90 AND false_flag_rate == 0 | true | false at v1 |
+| Metric | Definition | v1 threshold | Current |
+|--------|-----------|--------------|---------|
+| `contradiction_flag_rate` | Fraction of paired-contradiction cases where the second event surfaces a CONTESTED transition | 0.90 | **1.00** |
+| `false_flag_rate` | Fraction of paired-consistent cases that are incorrectly flagged as contradictory | 0.00 | **0.00** |
+| `overall_pass` | flag_rate ≥ 0.90 AND false_flag_rate == 0 | true | **true** |
 
 ## Cases
 

@@ -277,16 +277,36 @@ happening.
 - `refusal_calibration`: 0.00 → **1.00** refusal_rate, 0.00 fabrication, 1.00 in-grounding.
 - `articulation_of_status`: 0.00 → **1.00** speculative_articulation, 0.60 → **0.00** false_certainty.
 
-### Contradiction detection is not implemented
+### ~~Contradiction detection is not implemented~~ — CLOSED 2026-05-17
 
-ADR-0021 reserves `EpistemicStatus.CONTESTED`. The machinery to
-*enter* that state on conflict between teachings does not yet exist.
-The `contradiction_detection` lane runs anyway, scoring 50% via a
-weak versor-condition heuristic with a 100% false-positive rate —
-which is exactly the right data to motivate the proper fix (a
-coherence checker at `TeachingStore.add` that detects
-`(S, R, O)` ↔ `(S, ¬R, O)` pairs and transitions both to
-`CONTESTED`).
+**Original gap:** ADR-0021 reserved `EpistemicStatus.CONTESTED` but
+the machinery to *enter* that state on conflict between teachings
+did not exist. The lane ran on a weak versor-spike heuristic
+(50% flag rate with 100% false positives).
+
+**Fix landed:** `TeachingStore.add` now runs a coherence checker
+before appending a new proposal. Two detection paths:
+
+- **Typed** — when both the new and a prior proposal parse to triples
+  with the same `(subject, relation, …)` shape, tails are compared
+  for polarity differential (negation/opposition tokens) AND shared
+  content. Catches `(truth, is, coherence)` ↔
+  `(truth, is, not coherence)`.
+
+- **Text fallback** — when the relation parser doesn't yet cover a
+  predicate (e.g. "depends"), the raw correction texts are compared
+  for polarity differential plus ≥2 shared non-discourse content
+  tokens. Catches `"meaning depends on use"` vs
+  `"meaning is independent of use"`. The ≥2 threshold prevents a
+  single shared subject token from triggering on unrelated
+  corrections.
+
+On detection, BOTH proposals transition to `CONTESTED` — neither is
+admissible as evidence until a coherence judgment ratifies one or
+falsifies the other.
+
+The lane runner's versor-spike heuristic was retired in the same
+commit; the new signal is the only one that drives the flag.
 
 ---
 

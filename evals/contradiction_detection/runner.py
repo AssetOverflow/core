@@ -1,9 +1,14 @@
 """contradiction-detection lane runner.
 
 Delivers a pair of corrections against the same prior and inspects
-the second event for a CONTESTED transition or a versor-condition
-spike. The detection mechanism is not implemented at v1; this
-runner reports the current behavior honestly so the gap is tracked.
+the second event for a CONTESTED transition (ADR-0021).
+
+The v1 versor-spike heuristic was retired 2026-05-17 when the
+coherence checker in ``TeachingStore.add`` landed: same-subject
+proposals with opposing polarity are now transitioned to
+``EpistemicStatus.CONTESTED`` at write time, and the lane reads that
+directly.  ``versor_delta`` is still reported for telemetry but no
+longer drives the flag.
 
 Conforms to the framework interface: run_lane(cases, config=None) -> report.
 """
@@ -68,7 +73,9 @@ def _run_case(case: dict[str, Any]) -> dict[str, Any]:
     )
     versor_spike = versor_delta > VERSOR_SPIKE_THRESHOLD
 
-    flagged = contested or versor_spike
+    # Real signal: CONTESTED transition from TeachingStore.add.
+    # versor_spike retained in the record for telemetry/debugging only.
+    flagged = contested
 
     if kind == "paired_contradiction":
         passed = flagged
