@@ -13,6 +13,7 @@ import json
 from dataclasses import dataclass
 
 from teaching.correction import CorrectionCandidate
+from teaching.epistemic import EpistemicStatus
 from teaching.review import ReviewedTeachingExample
 
 
@@ -25,6 +26,13 @@ class PackMutationProposal:
     stored alongside the opaque text so the inference operators in
     ``generate.operators`` can walk the typed-relation graph that the
     teaching store represents (ADR-0018).
+
+    `epistemic_status` is set to SPECULATIVE at creation per ADR-0021
+    §Schema impact: "transitions to COHERENT / CONTESTED / FALSIFIED
+    only via the review path."  It is a *position in the revision
+    graph*, not a source-trust tier.  No `final`, `frozen`, `axiom`, or
+    `permanent` flag exists or may be added (non-hardening invariant,
+    ADR-0021 §2).
     """
     proposal_id: str
     candidate_id: str
@@ -33,6 +41,7 @@ class PackMutationProposal:
     prior_surface: str
     applied: bool = False
     triple: tuple[str, str, str] | None = None
+    epistemic_status: EpistemicStatus = EpistemicStatus.SPECULATIVE
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -43,7 +52,19 @@ class PackMutationProposal:
             "prior_surface": self.prior_surface,
             "applied": self.applied,
             "triple": list(self.triple) if self.triple is not None else None,
+            "epistemic_status": self.epistemic_status.value,
         }
+
+    def with_status(self, status: EpistemicStatus) -> "PackMutationProposal":
+        """Return a new proposal with `epistemic_status` set to `status`.
+
+        Immutable update — never mutates the original.  This is the only
+        admissible transition path for a proposal's epistemic status; it
+        must be driven by a coherence judgment, not by source authority
+        (ADR-0021 §3).
+        """
+        from dataclasses import replace
+        return replace(self, epistemic_status=status)
 
 
 def _proposal_id(candidate: CorrectionCandidate) -> str:
@@ -96,6 +117,7 @@ class TeachingStore:
             correction_text=example.candidate.correction_text,
             prior_surface=example.candidate.prior_surface,
             triple=triple,
+            epistemic_status=example.epistemic_status,
         )
         self._proposals.append(proposal)
         return proposal

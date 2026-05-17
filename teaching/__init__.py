@@ -13,15 +13,19 @@ approval before they touch the vocabulary manifold.
 """
 
 from teaching.correction import CorrectionCandidate, extract_correction
+from teaching.epistemic import ADMISSIBLE_AS_EVIDENCE, EpistemicStatus, parse_status
 from teaching.review import ReviewedTeachingExample, ReviewOutcome, review_correction
 from teaching.store import TeachingStore, PackMutationProposal
 
 __all__ = [
+    "ADMISSIBLE_AS_EVIDENCE",
     "CorrectionCandidate",
-    "extract_correction",
+    "EpistemicStatus",
+    "PackMutationProposal",
     "ReviewedTeachingExample",
     "ReviewOutcome",
-    "review_correction",
     "TeachingStore",
-    "PackMutationProposal",
+    "extract_correction",
+    "parse_status",
+    "review_correction",
 ]

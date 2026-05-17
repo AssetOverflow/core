@@ -36,6 +36,7 @@ def compute_trace_hash(
     intent_tag: str = "unknown",
     teaching_review_hash: str = "",
     teaching_proposal_id: str = "",
+    teaching_epistemic_status: str = "",
     operator_invocation: str = "",
 ) -> str:
     """Return a deterministic SHA-256 hex digest over the turn's key outputs.
@@ -48,6 +49,12 @@ def compute_trace_hash(
     string when no operator ran.  Folding it explicitly makes operator
     invocation a load-bearing part of replay equality, not just an
     indirect consequence of surface-change.
+
+    ``teaching_epistemic_status`` is the serialised EpistemicStatus of the
+    pack mutation proposal load-bearing in this turn — empty string when
+    no proposal was emitted.  Folded per ADR-0021 §Consequences so replay
+    detects when a downstream surface was produced under a different
+    epistemic frame than at the time of recall.
     """
     payload = {
         "input_text": input_text,
@@ -61,6 +68,7 @@ def compute_trace_hash(
         "intent_tag": intent_tag,
         "teaching_review_hash": teaching_review_hash,
         "teaching_proposal_id": teaching_proposal_id,
+        "teaching_epistemic_status": teaching_epistemic_status,
         "operator_invocation": operator_invocation,
     }
     serialized = json.dumps(payload, sort_keys=True, ensure_ascii=False)
@@ -80,6 +88,11 @@ def trace_hash_from_result(result: "CognitiveTurnResult") -> str:
         if result.pack_mutation_proposal is not None
         else ""
     )
+    epistemic_status = (
+        result.pack_mutation_proposal.epistemic_status.value
+        if result.pack_mutation_proposal is not None
+        else ""
+    )
     return compute_trace_hash(
         input_text=result.input_text,
         filtered_tokens=result.filtered_tokens,
@@ -92,5 +105,6 @@ def trace_hash_from_result(result: "CognitiveTurnResult") -> str:
         intent_tag=intent_tag,
         teaching_review_hash=review_hash,
         teaching_proposal_id=proposal_id,
+        teaching_epistemic_status=epistemic_status,
         operator_invocation=result.operator_invocation,
     )

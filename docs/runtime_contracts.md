@@ -106,6 +106,55 @@ Tests should protect load-bearing behavior:
 Avoid tests that preserve stale constructors, private helper shapes, or exact
 formatting that is not part of a documented contract.
 
+## Epistemic surface (ADR-0021)
+
+CORE exposes a typed `epistemic_status` on the teaching and lexicon
+surfaces.  The status is a **position in the revision graph**, not a
+source-trust tier:
+
+| Status        | Meaning                                                                                  |
+|---------------|------------------------------------------------------------------------------------------|
+| `COHERENT`    | Fits current field geometry; no incoherence with reviewed claims detected at admission. |
+| `CONTESTED`   | Incoherent with at least one reviewed claim; review pending; not load-bearing.           |
+| `SPECULATIVE` | Proposed; not yet reviewed for coherence; admissible only as a candidate.                |
+| `FALSIFIED`   | Incoherent under accumulated evidence; eligible for Stage-3 inversion; retained.         |
+
+### Non-hardening invariant
+
+No reviewed claim or proposition-graph edge ever becomes unrevisable.
+No `final`, `frozen`, `axiom`, or `permanent` flag exists or may be
+added on the runtime data model.  The closest such property in the
+architecture is the *mathematical* closure check
+`versor_condition(F) < 1e-6` — never an epistemic seal on a claim.
+The invariant is enforced by `tests/test_epistemic_invariants.py`.
+
+### Curator review rule
+
+`epistemic_status` transitions are computed from coherence with the
+existing reviewed field — not asserted by source authority.  At v1 the
+judgment is curator-mediated, with one rule:
+
+> The curator's only admissible reasoning is *geometric*: does the
+> claim cohere with already-reviewed claims, or does it produce
+> incoherence?  Source credentials, popularity, or institutional
+> position must not be invoked as justification.
+
+### Schema surfaces
+
+| Surface                                 | Field                                  | Default at creation   |
+|-----------------------------------------|----------------------------------------|-----------------------|
+| `teaching.PackMutationProposal`         | `epistemic_status: EpistemicStatus`    | `SPECULATIVE`         |
+| `teaching.ReviewedTeachingExample`      | `epistemic_status: EpistemicStatus`    | `SPECULATIVE`         |
+| `language_packs.schema.LexicalEntry`    | `epistemic_status: str`                | `"coherent"` (seed)   |
+| `core.cognition.trace.compute_trace_hash` | `teaching_epistemic_status: str`     | `""` if no proposal   |
+
+Promotion of a proposal's status uses the immutable updater
+`PackMutationProposal.with_status(...)` — original is never mutated.
+
+The status of the load-bearing proposal in a turn is folded into
+`trace_hash` so replay detects when a downstream surface was produced
+under a different epistemic frame than at the time of recall.
+
 ## Test organization target
 
 Future test moves should follow this taxonomy:

@@ -21,6 +21,7 @@ from enum import Enum, unique
 
 from core.physics.identity import IdentityCheck, IdentityManifold, IdentityScore
 from teaching.correction import CorrectionCandidate
+from teaching.epistemic import EpistemicStatus
 
 
 @unique
@@ -224,9 +225,20 @@ def _review_hash(candidate: CorrectionCandidate, outcome: ReviewOutcome) -> str:
 
 @dataclass(frozen=True, slots=True)
 class ReviewedTeachingExample:
+    """A correction that has passed the review gate (or been rejected).
+
+    `epistemic_status` is orthogonal to `outcome` per ADR-0021
+    §Schema impact: "Accepting a proposal is not the same as ratifying
+    it as COHERENT — the two are orthogonal and both required for
+    admission as evidence."  At v1 the default is SPECULATIVE for any
+    review outcome; promotion to COHERENT / CONTESTED / FALSIFIED is a
+    separate curator-mediated coherence judgment, not implied by
+    acceptance.
+    """
     candidate: CorrectionCandidate
     outcome: ReviewOutcome
     review_hash: str
+    epistemic_status: EpistemicStatus = EpistemicStatus.SPECULATIVE
 
     @property
     def accepted(self) -> bool:
@@ -237,6 +249,7 @@ class ReviewedTeachingExample:
             "candidate": self.candidate.as_dict(),
             "outcome": self.outcome.value,
             "review_hash": self.review_hash,
+            "epistemic_status": self.epistemic_status.value,
         }
 
 
@@ -245,6 +258,7 @@ def review_correction(
     *,
     identity_score: IdentityScore | None = None,
     identity_manifold: IdentityManifold | None = None,
+    epistemic_status: EpistemicStatus = EpistemicStatus.SPECULATIVE,
 ) -> ReviewedTeachingExample:
     """Review a correction candidate and produce a teaching example.
 
@@ -271,4 +285,5 @@ def review_correction(
         candidate=candidate,
         outcome=outcome,
         review_hash=_review_hash(candidate, outcome),
+        epistemic_status=epistemic_status,
     )

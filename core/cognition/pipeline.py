@@ -117,6 +117,7 @@ class CognitiveTurnPipeline:
         # typed-operator invocation per ADR-0018).
         review_hash = reviewed_example.review_hash if reviewed_example is not None else ""
         proposal_id = proposal.proposal_id if proposal is not None else ""
+        epistemic_status = proposal.epistemic_status.value if proposal is not None else ""
         operator_invocation = self._serialize_walk(walk_result)
         trace_hash = compute_trace_hash(
             input_text=text,
@@ -130,6 +131,7 @@ class CognitiveTurnPipeline:
             intent_tag=intent.tag.value,
             teaching_review_hash=review_hash,
             teaching_proposal_id=proposal_id,
+            teaching_epistemic_status=epistemic_status,
             operator_invocation=operator_invocation,
         )
 

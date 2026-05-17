@@ -98,7 +98,15 @@ class MorphologyEntry:
 
 @dataclass(frozen=True, slots=True)
 class LexicalEntry:
-    """One surface/lemma entry in a compiled linguistic manifold."""
+    """One surface/lemma entry in a compiled linguistic manifold.
+
+    `epistemic_status` follows ADR-0021: it is a *position in the
+    revision graph*, not a source-trust tier.  Seed vocabulary defaults
+    to ``"coherent"`` per ADR §Schema impact; bumps to other statuses
+    require a deliberate curator review at pack version bumps.  Absent
+    from the JSONL is treated as the seed default — no retroactive
+    tagging without review.
+    """
 
     entry_id: str
     surface: str
@@ -111,6 +119,7 @@ class LexicalEntry:
     semantic_domains: tuple[str, ...] = field(default_factory=tuple)
     manifold_point_checksum: str | None = None
     provenance_ids: tuple[str, ...] = field(default_factory=tuple)
+    epistemic_status: str = "coherent"
 
 
 @dataclass(frozen=True, slots=True)
