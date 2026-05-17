@@ -132,3 +132,91 @@ class TestDemoSubcommand:
         data = json.loads(index_path.read_text())
         names = [e["file"] for e in data["reports"]]
         assert "phase6_demo_report.json" in names
+
+
+class TestDemoPreambles:
+    """Pin the preamble explanations so they don't drift silently."""
+
+    def test_phase6_preamble_explains_three_conditions(self, capsys) -> None:
+        cli.main(["demo", "phase6"])
+        out = capsys.readouterr().out
+        assert "WHAT THIS DEMO TESTS" in out
+        assert "C1 Replay determinism" in out
+        assert "C2 Traced rejection" in out
+        assert "C3 Coherent refusal" in out
+        assert "WHAT TO EXPECT" in out
+        assert "WHEN TO TWEAK" in out
+
+    def test_phase6_preamble_states_in_system_baseline(self, capsys) -> None:
+        cli.main(["demo", "phase6"])
+        out = capsys.readouterr().out
+        # The "why not a transformer LLM" explanation must be present.
+        assert "ADR-0023 ablation" in out
+        assert "non-deterministic" in out or "Non-deterministic" in out
+
+    def test_phase5_preamble_explains_five_families(self, capsys) -> None:
+        cli.main(["demo", "phase5"])
+        out = capsys.readouterr().out
+        assert "WHAT THIS DEMO TESTS" in out
+        for family in (
+            "near_forbidden_correct_endpoint",
+            "near_equal_admissible",
+            "no_admissible_path",
+            "multi_step_admissibility",
+            "heterogeneous_relation",
+        ):
+            assert family in out
+        assert "WHAT TO LOOK FOR" in out
+
+    def test_phase5_preamble_states_delta_falsifiable(self, capsys) -> None:
+        cli.main(["demo", "phase5"])
+        out = capsys.readouterr().out
+        assert "FALSIFIABLE" in out or "falsifiable" in out
+
+    def test_preamble_suppressed_under_json(self, capsys) -> None:
+        cli.main(["demo", "phase6", "--json"])
+        out = capsys.readouterr().out
+        # No preamble text should leak into --json mode.
+        assert "WHAT THIS DEMO TESTS" not in out
+        # Output must be parseable JSON from the first character.
+        payload = json.loads(out.split("\n\n")[0])
+        assert "metrics" in payload
+
+    def test_all_preamble_explains_combined_run(self, capsys) -> None:
+        cli.main(["demo", "all"])
+        out = capsys.readouterr().out
+        assert "Combined Demo" in out
+        # Both phase preambles fire for `demo all`.
+        assert "Phase 5 Demo" in out
+        assert "Phase 6 Demo" in out
+        # Combined summary at the end.
+        assert "Combined demo summary" in out
+        assert "load-bearing claim of the ADR-0024 chain" in out
+
+
+class TestResultsReadme:
+    """The results/ directory ships with an explanatory README so cold readers
+    can interpret each report without spelunking the runner source."""
+
+    def test_results_readme_exists(self) -> None:
+        readme = Path("evals/forward_semantic_control/results/README.md")
+        assert readme.exists()
+        text = readme.read_text()
+        # The README must explicitly call out each phase's report file.
+        for fname in (
+            "phase5_report.json",
+            "phase6_demo_report.json",
+            "phase5_benign_inner_loop_report.json",
+            "phase4_characterization",
+            "phase3_v2_report.json",
+            "phase2_inner_loop_report.json",
+        ):
+            assert fname in text, f"{fname} missing from results/README.md"
+
+    def test_corpus_readmes_exist(self) -> None:
+        for path in (
+            "evals/forward_semantic_control/public/v2_phase5/README.md",
+            "evals/forward_semantic_control/public/v2_phase6_demo/README.md",
+            "evals/forward_semantic_control/public/inner_loop_benign/README.md",
+        ):
+            assert Path(path).exists(), f"{path} missing"

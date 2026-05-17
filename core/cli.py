@@ -671,6 +671,154 @@ _DEMO_RESULTS_DIR = Path("evals/forward_semantic_control/results")
 _DEMO_CORPUS_DIR = Path("evals/forward_semantic_control/public")
 
 
+_PHASE5_PREAMBLE = """
+================================================================================
+  Phase 5 Demo — Stratified Mechanism-Isolation
+================================================================================
+
+WHAT THIS DEMO TESTS
+  CORE's inner-loop admissibility mechanism is supposed to behave correctly
+  across five distinct geometric failure modes — not just on average, but
+  per-family. This demo runs a hand-curated 20-case corpus that stratifies
+  the chain's behaviour across those five families:
+
+    A. near_forbidden_correct_endpoint  Expected and forbidden tokens have
+                                        nearly equal blade-scores. Tests
+                                        margin sensitivity at the boundary.
+    B. near_equal_admissible            Two admissible candidates with
+                                        near-identical scores. Tests the
+                                        margin gate's determinism under tie.
+    C. no_admissible_path               All candidates score ≤ 0 against the
+                                        blade. Tests honest refusal.
+    D. multi_step_admissibility         Chained Family-A configurations.
+                                        Tests step-to-step composition.
+    E. heterogeneous_relation           Chained steps with DIFFERENT blades.
+                                        Tests blade-switching cleanliness.
+
+  Each case is run under TWO modes:
+    threshold mode  (ADR-0024 — per-case static admissibility_threshold)
+    margin mode     (ADR-0026 — scale-invariant δ-margin, δ=0.4 default)
+
+WHAT TO EXPECT IF THE MECHANISM IS WORKING
+  - Overall pass_rate (threshold) = 100%
+  - Overall pass_rate (margin)    = 100%
+  - mechanism_isolated (both modes) = True
+  - Per-family pass_rate = 100% for ALL five families
+  - Family B refusal_rate (margin) = 100% (near-equal candidates must
+    refuse under δ-margin by construction)
+  - Family C refusal_rate (both modes) = 100% (no admissible path)
+
+WHAT TO LOOK FOR
+  - If any family's pass_rate < 100%, the mechanism failed THAT family
+    specifically — not a general regression. Dig into the per-case
+    detail in the report JSON to see which case and what selection.
+  - If Family B does NOT refuse under margin mode, the δ gate has
+    silently broken — check generate/admissibility.py::check_margin.
+  - If Family C admits anything, honest refusal has regressed — check
+    generate/exhaustion.py and the InnerLoopExhaustion raise sites in
+    generate/stream.py.
+
+WHEN TO TWEAK
+  - δ = 0.4 (the margin default) is FALSIFIABLE: if a case surfaces a
+    blade-gap below δ where margin-mode refusal is the WRONG behaviour,
+    that is an architectural finding to REPORT in
+    docs/evals/phase5_stratified_findings.md, NOT a value to patch.
+  - Adding new failure-mode families requires editing
+    evals/forward_semantic_control/phase5_runner.py::_passed_single
+    and authoring stratified cases in
+    evals/forward_semantic_control/public/v2_phase5/cases.jsonl.
+================================================================================
+"""
+
+_PHASE6_PREAMBLE = """
+================================================================================
+  Phase 6 Demo — Comparative Demo: CORE vs In-System Baseline
+================================================================================
+
+WHAT THIS DEMO TESTS
+  Three head-to-head claims about what CORE adds OVER an in-system baseline
+  (the same codebase with inner-loop / margin / rotor admissibility DISABLED
+  — i.e. an ADR-0023 ablation). Each claim is run on a focused 8-case
+  corpus and pinned by 17 CI contract tests:
+
+    C1 Replay determinism   Both baseline AND CORE produce byte-identical
+                            trace hashes across 5 reruns. CORE additionally
+                            folds refusal_reason into trace_hash, so refusal
+                            events themselves are replayable evidence.
+
+    C2 Traced rejection     On adversarial cases where the boundary picks
+                            the forbidden token: baseline emits it (with
+                            admitted=False, silent emit). CORE overrides
+                            and the rejection appears in rejected_attempts.
+
+    C3 Coherent refusal     On no-admissible-path cases: baseline emits an
+                            inadmissible candidate. CORE raises
+                            InnerLoopExhaustion with a typed RefusalReason.
+
+WHY THE BASELINE IS IN-SYSTEM (NOT AN LLM)
+  A transformer-LLM comparison would be non-deterministic, could not be
+  CI-enforced, and would be apples-to-oranges (different corpus / training
+  / sampling). The honest comparison is the ablation: same code, same
+  field state, same vocab, same persona — only the Phase 2-5 mechanisms
+  toggled off. Anything CORE produces that the baseline does not produce
+  is therefore attributable to the mechanisms themselves.
+
+WHAT TO EXPECT IF EVERYTHING IS WORKING
+  - C1: BOTH baseline_stable AND CORE_stable = 8/8 (replay is preserved,
+    not added, by Phase 2-5)
+  - C2: baseline_emits_forbidden = 3/3, baseline_admits_forbidden = 0/3
+        CORE_corrects_or_refuses = 3/3, CORE_rejection_in_trace = 3/3
+  - C3: baseline_typed_refusals = 0/3, baseline_emits_inadmissible = 3/3
+        CORE_typed_refusals = 3/3
+  - ALL THREE CONDITIONS = PASS
+
+WHAT TO LOOK FOR
+  - If C1 baseline fails, the algebra layer's replay has regressed —
+    unrelated to the chain. Investigate algebra/ first.
+  - If C1 CORE fails but baseline holds, the trace fold or refusal
+    plumbing has broken determinism. Check trace.py + exhaustion.py.
+  - If C2 baseline_admits_forbidden > 0, the boundary-only gate is
+    accidentally admitting things — unrelated to the chain, but worth
+    investigating.
+  - If C3 baseline_typed_refusals > 0, baseline is somehow raising
+    InnerLoopExhaustion — investigate whether inner_loop_admissibility
+    actually got disabled in the ablation.
+  - If C3 CORE_typed_refusals < case_count, CORE is NOT refusing where
+    it should — the honest-refusal contract has regressed.
+
+WHEN TO TWEAK
+  - If a C2/C3 case stops surfacing the intended baseline failure mode
+    (e.g. boundary stops picking the forbidden), it has aged out — the
+    cure is to add a NEW case that surfaces the failure, NOT to relax
+    the predicate. See docs/evals/phase6_comparative_demo.md.
+================================================================================
+"""
+
+_ALL_PREAMBLE = """
+================================================================================
+  Combined Demo — Full ADR-0024 Chain Evidence
+================================================================================
+
+This runs BOTH Phase 5 (stratified mechanism-isolation, 20 cases, 5 failure-
+mode families, threshold + margin modes) AND Phase 6 (three-condition head-
+to-head vs in-system baseline, 8 cases). A combined summary line at the end
+reports the chain's overall verdict.
+
+For a thorough explanation of each phase, run them individually:
+  core demo phase5
+  core demo phase6
+
+For the central evidence index:
+  core demo list-results
+================================================================================
+"""
+
+
+def _print_preamble(text: str) -> None:
+    """Print a demo preamble to stdout (suppressed under --json)."""
+    print(text)
+
+
 def _format_phase5_table(metrics: dict[str, Any], per_family: dict[str, Any]) -> str:
     lines = [
         "",
@@ -769,8 +917,10 @@ def _write_results_index() -> Path:
     return index_path
 
 
-def _run_demo_phase5(emit_json: bool) -> dict[str, Any]:
+def _run_demo_phase5(emit_json: bool, *, with_preamble: bool = True) -> dict[str, Any]:
     from evals.forward_semantic_control.phase5_runner import run_lane
+    if with_preamble and not emit_json:
+        _print_preamble(_PHASE5_PREAMBLE)
     cases_path = _DEMO_CORPUS_DIR / "v2_phase5" / "cases.jsonl"
     cases = [json.loads(l) for l in cases_path.read_text().splitlines() if l.strip()]
     report = run_lane(cases)
@@ -789,8 +939,10 @@ def _run_demo_phase5(emit_json: bool) -> dict[str, Any]:
     return report.metrics
 
 
-def _run_demo_phase6(emit_json: bool) -> dict[str, Any]:
+def _run_demo_phase6(emit_json: bool, *, with_preamble: bool = True) -> dict[str, Any]:
     from evals.forward_semantic_control.phase6_demo import run_lane
+    if with_preamble and not emit_json:
+        _print_preamble(_PHASE6_PREAMBLE)
     cases_path = _DEMO_CORPUS_DIR / "v2_phase6_demo" / "cases.jsonl"
     cases = [json.loads(l) for l in cases_path.read_text().splitlines() if l.strip()]
     report = run_lane(cases)
@@ -829,6 +981,8 @@ def cmd_demo(args: argparse.Namespace) -> int:
     elif target == "phase6":
         _run_demo_phase6(args.json)
     elif target == "all":
+        if not args.json:
+            _print_preamble(_ALL_PREAMBLE)
         p5 = _run_demo_phase5(args.json)
         p6 = _run_demo_phase6(args.json)
         if not args.json:
@@ -838,6 +992,15 @@ def cmd_demo(args: argparse.Namespace) -> int:
             print(f"  Phase 5 pass_rate (margin):    {p5.get('pass_rate_margin', 0):.2%}")
             print(f"  Phase 5 mechanism_isolated:    {p5.get('mechanism_isolated_margin', False)}")
             print(f"  Phase 6 all three conditions:  {p6.get('all_three_conditions_pass', False)}")
+            print("")
+            print("  What this means:")
+            print("    Phase 5 verifies CORE handles five distinct geometric")
+            print("    failure modes correctly under both threshold and margin gates.")
+            print("    Phase 6 verifies CORE adds three capabilities the in-system")
+            print("    baseline cannot exhibit: deterministic replay of refusals,")
+            print("    traced rejection of inadmissible candidates, and coherent")
+            print("    typed refusal when no admissible path exists.")
+            print("    Together they are the load-bearing claim of the ADR-0024 chain.")
             print("")
     else:
         _die(f"unknown demo target: {target}")
