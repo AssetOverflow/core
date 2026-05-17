@@ -94,6 +94,41 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "proof": (
         "tests/test_proof_properties.py",
     ),
+    # ADR-0024 chain suites (Phases 2-6).  Each phase has its own
+    # contract tests so investors / reviewers can run them
+    # independently; ``adr-0024`` runs the full chain end-to-end.
+    "refusal": (
+        "tests/test_refusal_contract.py",
+    ),
+    "margin": (
+        "tests/test_margin_admissibility.py",
+    ),
+    "rotor": (
+        "tests/test_rotor_admissibility.py",
+    ),
+    "inner-loop": (
+        "tests/test_inner_loop_admissibility.py",
+        "tests/test_inner_loop_phase2.py",
+        "tests/test_inner_loop_phase3.py",
+        "tests/test_inner_loop_phase4.py",
+    ),
+    "phase5": (
+        "tests/test_phase5_corpus.py",
+    ),
+    "phase6": (
+        "tests/test_phase6_demo.py",
+    ),
+    "adr-0024": (
+        "tests/test_refusal_contract.py",
+        "tests/test_margin_admissibility.py",
+        "tests/test_rotor_admissibility.py",
+        "tests/test_inner_loop_admissibility.py",
+        "tests/test_inner_loop_phase2.py",
+        "tests/test_inner_loop_phase3.py",
+        "tests/test_inner_loop_phase4.py",
+        "tests/test_phase5_corpus.py",
+        "tests/test_phase6_demo.py",
+    ),
     "full": ("tests/",),
 }
 
@@ -632,6 +667,185 @@ def cmd_pulse(args: argparse.Namespace) -> int:
     return 0
 
 
+_DEMO_RESULTS_DIR = Path("evals/forward_semantic_control/results")
+_DEMO_CORPUS_DIR = Path("evals/forward_semantic_control/public")
+
+
+def _format_phase5_table(metrics: dict[str, Any], per_family: dict[str, Any]) -> str:
+    lines = [
+        "",
+        "Phase 5 — Stratified Mechanism-Isolation (ADR-0024 / ADR-0026)",
+        "=" * 68,
+        f"  cases:                     {metrics.get('case_count', 0)}",
+        f"  margin (δ):                {metrics.get('margin', 0)}",
+        f"  pass_rate (threshold):     {metrics.get('pass_rate_threshold', 0):.2%}",
+        f"  pass_rate (margin):        {metrics.get('pass_rate_margin', 0):.2%}",
+        f"  mechanism_isolated (thr):  {metrics.get('mechanism_isolated_threshold', False)}",
+        f"  mechanism_isolated (mgn):  {metrics.get('mechanism_isolated_margin', False)}",
+        "",
+        f"  {'family':38s} {'cases':>6s} {'pass(thr)':>11s} {'pass(mgn)':>11s} {'refuse(mgn)':>13s}",
+        "  " + "-" * 84,
+    ]
+    for fam, b in per_family.items():
+        lines.append(
+            f"  {fam:38s} {b.get('case_count', 0):>6d} "
+            f"{b.get('pass_rate_threshold', 0):>10.2%} "
+            f"{b.get('pass_rate_margin', 0):>10.2%} "
+            f"{b.get('refusal_rate_margin', 0):>12.2%}"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _format_phase6_table(metrics: dict[str, Any]) -> str:
+    def pf(b: bool) -> str:
+        return "PASS" if b else "FAIL"
+    lines = [
+        "",
+        "Phase 6 — Comparative Demo: CORE vs In-System Baseline (ADR-0023 ablation)",
+        "=" * 76,
+        f"  total cases:                  {metrics.get('case_count', 0)}",
+        f"  replay reruns:                {metrics.get('replay_reruns', 0)}",
+        "",
+        "  C1 Replay determinism",
+        f"    baseline stable:            {metrics.get('c1_replay_stable_baseline', 0)} / {metrics.get('c1_eligible', 0)}",
+        f"    CORE stable:                {metrics.get('c1_replay_stable_core', 0)} / {metrics.get('c1_eligible', 0)}",
+        f"    verdict:                    {pf(metrics.get('c1_pass', False))}",
+        "",
+        "  C2 Traced rejection",
+        f"    baseline emits forbidden:   {metrics.get('c2_baseline_emits_forbidden', 0)} / {metrics.get('c2_case_count', 0)}",
+        f"    baseline admits forbidden:  {metrics.get('c2_baseline_admits_forbidden', 0)} / {metrics.get('c2_case_count', 0)}",
+        f"    CORE corrects-or-refuses:   {metrics.get('c2_core_corrects_or_refuses', 0)} / {metrics.get('c2_case_count', 0)}",
+        f"    CORE rejection in trace:    {metrics.get('c2_core_rejection_traced', 0)} / {metrics.get('c2_case_count', 0)}",
+        f"    verdict:                    {pf(metrics.get('c2_pass', False))}",
+        "",
+        "  C3 Coherent refusal",
+        f"    baseline typed refusals:    {metrics.get('c3_baseline_refused_typed', 0)} / {metrics.get('c3_case_count', 0)}",
+        f"    baseline emits inadmiss.:   {metrics.get('c3_baseline_emitted_inadmissible', 0)} / {metrics.get('c3_case_count', 0)}",
+        f"    CORE typed refusals:        {metrics.get('c3_core_refused_typed', 0)} / {metrics.get('c3_case_count', 0)}",
+        f"    verdict:                    {pf(metrics.get('c3_pass', False))}",
+        "",
+        f"  ALL THREE CONDITIONS:         {pf(metrics.get('all_three_conditions_pass', False))}",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def _write_results_index() -> Path:
+    """Write/refresh the results index manifest.
+
+    Lists every ``*_report.json`` in the results directory with its
+    headline metric (or a short summary).  Reviewers can read this to
+    discover all available evidence in one place.
+    """
+    results_dir = _DEMO_RESULTS_DIR
+    results_dir.mkdir(parents=True, exist_ok=True)
+    entries: list[dict[str, Any]] = []
+    for p in sorted(results_dir.glob("*.json")):
+        if p.name == "index.json":
+            continue
+        try:
+            data = json.loads(p.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        metrics = data.get("metrics", {}) if isinstance(data, dict) else {}
+        entries.append({
+            "file": p.name,
+            "size_bytes": p.stat().st_size,
+            "headline": {
+                k: v for k, v in metrics.items()
+                if k in (
+                    "case_count", "pass_rate", "pass_rate_threshold",
+                    "pass_rate_margin", "mechanism_isolated",
+                    "mechanism_isolated_threshold", "mechanism_isolated_margin",
+                    "all_three_conditions_pass", "c1_pass", "c2_pass", "c3_pass",
+                    "best_threshold", "best_separation_quality",
+                )
+            },
+        })
+    index_path = results_dir / "index.json"
+    index_path.write_text(json.dumps({
+        "results_dir": str(results_dir),
+        "reports": entries,
+    }, indent=2))
+    return index_path
+
+
+def _run_demo_phase5(emit_json: bool) -> dict[str, Any]:
+    from evals.forward_semantic_control.phase5_runner import run_lane
+    cases_path = _DEMO_CORPUS_DIR / "v2_phase5" / "cases.jsonl"
+    cases = [json.loads(l) for l in cases_path.read_text().splitlines() if l.strip()]
+    report = run_lane(cases)
+    out = _DEMO_RESULTS_DIR / "phase5_report.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps({
+        "metrics": report.metrics,
+        "per_family": report.per_family,
+        "case_details": report.case_details,
+    }, indent=2))
+    if emit_json:
+        print(json.dumps({"metrics": report.metrics, "per_family": report.per_family}, indent=2))
+    else:
+        print(_format_phase5_table(report.metrics, report.per_family))
+        print(f"  full report: {out}")
+    return report.metrics
+
+
+def _run_demo_phase6(emit_json: bool) -> dict[str, Any]:
+    from evals.forward_semantic_control.phase6_demo import run_lane
+    cases_path = _DEMO_CORPUS_DIR / "v2_phase6_demo" / "cases.jsonl"
+    cases = [json.loads(l) for l in cases_path.read_text().splitlines() if l.strip()]
+    report = run_lane(cases)
+    out = _DEMO_RESULTS_DIR / "phase6_demo_report.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps({
+        "metrics": report.metrics,
+        "case_details": report.case_details,
+    }, indent=2))
+    if emit_json:
+        print(json.dumps({"metrics": report.metrics}, indent=2))
+    else:
+        print(_format_phase6_table(report.metrics))
+        print(f"  full report: {out}")
+    return report.metrics
+
+
+def cmd_demo(args: argparse.Namespace) -> int:
+    """Run the ADR-0024 chain comparative demos for investors / reviewers."""
+    target = args.target
+    if target == "list-results":
+        index_path = _write_results_index()
+        data = json.loads(index_path.read_text())
+        if args.json:
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"\nresults directory: {data['results_dir']}\n")
+            for entry in data["reports"]:
+                print(f"  {entry['file']:55s}  {entry['size_bytes']:>9d} bytes")
+                for k, v in entry["headline"].items():
+                    print(f"    {k}: {v}")
+        return 0
+
+    if target == "phase5":
+        _run_demo_phase5(args.json)
+    elif target == "phase6":
+        _run_demo_phase6(args.json)
+    elif target == "all":
+        p5 = _run_demo_phase5(args.json)
+        p6 = _run_demo_phase6(args.json)
+        if not args.json:
+            print("\n" + "=" * 76)
+            print("Combined demo summary")
+            print("=" * 76)
+            print(f"  Phase 5 pass_rate (margin):    {p5.get('pass_rate_margin', 0):.2%}")
+            print(f"  Phase 5 mechanism_isolated:    {p5.get('mechanism_isolated_margin', False)}")
+            print(f"  Phase 6 all three conditions:  {p6.get('all_three_conditions_pass', False)}")
+            print("")
+    else:
+        _die(f"unknown demo target: {target}")
+
+    _write_results_index()
+    return 0
+
+
 def cmd_bench(args: argparse.Namespace) -> int:
     """Run benchmark harness."""
     # "cost" suite has its own runtime contract — wall/CPU-seconds and
@@ -806,6 +1020,28 @@ def build_parser() -> argparse.ArgumentParser:
     bench.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     bench.add_argument("--report", metavar="PATH", help="write JSON report to file")
     bench.set_defaults(func=cmd_bench)
+
+    demo = subparsers.add_parser(
+        "demo",
+        help="run ADR-0024 chain comparative demos (phase5 / phase6 / all)",
+        description=(
+            "Run the comparative demo evidence for the ADR-0024 chain.  "
+            "Designed for showcasing CORE's deterministic-cognition mechanisms "
+            "to reviewers / investors / industry observers."
+        ),
+    )
+    demo.add_argument(
+        "target",
+        choices=["phase5", "phase6", "all", "list-results"],
+        help=(
+            "phase5: stratified 5-family mechanism-isolation.  "
+            "phase6: 3-condition head-to-head vs in-system baseline.  "
+            "all: run both and print a combined summary.  "
+            "list-results: index every JSON report in the results directory."
+        ),
+    )
+    demo.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    demo.set_defaults(func=cmd_demo)
 
     eval_cmd = subparsers.add_parser("eval", help="run eval lanes")
     eval_cmd.add_argument("lane", nargs="?", help="eval lane name (e.g. cognition)")

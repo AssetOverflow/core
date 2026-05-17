@@ -1,0 +1,82 @@
+{
+  "results_dir": "evals/forward_semantic_control/results",
+  "reports": [
+    {
+      "file": "phase2_inner_loop_report.json",
+      "size_bytes": 16773,
+      "headline": {
+        "case_count": 9
+      }
+    },
+    {
+      "file": "phase3_v2_report.json",
+      "size_bytes": 4302,
+      "headline": {
+        "case_count": 5,
+        "pass_rate": 1.0,
+        "mechanism_isolated": true
+      }
+    },
+    {
+      "file": "phase4_characterization_combined.json",
+      "size_bytes": 3753,
+      "headline": {
+        "best_threshold": 1.0,
+        "best_separation_quality": 0.6,
+        "case_count": 14
+      }
+    },
+    {
+      "file": "phase4_characterization_v1_plus_dev.json",
+      "size_bytes": 2587,
+      "headline": {
+        "best_threshold": -1.0,
+        "best_separation_quality": 0.0,
+        "case_count": 9
+      }
+    },
+    {
+      "file": "phase4_characterization_v2.json",
+      "size_bytes": 3194,
+      "headline": {
+        "best_threshold": 1.0,
+        "best_separation_quality": 0.6,
+        "case_count": 5
+      }
+    },
+    {
+      "file": "phase4_summary.json",
+      "size_bytes": 1387,
+      "headline": {}
+    },
+    {
+      "file": "phase5_benign_inner_loop_report.json",
+      "size_bytes": 18673,
+      "headline": {
+        "case_count": 10
+      }
+    },
+    {
+      "file": "phase5_report.json",
+      "size_bytes": 36903,
+      "headline": {
+        "case_count": 20,
+        "pass_rate_threshold": 1.0,
+        "pass_rate_margin": 1.0,
+        "mechanism_isolated_threshold": true,
+        "mechanism_isolated_margin": true
+      }
+    },
+    {
+      "file": "phase6_demo_report.json",
+      "size_bytes": 15874,
+      "headline": {
+        "case_count": 8,
+        "c1_pass": true,
+        "c2_pass": true,
+        "c3_pass": true,
+        "all_three_conditions_pass": true
+      }
+    }
+  ]
+}
