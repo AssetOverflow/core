@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from field.state import FieldState
 from core.cognition.result import CognitiveTurnResult
-from core.cognition.trace import compute_trace_hash
+from core.cognition.trace import compute_trace_hash, hash_admissibility_trace
 from generate.intent import classify_intent
 from generate.intent_ratifier import (
     RatificationOutcome,
@@ -247,6 +247,13 @@ class CognitiveTurnPipeline:
             if compose_serialised
             else walk_serialised
         )
+        # ADR-0023 — admissibility trace + ratification provenance.
+        admissibility_trace = getattr(response, "admissibility_trace", ()) or ()
+        region_was_unconstrained = getattr(
+            response, "region_was_unconstrained", True
+        )
+        admissibility_trace_hash = hash_admissibility_trace(admissibility_trace)
+        ratification_outcome = ratified.outcome.value
         trace_hash = compute_trace_hash(
             input_text=text,
             filtered_tokens=filtered_tokens,
@@ -261,6 +268,9 @@ class CognitiveTurnPipeline:
             teaching_proposal_id=proposal_id,
             teaching_epistemic_status=epistemic_status,
             operator_invocation=operator_invocation,
+            admissibility_trace_hash=admissibility_trace_hash,
+            ratification_outcome=ratification_outcome,
+            region_was_unconstrained=region_was_unconstrained,
         )
 
         return CognitiveTurnResult(
@@ -284,6 +294,10 @@ class CognitiveTurnPipeline:
             reviewed_teaching_example=reviewed_example,
             pack_mutation_proposal=proposal,
             operator_invocation=operator_invocation,
+            admissibility_trace=admissibility_trace,
+            admissibility_trace_hash=admissibility_trace_hash,
+            ratification_outcome=ratification_outcome,
+            region_was_unconstrained=region_was_unconstrained,
             versor_condition=response.versor_condition,
             trace_hash=trace_hash,
         )
@@ -309,7 +323,14 @@ class CognitiveTurnPipeline:
                 threshold=0.0,
                 seed_tag=intent.tag,
             )
-        vocab = getattr(self.runtime, "vocab", None)
+        # ChatRuntime exposes vocab via session, not directly.  The
+        # original ADR-0022 wiring used ``getattr(self.runtime, "vocab",
+        # None)`` which always returned None — silently routing every
+        # turn through PASSTHROUGH.  ADR-0023 §3 surfaced this via the
+        # ``passthrough_on_scored`` lane metric; the fix here is to
+        # resolve vocab through the session contract.
+        session = getattr(self.runtime, "session", None)
+        vocab = getattr(session, "vocab", None) if session is not None else None
         if vocab is None:
             return RatifiedIntent(
                 intent=intent,

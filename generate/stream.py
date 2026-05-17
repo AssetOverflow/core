@@ -19,7 +19,13 @@ from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import rotor_power, word_transition_rotor
 from algebra.versor import unitize_versor
-from generate.admissibility import AdmissibilityRegion, filter_candidates
+from generate.admissibility import (
+    AdmissibilityRegion,
+    AdmissibilityTraceStep,
+    AdmissibilityVerdict,
+    check_transition,
+    filter_candidates,
+)
 from generate.attention import AttentionOperator
 from generate.result import GenerationResult
 from generate.salience import SalienceOperator
@@ -299,6 +305,14 @@ def generate(
         candidate_indices = salience_candidates if salience_candidates is not None else language_candidates
         candidates_used = None if candidate_indices is None else len(candidate_indices)
 
+    region_was_unconstrained = region is None or region.is_unconstrained()
+    effective_region_label = (
+        region.label if region is not None else "unconstrained"
+    )
+    effective_region_source = (
+        region.source.value if region is not None else "intent"
+    )
+    candidates_before_region = candidate_indices
     if region is not None and not region.is_unconstrained():
         candidate_indices = filter_candidates(region, candidate_indices)
         if candidate_indices is not None and len(candidate_indices) == 0:
@@ -306,6 +320,17 @@ def generate(
                 f"AdmissibilityRegion[{region.label}] left no walk candidates."
             )
         candidates_used = None if candidate_indices is None else len(candidate_indices)
+    admissibility_trace: list[AdmissibilityTraceStep] = []
+    pre_tuple: tuple[int, ...] = (
+        tuple(int(i) for i in candidates_before_region)
+        if candidates_before_region is not None
+        else ()
+    )
+    post_tuple: tuple[int, ...] = (
+        tuple(int(i) for i in candidate_indices)
+        if candidate_indices is not None
+        else ()
+    )
 
     stop_nodes = frozenset(
         idx for token in _STOP_TOKENS
@@ -313,7 +338,7 @@ def generate(
     )
 
     token_budget = min(max_tokens, int(candidates_used)) if candidates_used is not None else max_tokens
-    for _ in range(token_budget):
+    for step_index in range(token_budget):
         current, hits_applied = _recall_state(_voiced_state(current, persona), vault, recall_top_k)
         vault_hits += hits_applied
         word, word_idx = _nearest_next(
@@ -325,6 +350,31 @@ def generate(
             candidate_indices=candidate_indices,
         )
         tokens.append(_articulate(vocab, word))
+        if region is not None and not region.is_unconstrained():
+            verdict = check_transition(
+                region,
+                candidate_index=int(word_idx),
+                candidate_versor=vocab.get_versor_at(word_idx),
+            )
+        else:
+            verdict = AdmissibilityVerdict(
+                admitted=True,
+                score=0.0,
+                region_label=effective_region_label,
+                reason="unconstrained",
+            )
+        admissibility_trace.append(
+            AdmissibilityTraceStep(
+                step_index=step_index,
+                region_label=effective_region_label,
+                region_source=effective_region_source,
+                candidates_before=pre_tuple,
+                candidates_after=post_tuple,
+                selected_index=int(word_idx),
+                selected_word=str(word),
+                verdict=verdict,
+            )
+        )
 
         if record_trajectory:
             trajectory.append(current)
@@ -351,6 +401,8 @@ def generate(
         salience_top_k=salience_budget,
         candidates_used=candidates_used,
         vault_hits=vault_hits,
+        admissibility_trace=tuple(admissibility_trace),
+        region_was_unconstrained=region_was_unconstrained,
     )
 
 

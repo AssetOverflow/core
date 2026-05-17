@@ -38,6 +38,9 @@ def compute_trace_hash(
     teaching_proposal_id: str = "",
     teaching_epistemic_status: str = "",
     operator_invocation: str = "",
+    admissibility_trace_hash: str = "",
+    ratification_outcome: str = "",
+    region_was_unconstrained: bool = True,
 ) -> str:
     """Return a deterministic SHA-256 hex digest over the turn's key outputs.
 
@@ -71,7 +74,35 @@ def compute_trace_hash(
         "teaching_epistemic_status": teaching_epistemic_status,
         "operator_invocation": operator_invocation,
     }
+    # ADR-0023 additions are folded in only when they carry non-default
+    # values, so a turn unaffected by forward semantic control keeps the
+    # exact same payload bytes as before ADR-0023.  Once a turn does
+    # carry admissibility evidence, those keys become load-bearing in
+    # replay equality.
+    if admissibility_trace_hash:
+        payload["admissibility_trace_hash"] = admissibility_trace_hash
+    if ratification_outcome:
+        payload["ratification_outcome"] = ratification_outcome
+    if not region_was_unconstrained:
+        payload["region_was_unconstrained"] = False
     serialized = json.dumps(payload, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+
+def hash_admissibility_trace(trace: tuple) -> str:
+    """SHA-256 over the canonical serialization of an admissibility trace.
+
+    Returns the empty string for an empty trace so callers can
+    short-circuit the ADR-0023 payload addition (preserving pre-ADR-0023
+    trace_hash bytes for turns that did not run admissibility).
+    """
+    if not trace:
+        return ""
+    serialized = json.dumps(
+        [step.canonical() for step in trace],
+        sort_keys=True,
+        ensure_ascii=False,
+    )
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
 
@@ -107,4 +138,7 @@ def trace_hash_from_result(result: "CognitiveTurnResult") -> str:
         teaching_proposal_id=proposal_id,
         teaching_epistemic_status=epistemic_status,
         operator_invocation=result.operator_invocation,
+        admissibility_trace_hash=getattr(result, "admissibility_trace_hash", ""),
+        ratification_outcome=getattr(result, "ratification_outcome", ""),
+        region_was_unconstrained=getattr(result, "region_was_unconstrained", True),
     )

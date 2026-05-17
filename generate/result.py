@@ -16,7 +16,7 @@ Contracts:
 """
 
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 from field.state import FieldState
 
@@ -30,12 +30,17 @@ class GenerationResult:
     candidates_used: int | None = None
     vault_hits: int = 0
     identity_score: Optional[object] = None  # IdentityScore | None
+    # ADR-0023 §2 — per-transition admissibility evidence.  Always a
+    # tuple (possibly empty when no admissibility was checked).
+    admissibility_trace: tuple = field(default_factory=tuple)
+    region_was_unconstrained: bool = True
 
     def __post_init__(self) -> None:
         # Coerce list inputs to tuple for immutability.
         object.__setattr__(self, "tokens", tuple(self.tokens))
         if self.trajectory is not None:
             object.__setattr__(self, "trajectory", tuple(self.trajectory))
+        object.__setattr__(self, "admissibility_trace", tuple(self.admissibility_trace))
 
     def text(self, sep: str = " ") -> str:
         """Join tokens into a string for display."""

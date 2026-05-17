@@ -154,6 +154,11 @@ class ChatResponse:
     identity_score: IdentityScore | None
     character_profile: CharacterProfile
     flagged: bool
+    # ADR-0023 §2 — per-transition admissibility evidence and region
+    # provenance flag.  An empty tuple is the contract for "no
+    # admissibility was checked this turn" (cold start, refusal, stub).
+    admissibility_trace: tuple = ()
+    region_was_unconstrained: bool = True
 
 
 class ChatRuntime:
@@ -475,6 +480,8 @@ class ChatRuntime:
             identity_score=identity_score,
             character_profile=self.character_profile,
             flagged=flagged,
+            admissibility_trace=result.admissibility_trace,
+            region_was_unconstrained=result.region_was_unconstrained,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

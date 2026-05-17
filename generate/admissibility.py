@@ -405,6 +405,48 @@ def check_transition(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class AdmissibilityTraceStep:
+    """One per-transition record from a constrained walk (ADR-0023 §2).
+
+    ``candidates_before`` and ``candidates_after`` are the candidate
+    index arrays observed before and after admissibility filtering at
+    this step.  ``selected_index`` / ``selected_word`` are the
+    destination chosen by the existing `_nearest_next` selector.  The
+    typed ``verdict`` is the result of ``check_transition`` evaluated
+    against the selected candidate; an unconstrained region produces
+    a verdict with ``reason="unconstrained"`` so the trace shape is
+    invariant across constrained / unconstrained walks.
+
+    The trace is observation-only.  It does not influence selection
+    and does not introduce any normalization or repair on the field
+    path (CLAUDE.md §Normalization Rules).
+    """
+
+    step_index: int
+    region_label: str
+    region_source: str
+    candidates_before: tuple[int, ...]
+    candidates_after: tuple[int, ...]
+    selected_index: int
+    selected_word: str
+    verdict: AdmissibilityVerdict
+
+    def canonical(self) -> dict[str, object]:
+        """Deterministic dict representation for trace hashing."""
+        return {
+            "step_index": int(self.step_index),
+            "region_label": str(self.region_label),
+            "region_source": str(self.region_source),
+            "candidates_before": [int(i) for i in self.candidates_before],
+            "candidates_after": [int(i) for i in self.candidates_after],
+            "selected_index": int(self.selected_index),
+            "selected_word": str(self.selected_word),
+            "verdict_admitted": bool(self.verdict.admitted),
+            "verdict_reason": str(self.verdict.reason),
+        }
+
+
 def filter_candidates(
     region: AdmissibilityRegion,
     candidate_indices: np.ndarray | None,

@@ -20,10 +20,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+import numpy as np
+
+from algebra.cga import outer_product
 from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.config import RuntimeConfig
 from evals.parallel import run_cases_parallel
+from generate.admissibility import AdmissibilityRegion, RegionSource
+from generate.stream import generate as generate_walk
 
 
 @dataclass(slots=True)
@@ -45,7 +50,7 @@ def _surfaces_forbidden(surface: str, forbidden_token: str | None) -> bool:
     return forbidden_token.lower().strip() in surface.lower()
 
 
-def _run_leg(case: dict[str, Any], *, constrained: bool) -> str:
+def _run_leg(case: dict[str, Any], *, constrained: bool) -> tuple[str, str]:
     """Run the case once.
 
     * ``constrained=True``  → full ``CognitiveTurnPipeline`` with
@@ -71,9 +76,9 @@ def _run_leg(case: dict[str, Any], *, constrained: bool) -> str:
                 pass
         try:
             result = pipeline.run(case["prompt"], max_tokens=8)
-            return result.surface or ""
+            return (result.surface or "", result.ratification_outcome or "")
         except ValueError:
-            return ""
+            return ("", "")
     # Unconstrained baseline — bare runtime, no graph, no ratifier,
     # no typed-operator fold.  Primes are fed through the same
     # `runtime.chat` entry so the vault state is comparable.
@@ -84,23 +89,146 @@ def _run_leg(case: dict[str, Any], *, constrained: bool) -> str:
             pass
     try:
         response = runtime.chat(case["prompt"], max_tokens=8)
-        return response.surface or ""
+        return (response.surface or "", "")
     except ValueError:
-        return ""
+        return ("", "")
+
+
+def _region_from_token_chain(
+    vocab,
+    tokens: tuple[str, ...],
+    *,
+    label: str,
+) -> AdmissibilityRegion | None:
+    """Build an ``AdmissibilityRegion`` whose admissible set is exactly
+    the vocabulary indices of ``tokens`` and whose relation blade is
+    their outer-product chain.
+
+    Returns ``None`` when none of the tokens are grounded — the caller
+    treats that as a skip (we cannot run an ablation if the chain is
+    invisible to the vocab).
+    """
+    indices: list[int] = []
+    versors: list[np.ndarray] = []
+    for raw in tokens:
+        token = raw.lower().strip()
+        if not token:
+            continue
+        try:
+            idx = vocab.index_of(token)
+        except (KeyError, AttributeError, IndexError):
+            continue
+        try:
+            versor = np.asarray(vocab.get_versor(token), dtype=np.float32)
+        except (KeyError, AttributeError):
+            continue
+        indices.append(int(idx))
+        versors.append(versor)
+    if not indices:
+        return None
+    blade = versors[0]
+    for nxt in versors[1:]:
+        blade = outer_product(blade, nxt)
+    return AdmissibilityRegion(
+        allowed_indices=np.asarray(indices, dtype=np.int64),
+        relation_blade=blade,
+        source=RegionSource.RELATION,
+        label=label,
+    )
+
+
+def _run_region_ablation(case: dict[str, Any]) -> tuple[str, str, bool, bool]:
+    """Same-path ablation leg (ADR-0023 §1).
+
+    Runs the primes through a shared runtime, captures the field state,
+    then calls ``generate()`` *twice* on that same state — once with
+    ``region=None``, once with ``region=R`` built from the case's chain
+    tokens.  Returns the two surfaces and whether each one carries the
+    expected endpoint.  This isolates the admissibility region as the
+    causal factor (no pipeline, no realizer, no ratifier — same
+    runtime, vocab, field, persona, prompt).
+    """
+    runtime = ChatRuntime()
+    for prime in case.get("prime", []):
+        try:
+            runtime.chat(prime, max_tokens=8)
+        except ValueError:
+            pass
+    try:
+        runtime.chat(case["prompt"], max_tokens=8)
+    except ValueError:
+        pass
+
+    field_state = runtime.session.state
+    if field_state is None:
+        return ("", "", False, False)
+    vocab = runtime.session.vocab
+    persona = runtime.session.persona
+
+    chain_tokens: tuple[str, ...] = tuple(case.get("chain_tokens", ()))
+    expected = case.get("expected_endpoint", "")
+    if not chain_tokens and expected:
+        chain_tokens = (expected,)
+
+    region = _region_from_token_chain(
+        vocab, chain_tokens, label=f"ablation[{case.get('id', '')}]"
+    )
+
+    try:
+        unconstrained = generate_walk(
+            field_state, vocab, persona, max_tokens=8, region=None
+        )
+        unconstrained_surface = " ".join(unconstrained.tokens)
+    except ValueError:
+        unconstrained_surface = ""
+
+    constrained_surface = ""
+    if region is not None:
+        try:
+            constrained = generate_walk(
+                field_state, vocab, persona, max_tokens=8, region=region
+            )
+            constrained_surface = " ".join(constrained.tokens)
+        except ValueError:
+            constrained_surface = ""
+
+    unconstrained_pass = _surfaces_endpoint(unconstrained_surface, expected)
+    constrained_pass = (
+        region is not None
+        and _surfaces_endpoint(constrained_surface, expected)
+    )
+    return (
+        unconstrained_surface,
+        constrained_surface,
+        unconstrained_pass,
+        constrained_pass,
+    )
 
 
 def _run_case(case: dict[str, Any]) -> dict[str, Any]:
     expected = case.get("expected_endpoint", "")
     forbidden = case.get("forbidden_token")
 
-    unconstrained_surface = _run_leg(case, constrained=False)
-    constrained_surface = _run_leg(case, constrained=True)
+    unconstrained_surface, _ = _run_leg(case, constrained=False)
+    constrained_surface, ratification_outcome = _run_leg(case, constrained=True)
 
     unconstrained_pass = _surfaces_endpoint(unconstrained_surface, expected)
     constrained_pass = _surfaces_endpoint(constrained_surface, expected)
     if forbidden:
         constrained_pass = constrained_pass and not _surfaces_forbidden(
             constrained_surface, forbidden
+        )
+
+    (
+        region_only_unconstrained_surface,
+        region_only_constrained_surface,
+        region_only_unconstrained_pass,
+        region_only_constrained_pass,
+    ) = _run_region_ablation(case)
+    if forbidden:
+        region_only_constrained_pass = (
+            region_only_constrained_pass
+            and not _surfaces_forbidden(region_only_constrained_surface, forbidden)
         )
 
     return {
@@ -112,7 +240,12 @@ def _run_case(case: dict[str, Any]) -> dict[str, Any]:
         "constrained_surface": constrained_surface,
         "unconstrained_pass": unconstrained_pass,
         "constrained_pass": constrained_pass,
+        "region_only_unconstrained_surface": region_only_unconstrained_surface,
+        "region_only_constrained_surface": region_only_constrained_surface,
+        "region_only_unconstrained_pass": region_only_unconstrained_pass,
+        "region_only_constrained_pass": region_only_constrained_pass,
         "baseline_must_fail": bool(case.get("baseline_must_fail", False)),
+        "ratification_outcome": ratification_outcome,
     }
 
 
@@ -149,13 +282,59 @@ def run_lane(
     )
     causality_gap = constrained_pass_rate - unconstrained_pass_rate
 
-    overall_pass = constrained_pass_rate >= 0.80 and causality_gap > 0.50
+    region_only_constrained_rate = (
+        sum(1 for d in chain_dependent if d["region_only_constrained_pass"])
+        / len(chain_dependent)
+        if chain_dependent
+        else 0.0
+    )
+    region_only_unconstrained_rate = (
+        sum(1 for d in chain_dependent if d["region_only_unconstrained_pass"])
+        / len(chain_dependent)
+        if chain_dependent
+        else 0.0
+    )
+    region_only_gap = region_only_constrained_rate - region_only_unconstrained_rate
+
+    # Ratification accounting (ADR-0023 §3).  Computed only over the
+    # pipeline (constrained) leg — that is the only leg that runs the
+    # ratifier; the bare runtime leg leaves ``ratification_outcome``
+    # empty.
+    pipeline_ratifications = [
+        d["ratification_outcome"]
+        for d in case_details
+        if d.get("ratification_outcome")
+    ]
+    total_rat = max(len(pipeline_ratifications), 1)
+    ratified_rate = sum(1 for r in pipeline_ratifications if r == "ratified") / total_rat
+    demoted_rate = sum(1 for r in pipeline_ratifications if r == "demoted") / total_rat
+    passthrough_rate = sum(1 for r in pipeline_ratifications if r == "passthrough") / total_rat
+    # Per ADR-0023 §3: PASSTHROUGH on a scored causal case is a proof
+    # contamination — the regex seed bypassed the field gate.  Flag it.
+    passthrough_on_scored = any(
+        d.get("ratification_outcome") == "passthrough"
+        for d in chain_dependent
+    )
+
+    overall_pass = (
+        constrained_pass_rate >= 0.80
+        and causality_gap > 0.50
+        and region_only_gap > 0.50
+        and not passthrough_on_scored
+    )
 
     metrics: dict[str, Any] = {
         "constrained_pass_rate": round(constrained_pass_rate, 4),
         "unconstrained_pass_rate": round(unconstrained_pass_rate, 4),
         "coincidence_rate": round(coincidence_rate, 4),
         "causality_gap": round(causality_gap, 4),
+        "region_only_constrained_rate": round(region_only_constrained_rate, 4),
+        "region_only_unconstrained_rate": round(region_only_unconstrained_rate, 4),
+        "region_only_gap": round(region_only_gap, 4),
+        "ratified_rate": round(ratified_rate, 4),
+        "demoted_rate": round(demoted_rate, 4),
+        "passthrough_rate": round(passthrough_rate, 4),
+        "passthrough_on_scored": passthrough_on_scored,
         "chain_dependent_count": len(chain_dependent),
         "negative_control_count": len(negative_controls),
         "overall_pass": overall_pass,

@@ -70,6 +70,23 @@ class CognitiveTurnResult:
     # so operator invocation is a load-bearing part of replay equality.
     operator_invocation: str = ""
 
+    # --- forward semantic control evidence (ADR-0023) ---
+    # ``admissibility_trace`` is the per-transition record produced by
+    # ``generate()`` (empty tuple when no admissibility ran).
+    # ``admissibility_trace_hash`` is its canonical SHA-256, folded
+    # into ``trace_hash`` only when non-empty so pre-ADR-0023 turn
+    # hashes are byte-preserved.
+    # ``ratification_outcome`` is the enum value ("ratified" /
+    # "demoted" / "passthrough") from the field ratifier; empty
+    # string when no ratification ran.
+    # ``region_was_unconstrained`` records whether forward semantic
+    # control was active on this turn — observation only, no
+    # production fail-closed yet (see ADR-0023 §Out of scope).
+    admissibility_trace: tuple = ()
+    admissibility_trace_hash: str = ""
+    ratification_outcome: str = ""
+    region_was_unconstrained: bool = True
+
     # --- invariant bookkeeping ---
     versor_condition: float = 0.0   # must be < 1e-6
     trace_hash: str = ""            # SHA-256 over deterministic key fields

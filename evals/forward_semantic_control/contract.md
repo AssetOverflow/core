@@ -47,6 +47,11 @@ Each case follows the same shape:
 | `coincidence_rate` | Fraction of negative-control probes that the unconstrained baseline happens to answer correctly (must be **low** for the lane to be measuring causality, not accuracy) | < 0.20 | **TBD** |
 | `causality_gap` | `constrained_pass_rate − unconstrained_pass_rate` on chain-dependent probes — must be positive for the lane to evidence "graph caused the answer" | > 0.50 | **TBD** |
 | `overall_pass` | `constrained_pass_rate ≥ 0.80 AND causality_gap > 0.50` | true | **TBD** |
+| `region_only_constrained_rate` | Same-path ablation: fraction of chain-dependent probes whose `generate(..., region=R)` surfaces the endpoint, evaluated against the *same* runtime/vocab/field/persona/prompt that produced `region_only_unconstrained_*` (ADR-0023 §1) | 0.80 | **TBD** |
+| `region_only_unconstrained_rate` | Same-path ablation baseline: `generate(..., region=None)` on the same state | low | **TBD** |
+| `region_only_gap` | `region_only_constrained_rate − region_only_unconstrained_rate` — the cleanest single-variable evidence that the admissibility region itself is the cause | > 0.50 | **TBD** |
+| `ratified_rate` / `demoted_rate` / `passthrough_rate` | Fraction of pipeline-leg turns whose intent was ratified / demoted / passthrough (ADR-0023 §3) | n/a | **TBD** |
+| `passthrough_on_scored` | Whether *any* chain-dependent (scored) case had `PASSTHROUGH` — that means the regex seed bypassed the field gate on a load-bearing case | **false** | **TBD** |
 
 ## Anti-patterns (cases must avoid)
 
