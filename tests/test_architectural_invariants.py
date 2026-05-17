@@ -881,3 +881,144 @@ class TestINV23VaultEpistemicFilter:
         store.store(v, {"role": "user"})
         hits = store.recall(v, top_k=1)
         assert hits, "Default recall must return SPECULATIVE session entries."
+
+
+# ===========================================================================
+# INV-24  Vault recall callsite registry — Leak C read-side audit guard
+# ===========================================================================
+#
+# Claim (ADR-0021 §Leak C, 2026-05-17 audit, completed 2026-05-17):
+# Every production vault.recall() callsite must be categorized in
+# VAULT_RECALL_SITES.  Categories:
+#
+#   RECOGNITION         — answers "have we seen anything like this?"
+#                         (gate decisions, unknown-domain probes).
+#                         Unfiltered recall is correct: session-tier
+#                         SPECULATIVE memory must count.
+#
+#   EVIDENCE_TELEMETRY  — feeds walk telemetry / trace evidence, NOT the
+#                         user-facing surface (per docs/runtime_contracts.md
+#                         §surface vs walk_surface).  Unfiltered recall is
+#                         tolerable because the walk does not shape claims.
+#                         If a future change routes the walk into the
+#                         user-facing surface, the site must move to
+#                         EVIDENCE_USER_FACING and pass min_status=COHERENT.
+#
+#   EVIDENCE_USER_FACING — feeds the user-facing surface as if ratified
+#                          knowledge.  MUST pass min_status=COHERENT.
+#                          Currently empty by design: user-facing
+#                          articulation comes from realize(proposition, vocab)
+#                          via pack lookup, not from vault.recall.
+#
+# A new vault.recall caller is a structural change to the read substrate of
+# the epistemic schema and must be reviewed — adding it to the registry
+# makes the categorization decision explicit.
+
+VAULT_RECALL_SITES: dict[str, str] = {
+    "chat/runtime.py":   "RECOGNITION",
+    "vault/decompose.py": "RECOGNITION",
+    "generate/stream.py": "EVIDENCE_TELEMETRY",
+    "session/context.py": "RECOGNITION",  # generic delegate; callers categorize
+    "vault/store.py":    "RECOGNITION",  # self-references in helpers/docstrings
+}
+
+VALID_RECALL_ROLES: frozenset[str] = frozenset({
+    "RECOGNITION", "EVIDENCE_TELEMETRY", "EVIDENCE_USER_FACING",
+})
+
+
+def _file_has_vault_recall_call(path: Path) -> bool:
+    """Return True iff `path` contains an executable `<vault>.recall(...)` call.
+
+    Uses AST so docstrings/comments cannot trigger false positives.
+    Detects `.recall(...)` on receivers that look like vault bindings:
+    a name `vault`, any `*_vault`, or any name assigned from `VaultStore(...)`.
+    """
+    try:
+        tree = ast.parse(path.read_text())
+    except (OSError, SyntaxError):
+        return False
+
+    vault_bindings: set[str] = {"vault"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+            func = node.value.func
+            func_name = (
+                func.attr if isinstance(func, ast.Attribute) else
+                func.id if isinstance(func, ast.Name) else ""
+            )
+            if func_name == "VaultStore":
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        vault_bindings.add(target.id)
+                    elif isinstance(target, ast.Attribute):
+                        vault_bindings.add(target.attr)
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if not isinstance(func, ast.Attribute) or func.attr != "recall":
+            continue
+        receiver = func.value
+        receiver_name = ""
+        if isinstance(receiver, ast.Name):
+            receiver_name = receiver.id
+        elif isinstance(receiver, ast.Attribute):
+            receiver_name = receiver.attr
+        if (
+            receiver_name in vault_bindings
+            or receiver_name.endswith("_vault")
+            or receiver_name == "vault"
+        ):
+            return True
+    return False
+
+
+class TestINV24VaultRecallRegistry:
+    """Every production vault.recall() callsite must be categorized in
+    VAULT_RECALL_SITES.  A new callsite is a structural change to the
+    epistemic read-substrate and must justify its categorization."""
+
+    def test_every_recall_site_is_registered(self):
+        offenders: list[str] = []
+        for path in _enumerate_project_py_files():
+            if not _file_has_vault_recall_call(path):
+                continue
+            rel = str(path.relative_to(PROJECT_ROOT_FOR_INV21))
+            if rel not in VAULT_RECALL_SITES:
+                offenders.append(rel)
+        assert not offenders, (
+            "New vault recall callsite(s) detected outside the registry:\n  "
+            + "\n  ".join(offenders)
+            + "\n\nAdd the path to VAULT_RECALL_SITES in "
+            "tests/test_architectural_invariants.py with one of the valid "
+            f"roles: {sorted(VALID_RECALL_ROLES)}.\n"
+            "EVIDENCE_USER_FACING sites MUST pass min_status=COHERENT "
+            "(ADR-0021 §Leak C, 2026-05-17 audit)."
+        )
+
+    def test_registry_roles_are_valid(self):
+        invalid = {
+            path: role
+            for path, role in VAULT_RECALL_SITES.items()
+            if role not in VALID_RECALL_ROLES
+        }
+        assert not invalid, (
+            f"Invalid recall role(s) in VAULT_RECALL_SITES: {invalid}\n"
+            f"Valid roles: {sorted(VALID_RECALL_ROLES)}"
+        )
+
+    def test_registry_is_not_stale(self):
+        """If a registered file no longer calls vault.recall(), drop it from
+        the registry to keep the read-substrate trust surface tight."""
+        used: set[str] = set()
+        for path in _enumerate_project_py_files():
+            if _file_has_vault_recall_call(path):
+                used.add(str(path.relative_to(PROJECT_ROOT_FOR_INV21)))
+        registered = set(VAULT_RECALL_SITES.keys())
+        unused = registered - used - {"vault/store.py"}
+        assert not unused, (
+            f"Registered recall site(s) no longer call vault.recall(): "
+            f"{sorted(unused)}\nRemove from VAULT_RECALL_SITES."
+        )

@@ -144,6 +144,15 @@ def _recall_state(state: FieldState, vault, top_k: int) -> tuple[FieldState, int
     if vault is None or top_k <= 0:
         return state, 0
 
+    # INV-24 recall role: EVIDENCE_TELEMETRY.  Hits become rotor transitions
+    # on the generation walk, but the walk feeds `walk_surface` (telemetry-
+    # only per docs/runtime_contracts.md) — not the user-facing surface.
+    # User-facing surface comes from realize(proposition, vocab), which is
+    # pack-grounded.  SPECULATIVE walk influence remains visible in trace
+    # evidence and is bounded by the recall score floor; no min_status
+    # filter is applied here.  If a future change routes walk output into
+    # the user-facing surface, this site must be re-categorized to
+    # EVIDENCE_USER_FACING and pass min_status=COHERENT.
     hits = vault.recall(state.F, top_k=top_k)
     if not hits:
         return state, 0

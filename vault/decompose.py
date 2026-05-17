@@ -118,6 +118,9 @@ class FieldDecomposer:
                 component_weights.append(0.0)
                 continue
 
+            # INV-24 recall role: RECOGNITION.  Grade-decomposed fallback for
+            # UnknownDomainGate when direct recall scores below the floor —
+            # still a "have we seen this?" probe, not evidence admission.
             hits = vault.recall(grade_vec, top_k=top_k)
             best = max((h["score"] for h in hits), default=0.0)
             component_scores.append(best)

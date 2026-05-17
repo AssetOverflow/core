@@ -207,30 +207,48 @@ opts in now gets the evidence guarantee.
 **Regression guard:** `tests/test_architectural_invariants.py::TestINV23VaultEpistemicFilter`
 (four tests).
 
-### ~~Leak C — Self-reinforcing fabrication via `propose()`~~ — PARTIALLY CLOSED 2026-05-17
+### ~~Leak C — Self-reinforcing fabrication via `propose()`~~ — CLOSED 2026-05-17
 
 **Original gap:** `generate/proposition.py:198` stored every
 articulated proposition back into vault unmarked. The system says
 something → recalls own output → cites it → says it again. A
 fabrication-feedback loop in the substrate.
 
-**Write-side fix landed:** the call site now stamps
+**Write-side fix:** the call site now stamps
 `epistemic_status=EpistemicStatus.SPECULATIVE` with an inline comment
 naming this leak. The feedback loop is broken in principle: any
 inference path that recalls with `min_status=COHERENT` will exclude
 the system's own prior utterances from evidence.
 
-**Residual work:** the *read side* — call sites in
-`chat/runtime.py`, `generate/stream.py`, and `vault/decompose.py`
-that currently recall without a `min_status` filter — must be
-audited site-by-site. Each is either an inference path (should pass
-`min_status=COHERENT`) or a context-display path (correctly
-tier-agnostic). The decision is per call site, not a single sweep.
-Until that audit lands, Leak C is closed at the write side but not
-yet enforced at every read site. The architectural-invariant test
-allowlist still names `generate/proposition.py` as a vault writer,
-correctly — the entry is no longer a leak in spirit, but the
-read-side audit is what makes the closure operationally tight.
+**Read-side audit (2026-05-17):** every production `vault.recall()`
+callsite was categorized and an architectural invariant added
+(`TestINV24VaultRecallRegistry`) that requires every new callsite to
+declare its role. Categories:
+
+- **RECOGNITION** — answers *"have we seen this before?"* (gate
+  decisions, unknown-domain probes). Unfiltered recall is correct,
+  because session-tier SPECULATIVE memory must count toward
+  recognition. Sites: `chat/runtime.py:330`,
+  `vault/decompose.py:121`.
+- **EVIDENCE_TELEMETRY** — feeds `walk_surface` and trace evidence
+  but NOT the user-facing surface (per
+  `docs/runtime_contracts.md` §surface vs walk_surface). Tolerable
+  unfiltered because the walk does not shape claims. Site:
+  `generate/stream.py:147` (`_recall_state`).
+- **EVIDENCE_USER_FACING** — would feed user-facing surface as if
+  ratified knowledge. **MUST pass `min_status=COHERENT`.** Currently
+  empty by design: user-facing articulation comes from
+  `realize(proposition, vocab)` via pack lookup (now SPECULATIVE-default
+  per Leak A fix), not from `vault.recall`.
+
+If a future change routes the generation walk into the user-facing
+surface, INV-24 forces the recategorization to be explicit and
+requires the `min_status=COHERENT` filter — the fabrication loop
+cannot reopen quietly.
+
+**Regression guard:** `tests/test_architectural_invariants.py::TestINV24VaultRecallRegistry`
+(three tests) + site-level `# INV-24 recall role:` provenance
+comments at every callsite.
 
 ### Realizer-side surface gaps
 

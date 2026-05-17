@@ -327,6 +327,10 @@ class ChatRuntime:
             raise ValueError("ChatRuntime.chat() received no in-vocabulary tokens.")
 
         probe_state = self._context.probe_ingest(filtered)
+        # INV-24 recall role: RECOGNITION.  Feeds UnknownDomainGate — asks
+        # "have we seen anything like this before?", not "what is admissible
+        # evidence?".  Session-tier SPECULATIVE memory must count here, so
+        # no min_status filter is applied.
         direct_hits = self._context.vault.recall(probe_state.F, top_k=3)
         direct_best = max((h["score"] for h in direct_hits), default=0.0)
         gate_decision = default_gate.check(
