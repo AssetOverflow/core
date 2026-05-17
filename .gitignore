@@ -6,6 +6,7 @@ __pycache__/
 
 *.egg-info/
 traces/
+.formation_cache/
 
 core-rs/target/
 core-rs/Cargo.lock

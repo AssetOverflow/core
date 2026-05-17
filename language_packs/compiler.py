@@ -328,7 +328,7 @@ def _parse_entry(payload: dict) -> LexicalEntry:
         semantic_domains=tuple(payload.get("semantic_domains", [])),
         manifold_point_checksum=payload.get("manifold_point_checksum"),
         provenance_ids=tuple(payload.get("provenance_ids", [])),
-        epistemic_status=payload.get("epistemic_status", "coherent"),
+        epistemic_status=payload.get("epistemic_status", "speculative"),
     )
 
 

@@ -19,6 +19,7 @@ import numpy as np
 from algebra.cga import cga_inner, outer_product
 from field.state import FieldState
 from generate.stream import _articulate
+from teaching.epistemic import EpistemicStatus
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _STOP_SURFACES = frozenset({"what", "who", "how", "why", "when", "which", "it", "to"})
@@ -195,7 +196,19 @@ def propose(
         relation=relation,
     )
     if vault is not None:
-        vault.store(proposition.subject_versor, {"kind": "proposition", "proposition": proposition})
+        # SPECULATIVE per ADR-0021 §3: the system's own articulated
+        # output has not passed coherence judgment.  Storing it as
+        # COHERENT would create a self-reinforcing fabrication loop
+        # (Leak C from the 2026-05-17 epistemic audit) — propose,
+        # store, recall own output as evidence, propose again.  The
+        # SPECULATIVE stamp keeps the entry retrievable for session
+        # context while excluding it from inference paths that pass
+        # min_status=COHERENT.
+        vault.store(
+            proposition.subject_versor,
+            {"kind": "proposition", "proposition": proposition},
+            epistemic_status=EpistemicStatus.SPECULATIVE,
+        )
     return proposition
 
 

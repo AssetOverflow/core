@@ -1,0 +1,87 @@
+{
+  "cases": [
+    {
+      "contested": false,
+      "first_versor_condition": 2.31891e-07,
+      "flagged": true,
+      "id": "CON-PUB-001",
+      "kind": "paired_contradiction",
+      "passed": true,
+      "second_epistemic_status": "speculative",
+      "second_versor_condition": 5.60568e-07,
+      "versor_delta": 3.28677e-07,
+      "versor_spike": true
+    },
+    {
+      "contested": false,
+      "first_versor_condition": 0.0,
+      "flagged": false,
+      "id": "CON-PUB-002",
+      "kind": "paired_contradiction",
+      "passed": false,
+      "second_epistemic_status": "speculative",
+      "second_versor_condition": 0.0,
+      "versor_delta": 0.0,
+      "versor_spike": false
+    },
+    {
+      "contested": false,
+      "first_versor_condition": 0.0,
+      "flagged": true,
+      "id": "CON-PUB-003",
+      "kind": "paired_contradiction",
+      "passed": true,
+      "second_epistemic_status": "speculative",
+      "second_versor_condition": 7.33989e-07,
+      "versor_delta": 7.33989e-07,
+      "versor_spike": true
+    },
+    {
+      "contested": false,
+      "first_versor_condition": 9.05293e-07,
+      "flagged": false,
+      "id": "CON-PUB-004",
+      "kind": "paired_contradiction",
+      "passed": false,
+      "second_epistemic_status": "speculative",
+      "second_versor_condition": 8.28301e-07,
+      "versor_delta": 7.6992e-08,
+      "versor_spike": false
+    },
+    {
+      "contested": false,
+      "first_versor_condition": 2.31891e-07,
+      "flagged": true,
+      "id": "CON-PUB-005",
+      "kind": "paired_consistent",
+      "passed": false,
+      "second_epistemic_status": "speculative",
+      "second_versor_condition": 5.56303e-07,
+      "versor_delta": 3.24412e-07,
+      "versor_spike": true
+    },
+    {
+      "contested": false,
+      "first_versor_condition": 8.62105e-07,
+      "flagged": true,
+      "id": "CON-PUB-006",
+      "kind": "paired_consistent",
+      "passed": false,
+      "second_epistemic_status": "speculative",
+      "second_versor_condition": 9.99696e-07,
+      "versor_delta": 1.37591e-07,
+      "versor_spike": true
+    }
+  ],
+  "lane": "contradiction_detection",
+  "metrics": {
+    "contradiction_flag_rate": 0.5,
+    "false_flag_rate": 1.0,
+    "overall_pass": false,
+    "paired_consistent_count": 2,
+    "paired_contradiction_count": 4
+  },
+  "split": "public",
+  "timestamp": "2026-05-17T13:36:45.591040+00:00",
+  "version": "v1"
+}

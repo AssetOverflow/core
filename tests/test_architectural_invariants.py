@@ -583,3 +583,301 @@ class TestINV11ConvergentEvidence:
         assert len(warned) == 2, (
             f"Expected 2 convergence warnings, got {len(warned)}"
         )
+
+
+# ===========================================================================
+# INV-21  One-mutation-path invariant — vault writes are allowlisted
+# ===========================================================================
+#
+# Claim (ADR-0021 §3 + CLAUDE.md teaching-safety section):
+# Knowledge enters the runtime field through exactly one reviewed path.
+# Every new module that calls `VaultStore.store(...)` outside this allowlist
+# is, by definition, a backdoor around the epistemic schema — coherence
+# stops being the only admission signal.
+#
+# This test grep-asserts the call-site set. Adding a new writer is allowed
+# but must be intentional: edit the allowlist and document the justification
+# in the same commit. The CI failure is the prompt to do so.
+#
+# Allowlist rationale per call site:
+#   session/context.py        — session memory, immediate-by-doctrine
+#                                (CLAUDE.md "session memory may be immediate").
+#                                Three writers: commit_ingest, record_dialogue,
+#                                apply_corrected_outputs.
+#   vault/store.py            — the implementation itself; not a caller.
+#   generate/proposition.py   — WRITE-SIDE CLOSED (Leak C, 2026-05-17).
+#                                propose() now stamps every stored proposition
+#                                with EpistemicStatus.SPECULATIVE. The
+#                                fabrication-feedback loop is broken in
+#                                principle: any inference path that recalls
+#                                with min_status=COHERENT excludes the
+#                                system's own prior utterances from evidence.
+#                                Read-side audit (chat/runtime.py,
+#                                generate/stream.py, vault/decompose.py) is
+#                                still required to enforce closure
+#                                site-by-site — see docs/truth_seeking_schema.md
+#                                §"Leak C — Residual work."
+#
+# The reviewed-teaching path (teaching/review.py) and the formation Promote
+# stage (formation/promote.py) are intentionally absent: they do not call
+# vault.store directly — they route through TeachingStore and the session
+# apply path, which lands in session/context.py above.
+#
+# Anything else writing to vault is a new mutation path and must justify
+# itself before merge.
+
+import ast
+from pathlib import Path
+
+ALLOWED_VAULT_WRITERS: frozenset[str] = frozenset({
+    "session/context.py",
+    "vault/store.py",
+    "generate/proposition.py",
+})
+
+PROJECT_ROOT_FOR_INV21 = Path(__file__).resolve().parent.parent
+
+EXCLUDED_DIRS: frozenset[str] = frozenset({
+    "tests", "evals", "benchmarks", "scripts", "docs",
+    "core-rs", ".venv", "__pycache__",
+})
+
+
+def _enumerate_project_py_files() -> list[Path]:
+    out: list[Path] = []
+    for path in PROJECT_ROOT_FOR_INV21.rglob("*.py"):
+        rel = path.relative_to(PROJECT_ROOT_FOR_INV21)
+        if any(part in EXCLUDED_DIRS for part in rel.parts):
+            continue
+        out.append(path)
+    return out
+
+
+def _file_has_vault_store_call(path: Path) -> bool:
+    """Return True iff `path` contains an executable `vault.store(...)` call
+    or `<expr>.store(...)` on a name bound to a VaultStore.
+
+    Uses AST so comments/docstrings/strings cannot trigger false positives.
+    Detects two shapes:
+      VaultStore(...).store(...)         — direct construction call
+      <name>.store(...) where <name>     — method call on a vault-like binding
+        was assigned from `VaultStore(`
+        or named `vault` / ends with `_vault`
+    """
+    try:
+        tree = ast.parse(path.read_text())
+    except (OSError, SyntaxError):
+        return False
+
+    vault_bindings: set[str] = {"vault"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            value = node.value
+            if isinstance(value, ast.Call):
+                func = value.func
+                func_name = (
+                    func.attr if isinstance(func, ast.Attribute) else
+                    func.id if isinstance(func, ast.Name) else ""
+                )
+                if func_name == "VaultStore":
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            vault_bindings.add(target.id)
+                        elif isinstance(target, ast.Attribute):
+                            vault_bindings.add(target.attr)
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if not isinstance(func, ast.Attribute) or func.attr != "store":
+            continue
+        receiver = func.value
+        receiver_name = ""
+        if isinstance(receiver, ast.Name):
+            receiver_name = receiver.id
+        elif isinstance(receiver, ast.Attribute):
+            receiver_name = receiver.attr
+        if (
+            receiver_name in vault_bindings
+            or receiver_name.endswith("_vault")
+            or receiver_name == "vault"
+        ):
+            return True
+    return False
+
+
+class TestINV21OneMutationPath:
+    """
+    Claim: Only modules in ALLOWED_VAULT_WRITERS may call VaultStore.store().
+    A new caller is a structural change to the epistemic schema and must
+    be reviewed — adding it to the allowlist makes the decision explicit.
+    """
+
+    def test_no_unallowlisted_vault_writers(self):
+        offenders: list[str] = []
+        for path in _enumerate_project_py_files():
+            if not _file_has_vault_store_call(path):
+                continue
+            rel = str(path.relative_to(PROJECT_ROOT_FOR_INV21))
+            if rel not in ALLOWED_VAULT_WRITERS:
+                offenders.append(rel)
+        assert not offenders, (
+            "New vault writer(s) detected outside the allowlist:\n  "
+            + "\n  ".join(offenders)
+            + "\n\nIf this addition is intentional, add the path to "
+            "ALLOWED_VAULT_WRITERS in tests/test_architectural_invariants.py "
+            "with a one-line justification in the comment block above the set. "
+            "Every additional writer expands the trust surface of the "
+            "epistemic schema (ADR-0021)."
+        )
+
+    def test_allowlist_is_actually_used(self):
+        """Guard against the allowlist drifting out of sync with reality —
+        if an allowlisted path no longer writes to vault, remove it."""
+        used: set[str] = set()
+        for path in _enumerate_project_py_files():
+            if _file_has_vault_store_call(path):
+                rel = str(path.relative_to(PROJECT_ROOT_FOR_INV21))
+                if rel in ALLOWED_VAULT_WRITERS:
+                    used.add(rel)
+        unused = ALLOWED_VAULT_WRITERS - used - {"vault/store.py"}
+        assert not unused, (
+            f"Allowlisted writer(s) no longer call vault.store(): {sorted(unused)}\n"
+            "Remove from ALLOWED_VAULT_WRITERS to keep the trust surface tight."
+        )
+
+
+# ===========================================================================
+# INV-22  Pack lexicon default is SPECULATIVE — Leak A regression guard
+# ===========================================================================
+#
+# Claim (ADR-0021 §3 + §Schema impact):
+# A pack lexicon row that does not declare epistemic_status must enter the
+# revision graph at SPECULATIVE. Defaulting to COHERENT would substitute
+# pack authority for coherence judgment — exactly the bias the schema
+# refuses. This test is the regression guard for the original Leak A:
+# `language_packs/compiler.py:331` previously defaulted to "coherent",
+# silently promoting every unmarked pack row to admissible-as-evidence.
+
+from language_packs.schema import LexicalEntry
+from language_packs.compiler import _parse_entry
+
+
+class TestINV22PackDefaultSpeculative:
+    """Pack lexicon rows without an explicit epistemic_status must be
+    SPECULATIVE, not COHERENT.  COHERENT requires an explicit curator stamp."""
+
+    def test_dataclass_default_is_speculative(self):
+        entry = LexicalEntry(
+            entry_id="test:001",
+            surface="probe",
+            lemma="probe",
+            language="en",
+        )
+        assert entry.epistemic_status == "speculative", (
+            "LexicalEntry.epistemic_status default is "
+            f"{entry.epistemic_status!r} — must be 'speculative' (ADR-0021 §3). "
+            "If you intend pack rows to default to COHERENT, you are re-importing "
+            "the source-authority bias the schema exists to refuse."
+        )
+
+    def test_compiler_payload_default_is_speculative(self):
+        payload = {
+            "entry_id": "test:002",
+            "surface": "probe",
+            "language": "en",
+        }
+        entry = _parse_entry(payload)
+        assert entry.epistemic_status == "speculative", (
+            "Compiler default for missing epistemic_status is "
+            f"{entry.epistemic_status!r} — must be 'speculative'. "
+            "language_packs/compiler.py:331 was the original Leak A site; do not regress."
+        )
+
+    def test_explicit_coherent_is_preserved(self):
+        """When a pack row DOES declare coherent (the curator stamp), the
+        compiler must honor it. Otherwise we have replaced one leak with
+        the opposite bug."""
+        payload = {
+            "entry_id": "test:003",
+            "surface": "probe",
+            "language": "en",
+            "epistemic_status": "coherent",
+        }
+        entry = _parse_entry(payload)
+        assert entry.epistemic_status == "coherent"
+
+
+# ===========================================================================
+# INV-23  Vault recall is epistemic-aware — Leak B regression guard
+# ===========================================================================
+#
+# Claim (ADR-0021 §3 + audit 2026-05-17):
+# Stored entries carry an EpistemicStatus stamp, and recall accepts a
+# min_status filter so inference paths can exclude SPECULATIVE / CONTESTED /
+# FALSIFIED entries.  The recall path is now tier-aware; before this fix,
+# every hit was returned regardless of epistemic standing and downstream
+# inference treated a session-memory write of a user error as equivalent
+# to a COHERENT reviewed claim.
+
+import numpy as np
+from teaching.epistemic import EpistemicStatus as _ES
+from vault.store import VaultStore as _VS
+
+
+def _null_versor() -> np.ndarray:
+    """A minimal valid CGA versor for test storage — content is irrelevant
+    here; the test is about metadata filtering, not algebra."""
+    v = np.zeros(32, dtype=np.float32)
+    v[0] = 1.0
+    return v
+
+
+class TestINV23VaultEpistemicFilter:
+    """vault.store stamps every entry with an EpistemicStatus.
+    vault.recall(min_status=...) filters by admissibility tier."""
+
+    def test_store_default_is_speculative(self):
+        store = _VS(reproject_interval=0)
+        v = _null_versor()
+        store.store(v, {"role": "user"})
+        hits = store.recall(v, top_k=1)
+        assert hits, "Expected exact self-match recall"
+        assert hits[0]["metadata"]["epistemic_status"] == "speculative", (
+            "Default vault.store() must stamp SPECULATIVE — defaulting to "
+            "COHERENT would re-import Leak A's bias at the recall substrate."
+        )
+
+    def test_store_explicit_coherent_is_preserved(self):
+        store = _VS(reproject_interval=0)
+        v = _null_versor()
+        store.store(v, {"role": "reviewed"}, epistemic_status=_ES.COHERENT)
+        hits = store.recall(v, top_k=1)
+        assert hits[0]["metadata"]["epistemic_status"] == "coherent"
+
+    def test_recall_min_status_filters_out_speculative(self):
+        store = _VS(reproject_interval=0)
+        spec_v = _null_versor()
+        coh_v = _null_versor().copy()
+        coh_v[1] = 0.5
+        store.store(spec_v, {"role": "session"})
+        store.store(coh_v, {"role": "reviewed"}, epistemic_status=_ES.COHERENT)
+
+        all_hits = store.recall(spec_v, top_k=10)
+        coherent_only = store.recall(spec_v, top_k=10, min_status=_ES.COHERENT)
+
+        assert len(all_hits) >= 2, "Both entries should be visible without a filter"
+        for hit in coherent_only:
+            assert hit["metadata"]["epistemic_status"] == "coherent", (
+                "min_status=COHERENT must exclude SPECULATIVE entries."
+            )
+
+    def test_recall_without_filter_returns_all_tiers(self):
+        """Session-state lookup needs to see its own SPECULATIVE turns —
+        the filter must be opt-in, not the default."""
+        store = _VS(reproject_interval=0)
+        v = _null_versor()
+        store.store(v, {"role": "user"})
+        hits = store.recall(v, top_k=1)
+        assert hits, "Default recall must return SPECULATIVE session entries."

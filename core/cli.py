@@ -88,6 +88,9 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_pulse_integration.py",
         "tests/test_graph_diffusion.py",
     ),
+    "formation": (
+        "tests/formation",
+    ),
     "proof": (
         "tests/test_proof_properties.py",
     ),
@@ -784,6 +787,9 @@ def build_parser() -> argparse.ArgumentParser:
     eval_cmd.add_argument("--save", action="store_true", help="write result to lane results/ directory")
     eval_cmd.add_argument("--report", metavar="PATH", help="write JSON report to file")
     eval_cmd.set_defaults(func=cmd_eval)
+
+    from formation.cli import register as _register_formation
+    _register_formation(subparsers)
 
     doctor = subparsers.add_parser("doctor", help="check runtime imports and packaging health")
     doctor.add_argument("--packs", action="store_true", help="also list discovered language packs")

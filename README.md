@@ -27,6 +27,19 @@ When facing a design decision, the world offers two visible options: use what al
 
 ---
 
+## The Truth-Seeking Schema
+
+Co-equal with the algebraic substrate. CORE's epistemic schema is a foundational architectural commitment: every claim that enters the runtime field carries a typed position in a revision graph (`SPECULATIVE`, `COHERENT`, `CONTESTED`, `FALSIFIED`); coherence — not source authority — is the only admission signal; no claim is ever locked, even when COHERENT; identity cannot be rewritten by content; and exactly one mutation path admits knowledge, enforced by a CI-level architectural-invariant test.
+
+The schema is the structural defense against the failure modes that afflict both fluent LLMs and human reasoning: confabulation, exaggeration, deference to authority, self-protection through erasure, self-promotion through self-citation, and the ossification of mistaken beliefs.
+
+A system that samples cannot have these properties — sampling has no place to attach an epistemic status. CORE has them because every admitted claim carries one and the only path to admission is the review path.
+
+**Full architectural commitment, including honestly-published gaps:** [`docs/truth_seeking_schema.md`](docs/truth_seeking_schema.md).
+**Reproducible measurements:** [`evals/CLAIMS.md`](evals/CLAIMS.md).
+
+---
+
 ## The Three Core Languages
 
 CORE is rooted in three human languages. This is a philosophical and architectural choice, not a localization decision.

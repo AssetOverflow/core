@@ -181,3 +181,33 @@ Future test moves should follow this taxonomy:
 
 Do not reorganize tests as a standalone churn PR unless it directly reduces
 contract ambiguity or unlocks a cognitive subsystem.
+
+## Formation trust boundaries
+
+The Formation Pipeline (see `docs/formation_pipeline_plan.md`) introduces six
+trust boundaries between the world and the manifold.  Every boundary has a
+content-addressed input and output; every rejection produces an audit record.
+No silent failures.
+
+| # | Boundary | Input | Output | Trust contract |
+|---|---|---|---|---|
+| 1 | Mining → Smelting | URLs / files | `OreBundle` | Untrusted text in; untrusted entries out.  No code execution from sources; no dynamic imports; source URLs sandboxed; SHA-256 captured per entry. |
+| 2 | Smelting → Forge | `OreBundle` + extracted candidates | `Candidate*` lists | Untrusted candidates in.  The Forge is the *only* validator.  Identity-override patterns and path-traversal in source SHAs are rejected at the Forge, not here. |
+| 3 | Forge → Compose | `Candidate*` lists | `ValidatedTripleSet` | Every candidate runs through `teaching.relation_parse.parse_triple`, identity-axis screening, source allow-list, pack collision check, and the cross-reference rule.  Output entries carry `EpistemicStatus.SPECULATIVE`.  No pack mutation. |
+| 4 | Compose → Compile/Run | `ValidatedTripleSet` | `CourseYAML` → `FormationPlan` | Deterministic, byte-stable composition.  No mutation of the language pack manifest. |
+| 5 | Run → Ratify | `FormationPlan` | `list[CognitiveTurnResult]` | The runner is a thin shim over `CognitiveTurnPipeline.run()`.  It cannot invent operators; it can only invoke existing ones.  Hard-halts on `versor_condition(F) >= 1e-6`.  No identity-manifold mutation, ever. |
+| 6 | Ratify → Promote | `MasteryReport` (self-sealed) | reviewed teaching apply | Promotion requires a self-sealed `MasteryReport` whose SHA verifies, whose prerequisites are present in the `MasteredCoursesIndex`, and whose triples are submitted through `teaching/review.py` — the existing reviewed apply path.  ADR-0021's "one mutation path" invariant is preserved. |
+
+Content-addressing rules (binding across the whole pipeline):
+
+- All hashed payloads are canonical JSON (sorted keys, tight separators,
+  UTF-8, no NaN/Infinity).  Floats are forbidden in hashed payloads; encode
+  numerics as strings or integers.
+- `MasteryReport.report_sha256` is self-sealing: SHA over the payload with
+  `report_sha256` blanked, then written back into the field.  Verifiers
+  reverse the process.
+- No pickle.  Pickle defeats replay determinism and is a code-execution
+  surface.
+
+See `formation/hashing.py`, `formation/cache.py`, and `formation/forge.py`
+for the implementation of each rule.

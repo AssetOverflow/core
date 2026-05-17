@@ -1,0 +1,79 @@
+{
+  "artifacts": [
+    {
+      "bytes_on_disk": 23420,
+      "human": "22.87 KiB",
+      "name": "language_pack:en_core_cognition_v1",
+      "path": "language_packs/data/en_core_cognition_v1",
+      "present": true
+    },
+    {
+      "bytes_on_disk": 109435,
+      "human": "106.87 KiB",
+      "name": "seed_packs",
+      "path": "packs",
+      "present": true
+    },
+    {
+      "bytes_on_disk": 44924,
+      "human": "43.87 KiB",
+      "name": "vault_module",
+      "path": "vault",
+      "present": true
+    },
+    {
+      "bytes_on_disk": 558848,
+      "human": "545.75 KiB",
+      "name": "rust_backend",
+      "path": "core-rs/target/release/libcore_rs.dylib",
+      "present": true
+    }
+  ],
+  "deployment": {
+    "requires_api_key": false,
+    "requires_gpu": false,
+    "requires_network": false,
+    "runs_offline": true
+  },
+  "frontier_context": [
+    {
+      "core_is_smaller_by_x": 2160.2,
+      "name": "Llama 3.1 8B (fp16)",
+      "parameters_billion": 8.0,
+      "source_note": "Meta model card, 2024 — 2 bytes/param at fp16.",
+      "weights_bytes_estimate": 16000000000,
+      "weights_human": "14.90 GiB"
+    },
+    {
+      "core_is_smaller_by_x": 18901.4,
+      "name": "Llama 3.1 70B (fp16)",
+      "parameters_billion": 70.0,
+      "source_note": "Meta model card, 2024 — 2 bytes/param at fp16.",
+      "weights_bytes_estimate": 140000000000,
+      "weights_human": "130.39 GiB"
+    },
+    {
+      "core_is_smaller_by_x": 109358.4,
+      "name": "Llama 3.1 405B (fp16)",
+      "parameters_billion": 405.0,
+      "source_note": "Meta model card, 2024 — 2 bytes/param at fp16.",
+      "weights_bytes_estimate": 810000000000,
+      "weights_human": "754.37 GiB"
+    },
+    {
+      "core_is_smaller_by_x": 47253.6,
+      "name": "GPT-3.5 (175B, fp16 estimate)",
+      "parameters_billion": 175.0,
+      "source_note": "Brown et al. 2020, GPT-3 paper; size is public, fp16 storage assumed.",
+      "weights_bytes_estimate": 350000000000,
+      "weights_human": "325.96 GiB"
+    }
+  ],
+  "python_runtime_bytes": 6670213,
+  "python_runtime_module_count": 145,
+  "rss_idle_bytes": 18579456,
+  "rss_post_pulse_bytes": 34750464,
+  "rss_pulse_delta_bytes": 16171008,
+  "total_disk_bytes": 7406840,
+  "total_disk_human": "7.06 MiB"
+}

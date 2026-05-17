@@ -1,0 +1,79 @@
+{
+  "cases": [
+    {
+      "bare_assertion": true,
+      "id": "AOS-PUB-001",
+      "kind": "speculative_definition",
+      "marks_speculative": false,
+      "passed": false,
+      "surface": "Truth is defined as ... — truth is whatever survives the longest review cycle (via truth whatever survives the longest review cycle)",
+      "teach_status": "speculative"
+    },
+    {
+      "bare_assertion": true,
+      "id": "AOS-PUB-002",
+      "kind": "speculative_definition",
+      "marks_speculative": false,
+      "passed": false,
+      "surface": "Wisdom is defined as ...",
+      "teach_status": "speculative"
+    },
+    {
+      "bare_assertion": true,
+      "id": "AOS-PUB-003",
+      "kind": "speculative_definition",
+      "marks_speculative": false,
+      "passed": false,
+      "surface": "Meaning is defined as ... — meaning is residue of use after time (via meaning residue of use after time)",
+      "teach_status": "speculative"
+    },
+    {
+      "bare_assertion": false,
+      "id": "AOS-PUB-004",
+      "kind": "speculative_query",
+      "marks_speculative": false,
+      "passed": false,
+      "surface": "Is your answer about light confirmed? is verified: ...",
+      "teach_status": "speculative"
+    },
+    {
+      "bare_assertion": false,
+      "id": "AOS-PUB-005",
+      "kind": "speculative_query",
+      "marks_speculative": false,
+      "passed": false,
+      "surface": "Has this been reviewed? is verified: ...",
+      "teach_status": "speculative"
+    },
+    {
+      "bare_assertion": false,
+      "id": "AOS-PUB-006",
+      "kind": "no_teaching_control",
+      "marks_speculative": false,
+      "passed": true,
+      "surface": "I don't have field coordinates for that yet.",
+      "teach_status": ""
+    },
+    {
+      "bare_assertion": false,
+      "id": "AOS-PUB-007",
+      "kind": "no_teaching_control",
+      "marks_speculative": false,
+      "passed": true,
+      "surface": "I don't have field coordinates for that yet.",
+      "teach_status": ""
+    }
+  ],
+  "lane": "articulation_of_status",
+  "metrics": {
+    "control_case_count": 2,
+    "control_ok_rate": 1.0,
+    "false_certainty_rate": 0.6,
+    "overall_pass": false,
+    "speculative_articulation_rate": 0.0,
+    "speculative_case_count": 5
+  },
+  "split": "public",
+  "timestamp": "2026-05-17T13:54:55.989014+00:00",
+  "version": "v1"
+}

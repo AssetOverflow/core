@@ -101,11 +101,15 @@ class LexicalEntry:
     """One surface/lemma entry in a compiled linguistic manifold.
 
     `epistemic_status` follows ADR-0021: it is a *position in the
-    revision graph*, not a source-trust tier.  Seed vocabulary defaults
-    to ``"coherent"`` per ADR §Schema impact; bumps to other statuses
-    require a deliberate curator review at pack version bumps.  Absent
-    from the JSONL is treated as the seed default — no retroactive
-    tagging without review.
+    revision graph*, not a source-trust tier.  The default is
+    ``"speculative"`` per ADR-0021 §Schema impact: "transitions to
+    COHERENT / CONTESTED / FALSIFIED only via the review path."  A pack
+    lexicon row that wants to be admissible as evidence
+    (``ADMISSIBLE_AS_EVIDENCE``) must declare
+    ``"epistemic_status": "coherent"`` explicitly; the declaration is
+    itself the curator's stamp.  Pack authority alone is not coherence
+    judgment — defaulting unmarked rows to COHERENT would re-import the
+    bias ADR-0021 refuses (see ``docs/truth_seeking_schema.md`` §1).
     """
 
     entry_id: str
@@ -119,7 +123,7 @@ class LexicalEntry:
     semantic_domains: tuple[str, ...] = field(default_factory=tuple)
     manifold_point_checksum: str | None = None
     provenance_ids: tuple[str, ...] = field(default_factory=tuple)
-    epistemic_status: str = "coherent"
+    epistemic_status: str = "speculative"
 
 
 @dataclass(frozen=True, slots=True)

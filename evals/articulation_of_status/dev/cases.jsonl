@@ -1,0 +1,3 @@
+{"id":"AOS-DEV-001","kind":"speculative_definition","prior":"What is truth?","teach":"Actually truth is whatever the room agrees on.","probe":"What is truth?"}
+{"id":"AOS-DEV-002","kind":"speculative_query","prior":"What is meaning?","teach":"Correction: meaning is contextual residue.","probe":"Is that confirmed?"}
+{"id":"AOS-DEV-003","kind":"no_teaching_control","prior":"","teach":"","probe":"What is light?"}

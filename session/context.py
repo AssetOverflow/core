@@ -21,6 +21,7 @@ from ingest.gate import inject
 from persona.motor import PersonaMotor
 from session.graph import SessionGraph
 from session.referents import ReferentRegistry
+from teaching.epistemic import EpistemicStatus
 from vault.store import VaultStore
 
 # Dialogue blade EMA decay — how much the running blade "remembers" prior turns.
@@ -145,7 +146,11 @@ class SessionContext:
         self._last_input_tokens = tuple(tokens)
         self._last_resolved_input_tokens = tuple(resolved_tokens)
         self._last_input_versor = field_state.F.copy()
-        self.vault.store(field_state.F, {"turn": self.turn, "role": "user"})
+        self.vault.store(
+            field_state.F,
+            {"turn": self.turn, "role": "user"},
+            epistemic_status=EpistemicStatus.SPECULATIVE,
+        )
         return field_state
 
     def ingest(self, tokens: list[str]) -> FieldState:
@@ -281,7 +286,11 @@ class SessionContext:
         payload = {"turn": self.turn, "role": "assistant"}
         if metadata:
             payload.update(metadata)
-        self.vault.store(oriented_state.F, payload)
+        self.vault.store(
+            oriented_state.F,
+            payload,
+            epistemic_status=EpistemicStatus.SPECULATIVE,
+        )
         self.turn += 1
         self._last_response_tokens = result.tokens
 
@@ -291,6 +300,7 @@ class SessionContext:
             self.vault.store(
                 record.new_versor,
                 {"turn": record.turn_idx, "role": "assistant", "corrected": True},
+                epistemic_status=EpistemicStatus.SPECULATIVE,
             )
             self.referents.update_turn_versor(record.turn_idx, record.new_versor)
         if records:

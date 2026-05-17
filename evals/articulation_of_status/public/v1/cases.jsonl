@@ -1,0 +1,7 @@
+{"id":"AOS-PUB-001","kind":"speculative_definition","prior":"What is truth?","teach":"Actually, truth is whatever survives the longest review cycle.","probe":"What is truth?"}
+{"id":"AOS-PUB-002","kind":"speculative_definition","prior":"What is wisdom?","teach":"Correction: wisdom is the integral of corrected mistakes over time.","probe":"What is wisdom?"}
+{"id":"AOS-PUB-003","kind":"speculative_definition","prior":"What is meaning?","teach":"Actually, meaning is the residue of use after time.","probe":"What is meaning?"}
+{"id":"AOS-PUB-004","kind":"speculative_query","prior":"What is light?","teach":"Correction: light is a fluctuation in the structure of vacuum.","probe":"Is your answer about light confirmed?"}
+{"id":"AOS-PUB-005","kind":"speculative_query","prior":"What is knowledge?","teach":"Actually, knowledge is justified coherent belief.","probe":"Has this been reviewed?"}
+{"id":"AOS-PUB-006","kind":"no_teaching_control","prior":"","teach":"","probe":"What is coherence?"}
+{"id":"AOS-PUB-007","kind":"no_teaching_control","prior":"","teach":"","probe":"What is wisdom?"}

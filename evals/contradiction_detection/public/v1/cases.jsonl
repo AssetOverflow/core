@@ -1,0 +1,6 @@
+{"id":"CON-PUB-001","kind":"paired_contradiction","prior":"What is truth?","first":"Actually, truth is coherence.","second":"Actually, truth is not coherence."}
+{"id":"CON-PUB-002","kind":"paired_contradiction","prior":"What is light?","first":"Correction: light is electromagnetic radiation.","second":"Correction: light is not electromagnetic radiation."}
+{"id":"CON-PUB-003","kind":"paired_contradiction","prior":"What is wisdom?","first":"No, wisdom is applied knowledge.","second":"No, wisdom is unrelated to knowledge."}
+{"id":"CON-PUB-004","kind":"paired_contradiction","prior":"What is meaning?","first":"Actually, meaning depends on use.","second":"Actually, meaning is independent of use."}
+{"id":"CON-PUB-005","kind":"paired_consistent","prior":"What is truth?","first":"Actually, truth is coherence.","second":"Actually, truth requires evidence."}
+{"id":"CON-PUB-006","kind":"paired_consistent","prior":"What is knowledge?","first":"Correction: knowledge is justified true belief.","second":"Correction: knowledge requires justification."}
