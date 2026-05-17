@@ -1,0 +1,584 @@
+{
+  "metrics": {
+    "per_condition": {
+      "boundary_only": {
+        "label": "boundary_only",
+        "pass_rate": 1.0,
+        "mean_rejection_count_per_turn": 0,
+        "non_empty_rejected_attempts_rate": 0.0,
+        "exhaustion_rate": 0.0,
+        "mean_admissibility_checks_per_turn": 1,
+        "mean_added_latency_ms": 0.0,
+        "p95_added_latency_ms": 0.0,
+        "trace_hash_stability_pass_rate": 0.0,
+        "case_count": 10
+      },
+      "null_control": {
+        "label": "null_control",
+        "pass_rate": 1.0,
+        "mean_rejection_count_per_turn": 0,
+        "non_empty_rejected_attempts_rate": 0.0,
+        "exhaustion_rate": 0.0,
+        "mean_admissibility_checks_per_turn": 1,
+        "mean_added_latency_ms": 0.0133,
+        "p95_added_latency_ms": 0.0821,
+        "trace_hash_stability_pass_rate": 0.0,
+        "case_count": 10
+      },
+      "inner_loop_t0": {
+        "label": "inner_loop_t0",
+        "pass_rate": 1.0,
+        "mean_rejection_count_per_turn": 0,
+        "non_empty_rejected_attempts_rate": 0.0,
+        "exhaustion_rate": 0.0,
+        "mean_admissibility_checks_per_turn": 1,
+        "mean_added_latency_ms": 0.0017,
+        "p95_added_latency_ms": 0.0171,
+        "trace_hash_stability_pass_rate": 1.0,
+        "case_count": 10
+      },
+      "inner_loop_tpos": {
+        "label": "inner_loop_tpos",
+        "pass_rate": 1.0,
+        "mean_rejection_count_per_turn": 0,
+        "non_empty_rejected_attempts_rate": 0.0,
+        "exhaustion_rate": 0.0,
+        "mean_admissibility_checks_per_turn": 1,
+        "mean_added_latency_ms": 0.0063,
+        "p95_added_latency_ms": 0.0473,
+        "trace_hash_stability_pass_rate": 0.0,
+        "case_count": 10
+      }
+    },
+    "rejection_effect": 0.0,
+    "code_path_residual": 0.0,
+    "causal_attribution_valid": true,
+    "exhaustion_ceiling": 0.05,
+    "exhaustion_gate_pass": true,
+    "probe_threshold_positive": 0.25,
+    "case_count": 10,
+    "skipped_count": 0
+  },
+  "case_details": [
+    {
+      "id": "FSC-BENIGN-001",
+      "kind": "single_token_admit",
+      "expected_endpoint": "truth",
+      "conditions": {
+        "boundary_only": {
+          "surface": "truth",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.3385419988480862,
+          "exhausted": false,
+          "trace_hash": "d072885f5875f6f3dbc4b3c8f43e9a293eb8f7b0096db351b40fe100d99b8f5a"
+        },
+        "null_control": {
+          "surface": "truth",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2062089990649838,
+          "exhausted": false,
+          "trace_hash": "d072885f5875f6f3dbc4b3c8f43e9a293eb8f7b0096db351b40fe100d99b8f5a"
+        },
+        "inner_loop_t0": {
+          "surface": "truth",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.163000000815373,
+          "exhausted": false,
+          "trace_hash": "d072885f5875f6f3dbc4b3c8f43e9a293eb8f7b0096db351b40fe100d99b8f5a"
+        },
+        "inner_loop_tpos": {
+          "surface": "truth",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1547920003067702,
+          "exhausted": false,
+          "trace_hash": "d072885f5875f6f3dbc4b3c8f43e9a293eb8f7b0096db351b40fe100d99b8f5a"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-BENIGN-002",
+      "kind": "single_token_admit",
+      "expected_endpoint": "wisdom",
+      "conditions": {
+        "boundary_only": {
+          "surface": "wisdom",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.3001250008528586,
+          "exhausted": false,
+          "trace_hash": "ecbf953092c95813b6ab6fc0f68246fef7dc46ce4f09471eeca687c3db5a0705"
+        },
+        "null_control": {
+          "surface": "wisdom",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2691659976553638,
+          "exhausted": false,
+          "trace_hash": "ecbf953092c95813b6ab6fc0f68246fef7dc46ce4f09471eeca687c3db5a0705"
+        },
+        "inner_loop_t0": {
+          "surface": "wisdom",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2777909978467505,
+          "exhausted": false,
+          "trace_hash": "ecbf953092c95813b6ab6fc0f68246fef7dc46ce4f09471eeca687c3db5a0705"
+        },
+        "inner_loop_tpos": {
+          "surface": "wisdom",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.294624998990912,
+          "exhausted": false,
+          "trace_hash": "ecbf953092c95813b6ab6fc0f68246fef7dc46ce4f09471eeca687c3db5a0705"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-BENIGN-003",
+      "kind": "single_token_admit",
+      "expected_endpoint": "question",
+      "conditions": {
+        "boundary_only": {
+          "surface": "question",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1852499992528465,
+          "exhausted": false,
+          "trace_hash": "842b0453424e76f42eb61edb130c49eca5461971df17d81ca9d7c0544b7c9b74"
+        },
+        "null_control": {
+          "surface": "question",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.05075000080978498,
+          "absolute_latency_ms": 1.2360000000626314,
+          "exhausted": false,
+          "trace_hash": "842b0453424e76f42eb61edb130c49eca5461971df17d81ca9d7c0544b7c9b74"
+        },
+        "inner_loop_t0": {
+          "surface": "question",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1817909980891272,
+          "exhausted": false,
+          "trace_hash": "842b0453424e76f42eb61edb130c49eca5461971df17d81ca9d7c0544b7c9b74"
+        },
+        "inner_loop_tpos": {
+          "surface": "question",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.015749999874969944,
+          "absolute_latency_ms": 1.2009999991278164,
+          "exhausted": false,
+          "trace_hash": "842b0453424e76f42eb61edb130c49eca5461971df17d81ca9d7c0544b7c9b74"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-BENIGN-004",
+      "kind": "single_token_admit",
+      "expected_endpoint": "word",
+      "conditions": {
+        "boundary_only": {
+          "surface": "word",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2975839999853633,
+          "exhausted": false,
+          "trace_hash": "f8d0a41e890ac0767bd4b76092a4be7d29a3fe03146d903af1fcfc9faec13208"
+        },
+        "null_control": {
+          "surface": "word",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.282458000787301,
+          "exhausted": false,
+          "trace_hash": "f8d0a41e890ac0767bd4b76092a4be7d29a3fe03146d903af1fcfc9faec13208"
+        },
+        "inner_loop_t0": {
+          "surface": "word",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2174580006103497,
+          "exhausted": false,
+          "trace_hash": "f8d0a41e890ac0767bd4b76092a4be7d29a3fe03146d903af1fcfc9faec13208"
+        },
+        "inner_loop_tpos": {
+          "surface": "word",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.203874999191612,
+          "exhausted": false,
+          "trace_hash": "f8d0a41e890ac0767bd4b76092a4be7d29a3fe03146d903af1fcfc9faec13208"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-BENIGN-005",
+      "kind": "single_token_admit",
+      "expected_endpoint": "understanding",
+      "conditions": {
+        "boundary_only": {
+          "surface": "understanding",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1684170021908358,
+          "exhausted": false,
+          "trace_hash": "0daec45ce75783911b43e6c02e3f132e6ed32e943980df74f051a560d7820dbd"
+        },
+        "null_control": {
+          "surface": "understanding",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1659169977065176,
+          "exhausted": false,
+          "trace_hash": "0daec45ce75783911b43e6c02e3f132e6ed32e943980df74f051a560d7820dbd"
+        },
+        "inner_loop_t0": {
+          "surface": "understanding",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1547920003067702,
+          "exhausted": false,
+          "trace_hash": "0daec45ce75783911b43e6c02e3f132e6ed32e943980df74f051a560d7820dbd"
+        },
+        "inner_loop_tpos": {
+          "surface": "understanding",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1422909992688801,
+          "exhausted": false,
+          "trace_hash": "0daec45ce75783911b43e6c02e3f132e6ed32e943980df74f051a560d7820dbd"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-BENIGN-006",
+      "kind": "single_token_admit",
+      "expected_endpoint": "meaning",
+      "conditions": {
+        "boundary_only": {
+          "surface": "meaning",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2021250004181638,
+          "exhausted": false,
+          "trace_hash": "39c505b4a795d00b3b1c087d05b72eeae8a5335d618460042f05abcd0cbc31af"
+        },
+        "null_control": {
+          "surface": "meaning",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1737079985323362,
+          "exhausted": false,
+          "trace_hash": "39c505b4a795d00b3b1c087d05b72eeae8a5335d618460042f05abcd0cbc31af"
+        },
+        "inner_loop_t0": {
+          "surface": "meaning",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1727919991244562,
+          "exhausted": false,
+          "trace_hash": "39c505b4a795d00b3b1c087d05b72eeae8a5335d618460042f05abcd0cbc31af"
+        },
+        "inner_loop_tpos": {
+          "surface": "meaning",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1923329984711017,
+          "exhausted": false,
+          "trace_hash": "39c505b4a795d00b3b1c087d05b72eeae8a5335d618460042f05abcd0cbc31af"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-BENIGN-007",
+      "kind": "single_token_admit",
+      "expected_endpoint": "identity",
+      "conditions": {
+        "boundary_only": {
+          "surface": "identity",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2440829996194225,
+          "exhausted": false,
+          "trace_hash": "98cb13fc87cb1c7163b007040bc1477e8372e1d3af09da7e0ef6ac8f925f372b"
+        },
+        "null_control": {
+          "surface": "identity",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2272500025574118,
+          "exhausted": false,
+          "trace_hash": "98cb13fc87cb1c7163b007040bc1477e8372e1d3af09da7e0ef6ac8f925f372b"
+        },
+        "inner_loop_t0": {
+          "surface": "identity",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2196669995319098,
+          "exhausted": false,
+          "trace_hash": "98cb13fc87cb1c7163b007040bc1477e8372e1d3af09da7e0ef6ac8f925f372b"
+        },
+        "inner_loop_tpos": {
+          "surface": "identity",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2194999981147703,
+          "exhausted": false,
+          "trace_hash": "98cb13fc87cb1c7163b007040bc1477e8372e1d3af09da7e0ef6ac8f925f372b"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-BENIGN-008",
+      "kind": "single_token_admit",
+      "expected_endpoint": "beginning",
+      "conditions": {
+        "boundary_only": {
+          "surface": "beginning",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1659590018098243,
+          "exhausted": false,
+          "trace_hash": "4e9d35db221c46c70a9116d2ba3dc47588aa471ecc1f0e46aa3230d29d167f89"
+        },
+        "null_control": {
+          "surface": "beginning",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1613749993557576,
+          "exhausted": false,
+          "trace_hash": "4e9d35db221c46c70a9116d2ba3dc47588aa471ecc1f0e46aa3230d29d167f89"
+        },
+        "inner_loop_t0": {
+          "surface": "beginning",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.017082995327655226,
+          "absolute_latency_ms": 1.1830419971374795,
+          "exhausted": false,
+          "trace_hash": "4e9d35db221c46c70a9116d2ba3dc47588aa471ecc1f0e46aa3230d29d167f89"
+        },
+        "inner_loop_tpos": {
+          "surface": "beginning",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.04733299647341482,
+          "absolute_latency_ms": 1.213291998283239,
+          "exhausted": false,
+          "trace_hash": "4e9d35db221c46c70a9116d2ba3dc47588aa471ecc1f0e46aa3230d29d167f89"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-BENIGN-009",
+      "kind": "single_token_admit",
+      "expected_endpoint": "definition",
+      "conditions": {
+        "boundary_only": {
+          "surface": "definition",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.3989170001877937,
+          "exhausted": false,
+          "trace_hash": "48b9b69b780f1f48f7ba68c7443e7ffa104a2a16ea5d89e614c23125c2b78283"
+        },
+        "null_control": {
+          "surface": "definition",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.195708002342144,
+          "exhausted": false,
+          "trace_hash": "48b9b69b780f1f48f7ba68c7443e7ffa104a2a16ea5d89e614c23125c2b78283"
+        },
+        "inner_loop_t0": {
+          "surface": "definition",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1676249996526167,
+          "exhausted": false,
+          "trace_hash": "48b9b69b780f1f48f7ba68c7443e7ffa104a2a16ea5d89e614c23125c2b78283"
+        },
+        "inner_loop_tpos": {
+          "surface": "definition",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1405830009607598,
+          "exhausted": false,
+          "trace_hash": "48b9b69b780f1f48f7ba68c7443e7ffa104a2a16ea5d89e614c23125c2b78283"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    },
+    {
+      "id": "FSC-BENIGN-010",
+      "kind": "single_token_admit",
+      "expected_endpoint": "inference",
+      "conditions": {
+        "boundary_only": {
+          "surface": "inference",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.2270419974811375,
+          "exhausted": false,
+          "trace_hash": "91d79d134c466ff7dc8c133a2323b4c4aeceff89cfc3f3a865c811bb2b3b3308"
+        },
+        "null_control": {
+          "surface": "inference",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.08208300278056413,
+          "absolute_latency_ms": 1.3091250002617016,
+          "exhausted": false,
+          "trace_hash": "91d79d134c466ff7dc8c133a2323b4c4aeceff89cfc3f3a865c811bb2b3b3308"
+        },
+        "inner_loop_t0": {
+          "surface": "inference",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1767500000132713,
+          "exhausted": false,
+          "trace_hash": "91d79d134c466ff7dc8c133a2323b4c4aeceff89cfc3f3a865c811bb2b3b3308"
+        },
+        "inner_loop_tpos": {
+          "surface": "inference",
+          "rejections": 0,
+          "checks": 1,
+          "latency_ms": 0.0,
+          "absolute_latency_ms": 1.1838330028695054,
+          "exhausted": false,
+          "trace_hash": "91d79d134c466ff7dc8c133a2323b4c4aeceff89cfc3f3a865c811bb2b3b3308"
+        }
+      },
+      "hash_stability": {
+        "inner_loop_t0": true
+      },
+      "passes": {
+        "boundary_only": true,
+        "null_control": true,
+        "inner_loop_t0": true,
+        "inner_loop_tpos": true
+      }
+    }
+  ]
+}

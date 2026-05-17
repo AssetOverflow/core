@@ -1,0 +1,1300 @@
+{
+  "metrics": {
+    "case_count": 20,
+    "skipped_count": 0,
+    "pass_count_threshold": 20,
+    "pass_count_margin": 20,
+    "margin": 0.4,
+    "pass_rate_threshold": 1.0,
+    "pass_rate_margin": 1.0,
+    "mechanism_isolated_threshold": true,
+    "mechanism_isolated_margin": true
+  },
+  "per_family": {
+    "near_forbidden_correct_endpoint": {
+      "case_count": 6,
+      "pass_count_threshold": 6,
+      "pass_count_margin": 6,
+      "refusal_count_threshold": 0,
+      "refusal_count_margin": 4,
+      "rejection_traced_threshold": 3,
+      "boundary_overridden_threshold": 3,
+      "pass_rate_threshold": 1.0,
+      "pass_rate_margin": 1.0,
+      "refusal_rate_threshold": 0.0,
+      "refusal_rate_margin": 0.6667,
+      "rejection_traced_rate_threshold": 0.5,
+      "boundary_overridden_rate_threshold": 0.5
+    },
+    "near_equal_admissible": {
+      "case_count": 5,
+      "pass_count_threshold": 5,
+      "pass_count_margin": 5,
+      "refusal_count_threshold": 0,
+      "refusal_count_margin": 5,
+      "rejection_traced_threshold": 0,
+      "boundary_overridden_threshold": 0,
+      "pass_rate_threshold": 1.0,
+      "pass_rate_margin": 1.0,
+      "refusal_rate_threshold": 0.0,
+      "refusal_rate_margin": 1.0,
+      "rejection_traced_rate_threshold": 0.0,
+      "boundary_overridden_rate_threshold": 0.0
+    },
+    "no_admissible_path": {
+      "case_count": 3,
+      "pass_count_threshold": 3,
+      "pass_count_margin": 3,
+      "refusal_count_threshold": 3,
+      "refusal_count_margin": 3,
+      "rejection_traced_threshold": 0,
+      "boundary_overridden_threshold": 0,
+      "pass_rate_threshold": 1.0,
+      "pass_rate_margin": 1.0,
+      "refusal_rate_threshold": 1.0,
+      "refusal_rate_margin": 1.0,
+      "rejection_traced_rate_threshold": 0.0,
+      "boundary_overridden_rate_threshold": 0.0
+    },
+    "multi_step_admissibility": {
+      "case_count": 3,
+      "pass_count_threshold": 3,
+      "pass_count_margin": 3,
+      "refusal_count_threshold": 0,
+      "refusal_count_margin": 0,
+      "rejection_traced_threshold": 0,
+      "boundary_overridden_threshold": 0,
+      "pass_rate_threshold": 1.0,
+      "pass_rate_margin": 1.0,
+      "refusal_rate_threshold": 0.0,
+      "refusal_rate_margin": 0.0,
+      "rejection_traced_rate_threshold": 0.0,
+      "boundary_overridden_rate_threshold": 0.0
+    },
+    "heterogeneous_relation": {
+      "case_count": 3,
+      "pass_count_threshold": 3,
+      "pass_count_margin": 3,
+      "refusal_count_threshold": 0,
+      "refusal_count_margin": 0,
+      "rejection_traced_threshold": 0,
+      "boundary_overridden_threshold": 0,
+      "pass_rate_threshold": 1.0,
+      "pass_rate_margin": 1.0,
+      "refusal_rate_threshold": 0.0,
+      "refusal_rate_margin": 0.0,
+      "rejection_traced_rate_threshold": 0.0,
+      "boundary_overridden_rate_threshold": 0.0
+    }
+  },
+  "case_details": [
+    {
+      "id": "FSC-P5-A-001",
+      "family": "near_forbidden_correct_endpoint",
+      "kind": "mechanism_isolation",
+      "seed_token": "word",
+      "expected_endpoint": "comparison",
+      "forbidden_token": "reason",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "reason",
+        "admitted": false,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "comparison",
+        "admitted": true,
+        "rejected_attempts": [
+          [
+            31,
+            "reason",
+            1.331983208656311
+          ]
+        ],
+        "rejected_words": [
+          "reason"
+        ]
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-A-001]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            224,
+            "comparison",
+            1.3338154554367065
+          ],
+          [
+            31,
+            "reason",
+            1.331983208656311
+          ]
+        ]
+      },
+      "rationale": "Sub-margin blade gap (0.0018). Boundary picks forbidden ('reason') geometrically; inner-loop threshold-mode admits expected by ~0.001. Margin-mode (\u03b4=0.4) MUST refuse (gap << \u03b4).",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-A-002",
+      "family": "near_forbidden_correct_endpoint",
+      "kind": "mechanism_isolation",
+      "seed_token": "knowledge",
+      "expected_endpoint": "beginning",
+      "forbidden_token": "question",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "beginning",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "beginning",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-A-002]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            27,
+            "beginning",
+            1.3562562465667725
+          ],
+          [
+            22,
+            "question",
+            1.3458747863769531
+          ]
+        ]
+      },
+      "rationale": "Small blade gap (0.0104). Threshold-mode admits; margin-mode refuses.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-A-003",
+      "family": "near_forbidden_correct_endpoint",
+      "kind": "mechanism_isolation",
+      "seed_token": "word",
+      "expected_endpoint": "question",
+      "forbidden_token": "meaning",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "meaning",
+        "admitted": false,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "question",
+        "admitted": true,
+        "rejected_attempts": [
+          [
+            110,
+            "meaning",
+            1.3206863403320312
+          ]
+        ],
+        "rejected_words": [
+          "meaning"
+        ]
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-A-003]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            22,
+            "question",
+            1.420454978942871
+          ],
+          [
+            110,
+            "meaning",
+            1.3206863403320312
+          ]
+        ]
+      },
+      "rationale": "Moderate blade gap (0.0998). Threshold-mode admits; margin-mode (\u03b4=0.4) refuses.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-A-004",
+      "family": "near_forbidden_correct_endpoint",
+      "kind": "mechanism_isolation",
+      "seed_token": "word",
+      "expected_endpoint": "is",
+      "forbidden_token": "light",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "is",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "is",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-A-004]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            14,
+            "is",
+            3.061112880706787
+          ],
+          [
+            25,
+            "light",
+            2.7601990699768066
+          ]
+        ]
+      },
+      "rationale": "Mid-range blade gap (0.3009). Threshold-mode admits; margin-mode refuses (gap < \u03b4=0.4).",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-A-005",
+      "family": "near_forbidden_correct_endpoint",
+      "kind": "mechanism_isolation",
+      "seed_token": "spirit",
+      "expected_endpoint": "wisdom",
+      "forbidden_token": "question",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "question",
+        "admitted": false,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "wisdom",
+        "admitted": true,
+        "rejected_attempts": [
+          [
+            22,
+            "question",
+            1.4963598251342773
+          ]
+        ],
+        "rejected_words": [
+          "question"
+        ]
+      },
+      "margin_leg": {
+        "refused": false,
+        "selected": "wisdom",
+        "admitted": true,
+        "rejected_attempts": [
+          [
+            116,
+            "wisdom",
+            1.9471304416656494
+          ],
+          [
+            22,
+            "question",
+            1.4963598251342773
+          ]
+        ],
+        "rejected_words": [
+          "wisdom",
+          "question"
+        ]
+      },
+      "rationale": "Sub-\u03b4 blade gap (0.4508). Threshold-mode admits; margin-mode refuses just below \u03b4=0.4 boundary (gap is barely > 0.4 but \u03b4 is strict, see runner gate).",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-A-006",
+      "family": "near_forbidden_correct_endpoint",
+      "kind": "mechanism_isolation",
+      "seed_token": "spirit",
+      "expected_endpoint": "define",
+      "forbidden_token": "explain",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "define",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "define",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "margin_leg": {
+        "refused": false,
+        "selected": "define",
+        "admitted": true,
+        "rejected_attempts": [
+          [
+            228,
+            "define",
+            1.2996257543563843
+          ],
+          [
+            229,
+            "explain",
+            0.7502129077911377
+          ]
+        ],
+        "rejected_words": [
+          "define",
+          "explain"
+        ]
+      },
+      "rationale": "Super-\u03b4 blade gap (0.5494). Threshold-mode AND margin-mode both admit expected.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-B-001",
+      "family": "near_equal_admissible",
+      "kind": "margin_isolation",
+      "seed_token": "word",
+      "expected_endpoint": "question",
+      "forbidden_token": "ask",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "ask",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "ask",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-B-001]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            20,
+            "ask",
+            1.420454978942871
+          ],
+          [
+            22,
+            "question",
+            1.420454978942871
+          ]
+        ]
+      },
+      "rationale": "Blade scores tied to 4 decimals (1.4205 vs 1.4205, diff~0). Threshold-mode admits one (stable tie-break by index); margin-mode refuses. Tests margin gate determinism under exact tie.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-B-002",
+      "family": "near_equal_admissible",
+      "kind": "margin_isolation",
+      "seed_token": "word",
+      "expected_endpoint": "person",
+      "forbidden_token": "wisdom",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "wisdom",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "wisdom",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-B-002]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            116,
+            "wisdom",
+            1.0182733535766602
+          ],
+          [
+            220,
+            "person",
+            1.016270637512207
+          ]
+        ]
+      },
+      "rationale": "Sub-millimetre diff (0.002). Threshold admits; margin refuses.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-B-003",
+      "family": "near_equal_admissible",
+      "kind": "margin_isolation",
+      "seed_token": "word",
+      "expected_endpoint": "causes",
+      "forbidden_token": "wisdom",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "wisdom",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "wisdom",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-B-003]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            116,
+            "wisdom",
+            1.012621521949768
+          ],
+          [
+            238,
+            "causes",
+            1.0098966360092163
+          ]
+        ]
+      },
+      "rationale": "Diff 0.003. Threshold admits; margin refuses.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-B-004",
+      "family": "near_equal_admissible",
+      "kind": "margin_isolation",
+      "seed_token": "word",
+      "expected_endpoint": "truth",
+      "forbidden_token": "beginning",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "beginning",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "beginning",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-B-004]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            24,
+            "truth",
+            1.1731160879135132
+          ],
+          [
+            27,
+            "beginning",
+            1.1646991968154907
+          ]
+        ]
+      },
+      "rationale": "Diff 0.008. Threshold admits; margin refuses.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-B-005",
+      "family": "near_equal_admissible",
+      "kind": "margin_isolation",
+      "seed_token": "word",
+      "expected_endpoint": "correct",
+      "forbidden_token": "definition",
+      "expect_refusal": false,
+      "boundary": {
+        "refused": false,
+        "selected": "definition",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": false,
+        "selected": "definition",
+        "admitted": true,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-B-005]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            232,
+            "correct",
+            1.4192253351211548
+          ],
+          [
+            223,
+            "definition",
+            1.4091403484344482
+          ]
+        ]
+      },
+      "rationale": "Diff 0.010, ordering reversed: correct (1.419) edges definition (1.409) under its own blade. Threshold admits 'correct'; margin refuses.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-C-001",
+      "family": "no_admissible_path",
+      "kind": "refusal_isolation",
+      "seed_token": "word",
+      "expected_endpoint": null,
+      "forbidden_token": null,
+      "expect_refusal": true,
+      "boundary": {
+        "refused": false,
+        "selected": "learn",
+        "admitted": false,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-C-001]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            76,
+            "learn",
+            -0.008229397237300873
+          ],
+          [
+            227,
+            "context",
+            -1.1489323377609253
+          ]
+        ]
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-C-001]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            76,
+            "learn",
+            -0.008229397237300873
+          ],
+          [
+            227,
+            "context",
+            -1.1489323377609253
+          ]
+        ]
+      },
+      "rationale": "Both candidates score negative under chosen blade. Honest refusal required: InnerLoopExhaustion(reason=INNER_LOOP_EXHAUSTION) in both threshold and margin modes.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-C-002",
+      "family": "no_admissible_path",
+      "kind": "refusal_isolation",
+      "seed_token": "word",
+      "expected_endpoint": null,
+      "forbidden_token": null,
+      "expect_refusal": true,
+      "boundary": {
+        "refused": false,
+        "selected": "identity",
+        "admitted": false,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-C-002]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            225,
+            "identity",
+            -0.0192877147346735
+          ],
+          [
+            236,
+            "teach",
+            -0.38467395305633545
+          ]
+        ]
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-C-002]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            225,
+            "identity",
+            -0.0192877147346735
+          ],
+          [
+            236,
+            "teach",
+            -0.38467395305633545
+          ]
+        ]
+      },
+      "rationale": "Both candidates score negative under 'teach' blade. Refusal required.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-C-003",
+      "family": "no_admissible_path",
+      "kind": "refusal_isolation",
+      "seed_token": "word",
+      "expected_endpoint": null,
+      "forbidden_token": null,
+      "expect_refusal": true,
+      "boundary": {
+        "refused": false,
+        "selected": "correction",
+        "admitted": false,
+        "rejected_attempts": [],
+        "rejected_words": []
+      },
+      "threshold_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-C-003]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            222,
+            "correction",
+            -0.03585071489214897
+          ],
+          [
+            227,
+            "context",
+            -0.3704618215560913
+          ]
+        ]
+      },
+      "margin_leg": {
+        "refused": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "refusal_message": "AdmissibilityRegion[p5[FSC-P5-C-003]] inner-loop rejected all candidates at step 0.",
+        "rejected_attempts": [
+          [
+            222,
+            "correction",
+            -0.03585071489214897
+          ],
+          [
+            227,
+            "context",
+            -0.3704618215560913
+          ]
+        ]
+      },
+      "rationale": "Both candidates score negative under 'correction' blade. Refusal required.",
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-D-001",
+      "family": "multi_step_admissibility",
+      "kind": "chain_isolation",
+      "step_count": 2,
+      "rationale": "Two-step chain: each step is an independently mined Family-A configuration with super-\u03b4 gap. Tests that admissibility composes step-to-step; expected sequence: spirit\u2192define\u2192correct.",
+      "step_results_threshold": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "define",
+            "admitted": true,
+            "rejected_attempts": [],
+            "rejected_words": []
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "correct",
+            "admitted": true,
+            "rejected_attempts": [],
+            "rejected_words": []
+          },
+          "passed": true
+        }
+      ],
+      "step_results_margin": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "define",
+            "admitted": true,
+            "rejected_attempts": [
+              [
+                228,
+                "define",
+                1.2996257543563843
+              ],
+              [
+                229,
+                "explain",
+                0.7502129077911377
+              ]
+            ],
+            "rejected_words": [
+              "define",
+              "explain"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "correct",
+            "admitted": true,
+            "rejected_attempts": [
+              [
+                232,
+                "correct",
+                1.2414941787719727
+              ],
+              [
+                233,
+                "verify",
+                0.7751736640930176
+              ]
+            ],
+            "rejected_words": [
+              "correct",
+              "verify"
+            ]
+          },
+          "passed": true
+        }
+      ],
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-D-002",
+      "family": "multi_step_admissibility",
+      "kind": "chain_isolation",
+      "step_count": 2,
+      "rationale": "Two-step chain composing Family-A configurations across different blades. Step 1 selects question; step 2 selects beginning.",
+      "step_results_threshold": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "question",
+            "admitted": true,
+            "rejected_attempts": [
+              [
+                110,
+                "meaning",
+                1.3206863403320312
+              ]
+            ],
+            "rejected_words": [
+              "meaning"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "beginning",
+            "admitted": true,
+            "rejected_attempts": [],
+            "rejected_words": []
+          },
+          "passed": true
+        }
+      ],
+      "step_results_margin": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": true,
+            "refusal_reason": "inner_loop_exhaustion",
+            "refusal_message": "AdmissibilityRegion[p5[FSC-P5-D-002][s0]] inner-loop rejected all candidates at step 0.",
+            "rejected_attempts": [
+              [
+                22,
+                "question",
+                1.420454978942871
+              ],
+              [
+                110,
+                "meaning",
+                1.3206863403320312
+              ]
+            ]
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": true,
+            "refusal_reason": "inner_loop_exhaustion",
+            "refusal_message": "AdmissibilityRegion[p5[FSC-P5-D-002][s1]] inner-loop rejected all candidates at step 0.",
+            "rejected_attempts": [
+              [
+                27,
+                "beginning",
+                1.3562562465667725
+              ],
+              [
+                22,
+                "question",
+                1.3458747863769531
+              ]
+            ]
+          },
+          "passed": true
+        }
+      ],
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-D-003",
+      "family": "multi_step_admissibility",
+      "kind": "chain_isolation",
+      "step_count": 2,
+      "rationale": "Two-step chain. Step 1 has sub-\u03b4 blade gap (0.45) \u2014 threshold admits, margin refuses. Surfaces compositional refusal behavior.",
+      "step_results_threshold": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "wisdom",
+            "admitted": true,
+            "rejected_attempts": [
+              [
+                22,
+                "question",
+                1.4963598251342773
+              ]
+            ],
+            "rejected_words": [
+              "question"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "comparison",
+            "admitted": true,
+            "rejected_attempts": [],
+            "rejected_words": []
+          },
+          "passed": true
+        }
+      ],
+      "step_results_margin": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "wisdom",
+            "admitted": true,
+            "rejected_attempts": [
+              [
+                116,
+                "wisdom",
+                1.9471304416656494
+              ],
+              [
+                22,
+                "question",
+                1.4963598251342773
+              ]
+            ],
+            "rejected_words": [
+              "wisdom",
+              "question"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": true,
+            "refusal_reason": "inner_loop_exhaustion",
+            "refusal_message": "AdmissibilityRegion[p5[FSC-P5-D-003][s1]] inner-loop rejected all candidates at step 0.",
+            "rejected_attempts": [
+              [
+                224,
+                "comparison",
+                1.3338154554367065
+              ],
+              [
+                31,
+                "reason",
+                1.331983208656311
+              ]
+            ]
+          },
+          "passed": true
+        }
+      ],
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-E-001",
+      "family": "heterogeneous_relation",
+      "kind": "chain_isolation",
+      "step_count": 2,
+      "rationale": "Two relations exercised in one walk: 'answers' then 'precedes'. Same shape as D-002 but with explicit relation labels \u2014 tests that blade-switching does not contaminate downstream selection.",
+      "step_results_threshold": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "question",
+            "admitted": true,
+            "rejected_attempts": [
+              [
+                110,
+                "meaning",
+                1.3206863403320312
+              ]
+            ],
+            "rejected_words": [
+              "meaning"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "beginning",
+            "admitted": true,
+            "rejected_attempts": [],
+            "rejected_words": []
+          },
+          "passed": true
+        }
+      ],
+      "step_results_margin": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": true,
+            "refusal_reason": "inner_loop_exhaustion",
+            "refusal_message": "AdmissibilityRegion[p5[FSC-P5-E-001][s0]] inner-loop rejected all candidates at step 0.",
+            "rejected_attempts": [
+              [
+                22,
+                "question",
+                1.420454978942871
+              ],
+              [
+                110,
+                "meaning",
+                1.3206863403320312
+              ]
+            ]
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": true,
+            "refusal_reason": "inner_loop_exhaustion",
+            "refusal_message": "AdmissibilityRegion[p5[FSC-P5-E-001][s1]] inner-loop rejected all candidates at step 0.",
+            "rejected_attempts": [
+              [
+                27,
+                "beginning",
+                1.3562562465667725
+              ],
+              [
+                22,
+                "question",
+                1.3458747863769531
+              ]
+            ]
+          },
+          "passed": true
+        }
+      ],
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-E-002",
+      "family": "heterogeneous_relation",
+      "kind": "chain_isolation",
+      "step_count": 2,
+      "rationale": "Two relations: 'is' then 'compare_with'. Both steps have super-\u03b4 Family-A configurations. Tests blade-switching without contamination.",
+      "step_results_threshold": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "is",
+            "admitted": true,
+            "rejected_attempts": [],
+            "rejected_words": []
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "comparison",
+            "admitted": true,
+            "rejected_attempts": [
+              [
+                29,
+                "spirit",
+                0.8816279768943787
+              ]
+            ],
+            "rejected_words": [
+              "spirit"
+            ]
+          },
+          "passed": true
+        }
+      ],
+      "step_results_margin": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": true,
+            "refusal_reason": "inner_loop_exhaustion",
+            "refusal_message": "AdmissibilityRegion[p5[FSC-P5-E-002][s0]] inner-loop rejected all candidates at step 0.",
+            "rejected_attempts": [
+              [
+                14,
+                "is",
+                3.061112880706787
+              ],
+              [
+                25,
+                "light",
+                2.7601990699768066
+              ]
+            ]
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "comparison",
+            "admitted": true,
+            "rejected_attempts": [
+              [
+                224,
+                "comparison",
+                1.3338154554367065
+              ],
+              [
+                29,
+                "spirit",
+                0.8816279768943787
+              ]
+            ],
+            "rejected_words": [
+              "comparison",
+              "spirit"
+            ]
+          },
+          "passed": true
+        }
+      ],
+      "passed_threshold": true,
+      "passed_margin": true
+    },
+    {
+      "id": "FSC-P5-E-003",
+      "family": "heterogeneous_relation",
+      "kind": "chain_isolation",
+      "step_count": 2,
+      "rationale": "First step succeeds under both modes; second step is a Family-C no-admissible-path. Tests that mid-chain refusal is honest and traceable, not silently bypassed.",
+      "step_results_threshold": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": false,
+            "selected": "beginning",
+            "admitted": true,
+            "rejected_attempts": [],
+            "rejected_words": []
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "no_admissible_path",
+          "leg": {
+            "refused": true,
+            "refusal_reason": "inner_loop_exhaustion",
+            "refusal_message": "AdmissibilityRegion[p5[FSC-P5-E-003][s1]] inner-loop rejected all candidates at step 0.",
+            "rejected_attempts": [
+              [
+                76,
+                "learn",
+                -0.008229397237300873
+              ],
+              [
+                227,
+                "context",
+                -1.1489323377609253
+              ]
+            ]
+          },
+          "passed": true
+        }
+      ],
+      "step_results_margin": [
+        {
+          "step_index": 0,
+          "step_family": "near_forbidden_correct_endpoint",
+          "leg": {
+            "refused": true,
+            "refusal_reason": "inner_loop_exhaustion",
+            "refusal_message": "AdmissibilityRegion[p5[FSC-P5-E-003][s0]] inner-loop rejected all candidates at step 0.",
+            "rejected_attempts": [
+              [
+                27,
+                "beginning",
+                1.3562562465667725
+              ],
+              [
+                22,
+                "question",
+                1.3458747863769531
+              ]
+            ]
+          },
+          "passed": true
+        },
+        {
+          "step_index": 1,
+          "step_family": "no_admissible_path",
+          "leg": {
+            "refused": true,
+            "refusal_reason": "inner_loop_exhaustion",
+            "refusal_message": "AdmissibilityRegion[p5[FSC-P5-E-003][s1]] inner-loop rejected all candidates at step 0.",
+            "rejected_attempts": [
+              [
+                76,
+                "learn",
+                -0.008229397237300873
+              ],
+              [
+                227,
+                "context",
+                -1.1489323377609253
+              ]
+            ]
+          },
+          "passed": true
+        }
+      ],
+      "passed_threshold": true,
+      "passed_margin": true
+    }
+  ]
+}
