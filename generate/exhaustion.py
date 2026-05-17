@@ -17,9 +17,11 @@ the same effect on caller control flow.  The exception subclasses
 runtime/eval code paths continues to work byte-for-byte — the carrying
 of structured evidence is additive.
 
-Reason codes are minimal in Phase 2.  A single
-``INNER_LOOP_EXHAUSTION`` reason covers both raise sites in
-``generate/stream.py``:
+Reason codes:
+
+``INNER_LOOP_EXHAUSTION`` covers two raise sites in
+``generate/stream.py`` — both express "destination-side admissibility
+produced no admissible candidate":
 
   1. Pre-walk: the region's allowed-index intersection with the
      candidate set is empty before any step ran.  ``step_index = -1``
@@ -27,13 +29,20 @@ Reason codes are minimal in Phase 2.  A single
      inner-loop rejections were issued; the region was already empty.
 
   2. In-walk: at some step, every candidate in the admissible set was
-     rejected by ``check_transition`` at the configured threshold.
-     ``step_index >= 0`` and ``rejected_attempts`` records the tried
-     (index, word, score) triples in attempt order.
+     rejected by ``check_transition`` (threshold mode) or
+     ``check_margin`` (Phase 3 / ADR-0026, margin mode).  ``step_index
+     >= 0`` and ``rejected_attempts`` records the tried (index, word,
+     score) triples in attempt order (threshold) or the full ranking
+     (margin).
 
-Splitting these into separate reasons can wait for Phase 4, when
-rotor-frame refusal introduces a third structurally distinct mode
-(ADR-0025).
+``ROTOR_REJECTION`` (Phase 4 / ADR-0025) is the rotor-side analogue.
+Raised when no admissible destination produces a rotor that lands
+the field within the region's frame versor cone.  Carries the same
+trace shape: ``rejected_attempts`` records the rotor-side scores
+(``cga_inner(F_after, frame_versor)``) for each rejected candidate.
+Splitting this from ``INNER_LOOP_EXHAUSTION`` keeps the trace
+self-explanatory — a refused turn says *which* admissibility axis
+ran out, destination-blade or rotor-frame.
 """
 
 from __future__ import annotations
@@ -51,6 +60,13 @@ class RefusalReason(Enum):
     """
 
     INNER_LOOP_EXHAUSTION = "inner_loop_exhaustion"
+    # Phase 4 / ADR-0025 — rotor side: every candidate's rotor would
+    # push the field outside the region's frame-versor admissible
+    # cone (``cga_inner(F_after, frame_versor) <= 0`` after
+    # sandwiching).  Distinct from INNER_LOOP_EXHAUSTION so the
+    # trace can tell destination-blade refusal from rotor-frame
+    # refusal without re-parsing the message.
+    ROTOR_REJECTION = "rotor_rejection"
 
 
 class InnerLoopExhaustion(ValueError):

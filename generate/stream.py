@@ -30,6 +30,7 @@ from generate.admissibility import (
     filter_candidates,
     rank_candidates_by_blade,
 )
+from generate.rotor_admissibility import check_rotor_admissibility
 from generate.attention import AttentionOperator
 from generate.exhaustion import InnerLoopExhaustion, RefusalReason
 from generate.result import GenerationResult
@@ -437,6 +438,34 @@ def generate(
             assert margin_verdict.top is not None  # admitted => non-None
             word_idx = int(margin_verdict.top.index)
             word = str(margin_verdict.top.word)
+            # Phase 4 / ADR-0025 — rotor admissibility on the top-
+            # ranked candidate.  If the rotor would push the field
+            # outside the frame's admissible cone, refuse with a
+            # distinct ROTOR_REJECTION reason so the trace shows
+            # *which* axis ran out (destination-blade vs rotor-frame).
+            # The ranked list is preserved as evidence, with the
+            # rotor score appended as the failed candidate's score.
+            if active_region is not None and active_region.frame_versor is not None:
+                A_now = vocab.get_versor_at(current.node)
+                B_cand = vocab.get_versor_at(word_idx)
+                V_hyp = word_transition_rotor(A_now, B_cand)
+                rv = check_rotor_admissibility(
+                    active_region,
+                    field_current=current.F,
+                    rotor=V_hyp,
+                )
+                if not rv.admitted:
+                    rotor_attempt = (
+                        int(word_idx),
+                        str(word),
+                        float(rv.score),
+                    )
+                    raise InnerLoopExhaustion(
+                        reason=RefusalReason.ROTOR_REJECTION,
+                        region_label=effective_region_label,
+                        step_index=step_index,
+                        rejected_attempts=tuple(rejected_attempts) + (rotor_attempt,),
+                    )
             # Build a legacy AdmissibilityVerdict for trace storage so
             # the AdmissibilityTraceStep shape is unchanged.  Margin
             # info is encoded into ``reason`` for human inspection;
@@ -455,6 +484,10 @@ def generate(
                 len(candidate_indices) if (inner_loop_active and candidate_indices is not None)
                 else 1
             )
+            # Phase 4 — track whether any rotor rejection occurred this
+            # step so the exhaustion exception can carry the right
+            # ``RefusalReason`` (rotor-side vs destination-side).
+            step_had_rotor_rejection = False
             for _attempt in range(max(max_attempts, 1)):
                 word, word_idx = _nearest_next(
                     vocab,
@@ -478,7 +511,34 @@ def generate(
                         region_label=effective_region_label,
                         reason="unconstrained",
                     )
-                if not inner_loop_active or verdict.admitted or inner_loop_force_admit:
+                # Phase 4 / ADR-0025 — if the destination admits and the
+                # region carries a frame versor, also check rotor-side
+                # admissibility: would the rotor applied to current.F
+                # land in the frame's admissible cone?  On reject, treat
+                # as a per-candidate rejection like the destination side
+                # — log the rotor score and retry the next candidate.
+                rotor_admitted = True
+                rotor_score_for_log: float | None = None
+                if (
+                    active_region is not None
+                    and verdict.admitted
+                    and inner_loop_active
+                    and active_region.frame_versor is not None
+                ):
+                    A_now = vocab.get_versor_at(current.node)
+                    B_cand = vocab.get_versor_at(word_idx)
+                    V_hyp = word_transition_rotor(A_now, B_cand)
+                    rv = check_rotor_admissibility(
+                        active_region,
+                        field_current=current.F,
+                        rotor=V_hyp,
+                    )
+                    rotor_admitted = rv.admitted
+                    if not rv.admitted:
+                        rotor_score_for_log = float(rv.score)
+                if not inner_loop_active or (
+                    verdict.admitted and rotor_admitted
+                ) or inner_loop_force_admit:
                     # `inner_loop_force_admit` is the Phase 2 null control:
                     # exercises the inner-loop code path (same attempt loop,
                     # same telemetry side effects) but force-breaks on the
@@ -486,17 +546,34 @@ def generate(
                     # inner-loop run is causally attributable to rejection,
                     # not to incidental code-path differences.
                     break
-                # Inner loop is on and verdict rejected this candidate.
-                rejected_attempts.append((int(word_idx), str(word), float(verdict.score)))
+                # Inner loop is on and either destination or rotor
+                # rejected this candidate.  Log the rejection with the
+                # score that produced it.
+                if rotor_score_for_log is not None:
+                    step_had_rotor_rejection = True
+                    rejected_attempts.append(
+                        (int(word_idx), str(word), rotor_score_for_log)
+                    )
+                else:
+                    rejected_attempts.append(
+                        (int(word_idx), str(word), float(verdict.score))
+                    )
                 if int(word_idx) in step_exclude:
                     # Selector returned the same exhausted candidate — no
                     # further admissible destinations.  Honest refusal.
                     # ADR-0024 Phase 2 — in-walk exhaustion site; carries the
                     # ordered ``rejected_attempts`` accumulated this step so
                     # downstream layers can read refusal evidence without
-                    # re-parsing the exception message.
+                    # re-parsing the exception message.  Phase 4 / ADR-0025
+                    # — if any rotor rejection occurred this step, the
+                    # exhaustion is reported under ROTOR_REJECTION so the
+                    # trace names the load-bearing axis.
                     raise InnerLoopExhaustion(
-                        reason=RefusalReason.INNER_LOOP_EXHAUSTION,
+                        reason=(
+                            RefusalReason.ROTOR_REJECTION
+                            if step_had_rotor_rejection
+                            else RefusalReason.INNER_LOOP_EXHAUSTION
+                        ),
                         region_label=effective_region_label,
                         step_index=step_index,
                         rejected_attempts=tuple(rejected_attempts),
@@ -504,13 +581,15 @@ def generate(
                 step_exclude.add(int(word_idx))
             else:
                 # max_attempts exhausted without break — every admissible
-                # candidate was rejected by the inner-loop threshold.
-                # Same refusal shape as the same-candidate-loop site above;
-                # both are structurally "inner-loop produced no admissible
-                # candidate at this step".  Splitting into separate reasons
-                # can wait for Phase 4 (rotor frame, ADR-0025).
+                # candidate was rejected by the inner-loop threshold (or
+                # rotor frame, Phase 4).  Same refusal shape, with the
+                # reason routed to the load-bearing axis.
                 raise InnerLoopExhaustion(
-                    reason=RefusalReason.INNER_LOOP_EXHAUSTION,
+                    reason=(
+                        RefusalReason.ROTOR_REJECTION
+                        if step_had_rotor_rejection
+                        else RefusalReason.INNER_LOOP_EXHAUSTION
+                    ),
                     region_label=effective_region_label,
                     step_index=step_index,
                     rejected_attempts=tuple(rejected_attempts),

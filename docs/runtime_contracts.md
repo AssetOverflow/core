@@ -94,6 +94,46 @@ future ADR can wire materialisation (e.g. propagate the typed
 exception to `ChatResponse.refusal_reason` or catch at the pipeline
 seam) without re-deriving the contract.
 
+### Rotor admissibility contract (ADR-0025 / Phase 4)
+
+The destination-side admissibility documented above (token-side blade
+alignment, ADR-0024 / Phase 3) is complemented by a rotor-side check:
+when a region carries a non-null `frame_versor`, the inner loop
+additionally verifies that the rotor's effect on the current field
+stays within the frame's admissible cone:
+
+```text
+F'    = versor_apply(V, F_current)
+score = cga_inner(F', frame_versor)
+admit iff score > 0
+```
+
+`generate.rotor_admissibility.check_rotor_admissibility` performs
+this pure semantic check. It lives at the same generation/propagation
+seam as the inner loop — in `generate/rotor_admissibility.py`, a
+sibling-but-separate module to `generate/admissibility.py` — **not**
+in `algebra/versor.py` (admissibility is a pack-semantic test, not a
+closure invariant) and **not** in `field/propagate.py` (forbidden
+normalization/repair site). The placement is the load-bearing
+architectural decision in ADR-0025.
+
+Refusal is materialised through the same `InnerLoopExhaustion`
+mechanism as destination-side refusal, but with
+`RefusalReason.ROTOR_REJECTION` instead of `INNER_LOOP_EXHAUSTION`,
+so the trace names the axis that ran out. In threshold mode, a step
+that exhausts after *any* rotor rejection is reported under
+`ROTOR_REJECTION`; pure destination exhaustion stays
+`INNER_LOOP_EXHAUSTION`. In margin mode, the rotor check runs on the
+top-ranked admissible candidate after destination margin admits; on
+rotor refusal the typed exception carries the full destination
+ranking plus the rejected rotor's score as evidence.
+
+The `versor_condition(F) < 1e-6` invariant remains the algebra
+layer's responsibility on actual propagation. `check_rotor_admissibility`
+does not mutate field state and does not enforce closure — it only
+asks whether applying `V` to `F` would leave the field in the
+frame's half-space.
+
 ## TurnEvent contract
 
 `TurnEvent.surface`
