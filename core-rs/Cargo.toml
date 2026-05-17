@@ -9,6 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 pyo3 = { version = "0.21" }
+numpy = "0.21"
 rayon = "1.10"
 nalgebra = "0.33"
 ndarray = { version = "0.16", features = ["rayon"] }

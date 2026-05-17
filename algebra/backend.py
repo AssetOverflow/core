@@ -95,15 +95,21 @@ def vault_recall(versors: list, query: np.ndarray, top_k: int = 5) -> list:
     order; the only thing the vectorisation replaces is the
     per-element Python dispatch loop.  ADR-0019 Stage 1.
     """
-    if _RUST:
-        try:
-            return _rs.vault_recall(versors, query, top_k)
-        except Exception:
-            pass
     if not versors:
         return []
     q = np.asarray(query, dtype=np.float32)
     M = np.asarray(versors, dtype=np.float32)
+    if _RUST and M.ndim == 2 and M.shape[1] == 32:
+        try:
+            # Pass the (N, 32) numpy buffer directly — the Rust
+            # binding reads it zero-copy via PyReadonlyArray2 (task
+            # #35).  ascontiguousarray ensures C-contiguous f32
+            # layout, which the zero-copy slice requires.
+            Mc = np.ascontiguousarray(M, dtype=np.float32)
+            qc = np.ascontiguousarray(q, dtype=np.float32)
+            return _rs.vault_recall(Mc, qc, top_k)
+        except Exception:
+            pass
     if M.ndim != 2:
         # Heterogeneous shapes — fall back to the scalar path rather
         # than coerce silently.

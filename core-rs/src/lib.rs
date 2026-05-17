@@ -21,6 +21,7 @@ pub mod versor;
 use cga::cga_inner_raw;
 use cl41::geometric_product_raw;
 use diffusion::{graph_diffusion_step, unitize_f32};
+#[allow(unused_imports)]
 use vault::vault_recall_raw;
 use versor::{normalize_to_versor_raw, versor_apply_closed, versor_apply_raw, versor_condition_raw};
 
@@ -94,19 +95,50 @@ fn cga_inner(x: &pyo3::types::PyAny, y: &pyo3::types::PyAny) -> PyResult<f32> {
     cga_inner_raw(&x_slice, &y_slice).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
-/// Parallel top-k vault recall by CGA inner product.
+/// Parallel top-k vault recall by CGA inner product (zero-copy).
+///
+/// Per ADR-0020 follow-on (task #35): accepts a 2D numpy
+/// (N, 32) float32 array via `PyReadonlyArray2`, which exposes a
+/// view *directly into the numpy buffer*.  No Python→Rust copy,
+/// no re-chunking — Rayon scores straight off the source slice.
+/// This is the load-bearing reason for the Rust path: NumPy
+/// already SIMD-vectorises the same kernel; the only win Rust
+/// can offer is *avoiding the marshalling tax* and adding
+/// thread-parallel scoring on top.
 #[pyfunction]
 fn vault_recall(
-    versors: Vec<&pyo3::types::PyAny>,
-    query: &pyo3::types::PyAny,
+    versors: numpy::PyReadonlyArray2<'_, f32>,
+    query: numpy::PyReadonlyArray1<'_, f32>,
     top_k: usize,
 ) -> PyResult<Vec<(usize, f32)>> {
-    let query_slice = extract_f32_slice(query)?;
-    let mut slices: Vec<[f32; 32]> = Vec::with_capacity(versors.len());
-    for v in &versors {
-        slices.push(extract_f32_slice(v)?);
+    let view = versors.as_array();
+    let shape = view.shape();
+    if shape.len() != 2 || shape[1] != 32 {
+        return Err(PyValueError::new_err(format!(
+            "versors must be shape (N, 32), got {:?}",
+            shape
+        )));
     }
-    vault_recall_raw(&slices, &query_slice, top_k)
+    let n = shape[0];
+    let q_slice = query.as_slice().map_err(|e| {
+        PyValueError::new_err(format!("query must be contiguous f32 (32,): {}", e))
+    })?;
+    if q_slice.len() != 32 {
+        return Err(PyValueError::new_err(format!(
+            "query must have length 32, got {}",
+            q_slice.len()
+        )));
+    }
+    let v_slice = versors.as_slice().map_err(|e| {
+        PyValueError::new_err(format!(
+            "versors must be C-contiguous f32 (N, 32): {}",
+            e
+        ))
+    })?;
+    let mut q_arr = [0f32; 32];
+    q_arr.copy_from_slice(q_slice);
+
+    crate::vault::vault_recall_flat(v_slice, n, &q_arr, top_k)
         .map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
