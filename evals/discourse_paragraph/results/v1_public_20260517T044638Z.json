@@ -1,0 +1,184 @@
+{
+  "cases": [
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "next"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_001",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 4,
+      "subject_coverage": 1.0,
+      "surface": "wisdom grounds knowledge. next, knowledge requires evidence. furthermore, evidence supports truth. next, truth reveals reality.",
+      "topic": "epistemic_chain"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "next"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_002",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 5,
+      "subject_coverage": 1.0,
+      "surface": "observation grounds hypothesis. furthermore, hypothesis implies prediction. next, prediction follows experiment. furthermore, experiment supports theory. next, theory entails explanation.",
+      "topic": "scientific_method"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "next"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_003",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 4,
+      "subject_coverage": 1.0,
+      "surface": "light precedes form. next, form grounds matter. furthermore, matter supports structure. next, structure reveals order.",
+      "topic": "creation_arc"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "next"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_004",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 3,
+      "subject_coverage": 1.0,
+      "surface": "premise supports conclusion. next, conclusion requires validity. furthermore, validity entails soundness.",
+      "topic": "logical_dependency"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "next"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_005",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 4,
+      "subject_coverage": 1.0,
+      "surface": "virtue grounds action. next, action requires intention. furthermore, intention supports consequence. next, consequence reveals character.",
+      "topic": "ethical_grounding"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "next"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_006",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 5,
+      "subject_coverage": 1.0,
+      "surface": "sound grounds phoneme. next, phoneme supports morpheme. furthermore, morpheme builds word. next, word composes sentence. furthermore, sentence conveys meaning.",
+      "topic": "linguistic_layers"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "next"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_007",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 4,
+      "subject_coverage": 1.0,
+      "surface": "axiom grounds theorem. furthermore, theorem entails corollary. next, corollary supports application. next, application yields insight.",
+      "topic": "mathematical_chain"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "next"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_008",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 4,
+      "subject_coverage": 1.0,
+      "surface": "conflict drives tension. next, tension precedes climax. furthermore, climax yields resolution. next, resolution reveals theme.",
+      "topic": "narrative_progression"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "next"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_009",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 5,
+      "subject_coverage": 1.0,
+      "surface": "gene encodes protein. next, protein builds cell. furthermore, cell composes tissue. next, tissue forms organ. furthermore, organ supports organism.",
+      "topic": "biological_hierarchy"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "next"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_010",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 4,
+      "subject_coverage": 1.0,
+      "surface": "force drives motion. furthermore, motion transfers energy. next, energy yields heat. next, heat raises temperature.",
+      "topic": "physical_causation"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "in contrast"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_011",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 3,
+      "subject_coverage": 1.0,
+      "surface": "knowledge requires evidence. in contrast, belief requires trust. furthermore, wisdom grounds judgment.",
+      "topic": "contrastive_definitions"
+    },
+    {
+      "discourse_markers_found": [
+        "furthermore",
+        "in contrast"
+      ],
+      "failure_reasons": [],
+      "id": "DP-PUB_012",
+      "passed": true,
+      "replay_match": true,
+      "sentence_count": 3,
+      "subject_coverage": 1.0,
+      "surface": "deduction yields certainty. in contrast, induction yields probability. furthermore, abduction yields explanation.",
+      "topic": "method_contrast"
+    }
+  ],
+  "lane": "discourse_paragraph",
+  "metrics": {
+    "accuracy": 1.0,
+    "mean_sentence_count": 4.0,
+    "mean_subject_coverage": 1.0,
+    "passed": 12,
+    "replay_determinism_rate": 1.0,
+    "total": 12
+  },
+  "split": "public",
+  "timestamp": "2026-05-17T04:46:38.277091+00:00",
+  "version": "v1"
+}

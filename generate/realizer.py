@@ -40,6 +40,44 @@ class RealizedFragment:
         }
 
 
+def _capitalize_sentence(s: str) -> str:
+    """Capitalize the first alphabetic character of a sentence.
+
+    Skips leading whitespace/punctuation so fragments that start with
+    discourse markers ("next, knowledge…") still emit a capital first
+    letter ("Next, knowledge…") at the sentence boundary.  Leaves the
+    rest of the string untouched — proper nouns and embedded all-caps
+    tokens are preserved.
+    """
+    if not s:
+        return s
+    for i, ch in enumerate(s):
+        if ch.isalpha():
+            return s[:i] + ch.upper() + s[i + 1:]
+    return s
+
+
+def _join_as_paragraph(fragments: list["RealizedFragment"]) -> str:
+    """Join fragments into a paragraph with sentence-initial capitalization.
+
+    Each fragment becomes one sentence; sentence-initial letters are
+    capitalized; the paragraph ends with a single terminal period.
+    """
+    if not fragments:
+        return ""
+    pieces: list[str] = []
+    for f in fragments:
+        s = f.surface.strip()
+        if not s:
+            continue
+        s = _capitalize_sentence(s)
+        pieces.append(s)
+    joined = ". ".join(pieces)
+    if joined and not joined.endswith("."):
+        joined += "."
+    return joined
+
+
 @dataclass(frozen=True, slots=True)
 class RealizedPlan:
     fragments: tuple[RealizedFragment, ...]
@@ -106,10 +144,7 @@ def realize_semantic(
                 surface=surface,
             ))
 
-    joined = ". ".join(f.surface for f in fragments)
-    if joined and not joined.endswith("."):
-        joined += "."
-
+    joined = _join_as_paragraph(fragments)
     return RealizedPlan(fragments=tuple(fragments), surface=joined)
 
 
@@ -208,10 +243,7 @@ def realize_target(
             )
         )
 
-    joined = ". ".join(f.surface for f in fragments)
-    if joined and not joined.endswith("."):
-        joined += "."
-
+    joined = _join_as_paragraph(fragments)
     return RealizedPlan(fragments=tuple(fragments), surface=joined)
 
 
