@@ -277,6 +277,8 @@ def generate(
     salience_top_k: int = 16,
     inhibition_threshold: float = 0.3,
     region: AdmissibilityRegion | None = None,
+    inner_loop_admissibility: bool = False,
+    admissibility_threshold: float = 0.0,
 ) -> GenerationResult:
     """Generate a token sequence.
 
@@ -286,6 +288,17 @@ def generate(
     intersected with language/salience candidates before each step;
     an empty intersection raises ``ValueError`` so the caller can
     route through the unknown-domain surface (§2 honest refusal).
+
+    ``inner_loop_admissibility`` (ADR-0024) — when ``True`` and a
+    real region is supplied, each per-step selection is re-evaluated
+    against ``check_transition`` with ``admissibility_threshold``.
+    Rejected candidates are excluded and the walk re-selects; if every
+    candidate in the admissible set is rejected, the walk raises
+    ``ValueError`` (honest refusal).  Default ``False`` preserves
+    ADR-0023 boundary-only behavior so existing trace hashes remain
+    byte-identical.  The rotor ``V`` is only constructed for the
+    admitted candidate, so the ``versor_condition < 1e-6`` invariant
+    is unaffected.
     """
     tokens = []
     trajectory = [] if record_trajectory else None
@@ -338,31 +351,70 @@ def generate(
     )
 
     token_budget = min(max_tokens, int(candidates_used)) if candidates_used is not None else max_tokens
+    region_active = region is not None and not region.is_unconstrained()
+    active_region: AdmissibilityRegion | None = region if region_active else None
+    inner_loop_active = inner_loop_admissibility and region_active
     for step_index in range(token_budget):
         current, hits_applied = _recall_state(_voiced_state(current, persona), vault, recall_top_k)
         vault_hits += hits_applied
-        word, word_idx = _nearest_next(
-            vocab,
-            current.F,
-            current.node,
-            recent_nodes=tuple(recent_nodes),
-            stop_nodes=stop_nodes,
-            candidate_indices=candidate_indices,
+
+        rejected_attempts: list[tuple[int, str, float]] = []
+        # Per-step exclude set seeded with stop/recent via _nearest_next;
+        # inner-loop rejections accumulate into a step-local exclude that
+        # we union with stop_nodes for the retry call.
+        step_exclude: set[int] = set()
+        word: str
+        word_idx: int
+        verdict: AdmissibilityVerdict
+
+        max_attempts = (
+            len(candidate_indices) if (inner_loop_active and candidate_indices is not None)
+            else 1
         )
-        tokens.append(_articulate(vocab, word))
-        if region is not None and not region.is_unconstrained():
-            verdict = check_transition(
-                region,
-                candidate_index=int(word_idx),
-                candidate_versor=vocab.get_versor_at(word_idx),
+        for _attempt in range(max(max_attempts, 1)):
+            word, word_idx = _nearest_next(
+                vocab,
+                current.F,
+                current.node,
+                recent_nodes=tuple(recent_nodes),
+                stop_nodes=stop_nodes | frozenset(step_exclude),
+                candidate_indices=candidate_indices,
             )
+            if active_region is not None:
+                verdict = check_transition(
+                    active_region,
+                    candidate_index=int(word_idx),
+                    candidate_versor=vocab.get_versor_at(word_idx),
+                    threshold=admissibility_threshold,
+                )
+            else:
+                verdict = AdmissibilityVerdict(
+                    admitted=True,
+                    score=0.0,
+                    region_label=effective_region_label,
+                    reason="unconstrained",
+                )
+            if not inner_loop_active or verdict.admitted:
+                break
+            # Inner loop is on and verdict rejected this candidate.
+            rejected_attempts.append((int(word_idx), str(word), float(verdict.score)))
+            if int(word_idx) in step_exclude:
+                # Selector returned the same exhausted candidate — no
+                # further admissible destinations.  Honest refusal.
+                raise ValueError(
+                    f"AdmissibilityRegion[{effective_region_label}] inner-loop "
+                    f"rejected all candidates at step {step_index}."
+                )
+            step_exclude.add(int(word_idx))
         else:
-            verdict = AdmissibilityVerdict(
-                admitted=True,
-                score=0.0,
-                region_label=effective_region_label,
-                reason="unconstrained",
+            # max_attempts exhausted without break — every admissible
+            # candidate was rejected by the inner-loop threshold.
+            raise ValueError(
+                f"AdmissibilityRegion[{effective_region_label}] inner-loop "
+                f"rejected all candidates at step {step_index}."
             )
+
+        tokens.append(_articulate(vocab, word))
         admissibility_trace.append(
             AdmissibilityTraceStep(
                 step_index=step_index,
@@ -373,6 +425,7 @@ def generate(
                 selected_index=int(word_idx),
                 selected_word=str(word),
                 verdict=verdict,
+                rejected_attempts=tuple(rejected_attempts),
             )
         )
 

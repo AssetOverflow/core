@@ -431,10 +431,17 @@ class AdmissibilityTraceStep:
     selected_index: int
     selected_word: str
     verdict: AdmissibilityVerdict
+    # ADR-0024 §2 — when inner-loop admissibility is on, candidates
+    # rejected by ``check_transition`` before final selection are
+    # recorded here as (index, word, score) triples in rejection
+    # order.  Empty in the ADR-0023 boundary-only path so the trace
+    # hash stays byte-identical for legacy turns (the canonical form
+    # folds this field only when non-empty).
+    rejected_attempts: tuple[tuple[int, str, float], ...] = ()
 
     def canonical(self) -> dict[str, object]:
         """Deterministic dict representation for trace hashing."""
-        return {
+        out: dict[str, object] = {
             "step_index": int(self.step_index),
             "region_label": str(self.region_label),
             "region_source": str(self.region_source),
@@ -445,6 +452,11 @@ class AdmissibilityTraceStep:
             "verdict_admitted": bool(self.verdict.admitted),
             "verdict_reason": str(self.verdict.reason),
         }
+        if self.rejected_attempts:
+            out["rejected_attempts"] = [
+                [int(i), str(w), float(s)] for (i, w, s) in self.rejected_attempts
+            ]
+        return out
 
 
 def filter_candidates(
