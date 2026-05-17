@@ -29,13 +29,31 @@ class LaneReport:
     case_details: list[dict[str, Any]] = field(default_factory=list)
 
 
+_PUNCT_STRIP = ".,;:!?—–"  # period, comma, semicolon, colon, !, ?, em-dash, en-dash
+
+
+def _strip_punct(word: str) -> str:
+    return word.strip(_PUNCT_STRIP)
+
+
 def _check_word_order(order: list[str], surface_words: list[str]) -> bool:
+    """Match `order` against `surface_words` as a subsequence, ignoring
+    trailing/leading punctuation on surface tokens.
+
+    Closes english_fluency_ood gaps.md G3: previously
+    `"river,"` failed to match `"river"` because the rubric did
+    exact-word comparison.  Stripping common terminal punctuation
+    makes the rubric tolerant to comma-bounded relative clauses and
+    sentence-final periods without weakening the structural ordering
+    check.
+    """
     positions = []
     for word in order:
         found = False
         start = positions[-1] + 1 if positions else 0
+        target = word.lower()
         for i in range(start, len(surface_words)):
-            if surface_words[i].lower() == word.lower():
+            if _strip_punct(surface_words[i]).lower() == target:
                 positions.append(i)
                 found = True
                 break
@@ -146,9 +164,14 @@ def _score_case(case: dict[str, Any]) -> CaseResult:
     if not exact_match and constraints:
         surface_words = surface_lower.split()
 
+        # Punctuation-tolerant token-level membership check (G3) — strip
+        # trailing/leading punctuation so "river," still satisfies
+        # `must_contain: ["river"]`.
+        surface_tokens_stripped = {_strip_punct(w).lower() for w in surface_words}
         must_contain = constraints.get("must_contain", [])
         for word in must_contain:
-            if word.lower() not in surface_lower:
+            w = word.lower()
+            if w not in surface_lower and w not in surface_tokens_stripped:
                 failures.append(f"missing required word: {word}")
 
         word_order = constraints.get("word_order", [])

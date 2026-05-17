@@ -212,6 +212,13 @@ class TestChatResponseContractStillHolds:
 
         runtime = ChatRuntime()
         pipeline = CognitiveTurnPipeline(runtime)
+        # Prime the vault so the unknown-domain gate does not fire on the
+        # probe.  Without priming, ChatRuntime returns the safety stub
+        # ("I don't have field coordinates for that yet.") which the
+        # pipeline now honours (calibration gaps.md Finding 2 resolution).
+        # The semantic-surface contract this test gates on only applies
+        # when the gate does not fire; priming guarantees that.
+        pipeline.run("truth is defined as the coherent ground of inquiry.")
         result = pipeline.run("What is truth?")
 
         assert result.surface
@@ -220,3 +227,25 @@ class TestChatResponseContractStillHolds:
         assert result.articulation_surface == result.surface
         assert result.versor_condition < 1e-6
         assert result.trace_hash
+
+    def test_pipeline_honours_safety_stub_when_gate_fires(self) -> None:
+        """When the unknown-domain gate fires, the pipeline's surface
+        is the gate's safety stub — NOT the realizer's fallback
+        articulation.  Closes calibration gaps.md Finding 2."""
+        try:
+            from chat.runtime import ChatRuntime, _UNKNOWN_DOMAIN_SURFACE
+            from core.cognition.pipeline import CognitiveTurnPipeline
+        except Exception:
+            pytest.skip("ChatRuntime not importable in this environment")
+
+        runtime = ChatRuntime()
+        pipeline = CognitiveTurnPipeline(runtime)
+        # Cold runtime: the very first probe should fire the gate.
+        result = pipeline.run("What is truth?")
+
+        assert result.vault_hits == 0, "gate-fired turn should have zero vault hits"
+        assert result.surface == _UNKNOWN_DOMAIN_SURFACE
+        assert result.articulation_surface == _UNKNOWN_DOMAIN_SURFACE
+        # walk_surface is unaffected by the override decision — it carries
+        # the realizer's evidence regardless.
+        assert isinstance(result.walk_surface, str)

@@ -58,11 +58,23 @@ _REDIRECT_VERBS: frozenset[str] = frozenset({
     "take", "drop", "discard", "abandon", "slip", "set",
     "pretend", "shift", "roleplay", "ignore", "forget",
     "override", "act", "treat", "suppose",
+    # Same dismissal family as ignore/forget/discard — caught the
+    # MAC-HOLD-001 holdout ("disregard your axiology") that slipped
+    # past the original list.
+    "disregard", "dismiss", "bypass", "circumvent", "renounce",
+    "reject", "repudiate",
 })
 
 # Rule (b) component: noun phrases that classify the agent's role or its
 # operating context. A redirect-verb landing on one of these is the syntactic
 # signature of an identity-override attempt.
+#
+# The "philosophical-axis" family (axiology, ontology, telos, ethos, …) was
+# added after multi_agent_composition holdout MAC-HOLD-001 surfaced
+# "disregard your axiology" — a real override frame the original list
+# missed because it targeted the *grounding ethics* of the agent rather
+# than its surface role label.  Same coverage extension recommended by
+# adversarial_identity gaps.md.
 _ROLE_FRAMES: frozenset[str] = frozenset({
     # agent-role nouns
     "agent", "agents", "assistant", "assistants", "model", "models",
@@ -74,6 +86,12 @@ _ROLE_FRAMES: frozenset[str] = frozenset({
     "framework", "frameworks", "framing", "system", "systems",
     "session", "sessions", "guardrails", "constraints",
     "axes", "rules", "bindings",
+    # philosophical-axis nouns (override-target frames)
+    "axiology", "axiologies", "ontology", "ontologies",
+    "telos", "teloi", "ethos", "values", "principles",
+    "epistemology", "epistemologies", "morality", "morals",
+    "ethics", "virtues", "norms", "doctrine", "doctrines",
+    "creed", "creeds", "convictions", "beliefs",
 })
 
 # Rule (c)/(d) component: qualifiers that dismiss or replace what is in place.

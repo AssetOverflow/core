@@ -20,7 +20,23 @@ constructions that pass on `en_core_cognition_v1` vocabulary
 seed pack does not contain.  The structural claim Phase 5.1 set
 out to test holds at v1.
 
-## Known v1 gaps (designed around, not denied)
+## Resolution — G1 / G2 / G3 closed 2026-05-17
+
+All three v1 gaps below have been closed in `generate/morphology.py`,
+`generate/templates.py`, and `evals/grammatical_coverage/runner.py`.
+Regression tests:
+
+  - `tests/test_morphology_irregular.py` (28 cases) — `bind`→`bound`,
+    `run`→`ran`/`running`, `stop`→`stopped`/`stopping`, etc.
+  - `tests/test_realizer_quantifier_agreement.py` (17 cases) —
+    "all molecules bind enzyme" (count) + "all evidence supports
+    truth" (mass), plus negation/aspect interactions.
+
+Phase 5.1–5.7 lane sweep stays at 100% on the more-correct realizer.
+
+The original gap descriptions are preserved below for traceability.
+
+## Original v1 gaps (now resolved)
 
 These are realizer gaps the v1 lane intentionally **avoids
 exercising** so the structural fluency claim is not confounded

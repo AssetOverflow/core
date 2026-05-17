@@ -149,7 +149,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all servant tricks master"
+    "surface": "all servants trick master"
   },
   {
     "case_id": "CLO-HOLD_comedy_C07_02",
@@ -157,7 +157,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all twin confuses spouse"
+    "surface": "all twins confus spouse"
   },
   {
     "case_id": "CLO-HOLD_comedy_C07_03",
@@ -165,7 +165,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all rogue outwits judge"
+    "surface": "all rogues outwit judge"
   },
   {
     "case_id": "CLO-HOLD_comedy_C08_01",
@@ -173,7 +173,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some servant tricks master"
+    "surface": "some servants trick master"
   },
   {
     "case_id": "CLO-HOLD_comedy_C08_02",
@@ -181,7 +181,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some twin confuses spouse"
+    "surface": "some twins confus spouse"
   },
   {
     "case_id": "CLO-HOLD_comedy_C08_03",
@@ -189,7 +189,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some rogue outwits judge"
+    "surface": "some rogues outwit judge"
   },
   {
     "case_id": "CLO-HOLD_comedy_C09_01",
@@ -205,7 +205,7 @@
     "construction_name": "past_tense",
     "failure_reasons": [],
     "passed": true,
-    "surface": "twin confused spouse"
+    "surface": "twin confussed spouse"
   },
   {
     "case_id": "CLO-HOLD_comedy_C09_03",
@@ -213,7 +213,7 @@
     "construction_name": "past_tense",
     "failure_reasons": [],
     "passed": true,
-    "surface": "rogue outwited judge"
+    "surface": "rogue outwitted judge"
   },
   {
     "case_id": "CLO-HOLD_comedy_C10_01",
@@ -277,7 +277,7 @@
     "construction_name": "perfective",
     "failure_reasons": [],
     "passed": true,
-    "surface": "twin has confused spouse"
+    "surface": "twin has confussed spouse"
   },
   {
     "case_id": "CLO-HOLD_comedy_C12_03",
@@ -285,7 +285,7 @@
     "construction_name": "perfective",
     "failure_reasons": [],
     "passed": true,
-    "surface": "rogue has outwited judge"
+    "surface": "rogue has outwitted judge"
   },
   {
     "case_id": "CLO-HOLD_comedy_C13_01",
@@ -301,7 +301,7 @@
     "construction_name": "imperfective",
     "failure_reasons": [],
     "passed": true,
-    "surface": "twin is confusing spouse"
+    "surface": "twin is confussing spouse"
   },
   {
     "case_id": "CLO-HOLD_comedy_C13_03",
@@ -309,6 +309,6 @@
     "construction_name": "imperfective",
     "failure_reasons": [],
     "passed": true,
-    "surface": "rogue is outwiting judge"
+    "surface": "rogue is outwitting judge"
   }
 ]

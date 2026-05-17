@@ -24,6 +24,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+# Use the realizer's own pluralizer so constraints stay aligned with
+# what the realizer will emit under quantifiers.  G2 fix.
+from generate.templates import pluralize
+
 # (subject, predicate, object) triples per domain.
 # Each triple uses a regular verb for tense/aspect compatibility.
 DOMAINS = {
@@ -128,13 +132,16 @@ def build_case(cid: str, code: str, name: str, triple: tuple[str, str, str], aux
         constraints["must_contain"] = [subj, "which", aux[2], obj]
         constraints["max_words"] = 14
     elif code == "C07":
+        # Universal quantifier triggers plural subject (G2 fix).
+        plural_subj = pluralize(subj)
         g_nodes = [_node("n1", subj, pred, obj, quantifier="all")]
-        constraints["must_contain"] = ["all", subj, obj]
-        constraints["word_order"] = ["all", subj, obj]
+        constraints["must_contain"] = ["all", plural_subj, obj]
+        constraints["word_order"] = ["all", plural_subj, obj]
     elif code == "C08":
+        plural_subj = pluralize(subj)
         g_nodes = [_node("n1", subj, pred, obj, quantifier="some")]
-        constraints["must_contain"] = ["some", subj, obj]
-        constraints["word_order"] = ["some", subj, obj]
+        constraints["must_contain"] = ["some", plural_subj, obj]
+        constraints["word_order"] = ["some", plural_subj, obj]
     elif code == "C09":
         g_nodes = [_node("n1", subj, pred, obj, tense="past")]
         constraints["must_contain"] = [subj, obj]

@@ -149,7 +149,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all event carries weight"
+    "surface": "all events carry weight"
   },
   {
     "case_id": "EMO-HOLD_probability_C07_02",
@@ -157,7 +157,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all outcome favors sample"
+    "surface": "all outcomes favor sample"
   },
   {
     "case_id": "EMO-HOLD_probability_C07_03",
@@ -165,7 +165,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all distribution covers range"
+    "surface": "all distributions cover range"
   },
   {
     "case_id": "EMO-HOLD_probability_C08_01",
@@ -173,7 +173,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some event carries weight"
+    "surface": "some events carry weight"
   },
   {
     "case_id": "EMO-HOLD_probability_C08_02",
@@ -181,7 +181,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some outcome favors sample"
+    "surface": "some outcomes favor sample"
   },
   {
     "case_id": "EMO-HOLD_probability_C08_03",
@@ -189,7 +189,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some distribution covers range"
+    "surface": "some distributions cover range"
   },
   {
     "case_id": "EMO-HOLD_probability_C09_01",
@@ -205,7 +205,7 @@
     "construction_name": "past_tense",
     "failure_reasons": [],
     "passed": true,
-    "surface": "outcome favored sample"
+    "surface": "outcome favorred sample"
   },
   {
     "case_id": "EMO-HOLD_probability_C09_03",
@@ -213,7 +213,7 @@
     "construction_name": "past_tense",
     "failure_reasons": [],
     "passed": true,
-    "surface": "distribution covered range"
+    "surface": "distribution coverred range"
   },
   {
     "case_id": "EMO-HOLD_probability_C10_01",
@@ -277,7 +277,7 @@
     "construction_name": "perfective",
     "failure_reasons": [],
     "passed": true,
-    "surface": "outcome has favored sample"
+    "surface": "outcome has favorred sample"
   },
   {
     "case_id": "EMO-HOLD_probability_C12_03",
@@ -285,7 +285,7 @@
     "construction_name": "perfective",
     "failure_reasons": [],
     "passed": true,
-    "surface": "distribution has covered range"
+    "surface": "distribution has coverred range"
   },
   {
     "case_id": "EMO-HOLD_probability_C13_01",
@@ -301,7 +301,7 @@
     "construction_name": "imperfective",
     "failure_reasons": [],
     "passed": true,
-    "surface": "outcome is favoring sample"
+    "surface": "outcome is favorring sample"
   },
   {
     "case_id": "EMO-HOLD_probability_C13_03",
@@ -309,6 +309,6 @@
     "construction_name": "imperfective",
     "failure_reasons": [],
     "passed": true,
-    "surface": "distribution is covering range"
+    "surface": "distribution is coverring range"
   }
 ]

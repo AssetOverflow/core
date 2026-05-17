@@ -149,7 +149,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all gene encodes trait"
+    "surface": "all genes encode trait"
   },
   {
     "case_id": "FBO-HOLD_genetics_C07_02",
@@ -157,7 +157,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all allele varies expression"
+    "surface": "all alleles vary expression"
   },
   {
     "case_id": "FBO-HOLD_genetics_C07_03",
@@ -165,7 +165,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all chromosome carries marker"
+    "surface": "all chromosomes carry marker"
   },
   {
     "case_id": "FBO-HOLD_genetics_C08_01",
@@ -173,7 +173,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some gene encodes trait"
+    "surface": "some genes encode trait"
   },
   {
     "case_id": "FBO-HOLD_genetics_C08_02",
@@ -181,7 +181,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some allele varies expression"
+    "surface": "some alleles vary expression"
   },
   {
     "case_id": "FBO-HOLD_genetics_C08_03",
@@ -189,7 +189,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some chromosome carries marker"
+    "surface": "some chromosomes carry marker"
   },
   {
     "case_id": "FBO-HOLD_genetics_C09_01",

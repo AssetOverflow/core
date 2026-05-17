@@ -55,6 +55,8 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_semantic_realizer_integration.py",
         "tests/test_cognitive_eval_harness.py",
         "tests/test_deterministic_hash.py",
+        "tests/test_morphology_irregular.py",
+        "tests/test_realizer_quantifier_agreement.py",
     ),
     "teaching": (
         "tests/test_reviewed_teaching_loop.py",
@@ -575,7 +577,8 @@ def cmd_eval(args: argparse.Namespace) -> int:
                 if not c.get("versor_closure"):
                     vc = c.get("versor_condition", 0)
                     issues.append(f"versor={vc:.2e}")
-                print(f"  {c['case_id']}: {', '.join(issues)}")
+                cid = c.get("case_id") or c.get("id") or "<unknown>"
+                print(f"  {cid}: {', '.join(issues)}")
 
     if args.save:
         result_path = write_result(lane, result)

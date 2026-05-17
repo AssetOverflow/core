@@ -34,9 +34,21 @@ changing tests or silently downgrading the invariant.
 Current selection policy:
 
 ```text
-surface = articulation_surface
-walk_surface = retained telemetry/evidence
+surface = articulation_surface     (when no unknown-domain gate fired)
+surface = _UNKNOWN_DOMAIN_SURFACE   (when the gate fired)
+walk_surface = retained telemetry/evidence (always)
 ```
+
+### Unknown-domain gate honour
+
+When `vault/decompose.py::UnknownDomainGate` fires, ChatRuntime returns
+the safety stub `_UNKNOWN_DOMAIN_SURFACE` ("I don't have field
+coordinates for that yet.") and `vault_hits == 0`.
+`CognitiveTurnPipeline` honours that stub: the user-facing `surface`
+remains the gate's response and is *not* overridden by the realizer's
+fallback articulation.  The realizer's surface always survives in
+`walk_surface` as evidence — only the user-facing selection is
+gated.  This closes `evals/calibration/gaps.md` Finding 2.
 
 Future realizer work may change the selection policy, but must update this
 document and the contract tests in the same PR.

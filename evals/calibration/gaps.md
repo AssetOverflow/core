@@ -56,7 +56,19 @@ Either path should preserve replay determinism and avoid post-hoc
 classifiers.  A v2 calibration lane could re-enable semantic OOD tests
 once that signal exists.
 
-## Finding 2: Pipeline overrides the gate's safety surface
+## Finding 2: Pipeline overrides the gate's safety surface — RESOLVED 2026-05-17
+
+`CognitiveTurnPipeline.run()` now gates the realizer override on
+`(response.surface == _UNKNOWN_DOMAIN_SURFACE and response.vault_hits == 0)`.
+When the gate fires, the safety stub is preserved as the user-facing
+`surface`; the realizer's articulation still survives in `walk_surface`
+as evidence.  Contract update in `docs/runtime_contracts.md`; new
+contract test `tests/test_semantic_realizer_integration.py::
+test_pipeline_honours_safety_stub_when_gate_fires`.
+
+The original finding is preserved below for traceability.
+
+### Original finding (now resolved)
 
 `core/cognition/pipeline.py` overrides `response.surface` with
 `realized_plan.surface` unconditionally when the realizer produced a

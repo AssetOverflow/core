@@ -149,7 +149,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all lens focuses ray"
+    "surface": "all lenses focus ray"
   },
   {
     "case_id": "FPO-HOLD_optics_C07_02",
@@ -157,7 +157,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all mirror reflects beam"
+    "surface": "all mirrors reflect beam"
   },
   {
     "case_id": "FPO-HOLD_optics_C07_03",
@@ -165,7 +165,7 @@
     "construction_name": "universal",
     "failure_reasons": [],
     "passed": true,
-    "surface": "all prism separates color"
+    "surface": "all prisms separate color"
   },
   {
     "case_id": "FPO-HOLD_optics_C08_01",
@@ -173,7 +173,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some lens focuses ray"
+    "surface": "some lenses focus ray"
   },
   {
     "case_id": "FPO-HOLD_optics_C08_02",
@@ -181,7 +181,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some mirror reflects beam"
+    "surface": "some mirrors reflect beam"
   },
   {
     "case_id": "FPO-HOLD_optics_C08_03",
@@ -189,7 +189,7 @@
     "construction_name": "existential",
     "failure_reasons": [],
     "passed": true,
-    "surface": "some prism separates color"
+    "surface": "some prisms separate color"
   },
   {
     "case_id": "FPO-HOLD_optics_C09_01",
@@ -197,7 +197,7 @@
     "construction_name": "past_tense",
     "failure_reasons": [],
     "passed": true,
-    "surface": "lens focused ray"
+    "surface": "lens focussed ray"
   },
   {
     "case_id": "FPO-HOLD_optics_C09_02",
@@ -269,7 +269,7 @@
     "construction_name": "perfective",
     "failure_reasons": [],
     "passed": true,
-    "surface": "lens has focused ray"
+    "surface": "lens has focussed ray"
   },
   {
     "case_id": "FPO-HOLD_optics_C12_02",
@@ -293,7 +293,7 @@
     "construction_name": "imperfective",
     "failure_reasons": [],
     "passed": true,
-    "surface": "lens is focusing ray"
+    "surface": "lens is focussing ray"
   },
   {
     "case_id": "FPO-HOLD_optics_C13_02",

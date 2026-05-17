@@ -69,9 +69,22 @@ class CognitiveTurnPipeline:
         # Override surfaces when semantic realizer produced a result.
         # The ChatResponse contract fields are preserved; we select
         # the better articulation surface from the semantic path.
+        #
+        # Exception: when the unknown-domain gate fired, ChatRuntime
+        # returns the safety stub ("I don't have field coordinates for
+        # that yet.") and `response.vault_hits == 0`.  In that case the
+        # realizer's fallback surface is template-noise that
+        # contradicts the gate's honest "no_grounding" signal, so we
+        # keep the gate's stub user-visible.  walk_surface is unaffected
+        # either way.  Addresses calibration gaps.md Finding 2.
+        from chat.runtime import _UNKNOWN_DOMAIN_SURFACE
+        gate_fired = (
+            response.vault_hits == 0
+            and response.surface == _UNKNOWN_DOMAIN_SURFACE
+        )
         surface = response.surface
         articulation_surface = response.articulation_surface
-        if realized_plan.surface:
+        if realized_plan.surface and not gate_fired:
             surface = realized_plan.surface
             articulation_surface = realized_plan.surface
 
