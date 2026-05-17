@@ -1,0 +1,429 @@
+{
+  "metrics": {
+    "case_count": 8,
+    "skipped_count": 0,
+    "margin": 0.4,
+    "replay_reruns": 5,
+    "c1_replay_stable_core": 8,
+    "c1_replay_stable_baseline": 8,
+    "c1_eligible": 8,
+    "c1_pass": true,
+    "c2_case_count": 3,
+    "c2_baseline_emits_forbidden": 3,
+    "c2_baseline_admits_forbidden": 0,
+    "c2_core_corrects_or_refuses": 3,
+    "c2_core_rejection_traced": 3,
+    "c2_pass": true,
+    "c3_case_count": 3,
+    "c3_baseline_refused_typed": 0,
+    "c3_baseline_emitted_inadmissible": 3,
+    "c3_core_refused_typed": 3,
+    "c3_pass": true,
+    "all_three_conditions_pass": true
+  },
+  "case_details": [
+    {
+      "id": "FSC-P6-C1-001",
+      "condition": "replay_determinism",
+      "rationale": "Same case as Phase 5 A-001 (sub-margin gap). Demonstrates byte-identical trace hash across 5 reruns under both baseline and CORE.",
+      "expected_endpoint": "comparison",
+      "forbidden_token": "reason",
+      "baseline": {
+        "refused": false,
+        "selected": "reason",
+        "admitted": false,
+        "rejected_words": [],
+        "trace_hash": "7036e150d141e7d8a5e3ccd4562d35b2567b13a398579c8f80246c7412cfe6c7"
+      },
+      "core": {
+        "refused": true,
+        "refusal_typed": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "trace_hash": "__refusal__:inner_loop_exhaustion",
+        "rejected_attempts": [
+          [
+            224,
+            "comparison",
+            1.3338154554367065
+          ],
+          [
+            31,
+            "reason",
+            1.331983208656311
+          ]
+        ]
+      },
+      "replay_hashes_baseline": [
+        "ffb465b7e31993264b40801a5104c6ffb6711fdba1e2924791d29fa7832e697c",
+        "ffb465b7e31993264b40801a5104c6ffb6711fdba1e2924791d29fa7832e697c",
+        "ffb465b7e31993264b40801a5104c6ffb6711fdba1e2924791d29fa7832e697c",
+        "ffb465b7e31993264b40801a5104c6ffb6711fdba1e2924791d29fa7832e697c",
+        "ffb465b7e31993264b40801a5104c6ffb6711fdba1e2924791d29fa7832e697c"
+      ],
+      "replay_hashes_core": [
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion"
+      ],
+      "replay_stable_baseline": true,
+      "replay_stable_core": true,
+      "c2_baseline_emits_forbidden": true,
+      "c2_baseline_admits_forbidden": false,
+      "c2_core_selects_expected": false,
+      "c2_core_rejection_traced": true
+    },
+    {
+      "id": "FSC-P6-C1-002",
+      "condition": "replay_determinism",
+      "rationale": "Super-\u03b4 gap case. Both modes must produce byte-identical trace hashes across 5 reruns.",
+      "expected_endpoint": "define",
+      "forbidden_token": "explain",
+      "baseline": {
+        "refused": false,
+        "selected": "define",
+        "admitted": true,
+        "rejected_words": [],
+        "trace_hash": "fcbfd9ba2271d12345329fb274b6821f6d7b4dfa4d51b1888b066f2289906199"
+      },
+      "core": {
+        "refused": false,
+        "selected": "define",
+        "admitted": true,
+        "rejected_words": [
+          "define",
+          "explain"
+        ],
+        "trace_hash": "5f034f8be2af470429d0ca05df546450de0982fbad11b6e6ba924a6bc61f4c1b"
+      },
+      "replay_hashes_baseline": [
+        "acb1a3a1aa80c282b5c79907481c5fdeeb64036e49adc0f6e045220c22da1f51",
+        "acb1a3a1aa80c282b5c79907481c5fdeeb64036e49adc0f6e045220c22da1f51",
+        "acb1a3a1aa80c282b5c79907481c5fdeeb64036e49adc0f6e045220c22da1f51",
+        "acb1a3a1aa80c282b5c79907481c5fdeeb64036e49adc0f6e045220c22da1f51",
+        "acb1a3a1aa80c282b5c79907481c5fdeeb64036e49adc0f6e045220c22da1f51"
+      ],
+      "replay_hashes_core": [
+        "b82eece7021d52e41d3ce83beba944925632cfa0d25a8adcb434ad8212eb2523",
+        "b82eece7021d52e41d3ce83beba944925632cfa0d25a8adcb434ad8212eb2523",
+        "b82eece7021d52e41d3ce83beba944925632cfa0d25a8adcb434ad8212eb2523",
+        "b82eece7021d52e41d3ce83beba944925632cfa0d25a8adcb434ad8212eb2523",
+        "b82eece7021d52e41d3ce83beba944925632cfa0d25a8adcb434ad8212eb2523"
+      ],
+      "replay_stable_baseline": true,
+      "replay_stable_core": true,
+      "c2_baseline_emits_forbidden": false,
+      "c2_baseline_admits_forbidden": true,
+      "c2_core_selects_expected": true,
+      "c2_core_rejection_traced": true
+    },
+    {
+      "id": "FSC-P6-C2-001",
+      "condition": "traced_rejection",
+      "rationale": "Boundary geometrically prefers 'meaning' (forbidden); CORE inner-loop must select 'question' and have 'meaning' visible in rejected_attempts. Baseline emits 'meaning' silently with admitted=False.",
+      "expected_endpoint": "question",
+      "forbidden_token": "meaning",
+      "baseline": {
+        "refused": false,
+        "selected": "meaning",
+        "admitted": false,
+        "rejected_words": [],
+        "trace_hash": "529241b196d1879cf0e46ba19fbff6c93f261187350d24f4918b96142475a58b"
+      },
+      "core": {
+        "refused": true,
+        "refusal_typed": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "trace_hash": "__refusal__:inner_loop_exhaustion",
+        "rejected_attempts": [
+          [
+            22,
+            "question",
+            1.420454978942871
+          ],
+          [
+            110,
+            "meaning",
+            1.3206863403320312
+          ]
+        ]
+      },
+      "replay_hashes_baseline": [
+        "f5ace96f1ad0bae05cfe16ca2cbb7bee78e5112d8881812e834dd6d574d0cb0d",
+        "f5ace96f1ad0bae05cfe16ca2cbb7bee78e5112d8881812e834dd6d574d0cb0d",
+        "f5ace96f1ad0bae05cfe16ca2cbb7bee78e5112d8881812e834dd6d574d0cb0d",
+        "f5ace96f1ad0bae05cfe16ca2cbb7bee78e5112d8881812e834dd6d574d0cb0d",
+        "f5ace96f1ad0bae05cfe16ca2cbb7bee78e5112d8881812e834dd6d574d0cb0d"
+      ],
+      "replay_hashes_core": [
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion"
+      ],
+      "replay_stable_baseline": true,
+      "replay_stable_core": true,
+      "c2_baseline_emits_forbidden": true,
+      "c2_baseline_admits_forbidden": false,
+      "c2_core_selects_expected": false,
+      "c2_core_rejection_traced": true
+    },
+    {
+      "id": "FSC-P6-C2-002",
+      "condition": "traced_rejection",
+      "rationale": "Boundary picks 'reason' (forbidden); CORE selects 'comparison' with 'reason' in rejected_attempts.",
+      "expected_endpoint": "comparison",
+      "forbidden_token": "reason",
+      "baseline": {
+        "refused": false,
+        "selected": "reason",
+        "admitted": false,
+        "rejected_words": [],
+        "trace_hash": "2a2361c096e0be2820b53f92b01b223c4f26a5748a862429fd025517a6792ba5"
+      },
+      "core": {
+        "refused": true,
+        "refusal_typed": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "trace_hash": "__refusal__:inner_loop_exhaustion",
+        "rejected_attempts": [
+          [
+            224,
+            "comparison",
+            1.3338154554367065
+          ],
+          [
+            31,
+            "reason",
+            1.331983208656311
+          ]
+        ]
+      },
+      "replay_hashes_baseline": [
+        "5dbe88f41d7aa58c0a249c89c9e87b28a6343f6e824847693e4ffac130846a2f",
+        "5dbe88f41d7aa58c0a249c89c9e87b28a6343f6e824847693e4ffac130846a2f",
+        "5dbe88f41d7aa58c0a249c89c9e87b28a6343f6e824847693e4ffac130846a2f",
+        "5dbe88f41d7aa58c0a249c89c9e87b28a6343f6e824847693e4ffac130846a2f",
+        "5dbe88f41d7aa58c0a249c89c9e87b28a6343f6e824847693e4ffac130846a2f"
+      ],
+      "replay_hashes_core": [
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion"
+      ],
+      "replay_stable_baseline": true,
+      "replay_stable_core": true,
+      "c2_baseline_emits_forbidden": true,
+      "c2_baseline_admits_forbidden": false,
+      "c2_core_selects_expected": false,
+      "c2_core_rejection_traced": true
+    },
+    {
+      "id": "FSC-P6-C2-003",
+      "condition": "traced_rejection",
+      "rationale": "Boundary picks 'question' (forbidden); CORE selects 'wisdom' or refuses under margin (gap is sub-\u03b4).",
+      "expected_endpoint": "wisdom",
+      "forbidden_token": "question",
+      "baseline": {
+        "refused": false,
+        "selected": "question",
+        "admitted": false,
+        "rejected_words": [],
+        "trace_hash": "2a164b6a6066ca865a9ccd6ffb423c09188026cad0029017b244a7c413b3dad9"
+      },
+      "core": {
+        "refused": false,
+        "selected": "wisdom",
+        "admitted": true,
+        "rejected_words": [
+          "wisdom",
+          "question"
+        ],
+        "trace_hash": "7077711a5096b3900c34fae8306018d05c995c4794527c8488b3a03be2ea6655"
+      },
+      "replay_hashes_baseline": [
+        "bd3f53d2e1ce12958e1f92de14cee7847224c5e7978f7bc52feed0d31e0078d9",
+        "bd3f53d2e1ce12958e1f92de14cee7847224c5e7978f7bc52feed0d31e0078d9",
+        "bd3f53d2e1ce12958e1f92de14cee7847224c5e7978f7bc52feed0d31e0078d9",
+        "bd3f53d2e1ce12958e1f92de14cee7847224c5e7978f7bc52feed0d31e0078d9",
+        "bd3f53d2e1ce12958e1f92de14cee7847224c5e7978f7bc52feed0d31e0078d9"
+      ],
+      "replay_hashes_core": [
+        "d93da8f42a05c8e45f662242e771f7bbecc69bc6bef7c2ee076179dec3b26d81",
+        "d93da8f42a05c8e45f662242e771f7bbecc69bc6bef7c2ee076179dec3b26d81",
+        "d93da8f42a05c8e45f662242e771f7bbecc69bc6bef7c2ee076179dec3b26d81",
+        "d93da8f42a05c8e45f662242e771f7bbecc69bc6bef7c2ee076179dec3b26d81",
+        "d93da8f42a05c8e45f662242e771f7bbecc69bc6bef7c2ee076179dec3b26d81"
+      ],
+      "replay_stable_baseline": true,
+      "replay_stable_core": true,
+      "c2_baseline_emits_forbidden": true,
+      "c2_baseline_admits_forbidden": false,
+      "c2_core_selects_expected": true,
+      "c2_core_rejection_traced": true
+    },
+    {
+      "id": "FSC-P6-C3-001",
+      "condition": "coherent_refusal",
+      "rationale": "Both candidates score negative under blade. Baseline emits something with admitted=False (silent inadmissibility). CORE raises InnerLoopExhaustion(INNER_LOOP_EXHAUSTION) \u2014 typed, replayable refusal.",
+      "expected_endpoint": null,
+      "forbidden_token": null,
+      "baseline": {
+        "refused": false,
+        "selected": "learn",
+        "admitted": false,
+        "rejected_words": [],
+        "trace_hash": "5eb3e286474ef4c0737fee8c5335006a680076d2a20bc7baeea988a82fcc477e"
+      },
+      "core": {
+        "refused": true,
+        "refusal_typed": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "trace_hash": "__refusal__:inner_loop_exhaustion",
+        "rejected_attempts": [
+          [
+            76,
+            "learn",
+            -0.008229397237300873
+          ],
+          [
+            227,
+            "context",
+            -1.1489323377609253
+          ]
+        ]
+      },
+      "replay_hashes_baseline": [
+        "04b809fc2e4c9d37666afee1b94819396de8bb07097e4a26e366ad1c15f302dc",
+        "04b809fc2e4c9d37666afee1b94819396de8bb07097e4a26e366ad1c15f302dc",
+        "04b809fc2e4c9d37666afee1b94819396de8bb07097e4a26e366ad1c15f302dc",
+        "04b809fc2e4c9d37666afee1b94819396de8bb07097e4a26e366ad1c15f302dc",
+        "04b809fc2e4c9d37666afee1b94819396de8bb07097e4a26e366ad1c15f302dc"
+      ],
+      "replay_hashes_core": [
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion"
+      ],
+      "replay_stable_baseline": true,
+      "replay_stable_core": true,
+      "c3_baseline_refused": false,
+      "c3_baseline_refusal_typed": false,
+      "c3_core_refused": true,
+      "c3_core_refusal_typed": true,
+      "c3_core_refusal_reason": "inner_loop_exhaustion"
+    },
+    {
+      "id": "FSC-P6-C3-002",
+      "condition": "coherent_refusal",
+      "rationale": "No admissible path under 'teach' blade. Same shape as C3-001 under different blade \u2014 replay determinism extends to refusal events.",
+      "expected_endpoint": null,
+      "forbidden_token": null,
+      "baseline": {
+        "refused": false,
+        "selected": "identity",
+        "admitted": false,
+        "rejected_words": [],
+        "trace_hash": "a824f9fa0b563e163fd1ba1bda1c1719a5e1708582cb1c79e3ad9216a84bd4b3"
+      },
+      "core": {
+        "refused": true,
+        "refusal_typed": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "trace_hash": "__refusal__:inner_loop_exhaustion",
+        "rejected_attempts": [
+          [
+            225,
+            "identity",
+            -0.0192877147346735
+          ],
+          [
+            236,
+            "teach",
+            -0.38467395305633545
+          ]
+        ]
+      },
+      "replay_hashes_baseline": [
+        "b803867dddc5b6f497e674541bc4df4ebdbbd5ac95d8c95ac1a86f83bb40815d",
+        "b803867dddc5b6f497e674541bc4df4ebdbbd5ac95d8c95ac1a86f83bb40815d",
+        "b803867dddc5b6f497e674541bc4df4ebdbbd5ac95d8c95ac1a86f83bb40815d",
+        "b803867dddc5b6f497e674541bc4df4ebdbbd5ac95d8c95ac1a86f83bb40815d",
+        "b803867dddc5b6f497e674541bc4df4ebdbbd5ac95d8c95ac1a86f83bb40815d"
+      ],
+      "replay_hashes_core": [
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion"
+      ],
+      "replay_stable_baseline": true,
+      "replay_stable_core": true,
+      "c3_baseline_refused": false,
+      "c3_baseline_refusal_typed": false,
+      "c3_core_refused": true,
+      "c3_core_refusal_typed": true,
+      "c3_core_refusal_reason": "inner_loop_exhaustion"
+    },
+    {
+      "id": "FSC-P6-C3-003",
+      "condition": "coherent_refusal",
+      "rationale": "No admissible path. Demonstrates that CORE's refusal_reason is the same typed value across distinct geometric failures.",
+      "expected_endpoint": null,
+      "forbidden_token": null,
+      "baseline": {
+        "refused": false,
+        "selected": "correction",
+        "admitted": false,
+        "rejected_words": [],
+        "trace_hash": "453167f97bd93cb5dd2e9d63335c34530ff78943cde5d5349080ee40c4abb681"
+      },
+      "core": {
+        "refused": true,
+        "refusal_typed": true,
+        "refusal_reason": "inner_loop_exhaustion",
+        "trace_hash": "__refusal__:inner_loop_exhaustion",
+        "rejected_attempts": [
+          [
+            222,
+            "correction",
+            -0.03585071489214897
+          ],
+          [
+            227,
+            "context",
+            -0.3704618215560913
+          ]
+        ]
+      },
+      "replay_hashes_baseline": [
+        "4caccbc9132c434f91ec89dbac90c0d44407bec01286e3ab1fe0a08cd17e4c7d",
+        "4caccbc9132c434f91ec89dbac90c0d44407bec01286e3ab1fe0a08cd17e4c7d",
+        "4caccbc9132c434f91ec89dbac90c0d44407bec01286e3ab1fe0a08cd17e4c7d",
+        "4caccbc9132c434f91ec89dbac90c0d44407bec01286e3ab1fe0a08cd17e4c7d",
+        "4caccbc9132c434f91ec89dbac90c0d44407bec01286e3ab1fe0a08cd17e4c7d"
+      ],
+      "replay_hashes_core": [
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion",
+        "__refusal__:inner_loop_exhaustion"
+      ],
+      "replay_stable_baseline": true,
+      "replay_stable_core": true,
+      "c3_baseline_refused": false,
+      "c3_baseline_refusal_typed": false,
+      "c3_core_refused": true,
+      "c3_core_refusal_typed": true,
+      "c3_core_refusal_reason": "inner_loop_exhaustion"
+    }
+  ]
+}
