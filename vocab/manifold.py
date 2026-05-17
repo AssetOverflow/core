@@ -262,6 +262,9 @@ class VocabManifold:
 
         best_score = -np.inf
         best_idx = -1
+        # Strict `>` is load-bearing: on ties, the first candidate in iteration
+        # order wins. ADR-0024 inner-loop re-selection relies on this for
+        # deterministic rejected_attempts ordering across runs.
         for i in candidates:
             if i in blocked:
                 continue

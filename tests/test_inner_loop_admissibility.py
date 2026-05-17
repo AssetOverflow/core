@@ -30,6 +30,7 @@ from generate.admissibility import (
     AdmissibilityVerdict,
     RegionSource,
 )
+from generate.result import GenerationResult
 from generate.stream import generate
 
 
@@ -239,6 +240,92 @@ class TestCanonicalOmitsEmptyRejectedAttempts:
         )
         canonical = step.canonical()
         assert canonical["rejected_attempts"] == [[1, "x", -0.25]]
+
+
+class TestInnerLoopDeterminism:
+    """Phase 1 acceptance criterion (ADR-0024 follow-up).
+
+    The inner-loop re-selection introduces a new ordering-sensitive
+    path: candidates excluded by rejection feed back into the next
+    ``vocab.nearest`` call.  Determinism here relies on:
+
+      * ``vocab.nearest`` using a strict ``>`` tie-break over a
+        sequenced iteration (load-bearing comment in
+        ``vocab/manifold.py``);
+      * ``step_exclude`` being used only for set membership, never
+        iterated;
+      * ``rejected_attempts`` being appended in loop order.
+
+    These tests pin determinism *by repetition* — same inputs, same
+    output across N runs, with non-empty rejection sequences in scope.
+    """
+
+    def _run(self) -> GenerationResult:
+        vocab = _ControllableVocab(
+            words=["seed", "alpha", "beta", "gamma"],
+            preference=[1, 2, 3],
+            versor_signs=[+1.0, -1.0, -1.0, +1.0],
+        )
+        return generate(
+            _initial_state(vocab),
+            vocab,
+            _IdentityPersona(),
+            max_tokens=1,
+            region=_positive_blade_region((1, 2, 3)),
+            inner_loop_admissibility=True,
+        )
+
+    def test_repeated_runs_produce_identical_rejected_attempts(self) -> None:
+        results = [self._run() for _ in range(5)]
+        baseline = results[0].admissibility_trace[0].rejected_attempts
+        # Two rejections precede the admitted selection.
+        assert len(baseline) == 2
+        for result in results[1:]:
+            step = result.admissibility_trace[0]
+            assert step.rejected_attempts == baseline
+            assert step.selected_word == "gamma"
+
+    def test_repeated_runs_produce_identical_trace_hash(self) -> None:
+        from core.cognition.trace import hash_admissibility_trace
+
+        hashes = {
+            hash_admissibility_trace(self._run().admissibility_trace)
+            for _ in range(5)
+        }
+        assert len(hashes) == 1
+        only_hash = next(iter(hashes))
+        assert only_hash != ""  # non-empty trace ⇒ non-empty hash
+
+    def test_inner_loop_off_preserves_legacy_trace_hash(self) -> None:
+        """No rejections ⇒ canonical omits the new key ⇒ hash is byte-
+        identical to what an ADR-0023 turn would have produced."""
+        from core.cognition.trace import hash_admissibility_trace
+
+        vocab_off = _ControllableVocab(
+            words=["seed", "alpha", "beta"],
+            preference=[1, 2],
+            versor_signs=[+1.0, +1.0, +1.0],
+        )
+        result_off = generate(
+            _initial_state(vocab_off),
+            vocab_off,
+            _IdentityPersona(),
+            max_tokens=1,
+            region=_positive_blade_region((1, 2)),
+            inner_loop_admissibility=False,
+        )
+        result_on = generate(
+            _initial_state(vocab_off),
+            vocab_off,
+            _IdentityPersona(),
+            max_tokens=1,
+            region=_positive_blade_region((1, 2)),
+            inner_loop_admissibility=True,
+        )
+        # No rejections in either run ⇒ traces hash identically.
+        h_off = hash_admissibility_trace(result_off.admissibility_trace)
+        h_on = hash_admissibility_trace(result_on.admissibility_trace)
+        assert h_off == h_on
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -20,6 +20,8 @@ class RuntimeConfig:
     use_salience: bool = True
     salience_top_k: int = 16
     inhibition_threshold: float = 0.3
+    inner_loop_admissibility: bool = False
+    admissibility_threshold: float = 0.0
 
 
 DEFAULT_CONFIG = RuntimeConfig()

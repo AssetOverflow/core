@@ -134,6 +134,8 @@ def _runtime_config_from_args(args: argparse.Namespace):
         use_salience=not args.no_salience,
         salience_top_k=args.salience_top_k,
         inhibition_threshold=args.inhibition_threshold,
+        inner_loop_admissibility=getattr(args, "inner_loop_admissibility", False),
+        admissibility_threshold=getattr(args, "admissibility_threshold", 0.0),
     )
 
 
@@ -684,6 +686,17 @@ def _add_runtime_policy_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--vault-reproject-interval", type=int, default=20, help="vault null-cone reprojection cadence; default: 20 stores")
     parser.add_argument("--salience-top-k", type=int, default=16, help="salience candidate budget; default: 16")
     parser.add_argument("--inhibition-threshold", type=float, default=0.3, help="attention inhibition threshold; default: 0.3")
+    parser.add_argument(
+        "--inner-loop-admissibility",
+        action="store_true",
+        help="enable ADR-0024 per-rotor inner-loop admissibility (re-select on rejection)",
+    )
+    parser.add_argument(
+        "--admissibility-threshold",
+        type=float,
+        default=0.0,
+        help="inner-loop admissibility score threshold; default: 0.0",
+    )
     parser.add_argument("--no-salience", action="store_true", help="disable salience attention and use full-manifold generation")
     parser.add_argument(
         "--allow-cross-language-generation",
