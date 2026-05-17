@@ -137,8 +137,10 @@ hard finding, not a metric noise event.
 | Median time-to-first-surface | seconds | TBD | TBD | `bench latency` |
 | p95 time-to-first-surface | seconds | TBD | TBD | `bench latency` |
 | Rust vs Python backend speedup | x faster | TBD | n/a | `bench speedup` |
-| Energy per turn (estimated) | joules | TBD | TBD | `bench cost` (not yet implemented) |
-| Cost per 1000 turns | USD | TBD (≈ electricity only) | TBD (API list) | `bench cost` (not yet implemented) |
+| Median turn latency | ms | **~445 ms** (100-turn measured, "What is truth?", warmup 5) | 200–2000 ms (provider-quoted, varies by model/region) | `core bench --suite cost --runs 100` — see `evals/reports/cost_latest.json` |
+| p95 turn latency | ms | **~447 ms** (100-turn measured) | varies | `bench cost` |
+| Cost per 1000 turns | USD | **$0.0044** at AWS t3.medium on-demand ($0.0416/hr, captured 2026-05-17) | $0.22 (Haiku) · $0.45 (GPT-4o) · $0.66 (Sonnet) at 20 in / 40 out tokens/turn | `bench cost` — **48–149× cheaper** depending on provider |
+| Energy per turn | joules | not measured (RAPL/IOKit required; cpu_seconds_total reported instead) | not directly comparable | `bench cost` energy_disclosure |
 | Total deployed footprint (on-disk) | bytes | **7.06 MiB** | 14.9 GiB (Llama 3.1 8B fp16) — **2,160× larger**; 754 GiB (Llama 3.1 405B) — **109,358× larger** | `python -c "from benchmarks.footprint import run_footprint; print(run_footprint().summary())"` — see `evals/reports/footprint_latest.json` |
 | Resident memory at idle / after one pulse | MiB | 17.9 / 33.3 | n/a (frontier inference requires GPU memory measured in GiB–TiB) | `bench footprint` (RSS rows) |
 | Runs offline on commodity hardware | yes / no | **yes** | no (requires datacenter GPU + network) | `bench footprint` (deployment profile) |

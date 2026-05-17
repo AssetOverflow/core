@@ -1,0 +1,53 @@
+{
+  "cloud_reference": {
+    "hourly_usd": 0.0416,
+    "name": "AWS t3.medium (2 vCPU, 4 GiB)",
+    "region": "us-east-1, on-demand, Linux",
+    "source_note": "aws.amazon.com/ec2/instance-types/t3 — public on-demand rate, captured 2026-05-17.  Update source_note + hourly_usd if the price page changes."
+  },
+  "cpu_seconds_total": 38.326082,
+  "cpu_utilization": 0.999,
+  "energy_disclosure": "Joules per turn is not reported.  Honest energy measurement requires RAPL (Linux) or IOKit/powermetrics (macOS) with privileged access.  cpu_seconds_total is the available CPU-time proxy.",
+  "frontier_pricing_comparison": [
+    {
+      "core_cheaper_by_x": 148.9,
+      "frontier_usd_per_1000_turns": 0.66,
+      "input_usd_per_million_tokens": 3.0,
+      "name": "Anthropic Claude Sonnet 4.5 (API)",
+      "output_usd_per_million_tokens": 15.0,
+      "source_note": "anthropic.com/pricing — public API rate, captured 2026-05-17."
+    },
+    {
+      "core_cheaper_by_x": 101.5,
+      "frontier_usd_per_1000_turns": 0.45,
+      "input_usd_per_million_tokens": 2.5,
+      "name": "OpenAI GPT-4o (API)",
+      "output_usd_per_million_tokens": 10.0,
+      "source_note": "openai.com/api/pricing — public API rate, captured 2026-05-17."
+    },
+    {
+      "core_cheaper_by_x": 49.6,
+      "frontier_usd_per_1000_turns": 0.22,
+      "input_usd_per_million_tokens": 1.0,
+      "name": "Anthropic Claude Haiku 4.5 (API)",
+      "output_usd_per_million_tokens": 5.0,
+      "source_note": "anthropic.com/pricing — public API rate, captured 2026-05-17."
+    }
+  ],
+  "frontier_token_assumption": {
+    "input_tokens_per_turn": 20,
+    "note": "Conservative short-prompt / short-answer turn.  Frontier $/1000-turns scales linearly with these counts.",
+    "output_tokens_per_turn": 40
+  },
+  "latency": {
+    "max_ms": 482.863,
+    "median_ms": 444.878,
+    "min_ms": 3.222,
+    "p95_ms": 447.097
+  },
+  "throughput_turns_per_second": 2.6065,
+  "turns": 100,
+  "usd_per_1000_turns": 0.004433,
+  "wall_seconds_total": 38.365003,
+  "warmup_turns": 5
+}

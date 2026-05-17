@@ -632,6 +632,22 @@ def cmd_pulse(args: argparse.Namespace) -> int:
 
 def cmd_bench(args: argparse.Namespace) -> int:
     """Run benchmark harness."""
+    # "cost" suite has its own runtime contract — wall/CPU-seconds and
+    # $/1000-turns derivation.  Dispatch separately so the report
+    # structure stays honest (no fake PASS/FAIL on a measurement bench).
+    if args.suite == "cost":
+        from benchmarks.cost import run_cost, write_report
+        report = run_cost(turns=args.runs)
+        if args.json:
+            print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2, sort_keys=True))
+        else:
+            print(report.summary())
+        if args.report:
+            write_report(report, root=Path(args.report).parent)
+        else:
+            write_report(report)
+        return 0
+
     from benchmarks.run_benchmarks import run_benchmarks
 
     report = run_benchmarks(
@@ -771,9 +787,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="run benchmark harness (determinism, latency, speedup, versor audit)",
         description="run benchmark harness",
     )
-    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer"],
+    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer", "cost"],
                        help="run a specific benchmark suite")
-    bench.add_argument("--runs", type=int, default=20, metavar="N", help="run count for determinism benchmark")
+    bench.add_argument("--runs", type=int, default=20, metavar="N", help="run count for determinism benchmark (also turns count for cost suite)")
     bench.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     bench.add_argument("--report", metavar="PATH", help="write JSON report to file")
     bench.set_defaults(func=cmd_bench)
