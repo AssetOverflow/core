@@ -40,6 +40,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_achat.py",
         "tests/test_runtime_config.py",
         "tests/test_cognitive_turn_pipeline.py",
+        "tests/test_architectural_invariants.py",
     ),
     "runtime": (
         "tests/test_chat_runtime.py",
@@ -53,6 +54,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_articulation_realizer_v2.py",
         "tests/test_semantic_realizer_integration.py",
         "tests/test_cognitive_eval_harness.py",
+        "tests/test_deterministic_hash.py",
     ),
     "teaching": (
         "tests/test_reviewed_teaching_loop.py",
@@ -69,6 +71,9 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_energy.py",
         "tests/test_motor.py",
         "tests/test_null_cone.py",
+        "tests/test_vault_recall.py",
+        "tests/test_vault_recall_vectorised.py",
+        "tests/test_vault_recall_rust_parity.py",
     ),
     "pulse": (
         "tests/test_pulse_integration.py",
