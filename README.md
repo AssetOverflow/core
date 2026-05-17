@@ -63,9 +63,75 @@ English establishes the operational base. Hebrew and Koine Greek bring the hidde
 
 ```bash
 pip install -e ".[dev]"
-pytest tests/test_versor_closure.py  # must pass before anything else
-pytest tests/
+pytest tests/test_versor_closure.py        # the core invariant — must pass first
+pytest tests/                              # full suite (~4 minutes, 1099 tests)
 ```
+
+### CLI
+
+The `core` CLI exposes curated entry points so reviewers can run any
+subsystem in isolation. Highlights:
+
+```bash
+core test --list-suites                    # list curated pytest suite aliases
+core test --suite fast                     # ~2s iteration lane
+core test --suite cognition                # cognition pipeline lane
+core test --suite algebra                  # versor / CGA / vault parity
+core test --suite adr-0024                 # Forward Semantic Control chain (98 tests)
+
+core demo phase6                           # 3-condition comparative table (CORE vs baseline)
+core demo phase5                           # stratified 5-family mechanism-isolation
+core demo all                              # both + combined summary
+core demo list-results                     # index every JSON report with headline metrics
+
+core eval --list                           # discover eval lanes
+core eval cognition                        # run a discovered lane
+core trace "your text here"                # one-turn field-telemetry trace
+core pulse "What is truth?"                # one full cognitive pulse
+core bench --suite latency                 # benchmark harness
+core doctor --packs --rust                 # environment + pack + Rust status
+```
+
+Every demo run rewrites `evals/forward_semantic_control/results/`
+including an auto-refreshed `index.json` manifest — the single
+place reviewers can read to see every available report.
+
+---
+
+## Forward Semantic Control — The ADR-0024 Chain
+
+CORE generates text without sampling. The generation walk is
+deterministic at the algebra level, but a deterministic walk over a
+boundary-only candidate scorer can still emit tokens that are
+inadmissible under the relation being asserted (e.g. answering a
+*causes* question with the *means*-target). The ADR-0024 chain closes
+that gap with five Architecture Decision Records and six phases of
+implementation evidence.
+
+| Layer | What it guarantees | ADR |
+|---|---|---|
+| **AdmissibilityRegion** | A typed region (`allowed_indices`, `relation_blade`, `frame_versor`) carried alongside every generation step. | [0022](docs/decisions/ADR-0022-forward-semantic-control.md) |
+| **Region intersection proof** | The admissible token set is honored at the language/salience intersection layer. | [0023](docs/decisions/ADR-0023-forward-semantic-control-proof.md) |
+| **Inner-loop destination check** | Each candidate's `cga_inner(versor(candidate), relation_blade)` is checked at the destination; rejection appears in `rejected_attempts`; exhaustion raises a typed `InnerLoopExhaustion`. | [0024](docs/decisions/ADR-0024-inner-loop-admissibility.md) |
+| **Rotor / frame admissibility** | The rotor's *effect* on the field state is additionally checked against `frame_versor` in `generate/rotor_admissibility.py` — separate from algebra closure (intentional). | [0025](docs/decisions/ADR-0025-rotor-frame-admissibility-design-note.md) |
+| **Ranked-with-margin gate** | Static-threshold tuning fails geometrically under Cl(4,1) signature; replaced with a scale-invariant margin gate (admit iff `score(top) − score(second) ≥ δ`). | [0026](docs/decisions/ADR-0026-ranked-admissibility-with-margin.md) |
+
+The chain's three head-to-head claims, all CI-enforced:
+
+| Claim | Test contract | Live demo |
+|---|---|---|
+| **C1 — Replay determinism** | `core test --suite phase6 -k TestC1` | `core demo phase6` |
+| **C2 — Traced rejection** | `core test --suite phase6 -k TestC2` | `core demo phase6` |
+| **C3 — Coherent refusal** | `core test --suite phase6 -k TestC3` | `core demo phase6` |
+
+Full evidence:
+
+* Runtime contract: [`docs/runtime_contracts.md`](docs/runtime_contracts.md) — Refusal / Margin / Rotor admissibility sections
+* Stratified findings: [`docs/evals/phase5_stratified_findings.md`](docs/evals/phase5_stratified_findings.md) — 5 failure-mode families, 20 cases, per-family pass rates
+* Comparative demo: [`docs/evals/phase6_comparative_demo.md`](docs/evals/phase6_comparative_demo.md) — three head-to-head conditions vs in-system baseline
+* Reports directory: `evals/forward_semantic_control/results/`
+
+---
 
 ## Architecture
 

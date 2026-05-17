@@ -387,6 +387,215 @@ Personas compose. Two persona motors can be combined into a single motor before 
 
 ---
 
+### IX-B. Forward Semantic Control — Formal Admissibility Specification
+
+This section provides the precise mathematical specification of the
+Forward Semantic Control mechanism (ADRs 0022, 0023, 0024, 0025,
+0026). The Whitepaper describes the architectural commitment; this
+section is the formal contract.
+
+#### 1. AdmissibilityRegion
+
+An `AdmissibilityRegion` is the triple
+
+```text
+R = (I, B, Φ)
+
+where
+    I ∈ ℕᵏ        : the admissible token index set (k ≥ 1)
+    B ∈ Cl(4,1)   : the relation blade (a multivector, not necessarily simple)
+    Φ ∈ Cl(4,1)*  : an optional frame versor (None ⇒ no rotor constraint)
+```
+
+Module: `generate/admissibility.py::AdmissibilityRegion`. The region
+is constructed once per turn from the proposition graph and is
+held immutable for the duration of the generation walk. No
+in-walk mutation of `R` is permitted.
+
+#### 2. Destination-side admissibility (ADR-0024)
+
+For a candidate token `t` with versor `V_t ∈ Cl(4,1)`, define the
+*destination score*
+
+```text
+σ_dest(t, R) = cga_inner(V_t, B)
+```
+
+In **threshold mode** (the back-compat default), `t` is *admitted*
+iff
+
+```text
+admit_threshold(t, R, τ)  ⇔  σ_dest(t, R) > τ
+```
+
+where `τ ∈ ℝ` is the `admissibility_threshold` configured per turn.
+In **margin mode** (ADR-0026), the admissibility test is on a *pair*
+of ranked candidates rather than a single candidate. See §4.
+
+Module: `generate/admissibility.py::check_transition`.
+
+#### 3. Rotor-side admissibility (ADR-0025)
+
+When `R.Φ ≠ None`, the rotor that would advance the field state must
+also be admissible. For a rotor `V` and current field state `F`,
+define the *post-rotor field*
+
+```text
+F' = versor_apply(V, F) = V · F · reverse(V)
+```
+
+and the *rotor score*
+
+```text
+σ_rotor(V, F, Φ) = cga_inner(F', Φ)
+```
+
+The rotor is *admitted* iff
+
+```text
+admit_rotor(V, F, Φ)  ⇔  σ_rotor(V, F, Φ) > 0
+```
+
+When `R.Φ = None` (or `||Φ|| < 10⁻⁸`), `admit_rotor` returns `True`
+unconditionally with `σ_rotor = +∞` as the sentinel.
+
+Module: `generate/rotor_admissibility.py::check_rotor_admissibility`.
+
+**Architectural placement (load-bearing).** This check lives in
+`generate/rotor_admissibility.py`, a sibling-but-separate module to
+`generate/admissibility.py`. It is **not** placed in
+`algebra/versor.py` (would couple algebra to pack-derived
+admissibility state and structurally invite grade-projection
+"repair" of inadmissible rotors) and **not** in
+`field/propagate.py` (forbidden normalization/repair site per
+`CLAUDE.md`).
+
+#### 4. Ranked-with-margin gate (ADR-0026)
+
+Given a candidate set `C ⊆ I` and the region `R`, compute the
+ranked list
+
+```text
+ranked(C, R) = sort_descending_by_score_then_index([
+    (t, σ_dest(t, R)) for t in C
+])
+```
+
+with stable tie-break by index (strict `<` on integer index, never
+floating-point comparison on score). Let `(t₁, σ₁), (t₂, σ₂), …` be
+the ordered list. The margin verdict is
+
+```text
+admit_margin(C, R, δ)  ⇔
+    |C| = 1 ∧ σ₁ > 0
+  ∨ |C| ≥ 2 ∧ σ₁ > 0 ∧ (σ₁ − σ₂) ≥ δ
+```
+
+where `δ ∈ ℝ₊` is the `admissibility_margin`. Default `δ = 0.4`.
+
+The walk admits the top-ranked candidate `t₁` iff
+`admit_margin(C, R, δ)` holds; otherwise the inner-loop raises
+`InnerLoopExhaustion` with the full ranked list as evidence.
+
+Modules:
+`generate/admissibility.py::rank_candidates_by_blade`,
+`generate/admissibility.py::check_margin` (returns typed
+`MarginVerdict`).
+
+**Why δ on the difference, not τ on the absolute score.** Under
+the Cl(4,1) Lorentzian signature, self-`cga_inner` is signed: 23 of
+85 tokens in `en_core_cognition_v1` have `σ_dest(t, V_t) < 0`. No
+scalar `τ` separates admissible from inadmissible across the
+corpus (`separation_quality < 0.8` at every probed `τ`,
+characterized in `evals/forward_semantic_control/results/phase4_characterization_combined.json`).
+A margin gate is scale-invariant under per-blade norm variation;
+it survives where the static threshold fails.
+
+#### 5. Honest refusal (ADR-0024 Phase 2)
+
+When inner-loop admissibility leaves no admissible destination, or
+when rotor-side admissibility refuses every candidate, the walk
+raises `InnerLoopExhaustion`, a typed subclass of `ValueError`
+carrying:
+
+```text
+InnerLoopExhaustion(
+    reason            : RefusalReason,
+    region_label      : str,
+    step_index        : int,        # -1 = pre-walk empty intersection
+                                    #  ≥0 = in-walk per-step exhaustion
+    rejected_attempts : tuple[(int, str, float), ...],
+)
+```
+
+`RefusalReason` is an enum with stable string values:
+
+| Value | Meaning |
+|---|---|
+| `"inner_loop_exhaustion"` | Destination-side: no candidate passed `admit_threshold` / `admit_margin`. |
+| `"rotor_rejection"` | Rotor-side: candidate passed destination admit, but `admit_rotor` returned `False`. |
+
+The reason value is folded into `compute_trace_hash` payload only
+when non-empty, preserving byte-identical hashes for non-refused
+turns (back-compat invariant) while making refusals themselves
+replay-deterministic.
+
+Module: `generate/exhaustion.py`. Trace fold:
+`core/cognition/trace.py::compute_trace_hash`.
+
+#### 6. Composition order at the generation seam
+
+The full per-step admissibility predicate is the conjunction:
+
+```text
+admit_step(t, R, F, τ, δ) =
+    t ∈ I                                             (region intersection, ADR-0023)
+  ∧ admit_destination(t, R, τ, δ)                     (destination, ADR-0024 / 0026)
+  ∧ admit_rotor(rotor_for(t), F, R.Φ)                 (rotor, ADR-0025)
+```
+
+where `admit_destination` is `admit_threshold` in threshold mode and
+`admit_margin` in margin mode. The conjunction is evaluated
+left-to-right and short-circuits at the first failing clause; the
+clause that failed is encoded in the `RefusalReason` carried by any
+subsequent `InnerLoopExhaustion`.
+
+Module: `generate/stream.py::generate` (the seam itself).
+
+#### 7. Replay determinism contract
+
+For any fixed `(state, vocab, persona, region, mode, τ, δ)`, the
+output `GenerationResult` is bit-identical across reruns, including
+the `admissibility_trace` and (when refused) the `RefusalReason`,
+`region_label`, `step_index`, and `rejected_attempts` carried by
+`InnerLoopExhaustion`.
+
+This contract is exercised by:
+
+| Lane | Replay tests | File |
+|---|---|---|
+| Inner-loop admit | 5-rerun byte identity | `tests/test_inner_loop_admissibility.py` |
+| Margin gate | 3-rerun replay | `tests/test_margin_admissibility.py` |
+| Rotor admissibility | 5-rerun admit + 5-rerun refuse | `tests/test_rotor_admissibility.py` |
+| Phase 5 stratified | 3-rerun across 20 cases | `tests/test_phase5_corpus.py::TestReplayDeterminism` |
+| Phase 6 demo C1 | 5-rerun on 8 cases, baseline + CORE | `tests/test_phase6_demo.py::TestC1ReplayDeterminism` |
+
+#### 8. Verification invariants added by the chain
+
+| Invariant | Expression | Tolerance | Test file |
+|---|---|---|---|
+| Refusal is typed | `isinstance(exc, ValueError) ∧ isinstance(exc, InnerLoopExhaustion)` | exact | `test_refusal_contract.py` |
+| Reason is enumerated | `exc.reason ∈ RefusalReason` | exact | `test_refusal_contract.py` |
+| Margin tie-break is stable | `rank_candidates_by_blade` returns deterministic ordering under exact tie | exact | `test_margin_admissibility.py` |
+| Rotor closure preserved | `versor_condition(versor_apply(V, F)) < 1e-6` on admitted rotors | < 1e-6 | `test_rotor_admissibility.py` |
+| Mechanism isolated (margin) | per-family `pass_rate_margin = 1.0` across 5 families | exact | `test_phase5_corpus.py` |
+| Three-condition demo passes | `c1_pass ∧ c2_pass ∧ c3_pass` | exact | `test_phase6_demo.py` |
+
+These are structural contracts, not regression tests. A failing
+invariant means the chain is broken, not the corpus.
+
+---
+
 ### X. Verification Invariants (The Implementation Gate)
 
 These are testable predicates. Every invariant has a corresponding test in `tests/`.

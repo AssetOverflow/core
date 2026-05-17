@@ -94,6 +94,55 @@ future ADR can wire materialisation (e.g. propagate the typed
 exception to `ChatResponse.refusal_reason` or catch at the pipeline
 seam) without re-deriving the contract.
 
+### Ranked-with-margin contract (ADR-0026 / Phase 3)
+
+The static `admissibility_threshold` documented above (ADR-0024 Phase 2)
+is supplemented by a scale-invariant margin gate (ADR-0026 Phase 3).
+The runtime selects mode via `RuntimeConfig.admissibility_mode`:
+
+```text
+RuntimeConfig.admissibility_mode    : "threshold" | "margin"   (default: "threshold")
+RuntimeConfig.admissibility_margin  : float                    (default: 0.4)
+```
+
+In **threshold mode** (back-compat, ADR-0024):
+
+```text
+admit iff cga_inner(versor(candidate), relation_blade) > admissibility_threshold
+```
+
+In **margin mode** (ADR-0026):
+
+```text
+rank candidates by cga_inner(versor(candidate), relation_blade), descending,
+  stable tie-break by candidate index
+admit iff (single candidate)
+       or (score(top) > 0  AND  score(top) - score(second) >= admissibility_margin)
+```
+
+`generate.admissibility.rank_candidates_by_blade` returns the ranked
+list with deterministic tie-break, and `generate.admissibility.check_margin`
+returns a typed `MarginVerdict` (`admitted`, `top`, `second`, `gap`,
+`reason`).  The selection invariant is that the *score difference* is
+the gate, not the absolute score — making the gate robust to per-blade
+norm variation that defeated static threshold tuning on the
+Phase 4 characterization corpus (see
+`docs/evals/phase5_stratified_findings.md`).
+
+Refusal in margin mode is materialised through the same
+`InnerLoopExhaustion` mechanism as threshold mode, with
+`RefusalReason.INNER_LOOP_EXHAUSTION` carrying the full ranked
+candidate list as evidence so the failure mode is "no candidate has
+margin over its successor" rather than "no candidate exceeded
+threshold T."
+
+The default δ = 0.4 was selected from the minimum observed margin in
+the Phase 3 v2 corpus (0.456) and is *falsifiable*: any case
+surfacing a blade-gap below δ where margin-mode refusal is the wrong
+behavior must be reported as an ADR-0026 falsification rather than
+silently patched per case.  Phase 5's 20-case stratified corpus does
+not falsify δ = 0.4.
+
 ### Rotor admissibility contract (ADR-0025 / Phase 4)
 
 The destination-side admissibility documented above (token-side blade

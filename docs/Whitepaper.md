@@ -262,7 +262,102 @@ The `docs/DELETION_LOG.md` records every deleted subsystem and the algebraic rea
 
 ---
 
-### XII. Extensions
+### XII. Forward Semantic Control — Generation Without Sampling
+
+The CORE generation walk is deterministic at the algebra level —
+every step is a versor product, every selection is the nearest-by-
+`cga_inner` candidate. But a deterministic walk over a boundary-only
+scorer can still emit tokens that are *inadmissible under the
+relation being asserted*. Asking *"what does symbol cause?"* the
+boundary may return *image* — geometrically nearest, but `means`-
+related, not `causes`-related. The token is on the manifold; the
+relation is wrong.
+
+The Forward Semantic Control chain (ADR-0022 through ADR-0026) closes
+this gap without introducing sampling, sampling temperature, or any
+stochastic mechanism whatsoever. The mechanism has five components:
+
+1. **AdmissibilityRegion** (ADR-0022). A typed region carried
+   alongside every generation step. Fields: `allowed_indices` (the
+   admissible token set), `relation_blade` (the multivector
+   characterizing the relation), and optionally `frame_versor` (the
+   rotor-side constraint). The region is constructed once per turn
+   from the proposition graph and held immutable through the walk.
+2. **Region intersection at selection** (ADR-0023). At every
+   selection point, the language/salience candidate set is
+   intersected with `allowed_indices` before scoring. An empty
+   intersection raises `ValueError`; the walk routes to the
+   unknown-domain surface (honest refusal at the pre-walk boundary).
+3. **Inner-loop destination check** (ADR-0024). The boundary
+   selection is re-evaluated against the relation blade via
+   `cga_inner(versor(candidate), relation_blade)`. Rejected
+   candidates are excluded and the walk re-selects; when every
+   candidate is rejected, generation raises `InnerLoopExhaustion`
+   carrying a typed `RefusalReason` (`INNER_LOOP_EXHAUSTION` or
+   `ROTOR_REJECTION`), the responsible region label, the step
+   index, and the full list of rejected attempts as evidence.
+   Refusal is not silent — it is structured data.
+4. **Rotor / frame admissibility** (ADR-0025). When the region
+   carries a `frame_versor`, the rotor's *effect on the field
+   state* is additionally checked: `cga_inner(versor_apply(V, F),
+   frame_versor) > 0`. This check lives in
+   `generate/rotor_admissibility.py` — *not* in `algebra/versor.py`,
+   because admissibility is a pack-semantic test, not a closure
+   invariant. Putting it in algebra would couple closure to pack
+   state and structurally invite grade-projection "repair" of
+   inadmissible rotors. That coupling was rejected by name in the
+   ADR.
+5. **Ranked-with-margin gate** (ADR-0026). A static
+   `admissibility_threshold` is brittle under the Cl(4,1)
+   Lorentzian signature: 23 of 85 tokens in the cognition pack have
+   *negative* self-`cga_inner`, so no scalar threshold separates
+   admissible from inadmissible across the corpus
+   (Phase 4 characterization confirms separation_quality < 0.8 at
+   every probed threshold). The chain replaces threshold tuning
+   with a scale-invariant margin test: admit iff
+   `score(top) − score(second) ≥ δ`. Default δ = 0.4, chosen from
+   the minimum observed margin in the Phase 3 adversarial corpus
+   and falsifiable against future cases.
+
+The chain is enforced by 98 CI-level contract tests
+(`core test --suite adr-0024`). Three head-to-head claims are pinned
+against an in-system ablation baseline:
+
+- **C1 — Replay determinism:** Trace hashes are byte-identical
+  across N reruns under both baseline and CORE; refusal events
+  themselves are replayable because `refusal_reason` is folded into
+  `trace_hash`.
+- **C2 — Traced rejection:** When the boundary selection diverges
+  from the blade-aligned selection, the rejected token appears in
+  `rejected_attempts`. The rejection is *causally responsible* for
+  the selection difference, not just observable.
+- **C3 — Coherent refusal:** When no candidate is admissible, the
+  walk raises `InnerLoopExhaustion` with a typed reason and
+  evidence list. The ablation baseline emits an inadmissible
+  candidate with `admitted = False` — observable but not
+  actionable. Typed refusal is *new in CORE*, not present in the
+  boundary-only baseline.
+
+This is what we mean by "deterministic cognition that can refuse":
+the system never samples to recover from an inadmissible state — it
+either selects an admissible candidate, or it reports honestly that
+it cannot.
+
+A transformer LLM cannot exhibit these properties at the mechanism
+level. Sampling has no place to attach an `AdmissibilityRegion`,
+no way to make refusal first-class evidence, and no replay-
+deterministic trace. The chain is the structural defense against
+the confabulation failure mode at exactly the layer where it must
+be defended — generation itself.
+
+Full evidence: `docs/runtime_contracts.md` (contracts),
+`docs/evals/phase5_stratified_findings.md` (geometric
+characterization), `docs/evals/phase6_comparative_demo.md`
+(head-to-head demo).
+
+---
+
+### XIII. Extensions
 
 **CORE-Logos** — The language articulation subsystem. Specified in the companion Yellow and White Addenda inherited from `core-ai`. The Logos defines the vocabulary manifold, the token projection law, the holonomy encoder, and the termination condition.
 

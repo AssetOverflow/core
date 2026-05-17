@@ -3,6 +3,51 @@
 Tracks completion of the phased plan defined in `docs/capability_roadmap.md`
 (ADR-0016). Updated as work lands.
 
+> **Naming note.** "Phase N" in this document refers to capability-roadmap
+> phases (Phase 0 through Phase 5+). The ADR-0024 chain has its *own*
+> six-phase plan (Phase 1 through Phase 6) which is tracked separately
+> immediately below. Do not conflate the two.
+
+---
+
+## ADR-0024 Chain — Forward Semantic Control Closure
+
+**Status:** Complete ✓
+**Closed:** 2026-05-17
+
+A standalone six-phase plan that closes forward semantic control as a
+deterministic, trace-evidenced, refuse-able mechanism. Distinct from
+the capability-roadmap phases below.
+
+| Phase | Commit | Deliverable | Contract tests |
+|---|---|---|---|
+| 1 | `3940290` | Pack-grounded fixture rewrite + architectural finding | (rewrites) |
+| 2 | `310793a` | Typed `InnerLoopExhaustion` + `RefusalReason` + trace fold | +10 |
+| 3 | `639e107` | ADR-0026 ranked-with-margin gate (δ = 0.4 default) | +13 |
+| 4 | `542e13d` | ADR-0025 rotor / frame admissibility (sibling module) | +11 |
+| 5 | `b664984` | Stratified 5-family mechanism-isolation corpus + benign EXHAUSTION_CEILING corpus | +20 |
+| 6 | `a076506` | Three-condition comparative demo (C1 replay / C2 traced rejection / C3 coherent refusal) | +17 |
+| CLI | `36aad75` | Suite aliases (`adr-0024`, `refusal`, `margin`, `rotor`, …) + `core demo` subcommand + results manifest | +14 |
+
+ADRs moved to Accepted under this chain: 0024, 0025, 0026.
+ADRs strengthened: 0022 (TBDs closed), 0023 (proof evidence expanded).
+
+Evidence locations:
+
+- Runtime contracts: `docs/runtime_contracts.md` — Refusal / Margin / Rotor admissibility sections
+- Stratified findings: `docs/evals/phase5_stratified_findings.md`
+- Comparative demo: `docs/evals/phase6_comparative_demo.md`
+- Reports: `evals/forward_semantic_control/results/` (+ auto-refreshed `index.json`)
+- ADR index: `docs/decisions/README.md` — "ADR-0024 chain" section
+
+How to verify on a fresh checkout:
+
+```bash
+core test --suite adr-0024     # 98 contract tests across the chain (~2 min)
+core demo all                  # phase5 + phase6 + combined summary (~40 s)
+core demo list-results         # index of every JSON report with headline metrics
+```
+
 ---
 
 ## Phase 0 — Benchmark Methodology Lock-in
