@@ -19,6 +19,10 @@ from field.state import FieldState
 from core.cognition.result import CognitiveTurnResult
 from core.cognition.trace import compute_trace_hash
 from generate.intent import classify_intent
+from generate.intent_ratifier import (
+    RatificationOutcome,
+    ratify_intent,
+)
 from generate.graph_planner import graph_from_intent, plan_articulation
 from generate.realizer import realize_semantic
 from generate.intent import IntentTag
@@ -101,7 +105,15 @@ class CognitiveTurnPipeline:
         field_state_before: FieldState | None = self._capture_field_state()
 
         # 1b. CLASSIFY — intent and proposition graph (deterministic, pre-chat)
-        intent = classify_intent(text)
+        seeded_intent = classify_intent(text)
+        # 1b.i FIELD-RATIFY the seeded intent (ADR-0022 §TBD-1).
+        #      The regex classifier is the *seed*; the field is the
+        #      gate.  A demoted intent routes the rest of the turn
+        #      through the existing UNKNOWN-domain surface so the
+        #      pipeline never silently relaxes a constraint to produce
+        #      a fluent-but-ungrounded surface (§2 honest refusal).
+        ratified = self._ratify_intent(seeded_intent, field_state_before)
+        intent = ratified.intent
         prior_node_id = self._last_node_id
         graph = graph_from_intent(intent, prior_node_id=prior_node_id)
         target = plan_articulation(graph)
@@ -279,6 +291,43 @@ class CognitiveTurnPipeline:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def _ratify_intent(self, intent, field_state):
+        """Field-ratify a seeded intent (ADR-0022 §TBD-1).
+
+        When no field state or no vocab is available (cold start),
+        ratification short-circuits to PASSTHROUGH and the seed
+        survives — the existing cold-start behavior is preserved.
+        """
+        from generate.intent_ratifier import RatifiedIntent
+
+        if field_state is None:
+            return RatifiedIntent(
+                intent=intent,
+                outcome=RatificationOutcome.PASSTHROUGH,
+                score=0.0,
+                threshold=0.0,
+                seed_tag=intent.tag,
+            )
+        vocab = getattr(self.runtime, "vocab", None)
+        if vocab is None:
+            return RatifiedIntent(
+                intent=intent,
+                outcome=RatificationOutcome.PASSTHROUGH,
+                score=0.0,
+                threshold=0.0,
+                seed_tag=intent.tag,
+            )
+        prompt_versor = getattr(field_state, "F", None)
+        if prompt_versor is None:
+            return RatifiedIntent(
+                intent=intent,
+                outcome=RatificationOutcome.PASSTHROUGH,
+                score=0.0,
+                threshold=0.0,
+                seed_tag=intent.tag,
+            )
+        return ratify_intent(intent, prompt_versor, vocab=vocab)
 
     def _should_mark_speculative(self, text: str, surface: str) -> bool:
         """Decide whether ``surface`` should carry the SPECULATIVE marker.

@@ -18,6 +18,7 @@ import numpy as np
 
 from algebra.cga import cga_inner, outer_product
 from field.state import FieldState
+from generate.admissibility import AdmissibilityRegion, filter_candidates
 from generate.stream import _articulate
 from teaching.epistemic import EpistemicStatus
 
@@ -140,12 +141,30 @@ def propose(
     vocab,
     frame_registry: FrameRegistry,
     output_lang: str | None = None,
+    region: AdmissibilityRegion | None = None,
 ) -> Proposition:
-    """Generate one structured proposition from the live field."""
+    """Generate one structured proposition from the live field.
+
+    ``region`` is the ADR-0022 admissibility region.  Default ``None``
+    preserves existing behavior during the transition window
+    (ADR-0022 §TBD-3).  When supplied, its allowed-index set is
+    intersected with the language candidate set before subject /
+    predicate / object selection.
+    """
     prompt = _prompt_versor(field_state)
     frame_relation = _frame_query_relation(field_state)
     frame = frame_registry.select(frame_relation)
     candidate_indices = _candidate_indices_for_language(vocab, output_lang)
+    if region is not None and not region.is_unconstrained():
+        candidate_indices = filter_candidates(region, candidate_indices)
+        if candidate_indices is not None and len(candidate_indices) == 0:
+            # ADR-0022 §2: an empty admissible set must fail honestly,
+            # not be silently relaxed.  Re-raise as ValueError so the
+            # call site can route through the existing unknown-domain
+            # surface (_UNKNOWN_DOMAIN_SURFACE).
+            raise ValueError(
+                f"AdmissibilityRegion[{region.label}] left no proposition candidates."
+            )
 
     subject_word, subject_idx = _nearest_content_word(
         vocab,

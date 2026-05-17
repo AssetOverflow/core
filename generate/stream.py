@@ -19,6 +19,7 @@ from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import rotor_power, word_transition_rotor
 from algebra.versor import unitize_versor
+from generate.admissibility import AdmissibilityRegion, filter_candidates
 from generate.attention import AttentionOperator
 from generate.result import GenerationResult
 from generate.salience import SalienceOperator
@@ -269,7 +270,17 @@ def generate(
     use_salience: bool = False,
     salience_top_k: int = 16,
     inhibition_threshold: float = 0.3,
+    region: AdmissibilityRegion | None = None,
 ) -> GenerationResult:
+    """Generate a token sequence.
+
+    ``region`` is the ADR-0022 admissibility region.  Default
+    ``None`` preserves existing behavior during the transition
+    window (§TBD-3).  When supplied, its allowed-index set is
+    intersected with language/salience candidates before each step;
+    an empty intersection raises ``ValueError`` so the caller can
+    route through the unknown-domain surface (§2 honest refusal).
+    """
     tokens = []
     trajectory = [] if record_trajectory else None
     vault_hits = 0
@@ -286,6 +297,14 @@ def generate(
     candidate_indices = _intersect_candidates(language_candidates, salience_candidates)
     if candidate_indices is not None and len(candidate_indices) == 0:
         candidate_indices = salience_candidates if salience_candidates is not None else language_candidates
+        candidates_used = None if candidate_indices is None else len(candidate_indices)
+
+    if region is not None and not region.is_unconstrained():
+        candidate_indices = filter_candidates(region, candidate_indices)
+        if candidate_indices is not None and len(candidate_indices) == 0:
+            raise ValueError(
+                f"AdmissibilityRegion[{region.label}] left no walk candidates."
+            )
         candidates_used = None if candidate_indices is None else len(candidate_indices)
 
     stop_nodes = frozenset(
