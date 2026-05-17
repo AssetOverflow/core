@@ -1,0 +1,1 @@
+{"id": "HEB-DEV_01", "construction": "C01", "construction_name": "simple_declarative", "language": "he", "proposition_graph": {"nodes": [{"node_id": "n1", "subject": "דבר", "predicate": "גילה", "obj": "אמת"}], "edges": []}, "accept_surfaces": ["גילה דבר אמת"], "constraints": {"must_contain": ["דבר", "גילה", "אמת"], "word_order": ["גילה", "דבר", "אמת"], "max_words": 6}}

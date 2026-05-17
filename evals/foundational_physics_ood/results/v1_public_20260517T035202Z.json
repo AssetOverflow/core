@@ -1,0 +1,964 @@
+{
+  "cases": [
+    {
+      "case_id": "FPO-PUB_mechanics_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force moves object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque rotates wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse changes momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force does not move object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque does not rotate wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse does not change momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force moves object and torque rotates wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque rotates wheel and impulse changes momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse changes momentum and force moves object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force moves object or torque rotates wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque rotates wheel or impulse changes momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse changes momentum or force moves object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque rotates that force moves object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse changes that torque rotates wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force moves that impulse changes momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force, which rotates wheel, moves object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque, which changes momentum, rotates wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse, which moves object, changes momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all force moves object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all torque rotates wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all impulse changes momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some force moves object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some torque rotates wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some impulse changes momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force moved object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque rotated wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse changed momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force moves object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque rotates wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse changes momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force will move object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque will rotate wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse will change momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force has moved object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque has rotated wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse has changed momentum"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "force is moving object"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "torque is rotating wheel"
+    },
+    {
+      "case_id": "FPO-PUB_mechanics_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "impulse is changing momentum"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current powers circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage drives charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor limits flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current does not power circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage does not drive charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor does not limit flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current powers circuit and voltage drives charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage drives charge and resistor limits flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor limits flow and current powers circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current powers circuit or voltage drives charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage drives charge or resistor limits flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor limits flow or current powers circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage drives that current powers circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor limits that voltage drives charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current powers that resistor limits flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current, which drives charge, powers circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage, which limits flow, drives charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor, which powers circuit, limits flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all current powers circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all voltage drives charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all resistor limits flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some current powers circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some voltage drives charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some resistor limits flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current powered circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage drived charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor limited flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current powers circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage drives charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor limits flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current will power circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage will drive charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor will limit flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current has powered circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage has drived charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor has limited flow"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "current is powering circuit"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voltage is driving charge"
+    },
+    {
+      "case_id": "FPO-PUB_electricity_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "resistor is limiting flow"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat raises temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston compresses gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy tracks disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat does not rais temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston does not compress gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy does not track disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat raises temperature and piston compresses gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston compresses gas and entropy tracks disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy tracks disorder and heat raises temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat raises temperature or piston compresses gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston compresses gas or entropy tracks disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy tracks disorder or heat raises temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston compresses that heat raises temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy tracks that piston compresses gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat raises that entropy tracks disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat, which compresses gas, raises temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston, which tracks disorder, compresses gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy, which raises temperature, tracks disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all heat raises temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all piston compresses gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all entropy tracks disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some heat raises temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some piston compresses gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some entropy tracks disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat raised temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston compressed gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy tracked disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat raises temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston compresses gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy tracks disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat will rais temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston will compress gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy will track disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat has raised temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston has compressed gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy has tracked disorder"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "heat is raising temperature"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "piston is compressing gas"
+    },
+    {
+      "case_id": "FPO-PUB_thermodynamics_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "entropy is tracking disorder"
+    }
+  ],
+  "lane": "foundational_physics_ood",
+  "metrics": {
+    "accuracy": 1.0,
+    "by_construction": {
+      "C01": 1.0,
+      "C02": 1.0,
+      "C03": 1.0,
+      "C04": 1.0,
+      "C05": 1.0,
+      "C06": 1.0,
+      "C07": 1.0,
+      "C08": 1.0,
+      "C09": 1.0,
+      "C10": 1.0,
+      "C11": 1.0,
+      "C12": 1.0,
+      "C13": 1.0
+    },
+    "passed": 117,
+    "total": 117
+  },
+  "split": "public",
+  "timestamp": "2026-05-17T03:52:02.384163+00:00",
+  "version": "v1"
+}

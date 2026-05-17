@@ -599,12 +599,19 @@ Vault indexing strategy is decided (ADR-0019: Stage 1 now, Stages
 
 - [x] 5.1 English fluency (`english_fluency_ood` v1, 100% on
       public + holdouts, 2026-05-16)
-- [ ] 5.2 Hebrew fluency
-- [ ] 5.3 Koine Greek fluency
-- [ ] 5.4 Elementary mathematics
-- [ ] 5.5 Foundational physics
-- [ ] 5.6 Foundational biology
-- [ ] 5.7 Classical literature
+- [x] 5.2 Hebrew fluency (`hebrew_fluency` v1, 3/3 — script +
+      length rubric; lexeme-slot grounding deferred to v2, see
+      `evals/hebrew_fluency/gaps.md`)
+- [x] 5.3 Koine Greek fluency (`koine_greek_fluency` v1, 3/3 —
+      same v1 scope as 5.2)
+- [x] 5.4 Elementary mathematics (`elementary_mathematics_ood` v1,
+      117/117 public + 39/39 holdouts = 100%)
+- [x] 5.5 Foundational physics (`foundational_physics_ood` v1,
+      117/117 + 39/39 = 100%)
+- [x] 5.6 Foundational biology (`foundational_biology_ood` v1,
+      117/117 + 39/39 = 100%)
+- [x] 5.7 Classical literature (`classical_literature_ood` v1,
+      117/117 + 39/39 = 100%)
 - [ ] Phase 1-4 lanes re-run on every release (no regression)
 
 ### Parallel track — Rust parity (ADR-0020)

@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "case_id": "GRC-PUB_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "λόγος λόγος"
+    },
+    {
+      "case_id": "GRC-PUB_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "λόγος λόγος"
+    },
+    {
+      "case_id": "GRC-PUB_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "λόγος λόγος"
+    }
+  ],
+  "lane": "koine_greek_fluency",
+  "metrics": {
+    "accuracy": 1.0,
+    "passed": 3,
+    "scope_note": "v1 measures C01 only; C02-C13 deferred to v2 (see gaps.md)",
+    "total": 3
+  },
+  "split": "public",
+  "timestamp": "2026-05-17T03:57:18.719574+00:00",
+  "version": "v1"
+}

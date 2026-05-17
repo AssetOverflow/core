@@ -1,0 +1,964 @@
+{
+  "cases": [
+    {
+      "case_id": "FBO-PUB_cell_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome assembles protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane guards interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion produces energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome does not assemble protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane does not guard interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion does not produce energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome assembles protein and membrane guards interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane guards interior and mitochondrion produces energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion produces energy and ribosome assembles protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome assembles protein or membrane guards interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane guards interior or mitochondrion produces energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion produces energy or ribosome assembles protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane guards that ribosome assembles protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion produces that membrane guards interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome assembles that mitochondrion produces energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome, which guards interior, assembles protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane, which produces energy, guards interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion, which assembles protein, produces energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all ribosome assembles protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all membrane guards interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all mitochondrion produces energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some ribosome assembles protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some membrane guards interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some mitochondrion produces energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome assembled protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane guarded interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion produced energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome assembles protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane guards interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion produces energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome will assemble protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane will guard interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion will produce energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome has assembled protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane has guarded interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion has produced energy"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "ribosome is assembling protein"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "membrane is guarding interior"
+    },
+    {
+      "case_id": "FBO-PUB_cell_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "mitochondrion is producing energy"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant absorbs sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal consumes food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus decomposes matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant does not absorb sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal does not consume food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus does not decompos matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant absorbs sunlight and animal consumes food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal consumes food and fungus decomposes matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus decomposes matter and plant absorbs sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant absorbs sunlight or animal consumes food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal consumes food or fungus decomposes matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus decomposes matter or plant absorbs sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal consumes that plant absorbs sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus decomposes that animal consumes food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant absorbs that fungus decomposes matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant, which consumes food, absorbs sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal, which decomposes matter, consumes food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus, which absorbs sunlight, decomposes matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all plant absorbs sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all animal consumes food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all fungus decomposes matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some plant absorbs sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some animal consumes food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some fungus decomposes matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant absorbed sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal consumed food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus decomposed matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant absorbs sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal consumes food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus decomposes matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant will absorb sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal will consume food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus will decompos matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant has absorbed sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal has consumed food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus has decomposed matter"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "plant is absorbing sunlight"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "animal is consuming food"
+    },
+    {
+      "case_id": "FBO-PUB_organism_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "fungus is decomposing matter"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator hunts prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest shelters creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river feeds wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator does not hunt prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest does not shelter creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river does not feed wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator hunts prey and forest shelters creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest shelters creature and river feeds wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river feeds wetland and predator hunts prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator hunts prey or forest shelters creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest shelters creature or river feeds wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river feeds wetland or predator hunts prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest shelters that predator hunts prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river feeds that forest shelters creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator hunts that river feeds wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator, which shelters creature, hunts prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest, which feeds wetland, shelters creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river, which hunts prey, feeds wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all predator hunts prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all forest shelters creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all river feeds wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some predator hunts prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some forest shelters creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some river feeds wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator hunted prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest sheltered creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river feeded wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator hunts prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest shelters creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river feeds wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator will hunt prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest will shelter creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river will feed wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator has hunted prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest has sheltered creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river has feeded wetland"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "predator is hunting prey"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "forest is sheltering creature"
+    },
+    {
+      "case_id": "FBO-PUB_ecosystem_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "river is feeding wetland"
+    }
+  ],
+  "lane": "foundational_biology_ood",
+  "metrics": {
+    "accuracy": 1.0,
+    "by_construction": {
+      "C01": 1.0,
+      "C02": 1.0,
+      "C03": 1.0,
+      "C04": 1.0,
+      "C05": 1.0,
+      "C06": 1.0,
+      "C07": 1.0,
+      "C08": 1.0,
+      "C09": 1.0,
+      "C10": 1.0,
+      "C11": 1.0,
+      "C12": 1.0,
+      "C13": 1.0
+    },
+    "passed": 117,
+    "total": 117
+  },
+  "split": "public",
+  "timestamp": "2026-05-17T03:52:02.384036+00:00",
+  "version": "v1"
+}

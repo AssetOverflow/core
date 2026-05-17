@@ -1,0 +1,964 @@
+{
+  "cases": [
+    {
+      "case_id": "CLO-PUB_epic_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero leaves homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior seeks glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager crosses ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero does not leave homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior does not seek glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager does not cross ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero leaves homeland and warrior seeks glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior seeks glory and voyager crosses ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager crosses ocean and hero leaves homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero leaves homeland or warrior seeks glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior seeks glory or voyager crosses ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager crosses ocean or hero leaves homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior seeks that hero leaves homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager crosses that warrior seeks glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero leaves that voyager crosses ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero, which seeks glory, leaves homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior, which crosses ocean, seeks glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager, which leaves homeland, crosses ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all hero leaves homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all warrior seeks glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all voyager crosses ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some hero leaves homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some warrior seeks glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some voyager crosses ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero leaved homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior seeked glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager crossed ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero leaves homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior seeks glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager crosses ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero will leave homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior will seek glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager will cross ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero has leaved homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior has seeked glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager has crossed ocean"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "hero is leaving homeland"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "warrior is seeking glory"
+    },
+    {
+      "case_id": "CLO-PUB_epic_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "voyager is crossing ocean"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king loses kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter warns father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle reveals doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king does not los kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter does not warn father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle does not reveal doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king loses kingdom and daughter warns father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter warns father and oracle reveals doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle reveals doom and king loses kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king loses kingdom or daughter warns father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter warns father or oracle reveals doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle reveals doom or king loses kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter warns that king loses kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle reveals that daughter warns father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king loses that oracle reveals doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king, which warns father, loses kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter, which reveals doom, warns father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle, which loses kingdom, reveals doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all king loses kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all daughter warns father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all oracle reveals doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some king loses kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some daughter warns father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some oracle reveals doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king losed kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter warned father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle revealed doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king loses kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter warns father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle reveals doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king will los kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter will warn father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle will reveal doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king has losed kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter has warned father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle has revealed doom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "king is losing kingdom"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "daughter is warning father"
+    },
+    {
+      "case_id": "CLO-PUB_tragedy_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "oracle is revealing doom"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet praises season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer mourns absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse inspires verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet does not prais season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer does not mourn absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse does not inspire verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet praises season and singer mourns absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer mourns absence and muse inspires verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse inspires verse and poet praises season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet praises season or singer mourns absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer mourns absence or muse inspires verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse inspires verse or poet praises season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer mourns that poet praises season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse inspires that singer mourns absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet praises that muse inspires verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet, which mourns absence, praises season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer, which inspires verse, mourns absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse, which praises season, inspires verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all poet praises season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all singer mourns absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all muse inspires verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some poet praises season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some singer mourns absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some muse inspires verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet praised season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer mourned absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse inspired verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet praises season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer mourns absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse inspires verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet will prais season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer will mourn absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse will inspire verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet has praised season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer has mourned absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse has inspired verse"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "poet is praising season"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "singer is mourning absence"
+    },
+    {
+      "case_id": "CLO-PUB_lyric_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "muse is inspiring verse"
+    }
+  ],
+  "lane": "classical_literature_ood",
+  "metrics": {
+    "accuracy": 1.0,
+    "by_construction": {
+      "C01": 1.0,
+      "C02": 1.0,
+      "C03": 1.0,
+      "C04": 1.0,
+      "C05": 1.0,
+      "C06": 1.0,
+      "C07": 1.0,
+      "C08": 1.0,
+      "C09": 1.0,
+      "C10": 1.0,
+      "C11": 1.0,
+      "C12": 1.0,
+      "C13": 1.0
+    },
+    "passed": 117,
+    "total": 117
+  },
+  "split": "public",
+  "timestamp": "2026-05-17T03:52:02.384134+00:00",
+  "version": "v1"
+}

@@ -1,0 +1,964 @@
+{
+  "cases": [
+    {
+      "case_id": "EMO-PUB_arithmetic_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition yields sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product equals factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference shows remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition does not yield sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product does not equal factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference does not show remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition yields sum and product equals factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product equals factor and difference shows remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference shows remainder and addition yields sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition yields sum or product equals factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product equals factor or difference shows remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference shows remainder or addition yields sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product equals that addition yields sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference shows that product equals factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition yields that difference shows remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition, which equals factor, yields sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product, which shows remainder, equals factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference, which yields sum, shows remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all addition yields sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all product equals factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all difference shows remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some addition yields sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some product equals factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some difference shows remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition yielded sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product equaled factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference showed remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition yields sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product equals factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference shows remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition will yield sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product will equal factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference will show remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition has yielded sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product has equaled factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference has shown remainder"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "addition is yielding sum"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "product is equaling factor"
+    },
+    {
+      "case_id": "EMO-PUB_arithmetic_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "difference is showing remainder"
+    },
+    {
+      "case_id": "EMO-PUB_set_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union joins element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset fits superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection shares member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union does not join element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset does not fit superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection does not share member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union joins element and subset fits superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset fits superset and intersection shares member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection shares member and union joins element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union joins element or subset fits superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset fits superset or intersection shares member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection shares member or union joins element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset fits that union joins element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection shares that subset fits superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union joins that intersection shares member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union, which fits superset, joins element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset, which shares member, fits superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection, which joins element, shares member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all union joins element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all subset fits superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all intersection shares member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some union joins element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some subset fits superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some intersection shares member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union joined element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset fited superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection shared member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union joins element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset fits superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection shares member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union will join element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset will fit superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection will share member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union has joined element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset has fited superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection has shared member"
+    },
+    {
+      "case_id": "EMO-PUB_set_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "union is joining element"
+    },
+    {
+      "case_id": "EMO-PUB_set_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "subset is fiting superset"
+    },
+    {
+      "case_id": "EMO-PUB_set_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "intersection is sharing member"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle encloses angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle bounds region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon contains vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle does not enclos angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle does not bound region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon does not contain vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle encloses angle and circle bounds region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle bounds region and polygon contains vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon contains vertex and triangle encloses angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle encloses angle or circle bounds region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle bounds region or polygon contains vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon contains vertex or triangle encloses angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle bounds that triangle encloses angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon contains that circle bounds region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle encloses that polygon contains vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle, which bounds region, encloses angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle, which contains vertex, bounds region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon, which encloses angle, contains vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all triangle encloses angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all circle bounds region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "all polygon contains vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some triangle encloses angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some circle bounds region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "some polygon contains vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle enclosed angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle bounded region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon contained vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle encloses angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle bounds region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon contains vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle will enclos angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle will bound region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon will contain vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle has enclosed angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle has bounded region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon has contained vertex"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "triangle is enclosing angle"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "circle is bounding region"
+    },
+    {
+      "case_id": "EMO-PUB_geometry_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "polygon is containing vertex"
+    }
+  ],
+  "lane": "elementary_mathematics_ood",
+  "metrics": {
+    "accuracy": 1.0,
+    "by_construction": {
+      "C01": 1.0,
+      "C02": 1.0,
+      "C03": 1.0,
+      "C04": 1.0,
+      "C05": 1.0,
+      "C06": 1.0,
+      "C07": 1.0,
+      "C08": 1.0,
+      "C09": 1.0,
+      "C10": 1.0,
+      "C11": 1.0,
+      "C12": 1.0,
+      "C13": 1.0
+    },
+    "passed": 117,
+    "total": 117
+  },
+  "split": "public",
+  "timestamp": "2026-05-17T03:52:02.384061+00:00",
+  "version": "v1"
+}
