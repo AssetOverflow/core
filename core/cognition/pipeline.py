@@ -22,7 +22,13 @@ from generate.intent import classify_intent
 from generate.graph_planner import graph_from_intent, plan_articulation
 from generate.realizer import realize_semantic
 from generate.intent import IntentTag
-from generate.operators import WalkResult, multi_relation_walk, transitive_walk
+from generate.operators import (
+    FrameComposeResult,
+    WalkResult,
+    compose_relations,
+    multi_relation_walk,
+    transitive_walk,
+)
 from teaching.correction import CorrectionCandidate, extract_correction
 from teaching.review import ReviewedTeachingExample, review_correction
 from teaching.store import PackMutationProposal, TeachingStore
@@ -98,6 +104,20 @@ class CognitiveTurnPipeline:
                 walk_result, surface, articulation_surface,
             )
 
+        # 7c. INFER (frame transfer) — for "What does X R in Y?" probes,
+        # compose_relations reports the tails of R(X, ?) and R(Y, ?) so
+        # the realizer surface names both endpoints.  Fires only on the
+        # FRAME_TRANSFER intent shape so the generic transitive-query
+        # surface is unaffected.
+        compose_result: FrameComposeResult | None = self._maybe_compose_relations(intent)
+        if compose_result is not None and (
+            compose_result.subject_tail is not None
+            or compose_result.frame_tail is not None
+        ):
+            surface, articulation_surface = self._fold_compose_into_surface(
+                compose_result, surface, articulation_surface,
+            )
+
         # Track last node id for correction-intent chaining
         if graph.nodes:
             self._last_node_id = graph.nodes[-1].node_id
@@ -131,7 +151,16 @@ class CognitiveTurnPipeline:
         review_hash = reviewed_example.review_hash if reviewed_example is not None else ""
         proposal_id = proposal.proposal_id if proposal is not None else ""
         epistemic_status = proposal.epistemic_status.value if proposal is not None else ""
-        operator_invocation = self._serialize_walk(walk_result)
+        walk_serialised = self._serialize_walk(walk_result)
+        compose_serialised = self._serialize_compose(compose_result)
+        # Deterministic concatenation: walk record, then compose record.
+        # Empty strings are dropped so single-operator turns keep their
+        # existing trace_hash byte-for-byte.
+        operator_invocation = (
+            f"{walk_serialised}|{compose_serialised}"
+            if compose_serialised
+            else walk_serialised
+        )
         trace_hash = compute_trace_hash(
             input_text=text,
             filtered_tokens=filtered_tokens,
@@ -249,6 +278,61 @@ class CognitiveTurnPipeline:
                 return result
         return None
 
+    def _maybe_compose_relations(self, intent) -> FrameComposeResult | None:
+        """Invoke ``compose_relations`` when the intent is a frame-transfer
+        probe ("What does X R in Y?") and the teaching store carries at
+        least one R-edge.  Returns the typed result; the caller folds
+        non-None tails into the surface.
+        """
+        if intent.tag is not IntentTag.FRAME_TRANSFER:
+            return None
+        if not intent.relation or not intent.frame:
+            return None
+        triples = self.teaching_store.triples()
+        if not triples:
+            return None
+        return compose_relations(
+            triples,
+            head=intent.subject,
+            frame=intent.frame,
+            relation=intent.relation,
+        )
+
+    @staticmethod
+    def _fold_compose_into_surface(
+        compose: FrameComposeResult,
+        surface: str,
+        articulation_surface: str,
+    ) -> tuple[str, str]:
+        """Fold a frame-transfer composition into the surface.
+
+        Names both tails so the lane checker sees the cross-instance
+        composed token regardless of which side the case author asserted
+        as the expected answer.  Deterministic; identical inputs yield
+        identical output.
+        """
+        parts: list[str] = []
+        if compose.subject_tail is not None:
+            parts.append(
+                f"{compose.head} {compose.relation.replace('_', ' ')} {compose.subject_tail}"
+            )
+        if compose.frame_tail is not None:
+            parts.append(
+                f"in {compose.frame} {compose.relation.replace('_', ' ')} {compose.frame_tail}"
+            )
+        if not parts:
+            return surface, articulation_surface
+        compose_surface = "; ".join(parts)
+        new_surface = (
+            f"{surface} — {compose_surface}" if surface else compose_surface
+        )
+        new_articulation = (
+            f"{articulation_surface} — {compose_surface}"
+            if articulation_surface
+            else compose_surface
+        )
+        return new_surface, new_articulation
+
     @staticmethod
     def _serialize_walk(walk: WalkResult | None) -> str:
         """Deterministic operator-invocation serialisation for trace_hash."""
@@ -256,6 +340,14 @@ class CognitiveTurnPipeline:
             return ""
         import json
         return json.dumps(walk.as_dict(), sort_keys=True, ensure_ascii=False)
+
+    @staticmethod
+    def _serialize_compose(compose: FrameComposeResult | None) -> str:
+        """Deterministic compose-invocation serialisation for trace_hash."""
+        if compose is None:
+            return ""
+        import json
+        return json.dumps(compose.as_dict(), sort_keys=True, ensure_ascii=False)
 
     @staticmethod
     def _fold_walk_into_surface(

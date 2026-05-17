@@ -12,20 +12,40 @@
   cases pass that bar comfortably but the slack lets a future
   realizer change ship without rewriting cases.
 
-## Known gaps for v2
+## Status: v2 partially shipped
 
-1. **No round-trip through the runtime.**  v1 invokes the realizer
-   directly with a constructed `ArticulationTarget`.  v2 should
-   feed the runtime real text inputs that *produce* the same
-   articulation target through `graph_from_intent` +
-   `plan_articulation`, end-to-end.
+- **Length scaling (was gap 3 — resolved):** `public/v2` exercises
+  10 / 20 / 50-sentence cases.  All three pass at 100% with bit-
+  identical replay.  First lane to push paragraph output past five
+  sentences.
+- **Per-sentence grammaticality (was gap 4 — resolved):** runner adds
+  `_check_per_sentence_grammar` gated on `require_per_sentence_grammar`
+  case field.  Per case: each emitted sentence must be non-empty,
+  contain ≥ 3 whitespace tokens, start with an uppercase letter, and
+  (when `align_steps_to_sentences` is set) contain the aligned step's
+  subject.  Lane reports `per_sentence_grammar_pass_rate`.
+
+## Remaining v3 gaps
+
+1. **Runtime round-trip — partial (single-sentence only).**  v2
+   adds round-trip cases (`mode: "runtime_roundtrip"`) that prime
+   the vault, ask a question through `ChatRuntime.chat`, and verify
+   the articulation surface is well-formed, capitalized, contains
+   an expected token, and is bit-identical across two fresh runtime
+   instances.  Three cases pass at 100%.  But the runtime/planner
+   currently produces one sentence per turn — the
+   multi-sentence-from-runtime claim still requires a planner
+   extension (e.g. expanding a single user question into a
+   multi-step `ArticulationTarget` via graph traversal).  That is
+   the real v3 gap.
 2. **No anaphora / pronoun reduction.**  Every sentence carries
    its subject explicitly.  Pronominalisation deferred.
-3. **No length scaling above 5 sentences.**  v2 should push to
-   10/20/50 sentences and measure per-sentence determinism.
-4. **No grammaticality check per sentence.**  v1 checks subject
-   coverage + discourse markers; v2 should run each emitted
-   sentence through grammatical_coverage's rubric.
+3. **No cross-sentence grammatical_coverage rubric.**  The v2
+   per-sentence check is structural (length, capitalization, subject
+   alignment); it does not run each sentence through
+   `evals/grammatical_coverage`'s constraint rubric.  Reuse should
+   be straightforward once a sentence-to-constraint mapping is
+   designed.
 
 ## Why this lane exists
 

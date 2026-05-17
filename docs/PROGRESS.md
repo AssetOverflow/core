@@ -627,6 +627,31 @@ Per-surface bit-identity gates landed (2026-05-16):
 - [x] ADR-0021 (Epistemic Grade Policy) schema wired across
       teaching + trace + lexicon (2026-05-16)
 
+### Compositionality + paragraph-scale fluency (2026-05-16)
+
+- [x] **`compose_relations` operator + `FRAME_TRANSFER` intent**
+      lifts compositionality from 68.8% → **100%** on public/v1
+      (16/16) and holdouts/v1 (10/10).  Closes the residual
+      `novel_pair_under_seen_relation` pattern: "What does X R in
+      Y?" surfaces both R-tails deterministically via a pure lookup
+      over the typed teaching store; result is folded into
+      `operator_invocation` so `trace_hash` stays bit-identical.
+- [x] **inference_closure, multi_step_reasoning, cross_domain_transfer**
+      all verified at 100% across public + holdouts after the new
+      operator and intent shape land (no regressions from the wider
+      `FRAME_TRANSFER` regex).
+- [x] **`discourse_paragraph` v2** ships scaling cases at
+      10 / 20 / 50 sentences with per-sentence grammaticality +
+      per-step subject alignment + bit-identical replay (3/3
+      passing), plus 3 runtime round-trip cases that prime the
+      vault and verify the runtime path is byte-identical across
+      two fresh `ChatRuntime` instances (3/3 passing).
+- [x] **`benchmarks/replay_vs_llm.py`** ships: long-form replay
+      benchmark with optional `llm_callable` for frontier-LLM
+      surface-variability comparison (BYO API client; no provider
+      lock-in).  Default cognition-pack prompts demonstrate
+      CORE-side 100% bit-identical replay at `runs=3`.
+
 ---
 
 ## Open Scope Decisions

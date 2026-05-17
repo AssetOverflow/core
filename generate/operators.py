@@ -166,6 +166,80 @@ def multi_relation_walk(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class FrameComposeResult:
+    """Result of a relation-frame composition (compose_relations).
+
+    ``head`` and ``frame`` are the two entities the probe names.
+    ``relation`` is the relation under which both have been instantiated
+    in the teaching store.  ``subject_tail`` is the tail of
+    ``R(head, ?)`` if it exists in the store, else None.  ``frame_tail``
+    is the tail of ``R(frame, ?)``.
+
+    The compositional answer to the probe "What does HEAD R in FRAME?"
+    is ``frame_tail`` (the cross-instance transfer): in the frame of
+    FRAME, HEAD's behaviour under R aligns with FRAME's R-tail.
+    ``subject_tail`` is returned alongside as the direct (literal)
+    answer so the realizer can surface both for replay evidence.
+    """
+    head: str
+    frame: str
+    relation: str
+    subject_tail: str | None
+    frame_tail: str | None
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "head": self.head,
+            "frame": self.frame,
+            "relation": self.relation,
+            "subject_tail": self.subject_tail,
+            "frame_tail": self.frame_tail,
+        }
+
+
+def compose_relations(
+    triples: tuple[tuple[str, str, str], ...],
+    head: str,
+    frame: str,
+    relation: str,
+) -> FrameComposeResult:
+    """Frame-aligned cross-instance composition over typed triples.
+
+    Given a teaching store containing ``R(head, h_tail)`` and
+    ``R(frame, f_tail)``, this operator answers probes of the form
+    "What does HEAD R in FRAME?" by reporting both tails.  The
+    compositional reading is ``frame_tail`` — i.e. in the frame of
+    FRAME, HEAD's R-target aligns with FRAME's R-target.
+
+    Pure function over its arguments.  First-write-wins on duplicate
+    ``(head, relation)`` keys to preserve determinism.  Case-insensitive
+    and whitespace-trimmed input handling, mirroring ``transitive_walk``.
+
+    Returns ``FrameComposeResult`` with ``subject_tail`` / ``frame_tail``
+    set to None when the corresponding edge is absent — callers can
+    detect "no composition possible" by checking both for None.
+    """
+    head_lc = _normalize(head)
+    frame_lc = _normalize(frame)
+    relation_lc = _normalize(relation)
+
+    edges: dict[str, str] = {}
+    for h, r, t in triples:
+        if _normalize(r) != relation_lc:
+            continue
+        h_lc_inner = _normalize(h)
+        edges.setdefault(h_lc_inner, _normalize(t))
+
+    return FrameComposeResult(
+        head=head_lc,
+        frame=frame_lc,
+        relation=relation_lc,
+        subject_tail=edges.get(head_lc),
+        frame_tail=edges.get(frame_lc),
+    )
+
+
 def path_recall(
     triples: tuple[tuple[str, str, str], ...],
     entity: str,

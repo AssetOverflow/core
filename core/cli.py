@@ -58,6 +58,8 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_morphology_irregular.py",
         "tests/test_realizer_quantifier_agreement.py",
         "tests/test_benchmarks_profiler.py",
+        "tests/test_compose_relations.py",
+        "tests/test_replay_vs_llm_benchmark.py",
     ),
     "teaching": (
         "tests/test_reviewed_teaching_loop.py",

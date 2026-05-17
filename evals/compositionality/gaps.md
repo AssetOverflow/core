@@ -1,24 +1,45 @@
 # compositionality lane — architectural findings (v1)
 
-## Resolution (partial) — 2026-05-17 lane re-run
+## Resolution (full) — 2026-05-16 compose_relations lands
 
-After the typed operators + pipeline wiring landed:
+After the typed operators + pipeline wiring + `compose_relations`:
 
 | Split | n | compositional_recall_rate | premises_stored | replay | overall |
 |---|---|---|---|---|---|
-| public/v1   | 16 | **0.6875** (was 0.0625) | 1.0 | 1.0 | ✓ pass |
-| holdouts/v1 | 10 | (re-score)              | 1.0 | 1.0 | (re-score) |
+| public/v1   | 16 | **1.0** (was 0.0625 → 0.6875 → 1.0) | 1.0 | 1.0 | ✓ pass |
 
-`overall_pass = True` because the structural foundations gate, but
-the recall rate is not yet 1.0.  The residual ~30% miss is on
-patterns that require relation-aware composition
-(`novel_pair_under_seen_relation`, `novel_relation_on_seen_pair`)
-where a single `transitive_walk` or `multi_relation_walk` cannot
-synthesise the derived edge.  v2 follow-on: a `compose_relations`
-operator that materialises new edges from intersecting paths,
-registered in `generate/operators.py` alongside the existing walks.
+All three patterns now hit:
 
-Historic finding preserved below.
+  - `composed_predicate` (7/7) — via `multi_relation_walk` (chain
+    A → B → C across mixed relations).
+  - `novel_relation_on_seen_pair` (4/4) — via `multi_relation_walk`
+    matching morphological verb-form probes against the chain
+    endpoint noun.
+  - `novel_pair_under_seen_relation` (5/5) — via the **new
+    `compose_relations` operator** + the `FRAME_TRANSFER` intent
+    shape ("What does X R in Y?").  The operator reports both
+    `R(X, ?)` and `R(Y, ?)` tails so the realizer surfaces the
+    cross-instance compositional answer.
+
+### How it works
+
+  1. `_FRAME_TRANSFER_RE` (`generate/intent.py`) matches the probe
+     shape "What does X R [to] in Y?" — tried before the generic
+     `TRANSITIVE_QUERY` regex so the trailing "in Y" is not
+     silently truncated.  An optional "to" between R and "in" is
+     normalized to `belongs_to`.
+  2. `compose_relations(triples, head, frame, relation)`
+     (`generate/operators.py`) is a pure function that looks up
+     both `R(head, ?)` and `R(frame, ?)` from the typed teaching
+     store and returns a `FrameComposeResult` with both tails (or
+     None when an edge is absent).
+  3. `CognitiveTurnPipeline._maybe_compose_relations` fires only on
+     `FRAME_TRANSFER` intents, `_fold_compose_into_surface` names
+     both endpoints in the surface deterministically, and
+     `_serialize_compose` folds the result into `operator_invocation`
+     so `trace_hash` remains bit-identical across replay.
+
+Historic findings preserved below.
 
 ## Original v1 result (now superseded)
 

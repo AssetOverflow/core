@@ -22,6 +22,7 @@ class IntentTag(Enum):
     RECALL = "recall"
     VERIFICATION = "verification"
     TRANSITIVE_QUERY = "transitive_query"
+    FRAME_TRANSFER = "frame_transfer"
     UNKNOWN = "unknown"
 
 
@@ -31,6 +32,7 @@ class DialogueIntent:
     subject: str
     secondary_subject: str | None = None
     relation: str | None = None  # populated for TRANSITIVE_QUERY (ADR-0018)
+    frame: str | None = None     # populated for FRAME_TRANSFER (compose_relations)
 
     def requires_prior_turn(self) -> bool:
         return self.tag is IntentTag.CORRECTION
@@ -50,6 +52,17 @@ _COMPARE_RE = re.compile(
 _TRANSITIVE_QUERY_RE = re.compile(
     r"^what\s+does\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
     r"(?P<relation>[a-z][a-z\-]*)\b",
+    re.IGNORECASE,
+)
+# Frame-transfer form:
+#   "What does X R in Y?"  -> compose_relations(triples, X, Y, R)
+# This is the compositionality lane's `novel_pair_under_seen_relation`
+# probe shape.  Must be tried before the generic transitive-query rule
+# so the "in Y" tail is not silently truncated.
+_FRAME_TRANSFER_RE = re.compile(
+    r"^what\s+does\s+(?P<subject>[a-z][a-z\-]+)\s+"
+    r"(?P<relation>[a-z][a-z\-]+)(?P<rel_tail>\s+to)?\s+in\s+"
+    r"(?P<frame>[a-z][a-z\-]+)\b",
     re.IGNORECASE,
 )
 _BELONG_QUERY_RE = re.compile(
@@ -93,6 +106,23 @@ def classify_intent(prompt: str) -> DialogueIntent:
             tag=IntentTag.COMPARISON,
             subject=compare_match.group(1).strip(),
             secondary_subject=compare_match.group(2).strip(),
+        )
+
+    frame_match = _FRAME_TRANSFER_RE.match(text)
+    if frame_match:
+        raw_relation = frame_match.group("relation").lower().strip()
+        # "X belong to in Y" — normalize to belongs_to since the optional
+        # " to" token after the relation indicates the same paraphrase
+        # the BELONG_QUERY rule handles for single-entity probes.
+        if frame_match.group("rel_tail") and raw_relation in {"belong", "belongs"}:
+            relation = "belongs_to"
+        else:
+            relation = _RELATION_NORMALIZE.get(raw_relation, raw_relation)
+        return DialogueIntent(
+            tag=IntentTag.FRAME_TRANSFER,
+            subject=frame_match.group("subject").strip(),
+            relation=relation,
+            frame=frame_match.group("frame").strip(),
         )
 
     transitive_match = _TRANSITIVE_QUERY_RE.match(text)
