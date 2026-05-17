@@ -57,6 +57,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "teaching": (
         "tests/test_reviewed_teaching_loop.py",
         "tests/test_pipeline_teaching_integration.py",
+        "tests/test_epistemic_invariants.py",
     ),
     "packs": (
         "tests/test_core_semantic_seed_pack.py",
