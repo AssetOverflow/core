@@ -23,8 +23,12 @@ from generate.admissibility import (
     AdmissibilityRegion,
     AdmissibilityTraceStep,
     AdmissibilityVerdict,
+    MarginVerdict,
+    RankedCandidate,
+    check_margin,
     check_transition,
     filter_candidates,
+    rank_candidates_by_blade,
 )
 from generate.attention import AttentionOperator
 from generate.exhaustion import InnerLoopExhaustion, RefusalReason
@@ -281,6 +285,8 @@ def generate(
     inner_loop_admissibility: bool = False,
     admissibility_threshold: float = 0.0,
     inner_loop_force_admit: bool = False,
+    admissibility_mode: str = "threshold",
+    admissibility_margin: float = 0.4,
 ) -> GenerationResult:
     """Generate a token sequence.
 
@@ -375,6 +381,18 @@ def generate(
     region_active = region is not None and not region.is_unconstrained()
     active_region: AdmissibilityRegion | None = region if region_active else None
     inner_loop_active = inner_loop_admissibility and region_active
+    # ADR-0026 / Phase 3 — margin mode is opt-in.  When active it
+    # replaces the per-candidate threshold check with a ranked
+    # admissibility test on the candidate set, admitting the top
+    # blade-ranked candidate iff its margin over the second-ranked
+    # is at least ``admissibility_margin``.  Falls back to threshold
+    # mode (ADR-0024) on any unrecognised value so a config typo
+    # cannot silently disable admissibility.
+    margin_mode_active = (
+        inner_loop_active
+        and admissibility_mode == "margin"
+        and active_region is not None
+    )
     for step_index in range(token_budget):
         current, hits_applied = _recall_state(_voiced_state(current, persona), vault, recall_top_k)
         vault_hits += hits_applied
@@ -388,70 +406,115 @@ def generate(
         word_idx: int
         verdict: AdmissibilityVerdict
 
-        max_attempts = (
-            len(candidate_indices) if (inner_loop_active and candidate_indices is not None)
-            else 1
-        )
-        for _attempt in range(max(max_attempts, 1)):
-            word, word_idx = _nearest_next(
-                vocab,
-                current.F,
-                current.node,
-                recent_nodes=tuple(recent_nodes),
-                stop_nodes=stop_nodes | frozenset(step_exclude),
+        if margin_mode_active:
+            # ADR-0026 / Phase 3 — rank the admissible candidate set by
+            # blade-score and admit the top iff margin >= delta.  The
+            # rotor V is only constructed for the admitted candidate
+            # below, preserving the versor_condition invariant.
+            assert active_region is not None  # margin_mode_active gates this
+            ranked = rank_candidates_by_blade(
+                active_region,
                 candidate_indices=candidate_indices,
+                versor_lookup=vocab.get_versor_at,
+                word_lookup=vocab.get_word_at,
             )
-            if active_region is not None:
-                verdict = check_transition(
-                    active_region,
-                    candidate_index=int(word_idx),
-                    candidate_versor=vocab.get_versor_at(word_idx),
-                    threshold=admissibility_threshold,
-                )
-            else:
-                verdict = AdmissibilityVerdict(
-                    admitted=True,
-                    score=0.0,
-                    region_label=effective_region_label,
-                    reason="unconstrained",
-                )
-            if not inner_loop_active or verdict.admitted or inner_loop_force_admit:
-                # `inner_loop_force_admit` is the Phase 2 null control:
-                # exercises the inner-loop code path (same attempt loop,
-                # same telemetry side effects) but force-breaks on the
-                # first candidate so any pass-rate delta vs the true
-                # inner-loop run is causally attributable to rejection,
-                # not to incidental code-path differences.
-                break
-            # Inner loop is on and verdict rejected this candidate.
-            rejected_attempts.append((int(word_idx), str(word), float(verdict.score)))
-            if int(word_idx) in step_exclude:
-                # Selector returned the same exhausted candidate — no
-                # further admissible destinations.  Honest refusal.
-                # ADR-0024 Phase 2 — in-walk exhaustion site; carries the
-                # ordered ``rejected_attempts`` accumulated this step so
-                # downstream layers can read refusal evidence without
-                # re-parsing the exception message.
+            margin_verdict = check_margin(
+                active_region, ranked, delta=admissibility_margin
+            )
+            # rejected_attempts carries the full ranked list as evidence
+            # — index, word, score — so refusal traces show the entire
+            # blade-ordering at the failed step, not just one rejection.
+            rejected_attempts = [
+                (r.index, r.word, r.score) for r in margin_verdict.ranked
+            ]
+            if not margin_verdict.admitted:
                 raise InnerLoopExhaustion(
                     reason=RefusalReason.INNER_LOOP_EXHAUSTION,
                     region_label=effective_region_label,
                     step_index=step_index,
                     rejected_attempts=tuple(rejected_attempts),
                 )
-            step_exclude.add(int(word_idx))
-        else:
-            # max_attempts exhausted without break — every admissible
-            # candidate was rejected by the inner-loop threshold.
-            # Same refusal shape as the same-candidate-loop site above;
-            # both are structurally "inner-loop produced no admissible
-            # candidate at this step".  Splitting into separate reasons
-            # can wait for Phase 4 (rotor frame, ADR-0025).
-            raise InnerLoopExhaustion(
-                reason=RefusalReason.INNER_LOOP_EXHAUSTION,
-                region_label=effective_region_label,
-                step_index=step_index,
-                rejected_attempts=tuple(rejected_attempts),
+            assert margin_verdict.top is not None  # admitted => non-None
+            word_idx = int(margin_verdict.top.index)
+            word = str(margin_verdict.top.word)
+            # Build a legacy AdmissibilityVerdict for trace storage so
+            # the AdmissibilityTraceStep shape is unchanged.  Margin
+            # info is encoded into ``reason`` for human inspection;
+            # the structured ranking lives in ``rejected_attempts``.
+            verdict = AdmissibilityVerdict(
+                admitted=True,
+                score=float(margin_verdict.top.score),
+                region_label=margin_verdict.region_label,
+                reason=(
+                    f"margin {margin_verdict.margin:.6f} >= "
+                    f"delta {margin_verdict.delta:.6f}"
+                ),
             )
+        else:
+            max_attempts = (
+                len(candidate_indices) if (inner_loop_active and candidate_indices is not None)
+                else 1
+            )
+            for _attempt in range(max(max_attempts, 1)):
+                word, word_idx = _nearest_next(
+                    vocab,
+                    current.F,
+                    current.node,
+                    recent_nodes=tuple(recent_nodes),
+                    stop_nodes=stop_nodes | frozenset(step_exclude),
+                    candidate_indices=candidate_indices,
+                )
+                if active_region is not None:
+                    verdict = check_transition(
+                        active_region,
+                        candidate_index=int(word_idx),
+                        candidate_versor=vocab.get_versor_at(word_idx),
+                        threshold=admissibility_threshold,
+                    )
+                else:
+                    verdict = AdmissibilityVerdict(
+                        admitted=True,
+                        score=0.0,
+                        region_label=effective_region_label,
+                        reason="unconstrained",
+                    )
+                if not inner_loop_active or verdict.admitted or inner_loop_force_admit:
+                    # `inner_loop_force_admit` is the Phase 2 null control:
+                    # exercises the inner-loop code path (same attempt loop,
+                    # same telemetry side effects) but force-breaks on the
+                    # first candidate so any pass-rate delta vs the true
+                    # inner-loop run is causally attributable to rejection,
+                    # not to incidental code-path differences.
+                    break
+                # Inner loop is on and verdict rejected this candidate.
+                rejected_attempts.append((int(word_idx), str(word), float(verdict.score)))
+                if int(word_idx) in step_exclude:
+                    # Selector returned the same exhausted candidate — no
+                    # further admissible destinations.  Honest refusal.
+                    # ADR-0024 Phase 2 — in-walk exhaustion site; carries the
+                    # ordered ``rejected_attempts`` accumulated this step so
+                    # downstream layers can read refusal evidence without
+                    # re-parsing the exception message.
+                    raise InnerLoopExhaustion(
+                        reason=RefusalReason.INNER_LOOP_EXHAUSTION,
+                        region_label=effective_region_label,
+                        step_index=step_index,
+                        rejected_attempts=tuple(rejected_attempts),
+                    )
+                step_exclude.add(int(word_idx))
+            else:
+                # max_attempts exhausted without break — every admissible
+                # candidate was rejected by the inner-loop threshold.
+                # Same refusal shape as the same-candidate-loop site above;
+                # both are structurally "inner-loop produced no admissible
+                # candidate at this step".  Splitting into separate reasons
+                # can wait for Phase 4 (rotor frame, ADR-0025).
+                raise InnerLoopExhaustion(
+                    reason=RefusalReason.INNER_LOOP_EXHAUSTION,
+                    region_label=effective_region_label,
+                    step_index=step_index,
+                    rejected_attempts=tuple(rejected_attempts),
+                )
 
         tokens.append(_articulate(vocab, word))
         admissibility_trace.append(

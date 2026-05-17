@@ -22,6 +22,13 @@ class RuntimeConfig:
     inhibition_threshold: float = 0.3
     inner_loop_admissibility: bool = False
     admissibility_threshold: float = 0.0
+    # ADR-0026 / Phase 3 — margin-based admissibility.  ``mode``
+    # selects between ADR-0024's per-candidate threshold check and
+    # the ranked-with-margin check.  Default "threshold" preserves
+    # ADR-0024 acceptance evidence; opt-in "margin" replaces the
+    # static-threshold gate with a scale-invariant margin.
+    admissibility_mode: str = "threshold"
+    admissibility_margin: float = 0.4
 
 
 DEFAULT_CONFIG = RuntimeConfig()

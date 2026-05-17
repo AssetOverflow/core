@@ -184,6 +184,8 @@ class ChatRuntime:
                 inhibition_threshold=config.inhibition_threshold,
                 inner_loop_admissibility=config.inner_loop_admissibility,
                 admissibility_threshold=config.admissibility_threshold,
+                admissibility_mode=config.admissibility_mode,
+                admissibility_margin=config.admissibility_margin,
             )
         else:
             resolved_config = config
@@ -400,6 +402,8 @@ class ChatRuntime:
             inhibition_threshold=self.config.inhibition_threshold,
             inner_loop_admissibility=self.config.inner_loop_admissibility,
             admissibility_threshold=self.config.admissibility_threshold,
+            admissibility_mode=self.config.admissibility_mode,
+            admissibility_margin=self.config.admissibility_margin,
         )
 
         # --- Articulation fidelity: replace bare S-P-O join with intent-aware surface ---

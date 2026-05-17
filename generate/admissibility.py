@@ -405,6 +405,190 @@ def check_transition(
     )
 
 
+# ----------------------------------------------------------------------
+# Phase 3 — Ranked admissibility with margin (ADR-0026)
+# ----------------------------------------------------------------------
+#
+# Replaces ``score >= threshold`` with
+# ``score(top) - score(second) >= delta`` over the candidates in the
+# admissible set, ranked by ``cga_inner(versor, relation_blade)``
+# descending with strict ``>`` tie-break (deterministic on ascending
+# vocab index for ties).
+#
+# Phase 4 characterization (recorded in
+# ``tests/test_inner_loop_phase4.py``) showed that no single global
+# threshold separates the v2 mechanism-isolation cases because blade
+# norms vary ~10x across cases.  Margins are scale-invariant under
+# blade-norm variation — the gap between top and second-ranked is
+# proportional to the blade norm, so the *relative* admissibility
+# ordering is what the geometry actually delivers.  A single per-
+# runtime ``delta`` is therefore meaningful in a way that a single
+# ``tau`` is not.
+#
+# Selection within margin mode is blade-rank-driven: the top-ranked
+# admissible candidate IS the admitted destination.  This differs
+# from threshold mode where ``_nearest_next`` (field-driven) picks
+# and ``check_transition`` gates.  The mode is opt-in; threshold
+# mode remains the default to preserve ADR-0024 acceptance evidence.
+
+
+@dataclass(frozen=True, slots=True)
+class RankedCandidate:
+    """One row in the blade-score ranking of an admissible candidate set."""
+
+    index: int
+    word: str
+    score: float
+
+
+@dataclass(frozen=True, slots=True)
+class MarginVerdict:
+    """Result of margin-based admissibility check on a ranked candidate set.
+
+    Carries the admit/reject verdict, the top-ranked candidate, the
+    margin between top and second-ranked, and the full ranked list so
+    refusal evidence (in ``InnerLoopExhaustion.rejected_attempts``)
+    can carry the entire ordering at the failed step rather than a
+    single rejected score.
+    """
+
+    admitted: bool
+    top: RankedCandidate | None
+    margin: float
+    delta: float
+    region_label: str
+    ranked: tuple[RankedCandidate, ...] = ()
+    reason: str = ""
+
+
+def rank_candidates_by_blade(
+    region: AdmissibilityRegion,
+    *,
+    candidate_indices: np.ndarray | None,
+    versor_lookup,
+    word_lookup,
+) -> tuple[RankedCandidate, ...]:
+    """Rank candidates by ``cga_inner(versor, relation_blade)`` desc.
+
+    ``candidate_indices`` is the post-region-filter candidate set
+    (already intersected with ``region.allowed_indices`` upstream).
+    ``versor_lookup(idx) -> np.ndarray`` and
+    ``word_lookup(idx) -> str`` are vocab accessors hoisted into
+    parameters so this function has no I/O and can be unit-tested
+    with a stub vocab.
+
+    Tie-break: strict ``>`` on score, with ascending ``index`` as the
+    deterministic secondary key.  This matches the ``vocab.nearest``
+    strict-``>`` convention documented as load-bearing in ADR-0024.
+    """
+    if candidate_indices is None or len(candidate_indices) == 0:
+        return ()
+    blade_norm = float(np.linalg.norm(region.relation_blade))
+    if blade_norm < _NULL_TOLERANCE:
+        # No blade constraint — every candidate scores 0.  Margin
+        # cannot separate them; the caller should not enter margin
+        # mode on an unconstrained blade.  Return ranking in vocab
+        # index order so behaviour is at least deterministic.
+        rows = [
+            RankedCandidate(index=int(i), word=str(word_lookup(int(i))), score=0.0)
+            for i in candidate_indices
+        ]
+        return tuple(rows)
+    rows: list[RankedCandidate] = []
+    for idx in candidate_indices:
+        v = np.asarray(versor_lookup(int(idx)), dtype=np.float32)
+        s = float(cga_inner(v, region.relation_blade))
+        rows.append(
+            RankedCandidate(index=int(idx), word=str(word_lookup(int(idx))), score=s)
+        )
+    # Sort descending by score, ascending by index for tie-break.
+    rows.sort(key=lambda r: (-r.score, r.index))
+    return tuple(rows)
+
+
+def check_margin(
+    region: AdmissibilityRegion,
+    ranked: tuple[RankedCandidate, ...],
+    *,
+    delta: float,
+) -> MarginVerdict:
+    """Admit the top-ranked candidate iff it has a clean margin.
+
+    Admission requires:
+
+      1. The ranking is non-empty (``len(ranked) >= 1``).
+      2. ``ranked[0].score > 0`` — basic positivity in the blade
+         half-space.  A non-positive top score means the admissible
+         set has no blade-aligned candidate at all; refuse.
+      3. If ``len(ranked) >= 2``: ``ranked[0].score - ranked[1].score
+         >= delta``.  The top must out-score the next-best by at
+         least ``delta``.
+      4. If ``len(ranked) == 1``: trivially admit (no competitor to
+         confuse the boundary's pick).
+
+    A single ``delta`` works across blades of varying norm because
+    the margin scales with blade norm — the *relative* gap, not the
+    absolute score, is what carries semantic separation.
+    """
+    if not ranked:
+        return MarginVerdict(
+            admitted=False,
+            top=None,
+            margin=float("-inf"),
+            delta=delta,
+            region_label=region.label,
+            ranked=(),
+            reason="empty ranking",
+        )
+    top = ranked[0]
+    if top.score <= 0.0:
+        return MarginVerdict(
+            admitted=False,
+            top=top,
+            margin=float("-inf"),
+            delta=delta,
+            region_label=region.label,
+            ranked=ranked,
+            reason=f"top score {top.score:.6f} not positive",
+        )
+    if len(ranked) == 1:
+        # Single admissible candidate — no margin to compute.
+        return MarginVerdict(
+            admitted=True,
+            top=top,
+            margin=float("inf"),
+            delta=delta,
+            region_label=region.label,
+            ranked=ranked,
+            reason="ok (single admissible)",
+        )
+    second = ranked[1]
+    margin = top.score - second.score
+    if margin < delta:
+        return MarginVerdict(
+            admitted=False,
+            top=top,
+            margin=margin,
+            delta=delta,
+            region_label=region.label,
+            ranked=ranked,
+            reason=(
+                f"margin {margin:.6f} below delta {delta:.6f} "
+                f"(top={top.word!r}@{top.score:.6f}, "
+                f"next={second.word!r}@{second.score:.6f})"
+            ),
+        )
+    return MarginVerdict(
+        admitted=True,
+        top=top,
+        margin=margin,
+        delta=delta,
+        region_label=region.label,
+        ranked=ranked,
+        reason="ok",
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class AdmissibilityTraceStep:
     """One per-transition record from a constrained walk (ADR-0023 §2).
