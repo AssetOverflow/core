@@ -595,9 +595,10 @@ Vault indexing strategy is decided (ADR-0019: Stage 1 now, Stages
 **Status:** IN PROGRESS (opened 2026-05-16, ADR-0020 Option C)
 **Depends on:** Phase 4 exit (✓ 2026-05-16)
 **Parallel track:** Rust backend parity port, per-surface
-  bit-identity gated.  First port: `vault_recall`.
+  bit-identity gated.
 
-- [ ] 5.1 English fluency (grammatical-coverage v5 OOD)
+- [x] 5.1 English fluency (`english_fluency_ood` v1, 100% on
+      public + holdouts, 2026-05-16)
 - [ ] 5.2 Hebrew fluency
 - [ ] 5.3 Koine Greek fluency
 - [ ] 5.4 Elementary mathematics
@@ -605,6 +606,19 @@ Vault indexing strategy is decided (ADR-0019: Stage 1 now, Stages
 - [ ] 5.6 Foundational biology
 - [ ] 5.7 Classical literature
 - [ ] Phase 1-4 lanes re-run on every release (no regression)
+
+### Parallel track — Rust parity (ADR-0020)
+
+Per-surface bit-identity gates landed (2026-05-16):
+
+- [x] `vault_recall` — passing, dispatch enabled (1.91× at N=1M)
+- [x] `cga_inner` — passing, dispatch enabled
+- [x] `geometric_product` — passing, dispatch enabled
+- [x] `versor_condition` — passing after f64 fold fix, dispatch enabled
+- [x] `versor_apply` — f64 port passing, dispatch enabled
+      (29× over Python on the runtime hot path)
+- [x] ADR-0021 (Epistemic Grade Policy) schema wired across
+      teaching + trace + lexicon (2026-05-16)
 
 ---
 

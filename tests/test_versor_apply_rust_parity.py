@@ -94,21 +94,7 @@ def _assert_bit_identity(py: dict, rs: dict) -> None:
         assert p == r, f"versor_apply divergence at component {k}: python={p} rust={r}"
 
 
-# Rust dispatch for versor_apply is currently disabled in algebra/backend.py
-# pending an f64 parity port — see the docstring on `algebra.backend.versor_apply`.
-# The Rust kernel `versor_apply_closed` diverges from Python on two axes:
-#   (1) precision: Rust folds the sandwich in f32; Python in f64
-#   (2) closure structure: Rust has a null-vector early branch + no
-#       post-unitize condition recheck; Python is the inverse
-# Until both axes are reconciled, the parity gate is skipped.  When the
-# f64 port lands and the dispatch is re-enabled, remove this skip marker.
-_PARITY_DISABLED_REASON = (
-    "Rust versor_apply dispatch disabled pending f64 parity port; "
-    "see algebra/backend.py::versor_apply and ADR-0020."
-)
-
-
-@pytest.mark.skip(reason=_PARITY_DISABLED_REASON)
+@pytest.mark.skipif(not _RUST_AVAILABLE, reason="core_rs extension not built")
 @pytest.mark.parametrize("seed", [0xC07E, 0xBEEF, 0x1234, 0xFACE, 0xDEAD])
 def test_versor_apply_normalized_bit_identity(seed: int) -> None:
     """Runtime hot path — both V and F normalized through the closure boundary."""
@@ -117,15 +103,10 @@ def test_versor_apply_normalized_bit_identity(seed: int) -> None:
     _assert_bit_identity(py, rs)
 
 
-@pytest.mark.skip(reason=_PARITY_DISABLED_REASON)
+@pytest.mark.skipif(not _RUST_AVAILABLE, reason="core_rs extension not built")
 @pytest.mark.parametrize("seed", [0xC07E, 0xBEEF, 0x1234])
 def test_versor_apply_identity_v_bit_identity(seed: int) -> None:
     """V = scalar 1 → V·F·rev(V) == F. The simplest non-trivial sandwich case."""
     py = _run_backend("python", FIXTURE_MODE="identity_v", FIXTURE_SEED=str(seed))
     rs = _run_backend("rust", FIXTURE_MODE="identity_v", FIXTURE_SEED=str(seed))
     _assert_bit_identity(py, rs)
-
-
-# Keep _RUST_AVAILABLE referenced so static analysis sees its intended use
-# once the parity gate is re-enabled.
-_ = _RUST_AVAILABLE

@@ -112,6 +112,78 @@ pub fn versor_apply_closed(v: &[f32; 32], f: &[f32; 32]) -> Result<[f32; 32], Ve
     Ok(close_applied_versor(&vfrv))
 }
 
+/// `versor_apply` f64 path — bit-identity port of Python
+/// `algebra.versor.versor_apply` + `_close_applied_versor`.
+///
+/// Performs the full sandwich V·F·rev(V) and closure in f64.  The
+/// closure mirrors Python exactly: no null-vector early branch
+/// (Python doesn't have one), and after `unitize_closed` succeeds the
+/// candidate is gated through `versor_condition < 1e-6` before being
+/// accepted — otherwise the deterministic `seed_to_rotor`
+/// construction map is used.  ADR-0020 parity gate
+/// `tests/test_versor_apply_rust_parity.py`.
+pub fn versor_apply_closed_f64(
+    v: &[f64; 32],
+    f: &[f64; 32],
+) -> Result<[f64; 32], VersorError> {
+    let rev_v = reverse_f64(v);
+    let vf = geometric_product_f64(v, f);
+    let vfrv = geometric_product_f64(&vf, &rev_v);
+    Ok(close_applied_versor_f64(&vfrv))
+}
+
+const RUNTIME_CLOSURE_TOL: f64 = 1e-6;
+const DENSE_SEED_MIN_COMPONENTS: usize = 8;
+
+fn versor_condition_f64(v: &[f64; 32]) -> f64 {
+    let rev = reverse_f64(v);
+    let mut frv = geometric_product_f64(v, &rev);
+    frv[0] -= 1.0;
+    frv.iter().map(|x| x * x).sum::<f64>().sqrt()
+}
+
+/// Mirrors Python `unitize_versor`: try `unitize_closed`; on
+/// bad_residue, if dense enough fall back to `seed_to_rotor`; else
+/// propagate the error.
+fn unitize_versor_f64(v: &[f64; 32]) -> Result<[f64; 32], ()> {
+    match unitize_closed(v) {
+        Ok(closed) => Ok(closed),
+        Err(()) => {
+            // Python distinguishes bad_residue (eligible for seed fallback)
+            // from bad_scalar / near_zero (not eligible).  We can't
+            // distinguish the error variants under the current
+            // `unitize_closed` signature; mirror Python's policy by gating
+            // the fallback on the dense-support heuristic, which is the
+            // condition Python also requires before invoking the rotor seed.
+            let support = v
+                .iter()
+                .filter(|x| x.abs() > NEAR_ZERO_TOL)
+                .count();
+            if support < DENSE_SEED_MIN_COMPONENTS {
+                Err(())
+            } else {
+                seed_to_rotor(v)
+            }
+        }
+    }
+}
+
+/// Mirrors Python `_close_applied_versor`:
+///   try _runtime_closed(v) -> if condition < 1e-6 return; else seed_to_rotor
+///   on any ValueError -> seed_to_rotor (with passthrough as last resort
+///                                       if seed_to_rotor itself fails)
+fn close_applied_versor_f64(v: &[f64; 32]) -> [f64; 32] {
+    if let Ok(candidate) = unitize_versor_f64(v) {
+        if versor_condition_f64(&candidate) < RUNTIME_CLOSURE_TOL {
+            return candidate;
+        }
+    }
+    if let Ok(seeded) = seed_to_rotor(v) {
+        return seeded;
+    }
+    *v
+}
+
 /// Raw sandwich product V * F * reverse(V) without closure.
 pub fn versor_apply_raw(v: &[f32; 32], f: &[f32; 32]) -> Result<[f32; 32], VersorError> {
     let rev_v = reverse_raw(v);

@@ -23,7 +23,10 @@ use cl41::geometric_product_raw;
 use diffusion::{graph_diffusion_step, unitize_f32};
 #[allow(unused_imports)]
 use vault::vault_recall_raw;
-use versor::{normalize_to_versor_raw, versor_apply_closed, versor_apply_raw, versor_condition_raw};
+use versor::{
+    normalize_to_versor_raw, versor_apply_closed, versor_apply_closed_f64, versor_apply_raw,
+    versor_condition_raw,
+};
 
 /// Geometric product in Cl(4,1). Accepts two numpy-compatible f32 arrays of length 32.
 #[pyfunction]
@@ -66,6 +69,22 @@ fn versor_apply_with_closure(
     let result = versor_apply_closed(&v_slice, &f_slice)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     f32_array_to_numpy(py, &result)
+}
+
+/// `versor_apply` f64 closure path — bit-identity port of Python
+/// `algebra.versor.versor_apply` + `_close_applied_versor`.
+/// Inputs and output are float64.  ADR-0020 parity surface.
+#[pyfunction]
+fn versor_apply_with_closure_f64(
+    py: Python<'_>,
+    v: &pyo3::types::PyAny,
+    f: &pyo3::types::PyAny,
+) -> PyResult<PyObject> {
+    let v_slice = extract_f64_slice(v)?;
+    let f_slice = extract_f64_slice(f)?;
+    let result = versor_apply_closed_f64(&v_slice, &f_slice)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    f64_array_to_numpy(py, &result)
 }
 
 /// ||F*reverse(F) - 1||_F. Returns scalar f32.
@@ -217,11 +236,35 @@ fn f32_array_to_numpy(py: Python<'_>, data: &[f32; 32]) -> PyResult<PyObject> {
     Ok(arr.into_py(py))
 }
 
+fn extract_f64_slice(obj: &pyo3::types::PyAny) -> PyResult<[f64; 32]> {
+    let np = obj.py().import("numpy")?;
+    let arr = np.call_method1("asarray", (obj, "float64"))?;
+    let flat = arr.call_method0("flatten")?;
+    let list: Vec<f64> = flat.extract()?;
+    if list.len() != 32 {
+        return Err(PyValueError::new_err(format!(
+            "Expected array of length 32, got {}",
+            list.len()
+        )));
+    }
+    let mut out = [0f64; 32];
+    out.copy_from_slice(&list);
+    Ok(out)
+}
+
+fn f64_array_to_numpy(py: Python<'_>, data: &[f64; 32]) -> PyResult<PyObject> {
+    let np = py.import("numpy")?;
+    let list: Vec<f64> = data.to_vec();
+    let arr = np.call_method1("array", (list, "float64"))?;
+    Ok(arr.into_py(py))
+}
+
 #[pymodule]
 fn core_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(geometric_product, m)?)?;
     m.add_function(wrap_pyfunction!(versor_apply, m)?)?;
     m.add_function(wrap_pyfunction!(versor_apply_with_closure, m)?)?;
+    m.add_function(wrap_pyfunction!(versor_apply_with_closure_f64, m)?)?;
     m.add_function(wrap_pyfunction!(versor_condition, m)?)?;
     m.add_function(wrap_pyfunction!(normalize_to_versor, m)?)?;
     m.add_function(wrap_pyfunction!(cga_inner, m)?)?;
