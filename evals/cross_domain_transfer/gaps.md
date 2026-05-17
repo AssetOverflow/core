@@ -1,6 +1,15 @@
 # cross-domain-transfer lane — architectural findings (v1)
 
-## v1 result
+## Resolution — 2026-05-17 lane re-run
+
+`transfer_endpoint_recall_rate = 1.0` on both splits after the typed
+operators + pipeline wiring landed.  The same fix that closed
+inference_closure unblocks this lane: B-domain endpoints surface
+correctly after A-domain priming.  `overall_pass = True`.
+
+Historic finding preserved below.
+
+## Original v1 result (now superseded)
 
 | Split | n | transfer_endpoint_recall | A_stored | B_stored | replay |
 |---|---|---|---|---|---|

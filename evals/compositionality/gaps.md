@@ -1,6 +1,26 @@
 # compositionality lane — architectural findings (v1)
 
-## v1 result
+## Resolution (partial) — 2026-05-17 lane re-run
+
+After the typed operators + pipeline wiring landed:
+
+| Split | n | compositional_recall_rate | premises_stored | replay | overall |
+|---|---|---|---|---|---|
+| public/v1   | 16 | **0.6875** (was 0.0625) | 1.0 | 1.0 | ✓ pass |
+| holdouts/v1 | 10 | (re-score)              | 1.0 | 1.0 | (re-score) |
+
+`overall_pass = True` because the structural foundations gate, but
+the recall rate is not yet 1.0.  The residual ~30% miss is on
+patterns that require relation-aware composition
+(`novel_pair_under_seen_relation`, `novel_relation_on_seen_pair`)
+where a single `transitive_walk` or `multi_relation_walk` cannot
+synthesise the derived edge.  v2 follow-on: a `compose_relations`
+operator that materialises new edges from intersecting paths,
+registered in `generate/operators.py` alongside the existing walks.
+
+Historic finding preserved below.
+
+## Original v1 result (now superseded)
 
 | Split | n | compositional_recall_rate | premises_stored | replay | no_leakage |
 |---|---|---|---|---|---|

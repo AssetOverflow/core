@@ -447,7 +447,6 @@ class TestINV06NullConePreservation:
             f"Null vector self-product scalar part = {scalar_part:.2e}, expected ~0"
         )
 
-    @pytest.mark.skip(reason="versor_apply now always closes to unit versor; null preservation deferred to explicit geometry API")
     def test_versor_apply_preserves_null_property(self):
         n = self._null_vector()
         V = normalize_to_versor(_unit_versor(0))  # identity-like rotor

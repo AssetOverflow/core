@@ -1,6 +1,26 @@
 # inference-closure lane — architectural findings (v1)
 
-## v1 result
+## Resolution — 2026-05-17 lane re-run
+
+After the typed deterministic operators (ADR-0018: `transitive_walk`,
+`multi_relation_walk`, `path_recall` in `generate/operators.py`) and
+their pipeline wiring (`_maybe_transitive_walk` + `_fold_walk_into_surface`
+in `core/cognition/pipeline.py`) landed, this lane passes:
+
+| Split | n | derived_recall_rate | premises_stored | replay | overall |
+|---|---|---|---|---|---|
+| public/v1  | 20 | **1.0** | 1.0 | 1.0 | ✓ |
+| holdouts/v1 | 12 | **1.0** | 1.0 | 1.0 | ✓ |
+
+Gap 1 (no transitive composition) and Gap 2 (no path-recall) are both
+closed.  The probe for `wisdom is light`, `light is truth`,
+`What is wisdom?` now produces
+`wisdom is defined as ... — wisdom is truth (via wisdom light truth)`,
+and the chain endpoint `truth` is folded into the user-facing surface.
+
+Historic finding preserved below.
+
+## Original v1 result (now superseded)
 
 | Split | n | derived_recall_rate | premises_stored_rate | replay_determinism | overall_pass |
 |---|---|---|---|---|---|

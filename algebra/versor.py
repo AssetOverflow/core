@@ -120,10 +120,46 @@ def _close_applied_versor(v: np.ndarray) -> np.ndarray:
         return _seed_to_rotor(arr, _RUNTIME_FIELD_DTYPE).astype(_RUNTIME_FIELD_DTYPE)
 
 
+_NULL_INNER_TOL: float = 1e-5  # f32 sandwich noise floor for null inputs
+
+
+def _input_is_null(F: np.ndarray) -> bool:
+    """True if F is a null vector in the CGA inner product (self-inner ≈ 0).
+
+    Used to route null inputs around the unit-versor closure path so the
+    sandwich V·F·rev(V) preserves the null property (Euclidean points
+    map to Euclidean points under conformal transformations).
+    """
+    from algebra.cga import cga_inner
+    return abs(float(cga_inner(F, F))) < _NULL_INNER_TOL
+
+
 def versor_apply(V: np.ndarray, F: np.ndarray) -> np.ndarray:
+    """Apply a versor V to a multivector F via the sandwich V·F·rev(V).
+
+    Two regimes:
+
+      - **Non-null F** (the runtime field-state path): the result is
+        closed back onto the unit-versor manifold via
+        `_close_applied_versor` so the invariant
+        `versor_condition(F) < 1e-6` is preserved.
+
+      - **Null F** (CGA point input): the raw sandwich preserves the
+        null property algebraically.  Closure would force the result
+        onto the unit-versor shell, breaking the null invariant
+        (Euclidean points should map to Euclidean points under
+        conformal transformations).  We detect null inputs by
+        ``cga_inner(F, F) ≈ 0`` and return the raw sandwich.
+
+    This dual-path replaces the previously-skipped tests
+    `test_versor_apply_preserves_null_property` and the Rust parity
+    sibling `test_rust_versor_apply_preserves_null_vectors`.
+    """
     V = np.asarray(V, dtype=_RUNTIME_FIELD_DTYPE)
     F = np.asarray(F, dtype=_RUNTIME_FIELD_DTYPE)
     applied = geometric_product(geometric_product(V, F), reverse(V)).astype(_RUNTIME_FIELD_DTYPE)
+    if _input_is_null(F):
+        return applied  # null inputs: keep raw sandwich, do not unitise
     return _close_applied_versor(applied)
 
 

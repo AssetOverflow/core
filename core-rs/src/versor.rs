@@ -129,7 +129,19 @@ pub fn versor_apply_closed_f64(
     let rev_v = reverse_f64(v);
     let vf = geometric_product_f64(v, f);
     let vfrv = geometric_product_f64(&vf, &rev_v);
+    // Null inputs (CGA points) skip closure to preserve null property.
+    // Matches `algebra.versor.versor_apply` _input_is_null branch.
+    if input_is_null_f64(f) {
+        return Ok(vfrv);
+    }
     Ok(close_applied_versor_f64(&vfrv))
+}
+
+fn input_is_null_f64(f: &[f64; 32]) -> bool {
+    // cga_inner(f, f) ≈ 0 to the f32-sandwich noise floor.
+    // Symmetric formula: 0.5 * (scalar(f*f) + scalar(f*f)) = scalar(f*f).
+    let f_sq = geometric_product_f64(f, f);
+    f_sq[0].abs() < 1e-5
 }
 
 const RUNTIME_CLOSURE_TOL: f64 = 1e-6;

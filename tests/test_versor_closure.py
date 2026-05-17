@@ -105,16 +105,35 @@ def test_composition_closed():
     assert versor_condition(F3) < 1e-4
 
 
-def test_versor_apply_closes_null_like_field_results_for_runtime_contract():
+def test_versor_apply_preserves_null_property_for_null_inputs():
+    """Null vectors (CGA points) map to null vectors under versor sandwich.
+
+    Updated 2026-05-17: `versor_apply` now routes null inputs around
+    the unit-versor closure boundary so the null property is preserved.
+    The previous test name claimed runtime closure was required for
+    null inputs; that contradicted the CGA geometric semantics
+    (Euclidean points stay points under conformal transformations)
+    and the un-skipped null-preservation invariant in
+    `tests/test_architectural_invariants.py::TestINV06NullConePreservation`.
+
+    Non-null field states still pass through closure unchanged — see
+    `test_composition_closed` and `test_identity_versor` for those.
+    """
+    from algebra.cga import cga_inner
     identity = np.zeros(32, dtype=np.float32)
     identity[0] = 1.0
     null_like = np.zeros(32, dtype=np.float32)
     null_like[1] = 1.0
     null_like[5] = 1.0
 
+    # Sanity: the constructed input is null under the CGA metric
+    # (e1·e1=+1, e_-·e_-=-1, cross terms cancel → self-inner = 0).
+    assert abs(float(cga_inner(null_like, null_like))) < 1e-9
+
     result = versor_apply(identity, null_like)
 
-    assert versor_condition(result) < 1e-6
+    # The result must remain null, not closed to the unit-versor shell.
+    assert abs(float(cga_inner(result, result))) < 1e-5
 
 
 def test_identity_versor():

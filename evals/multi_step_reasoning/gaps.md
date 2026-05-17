@@ -1,6 +1,17 @@
 # multi-step-reasoning lane — architectural findings (v1)
 
-## v1 result
+## Resolution — 2026-05-17 lane re-run
+
+`endpoint_recall_rate`, `intermediate_hop_visible_rate`,
+`premises_stored_rate`, and `replay_determinism` all **1.0** on both
+splits after the typed operators + pipeline wiring landed.
+`overall_pass = True`.  3-, 4-, and 5-hop chains all surface their
+endpoint and visible intermediate tokens.  Same architectural fix
+that closed inference_closure.
+
+Historic finding preserved below.
+
+## Original v1 result (now superseded)
 
 | Split | n | endpoint_recall | intermediate_visible | stored | replay |
 |---|---|---|---|---|---|
