@@ -87,6 +87,19 @@ class CognitiveTurnResult:
     ratification_outcome: str = ""
     region_was_unconstrained: bool = True
 
+    # --- inner-loop refusal evidence (ADR-0024 Phase 2) ---
+    # ``refusal_reason`` is the stable string value of a
+    # ``generate.exhaustion.RefusalReason`` when the walk refused this
+    # turn, or the empty string otherwise.  Empty-string default is
+    # the contract for "no refusal materialised"; folding into
+    # trace_hash is gated on non-emptiness so non-refused turns keep
+    # byte-identical hashes relative to pre-Phase-2 (CLAUDE.md
+    # determinism invariant).  Phase 2 leaves the materialisation site
+    # in chat/runtime.py untouched per the ADR-0024 Phase 2 scope
+    # decision — this field exists so the trace contract is already
+    # in place when a future ADR wires the materialisation path.
+    refusal_reason: str = ""
+
     # --- invariant bookkeeping ---
     versor_condition: float = 0.0   # must be < 1e-6
     trace_hash: str = ""            # SHA-256 over deterministic key fields

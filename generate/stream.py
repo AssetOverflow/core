@@ -27,6 +27,7 @@ from generate.admissibility import (
     filter_candidates,
 )
 from generate.attention import AttentionOperator
+from generate.exhaustion import InnerLoopExhaustion, RefusalReason
 from generate.result import GenerationResult
 from generate.salience import SalienceOperator
 
@@ -339,8 +340,18 @@ def generate(
     if region is not None and not region.is_unconstrained():
         candidate_indices = filter_candidates(region, candidate_indices)
         if candidate_indices is not None and len(candidate_indices) == 0:
-            raise ValueError(
-                f"AdmissibilityRegion[{region.label}] left no walk candidates."
+            # ADR-0024 Phase 2 — pre-walk exhaustion site.  The region's
+            # allowed-index intersection with the candidate set is empty
+            # before any step ran.  ``step_index = -1`` and
+            # ``rejected_attempts = ()`` distinguish this site from the
+            # in-walk exhaustion site below; no inner-loop rejections were
+            # issued because the region was already empty.  Subclasses
+            # ValueError so existing handlers continue to catch it.
+            raise InnerLoopExhaustion(
+                reason=RefusalReason.INNER_LOOP_EXHAUSTION,
+                region_label=region.label,
+                step_index=-1,
+                rejected_attempts=(),
             )
         candidates_used = None if candidate_indices is None else len(candidate_indices)
     admissibility_trace: list[AdmissibilityTraceStep] = []
@@ -417,17 +428,29 @@ def generate(
             if int(word_idx) in step_exclude:
                 # Selector returned the same exhausted candidate — no
                 # further admissible destinations.  Honest refusal.
-                raise ValueError(
-                    f"AdmissibilityRegion[{effective_region_label}] inner-loop "
-                    f"rejected all candidates at step {step_index}."
+                # ADR-0024 Phase 2 — in-walk exhaustion site; carries the
+                # ordered ``rejected_attempts`` accumulated this step so
+                # downstream layers can read refusal evidence without
+                # re-parsing the exception message.
+                raise InnerLoopExhaustion(
+                    reason=RefusalReason.INNER_LOOP_EXHAUSTION,
+                    region_label=effective_region_label,
+                    step_index=step_index,
+                    rejected_attempts=tuple(rejected_attempts),
                 )
             step_exclude.add(int(word_idx))
         else:
             # max_attempts exhausted without break — every admissible
             # candidate was rejected by the inner-loop threshold.
-            raise ValueError(
-                f"AdmissibilityRegion[{effective_region_label}] inner-loop "
-                f"rejected all candidates at step {step_index}."
+            # Same refusal shape as the same-candidate-loop site above;
+            # both are structurally "inner-loop produced no admissible
+            # candidate at this step".  Splitting into separate reasons
+            # can wait for Phase 4 (rotor frame, ADR-0025).
+            raise InnerLoopExhaustion(
+                reason=RefusalReason.INNER_LOOP_EXHAUSTION,
+                region_label=effective_region_label,
+                step_index=step_index,
+                rejected_attempts=tuple(rejected_attempts),
             )
 
         tokens.append(_articulate(vocab, word))

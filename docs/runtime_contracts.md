@@ -53,6 +53,47 @@ gated.  This closes `evals/calibration/gaps.md` Finding 2.
 Future realizer work may change the selection policy, but must update this
 document and the contract tests in the same PR.
 
+### Refusal contract (ADR-0024 Phase 2)
+
+When the inner-loop admissibility check leaves no admissible destination
+for the next step, the generation walk in `generate/stream.py` raises
+`generate.exhaustion.InnerLoopExhaustion`, a typed subclass of
+`ValueError` carrying:
+
+```text
+reason            : RefusalReason     (machine-readable taxonomy)
+region_label      : str               (which AdmissibilityRegion blocked)
+step_index        : int               (-1 = pre-walk empty intersection;
+                                       >=0 = in-walk per-step exhaustion)
+rejected_attempts : tuple[(int, str, float), ...]  (per-step evidence)
+```
+
+Reason codes are minimal in Phase 2: a single `INNER_LOOP_EXHAUSTION`
+covers both raise sites. Phase 4 (rotor-frame admissibility, ADR-0025)
+is expected to add a second reason for rotor exhaustion.
+
+`CognitiveTurnResult.refusal_reason` carries the stable string value of
+the `RefusalReason` when a turn refuses, and the empty string otherwise.
+`compute_trace_hash` folds `refusal_reason` into the payload only when
+non-empty, preserving byte-identical hashes for non-refused turns
+relative to pre-Phase-2 (determinism invariant). When the field is
+non-empty, it becomes load-bearing in replay equality.
+
+Backward compatibility: `InnerLoopExhaustion` is a `ValueError`, so
+every pre-Phase-2 `except ValueError` handler in `chat/runtime.py`,
+eval lanes, and tests continues to catch it without modification.
+
+Residual silent path (out of scope for Phase 2, future ADR):
+`ChatRuntime.respond()` and `arespond()` still convert any `ValueError`
+to the empty string for their public `str` return contract, so a real
+turn that refuses today produces `surface == ""` with
+`refusal_reason == ""` — the typed evidence is unread between the
+raise site and the result. The plumbing on `CognitiveTurnResult`,
+`compute_trace_hash`, and `CognitiveTurnPipeline` is in place so a
+future ADR can wire materialisation (e.g. propagate the typed
+exception to `ChatResponse.refusal_reason` or catch at the pipeline
+seam) without re-deriving the contract.
+
 ## TurnEvent contract
 
 `TurnEvent.surface`

@@ -254,6 +254,12 @@ class CognitiveTurnPipeline:
         )
         admissibility_trace_hash = hash_admissibility_trace(admissibility_trace)
         ratification_outcome = ratified.outcome.value
+        # ADR-0024 Phase 2 — refusal_reason flows from a future
+        # materialisation site on ChatResponse.  For Phase 2 it is
+        # absent on every non-refused turn; reading via getattr keeps
+        # the trace_hash byte-identical to pre-Phase-2 when no refusal
+        # was materialised (the empty string skips the payload fold).
+        refusal_reason = getattr(response, "refusal_reason", "") or ""
         trace_hash = compute_trace_hash(
             input_text=text,
             filtered_tokens=filtered_tokens,
@@ -271,6 +277,7 @@ class CognitiveTurnPipeline:
             admissibility_trace_hash=admissibility_trace_hash,
             ratification_outcome=ratification_outcome,
             region_was_unconstrained=region_was_unconstrained,
+            refusal_reason=refusal_reason,
         )
 
         return CognitiveTurnResult(
@@ -298,6 +305,7 @@ class CognitiveTurnPipeline:
             admissibility_trace_hash=admissibility_trace_hash,
             ratification_outcome=ratification_outcome,
             region_was_unconstrained=region_was_unconstrained,
+            refusal_reason=refusal_reason,
             versor_condition=response.versor_condition,
             trace_hash=trace_hash,
         )

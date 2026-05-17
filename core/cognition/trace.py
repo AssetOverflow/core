@@ -41,6 +41,7 @@ def compute_trace_hash(
     admissibility_trace_hash: str = "",
     ratification_outcome: str = "",
     region_was_unconstrained: bool = True,
+    refusal_reason: str = "",
 ) -> str:
     """Return a deterministic SHA-256 hex digest over the turn's key outputs.
 
@@ -85,6 +86,13 @@ def compute_trace_hash(
         payload["ratification_outcome"] = ratification_outcome
     if not region_was_unconstrained:
         payload["region_was_unconstrained"] = False
+    # ADR-0024 Phase 2 — fold refusal_reason only when non-empty so a
+    # turn that did not refuse keeps byte-identical payload bytes (and
+    # therefore byte-identical trace_hash) relative to pre-Phase-2.
+    # Once a turn does materialise a refusal, the reason becomes
+    # load-bearing in replay equality.
+    if refusal_reason:
+        payload["refusal_reason"] = refusal_reason
     serialized = json.dumps(payload, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
@@ -141,4 +149,5 @@ def trace_hash_from_result(result: "CognitiveTurnResult") -> str:
         admissibility_trace_hash=getattr(result, "admissibility_trace_hash", ""),
         ratification_outcome=getattr(result, "ratification_outcome", ""),
         region_was_unconstrained=getattr(result, "region_was_unconstrained", True),
+        refusal_reason=getattr(result, "refusal_reason", ""),
     )
