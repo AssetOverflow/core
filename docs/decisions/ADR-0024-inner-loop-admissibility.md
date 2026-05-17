@@ -182,3 +182,111 @@ user-controlled text enters the trace path.
 Set `inner_loop_admissibility=False` (the default) at every call
 site.  The trace hash remains byte-identical to ADR-0023, so
 deterministic replay over the existing corpus is unaffected.
+
+---
+
+## Addendum — Phase 1 v1/dev fixture retirement (2026-05-17)
+
+### Finding
+
+Phase 4's characterization recorded that v1 chain-token outer-product
+blades skipped 9/9 cases because `chain_tokens` (`alpha`, `beta`,
+`gamma`, `delta`, `mu`, `nu`, `omicron`, `pi`, `rho`, `sigma`, `tau`,
+`upsilon`, `phi`, `chi`, `psi`, `omega`, `iota`, `lambda`, `eta`,
+`theta`, `zeta`, `xenon`, `ytterbium`, `kappa`) were synthetic and
+ungrounded in `en_core_cognition_v1`.  The Phase 2 corpus-observation
+runner inherited the same fixtures, surfacing `exhaustion_rate = 0.33`
+at `t = 0` on v1+dev — above the 5 % benign-corpus ceiling.
+
+Original assessment (pre-Phase-1): "v1 chain construction can produce
+ungrounded regions; fix the cause, not the symptom."
+
+### What Phase 1 did
+
+The 1 v1 case and 8 dev cases were rewritten with pack-grounded tokens
+drawn from `en_core_cognition_v1`:
+
+* `tone → evidence → memory → wisdom` (causes chain, replacing
+  `alpha → beta → gamma → delta`)
+* `voice → memory → wisdom` (means chain, replacing
+  `mu → nu → omicron`)
+* `question → answer → understanding → wisdom` (precedes chain,
+  replacing `pi → rho → sigma → tau`)
+* `word → discourse → narrative` (part_of chain, replacing
+  `upsilon → phi → chi`)
+* `symbol → word → meaning` with `image`/`light` distractors
+  (adversarial branching, replacing `eta/theta/zeta` plus
+  `beta/rho` means-distractors)
+
+All token-level grammar adjustments (e.g. *"register cause memory"* →
+*"register causes memory"*) were corrected as part of the rewrite.
+
+### What changed about the finding
+
+| Metric                                  | Pre-rewrite | Post-rewrite |
+| --------------------------------------- | ----------- | ------------ |
+| v1+dev cases skipped (region builds)    | 9 / 9       | 0 / 9        |
+| `causal_attribution_valid`              | True        | True         |
+| `code_path_residual`                    | 0.0         | 0.0          |
+| `inner_loop_t0` hash stability          | 1.0         | 1.0          |
+| `best_separation_quality` (Phase 4)     | 0.0         | 0.056        |
+| `geometry_supports_static_threshold`    | False       | False        |
+| `inner_loop_t0` exhaustion (Phase 2)    | 0.33        | 0.67         |
+| `inner_loop_tpos` exhaustion (Phase 2)  | (skipped)   | 1.00         |
+
+The original Phase 4 finding ("v1 chain-token blades unsuitable as the
+default region construction") was caused by two layered issues:
+
+1. **Surface fixture rot** — synthetic tokens prevented region
+   construction at all.  This is now fixed.
+2. **Deeper architectural mismatch** — v1's case schema
+   (`prime` + `chain_tokens`) probes *teaching-driven walk* through a
+   relation injected at runtime (ADR-0022 / ADR-0023's mechanism).
+   The inner-loop admissibility lane (ADR-0024) tests
+   *blade-geometric region constraint*.  These are distinct
+   mechanisms; the same case schema cannot meaningfully exercise both.
+
+Exhaustion *increased* post-rewrite because the chain-blade region is
+now constructible *and* actively rejecting the boundary's off-chain
+picks.  That is honest behavior of the inner-loop on cases it was not
+designed to evaluate.
+
+### Architectural conclusion
+
+* **v1 / dev cases belong to the ADR-0022 / ADR-0023 boundary-walk
+  lane (`evals/forward_semantic_control/runner.py`).**  The rewrite
+  improves that lane (real semantic substrate for teaching priming) and
+  does not affect this ADR.
+* **v2 cases belong to the ADR-0024 inner-loop admissibility lane
+  (`evals/forward_semantic_control/v2_runner.py`).**  v2's schema
+  (`seed_token` + `admissible_tokens` + `relation_blade_token`) is the
+  correct fixture shape for blade-admissibility evaluation.
+* **The Phase 2 corpus-observation runner's reuse of v1+dev cases was
+  a categorical error.**  The runner remains useful as a corpus-style
+  observation harness; it now needs a proper benign inner-loop corpus,
+  authored with v2's schema.  Authoring that corpus is **Phase 5's
+  job** (stratified mechanism-isolation families subsume benign-corpus
+  observation).
+
+### What this ADR addendum does *not* claim
+
+* The exhaustion finding is not "closed" — it is reattributed.  v1/dev
+  inner-loop exhaustion at 67 % is an honest consequence of running the
+  wrong mechanism on the wrong fixture, not a defect in the inner-loop
+  implementation.
+* The Phase 2 runner's exhaustion gate (`EXHAUSTION_CEILING = 0.05`)
+  remains valid as a contract; it cannot be satisfied on the current
+  fixture mix.  Phase 5 will produce the benign-corpus fixtures the
+  gate was designed against.
+* Phase 4's "no static threshold passes" finding stands unchanged.
+
+### Tests pinning the new state
+
+* `tests/test_inner_loop_phase4.py::TestV1ChainBladePostGrounding` —
+  asserts `skipped_count == 0` (replacing the pre-rewrite assertion
+  `skipped_count == case_count`) and
+  `best_separation_quality < 0.5` (replacing `== 0.0`).
+* `tests/test_inner_loop_phase2.py` (unchanged) — continues to assert
+  `causal_attribution_valid` and inner-loop hash stability.  No
+  exhaustion gate assertion; exhaustion remains a recorded finding,
+  not an invariant.

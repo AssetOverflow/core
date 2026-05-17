@@ -12,11 +12,16 @@ Findings recorded:
   * But globally NO STATIC threshold delivers separation_quality ≥ 0.8.
     Blade norms vary across cases (~10x range), so the same threshold
     value means different things case-to-case.
-  * The v1 chain-token outer-product blade is ungrounded in the active
-    pack — all 9 cases are skipped because chain_tokens (alpha, beta,
-    gamma, delta) are not in the en_core_cognition vocab.  This is its
-    own load-bearing finding for ADR-0025: chain-token blades are
-    unsuitable as the default region construction.
+  * Post-Phase-1 (ADR-0024 addendum): v1/dev cases were rewritten with
+    pack-grounded tokens (e.g. tone/evidence/memory/wisdom), so the
+    chain-token outer-product blade now constructs successfully (0/9
+    skipped vs the pre-rewrite 9/9).  But the chain-blade geometry on
+    v1/dev still does NOT separate cleanly (best_separation_quality
+    ≈ 0.06), reinforcing the deeper Phase 4 finding: v1/dev chain
+    blades probe teaching-driven walk (ADR-0022/0023), not the
+    inner-loop's blade-admissibility mechanism.  v1/dev belong to the
+    boundary-walk lane (runner.py); v2's seed_token + relation_blade_token
+    schema is the proper inner-loop fixture.
 
 ADR-0025 design implication: static thresholds (global, relation-typed,
 or frame-derived) are insufficient.  Per-case normalized thresholds
@@ -60,18 +65,26 @@ def v2_report():
     return characterize(cases)
 
 
-class TestV1ChainBladeUngrounded:
-    """V1 chain_tokens are synthetic (alpha, beta, gamma, delta) and
-    not present in the active pack.  The characterization should
-    surface this by skipping every case.
+class TestV1ChainBladePostGrounding:
+    """Post-Phase-1: v1/dev chain_tokens were rewritten with pack-grounded
+    tokens (ADR-0024 addendum).  Region construction now succeeds — but
+    the chain-blade geometry remains a poor fit for the inner-loop lane.
+    These tests pin the new finding: v1/dev is constructible but probes
+    a different mechanism than v2.
     """
 
-    def test_all_v1_cases_skipped(self, v1_report) -> None:
-        assert v1_report.metrics["skipped_count"] == v1_report.metrics["case_count"]
+    def test_no_v1_cases_skipped_after_grounding(self, v1_report) -> None:
+        # Phase 1 retired synthetic chain tokens; every case now grounds.
+        assert v1_report.metrics["skipped_count"] == 0
 
-    def test_v1_reports_no_separation(self, v1_report) -> None:
-        # No candidates ⇒ best_separation_quality stays at zero.
-        assert v1_report.metrics["best_separation_quality"] == 0.0
+    def test_v1_chain_blade_geometry_remains_unsuitable(self, v1_report) -> None:
+        # Constructible but not separable: chain-blade outer-product
+        # geometry produces near-zero separation_quality on v1/dev,
+        # confirming the architectural finding that v1/dev belong to
+        # the boundary-walk lane, not the inner-loop lane.  If a future
+        # change pushes this above 0.5, ADR-0024's lane-assignment
+        # decision may need revisiting.
+        assert v1_report.metrics["best_separation_quality"] < 0.5
 
 
 class TestV2PerCaseSeparates:
