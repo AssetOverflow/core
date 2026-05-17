@@ -1,0 +1,14 @@
+{
+  "kind": "structural_zero",
+  "lane": "english_fluency_ood",
+  "metrics": {
+    "accuracy": null,
+    "by_construction": null,
+    "overall_pass": false
+  },
+  "model_id": "frontier-structural-zero",
+  "note": "Frontier LLMs produce grammatical English from a PropositionGraph prompt at this scale as a matter of native capability. The lane's load-bearing claim is determinism + provenance: same typed input, same surface, traceable to the realizer template that produced it. Frontier systems do not expose a typed deterministic realizer; their surfaces are token-sampled from a stochastic decoder. The comparison axis here is therefore structural (typed-fluency-with-provenance), not accuracy.",
+  "rationale": "Phase 5.1 tests whether CORE's realizer remains grammatical on vocabulary outside the en_core_cognition_v1 pack. The structural claim is that fluency is template-mediated and pack-independent. Frontier baselines have no analogous typed-fluency surface, so this is a frontier structural zero by construction.",
+  "timestamp": "2026-05-16T00:00:00+00:00",
+  "version": "v1"
+}

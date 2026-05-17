@@ -1,0 +1,314 @@
+[
+  {
+    "case_id": "EFO-HOLD_chemistry_C01_01",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "molecule binds enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C01_02",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "atom forms bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C01_03",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "reaction produces compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C02_01",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "molecule does not bind enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C02_02",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "atom does not form bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C02_03",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "reaction does not produce compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C03_01",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "molecule binds enzyme and atom forms bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C03_02",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "atom forms bond and reaction produces compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C03_03",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "reaction produces compound and molecule binds enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C04_01",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "molecule binds enzyme or atom forms bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C04_02",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "atom forms bond or reaction produces compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C04_03",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "reaction produces compound or molecule binds enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C05_01",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "atom forms that molecule binds enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C05_02",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "reaction produces that atom forms bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C05_03",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "molecule binds that reaction produces compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C06_01",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "molecule, which forms bond, binds enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C06_02",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "atom, which produces compound, forms bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C06_03",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "reaction, which binds enzyme, produces compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C07_01",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all molecule binds enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C07_02",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all atom forms bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C07_03",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all reaction produces compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C08_01",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some molecule binds enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C08_02",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some atom forms bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C08_03",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some reaction produces compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C09_01",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "molecule binded enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C09_02",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "atom formed bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C09_03",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "reaction produced compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C10_01",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "molecule binds enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C10_02",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "atom forms bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C10_03",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "reaction produces compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C11_01",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "molecule will bind enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C11_02",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "atom will form bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C11_03",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "reaction will produce compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C12_01",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "molecule has binded enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C12_02",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "atom has formed bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C12_03",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "reaction has produced compound",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C13_01",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "molecule is binding enzyme",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C13_02",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "atom is forming bond",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-HOLD_chemistry_C13_03",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "reaction is producing compound",
+    "failure_reasons": []
+  }
+]

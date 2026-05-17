@@ -1,0 +1,938 @@
+[
+  {
+    "case_id": "EFO-PUB_nature_C01_01",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "river flows valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C01_02",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "wind shapes dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C01_03",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "cloud covers ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C02_01",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "river does not flow valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C02_02",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "wind does not shape dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C02_03",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "cloud does not cover ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C03_01",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "river flows valley and wind shapes dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C03_02",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "wind shapes dune and cloud covers ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C03_03",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "cloud covers ridge and river flows valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C04_01",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "river flows valley or wind shapes dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C04_02",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "wind shapes dune or cloud covers ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C04_03",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "cloud covers ridge or river flows valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C05_01",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "wind shapes that river flows valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C05_02",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "cloud covers that wind shapes dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C05_03",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "river flows that cloud covers ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C06_01",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "river, which shapes dune, flows valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C06_02",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "wind, which covers ridge, shapes dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C06_03",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "cloud, which flows valley, covers ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C07_01",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all river flows valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C07_02",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all wind shapes dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C07_03",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all cloud covers ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C08_01",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some river flows valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C08_02",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some wind shapes dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C08_03",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some cloud covers ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C09_01",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "river flowed valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C09_02",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "wind shaped dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C09_03",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "cloud covered ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C10_01",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "river flows valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C10_02",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "wind shapes dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C10_03",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "cloud covers ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C11_01",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "river will flow valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C11_02",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "wind will shape dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C11_03",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "cloud will cover ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C12_01",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "river has flowed valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C12_02",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "wind has shaped dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C12_03",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "cloud has covered ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C13_01",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "river is flowing valley",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C13_02",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "wind is shaping dune",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_nature_C13_03",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "cloud is covering ridge",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C01_01",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "server returns packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C01_02",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "cable carries signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C01_03",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "database stores record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C02_01",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "server does not return packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C02_02",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "cable does not carry signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C02_03",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "database does not store record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C03_01",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "server returns packet and cable carries signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C03_02",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "cable carries signal and database stores record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C03_03",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "database stores record and server returns packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C04_01",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "server returns packet or cable carries signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C04_02",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "cable carries signal or database stores record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C04_03",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "database stores record or server returns packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C05_01",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "cable carries that server returns packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C05_02",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "database stores that cable carries signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C05_03",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "server returns that database stores record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C06_01",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "server, which carries signal, returns packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C06_02",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "cable, which stores record, carries signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C06_03",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "database, which returns packet, stores record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C07_01",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all server returns packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C07_02",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all cable carries signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C07_03",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all database stores record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C08_01",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some server returns packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C08_02",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some cable carries signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C08_03",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some database stores record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C09_01",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "server returned packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C09_02",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "cable carried signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C09_03",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "database stored record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C10_01",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "server returns packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C10_02",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "cable carries signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C10_03",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "database stores record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C11_01",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "server will return packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C11_02",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "cable will carry signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C11_03",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "database will store record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C12_01",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "server has returned packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C12_02",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "cable has carried signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C12_03",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "database has stored record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C13_01",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "server is returning packet",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C13_02",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "cable is carrying signal",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_tech_C13_03",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "database is storing record",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C01_01",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "train passes station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C01_02",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "coffee warms cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C01_03",
+    "construction": "C01",
+    "construction_name": "simple_declarative",
+    "passed": true,
+    "surface": "lamp lights room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C02_01",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "train does not pass station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C02_02",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "coffee does not warm cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C02_03",
+    "construction": "C02",
+    "construction_name": "negation",
+    "passed": true,
+    "surface": "lamp does not light room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C03_01",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "train passes station and coffee warms cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C03_02",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "coffee warms cup and lamp lights room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C03_03",
+    "construction": "C03",
+    "construction_name": "conjunction",
+    "passed": true,
+    "surface": "lamp lights room and train passes station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C04_01",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "train passes station or coffee warms cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C04_02",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "coffee warms cup or lamp lights room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C04_03",
+    "construction": "C04",
+    "construction_name": "disjunction",
+    "passed": true,
+    "surface": "lamp lights room or train passes station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C05_01",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "coffee warms that train passes station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C05_02",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "lamp lights that coffee warms cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C05_03",
+    "construction": "C05",
+    "construction_name": "complement",
+    "passed": true,
+    "surface": "train passes that lamp lights room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C06_01",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "train, which warms cup, passes station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C06_02",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "coffee, which lights room, warms cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C06_03",
+    "construction": "C06",
+    "construction_name": "relative",
+    "passed": true,
+    "surface": "lamp, which passes station, lights room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C07_01",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all train passes station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C07_02",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all coffee warms cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C07_03",
+    "construction": "C07",
+    "construction_name": "universal",
+    "passed": true,
+    "surface": "all lamp lights room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C08_01",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some train passes station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C08_02",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some coffee warms cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C08_03",
+    "construction": "C08",
+    "construction_name": "existential",
+    "passed": true,
+    "surface": "some lamp lights room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C09_01",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "train passed station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C09_02",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "coffee warmed cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C09_03",
+    "construction": "C09",
+    "construction_name": "past_tense",
+    "passed": true,
+    "surface": "lamp lighted room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C10_01",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "train passes station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C10_02",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "coffee warms cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C10_03",
+    "construction": "C10",
+    "construction_name": "present_tense",
+    "passed": true,
+    "surface": "lamp lights room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C11_01",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "train will pass station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C11_02",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "coffee will warm cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C11_03",
+    "construction": "C11",
+    "construction_name": "future_tense",
+    "passed": true,
+    "surface": "lamp will light room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C12_01",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "train has passed station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C12_02",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "coffee has warmed cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C12_03",
+    "construction": "C12",
+    "construction_name": "perfective",
+    "passed": true,
+    "surface": "lamp has lighted room",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C13_01",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "train is passing station",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C13_02",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "coffee is warming cup",
+    "failure_reasons": []
+  },
+  {
+    "case_id": "EFO-PUB_domestic_C13_03",
+    "construction": "C13",
+    "construction_name": "imperfective",
+    "passed": true,
+    "surface": "lamp is lighting room",
+    "failure_reasons": []
+  }
+]
