@@ -48,6 +48,16 @@ class RuntimeConfig:
     # disable to retain the pre-ADR-0046 unconstrained walk.
     forward_graph_constraint: bool = False
 
+    # ADR-0062 — composed teaching-grounded surface.  When enabled,
+    # the teaching-grounded composer extends a single-chain surface
+    # with a follow-up chain whose subject equals the initial chain's
+    # object — producing surfaces like "light reveals truth, which
+    # grounds knowledge" instead of just "light reveals truth".
+    # Default False preserves all pre-ADR-0062 behaviour.  Cycle-safe
+    # (won't follow if the next subject has been visited), bounded
+    # depth (max one follow-up chain in v1).
+    composed_surface: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"

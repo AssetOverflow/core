@@ -224,6 +224,104 @@ def teaching_grounded_surface(
     )
 
 
+def teaching_grounded_surface_composed(
+    subject_lemma: str, intent_tag: IntentTag,
+) -> str | None:
+    """ADR-0062 — chain-of-chains teaching-grounded surface.
+
+    When a chain ``(A, intent_A, conn_A, B)`` exists AND a follow-up
+    chain ``(B, ?, conn_B, C)`` exists for either intent, compose a
+    two-clause surface:
+
+        "{A} — teaching-grounded ({corpus_id}): {dA1}; {dA2}.
+         {A} {conn_A} {B} ({dB1}), which {conn_B} {C} ({dC1}).
+         No session evidence yet."
+
+    Cycle-safe: if ``C == A`` or ``C == B``, the composer falls back
+    to the single-chain surface (no follow-up clause).  Bounded depth:
+    v1 follows exactly one hop; deeper chains require a future ADR.
+
+    Follow-up intent preference: prefer ``cause`` when both exist
+    (causal continuation reads more naturally than a verification
+    detour).  This preference is deterministic and pack-agnostic.
+
+    Returns ``None`` under the same conditions as
+    ``teaching_grounded_surface``.  When the initial chain exists
+    but no follow-up does, the composer degrades to the single-chain
+    surface byte-identically — drop-in replacement.
+    """
+    if not subject_lemma or not isinstance(subject_lemma, str):
+        return None
+    key = subject_lemma.strip().lower()
+    if not key:
+        return None
+    intent_name = _intent_name(intent_tag)
+    if intent_name is None:
+        return None
+    corpus = _corpus_index()
+    chain = corpus.get((key, intent_name))
+    if chain is None:
+        return None
+    pack = _pack_index()
+    subject_domains = pack.get(chain.subject, ())
+    object_domains = pack.get(chain.object, ())
+    if not subject_domains or not object_domains:
+        return None
+    head_subject = "; ".join(
+        subject_domains[: max(1, chain.domains_subject_k)]
+    )
+    head_object_short = "; ".join(
+        object_domains[: max(1, chain.domains_object_k)]
+    )
+    connective = humanize_predicate(chain.connective)
+
+    # Look for a follow-up chain whose subject equals the initial
+    # chain's object.  Prefer cause; fall back to verification.
+    follow_up = None
+    for next_intent in ("cause", "verification"):
+        candidate = corpus.get((chain.object, next_intent))
+        if candidate is None:
+            continue
+        # Cycle guard: don't follow if the next object is the initial
+        # subject (1-step cycle) or the same as the current object
+        # (degenerate same-cell mismatch).
+        if candidate.object in (chain.subject, chain.object):
+            continue
+        follow_up = candidate
+        break
+
+    if follow_up is None:
+        # No follow-up available — degrade to single-chain surface
+        # byte-identically with ``teaching_grounded_surface``.
+        return (
+            f"{chain.subject} — teaching-grounded ({TEACHING_CORPUS_ID}): "
+            f"{head_subject}. {chain.subject} {connective} {chain.object} "
+            f"({head_object_short}). No session evidence yet."
+        )
+
+    follow_object_domains = pack.get(follow_up.object, ())
+    if not follow_object_domains:
+        # Follow-up's object isn't pack-resident with semantic domains
+        # — degrade to single-chain surface rather than emit a
+        # partially-grounded composition.
+        return (
+            f"{chain.subject} — teaching-grounded ({TEACHING_CORPUS_ID}): "
+            f"{head_subject}. {chain.subject} {connective} {chain.object} "
+            f"({head_object_short}). No session evidence yet."
+        )
+
+    follow_head = "; ".join(
+        follow_object_domains[: max(1, follow_up.domains_object_k)]
+    )
+    follow_connective = humanize_predicate(follow_up.connective)
+    return (
+        f"{chain.subject} — teaching-grounded ({TEACHING_CORPUS_ID}): "
+        f"{head_subject}. {chain.subject} {connective} {chain.object} "
+        f"({head_object_short}), which {follow_connective} {follow_up.object} "
+        f"({follow_head}). No session evidence yet."
+    )
+
+
 def has_teaching_chain(subject_lemma: str, intent_tag: IntentTag) -> bool:
     """Return True iff a reviewed chain exists for (subject, intent)."""
     if not subject_lemma or not isinstance(subject_lemma, str):

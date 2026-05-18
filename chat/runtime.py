@@ -19,6 +19,7 @@ from chat.pack_grounding import (
 )
 from chat.teaching_grounding import (
     teaching_grounded_surface,
+    teaching_grounded_surface_composed,
     TEACHING_CORPUS_ID as _TEACHING_CORPUS_ID,
 )
 from chat.refusal import (
@@ -668,7 +669,17 @@ class ChatRuntime:
             lemma = (intent.subject or "").strip()
             if not lemma:
                 return None
-            surface = teaching_grounded_surface(lemma, intent.tag)
+            # ADR-0062 — when ``composed_surface`` is enabled, the
+            # teaching-grounded composer extends the single-chain
+            # surface with a follow-up chain whose subject equals the
+            # initial chain's object.  Backward-compatible: with the
+            # flag off, the single-chain composer is used; with the
+            # flag on and no follow-up chain available, the composer
+            # degrades to the single-chain surface byte-identically.
+            if self.config.composed_surface:
+                surface = teaching_grounded_surface_composed(lemma, intent.tag)
+            else:
+                surface = teaching_grounded_surface(lemma, intent.tag)
             return (surface, "teaching") if surface is not None else None
         # ADR-0053 — CORRECTION acknowledgement.  Cold-start CORRECTION
         # has no prior session turn to apply to; emit a pack-grounded
