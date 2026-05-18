@@ -207,10 +207,14 @@ def cmd_chat(args: argparse.Namespace) -> int:
         return _print_identity_packs(use_json=getattr(args, "json", False))
     try:
         from chat.runtime import ChatRuntime
+        # ADR-0041 — operator-facing verdict readout.  Imported lazily
+        # so a broken telemetry module doesn't block REPL startup.
+        from chat.telemetry import format_verdict_summary
     except Exception as exc:  # pragma: no cover - exercised by CLI in broken envs
         _print_runtime_import_hint(exc)
 
     runtime = ChatRuntime(config=_runtime_config_from_args(args))
+    show_verdicts = bool(getattr(args, "show_verdicts", False))
     while True:
         try:
             text = input("> ").strip()
@@ -227,6 +231,13 @@ def cmd_chat(args: argparse.Namespace) -> int:
             print(f"[{exc}]", file=sys.stderr)
             continue
         print(response.surface)
+        if show_verdicts:
+            # ADR-0041 — print the verdict bundle to stderr so the
+            # response surface on stdout stays parseable by tooling
+            # that pipes through ``core chat``.
+            summary = format_verdict_summary(response.verdicts)
+            if summary:
+                print(summary, file=sys.stderr)
     return 0
 
 
@@ -1144,6 +1155,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--json",
         action="store_true",
         help="emit machine-readable JSON (with --list-identity-packs)",
+    )
+    chat.add_argument(
+        "--show-verdicts",
+        action="store_true",
+        help=(
+            "after each turn, print the TurnVerdicts bundle summary to "
+            "stderr (ADR-0041 operator-facing audit readout)"
+        ),
     )
     chat.set_defaults(func=cmd_chat)
 

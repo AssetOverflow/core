@@ -183,10 +183,91 @@ class JsonlFileSink:
         self.close()
 
 
+# ---------- fan-out ----------
+
+
+@dataclass
+class FanOutSink:
+    """Forward every emitted line to N sinks in declaration order.
+
+    ADR-0041.  Composes with any combination of sinks — typically
+    ``JsonlFileSink`` (durable) + ``JsonlBufferSink`` (in-memory
+    audit), or two file sinks (local + shadow).
+
+    **Error semantics:** fail-fast.  If sink *i* raises, sinks *i+1..*
+    are NOT called and the exception propagates to the caller.  This
+    is consistent with the single-sink contract: telemetry failures
+    surface, never silently drop audit signal.  Callers wanting
+    partial-success semantics wrap individual sinks in their own
+    error-tolerant shim.
+    """
+
+    sinks: tuple = ()  # tuple[TurnEventSink, ...]
+
+    def emit(self, line: str) -> None:
+        for sink in self.sinks:
+            sink.emit(line)
+
+
+# ---------- operator-facing summary formatter ----------
+
+
+def format_verdict_summary(verdicts) -> str:
+    """ADR-0041 — one-line human-readable summary of a TurnVerdicts bundle.
+
+    Used by ``core chat --show-verdicts`` to print a per-turn audit
+    line to the operator.  Distinct from ``format_turn_event_jsonl``
+    (machine-facing): this is dense, terse, and skims the high-signal
+    fields.  Empty string when ``verdicts`` is None.
+
+    Format::
+
+        [identity=0.83 safety=ok ethics=ok refusal=- hedge=-]
+        [identity=0.42 safety=VIOLATED:preserve_versor_closure ethics=ok refusal=YES hedge=-]
+    """
+    if verdicts is None:
+        return ""
+    parts: list[str] = []
+    identity = getattr(verdicts, "identity_score", None)
+    if identity is not None:
+        alignment = float(getattr(identity, "alignment", 0.0))
+        parts.append(f"identity={alignment:.2f}")
+    else:
+        parts.append("identity=-")
+    safety = getattr(verdicts, "safety_verdict", None)
+    parts.append(_format_verdict_short(
+        safety, "safety", id_attr="violated_boundaries",
+    ))
+    ethics = getattr(verdicts, "ethics_verdict", None)
+    parts.append(_format_verdict_short(
+        ethics, "ethics", id_attr="violated_commitments",
+    ))
+    parts.append(
+        "refusal=YES" if getattr(verdicts, "refusal_emitted", False)
+        else "refusal=-"
+    )
+    parts.append(
+        "hedge=YES" if getattr(verdicts, "hedge_injected", False)
+        else "hedge=-"
+    )
+    return "[" + " ".join(parts) + "]"
+
+
+def _format_verdict_short(verdict, label: str, *, id_attr: str) -> str:
+    if verdict is None:
+        return f"{label}=-"
+    violated = sorted(getattr(verdict, id_attr, ()) or ())
+    if not violated:
+        return f"{label}=ok"
+    return f"{label}=VIOLATED:{','.join(violated)}"
+
+
 __all__ = [
+    "FanOutSink",
     "JsonlBufferSink",
     "JsonlFileSink",
     "TurnEventSink",
     "format_turn_event_jsonl",
+    "format_verdict_summary",
     "serialize_turn_event",
 ]
