@@ -571,6 +571,119 @@ def cmd_teaching_gaps(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_teaching_oov_gaps(args: argparse.Namespace) -> int:
+    """Phase 2.3 — rank OOV tokens emitted by the runtime's
+    OOV "teach me" surface.
+
+    Reads JSONL files written by
+    :class:`teaching.oov_sink.OOVMonthlyFileSink` under *root*
+    (default ``teaching/oov_log``) and emits a ranked table of
+    tokens ordered by emission count.
+
+    Pure read — never mutates the sink.
+    """
+    from teaching.oov_gaps import _DEFAULT_ROOT, aggregate_oov_gaps
+
+    root = Path(args.root) if args.root else _DEFAULT_ROOT
+    try:
+        rows = aggregate_oov_gaps(
+            root=root,
+            since=args.since,
+            sample_limit=max(1, int(args.sample_limit)),
+        )
+    except ValueError as exc:
+        _die(str(exc), code=2)
+
+    if args.top is not None and args.top > 0:
+        rows = rows[: args.top]
+
+    if args.json:
+        payload = {
+            "root": str(root),
+            "since": args.since,
+            "total_tokens": len(rows),
+            "oov_gaps": [g.as_dict() for g in rows],
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if rows else 1
+
+    if not rows:
+        print("No OOV candidates found.")
+        if root is not None and not root.exists():
+            print(f"  (root path does not exist: {root})")
+        return 1
+
+    print(f"{'rank':>4}  {'token':<28}{'count':>6}  {'clean':>6}  intents")
+    print("-" * 80)
+    for i, gap in enumerate(rows, 1):
+        intents = ",".join(gap.intents) if gap.intents else "—"
+        print(
+            f"{i:>4}  {gap.token[:28]:<28}{gap.count:>6}  "
+            f"{gap.boundary_clean_count:>6}  {intents}"
+        )
+    return 0
+
+
+def cmd_teaching_oov_queue(args: argparse.Namespace) -> int:
+    """Phase 2.3 — show the auto-promoted OOV-token queue.
+
+    Same shape as ``core teaching queue`` but for vocabulary gaps:
+    tokens whose boundary-clean emission count meets ``--threshold``
+    are surfaced as PackMutationProposal candidates that an operator
+    can author via the reviewed ADR-0027 path.
+
+    Never auto-mutates a pack — operator-visible signal only.
+    """
+    from teaching.oov_gaps import _DEFAULT_ROOT, aggregate_oov_gaps
+    from teaching.oov_promotion import promote_oov_gaps
+
+    root = Path(args.root) if args.root else _DEFAULT_ROOT
+    try:
+        gaps = aggregate_oov_gaps(root=root, since=args.since, sample_limit=5)
+    except ValueError as exc:
+        _die(str(exc), code=2)
+
+    if args.threshold < 1:
+        _die(f"--threshold must be >= 1 (got {args.threshold})", code=2)
+
+    promoted = promote_oov_gaps(
+        gaps,
+        threshold=args.threshold,
+        include_tainted=args.include_tainted,
+    )
+
+    if args.json:
+        payload = {
+            "root": str(root),
+            "since": args.since,
+            "threshold": args.threshold,
+            "include_tainted": args.include_tainted,
+            "total_promoted": len(promoted),
+            "queue": [p.as_dict() for p in promoted],
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if promoted else 1
+
+    if not promoted:
+        print(f"No OOV tokens met threshold {args.threshold}.")
+        return 1
+
+    print(f"{'rank':>4}  {'queue_id':<40}{'count':>6}  {'clean':>6}  intents")
+    print("-" * 96)
+    for i, p in enumerate(promoted, 1):
+        intents = ",".join(p.intents) if p.intents else "—"
+        print(
+            f"{i:>4}  {p.queue_id[:40]:<40}{p.count:>6}  "
+            f"{p.boundary_clean_count:>6}  {intents}"
+        )
+    print()
+    print(
+        f"Add each token to one of: {', '.join(promoted[0].suggested_packs)}.  "
+        f"Use a reviewed PackMutationProposal — never auto-applies."
+    )
+    return 0
+
+
 def cmd_teaching_queue(args: argparse.Namespace) -> int:
     """Phase 1.2 — show the auto-promoted gap queue.
 
@@ -1965,6 +2078,56 @@ def build_parser() -> argparse.ArgumentParser:
         help="emit machine-readable JSON",
     )
     teaching_audit.set_defaults(func=cmd_teaching_audit)
+
+    teaching_oov_gaps = teaching_sub.add_parser(
+        "oov-gaps",
+        help="rank OOV tokens emitted by the runtime's teach-me surface",
+    )
+    teaching_oov_gaps.add_argument(
+        "--root", default=None,
+        help="OOV-sink root (default: teaching/oov_log)",
+    )
+    teaching_oov_gaps.add_argument(
+        "--since", default=None,
+        help="lower-bound month token YYYY-MM",
+    )
+    teaching_oov_gaps.add_argument(
+        "--top", type=int, default=None,
+        help="show only the top N tokens by emission count",
+    )
+    teaching_oov_gaps.add_argument(
+        "--sample-limit", type=int, default=5,
+        help="max candidate_ids retained per token as samples (default: 5)",
+    )
+    teaching_oov_gaps.add_argument(
+        "--json", action="store_true", help="machine-readable output",
+    )
+    teaching_oov_gaps.set_defaults(func=cmd_teaching_oov_gaps)
+
+    teaching_oov_queue = teaching_sub.add_parser(
+        "oov-queue",
+        help="show auto-promoted OOV-token queue (tokens crossing --threshold)",
+    )
+    teaching_oov_queue.add_argument(
+        "--root", default=None,
+        help="OOV-sink root (default: teaching/oov_log)",
+    )
+    teaching_oov_queue.add_argument(
+        "--since", default=None,
+        help="lower-bound month token YYYY-MM",
+    )
+    teaching_oov_queue.add_argument(
+        "--threshold", type=int, default=3,
+        help="minimum (boundary-clean) emissions to promote (default: 3)",
+    )
+    teaching_oov_queue.add_argument(
+        "--include-tainted", action="store_true",
+        help="count refusal/hedge-tainted emissions toward the threshold",
+    )
+    teaching_oov_queue.add_argument(
+        "--json", action="store_true", help="machine-readable output",
+    )
+    teaching_oov_queue.set_defaults(func=cmd_teaching_oov_queue)
 
     teaching_queue = teaching_sub.add_parser(
         "queue",
