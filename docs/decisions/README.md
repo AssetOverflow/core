@@ -64,6 +64,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0052](ADR-0052-teaching-grounded-surface.md) | Teaching-grounded surface for cold-start CAUSE / VERIFICATION | Accepted (2026-05-18) |
 | [ADR-0053](ADR-0053-cognition-lane-closure.md) | Cognition lane closure: dev-driven corpus expansion + CORRECTION acknowledgement | Accepted (2026-05-18) |
 | [ADR-0054](ADR-0054-vault-recall-indexing-batching.md) | Vault recall matrix-cache indexing + batched API; holdout split wired into eval CLI | Accepted (2026-05-18) |
+| [ADR-0055](ADR-0055-inter-session-memory-discovery-promotion.md) | Inter-session memory: reviewed discovery promotion (phased design — DiscoveryCandidate, TeachingChainProposal, replay-equivalence gate) | **Proposed** (2026-05-18) |
 
 ---
 
