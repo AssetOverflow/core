@@ -26,6 +26,42 @@ if TYPE_CHECKING:
     from morphology.registry import MorphologyRegistry
     from sensorium.protocol import ModalityVocabulary
 
+def _validate_pack_id(pack_id: object) -> str:
+    """Reject unsafe pack ids before any filesystem access (ADR-0051).
+
+    Pack ids are concatenated into a filesystem path (`data/<pack_id>/...`)
+    so any traversal token, absolute-path marker, or path separator must
+    fail closed *before* the `Path` join happens.  The check is identical
+    in spirit to ``core.cli._safe_pack_id``; it is kept here so every
+    caller of :func:`load_pack` / :func:`load_pack_entries` is protected
+    by the same boundary regardless of which entrypoint dispatched the
+    call.
+    """
+    from core._safe_display import safe_pack_id as _disp
+
+    if not isinstance(pack_id, str):
+        raise ValueError(f"pack_id must be a string, got {_disp(pack_id)!r}")
+    if pack_id == "":
+        raise ValueError("pack_id must not be empty")
+    if ".." in pack_id:
+        raise ValueError(f"pack_id must not contain '..': {_disp(pack_id)!r}")
+    if "/" in pack_id or "\\" in pack_id:
+        raise ValueError(
+            f"pack_id must be a simple pack id, not a path: {_disp(pack_id)!r}"
+        )
+    if pack_id.startswith("."):
+        raise ValueError(
+            f"pack_id must not start with '.': {_disp(pack_id)!r}"
+        )
+    # Pack ids on disk are ASCII identifiers; reject anything else early.
+    for ch in pack_id:
+        if not (ch.isascii() and (ch.isalnum() or ch in {"_", "-"})):
+            raise ValueError(
+                f"pack_id must be alphanumeric/_/-, got {_disp(pack_id)!r}"
+            )
+    return pack_id
+
+
 _ALIGNMENT_NUDGE_STRENGTH: float = 0.10
 _MORPHOLOGY_CLUSTER_NUDGE_STRENGTH: float = 0.40
 _PRIMARY_SEMANTIC_DOMAIN_WEIGHT: float = 0.55
@@ -423,6 +459,7 @@ def _load_pack_cached(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold
 
 
 def load_pack(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold]:
+    pack_id = _validate_pack_id(pack_id)
     manifest, manifold = _load_pack_cached(pack_id)
     return manifest, _clone_manifold(manifold)
 
@@ -466,7 +503,8 @@ def load_mounted_packs(pack_ids: tuple[str, ...] | list[str]) -> VocabManifold:
     The mounted field is a union of already-compiled Cl(4,1) points. It does
     not add a side index, fallback embedding, or approximate distance path.
     """
-    return _clone_manifold(_load_mounted_packs_cached(tuple(pack_ids)))
+    validated = tuple(_validate_pack_id(pid) for pid in pack_ids)
+    return _clone_manifold(_load_mounted_packs_cached(validated))
 
 
 def _apply_mounted_primary_domain_resonance(
@@ -517,6 +555,7 @@ def _load_pack_entries_cached(pack_id: str) -> tuple[LexicalEntry, ...]:
 
 
 def load_pack_entries(pack_id: str) -> list[LexicalEntry]:
+    pack_id = _validate_pack_id(pack_id)
     return list(_load_pack_entries_cached(pack_id))
 
 
