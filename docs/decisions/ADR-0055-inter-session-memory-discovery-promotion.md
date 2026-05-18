@@ -1,6 +1,6 @@
 # ADR-0055 — Inter-Session Memory: Reviewed Discovery Promotion
 
-**Status:** Proposed
+**Status:** Phase A + Phase B Accepted; Phases C–E Proposed
 **Date:** 2026-05-18
 **Author:** Shay
 

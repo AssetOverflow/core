@@ -5,7 +5,7 @@ import hashlib
 import json
 import re
 from collections.abc import Sequence
-from typing import List
+from typing import Any, List
 
 import numpy as np
 
@@ -28,6 +28,11 @@ from chat.refusal import (
 )
 from chat.telemetry import TurnEventSink, format_turn_event_jsonl
 from chat.verdicts import TurnVerdicts
+from teaching.discovery import (
+    extract_discovery_candidates,
+    format_candidate_jsonl,
+)
+from teaching.discovery_sink import DiscoveryCandidateSink
 from core.config import DEFAULT_CONFIG, DEFAULT_IDENTITY_PACK, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField
 from core.physics.energy import EnergyProfile
@@ -408,6 +413,11 @@ class ChatRuntime:
         # trust boundary.
         self._telemetry_sink: TurnEventSink | None = None
         self._telemetry_include_content: bool = False
+        # ADR-0055 Phase B — opt-in DiscoveryCandidate sink.  Default
+        # None preserves prior behavior; callers attach via
+        # ``attach_discovery_sink``.  Candidates are *evidence*, never
+        # mutate the corpus or runtime state.
+        self._discovery_sink: DiscoveryCandidateSink | None = None
         self._correction_pass = CorrectionPass()
         self._last_valence: float = 0.0
 
@@ -434,6 +444,44 @@ class ChatRuntime:
         """
         self._telemetry_sink = sink
         self._telemetry_include_content = bool(include_content)
+
+    def attach_discovery_sink(
+        self,
+        sink: DiscoveryCandidateSink | None,
+    ) -> None:
+        """ADR-0055 Phase B — attach a DiscoveryCandidate sink.
+
+        After each turn, the runtime extracts zero-or-more candidates
+        from the most recent ``TurnEvent`` (deterministic rule firing
+        on the audit trail) and forwards each as one JSONL line.
+        Passing ``None`` detaches.
+
+        Candidates are **evidence**: emission never mutates the
+        active teaching corpus.  Phase C's ``TeachingChainProposal``
+        is the only path to corpus extension and runs through
+        review + replay.
+        """
+        self._discovery_sink = sink
+
+    def _emit_discovery_candidates(
+        self,
+        *,
+        turn_event: TurnEvent,
+        intent_tag: Any,
+        intent_subject: str | None,
+        grounding_source: str | None,
+    ) -> None:
+        sink = self._discovery_sink
+        if sink is None:
+            return
+        candidates = extract_discovery_candidates(
+            turn_event,
+            intent_tag,
+            intent_subject,
+            grounding_source=grounding_source,
+        )
+        for candidate in candidates:
+            sink.emit(format_candidate_jsonl(candidate))
 
     def _emit_turn_event(self, event: TurnEvent) -> None:
         """Internal — emit one serialised line for the current event.
@@ -612,6 +660,8 @@ class ChatRuntime:
         tokens: tuple[str, ...] = (),
         pack_grounded_surface: str | None = None,
         grounded_source_tag: str = "pack",
+        discovery_intent_tag: Any = None,
+        discovery_intent_subject: str | None = None,
     ) -> ChatResponse:
         zero = np.zeros(field_state.F.shape, dtype=np.float32)
         prop = Proposition(
@@ -723,6 +773,17 @@ class ChatRuntime:
             )
             self.turn_log.append(stub_event)
             self._emit_turn_event(stub_event)
+            # ADR-0055 Phase B — opt-in discovery candidate emission.
+            # Only meaningful when the caller threads classified
+            # intent forward (gate-fire / fall-through site).  Pure
+            # rule firing on the just-appended TurnEvent.
+            if discovery_intent_tag is not None:
+                self._emit_discovery_candidates(
+                    turn_event=stub_event,
+                    intent_tag=discovery_intent_tag,
+                    intent_subject=discovery_intent_subject,
+                    grounding_source=grounding_source,
+                )
         return ChatResponse(
             surface=response_surface,
             proposition=prop,
@@ -793,11 +854,30 @@ class ChatRuntime:
                     "grounding_source": pack_source_tag if pack_surface else "none",
                 },
             )
+            # ADR-0055 Phase B — thread classified intent forward only
+            # when a sink is attached.  Discovery emission is opt-in;
+            # the deterministic classification used here is the same
+            # call ``_maybe_pack_grounded_surface`` already ran for the
+            # empty-vault English path, so behaviour is identical when
+            # no sink is attached.
+            discovery_intent_tag = None
+            discovery_intent_subject: str | None = None
+            if (
+                self._discovery_sink is not None
+                and gate_decision.source == "empty_vault"
+                and self.config.output_language == "en"
+            ):
+                from generate.intent_bridge import classify_intent_from_input
+                _intent = classify_intent_from_input(text)
+                discovery_intent_tag = _intent.tag
+                discovery_intent_subject = _intent.subject
             return self._stub_response(
                 committed,
                 tokens=tuple(filtered),
                 pack_grounded_surface=pack_surface,
                 grounded_source_tag=pack_source_tag,
+                discovery_intent_tag=discovery_intent_tag,
+                discovery_intent_subject=discovery_intent_subject,
             )
 
         field_state = self._context.commit_ingest(filtered)
