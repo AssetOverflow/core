@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -1405,6 +1405,14 @@ def cmd_demo(args: argparse.Namespace) -> int:
             print(json.dumps(report, indent=2, sort_keys=True))
         return 0
 
+    if target == "learning-loop":
+        from evals.learning_loop.run_demo import run_demo as run_loop_demo
+
+        report = run_loop_demo(emit_json=args.json)
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        return 0
+
     if target == "long-context-comparison":
         from evals.long_context_cost.comparison_runner import (
             run_comparison,
@@ -1795,6 +1803,7 @@ def build_parser() -> argparse.ArgumentParser:
             "pack-measurements",
             "long-context-comparison",
             "anti-regression",
+            "learning-loop",
             "list-results",
         ],
         help=(
@@ -1809,6 +1818,8 @@ def build_parser() -> argparse.ArgumentParser:
             "N∈{100,1k,10k,100k} paired with frozen transformer baselines.  "
             "anti-regression: ADR-0057 — three-gate defense against learning "
             "harmful chains (eligibility / replay-equivalence / operator).  "
+            "learning-loop: ADR-0055..0057 — full cold-turn → discovery → "
+            "propose → accept → same-prompt-now-grounded walkthrough.  "
             "list-results: index every JSON report in the results directory."
         ),
     )
