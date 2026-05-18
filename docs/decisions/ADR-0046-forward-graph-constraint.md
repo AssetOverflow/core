@@ -101,7 +101,7 @@ code is the CGA neighbourhood computation in `graph_constraint.py`.
 
 ## Industry Demo Suite
 
-Four standalone demos in `evals/industry_demos/` make falsifiable claims
+Three standalone demos in `evals/industry_demos/` make falsifiable claims
 no transformer-LLM wrapper can reproduce:
 
 | Demo | Claim |
@@ -109,18 +109,56 @@ no transformer-LLM wrapper can reproduce:
 | `demo_01_forward_constraint` | Graph constrains walk via CGA geometry *before* any tokens are produced |
 | `demo_02_geometry_drives_identity` | Identity pack swap changes manifold geometry, not just output text |
 | `demo_03_deterministic_audit` | Three independent runtimes produce byte-identical audit records (architectural determinism) |
-| `demo_04_exact_recall_scale` | CGA vault recall is exact (100%) at N=100, 1K, 10K — no degradation curve |
 
 Each demo exits 0 on pass, 1 on fail, and prints structured JSON evidence.
+
+The exact-recall-at-scale claim that previously sat under this ADR as a
+fourth demo has been **moved out**.  An earlier draft attempted to
+demonstrate it via random `standard_normal` vectors run through
+`unitize_versor`; that construction is not valid as a versor in `Cl(4,1)`
+(mixed signature `cga_inner` is not self-maximising for arbitrary
+unitized random vectors), and the demo failed at N=10 000 in exactly
+the way the construction predicts.  The correct home for that claim
+remains [ADR-0045](./ADR-0045-long-context-recall-vs-transformer-baselines.md),
+which measures recall on the actual vault path with properly
+constructed versors at N ∈ {100, 1k, 10k, 100k} = 100 %.  Putting the
+same claim behind a weaker construction here would have been honest
+neither to the geometry nor to the existing measurement.
+
+---
+
+## Cross-References
+
+- [ADR-0018](./ADR-0018-tool-use-scope.md) — `intent_bridge.py` originally
+  builds the `PropositionGraph` from the classified intent and articulation
+  plan; this ADR converts that graph into a forward constraint.
+- [ADR-0022](./ADR-0022-forward-semantic-control.md) through
+  [ADR-0026](./ADR-0026-ranked-admissibility-with-margin.md) — `AdmissibilityRegion`
+  contract that `generate()` already accepts; this ADR provides a new
+  source for that region (the graph) without changing the contract.
+- [ADR-0045](./ADR-0045-long-context-recall-vs-transformer-baselines.md) —
+  load-bearing exact-recall measurement; the canonical source for that
+  claim (see note above).
 
 ---
 
 ## Verification
 
 ```
-tests/test_graph_constraint.py  — 8 tests, all green
-evals/industry_demos/*.py       — 4 demos, each exits 0
+tests/test_graph_constraint.py        — 8 tests, all green
+evals/industry_demos/demo_01..03.py   — 3 demos, each exits 0
+
+Lanes (all green on this branch):
+  core test --suite smoke         67 passed
+  core test --suite cognition    121 passed
+  core test --suite runtime       19 passed
+  core test --suite algebra      132 passed
+  core test --suite teaching      17 passed
+  core test --suite packs          6 passed
+  core eval cognition           intent_accuracy=100%  versor_closure_rate=100%
 ```
 
-Existing suite status unchanged: cognition, teaching, runtime, formation,
-smoke, pack-layer, telemetry suites all green.
+The non-negotiable field invariant (`versor_condition(F) < 1e-6`) is
+unaffected: this ADR only narrows the candidate index set fed to
+`generate()` — it does not touch versor construction, sandwich
+application, or field update.

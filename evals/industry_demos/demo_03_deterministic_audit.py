@@ -73,7 +73,7 @@ def run() -> dict:
         sink = JsonlBufferSink()
         rt.attach_telemetry_sink(sink)
         rt.chat(INPUT)
-        lines = sink.lines()
+        lines = sink.lines
         # Take the last emitted line (the main-path turn event)
         if lines:
             record = json.loads(lines[-1])

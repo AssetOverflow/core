@@ -40,7 +40,7 @@ def run() -> dict:
     from algebra.cga import cga_inner
     import numpy as np
 
-    _manifest, manifold = load_pack("en")
+    _manifest, manifold = load_pack("en_core_cognition_v1")
     vocab = manifold
 
     # Build a minimal graph: light --addresses--> truth

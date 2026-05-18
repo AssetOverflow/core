@@ -35,7 +35,7 @@ from __future__ import annotations
 import numpy as np
 
 from algebra.cga import cga_inner
-from generate.admissibility import AdmissibilityRegion, AdmissibilitySource
+from generate.admissibility import AdmissibilityRegion, RegionSource
 from generate.graph_planner import PropositionGraph
 
 _DEFAULT_TOP_K = 8
@@ -141,7 +141,7 @@ def build_graph_constraint(
         return AdmissibilityRegion(
             allowed_indices=None,
             label="graph:unconstrained",
-            source=AdmissibilitySource.INTENT,
+            source=RegionSource.INTENT,
         )
 
     allowed = _neighbourhood_indices(node_versors, vocab, top_k)
@@ -149,11 +149,11 @@ def build_graph_constraint(
         return AdmissibilityRegion(
             allowed_indices=None,
             label="graph:unconstrained",
-            source=AdmissibilitySource.INTENT,
+            source=RegionSource.INTENT,
         )
 
     return AdmissibilityRegion(
         allowed_indices=np.asarray(sorted(allowed), dtype=np.int64),
         label=_constraint_label(graph),
-        source=AdmissibilitySource.INTENT,
+        source=RegionSource.INTENT,
     )

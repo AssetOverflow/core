@@ -55,6 +55,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0043](ADR-0043-pack-measurements-phase2.md) | Phase-2 pack measurements — claims → numbers | Accepted (2026-05-17) |
 | [ADR-0044](ADR-0044-medical-clinical-ethics-pack.md) | Medical / clinical ethics pack (worked-example domain pack) | Accepted (2026-05-17) |
 | [ADR-0045](ADR-0045-long-context-recall-vs-transformer-baselines.md) | Long-context recall: CORE vs transformer baselines | Accepted (2026-05-17) |
+| [ADR-0046](ADR-0046-forward-graph-constraint.md) | PropositionGraph as forward AdmissibilityRegion + industry demos | Accepted (2026-05-18) |
 
 ---
 
@@ -152,6 +153,39 @@ Verification surface:
 | Turn-loop verdicts + bundle | `tests/test_turn_loop_verdicts.py`, `tests/test_turn_verdicts_bundle.py` | `core chat --show-verdicts` |
 | Telemetry sink | `tests/test_telemetry_sink.py`, `tests/test_telemetry_fanout_and_summary.py` | `core demo audit-tour` Scene 4 |
 | Audit tour gate | `tests/test_audit_tour.py` — asserts `all_claims_supported` | `core demo audit-tour` |
+
+---
+
+## Pillar 1 → 2 → 3 coupling — ADR-0046
+
+ADR-0046 extends the **ADR-0022 → ADR-0026** forward-semantic-control
+chain by giving the `AdmissibilityRegion` a new, geometry-derived
+source: the `PropositionGraph`.
+
+The graph was previously built **after** `generate()` ran, from the
+walk's nearest-node results — a post-hoc descriptor of what the field
+had already produced.  ADR-0046 converts each graph's named-node
+versors into an `AdmissibilityRegion` **before** `generate()` is
+called, via the exact CGA top-k neighbourhood.  The walk is now
+constrained by the proposition's geometric meaning rather than
+described by it after the fact.
+
+```
+geometry (CGA versor neighbourhood)
+  → structure (PropositionGraph nodes)
+    → propagation (AdmissibilityRegion fed to generate())
+```
+
+Three industry-facing demos under `evals/industry_demos/` carry the
+falsifiable claims for this coupling.  The exact-recall-at-scale claim
+remains under ADR-0045 / `evals/long_context/`, where it is measured
+on the real vault path and not duplicated under a weaker construction.
+
+| Layer | Tests | Live demo |
+|---|---|---|
+| Forward graph constraint | `tests/test_graph_constraint.py` — 8 tests | `python -m evals.industry_demos.demo_01_forward_constraint` |
+| Geometry-driven identity | `tests/test_identity_packs.py`, `tests/test_identity_surface_divergence.py` | `python -m evals.industry_demos.demo_02_geometry_drives_identity` |
+| Architectural determinism | `tests/test_telemetry_sink.py`, `tests/test_telemetry_fanout_and_summary.py` | `python -m evals.industry_demos.demo_03_deterministic_audit` |
 
 ---
 
