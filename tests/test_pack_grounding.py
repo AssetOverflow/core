@@ -88,32 +88,33 @@ def test_cold_start_recall_returns_pack_grounded_surface() -> None:
     assert "light" in resp.surface
 
 
-def test_cold_start_unknown_lemma_returns_universal_disclosure() -> None:
-    """When the gate fires AND no lemma in the utterance resolves in any
-    mounted pack, we fall through to the universal disclosure unchanged.
+def test_cold_start_unknown_lemma_routes_to_oov_invitation() -> None:
+    """ADR-0065 / P2.1 — when the classifier extracts a clean subject
+    that is OOV, the runtime emits the OOV "teach me" invitation
+    surface instead of the universal disclosure.
 
-    ADR-0061 + ADR-0063 — the PROCEDURE composer scans the subject
-    phrase for any mounted-pack lemma.  This test deliberately uses
-    a fully out-of-pack prompt so neither the cognition nor the
-    relations pack catches a topic anchor."""
+    ``How can I quoxulate the wxyzabc?`` is PROCEDURE intent;
+    ``quoxulate`` is OOV.  Pre-P2.1 this produced the universal
+    disclosure; post-P2.1 it produces an OOV invitation naming the
+    unknown token + the mounted-pack list."""
     rt = ChatRuntime()
     resp = rt.chat("How can I quoxulate the wxyzabc?")
-    assert resp.surface == _UNKNOWN_DOMAIN_SURFACE
-    assert resp.grounding_source == "none"
+    assert resp.grounding_source == "oov"
+    assert "quoxulate" in resp.surface or "wxyzabc" in resp.surface
+    assert "PackMutationProposal" in resp.surface
 
 
-def test_cold_start_non_definition_intent_no_pack_grounding() -> None:
-    """CAUSE on a non-pack subject lemma does not engage the
-    pack-grounded DEFINITION path — pack-grounded surfaces require a
-    pack-resident lemma in any mounted lexicon (ADR-0048 + ADR-0063).
+def test_cold_start_cause_on_oov_routes_to_oov_invitation() -> None:
+    """ADR-0065 / P2.1 — CAUSE on an OOV subject also routes to the
+    OOV invitation, not the universal disclosure.
 
-    ADR-0052 teaching-grounded surfaces handle CAUSE on subjects that
-    appear in the reviewed cognition chains corpus; ``wxyzabc`` is in
-    neither the pack nor the corpus, so the universal disclosure fires."""
+    Pre-P2.1 these prompts went silent (CAUSE branch early-returned
+    None when no teaching chain existed).  Post-P2.1 the runtime
+    explicitly names the gap."""
     rt = ChatRuntime()
     resp = rt.chat("Why does wxyzabc exist?")
-    assert resp.grounding_source == "none"
-    assert resp.surface == _UNKNOWN_DOMAIN_SURFACE
+    assert resp.grounding_source == "oov"
+    assert "wxyzabc" in resp.surface
 
 
 def test_turn_event_carries_grounding_source() -> None:

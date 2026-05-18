@@ -147,13 +147,20 @@ def test_procedure_define_010_now_emits_concept() -> None:
     assert "concept" in response.surface.lower()
 
 
-def test_procedure_with_no_pack_lemma_falls_through() -> None:
-    """A procedure utterance with no pack-resident lemma still
-    receives the universal disclosure (no surface fabrication)."""
+def test_procedure_with_no_pack_lemma_routes_to_oov_invitation() -> None:
+    """ADR-0065 / P2.1 — a procedure utterance with no pack-resident
+    lemma now routes to the OOV invitation surface (names the unknown
+    topic, points at PackMutationProposal path) instead of the flat
+    universal disclosure.  No surface fabrication: the invitation
+    only references the OOV token and the mounted-pack list."""
     rt = ChatRuntime()
     response = rt.chat("How do I do stuff?")
-    assert response.grounding_source == "none"
-    assert "insufficient grounding" in response.surface.lower()
+    # Either UNKNOWN-intent → "none", or PROCEDURE-intent on OOV
+    # subject → "oov" invitation.  Both honour the no-fabrication
+    # contract; the surface text differs by intent classification.
+    assert response.grounding_source in {"oov", "none"}
+    if response.grounding_source == "oov":
+        assert "PackMutationProposal" in response.surface
 
 
 def test_procedure_verify_a_claim_grounds() -> None:

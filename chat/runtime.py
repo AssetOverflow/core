@@ -424,6 +424,11 @@ class ChatRuntime:
         # ``attach_discovery_sink``.  Candidates are *evidence*, never
         # mutate the corpus or runtime state.
         self._discovery_sink: DiscoveryCandidateSink | None = None
+        # Phase 2.3 — opt-in OOV candidate sink.  Default None preserves
+        # prior behavior; callers attach via ``attach_oov_sink``.
+        # Candidates are evidence; ratified-pack-mutation is the only
+        # path an OOV promotion becomes a real pack change.
+        self._oov_sink: Any = None
         # ADR-0056 Phase C1 — opt-in contemplation pass that enriches
         # each emitted DiscoveryCandidate with polarity / claim_domain /
         # evidence / sub_questions before the sink writes the JSONL
@@ -458,6 +463,21 @@ class ChatRuntime:
         self._telemetry_sink = sink
         self._telemetry_include_content = bool(include_content)
 
+    def attach_oov_sink(self, sink: Any) -> None:
+        """Phase 2.3 — attach an OOV candidate sink.
+
+        After each turn whose surface fired the P2.1 OOV invitation
+        (``grounding_source="oov"``), the runtime emits one
+        :class:`teaching.oov_sink.OOVCandidate` JSONL line to the
+        attached sink.  Passing ``None`` detaches.
+
+        Candidates are evidence: emission never mutates any pack.
+        The ratified pack-mutation path (ADR-0027 +
+        :mod:`teaching.proposals`) is the only way an OOV promotion
+        becomes a real pack change.
+        """
+        self._oov_sink = sink
+
     def attach_discovery_sink(
         self,
         sink: DiscoveryCandidateSink | None,
@@ -491,6 +511,55 @@ class ChatRuntime:
         to emit, so contemplation would do hidden work.
         """
         self._contemplate_discoveries = bool(enabled)
+
+    def _emit_oov_candidate(
+        self,
+        *,
+        turn_event: TurnEvent,
+        intent_tag: Any,
+        token: str | None,
+    ) -> None:
+        """P2.3 — emit one OOVCandidate per OOV-grounded turn.
+
+        No-op unless ``attach_oov_sink`` was called.  The token is
+        already safe-displayed at the surface composer; persistence
+        carries the same sanitised form.
+        """
+        sink = self._oov_sink
+        if sink is None or not token:
+            return
+        # Local imports — keep OOV machinery out of the runtime
+        # hot-path import graph for callers that never opt in.
+        from teaching.oov_sink import (
+            OOVCandidate,
+            format_oov_candidate_jsonl,
+            hash_oov_candidate_id,
+        )
+        from generate.intent import IntentTag
+
+        if intent_tag is None or not isinstance(intent_tag, IntentTag):
+            return
+        intent_name = intent_tag.name.lower()
+        # Pull trace hash from the turn event when present so the
+        # candidate_id replays deterministically.
+        trace_hash = getattr(turn_event, "trace_hash", "") or ""
+        boundary_clean = (
+            not getattr(turn_event, "refusal_emitted", False)
+            and not getattr(turn_event, "hedge_injected", False)
+        )
+        cleaned_token = (token or "").strip().lower()
+        if not cleaned_token:
+            return
+        candidate_id = hash_oov_candidate_id(cleaned_token, intent_name, trace_hash)
+        candidate = OOVCandidate(
+            candidate_id=candidate_id,
+            token=cleaned_token,
+            intent=intent_name,  # type: ignore[arg-type]
+            trigger="unresolved_subject",
+            source_turn_trace=trace_hash,
+            boundary_clean=boundary_clean,
+        )
+        sink.emit(format_oov_candidate_jsonl(candidate))
 
     def _emit_discovery_candidates(
         self,
@@ -655,32 +724,51 @@ class ChatRuntime:
         # composed from both lemmas' pack semantic_domains.  Engages only
         # when both subject and secondary_subject are pack lemmas.
         if intent.tag is IntentTag.COMPARISON:
-            lemma_a = (intent.subject or "").strip()
-            lemma_b = (intent.secondary_subject or "").strip()
-            if not lemma_a or not lemma_b:
-                return None
-            surface = pack_grounded_comparison_surface(lemma_a, lemma_b)
-            return (surface, "pack") if surface is not None else None
+            # The intent classifier may retain terminal punctuation on
+            # secondary_subject when it falls at the end of the prompt
+            # ("Compare A and B.").  Strip terminal sentence punctuation
+            # so the resolver can find the underlying lemma.  This is
+            # a normalization at the runtime boundary, not in the
+            # classifier itself, to keep the classifier's verbatim
+            # extraction available to other consumers.
+            lemma_a = (intent.subject or "").strip().rstrip(".,?!;:")
+            lemma_b = (intent.secondary_subject or "").strip().rstrip(".,?!;:")
+            if lemma_a and lemma_b:
+                surface = pack_grounded_comparison_surface(lemma_a, lemma_b)
+                if surface is not None:
+                    return (surface, "pack")
+                # P2.2 — Partial-grounding tier.  When exactly one of
+                # the two compared lemmas is pack-resident, emit a
+                # hedged surface that grounds the known side and
+                # explicitly disclaims the OOV side.  Better than
+                # falling through to OOV invitation (which would name
+                # only one token while ignoring the other's actual
+                # grounding).
+                from chat.partial_surface import partial_comparison_surface
+                partial = partial_comparison_surface(lemma_a, lemma_b)
+                if partial is not None:
+                    return (partial[0], "partial")
         # ADR-0052 — teaching-grounded CAUSE / VERIFICATION.  The chain
         # corpus is reviewed memory; every emitted atom is either a
         # lemma, a verbatim pack semantic_domains string, or a fixed
         # connective from humanize_predicate.
         if intent.tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
             lemma = (intent.subject or "").strip()
-            if not lemma:
-                return None
-            # ADR-0062 — when ``composed_surface`` is enabled, the
-            # teaching-grounded composer extends the single-chain
-            # surface with a follow-up chain whose subject equals the
-            # initial chain's object.  Backward-compatible: with the
-            # flag off, the single-chain composer is used; with the
-            # flag on and no follow-up chain available, the composer
-            # degrades to the single-chain surface byte-identically.
-            if self.config.composed_surface:
-                surface = teaching_grounded_surface_composed(lemma, intent.tag)
-            else:
-                surface = teaching_grounded_surface(lemma, intent.tag)
-            return (surface, "teaching") if surface is not None else None
+            if lemma:
+                # ADR-0062 — when ``composed_surface`` is enabled, the
+                # teaching-grounded composer extends the single-chain
+                # surface with a follow-up chain whose subject equals
+                # the initial chain's object.  Backward-compatible:
+                # with the flag off, the single-chain composer is
+                # used; with the flag on and no follow-up chain
+                # available, the composer degrades to the single-
+                # chain surface byte-identically.
+                if self.config.composed_surface:
+                    surface = teaching_grounded_surface_composed(lemma, intent.tag)
+                else:
+                    surface = teaching_grounded_surface(lemma, intent.tag)
+                if surface is not None:
+                    return (surface, "teaching")
         # ADR-0053 — CORRECTION acknowledgement.  Cold-start CORRECTION
         # has no prior session turn to apply to; emit a pack-grounded
         # surface that acknowledges the correction was received and
@@ -694,7 +782,8 @@ class ChatRuntime:
             # topical lemma present, the surface degrades to the
             # ADR-0053 topic-less template.
             surface = pack_grounded_correction_surface(text)
-            return (surface, "pack") if surface is not None else None
+            if surface is not None:
+                return (surface, "pack")
         # ADR-0061 — PROCEDURE pack-grounded surface.  Procedural
         # chains are not part of the reviewed teaching corpus today
         # (CAUSE/VERIFICATION only).  Rather than fall through to the
@@ -705,17 +794,32 @@ class ChatRuntime:
         # ratified.  Honest, deterministic, pack-grounded.
         if intent.tag is IntentTag.PROCEDURE:
             subject_text = (intent.subject or "").strip()
-            if not subject_text:
+            if subject_text:
+                surface = pack_grounded_procedure_surface(subject_text)
+                if surface is not None:
+                    return (surface, "pack")
+        if intent.tag in (IntentTag.DEFINITION, IntentTag.RECALL):
+            lemma = (intent.subject or "").strip()
+            if not lemma:
                 return None
-            surface = pack_grounded_procedure_surface(subject_text)
-            return (surface, "pack") if surface is not None else None
-        if intent.tag not in (IntentTag.DEFINITION, IntentTag.RECALL):
-            return None
-        lemma = (intent.subject or "").strip()
-        if not lemma:
-            return None
-        surface = pack_grounded_surface(lemma)
-        return (surface, "pack") if surface is not None else None
+            surface = pack_grounded_surface(lemma)
+            if surface is not None:
+                return (surface, "pack")
+        # P2.1 — OOV "teach me" surface.  If the classified intent is
+        # one of the surface-supported shapes AND the subject lemma
+        # does not resolve in any mounted lexicon pack, emit a
+        # deterministic learning-invitation surface tagged
+        # ``grounding_source="oov"`` instead of falling through to
+        # the universal disclosure.  Converts the OOV cliff into a
+        # gradient that names the unknown token + points the operator
+        # at the reviewed pack-mutation path.
+        oov_lemma = (intent.subject or "").strip()
+        if oov_lemma:
+            from chat.oov_surface import oov_learning_invitation_surface
+            oov_surface = oov_learning_invitation_surface(oov_lemma, intent.tag)
+            if oov_surface is not None:
+                return (oov_surface, "oov")
+        return None
 
     def _stub_response(
         self,
@@ -848,6 +952,15 @@ class ChatRuntime:
                     intent_subject=discovery_intent_subject,
                     grounding_source=grounding_source,
                 )
+                # P2.3 — emit OOV candidate when the surface fired the
+                # OOV invitation.  Only when an operator has attached
+                # a sink — otherwise this is a no-op.
+                if grounding_source == "oov":
+                    self._emit_oov_candidate(
+                        turn_event=stub_event,
+                        intent_tag=discovery_intent_tag,
+                        token=discovery_intent_subject,
+                    )
         return ChatResponse(
             surface=response_surface,
             proposition=prop,
@@ -926,8 +1039,13 @@ class ChatRuntime:
             # no sink is attached.
             discovery_intent_tag = None
             discovery_intent_subject: str | None = None
+            # Classify intent up-front when EITHER the discovery sink
+            # OR the OOV sink is attached (P2.3) — both downstream
+            # emission paths need it.  Without either sink attached
+            # this is a no-op, so behaviour stays identical to the
+            # pre-Phase-2 path.
             if (
-                self._discovery_sink is not None
+                (self._discovery_sink is not None or self._oov_sink is not None)
                 and gate_decision.source == "empty_vault"
                 and self.config.output_language == "en"
             ):

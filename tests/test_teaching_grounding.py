@@ -181,11 +181,14 @@ def test_cold_start_verification_memory_returns_teaching_surface() -> None:
     assert "recall" in resp.surface
 
 
-def test_cold_start_cause_unknown_subject_disclosure() -> None:
+def test_cold_start_cause_unknown_subject_routes_to_oov_invitation() -> None:
+    """ADR-0065 / P2.1 — CAUSE on an OOV subject routes through the
+    OOV invitation surface (subject is OOV → no chain → fall-through
+    to OOV).  Pre-P2.1 this returned the universal disclosure."""
     rt = ChatRuntime()
     resp = rt.chat("Why does dragon exist?")
-    assert resp.surface == _UNKNOWN_DOMAIN_SURFACE
-    assert resp.grounding_source == "none"
+    assert resp.grounding_source == "oov"
+    assert "dragon" in resp.surface
 
 
 def test_turn_event_carries_grounding_source_teaching() -> None:

@@ -96,13 +96,21 @@ def test_cold_start_comparison_returns_pack_grounded_surface() -> None:
     assert "contrasts with" in resp.surface
 
 
-def test_cold_start_comparison_with_unknown_lemma_disclosure() -> None:
-    """When one term is not a pack lemma, the COMPARISON path returns
-    None and the runtime falls through to the universal disclosure."""
+def test_cold_start_comparison_with_unknown_lemma_routes_to_partial() -> None:
+    """ADR-0065 / P2.2 — when exactly one COMPARISON lemma resolves
+    and the other is OOV, the runtime emits the partial-grounding
+    surface (grounds the known side, hedges the OOV side) instead of
+    the universal disclosure.
+
+    Pre-P2.2 this returned the flat disclosure; post-P2.2 it emits
+    an explicit partial surface that names which side could be
+    grounded and which side needs a reviewed PackMutationProposal."""
     rt = ChatRuntime()
     resp = rt.chat("Compare memory and zigzagxyz")
-    assert resp.surface == _UNKNOWN_DOMAIN_SURFACE
-    assert resp.grounding_source == "none"
+    assert resp.grounding_source == "partial"
+    assert "memory" in resp.surface
+    assert "zigzagxyz" in resp.surface
+    assert "PackMutationProposal" in resp.surface
 
 
 def test_cold_start_comparison_with_identical_lemmas_disclosure() -> None:
