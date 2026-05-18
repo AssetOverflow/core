@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -488,6 +488,126 @@ def cmd_teaching_audit(args: argparse.Namespace) -> int:
             cid = d.chain_id or "<unknown>"
             print(f"  L{d.line_no:>4}  {cid:<40}  {d.reason}")
         return 1
+    return 0
+
+
+def cmd_teaching_gaps(args: argparse.Namespace) -> int:
+    """Phase 1.1 — rank (subject, intent) cells the runtime would have
+    grounded but couldn't, aggregated from emitted DiscoveryCandidates.
+
+    Reads JSONL files written by
+    :class:`teaching.discovery_sink.DiscoveryMonthlyFileSink` under
+    *root* (default ``teaching/discovery_log``) and emits a ranked
+    table of cells ordered by emission count.
+
+    Pure read — never mutates the sink.
+    """
+    from teaching.gaps import _DEFAULT_ROOT, aggregate_gaps
+
+    root = Path(args.root) if args.root else _DEFAULT_ROOT
+    try:
+        rows = aggregate_gaps(
+            root=root,
+            since=args.since,
+            sample_limit=max(1, int(args.sample_limit)),
+        )
+    except ValueError as exc:
+        _die(str(exc), code=2)
+
+    if args.top is not None and args.top > 0:
+        rows = rows[: args.top]
+
+    if args.json:
+        payload = {
+            "root": str(root) if root is not None else None,
+            "since": args.since,
+            "total_cells": len(rows),
+            "gaps": [g.as_dict() for g in rows],
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if rows else 1
+
+    if not rows:
+        print("No discovery candidates found.")
+        if root is not None and not root.exists():
+            print(f"  (root path does not exist: {root})")
+        return 1
+
+    print(f"{'rank':>4}  {'subject':<24}{'intent':<14}{'count':>6}  {'clean':>6}  months")
+    print("-" * 80)
+    for i, gap in enumerate(rows, 1):
+        months = ",".join(gap.months_seen) if gap.months_seen else "—"
+        print(
+            f"{i:>4}  {gap.subject[:24]:<24}{gap.intent[:14]:<14}"
+            f"{gap.count:>6}  {gap.boundary_clean_count:>6}  {months}"
+        )
+    return 0
+
+
+def cmd_teaching_queue(args: argparse.Namespace) -> int:
+    """Phase 1.2 — show the auto-promoted gap queue.
+
+    Reads the discovery sink (same path as ``core teaching gaps``),
+    aggregates by cell, and emits cells whose boundary-clean
+    emission count meets ``--threshold``.
+
+    Boundary-tainted emissions (refusal/hedge fired during the
+    contributing turn) are excluded by default; ``--include-tainted``
+    counts every emission toward the threshold.  Operators reach for
+    that flag deliberately, not by accident.
+    """
+    from teaching.gaps import _DEFAULT_ROOT, aggregate_gaps
+    from teaching.promotion import promote_gaps
+
+    root = Path(args.root) if args.root else _DEFAULT_ROOT
+    try:
+        gaps = aggregate_gaps(
+            root=root,
+            since=args.since,
+            sample_limit=5,
+        )
+    except ValueError as exc:
+        _die(str(exc), code=2)
+
+    if args.threshold < 1:
+        _die(f"--threshold must be >= 1 (got {args.threshold})", code=2)
+
+    promoted = promote_gaps(
+        gaps,
+        threshold=args.threshold,
+        include_tainted=args.include_tainted,
+    )
+
+    if args.json:
+        payload = {
+            "root": str(root),
+            "since": args.since,
+            "threshold": args.threshold,
+            "include_tainted": args.include_tainted,
+            "total_promoted": len(promoted),
+            "queue": [p.as_dict() for p in promoted],
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if promoted else 1
+
+    if not promoted:
+        print(f"No cells met threshold {args.threshold}.")
+        return 1
+
+    print(
+        f"{'rank':>4}  {'queue_id':<48}{'count':>6}  {'clean':>6}  months"
+    )
+    print("-" * 96)
+    for i, p in enumerate(promoted, 1):
+        months = ",".join(p.months_seen) if p.months_seen else "—"
+        print(
+            f"{i:>4}  {p.queue_id[:48]:<48}{p.count:>6}  {p.boundary_clean_count:>6}  {months}"
+        )
+    print()
+    print(
+        f"Author chains with: core teaching propose <candidate-jsonl> "
+        f"(or hand-author + supersede)."
+    )
     return 0
 
 
@@ -1818,6 +1938,56 @@ def build_parser() -> argparse.ArgumentParser:
         help="emit machine-readable JSON",
     )
     teaching_audit.set_defaults(func=cmd_teaching_audit)
+
+    teaching_queue = teaching_sub.add_parser(
+        "queue",
+        help="show auto-promoted high-priority gaps (cells crossing --threshold)",
+    )
+    teaching_queue.add_argument(
+        "--root", default=None,
+        help="discovery-sink root (default: teaching/discovery_log)",
+    )
+    teaching_queue.add_argument(
+        "--since", default=None,
+        help="lower-bound month token YYYY-MM",
+    )
+    teaching_queue.add_argument(
+        "--threshold", type=int, default=3,
+        help="minimum (boundary-clean) emissions to promote a cell (default: 3)",
+    )
+    teaching_queue.add_argument(
+        "--include-tainted", action="store_true",
+        help="count refusal/hedge-tainted emissions toward the threshold",
+    )
+    teaching_queue.add_argument(
+        "--json", action="store_true", help="machine-readable output",
+    )
+    teaching_queue.set_defaults(func=cmd_teaching_queue)
+
+    teaching_gaps = teaching_sub.add_parser(
+        "gaps",
+        help="rank (subject, intent) cells discovery candidates would have grounded",
+    )
+    teaching_gaps.add_argument(
+        "--root", default=None,
+        help="discovery-sink root (default: teaching/discovery_log)",
+    )
+    teaching_gaps.add_argument(
+        "--since", default=None,
+        help="lower-bound month token YYYY-MM (default: include every available month)",
+    )
+    teaching_gaps.add_argument(
+        "--top", type=int, default=None,
+        help="show only the top N cells by emission count",
+    )
+    teaching_gaps.add_argument(
+        "--sample-limit", type=int, default=5,
+        help="max candidate_ids retained per cell as samples (default: 5)",
+    )
+    teaching_gaps.add_argument(
+        "--json", action="store_true", help="machine-readable output",
+    )
+    teaching_gaps.set_defaults(func=cmd_teaching_gaps)
 
     teaching_propose = teaching_sub.add_parser(
         "propose",
