@@ -14,6 +14,7 @@ from chat.pack_grounding import (
     pack_grounded_surface,
     pack_grounded_comparison_surface,
     pack_grounded_correction_surface,
+    pack_grounded_procedure_surface,
     PACK_ID as _COGNITION_PACK_ID,
 )
 from chat.teaching_grounding import (
@@ -682,6 +683,20 @@ class ChatRuntime:
             # topical lemma present, the surface degrades to the
             # ADR-0053 topic-less template.
             surface = pack_grounded_correction_surface(text)
+            return (surface, "pack") if surface is not None else None
+        # ADR-0061 — PROCEDURE pack-grounded surface.  Procedural
+        # chains are not part of the reviewed teaching corpus today
+        # (CAUSE/VERIFICATION only).  Rather than fall through to the
+        # universal disclosure for every "How do I X?" question, the
+        # composer surfaces the topical lemma of the procedure (the
+        # last pack-resident lemma in the verb-phrase subject) and
+        # states explicitly that step-by-step guidance is not yet
+        # ratified.  Honest, deterministic, pack-grounded.
+        if intent.tag is IntentTag.PROCEDURE:
+            subject_text = (intent.subject or "").strip()
+            if not subject_text:
+                return None
+            surface = pack_grounded_procedure_surface(subject_text)
             return (surface, "pack") if surface is not None else None
         if intent.tag not in (IntentTag.DEFINITION, IntentTag.RECALL):
             return None

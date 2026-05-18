@@ -227,6 +227,94 @@ def pack_grounded_correction_surface(text: str | None = None) -> str | None:
     )
 
 
+_PROCEDURE_TOPIC_STOPWORDS: frozenset[str] = frozenset({
+    # Pack-resident lemmas that classify but carry no topical signal
+    # in a procedure utterance — dialogue fillers / copulae.
+    "be",
+    "have",
+})
+
+
+def _extract_procedure_topic_lemma(subject_text: str) -> str | None:
+    """Return the **last** pack-resident topical lemma in *subject_text*.
+
+    Procedure subjects emerge from the intent classifier as verb
+    phrases (e.g. ``"define a concept"``, ``"correct an error"``,
+    ``"verify a claim"``).  The procedure verb tends to be the
+    first pack-resident lemma; the *topic* of the procedure tends
+    to be the last.  Selecting the last pack-resident lemma
+    captures the user's actual subject of interest without requiring
+    POS tagging or syntactic analysis.
+
+    Deterministic: tokens are processed left-to-right; the *last*
+    token that is pack-resident AND not in the stopword set wins.
+
+    Stopwords filter only dialogue fillers (``be`` / ``have``);
+    pack-resident verbs (``define``, ``verify``, ``correct``, etc.)
+    are NOT stopworded — when a procedure utterance contains only
+    one pack-resident lemma and that lemma is the verb, the verb
+    is the topical anchor by elimination.
+    """
+    if not subject_text or not isinstance(subject_text, str):
+        return None
+    index = _pack_index()
+    raw = subject_text.lower()
+    for ch in ",.;:!?\"'()[]{}":
+        raw = raw.replace(ch, " ")
+    last_match: str | None = None
+    for token in raw.split():
+        if not token:
+            continue
+        if token in _PROCEDURE_TOPIC_STOPWORDS:
+            continue
+        if token in index:
+            last_match = token
+    return last_match
+
+
+def pack_grounded_procedure_surface(subject_text: str) -> str | None:
+    """ADR-0061 — cold-start PROCEDURE pack-grounded surface.
+
+    A PROCEDURE intent (``"How do I X?"``, ``"How can I Y?"``) requests
+    step-by-step guidance.  Procedural chains are not part of the
+    reviewed teaching corpus today (teaching chains cover CAUSE and
+    VERIFICATION intents only — see
+    ``chat.teaching_grounding._VALID_INTENTS``).  Rather than fall
+    through to the universal disclosure on every procedure question,
+    this composer emits a pack-grounded acknowledgement that surfaces
+    the topical lemma of the procedure and notes explicitly that
+    step-by-step guidance is not yet ratified — preserving honesty
+    while grounding the user's topic in pack semantics.
+
+    Surface format (fixed template, all atoms pack-sourced):
+
+        "procedure-grounded ({pack_id}): {lemma} ({d1}; {d2}).
+         Step-by-step guidance for {lemma} is not yet ratified
+         in this session."
+
+    The trailing clause is the constant trust-boundary label,
+    analogous to ``"No prior turn in this session to correct yet."``
+    in the CORRECTION acknowledgement (ADR-0053 / ADR-0060).
+
+    Returns ``None`` if no pack-resident lemma is found in
+    *subject_text* — callers fall through to the universal disclosure
+    unchanged (preserves the ADR-0053 honesty contract for the
+    fully-unknown case).
+    """
+    lemma = _extract_procedure_topic_lemma(subject_text)
+    if lemma is None:
+        return None
+    index = _pack_index()
+    domains = index.get(lemma, ())
+    if not domains:
+        return None
+    head = "; ".join(domains[:2])
+    return (
+        f"procedure-grounded ({PACK_ID}): {lemma} ({head}). "
+        f"Step-by-step guidance for {lemma} is not yet ratified in this session."
+    )
+
+
 def pack_grounded_comparison_surface(
     lemma_a: str, lemma_b: str
 ) -> str | None:
