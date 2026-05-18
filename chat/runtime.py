@@ -15,6 +15,10 @@ from chat.pack_grounding import (
     pack_grounded_comparison_surface,
     PACK_ID as _COGNITION_PACK_ID,
 )
+from chat.teaching_grounding import (
+    teaching_grounded_surface,
+    TEACHING_CORPUS_ID as _TEACHING_CORPUS_ID,
+)
 from chat.refusal import (
     build_hedge_prefix,
     build_refusal_surface,
@@ -266,11 +270,15 @@ class ChatResponse:
     # (refusal_emitted, hedge_injected).  Typed as ``object`` to avoid
     # coupling at module-resolution time; downcast at use site.
     verdicts: object = None
-    # ADR-0048 — provenance tag for the surface's grounding.  One of:
-    #   "vault" — answer drawn from session vault evidence (main path).
-    #   "pack"  — answer drawn from the ratified language pack (cold-start
-    #             fallback for DEFINITION/RECALL on pack-known lemmas).
-    #   "none"  — universal "insufficient grounding" disclosure on stub.
+    # ADR-0048 / ADR-0050 / ADR-0052 — provenance tag for the surface's
+    # grounding.  One of:
+    #   "vault"    — answer drawn from session vault evidence (main path).
+    #   "pack"     — answer drawn from the ratified language pack
+    #                (cold-start DEFINITION/RECALL/COMPARISON on pack-known
+    #                lemmas — ADR-0048 / ADR-0050).
+    #   "teaching" — answer drawn from a reviewed teaching-chain corpus
+    #                (cold-start CAUSE/VERIFICATION — ADR-0052).
+    #   "none"     — universal "insufficient grounding" disclosure on stub.
     # The string is preserved verbatim in TurnEvent for downstream audit.
     grounding_source: str = "none"
 
@@ -528,19 +536,29 @@ class ChatRuntime:
 
     def _maybe_pack_grounded_surface(
         self, text: str, gate_source: str
-    ) -> str | None:
-        """ADR-0048 — return a pack-grounded surface, or None.
+    ) -> tuple[str, str] | None:
+        """Return ``(surface, grounding_source)`` or ``None``.
 
-        Only engages when:
+        ADR-0048 / ADR-0050 / ADR-0052 — three reviewed sources of
+        cold-start grounding share this dispatcher:
+
+          - DEFINITION / RECALL → pack-grounded surface (ADR-0048)
+          - COMPARISON          → pack-grounded surface (ADR-0050)
+          - CAUSE / VERIFICATION → teaching-grounded surface (ADR-0052)
+
+        Engagement conditions common to all three branches:
+
           - the gate fired because the session vault is empty,
-          - the classified intent is DEFINITION or RECALL,
-          - the intent's subject lemma is in the ratified cognition pack
-            (``en_core_cognition_v1``).
+          - ``config.output_language == "en"``,
+          - the classified intent has a clean subject lemma.
 
-        Any other condition returns None and the caller falls through to
-        the universal "insufficient grounding" disclosure.  English path
-        only — the cognition pack is English-specific; non-English runs
-        retain the unchanged disclosure.
+        Returns ``None`` when no branch applies and the caller falls
+        through to the universal "insufficient grounding" disclosure.
+
+        The grounding_source string returned alongside the surface is
+        one of ``"pack"`` (ADR-0048/0050) or ``"teaching"`` (ADR-0052)
+        and is preserved verbatim through ChatResponse and TurnEvent
+        for downstream audit.
         """
         if gate_source != "empty_vault":
             return None
@@ -557,13 +575,25 @@ class ChatRuntime:
             lemma_b = (intent.secondary_subject or "").strip()
             if not lemma_a or not lemma_b:
                 return None
-            return pack_grounded_comparison_surface(lemma_a, lemma_b)
+            surface = pack_grounded_comparison_surface(lemma_a, lemma_b)
+            return (surface, "pack") if surface is not None else None
+        # ADR-0052 — teaching-grounded CAUSE / VERIFICATION.  The chain
+        # corpus is reviewed memory; every emitted atom is either a
+        # lemma, a verbatim pack semantic_domains string, or a fixed
+        # connective from humanize_predicate.
+        if intent.tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
+            lemma = (intent.subject or "").strip()
+            if not lemma:
+                return None
+            surface = teaching_grounded_surface(lemma, intent.tag)
+            return (surface, "teaching") if surface is not None else None
         if intent.tag not in (IntentTag.DEFINITION, IntentTag.RECALL):
             return None
         lemma = (intent.subject or "").strip()
         if not lemma:
             return None
-        return pack_grounded_surface(lemma)
+        surface = pack_grounded_surface(lemma)
+        return (surface, "pack") if surface is not None else None
 
     def _stub_response(
         self,
@@ -571,6 +601,7 @@ class ChatRuntime:
         *,
         tokens: tuple[str, ...] = (),
         pack_grounded_surface: str | None = None,
+        grounded_source_tag: str = "pack",
     ) -> ChatResponse:
         zero = np.zeros(field_state.F.shape, dtype=np.float32)
         prop = Proposition(
@@ -640,7 +671,9 @@ class ChatRuntime:
         # pack-grounded surface (refusal does not override the source —
         # refusal is a remediation tier, not a grounding source).
         if pack_grounded_surface is not None and not refusal_emitted:
-            grounding_source = "pack"
+            # ADR-0052 — preserve provenance: pack-grounded surfaces tag
+            # ``"pack"``, teaching-grounded surfaces tag ``"teaching"``.
+            grounding_source = grounded_source_tag
         else:
             grounding_source = "none"
         # ADR-0038 — hedge injection does NOT run on the stub path
@@ -731,9 +764,14 @@ class ChatRuntime:
             # intent's subject lemma is in the ratified cognition pack.
             # Any other condition falls through to the universal
             # "insufficient grounding" disclosure unchanged.
-            pack_surface = self._maybe_pack_grounded_surface(
+            pack_result = self._maybe_pack_grounded_surface(
                 text, gate_decision.source
             )
+            if pack_result is None:
+                pack_surface = None
+                pack_source_tag = "none"
+            else:
+                pack_surface, pack_source_tag = pack_result
             self._context.finalize_turn(
                 empty_result,
                 tokens_in=tuple(filtered),
@@ -742,13 +780,14 @@ class ChatRuntime:
                 metadata={
                     "unknown": True,
                     "unknown_source": gate_decision.source,
-                    "grounding_source": "pack" if pack_surface else "none",
+                    "grounding_source": pack_source_tag if pack_surface else "none",
                 },
             )
             return self._stub_response(
                 committed,
                 tokens=tuple(filtered),
                 pack_grounded_surface=pack_surface,
+                grounded_source_tag=pack_source_tag,
             )
 
         field_state = self._context.commit_ingest(filtered)

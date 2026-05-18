@@ -1,0 +1,3 @@
+{"chain_id":"cause_light_reveals_truth","subject":"light","intent":"cause","connective":"reveals","object":"truth","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0052:reviewed:2026-05-18"}
+{"chain_id":"cause_knowledge_requires_evidence","subject":"knowledge","intent":"cause","connective":"requires","object":"evidence","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0052:reviewed:2026-05-18"}
+{"chain_id":"verification_memory_requires_recall","subject":"memory","intent":"verification","connective":"requires","object":"recall","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0052:reviewed:2026-05-18"}
