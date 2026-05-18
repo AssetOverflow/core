@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -872,6 +872,82 @@ For machine-readable output:
 """
 
 
+_PACK_MEASUREMENTS_PREAMBLE = """
+================================================================================
+  Pack Measurements (ADR-0043)
+================================================================================
+
+Reference: ADR-0027 through ADR-0042 (the pack-layer architecture).
+
+Two pack-driven runners produce per-pack measurements across the three
+ratified identity packs (default_general_v1, precision_first_v1,
+generosity_first_v1):
+
+  Runner 1 — Identity divergence
+    Invokes the production SentenceAssembler with each pack's SurfaceContext
+    over 10 cases × 5 alignment bands.  Reports per-pack rates of bare /
+    hedged / qualified surfaces and pairwise distinct_rate.  No mocks; the
+    same code path used by the runtime.
+
+  Runner 2 — Pack-aware refusal calibration
+    Re-runs the grounding-refusal lane with each identity pack selected via
+    RuntimeConfig.  Reports per-pack refusal_rate, fabrication_rate, and
+    pack_invariant_gate (byte-identical out-of-grounding surfaces across
+    packs).
+
+Combined artifact:
+  evals/results/phase2_pack_measurements.json
+
+Test gate:
+  tests/test_pack_measurements_phase2.py (schema, load-bearing flags,
+  precision.hedge_rate > generosity.hedge_rate).
+
+Machine-readable output:
+  core demo pack-measurements --json
+================================================================================
+"""
+
+
+_LONG_CONTEXT_COMPARISON_PREAMBLE = """
+================================================================================
+  Long-Context Recall Comparison (ADR-0045)
+================================================================================
+
+Reference: vault/store.py (cga_inner exact scan); CLAUDE.md long-context
+doctrine ("Vault recall is exact and deterministic").
+
+This report combines a controlled CORE measurement with frozen citations of
+published transformer long-context recall figures.  The two measurements use
+different inputs (synthetic float32 versors vs natural-language needles) and
+are not directly comparable on benchmark-for-benchmark grounds; the
+comparison is at the architectural level — exact-scan recall vs
+attention-based probabilistic recall.
+
+  Component 1 — CORE controlled measurement
+    Procedure: for each N ∈ {100, 1_000, 10_000, 100_000}, populate a fresh
+    VaultStore with N-1 random float32 versors and one distinguished needle
+    at a known index; query the vault with the needle vector; verify the
+    top-1 result is the planted index.  Determinism: fixed seed schedule.
+
+  Component 2 — Published transformer baselines (frozen citations)
+    Anthropic Claude 2.1, OpenAI GPT-4 Turbo 128k, Google Gemini 1.5 Pro,
+    NVIDIA RULER.  Each baseline carries source citation and URL; figures
+    are not re-measured here.  See
+    evals/long_context_cost/baselines/transformer_long_context.json.
+
+Combined artifact:
+  evals/long_context_cost/results/comparison_v1.json
+
+Test gate:
+  tests/test_long_context_comparison.py (schema; CORE recall = 100%; every
+  baseline retains source + url).
+
+Machine-readable output:
+  core demo long-context-comparison --json
+================================================================================
+"""
+
+
 _ALL_PREAMBLE = """
 ================================================================================
   Combined Demo — Full ADR-0024 Chain Evidence
@@ -1062,6 +1138,59 @@ def cmd_demo(args: argparse.Namespace) -> int:
         result = run_tour(emit_json=args.json)
         if args.json:
             print(json.dumps(result, indent=2, sort_keys=True, default=str))
+        return 0
+
+    if target == "pack-measurements":
+        from scripts.publish_pack_measurements import (
+            build_combined_report,
+            write_report,
+            _print_human,
+        )
+
+        if not args.json:
+            _print_preamble(_PACK_MEASUREMENTS_PREAMBLE)
+        report = build_combined_report()
+        write_report(report, Path("evals/results/phase2_pack_measurements.json"))
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            _print_human(report)
+        return 0
+
+    if target == "long-context-comparison":
+        from evals.long_context_cost.comparison_runner import (
+            run_comparison,
+            _write_report as _write_lc_report,
+        )
+
+        if not args.json:
+            _print_preamble(_LONG_CONTEXT_COMPARISON_PREAMBLE)
+        report = run_comparison()
+        _write_lc_report(
+            report,
+            Path("evals/long_context_cost/results"),
+        )
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            core = report["core_measurements"]
+            print(
+                f"CORE needle-in-a-haystack recall: {core['recall_pct']:.2f}%  "
+                f"(N={core['n_values']})"
+            )
+            for entry in core["per_n"]:
+                mark = "✓" if entry["top1_correct"] else "✗"
+                print(f"  {mark}  N={entry['n']}")
+            print()
+            for b in report["transformer_baselines"]["baselines"]:
+                rec = b["reported_recall_pct"]
+                rec_str = f"{rec:.1f}%" if rec is not None else "n/a"
+                print(
+                    f"  {b['system']:<32}  ctx={b['context_window_tokens']:<8}  "
+                    f"recall={rec_str}"
+                )
+            print()
+            print(f"claim_supported = {report['claim_supported']}")
         return 0
 
     if target == "phase5":
@@ -1308,13 +1437,25 @@ def build_parser() -> argparse.ArgumentParser:
     )
     demo.add_argument(
         "target",
-        choices=["phase5", "phase6", "all", "audit-tour", "list-results"],
+        choices=[
+            "phase5",
+            "phase6",
+            "all",
+            "audit-tour",
+            "pack-measurements",
+            "long-context-comparison",
+            "list-results",
+        ],
         help=(
             "phase5: stratified 5-family mechanism-isolation.  "
             "phase6: 3-condition head-to-head vs in-system baseline.  "
             "all: run both and print a combined summary.  "
             "audit-tour: ADR-0027..0041 pack-layer architecture in four "
             "scenes (identity / safety / ethics / replay).  "
+            "pack-measurements: ADR-0043 — pack-layer claims → CI-enforced "
+            "numbers across the three ratified identity packs.  "
+            "long-context-comparison: ADR-0045 — CORE exact recall NIAH at "
+            "N∈{100,1k,10k,100k} paired with frozen transformer baselines.  "
             "list-results: index every JSON report in the results directory."
         ),
     )

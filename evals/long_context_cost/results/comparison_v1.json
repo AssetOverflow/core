@@ -1,0 +1,98 @@
+{
+  "claim_supported": true,
+  "core_measurements": {
+    "exact_by_construction": true,
+    "n_values": [
+      100,
+      1000,
+      10000,
+      100000
+    ],
+    "per_n": [
+      {
+        "n": 100,
+        "needle_index": 57,
+        "runner_up_score": 15.629206,
+        "score_margin": null,
+        "top1_correct": true,
+        "top1_score": null
+      },
+      {
+        "n": 1000,
+        "needle_index": 573,
+        "runner_up_score": 20.133564,
+        "score_margin": null,
+        "top1_correct": true,
+        "top1_score": null
+      },
+      {
+        "n": 10000,
+        "needle_index": 5739,
+        "runner_up_score": 26.193018,
+        "score_margin": null,
+        "top1_correct": true,
+        "top1_score": null
+      },
+      {
+        "n": 100000,
+        "needle_index": 57393,
+        "runner_up_score": 26.193018,
+        "score_margin": null,
+        "top1_correct": true,
+        "top1_score": null
+      }
+    ],
+    "recall_pct": 100.0
+  },
+  "schema_version": 1,
+  "transformer_baselines": {
+    "baselines": [
+      {
+        "context_window_tokens": 200000,
+        "note": "Without prompt engineering; rises substantially with a single-sentence prefix. Demonstrates probabilistic recall is sensitive to elicitation.",
+        "reported_recall_pct": 50.0,
+        "source": "Anthropic, \"Long context prompting for Claude 2.1\", 2023-12-06",
+        "system": "Anthropic Claude 2.1",
+        "task": "needle_in_a_haystack",
+        "url": "https://www.anthropic.com/news/claude-2-1-prompting"
+      },
+      {
+        "context_window_tokens": 128000,
+        "note": "Aggregate across needle depths; recall degrades non-monotonically as depth and context length both grow.",
+        "reported_recall_pct": 71.0,
+        "source": "Greg Kamradt, \"Pressure Testing GPT-4-128K With Long Context Recall\", 2023-11",
+        "system": "OpenAI GPT-4 Turbo (128k)",
+        "task": "needle_in_a_haystack",
+        "url": "https://github.com/gkamradt/LLMTest_NeedleInAHaystack"
+      },
+      {
+        "context_window_tokens": 1000000,
+        "note": "Headline result; published recall on multi-needle and multi-modal NIAH variants is lower.",
+        "reported_recall_pct": 99.7,
+        "source": "Google DeepMind, \"Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context\", 2024-02",
+        "system": "Google Gemini 1.5 Pro",
+        "task": "needle_in_a_haystack",
+        "url": "https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/"
+      },
+      {
+        "context_window_tokens": 131072,
+        "note": "Showed that most open-source models' *effective* context length is far smaller than their advertised length. Top open models (Llama-3.1-70B, Qwen2-72B) drop below 80% accuracy well before nominal context limit.",
+        "reported_recall_pct": null,
+        "source": "Hsieh et al., \"RULER: What's the Real Context Size of Your Long-Context Language Models?\", arXiv:2404.06654, 2024-04",
+        "system": "NVIDIA RULER (eval, not a model)",
+        "task": "RULER_aggregate_13_tasks",
+        "url": "https://arxiv.org/abs/2404.06654"
+      }
+    ],
+    "core_guarantee": {
+      "recall_kind": "exact_cga_inner_scan",
+      "recall_kind_note": "Recall is an exact scan over `cga_inner(query, stored_i)`. There is no approximate index, no embedding compression, no attention bottleneck. The recall pct is 100 by construction at every N; the latency curve (linear) is what's measured.",
+      "recall_pct": 100.0,
+      "see_also": "evals/long_context_cost/runner.py \u2014 linear-scaling latency curve; results/v1_metrics.json",
+      "system": "CORE Vault (`vault/store.py`)"
+    },
+    "issued_at": "2026-05-17",
+    "note": "Frozen citations of published transformer long-context recall numbers. The baselines here are headline figures reported by the model vendors / published benchmarks; they are NOT re-measured here. They serve as the comparator for ADR-0045: CORE's vault recall is exact-by-construction, the transformer baselines are probabilistic and degrade past each model's effective context. Update only when new published numbers warrant.",
+    "schema_version": 1
+  }
+}

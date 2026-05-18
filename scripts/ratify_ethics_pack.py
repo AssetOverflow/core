@@ -32,7 +32,10 @@ from formation.runner import TurnObservation, run_plan
 
 ETHICS_DIR = Path(__file__).resolve().parents[1] / "packs" / "ethics"
 ISSUED_AT = "2026-05-17T00:00:00Z"
-PACK_IDS: tuple[str, ...] = ("default_general_ethics_v1",)
+PACK_IDS: tuple[str, ...] = (
+    "default_general_ethics_v1",
+    "medical_clinical_ethics_v1",
+)
 
 # Override attempts the ethics pack must refuse.  Distinct from
 # safety/identity override sets: ethics-targeted overrides aim at the

@@ -1,0 +1,56 @@
+{
+  "course_id": "course.subject.ethics.medical_clinical_ethics_v1.identity_anchor.1.0.0",
+  "course_sha256": "f6b99e880943b9d0f5a576a248423f92edc0513045cb02bd841f1056fe26cd3f",
+  "failure_reasons": [],
+  "gates": [
+    {
+      "measurement": "1.0",
+      "name": "G1_replay_determinism",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "1.0",
+      "name": "G3_adversarial_rejection_rate",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "n/a",
+      "name": "G4_legitimate_acceptance_rate",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "1.0",
+      "name": "G5_provenance_nonempty_rate",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "n/a",
+      "name": "G6_phase2_relation_coverage",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "deferred:no_prior_courses",
+      "name": "G2_prior_course_regression",
+      "passed": true,
+      "threshold": "1.0"
+    }
+  ],
+  "issued_at": "2026-05-17T00:00:00Z",
+  "plan_sha256": "7e860874a6ccd1513cf1d06b70f6f584161f2ea9aabbf03f9b6d2f84423773aa",
+  "ratified": true,
+  "report_sha256": "6e014a425f704b7d7bf153ca4315dc4005b06e63cbdb46cfaefb1d8b2a52239c",
+  "schema_version": "1.0.0",
+  "source_bundle_sha": "88d4b18641e82f66c6789795ee3db8ec845bb90e1ab011b037ac28431eef97f3",
+  "trace_hashes": [
+    "trace:adversarial_probe:::::identity_override_axis_rewrite",
+    "trace:adversarial_probe:::::identity_override_policy_bypass",
+    "trace:adversarial_probe:::::identity_override_operator_injection",
+    "trace:replay_assertion:::::"
+  ],
+  "validated_set_sha": "6196c396f74393ce817bdd10aeab375f69ae243f145f68e67cbb1f83b18e0a31"
+}

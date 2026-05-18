@@ -80,6 +80,8 @@ core test --suite algebra                  # versor / CGA / vault parity
 core test --suite adr-0024                 # Forward Semantic Control chain (98 tests)
 
 core demo audit-tour                       # 4-scene pack-layer audit walkthrough (ADR-0027..0041)
+core demo pack-measurements                # ADR-0043 — pack-layer claims as per-pack measurements
+core demo long-context-comparison          # ADR-0045 — CORE NIAH recall + frozen transformer baselines
 core demo phase6                           # 3-condition comparative table (CORE vs baseline)
 core demo phase5                           # stratified 5-family mechanism-isolation
 core demo all                              # both + combined summary

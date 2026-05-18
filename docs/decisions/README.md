@@ -53,6 +53,8 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0041](ADR-0041-cli-verdicts-and-fanout.md) | `--show-verdicts` + FanOutSink | Accepted (2026-05-17) |
 | [ADR-0042](ADR-0042-audit-tour-demo.md) | Audit Tour Demo (`core demo audit-tour`) | Accepted (2026-05-17) |
 | [ADR-0043](ADR-0043-pack-measurements-phase2.md) | Phase-2 pack measurements — claims → numbers | Accepted (2026-05-17) |
+| [ADR-0044](ADR-0044-medical-clinical-ethics-pack.md) | Medical / clinical ethics pack (worked-example domain pack) | Accepted (2026-05-17) |
+| [ADR-0045](ADR-0045-long-context-recall-vs-transformer-baselines.md) | Long-context recall: CORE vs transformer baselines | Accepted (2026-05-17) |
 
 ---
 
@@ -106,9 +108,9 @@ contract, Margin contract, Rotor admissibility contract sections).
 
 ---
 
-## Pack-Layer chain — ADR-0027 through ADR-0043
+## Pack-Layer chain — ADR-0027 through ADR-0045
 
-ADR-0027 through ADR-0043 form the second coherent chain in the
+ADR-0027 through ADR-0045 form the second coherent chain in the
 project: a load-bearing three-tier pack architecture (identity /
 safety / ethics) with deterministic remediation, full-stream audit,
 machine-readable telemetry, an operator-facing CLI readout, and an
@@ -126,6 +128,8 @@ investor-facing walkthrough.  Read in order:
 | **Machine + operator surfaces** | ADR-0040 / ADR-0041 | Structured JSONL sink with redact-by-default trust boundary; `FanOutSink` composer; `core chat --show-verdicts` operator readout. |
 | **Demo** | ADR-0042 | `core demo audit-tour` — four-scene investor-facing walkthrough; test-gated `all_claims_supported` flag. |
 | **Phase-2 measurements** | ADR-0043 | Pack-driven identity-divergence + refusal-calibration runners convert load-bearing claims into CI-enforced numbers across the three ratified packs; combined report at `evals/results/phase2_pack_measurements.json`. |
+| **Worked-example domain pack** | ADR-0044 | `medical_clinical_ethics_v1` — six commitments across all three remediation tiers (refuse / hedge / audit); ratified end-to-end through `scripts/ratify_ethics_pack.py`; composes into the runtime manifold alongside the universal safety floor. |
+| **Long-context comparison** | ADR-0045 | CORE exact needle-in-a-haystack measurement at N ∈ {100, 1k, 10k, 100k} paired with frozen transformer baselines (Claude 2.1, GPT-4 Turbo 128k, Gemini 1.5 Pro, RULER); `recall_pct=100` for CORE by construction. |
 
 Three sibling pack types compose into every runtime manifold:
 

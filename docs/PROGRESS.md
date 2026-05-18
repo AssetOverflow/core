@@ -46,6 +46,8 @@ How to verify on a fresh checkout:
 core test --suite adr-0024     # 98 contract tests across the chain (~2 min)
 core demo all                  # phase5 + phase6 + combined summary (~40 s)
 core demo audit-tour           # pack-layer architecture in 4 scenes (ADR-0027..0041)
+core demo pack-measurements    # ADR-0043 — pack-layer claims as per-pack measurements
+core demo long-context-comparison  # ADR-0045 — CORE NIAH recall + frozen transformer baselines
 core demo list-results         # index of every JSON report with headline metrics
 ```
 

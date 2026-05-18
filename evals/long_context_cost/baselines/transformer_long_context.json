@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "issued_at": "2026-05-17",
+  "note": "Frozen citations of published transformer long-context recall numbers. The baselines here are headline figures reported by the model vendors / published benchmarks; they are NOT re-measured here. They serve as the comparator for ADR-0045: CORE's vault recall is exact-by-construction, the transformer baselines are probabilistic and degrade past each model's effective context. Update only when new published numbers warrant.",
+  "baselines": [
+    {
+      "system": "Anthropic Claude 2.1",
+      "context_window_tokens": 200000,
+      "task": "needle_in_a_haystack",
+      "reported_recall_pct": 50.0,
+      "source": "Anthropic, \"Long context prompting for Claude 2.1\", 2023-12-06",
+      "url": "https://www.anthropic.com/news/claude-2-1-prompting",
+      "note": "Without prompt engineering; rises substantially with a single-sentence prefix. Demonstrates probabilistic recall is sensitive to elicitation."
+    },
+    {
+      "system": "OpenAI GPT-4 Turbo (128k)",
+      "context_window_tokens": 128000,
+      "task": "needle_in_a_haystack",
+      "reported_recall_pct": 71.0,
+      "source": "Greg Kamradt, \"Pressure Testing GPT-4-128K With Long Context Recall\", 2023-11",
+      "url": "https://github.com/gkamradt/LLMTest_NeedleInAHaystack",
+      "note": "Aggregate across needle depths; recall degrades non-monotonically as depth and context length both grow."
+    },
+    {
+      "system": "Google Gemini 1.5 Pro",
+      "context_window_tokens": 1000000,
+      "task": "needle_in_a_haystack",
+      "reported_recall_pct": 99.7,
+      "source": "Google DeepMind, \"Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context\", 2024-02",
+      "url": "https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/",
+      "note": "Headline result; published recall on multi-needle and multi-modal NIAH variants is lower."
+    },
+    {
+      "system": "NVIDIA RULER (eval, not a model)",
+      "context_window_tokens": 131072,
+      "task": "RULER_aggregate_13_tasks",
+      "reported_recall_pct": null,
+      "source": "Hsieh et al., \"RULER: What's the Real Context Size of Your Long-Context Language Models?\", arXiv:2404.06654, 2024-04",
+      "url": "https://arxiv.org/abs/2404.06654",
+      "note": "Showed that most open-source models' *effective* context length is far smaller than their advertised length. Top open models (Llama-3.1-70B, Qwen2-72B) drop below 80% accuracy well before nominal context limit."
+    }
+  ],
+  "core_guarantee": {
+    "system": "CORE Vault (`vault/store.py`)",
+    "recall_kind": "exact_cga_inner_scan",
+    "recall_pct": 100.0,
+    "recall_kind_note": "Recall is an exact scan over `cga_inner(query, stored_i)`. There is no approximate index, no embedding compression, no attention bottleneck. The recall pct is 100 by construction at every N; the latency curve (linear) is what's measured.",
+    "see_also": "evals/long_context_cost/runner.py — linear-scaling latency curve; results/v1_metrics.json"
+  }
+}
