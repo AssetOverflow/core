@@ -133,6 +133,14 @@ Full evidence:
 
 ---
 
+## Safety Pack
+
+Sibling to the identity packs but architecturally distinct: the safety pack at `packs/safety/core_safety_axes_v1.json` carries the boundaries CORE will **never** cross — `no_fabricated_source`, `no_hot_path_repair`, `no_identity_override`, `no_silent_correction`, `preserve_versor_closure`. The pack loads unconditionally at runtime startup (fail-closed on missing or unverified), and its boundaries are unioned into whatever identity pack is selected. Identity packs may *add* boundaries on top, but may never remove safety boundaries.
+
+This is the architecture downstream robotics, healthcare, and other high-stakes deployments will need before they can build CORE into anything that matters. Full doctrine: [`docs/safety_packs.md`](docs/safety_packs.md); decision record: [ADR-0029](docs/decisions/ADR-0029-safety-packs.md).
+
+---
+
 ## Identity Packs
 
 CORE's identity is load-bearing: every reasoning trajectory is scored against an `IdentityManifold` of value axes, and a `PersonaMotor` derived from those axes biases every field walk. As of [ADR-0027](docs/decisions/ADR-0027-identity-packs.md) the manifold is no longer hardcoded — it is loaded at runtime from a swappable, content-addressed pack under `packs/identity/`.

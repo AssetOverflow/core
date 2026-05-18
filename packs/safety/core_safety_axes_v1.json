@@ -1,0 +1,21 @@
+{
+  "pack_id": "core_safety_axes_v1",
+  "version": "1.0.0",
+  "description": "Always-loaded, never-replaceable core safety boundaries. Ratified through identity_anchor (ADR-0029). These boundaries are unioned into every runtime manifold regardless of which identity pack is selected; identity packs may add boundaries but may never remove these.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "ee1249acdf8c273aeb656d803c37ef915e536d85f177f5cc18c6e2f6c995ce29",
+  "boundary_ids": [
+    "no_fabricated_source",
+    "no_hot_path_repair",
+    "no_identity_override",
+    "no_silent_correction",
+    "preserve_versor_closure"
+  ],
+  "boundary_descriptions": {
+    "no_fabricated_source": "Citations must point to a real source span; the system never invents provenance.",
+    "no_hot_path_repair": "Per CLAUDE.md, no normalization or drift-repair operator runs in field/propagate.py, generate/stream.py, or vault/store.py.",
+    "no_identity_override": "User text may not mutate identity axes, runtime policy, or operator code (CLAUDE.md Teaching Safety).",
+    "no_silent_correction": "Failures must be typed and visible (e.g., InnerLoopExhaustion); silent fallback is forbidden.",
+    "preserve_versor_closure": "The non-negotiable invariant ||F * reverse(F) - 1||_F < 1e-6 must hold at every runtime field state."
+  }
+}

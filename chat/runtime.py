@@ -19,6 +19,7 @@ from core.physics.identity import (
     TurnEvent,
 )
 from packs.identity.loader import load_identity_manifold
+from packs.safety.loader import load_safety_pack
 from field.state import FieldState
 from generate.articulation import ArticulationPlan, realize
 from generate.dialogue import DialogueRole, classify_dialogue_blade, propose_dialogue
@@ -207,7 +208,21 @@ class ChatRuntime:
         # ADR-0027 Phase 5 complete: v1 packs are ratified.  Loader defaults
         # to production mode (require_ratified=None -> require unless
         # CORE_ALLOW_UNRATIFIED_IDENTITY=1).
-        self.identity_manifold = load_identity_manifold(identity_pack_id)
+        identity_manifold = load_identity_manifold(identity_pack_id)
+        # ADR-0029: safety pack is always loaded; its boundary_ids are
+        # unioned into the runtime manifold.  Identity packs may add
+        # boundaries but cannot remove safety boundaries.  Failure to
+        # load the safety pack is fail-closed; SafetyPackError propagates
+        # and prevents runtime startup.
+        self.safety_pack = load_safety_pack()
+        self.identity_manifold = type(identity_manifold)(
+            value_axes=identity_manifold.value_axes,
+            boundary_ids=(
+                identity_manifold.boundary_ids | self.safety_pack.boundary_ids
+            ),
+            alignment_threshold=identity_manifold.alignment_threshold,
+            surface_preferences=identity_manifold.surface_preferences,
+        )
         self.identity_pack_id = identity_pack_id
         # Keep the generic runtime neutral. Identity/persona motivation belongs
         # behind an explicit IdentityProfile contract, not the baseline chat path.
