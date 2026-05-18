@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -620,6 +620,54 @@ def cmd_teaching_review(args: argparse.Namespace) -> int:
     except ProposalError as exc:
         _die(str(exc), code=1)
     return 0
+
+
+def cmd_teaching_supersessions(args: argparse.Namespace) -> int:
+    """Pair each retired chain with its active replacement.
+
+    Derived view over ``teaching.audit.audit_corpus`` — pure, read-only.
+    Surfaces orphan supersessions (retired chain with no live replacement
+    carrying the matching ``superseded_by``) so silent corpus drift is
+    inspectable.
+    """
+    from teaching.audit import audit_corpus, supersession_history
+
+    report = audit_corpus()
+    records = supersession_history(report)
+
+    if args.json:
+        print(json.dumps(
+            {
+                "corpus_id": report.corpus_id,
+                "corpus_path": report.corpus_path,
+                "supersessions": [r.as_dict() for r in records],
+            },
+            ensure_ascii=False, indent=2, sort_keys=True,
+        ))
+        return 0
+
+    if not records:
+        print("(no supersessions)")
+        return 0
+
+    has_orphan = False
+    for r in records:
+        if r.replacement is None:
+            has_orphan = True
+            print(
+                f"retired: {r.retired_chain_id}  (line {r.retired_line_no})\n"
+                f"  replaced_by: <ORPHAN — no live entry carries this superseded_by>"
+            )
+            continue
+        rep = r.replacement
+        prov = rep.provenance.raw or "(unknown)"
+        print(
+            f"retired: {r.retired_chain_id}  (line {r.retired_line_no})\n"
+            f"  replaced_by: {rep.chain_id}  (line {rep.line_no})\n"
+            f"    {rep.subject} {rep.connective} {rep.object}  [{rep.intent}]\n"
+            f"    provenance: {prov}"
+        )
+    return 1 if has_orphan else 0
 
 
 def cmd_teaching_supersede(args: argparse.Namespace) -> int:
@@ -1670,6 +1718,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="explicit new chain_id (default: <intent>_<subject>_<connective>_<object>)",
     )
     teaching_supersede.set_defaults(func=cmd_teaching_supersede)
+
+    teaching_supersessions = teaching_sub.add_parser(
+        "supersessions",
+        help="pair each retired chain with its active replacement (derived view)",
+    )
+    teaching_supersessions.add_argument(
+        "--json", action="store_true", help="emit machine-readable JSON",
+    )
+    teaching_supersessions.set_defaults(func=cmd_teaching_supersessions)
 
     rust = subparsers.add_parser(
         "rust",

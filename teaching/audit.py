@@ -247,3 +247,67 @@ def audit_corpus(path: Path | None = None) -> AuditReport:
         loaded=tuple(loaded),
         dropped=tuple(dropped),
     )
+
+
+@dataclass(frozen=True, slots=True)
+class SupersessionRecord:
+    """One retired→replacement pair derived from an ``AuditReport``.
+
+    ``replacement`` is ``None`` when the corpus claims a chain was
+    superseded but no currently-active entry carries the matching
+    ``superseded_by`` field — i.e. an orphan supersession.  This
+    surfaces silent corpus drift to the operator.
+    """
+
+    retired_chain_id: str
+    retired_line_no: int
+    replacement: LoadedChain | None
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "retired_chain_id": self.retired_chain_id,
+            "retired_line_no": self.retired_line_no,
+            "replacement": (
+                {
+                    "chain_id": self.replacement.chain_id,
+                    "line_no": self.replacement.line_no,
+                    "subject": self.replacement.subject,
+                    "intent": self.replacement.intent,
+                    "connective": self.replacement.connective,
+                    "object": self.replacement.object,
+                    "provenance": {
+                        "adr_id": self.replacement.provenance.adr_id,
+                        "source": self.replacement.provenance.source,
+                        "review_date": self.replacement.provenance.review_date,
+                        "raw": self.replacement.provenance.raw,
+                    },
+                }
+                if self.replacement is not None
+                else None
+            ),
+        }
+
+
+def supersession_history(report: AuditReport) -> tuple[SupersessionRecord, ...]:
+    """Derive retired→replacement pairs from an audit report.
+
+    Pure function of the report; deterministic, ordered by the
+    retired entry's line number (disk order, oldest first).
+    """
+    by_supersedes: dict[str, LoadedChain] = {
+        entry.superseded_by: entry
+        for entry in report.loaded
+        if entry.superseded_by
+    }
+    records: list[SupersessionRecord] = []
+    for dropped in report.dropped:
+        if not dropped.reason.startswith("superseded_by:"):
+            continue
+        retired_id = dropped.chain_id or dropped.reason.split(":", 1)[1]
+        records.append(SupersessionRecord(
+            retired_chain_id=retired_id,
+            retired_line_no=dropped.line_no,
+            replacement=by_supersedes.get(retired_id),
+        ))
+    records.sort(key=lambda r: r.retired_line_no)
+    return tuple(records)
