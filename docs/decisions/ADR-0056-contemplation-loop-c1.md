@@ -1,6 +1,6 @@
 # ADR-0056 — Contemplation Loop: Question Decomposition + Polarity + Domain Typing (Phase C1)
 
-**Status:** Proposed
+**Status:** Accepted (implemented at `4eecf73`, 2026-05-18)
 **Date:** 2026-05-18
 **Author:** Shay
 **Supersedes part of:** ADR-0055 §Decision Phase C (split into C1 + C2)
