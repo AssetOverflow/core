@@ -10,7 +10,11 @@ from typing import List
 import numpy as np
 
 from algebra.versor import versor_condition
-from chat.pack_grounding import pack_grounded_surface, PACK_ID as _COGNITION_PACK_ID
+from chat.pack_grounding import (
+    pack_grounded_surface,
+    pack_grounded_comparison_surface,
+    PACK_ID as _COGNITION_PACK_ID,
+)
 from chat.refusal import (
     build_hedge_prefix,
     build_refusal_surface,
@@ -545,6 +549,15 @@ class ChatRuntime:
         from generate.intent import IntentTag  # local to avoid coupling at import time
         from generate.intent_bridge import classify_intent_from_input
         intent = classify_intent_from_input(text)
+        # ADR-0050 — COMPARISON path: deterministic side-by-side surface
+        # composed from both lemmas' pack semantic_domains.  Engages only
+        # when both subject and secondary_subject are pack lemmas.
+        if intent.tag is IntentTag.COMPARISON:
+            lemma_a = (intent.subject or "").strip()
+            lemma_b = (intent.secondary_subject or "").strip()
+            if not lemma_a or not lemma_b:
+                return None
+            return pack_grounded_comparison_surface(lemma_a, lemma_b)
         if intent.tag not in (IntentTag.DEFINITION, IntentTag.RECALL):
             return None
         lemma = (intent.subject or "").strip()

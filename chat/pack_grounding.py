@@ -118,3 +118,51 @@ def is_pack_lemma(lemma: str) -> bool:
     if not lemma or not isinstance(lemma, str):
         return False
     return lemma.strip().lower() in _pack_index()
+
+
+def pack_grounded_comparison_surface(
+    lemma_a: str, lemma_b: str
+) -> str | None:
+    """ADR-0050 — deterministic pack-grounded surface for COMPARISON intent.
+
+    Returns a surface that composes each lemma's pack semantic_domains
+    side-by-side, with no rewording or inference:
+
+        "{a} (d_a1; d_a2) contrasts with {b} (d_b1; d_b2) — pack-grounded
+         ({pack_id}). No session evidence yet."
+
+    Up to two semantic_domains per side are emitted to keep the surface
+    compact.  All visible tokens are either the lemmas themselves or
+    verbatim pack strings; the verb "contrasts with" is the fixed
+    COMPARISON template constant (mirroring the relation predicate
+    `contrasts_with` already humanised by ``humanize_predicate``).
+
+    Returns ``None`` when:
+      - either lemma is empty or not a string,
+      - either lemma is not present in the pack,
+      - the two lemmas are identical (a comparison between a term
+        and itself carries no contrastive evidence — defer to the
+        single-lemma ``pack_grounded_surface`` path or to the
+        universal disclosure).
+    """
+    if not lemma_a or not isinstance(lemma_a, str):
+        return None
+    if not lemma_b or not isinstance(lemma_b, str):
+        return None
+    key_a = lemma_a.strip().lower()
+    key_b = lemma_b.strip().lower()
+    if not key_a or not key_b:
+        return None
+    if key_a == key_b:
+        return None
+    index = _pack_index()
+    domains_a = index.get(key_a)
+    domains_b = index.get(key_b)
+    if not domains_a or not domains_b:
+        return None
+    head_a = "; ".join(domains_a[:2])
+    head_b = "; ".join(domains_b[:2])
+    return (
+        f"{key_a} ({head_a}) contrasts with {key_b} ({head_b}) "
+        f"— pack-grounded ({PACK_ID}). No session evidence yet."
+    )

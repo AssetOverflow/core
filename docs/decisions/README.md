@@ -59,6 +59,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0047](ADR-0047-wire-forward-graph-constraint.md) | Wire forward graph constraint into the chat hot path (opt-in) | Accepted (2026-05-18) |
 | [ADR-0048](ADR-0048-pack-grounded-surface.md) | Pack-grounded surface for cold-start DEFINITION / RECALL | Accepted (2026-05-18) |
 | [ADR-0049](ADR-0049-intent-subject-extraction.md) | Intent classifier head-noun subject extraction | Accepted (2026-05-18) |
+| [ADR-0050](ADR-0050-pack-grounded-comparison.md) | Pack-grounded surface for cold-start COMPARISON | Accepted (2026-05-18) |
 
 ---
 
