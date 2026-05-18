@@ -36,6 +36,22 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0024](ADR-0024-inner-loop-admissibility.md) | Inner-Loop Per-Rotor Admissibility | Accepted |
 | [ADR-0025](ADR-0025-rotor-frame-admissibility-design-note.md) | Rotor / Frame Admissibility | Accepted (2026-05-17) |
 | [ADR-0026](ADR-0026-ranked-admissibility-with-margin.md) | Ranked Admissibility with Margin | Accepted (2026-05-17) |
+| [ADR-0027](ADR-0027-identity-packs.md) | Identity Packs — swappable, ratified | Accepted (2026-05-17) |
+| [ADR-0028](ADR-0028-identity-surface-wiring.md) | Identity Surface Wiring | Accepted (2026-05-17) |
+| [ADR-0029](ADR-0029-safety-packs.md) | Safety Packs — never-swappable, fail-closed | Accepted (2026-05-17) |
+| [ADR-0030](ADR-0030-depth-language-hedge.md) | Depth-Language Hedge | Accepted (2026-05-17) |
+| [ADR-0031](ADR-0031-score-decomposition-surface.md) | Score-Decomposition Surface | Accepted (2026-05-17) |
+| [ADR-0032](ADR-0032-safety-check-surface.md) | SafetyCheck Predicate Surface | Accepted (2026-05-17) |
+| [ADR-0033](ADR-0033-ethics-packs.md) | Ethics Packs — third pack tier | Accepted (2026-05-17) |
+| [ADR-0034](ADR-0034-ethics-check-surface.md) | EthicsCheck Predicate Surface | Accepted (2026-05-17) |
+| [ADR-0035](ADR-0035-turn-loop-verdict-surfacing.md) | Turn-Loop Verdict Surfacing | Accepted (2026-05-17) |
+| [ADR-0036](ADR-0036-safety-refusal-policy.md) | Safety-Only Typed Refusal | Accepted (2026-05-17) |
+| [ADR-0037](ADR-0037-per-predicate-ethics-refusal.md) | Per-Predicate Ethics Refusal Opt-In | Accepted (2026-05-17) |
+| [ADR-0038](ADR-0038-hedge-injection.md) | Hedge Injection as Runtime Affordance | Accepted (2026-05-17) |
+| [ADR-0039](ADR-0039-audit-completeness.md) | Audit Completeness — TurnVerdicts + stub TurnEvent | Accepted (2026-05-17) |
+| [ADR-0040](ADR-0040-telemetry-sink.md) | Structured-Logging Sink | Accepted (2026-05-17) |
+| [ADR-0041](ADR-0041-cli-verdicts-and-fanout.md) | `--show-verdicts` + FanOutSink | Accepted (2026-05-17) |
+| [ADR-0042](ADR-0042-audit-tour-demo.md) | Audit Tour Demo (`core demo audit-tour`) | Accepted (2026-05-17) |
 
 ---
 
@@ -86,6 +102,50 @@ Implementation evidence:
 Runtime contracts for the chain are pinned in
 [`docs/runtime_contracts.md`](../runtime_contracts.md) (Refusal
 contract, Margin contract, Rotor admissibility contract sections).
+
+---
+
+## Pack-Layer chain — ADR-0027 through ADR-0042
+
+ADR-0027 through ADR-0042 form the second coherent chain in the
+project: a load-bearing three-tier pack architecture (identity /
+safety / ethics) with deterministic remediation, full-stream audit,
+machine-readable telemetry, an operator-facing CLI readout, and an
+investor-facing walkthrough.  Read in order:
+
+| Group | ADRs | What it adds |
+|---|---|---|
+| **Identity** | ADR-0027 / ADR-0028 | Identity manifold loads from a swappable JSON pack at composition time.  Pack carries `surface_preferences` that visibly drive hedging and claim strength. |
+| **Identity surface refinements** | ADR-0030 / ADR-0031 | Depth-language hedge; score-decomposition surface. |
+| **Safety** | ADR-0029 / ADR-0032 | Five universal safety boundaries unioned into every runtime manifold; SafetyCheck registry-of-predicates surface (observational). |
+| **Ethics** | ADR-0033 / ADR-0034 | Third pack tier — deployment commitments, swappable like identity but propositional like safety; EthicsCheck predicate surface. |
+| **Turn-loop wiring** | ADR-0035 | Both checks auto-invoked at end of every turn; verdicts attached to `ChatResponse` and `TurnEvent`. |
+| **Remediation tiers** | ADR-0036 / ADR-0037 / ADR-0038 | Safety-only typed refusal → per-commitment ethics refusal opt-in → hedge injection.  Three tiers per ethics commitment: audit / hedge / refuse. |
+| **Audit completeness** | ADR-0039 | `TurnVerdicts` bundle + stub-path `TurnEvent` emission + `refusal_emitted` / `hedge_injected` flags.  `rt.turn_log` covers every turn. |
+| **Machine + operator surfaces** | ADR-0040 / ADR-0041 | Structured JSONL sink with redact-by-default trust boundary; `FanOutSink` composer; `core chat --show-verdicts` operator readout. |
+| **Demo** | ADR-0042 | `core demo audit-tour` — four-scene investor-facing walkthrough; test-gated `all_claims_supported` flag. |
+
+Three sibling pack types compose into every runtime manifold:
+
+```
+identity.boundary_ids ∪ safety.boundary_ids ∪ ethics.commitment_ids → manifold.boundary_ids
+```
+
+Per-commitment ethics policy lives in two opt-in lists on the
+ethics pack: `refusal_commitments` (hard stop) and
+`hedge_commitments` (soft prepend), mutually exclusive at load time.
+Safety is always in scope for refusal; the floor never moves.
+
+Verification surface:
+
+| Layer | Tests | Live demo |
+|---|---|---|
+| Identity packs | `tests/test_identity_packs.py`, `tests/test_identity_surface_divergence.py` | `core demo audit-tour` Scene 1 |
+| Safety pack + refusal | `tests/test_safety_pack.py`, `tests/test_safety_check.py`, `tests/test_safety_refusal.py` | `core demo audit-tour` Scene 2 |
+| Ethics pack + opt-ins | `tests/test_ethics_packs.py`, `tests/test_ethics_check.py`, `tests/test_ethics_refusal_opt_in.py`, `tests/test_hedge_injection.py` | `core demo audit-tour` Scene 3 |
+| Turn-loop verdicts + bundle | `tests/test_turn_loop_verdicts.py`, `tests/test_turn_verdicts_bundle.py` | `core chat --show-verdicts` |
+| Telemetry sink | `tests/test_telemetry_sink.py`, `tests/test_telemetry_fanout_and_summary.py` | `core demo audit-tour` Scene 4 |
+| Audit tour gate | `tests/test_audit_tour.py` — asserts `all_claims_supported` | `core demo audit-tour` |
 
 ---
 

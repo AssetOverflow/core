@@ -45,6 +45,7 @@ How to verify on a fresh checkout:
 ```bash
 core test --suite adr-0024     # 98 contract tests across the chain (~2 min)
 core demo all                  # phase5 + phase6 + combined summary (~40 s)
+core demo audit-tour           # pack-layer architecture in 4 scenes (ADR-0027..0041)
 core demo list-results         # index of every JSON report with headline metrics
 ```
 

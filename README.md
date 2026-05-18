@@ -79,6 +79,7 @@ core test --suite cognition                # cognition pipeline lane
 core test --suite algebra                  # versor / CGA / vault parity
 core test --suite adr-0024                 # Forward Semantic Control chain (98 tests)
 
+core demo audit-tour                       # 4-scene pack-layer audit walkthrough (ADR-0027..0041)
 core demo phase6                           # 3-condition comparative table (CORE vs baseline)
 core demo phase5                           # stratified 5-family mechanism-isolation
 core demo all                              # both + combined summary

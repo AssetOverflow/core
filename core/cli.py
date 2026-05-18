@@ -834,6 +834,44 @@ WHEN TO TWEAK
 ================================================================================
 """
 
+_AUDIT_TOUR_PREAMBLE = """
+================================================================================
+  Audit Tour — Pack-Layer Architecture in Four Scenes
+================================================================================
+
+Four scenes, each making one falsifiable claim no transformer-LLM wrapper
+can reproduce:
+
+  Scene 1 — Identity is geometric, not prompt-veneer.
+            Three identity packs load three structurally distinct manifolds
+            (ADR-0027).  Different alignment thresholds, different hedge
+            phrases.  Differences come from JSON pack files, not prompts.
+
+  Scene 2 — Safety is the universal floor.
+            A runtime-checkable safety violation produces a deterministic
+            typed refusal string (ADR-0036).  walk_surface preserved for
+            audit.  Byte-identical across runs.
+
+  Scene 3 — Ethics commitments choose their remediation.
+            Per-commitment opt-in (ADR-0037 / ADR-0038): same engine, same
+            input, different policy.  Pack JSON picks the remediation tier
+            (audit / hedge / refuse).
+
+  Scene 4 — Deterministic replay across runtime instances.
+            Two fresh ChatRuntime instances, same input, same packs.  The
+            emitted JSONL audit line (ADR-0040) is byte-identical.  No
+            stochastic sampling.  No hidden state.
+
+Every claim is testable (tests/test_audit_tour.py asserts
+all_claims_supported is True), every refusal/hedge is auditable, every run
+is replayable.
+
+For machine-readable output:
+  core demo audit-tour --json
+================================================================================
+"""
+
+
 _ALL_PREAMBLE = """
 ================================================================================
   Combined Demo — Full ADR-0024 Chain Evidence
@@ -1014,6 +1052,16 @@ def cmd_demo(args: argparse.Namespace) -> int:
                 print(f"  {entry['file']:55s}  {entry['size_bytes']:>9d} bytes")
                 for k, v in entry["headline"].items():
                     print(f"    {k}: {v}")
+        return 0
+
+    if target == "audit-tour":
+        from evals.audit_tour.run_tour import run_tour
+
+        if not args.json:
+            _print_preamble(_AUDIT_TOUR_PREAMBLE)
+        result = run_tour(emit_json=args.json)
+        if args.json:
+            print(json.dumps(result, indent=2, sort_keys=True, default=str))
         return 0
 
     if target == "phase5":
@@ -1260,11 +1308,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     demo.add_argument(
         "target",
-        choices=["phase5", "phase6", "all", "list-results"],
+        choices=["phase5", "phase6", "all", "audit-tour", "list-results"],
         help=(
             "phase5: stratified 5-family mechanism-isolation.  "
             "phase6: 3-condition head-to-head vs in-system baseline.  "
             "all: run both and print a combined summary.  "
+            "audit-tour: ADR-0027..0041 pack-layer architecture in four "
+            "scenes (identity / safety / ethics / replay).  "
             "list-results: index every JSON report in the results directory."
         ),
     )
