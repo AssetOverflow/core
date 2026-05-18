@@ -112,6 +112,11 @@ TEACHING_CORPORA: tuple[TeachingCorpusSpec, ...] = (
         path=_TEACHING_ROOT / "relations_chains" / "relations_chains_v1.jsonl",
         pack_id="en_core_relations_v1",
     ),
+    TeachingCorpusSpec(
+        corpus_id="relations_chains_v2",
+        path=_TEACHING_ROOT / "relations_chains_v2" / "relations_chains_v2.jsonl",
+        pack_id="en_core_relations_v2",
+    ),
 )
 
 

@@ -43,6 +43,7 @@ from pathlib import Path
 DEFAULT_RESOLVABLE_PACK_IDS: tuple[str, ...] = (
     "en_core_cognition_v1",
     "en_core_relations_v1",
+    "en_core_relations_v2",
 )
 
 _PACK_ROOT = Path(__file__).resolve().parent.parent / "language_packs" / "data"

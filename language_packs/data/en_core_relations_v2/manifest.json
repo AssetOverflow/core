@@ -1,0 +1,13 @@
+{
+  "pack_id": "en_core_relations_v2",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_core_relations_v2.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "7d0583f7e6a13ce72a5b0b191786cfc57af31583dc5111b24c3466e89ee70856",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback"
+}
