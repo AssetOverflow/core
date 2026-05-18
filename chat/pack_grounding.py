@@ -120,6 +120,45 @@ def is_pack_lemma(lemma: str) -> bool:
     return lemma.strip().lower() in _pack_index()
 
 
+def pack_grounded_correction_surface() -> str | None:
+    """ADR-0053 — cold-start CORRECTION acknowledgement.
+
+    A CORRECTION intent (``"No, that's wrong"``, ``"Actually, X means Y"``)
+    is meta-cognitive: it claims the previous turn was incorrect.  On a
+    cold-start session there is no prior turn to apply the correction
+    to, so the doctrine-aligned response is **not** to define what
+    correction is (that would be the DEFINITION path) but to
+    acknowledge receipt and state explicitly that no prior turn exists
+    in this session.
+
+    Surface format (fixed template, all atoms pack-sourced):
+
+        "correction received — pack-grounded ({pack_id}): {d1}; {d2}; {d3}.
+         No prior turn in this session to correct yet."
+
+    Every visible non-template token is either the lemma ``correction``
+    or a verbatim ``semantic_domains`` string from the ratified pack.
+    The trailing disclosure (``No prior turn in this session to correct
+    yet.``) is the constant trust-boundary label distinguishing this
+    cold-start acknowledgement from the post-correction teaching
+    repair path (``teaching/correction.py``) which engages once a
+    prior turn exists.
+
+    Returns ``None`` if the pack is unavailable or has no entry for
+    ``correction`` — callers fall through to the universal disclosure
+    unchanged.
+    """
+    index = _pack_index()
+    domains = index.get("correction")
+    if not domains:
+        return None
+    head = "; ".join(domains[:3])
+    return (
+        f"correction received — pack-grounded ({PACK_ID}): {head}. "
+        f"No prior turn in this session to correct yet."
+    )
+
+
 def pack_grounded_comparison_surface(
     lemma_a: str, lemma_b: str
 ) -> str | None:

@@ -13,6 +13,7 @@ from algebra.versor import versor_condition
 from chat.pack_grounding import (
     pack_grounded_surface,
     pack_grounded_comparison_surface,
+    pack_grounded_correction_surface,
     PACK_ID as _COGNITION_PACK_ID,
 )
 from chat.teaching_grounding import (
@@ -587,6 +588,15 @@ class ChatRuntime:
                 return None
             surface = teaching_grounded_surface(lemma, intent.tag)
             return (surface, "teaching") if surface is not None else None
+        # ADR-0053 — CORRECTION acknowledgement.  Cold-start CORRECTION
+        # has no prior session turn to apply to; emit a pack-grounded
+        # surface that acknowledges the correction was received and
+        # states the missing-prior-turn constraint explicitly.  The
+        # post-correction reviewed-teaching path (``teaching/correction.py``)
+        # engages only once a prior turn exists in the session.
+        if intent.tag is IntentTag.CORRECTION:
+            surface = pack_grounded_correction_surface()
+            return (surface, "pack") if surface is not None else None
         if intent.tag not in (IntentTag.DEFINITION, IntentTag.RECALL):
             return None
         lemma = (intent.subject or "").strip()

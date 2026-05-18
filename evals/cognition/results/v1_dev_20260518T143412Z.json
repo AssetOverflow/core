@@ -1,0 +1,145 @@
+{
+  "cases": [
+    {
+      "case_id": "cause_correction_033",
+      "category": "cause",
+      "intent_correct": true,
+      "surface": "I don't know — insufficient grounding for that yet.",
+      "surface_contains_pass": false,
+      "trace_hash": "ab0dbfb818254b25364c6f000839f99f65ff3680c7ae0db6d134bedbb2b6923b",
+      "versor_closure": true,
+      "versor_condition": 4.6e-08
+    },
+    {
+      "case_id": "cause_creation_008",
+      "category": "cause",
+      "intent_correct": true,
+      "surface": "I don't know — insufficient grounding for that yet.",
+      "surface_contains_pass": false,
+      "trace_hash": "5f3cf11ba4456ebcb2f89ec217817210e2f1d1df8fc3ff4714894089fc4537c4",
+      "versor_closure": true,
+      "versor_condition": 2.3e-08
+    },
+    {
+      "case_id": "comparison_knowledge_wisdom_029",
+      "category": "comparison",
+      "intent_correct": true,
+      "surface": "knowledge (cognition.knowledge; epistemic.ground) contrasts with wisdom (cognition.wisdom; epistemic.judgment) — pack-grounded (en_core_cognition_v1). No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "1b362aca2c7d93db9d499cb1d65dcbc5a5fec4d111afcefde74992ba43c57a47",
+      "versor_closure": true,
+      "versor_condition": 3.6e-08
+    },
+    {
+      "case_id": "correction_basic_014",
+      "category": "correction",
+      "intent_correct": true,
+      "surface": "I don't know — insufficient grounding for that yet.",
+      "surface_contains_pass": false,
+      "trace_hash": "acc36c9c27f20afa1a5162c9808a3e3935c838eda736661349d3894cdaeb2065",
+      "versor_closure": true,
+      "versor_condition": 7.9e-08
+    },
+    {
+      "case_id": "definition_distinction_025",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "distinction — pack-grounded (en_core_cognition_v1): cognition.distinction; relation.contrast; reason.boundary. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "b5a4ea1fbb1685dbee920774c9f35e35760302de1bbd8407c42e69913ea0dcdf",
+      "versor_closure": true,
+      "versor_condition": 4e-08
+    },
+    {
+      "case_id": "definition_evidence_021",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "evidence — pack-grounded (en_core_cognition_v1): cognition.evidence; epistemic.ground; reason.support. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "20c00f392d10574e5e474d8f707f080041e2582d7907a40a0a1bfbabe2a3e7ca",
+      "versor_closure": true,
+      "versor_condition": 7.8e-08
+    },
+    {
+      "case_id": "definition_identity_027",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "identity — pack-grounded (en_core_cognition_v1): cognition.identity; identity.stable; runtime.contract. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "e55b66311f9bd348dc85f689fb77114626fc0e798932b05cef40693e56f12489",
+      "versor_closure": true,
+      "versor_condition": 3.8e-08
+    },
+    {
+      "case_id": "definition_inference_022",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "inference — pack-grounded (en_core_cognition_v1): cognition.inference; logic.derivation; reason.step. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "43ccdddd28a523c814f206d9d7543ef91cf5f9001e49efed8aec5a1b9bd90533",
+      "versor_closure": true,
+      "versor_condition": 7.4e-08
+    },
+    {
+      "case_id": "definition_judgment_044",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "judgment — pack-grounded (en_core_cognition_v1): cognition.judgment; epistemic.evaluation; reason.decision. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "74a7be94c00a82faac020b8e7be98c666243396056a51864b6a20ebaec51b9d4",
+      "versor_closure": true,
+      "versor_condition": 1.97e-07
+    },
+    {
+      "case_id": "procedure_compare_011",
+      "category": "procedure",
+      "intent_correct": true,
+      "surface": "I don't know — insufficient grounding for that yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "f1d263ec417f7363667065958e120334b27091b16fd0c535f30081b210862acb",
+      "versor_closure": true,
+      "versor_condition": 8.5e-08
+    },
+    {
+      "case_id": "recall_knowledge_039",
+      "category": "recall",
+      "intent_correct": true,
+      "surface": "knowledge — pack-grounded (en_core_cognition_v1): cognition.knowledge; epistemic.ground; memory.semantic. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "a4dc6732968e036540dab339592f40e473e72e328df042e4e0f629a4a5b2160d",
+      "versor_closure": true,
+      "versor_condition": 5.9e-08
+    },
+    {
+      "case_id": "unknown_evidence_042",
+      "category": "unknown",
+      "intent_correct": true,
+      "surface": "I don't know — insufficient grounding for that yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "1ede8bec4945c6dca9d5929168ef88336009fef173c326bfa99fc9e9194a0372",
+      "versor_closure": true,
+      "versor_condition": 2e-08
+    },
+    {
+      "case_id": "verification_light_017",
+      "category": "verification",
+      "intent_correct": true,
+      "surface": "I don't know — insufficient grounding for that yet.",
+      "surface_contains_pass": false,
+      "trace_hash": "8406a41fc11ffe5a44daf87f112c523dbd6ac89d67c8004ea7e2943971c64705",
+      "versor_closure": true,
+      "versor_condition": 9.2e-08
+    }
+  ],
+  "lane": "cognition",
+  "metrics": {
+    "intent_accuracy": 1.0,
+    "surface_groundedness": 0.6923,
+    "term_capture_rate": 0.5714,
+    "total": 13,
+    "versor_closure_rate": 1.0
+  },
+  "split": "dev",
+  "timestamp": "2026-05-18T14:34:12.261381+00:00",
+  "version": "v1"
+}

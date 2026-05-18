@@ -1,3 +1,10 @@
 {"chain_id":"cause_light_reveals_truth","subject":"light","intent":"cause","connective":"reveals","object":"truth","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0052:reviewed:2026-05-18"}
 {"chain_id":"cause_knowledge_requires_evidence","subject":"knowledge","intent":"cause","connective":"requires","object":"evidence","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0052:reviewed:2026-05-18"}
 {"chain_id":"verification_memory_requires_recall","subject":"memory","intent":"verification","connective":"requires","object":"recall","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0052:reviewed:2026-05-18"}
+{"chain_id":"cause_correction_reveals_truth","subject":"correction","intent":"cause","connective":"reveals","object":"truth","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0053:reviewed:2026-05-18"}
+{"chain_id":"cause_creation_reveals_meaning","subject":"creation","intent":"cause","connective":"reveals","object":"meaning","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0053:reviewed:2026-05-18"}
+{"chain_id":"verification_light_reveals_truth","subject":"light","intent":"verification","connective":"reveals","object":"truth","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0053:reviewed:2026-05-18"}
+{"chain_id":"cause_truth_grounds_knowledge","subject":"truth","intent":"cause","connective":"grounds","object":"knowledge","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0053:reviewed:2026-05-18"}
+{"chain_id":"cause_wisdom_orders_judgment","subject":"wisdom","intent":"cause","connective":"orders","object":"judgment","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0053:reviewed:2026-05-18"}
+{"chain_id":"verification_truth_requires_evidence","subject":"truth","intent":"verification","connective":"requires","object":"evidence","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0053:reviewed:2026-05-18"}
+{"chain_id":"verification_wisdom_grounds_judgment","subject":"wisdom","intent":"verification","connective":"grounds","object":"judgment","domains_subject_k":2,"domains_object_k":1,"provenance":"adr-0053:reviewed:2026-05-18"}
