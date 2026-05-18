@@ -67,6 +67,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0055](ADR-0055-inter-session-memory-discovery-promotion.md) | Inter-session memory: reviewed discovery promotion (phased design — DiscoveryCandidate, TeachingChainProposal, replay-equivalence gate); Phase A + Phase B Accepted | **Phase A + B Accepted**; C–E Proposed (2026-05-18) |
 | [ADR-0056](ADR-0056-contemplation-loop-c1.md) | Contemplation loop (Phase C1): question decomposition, polarity (affirms/falsifies/undetermined), claim_domain typing (factual/relational/evaluative), sync-only by design | **Accepted** (2026-05-18, implemented `4eecf73`) |
 | [ADR-0057](ADR-0057-teaching-chain-proposal-review.md) | Teaching-chain proposal + review + replay-equivalence gate (Phase C2): the only path to active-corpus extension; eligibility predicate; auto-reject on metric regression; operator accept/reject/withdraw; append-only proposal log | **Accepted** (2026-05-18) |
+| [ADR-0058](ADR-0058-forward-graph-constraint-status.md) | `forward_graph_constraint` remains opt-in default-`False`; no identity pack flips it on; ADR-0047 null-lift on cognition lane promoted to CI-enforced invariant (regression test); identity-pack→`RuntimeConfig` composition deferred until at least one such preference shows lift | **Accepted** (2026-05-18) |
 
 ---
 
