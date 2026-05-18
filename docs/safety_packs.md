@@ -137,9 +137,53 @@ A safety pack is unique to a deployment. The shipping default is `core_safety_ax
 
 A new major version means a new `pack_id`. The old pack remains in the repo for replay and audit; the runtime loads whichever pack id is shipped (currently hardcoded in `packs.safety.loader.DEFAULT_SAFETY_PACK`).
 
+## SafetyCheck — structural surface (ADR-0032)
+
+A centralized, observational surface for evaluating safety boundaries at runtime, parallel in shape to `IdentityCheck`. Produces a `SafetyVerdict`; does not refuse. Wiring violations into refusal paths is a future ADR.
+
+```python
+from packs.safety import SafetyCheck, SafetyContext
+
+check = SafetyCheck()  # ships with default predicates for the five v1 boundaries
+ctx = SafetyContext(
+    field_state=current_field_state,
+    cited_source_shas=frozenset({...}),
+    allowed_source_shas=frozenset({...}),
+    last_refusal_was_typed=True,
+    identity_manifold_hash_before=before_hash,
+    identity_manifold_hash_after=after_hash,
+)
+verdict = check.check(ctx, safety_pack)
+# verdict.upheld: bool, verdict.violated_boundaries: frozenset[str]
+# verdict.results: tuple of per-boundary SafetyCheckResult
+```
+
+Every field on `SafetyContext` is optional. Predicates over fields the caller didn't populate default to `upheld=True, runtime_checkable=False` — absence of evidence is not evidence of violation. `ChatRuntime` exposes a pre-constructed instance as `runtime.safety_check`; the turn loop does not auto-invoke it at v1.
+
+### Default predicates per v1 boundary
+
+| Boundary | Runtime-checkable? | What it checks |
+|---|---|---|
+| `preserve_versor_closure` | Yes | `field_state.versor_condition < 1.0e-6` |
+| `no_fabricated_source` | Yes (when allowlist supplied) | `cited_source_shas ⊆ allowed_source_shas` |
+| `no_silent_correction` | Yes | `last_refusal_was_typed` flag |
+| `no_identity_override` | Yes (when both hashes supplied) | identity-manifold hash before == after |
+| `no_hot_path_repair` | **No** | code-path boundary; enforced by static analysis + code review |
+
+The `no_hot_path_repair` predicate reports `runtime_checkable=False` and `upheld=True` honestly. A predicate that silently reported `upheld=True` would be a small lie — the surface acknowledges what it cannot judge.
+
+### Custom predicates
+
+```python
+check = SafetyCheck()
+check.register("my_boundary_id", my_predicate)
+```
+
+Unknown boundaries (declared in the pack but no predicate registered) default to `upheld=True, runtime_checkable=False, reason="no predicate registered for boundary"`. Doesn't crash; surfaces in audit.
+
 ## Known limits
 
-1. **No `SafetyCheck` parallel to `IdentityCheck`.** Boundaries are enforced elsewhere in the pipeline (refusal paths, allowlist enforcement). A future structural safety-score surface would be valuable but isn't in scope here.
+1. ~~**No `SafetyCheck` parallel to `IdentityCheck`.**~~ **Closed by [ADR-0032](decisions/ADR-0032-safety-check-surface.md) (2026-05-17).** See §SafetyCheck above. v1 is observational; turn-loop auto-invocation and refusal wiring are future ADRs.
 2. **No per-tenant safety packs.** Multi-tenant CORE deployments share one safety pack.
 3. **No human-in-the-loop ratification step.** Operational discipline lives in PR review, not the code.
 4. **English-only boundary descriptions** at v1.

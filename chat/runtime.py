@@ -19,6 +19,7 @@ from core.physics.identity import (
     TurnEvent,
 )
 from packs.identity.loader import load_identity_manifold
+from packs.safety.check import SafetyCheck
 from packs.safety.loader import load_safety_pack
 from field.state import FieldState
 from generate.articulation import ArticulationPlan, realize
@@ -245,6 +246,12 @@ class ChatRuntime:
             fatigue_index=0.0,
         )
         self._identity_check = IdentityCheck()
+        # ADR-0032 — structural safety surface.  Observational at v1:
+        # ChatRuntime exposes ``safety_check`` for callers (audit /
+        # logging / future enforcement), but does not auto-invoke it in
+        # the turn loop.  Wiring violations into refusal paths is a
+        # future ADR.
+        self.safety_check = SafetyCheck()
         self.turn_log: List[TurnEvent] = []
         self._correction_pass = CorrectionPass()
         self._last_valence: float = 0.0
