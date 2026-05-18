@@ -95,6 +95,69 @@ _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
 )
 
 
+# ADR-0049 — deterministic head-noun extraction from subject phrases.
+#
+# After a rule fires, the raw subject span often still carries auxiliary
+# verbs, articles, or trailing punctuation:
+#
+#     "What is a procedure?"      -> raw subject "a procedure"
+#     "Why does light exist?"     -> raw subject "does light exist"
+#     "Does memory require recall?" -> raw subject (whole prompt)
+#
+# Downstream consumers (graph_planner, ADR-0048 pack-grounded surface,
+# future teaching-store inference) expect a clean lemma so they can
+# match the ratified pack lexicon, build single-subject graphs, or
+# consult the teaching store keyed by lemma.
+#
+# This normalizer is *pack-agnostic* — it does not load or consult any
+# pack.  It is a pure syntactic head-noun extractor: strip aux verbs,
+# strip articles, return either the head noun (CAUSE / VERIFICATION)
+# or the cleaned noun phrase (DEFINITION / RECALL / PROCEDURE).
+_ARTICLES = frozenset({"a", "an", "the"})
+_AUX_VERBS = frozenset({
+    "is", "are", "am", "was", "were", "be", "been", "being",
+    "does", "do", "did",
+    "has", "have", "had",
+    "can", "could", "would", "should", "shall", "will", "might", "may", "must",
+})
+
+
+def _normalize_subject(phrase: str, tag: IntentTag) -> str:
+    """Strip aux verbs, articles, and trailing punctuation from a subject phrase.
+
+    For CAUSE and VERIFICATION the subject phrase typically contains the
+    full predicate ("does light exist"), and we return the head noun.
+    For DEFINITION / RECALL / PROCEDURE we keep multi-word noun phrases
+    intact (so e.g. "artificial intelligence" is preserved), only
+    stripping leading articles and trailing punctuation.
+
+    Falls back to the original phrase if normalization would empty it.
+    """
+    if not phrase:
+        return phrase
+    cleaned = phrase.strip().rstrip("?.!").strip()
+    if not cleaned:
+        return ""
+    tokens = cleaned.split()
+    if not tokens:
+        return cleaned
+
+    if tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
+        while tokens and tokens[0].lower() in _AUX_VERBS:
+            tokens = tokens[1:]
+
+    while tokens and tokens[0].lower() in _ARTICLES:
+        tokens = tokens[1:]
+
+    if not tokens:
+        return cleaned
+
+    if tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
+        return tokens[0]
+
+    return " ".join(tokens)
+
+
 def classify_intent(prompt: str) -> DialogueIntent:
     text = prompt.strip()
     if not text:
@@ -149,6 +212,7 @@ def classify_intent(prompt: str) -> DialogueIntent:
             subject = text[match.end():].rstrip("?").strip()
             if not subject:
                 subject = text
+            subject = _normalize_subject(subject, tag)
             return DialogueIntent(tag=tag, subject=subject)
 
     return DialogueIntent(tag=IntentTag.UNKNOWN, subject=text)
