@@ -1,0 +1,56 @@
+{
+  "course_id": "course.subject.ethics.default_general_ethics_v1.identity_anchor.1.0.0",
+  "course_sha256": "405bfbb34399fe591c757a8feb3307dd7ad824b663e87bd2e495e6358c677f23",
+  "failure_reasons": [],
+  "gates": [
+    {
+      "measurement": "1.0",
+      "name": "G1_replay_determinism",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "1.0",
+      "name": "G3_adversarial_rejection_rate",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "n/a",
+      "name": "G4_legitimate_acceptance_rate",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "1.0",
+      "name": "G5_provenance_nonempty_rate",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "n/a",
+      "name": "G6_phase2_relation_coverage",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "deferred:no_prior_courses",
+      "name": "G2_prior_course_regression",
+      "passed": true,
+      "threshold": "1.0"
+    }
+  ],
+  "issued_at": "2026-05-17T00:00:00Z",
+  "plan_sha256": "b653ae409da1e6fde66fa45571b9d2aef2cbeb90d9f39141779d4ba97a074dc5",
+  "ratified": true,
+  "report_sha256": "81fc9b61c828fdd4926ac9eb212883ffd72c032a0ddb6a4b8d988783c98ae98d",
+  "schema_version": "1.0.0",
+  "source_bundle_sha": "80b4ee29b404464023ebc5d60355bde70c45b40f4b56a5c3ff42a72f73157184",
+  "trace_hashes": [
+    "trace:adversarial_probe:::::identity_override_axis_rewrite",
+    "trace:adversarial_probe:::::identity_override_policy_bypass",
+    "trace:adversarial_probe:::::identity_override_operator_injection",
+    "trace:replay_assertion:::::"
+  ],
+  "validated_set_sha": "ade3949195605b4c6bfc46c486b8acfc02d55b2e73901e35ce0dcded193a7140"
+}

@@ -33,7 +33,11 @@ class RuntimeConfig:
     # resolves to ``DEFAULT_IDENTITY_PACK``.  CLI override on chat:
     # ``core chat --identity <pack_id>``.  See docs/identity_packs.md.
     identity_pack: str = ""
+    # ADR-0033 — Ethics pack id loaded at runtime startup.  Empty string
+    # resolves to ``DEFAULT_ETHICS_PACK``.  See docs/ethics_packs.md.
+    ethics_pack: str = ""
 
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
+DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"
 DEFAULT_CONFIG = RuntimeConfig()

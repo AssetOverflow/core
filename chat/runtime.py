@@ -18,6 +18,11 @@ from core.physics.identity import (
     IdentityScore,
     TurnEvent,
 )
+from packs.ethics.loader import (
+    DEFAULT_ETHICS_PACK as _DEFAULT_ETHICS_PACK,
+    EthicsPackError,
+    load_ethics_pack,
+)
 from packs.identity.loader import load_identity_manifold
 from packs.safety.check import SafetyCheck
 from packs.safety.loader import load_safety_pack
@@ -216,10 +221,25 @@ class ChatRuntime:
         # load the safety pack is fail-closed; SafetyPackError propagates
         # and prevents runtime startup.
         self.safety_pack = load_safety_pack()
+        # ADR-0033 — ethics pack composes alongside identity + safety.
+        # Swappable like identity; falls back to the default pack on
+        # load failure rather than refusing startup (safety is the
+        # fail-closed layer, not ethics).
+        ethics_pack_id = resolved_config.ethics_pack or _DEFAULT_ETHICS_PACK
+        try:
+            self.ethics_pack = load_ethics_pack(ethics_pack_id)
+        except EthicsPackError:
+            if ethics_pack_id == _DEFAULT_ETHICS_PACK:
+                raise
+            self.ethics_pack = load_ethics_pack(_DEFAULT_ETHICS_PACK)
+            ethics_pack_id = _DEFAULT_ETHICS_PACK
+        self.ethics_pack_id = ethics_pack_id
         self.identity_manifold = type(identity_manifold)(
             value_axes=identity_manifold.value_axes,
             boundary_ids=(
-                identity_manifold.boundary_ids | self.safety_pack.boundary_ids
+                identity_manifold.boundary_ids
+                | self.safety_pack.boundary_ids
+                | self.ethics_pack.commitment_ids
             ),
             alignment_threshold=identity_manifold.alignment_threshold,
             surface_preferences=identity_manifold.surface_preferences,
