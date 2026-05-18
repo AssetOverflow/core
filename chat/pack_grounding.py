@@ -120,8 +120,51 @@ def is_pack_lemma(lemma: str) -> bool:
     return lemma.strip().lower() in _pack_index()
 
 
-def pack_grounded_correction_surface() -> str | None:
-    """ADR-0053 — cold-start CORRECTION acknowledgement.
+_CORRECTION_TOPIC_STOPWORDS: frozenset[str] = frozenset({
+    # The meta-cognition lemma itself — we never echo it as the topic
+    # because it's already the subject of the acknowledgement template.
+    "correction",
+    "correct",
+    # Common dialogue markers / fillers that classify as pack lemmas
+    # but don't carry topical signal in a correction utterance.
+    "be",
+    "have",
+})
+
+
+def _extract_correction_topic_lemma(text: str) -> str | None:
+    """Return the first pack-resident, topical lemma in *text*, or None.
+
+    Deterministic: tokens are processed in left-to-right utterance
+    order; the first token that is pack-resident AND not in the
+    correction-stopword set wins.  Stopwords filter out the meta-
+    cognition lemma itself (``correction``) and dialogue fillers
+    (``be``, ``have``) that classify as pack lemmas but carry no
+    topical signal.
+
+    Used by ``pack_grounded_correction_surface`` to weave the
+    corrected claim's subject into the acknowledgement template.
+    """
+    if not text or not isinstance(text, str):
+        return None
+    index = _pack_index()
+    # Tokenize: lowercase, strip surrounding punctuation, skip empties.
+    raw = text.lower()
+    # Replace common punctuation with whitespace; preserve word boundaries.
+    for ch in ",.;:!?\"'()[]{}":
+        raw = raw.replace(ch, " ")
+    for token in raw.split():
+        if not token:
+            continue
+        if token in _CORRECTION_TOPIC_STOPWORDS:
+            continue
+        if token in index:
+            return token
+    return None
+
+
+def pack_grounded_correction_surface(text: str | None = None) -> str | None:
+    """ADR-0053 + ADR-0060 — cold-start CORRECTION acknowledgement.
 
     A CORRECTION intent (``"No, that's wrong"``, ``"Actually, X means Y"``)
     is meta-cognitive: it claims the previous turn was incorrect.  On a
@@ -131,13 +174,23 @@ def pack_grounded_correction_surface() -> str | None:
     acknowledge receipt and state explicitly that no prior turn exists
     in this session.
 
-    Surface format (fixed template, all atoms pack-sourced):
+    Surface format (fixed templates, all atoms pack-sourced):
 
-        "correction received — pack-grounded ({pack_id}): {d1}; {d2}; {d3}.
-         No prior turn in this session to correct yet."
+      - **Without topic** (text=None or no pack-resident lemma found):
 
-    Every visible non-template token is either the lemma ``correction``
-    or a verbatim ``semantic_domains`` string from the ratified pack.
+          "correction received — pack-grounded ({pack_id}): {d1}; {d2}; {d3}.
+           No prior turn in this session to correct yet."
+
+      - **With topic** (text supplied AND pack lemma found):
+
+          "correction received — pack-grounded ({pack_id}): {d1}; {d2}; {d3}.
+           Noted topic: {lemma} ({td1}; {td2}).
+           No prior turn in this session to correct yet."
+
+    Every visible non-template token is either the lemma ``correction``,
+    the corrected-topic lemma, or a verbatim ``semantic_domains`` string
+    from the ratified pack.  No inference; no rewording.
+
     The trailing disclosure (``No prior turn in this session to correct
     yet.``) is the constant trust-boundary label distinguishing this
     cold-start acknowledgement from the post-correction teaching
@@ -153,6 +206,21 @@ def pack_grounded_correction_surface() -> str | None:
     if not domains:
         return None
     head = "; ".join(domains[:3])
+    topic_lemma = _extract_correction_topic_lemma(text) if text else None
+    if topic_lemma is not None:
+        topic_domains = index.get(topic_lemma, ())
+        topic_head = "; ".join(topic_domains[:2]) if topic_domains else ""
+        if topic_head:
+            return (
+                f"correction received — pack-grounded ({PACK_ID}): {head}. "
+                f"Noted topic: {topic_lemma} ({topic_head}). "
+                f"No prior turn in this session to correct yet."
+            )
+        return (
+            f"correction received — pack-grounded ({PACK_ID}): {head}. "
+            f"Noted topic: {topic_lemma}. "
+            f"No prior turn in this session to correct yet."
+        )
     return (
         f"correction received — pack-grounded ({PACK_ID}): {head}. "
         f"No prior turn in this session to correct yet."

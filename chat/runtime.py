@@ -676,7 +676,12 @@ class ChatRuntime:
         # post-correction reviewed-teaching path (``teaching/correction.py``)
         # engages only once a prior turn exists in the session.
         if intent.tag is IntentTag.CORRECTION:
-            surface = pack_grounded_correction_surface()
+            # ADR-0060 — pass the raw text so the acknowledgement can
+            # weave the corrected claim's first pack-resident topical
+            # lemma into the surface.  Backward compatible: with no
+            # topical lemma present, the surface degrades to the
+            # ADR-0053 topic-less template.
+            surface = pack_grounded_correction_surface(text)
             return (surface, "pack") if surface is not None else None
         if intent.tag not in (IntentTag.DEFINITION, IntentTag.RECALL):
             return None

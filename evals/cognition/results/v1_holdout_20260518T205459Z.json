@@ -1,0 +1,205 @@
+{
+  "cases": [
+    {
+      "case_id": "cause_truth_031",
+      "category": "cause",
+      "intent_correct": true,
+      "surface": "truth — teaching-grounded (cognition_chains_v1): cognition.truth; logos.core. truth grounds knowledge (cognition.knowledge). No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "cf91517f1d2288cec1c4c27ea8a36ef3db8a51ff6538e8b4ba88c45080930142",
+      "versor_closure": true,
+      "versor_condition": 1.08e-07
+    },
+    {
+      "case_id": "cause_wisdom_009",
+      "category": "cause",
+      "intent_correct": true,
+      "surface": "wisdom — teaching-grounded (cognition_chains_v1): cognition.wisdom; epistemic.judgment. wisdom orders judgment (cognition.judgment). No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "363848c63bec301b25d2a9eaa0c5784c5b040d619d4217e1df15ee946ebfe4d4",
+      "versor_closure": true,
+      "versor_condition": 1.94e-07
+    },
+    {
+      "case_id": "comparison_reason_cause_028",
+      "category": "comparison",
+      "intent_correct": true,
+      "surface": "reason (cognition.reason; logic.cause) contrasts with cause (relation.causal; predicate.cause) — pack-grounded (en_core_cognition_v1). No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "5953b999066ca280920998eeb8ae8d32e2cbb77e8e84b499d033490cad73f926",
+      "versor_closure": true,
+      "versor_condition": 3.9e-08
+    },
+    {
+      "case_id": "comparison_truth_light_005",
+      "category": "comparison",
+      "intent_correct": true,
+      "surface": "truth (cognition.truth; logos.core) contrasts with light (cognition.illumination; logos.core) — pack-grounded (en_core_cognition_v1). No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "0339b114eaf83b3f3825bcf69d3c1fe71003864ccdfb409069d729f5fc6bb3f3",
+      "versor_closure": true,
+      "versor_condition": 6.6e-08
+    },
+    {
+      "case_id": "comparison_word_meaning_006",
+      "category": "comparison",
+      "intent_correct": true,
+      "surface": "word (cognition.language.word; logos.core) contrasts with meaning (cognition.meaning; semantics) — pack-grounded (en_core_cognition_v1). No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "8049248aa33af5dd2e506a9e641d5dbdb6501c0f9a4d601a2a540e47c38c0e8e",
+      "versor_closure": true,
+      "versor_condition": 6.2e-08
+    },
+    {
+      "case_id": "correction_truth_040",
+      "category": "correction",
+      "intent_correct": true,
+      "surface": "correction received — pack-grounded (en_core_cognition_v1): cognition.correction; teaching.review; dialogue.repair. No prior turn in this session to correct yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "49d37322c5df9698f32ff44dc569e57389f7728f999021da8c26d4ff3f13b869",
+      "versor_closure": true,
+      "versor_condition": 1.7e-07
+    },
+    {
+      "case_id": "definition_thought_043",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "thought — pack-grounded (en_core_cognition_v1): cognition.thought; logos.internal; reason.process. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "4580f35ba98e57f4bce9110b2ea01fc552d56b483b59c84bc83fb8c837ea0710",
+      "versor_closure": true,
+      "versor_condition": 2.95e-07
+    },
+    {
+      "case_id": "definition_truth_001",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "truth — pack-grounded (en_core_cognition_v1): cognition.truth; logos.core; epistemic.ground. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "3d53af19b1b8f3664081d2bfdbf6a01afb210e9ed2e10765fedf92b39650c511",
+      "versor_closure": true,
+      "versor_condition": 1.05e-07
+    },
+    {
+      "case_id": "definition_understanding_045",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "understanding — pack-grounded (en_core_cognition_v1): cognition.understanding; epistemic.grasp; meaning.comprehension. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "fbb2d48eff6fdaf3550a2fff214f1678c642d31ec247e876d0382b55fe8faa00",
+      "versor_closure": true,
+      "versor_condition": 4.7e-08
+    },
+    {
+      "case_id": "definition_verification_024",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "verification — pack-grounded (en_core_cognition_v1): cognition.verification; epistemic.check; truth.test. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "f2d7973bfda57b03a7254dac73e4c5ed1e32a6222bea392f2475377b6a20efeb",
+      "versor_closure": true,
+      "versor_condition": 1.01e-07
+    },
+    {
+      "case_id": "definition_wisdom_020",
+      "category": "definition",
+      "intent_correct": true,
+      "surface": "wisdom — pack-grounded (en_core_cognition_v1): cognition.wisdom; epistemic.judgment; reason.order. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "eec38987c51de5cee3cbf722f35c36fa56969666b94f24a60968d6321ca00356",
+      "versor_closure": true,
+      "versor_condition": 2e-08
+    },
+    {
+      "case_id": "procedure_define_010",
+      "category": "procedure",
+      "intent_correct": true,
+      "surface": "I don't know — insufficient grounding for that yet.",
+      "surface_contains_pass": false,
+      "trace_hash": "1aba4270212b74e04dd86bed0a8fa7c0e0ada638e1d50e5987c3db6744c641b7",
+      "versor_closure": true,
+      "versor_condition": 1.1e-08
+    },
+    {
+      "case_id": "procedure_verify_034",
+      "category": "procedure",
+      "intent_correct": true,
+      "surface": "I don't know — insufficient grounding for that yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "a68f18a016983cb1fe269ffc7cfaa7f89c246eea16bb4da1067640f39143f564",
+      "versor_closure": true,
+      "versor_condition": 1.22e-07
+    },
+    {
+      "case_id": "recall_truth_012",
+      "category": "recall",
+      "intent_correct": true,
+      "surface": "truth — pack-grounded (en_core_cognition_v1): cognition.truth; logos.core; epistemic.ground. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "bfd96411b3d66fdd73f99746c6f12e3b17ef3885c820339bddfb3a22f84e958d",
+      "versor_closure": true,
+      "versor_condition": 5.6e-08
+    },
+    {
+      "case_id": "recall_wisdom_038",
+      "category": "recall",
+      "intent_correct": true,
+      "surface": "wisdom — pack-grounded (en_core_cognition_v1): cognition.wisdom; epistemic.judgment; reason.order. No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "c3747bc4d62f24b60385e346c912cdfeb84f0be5404ec535f3bd7ff95303d706",
+      "versor_closure": true,
+      "versor_condition": 3e-08
+    },
+    {
+      "case_id": "unknown_spirit_041",
+      "category": "unknown",
+      "intent_correct": true,
+      "surface": "I don't know — insufficient grounding for that yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "b4571592a8332811586ca9398f667d99f33c73cf43a3cd2e092e6a1bd48f1b08",
+      "versor_closure": true,
+      "versor_condition": 6.2e-08
+    },
+    {
+      "case_id": "unknown_word_018",
+      "category": "unknown",
+      "intent_correct": true,
+      "surface": "I don't know — insufficient grounding for that yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "07903c9e6d28cb584800ede4e6534b50b26120b72f6973108438f25fb5a8972d",
+      "versor_closure": true,
+      "versor_condition": 1.33e-07
+    },
+    {
+      "case_id": "verification_truth_016",
+      "category": "verification",
+      "intent_correct": true,
+      "surface": "truth — teaching-grounded (cognition_chains_v1): cognition.truth; logos.core. truth requires evidence (cognition.evidence). No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "8dd5fe4ed93dedb6da24fdab99a9d167cb36f8bdb2a3e55d4eea5a159411c884",
+      "versor_closure": true,
+      "versor_condition": 1.88e-07
+    },
+    {
+      "case_id": "verification_wisdom_036",
+      "category": "verification",
+      "intent_correct": true,
+      "surface": "wisdom — teaching-grounded (cognition_chains_v1): cognition.wisdom; epistemic.judgment. wisdom grounds judgment (cognition.judgment). No session evidence yet.",
+      "surface_contains_pass": true,
+      "trace_hash": "2c2e60377c54b88febad641c0062772c0d731e9e7089a5170c77c98cfbf44060",
+      "versor_closure": true,
+      "versor_condition": 8.2e-08
+    }
+  ],
+  "lane": "cognition",
+  "metrics": {
+    "intent_accuracy": 1.0,
+    "surface_groundedness": 0.9474,
+    "term_capture_rate": 0.7083,
+    "total": 19,
+    "versor_closure_rate": 1.0
+  },
+  "split": "holdout",
+  "timestamp": "2026-05-18T20:54:59.383102+00:00",
+  "version": "v1"
+}
