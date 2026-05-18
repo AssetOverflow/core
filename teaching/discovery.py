@@ -51,9 +51,13 @@ import json
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from chat.pack_grounding import _pack_index
-from chat.teaching_grounding import _corpus_index
 from generate.intent import IntentTag
+
+# ``chat.pack_grounding`` and ``chat.teaching_grounding`` are
+# imported lazily inside ``extract_discovery_candidates`` to break a
+# circular import chain when an entry-point (e.g. the CLI) imports
+# ``teaching.proposals`` → ``teaching.discovery`` before ``chat``
+# has been fully initialized.
 
 
 DiscoveryTrigger = Literal[
@@ -256,6 +260,9 @@ def extract_discovery_candidates(
     lemma = intent_subject_lemma.strip().lower()
     if not lemma:
         return ()
+
+    from chat.pack_grounding import _pack_index
+    from chat.teaching_grounding import _corpus_index
 
     pack = _pack_index()
     if lemma not in pack:

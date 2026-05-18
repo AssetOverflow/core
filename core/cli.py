@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -488,6 +488,137 @@ def cmd_teaching_audit(args: argparse.Namespace) -> int:
             cid = d.chain_id or "<unknown>"
             print(f"  L{d.line_no:>4}  {cid:<40}  {d.reason}")
         return 1
+    return 0
+
+
+def _load_candidate_jsonl(path: str) -> Any:
+    """Read one enriched DiscoveryCandidate JSONL line from *path*."""
+    from teaching.discovery import DiscoveryCandidate, EvidencePointer, SubQuestion
+
+    p = Path(path)
+    if not p.exists():
+        _die(f"candidate file not found: {path}", code=2)
+    raw = p.read_text(encoding="utf-8").strip()
+    if not raw:
+        _die("candidate file is empty", code=2)
+    first = raw.splitlines()[0].strip()
+    try:
+        payload = json.loads(first)
+    except json.JSONDecodeError as exc:
+        _die(f"invalid JSON: {exc}", code=2)
+    try:
+        evidence = tuple(
+            EvidencePointer(**e) for e in payload.get("evidence", [])
+        )
+        sub_questions = tuple(
+            SubQuestion(
+                sub_id=s["sub_id"],
+                proposed_subject=s["proposed_subject"],
+                proposed_intent=s["proposed_intent"],
+                outcome=s["outcome"],
+                evidence=tuple(EvidencePointer(**e) for e in s.get("evidence", [])),
+            )
+            for s in payload.get("sub_questions", [])
+        )
+        return DiscoveryCandidate(
+            candidate_id=payload["candidate_id"],
+            proposed_chain=payload["proposed_chain"],
+            trigger=payload["trigger"],
+            source_turn_trace=payload.get("source_turn_trace", ""),
+            pack_consistent=bool(payload.get("pack_consistent", True)),
+            boundary_clean=bool(payload.get("boundary_clean", True)),
+            review_state=payload.get("review_state", "unreviewed"),
+            polarity=payload.get("polarity", "undetermined"),
+            claim_domain=payload.get("claim_domain", "factual"),
+            evidence=evidence,
+            sub_questions=sub_questions,
+            contemplation_depth=int(payload.get("contemplation_depth", 0)),
+            recursion_overflow=bool(payload.get("recursion_overflow", False)),
+        )
+    except (KeyError, TypeError) as exc:
+        _die(f"candidate JSON missing required field: {exc}", code=2)
+
+
+def cmd_teaching_propose(args: argparse.Namespace) -> int:
+    """ADR-0057 Phase C2 — build a proposal from an enriched candidate JSONL."""
+    from teaching.proposals import (
+        ProposalError, ProposalLog, propose_from_candidate,
+    )
+
+    candidate = _load_candidate_jsonl(args.candidate_path)
+    log_path = Path(args.log) if args.log else None
+    log = ProposalLog(log_path)
+    try:
+        proposal = propose_from_candidate(
+            candidate, log=log, allow_evaluative=args.allow_evaluative,
+        )
+    except ProposalError as exc:
+        _die(f"ineligible: {exc}", code=1)
+    rec = log.find(proposal.proposal_id)
+    print(f"proposal_id    : {proposal.proposal_id}")
+    print(f"state          : {rec['state']}")
+    if rec.get("replay_evidence"):
+        ev = rec["replay_evidence"]
+        print(f"replay_equivalent: {ev['replay_equivalent']}")
+        if ev.get("regressed_metrics"):
+            print(f"regressed       : {', '.join(ev['regressed_metrics'])}")
+    if rec.get("operator_note"):
+        print(f"note           : {rec['operator_note']}")
+    return 0 if rec["state"] in ("pending", "accepted") else 1
+
+
+def cmd_teaching_proposals(args: argparse.Namespace) -> int:
+    from teaching.proposals import ProposalLog
+
+    log_path = Path(args.log) if args.log else None
+    log = ProposalLog(log_path)
+    state = log.current_state()
+    if args.state:
+        state = {pid: rec for pid, rec in state.items() if rec["state"] == args.state}
+    if args.json:
+        print(json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    if not state:
+        print("(no proposals)")
+        return 0
+    for pid, rec in state.items():
+        chain = rec["proposal"]["proposed_chain"]
+        print(
+            f"{pid}  {rec['state']:<10}  "
+            f"{chain.get('subject')} {chain.get('connective')} {chain.get('object')} "
+            f"({chain.get('intent')})"
+        )
+    return 0
+
+
+def cmd_teaching_review(args: argparse.Namespace) -> int:
+    from teaching.proposals import (
+        ProposalError, ProposalLog,
+        accept_proposal, reject_proposal, withdraw_proposal,
+    )
+
+    log_path = Path(args.log) if args.log else None
+    log = ProposalLog(log_path)
+    try:
+        if args.accept:
+            if not args.review_date:
+                _die("--accept requires --review-date YYYY-MM-DD", code=2)
+            from chat.teaching_grounding import _CORPUS_PATH
+            chain_id = accept_proposal(
+                args.proposal_id, log=log,
+                corpus_path=_CORPUS_PATH,
+                review_date=args.review_date,
+                operator_note=args.note,
+            )
+            print(f"accepted; appended chain_id = {chain_id}")
+        elif args.reject:
+            reject_proposal(args.proposal_id, log=log, operator_note=args.note)
+            print(f"{args.proposal_id} rejected")
+        elif args.withdraw:
+            withdraw_proposal(args.proposal_id, log=log, operator_note=args.note)
+            print(f"{args.proposal_id} withdrawn")
+    except ProposalError as exc:
+        _die(str(exc), code=1)
     return 0
 
 
@@ -1428,6 +1559,60 @@ def build_parser() -> argparse.ArgumentParser:
         help="emit machine-readable JSON",
     )
     teaching_audit.set_defaults(func=cmd_teaching_audit)
+
+    teaching_propose = teaching_sub.add_parser(
+        "propose",
+        help="convert an enriched DiscoveryCandidate (JSONL) into a TeachingChainProposal",
+    )
+    teaching_propose.add_argument(
+        "candidate_path",
+        help="path to a JSONL file containing one enriched candidate line",
+    )
+    teaching_propose.add_argument(
+        "--allow-evaluative", action="store_true",
+        help="permit claim_domain=evaluative proposals (operator override)",
+    )
+    teaching_propose.add_argument(
+        "--log", default=None,
+        help="proposal log path (default: teaching/proposals/proposals.jsonl)",
+    )
+    teaching_propose.set_defaults(func=cmd_teaching_propose)
+
+    teaching_proposals = teaching_sub.add_parser(
+        "proposals",
+        help="list proposals in the append-only log",
+    )
+    teaching_proposals.add_argument(
+        "--state", default=None,
+        choices=("pending", "accepted", "rejected", "withdrawn"),
+        help="filter by review state",
+    )
+    teaching_proposals.add_argument(
+        "--log", default=None, help="proposal log path",
+    )
+    teaching_proposals.add_argument(
+        "--json", action="store_true", help="machine-readable output",
+    )
+    teaching_proposals.set_defaults(func=cmd_teaching_proposals)
+
+    teaching_review = teaching_sub.add_parser(
+        "review",
+        help="operator review action: accept / reject / withdraw a pending proposal",
+    )
+    teaching_review.add_argument("proposal_id")
+    grp = teaching_review.add_mutually_exclusive_group(required=True)
+    grp.add_argument("--accept", action="store_true")
+    grp.add_argument("--reject", action="store_true")
+    grp.add_argument("--withdraw", action="store_true")
+    teaching_review.add_argument("--note", default="", help="operator note")
+    teaching_review.add_argument(
+        "--review-date", default=None,
+        help="review date (YYYY-MM-DD) — required on --accept",
+    )
+    teaching_review.add_argument(
+        "--log", default=None, help="proposal log path",
+    )
+    teaching_review.set_defaults(func=cmd_teaching_review)
 
     rust = subparsers.add_parser(
         "rust",
