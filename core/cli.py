@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -463,6 +463,32 @@ def _safe_pack_id(pack_id: str) -> str:
         _die("pack_id must be a simple pack id, not a path", code=2)
 
     return pack_id
+
+
+def cmd_teaching_audit(args: argparse.Namespace) -> int:
+    """ADR-0055 Phase A — surface load decisions on the reviewed teaching corpus.
+
+    Re-parses the cognition-chains JSONL with the same gates as the
+    runtime loader, but keeps drop reasons so silent shrinkage (pack
+    skew, supersession, schema drift) is inspectable.  Pure read.
+    """
+    from teaching.audit import audit_corpus
+
+    report = audit_corpus()
+    if args.json:
+        print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2, sort_keys=True))
+        return 0 if not report.dropped else 1
+    print(f"corpus_id      : {report.corpus_id}")
+    print(f"corpus_path    : {report.corpus_path}")
+    print(f"lines_on_disk  : {report.lines_on_disk}")
+    print(f"lines_loaded   : {report.lines_loaded}")
+    if report.dropped:
+        print(f"\ndropped ({len(report.dropped)}):")
+        for d in report.dropped:
+            cid = d.chain_id or "<unknown>"
+            print(f"  L{d.line_no:>4}  {cid:<40}  {d.reason}")
+        return 1
+    return 0
 
 
 def cmd_pack_validate(args: argparse.Namespace) -> int:
@@ -1385,6 +1411,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="permit dynamic validator execution (required to run validators)",
     )
     pack_validate.set_defaults(func=cmd_pack_validate)
+
+    teaching = subparsers.add_parser(
+        "teaching",
+        help="inspect the reviewed teaching corpus",
+    )
+    teaching_sub = teaching.add_subparsers(
+        dest="teaching_command", metavar="teaching-command", required=True,
+    )
+    teaching_audit = teaching_sub.add_parser(
+        "audit",
+        help="surface load decisions and drop reasons for the cognition-chains corpus",
+    )
+    teaching_audit.add_argument(
+        "--json", action="store_true",
+        help="emit machine-readable JSON",
+    )
+    teaching_audit.set_defaults(func=cmd_teaching_audit)
 
     rust = subparsers.add_parser(
         "rust",

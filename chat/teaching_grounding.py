@@ -99,11 +99,20 @@ def _corpus_index() -> dict[tuple[str, str], TeachingChain]:
     is reviewed memory but the runtime still verifies pack consistency
     on load so a pack-corpus skew cannot leak a non-pack atom into a
     surface.
+
+    ADR-0055 Phase A: an entry whose ``chain_id`` appears as another
+    entry's ``superseded_by`` is also dropped from the active view.
+    Append-only history on disk is preserved; the loader derives the
+    active set.
     """
     if not _CORPUS_PATH.exists():
         return {}
     pack = _pack_index()
-    out: dict[tuple[str, str], TeachingChain] = {}
+    # First sweep: collect supersession claims.  Only well-formed
+    # entries (parseable JSON object) can retire other entries — a
+    # malformed line cannot supersede a good one.
+    superseded_ids: set[str] = set()
+    parsed_lines: list[dict] = []
     for line in _CORPUS_PATH.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line:
@@ -112,6 +121,15 @@ def _corpus_index() -> dict[tuple[str, str], TeachingChain]:
             entry = json.loads(line)
         except json.JSONDecodeError:
             continue
+        if not isinstance(entry, dict):
+            continue
+        parsed_lines.append(entry)
+        sup = entry.get("superseded_by")
+        if isinstance(sup, str) and sup.strip():
+            superseded_ids.add(sup.strip())
+
+    out: dict[tuple[str, str], TeachingChain] = {}
+    for entry in parsed_lines:
         subject = (entry.get("subject") or "").strip().lower()
         intent = (entry.get("intent") or "").strip().lower()
         obj = (entry.get("object") or "").strip().lower()
@@ -124,9 +142,12 @@ def _corpus_index() -> dict[tuple[str, str], TeachingChain]:
         # surface atom is pack-sourced.
         if subject not in pack or obj not in pack:
             continue
+        chain_id = str(entry.get("chain_id") or f"{subject}_{intent}")
+        if chain_id in superseded_ids:
+            continue
         try:
             chain = TeachingChain(
-                chain_id=str(entry.get("chain_id") or f"{subject}_{intent}"),
+                chain_id=chain_id,
                 subject=subject,
                 intent=intent,
                 connective=connective,
