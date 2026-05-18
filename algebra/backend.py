@@ -90,7 +90,13 @@ def cga_inner(X: np.ndarray, Y: np.ndarray) -> float:
     return _ci(X, Y)
 
 
-def vault_recall(versors: list, query: np.ndarray, top_k: int = 5) -> list:
+def vault_recall(
+    versors: list,
+    query: np.ndarray,
+    top_k: int = 5,
+    *,
+    prebuilt_matrix: np.ndarray | None = None,
+) -> list:
     """Top-k CGA inner product recall.
 
     Rust path: parallel Rayon scan when explicitly enabled.
@@ -99,11 +105,21 @@ def vault_recall(versors: list, query: np.ndarray, top_k: int = 5) -> list:
     because the per-versor sum is folded in the same serial component
     order; the only thing the vectorisation replaces is the
     per-element Python dispatch loop.  ADR-0019 Stage 1.
+
+    ``prebuilt_matrix`` (ADR-0054): optional cached (N, D) f32 matrix
+    of stacked versors maintained by ``VaultStore``.  When supplied,
+    the deque→ndarray conversion is skipped — purely an indexing
+    optimisation, scoring arithmetic is identical.
     """
-    if not versors:
+    if not versors and prebuilt_matrix is None:
         return []
     q = np.asarray(query, dtype=np.float32)
-    M = np.asarray(versors, dtype=np.float32)
+    if prebuilt_matrix is not None:
+        M = prebuilt_matrix
+        if M.shape[0] == 0:
+            return []
+    else:
+        M = np.asarray(versors, dtype=np.float32)
     if _RUST and M.ndim == 2 and M.shape[1] == 32:
         try:
             # Pass the (N, 32) numpy buffer directly — the Rust
@@ -141,6 +157,65 @@ def vault_recall(versors: list, query: np.ndarray, top_k: int = 5) -> list:
     order = np.lexsort((cand, -scores[cand]))
     cand = cand[order]
     return [(int(i), float(scores[i])) for i in cand]
+
+
+def vault_recall_batch(
+    matrix: np.ndarray,
+    queries: np.ndarray,
+    top_k: int = 5,
+) -> list[list[tuple[int, float]]]:
+    """Top-k CGA inner product recall for B queries against one matrix.
+
+    ADR-0054.  Returns one ``[(index, score), ...]`` list per query in
+    the same shape ``vault_recall`` returns for a single query.
+
+    Bit-identity contract: each per-query result must equal the
+    corresponding single-query ``vault_recall`` call against the same
+    matrix.  We accumulate scores in component-serial order with the
+    diagonal metric — the same folding pattern as the single-query
+    path — so the per-versor sum is folded identically.  Top-k
+    ordering uses the same descending-score / ascending-index stable
+    rule.
+
+    No approximate search.  No Rust path here yet (the Rust binding
+    is single-query); Python is canonical.
+    """
+    M = np.asarray(matrix, dtype=np.float32)
+    Q = np.asarray(queries, dtype=np.float32)
+    if Q.ndim == 1:
+        Q = Q[None, :]
+    if M.ndim != 2 or Q.ndim != 2:
+        raise ValueError(
+            f"vault_recall_batch requires matrix.ndim==2 and queries.ndim in (1, 2); "
+            f"got matrix.ndim={M.ndim}, queries.ndim={Q.ndim}"
+        )
+    if M.shape[1] != Q.shape[1]:
+        raise ValueError(
+            f"vault_recall_batch shape mismatch: matrix has {M.shape[1]} components "
+            f"per row, queries have {Q.shape[1]}"
+        )
+    N = M.shape[0]
+    B = Q.shape[0]
+    if N == 0 or top_k <= 0:
+        return [[] for _ in range(B)]
+    # Component-serial accumulation: scores[b, n] = sum_i metric[i] * M[n,i] * Q[b,i].
+    # Folding component-by-component preserves bit-identity with the
+    # single-query path (same float32 addition order across i).
+    scores = np.zeros((B, N), dtype=np.float32)
+    for i in range(M.shape[1]):
+        scores += (_CGA_INNER_METRIC[i] * M[:, i])[None, :] * Q[:, i, None]
+    k = min(top_k, N)
+    out: list[list[tuple[int, float]]] = []
+    for b in range(B):
+        row = scores[b]
+        if k < N:
+            cand = np.argpartition(-row, k - 1)[:k]
+        else:
+            cand = np.arange(N)
+        order = np.lexsort((cand, -row[cand]))
+        cand = cand[order]
+        out.append([(int(i), float(row[i])) for i in cand])
+    return out
 
 
 def unitize_expmap(v: np.ndarray) -> np.ndarray:

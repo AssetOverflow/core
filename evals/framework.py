@@ -45,6 +45,32 @@ class LaneInfo:
     def public_cases_path(self, version: str = "v1") -> Path:
         return self.root / "public" / version / "cases.jsonl"
 
+    def holdout_cases_path(self, version: str = "v1") -> Path:
+        """Return the resolved holdout cases path for this lane.
+
+        Resolution order (first existing wins):
+          1. ``holdouts/cases.jsonl``                — flat plaintext
+          2. ``holdouts/cases_plaintext.jsonl``      — cognition convention
+          3. ``holdouts/<version>/cases.jsonl``      — versioned plaintext
+
+        If none exist, returns the versioned path so callers receive a
+        coherent ``FileNotFoundError``.
+
+        This intentionally does NOT decrypt sealed (``*.age``) holdouts —
+        sealed runs must go through ``evals.holdout_runner.run_holdout``,
+        which enforces aggregate-only output per its trust boundary.
+        """
+        holdouts = self.root / "holdouts"
+        candidates = (
+            holdouts / "cases.jsonl",
+            holdouts / "cases_plaintext.jsonl",
+            holdouts / version / "cases.jsonl",
+        )
+        for path in candidates:
+            if path.exists():
+                return path
+        return candidates[-1]
+
     def results_dir(self) -> Path:
         return self.root / "results"
 
@@ -133,8 +159,12 @@ def run_lane(
         cases_path = lane.dev_cases_path()
     elif split == "public":
         cases_path = lane.public_cases_path(version)
+    elif split == "holdout":
+        cases_path = lane.holdout_cases_path(version)
     else:
-        raise ValueError(f"Unsupported split: {split!r}. Use 'dev' or 'public'.")
+        raise ValueError(
+            f"Unsupported split: {split!r}. Use 'dev', 'public', or 'holdout'."
+        )
 
     if not cases_path.exists():
         raise FileNotFoundError(f"Cases not found: {cases_path}")
