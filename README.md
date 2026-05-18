@@ -133,6 +133,14 @@ Full evidence:
 
 ---
 
+## Teaching Order
+
+CORE's manifold is built by ratified relations under a strict prerequisite DAG — not by absorbing a corpus. The "elementary → college" intuition is right at the macro level (simple before composed, anchored before novel) and wrong at the literal level (don't import a K–12 corpus). Five-layer ordering: **identity axes → atomic definitions → binary relations → composed relations → domain expansion**, re-applied inside every new domain.
+
+Full doctrine, decision rules, and curriculum-platform locations: [`docs/teaching_order.md`](docs/teaching_order.md).
+
+---
+
 ## Architecture
 
 ```

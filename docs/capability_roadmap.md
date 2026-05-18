@@ -2,7 +2,38 @@
 
 **Status:** Draft, derived from `docs/sessions/SESSION-2026-05-15-capability-gates.md`
 **Owner:** Joshua Shay
-**Last updated:** 2026-05-15
+**Last updated:** 2026-05-17
+
+## Status update — 2026-05-17
+
+Work landed since the 2026-05-15 draft (each item is a roadmap input, not yet
+a roadmap rewrite — that pass is queued):
+
+* **Forward Semantic Control chain** — ADR-0022 through ADR-0026 accepted;
+  inner-loop admissibility, rotor/frame admissibility, and ranked-with-margin
+  gates implemented and CI-enforced. See README §"Forward Semantic Control".
+* **Epistemic schema closure** — three leaks closed, four new lanes, three new
+  architectural invariants (INV-21/22/23). Realizer-side refusal calibration
+  and contradiction-coherence checker landed.
+* **Formation pipeline (back half)** — Phases 1–7 implemented; 138/138
+  formation tests pass. See `docs/formation_pipeline_plan.md`.
+* **FSC v3 50-case threshold proof matrix** — landed on
+  `feat/fsc-proof-suite-demo-rebased`; PR pending.
+* **Cost benchmark** — `bench cost` lane reports $/1000 turns + latency with
+  disclosed assumptions; current measurement is 48–149× cheaper per turn than
+  frontier LLMs.
+* **`core pulse` import fix** — 2026-05-17 hex-literal bug in
+  `language_packs/en_seeder.py` repaired; pulse path is operational again.
+
+Closed gates (vs the Phase 1 "Foundational Triple"):
+
+* `identity-divergence` — lane runner, axes, 93-event shared curriculum, dev /
+  public / holdout splits all present.
+* `grammatical-coverage` — partial; v1 work in flight, no formal contract yet.
+* `zero-code-domain-acquisition` — not started.
+
+A full rewrite of the phase exit-criteria against current state is queued for
+the next planning pass.
 
 This document walks CORE from its present state through the gating framework defined in the 2026-05-15 session. It is organized into six phases. Each phase has entry criteria, work items, exit criteria, and a benchmark discipline contract.
 

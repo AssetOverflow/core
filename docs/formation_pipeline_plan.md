@@ -1,9 +1,33 @@
 # Formation Pipeline — Implementation Plan
 
-Status: **DRAFT — awaiting confirmation**
+Status: **IMPLEMENTED (back half) — 2026-05-17**
 Author: planner pass, 2026-05-16
 Companion doc: `docs/decisions/ADR-0021-epistemic-grade-policy.md`,
-`docs/runtime_contracts.md`
+`docs/runtime_contracts.md`, `docs/teaching_order.md`
+
+## Implementation status
+
+Phases 1–7 (the back half — substrate through reviewed-promote bridge) are
+landed on `main`. `core test --suite formation -q` passes 138 / 138.
+
+| Phase | Target modules | Status |
+|---|---|---|
+| 1 | `course.py`, `hashing.py`, `cache.py`, `candidate.py` | ✅ implemented, tested |
+| 2 | `forge.py` (sole text→manifold trust boundary) | ✅ implemented, tested |
+| 3 | `compose.py` + `templates/definition.py` | ✅ implemented (only `definition` template exists; composed-relation / procedural / falsification / identity-anchor templates are still TODO) |
+| 4 | `compiler.py` + `runner.py` | ✅ implemented, tested |
+| 5 | `ratify.py` + `mastery.py` | ✅ implemented; G2 (prior-course regression) intentionally records `deferred:no_prior_courses` until `MasteredCoursesIndex` accumulates history |
+| 6 | CLI wiring (`core formation`) + micro-course e2e | ✅ implemented, tested |
+| 7 | `promote.py` + `index.py` (sole `SPECULATIVE→COHERENT` bridge through `teaching/review.py`) | ✅ implemented, tested |
+| 8–11 | `smelter.py`, `miner.py`, adapters | smelter exists; LLM miner adapter remains gated behind `--enable-llm-source` per item #11 below |
+
+Open items not yet closed by the back-half landing:
+
+* Additional course templates beyond `definition` (see Phase 3).
+* First production curriculum routed through Forge→Promote (current
+  `evals/identity_divergence/curriculum/teaching.jsonl` predates the pipeline
+  and still flows through the older runner path).
+* G2 activation once a real `MasteredCoursesIndex` history exists.
 
 ## 0. Purpose
 
