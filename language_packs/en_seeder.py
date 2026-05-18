@@ -71,9 +71,9 @@ MANIFOLD_RESIDUAL_TOLERANCE = 1e-5
 #     sub-space.
 #   - Rows 5..31: structured bivector projection via a random orthogonal
 #     complement, seeded deterministically so the matrix is always the same.
-# The seed RNG is fixed to numpy.random.default_rng(seed=0xC0_RE_LOG0S) so
-# the lift is reproducible across machines and Python versions.
-_RNG_SEED = 0xC0_RELOG0  # 0xC0RELOG0 = 3236855408
+# The seed RNG is fixed so the lift is reproducible across machines and
+# Python versions.
+_RNG_SEED = 3236855408
 _rng = np.random.default_rng(seed=_RNG_SEED)
 
 # Build the full (32 x 50) projection matrix once at import time.
