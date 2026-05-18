@@ -361,16 +361,32 @@ def _scene5_replay_now_grounded(transient: Path) -> SceneResult:
         "narrative reveals meaning.  Identical bytes for any replay of "
         "the same prompt against this corpus state.",
     )
+    # ADR-0064 — the cognition corpus is one of several registered
+    # teaching corpora; surface composers now consult
+    # ``_all_chains_index`` instead of ``_corpus_index`` alone.  We
+    # rewrite the registry entry's path for the duration of the swap
+    # and clear every teaching cache so the aggregator re-reads the
+    # transient corpus.
     real_path = _tg._CORPUS_PATH
+    original_specs = _tg.TEACHING_CORPORA
+    swapped_specs = tuple(
+        _tg.TeachingCorpusSpec(
+            corpus_id=s.corpus_id,
+            path=transient if s.corpus_id == _tg.TEACHING_CORPUS_ID else s.path,
+            pack_id=s.pack_id,
+        )
+        for s in original_specs
+    )
     try:
         _tg._CORPUS_PATH = transient  # type: ignore[assignment]
-        _tg._corpus_index.cache_clear()
-        # Fresh runtime to avoid any per-instance state.
+        _tg.TEACHING_CORPORA = swapped_specs  # type: ignore[misc]
+        _tg.clear_teaching_caches()
         rt2 = ChatRuntime()
         response = rt2.chat(_DEMO_PROMPT)
     finally:
         _tg._CORPUS_PATH = real_path  # type: ignore[assignment]
-        _tg._corpus_index.cache_clear()
+        _tg.TEACHING_CORPORA = original_specs  # type: ignore[misc]
+        _tg.clear_teaching_caches()
 
     surface = response.surface
     grounding = response.grounding_source

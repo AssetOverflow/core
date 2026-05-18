@@ -48,13 +48,28 @@ def _swap_corpus_path(temp_path: Path) -> Iterator[None]:
     corpus on disk is not touched.
     """
     real_path = _tg._CORPUS_PATH
+    # ADR-0064 — the cognition corpus is one of several registered
+    # teaching corpora.  When we swap it for replay, we must also
+    # rewrite the registry entry's path AND invalidate the aggregated
+    # index so surface composers re-read the swapped corpus.
+    original_specs = _tg.TEACHING_CORPORA
+    swapped_specs = tuple(
+        _tg.TeachingCorpusSpec(
+            corpus_id=s.corpus_id,
+            path=temp_path if s.corpus_id == _tg.TEACHING_CORPUS_ID else s.path,
+            pack_id=s.pack_id,
+        )
+        for s in original_specs
+    )
     try:
         _tg._CORPUS_PATH = temp_path  # type: ignore[assignment]
-        _tg._corpus_index.cache_clear()
+        _tg.TEACHING_CORPORA = swapped_specs  # type: ignore[misc]
+        _tg.clear_teaching_caches()
         yield
     finally:
         _tg._CORPUS_PATH = real_path  # type: ignore[assignment]
-        _tg._corpus_index.cache_clear()
+        _tg.TEACHING_CORPORA = original_specs  # type: ignore[misc]
+        _tg.clear_teaching_caches()
 
 
 def _run_cognition_public() -> dict[str, float]:
@@ -113,9 +128,10 @@ def run_replay_equivalence(chain: dict[str, Any]) -> ReplayEvidence:
     active_path = _tg._CORPUS_PATH
     active_bytes_before = active_path.read_bytes() if active_path.exists() else b""
 
-    # Baseline: just run against the active corpus.  Cache is cleared
-    # to make sure we read the current state of disk.
-    _tg._corpus_index.cache_clear()
+    # Baseline: just run against the active corpus.  Caches are
+    # cleared to make sure we read the current state of disk for
+    # every registered teaching corpus (ADR-0064).
+    _tg.clear_teaching_caches()
     baseline = _run_cognition_public()
 
     # Candidate: build a transient corpus with the chain appended

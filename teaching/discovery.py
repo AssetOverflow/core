@@ -261,15 +261,19 @@ def extract_discovery_candidates(
     if not lemma:
         return ()
 
-    from chat.pack_grounding import _pack_index
-    from chat.teaching_grounding import _corpus_index
+    from chat.pack_resolver import is_resolvable
+    from chat.teaching_grounding import _all_chains_index
 
-    pack = _pack_index()
-    if lemma not in pack:
+    # ADR-0064 — discovery gate uses cross-pack residency (any mounted
+    # lexicon pack) AND cross-corpus chain lookup (any registered
+    # teaching corpus).  A kinship CAUSE prompt whose subject is in
+    # the relations pack but has no relations-chain in the active
+    # corpus is now also a discovery signal.
+    if not is_resolvable(lemma):
         return ()
 
     intent_name = _TEACHING_INTENT_NAME[intent_tag]
-    if (lemma, intent_name) in _corpus_index():
+    if (lemma, intent_name) in _all_chains_index():
         return ()
 
     # The candidate's proposed_chain is intentionally partial: Phase B

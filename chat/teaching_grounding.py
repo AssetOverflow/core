@@ -50,6 +50,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from chat.pack_grounding import PACK_ID as COGNITION_PACK_ID, _pack_index
+from chat.pack_resolver import _pack_lexicon_for
 from generate.intent import IntentTag
 from generate.semantic_templates import humanize_predicate
 
@@ -62,21 +63,69 @@ _INTENT_TAG_BY_NAME: dict[str, IntentTag] = {
     "verification": IntentTag.VERIFICATION,
 }
 
+_TEACHING_ROOT = Path(__file__).resolve().parent.parent / "teaching"
+
 _CORPUS_PATH = (
-    Path(__file__).resolve().parent.parent
-    / "teaching"
+    _TEACHING_ROOT
     / "cognition_chains"
     / f"{TEACHING_CORPUS_ID}.jsonl"
 )
 
 
 @dataclass(frozen=True, slots=True)
+class TeachingCorpusSpec:
+    """ADR-0064 — descriptor for one reviewed teaching corpus.
+
+    A corpus is a JSONL file of reviewed chains plus the single lexicon
+    pack whose vocabulary every chain in that corpus must reside in.  The
+    1-to-1 corpus↔pack binding is the structural invariant that prevents
+    cross-domain leakage during cold-start surface composition: a
+    relations-domain chain cannot accidentally surface a cognition-pack
+    atom (or vice versa) because the pack-consistency check at load time
+    is scoped to the corpus's declared pack.
+
+    Each registered corpus is treated as immutable, reviewed memory.
+    Cross-domain triples (cognition × relations) are deliberately out of
+    scope for v1 — they require a follow-up ADR that introduces a
+    cross-pack chain shape, per ``docs/teaching_order.md`` §5.
+    """
+
+    corpus_id: str
+    path: Path
+    pack_id: str
+
+
+# ADR-0064 — registered teaching corpora.  Order matters: chains in
+# earlier corpora win on (subject, intent) collision.  Cognition is
+# listed first so the cognition-lane byte-identity invariant is
+# preserved when a relations chain ever shares a key (today the
+# orthogonal-pack invariant prevents any such collision, but the
+# resolution rule is documented).
+TEACHING_CORPORA: tuple[TeachingCorpusSpec, ...] = (
+    TeachingCorpusSpec(
+        corpus_id="cognition_chains_v1",
+        path=_TEACHING_ROOT / "cognition_chains" / "cognition_chains_v1.jsonl",
+        pack_id="en_core_cognition_v1",
+    ),
+    TeachingCorpusSpec(
+        corpus_id="relations_chains_v1",
+        path=_TEACHING_ROOT / "relations_chains" / "relations_chains_v1.jsonl",
+        pack_id="en_core_relations_v1",
+    ),
+)
+
+
+@dataclass(frozen=True, slots=True)
 class TeachingChain:
-    """One reviewed cognition chain.
+    """One reviewed teaching chain.
 
     Fields are copied verbatim from the JSONL line; the runtime never
     mutates them.  ``provenance`` is preserved for audit but not emitted
     in the user-facing surface.
+
+    ADR-0064 — ``corpus_id`` records which registered teaching corpus
+    the chain belongs to so the surface tag and audit trail are
+    unambiguous when multiple corpora are active.
     """
 
     chain_id: str
@@ -87,11 +136,87 @@ class TeachingChain:
     domains_subject_k: int
     domains_object_k: int
     provenance: str
+    corpus_id: str = "cognition_chains_v1"
+
+
+def _load_corpus(spec: TeachingCorpusSpec) -> dict[tuple[str, str], TeachingChain]:
+    """ADR-0064 — load one registered teaching corpus.
+
+    Returns ``{(subject_lower, intent_lower): TeachingChain}`` keyed
+    within this corpus only.  Pack-consistency is scoped to
+    ``spec.pack_id``: every chain's subject AND object must reside in
+    that specific pack's lexicon.  Cross-pack chain shapes (e.g. a
+    relations subject with a cognition object) are out of scope for
+    v1 per ``docs/teaching_order.md`` §5 and produce a drop with no
+    surface impact.
+
+    ADR-0055 Phase A: an entry whose ``chain_id`` appears as another
+    entry's ``superseded_by`` is dropped from the active view.
+    Append-only history on disk is preserved; the loader derives the
+    active set.
+    """
+    if not spec.path.exists():
+        return {}
+    pack = _pack_lexicon_for(spec.pack_id)
+    if not pack:
+        return {}
+    superseded_ids: set[str] = set()
+    parsed_lines: list[dict] = []
+    for line in spec.path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(entry, dict):
+            continue
+        parsed_lines.append(entry)
+        sup = entry.get("superseded_by")
+        if isinstance(sup, str) and sup.strip():
+            superseded_ids.add(sup.strip())
+
+    out: dict[tuple[str, str], TeachingChain] = {}
+    for entry in parsed_lines:
+        subject = (entry.get("subject") or "").strip().lower()
+        intent = (entry.get("intent") or "").strip().lower()
+        obj = (entry.get("object") or "").strip().lower()
+        connective = (entry.get("connective") or "").strip()
+        if not subject or not intent or not obj or not connective:
+            continue
+        if intent not in _VALID_INTENTS:
+            continue
+        if subject not in pack or obj not in pack:
+            continue
+        chain_id = str(entry.get("chain_id") or f"{subject}_{intent}")
+        if chain_id in superseded_ids:
+            continue
+        try:
+            chain = TeachingChain(
+                chain_id=chain_id,
+                subject=subject,
+                intent=intent,
+                connective=connective,
+                object=obj,
+                domains_subject_k=int(entry.get("domains_subject_k", 2)),
+                domains_object_k=int(entry.get("domains_object_k", 1)),
+                provenance=str(entry.get("provenance", "")),
+                corpus_id=spec.corpus_id,
+            )
+        except (TypeError, ValueError):
+            continue
+        out[(subject, intent)] = chain
+    return out
 
 
 @lru_cache(maxsize=1)
 def _corpus_index() -> dict[tuple[str, str], TeachingChain]:
-    """Load the cognition-chains corpus once.
+    """Load the cognition-chains corpus once (back-compat surface).
+
+    Retained for discovery / replay / audit consumers whose semantics
+    are scoped to the cognition corpus specifically.  Cross-corpus
+    composition uses :func:`_all_chains_index` instead.
 
     Returns ``{(subject_lower, intent_lower): TeachingChain}``.  Entries
     with invalid schema, unsupported intents, or with subject/object
@@ -155,11 +280,52 @@ def _corpus_index() -> dict[tuple[str, str], TeachingChain]:
                 domains_subject_k=int(entry.get("domains_subject_k", 2)),
                 domains_object_k=int(entry.get("domains_object_k", 1)),
                 provenance=str(entry.get("provenance", "")),
+                corpus_id=TEACHING_CORPUS_ID,
             )
         except (TypeError, ValueError):
             continue
         out[(subject, intent)] = chain
     return out
+
+
+@lru_cache(maxsize=1)
+def _all_chains_index() -> dict[tuple[str, str], TeachingChain]:
+    """ADR-0064 — aggregated view across every registered teaching corpus.
+
+    Returns ``{(subject_lower, intent_lower): TeachingChain}`` keyed
+    across all corpora in :data:`TEACHING_CORPORA`.  Registration order
+    is the resolution order: earlier corpora win on collision.  The
+    cognition corpus is registered first so the cognition-lane
+    byte-identity invariant is preserved.
+
+    The :func:`_corpus_index` back-compat loader is **not** an input to
+    this aggregator — both consult the same underlying file but
+    :func:`_corpus_index` is reserved for cognition-corpus-only
+    consumers (audit, replay, discovery's gate).  Cross-corpus surface
+    composition consults :func:`_all_chains_index`.
+    """
+    aggregated: dict[tuple[str, str], TeachingChain] = {}
+    for spec in TEACHING_CORPORA:
+        corpus = _load_corpus(spec)
+        for key, chain in corpus.items():
+            if key not in aggregated:
+                aggregated[key] = chain
+    return aggregated
+
+
+@lru_cache(maxsize=8)
+def _pack_for_corpus(corpus_id: str) -> dict[str, tuple[str, ...]]:
+    """Return the lexicon for the pack bound to *corpus_id*, cached.
+
+    ADR-0064 — each registered teaching corpus is bound to exactly
+    one lexicon pack via :data:`TEACHING_CORPORA`.  Returns an empty
+    dict if *corpus_id* is unknown — callers see this as "chain
+    cannot be surfaced" and fall through to the universal disclosure.
+    """
+    for spec in TEACHING_CORPORA:
+        if spec.corpus_id == corpus_id:
+            return _pack_lexicon_for(spec.pack_id)
+    return {}
 
 
 def _intent_name(intent_tag: IntentTag) -> str | None:
@@ -202,10 +368,12 @@ def teaching_grounded_surface(
     intent_name = _intent_name(intent_tag)
     if intent_name is None:
         return None
-    chain = _corpus_index().get((key, intent_name))
+    chain = _all_chains_index().get((key, intent_name))
     if chain is None:
         return None
-    pack = _pack_index()
+    # ADR-0064 — pack-residency is scoped to the chain's resolving
+    # corpus.  Each registered corpus is bound to exactly one pack.
+    pack = _pack_for_corpus(chain.corpus_id)
     subject_domains = pack.get(chain.subject, ())
     object_domains = pack.get(chain.object, ())
     if not subject_domains or not object_domains:
@@ -218,7 +386,7 @@ def teaching_grounded_surface(
     )
     connective = humanize_predicate(chain.connective)
     return (
-        f"{chain.subject} — teaching-grounded ({TEACHING_CORPUS_ID}): "
+        f"{chain.subject} — teaching-grounded ({chain.corpus_id}): "
         f"{head_subject}. {chain.subject} {connective} {chain.object} "
         f"({head_object}). No session evidence yet."
     )
@@ -258,11 +426,12 @@ def teaching_grounded_surface_composed(
     intent_name = _intent_name(intent_tag)
     if intent_name is None:
         return None
-    corpus = _corpus_index()
+    corpus = _all_chains_index()
     chain = corpus.get((key, intent_name))
     if chain is None:
         return None
-    pack = _pack_index()
+    # ADR-0064 — pack lookups follow each chain's resolving corpus.
+    pack = _pack_for_corpus(chain.corpus_id)
     subject_domains = pack.get(chain.subject, ())
     object_domains = pack.get(chain.object, ())
     if not subject_domains or not object_domains:
@@ -294,18 +463,19 @@ def teaching_grounded_surface_composed(
         # No follow-up available — degrade to single-chain surface
         # byte-identically with ``teaching_grounded_surface``.
         return (
-            f"{chain.subject} — teaching-grounded ({TEACHING_CORPUS_ID}): "
+            f"{chain.subject} — teaching-grounded ({chain.corpus_id}): "
             f"{head_subject}. {chain.subject} {connective} {chain.object} "
             f"({head_object_short}). No session evidence yet."
         )
 
-    follow_object_domains = pack.get(follow_up.object, ())
+    follow_pack = _pack_for_corpus(follow_up.corpus_id)
+    follow_object_domains = follow_pack.get(follow_up.object, ())
     if not follow_object_domains:
         # Follow-up's object isn't pack-resident with semantic domains
         # — degrade to single-chain surface rather than emit a
         # partially-grounded composition.
         return (
-            f"{chain.subject} — teaching-grounded ({TEACHING_CORPUS_ID}): "
+            f"{chain.subject} — teaching-grounded ({chain.corpus_id}): "
             f"{head_subject}. {chain.subject} {connective} {chain.object} "
             f"({head_object_short}). No session evidence yet."
         )
@@ -315,7 +485,7 @@ def teaching_grounded_surface_composed(
     )
     follow_connective = humanize_predicate(follow_up.connective)
     return (
-        f"{chain.subject} — teaching-grounded ({TEACHING_CORPUS_ID}): "
+        f"{chain.subject} — teaching-grounded ({chain.corpus_id}): "
         f"{head_subject}. {chain.subject} {connective} {chain.object} "
         f"({head_object_short}), which {follow_connective} {follow_up.object} "
         f"({follow_head}). No session evidence yet."
@@ -323,10 +493,25 @@ def teaching_grounded_surface_composed(
 
 
 def has_teaching_chain(subject_lemma: str, intent_tag: IntentTag) -> bool:
-    """Return True iff a reviewed chain exists for (subject, intent)."""
+    """Return True iff a reviewed chain exists for (subject, intent)
+    in any registered teaching corpus (ADR-0064 cross-corpus view)."""
     if not subject_lemma or not isinstance(subject_lemma, str):
         return False
     intent_name = _intent_name(intent_tag)
     if intent_name is None:
         return False
-    return (subject_lemma.strip().lower(), intent_name) in _corpus_index()
+    return (subject_lemma.strip().lower(), intent_name) in _all_chains_index()
+
+
+def clear_teaching_caches() -> None:
+    """Drop every teaching-grounding lru_cache.
+
+    ADR-0064 — the replay-equivalence gate swaps ``_CORPUS_PATH`` to
+    a transient corpus and clears ``_corpus_index``; when multiple
+    corpora are registered the aggregated index must also reset so
+    the swap takes effect.  Test-only and replay-only escape hatch;
+    production code never calls this on the hot path.
+    """
+    _corpus_index.cache_clear()
+    _all_chains_index.cache_clear()
+    _pack_for_corpus.cache_clear()
