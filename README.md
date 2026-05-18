@@ -183,11 +183,11 @@ Supersession is the second operator-direct mutation surface: `core teaching supe
 
 Three live demos / benchmarks make the chain demoable end-to-end:
 
-| Demo | Headline claim | Live command |
-|---|---|---|
-| **Anti-regression** | Three independent gates each fail closed; bad proposals stop at the cheapest applicable gate. | `core demo anti-regression` |
-| **Learning loop** | Same deterministic prompt: `[none] I don't know…` before, `[teaching] thought reveals meaning…` after one accept. | `core demo learning-loop` |
-| **Determinism bench** | N identical inputs → N byte-identical proposal_id / replay metrics / chain_id. 100 runs: `unique=1` everywhere, mean ≈ 1.85s. | `core bench --suite teaching-loop --runs 100` |
+| Demo | Headline claim | Live command | Writeup |
+|---|---|---|---|
+| **Anti-regression** | Three independent gates each fail closed; bad proposals stop at the cheapest applicable gate. | `core demo anti-regression` | [`docs/evals/anti_regression_demo.md`](docs/evals/anti_regression_demo.md) |
+| **Learning loop** | Same deterministic prompt: `[none] I don't know…` before, `[teaching] thought reveals meaning…` after one accept. | `core demo learning-loop` | [`docs/evals/learning_loop_demo.md`](docs/evals/learning_loop_demo.md) |
+| **Determinism bench** | N identical inputs → N byte-identical proposal_id / replay metrics / chain_id. 100 runs: `unique=1` everywhere, mean ≈ 1.85s. | `core bench --suite teaching-loop --runs 100` | [`docs/evals/teaching_loop_bench.md`](docs/evals/teaching_loop_bench.md) |
 
 Operator surfaces:
 
