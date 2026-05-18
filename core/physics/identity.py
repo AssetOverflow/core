@@ -285,3 +285,7 @@ class TurnEvent:
     # Carries refusal_emitted / hedge_injected remediation flags
     # alongside the three verdict surfaces.
     verdicts: object = None
+    # ADR-0048 — provenance tag mirroring ChatResponse.grounding_source.
+    # One of "vault" | "pack" | "none".  Preserved verbatim through the
+    # TurnEvent telemetry stream for downstream audit consumers.
+    grounding_source: str = "none"

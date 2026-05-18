@@ -131,16 +131,16 @@ class CognitiveTurnPipeline:
         # the better articulation surface from the semantic path.
         #
         # Exception: when the unknown-domain gate fired, ChatRuntime
-        # returns the safety stub ("I don't have field coordinates for
-        # that yet.") and `response.vault_hits == 0`.  In that case the
-        # realizer's fallback surface is template-noise that
+        # returns either the universal "insufficient grounding" stub
+        # (ADR-0035) or a pack-grounded surface (ADR-0048) — in both
+        # cases the realizer's fallback would be template-noise that
         # contradicts the gate's honest "no_grounding" signal, so we
-        # keep the gate's stub user-visible.  walk_surface is unaffected
-        # either way.  Addresses calibration gaps.md Finding 2.
-        from chat.runtime import _UNKNOWN_DOMAIN_SURFACE
+        # keep ChatRuntime's stub-path surface user-visible.  walk_surface
+        # is unaffected either way.  Addresses calibration gaps.md
+        # Finding 2.
         gate_fired = (
             response.vault_hits == 0
-            and response.surface == _UNKNOWN_DOMAIN_SURFACE
+            and getattr(response, "grounding_source", "vault") != "vault"
         )
         surface = response.surface
         articulation_surface = response.articulation_surface

@@ -10,6 +10,7 @@ from typing import List
 import numpy as np
 
 from algebra.versor import versor_condition
+from chat.pack_grounding import pack_grounded_surface, PACK_ID as _COGNITION_PACK_ID
 from chat.refusal import (
     build_hedge_prefix,
     build_refusal_surface,
@@ -261,6 +262,13 @@ class ChatResponse:
     # (refusal_emitted, hedge_injected).  Typed as ``object`` to avoid
     # coupling at module-resolution time; downcast at use site.
     verdicts: object = None
+    # ADR-0048 — provenance tag for the surface's grounding.  One of:
+    #   "vault" — answer drawn from session vault evidence (main path).
+    #   "pack"  — answer drawn from the ratified language pack (cold-start
+    #             fallback for DEFINITION/RECALL on pack-known lemmas).
+    #   "none"  — universal "insufficient grounding" disclosure on stub.
+    # The string is preserved verbatim in TurnEvent for downstream audit.
+    grounding_source: str = "none"
 
 
 class ChatRuntime:
@@ -514,11 +522,42 @@ class ChatRuntime:
             axis_hedges=axis_hedges,
         )
 
+    def _maybe_pack_grounded_surface(
+        self, text: str, gate_source: str
+    ) -> str | None:
+        """ADR-0048 — return a pack-grounded surface, or None.
+
+        Only engages when:
+          - the gate fired because the session vault is empty,
+          - the classified intent is DEFINITION or RECALL,
+          - the intent's subject lemma is in the ratified cognition pack
+            (``en_core_cognition_v1``).
+
+        Any other condition returns None and the caller falls through to
+        the universal "insufficient grounding" disclosure.  English path
+        only — the cognition pack is English-specific; non-English runs
+        retain the unchanged disclosure.
+        """
+        if gate_source != "empty_vault":
+            return None
+        if self.config.output_language != "en":
+            return None
+        from generate.intent import IntentTag  # local to avoid coupling at import time
+        from generate.intent_bridge import classify_intent_from_input
+        intent = classify_intent_from_input(text)
+        if intent.tag not in (IntentTag.DEFINITION, IntentTag.RECALL):
+            return None
+        lemma = (intent.subject or "").strip()
+        if not lemma:
+            return None
+        return pack_grounded_surface(lemma)
+
     def _stub_response(
         self,
         field_state: FieldState,
         *,
         tokens: tuple[str, ...] = (),
+        pack_grounded_surface: str | None = None,
     ) -> ChatResponse:
         zero = np.zeros(field_state.F.shape, dtype=np.float32)
         prop = Proposition(
@@ -574,8 +613,23 @@ class ChatRuntime:
         if refusal_emitted:
             response_surface = refusal_surface
             self._last_refusal_was_typed = True
+        elif pack_grounded_surface is not None:
+            # ADR-0048 — pack-grounded surface for cold-start DEFINITION /
+            # RECALL on a known pack lemma.  Safety/ethics refusal still
+            # take priority above this branch; the pack surface only
+            # replaces the universal "insufficient grounding" disclosure
+            # when no refusal applies.
+            response_surface = pack_grounded_surface
         else:
             response_surface = _UNKNOWN_DOMAIN_SURFACE
+        # ADR-0048 — grounding provenance recorded for both ChatResponse
+        # and TurnEvent.  ``"pack"`` only when we actually emit the
+        # pack-grounded surface (refusal does not override the source —
+        # refusal is a remediation tier, not a grounding source).
+        if pack_grounded_surface is not None and not refusal_emitted:
+            grounding_source = "pack"
+        else:
+            grounding_source = "none"
         # ADR-0038 — hedge injection does NOT run on the stub path
         # (the unknown-domain marker is already a disclosure surface;
         # prepending a hedge would be a confused double-disclosure).
@@ -609,6 +663,7 @@ class ChatRuntime:
                 safety_verdict=safety_verdict,
                 ethics_verdict=ethics_verdict,
                 verdicts=verdicts_bundle,
+                grounding_source=grounding_source,
             )
             self.turn_log.append(stub_event)
             self._emit_turn_event(stub_event)
@@ -631,6 +686,7 @@ class ChatRuntime:
             safety_verdict=safety_verdict,
             ethics_verdict=ethics_verdict,
             verdicts=verdicts_bundle,
+            grounding_source=grounding_source,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -655,14 +711,32 @@ class ChatRuntime:
         if gate_decision.fire:
             committed = self._context.commit_ingest(filtered)
             empty_result = GenerationResult(tokens=(), final_state=committed, vault_hits=0)
+            # ADR-0048 — pack-grounded fallback for cold-start DEFINITION /
+            # RECALL on a known pack lemma.  Only engages when the gate
+            # fired because the session vault is empty (``empty_vault``)
+            # AND the classified intent is DEFINITION or RECALL AND the
+            # intent's subject lemma is in the ratified cognition pack.
+            # Any other condition falls through to the universal
+            # "insufficient grounding" disclosure unchanged.
+            pack_surface = self._maybe_pack_grounded_surface(
+                text, gate_decision.source
+            )
             self._context.finalize_turn(
                 empty_result,
                 tokens_in=tuple(filtered),
                 input_versor=committed.F,
                 dialogue_role="assert",
-                metadata={"unknown": True, "unknown_source": gate_decision.source},
+                metadata={
+                    "unknown": True,
+                    "unknown_source": gate_decision.source,
+                    "grounding_source": "pack" if pack_surface else "none",
+                },
             )
-            return self._stub_response(committed, tokens=tuple(filtered))
+            return self._stub_response(
+                committed,
+                tokens=tuple(filtered),
+                pack_grounded_surface=pack_surface,
+            )
 
         field_state = self._context.commit_ingest(filtered)
         field_state = self._apply_drive_bias(field_state)
@@ -856,6 +930,7 @@ class ChatRuntime:
             safety_verdict=safety_verdict,
             ethics_verdict=ethics_verdict,
             verdicts=verdicts_bundle,
+            grounding_source="vault",
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
@@ -880,6 +955,7 @@ class ChatRuntime:
             safety_verdict=safety_verdict,
             ethics_verdict=ethics_verdict,
             verdicts=verdicts_bundle,
+            grounding_source="vault",
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

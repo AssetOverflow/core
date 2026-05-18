@@ -242,8 +242,17 @@ class TestChatResponseContractStillHolds:
 
     def test_pipeline_honours_safety_stub_when_gate_fires(self) -> None:
         """When the unknown-domain gate fires, the pipeline's surface
-        is the gate's safety stub — NOT the realizer's fallback
-        articulation.  Closes calibration gaps.md Finding 2."""
+        is ChatRuntime's stub-path surface — NOT the realizer's
+        fallback articulation.  Closes calibration gaps.md Finding 2.
+
+        ADR-0048 broadens the stub-path surface: it may now be either
+        the universal disclosure (``_UNKNOWN_DOMAIN_SURFACE``) or a
+        pack-grounded surface for cold-start DEFINITION / RECALL on a
+        known pack lemma.  In both cases ``grounding_source != "vault"``
+        and the realizer must not override.  The articulation_surface
+        remains the universal disclosure on the stub path because no
+        real walk produced an articulation.
+        """
         try:
             from chat.runtime import ChatRuntime, _UNKNOWN_DOMAIN_SURFACE
             from core.cognition.pipeline import CognitiveTurnPipeline
@@ -256,8 +265,16 @@ class TestChatResponseContractStillHolds:
         result = pipeline.run("What is truth?")
 
         assert result.vault_hits == 0, "gate-fired turn should have zero vault hits"
-        assert result.surface == _UNKNOWN_DOMAIN_SURFACE
+        # Surface is either the universal disclosure or a pack-grounded
+        # surface — both are valid stub-path surfaces.  What we forbid
+        # is the realizer's "Truth is defined as ..." template surface
+        # leaking on a gate-fired turn.
+        is_universal = result.surface == _UNKNOWN_DOMAIN_SURFACE
+        is_pack_grounded = "pack-grounded" in result.surface
+        assert is_universal or is_pack_grounded, result.surface
+        assert "is defined as" not in result.surface
+        # articulation_surface is always the universal disclosure on
+        # the stub path — no real walk produced an articulation.
         assert result.articulation_surface == _UNKNOWN_DOMAIN_SURFACE
-        # walk_surface is unaffected by the override decision — it carries
-        # the realizer's evidence regardless.
+        # walk_surface is unaffected by the override decision.
         assert isinstance(result.walk_surface, str)
