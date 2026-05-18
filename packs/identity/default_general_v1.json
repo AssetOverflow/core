@@ -3,12 +3,21 @@
   "version": "1.0.0",
   "description": "Balanced general identity. Shipping default. Encodes the three axes previously hardcoded in chat/runtime.py: truthfulness, coherence, reverence.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "0b77357fe4359f161d7ca72f184b6e0db2f9e2de16b32c237a3b80d2bbb005b4",
+  "mastery_report_sha256": "ddc1ba127231272660e6a435e177227558461b0278572a95635b416c3e1dec5a",
   "alignment_threshold": 0.45,
   "boundary_ids": [
     "no_fabricated_source",
     "no_hot_path_repair"
   ],
+  "surface_preferences": {
+    "hedge_threshold_strong": 0.4,
+    "hedge_threshold_soft": 0.5,
+    "preferred_hedge_strong": "It seems that",
+    "preferred_hedge_soft": "Perhaps",
+    "claim_strength": "balanced",
+    "qualified_band_high": 0.75,
+    "preferred_qualifier": "In some cases,"
+  },
   "value_axes": [
     {
       "axis_id": "truthfulness",

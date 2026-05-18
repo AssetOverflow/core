@@ -65,11 +65,40 @@ class IdentityScore:
 
 
 @dataclass(frozen=True)
+class SurfacePreferences:
+    """Pack-supplied surface phrasing preferences (ADR-0028).
+
+    Drives the assembler's hedge and claim-strength decisions so that
+    swapping identity packs produces visibly different surfaces on the
+    same prompt.  Defaults preserve the pre-ADR-0028 behavior: the
+    legacy ``HEDGE_STRONG_THRESHOLD`` / ``HEDGE_SOFT_THRESHOLD``
+    constants and the canned ``"It seems that"`` / ``"Perhaps"`` hedges.
+
+    ``claim_strength`` semantics:
+
+    * ``"balanced"`` — no claim-strength effect outside the hedge band.
+    * ``"qualified"`` — when alignment falls in
+      ``[hedge_threshold_soft, qualified_band_high)``, prepend
+      ``preferred_qualifier`` instead of leaving the surface bare.
+    * ``"affirmative"`` — never qualify in the marginal band; let the
+      assertion stand.
+    """
+    hedge_threshold_strong: float = 0.40
+    hedge_threshold_soft: float = 0.50
+    preferred_hedge_strong: str = "It seems that"
+    preferred_hedge_soft: str = "Perhaps"
+    claim_strength: str = "balanced"
+    qualified_band_high: float = 0.75
+    preferred_qualifier: str = "In some cases,"
+
+
+@dataclass(frozen=True)
 class IdentityManifold:
     """Fixed geometric subspace encoding CORE's stable character."""
     value_axes: Tuple = ()  # Tuple[ValueAxis, ...]
     boundary_ids: FrozenSet[str] = frozenset()
     alignment_threshold: float = 0.45
+    surface_preferences: SurfacePreferences = SurfacePreferences()
 
 
 class IdentityCheck:

@@ -63,10 +63,38 @@ A single JSON file. Strings, ints, bools, lists, dicts only — same canonical-J
 | `version` | yes | Semver. Bumping `major` produces a new `pack_id`. |
 | `description` | yes | Human-facing one-liner. Surfaces in `core pulse --list-identity-packs`. |
 | `schema_version` | yes | Format version. Currently `"1.0.0"`. |
+| `surface_preferences` | no | Pack-supplied surface hedge / claim-strength shaping (ADR-0028). Defaults preserve pre-ADR behavior. See §"Surface preferences" below. |
 | `mastery_report_sha256` | no | SHA of the companion `<pack_id>.mastery_report.json`. Empty for unratified development packs; production deployments refuse to load packs with empty values. |
 | `alignment_threshold` | yes | Float in [0, 1]. Passed to `IdentityManifold.alignment_threshold`. |
 | `boundary_ids` | yes | List of boundary identifiers. Mirrors `IdentityManifold.boundary_ids`. |
 | `value_axes` | yes | List of ≥ 1 axes. Each has: `axis_id`, `name`, `direction` (list of 3 floats in [-1, 1]), `weight` (float ≥ 0), `theological_note`. |
+
+### Surface preferences (ADR-0028)
+
+Optional block driving the assembler's hedge and claim-strength decisions:
+
+```json
+"surface_preferences": {
+  "hedge_threshold_strong": 0.40,
+  "hedge_threshold_soft": 0.50,
+  "preferred_hedge_strong": "It seems that",
+  "preferred_hedge_soft": "Perhaps",
+  "claim_strength": "balanced",
+  "qualified_band_high": 0.75,
+  "preferred_qualifier": "In some cases,"
+}
+```
+
+Bands (in descending hedge strength):
+
+1. `alignment < hedge_threshold_strong` → prepend `preferred_hedge_strong`.
+2. `alignment < hedge_threshold_soft` → prepend `preferred_hedge_soft`.
+3. `hedge_threshold_soft <= alignment < qualified_band_high` and `claim_strength == "qualified"` → prepend `preferred_qualifier`.
+4. Otherwise leave the assertion bare.
+
+Threshold ordering required: `hedge_threshold_strong <= hedge_threshold_soft <= qualified_band_high`. Loader enforces this.
+
+`claim_strength` must be one of `{"balanced", "qualified", "affirmative"}`. `"balanced"` and `"affirmative"` skip the marginal-band qualifier; only `"qualified"` triggers it.
 
 ### Loader bounds (enforced)
 
@@ -118,9 +146,9 @@ CORE_DEFAULT_IDENTITY_PACK=precision_first_v1 core pulse "..."
 
 | Pack id | Role | Notes |
 |---|---|---|
-| `default_general_v1` | Ship default. Balanced. | Encodes the *exact* three axes (`truthfulness`, `coherence`, `reverence`) previously hardcoded in `chat/runtime.py`. Behavioral no-op vs. pre-ADR runtime. Ratified: `0b77357fe4359f161d7ca72f184b6e0db2f9e2de16b32c237a3b80d2bbb005b4`. |
-| `precision_first_v1` | Specialization example A. | Boosts `truthfulness` weight, narrows reverence direction. Source: `evals/identity_divergence/axes/axis_a.yaml` (semantics, not field-for-field). Ratified: `5f5000dba9a0dd19d831e9ab5d3c0e3b9faf6abdc2648940e96aa6263af3302e`. |
-| `generosity_first_v1` | Specialization example B. | Boosts `coherence` weight, broadens reverence direction. Source: `evals/identity_divergence/axes/axis_b.yaml`. Ratified: `91716117558113f74b2c6d07a804cb324f262d62b743523d901d1386a4f85ae4`. |
+| `default_general_v1` | Ship default. Balanced. | Encodes the *exact* three axes (`truthfulness`, `coherence`, `reverence`) previously hardcoded in `chat/runtime.py`. Behavioral no-op vs. pre-ADR runtime. ADR-0028 surface_preferences: balanced; hedge thresholds 0.40/0.50/0.75. Ratified: `ddc1ba127231272660e6a435e177227558461b0278572a95635b416c3e1dec5a`. |
+| `precision_first_v1` | Specialization example A. | Boosts `truthfulness` weight, narrows reverence direction. Surface: hedges sooner (0.55/0.70/0.85), uses "Arguably,"/"In some cases,"/"Under certain conditions,"; claim_strength=qualified. Source: `evals/identity_divergence/axes/axis_a.yaml`. Ratified: `cb5fb2323214a26afda33f2a67e22f38fe49f4763829d48ef67fd41241aba33c`. |
+| `generosity_first_v1` | Specialization example B. | Boosts `coherence` weight, broadens reverence direction. Surface: hedges later (0.20/0.30/0.50); claim_strength=affirmative. Source: `evals/identity_divergence/axes/axis_b.yaml`. Ratified: `94f2f49e1b16c7498fb52b8f9864eecc198618933dc8381a01b809c146826db7`. |
 
 Each ratified pack ships alongside a `<pack_id>.mastery_report.json` companion file. The loader, in production mode, verifies the companion's self-seal and cross-checks its `report_sha256` against the pack's `mastery_report_sha256`. To re-ratify after editing a pack's axes, run `python scripts/ratify_identity_packs.py` (idempotent — re-running on already-current packs is a no-op).
 
@@ -141,7 +169,7 @@ Each ratified pack ships alongside a `<pack_id>.mastery_report.json` companion f
 
 ## Known limits (read before designing around)
 
-1. **Identity does not yet visibly differentiate articulation at the realizer.** `PersonaMotor` biases field walks and `IdentityCheck` scores alignment, but the realizer does not currently choose hedged-vs-affirmative phrasing or narrow-vs-broad scope based on axis identity. Swapping packs *will* change identity scores and may shift token selection through motor bias, but expect modest surface-level differences until P3 (deep realizer wiring; see ADR-0027 §Scope limits) lands.
+1. ~~**Identity does not yet visibly differentiate articulation at the realizer.**~~ **Closed by [ADR-0028](decisions/ADR-0028-identity-surface-wiring.md) (2026-05-17).** Pack `surface_preferences` now flow into the assembler's hedge and claim-strength decisions. `core chat --identity precision_first_v1 "Q"` produces a visibly different surface than the default pack on the same prompt at the same alignment. Hedging is English-only at v1; depth-language hedging is a future ADR.
 2. **One pack at a time.** Multi-pack overlays (`--identity general,domain_medical`) are deferred to a follow-up ADR.
 3. **No language-specific identity yet.** Packs are language-neutral. Per-language identity is a future concern.
 4. **Safety axes are still in `chat/runtime.py`.** Once the safety pack ADR lands, safety boundaries will move out of `boundary_ids` and into a separately-loaded safety pack.

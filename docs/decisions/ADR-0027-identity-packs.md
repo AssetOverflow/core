@@ -1,6 +1,6 @@
 # ADR-0027: Identity Packs — Load-Bearing, Swappable, Ratified
 
-**Status:** Accepted (2026-05-17) — Phases 1–6 complete; Phase 7 (this doc + the operational reference) complete; deep realizer wiring tracked as a follow-up ADR.
+**Status:** Accepted (2026-05-17) — Phases 1–6 complete; Phase 7 (this doc + the operational reference) complete; deep realizer wiring landed under [ADR-0028](ADR-0028-identity-surface-wiring.md) (2026-05-17).
 **Author:** Joshua Shay + planner pass
 **Companion docs:** [`docs/identity_packs.md`](../identity_packs.md), [`docs/teaching_order.md`](../teaching_order.md), [`ADR-0010 IdentityManifold (implicit)`](#), [`ADR-0017-agency-scope.md`](ADR-0017-agency-scope.md), [`ADR-0021-epistemic-grade-policy.md`](ADR-0021-epistemic-grade-policy.md)
 

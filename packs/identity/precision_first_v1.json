@@ -3,13 +3,22 @@
   "version": "1.0.0",
   "description": "Precision-first specialization. Boosts truthfulness; narrows coherence and reverence. Source: evals/identity_divergence/axes/axis_a.yaml (semantics, not field-for-field).",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "5f5000dba9a0dd19d831e9ab5d3c0e3b9faf6abdc2648940e96aa6263af3302e",
+  "mastery_report_sha256": "cb5fb2323214a26afda33f2a67e22f38fe49f4763829d48ef67fd41241aba33c",
   "alignment_threshold": 0.55,
   "boundary_ids": [
     "no_fabricated_source",
     "no_hot_path_repair",
     "no_overstatement"
   ],
+  "surface_preferences": {
+    "hedge_threshold_strong": 0.55,
+    "hedge_threshold_soft": 0.7,
+    "preferred_hedge_strong": "Arguably,",
+    "preferred_hedge_soft": "In some cases,",
+    "claim_strength": "qualified",
+    "qualified_band_high": 0.85,
+    "preferred_qualifier": "Under certain conditions,"
+  },
   "value_axes": [
     {
       "axis_id": "truthfulness",

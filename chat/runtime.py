@@ -287,12 +287,20 @@ class ChatRuntime:
     def _build_surface_context(self, identity_score, current_valence: float) -> SurfaceContext:
         active = self._context.referents.active_referent()
         alignment = float(identity_score.alignment) if identity_score is not None else 1.0
+        prefs = self.identity_manifold.surface_preferences
         return SurfaceContext(
             active_referent_surface=active.surface if active is not None else "",
             active_referent_slot=active.slot if active is not None else "neut_sg",
             identity_alignment=alignment,
             valence_delta=current_valence - self._last_valence,
             elab_conjunction="",
+            hedge_threshold_strong=prefs.hedge_threshold_strong,
+            hedge_threshold_soft=prefs.hedge_threshold_soft,
+            preferred_hedge_strong=prefs.preferred_hedge_strong,
+            preferred_hedge_soft=prefs.preferred_hedge_soft,
+            claim_strength=prefs.claim_strength,
+            qualified_band_high=prefs.qualified_band_high,
+            preferred_qualifier=prefs.preferred_qualifier,
         )
 
     def _stub_response(self, field_state: FieldState) -> ChatResponse:

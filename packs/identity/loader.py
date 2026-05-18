@@ -25,7 +25,7 @@ import os
 from pathlib import Path
 from typing import Iterable
 
-from core.physics.identity import IdentityManifold, ValueAxis
+from core.physics.identity import IdentityManifold, SurfacePreferences, ValueAxis
 from formation.hashing import verify_seal
 
 
@@ -79,10 +79,14 @@ def load_identity_manifold(
     axes = _build_axes(raw["value_axes"], pack_id)
     threshold = _validate_threshold(raw["alignment_threshold"], pack_id)
     boundaries = frozenset(_validate_boundaries(raw["boundary_ids"], pack_id))
+    surface_prefs = _build_surface_preferences(
+        raw.get("surface_preferences"), pack_id,
+    )
     return IdentityManifold(
         value_axes=axes,
         boundary_ids=boundaries,
         alignment_threshold=threshold,
+        surface_preferences=surface_prefs,
     )
 
 
@@ -304,6 +308,102 @@ def _validate_threshold(value: object, pack_id: str) -> float:
             f"[{_THRESHOLD_LO}, {_THRESHOLD_HI}]"
         )
     return fv
+
+
+_ALLOWED_CLAIM_STRENGTHS: frozenset[str] = frozenset(
+    {"balanced", "qualified", "affirmative"}
+)
+_MIN_HEDGE_LEN: int = 1
+_MAX_HEDGE_LEN: int = 64
+
+
+def _build_surface_preferences(
+    value: object, pack_id: str,
+) -> SurfacePreferences:
+    """Parse and bounds-check the optional ``surface_preferences`` block.
+
+    Absent block → defaults that reproduce pre-ADR-0028 behavior.
+    """
+    if value is None:
+        return SurfacePreferences()
+    if not isinstance(value, dict):
+        raise IdentityPackError(
+            f"pack {pack_id!r}: surface_preferences must be a dict, got "
+            f"{type(value).__name__}"
+        )
+    defaults = SurfacePreferences()
+    strong = _validate_threshold_field(
+        value.get("hedge_threshold_strong", defaults.hedge_threshold_strong),
+        pack_id, "hedge_threshold_strong",
+    )
+    soft = _validate_threshold_field(
+        value.get("hedge_threshold_soft", defaults.hedge_threshold_soft),
+        pack_id, "hedge_threshold_soft",
+    )
+    band_high = _validate_threshold_field(
+        value.get("qualified_band_high", defaults.qualified_band_high),
+        pack_id, "qualified_band_high",
+    )
+    if not (strong <= soft <= band_high):
+        raise IdentityPackError(
+            f"pack {pack_id!r}: surface_preferences thresholds must satisfy "
+            f"hedge_threshold_strong ({strong}) <= "
+            f"hedge_threshold_soft ({soft}) <= "
+            f"qualified_band_high ({band_high})"
+        )
+    claim_strength = str(
+        value.get("claim_strength", defaults.claim_strength)
+    )
+    if claim_strength not in _ALLOWED_CLAIM_STRENGTHS:
+        raise IdentityPackError(
+            f"pack {pack_id!r}: claim_strength={claim_strength!r} not in "
+            f"{sorted(_ALLOWED_CLAIM_STRENGTHS)}"
+        )
+    return SurfacePreferences(
+        hedge_threshold_strong=strong,
+        hedge_threshold_soft=soft,
+        preferred_hedge_strong=_validate_hedge_phrase(
+            value.get("preferred_hedge_strong", defaults.preferred_hedge_strong),
+            pack_id, "preferred_hedge_strong",
+        ),
+        preferred_hedge_soft=_validate_hedge_phrase(
+            value.get("preferred_hedge_soft", defaults.preferred_hedge_soft),
+            pack_id, "preferred_hedge_soft",
+        ),
+        claim_strength=claim_strength,
+        qualified_band_high=band_high,
+        preferred_qualifier=_validate_hedge_phrase(
+            value.get("preferred_qualifier", defaults.preferred_qualifier),
+            pack_id, "preferred_qualifier",
+        ),
+    )
+
+
+def _validate_threshold_field(value: object, pack_id: str, field: str) -> float:
+    if not isinstance(value, (int, float)):
+        raise IdentityPackError(
+            f"pack {pack_id!r}: surface_preferences.{field} must be numeric"
+        )
+    fv = float(value)
+    if not _THRESHOLD_LO <= fv <= _THRESHOLD_HI:
+        raise IdentityPackError(
+            f"pack {pack_id!r}: surface_preferences.{field}={fv} out of "
+            f"bounds [{_THRESHOLD_LO}, {_THRESHOLD_HI}]"
+        )
+    return fv
+
+
+def _validate_hedge_phrase(value: object, pack_id: str, field: str) -> str:
+    if not isinstance(value, str):
+        raise IdentityPackError(
+            f"pack {pack_id!r}: surface_preferences.{field} must be a string"
+        )
+    if not _MIN_HEDGE_LEN <= len(value) <= _MAX_HEDGE_LEN:
+        raise IdentityPackError(
+            f"pack {pack_id!r}: surface_preferences.{field} length "
+            f"{len(value)} out of bounds [{_MIN_HEDGE_LEN}, {_MAX_HEDGE_LEN}]"
+        )
+    return value
 
 
 def _validate_boundaries(value: object, pack_id: str) -> list[str]:

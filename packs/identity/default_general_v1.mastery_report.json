@@ -1,6 +1,6 @@
 {
   "course_id": "course.subject.identity.default_general_v1.identity_anchor.1.0.0",
-  "course_sha256": "e9372f6d4cac876cf5eab46dcd4b547fae1d9fe01d96e9370754c251a6bdf8c7",
+  "course_sha256": "57295c81036dde60d2108c8c036a2ba5c7cc34c3a6079bc6828db36d37769cca",
   "failure_reasons": [],
   "gates": [
     {
@@ -41,16 +41,16 @@
     }
   ],
   "issued_at": "2026-05-17T00:00:00Z",
-  "plan_sha256": "31c92f68bce9f725d1d69421e4a3c611928e1ef745b900f91655f09f0d766d74",
+  "plan_sha256": "48b5a5b757feae5580387851f4a7c568d2a68b99b3599117f0429f2d2275239b",
   "ratified": true,
-  "report_sha256": "0b77357fe4359f161d7ca72f184b6e0db2f9e2de16b32c237a3b80d2bbb005b4",
+  "report_sha256": "ddc1ba127231272660e6a435e177227558461b0278572a95635b416c3e1dec5a",
   "schema_version": "1.0.0",
-  "source_bundle_sha": "a954cdce25f86e681f6f51bed1a2196441d7a7dec4f0e69ecf84502664c938e0",
+  "source_bundle_sha": "4bbade402c02486e99d5f3c3692039ba36cd29483bf7f6c895e5e35dd97da66a",
   "trace_hashes": [
     "trace:adversarial_probe:::::identity_override_axis_rewrite",
     "trace:adversarial_probe:::::identity_override_policy_bypass",
     "trace:adversarial_probe:::::identity_override_operator_injection",
     "trace:replay_assertion:::::"
   ],
-  "validated_set_sha": "32e83f9513004daa743180f00711dd47f841c782679596512fe519143a96b2e0"
+  "validated_set_sha": "bb45f6d2d2a32cf537298a9f51a367149cbe60457317cf061f892feccfaae49e"
 }

@@ -139,6 +139,8 @@ CORE's identity is load-bearing: every reasoning trajectory is scored against an
 
 The shipping default `identity.default_general_v1` carries the previously-hardcoded three axes (`truthfulness`, `coherence`, `reverence`) so the default behavior is preserved. Two specialization packs ship alongside it for demonstrating identity-divergence: `identity.precision_first_v1` and `identity.generosity_first_v1`. Override on the chat surface with `core chat --identity <pack_id>`.
 
+[ADR-0028](docs/decisions/ADR-0028-identity-surface-wiring.md) makes the swap *visibly load-bearing*: each pack carries a `surface_preferences` block (hedge thresholds, hedge phrases, claim-strength policy) consumed by the assembler. On the same prompt at the same alignment, `precision_first_v1` hedges sooner with "Arguably," / "In some cases," while `generosity_first_v1` leaves the assertion bare — see `tests/test_identity_surface_divergence.py` for the proof.
+
 Robotics, personalization, and creative-tool builders author their own ratified identity packs via the formation pipeline's `identity_anchor` template, then ship them under `packs/identity/` in their deployment. Full format spec, loader contract, and authoring guide: [`docs/identity_packs.md`](docs/identity_packs.md).
 
 ---

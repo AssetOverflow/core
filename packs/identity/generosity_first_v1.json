@@ -3,12 +3,21 @@
   "version": "1.0.0",
   "description": "Generosity-first specialization. Boosts coherence; broadens reverence. Source: evals/identity_divergence/axes/axis_b.yaml (semantics, not field-for-field).",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "91716117558113f74b2c6d07a804cb324f262d62b743523d901d1386a4f85ae4",
+  "mastery_report_sha256": "94f2f49e1b16c7498fb52b8f9864eecc198618933dc8381a01b809c146826db7",
   "alignment_threshold": 0.4,
   "boundary_ids": [
     "no_fabricated_source",
     "no_hot_path_repair"
   ],
+  "surface_preferences": {
+    "hedge_threshold_strong": 0.2,
+    "hedge_threshold_soft": 0.3,
+    "preferred_hedge_strong": "It seems that",
+    "preferred_hedge_soft": "Perhaps",
+    "claim_strength": "affirmative",
+    "qualified_band_high": 0.5,
+    "preferred_qualifier": "In some cases,"
+  },
   "value_axes": [
     {
       "axis_id": "truthfulness",

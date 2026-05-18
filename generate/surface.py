@@ -17,8 +17,16 @@ _STOP_SURFACES: frozenset[str] = frozenset({
     "why", "when", "which", "that", "this", "these", "those",
 })
 _MAX_ELAB_TOKENS: int = 4
+# Legacy default thresholds — used when SurfaceContext is constructed
+# without pack-supplied identity surface preferences.  Identical to the
+# pre-ADR-0028 hardcoded values; do not change without bumping every
+# downstream test that asserts on these constants.
 HEDGE_STRONG_THRESHOLD: float = 0.4
 HEDGE_SOFT_THRESHOLD: float = 0.5
+_DEFAULT_HEDGE_STRONG_PHRASE: str = "It seems that"
+_DEFAULT_HEDGE_SOFT_PHRASE: str = "Perhaps"
+_DEFAULT_QUALIFIER_PHRASE: str = "In some cases,"
+_DEFAULT_QUALIFIED_BAND_HIGH: float = 0.75
 CONTRAST_THRESHOLD: float = 0.3
 _SLOT_PRONOUN: dict[str, str] = {
     "neut_sg": "it",
@@ -35,6 +43,18 @@ class SurfaceContext:
     identity_alignment: float = 1.0
     valence_delta: float = 0.0
     elab_conjunction: str = ""
+    # ADR-0028 — pack-supplied identity surface preferences.  Defaults
+    # preserve the pre-ADR ``_apply_hedge`` behavior byte-for-byte when
+    # the chat runtime is constructed without an identity-pack manifold
+    # (no test should ever exercise that path post-ADR-0027, but the
+    # defaults keep ``SurfaceContext()`` legal and harmless).
+    hedge_threshold_strong: float = HEDGE_STRONG_THRESHOLD
+    hedge_threshold_soft: float = HEDGE_SOFT_THRESHOLD
+    preferred_hedge_strong: str = _DEFAULT_HEDGE_STRONG_PHRASE
+    preferred_hedge_soft: str = _DEFAULT_HEDGE_SOFT_PHRASE
+    claim_strength: str = "balanced"
+    qualified_band_high: float = _DEFAULT_QUALIFIED_BAND_HIGH
+    preferred_qualifier: str = _DEFAULT_QUALIFIER_PHRASE
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,11 +120,30 @@ def _lower_first(surface: str) -> str:
     return surface[0].lower() + surface[1:] if surface else surface
 
 
-def _apply_hedge(surface: str, alignment: float) -> str:
-    if alignment < HEDGE_STRONG_THRESHOLD:
-        return f"It seems that {_lower_first(surface)}"
-    if alignment < HEDGE_SOFT_THRESHOLD:
-        return f"Perhaps {_lower_first(surface)}"
+def _apply_hedge(surface: str, ctx: SurfaceContext) -> str:
+    """Apply identity-pack-supplied hedge and claim-strength shaping.
+
+    Bands, in descending hedge strength:
+
+    1. ``alignment < hedge_threshold_strong``  → strong hedge phrase.
+    2. ``alignment < hedge_threshold_soft``    → soft hedge phrase.
+    3. Otherwise, in the *marginal* band
+       ``[hedge_threshold_soft, qualified_band_high)``:
+       - ``claim_strength == "qualified"``    → prepend ``preferred_qualifier``.
+       - ``claim_strength == "affirmative"``  → leave assertion bare.
+       - ``claim_strength == "balanced"``     → leave assertion bare.
+    4. Above ``qualified_band_high``          → leave assertion bare.
+    """
+    alignment = ctx.identity_alignment
+    if alignment < ctx.hedge_threshold_strong:
+        return f"{ctx.preferred_hedge_strong} {_lower_first(surface)}"
+    if alignment < ctx.hedge_threshold_soft:
+        return f"{ctx.preferred_hedge_soft} {_lower_first(surface)}"
+    if (
+        ctx.claim_strength == "qualified"
+        and alignment < ctx.qualified_band_high
+    ):
+        return f"{ctx.preferred_qualifier} {_lower_first(surface)}"
     return surface
 
 
@@ -160,7 +199,7 @@ def _assemble_en(
     surface = _apply_subordination(surface, role, ctx, lang="en")
     if ctx is not None:
         surface = _apply_contrast(surface, ctx.valence_delta)
-        surface = _apply_hedge(surface, ctx.identity_alignment)
+        surface = _apply_hedge(surface, ctx)
     return surface
 
 
