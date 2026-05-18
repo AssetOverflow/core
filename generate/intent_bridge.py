@@ -39,6 +39,22 @@ def classify_intent_from_input(text: str) -> DialogueIntent:
     return classify_intent(text)
 
 
+def build_graph_from_input(text: str, plan: ArticulationPlan) -> PropositionGraph:
+    """Public helper: classify intent and build the pre-generation PropositionGraph.
+
+    Returns the same graph that ``articulate_with_intent`` builds internally,
+    but without grounding ``<pending>`` slots — the result is suitable for
+    forward-constraint construction via ``build_graph_constraint`` BEFORE
+    ``generate()`` runs (ADR-0046, ADR-0047).
+
+    Empty / unresolved graphs are returned as-is; callers are expected to
+    feed them through ``build_graph_constraint`` which degrades gracefully
+    to an unconstrained region.
+    """
+    intent = classify_intent_from_input(text)
+    return _build_graph_from_intent(intent, plan)
+
+
 def _build_graph_from_intent(intent: DialogueIntent, plan: ArticulationPlan) -> PropositionGraph:
     """Build a minimal PropositionGraph from a classified intent and an ArticulationPlan.
 
