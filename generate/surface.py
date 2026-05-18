@@ -27,6 +27,23 @@ _DEFAULT_HEDGE_STRONG_PHRASE: str = "It seems that"
 _DEFAULT_HEDGE_SOFT_PHRASE: str = "Perhaps"
 _DEFAULT_QUALIFIER_PHRASE: str = "In some cases,"
 _DEFAULT_QUALIFIED_BAND_HIGH: float = 0.75
+# ADR-0030 — depth-language hedge phrases.  Same thresholds and
+# claim_strength policy from the identity pack apply to Hebrew and
+# Koine Greek, but the hedge surface strings are language-specific
+# (per-pack overrides are deferred to a future schema bump).  Tuple
+# layout: (strong, soft, qualifier).
+_DEPTH_HEDGE_PHRASES: dict[str, tuple[str, str, str]] = {
+    "he": (
+        "נראה ש",         # "nir'eh she" — it seems that
+        "אולי",                  # "ulai" — perhaps
+        "במקרים מסוימים,",  # "be'mikrim mesuyamim," — in some cases,
+    ),
+    "grc": (
+        "δοκεῖ ὅτι",  # "dokei hoti" — it seems that
+        "ἴσως",                              # "isos" — perhaps
+        "ἐνίοτε,",                # "eniote," — at times,
+    ),
+}
 CONTRAST_THRESHOLD: float = 0.3
 _SLOT_PRONOUN: dict[str, str] = {
     "neut_sg": "it",
@@ -120,7 +137,7 @@ def _lower_first(surface: str) -> str:
     return surface[0].lower() + surface[1:] if surface else surface
 
 
-def _apply_hedge(surface: str, ctx: SurfaceContext) -> str:
+def _apply_hedge(surface: str, ctx: SurfaceContext, lang: str = "en") -> str:
     """Apply identity-pack-supplied hedge and claim-strength shaping.
 
     Bands, in descending hedge strength:
@@ -133,17 +150,28 @@ def _apply_hedge(surface: str, ctx: SurfaceContext) -> str:
        - ``claim_strength == "affirmative"``  → leave assertion bare.
        - ``claim_strength == "balanced"``     → leave assertion bare.
     4. Above ``qualified_band_high``          → leave assertion bare.
+
+    Thresholds and ``claim_strength`` come from the identity pack
+    (carried on ``ctx``) regardless of ``lang``.  Hedge phrases come
+    from ``ctx`` for English and from ``_DEPTH_HEDGE_PHRASES`` for
+    Hebrew (``"he"``) and Koine Greek (``"grc"``) — ADR-0030.
     """
     alignment = ctx.identity_alignment
+    if lang in _DEPTH_HEDGE_PHRASES:
+        strong_phrase, soft_phrase, qualifier_phrase = _DEPTH_HEDGE_PHRASES[lang]
+    else:
+        strong_phrase = ctx.preferred_hedge_strong
+        soft_phrase = ctx.preferred_hedge_soft
+        qualifier_phrase = ctx.preferred_qualifier
     if alignment < ctx.hedge_threshold_strong:
-        return f"{ctx.preferred_hedge_strong} {_lower_first(surface)}"
+        return f"{strong_phrase} {_lower_first(surface)}"
     if alignment < ctx.hedge_threshold_soft:
-        return f"{ctx.preferred_hedge_soft} {_lower_first(surface)}"
+        return f"{soft_phrase} {_lower_first(surface)}"
     if (
         ctx.claim_strength == "qualified"
         and alignment < ctx.qualified_band_high
     ):
-        return f"{ctx.preferred_qualifier} {_lower_first(surface)}"
+        return f"{qualifier_phrase} {_lower_first(surface)}"
     return surface
 
 
@@ -203,26 +231,48 @@ def _assemble_en(
     return surface
 
 
-def _assemble_he(subject: str, predicate: str, object_: str | None, elaboration: str, role: str) -> str:
+def _assemble_he(
+    subject: str,
+    predicate: str,
+    object_: str | None,
+    elaboration: str,
+    role: str,
+    ctx: SurfaceContext | None,
+) -> str:
     obj = object_ or ""
     if role == "question":
         parts = ["\u05d4\u05d0\u05dd", predicate, subject]
         if obj:
             parts.append(obj)
-        return " ".join(parts) + "?"
-    if role == "refute":
+        surface = " ".join(parts) + "?"
+    elif role == "refute":
         parts = ["\u05dc\u05d0", predicate, subject]
         if obj:
             parts.append(obj)
-        return " ".join(parts) + "."
-    parts = [predicate, subject]
-    if obj:
-        parts.append(obj)
-    base = " ".join(parts)
-    return f"{base} \u2014 {elaboration}." if role == "elaborate" and elaboration else base + "."
+        surface = " ".join(parts) + "."
+    else:
+        parts = [predicate, subject]
+        if obj:
+            parts.append(obj)
+        base = " ".join(parts)
+        surface = (
+            f"{base} \u2014 {elaboration}."
+            if role == "elaborate" and elaboration
+            else base + "."
+        )
+    if ctx is not None:
+        surface = _apply_hedge(surface, ctx, lang="he")
+    return surface
 
 
-def _assemble_grc(subject: str, predicate: str, object_: str | None, elaboration: str, role: str) -> str:
+def _assemble_grc(
+    subject: str,
+    predicate: str,
+    object_: str | None,
+    elaboration: str,
+    role: str,
+    ctx: SurfaceContext | None,
+) -> str:
     subj = _cap(subject)
     obj = object_ or ""
     if role == "question":
@@ -230,19 +280,27 @@ def _assemble_grc(subject: str, predicate: str, object_: str | None, elaboration
         if obj:
             parts.append(obj)
         parts.append(predicate)
-        return " ".join(parts) + ";"
-    if role == "refute":
+        surface = " ".join(parts) + ";"
+    elif role == "refute":
         parts = [subj, "\u03bf\u1f50"]
         if obj:
             parts.append(obj)
         parts.append(predicate)
-        return " ".join(parts) + "."
-    parts = [subj]
-    if obj:
-        parts.append(obj)
-    parts.append(predicate)
-    base = " ".join(parts)
-    return f"{base} \u2014 {elaboration}." if role == "elaborate" and elaboration else base + "."
+        surface = " ".join(parts) + "."
+    else:
+        parts = [subj]
+        if obj:
+            parts.append(obj)
+        parts.append(predicate)
+        base = " ".join(parts)
+        surface = (
+            f"{base} \u2014 {elaboration}."
+            if role == "elaborate" and elaboration
+            else base + "."
+        )
+    if ctx is not None:
+        surface = _apply_hedge(surface, ctx, lang="grc")
+    return surface
 
 
 class SentenceAssembler:
@@ -265,9 +323,13 @@ class SentenceAssembler:
             fallback = plan.surface or " ".join(t for t in tokens if t)
             return SentencePlan("", "", object_, None, role_str, lang, fallback)
         if lang == "he":
-            surface = _assemble_he(subject, predicate, object_, elaboration, role_str)
+            surface = _assemble_he(
+                subject, predicate, object_, elaboration, role_str, context,
+            )
         elif lang == "grc":
-            surface = _assemble_grc(subject, predicate, object_, elaboration, role_str)
+            surface = _assemble_grc(
+                subject, predicate, object_, elaboration, role_str, context,
+            )
         else:
             surface = _assemble_en(subject, predicate, object_, elaboration, role_str, context)
         return SentencePlan(

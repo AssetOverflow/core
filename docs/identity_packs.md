@@ -174,7 +174,7 @@ Each ratified pack ships alongside a `<pack_id>.mastery_report.json` companion f
 
 ## Known limits (read before designing around)
 
-1. ~~**Identity does not yet visibly differentiate articulation at the realizer.**~~ **Closed by [ADR-0028](decisions/ADR-0028-identity-surface-wiring.md) (2026-05-17).** Pack `surface_preferences` now flow into the assembler's hedge and claim-strength decisions. `core chat --identity precision_first_v1 "Q"` produces a visibly different surface than the default pack on the same prompt at the same alignment. Hedging is English-only at v1; depth-language hedging is a future ADR.
+1. ~~**Identity does not yet visibly differentiate articulation at the realizer.**~~ **Closed by [ADR-0028](decisions/ADR-0028-identity-surface-wiring.md) + [ADR-0030](decisions/ADR-0030-depth-language-hedge.md) (2026-05-17).** Pack `surface_preferences` now flow into the English, Hebrew, and Koine Greek assemblers. `core chat --identity precision_first_v1 "Q"` produces a visibly different surface than the default pack on the same prompt at the same alignment, *across all three foundational languages*. Per-pack depth-language phrase overrides remain a future concern (today's depth-language hedge phrases are canonical defaults in `generate/surface.py::_DEPTH_HEDGE_PHRASES`).
 2. **One pack at a time.** Multi-pack overlays (`--identity general,domain_medical`) are deferred to a follow-up ADR.
 3. **No language-specific identity yet.** Packs are language-neutral. Per-language identity is a future concern.
 4. **Safety axes are still in `chat/runtime.py`.** Once the safety pack ADR lands, safety boundaries will move out of `boundary_ids` and into a separately-loaded safety pack.
