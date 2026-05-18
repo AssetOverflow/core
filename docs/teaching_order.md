@@ -28,7 +28,7 @@ A sampling architecture absorbs corpora regardless of order because the loss sur
 
 Always teach in this order, both globally and re-applied within every new domain:
 
-1. **Identity axes and refusal probes.** Seeded first so identity is load-bearing before any content lands. Already covered in `formation/templates/definition.py::_IDENTITY_OVERRIDE_PROBES` and `evals/identity_divergence/axes/`. Adversarial probes must be defined before the concepts they protect.
+1. **Identity axes and refusal probes.** Seeded first so identity is load-bearing before any content lands. As of [ADR-0027](decisions/ADR-0027-identity-packs.md) the runtime identity manifold is loaded from a swappable pack at `packs/identity/<pack_id>.json`; the ship default is `default_general_v1`. The `formation/templates/identity_anchor.py` template ratifies new identity packs through the standard formation gates. Canned override probes live in `formation/templates/_common.py::IDENTITY_OVERRIDE_PROBES`. Reference: [`identity_packs.md`](identity_packs.md). Adversarial probes must be defined before the concepts they protect.
 
 2. **Atomic definitions.** Concepts with no internal structure — `is_a`, `kind_of`, `instance_of` only. These are the leaf nodes of the prerequisite DAG. No relation in a step-2 course references a concept defined later in the same course.
 

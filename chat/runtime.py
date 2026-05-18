@@ -8,17 +8,17 @@ from typing import List
 import numpy as np
 
 from algebra.versor import versor_condition
-from core.config import DEFAULT_CONFIG, RuntimeConfig
-from core.physics.drive import DriveGradientMap, GradientField, ValueAxis
+from core.config import DEFAULT_CONFIG, DEFAULT_IDENTITY_PACK, RuntimeConfig
+from core.physics.drive import DriveGradientMap, GradientField
 from core.physics.energy import EnergyProfile
 from core.physics.exertion import CycleCost, ExertionMeter
 from core.physics.identity import (
     CharacterProfile,
     IdentityCheck,
-    IdentityManifold,
     IdentityScore,
     TurnEvent,
 )
+from packs.identity.loader import load_identity_manifold
 from field.state import FieldState
 from generate.articulation import ArticulationPlan, realize
 from generate.dialogue import DialogueRole, classify_dialogue_blade, propose_dialogue
@@ -203,7 +203,11 @@ class ChatRuntime:
 
         manifold = manifolds[0] if len(pack_ids) == 1 else load_mounted_packs(pack_ids)
         self._manifests = tuple(manifests)
-        self.identity_manifold = _default_identity_manifold()
+        identity_pack_id = resolved_config.identity_pack or DEFAULT_IDENTITY_PACK
+        self.identity_manifold = load_identity_manifold(
+            identity_pack_id, require_ratified=False,
+        )
+        self.identity_pack_id = identity_pack_id
         # Keep the generic runtime neutral. Identity/persona motivation belongs
         # behind an explicit IdentityProfile contract, not the baseline chat path.
         persona_motor = PersonaMotor.identity()
@@ -528,29 +532,9 @@ class ChatRuntime:
             return ""
 
 
-def _default_identity_manifold() -> IdentityManifold:
-    axes = (
-        ValueAxis(
-            axis_id="truthfulness",
-            name="truthfulness",
-            direction=(1.0, 0.0, 0.0),
-            theological_note="Truth is treated as a fixed value axis, not a prompt preference.",
-        ),
-        ValueAxis(
-            axis_id="coherence",
-            name="coherence",
-            direction=(0.0, 1.0, 0.0),
-            theological_note="Operations must preserve field coherence under propagation.",
-        ),
-        ValueAxis(
-            axis_id="reverence",
-            name="reverence",
-            direction=(0.0, 0.0, 1.0),
-            theological_note="Depth-language handling remains bounded by source structure.",
-        ),
-    )
-    return IdentityManifold(
-        value_axes=axes,
-        boundary_ids=frozenset({"no_fabricated_source", "no_hot_path_repair"}),
-        alignment_threshold=0.45,
-    )
+# The previous ``_default_identity_manifold()`` constructor was removed as
+# part of ADR-0027.  Identity is now loaded from a pack at runtime via
+# ``packs.identity.loader.load_identity_manifold`` using
+# ``RuntimeConfig.identity_pack`` (default ``DEFAULT_IDENTITY_PACK``).
+# The previously-hardcoded three axes (truthfulness / coherence /
+# reverence) live in ``packs/identity/default_general_v1.json``.

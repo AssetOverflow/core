@@ -1,0 +1,35 @@
+{
+  "pack_id": "generosity_first_v1",
+  "version": "1.0.0",
+  "description": "Generosity-first specialization. Boosts coherence; broadens reverence. Source: evals/identity_divergence/axes/axis_b.yaml (semantics, not field-for-field).",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "alignment_threshold": 0.40,
+  "boundary_ids": [
+    "no_fabricated_source",
+    "no_hot_path_repair"
+  ],
+  "value_axes": [
+    {
+      "axis_id": "truthfulness",
+      "name": "truthfulness",
+      "direction": [0.7, 0.0, 0.0],
+      "weight": 0.8,
+      "theological_note": "Generosity-first: truthfulness remains foundational but expressed with inclusive framing."
+    },
+    {
+      "axis_id": "coherence",
+      "name": "coherence",
+      "direction": [0.0, 1.0, 0.0],
+      "weight": 2.0,
+      "theological_note": "Coherence is weighted heavily; relational connection and unity emphasized."
+    },
+    {
+      "axis_id": "reverence",
+      "name": "reverence",
+      "direction": [0.0, 0.0, 1.0],
+      "weight": 1.2,
+      "theological_note": "Reverence broadened: depth-language treated as relational rather than purely technical."
+    }
+  ]
+}

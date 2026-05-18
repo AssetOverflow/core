@@ -29,6 +29,11 @@ class RuntimeConfig:
     # static-threshold gate with a scale-invariant margin.
     admissibility_mode: str = "threshold"
     admissibility_margin: float = 0.4
+    # ADR-0027 — Identity pack id loaded at runtime startup.  Empty string
+    # resolves to ``DEFAULT_IDENTITY_PACK``.  CLI override on chat:
+    # ``core chat --identity <pack_id>``.  See docs/identity_packs.md.
+    identity_pack: str = ""
 
 
+DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_CONFIG = RuntimeConfig()

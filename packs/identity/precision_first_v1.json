@@ -1,0 +1,36 @@
+{
+  "pack_id": "precision_first_v1",
+  "version": "1.0.0",
+  "description": "Precision-first specialization. Boosts truthfulness; narrows coherence and reverence. Source: evals/identity_divergence/axes/axis_a.yaml (semantics, not field-for-field).",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "alignment_threshold": 0.55,
+  "boundary_ids": [
+    "no_fabricated_source",
+    "no_hot_path_repair",
+    "no_overstatement"
+  ],
+  "value_axes": [
+    {
+      "axis_id": "truthfulness",
+      "name": "truthfulness",
+      "direction": [1.0, 0.0, 0.0],
+      "weight": 2.0,
+      "theological_note": "Precision-first: accuracy weighs higher than coverage. Explicit qualification preferred."
+    },
+    {
+      "axis_id": "coherence",
+      "name": "coherence",
+      "direction": [0.0, 0.7, 0.0],
+      "weight": 0.7,
+      "theological_note": "Coherence is necessary but secondary to precision when the two are in tension."
+    },
+    {
+      "axis_id": "reverence",
+      "name": "reverence",
+      "direction": [0.0, 0.0, 0.7],
+      "weight": 0.7,
+      "theological_note": "Reverence narrowed to source-text fidelity; broad inclusivity is not preferred."
+    }
+  ]
+}

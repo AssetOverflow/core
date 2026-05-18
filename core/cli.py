@@ -171,6 +171,7 @@ def _runtime_config_from_args(args: argparse.Namespace):
         inhibition_threshold=args.inhibition_threshold,
         inner_loop_admissibility=getattr(args, "inner_loop_admissibility", False),
         admissibility_threshold=getattr(args, "admissibility_threshold", 0.0),
+        identity_pack=getattr(args, "identity", "") or "",
     )
 
 
@@ -1084,6 +1085,13 @@ def _add_runtime_policy_args(parser: argparse.ArgumentParser) -> None:
         "--no-cross-language-recall",
         action="store_true",
         help="disable vault recall during generation",
+    )
+    parser.add_argument(
+        "--identity",
+        default="",
+        metavar="PACK_ID",
+        help="identity pack id to load (default: default_general_v1); see "
+        "docs/identity_packs.md",
     )
 
 

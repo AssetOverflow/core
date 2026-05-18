@@ -133,6 +133,16 @@ Full evidence:
 
 ---
 
+## Identity Packs
+
+CORE's identity is load-bearing: every reasoning trajectory is scored against an `IdentityManifold` of value axes, and a `PersonaMotor` derived from those axes biases every field walk. As of [ADR-0027](docs/decisions/ADR-0027-identity-packs.md) the manifold is no longer hardcoded — it is loaded at runtime from a swappable, content-addressed pack under `packs/identity/`.
+
+The shipping default `identity.default_general_v1` carries the previously-hardcoded three axes (`truthfulness`, `coherence`, `reverence`) so the default behavior is preserved. Two specialization packs ship alongside it for demonstrating identity-divergence: `identity.precision_first_v1` and `identity.generosity_first_v1`. Override on the chat surface with `core chat --identity <pack_id>`.
+
+Robotics, personalization, and creative-tool builders author their own ratified identity packs via the formation pipeline's `identity_anchor` template, then ship them under `packs/identity/` in their deployment. Full format spec, loader contract, and authoring guide: [`docs/identity_packs.md`](docs/identity_packs.md).
+
+---
+
 ## Teaching Order
 
 CORE's manifold is built by ratified relations under a strict prerequisite DAG — not by absorbing a corpus. The "elementary → college" intuition is right at the macro level (simple before composed, anchored before novel) and wrong at the literal level (don't import a K–12 corpus). Five-layer ordering: **identity axes → atomic definitions → binary relations → composed relations → domain expansion**, re-applied inside every new domain.
