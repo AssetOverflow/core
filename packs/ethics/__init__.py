@@ -9,6 +9,13 @@ or *boundaries* (universal red lines).
 See ``docs/decisions/ADR-0033-ethics-packs.md``.
 """
 
+from packs.ethics.check import (
+    EthicsCheck,
+    EthicsCheckResult,
+    EthicsContext,
+    EthicsPredicate,
+    EthicsVerdict,
+)
 from packs.ethics.loader import (
     DEFAULT_ETHICS_PACK,
     EthicsPack,
@@ -19,8 +26,13 @@ from packs.ethics.loader import (
 
 __all__ = [
     "DEFAULT_ETHICS_PACK",
+    "EthicsCheck",
+    "EthicsCheckResult",
+    "EthicsContext",
     "EthicsPack",
     "EthicsPackError",
+    "EthicsPredicate",
+    "EthicsVerdict",
     "available_packs",
     "load_ethics_pack",
 ]

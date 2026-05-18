@@ -160,20 +160,68 @@ final_boundary_ids = (
 | Removing a commitment | Major + new pack ID (`<slug>_v2`) |
 | Schema format change | Major + new `schema_version` |
 
+## EthicsCheck — structural surface (ADR-0034)
+
+A centralized, observational surface for evaluating commitments at runtime, parallel in shape to `SafetyCheck` (ADR-0032). Produces an `EthicsVerdict`; does not refuse. Wiring violations into refusal / re-articulation paths is a future ADR.
+
+```python
+from packs.ethics import EthicsCheck, EthicsContext
+
+check = EthicsCheck()  # ships with default predicates for the five v1 commitments
+ctx = EthicsContext(
+    alignment_score=score,
+    hedge_emitted=hedged,
+    high_stakes_topic=is_high_stakes,
+    recommended_human_review=review_recommended,
+    grounded_in_evidence=grounded,
+    disclosure_emitted=disclosed,
+    prescribed_single_answer=prescriptive,
+    presented_options_count=n_options,
+)
+verdict = check.check(ctx, ethics_pack)
+# verdict.upheld: bool, verdict.violated_commitments: frozenset[str]
+# verdict.results: tuple of per-commitment EthicsCheckResult
+```
+
+Every `EthicsContext` field is `None`-default. Predicates over fields the caller didn't populate return `upheld=True, runtime_checkable=False` — absence of evidence is not evidence of pledge violation. `ChatRuntime` exposes a pre-constructed instance as `runtime.ethics_check`; the turn loop does not auto-invoke it at v1.
+
+### Default predicates per v1 commitment
+
+| Commitment | Runtime-checkable? | What it checks |
+|---|---|---|
+| `acknowledge_uncertainty` | Yes (when supplied) | `alignment < hedge_threshold_soft` requires `hedge_emitted=True` |
+| `defer_high_stakes_to_human_review` | Yes (when supplied) | `high_stakes_topic=True` requires `recommended_human_review=True` |
+| `disclose_limitations` | Yes (when supplied) | `grounded_in_evidence=False` requires `disclosure_emitted=True` |
+| `no_manipulation` | **No** | aggregate property; enforced by realizer design + review |
+| `respect_user_autonomy` | Yes (when supplied) | `prescribed_single_answer=True` requires `presented_options_count >= 2` |
+
+`no_manipulation` is the structural analogue of `no_hot_path_repair` in SafetyCheck. Honest `runtime_checkable=False` rather than a silent pass.
+
+### Custom predicates
+
+```python
+check = EthicsCheck()
+check.register("my_domain_commitment", my_predicate)
+```
+
+Unknown commitments default to `upheld=True, runtime_checkable=False, reason="no predicate registered for commitment"`. Surfaces in audit; doesn't crash.
+
 ## Known limits / future ADRs
 
-1. **No `EthicsCheck` predicate surface** parallel to `SafetyCheck` (ADR-0032). Future ADR.
+1. ~~**No `EthicsCheck` predicate surface** parallel to `SafetyCheck`.~~ **Closed by [ADR-0034](decisions/ADR-0034-ethics-check-surface.md) (2026-05-17).** v1 is observational; turn-loop auto-invocation and refusal wiring are future ADRs.
 2. **No deliberation surface.** Ethics-as-deliberation (multi-candidate trajectory selection, typed-tradeoff evaluation) needs multi-trajectory articulation first.
 3. **No pack inheritance.** Domain packs must declare full commitment lists; no `extends` mechanism.
 4. **No domain-driven behavior.** `domain` is audit-only.
 5. **No CLI flag** for `--ethics <pack_id>` yet — `RuntimeConfig(ethics_pack=...)` only. Future ADR.
 6. **English-only commitment descriptions** at v1.
+7. **No cross-surface verdict aggregation.** Identity / Safety / Ethics produce three independent verdicts; no unified bundle type. Future convenience ADR if call sites grow.
 
 ## Cross-reference index
 
 - Pack format spec: this doc §"Pack format (v1)".
 - Loader contract: this doc §"Loader contract".
-- Decision record: [ADR-0033](decisions/ADR-0033-ethics-packs.md).
+- Decision records: [ADR-0033](decisions/ADR-0033-ethics-packs.md), [ADR-0034](decisions/ADR-0034-ethics-check-surface.md).
 - Identity composition: [`identity_packs.md`](identity_packs.md).
 - Safety composition: [`safety_packs.md`](safety_packs.md).
+- Safety predicate surface: [`safety_packs.md`](safety_packs.md) §SafetyCheck.
 - Formation template used for ratification: `formation/templates/identity_anchor.py`.

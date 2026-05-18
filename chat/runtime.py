@@ -18,6 +18,7 @@ from core.physics.identity import (
     IdentityScore,
     TurnEvent,
 )
+from packs.ethics.check import EthicsCheck
 from packs.ethics.loader import (
     DEFAULT_ETHICS_PACK as _DEFAULT_ETHICS_PACK,
     EthicsPackError,
@@ -272,6 +273,9 @@ class ChatRuntime:
         # the turn loop.  Wiring violations into refusal paths is a
         # future ADR.
         self.safety_check = SafetyCheck()
+        # ADR-0034 — structural ethics surface, sibling to SafetyCheck.
+        # Observational at v1; no auto-invocation in the turn loop.
+        self.ethics_check = EthicsCheck()
         self.turn_log: List[TurnEvent] = []
         self._correction_pass = CorrectionPass()
         self._last_valence: float = 0.0
