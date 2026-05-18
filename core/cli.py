@@ -1188,6 +1188,159 @@ Machine-readable output:
 """
 
 
+_ANTI_REGRESSION_PREAMBLE = """
+================================================================================
+  Anti-Regression — Three-Gate Defense Against Learning Harm (ADR-0057)
+================================================================================
+
+Reference: ADR-0055 (inter-session memory), ADR-0056 (contemplation),
+ADR-0057 (TeachingChainProposal + replay-equivalence gate).
+
+When a system extends its own knowledge, the gate that decides what to
+admit is the load-bearing part — not the proposer.  CORE's reviewed-
+corpus extension path has three independent gates that each must pass
+before any byte is written to the active teaching corpus:
+
+  S1.  Eligibility predicate  (mechanical, pre-replay)
+       Five mechanical checks on candidate shape — polarity in
+       {affirms, falsifies}, ≥1 source='corpus' evidence pointer,
+       claim_domain != evaluative (unless --allow-evaluative),
+       boundary_clean=True, proposed_chain complete.
+       Ineligible candidates raise ProposalError; they never enter
+       the proposal log.
+
+  S2.  Replay-equivalence gate  (mechanical, post-eligibility)
+       The full cognition lane runs against the active corpus AND
+       against a transient copy with the proposed chain appended.
+       Any strict-decrease in a watched metric (intent_accuracy,
+       surface_groundedness, term_capture_rate, versor_closure_rate)
+       auto-rejects with the metrics named in the operator note.
+       Active corpus file bytes byte-identical pre/post.
+
+  S3.  Operator review  (manual, post-replay)
+       Even a replay-equivalent proposal only reaches the 'pending'
+       state.  Explicit `core teaching review <id> --accept` is
+       required to write to the active corpus.
+
+What to expect:
+  Three scenes, each printed with its CLAIM, candidate, outcome, and
+  the byte-identical-corpus assertion.  Scenes 1 and 3 use the real
+  replay function; scene 2 injects a controlled replay (via the
+  documented run_replay= kwarg) to deterministically demonstrate the
+  auto-rejection lifecycle on a synthetic regression.
+
+Test gate:
+  tests/test_anti_regression_demo.py (5 tests — per-scene claim +
+  active-corpus-byte-identical invariant).
+
+Machine-readable output:
+  core demo anti-regression --json
+================================================================================
+"""
+
+
+_LEARNING_LOOP_PREAMBLE = """
+================================================================================
+  Learning Loop — Cold Turn to Grounded Surface, End-to-End (ADR-0055..0057)
+================================================================================
+
+Reference: ADR-0055 (Phase B DiscoveryCandidate emission, Phase A audit
++ provenance), ADR-0056 (Phase C1 contemplation), ADR-0057 (Phase C2
+TeachingChainProposal + replay gate + operator review).
+
+A single deterministic prompt drives every scene:
+
+    "Why does thought exist?"
+
+Headline claim: CORE, asked a question it cannot ground, emits
+structured evidence that a reviewed chain would have helped.  An
+operator authors a proposal from that evidence.  The replay-
+equivalence gate confirms no regression.  The operator accepts.  The
+**same prompt now produces a deterministic teaching-grounded surface**
+— replayable, with full provenance back to the operator's accept.
+
+  S1.  Cold turn          — runtime returns the universal disclosure;
+                            grounding_source = none.
+  S2.  Discovery emission — DiscoveryCandidate emitted to the attached
+                            sink; contemplation enriches with pack/
+                            corpus evidence.  Active corpus untouched.
+  S3.  Operator proposal  — complete chain authored + real replay gate
+                            run + replay_equivalent=True → pending.
+  S4.  Operator accept    — accept_proposal writes ONE line to a
+                            transient corpus (copy of active + new
+                            chain).  Active corpus byte-identical.
+  S5.  Replay the prompt  — _CORPUS_PATH swapped to the transient;
+                            same prompt now teaching-grounded with the
+                            new chain's subject / connective / object.
+
+Trust boundary:
+  The demo writes ONLY to a tempdir-scoped transient corpus.  The
+  active teaching corpus on disk is byte-identical pre/post — same
+  swap pattern the replay-equivalence gate uses.  No clock-time read.
+
+What to expect:
+  Per-scene printout with CLAIM, prompt/inputs, outputs, and the
+  byte-identical-corpus assertion.  Final BEFORE / AFTER block shows
+  the deterministic surface change on the same prompt.
+
+Test gate:
+  tests/test_learning_loop_demo.py (7 tests — loop closes, before is
+  ungrounded, after contains new chain atoms, discovery emits ≥1,
+  replay gate reports no regression, transient adds exactly 1 line
+  while active is byte-identical, same prompt drives both surfaces).
+
+Machine-readable output:
+  core demo learning-loop --json
+================================================================================
+"""
+
+
+_TEACHING_LOOP_BENCH_PREAMBLE = """
+================================================================================
+  Teaching-Loop Determinism Benchmark (ADR-0055..0057)
+================================================================================
+
+Reference: benchmarks/teaching_loop.py, ADR-0057 (the propose →
+replay → accept pipeline).  Pairs naturally with ADR-0045's 100%
+exact-NIAH recall numbers — same epistemic class of guarantee,
+applied to the *learning loop* rather than only to retrieval.
+
+For an identical candidate, the bench runs the full reviewed-corpus
+extension pipeline (propose_from_candidate → real run_replay_equivalence
+→ accept_proposal) N times against tempdir-scoped paths, and asserts
+byte-identical artifacts every iteration:
+
+  - proposal_id           (SHA-256 of canonical-JSON payload)
+  - replay_baseline       (cognition lane metrics on active corpus)
+  - replay_candidate      (cognition lane metrics on transient corpus)
+  - regressed_metrics     (sorted tuple)
+  - chain_id_written
+
+Also reports per-iteration wall-time (mean / p50 / p95) and total.
+
+Trust boundary:
+  Every write is confined to a tempdir created inside the bench loop.
+  Active corpus file bytes are byte-identical pre/post regardless of
+  N.  Asserted in the bench report and re-pinned in the test.
+
+100-run reference result on today's main:
+  unique(proposal_id) = 1     unique(chain_id) = 1
+  unique(baseline)    = 1     unique(candidate) = 1
+  active_corpus_byte_eq = True
+  mean = 1.85s    p50 = 1.84s    p95 = 1.85s
+
+Test gate:
+  tests/test_teaching_loop_bench.py (5 tests — determinism at small N,
+  proposal_id SHA-256 shape, canonical chain_id layout, latency stats
+  well-formed, JSON serialisation).
+
+Usage:
+  core bench --suite teaching-loop --runs 100
+  core bench --suite teaching-loop --runs 10 --json
+================================================================================
+"""
+
+
 _ALL_PREAMBLE = """
 ================================================================================
   Combined Demo — Full ADR-0024 Chain Evidence
@@ -1400,6 +1553,8 @@ def cmd_demo(args: argparse.Namespace) -> int:
     if target == "anti-regression":
         from evals.anti_regression.run_demo import run_demo
 
+        if not args.json:
+            _print_preamble(_ANTI_REGRESSION_PREAMBLE)
         report = run_demo(emit_json=args.json)
         if args.json:
             print(json.dumps(report, indent=2, sort_keys=True))
@@ -1408,6 +1563,8 @@ def cmd_demo(args: argparse.Namespace) -> int:
     if target == "learning-loop":
         from evals.learning_loop.run_demo import run_demo as run_loop_demo
 
+        if not args.json:
+            _print_preamble(_LEARNING_LOOP_PREAMBLE)
         report = run_loop_demo(emit_json=args.json)
         if args.json:
             print(json.dumps(report, indent=2, sort_keys=True))
@@ -1501,6 +1658,9 @@ def cmd_bench(args: argparse.Namespace) -> int:
         return 0
 
     from benchmarks.run_benchmarks import run_benchmarks
+
+    if args.suite == "teaching-loop" and not args.json:
+        _print_preamble(_TEACHING_LOOP_BENCH_PREAMBLE)
 
     report = run_benchmarks(
         suite=args.suite,

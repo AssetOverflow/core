@@ -82,6 +82,8 @@ core test --suite adr-0024                 # Forward Semantic Control chain (98 
 core demo audit-tour                       # 4-scene pack-layer audit walkthrough (ADR-0027..0041)
 core demo pack-measurements                # ADR-0043 — pack-layer claims as per-pack measurements
 core demo long-context-comparison          # ADR-0045 — CORE NIAH recall + frozen transformer baselines
+core demo anti-regression                  # ADR-0057 — three-gate defense against learning harm
+core demo learning-loop                    # ADR-0055..0057 — cold turn → discovery → propose → accept → grounded
 core demo phase6                           # 3-condition comparative table (CORE vs baseline)
 core demo phase5                           # stratified 5-family mechanism-isolation
 core demo all                              # both + combined summary
@@ -92,6 +94,7 @@ core eval cognition                        # run a discovered lane
 core trace "your text here"                # one-turn field-telemetry trace
 core pulse "What is truth?"                # one full cognitive pulse
 core bench --suite latency                 # benchmark harness
+core bench --suite teaching-loop --runs 100  # ADR-0055..0057 — replayable learning loop determinism
 core doctor --packs --rust                 # environment + pack + Rust status
 ```
 
@@ -161,6 +164,41 @@ Robotics, personalization, and creative-tool builders author their own ratified 
 CORE's manifold is built by ratified relations under a strict prerequisite DAG — not by absorbing a corpus. The "elementary → college" intuition is right at the macro level (simple before composed, anchored before novel) and wrong at the literal level (don't import a K–12 corpus). Five-layer ordering: **identity axes → atomic definitions → binary relations → composed relations → domain expansion**, re-applied inside every new domain.
 
 Full doctrine, decision rules, and curriculum-platform locations: [`docs/teaching_order.md`](docs/teaching_order.md).
+
+---
+
+## Inter-Session Memory — Reviewed Learning
+
+CORE extends its own teaching corpus through a four-tier path: session vault → turn-event audit → reviewed teaching corpus → ratified packs. No opaque gradient updates, no uncurated ingestion. The only path to active-corpus extension is the review-gated `TeachingChainProposal` ([ADR-0057](docs/decisions/ADR-0057-teaching-chain-proposal-review.md)), built from a contemplated `DiscoveryCandidate` ([ADR-0056](docs/decisions/ADR-0056-contemplation-loop.md)) emitted by the turn loop ([ADR-0055](docs/decisions/ADR-0055-inter-session-memory.md)).
+
+Three independent gates every extension must pass:
+
+| Gate | What it checks | Trust property |
+|---|---|---|
+| **Eligibility predicate** | polarity ∈ {affirms, falsifies} ∧ ≥1 `source='corpus'` evidence ∧ claim_domain ≠ evaluative ∧ boundary_clean ∧ chain complete | Pre-replay; raises `ProposalError`; no log entry. |
+| **Replay-equivalence gate** | Full cognition lane on active vs transient-with-append; any strict-decrease in `intent_accuracy / surface_groundedness / term_capture_rate / versor_closure_rate` auto-rejects with named metrics. | Active corpus byte-identical pre/post. |
+| **Operator review** | Explicit `core teaching review <id> --accept` writes one JSONL line via `append_chain_to_corpus` (the sole corpus-write surface). | No auto-apply; replay-equivalence is a precondition, not a permission. |
+
+Supersession is the second operator-direct mutation surface: `core teaching supersede <old_chain_id>` retires an active chain by appending a replacement with `superseded_by`, with byte-identical rollback on any post-audit failure.
+
+Three live demos / benchmarks make the chain demoable end-to-end:
+
+| Demo | Headline claim | Live command |
+|---|---|---|
+| **Anti-regression** | Three independent gates each fail closed; bad proposals stop at the cheapest applicable gate. | `core demo anti-regression` |
+| **Learning loop** | Same deterministic prompt: `[none] I don't know…` before, `[teaching] thought reveals meaning…` after one accept. | `core demo learning-loop` |
+| **Determinism bench** | N identical inputs → N byte-identical proposal_id / replay metrics / chain_id. 100 runs: `unique=1` everywhere, mean ≈ 1.85s. | `core bench --suite teaching-loop --runs 100` |
+
+Operator surfaces:
+
+```
+core teaching audit                                 # surface load decisions + drop reasons
+core teaching propose <candidate-jsonl-path>        # build a proposal, run the replay gate
+core teaching proposals --state pending             # inspect the proposal log
+core teaching review <proposal_id> --accept --review-date YYYY-MM-DD
+core teaching supersede <old_chain_id> --subject ... --intent ... --connective ... --object ... --review-date YYYY-MM-DD
+core teaching supersessions                         # pair retired chains with replacements (orphan-aware)
+```
 
 ---
 
