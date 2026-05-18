@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Precision-first specialization. Boosts truthfulness; narrows coherence and reverence. Source: evals/identity_divergence/axes/axis_a.yaml (semantics, not field-for-field).",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "cb5fb2323214a26afda33f2a67e22f38fe49f4763829d48ef67fd41241aba33c",
+  "mastery_report_sha256": "78aa1e6a68a35c2c8576b6196a52d421b94f6d11e006128986902a4fd08679af",
   "alignment_threshold": 0.55,
   "boundary_ids": [
     "no_fabricated_source",
@@ -17,7 +17,24 @@
     "preferred_hedge_soft": "In some cases,",
     "claim_strength": "qualified",
     "qualified_band_high": 0.85,
-    "preferred_qualifier": "Under certain conditions,"
+    "preferred_qualifier": "Under certain conditions,",
+    "axis_hedges": {
+      "truthfulness": {
+        "strong": "The evidence does not support that",
+        "soft": "The evidence is mixed on whether",
+        "qualifier": "On the available evidence,"
+      },
+      "coherence": {
+        "strong": "This contradicts what is established:",
+        "soft": "This sits uneasily with what is established:",
+        "qualifier": "Within the bounds of what coheres,"
+      },
+      "reverence": {
+        "strong": "Source attestation is weak:",
+        "soft": "Source attestation is partial:",
+        "qualifier": "On the sources available,"
+      }
+    }
   },
   "value_axes": [
     {

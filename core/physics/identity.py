@@ -65,6 +65,20 @@ class IdentityScore:
 
 
 @dataclass(frozen=True)
+class AxisHedge:
+    """Per-axis hedge phrases for ADR-0031 score-decomposition.
+
+    When ``IdentityCheck`` flags one or more axes as deviating, the
+    assembler can call out the specific axis instead of using the
+    generic hedge.  v1 is English-only; depth-language axis hedges are
+    a future ADR.
+    """
+    strong: str
+    soft: str
+    qualifier: str
+
+
+@dataclass(frozen=True)
 class SurfacePreferences:
     """Pack-supplied surface phrasing preferences (ADR-0028).
 
@@ -90,6 +104,13 @@ class SurfacePreferences:
     claim_strength: str = "balanced"
     qualified_band_high: float = 0.75
     preferred_qualifier: str = "In some cases,"
+    # ADR-0031 — per-axis hedge phrases keyed by axis_id.  When a
+    # deviating axis matches an entry, the assembler uses that axis's
+    # phrase instead of the generic ``preferred_hedge_*`` above.
+    # Tuple of ``(axis_id, AxisHedge)`` pairs for hashability under
+    # frozen dataclass semantics; pairs are kept in lex order on
+    # ``axis_id`` so determinism is preserved across loads.
+    axis_hedges: Tuple = ()  # Tuple[Tuple[str, AxisHedge], ...]
 
 
 @dataclass(frozen=True)

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Generosity-first specialization. Boosts coherence; broadens reverence. Source: evals/identity_divergence/axes/axis_b.yaml (semantics, not field-for-field).",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "94f2f49e1b16c7498fb52b8f9864eecc198618933dc8381a01b809c146826db7",
+  "mastery_report_sha256": "511f1ce20edd4266239da61443bfc93473a5433f20bfee6692a25a03073dc933",
   "alignment_threshold": 0.4,
   "boundary_ids": [
     "no_fabricated_source",
@@ -16,7 +16,24 @@
     "preferred_hedge_soft": "Perhaps",
     "claim_strength": "affirmative",
     "qualified_band_high": 0.5,
-    "preferred_qualifier": "In some cases,"
+    "preferred_qualifier": "In some cases,",
+    "axis_hedges": {
+      "truthfulness": {
+        "strong": "Some hold that",
+        "soft": "Many would say that",
+        "qualifier": "As is commonly understood,"
+      },
+      "coherence": {
+        "strong": "There is a thread connecting this:",
+        "soft": "Loosely, this connects:",
+        "qualifier": "Where these meanings meet,"
+      },
+      "reverence": {
+        "strong": "It is reported that",
+        "soft": "Tradition holds that",
+        "qualifier": "In the broader telling,"
+      }
+    }
   },
   "value_axes": [
     {

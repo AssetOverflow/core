@@ -69,6 +69,24 @@ A single JSON file. Strings, ints, bools, lists, dicts only — same canonical-J
 | `boundary_ids` | yes | List of boundary identifiers. Mirrors `IdentityManifold.boundary_ids`. |
 | `value_axes` | yes | List of ≥ 1 axes. Each has: `axis_id`, `name`, `direction` (list of 3 floats in [-1, 1]), `weight` (float ≥ 0), `theological_note`. |
 
+### Axis-specific hedge phrases (ADR-0031)
+
+Optional sub-block inside `surface_preferences` that lets the assembler call out *which* axis is deviating when it hedges.  When `IdentityScore.deviation_axes` names an axis and the pack supplies an `axis_hedges` entry for that axis, the lex-smallest match is used instead of the generic `preferred_hedge_*`:
+
+```json
+"axis_hedges": {
+  "truthfulness": {
+    "strong":    "Evidence is thin that",
+    "soft":      "It is hard to confirm that",
+    "qualifier": "Where evidence is partial,"
+  },
+  "coherence": { "strong": "...", "soft": "...", "qualifier": "..." },
+  "reverence": { "strong": "...", "soft": "...", "qualifier": "..." }
+}
+```
+
+Each axis entry must supply `strong`, `soft`, and `qualifier` phrases (length 1–64).  When no deviating axis matches an `axis_hedges` entry, the generic phrases from §"Surface preferences" fire.  Depth languages (Hebrew, Koine Greek) ignore `axis_hedges` at v1 and continue to use the canonical phrases from [ADR-0030](decisions/ADR-0030-depth-language-hedge.md).
+
 ### Surface preferences (ADR-0028)
 
 Optional block driving the assembler's hedge and claim-strength decisions:
@@ -151,9 +169,9 @@ CORE_DEFAULT_IDENTITY_PACK=precision_first_v1 core pulse "..."
 
 | Pack id | Role | Notes |
 |---|---|---|
-| `default_general_v1` | Ship default. Balanced. | Encodes the *exact* three axes (`truthfulness`, `coherence`, `reverence`) previously hardcoded in `chat/runtime.py`. Behavioral no-op vs. pre-ADR runtime. ADR-0028 surface_preferences: balanced; hedge thresholds 0.40/0.50/0.75. Ratified: `ddc1ba127231272660e6a435e177227558461b0278572a95635b416c3e1dec5a`. |
-| `precision_first_v1` | Specialization example A. | Boosts `truthfulness` weight, narrows reverence direction. Surface: hedges sooner (0.55/0.70/0.85), uses "Arguably,"/"In some cases,"/"Under certain conditions,"; claim_strength=qualified. Source: `evals/identity_divergence/axes/axis_a.yaml`. Ratified: `cb5fb2323214a26afda33f2a67e22f38fe49f4763829d48ef67fd41241aba33c`. |
-| `generosity_first_v1` | Specialization example B. | Boosts `coherence` weight, broadens reverence direction. Surface: hedges later (0.20/0.30/0.50); claim_strength=affirmative. Source: `evals/identity_divergence/axes/axis_b.yaml`. Ratified: `94f2f49e1b16c7498fb52b8f9864eecc198618933dc8381a01b809c146826db7`. |
+| `default_general_v1` | Ship default. Balanced. | Encodes the *exact* three axes (`truthfulness`, `coherence`, `reverence`) previously hardcoded in `chat/runtime.py`. Behavioral no-op vs. pre-ADR runtime. ADR-0028 surface_preferences: balanced; hedge thresholds 0.40/0.50/0.75. ADR-0031 axis_hedges: "Evidence is thin that" / "This does not yet cohere:" / "Reports suggest". Ratified: `2ab7d469013509ba5030313ca9a609a443d0716e3ddcc5596f59858ce054f5d3`. |
+| `precision_first_v1` | Specialization example A. | Boosts `truthfulness` weight, narrows reverence direction. Surface: hedges sooner (0.55/0.70/0.85), uses "Arguably,"/"In some cases,"/"Under certain conditions,"; claim_strength=qualified. ADR-0031 axis_hedges: "The evidence does not support that" / "This contradicts what is established:" / "Source attestation is weak:". Source: `evals/identity_divergence/axes/axis_a.yaml`. Ratified: `78aa1e6a68a35c2c8576b6196a52d421b94f6d11e006128986902a4fd08679af`. |
+| `generosity_first_v1` | Specialization example B. | Boosts `coherence` weight, broadens reverence direction. Surface: hedges later (0.20/0.30/0.50); claim_strength=affirmative. ADR-0031 axis_hedges: "Some hold that" / "There is a thread connecting this:" / "It is reported that". Source: `evals/identity_divergence/axes/axis_b.yaml`. Ratified: `511f1ce20edd4266239da61443bfc93473a5433f20bfee6692a25a03073dc933`. |
 
 Each ratified pack ships alongside a `<pack_id>.mastery_report.json` companion file. The loader, in production mode, verifies the companion's self-seal and cross-checks its `report_sha256` against the pack's `mastery_report_sha256`. To re-ratify after editing a pack's axes, run `python scripts/ratify_identity_packs.py` (idempotent — re-running on already-current packs is a no-op).
 

@@ -25,7 +25,12 @@ import os
 from pathlib import Path
 from typing import Iterable
 
-from core.physics.identity import IdentityManifold, SurfacePreferences, ValueAxis
+from core.physics.identity import (
+    AxisHedge,
+    IdentityManifold,
+    SurfacePreferences,
+    ValueAxis,
+)
 from formation.hashing import verify_seal
 
 
@@ -368,6 +373,7 @@ def _build_surface_preferences(
             f"pack {pack_id!r}: claim_strength={claim_strength!r} not in "
             f"{sorted(_ALLOWED_CLAIM_STRENGTHS)}"
         )
+    axis_hedges = _build_axis_hedges(value.get("axis_hedges"), pack_id)
     return SurfacePreferences(
         hedge_threshold_strong=strong,
         hedge_threshold_soft=soft,
@@ -385,7 +391,61 @@ def _build_surface_preferences(
             value.get("preferred_qualifier", defaults.preferred_qualifier),
             pack_id, "preferred_qualifier",
         ),
+        axis_hedges=axis_hedges,
     )
+
+
+def _build_axis_hedges(
+    value: object, pack_id: str,
+) -> tuple[tuple[str, AxisHedge], ...]:
+    """Parse and bounds-check the optional ``axis_hedges`` sub-block.
+
+    Returns a tuple of ``(axis_id, AxisHedge)`` pairs in lex order on
+    ``axis_id``.  Absent block → empty tuple → ADR-0028 fallback.
+    """
+    if value is None:
+        return ()
+    if not isinstance(value, dict):
+        raise IdentityPackError(
+            f"pack {pack_id!r}: surface_preferences.axis_hedges must be a dict"
+        )
+    pairs: list[tuple[str, AxisHedge]] = []
+    for axis_id in sorted(value):
+        if not isinstance(axis_id, str) or not axis_id:
+            raise IdentityPackError(
+                f"pack {pack_id!r}: axis_hedges keys must be non-empty strings"
+            )
+        entry = value[axis_id]
+        if not isinstance(entry, dict):
+            raise IdentityPackError(
+                f"pack {pack_id!r}: axis_hedges[{axis_id!r}] must be a dict"
+            )
+        missing = [k for k in ("strong", "soft", "qualifier") if k not in entry]
+        if missing:
+            raise IdentityPackError(
+                f"pack {pack_id!r}: axis_hedges[{axis_id!r}] missing fields: "
+                f"{missing}"
+            )
+        pairs.append(
+            (
+                axis_id,
+                AxisHedge(
+                    strong=_validate_hedge_phrase(
+                        entry["strong"], pack_id,
+                        f"axis_hedges[{axis_id!r}].strong",
+                    ),
+                    soft=_validate_hedge_phrase(
+                        entry["soft"], pack_id,
+                        f"axis_hedges[{axis_id!r}].soft",
+                    ),
+                    qualifier=_validate_hedge_phrase(
+                        entry["qualifier"], pack_id,
+                        f"axis_hedges[{axis_id!r}].qualifier",
+                    ),
+                ),
+            )
+        )
+    return tuple(pairs)
 
 
 def _validate_threshold_field(value: object, pack_id: str, field: str) -> float:

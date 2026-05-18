@@ -72,6 +72,14 @@ class SurfaceContext:
     claim_strength: str = "balanced"
     qualified_band_high: float = _DEFAULT_QUALIFIED_BAND_HIGH
     preferred_qualifier: str = _DEFAULT_QUALIFIER_PHRASE
+    # ADR-0031 — score decomposition surface.  When ``deviation_axes``
+    # is non-empty and at least one of its axis_ids appears in
+    # ``axis_hedges``, ``_apply_hedge`` uses the lex-smallest matching
+    # axis's phrase instead of the generic ``preferred_hedge_*``.
+    # ``axis_hedges`` is a tuple of ``(axis_id, strong, soft, qualifier)``
+    # quadruples kept in lex order for hashability + determinism.
+    deviation_axes: frozenset[str] = frozenset()
+    axis_hedges: tuple[tuple[str, str, str, str], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,11 +166,21 @@ def _apply_hedge(surface: str, ctx: SurfaceContext, lang: str = "en") -> str:
     """
     alignment = ctx.identity_alignment
     if lang in _DEPTH_HEDGE_PHRASES:
+        # ADR-0030 — depth languages use canonical phrases; per-axis
+        # decomposition (ADR-0031) is English-only at v1.
         strong_phrase, soft_phrase, qualifier_phrase = _DEPTH_HEDGE_PHRASES[lang]
     else:
-        strong_phrase = ctx.preferred_hedge_strong
-        soft_phrase = ctx.preferred_hedge_soft
-        qualifier_phrase = ctx.preferred_qualifier
+        # ADR-0031 — when the score reports specific deviating axes and
+        # the pack supplies axis-specific phrases for any of them, use
+        # the lex-smallest matching axis's phrase.  Otherwise fall
+        # through to ADR-0028 generic phrases.
+        axis_phrase = _axis_specific_phrase(ctx)
+        if axis_phrase is not None:
+            strong_phrase, soft_phrase, qualifier_phrase = axis_phrase
+        else:
+            strong_phrase = ctx.preferred_hedge_strong
+            soft_phrase = ctx.preferred_hedge_soft
+            qualifier_phrase = ctx.preferred_qualifier
     if alignment < ctx.hedge_threshold_strong:
         return f"{strong_phrase} {_lower_first(surface)}"
     if alignment < ctx.hedge_threshold_soft:
@@ -173,6 +191,25 @@ def _apply_hedge(surface: str, ctx: SurfaceContext, lang: str = "en") -> str:
     ):
         return f"{qualifier_phrase} {_lower_first(surface)}"
     return surface
+
+
+def _axis_specific_phrase(
+    ctx: SurfaceContext,
+) -> tuple[str, str, str] | None:
+    """Return (strong, soft, qualifier) for the most-relevant deviating axis,
+    or ``None`` if no match.
+
+    Match rule: the lex-smallest ``axis_id`` that appears in both
+    ``ctx.deviation_axes`` and the keys of ``ctx.axis_hedges``.  Lex
+    tie-break keeps output deterministic when multiple axes deviate.
+    """
+    if not ctx.deviation_axes or not ctx.axis_hedges:
+        return None
+    for axis_id, strong, soft, qualifier in ctx.axis_hedges:
+        # ``axis_hedges`` is already in lex order — first match wins.
+        if axis_id in ctx.deviation_axes:
+            return (strong, soft, qualifier)
+    return None
 
 
 def _apply_contrast(surface: str, valence_delta: float) -> str:

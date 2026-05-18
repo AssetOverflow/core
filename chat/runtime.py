@@ -302,7 +302,20 @@ class ChatRuntime:
     def _build_surface_context(self, identity_score, current_valence: float) -> SurfaceContext:
         active = self._context.referents.active_referent()
         alignment = float(identity_score.alignment) if identity_score is not None else 1.0
+        deviation_axes = (
+            frozenset(identity_score.deviation_axes)
+            if identity_score is not None
+            else frozenset()
+        )
         prefs = self.identity_manifold.surface_preferences
+        # ADR-0031 — flatten the manifold's axis_hedges (tuple of
+        # (axis_id, AxisHedge)) into the wire-format quadruples that
+        # SurfaceContext carries.  Order is preserved (loader emits in
+        # lex order); _axis_specific_phrase relies on this.
+        axis_hedges = tuple(
+            (axis_id, hedge.strong, hedge.soft, hedge.qualifier)
+            for axis_id, hedge in prefs.axis_hedges
+        )
         return SurfaceContext(
             active_referent_surface=active.surface if active is not None else "",
             active_referent_slot=active.slot if active is not None else "neut_sg",
@@ -316,6 +329,8 @@ class ChatRuntime:
             claim_strength=prefs.claim_strength,
             qualified_band_high=prefs.qualified_band_high,
             preferred_qualifier=prefs.preferred_qualifier,
+            deviation_axes=deviation_axes,
+            axis_hedges=axis_hedges,
         )
 
     def _stub_response(self, field_state: FieldState) -> ChatResponse:
