@@ -124,17 +124,22 @@ The loader is path-aware: deployments may supply `search_paths=("/srv/myapp/pack
 ## CLI usage
 
 ```bash
-core pulse "What is truth?"
-# Loads default identity (currently default_general_v1).
+core chat
+# Loads the default identity pack (currently default_general_v1).
 
-core pulse --identity precision_first_v1 "What is truth?"
-# Loads a specific pack. Pack must exist on the loader's search paths.
+core chat --identity precision_first_v1
+# Loads a specific pack.  Pack must exist on the loader's search paths.
 
-core pulse --list-identity-packs
+core chat --list-identity-packs
 # Lists discoverable packs with description + ratification status.
+# Short-circuits before the REPL launches.
+
+core chat --list-identity-packs --json
+# Same listing as machine-readable JSON (pack_id, version, description,
+# ratified, path).
 
 core chat --identity generosity_first_v1
-# Same flag, applies to the chat surface.
+# A different specialization on the chat surface.
 
 CORE_DEFAULT_IDENTITY_PACK=precision_first_v1 core pulse "..."
 # Environment override of the default. Takes precedence over the

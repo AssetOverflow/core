@@ -103,20 +103,29 @@ def available_packs(
         if not d.is_dir():
             continue
         for entry in sorted(d.glob("*.json")):
+            # Skip companion artifacts (mastery reports, etc.) — only
+            # real identity packs declare ``schema_version`` and
+            # ``value_axes``.
+            if entry.name.endswith(".mastery_report.json"):
+                continue
             try:
                 raw = _read_json(entry)
-                pack_id = str(raw.get("pack_id", entry.stem))
-                if pack_id in seen:
-                    continue
-                seen[pack_id] = {
-                    "pack_id": pack_id,
-                    "version": str(raw.get("version", "")),
-                    "description": str(raw.get("description", "")),
-                    "ratified": bool(raw.get("mastery_report_sha256")),
-                    "path": str(entry),
-                }
             except IdentityPackError:
                 continue
+            if not isinstance(raw, dict):
+                continue
+            if "schema_version" not in raw or "value_axes" not in raw:
+                continue
+            pack_id = str(raw.get("pack_id", entry.stem))
+            if pack_id in seen:
+                continue
+            seen[pack_id] = {
+                "pack_id": pack_id,
+                "version": str(raw.get("version", "")),
+                "description": str(raw.get("description", "")),
+                "ratified": bool(raw.get("mastery_report_sha256")),
+                "path": str(entry),
+            }
     return sorted(seen.values(), key=lambda d: str(d["pack_id"]))
 
 

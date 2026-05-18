@@ -175,8 +175,36 @@ def _runtime_config_from_args(args: argparse.Namespace):
     )
 
 
+def _print_identity_packs(use_json: bool) -> int:
+    """Print discoverable identity packs.  Returns process exit code."""
+    from packs.identity.loader import available_packs
+
+    packs = available_packs()
+    if use_json:
+        import json as _json
+        print(_json.dumps(packs, indent=2, sort_keys=True))
+        return 0
+    if not packs:
+        print("(no identity packs found on default search path)")
+        return 0
+    pack_w = max(len("pack_id"), max(len(str(p["pack_id"])) for p in packs))
+    ver_w = max(len("version"), max(len(str(p["version"])) for p in packs))
+    print(f"{'pack_id':<{pack_w}}  {'version':<{ver_w}}  ratified  description")
+    print(f"{'-' * pack_w}  {'-' * ver_w}  --------  -----------")
+    for p in packs:
+        flag = "yes" if p["ratified"] else "no "
+        print(
+            f"{str(p['pack_id']):<{pack_w}}  "
+            f"{str(p['version']):<{ver_w}}  "
+            f"{flag:<8}  {p['description']}"
+        )
+    return 0
+
+
 def cmd_chat(args: argparse.Namespace) -> int:
     """Launch a readline REPL backed by ChatRuntime."""
+    if getattr(args, "list_identity_packs", False):
+        return _print_identity_packs(use_json=getattr(args, "json", False))
     try:
         from chat.runtime import ChatRuntime
     except Exception as exc:  # pragma: no cover - exercised by CLI in broken envs
@@ -1107,6 +1135,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     chat = subparsers.add_parser("chat", help="start the interactive chat REPL")
     _add_runtime_policy_args(chat)
+    chat.add_argument(
+        "--list-identity-packs",
+        action="store_true",
+        help="list discoverable identity packs and exit (no REPL launched)",
+    )
+    chat.add_argument(
+        "--json",
+        action="store_true",
+        help="emit machine-readable JSON (with --list-identity-packs)",
+    )
     chat.set_defaults(func=cmd_chat)
 
     test = subparsers.add_parser("test", help="run pytest with curated suite aliases or direct passthrough")

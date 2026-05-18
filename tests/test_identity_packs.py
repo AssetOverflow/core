@@ -70,6 +70,15 @@ class TestLoaderHappyPath:
         ratified_ids = {p["pack_id"] for p in packs if p["ratified"]}
         assert {"default_general_v1", "precision_first_v1", "generosity_first_v1"} <= ratified_ids
 
+    def test_available_packs_excludes_mastery_reports(self) -> None:
+        """Companion ``<pack_id>.mastery_report.json`` files must not surface as packs."""
+        packs = available_packs()
+        ids = {p["pack_id"] for p in packs}
+        for pid in ids:
+            assert not pid.endswith(".mastery_report"), (
+                f"mastery report companion leaked into available_packs(): {pid!r}"
+            )
+
     def test_v1_packs_load_in_production_mode(self) -> None:
         # require_ratified default (None) -> production unless env override.
         for pid in (
@@ -289,6 +298,51 @@ class TestPackSwap:
             m = load_identity_manifold(pack_id, require_ratified=False)
             assert "no_fabricated_source" in m.boundary_ids
             assert "no_hot_path_repair" in m.boundary_ids
+
+
+# ---------- CLI: --list-identity-packs ----------
+
+
+class TestListIdentityPacksCLI:
+    def test_table_output_lists_all_three_packs(self) -> None:
+        import subprocess
+        import sys
+
+        repo_root = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [sys.executable, "-m", "core.cli", "chat", "--list-identity-packs"],
+            cwd=str(repo_root),
+            env={"PYTHONPATH": str(repo_root), "PATH": "/usr/bin:/bin"},
+            capture_output=True, text=True, check=True,
+        )
+        # Header + three pack rows; no mastery_report companion rows.
+        assert "default_general_v1" in result.stdout
+        assert "precision_first_v1" in result.stdout
+        assert "generosity_first_v1" in result.stdout
+        assert "mastery_report" not in result.stdout
+        # All three ratified -> three "yes" flags.
+        assert result.stdout.count(" yes ") >= 3
+
+    def test_json_output_is_valid_json(self) -> None:
+        import subprocess
+        import sys
+
+        repo_root = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "core.cli", "chat",
+                "--list-identity-packs", "--json",
+            ],
+            cwd=str(repo_root),
+            env={"PYTHONPATH": str(repo_root), "PATH": "/usr/bin:/bin"},
+            capture_output=True, text=True, check=True,
+        )
+        payload = json.loads(result.stdout)
+        assert isinstance(payload, list)
+        pack_ids = {p["pack_id"] for p in payload}
+        assert {"default_general_v1", "precision_first_v1", "generosity_first_v1"} <= pack_ids
+        for p in payload:
+            assert p["ratified"] is True
 
 
 # ---------- ratification script idempotency ----------
