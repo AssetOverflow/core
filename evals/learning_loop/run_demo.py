@@ -60,13 +60,20 @@ from teaching.proposals import (
 
 
 # The single prompt that drives every scene.  CAUSE intent, subject
-# "thought", pack-resident lemma but no `(thought, cause)` chain in
-# the active corpus today — guarantees the cold-turn path.
-_DEMO_PROMPT: str = "Why does thought exist?"
+# ``narrative`` — pack-resident lemma but no ``(narrative, cause)``
+# chain in the active corpus today, guaranteeing the cold-turn path.
+#
+# History: the original demo used ``thought`` as the cold subject; the
+# cognition saturation v2 curriculum unit (commit ``a0edbb4``) added
+# ``cause_thought_reveals_meaning`` to the active corpus, so the
+# (thought, cause) cell is no longer cold.  ``narrative`` is the new
+# cold exemplar — same thematic shape, same connective + object.
+_DEMO_PROMPT: str = "Why does narrative exist?"
+_DEMO_SUBJECT: str = "narrative"
 
-# Operator-authored proposal payload.  The (thought, cause) cell is
+# Operator-authored proposal payload.  The (narrative, cause) cell is
 # unoccupied; the operator proposes the chain
-#   thought reveals meaning
+#   narrative reveals meaning
 # affirming evidence is the existing corpus chain
 #   cause_creation_reveals_meaning   (creation reveals meaning)
 # both endpoints are pack-resident.
@@ -224,7 +231,7 @@ def _scene3_propose(log_path: Path, candidate_id: str) -> tuple[SceneResult, Any
     _print_header(
         "S3.  Operator-authored proposal — replay-equivalence gate runs",
         "From the discovery candidate's evidence, the operator authors "
-        "a complete chain: thought reveals meaning.  Affirming evidence "
+        "a complete chain: narrative reveals meaning.  Affirming evidence "
         "is the existing corpus chain cause_creation_reveals_meaning. "
         "The real replay gate (teaching.replay.run_replay_equivalence) "
         "runs the cognition public split twice — active corpus vs. "
@@ -237,7 +244,7 @@ def _scene3_propose(log_path: Path, candidate_id: str) -> tuple[SceneResult, Any
     augmented = DiscoveryCandidate(
         candidate_id=candidate_id,
         proposed_chain={
-            "subject": "thought", "intent": "cause",
+            "subject": _DEMO_SUBJECT, "intent": "cause",
             "connective": _OPERATOR_CONNECTIVE,
             "object": _OPERATOR_OBJECT,
         },
@@ -351,7 +358,7 @@ def _scene5_replay_now_grounded(transient: Path) -> SceneResult:
         "With the runtime's corpus path swapped to the transient corpus, "
         "the same prompt now returns a teaching-grounded surface "
         "containing the operator-accepted chain: "
-        "thought reveals meaning.  Identical bytes for any replay of "
+        "narrative reveals meaning.  Identical bytes for any replay of "
         "the same prompt against this corpus state.",
     )
     real_path = _tg._CORPUS_PATH
@@ -372,7 +379,7 @@ def _scene5_replay_now_grounded(transient: Path) -> SceneResult:
     _say(f"  grounding_source        : {grounding}")
 
     # Falsifiable assertions for the demo's headline claim.
-    contains_subject = "thought" in surface.lower()
+    contains_subject = _DEMO_SUBJECT in surface.lower()
     contains_connective = "reveal" in surface.lower()  # humanised
     contains_object = "meaning" in surface.lower()
     is_teaching_grounded = grounding == "teaching"
@@ -393,7 +400,7 @@ def _scene5_replay_now_grounded(transient: Path) -> SceneResult:
         detail={
             "surface": surface,
             "grounding_source": grounding,
-            "contains_subject_thought": contains_subject,
+            "contains_subject": contains_subject,
             "contains_connective_reveals": contains_connective,
             "contains_object_meaning": contains_object,
         },

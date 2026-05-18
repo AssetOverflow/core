@@ -1250,7 +1250,7 @@ TeachingChainProposal + replay gate + operator review).
 
 A single deterministic prompt drives every scene:
 
-    "Why does thought exist?"
+    "Why does narrative exist?"
 
 Headline claim: CORE, asked a question it cannot ground, emits
 structured evidence that a reviewed chain would have helped.  An

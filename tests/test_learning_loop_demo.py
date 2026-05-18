@@ -27,8 +27,12 @@ def test_after_is_teaching_grounded_with_new_chain_atoms() -> None:
     report = run_demo(emit_json=True)
     assert report["after"]["grounding_source"] == "teaching"
     surface = report["after"]["surface"].lower()
-    # The accepted chain is (thought, cause, reveals, meaning).
-    assert "thought" in surface
+    # The accepted chain is (narrative, cause, reveals, meaning).
+    # ``thought`` was the original cold subject; cognition saturation
+    # v2 (commit ``a0edbb4``) added ``cause_thought_reveals_meaning``
+    # to the active corpus so the demo switched to ``narrative`` —
+    # same shape, still cold.
+    assert "narrative" in surface
     assert "reveal" in surface  # humanised connective
     assert "meaning" in surface
     assert "teaching-grounded" in surface
@@ -64,7 +68,7 @@ def test_same_prompt_drives_before_and_after() -> None:
     Different surfaces emerge from the corpus state change alone, not
     from any prompt variation or stochastic sampling."""
     report = run_demo(emit_json=True)
-    assert report["prompt"] == "Why does thought exist?"
+    assert report["prompt"] == "Why does narrative exist?"
     # And the two surfaces are observably different — the loop changed
     # the response, not merely the metadata.
     assert report["before"]["surface"] != report["after"]["surface"]

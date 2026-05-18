@@ -90,11 +90,21 @@ def test_parse_extra_trailing_colons_folded_into_date() -> None:
 
 
 def test_audit_real_corpus_runs_clean() -> None:
+    """The audit report's accounting invariant: every line on disk is
+    either loaded or accounted for as dropped (with a typed reason).
+    Hardcoding ``dropped == ()`` was the pre-supersession premise; the
+    curriculum saturation v2 (commit ``a0edbb4``) introduced one
+    ratified supersession (``verification_wisdom_grounds_judgment`` →
+    ``verification_wisdom_requires_knowledge``).  The invariant the
+    audit guarantees is line-conservation, not zero supersessions."""
     report = audit_corpus()
-    assert report.lines_on_disk == report.lines_loaded
-    assert report.dropped == ()
+    assert report.lines_loaded + len(report.dropped) == report.lines_on_disk
     assert len(report.loaded) >= 10
     assert report.corpus_id == "cognition_chains_v1"
+    # Every dropped line must carry a typed reason so an operator can
+    # audit why it was retired without re-deriving the supersession.
+    for dropped in report.dropped:
+        assert dropped.reason.startswith("superseded_by:")
 
 
 def test_audit_loaded_entries_have_typed_provenance() -> None:
@@ -210,10 +220,34 @@ def test_supersession_drops_earlier_chain_from_active_view(tmp_path: Path) -> No
     assert report.loaded[0].chain_id == "cause_light_grounds_truth"
 
 
-def test_default_superseded_by_is_null_in_loaded_entries() -> None:
-    """Existing corpus uses default null — must round-trip unchanged."""
+def test_loaded_entries_with_supersession_point_to_dropped_chains() -> None:
+    """The active-set invariant: a loaded entry may carry a non-null
+    ``superseded_by`` (it is the replacement, pointing back at what it
+    retired), but the chain id it points to MUST itself be dropped
+    from the active set — otherwise the corpus would contain two
+    live versions of the same lemma's chain.
+
+    Was ``test_default_superseded_by_is_null_in_loaded_entries`` (an
+    overstrict premise written before any supersession existed); the
+    weaker invariant here is the one ADR-0055 Phase A actually
+    guarantees."""
     report = audit_corpus()
-    assert all(entry.superseded_by is None for entry in report.loaded)
+    dropped_ids = {entry.chain_id for entry in report.dropped}
+    live_ids = {entry.chain_id for entry in report.loaded}
+    for entry in report.loaded:
+        if entry.superseded_by is None:
+            continue
+        # Replacement entry — its back-pointer must reference a chain
+        # id that is dropped (retired), never a live one.
+        assert entry.superseded_by in dropped_ids, (
+            f"loaded entry {entry.chain_id!r} points to "
+            f"{entry.superseded_by!r} which is not in the dropped set "
+            f"— supersession invariant broken"
+        )
+        assert entry.superseded_by not in live_ids, (
+            f"loaded entry {entry.chain_id!r} supersedes a still-live "
+            f"chain {entry.superseded_by!r} — double-live state"
+        )
 
 
 # ---------------------------------------------------------------------------

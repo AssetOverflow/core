@@ -63,27 +63,29 @@ class _TE:
 
 
 def test_fires_on_would_have_grounded_for_cause_on_unknown_pack_lemma() -> None:
-    """``judgment`` is a pack lemma; (judgment, cause) is NOT in the
-    corpus today (the existing chains for ``judgment`` are
-    VERIFICATION + CAUSE→ordered_by_wisdom, but no ``(judgment,
-    cause)`` SUBJECT key exists)."""
-    # First check the pack actually has the lemma we're claiming.
+    """``principle`` is a pack lemma; (principle, cause) is NOT in the
+    active cognition corpus.  ``judgment`` was the historical fixture
+    here, but the epistemology v1 curriculum unit (commit ``2acf71f``)
+    added ``cause_judgment_requires_wisdom`` — so ``principle`` is the
+    new still-cold cognition exemplar.  If a future curriculum unit
+    ratifies a ``(principle, *)`` chain, this test pytest-skips and the
+    fixture should rotate to the next cold lemma."""
     from chat.pack_grounding import _pack_index
     from chat.teaching_grounding import _corpus_index
 
-    assert "judgment" in _pack_index()
-    if ("judgment", "cause") in _corpus_index():
-        pytest.skip("judgment/cause is in the active corpus; pick another fixture")
+    assert "principle" in _pack_index()
+    if ("principle", "cause") in _corpus_index():
+        pytest.skip("principle/cause is in the active corpus; pick another fixture")
 
     cands = extract_discovery_candidates(
         _TE(grounding_source="none"),
         IntentTag.CAUSE,
-        "judgment",
+        "principle",
     )
     assert len(cands) == 1
     c = cands[0]
     assert c.trigger == "would_have_grounded"
-    assert c.proposed_chain["subject"] == "judgment"
+    assert c.proposed_chain["subject"] == "principle"
     assert c.proposed_chain["intent"] == "cause"
     assert c.proposed_chain["connective"] is None
     assert c.proposed_chain["object"] is None
@@ -96,7 +98,7 @@ def test_does_not_fire_when_grounding_source_is_pack() -> None:
     cands = extract_discovery_candidates(
         _TE(grounding_source="pack"),
         IntentTag.CAUSE,
-        "judgment",
+        "principle",
     )
     assert cands == ()
 
@@ -105,7 +107,7 @@ def test_does_not_fire_when_grounding_source_is_teaching() -> None:
     cands = extract_discovery_candidates(
         _TE(grounding_source="teaching"),
         IntentTag.CAUSE,
-        "judgment",
+        "principle",
     )
     assert cands == ()
 
@@ -114,7 +116,7 @@ def test_does_not_fire_for_definition_intent() -> None:
     cands = extract_discovery_candidates(
         _TE(grounding_source="none"),
         IntentTag.DEFINITION,
-        "judgment",
+        "principle",
     )
     assert cands == ()
 
@@ -123,7 +125,7 @@ def test_does_not_fire_for_unknown_intent() -> None:
     cands = extract_discovery_candidates(
         _TE(grounding_source="none"),
         IntentTag.UNKNOWN,
-        "judgment",
+        "principle",
     )
     assert cands == ()
 
@@ -172,12 +174,12 @@ def test_candidate_id_is_deterministic() -> None:
     a = extract_discovery_candidates(
         _TE(grounding_source="none", trace_hash="seed-1"),
         IntentTag.CAUSE,
-        "judgment",
+        "principle",
     )
     b = extract_discovery_candidates(
         _TE(grounding_source="none", trace_hash="seed-1"),
         IntentTag.CAUSE,
-        "judgment",
+        "principle",
     )
     assert a[0].candidate_id == b[0].candidate_id
 
@@ -186,12 +188,12 @@ def test_candidate_id_changes_with_trace_hash() -> None:
     a = extract_discovery_candidates(
         _TE(grounding_source="none", trace_hash="seed-1"),
         IntentTag.CAUSE,
-        "judgment",
+        "principle",
     )
     b = extract_discovery_candidates(
         _TE(grounding_source="none", trace_hash="seed-2"),
         IntentTag.CAUSE,
-        "judgment",
+        "principle",
     )
     assert a[0].candidate_id != b[0].candidate_id
 
@@ -200,7 +202,7 @@ def test_boundary_clean_false_when_refusal_emitted() -> None:
     cands = extract_discovery_candidates(
         _TE(grounding_source="none", refusal_emitted=True),
         IntentTag.CAUSE,
-        "judgment",
+        "principle",
     )
     # The trigger still fires (refusal does not block evidence), but
     # boundary_clean flips to False so reviewers can filter these out
@@ -213,7 +215,7 @@ def test_boundary_clean_false_when_hedge_injected() -> None:
     cands = extract_discovery_candidates(
         _TE(grounding_source="none", hedge_injected=True),
         IntentTag.CAUSE,
-        "judgment",
+        "principle",
     )
     assert len(cands) == 1
     assert cands[0].boundary_clean is False
@@ -227,7 +229,7 @@ def test_boundary_clean_false_when_hedge_injected() -> None:
 def test_format_jsonl_is_sorted_keys_compact() -> None:
     cand = DiscoveryCandidate(
         candidate_id="x",
-        proposed_chain={"subject": "judgment", "intent": "cause", "connective": None, "object": None},
+        proposed_chain={"subject": "principle", "intent": "cause", "connective": None, "object": None},
         trigger="would_have_grounded",
         source_turn_trace="t",
         pack_consistent=True,
@@ -389,7 +391,7 @@ def test_pure_extract_does_not_load_or_mutate_runtime_state() -> None:
     pack_before = dict(_pack_index())
     corpus_before = dict(_corpus_index())
     for _ in range(5):
-        extract_discovery_candidates(_TE(), IntentTag.CAUSE, "judgment")
+        extract_discovery_candidates(_TE(), IntentTag.CAUSE, "principle")
     pack_after = dict(_pack_index())
     corpus_after = dict(_corpus_index())
     assert pack_before.keys() == pack_after.keys()
