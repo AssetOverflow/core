@@ -40,7 +40,8 @@ from packs.safety.loader import load_safety_pack
 from field.state import FieldState
 from generate.articulation import ArticulationPlan, realize
 from generate.dialogue import DialogueRole, classify_dialogue_blade, propose_dialogue
-from generate.intent_bridge import articulate_with_intent
+from generate.graph_constraint import build_graph_constraint
+from generate.intent_bridge import articulate_with_intent, build_graph_from_input
 from generate.proposition import FrameRegistry, Proposition, propose
 from generate.result import GenerationResult
 from generate.stream import generate
@@ -690,6 +691,20 @@ class ChatRuntime:
         articulation = _prefer_prompt_anchor(articulation, filtered, output_language=self.config.output_language)
         self._context.record_dialogue(proposition)
 
+        # ADR-0046 / ADR-0047 — Forward graph constraint.
+        # Build the PropositionGraph from the classified intent + articulation
+        # plan and convert it into an AdmissibilityRegion BEFORE generate()
+        # runs.  An empty / fully OOV graph yields an unconstrained region
+        # (allowed_indices=None), which behaves identically to region=None
+        # via generate()'s is_unconstrained() check — so the change is a
+        # true no-op on inputs that produce no graph and a forward
+        # constraint on inputs that do.  Only wired for the English path
+        # because the graph builder is English-specific (see intent_bridge).
+        forward_region = None
+        if self.config.forward_graph_constraint and self.config.output_language == "en":
+            pre_gen_graph = build_graph_from_input(text, articulation)
+            forward_region = build_graph_constraint(pre_gen_graph, self._context.vocab)
+
         result = generate(
             field_state,
             self._context.vocab,
@@ -703,6 +718,7 @@ class ChatRuntime:
             use_salience=self.config.use_salience,
             salience_top_k=self.config.salience_top_k,
             inhibition_threshold=self.config.inhibition_threshold,
+            region=forward_region,
             inner_loop_admissibility=self.config.inner_loop_admissibility,
             admissibility_threshold=self.config.admissibility_threshold,
             admissibility_mode=self.config.admissibility_mode,

@@ -36,6 +36,17 @@ class RuntimeConfig:
     # ADR-0033 — Ethics pack id loaded at runtime startup.  Empty string
     # resolves to ``DEFAULT_ETHICS_PACK``.  See docs/ethics_packs.md.
     ethics_pack: str = ""
+    # ADR-0046 / ADR-0047 — forward graph constraint.  When True, the
+    # PropositionGraph built from the classified intent + articulation
+    # plan is converted into an AdmissibilityRegion BEFORE generate()
+    # runs (Pillar 1→2→3 coupling closes on the live path).  Default
+    # False preserves existing behavior during the transition window —
+    # ADR-0024's honest-refusal exhaustion is the correct response when
+    # the constraint geometry and the walk candidate pool do not
+    # intersect, but operators must opt in to observing that behavior
+    # on their workloads.  Enable to live the forward constraint;
+    # disable to retain the pre-ADR-0046 unconstrained walk.
+    forward_graph_constraint: bool = False
 
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"

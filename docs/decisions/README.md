@@ -56,6 +56,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0044](ADR-0044-medical-clinical-ethics-pack.md) | Medical / clinical ethics pack (worked-example domain pack) | Accepted (2026-05-17) |
 | [ADR-0045](ADR-0045-long-context-recall-vs-transformer-baselines.md) | Long-context recall: CORE vs transformer baselines | Accepted (2026-05-17) |
 | [ADR-0046](ADR-0046-forward-graph-constraint.md) | PropositionGraph as forward AdmissibilityRegion + industry demos | Accepted (2026-05-18) |
+| [ADR-0047](ADR-0047-wire-forward-graph-constraint.md) | Wire forward graph constraint into the chat hot path (opt-in) | Accepted (2026-05-18) |
 
 ---
 
@@ -156,7 +157,7 @@ Verification surface:
 
 ---
 
-## Pillar 1 → 2 → 3 coupling — ADR-0046
+## Pillar 1 → 2 → 3 coupling — ADR-0046 / ADR-0047
 
 ADR-0046 extends the **ADR-0022 → ADR-0026** forward-semantic-control
 chain by giving the `AdmissibilityRegion` a new, geometry-derived
@@ -183,9 +184,17 @@ on the real vault path and not duplicated under a weaker construction.
 
 | Layer | Tests | Live demo |
 |---|---|---|
-| Forward graph constraint | `tests/test_graph_constraint.py` — 8 tests | `python -m evals.industry_demos.demo_01_forward_constraint` |
+| Forward graph constraint (primitive) | `tests/test_graph_constraint.py` — 8 tests | `python -m evals.industry_demos.demo_01_forward_constraint` |
+| Forward graph constraint (live wiring) | `tests/test_forward_graph_constraint_wiring.py` — 5 tests | `RuntimeConfig(forward_graph_constraint=True)` then `core eval cognition` |
 | Geometry-driven identity | `tests/test_identity_packs.py`, `tests/test_identity_surface_divergence.py` | `python -m evals.industry_demos.demo_02_geometry_drives_identity` |
 | Architectural determinism | `tests/test_telemetry_sink.py`, `tests/test_telemetry_fanout_and_summary.py` | `python -m evals.industry_demos.demo_03_deterministic_audit` |
+
+ADR-0047 lands the wire-up behind an opt-in `RuntimeConfig` flag.  The
+characterisation it carries (`A/B` on the public cognition split)
+shows the wiring is correct and safe but does not move
+`surface_groundedness` or `term_capture_rate` on this lane — isolating
+the next load-bearing pull to the realizer / surface-assembly path
+rather than to propagation.
 
 ---
 
