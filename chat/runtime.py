@@ -16,6 +16,7 @@ from chat.refusal import (
     inject_hedge,
     should_inject_hedge,
 )
+from chat.telemetry import TurnEventSink, format_turn_event_jsonl
 from chat.verdicts import TurnVerdicts
 from core.config import DEFAULT_CONFIG, DEFAULT_IDENTITY_PACK, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField
@@ -378,12 +379,59 @@ class ChatRuntime:
         )
         self._last_refusal_was_typed: bool = True
         self.turn_log: List[TurnEvent] = []
+        # ADR-0040 — opt-in structured-logging sink.  Default None
+        # preserves prior behavior; callers attach via
+        # ``attach_telemetry_sink``.  ``_telemetry_include_content``
+        # gates surface / token emission per the redact-by-default
+        # trust boundary.
+        self._telemetry_sink: TurnEventSink | None = None
+        self._telemetry_include_content: bool = False
         self._correction_pass = CorrectionPass()
         self._last_valence: float = 0.0
 
     @property
     def session(self) -> SessionContext:
         return self._context
+
+    def attach_telemetry_sink(
+        self,
+        sink: TurnEventSink | None,
+        *,
+        include_content: bool = False,
+    ) -> None:
+        """ADR-0040 — attach a structured-logging sink.
+
+        After each turn (main or stub path), the runtime serialises
+        the appended ``TurnEvent`` as one JSONL line and calls
+        ``sink.emit(line)``.  Passing ``None`` detaches.
+
+        ``include_content`` opts surface text and input tokens into
+        the emitted record.  Default ``False`` preserves the
+        redact-by-default trust boundary (CLAUDE.md): audit pipelines
+        get counts, ids, and flags without raw user content.
+        """
+        self._telemetry_sink = sink
+        self._telemetry_include_content = bool(include_content)
+
+    def _emit_turn_event(self, event: TurnEvent) -> None:
+        """Internal — emit one serialised line for the current event.
+
+        Called after every ``turn_log.append``.  No-op when no sink
+        is attached.  Sink errors are intentionally NOT swallowed:
+        a broken telemetry path should surface, not silently drop
+        audit signal.
+        """
+        sink = self._telemetry_sink
+        if sink is None:
+            return
+        line = format_turn_event_jsonl(
+            event,
+            safety_pack_id=self.safety_pack.pack_id,
+            ethics_pack_id=self.ethics_pack_id,
+            identity_pack_id=self.identity_pack_id,
+            include_content=self._telemetry_include_content,
+        )
+        sink.emit(line)
 
     def _tokenize(self, text: str) -> list[str]:
         return [self._surface_by_fold.get(m.group(0).casefold(), m.group(0)) for m in _TOKEN_RE.finditer(text)]
@@ -562,6 +610,7 @@ class ChatRuntime:
                 verdicts=verdicts_bundle,
             )
             self.turn_log.append(stub_event)
+            self._emit_turn_event(stub_event)
         return ChatResponse(
             surface=response_surface,
             proposition=prop,
@@ -793,6 +842,7 @@ class ChatRuntime:
             verdicts=verdicts_bundle,
         )
         self.turn_log.append(turn_event)
+        self._emit_turn_event(turn_event)
         return ChatResponse(
             surface=response_surface,
             proposition=proposition,
