@@ -280,3 +280,8 @@ class TurnEvent:
     # Typed as ``object`` to avoid coupling identity.py to packs.*.
     safety_verdict: object = None
     ethics_verdict: object = None
+    # ADR-0039 — unified verdict bundle (TurnVerdicts).  Typed as
+    # ``object`` to avoid coupling identity.py to chat.verdicts.
+    # Carries refusal_emitted / hedge_injected remediation flags
+    # alongside the three verdict surfaces.
+    verdicts: object = None

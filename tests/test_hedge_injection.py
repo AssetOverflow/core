@@ -203,9 +203,10 @@ class TestRuntimeHedgeInjection:
             return  # nothing to inject in this pack
         # Hedge injection is a main-path-only affordance — the stub
         # path's unknown-domain marker is already a disclosure surface
-        # and is intentionally not hedge-prefixed.  Only assert when
-        # the main path was taken (turn_log populated).
-        if not rt.turn_log:
+        # and is intentionally not hedge-prefixed.  Detect stub path
+        # by walk_surface (ADR-0039 now emits stub TurnEvents too, so
+        # ``rt.turn_log`` is no longer a stub/main discriminator).
+        if resp.walk_surface == "I don't know — insufficient grounding for that yet.":
             return
         assert resp.surface.startswith(prefix)
 

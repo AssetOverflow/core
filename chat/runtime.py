@@ -16,6 +16,7 @@ from chat.refusal import (
     inject_hedge,
     should_inject_hedge,
 )
+from chat.verdicts import TurnVerdicts
 from core.config import DEFAULT_CONFIG, DEFAULT_IDENTITY_PACK, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField
 from core.physics.energy import EnergyProfile
@@ -253,6 +254,11 @@ class ChatResponse:
     # ``None`` only on stub/refusal paths that bypass the turn loop.
     safety_verdict: object = None
     ethics_verdict: object = None
+    # ADR-0039 — unified TurnVerdicts bundle carrying identity / safety
+    # / ethics verdicts and the two remediation flags
+    # (refusal_emitted, hedge_injected).  Typed as ``object`` to avoid
+    # coupling at module-resolution time; downcast at use site.
+    verdicts: object = None
 
 
 class ChatRuntime:
@@ -459,7 +465,12 @@ class ChatRuntime:
             axis_hedges=axis_hedges,
         )
 
-    def _stub_response(self, field_state: FieldState) -> ChatResponse:
+    def _stub_response(
+        self,
+        field_state: FieldState,
+        *,
+        tokens: tuple[str, ...] = (),
+    ) -> ChatResponse:
         zero = np.zeros(field_state.F.shape, dtype=np.float32)
         prop = Proposition(
             subject="",
@@ -510,11 +521,47 @@ class ChatRuntime:
         refusal_surface = build_refusal_surface(
             safety_verdict, ethics_verdict, self.ethics_pack,
         )
-        if refusal_surface is not None:
+        refusal_emitted = refusal_surface is not None
+        if refusal_emitted:
             response_surface = refusal_surface
             self._last_refusal_was_typed = True
         else:
             response_surface = _UNKNOWN_DOMAIN_SURFACE
+        # ADR-0038 — hedge injection does NOT run on the stub path
+        # (the unknown-domain marker is already a disclosure surface;
+        # prepending a hedge would be a confused double-disclosure).
+        # ``hedge_injected`` is therefore always False on stub paths.
+        verdicts_bundle = TurnVerdicts(
+            identity_score=None,
+            safety_verdict=safety_verdict,
+            ethics_verdict=ethics_verdict,
+            refusal_emitted=refusal_emitted,
+            hedge_injected=False,
+        )
+        # ADR-0039 — emit a TurnEvent on stub paths too so ``turn_log``
+        # covers the entire turn stream for audit consumers.  Only
+        # append when invoked from a real turn (``tokens`` is
+        # non-empty); defensive call sites that pass no tokens
+        # preserve the prior bypass-turn_log behavior.
+        if tokens:
+            stub_event = TurnEvent(
+                turn=max(self._context.turn - 1, 0),
+                input_tokens=tokens,
+                surface=response_surface,
+                walk_surface=_UNKNOWN_DOMAIN_SURFACE,
+                articulation_surface=_UNKNOWN_DOMAIN_SURFACE,
+                dialogue_role="assert",
+                identity_score=None,
+                cycle_cost_total=0.0,
+                vault_hits=0,
+                versor_condition=float(versor_condition(field_state.F)),
+                flagged=False,
+                elaboration=None,
+                safety_verdict=safety_verdict,
+                ethics_verdict=ethics_verdict,
+                verdicts=verdicts_bundle,
+            )
+            self.turn_log.append(stub_event)
         return ChatResponse(
             surface=response_surface,
             proposition=prop,
@@ -533,6 +580,7 @@ class ChatRuntime:
             flagged=False,
             safety_verdict=safety_verdict,
             ethics_verdict=ethics_verdict,
+            verdicts=verdicts_bundle,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -564,7 +612,7 @@ class ChatRuntime:
                 dialogue_role="assert",
                 metadata={"unknown": True, "unknown_source": gate_decision.source},
             )
-            return self._stub_response(committed)
+            return self._stub_response(committed, tokens=tuple(filtered))
 
         field_state = self._context.commit_ingest(filtered)
         field_state = self._apply_drive_bias(field_state)
@@ -697,7 +745,9 @@ class ChatRuntime:
         refusal_surface = build_refusal_surface(
             safety_verdict, ethics_verdict, self.ethics_pack,
         )
-        if refusal_surface is not None:
+        refusal_emitted = refusal_surface is not None
+        hedge_injected = False
+        if refusal_emitted:
             response_surface = refusal_surface
             self._last_refusal_was_typed = True
         else:
@@ -712,7 +762,19 @@ class ChatRuntime:
             # audit (same discipline as ADR-0036).
             if should_inject_hedge(ethics_verdict, self.ethics_pack):
                 hedge_prefix = build_hedge_prefix(self.identity_manifold)
+                before = response_surface
                 response_surface = inject_hedge(response_surface, hedge_prefix)
+                hedge_injected = response_surface != before
+        # ADR-0039 — unified TurnVerdicts bundle attached to both
+        # ChatResponse and TurnEvent.  Audit consumers read the bundle
+        # instead of correlating individual fields.
+        verdicts_bundle = TurnVerdicts(
+            identity_score=identity_score,
+            safety_verdict=safety_verdict,
+            ethics_verdict=ethics_verdict,
+            refusal_emitted=refusal_emitted,
+            hedge_injected=hedge_injected,
+        )
         turn_event = TurnEvent(
             turn=self._context.turn - 1,
             input_tokens=tuple(filtered),
@@ -728,6 +790,7 @@ class ChatRuntime:
             elaboration=sentence_plan.elaboration,
             safety_verdict=safety_verdict,
             ethics_verdict=ethics_verdict,
+            verdicts=verdicts_bundle,
         )
         self.turn_log.append(turn_event)
         return ChatResponse(
@@ -750,6 +813,7 @@ class ChatRuntime:
             region_was_unconstrained=result.region_was_unconstrained,
             safety_verdict=safety_verdict,
             ethics_verdict=ethics_verdict,
+            verdicts=verdicts_bundle,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:
