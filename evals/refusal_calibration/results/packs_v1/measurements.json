@@ -1,0 +1,27 @@
+{
+  "case_count": 13,
+  "in_grounding_count": 5,
+  "out_of_grounding_count": 8,
+  "pack_invariant_gate": true,
+  "packs": [
+    {
+      "fabrication_rate": 0.0,
+      "out_of_grounding_count": 8,
+      "pack_id": "default_general_v1",
+      "refusal_rate": 1.0
+    },
+    {
+      "fabrication_rate": 0.0,
+      "out_of_grounding_count": 8,
+      "pack_id": "precision_first_v1",
+      "refusal_rate": 1.0
+    },
+    {
+      "fabrication_rate": 0.0,
+      "out_of_grounding_count": 8,
+      "pack_id": "generosity_first_v1",
+      "refusal_rate": 1.0
+    }
+  ],
+  "schema_version": 1
+}

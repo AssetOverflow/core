@@ -1,0 +1,90 @@
+{
+  "claims_supported": {
+    "grounding_gate_pack_invariant": true,
+    "identity_load_bearing": true,
+    "no_fabrication_under_any_pack": true
+  },
+  "identity_divergence": {
+    "alignment_bands": [
+      0.2,
+      0.45,
+      0.6,
+      0.8,
+      0.95
+    ],
+    "case_count": 10,
+    "load_bearing": true,
+    "packs": [
+      {
+        "bare_rate": 0.6,
+        "case_count": 10,
+        "hedge_rate": 0.4,
+        "pack_id": "default_general_v1",
+        "qualifier_rate": 0.0,
+        "surface_count": 50
+      },
+      {
+        "bare_rate": 0.2,
+        "case_count": 10,
+        "hedge_rate": 0.6,
+        "pack_id": "precision_first_v1",
+        "qualifier_rate": 0.2,
+        "surface_count": 50
+      },
+      {
+        "bare_rate": 0.8,
+        "case_count": 10,
+        "hedge_rate": 0.2,
+        "pack_id": "generosity_first_v1",
+        "qualifier_rate": 0.0,
+        "surface_count": 50
+      }
+    ],
+    "pairwise_divergence": [
+      {
+        "distinct_rate": 0.8,
+        "pack_a": "default_general_v1",
+        "pack_b": "precision_first_v1"
+      },
+      {
+        "distinct_rate": 0.4,
+        "pack_a": "default_general_v1",
+        "pack_b": "generosity_first_v1"
+      },
+      {
+        "distinct_rate": 0.8,
+        "pack_a": "precision_first_v1",
+        "pack_b": "generosity_first_v1"
+      }
+    ],
+    "schema_version": 1
+  },
+  "refusal_calibration": {
+    "case_count": 13,
+    "in_grounding_count": 5,
+    "out_of_grounding_count": 8,
+    "pack_invariant_gate": true,
+    "packs": [
+      {
+        "fabrication_rate": 0.0,
+        "out_of_grounding_count": 8,
+        "pack_id": "default_general_v1",
+        "refusal_rate": 1.0
+      },
+      {
+        "fabrication_rate": 0.0,
+        "out_of_grounding_count": 8,
+        "pack_id": "precision_first_v1",
+        "refusal_rate": 1.0
+      },
+      {
+        "fabrication_rate": 0.0,
+        "out_of_grounding_count": 8,
+        "pack_id": "generosity_first_v1",
+        "refusal_rate": 1.0
+      }
+    ],
+    "schema_version": 1
+  },
+  "schema_version": 1
+}

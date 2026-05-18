@@ -52,6 +52,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0040](ADR-0040-telemetry-sink.md) | Structured-Logging Sink | Accepted (2026-05-17) |
 | [ADR-0041](ADR-0041-cli-verdicts-and-fanout.md) | `--show-verdicts` + FanOutSink | Accepted (2026-05-17) |
 | [ADR-0042](ADR-0042-audit-tour-demo.md) | Audit Tour Demo (`core demo audit-tour`) | Accepted (2026-05-17) |
+| [ADR-0043](ADR-0043-pack-measurements-phase2.md) | Phase-2 pack measurements — claims → numbers | Accepted (2026-05-17) |
 
 ---
 
@@ -105,9 +106,9 @@ contract, Margin contract, Rotor admissibility contract sections).
 
 ---
 
-## Pack-Layer chain — ADR-0027 through ADR-0042
+## Pack-Layer chain — ADR-0027 through ADR-0043
 
-ADR-0027 through ADR-0042 form the second coherent chain in the
+ADR-0027 through ADR-0043 form the second coherent chain in the
 project: a load-bearing three-tier pack architecture (identity /
 safety / ethics) with deterministic remediation, full-stream audit,
 machine-readable telemetry, an operator-facing CLI readout, and an
@@ -124,6 +125,7 @@ investor-facing walkthrough.  Read in order:
 | **Audit completeness** | ADR-0039 | `TurnVerdicts` bundle + stub-path `TurnEvent` emission + `refusal_emitted` / `hedge_injected` flags.  `rt.turn_log` covers every turn. |
 | **Machine + operator surfaces** | ADR-0040 / ADR-0041 | Structured JSONL sink with redact-by-default trust boundary; `FanOutSink` composer; `core chat --show-verdicts` operator readout. |
 | **Demo** | ADR-0042 | `core demo audit-tour` — four-scene investor-facing walkthrough; test-gated `all_claims_supported` flag. |
+| **Phase-2 measurements** | ADR-0043 | Pack-driven identity-divergence + refusal-calibration runners convert load-bearing claims into CI-enforced numbers across the three ratified packs; combined report at `evals/results/phase2_pack_measurements.json`. |
 
 Three sibling pack types compose into every runtime manifold:
 
