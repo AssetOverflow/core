@@ -1,6 +1,6 @@
 # ADR-0027: Identity Packs — Load-Bearing, Swappable, Ratified
 
-**Status:** Accepted (2026-05-17)
+**Status:** Accepted (2026-05-17) — Phases 1–6 complete; Phase 7 (this doc + the operational reference) complete; deep realizer wiring tracked as a follow-up ADR.
 **Author:** Joshua Shay + planner pass
 **Companion docs:** [`docs/identity_packs.md`](../identity_packs.md), [`docs/teaching_order.md`](../teaching_order.md), [`ADR-0010 IdentityManifold (implicit)`](#), [`ADR-0017-agency-scope.md`](ADR-0017-agency-scope.md), [`ADR-0021-epistemic-grade-policy.md`](ADR-0021-epistemic-grade-policy.md)
 
@@ -62,7 +62,7 @@ The architecturally correct fix is to make the identity manifold the contents of
 | **2. Author three v1 packs** | Author `default_general_v1.json`, `precision_first_v1.json`, `generosity_first_v1.json`. | Three JSON files committed; each loads cleanly through Phase-1 loader. |
 | **3. Replace hardcoded constructor** | `chat/runtime.py::_default_identity_manifold()` calls the loader using `core.config.DEFAULT_IDENTITY_PACK`. | All existing runtime / cognition / smoke tests still pass. |
 | **4. CLI flag** | Add `--identity <pack_id>` to `core pulse` (`scripts/run_pulse.py`) and `core chat` / `core trace`. Threaded into the runtime constructor. | `core pulse --identity precision_first_v1 "..."` runs without error; identity score reflects different axes. |
-| **5. Formation ratification** | Author one `SubjectSpec` per pack; render through `identity_anchor` template; compile, run, ratify; write companion `<pack_id>.mastery_report.json`. | All three packs ship with a verified self-sealed MasteryReport. |
+| **5. Formation ratification** ✅ | Author one `SubjectSpec` per pack; render through `identity_anchor` template; compile, run, ratify; write companion `<pack_id>.mastery_report.json`. Implemented as `scripts/ratify_identity_packs.py` (idempotent). | **Complete (2026-05-17).** All three v1 packs ship with a verified self-sealed MasteryReport: `default_general_v1` → `0b77357f…`, `precision_first_v1` → `5f5000db…`, `generosity_first_v1` → `91716117…`. Loader now defaults to production mode (`require_ratified=None`); chat runtime no longer passes `require_ratified=False`. |
 | **6. Tests** | Pack loader unit tests; round-trip default test (loaded pack ≡ previous hardcoded manifold); CLI smoke test (pulse runs under each pack); divergence smoke test (pulse outputs differ between default and precision_first on a known prompt — even if only via score). | All pass; full formation/cognition/smoke suites still pass. |
 | **7. Documentation** | `docs/identity_packs.md` reference; README §Identity Packs paragraph; `docs/teaching_order.md` Layer 1 cross-reference; memory file. | Documentation lands in the same PR. |
 

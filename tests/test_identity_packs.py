@@ -66,8 +66,17 @@ class TestLoaderHappyPath:
         packs = available_packs()
         ids = {p["pack_id"] for p in packs}
         assert {"default_general_v1", "precision_first_v1", "generosity_first_v1"} <= ids
-        for p in packs:
-            assert p["ratified"] is False  # v1 packs not yet ratified
+        # Phase 5 complete — v1 packs are ratified.
+        ratified_ids = {p["pack_id"] for p in packs if p["ratified"]}
+        assert {"default_general_v1", "precision_first_v1", "generosity_first_v1"} <= ratified_ids
+
+    def test_v1_packs_load_in_production_mode(self) -> None:
+        # require_ratified default (None) -> production unless env override.
+        for pid in (
+            "default_general_v1", "precision_first_v1", "generosity_first_v1",
+        ):
+            m = load_identity_manifold(pid)
+            assert len(m.value_axes) == 3
 
 
 # ---------- error paths ----------
@@ -86,12 +95,86 @@ class TestLoaderRejects:
                 "../../etc/passwd", require_ratified=False,
             )
 
-    def test_require_ratified_default(self, tmp_path: Path) -> None:
-        # default_general_v1 is unratified (empty mastery_report_sha256);
-        # require_ratified=True must refuse.
+    def test_unratified_pack_refused_in_production(self, tmp_path: Path) -> None:
+        # An unratified test pack (empty mastery_report_sha256) must be
+        # refused in production mode.
+        bad = _write_pack(
+            tmp_path,
+            value_axes=[{
+                "axis_id": "x", "name": "x",
+                "direction": [1.0, 0.0, 0.0], "weight": 1.0,
+            }],
+        )
         with pytest.raises(IdentityPackError, match="not ratified"):
             load_identity_manifold(
-                "default_general_v1", require_ratified=True,
+                bad["pack_id"], search_paths=[tmp_path], require_ratified=True,
+            )
+
+    def test_missing_companion_report_refused(
+        self, tmp_path: Path,
+    ) -> None:
+        bad = _write_pack(
+            tmp_path,
+            value_axes=[{
+                "axis_id": "x", "name": "x",
+                "direction": [1.0, 0.0, 0.0], "weight": 1.0,
+            }],
+            mastery_report_sha256="0" * 64,
+        )
+        with pytest.raises(IdentityPackError, match="companion report file"):
+            load_identity_manifold(
+                bad["pack_id"], search_paths=[tmp_path], require_ratified=True,
+            )
+
+    def test_companion_report_sha_mismatch_refused(
+        self, tmp_path: Path,
+    ) -> None:
+        # Pack claims one SHA; companion report carries a different one.
+        bad = _write_pack(
+            tmp_path,
+            value_axes=[{
+                "axis_id": "x", "name": "x",
+                "direction": [1.0, 0.0, 0.0], "weight": 1.0,
+            }],
+            mastery_report_sha256="a" * 64,
+        )
+        report_path = tmp_path / f"{bad['pack_id']}.mastery_report.json"
+        report_path.write_text(
+            json.dumps({"report_sha256": "b" * 64, "ratified": True}),
+            encoding="utf-8",
+        )
+        with pytest.raises(IdentityPackError, match="does not match"):
+            load_identity_manifold(
+                bad["pack_id"], search_paths=[tmp_path], require_ratified=True,
+            )
+
+    def test_companion_report_seal_failure_refused(
+        self, tmp_path: Path,
+    ) -> None:
+        # Companion report's claimed SHA does not actually self-seal.
+        bogus_sha = "c" * 64
+        bad = _write_pack(
+            tmp_path,
+            value_axes=[{
+                "axis_id": "x", "name": "x",
+                "direction": [1.0, 0.0, 0.0], "weight": 1.0,
+            }],
+            mastery_report_sha256=bogus_sha,
+        )
+        report_path = tmp_path / f"{bad['pack_id']}.mastery_report.json"
+        report_path.write_text(
+            json.dumps(
+                {
+                    "report_sha256": bogus_sha,
+                    "ratified": True,
+                    "other_field": "anything",
+                },
+            ),
+            encoding="utf-8",
+        )
+        with pytest.raises(IdentityPackError, match="self-seal"):
+            load_identity_manifold(
+                bad["pack_id"], search_paths=[tmp_path], require_ratified=True,
             )
 
     def test_malformed_direction(self, tmp_path: Path) -> None:
@@ -208,16 +291,59 @@ class TestPackSwap:
             assert "no_hot_path_repair" in m.boundary_ids
 
 
+# ---------- ratification script idempotency ----------
+
+
+class TestRatificationScript:
+    def test_script_idempotent(self) -> None:
+        """Re-running scripts/ratify_identity_packs.py must not change anything."""
+        import subprocess
+        import sys
+
+        repo_root = Path(__file__).resolve().parents[1]
+        before = {
+            pid: (repo_root / "packs" / "identity" / f"{pid}.json").read_text(
+                encoding="utf-8"
+            )
+            for pid in (
+                "default_general_v1", "precision_first_v1", "generosity_first_v1",
+            )
+        }
+        result = subprocess.run(
+            [sys.executable, "scripts/ratify_identity_packs.py"],
+            cwd=str(repo_root),
+            env={"PYTHONPATH": str(repo_root), "PATH": "/usr/bin:/bin"},
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert "ratified 0 pack(s); 3 already current" in result.stdout
+        after = {
+            pid: (repo_root / "packs" / "identity" / f"{pid}.json").read_text(
+                encoding="utf-8"
+            )
+            for pid in before
+        }
+        for pid, txt in before.items():
+            assert after[pid] == txt, f"pack {pid} changed during idempotent re-run"
+
+
 # ---------- helpers ----------
 
 
-def _write_pack(tmp_path: Path, *, value_axes: list, pack_id: str = "test_pack") -> dict:
+def _write_pack(
+    tmp_path: Path,
+    *,
+    value_axes: list,
+    pack_id: str = "test_pack",
+    mastery_report_sha256: str = "",
+) -> dict:
     body = {
         "pack_id": pack_id,
         "version": "1.0.0",
         "description": "test",
         "schema_version": "1.0.0",
-        "mastery_report_sha256": "",
+        "mastery_report_sha256": mastery_report_sha256,
         "alignment_threshold": 0.45,
         "boundary_ids": ["test_boundary"],
         "value_axes": value_axes,

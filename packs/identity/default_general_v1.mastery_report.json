@@ -1,0 +1,56 @@
+{
+  "course_id": "course.subject.identity.default_general_v1.identity_anchor.1.0.0",
+  "course_sha256": "e9372f6d4cac876cf5eab46dcd4b547fae1d9fe01d96e9370754c251a6bdf8c7",
+  "failure_reasons": [],
+  "gates": [
+    {
+      "measurement": "1.0",
+      "name": "G1_replay_determinism",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "1.0",
+      "name": "G3_adversarial_rejection_rate",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "n/a",
+      "name": "G4_legitimate_acceptance_rate",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "1.0",
+      "name": "G5_provenance_nonempty_rate",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "n/a",
+      "name": "G6_phase2_relation_coverage",
+      "passed": true,
+      "threshold": "1.0"
+    },
+    {
+      "measurement": "deferred:no_prior_courses",
+      "name": "G2_prior_course_regression",
+      "passed": true,
+      "threshold": "1.0"
+    }
+  ],
+  "issued_at": "2026-05-17T00:00:00Z",
+  "plan_sha256": "31c92f68bce9f725d1d69421e4a3c611928e1ef745b900f91655f09f0d766d74",
+  "ratified": true,
+  "report_sha256": "0b77357fe4359f161d7ca72f184b6e0db2f9e2de16b32c237a3b80d2bbb005b4",
+  "schema_version": "1.0.0",
+  "source_bundle_sha": "a954cdce25f86e681f6f51bed1a2196441d7a7dec4f0e69ecf84502664c938e0",
+  "trace_hashes": [
+    "trace:adversarial_probe:::::identity_override_axis_rewrite",
+    "trace:adversarial_probe:::::identity_override_policy_bypass",
+    "trace:adversarial_probe:::::identity_override_operator_injection",
+    "trace:replay_assertion:::::"
+  ],
+  "validated_set_sha": "32e83f9513004daa743180f00711dd47f841c782679596512fe519143a96b2e0"
+}

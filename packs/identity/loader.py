@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Iterable
 
 from core.physics.identity import IdentityManifold, ValueAxis
+from formation.hashing import verify_seal
 
 
 class IdentityPackError(ValueError):
@@ -74,7 +75,7 @@ def load_identity_manifold(
     pack_path = _find_pack(pack_id, paths)
     raw = _read_json(pack_path)
     _validate_envelope(raw, pack_id)
-    _validate_ratification(raw, pack_id, require_ratified)
+    _validate_ratification(raw, pack_id, require_ratified, pack_path)
     axes = _build_axes(raw["value_axes"], pack_id)
     threshold = _validate_threshold(raw["alignment_threshold"], pack_id)
     boundaries = frozenset(_validate_boundaries(raw["boundary_ids"], pack_id))
@@ -177,7 +178,7 @@ def _validate_envelope(raw: dict, pack_id: str) -> None:
 
 
 def _validate_ratification(
-    raw: dict, pack_id: str, require_ratified: bool | None,
+    raw: dict, pack_id: str, require_ratified: bool | None, pack_path: Path,
 ) -> None:
     if require_ratified is False:
         return
@@ -185,11 +186,44 @@ def _validate_ratification(
         require_ratified = os.environ.get("CORE_ALLOW_UNRATIFIED_IDENTITY") != "1"
     if not require_ratified:
         return
-    if not raw.get("mastery_report_sha256"):
+    declared_sha = raw.get("mastery_report_sha256", "")
+    if not declared_sha:
         raise IdentityPackError(
             f"pack {pack_id!r} is not ratified (mastery_report_sha256 empty); "
             "set CORE_ALLOW_UNRATIFIED_IDENTITY=1 for development, or "
-            "ratify the pack through the formation pipeline."
+            "ratify the pack through the formation pipeline "
+            "(scripts/ratify_identity_packs.py)."
+        )
+    report_path = pack_path.parent / f"{pack_id}.mastery_report.json"
+    if not report_path.is_file():
+        raise IdentityPackError(
+            f"pack {pack_id!r} declares mastery_report_sha256={declared_sha[:12]}"
+            f"... but companion report file {report_path.name!r} is missing"
+        )
+    try:
+        with report_path.open("r", encoding="utf-8") as f:
+            report = json.load(f)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise IdentityPackError(
+            f"pack {pack_id!r}: failed to read companion report: {exc}"
+        ) from exc
+    if not isinstance(report, dict):
+        raise IdentityPackError(
+            f"pack {pack_id!r}: companion report is not a JSON object"
+        )
+    if report.get("report_sha256") != declared_sha:
+        raise IdentityPackError(
+            f"pack {pack_id!r}: companion report SHA "
+            f"{str(report.get('report_sha256'))[:12]}... does not match pack's "
+            f"declared {declared_sha[:12]}..."
+        )
+    if not verify_seal(report, sha_field="report_sha256"):
+        raise IdentityPackError(
+            f"pack {pack_id!r}: companion report failed self-seal verification"
+        )
+    if not report.get("ratified", False):
+        raise IdentityPackError(
+            f"pack {pack_id!r}: companion report has ratified=False"
         )
 
 

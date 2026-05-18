@@ -204,9 +204,10 @@ class ChatRuntime:
         manifold = manifolds[0] if len(pack_ids) == 1 else load_mounted_packs(pack_ids)
         self._manifests = tuple(manifests)
         identity_pack_id = resolved_config.identity_pack or DEFAULT_IDENTITY_PACK
-        self.identity_manifold = load_identity_manifold(
-            identity_pack_id, require_ratified=False,
-        )
+        # ADR-0027 Phase 5 complete: v1 packs are ratified.  Loader defaults
+        # to production mode (require_ratified=None -> require unless
+        # CORE_ALLOW_UNRATIFIED_IDENTITY=1).
+        self.identity_manifold = load_identity_manifold(identity_pack_id)
         self.identity_pack_id = identity_pack_id
         # Keep the generic runtime neutral. Identity/persona motivation belongs
         # behind an explicit IdentityProfile contract, not the baseline chat path.

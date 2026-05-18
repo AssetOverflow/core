@@ -118,9 +118,11 @@ CORE_DEFAULT_IDENTITY_PACK=precision_first_v1 core pulse "..."
 
 | Pack id | Role | Notes |
 |---|---|---|
-| `default_general_v1` | Ship default. Balanced. | Encodes the *exact* three axes (`truthfulness`, `coherence`, `reverence`) previously hardcoded in `chat/runtime.py`. Behavioral no-op vs. pre-ADR runtime. |
-| `precision_first_v1` | Specialization example A. | Boosts `truthfulness` weight, narrows reverence direction. Source: `evals/identity_divergence/axes/axis_a.yaml` (semantics, not field-for-field). |
-| `generosity_first_v1` | Specialization example B. | Boosts `coherence` weight, broadens reverence direction. Source: `evals/identity_divergence/axes/axis_b.yaml`. |
+| `default_general_v1` | Ship default. Balanced. | Encodes the *exact* three axes (`truthfulness`, `coherence`, `reverence`) previously hardcoded in `chat/runtime.py`. Behavioral no-op vs. pre-ADR runtime. Ratified: `0b77357fe4359f161d7ca72f184b6e0db2f9e2de16b32c237a3b80d2bbb005b4`. |
+| `precision_first_v1` | Specialization example A. | Boosts `truthfulness` weight, narrows reverence direction. Source: `evals/identity_divergence/axes/axis_a.yaml` (semantics, not field-for-field). Ratified: `5f5000dba9a0dd19d831e9ab5d3c0e3b9faf6abdc2648940e96aa6263af3302e`. |
+| `generosity_first_v1` | Specialization example B. | Boosts `coherence` weight, broadens reverence direction. Source: `evals/identity_divergence/axes/axis_b.yaml`. Ratified: `91716117558113f74b2c6d07a804cb324f262d62b743523d901d1386a4f85ae4`. |
+
+Each ratified pack ships alongside a `<pack_id>.mastery_report.json` companion file. The loader, in production mode, verifies the companion's self-seal and cross-checks its `report_sha256` against the pack's `mastery_report_sha256`. To re-ratify after editing a pack's axes, run `python scripts/ratify_identity_packs.py` (idempotent — re-running on already-current packs is a no-op).
 
 ## Authoring a new identity pack (robotics / personalization / creative tools)
 

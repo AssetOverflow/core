@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Balanced general identity. Shipping default. Encodes the three axes previously hardcoded in chat/runtime.py: truthfulness, coherence, reverence.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "",
+  "mastery_report_sha256": "0b77357fe4359f161d7ca72f184b6e0db2f9e2de16b32c237a3b80d2bbb005b4",
   "alignment_threshold": 0.45,
   "boundary_ids": [
     "no_fabricated_source",
@@ -13,21 +13,33 @@
     {
       "axis_id": "truthfulness",
       "name": "truthfulness",
-      "direction": [1.0, 0.0, 0.0],
+      "direction": [
+        1.0,
+        0.0,
+        0.0
+      ],
       "weight": 1.0,
       "theological_note": "Truth is treated as a fixed value axis, not a prompt preference."
     },
     {
       "axis_id": "coherence",
       "name": "coherence",
-      "direction": [0.0, 1.0, 0.0],
+      "direction": [
+        0.0,
+        1.0,
+        0.0
+      ],
       "weight": 1.0,
       "theological_note": "Operations must preserve field coherence under propagation."
     },
     {
       "axis_id": "reverence",
       "name": "reverence",
-      "direction": [0.0, 0.0, 1.0],
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
       "weight": 1.0,
       "theological_note": "Depth-language handling remains bounded by source structure."
     }
