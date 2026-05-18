@@ -249,6 +249,32 @@ def _pytest_args_for_suite(suite: str, extra_args: Sequence[str]) -> list[str]:
     return [*paths, *forwarded]
 
 
+def _xdist_available() -> bool:
+    """Return True iff ``pytest-xdist`` is importable."""
+    try:
+        import xdist  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def _maybe_inject_xdist(forwarded: list[str], suite: str | None) -> list[str]:
+    """Inject ``-n auto`` for suites large enough to benefit from
+    parallelism.  ``--suite full`` always gets it (when xdist is
+    installed); curated suites stay single-process because they are
+    already small and the worker-spawn overhead is net-negative on
+    them.  Operators can override by passing ``-n <N>`` or
+    ``--no-parallel`` (here stripped) in ``args``."""
+    if not _xdist_available():
+        return forwarded
+    # Honour explicit operator override.
+    if any(a.startswith("-n") or a == "--dist" for a in forwarded):
+        return forwarded
+    if suite == "full":
+        return ["-n", "auto", *forwarded]
+    return forwarded
+
+
 def cmd_test(args: argparse.Namespace) -> int:
     """Run pytest through curated suite aliases or direct passthrough args."""
     default_args = ["-q", "--tb=short"]
@@ -262,6 +288,7 @@ def cmd_test(args: argparse.Namespace) -> int:
         forwarded = list(args.args or default_args)
         if forwarded and forwarded[0] == "--":
             forwarded = forwarded[1:]
+    forwarded = _maybe_inject_xdist(forwarded, args.suite)
     return _run(sys.executable, "-m", "pytest", *forwarded)
 
 
