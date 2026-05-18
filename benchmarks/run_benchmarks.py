@@ -316,6 +316,37 @@ def bench_realizer_coverage() -> BenchResult:
 # Runner
 # ---------------------------------------------------------------------------
 
+def bench_teaching_loop_determinism(runs: int = 10) -> BenchResult:
+    """Run propose → replay → accept N times; assert byte-identical artifacts.
+
+    This is the determinism benchmark for the *learning loop* itself
+    (ADR-0055..0057): per-fact provenance, replay-equivalence gate,
+    operator-gated corpus write — all replayable bit-identically.
+    The active corpus on disk is byte-identical pre/post.
+    """
+    from benchmarks.teaching_loop import run_teaching_loop_determinism
+
+    report = run_teaching_loop_determinism(runs=runs)
+    passed = report.deterministic and report.active_corpus_byte_identical
+    metric = 1.0 if passed else 0.0
+    detail = (
+        f"{report.runs} runs; unique(proposal_id)={report.unique_proposal_ids}, "
+        f"unique(baseline)={report.unique_replay_baselines}, "
+        f"unique(candidate)={report.unique_replay_candidates}, "
+        f"unique(chain_id)={report.unique_chain_ids}; "
+        f"mean={report.elapsed_mean_s:.3f}s p50={report.elapsed_p50_s:.3f}s "
+        f"p95={report.elapsed_p95_s:.3f}s; active_corpus_byte_eq="
+        f"{report.active_corpus_byte_identical}"
+    )
+    return BenchResult(
+        name="teaching_loop_determinism",
+        passed=passed,
+        metric=metric,
+        unit="byte_identity_ratio",
+        detail=detail,
+    )
+
+
 _SUITES: dict[str, list] = {
     "determinism": [bench_determinism],
     "latency": [bench_latency],
@@ -323,6 +354,7 @@ _SUITES: dict[str, list] = {
     "versor": [bench_versor_closure_audit],
     "convergence": [bench_convergence_proof],
     "realizer": [bench_realizer_coverage],
+    "teaching-loop": [bench_teaching_loop_determinism],
 }
 
 _ALL = [
@@ -348,6 +380,8 @@ def run_benchmarks(
 
     for func in funcs:
         if func is bench_determinism:
+            result = func(runs=runs)
+        elif func is bench_teaching_loop_determinism:
             result = func(runs=runs)
         else:
             result = func()

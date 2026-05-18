@@ -1777,7 +1777,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="run benchmark harness (determinism, latency, speedup, versor audit)",
         description="run benchmark harness",
     )
-    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer", "cost"],
+    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer", "cost", "teaching-loop"],
                        help="run a specific benchmark suite")
     bench.add_argument("--runs", type=int, default=20, metavar="N", help="run count for determinism benchmark (also turns count for cost suite)")
     bench.add_argument("--json", action="store_true", help="emit machine-readable JSON")
