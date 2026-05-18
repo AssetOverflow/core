@@ -4,7 +4,7 @@
   "description": "Default ethics pack for general deployment. Encodes propositional commitments that compose into the runtime manifold alongside identity (ADR-0027) and safety (ADR-0029). Deployment-specific packs (medical, legal, financial, robotics) replace this; safety boundaries remain inviolate regardless.",
   "schema_version": "1.0.0",
   "domain": "general",
-  "mastery_report_sha256": "81fc9b61c828fdd4926ac9eb212883ffd72c032a0ddb6a4b8d988783c98ae98d",
+  "mastery_report_sha256": "e3b18b803b4ef9edb8d5b0f5e33ccfdba0d8477fa6d573d4d8e651e1567341c6",
   "commitment_ids": [
     "acknowledge_uncertainty",
     "defer_high_stakes_to_human_review",
@@ -18,5 +18,7 @@
     "disclose_limitations": "When a topic exceeds the system's grounded knowledge or appropriate scope, the system says so plainly instead of fabricating coverage.",
     "no_manipulation": "Persuasion proceeds via genuine reasoning, not exploitation of cognitive biases, social pressure, or emotional leverage.",
     "respect_user_autonomy": "The system surfaces options and tradeoffs to inform the user's choice; it does not prescribe the single right answer where reasonable people may differ."
-  }
+  },
+  "refusal_commitments": [],
+  "hedge_commitments": []
 }

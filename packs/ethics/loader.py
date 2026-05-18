@@ -60,7 +60,14 @@ class EthicsPack:
 
     ``commitment_ids`` is the set of propositional pledges contributed
     to the runtime manifold's ``boundary_ids``.  ``domain`` declares the
-    deployment context (audit-only at v1; no behavior change yet).
+    deployment context.
+
+    ADR-0037 — ``refusal_commitments`` is the opt-in subset of
+    commitments that, when violated runtime-checkably, trigger typed
+    refusal at the runtime level (ADR-0036 surface).  The default pack
+    leaves this empty: ethics remains audit-only unless a deployment
+    explicitly opts a commitment in.  Must be a subset of
+    ``commitment_ids``.
     """
 
     pack_id: str
@@ -71,6 +78,8 @@ class EthicsPack:
     commitment_descriptions: dict[str, str]
     mastery_report_sha256: str
     ratified: bool
+    refusal_commitments: FrozenSet[str] = frozenset()
+    hedge_commitments: FrozenSet[str] = frozenset()
 
 
 def load_ethics_pack(
@@ -106,6 +115,25 @@ def load_ethics_pack(
         raw.get("commitment_descriptions", {}), pack_id, commitments,
     )
     domain = _validate_domain(raw.get("domain", "general"), pack_id)
+    refusal_commitments = _validate_opt_in_subset(
+        raw.get("refusal_commitments", []),
+        pack_id=pack_id,
+        commitments=commitments,
+        field_name="refusal_commitments",
+    )
+    hedge_commitments = _validate_opt_in_subset(
+        raw.get("hedge_commitments", []),
+        pack_id=pack_id,
+        commitments=commitments,
+        field_name="hedge_commitments",
+    )
+    overlap = set(refusal_commitments) & set(hedge_commitments)
+    if overlap:
+        raise EthicsPackError(
+            f"ethics pack {pack_id!r}: commitments cannot appear in both "
+            f"refusal_commitments and hedge_commitments: "
+            f"{sorted(overlap)}"
+        )
     return EthicsPack(
         pack_id=str(raw["pack_id"]),
         version=str(raw["version"]),
@@ -115,6 +143,8 @@ def load_ethics_pack(
         commitment_descriptions=descriptions,
         mastery_report_sha256=str(raw.get("mastery_report_sha256", "")),
         ratified=bool(raw.get("mastery_report_sha256")),
+        refusal_commitments=frozenset(refusal_commitments),
+        hedge_commitments=frozenset(hedge_commitments),
     )
 
 
@@ -310,6 +340,50 @@ def _validate_descriptions(
                 "must be a string"
             )
         out[c] = desc
+    return out
+
+
+def _validate_opt_in_subset(
+    value: object,
+    *,
+    pack_id: str,
+    commitments: list[str],
+    field_name: str,
+) -> list[str]:
+    """Validate an opt-in list of commitment ids.
+
+    ADR-0037 (``refusal_commitments``) and ADR-0038
+    (``hedge_commitments``) both encode opt-in subsets of
+    ``commitment_ids``.  An unknown or duplicate id is a load-time
+    error — silent typos would be catastrophic given the behavioral
+    consequences.
+    """
+    if value is None or value == []:
+        return []
+    if not isinstance(value, list):
+        raise EthicsPackError(
+            f"ethics pack {pack_id!r}: {field_name} must be a list"
+        )
+    seen: set[str] = set()
+    valid = set(commitments)
+    out: list[str] = []
+    for i, c in enumerate(value):
+        if not isinstance(c, str) or not c:
+            raise EthicsPackError(
+                f"ethics pack {pack_id!r}: {field_name}[{i}] must be a "
+                "non-empty string"
+            )
+        if c in seen:
+            raise EthicsPackError(
+                f"ethics pack {pack_id!r}: duplicate {field_name} entry {c!r}"
+            )
+        if c not in valid:
+            raise EthicsPackError(
+                f"ethics pack {pack_id!r}: {field_name} entry {c!r} is not "
+                "a declared commitment_id"
+            )
+        seen.add(c)
+        out.append(c)
     return out
 
 

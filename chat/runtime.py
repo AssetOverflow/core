@@ -10,7 +10,12 @@ from typing import List
 import numpy as np
 
 from algebra.versor import versor_condition
-from chat.refusal import build_refusal_surface
+from chat.refusal import (
+    build_hedge_prefix,
+    build_refusal_surface,
+    inject_hedge,
+    should_inject_hedge,
+)
 from core.config import DEFAULT_CONFIG, DEFAULT_IDENTITY_PACK, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField
 from core.physics.energy import EnergyProfile
@@ -502,7 +507,9 @@ class ChatRuntime:
         # a runtime-checkable safety boundary is violated even on the
         # ungrounded surface (e.g. versor-closure failure), replace the
         # user-facing ``surface`` with the deterministic typed refusal.
-        refusal_surface = build_refusal_surface(safety_verdict)
+        refusal_surface = build_refusal_surface(
+            safety_verdict, ethics_verdict, self.ethics_pack,
+        )
         if refusal_surface is not None:
             response_surface = refusal_surface
             self._last_refusal_was_typed = True
@@ -687,12 +694,25 @@ class ChatRuntime:
         # and ``articulation_surface`` retain the original token-walk /
         # realizer evidence for audit (per the runtime surface
         # contract in CLAUDE.md).  Ethics violations remain audit-only.
-        refusal_surface = build_refusal_surface(safety_verdict)
+        refusal_surface = build_refusal_surface(
+            safety_verdict, ethics_verdict, self.ethics_pack,
+        )
         if refusal_surface is not None:
             response_surface = refusal_surface
             self._last_refusal_was_typed = True
         else:
             response_surface = walk_surface
+            # ADR-0038 — hedge injection.  When an ethics commitment in
+            # ``ethics_pack.hedge_commitments`` fires runtime-checkable
+            # and the manifold has a hedge phrase configured, prepend
+            # the hedge to the user-facing surface.  Mutually exclusive
+            # with refusal at the pack-schema level; this branch only
+            # runs when refusal did not fire.  ``walk_surface`` and
+            # ``articulation_surface`` are preserved unchanged for
+            # audit (same discipline as ADR-0036).
+            if should_inject_hedge(ethics_verdict, self.ethics_pack):
+                hedge_prefix = build_hedge_prefix(self.identity_manifold)
+                response_surface = inject_hedge(response_surface, hedge_prefix)
         turn_event = TurnEvent(
             turn=self._context.turn - 1,
             input_tokens=tuple(filtered),
