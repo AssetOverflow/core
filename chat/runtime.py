@@ -10,6 +10,7 @@ from typing import List
 import numpy as np
 
 from algebra.versor import versor_condition
+from chat.refusal import build_refusal_surface
 from core.config import DEFAULT_CONFIG, DEFAULT_IDENTITY_PACK, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField
 from core.physics.energy import EnergyProfile
@@ -497,8 +498,18 @@ class ChatRuntime:
             disclosure_emitted=True,
         )
         ethics_verdict = self.ethics_check.check(ethics_ctx, self.ethics_pack)
+        # ADR-0036 — typed refusal also applies on the stub path.  When
+        # a runtime-checkable safety boundary is violated even on the
+        # ungrounded surface (e.g. versor-closure failure), replace the
+        # user-facing ``surface`` with the deterministic typed refusal.
+        refusal_surface = build_refusal_surface(safety_verdict)
+        if refusal_surface is not None:
+            response_surface = refusal_surface
+            self._last_refusal_was_typed = True
+        else:
+            response_surface = _UNKNOWN_DOMAIN_SURFACE
         return ChatResponse(
-            surface=_UNKNOWN_DOMAIN_SURFACE,
+            surface=response_surface,
             proposition=prop,
             articulation=art,
             articulation_surface=_UNKNOWN_DOMAIN_SURFACE,
@@ -670,10 +681,22 @@ class ChatRuntime:
             disclosure_emitted=not is_grounded,
         )
         ethics_verdict = self.ethics_check.check(ethics_ctx, self.ethics_pack)
+        # ADR-0036 — safety-only typed refusal.  A runtime-checkable
+        # SafetyVerdict violation replaces the user-facing ``surface``
+        # with a deterministic typed refusal string.  ``walk_surface``
+        # and ``articulation_surface`` retain the original token-walk /
+        # realizer evidence for audit (per the runtime surface
+        # contract in CLAUDE.md).  Ethics violations remain audit-only.
+        refusal_surface = build_refusal_surface(safety_verdict)
+        if refusal_surface is not None:
+            response_surface = refusal_surface
+            self._last_refusal_was_typed = True
+        else:
+            response_surface = walk_surface
         turn_event = TurnEvent(
             turn=self._context.turn - 1,
             input_tokens=tuple(filtered),
-            surface=surface,
+            surface=response_surface,
             walk_surface=walk_surface,
             articulation_surface=articulation.surface,
             dialogue_role=str(dialogue_role),
@@ -688,7 +711,7 @@ class ChatRuntime:
         )
         self.turn_log.append(turn_event)
         return ChatResponse(
-            surface=walk_surface,
+            surface=response_surface,
             proposition=proposition,
             articulation=articulation,
             articulation_surface=articulation.surface,
