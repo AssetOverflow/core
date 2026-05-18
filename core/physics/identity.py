@@ -275,3 +275,8 @@ class TurnEvent:
     versor_condition: float
     flagged: bool
     elaboration: Optional[str] = None
+    # ADR-0035 — verdicts from SafetyCheck and EthicsCheck at end-of-turn.
+    # Observational at v1: surfaced for audit; no behavioral effect.
+    # Typed as ``object`` to avoid coupling identity.py to packs.*.
+    safety_verdict: object = None
+    ethics_verdict: object = None

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+import hashlib
+import json
 import re
 from collections.abc import Sequence
 from typing import List
@@ -18,14 +20,14 @@ from core.physics.identity import (
     IdentityScore,
     TurnEvent,
 )
-from packs.ethics.check import EthicsCheck
+from packs.ethics.check import EthicsCheck, EthicsContext
 from packs.ethics.loader import (
     DEFAULT_ETHICS_PACK as _DEFAULT_ETHICS_PACK,
     EthicsPackError,
     load_ethics_pack,
 )
 from packs.identity.loader import load_identity_manifold
-from packs.safety.check import SafetyCheck
+from packs.safety.check import SafetyCheck, SafetyContext
 from packs.safety.loader import load_safety_pack
 from field.state import FieldState
 from generate.articulation import ArticulationPlan, realize
@@ -128,6 +130,80 @@ class _StubBindingFrame:
     cycle_index: int
 
 
+@dataclass(frozen=True, slots=True)
+class _FieldStateWithVersor:
+    """Adapter exposing ``versor_condition`` for SafetyContext.
+
+    ``FieldState`` itself does not carry a precomputed
+    ``versor_condition`` attribute; it is computed on demand from
+    ``versor_condition(state.F)``.  The SafetyCheck predicate for
+    ``preserve_versor_closure`` reads ``ctx.field_state.versor_condition``
+    via ``getattr``.  This adapter exposes the precomputed value so the
+    predicate is runtime-checkable each turn.
+    """
+
+    versor_condition: float
+
+
+def _hash_identity_manifold(manifold) -> str:
+    """Deterministic SHA-256 of the load-bearing identity-manifold fields.
+
+    ADR-0035 — feeds the ``no_identity_override`` predicate in
+    :class:`SafetyCheck`.  The runtime never mutates ``identity_manifold``
+    after composition, so before- and after-turn hashes are equal by
+    construction; an unequal hash would indicate the predicate's exact
+    failure mode.
+    """
+    payload = {
+        "value_axes": [
+            {
+                "axis_id": axis.axis_id,
+                "name": axis.name,
+                "direction": list(axis.direction),
+                "weight": axis.weight,
+            }
+            for axis in manifold.value_axes
+        ],
+        "boundary_ids": sorted(manifold.boundary_ids),
+        "alignment_threshold": manifold.alignment_threshold,
+    }
+    blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
+
+
+def _surface_contains_hedge(surface: str, manifold) -> bool:
+    """Detect whether the realized surface emitted a hedge phrase.
+
+    Compares case-insensitively against the manifold's preferred hedge
+    phrases (ADR-0028).  False when surface is empty.  Coarse but
+    deterministic: the predicate downstream is observational, so
+    occasional false negatives are surfaced as
+    ``acknowledge_uncertainty`` violations in audit and corrected by
+    refining hedge detection, not by silently passing.
+    """
+    if not surface:
+        return False
+    prefs = getattr(manifold, "surface_preferences", None)
+    if prefs is None:
+        return False
+    candidates: list[str] = []
+    for field_name in (
+        "preferred_hedge_strong",
+        "preferred_hedge_soft",
+        "preferred_qualifier",
+    ):
+        value = getattr(prefs, field_name, "")
+        if value:
+            candidates.append(value)
+    for _, hedge in getattr(prefs, "axis_hedges", ()) or ():
+        for sub in ("strong", "soft", "qualifier"):
+            value = getattr(hedge, sub, "")
+            if value:
+                candidates.append(value)
+    surface_fold = surface.casefold()
+    return any(c.casefold() in surface_fold for c in candidates if c)
+
+
 def _make_trajectory_from_result(result, turn: int):
     from core.physics.reasoning import TrajectoryOperator
 
@@ -167,6 +243,10 @@ class ChatResponse:
     # admissibility was checked this turn" (cold start, refusal, stub).
     admissibility_trace: tuple = ()
     region_was_unconstrained: bool = True
+    # ADR-0035 — verdicts surfaced from SafetyCheck and EthicsCheck.
+    # ``None`` only on stub/refusal paths that bypass the turn loop.
+    safety_verdict: object = None
+    ethics_verdict: object = None
 
 
 class ChatRuntime:
@@ -274,8 +354,17 @@ class ChatRuntime:
         # future ADR.
         self.safety_check = SafetyCheck()
         # ADR-0034 — structural ethics surface, sibling to SafetyCheck.
-        # Observational at v1; no auto-invocation in the turn loop.
         self.ethics_check = EthicsCheck()
+        # ADR-0035 — auto-invoke both checks at end-of-turn.  The
+        # manifold is constructed once and never mutated, so the
+        # pre-turn hash is a stable property of this runtime instance.
+        # ``last_refusal_was_typed`` defaults True (no untyped refusals
+        # observed); turn-loop bookkeeping flips this on typed-refusal
+        # paths so the predicate has live evidence.
+        self._identity_manifold_hash: str = _hash_identity_manifold(
+            self.identity_manifold,
+        )
+        self._last_refusal_was_typed: bool = True
         self.turn_log: List[TurnEvent] = []
         self._correction_pass = CorrectionPass()
         self._last_valence: float = 0.0
@@ -385,6 +474,29 @@ class ChatRuntime:
             output_language=self.config.output_language,
             frame_id="unknown_domain",
         )
+        # ADR-0035 — stub responses are exactly the ungrounded path that
+        # triggers ``disclose_limitations``.  Surfacing verdicts here
+        # keeps the audit contract uniform: every ChatResponse carries
+        # a SafetyVerdict and EthicsVerdict.
+        safety_ctx = SafetyContext(
+            field_state=_FieldStateWithVersor(
+                versor_condition=float(versor_condition(field_state.F)),
+            ),
+            last_refusal_was_typed=self._last_refusal_was_typed,
+            identity_manifold_hash_before=self._identity_manifold_hash,
+            identity_manifold_hash_after=_hash_identity_manifold(self.identity_manifold),
+        )
+        safety_verdict = self.safety_check.check(safety_ctx, self.safety_pack)
+        ethics_ctx = EthicsContext(
+            alignment_score=0.0,
+            hedge_threshold_soft=float(
+                self.identity_manifold.surface_preferences.hedge_threshold_soft
+            ),
+            hedge_emitted=False,
+            grounded_in_evidence=False,
+            disclosure_emitted=True,
+        )
+        ethics_verdict = self.ethics_check.check(ethics_ctx, self.ethics_pack)
         return ChatResponse(
             surface=_UNKNOWN_DOMAIN_SURFACE,
             proposition=prop,
@@ -401,6 +513,8 @@ class ChatRuntime:
             identity_score=None,
             character_profile=self.character_profile,
             flagged=False,
+            safety_verdict=safety_verdict,
+            ethics_verdict=ethics_verdict,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -531,6 +645,31 @@ class ChatRuntime:
         )
         walk_surface = sentence_plan.surface
         vault_hits = int(result.vault_hits)
+        # ADR-0035 — auto-invoke safety + ethics surfaces.  Observational
+        # at v1; verdicts are attached to TurnEvent and ChatResponse for
+        # audit but do not gate behavior.  Refusal/re-articulation
+        # wiring is a future ADR.
+        is_grounded = walk_surface != _UNKNOWN_DOMAIN_SURFACE
+        hedge_emitted = _surface_contains_hedge(walk_surface, self.identity_manifold)
+        safety_ctx = SafetyContext(
+            field_state=_FieldStateWithVersor(
+                versor_condition=float(versor_condition(result.final_state.F)),
+            ),
+            last_refusal_was_typed=self._last_refusal_was_typed,
+            identity_manifold_hash_before=self._identity_manifold_hash,
+            identity_manifold_hash_after=_hash_identity_manifold(self.identity_manifold),
+        )
+        safety_verdict = self.safety_check.check(safety_ctx, self.safety_pack)
+        ethics_ctx = EthicsContext(
+            alignment_score=float(getattr(identity_score, "alignment", 0.0)),
+            hedge_threshold_soft=float(
+                self.identity_manifold.surface_preferences.hedge_threshold_soft
+            ),
+            hedge_emitted=hedge_emitted,
+            grounded_in_evidence=is_grounded,
+            disclosure_emitted=not is_grounded,
+        )
+        ethics_verdict = self.ethics_check.check(ethics_ctx, self.ethics_pack)
         turn_event = TurnEvent(
             turn=self._context.turn - 1,
             input_tokens=tuple(filtered),
@@ -544,6 +683,8 @@ class ChatRuntime:
             versor_condition=versor_condition(result.final_state.F),
             flagged=flagged,
             elaboration=sentence_plan.elaboration,
+            safety_verdict=safety_verdict,
+            ethics_verdict=ethics_verdict,
         )
         self.turn_log.append(turn_event)
         return ChatResponse(
@@ -564,6 +705,8 @@ class ChatRuntime:
             flagged=flagged,
             admissibility_trace=result.admissibility_trace,
             region_was_unconstrained=result.region_was_unconstrained,
+            safety_verdict=safety_verdict,
+            ethics_verdict=ethics_verdict,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:
