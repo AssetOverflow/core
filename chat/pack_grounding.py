@@ -38,6 +38,12 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
+from chat.pack_resolver import (
+    DEFAULT_RESOLVABLE_PACK_IDS,
+    mounted_lemmas,
+    resolve_lemma,
+)
+
 PACK_ID: str = "en_core_cognition_v1"
 
 _PACK_LEXICON_PATH = (
@@ -77,44 +83,51 @@ def _pack_index() -> dict[str, tuple[str, ...]]:
     return out
 
 
-def pack_grounded_surface(lemma: str) -> str | None:
+def pack_grounded_surface(
+    lemma: str,
+    pack_ids: tuple[str, ...] = DEFAULT_RESOLVABLE_PACK_IDS,
+) -> str | None:
     """Return a deterministic pack-grounded surface for *lemma*, or ``None``.
 
     The surface format is fixed:
 
-        "{lemma} — pack-grounded ({pack_id}): {d1}; {d2}; {d3}. No session evidence yet."
+        "{lemma} — pack-grounded ({resolved_pack_id}): {d1}; {d2}; {d3}. No session evidence yet."
 
-    Only the lemma and up to three semantic_domains from the pack are
-    emitted; both come directly from the ratified pack lexicon, with no
-    rewording.  The trailing disclosure is the constant trust-boundary
-    label that distinguishes pack-grounded surfaces from vault-grounded
-    surfaces (which would carry session evidence) and from the universal
-    "insufficient grounding" disclosure (which carries neither).
+    ADR-0063 — *resolved_pack_id* is the pack in *pack_ids* whose lexicon
+    contained *lemma* (first-match-wins).  Cognition lemmas keep emitting
+    ``pack-grounded (en_core_cognition_v1)`` byte-identically; kinship
+    lemmas emit ``pack-grounded (en_core_relations_v1)``.
+
+    Only the lemma and up to three semantic_domains from the resolved
+    pack are emitted; both come directly from the ratified pack lexicon,
+    with no rewording.
 
     Returns ``None`` when:
       - the lemma is empty or not a string,
-      - the pack lexicon file is unavailable,
-      - the lemma is not present in the pack,
-      - the pack entry has no ``semantic_domains``.
+      - the lemma does not resolve in any of *pack_ids*.
     """
-    if not lemma or not isinstance(lemma, str):
+    resolved = resolve_lemma(lemma, pack_ids)
+    if resolved is None:
         return None
+    resolved_pack_id, domains = resolved
     key = lemma.strip().lower()
-    if not key:
-        return None
-    index = _pack_index()
-    domains = index.get(key)
-    if not domains:
-        return None
     head = "; ".join(domains[:3])
     return (
-        f"{key} — pack-grounded ({PACK_ID}): {head}. "
+        f"{key} — pack-grounded ({resolved_pack_id}): {head}. "
         f"No session evidence yet."
     )
 
 
 def is_pack_lemma(lemma: str) -> bool:
-    """Return True iff *lemma* has an entry with ``semantic_domains`` in the pack."""
+    """Return True iff *lemma* has an entry with ``semantic_domains`` in the
+    ratified cognition pack (``en_core_cognition_v1``).
+
+    Cognition-pack-specific helper retained for back-compat with the
+    cognition-corpus modules (discovery, contemplation, teaching
+    chains) whose semantics are scoped to the cognition pack.  For
+    cross-pack residency checks, use
+    :func:`chat.pack_resolver.is_resolvable`.
+    """
     if not lemma or not isinstance(lemma, str):
         return False
     return lemma.strip().lower() in _pack_index()
@@ -133,24 +146,27 @@ _CORRECTION_TOPIC_STOPWORDS: frozenset[str] = frozenset({
 
 
 def _extract_correction_topic_lemma(text: str) -> str | None:
-    """Return the first pack-resident, topical lemma in *text*, or None.
+    """Return the first mounted-pack-resident, topical lemma in *text*, or None.
 
     Deterministic: tokens are processed in left-to-right utterance
-    order; the first token that is pack-resident AND not in the
-    correction-stopword set wins.  Stopwords filter out the meta-
-    cognition lemma itself (``correction``) and dialogue fillers
+    order; the first token that is resident in any mounted pack AND not
+    in the correction-stopword set wins.  Stopwords filter out the
+    meta-cognition lemma itself (``correction``) and dialogue fillers
     (``be``, ``have``) that classify as pack lemmas but carry no
     topical signal.
 
-    Used by ``pack_grounded_correction_surface`` to weave the
+    ADR-0063 — residency is checked across all mounted lexicon packs
+    (see :data:`chat.pack_resolver.DEFAULT_RESOLVABLE_PACK_IDS`), so a
+    kinship correction (``"No, my parent disagrees"``) anchors the
+    acknowledgement on the kinship topic.
+
+    Used by :func:`pack_grounded_correction_surface` to weave the
     corrected claim's subject into the acknowledgement template.
     """
     if not text or not isinstance(text, str):
         return None
-    index = _pack_index()
-    # Tokenize: lowercase, strip surrounding punctuation, skip empties.
+    lemmas = mounted_lemmas()
     raw = text.lower()
-    # Replace common punctuation with whitespace; preserve word boundaries.
     for ch in ",.;:!?\"'()[]{}":
         raw = raw.replace(ch, " ")
     for token in raw.split():
@@ -158,7 +174,7 @@ def _extract_correction_topic_lemma(text: str) -> str | None:
             continue
         if token in _CORRECTION_TOPIC_STOPWORDS:
             continue
-        if token in index:
+        if token in lemmas:
             return token
     return None
 
@@ -208,7 +224,12 @@ def pack_grounded_correction_surface(text: str | None = None) -> str | None:
     head = "; ".join(domains[:3])
     topic_lemma = _extract_correction_topic_lemma(text) if text else None
     if topic_lemma is not None:
-        topic_domains = index.get(topic_lemma, ())
+        # ADR-0063 — topic_lemma may resolve in a non-cognition pack
+        # (e.g. ``parent`` in en_core_relations_v1).  Anchor pack stays
+        # cognition (``correction`` is a cognition lemma), topic domains
+        # come from whichever pack resolves the topic.
+        topic_resolved = resolve_lemma(topic_lemma)
+        topic_domains = topic_resolved[1] if topic_resolved is not None else ()
         topic_head = "; ".join(topic_domains[:2]) if topic_domains else ""
         if topic_head:
             return (
@@ -257,7 +278,7 @@ def _extract_procedure_topic_lemma(subject_text: str) -> str | None:
     """
     if not subject_text or not isinstance(subject_text, str):
         return None
-    index = _pack_index()
+    lemmas = mounted_lemmas()
     raw = subject_text.lower()
     for ch in ",.;:!?\"'()[]{}":
         raw = raw.replace(ch, " ")
@@ -267,7 +288,7 @@ def _extract_procedure_topic_lemma(subject_text: str) -> str | None:
             continue
         if token in _PROCEDURE_TOPIC_STOPWORDS:
             continue
-        if token in index:
+        if token in lemmas:
             last_match = token
     return last_match
 
@@ -304,13 +325,17 @@ def pack_grounded_procedure_surface(subject_text: str) -> str | None:
     lemma = _extract_procedure_topic_lemma(subject_text)
     if lemma is None:
         return None
-    index = _pack_index()
-    domains = index.get(lemma, ())
-    if not domains:
+    # ADR-0063 — resolve topic across all mounted lexicon packs.  The
+    # surface tag follows the resolving pack id so a kinship procedure
+    # (``"How do I trace my ancestor?"``) emits
+    # ``procedure-grounded (en_core_relations_v1)``.
+    resolved = resolve_lemma(lemma)
+    if resolved is None:
         return None
+    resolved_pack_id, domains = resolved
     head = "; ".join(domains[:2])
     return (
-        f"procedure-grounded ({PACK_ID}): {lemma} ({head}). "
+        f"procedure-grounded ({resolved_pack_id}): {lemma} ({head}). "
         f"Step-by-step guidance for {lemma} is not yet ratified in this session."
     )
 
@@ -350,14 +375,22 @@ def pack_grounded_comparison_surface(
         return None
     if key_a == key_b:
         return None
-    index = _pack_index()
-    domains_a = index.get(key_a)
-    domains_b = index.get(key_b)
-    if not domains_a or not domains_b:
+    resolved_a = resolve_lemma(key_a)
+    resolved_b = resolve_lemma(key_b)
+    if resolved_a is None or resolved_b is None:
         return None
+    pack_a, domains_a = resolved_a
+    pack_b, domains_b = resolved_b
     head_a = "; ".join(domains_a[:2])
     head_b = "; ".join(domains_b[:2])
+    # ADR-0063 — tag follows the resolving pack ids.  Cognition-only
+    # comparisons stay byte-identical (both sides resolve to cognition);
+    # cross-pack comparisons render the composite tag explicitly.
+    if pack_a == pack_b:
+        tag = f"pack-grounded ({pack_a})"
+    else:
+        tag = f"pack-grounded ({pack_a} × {pack_b})"
     return (
         f"{key_a} ({head_a}) contrasts with {key_b} ({head_b}) "
-        f"— pack-grounded ({PACK_ID}). No session evidence yet."
+        f"— {tag}. No session evidence yet."
     )

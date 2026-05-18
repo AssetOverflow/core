@@ -5,9 +5,15 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class RuntimeConfig:
+    # ADR-0063 — ``en_core_relations_v1`` (kinship starter pack) joins the
+    # default mount once the cross-pack surface resolver lands.  Pack
+    # composers in :mod:`chat.pack_grounding` now consult
+    # :mod:`chat.pack_resolver`, so kinship lemmas ground deterministically
+    # without a separate composer module.
     input_packs: tuple[str, ...] = (
         "en_minimal_v1",
         "en_core_cognition_v1",
+        "en_core_relations_v1",
         "he_logos_micro_v1",
         "grc_logos_micro_v1",
     )

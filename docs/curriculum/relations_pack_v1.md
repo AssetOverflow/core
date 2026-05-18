@@ -4,7 +4,7 @@
 **Author:** Shay
 **Pack ID:** `en_core_relations_v1`
 **Lemma count:** 8 (kinship-only; deliberately tight)
-**Status:** Ratified (checksum verified). **Not yet mounted** on the default runtime.
+**Status:** Ratified (checksum verified). **Mounted on the default runtime** as of ADR-0063 (`chat/pack_resolver.py`) — cross-pack surface composers ground kinship lemmas deterministically on the live path.
 
 ---
 
@@ -86,30 +86,37 @@ follow-up ADR — there is no `relations_chains_v1.jsonl` yet).
 
 ---
 
-## Engagement (opt-in only)
+## Engagement (default mount as of ADR-0063)
 
-The pack is **not** in the default `RuntimeConfig.input_packs`.
-Mounting it changes the runtime's mounted manifold (89 → 93
-lemmas in the cognition+relations combination). Until cross-pack
-teaching-grounded composition exists, mounting the relations
-pack would expose lemmas to vault recall and intent classification
-without a corresponding ratified surface composer for them. That
-asymmetry would silently lower the deterministic-grounding
-fraction of any kinship prompt.
+The pack is in the default `RuntimeConfig.input_packs` as of
+ADR-0063 (cross-pack surface resolver). Mounting changes the
+runtime's mounted manifold (cognition+relations combination) but the
+pack-grounded surface composers in `chat/pack_grounding.py` now
+consult `chat/pack_resolver.py` for cross-pack lemma residency — so
+kinship lemmas ground on the live path:
 
-To opt in for development:
+```
+> What is a parent?
+parent — pack-grounded (en_core_relations_v1): kinship.ascendant.direct;
+kinship.parent; biology.progenitor. No session evidence yet.
+```
+
+For development with the pack disabled, opt out:
 
 ```python
 from core.config import RuntimeConfig
 from chat.runtime import ChatRuntime
 
-cfg = RuntimeConfig(input_packs=RuntimeConfig().input_packs + ("en_core_relations_v1",))
+# Opt-out of the default mount (development only):
+defaults = RuntimeConfig().input_packs
+cfg = RuntimeConfig(
+    input_packs=tuple(p for p in defaults if p != "en_core_relations_v1")
+)
 rt = ChatRuntime(config=cfg)
 ```
 
-Programmatic mounting works today. CLI-level support
-(`core chat --pack en_core_relations_v1`) is already in place via
-the `--pack` flag (see `core chat --help`).
+For full production use, no override is needed — the pack is mounted by
+default and the cross-pack resolver finds kinship lemmas automatically.
 
 ---
 
@@ -138,13 +145,14 @@ data + a contract test. No runtime code path changed.
 
 ## Path forward (future ADRs in priority order)
 
-1. **Cross-pack teaching-grounded composition.**
-   `chat/pack_grounding.py` and `chat/teaching_grounding.py` are
-   currently hardcoded to `en_core_cognition_v1`. A
-   `pack_resolver` abstraction that picks the right pack(s) for a
-   given intent/subject is the natural unlock — composes the
-   relations pack into the live surface path without a separate
-   composer module.
+1. **Cross-pack teaching-grounded composition.** ✅ **Landed (ADR-0063).**
+   `chat/pack_resolver.py` provides `resolve_lemma(lemma, pack_ids) →
+   (resolving_pack_id, semantic_domains)`. Surface composers in
+   `chat/pack_grounding.py` consult the resolver; kinship lemmas
+   ground on the live path without a separate composer module.
+   `chat/teaching_grounding.py` still references the cognition-chains
+   corpus only — extending it to a relations-chains corpus is the
+   natural next ADR.
 
 2. **First kinship reviewed chains** — a
    `relations_chains_v1.jsonl` or extension of the cognition

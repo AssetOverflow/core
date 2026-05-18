@@ -5,18 +5,18 @@ Following the teaching-order doctrine
 domain expansion starts with kinship — a tight, well-bounded
 domain whose triples exercise every formation gate end-to-end.
 
-This pack is **not yet mounted** on the default runtime: it is
-not in ``RuntimeConfig.input_packs`` defaults. Operator opt-in via
-explicit ``RuntimeConfig(input_packs=(..., "en_core_relations_v1"))``
-is the engagement path until a follow-up ADR introduces cross-pack
-composition for teaching-grounded surfaces.
+As of ADR-0063 (cross-pack surface resolver), this pack IS in the
+default ``RuntimeConfig.input_packs``.  Pack-grounded surface
+composers in :mod:`chat.pack_grounding` consult
+:mod:`chat.pack_resolver` so kinship lemmas ground on the live path
+without a separate composer module.
 
 These tests pin:
 
   - The pack loads via ``load_pack("en_core_relations_v1")`` without
     a checksum mismatch (manifest.checksum matches the bytes on
     disk per CLAUDE.md's pack-discipline).
-  - The 9 kinship lemmas are all present.
+  - The 8 kinship lemmas are all present.
   - Each lemma carries the expected canonical semantic_domains
     (deterministic taxonomy under ``kinship.*``, ``lineage.*``,
     ``biology.*``, ``social.*``).
@@ -130,11 +130,15 @@ def test_no_lemma_collision_with_cognition_pack() -> None:
     )
 
 
-def test_pack_is_not_in_default_input_packs() -> None:
-    """Engagement is opt-in.  Adding the pack to the default
-    ``input_packs`` is a follow-up ADR scope: cross-pack teaching-
-    grounded composition does not exist yet, and silently mounting
-    the pack would change the runtime's recall surface without a
-    corresponding ratification path."""
+def test_pack_is_in_default_input_packs() -> None:
+    """ADR-0063 — once the cross-pack surface resolver landed, the
+    relations pack joined the default mount.  Pack composers in
+    :mod:`chat.pack_grounding` consult :mod:`chat.pack_resolver` for
+    cross-pack lemma residency, so mounting the pack no longer
+    silently widens recall without a corresponding surface composer
+    — the composer is now cross-pack by default.
+
+    Inverted from the original ADR-0063-pre guard
+    ``test_pack_is_not_in_default_input_packs``."""
     from core.config import RuntimeConfig
-    assert PACK_ID not in RuntimeConfig().input_packs
+    assert PACK_ID in RuntimeConfig().input_packs

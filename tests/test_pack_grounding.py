@@ -89,23 +89,29 @@ def test_cold_start_recall_returns_pack_grounded_surface() -> None:
 
 
 def test_cold_start_unknown_lemma_returns_universal_disclosure() -> None:
-    """When the gate fires AND the subject lemma is not in the pack,
-    we fall through to the universal disclosure unchanged."""
+    """When the gate fires AND no lemma in the utterance resolves in any
+    mounted pack, we fall through to the universal disclosure unchanged.
+
+    ADR-0061 + ADR-0063 — the PROCEDURE composer scans the subject
+    phrase for any mounted-pack lemma.  This test deliberately uses
+    a fully out-of-pack prompt so neither the cognition nor the
+    relations pack catches a topic anchor."""
     rt = ChatRuntime()
-    # 'addresses' is in vocab but subject after intent parsing will be
-    # the multi-word phrase, which won't match the pack lemma index.
-    resp = rt.chat("How can I correct an error?")
+    resp = rt.chat("How can I quoxulate the wxyzabc?")
     assert resp.surface == _UNKNOWN_DOMAIN_SURFACE
     assert resp.grounding_source == "none"
 
 
 def test_cold_start_non_definition_intent_no_pack_grounding() -> None:
-    """CAUSE / COMPARISON / VERIFICATION intents do not engage the
-    pack path even when their subject is a pack lemma — narrow scope
-    of ADR-0048 is DEFINITION + RECALL only."""
+    """CAUSE on a non-pack subject lemma does not engage the
+    pack-grounded DEFINITION path — pack-grounded surfaces require a
+    pack-resident lemma in any mounted lexicon (ADR-0048 + ADR-0063).
+
+    ADR-0052 teaching-grounded surfaces handle CAUSE on subjects that
+    appear in the reviewed cognition chains corpus; ``wxyzabc`` is in
+    neither the pack nor the corpus, so the universal disclosure fires."""
     rt = ChatRuntime()
-    # 'Why does light exist?' is CAUSE intent.
-    resp = rt.chat("Why does light exist?")
+    resp = rt.chat("Why does wxyzabc exist?")
     assert resp.grounding_source == "none"
     assert resp.surface == _UNKNOWN_DOMAIN_SURFACE
 
