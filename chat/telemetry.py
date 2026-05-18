@@ -120,6 +120,97 @@ def format_turn_event_jsonl(event, **kwargs) -> str:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
 
+# ---------- ADR-0059 — correction-event serializer ----------
+
+
+def serialize_correction_event(
+    correction_result,
+    *,
+    target_turn: int,
+    identity_pack_id: str = "",
+    safety_pack_id: str = "",
+    ethics_pack_id: str = "",
+    timestamp: str | None = None,
+) -> dict[str, object]:
+    """Produce a JSON-safe audit dict from a ``CorrectionResult``.
+
+    Distinct from a turn event: this records the *backward* update to
+    a session graph triggered by ``ChatRuntime.correct()``.  The
+    forward regen turn that follows still emits its own turn event;
+    this event documents the perturbation itself so audit consumers
+    can answer "which past turns moved, by how much, and toward what".
+
+    Trust boundary (per CLAUDE.md):
+
+    * **Metadata-only.**  Versor coordinates are NOT emitted — only
+      the L2-delta-norm-per-record and a SHA-256 digest of the
+      correction versor's float32 bytes (deterministic identifier).
+    * **No implicit wall-clock.**  ``timestamp`` is caller-provided.
+    * **Deterministic.**  Same ``CorrectionResult`` → byte-identical
+      serialized line.  ``records`` are traversed in their tuple
+      order (deterministic, matches insertion order from
+      ``CorrectionPass.apply``).
+    """
+    import hashlib
+    import math
+
+    records = getattr(correction_result, "records", ()) or ()
+    correction_versor = getattr(correction_result, "correction_versor", None)
+
+    # Per-record L2 deltas + the max across records.
+    deltas: list[float] = []
+    turn_idxs: list[int] = []
+    for r in records:
+        old_v = getattr(r, "old_versor", None)
+        new_v = getattr(r, "new_versor", None)
+        if old_v is None or new_v is None:
+            continue
+        # numpy.ndarray subtraction + norm; pure stdlib fallback would
+        # be slower but the runtime already imports numpy on this path.
+        import numpy as np
+        delta = float(np.linalg.norm(np.asarray(new_v) - np.asarray(old_v)))
+        if math.isfinite(delta):
+            deltas.append(delta)
+        turn_idxs.append(int(getattr(r, "turn_idx", 0)))
+
+    # SHA-256 digest of the correction versor's float32 bytes — gives
+    # a stable identifier for the perturbation without leaking
+    # coordinates.  Falls back to empty string when missing.
+    digest = ""
+    if correction_versor is not None:
+        import numpy as np
+        digest = hashlib.sha256(
+            np.asarray(correction_versor, dtype=np.float32).tobytes()
+        ).hexdigest()
+
+    out: dict[str, object] = {
+        "type": "correction",
+        "target_turn": int(target_turn),
+        "identity_pack_id": str(identity_pack_id),
+        "safety_pack_id": str(safety_pack_id),
+        "ethics_pack_id": str(ethics_pack_id),
+        "records_count": int(getattr(correction_result, "turns_affected", len(records))),
+        "turns_skipped": int(getattr(correction_result, "turns_skipped", 0)),
+        "turn_idxs_affected": sorted(turn_idxs),
+        "max_delta_norm": max(deltas) if deltas else 0.0,
+        "mean_delta_norm": (sum(deltas) / len(deltas)) if deltas else 0.0,
+        "correction_versor_digest": digest,
+    }
+    if timestamp is not None:
+        out["timestamp"] = str(timestamp)
+    return out
+
+
+def format_correction_event_jsonl(correction_result, **kwargs) -> str:
+    """Serialize a correction event as one deterministic JSONL line.
+
+    The ``"type": "correction"`` field discriminates this line from
+    turn events at consume time without changing the sink contract.
+    """
+    payload = serialize_correction_event(correction_result, **kwargs)
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+
+
 # ---------- sink protocol ----------
 
 
@@ -267,7 +358,9 @@ __all__ = [
     "JsonlBufferSink",
     "JsonlFileSink",
     "TurnEventSink",
+    "format_correction_event_jsonl",
     "format_turn_event_jsonl",
     "format_verdict_summary",
+    "serialize_correction_event",
     "serialize_turn_event",
 ]

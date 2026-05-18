@@ -68,6 +68,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0056](ADR-0056-contemplation-loop-c1.md) | Contemplation loop (Phase C1): question decomposition, polarity (affirms/falsifies/undetermined), claim_domain typing (factual/relational/evaluative), sync-only by design | **Accepted** (2026-05-18, implemented `4eecf73`) |
 | [ADR-0057](ADR-0057-teaching-chain-proposal-review.md) | Teaching-chain proposal + review + replay-equivalence gate (Phase C2): the only path to active-corpus extension; eligibility predicate; auto-reject on metric regression; operator accept/reject/withdraw; append-only proposal log | **Accepted** (2026-05-18) |
 | [ADR-0058](ADR-0058-forward-graph-constraint-status.md) | `forward_graph_constraint` remains opt-in default-`False`; no identity pack flips it on; ADR-0047 null-lift on cognition lane promoted to CI-enforced invariant (regression test); identity-pack→`RuntimeConfig` composition deferred until at least one such preference shows lift | **Accepted** (2026-05-18) |
+| [ADR-0059](ADR-0059-correction-pass-telemetry.md) | `ChatRuntime.correct()` emits a discriminated `"type": "correction"` JSONL event to the existing telemetry sink with `target_turn`, `records_count`, `turn_idxs_affected`, `max_delta_norm`, `mean_delta_norm`, SHA-256 correction-versor digest, pack ids — no raw versor coordinates; deterministic; no-op without sink | **Accepted** (2026-05-18) |
 
 ---
 

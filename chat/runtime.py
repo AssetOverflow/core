@@ -26,7 +26,11 @@ from chat.refusal import (
     inject_hedge,
     should_inject_hedge,
 )
-from chat.telemetry import TurnEventSink, format_turn_event_jsonl
+from chat.telemetry import (
+    TurnEventSink,
+    format_correction_event_jsonl,
+    format_turn_event_jsonl,
+)
 from chat.verdicts import TurnVerdicts
 from teaching.discovery import (
     extract_discovery_candidates,
@@ -1144,10 +1148,36 @@ class ChatRuntime:
             from_turn=target_turn,
         )
         self._context.apply_corrected_outputs(correction_result.records)
+        # ADR-0059 — emit a correction event before the regen turn so
+        # audit consumers can pair the backward perturbation with the
+        # forward turn event it produces.  No-op when no sink attached.
+        self._emit_correction_event(correction_result, target_turn=target_turn)
         regen_tokens = self._context.last_input_tokens
         if not regen_tokens:
             return self._stub_response(correction_state)
         return self.chat(" ".join(regen_tokens), max_tokens=max_tokens)
+
+    def _emit_correction_event(
+        self, correction_result, *, target_turn: int,
+    ) -> None:
+        """ADR-0059 — emit one JSONL correction event to the telemetry sink.
+
+        Mirrors ``_emit_turn_event``: no-op when no sink is attached;
+        sink errors are intentionally NOT swallowed so a misconfigured
+        durable sink surfaces loudly rather than silently dropping
+        audit evidence.
+        """
+        sink = self._telemetry_sink
+        if sink is None:
+            return
+        line = format_correction_event_jsonl(
+            correction_result,
+            target_turn=target_turn,
+            identity_pack_id=self.identity_pack_id,
+            safety_pack_id=getattr(self.safety_pack, "pack_id", ""),
+            ethics_pack_id=self.ethics_pack_id,
+        )
+        sink.emit(line)
 
     def respond(self, text: str, max_tokens: int | None = None) -> str:
         try:
