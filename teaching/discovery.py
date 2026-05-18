@@ -64,15 +64,68 @@ DiscoveryTrigger = Literal[
 ]
 
 
+# ADR-0056 Phase C1: typed claim domain for the contemplation loop.
+ClaimDomain = Literal["factual", "relational", "evaluative"]
+
+
+@dataclass(frozen=True, slots=True)
+class EvidencePointer:
+    """One unit of admissible evidence used by the contemplation loop.
+
+    Only three source families admit a pointer: reviewed teaching
+    corpus chains, ratified pack atoms, and vault entries stamped
+    ``EpistemicStatus.COHERENT``.  SPECULATIVE / CONTESTED / FALSIFIED
+    vault entries contest but do not contribute as evidence.
+    """
+
+    source: Literal["corpus", "pack", "vault_coherent"]
+    ref: str
+    polarity: Literal["affirms", "falsifies"]
+    epistemic_status: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "source": self.source,
+            "ref": self.ref,
+            "polarity": self.polarity,
+            "epistemic_status": self.epistemic_status,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SubQuestion:
+    """One decomposed sub-question + its outcome (ADR-0056 §SubQuestion).
+
+    ``outcome="gap_recorded"`` is the load-bearing case from Call 1
+    in ADR-0056: the sub-question could not be decomposed further so
+    the system records the gap and stops.
+    """
+
+    sub_id: str
+    proposed_subject: str
+    proposed_intent: str
+    outcome: Literal["grounded", "gap_recorded", "depth_failsafe"]
+    evidence: tuple[EvidencePointer, ...] = ()
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "sub_id": self.sub_id,
+            "proposed_subject": self.proposed_subject,
+            "proposed_intent": self.proposed_intent,
+            "outcome": self.outcome,
+            "evidence": [e.as_dict() for e in self.evidence],
+        }
+
+
 @dataclass(frozen=True, slots=True)
 class DiscoveryCandidate:
     """Structured evidence that a reviewed chain would have helped.
 
-    ``proposed_chain`` is *partial* by design: Phase B can only see
-    that a chain of a given ``(subject, intent)`` would have grounded
-    the turn — it cannot infer the connective or object.  Phase C's
-    ``TeachingChainProposal`` is the place where a complete proposed
-    entry is constructed and gated through review + replay.
+    Phase B emits the Phase-B fields only.  ADR-0056 Phase C1 adds
+    typed contemplation fields (``polarity``, ``claim_domain``,
+    ``evidence``, ``sub_questions``, ``contemplation_depth``,
+    ``recursion_overflow``).  Defaults make a freshly-emitted Phase B
+    candidate a trivially-valid un-contemplated C1 candidate.
     """
 
     candidate_id: str
@@ -82,9 +135,17 @@ class DiscoveryCandidate:
     pack_consistent: bool
     boundary_clean: bool
     review_state: Literal["unreviewed"] = "unreviewed"
+    # Phase C1 fields.  Defaults preserve byte-equality with Phase B
+    # ``as_dict`` output when the candidate has not been contemplated.
+    polarity: Literal["affirms", "falsifies", "undetermined"] = "undetermined"
+    claim_domain: ClaimDomain = "factual"
+    evidence: tuple[EvidencePointer, ...] = ()
+    sub_questions: tuple[SubQuestion, ...] = ()
+    contemplation_depth: int = 0
+    recursion_overflow: bool = False
 
     def as_dict(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "candidate_id": self.candidate_id,
             "proposed_chain": self.proposed_chain,
             "trigger": self.trigger,
@@ -93,6 +154,25 @@ class DiscoveryCandidate:
             "boundary_clean": self.boundary_clean,
             "review_state": self.review_state,
         }
+        # Phase C1 fields are emitted only when contemplation has
+        # produced non-default content.  This keeps a freshly-emitted
+        # Phase B candidate's JSONL line byte-identical to the pre-C1
+        # encoding.
+        if (
+            self.polarity != "undetermined"
+            or self.claim_domain != "factual"
+            or self.evidence
+            or self.sub_questions
+            or self.contemplation_depth != 0
+            or self.recursion_overflow
+        ):
+            out["polarity"] = self.polarity
+            out["claim_domain"] = self.claim_domain
+            out["evidence"] = [e.as_dict() for e in self.evidence]
+            out["sub_questions"] = [s.as_dict() for s in self.sub_questions]
+            out["contemplation_depth"] = self.contemplation_depth
+            out["recursion_overflow"] = self.recursion_overflow
+        return out
 
 
 _TEACHING_INTENT_NAME: dict[IntentTag, str] = {
@@ -225,8 +305,11 @@ def format_candidate_jsonl(candidate: DiscoveryCandidate) -> str:
 
 
 __all__ = [
+    "ClaimDomain",
     "DiscoveryCandidate",
     "DiscoveryTrigger",
+    "EvidencePointer",
+    "SubQuestion",
     "extract_discovery_candidates",
     "format_candidate_jsonl",
 ]
