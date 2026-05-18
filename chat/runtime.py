@@ -418,6 +418,13 @@ class ChatRuntime:
         # ``attach_discovery_sink``.  Candidates are *evidence*, never
         # mutate the corpus or runtime state.
         self._discovery_sink: DiscoveryCandidateSink | None = None
+        # ADR-0056 Phase C1 — opt-in contemplation pass that enriches
+        # each emitted DiscoveryCandidate with polarity / claim_domain /
+        # evidence / sub_questions before the sink writes the JSONL
+        # line.  Default False preserves prior behavior (Phase B raw
+        # candidates).  Toggling on does NOT mutate the corpus; the
+        # loop is read-only over pack + corpus + (optional) vault.
+        self._contemplate_discoveries: bool = False
         self._correction_pass = CorrectionPass()
         self._last_valence: float = 0.0
 
@@ -463,6 +470,22 @@ class ChatRuntime:
         """
         self._discovery_sink = sink
 
+    def attach_contemplation(self, *, enabled: bool = True) -> None:
+        """ADR-0056 Phase C1 — opt-in inline contemplation.
+
+        When enabled, each emitted ``DiscoveryCandidate`` is passed
+        through ``teaching.contemplation.contemplate`` before the
+        sink writes the JSONL line.  The sink therefore receives an
+        *enriched* candidate (polarity / claim_domain / evidence /
+        sub_questions populated) instead of the Phase B raw record.
+
+        Read-only over pack + corpus.  No corpus mutation, no clock-
+        time read, no LLM step.  Requires ``attach_discovery_sink``
+        to have been called first — without a sink there is nowhere
+        to emit, so contemplation would do hidden work.
+        """
+        self._contemplate_discoveries = bool(enabled)
+
     def _emit_discovery_candidates(
         self,
         *,
@@ -480,6 +503,12 @@ class ChatRuntime:
             intent_subject,
             grounding_source=grounding_source,
         )
+        if self._contemplate_discoveries and candidates:
+            # Local import — keeps the contemplation module out of
+            # the runtime hot-path import graph for callers that
+            # never opt in.
+            from teaching.contemplation import contemplate
+            candidates = tuple(contemplate(c) for c in candidates)
         for candidate in candidates:
             sink.emit(format_candidate_jsonl(candidate))
 
