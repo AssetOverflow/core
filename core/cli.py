@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -619,6 +619,41 @@ def cmd_teaching_review(args: argparse.Namespace) -> int:
             print(f"{args.proposal_id} withdrawn")
     except ProposalError as exc:
         _die(str(exc), code=1)
+    return 0
+
+
+def cmd_teaching_supersede(args: argparse.Namespace) -> int:
+    """ADR-0057 follow-up — retire an active corpus chain by appending
+    a new chain marked ``superseded_by``.
+
+    Distinct from accept-a-proposal (no replay gate; this is a direct
+    operator action).  Validates pack-consistency / intent / completeness
+    before the append, and rolls back the corpus byte-identically on any
+    post-audit failure.
+    """
+    from chat.teaching_grounding import _CORPUS_PATH
+    from teaching.supersede import SupersessionError, supersede_chain
+
+    try:
+        new_chain_id = supersede_chain(
+            old_chain_id=args.old_chain_id,
+            subject=args.subject,
+            intent=args.intent,
+            connective=args.connective,
+            object_=args.object,
+            review_date=args.review_date,
+            corpus_path=_CORPUS_PATH,
+            operator_note=args.note,
+            new_chain_id=args.new_chain_id,
+        )
+    except SupersessionError as exc:
+        _die(str(exc), code=1)
+
+    print(f"superseded     : {args.old_chain_id}")
+    print(f"new chain_id   : {new_chain_id}")
+    print(f"review_date    : {args.review_date}")
+    if args.note:
+        print(f"note           : {args.note}")
     return 0
 
 
@@ -1613,6 +1648,28 @@ def build_parser() -> argparse.ArgumentParser:
         "--log", default=None, help="proposal log path",
     )
     teaching_review.set_defaults(func=cmd_teaching_review)
+
+    teaching_supersede = teaching_sub.add_parser(
+        "supersede",
+        help="retire an active corpus chain by appending a replacement (operator action)",
+    )
+    teaching_supersede.add_argument(
+        "old_chain_id",
+        help="chain_id currently active in the corpus that this action retires",
+    )
+    teaching_supersede.add_argument("--subject", required=True)
+    teaching_supersede.add_argument("--intent", required=True)
+    teaching_supersede.add_argument("--connective", required=True)
+    teaching_supersede.add_argument("--object", required=True)
+    teaching_supersede.add_argument(
+        "--review-date", required=True, help="YYYY-MM-DD",
+    )
+    teaching_supersede.add_argument("--note", default="", help="operator note")
+    teaching_supersede.add_argument(
+        "--new-chain-id", default=None,
+        help="explicit new chain_id (default: <intent>_<subject>_<connective>_<object>)",
+    )
+    teaching_supersede.set_defaults(func=cmd_teaching_supersede)
 
     rust = subparsers.add_parser(
         "rust",

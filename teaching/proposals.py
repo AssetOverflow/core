@@ -323,14 +323,21 @@ def append_chain_to_corpus(
     corpus_path: Path,
     provenance: Provenance,
     chain_id: str | None = None,
+    superseded_by: str | None = None,
 ) -> str:
     """Append one reviewed chain JSON line to the active corpus.
 
     Returns the ``chain_id`` written.  Trust boundary: this is the
     ONLY function in the codebase that writes to the active teaching
-    corpus, and it is reachable only from
-    ``accept_proposal`` after the replay-equivalence gate and
-    operator review.
+    corpus, and it is reachable only from ``accept_proposal`` (after
+    the replay-equivalence gate + operator review) or from
+    ``teaching.supersede.supersede_chain`` (operator-driven retire
+    of an existing chain — see ADR-0057).
+
+    ``superseded_by`` records the ``chain_id`` of an earlier active
+    entry that this new entry retires.  The earlier entry stays on
+    disk; ``teaching.audit`` and ``chat.teaching_grounding`` both
+    honour the supersession at load time.
     """
     subject = str(chain["subject"]).strip().lower()
     intent = str(chain["intent"]).strip().lower()
@@ -338,7 +345,7 @@ def append_chain_to_corpus(
     obj = str(chain["object"]).strip().lower()
     if not chain_id:
         chain_id = f"{intent}_{subject}_{connective}_{obj}"
-    entry = {
+    entry: dict[str, Any] = {
         "chain_id": chain_id,
         "subject": subject,
         "intent": intent,
@@ -351,6 +358,8 @@ def append_chain_to_corpus(
             f"{provenance.review_date or ''}"
         ),
     }
+    if superseded_by:
+        entry["superseded_by"] = str(superseded_by).strip()
     line = json.dumps(entry, sort_keys=True, separators=(",", ":"))
     with corpus_path.open("a", encoding="utf-8") as fh:
         fh.write(line + "\n")
