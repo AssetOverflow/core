@@ -58,7 +58,7 @@ def test_extract_topic_lemma_skips_dialogue_fillers() -> None:
 
 
 def test_extract_topic_lemma_returns_none_when_no_pack_lemma() -> None:
-    assert _extract_correction_topic_lemma("No that is wrong") is None
+    assert _extract_correction_topic_lemma("Nope that is wrong") is None
     assert _extract_correction_topic_lemma("") is None
     assert _extract_correction_topic_lemma(None) is None  # type: ignore[arg-type]
 
@@ -104,7 +104,7 @@ def test_surface_with_no_topic_degrades_to_adr_0053_template() -> None:
     with no argument emits the ADR-0053 topic-less template
     byte-identically."""
     legacy = pack_grounded_correction_surface()
-    no_lemma = pack_grounded_correction_surface("No that is wrong")
+    no_lemma = pack_grounded_correction_surface("Nope that is wrong")
     assert legacy is not None
     assert legacy == no_lemma
     assert "Noted topic" not in legacy
@@ -157,7 +157,7 @@ def test_correction_with_no_pack_lemma_still_grounds() -> None:
     still receives the acknowledgement surface (degrades to the
     topic-less template), not the universal disclosure."""
     rt = ChatRuntime()
-    response = rt.chat("No that is wrong")
+    response = rt.chat("Nope that is wrong")
     assert response.grounding_source == "pack"
     assert "correction" in response.surface.lower()
     assert "Noted topic" not in response.surface
