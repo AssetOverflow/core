@@ -412,6 +412,13 @@ class ChatRuntime:
         )
         self._last_refusal_was_typed: bool = True
         self.turn_log: List[TurnEvent] = []
+        # P3.1 — session-thread state for downstream anaphora /
+        # NARRATIVE composers.  Bounded recency window of structured
+        # TurnSummary records.  Data layer only at P3.1 — no surface
+        # emission consults this until P3.2 (anaphora composer) opt-in
+        # flag flips on.
+        from chat.thread_context import ThreadContext
+        self.thread_context = ThreadContext()
         # ADR-0040 — opt-in structured-logging sink.  Default None
         # preserves prior behavior; callers attach via
         # ``attach_telemetry_sink``.  ``_telemetry_include_content``
@@ -511,6 +518,69 @@ class ChatRuntime:
         to emit, so contemplation would do hidden work.
         """
         self._contemplate_discoveries = bool(enabled)
+
+    def _push_thread_summary(
+        self,
+        *,
+        turn_event: TurnEvent,
+        intent_tag: Any,
+        intent_subject: str | None,
+        grounding_source: str | None,
+        surface: str | None = None,
+    ) -> None:
+        """P3.1 — append one :class:`TurnSummary` to the bounded
+        session-thread context.  Called at end-of-turn from both the
+        stub path (cold start / pack / teaching / OOV / partial)
+        and the walk path (vault).
+
+        For teaching-grounded turns the chain_id + corpus_id are
+        recovered from the most-recently-loaded aggregated chain
+        index (deterministic O(1) lookup since the index is lru-
+        cached).  For non-teaching turns those fields stay None.
+
+        Pure data layer: this method does NOT consult the surface,
+        does NOT mutate any composer state, and does NOT call any
+        LLM.  Push runs unconditionally — anaphora consumers are
+        opt-in elsewhere.
+        """
+        from chat.thread_context import TurnSummary
+
+        turn_index = len(self.turn_log) - 1  # turn_log was just appended
+        # Normalise the intent tag name; ``None`` (walk path) projects
+        # to the empty string so the recency lookup can still ignore
+        # mismatched intents without raising.
+        if intent_tag is not None and hasattr(intent_tag, "name"):
+            intent_name = str(intent_tag.name).lower()
+        else:
+            intent_name = ""
+        subject = (intent_subject or "").strip().lower()
+        source = (grounding_source or "none").lower()
+
+        # Recover chain_id + corpus_id for teaching-grounded turns so
+        # the anaphora composer can detect "same chain" vs "same
+        # subject, different chain".
+        chain_id: str | None = None
+        corpus_id: str | None = None
+        if source == "teaching" and subject and intent_name in {"cause", "verification"}:
+            from chat.teaching_grounding import _all_chains_index
+            chain = _all_chains_index().get((subject, intent_name))
+            if chain is not None:
+                chain_id = chain.chain_id
+                corpus_id = chain.corpus_id
+        # ``surface`` is accepted so future extensions can hash it,
+        # but P3.1 intentionally does not retain the text.
+        _ = surface
+
+        self.thread_context.push(
+            TurnSummary(
+                turn_index=turn_index,
+                intent_tag_name=intent_name,
+                subject=subject,
+                grounding_source=source,
+                chain_id=chain_id,
+                corpus_id=corpus_id,
+            )
+        )
 
     def _emit_oov_candidate(
         self,
@@ -752,6 +822,27 @@ class ChatRuntime:
         # corpus is reviewed memory; every emitted atom is either a
         # lemma, a verbatim pack semantic_domains string, or a fixed
         # connective from humanize_predicate.
+        # P3.3 — NARRATIVE: "Tell me about X" / "Describe X".
+        # Multi-clause composer aggregates every reviewed chain
+        # rooted on X across all registered teaching corpora.
+        if intent.tag is IntentTag.NARRATIVE:
+            lemma = (intent.subject or "").strip()
+            if lemma:
+                from chat.narrative_surface import narrative_grounded_surface
+                surface = narrative_grounded_surface(lemma)
+                if surface is not None:
+                    return (surface, "teaching")
+        # P3.4 — EXAMPLE: "Give me an example of X".  Reverse-chain
+        # composer surfaces chains where X is the OBJECT.  Same
+        # aggregated corpus index as NARRATIVE; inverts the access
+        # pattern.
+        if intent.tag is IntentTag.EXAMPLE:
+            lemma = (intent.subject or "").strip()
+            if lemma:
+                from chat.example_surface import example_grounded_surface
+                surface = example_grounded_surface(lemma)
+                if surface is not None:
+                    return (surface, "teaching")
         if intent.tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
             lemma = (intent.subject or "").strip()
             if lemma:
@@ -892,6 +983,27 @@ class ChatRuntime:
             # replaces the universal "insufficient grounding" disclosure
             # when no refusal applies.
             response_surface = pack_grounded_surface
+            # P3.2 — opt-in thread anaphora prefix.  Engages only when
+            # the current turn AND a recent turn (same subject) are
+            # both pack/teaching grounded.  Default-off so pre-P3.2
+            # surfaces stay byte-identical; turning it on prepends a
+            # deterministic backreference referencing the prior turn
+            # by turn-index + chain_id (no prose generation).
+            if (
+                self.config.thread_anaphora
+                and grounded_source_tag in {"pack", "teaching"}
+                and discovery_intent_subject
+                and discovery_intent_tag is not None
+            ):
+                from chat.anaphora import thread_anaphora_prefix
+                prefix = thread_anaphora_prefix(
+                    self.thread_context,
+                    discovery_intent_subject,
+                    discovery_intent_tag.name.lower(),
+                    grounded_source_tag,
+                )
+                if prefix is not None:
+                    response_surface = prefix + response_surface
         else:
             response_surface = _UNKNOWN_DOMAIN_SURFACE
         # ADR-0048 — grounding provenance recorded for both ChatResponse
@@ -961,6 +1073,15 @@ class ChatRuntime:
                         intent_tag=discovery_intent_tag,
                         token=discovery_intent_subject,
                     )
+            # P3.1 — push session-thread summary.  Data layer only;
+            # downstream composers (P3.2 anaphora) consult this.
+            self._push_thread_summary(
+                turn_event=stub_event,
+                intent_tag=discovery_intent_tag,
+                intent_subject=discovery_intent_subject,
+                grounding_source=grounding_source,
+                surface=response_surface,
+            )
         return ChatResponse(
             surface=response_surface,
             proposition=prop,
@@ -1039,14 +1160,15 @@ class ChatRuntime:
             # no sink is attached.
             discovery_intent_tag = None
             discovery_intent_subject: str | None = None
-            # Classify intent up-front when EITHER the discovery sink
-            # OR the OOV sink is attached (P2.3) — both downstream
-            # emission paths need it.  Without either sink attached
-            # this is a no-op, so behaviour stays identical to the
-            # pre-Phase-2 path.
+            # Classify intent up-front whenever the gate fired on an
+            # empty vault.  P2.3 needs it for OOV sink emission,
+            # ADR-0055 Phase B needs it for discovery sink emission,
+            # and P3.1 needs it for session-thread context — the
+            # classifier is cheap and deterministic, so always run
+            # it on the cold-start English path.  Sinks themselves
+            # remain opt-in (no-op without ``attach_*_sink``).
             if (
-                (self._discovery_sink is not None or self._oov_sink is not None)
-                and gate_decision.source == "empty_vault"
+                gate_decision.source == "empty_vault"
                 and self.config.output_language == "en"
             ):
                 from generate.intent_bridge import classify_intent_from_input
@@ -1258,6 +1380,16 @@ class ChatRuntime:
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
+        # P3.1 — push session-thread summary for the walk path.
+        # Subject is taken from the articulation (deterministic;
+        # matches what the surface foregrounded).
+        self._push_thread_summary(
+            turn_event=turn_event,
+            intent_tag=None,
+            intent_subject=articulation.subject,
+            grounding_source="vault",
+            surface=response_surface,
+        )
         return ChatResponse(
             surface=response_surface,
             proposition=proposition,

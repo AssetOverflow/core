@@ -65,6 +65,15 @@ class RuntimeConfig:
     # depth (max one follow-up chain in v1).
     composed_surface: bool = False
 
+    # ADR-0066 / P3.2 — opt-in thread anaphora.  When enabled, the
+    # runtime prepends a deterministic backreference to a recent
+    # grounded turn when the current turn's subject lemma matches
+    # one in the bounded session-thread context.  Engages only on
+    # pack/teaching-tier turns (both prior and current); weaker
+    # tiers do not anchor.  Default False preserves every pre-P3.2
+    # surface byte-identically.
+    thread_anaphora: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"
