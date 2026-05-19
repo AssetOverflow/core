@@ -135,11 +135,104 @@ def mounted_lemmas(
     return frozenset(out)
 
 
+@lru_cache(maxsize=16)
+def _pack_glosses_for(pack_id: str) -> dict[str, tuple[str, str]]:
+    """Return ``{lemma_lower: (pos, gloss)}`` from the pack's optional
+    ``glosses.jsonl`` companion file.
+
+    Returns an empty dict when the pack ships no glosses (back-compat
+    with the original ratified packs).  Glosses are an additive overlay
+    on top of the immutable, checksum-sealed ``lexicon.jsonl`` — they
+    intentionally live in a separate file so adding a gloss never
+    perturbs the lexicon checksum.
+
+    Each line of ``glosses.jsonl`` must be a JSON object with at least
+    ``lemma`` and ``gloss`` fields; ``pos`` (string) is optional and
+    drives the natural-language sentence frame in
+    :func:`chat.pack_grounding.pack_grounded_surface`.  Lines without
+    a non-empty ``lemma`` or ``gloss`` are silently skipped — never
+    fabricated.  Malformed JSON lines are also skipped (defensive
+    parsing — a single bad line never breaks gloss resolution for the
+    rest of the pack).
+    """
+    path = _PACK_ROOT / pack_id / "glosses.jsonl"
+    if not path.exists():
+        return {}
+    out: dict[str, tuple[str, str]] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(entry, dict):
+            continue
+        lemma = entry.get("lemma")
+        gloss = entry.get("gloss")
+        if not isinstance(lemma, str) or not lemma.strip():
+            continue
+        if not isinstance(gloss, str) or not gloss.strip():
+            continue
+        pos_raw = entry.get("pos")
+        pos = pos_raw if isinstance(pos_raw, str) else ""
+        out[lemma.strip().lower()] = (pos, gloss.strip())
+    return out
+
+
+def resolve_gloss(
+    lemma: str,
+    pack_ids: tuple[str, ...] = DEFAULT_RESOLVABLE_PACK_IDS,
+) -> tuple[str, str, str] | None:
+    """Return ``(pack_id, pos, gloss)`` for the first pack in
+    *pack_ids* that BOTH (a) ratifies *lemma* in its ``lexicon.jsonl``
+    AND (b) carries a gloss for it in ``glosses.jsonl``.
+
+    First-match-wins on collision, matching :func:`resolve_lemma`'s
+    resolution order — so a lemma's lexicon resolution and gloss
+    resolution always agree on the resolving pack.
+
+    The lexicon-residency requirement is load-bearing trust-boundary
+    discipline (2026-05-19 design review).  Without it, ``glosses.jsonl``
+    would become a parallel surface-authoring channel that bypasses the
+    checksum-sealed lexicon: someone could ship a gloss for a lemma the
+    pack has never ratified, and the runtime would emit that gloss as
+    if it were pack content.  This function rejects any (lemma, pack)
+    pair where the lemma is not present in the pack's lexicon, even if
+    a gloss exists for it.
+    """
+    if not lemma or not isinstance(lemma, str):
+        return None
+    key = lemma.strip().lower()
+    if not key:
+        return None
+    for pack_id in pack_ids:
+        lex = _pack_lexicon_for(pack_id)
+        if key not in lex:
+            # Lemma not ratified in this pack's lexicon — refuse to
+            # surface any gloss this pack might carry for it.
+            continue
+        glosses = _pack_glosses_for(pack_id)
+        entry = glosses.get(key)
+        if entry is not None:
+            pos, gloss = entry
+            return (pack_id, pos, gloss)
+    return None
+
+
 def clear_resolver_cache() -> None:
-    """Drop the lru_cache for :func:`_pack_lexicon_for`.
+    """Drop all caches in this module — lexicon AND glosses.
 
     Test-only escape hatch: enables fixture-based pack mutation
     scenarios.  Production code never calls this — ratified packs are
     immutable.
+
+    Both ``_pack_lexicon_for`` and ``_pack_glosses_for`` are
+    ``functools.lru_cache``-wrapped, so the test must clear BOTH or a
+    fixture that adds glosses on disk would be invisible to subsequent
+    ``resolve_gloss`` calls in the same test process.  Prior versions
+    cleared only the lexicon cache.
     """
     _pack_lexicon_for.cache_clear()
+    _pack_glosses_for.cache_clear()

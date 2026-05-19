@@ -417,6 +417,27 @@ def _load_pack_cached(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold
     if checksum != manifest_payload["checksum"]:
         raise ValueError(f"Checksum mismatch for {pack_id}: {checksum} != {manifest_payload['checksum']}")
 
+    # Optional glosses.jsonl dual-checksum.  Glosses are an additive
+    # overlay on the immutable lexicon — present packs may carry a
+    # ``glosses_checksum`` field in the manifest that pins the
+    # bytes-on-disk of glosses.jsonl.  Verified the same way as the
+    # lexicon checksum; missing field on packs without glosses is the
+    # default-back-compat path.
+    expected_glosses_checksum = manifest_payload.get("glosses_checksum")
+    glosses_path = pack_dir / "glosses.jsonl"
+    if expected_glosses_checksum is not None:
+        if not glosses_path.exists():
+            raise ValueError(
+                f"Manifest for {pack_id} declares glosses_checksum but "
+                f"glosses.jsonl is missing at {glosses_path}"
+            )
+        actual = hashlib.sha256(glosses_path.read_bytes()).hexdigest()
+        if actual != expected_glosses_checksum:
+            raise ValueError(
+                f"Glosses checksum mismatch for {pack_id}: "
+                f"{actual} != {expected_glosses_checksum}"
+            )
+
     entries = load_pack_entries(pack_id)
     morphology_registry = None
     if any(entry.morphology_id for entry in entries):
@@ -435,6 +456,7 @@ def _load_pack_cached(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold
         version=manifest_payload.get("version", "1.0.0"),
         gate_engaged=manifest_payload.get("gate_engaged", False),
         oov_policy=OOVPolicy(manifest_payload.get("oov_policy", OOVPolicy.FAIL_CLOSED.value)),
+        glosses_checksum=manifest_payload.get("glosses_checksum"),
     )
 
     home_manifold, home_id_map = compile_entries_to_manifold(entries, morphology_registry=morphology_registry)

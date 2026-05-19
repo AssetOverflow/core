@@ -49,6 +49,13 @@ class LanguagePackManifest:
     version: str = "1.0.0"
     gate_engaged: bool = False
     oov_policy: OOVPolicy = OOVPolicy.FAIL_CLOSED
+    # Optional dual-checksum for the companion ``glosses.jsonl`` file.
+    # When present, the loader verifies the bytes-on-disk match this
+    # SHA-256 just like the lexicon checksum.  Absent on legacy packs
+    # that ship no glosses (back-compat — never raised in that case).
+    # Glosses are an additive overlay; bumping ``glosses_checksum`` does
+    # NOT perturb the immutable ``checksum`` (lexicon seal).
+    glosses_checksum: str | None = None
 
     def __post_init__(self) -> None:
         if not self.pack_id:
