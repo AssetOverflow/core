@@ -704,6 +704,51 @@ class ChatRuntime:
                 return (oov_surface, "oov")
         return None
 
+    def _maybe_apply_discourse_planner(
+        self, text: str, source_tag: str
+    ) -> str | None:
+        """Build and render a :class:`DiscoursePlan` for *text*.
+
+        Returns the rendered multi-clause surface when the planner
+        engages and produces more than one move, else ``None``.  Callers
+        own surface assignment — this helper neither reads nor writes
+        any caller-visible state besides loading the grounding bundle.
+
+        Gating discipline (must match both cold-start and warm hooks):
+
+        * Returns ``None`` unless ``self.config.discourse_planner`` is True.
+        * Returns ``None`` unless *source_tag* is one of ``pack`` or
+          ``teaching``.  Vault / none / oov / empty paths are not
+          replaced — the discovery-signal disclosure and the existing
+          vault-grounded walk surfaces stay intact.
+        * Returns ``None`` when the classified intent carries no
+          subject (no head noun ⇒ no grounding bundle to plan over).
+        * Returns ``None`` when the resulting plan has ≤ 1 move (BRIEF
+          mode or empty bundle) — render in that case would just
+          duplicate the existing single-sentence pack-grounded surface.
+        * Returns ``None`` when the renderer produces an empty string.
+        """
+
+        if not self.config.discourse_planner:
+            return None
+        if source_tag not in {"pack", "teaching"}:
+            return None
+        from generate.discourse_planner import plan_discourse, render_plan
+        from generate.grounding_accessors import grounding_bundle_for
+        from generate.intent import classify_response_mode
+        from generate.intent_bridge import classify_intent_from_input
+
+        intent = classify_intent_from_input(text)
+        if not intent.subject:
+            return None
+        mode = classify_response_mode(text)
+        bundle = grounding_bundle_for(intent.subject)
+        plan = plan_discourse(intent, mode, bundle)
+        if len(plan.moves) <= 1:
+            return None
+        rendered = render_plan(plan)
+        return rendered or None
+
     def _stub_response(
         self,
         field_state: FieldState,
@@ -879,41 +924,11 @@ class ChatRuntime:
                 pack_source_tag = "none"
             else:
                 pack_surface, pack_source_tag = pack_result
-                # Option 2 — engage discourse planner on the cold
-                # pack/teaching-grounded path so one-shot prompts (no
-                # priming) can produce multi-clause output when the
-                # planner has substrate.  Same gating discipline as
-                # the warm hook: only fires when grounding source is
-                # pack or teaching, and only replaces the surface
-                # when the plan has more than one move.  BRIEF mode
-                # collapses to a single ANCHOR move and renders to a
-                # surface byte-equivalent to the existing composer,
-                # so the flag-off path is unaffected.
-                if (
-                    self.config.discourse_planner
-                    and pack_source_tag in {"pack", "teaching"}
-                ):
-                    from generate.discourse_planner import (
-                        plan_discourse,
-                        render_plan,
-                    )
-                    from generate.grounding_accessors import (
-                        grounding_bundle_for,
-                    )
-                    from generate.intent import classify_response_mode
-                    from generate.intent_bridge import (
-                        classify_intent_from_input,
-                    )
-
-                    _cintent = classify_intent_from_input(text)
-                    _cmode = classify_response_mode(text)
-                    if _cintent.subject:
-                        _cbundle = grounding_bundle_for(_cintent.subject)
-                        _cplan = plan_discourse(_cintent, _cmode, _cbundle)
-                        if len(_cplan.moves) > 1:
-                            _crendered = render_plan(_cplan)
-                            if _crendered:
-                                pack_surface = _crendered
+                planned = self._maybe_apply_discourse_planner(
+                    text, pack_source_tag
+                )
+                if planned is not None:
+                    pack_surface = planned
             self._context.finalize_turn(
                 empty_result,
                 tokens_in=tuple(filtered),
@@ -1129,34 +1144,12 @@ class ChatRuntime:
                 # BRIEF mode always collapses to a single ANCHOR move so
                 # the flag-off path stays byte-identical to the existing
                 # composer.
-                if (
-                    self.config.discourse_planner
-                    and warm_grounding_source in {"pack", "teaching"}
-                ):
-                    from generate.discourse_planner import (
-                        plan_discourse,
-                        render_plan,
-                    )
-                    from generate.grounding_accessors import (
-                        grounding_bundle_for,
-                    )
-                    from generate.intent import classify_response_mode
-                    from generate.intent_bridge import (
-                        classify_intent_from_input,
-                    )
-
-                    _dintent = classify_intent_from_input(text)
-                    _dmode = classify_response_mode(text)
-                    if _dintent.subject:
-                        _dbundle = grounding_bundle_for(_dintent.subject)
-                        _dplan = plan_discourse(_dintent, _dmode, _dbundle)
-                        if len(_dplan.moves) > 1:
-                            _drendered = render_plan(_dplan)
-                            if _drendered:
-                                response_surface = _drendered
-                                articulation = replace(
-                                    articulation, surface=_drendered
-                                )
+                planned = self._maybe_apply_discourse_planner(
+                    text, warm_grounding_source or ""
+                )
+                if planned is not None:
+                    response_surface = planned
+                    articulation = replace(articulation, surface=planned)
             if should_inject_hedge(ethics_verdict, self.ethics_pack):
                 hedge_prefix = build_hedge_prefix(self.identity_manifold)
                 before = response_surface
