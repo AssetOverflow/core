@@ -279,8 +279,17 @@ _MODE_BUDGETS: dict[ResponseMode, tuple[int, int]] = {
     ResponseMode.EXPLAIN: (1, 3),
     ResponseMode.PARAGRAPH: (1, 5),
     ResponseMode.EXAMPLE: (1, 3),
-    ResponseMode.WALKTHROUGH: (1, 1),
+    # WALKTHROUGH v1: ≤ 4 hops along the teaching-chain graph.  The
+    # planner walks ``(subject, *, object) → (object, *, *)``
+    # starting from the anchor and follows up to three additional
+    # hops (4 moves total including the anchor).  When no chain is
+    # available the v1 implementation falls back to the expository
+    # plan shape (EXPLAIN budget) rather than fabricating steps —
+    # operator-chain WALKTHROUGH is deferred to a follow-up ADR.
+    ResponseMode.WALKTHROUGH: (1, 4),
 }
+
+_WALKTHROUGH_MAX_HOPS = 3  # 3 hops after the anchor = 4 moves total
 
 
 def _select_anchor(
@@ -379,6 +388,111 @@ def _select_transition(
     return None
 
 
+def _plan_walkthrough(
+    intent: DialogueIntent,
+    mode: ResponseMode,
+    bundle: GroundingBundle,
+    anchor_fact: GroundedFact,
+    moves: list[DiscourseMove],
+    used: set[tuple[int, str, str, str, str]],
+) -> DiscoursePlan:
+    """WALKTHROUGH v1 — sequential teaching-chain walk.
+
+    Starting from the anchor's subject, follow up to
+    ``_WALKTHROUGH_MAX_HOPS`` hops along teaching-chain edges
+    ``(subject, *, object) → (object, *, *)``.  Each hop is one
+    ``RELATION`` move; the final hop becomes a ``CLOSURE`` move.
+
+    Cycle-safe: never re-emits a fact already in *used*.  Bounded
+    depth.  When the substrate has no chain rooted on the anchor (or
+    the walk stalls before any hop), the v1 implementation falls
+    back to the expository (EXPLAIN) plan shape rather than
+    fabricating walk steps.
+    """
+
+    given_lemmas: list[str] = [anchor_fact.subject]
+    current_subject = anchor_fact.subject
+
+    walked_facts: list[GroundedFact] = []
+    for _hop in range(_WALKTHROUGH_MAX_HOPS):
+        next_fact: GroundedFact | None = None
+        for fact in bundle.facts_by_source(FactSource.TEACHING):
+            if fact.sort_key() in used:
+                continue
+            if fact.subject == current_subject:
+                next_fact = fact
+                break
+        if next_fact is None:
+            break
+        walked_facts.append(next_fact)
+        used.add(next_fact.sort_key())
+        current_subject = next_fact.obj.strip().lower()
+
+    if not walked_facts:
+        # No teaching-chain substrate — fall back to expository plan
+        # rather than fabricating walk steps.  Anchor + (SUPPORT) +
+        # (RELATION) shape preserves the "walkthrough" intent without
+        # claiming a process the substrate cannot support.
+        return _plan_walkthrough_fallback(
+            intent, bundle, anchor_fact, moves, used
+        )
+
+    # Emit walked facts as RELATION moves with the final one becoming
+    # CLOSURE so the rendered surface terminates explicitly.
+    for idx, fact in enumerate(walked_facts):
+        kind = (
+            DiscourseMoveKind.CLOSURE
+            if idx == len(walked_facts) - 1
+            else DiscourseMoveKind.RELATION
+        )
+        moves.append(
+            DiscourseMove(
+                kind=kind,
+                topic=fact.subject,
+                given=tuple(given_lemmas),
+                new=(fact.obj,),
+                relation_to_previous=Relation.SEQUENCE,
+                fact=fact,
+            )
+        )
+        given_lemmas.append(fact.obj)
+
+    return DiscoursePlan(intent=intent, mode=mode, moves=tuple(moves))
+
+
+def _plan_walkthrough_fallback(
+    intent: DialogueIntent,
+    bundle: GroundingBundle,
+    anchor_fact: GroundedFact,
+    moves: list[DiscourseMove],
+    used: set[tuple[int, str, str, str, str]],
+) -> DiscoursePlan:
+    """Fallback shape when no teaching chain is available for
+    WALKTHROUGH.  Emits an ANCHOR + (SUPPORT) plan — the
+    ``ResponseMode`` stays WALKTHROUGH on the resulting plan so
+    callers can tell the planner attempted a walkthrough but
+    degraded honestly.
+    """
+
+    given_lemmas: list[str] = [anchor_fact.subject]
+    support_fact = _select_support(anchor_fact, bundle)
+    if support_fact is not None and support_fact.sort_key() not in used:
+        moves.append(
+            DiscourseMove(
+                kind=DiscourseMoveKind.SUPPORT,
+                topic=support_fact.subject,
+                given=tuple(given_lemmas),
+                new=(support_fact.obj,),
+                relation_to_previous=Relation.ELABORATION,
+                fact=support_fact,
+            )
+        )
+        used.add(support_fact.sort_key())
+    return DiscoursePlan(
+        intent=intent, mode=ResponseMode.WALKTHROUGH, moves=tuple(moves)
+    )
+
+
 def plan_discourse(
     intent: DialogueIntent,
     mode: ResponseMode,
@@ -441,7 +555,12 @@ def plan_discourse(
     ]
     used: set[tuple[int, str, str, str, str]] = {anchor_fact.sort_key()}
     _, max_moves = _move_budget(mode)
-    if max_moves <= 1 or mode is ResponseMode.WALKTHROUGH:
+
+    # WALKTHROUGH v1 — sequential teaching-chain walk.
+    if mode is ResponseMode.WALKTHROUGH:
+        return _plan_walkthrough(intent, mode, bundle, anchor_fact, moves, used)
+
+    if max_moves <= 1:
         return DiscoursePlan(intent=intent, mode=mode, moves=tuple(moves))
 
     given_lemmas: list[str] = [anchor_fact.subject]

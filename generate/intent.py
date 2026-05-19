@@ -165,6 +165,18 @@ _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
         re.compile(r"^paragraph\s+(?:about|on)\s+", re.IGNORECASE),
         IntentTag.DEFINITION,
     ),
+    # WALKTHROUGH-shape requests — semantic intent is "describe X step
+    # by step".  Routes to DEFINITION so the grounded substrate fires
+    # on X; ``ResponseMode.WALKTHROUGH`` carries the walk depth and
+    # selects the sequential teaching-chain plan budget at planning
+    # time.  Same orthogonality discipline as the EXPLAIN rule.
+    (
+        re.compile(
+            r"^walk\s+(?:me\s+)?through\s+",
+            re.IGNORECASE,
+        ),
+        IntentTag.DEFINITION,
+    ),
     (re.compile(r"^why\s+", re.IGNORECASE), IntentTag.CAUSE),
     # "What causes / triggers / enables / prevents / drives X?" — the
     # query is about what causes X, so the subject of the CAUSE intent

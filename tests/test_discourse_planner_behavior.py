@@ -232,10 +232,16 @@ class TestExampleMode:
 
 
 class TestWalkthroughMode:
-    def test_walkthrough_falls_back_to_brief_shape(self) -> None:
+    def test_walkthrough_emits_chain_walk(self) -> None:
+        # WALKTHROUGH v1 — sequential teaching-chain walk.  The
+        # _full_bundle has a 2-hop chain (truth→knowledge→evidence)
+        # plus pack anchor, so the walk emits ANCHOR + RELATION +
+        # CLOSURE.  See test_discourse_planner_walkthrough.py for
+        # the dedicated suite.
         plan = plan_discourse(_intent(), ResponseMode.WALKTHROUGH, _full_bundle())
         kinds = [m.kind for m in plan.moves]
-        assert kinds == [DiscourseMoveKind.ANCHOR]
+        assert kinds[0] is DiscourseMoveKind.ANCHOR
+        assert DiscourseMoveKind.CLOSURE in kinds or DiscourseMoveKind.RELATION in kinds
 
 
 # ---------------------------------------------------------------------------
