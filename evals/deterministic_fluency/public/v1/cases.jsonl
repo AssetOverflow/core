@@ -1,0 +1,15 @@
+{"id":"fluency_truth_001","prompt":"What is truth?","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"fluency_knowledge_002","prompt":"What is knowledge?","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"fluency_doubt_003","prompt":"What is doubt?","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"fluency_define_moment_004","prompt":"Define moment.","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"fluency_what_does_soon_mean_005","prompt":"What does soon mean?","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"fluency_what_is_true_006","prompt":"What is true?","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"fluency_define_evident_007","prompt":"Define evident.","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"fluency_what_does_important_mean_008","prompt":"What does important mean?","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"fluency_what_is_a_fact_009","prompt":"What is a fact?","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"fluency_what_is_self_010","prompt":"What is the self?","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"fluency_oov_hypothesis_011","prompt":"What is a hypothesis?","category":"oov_invitation","expected_predicates":["no_placeholder","complete_punctuation"]}
+{"id":"fluency_oov_quasar_012","prompt":"What is quasar?","category":"oov_invitation","expected_predicates":["no_placeholder","complete_punctuation"]}
+{"id":"fluency_cause_no_chain_013","prompt":"How does memory work?","category":"cause_no_chain_unknown_domain","expected_predicates":["no_placeholder","complete_punctuation"]}
+{"id":"fluency_cause_no_chain_014","prompt":"What causes doubt?","category":"cause_no_chain_unknown_domain","expected_predicates":["no_placeholder","complete_punctuation"]}
+{"id":"fluency_teaching_truth_015","prompt":"Why is truth important?","category":"teaching_grounded","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}

@@ -1,0 +1,2 @@
+{"id":"dev_fluency_truth","prompt":"What is truth?","category":"pack_definition","expected_predicates":["no_placeholder","complete_punctuation","finite_predicate_shape"]}
+{"id":"dev_fluency_oov","prompt":"What is quasar?","category":"oov_invitation","expected_predicates":["no_placeholder","complete_punctuation"]}
