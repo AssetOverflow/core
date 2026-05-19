@@ -37,6 +37,7 @@ deterministic.
 
 from __future__ import annotations
 
+import re
 import sys
 import textwrap
 import time
@@ -45,6 +46,76 @@ from typing import Any
 
 from chat.runtime import ChatRuntime
 from core.config import RuntimeConfig
+
+
+# Production teaching-grounded surface format (chat/teaching_grounding.py):
+#   "{subject} — teaching-grounded ({corpus_id}): {ds1}; {ds2}.
+#    {subject} {conn} {object} ({do}). No session evidence yet."
+#
+# Semantic domains contain dots ("rhetoric.narrative"), so we can't
+# split on '.' alone.  Instead we anchor on the fixed trailing
+# "No session evidence yet.", the corpus-id parenthetical, and the
+# fact that the propositional sentence begins with the subject lemma
+# (which we capture from the header).  This makes the parse
+# unambiguous against the live format.
+_TEACHING_HEADER_RE = re.compile(
+    r"^(?P<subject>[A-Za-z][A-Za-z_-]*)\s*—\s*teaching-grounded\s*"
+    r"\((?P<corpus_id>[^)]+)\):\s*"
+)
+_TEACHING_TAIL_LITERAL = "No session evidence yet."
+
+
+def _humanize_surface(surface: str, *, grounding_source: str) -> str:
+    """Layperson-friendly rewrite of CORE's surface for display.
+
+    Trust-boundary preserving:
+      * Only fires for ``grounding_source == "teaching"`` surfaces
+        matching the production format.
+      * Keeps every load-bearing token (subject, connective, object,
+        corpus_id, semantic_domains, "No session evidence yet").
+      * Reorders so the propositional sentence reads first, with
+        provenance as a trailing parenthetical.
+
+    Production surface is unchanged — this is presentation only and is
+    not applied to the JSON report's ``surface`` field.
+    """
+    if grounding_source != "teaching":
+        return surface
+    text = surface.strip()
+    if not text.endswith(_TEACHING_TAIL_LITERAL):
+        return surface
+    header = _TEACHING_HEADER_RE.match(text)
+    if header is None:
+        return surface
+    subject = header.group("subject")
+    corpus_id = header.group("corpus_id").strip()
+    body = text[header.end():-len(_TEACHING_TAIL_LITERAL)].rstrip().rstrip(".").strip()
+    # Body shape: "{ds1}; {ds2}. {subject} {conn} {object} ({do})"
+    # The split between subject_domains and the sentence is the FIRST
+    # ". " followed by the subject lemma.
+    sentence_marker = f". {subject} "
+    idx = body.find(sentence_marker)
+    if idx == -1:
+        return surface
+    subject_domains = body[:idx].strip()
+    sentence_and_obj = body[idx + 2:].strip()  # skip ". "
+    # Trailing "(do)" parenthetical:
+    paren_open = sentence_and_obj.rfind("(")
+    paren_close = sentence_and_obj.rfind(")")
+    if paren_open == -1 or paren_close == -1 or paren_close < paren_open:
+        return surface
+    sentence = sentence_and_obj[:paren_open].strip()
+    object_domains = sentence_and_obj[paren_open + 1:paren_close].strip()
+    if not sentence:
+        return surface
+    sentence_cased = sentence[:1].upper() + sentence[1:]
+    return (
+        f"{sentence_cased}. "
+        f"(teaching-grounded from {corpus_id} — "
+        f"{subject}: {subject_domains}; "
+        f"final term: {object_domains}. "
+        f"No session evidence yet.)"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -120,13 +191,26 @@ def _scene_header(num: int, title: str) -> None:
     sys.stdout.flush()
 
 
-def _emit_turn(prompt: str, response_text: str, note: str, *, stream: bool) -> None:
+def _emit_turn(
+    prompt: str,
+    response_text: str,
+    note: str,
+    *,
+    stream: bool,
+    grounding_source: str = "",
+) -> None:
     """Render one You/CORE turn with a caption.
 
     ``stream=True`` adds per-character / per-word delays (live feel).
     ``stream=False`` prints the same layout instantly (CI / tests /
     fast capture).
+
+    ``response_text`` is humanised for display only — when it matches
+    the production teaching-grounded format, it's rewritten to put
+    the propositional sentence first and provenance in a trailing
+    parenthetical.  The raw surface remains in the JSON report.
     """
+    displayed = _humanize_surface(response_text, grounding_source=grounding_source)
     if stream:
         sys.stdout.write("  You:   ")
         _stream_write(prompt, _CARET_DELAY_SECONDS)
@@ -134,12 +218,12 @@ def _emit_turn(prompt: str, response_text: str, note: str, *, stream: bool) -> N
         sys.stdout.write("  CORE:  ")
         sys.stdout.flush()
         time.sleep(0.25)  # tiny "thinking" pause
-        _stream_words(response_text, prefix="         ", width=58)
+        _stream_words(displayed, prefix="         ", width=58)
         _stream_note(note)
     else:
         sys.stdout.write(f"  You:   {prompt}\n\n")
         wrapped_response = textwrap.fill(
-            response_text, width=58,
+            displayed, width=58,
             initial_indent="         ", subsequent_indent="         ",
         )
         sys.stdout.write(f"  CORE:  {wrapped_response.lstrip()}\n\n")
@@ -215,7 +299,7 @@ def _scene1_pack_lookup(*, show: bool, stream: bool) -> TurnRecord:
         "internet, no guessing."
     )
     if show:
-        _emit_turn(prompt, surface, note, stream=stream)
+        _emit_turn(prompt, surface, note, stream=stream, grounding_source=grounding)
     return TurnRecord(
         scene="S1_pack_lookup", prompt=prompt, surface=surface,
         grounding_source=grounding, note=note,
@@ -233,7 +317,7 @@ def _scene2_teaching_chain(*, show: bool, stream: bool) -> TurnRecord:
         "an operator approved."
     )
     if show:
-        _emit_turn(prompt, surface, note, stream=stream)
+        _emit_turn(prompt, surface, note, stream=stream, grounding_source=grounding)
     return TurnRecord(
         scene="S2_teaching_chain", prompt=prompt, surface=surface,
         grounding_source=grounding, note=note,
@@ -251,7 +335,7 @@ def _scene3_compound(*, show: bool, stream: bool) -> TurnRecord:
         "in the lexicon or in a reviewed chain."
     )
     if show:
-        _emit_turn(prompt, surface, note, stream=stream)
+        _emit_turn(prompt, surface, note, stream=stream, grounding_source=grounding)
     return TurnRecord(
         scene="S3_compound", prompt=prompt, surface=surface,
         grounding_source=grounding, note=note,
@@ -301,13 +385,19 @@ def _scene4_learning_loop(*, show: bool, stream: bool) -> tuple[TurnRecord, Turn
     )
 
     if show:
-        _emit_turn(prompt, before_surface, before_note, stream=stream)
+        _emit_turn(
+            prompt, before_surface, before_note,
+            stream=stream, grounding_source=before_grounding,
+        )
         sys.stdout.write("\n")
         sys.stdout.write("           ┄ ┄ ┄  operator teaches CORE one new fact  ┄ ┄ ┄\n\n")
         sys.stdout.flush()
         if stream:
             time.sleep(0.6)
-        _emit_turn(prompt, after_surface, after_note, stream=stream)
+        _emit_turn(
+            prompt, after_surface, after_note,
+            stream=stream, grounding_source=after_grounding,
+        )
 
     before = TurnRecord(
         scene="S4a_cold_turn", prompt=prompt, surface=before_surface,
