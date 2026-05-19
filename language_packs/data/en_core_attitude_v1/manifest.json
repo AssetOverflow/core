@@ -1,0 +1,13 @@
+{
+  "pack_id": "en_core_attitude_v1",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_core_attitude_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "11076d46a2b8642e4d2d958a5aa3fc13c42fb53a17d746ec312f27716c237c79",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback"
+}
