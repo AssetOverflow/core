@@ -252,28 +252,270 @@ class DiscoursePlan:
         return json.dumps(self.as_dict(), sort_keys=True, separators=(",", ":"))
 
 
+def _move_budget(mode: ResponseMode) -> tuple[int, int]:
+    """Return ``(min_moves, max_moves)`` for *mode*.
+
+    BRIEF      → exactly 1 (ANCHOR only) so flag-on rendering of a
+                 single-sentence pack-grounded surface stays at parity
+                 with the existing string composer.
+    EXPLAIN    → up to 3 (ANCHOR + SUPPORT + RELATION).
+    PARAGRAPH  → up to 5 (ANCHOR + SUPPORT + RELATION + TRANSITION +
+                 CLOSURE).
+    EXAMPLE    → up to 3 (ANCHOR + RELATION + CLOSURE) — instance-shape
+                 surfacing through the reverse-chain view.
+    WALKTHROUGH→ deferred (needs operator-chain semantics), capped at 1.
+    """
+
+    return _MODE_BUDGETS.get(mode, (1, 1))
+
+
+_MODE_BUDGETS: dict[ResponseMode, tuple[int, int]] = {
+    ResponseMode.BRIEF: (1, 1),
+    ResponseMode.EXPLAIN: (1, 3),
+    ResponseMode.PARAGRAPH: (1, 5),
+    ResponseMode.EXAMPLE: (1, 3),
+    ResponseMode.WALKTHROUGH: (1, 1),
+}
+
+
+def _select_anchor(
+    intent: DialogueIntent,
+    bundle: GroundingBundle,
+) -> GroundedFact | None:
+    """Pick the anchor fact: a pack ``is_defined_as`` for the subject if
+    available, otherwise the first canonical pack fact, otherwise the
+    first canonical fact of any source.
+    """
+
+    if bundle.is_empty():
+        return None
+    subject = intent.subject.strip().lower()
+    pack_facts = bundle.facts_by_source(FactSource.PACK)
+    # Prefer is_defined_as on the subject (carries the gloss).
+    for fact in pack_facts:
+        if fact.subject == subject and fact.predicate == "is_defined_as":
+            return fact
+    # Fall back to the first canonical pack fact on the subject.
+    for fact in pack_facts:
+        if fact.subject == subject:
+            return fact
+    # Fall back to the first canonical fact of any source.
+    for fact in bundle.sorted_facts():
+        return fact
+    return None
+
+
+def _select_support(
+    anchor: GroundedFact,
+    bundle: GroundingBundle,
+) -> GroundedFact | None:
+    """Pick a SUPPORT fact distinct from the anchor: a pack ``belongs_to``
+    on the anchor's subject if available.
+    """
+
+    for fact in bundle.facts_by_source(FactSource.PACK):
+        if fact == anchor:
+            continue
+        if fact.subject != anchor.subject:
+            continue
+        if fact.predicate == "belongs_to":
+            return fact
+    # Any other pack fact on the same subject.
+    for fact in bundle.facts_by_source(FactSource.PACK):
+        if fact == anchor or fact.subject != anchor.subject:
+            continue
+        return fact
+    return None
+
+
+def _select_relation(
+    anchor: GroundedFact,
+    bundle: GroundingBundle,
+    *,
+    exclude: frozenset[tuple[int, str, str, str, str]] = frozenset(),
+) -> GroundedFact | None:
+    """Pick a RELATION fact: a teaching/cross-pack chain rooted on the
+    anchor's subject.
+    """
+
+    for fact in bundle.facts_by_source(FactSource.TEACHING):
+        if fact.sort_key() in exclude:
+            continue
+        if fact.subject == anchor.subject:
+            return fact
+    return None
+
+
+def _select_transition(
+    relation: GroundedFact,
+    bundle: GroundingBundle,
+    *,
+    exclude: frozenset[tuple[int, str, str, str, str]] = frozenset(),
+) -> GroundedFact | None:
+    """Pick a TRANSITION fact: a teaching/cross-pack chain rooted on the
+    RELATION's object (the topic shifts to the chain's tail).
+    """
+
+    target = relation.obj.strip().lower()
+    if not target:
+        return None
+    for fact in bundle.facts_by_source(FactSource.TEACHING):
+        if fact.sort_key() in exclude:
+            continue
+        if fact.subject == target:
+            return fact
+    # No same-source continuation — try any pack fact on the new topic
+    # (lets the closure step still describe the transitioned topic).
+    for fact in bundle.facts_by_source(FactSource.PACK):
+        if fact.sort_key() in exclude:
+            continue
+        if fact.subject == target:
+            return fact
+    return None
+
+
 def plan_discourse(
     intent: DialogueIntent,
     mode: ResponseMode,
     bundle: GroundingBundle,
 ) -> DiscoursePlan:
-    """Pure planner function — contract-only signature in this landing.
+    """Deterministic discourse planner.
 
-    Same ``(intent, mode, bundle)`` must produce the same plan on every
-    invocation: no I/O, no clock reads, no module-level mutable state.
+    Selects ordered moves from *bundle* according to *mode*'s budget
+    and the canonical anchor/support/relation/transition/closure
+    vocabulary.  Pure: same ``(intent, mode, bundle)`` always produces
+    the same plan; no I/O, no clock reads, no module-level state.
 
-    The implementation is intentionally deferred: a follow-up ADR will
-    fill in the move-selection rules (anchor → support → relation →
-    transition → closure) per ``ResponseMode``.  Landing the signature
-    first locks the contract callers can target without committing to
-    the heuristics that will populate it.
+    Empty bundles produce an empty plan rather than raising — callers
+    fall through to the existing single-sentence composer path so the
+    runtime is always safe to call with the flag on.
+
+    Mode rules:
+
+    * ``BRIEF``       — ANCHOR only.  Equivalent to today's single-
+                        sentence pack-grounded surface.
+    * ``EXPLAIN``     — ANCHOR + SUPPORT + RELATION (up to 3 moves).
+    * ``PARAGRAPH``   — ANCHOR + SUPPORT + RELATION + TRANSITION +
+                        CLOSURE (up to 5 moves).
+    * ``EXAMPLE``     — ANCHOR + RELATION + CLOSURE (up to 3 moves).
+                        The relation is selected from the reverse-chain
+                        view via the bundle (callers supply
+                        cross-pack `include_object_view=True`).
+    * ``WALKTHROUGH`` — deferred to a follow-up ADR; falls back to
+                        BRIEF shape so the planner is total.
     """
 
-    _ = (intent, mode, bundle)
-    raise NotImplementedError(
-        "plan_discourse is contract-only in this landing; "
-        "move-selection rules will land in a follow-up ADR."
+    if bundle.is_empty():
+        return DiscoursePlan(intent=intent, mode=mode, moves=())
+
+    anchor_fact = _select_anchor(intent, bundle)
+    if anchor_fact is None:
+        return DiscoursePlan(intent=intent, mode=mode, moves=())
+
+    moves: list[DiscourseMove] = [
+        DiscourseMove(
+            kind=DiscourseMoveKind.ANCHOR,
+            topic=anchor_fact.subject,
+            given=(),
+            new=(anchor_fact.subject,),
+            relation_to_previous=None,
+            fact=anchor_fact,
+        )
+    ]
+    used: set[tuple[int, str, str, str, str]] = {anchor_fact.sort_key()}
+    _, max_moves = _move_budget(mode)
+    if max_moves <= 1 or mode is ResponseMode.WALKTHROUGH:
+        return DiscoursePlan(intent=intent, mode=mode, moves=tuple(moves))
+
+    given_lemmas: list[str] = [anchor_fact.subject]
+    last_topic = anchor_fact.subject
+
+    # SUPPORT (EXPLAIN, PARAGRAPH — not EXAMPLE which goes anchor→relation).
+    if mode in (ResponseMode.EXPLAIN, ResponseMode.PARAGRAPH):
+        support_fact = _select_support(anchor_fact, bundle)
+        if support_fact is not None:
+            moves.append(
+                DiscourseMove(
+                    kind=DiscourseMoveKind.SUPPORT,
+                    topic=support_fact.subject,
+                    given=tuple(given_lemmas),
+                    new=(support_fact.obj,),
+                    relation_to_previous=Relation.ELABORATION,
+                    fact=support_fact,
+                )
+            )
+            used.add(support_fact.sort_key())
+            given_lemmas.append(support_fact.obj)
+            last_topic = support_fact.subject
+            if len(moves) >= max_moves:
+                return DiscoursePlan(
+                    intent=intent, mode=mode, moves=tuple(moves)
+                )
+
+    # RELATION.
+    relation_fact = _select_relation(
+        anchor_fact, bundle, exclude=frozenset(used)
     )
+    if relation_fact is not None:
+        moves.append(
+            DiscourseMove(
+                kind=DiscourseMoveKind.RELATION,
+                topic=relation_fact.subject,
+                given=tuple(given_lemmas),
+                new=(relation_fact.obj,),
+                relation_to_previous=Relation.CAUSE,
+                fact=relation_fact,
+            )
+        )
+        used.add(relation_fact.sort_key())
+        given_lemmas.append(relation_fact.obj)
+        last_topic = relation_fact.subject
+        if len(moves) >= max_moves:
+            return DiscoursePlan(
+                intent=intent, mode=mode, moves=tuple(moves)
+            )
+
+    # TRANSITION (PARAGRAPH only).
+    transition_fact: GroundedFact | None = None
+    if mode is ResponseMode.PARAGRAPH and relation_fact is not None:
+        transition_fact = _select_transition(
+            relation_fact, bundle, exclude=frozenset(used)
+        )
+        if transition_fact is not None:
+            moves.append(
+                DiscourseMove(
+                    kind=DiscourseMoveKind.TRANSITION,
+                    topic=transition_fact.subject,
+                    given=tuple(given_lemmas),
+                    new=(transition_fact.obj,),
+                    relation_to_previous=Relation.SEQUENCE,
+                    fact=transition_fact,
+                )
+            )
+            used.add(transition_fact.sort_key())
+            given_lemmas.append(transition_fact.obj)
+            last_topic = transition_fact.subject
+            if len(moves) >= max_moves:
+                return DiscoursePlan(
+                    intent=intent, mode=mode, moves=tuple(moves)
+                )
+
+    # CLOSURE (PARAGRAPH, EXAMPLE) — summarize the latest topic.  No
+    # new fact (fact=None); closure carries the prior given lemmas
+    # forward without introducing new content.
+    if mode in (ResponseMode.PARAGRAPH, ResponseMode.EXAMPLE):
+        moves.append(
+            DiscourseMove(
+                kind=DiscourseMoveKind.CLOSURE,
+                topic=last_topic,
+                given=tuple(given_lemmas),
+                new=(),
+                relation_to_previous=Relation.ELABORATION,
+                fact=None,
+            )
+        )
+
+    return DiscoursePlan(intent=intent, mode=mode, moves=tuple(moves))
 
 
 __all__ = [

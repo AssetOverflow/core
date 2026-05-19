@@ -303,13 +303,17 @@ class TestPlannerSignature:
         assert hints["bundle"] is GroundingBundle
         assert hints["return"] is DiscoursePlan
 
-    def test_plan_discourse_is_contract_only(self) -> None:
-        with pytest.raises(NotImplementedError):
-            plan_discourse(
-                _make_intent(),
-                ResponseMode.PARAGRAPH,
-                GroundingBundle(facts=_make_facts()),
-            )
+    def test_plan_discourse_handles_empty_bundle(self) -> None:
+        # Empty bundle ⇒ empty plan (planner is total; callers fall
+        # through to the existing single-sentence composer path).
+        plan = plan_discourse(
+            _make_intent(),
+            ResponseMode.PARAGRAPH,
+            GroundingBundle(),
+        )
+        assert plan.is_empty()
+        assert plan.intent == _make_intent()
+        assert plan.mode is ResponseMode.PARAGRAPH
 
     def test_no_runtime_imports(self) -> None:
         import generate.discourse_planner as dp
