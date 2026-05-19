@@ -101,7 +101,12 @@ def test_narrative_dedupes_by_predicate_object() -> None:
 def test_narrative_handles_relations_pack_subject() -> None:
     surface = narrative_grounded_surface("parent")
     assert surface is not None
-    assert "narrative-grounded (relations_chains_v1)" in surface
+    # ADR-0067 — ``parent`` is the subject of both the in-pack chain
+    # ``parent precedes child`` (relations_chains_v1) and the cross-
+    # pack chain ``parent grounds understanding`` (cross_pack_chains_v1).
+    # The narrative composer aggregates both; the corpus tag reflects
+    # both binding sources.
+    assert "relations_chains_v1" in surface
     assert "parent precedes child" in surface
 
 
@@ -168,10 +173,12 @@ def test_example_aggregates_multiple_subjects() -> None:
 
 def test_example_handles_relations_object() -> None:
     """``parent`` appears as object of ``child follows parent`` +
-    ``family grounds parent`` — multiple examples."""
+    ``family grounds parent`` — multiple examples.  ADR-0067 added
+    ``understanding requires parent`` (cross-pack), which is also
+    aggregated; the corpus tag widens to reflect both bindings."""
     surface = example_grounded_surface("parent")
     assert surface is not None
-    assert "example-grounded (relations_chains_v1)" in surface
+    assert "relations_chains_v1" in surface
     assert "parent" in surface
 
 

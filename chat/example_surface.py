@@ -35,12 +35,21 @@ or to OOV invitation (if X is unknown).
 
 from __future__ import annotations
 
-from chat.pack_resolver import resolve_lemma
+from chat.cross_pack_grounding import cross_pack_chains_for_object
+from chat.pack_resolver import _pack_lexicon_for, resolve_lemma
 from chat.teaching_grounding import (
     _all_chains_index,
     _pack_for_corpus,
 )
 from generate.semantic_templates import humanize_predicate
+
+
+def _object_domains_for_chain(chain) -> tuple[str, ...]:
+    """Resolve object domains for both in-pack and cross-pack chains."""
+    object_pack_id = getattr(chain, "object_pack_id", None)
+    if object_pack_id:
+        return _pack_lexicon_for(object_pack_id).get(chain.object, ())
+    return _pack_for_corpus(chain.corpus_id).get(chain.object, ())
 
 
 def example_grounded_surface(
@@ -69,7 +78,9 @@ def example_grounded_surface(
         return None
 
     index = _all_chains_index()
-    matching = [chain for chain in index.values() if chain.object == key]
+    matching: list = [chain for chain in index.values() if chain.object == key]
+    # ADR-0067 — merge cross-pack chains whose object equals the lemma.
+    matching.extend(cross_pack_chains_for_object(key))
     if not matching:
         return None
 
@@ -89,12 +100,7 @@ def example_grounded_surface(
             break
 
     first = deduped[0]
-    # Object domains come from the first chain's bound pack; falls
-    # back to the cross-pack resolver if the chain's corpus is bound
-    # to a pack that does not carry the object (defensive — strict
-    # pack-residency in ADR-0064 prevents this).
-    object_pack = _pack_for_corpus(first.corpus_id)
-    object_domains = object_pack.get(first.object, ())
+    object_domains = _object_domains_for_chain(first)
     if not object_domains:
         resolved = resolve_lemma(first.object)
         if resolved is None:

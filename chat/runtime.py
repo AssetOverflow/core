@@ -860,6 +860,17 @@ class ChatRuntime:
                     surface = teaching_grounded_surface(lemma, intent.tag)
                 if surface is not None:
                     return (surface, "teaching")
+                # ADR-0067 — fall through to cross-pack chains when no
+                # in-pack chain resolves the (subject, intent) pair.
+                # Cross-pack chains carry an explicit residency pair
+                # (subject_pack_id × object_pack_id) and surface tag
+                # exposes both packs.  Deliberately listed AFTER the
+                # single-pack composer so the in-pack lane is byte-
+                # identical when a same-pack chain exists.
+                from chat.cross_pack_grounding import cross_pack_grounded_surface
+                surface = cross_pack_grounded_surface(lemma, intent.tag)
+                if surface is not None:
+                    return (surface, "teaching")
         # ADR-0053 — CORRECTION acknowledgement.  Cold-start CORRECTION
         # has no prior session turn to apply to; emit a pack-grounded
         # surface that acknowledges the correction was received and

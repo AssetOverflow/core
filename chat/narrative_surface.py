@@ -51,12 +51,34 @@ narrative) or to the OOV invitation if X is also not pack-resident.
 
 from __future__ import annotations
 
-from chat.pack_resolver import resolve_lemma
+from chat.cross_pack_grounding import cross_pack_chains_for_subject
+from chat.pack_resolver import _pack_lexicon_for, resolve_lemma
 from chat.teaching_grounding import (
     _all_chains_index,
     _pack_for_corpus,
 )
 from generate.semantic_templates import humanize_predicate
+
+
+def _object_domains_for_chain(chain) -> tuple[str, ...]:
+    """Return the object lemma's semantic domains for *chain*.
+
+    Handles both in-pack ``TeachingChain`` (residency via its bound
+    corpus pack) and cross-pack ``CrossPackChain`` (residency in
+    its declared ``object_pack_id``).
+    """
+    object_pack_id = getattr(chain, "object_pack_id", None)
+    if object_pack_id:
+        return _pack_lexicon_for(object_pack_id).get(chain.object, ())
+    return _pack_for_corpus(chain.corpus_id).get(chain.object, ())
+
+
+def _subject_domains_for_chain(chain) -> tuple[str, ...]:
+    """Same as :func:`_object_domains_for_chain` but for the subject."""
+    subject_pack_id = getattr(chain, "subject_pack_id", None)
+    if subject_pack_id:
+        return _pack_lexicon_for(subject_pack_id).get(chain.subject, ())
+    return _pack_for_corpus(chain.corpus_id).get(chain.subject, ())
 
 
 def narrative_grounded_surface(
@@ -86,9 +108,13 @@ def narrative_grounded_surface(
         return None
 
     index = _all_chains_index()
-    matching = [
+    matching: list = [
         chain for (s, _), chain in index.items() if s == key
     ]
+    # ADR-0067 — merge cross-pack chains rooted on the same subject.
+    # In-pack chains take precedence on (intent, connective, object)
+    # collision (first-occurrence-wins in dedup loop below).
+    matching.extend(cross_pack_chains_for_subject(key))
     if not matching:
         return None
 
@@ -113,8 +139,7 @@ def narrative_grounded_surface(
     # narrative header is sourced from the lemma's own pack — even
     # when the matching chains span multiple corpora.
     first = deduped[0]
-    subject_pack = _pack_for_corpus(first.corpus_id)
-    subject_domains = subject_pack.get(first.subject, ())
+    subject_domains = _subject_domains_for_chain(first)
     if not subject_domains:
         # Fall back to cross-pack resolver — subject may live in a
         # different pack than its chains' corpus binding (defensive).
@@ -133,8 +158,7 @@ def narrative_grounded_surface(
     # Emit one clause per deduped chain.
     clauses: list[str] = []
     for chain in deduped:
-        obj_pack = _pack_for_corpus(chain.corpus_id)
-        obj_domains = obj_pack.get(chain.object, ())
+        obj_domains = _object_domains_for_chain(chain)
         if not obj_domains:
             continue
         obj_head = "; ".join(
