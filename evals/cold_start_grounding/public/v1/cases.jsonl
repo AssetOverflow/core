@@ -1,0 +1,44 @@
+{"id":"def_truth_001","prompt":"What is truth?","category":"definition_cognition","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"truth"}
+{"id":"def_knowledge_002","prompt":"Define knowledge.","category":"definition_imperative","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"knowledge"}
+{"id":"def_memory_003","prompt":"What is memory?","category":"definition_cognition","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"memory"}
+{"id":"def_fact_004","prompt":"What is a fact?","category":"definition_meta","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"fact"}
+{"id":"def_belief_005","prompt":"What is belief?","category":"definition_morphology_gap","expected_intent":"definition","expected_grounding_source":"oov","expected_subject":"belief"}
+{"id":"def_doubt_006","prompt":"What is doubt?","category":"definition_meta","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"doubt"}
+{"id":"def_say_007","prompt":"What does say mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"say"}
+{"id":"def_self_008","prompt":"What is the self?","category":"definition_meta_self_reference","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"self"}
+{"id":"def_statement_009","prompt":"What is a statement?","category":"definition_meta","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"statement"}
+{"id":"def_true_010","prompt":"What is true?","category":"definition_attitude_adjective","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"true"}
+{"id":"def_important_011","prompt":"What does important mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"important"}
+{"id":"def_good_012","prompt":"What is good?","category":"definition_attitude_adjective","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"good"}
+{"id":"def_certain_013","prompt":"What does certain mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"certain"}
+{"id":"def_evident_014","prompt":"Define evident.","category":"definition_imperative","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"evident"}
+{"id":"def_now_015","prompt":"What is now?","category":"definition_temporal","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"now"}
+{"id":"def_future_016","prompt":"What is the future?","category":"definition_temporal","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"future"}
+{"id":"def_soon_017","prompt":"What does soon mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"soon"}
+{"id":"def_moment_018","prompt":"Define moment.","category":"definition_imperative","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"moment"}
+{"id":"def_before_019","prompt":"What does before mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"before"}
+{"id":"def_make_020","prompt":"What does make mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"make"}
+{"id":"def_to_create_021","prompt":"What is to create?","category":"definition_infinitive","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"create"}
+{"id":"def_change_022","prompt":"What does change mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"change"}
+{"id":"def_use_023","prompt":"What does use mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"use"}
+{"id":"def_all_024","prompt":"What does all mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"all"}
+{"id":"def_some_025","prompt":"Define some.","category":"definition_imperative","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"some"}
+{"id":"def_more_026","prompt":"What is more?","category":"definition_quantitative","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"more"}
+{"id":"def_enough_027","prompt":"What does enough mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"enough"}
+{"id":"def_place_028","prompt":"What is a place?","category":"definition_spatial","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"place"}
+{"id":"def_here_029","prompt":"What does here mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"here"}
+{"id":"def_location_030","prompt":"Define location.","category":"definition_imperative","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"location"}
+{"id":"def_above_031","prompt":"What is above?","category":"definition_spatial","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"above"}
+{"id":"def_effect_032","prompt":"What is an effect?","category":"definition_causation","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"effect"}
+{"id":"def_consequence_033","prompt":"Define consequence.","category":"definition_imperative","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"consequence"}
+{"id":"def_trigger_034","prompt":"What does trigger mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"trigger"}
+{"id":"def_outcome_035","prompt":"What is outcome?","category":"definition_causation","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"outcome"}
+{"id":"def_always_036","prompt":"What is always?","category":"definition_polarity","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"always"}
+{"id":"def_never_037","prompt":"Define never.","category":"definition_imperative","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"never"}
+{"id":"def_maybe_038","prompt":"What does maybe mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"maybe"}
+{"id":"oov_hypothesis_039","prompt":"What is a hypothesis?","category":"oov_control","expected_intent":"definition","expected_grounding_source":"oov","expected_subject":"hypothesis"}
+{"id":"oov_quasar_040","prompt":"What is quasar?","category":"oov_control","expected_intent":"definition","expected_grounding_source":"oov","expected_subject":"quasar"}
+{"id":"oov_javascript_041","prompt":"Define javascript.","category":"oov_control","expected_intent":"definition","expected_grounding_source":"oov","expected_subject":"javascript"}
+{"id":"cause_why_truth_042","prompt":"Why is truth important?","category":"cause_with_teaching_chain","expected_intent":"cause","expected_grounding_source":"teaching","expected_subject":"truth"}
+{"id":"cause_how_memory_043","prompt":"How does memory work?","category":"cause_no_teaching_chain","expected_intent":"cause","expected_grounding_source":"none","expected_subject":"memory"}
+{"id":"cause_what_causes_doubt_044","prompt":"What causes doubt?","category":"cause_no_teaching_chain","expected_intent":"cause","expected_grounding_source":"none","expected_subject":"doubt"}

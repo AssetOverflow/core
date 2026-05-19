@@ -1,0 +1,5 @@
+{"id":"dev_define_moment","prompt":"Define moment.","category":"definition_imperative","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"moment"}
+{"id":"dev_what_does_soon_mean","prompt":"What does soon mean?","category":"definition_what_does_x_mean","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"soon"}
+{"id":"dev_what_is_to_create","prompt":"What is to create?","category":"definition_infinitive","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"create"}
+{"id":"dev_what_is_quasar","prompt":"What is quasar?","category":"oov_control","expected_intent":"definition","expected_grounding_source":"oov","expected_subject":"quasar"}
+{"id":"dev_how_does_memory_work","prompt":"How does memory work?","category":"cause_no_teaching_chain","expected_intent":"cause","expected_grounding_source":"none","expected_subject":"memory"}
