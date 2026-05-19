@@ -1,0 +1,13 @@
+{
+  "pack_id": "en_core_causation_v1",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_core_causation_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "0e173445c84c26a92546bba9243bcd42f33a516b9f9f660a2d13d25ed07df741",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback"
+}
