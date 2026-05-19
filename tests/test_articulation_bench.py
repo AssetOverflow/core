@@ -13,9 +13,11 @@ import pytest
 from benchmarks.articulation import (
     INTENT_PROBE_PROMPTS,
     CROSS_TOPIC_PROMPTS,
+    DISCOURSE_PLANNER_PROMPTS,
     bench_breadth,
     bench_cross_topic,
     bench_determinism,
+    bench_discourse_planner,
     bench_footprint,
     bench_ollama_compare,
     run_articulation_suite,
@@ -118,6 +120,20 @@ def test_cross_topic_visits_every_prompt() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Discourse planner
+# ---------------------------------------------------------------------------
+
+
+def test_discourse_planner_bench_covers_new_prompt_shapes() -> None:
+    probes, metrics = bench_discourse_planner()
+    assert [p.label for p in probes] == [label for label, _ in DISCOURSE_PLANNER_PROMPTS]
+    assert metrics["cases"] == len(DISCOURSE_PLANNER_PROMPTS)
+    assert "articulate_sentence_rate" in metrics
+    labels = {p.label for p in probes}
+    assert {"COMPOUND", "WALKTHROUGH"} <= labels
+
+
+# ---------------------------------------------------------------------------
 # Ollama (skipped when binary absent)
 # ---------------------------------------------------------------------------
 
@@ -145,5 +161,7 @@ def test_run_articulation_suite_emits_shaped_report() -> None:
     assert d["determinism_all_identical"] is True
     assert isinstance(d["footprint_samples"], list)
     assert d["ollama"]["status"] == "skipped"
+    assert isinstance(d["discourse_planner"], list)
+    assert d["discourse_planner_metrics"]["cases"] == len(DISCOURSE_PLANNER_PROMPTS)
     # Cross-topic walk runs every entry.
     assert len(d["cross_topic"]) == len(CROSS_TOPIC_PROMPTS)

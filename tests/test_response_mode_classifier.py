@@ -179,11 +179,13 @@ class TestClassifyIntentUnchanged:
 class TestIntentModeOrthogonality:
     def test_definition_plus_paragraph(self) -> None:
         prompt = "Write a paragraph about truth"
-        # "Write a paragraph about" isn't a DEFINITION trigger, so the
-        # intent falls through to UNKNOWN — but ResponseMode still picks
-        # up PARAGRAPH.  This documents the orthogonality: mode does not
-        # *cause* a particular intent.
+        # The semantic intent and presentation mode are still distinct:
+        # the intent anchors the subject as a definition, while
+        # ResponseMode carries the paragraph shape.
+        intent = classify_intent(prompt)
         mode = classify_response_mode(prompt)
+        assert intent.tag is IntentTag.DEFINITION
+        assert intent.subject == "truth"
         assert mode is ResponseMode.PARAGRAPH
 
     def test_narrative_plus_explain(self) -> None:

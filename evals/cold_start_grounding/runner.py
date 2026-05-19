@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from chat.runtime import ChatRuntime
-from generate.intent import classify_intent
+from generate.intent import classify_compound_intent, classify_intent
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,7 +58,8 @@ def _run_case(case: dict[str, Any]) -> CaseResult:
     # Classify intent independently for the subject-match check —
     # avoids round-tripping through the runtime when the prompt
     # bypasses pack-grounding for an OOV/none case.
-    classified = classify_intent(prompt)
+    compound = classify_compound_intent(prompt)
+    classified = compound.primary if compound.is_compound() else classify_intent(prompt)
     actual_subject = (classified.subject or "").strip().lower()
 
     # Fresh runtime — cold-start invariant.

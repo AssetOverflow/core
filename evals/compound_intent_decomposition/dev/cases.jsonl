@@ -1,0 +1,2 @@
+{"id":"dev_compound_knowledge_definition_cause","prompt":"What is knowledge, and why does it matter?","expected_atoms":[{"intent":"definition","subject":"knowledge"},{"intent":"cause","subject":"knowledge"}]}
+

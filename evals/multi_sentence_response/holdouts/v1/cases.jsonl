@@ -1,0 +1,5 @@
+{"id":"hold_multi_explain_evidence_001","category":"explain","prompt":"Explain evidence.","subject_lemma":"evidence","expects_connective":true}
+{"id":"hold_multi_paragraph_knowledge_002","category":"essay","prompt":"Write a paragraph about knowledge.","subject_lemma":"knowledge","expects_connective":true}
+{"id":"hold_multi_compound_memory_003","category":"compose","prompt":"What is memory, and why does it matter?","subject_lemma":"memory","expects_connective":true}
+{"id":"hold_multi_walk_inference_004","category":"walkthrough","prompt":"Walk me through inference.","subject_lemma":"inference","expects_connective":true}
+

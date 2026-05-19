@@ -36,6 +36,12 @@ Sub-benches:
      prompts.  Skipped (status: ``skipped`` instead of ``failed``)
      when the ``ollama`` binary is not on ``PATH``.
 
+  6. **discourse-planner** — Runs expository, compound, and
+     walkthrough prompts with ``RuntimeConfig(discourse_planner=True)``
+     and reports honest sentence buckets.  This keeps the benchmark
+     aligned with the multi-clause articulation spine instead of only
+     the older intent-breadth probes.
+
 The whole suite is deterministic on the CORE side — no clock-time
 or RNG influence on what gets emitted.  Walltime sampling lives in
 ``benchmarks.cost``; this module focuses on capability + identity.
@@ -88,6 +94,13 @@ DETERMINISM_PROMPTS: tuple[str, ...] = (
     "Give me an example of memory.",
 )
 
+DISCOURSE_PLANNER_PROMPTS: tuple[tuple[str, str], ...] = (
+    ("EXPLAIN", "Explain truth."),
+    ("PARAGRAPH", "Write a paragraph about truth."),
+    ("COMPOUND", "What is truth, and why does it matter?"),
+    ("WALKTHROUGH", "Walk me through recall."),
+)
+
 
 # ---------------------------------------------------------------------------
 # Report shapes
@@ -128,6 +141,18 @@ class CrossTopicTurn:
 
 
 @dataclass(frozen=True)
+class DiscoursePlannerProbe:
+    label: str
+    prompt: str
+    intent_tag: str
+    grounding_source: str
+    sentence_count: int
+    articulate_sentence: bool
+    disclosure_sentence: bool
+    surface_snippet: str
+
+
+@dataclass(frozen=True)
 class OllamaPair:
     prompt: str
     core_surface: str
@@ -148,6 +173,8 @@ class ArticulationReport:
     footprint_per_turn_delta_bytes: float = 0.0
     cross_topic: list[CrossTopicTurn] = field(default_factory=list)
     anaphora_fire_count: int = 0
+    discourse_planner: list[DiscoursePlannerProbe] = field(default_factory=list)
+    discourse_planner_metrics: dict[str, Any] = field(default_factory=dict)
     ollama: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
@@ -164,6 +191,8 @@ class ArticulationReport:
             ),
             "cross_topic": [t.__dict__ for t in self.cross_topic],
             "anaphora_fire_count": self.anaphora_fire_count,
+            "discourse_planner": [p.__dict__ for p in self.discourse_planner],
+            "discourse_planner_metrics": self.discourse_planner_metrics,
             "ollama": self.ollama,
         }
 
@@ -176,6 +205,12 @@ class ArticulationReport:
 def _snippet(s: str, n: int = 120) -> str:
     s = " ".join(s.split())
     return s if len(s) <= n else s[: n - 1] + "…"
+
+
+def _sentence_count(surface: str) -> int:
+    from evals.multi_sentence_response.runner import _split_sentences, _strip_provenance
+
+    return len(_split_sentences(_strip_provenance(surface)))
 
 
 def _classify_prompt(prompt: str) -> str:
@@ -291,6 +326,48 @@ def bench_cross_topic() -> tuple[list[CrossTopicTurn], int]:
             surface_snippet=_snippet(resp.surface),
         ))
     return out, fires
+
+
+def bench_discourse_planner() -> tuple[list[DiscoursePlannerProbe], dict[str, Any]]:
+    from chat.runtime import ChatRuntime
+    from core.config import RuntimeConfig
+
+    out: list[DiscoursePlannerProbe] = []
+    for label, prompt in DISCOURSE_PLANNER_PROMPTS:
+        rt = ChatRuntime(config=RuntimeConfig(discourse_planner=True))
+        resp = rt.chat(prompt)
+        grounding = getattr(resp, "grounding_source", "unknown")
+        sentence_count = _sentence_count(resp.surface)
+        articulate = sentence_count >= 2 and grounding in {"pack", "teaching"}
+        disclosure = sentence_count >= 2 and grounding in {"oov", "refusal", "none"}
+        out.append(DiscoursePlannerProbe(
+            label=label,
+            prompt=prompt,
+            intent_tag=_classify_prompt(prompt),
+            grounding_source=grounding,
+            sentence_count=sentence_count,
+            articulate_sentence=articulate,
+            disclosure_sentence=disclosure,
+            surface_snippet=_snippet(resp.surface),
+        ))
+
+    total = len(out)
+    metrics = {
+        "cases": total,
+        "articulate_sentence_rate": (
+            round(sum(1 for p in out if p.articulate_sentence) / total, 4)
+            if total else 0.0
+        ),
+        "disclosure_sentence_rate": (
+            round(sum(1 for p in out if p.disclosure_sentence) / total, 4)
+            if total else 0.0
+        ),
+        "multi_sentence_rate": (
+            round(sum(1 for p in out if p.sentence_count >= 2) / total, 4)
+            if total else 0.0
+        ),
+    }
+    return out, metrics
 
 
 def _have_ollama() -> bool:
@@ -409,6 +486,9 @@ def run_articulation_suite(
     ct_turns, ct_fires = bench_cross_topic()
     report.cross_topic = ct_turns
     report.anaphora_fire_count = ct_fires
+    dp_probes, dp_metrics = bench_discourse_planner()
+    report.discourse_planner = dp_probes
+    report.discourse_planner_metrics = dp_metrics
     report.ollama = bench_ollama_compare(
         model=ollama_model,
         prompts=DETERMINISM_PROMPTS[:3],  # subset — ollama is slow
@@ -425,14 +505,14 @@ def format_summary(report: ArticulationReport) -> str:
     out.append("Articulation benchmark suite")
     out.append("=" * 76)
     out.append("")
-    out.append("[1/5] Intent breadth — every supported intent shape:")
+    out.append("[1/6] Intent breadth — every supported intent shape:")
     for p in report.breadth:
         out.append(
             f"  {p.label:30s} {p.intent_tag:14s} {p.grounding_source:9s} "
             f"{_snippet(p.surface_snippet, 80)}"
         )
     out.append("")
-    out.append("[2/5] Determinism — same prompt → byte-identical surface:")
+    out.append("[2/6] Determinism — same prompt → byte-identical surface:")
     for c in report.determinism:
         flag = "OK" if c.unique_surfaces == 1 else "FAIL"
         out.append(
@@ -443,7 +523,7 @@ def format_summary(report: ArticulationReport) -> str:
         f"  all_identical = {report.determinism_all_identical}"
     )
     out.append("")
-    out.append("[3/5] Memory footprint — single runtime, repeated turns:")
+    out.append("[3/6] Memory footprint — single runtime, repeated turns:")
     if report.footprint:
         out.append(
             f"  start = {report.footprint_start_bytes / 1024 / 1024:.1f} MiB  "
@@ -455,7 +535,7 @@ def format_summary(report: ArticulationReport) -> str:
             f"{report.footprint_per_turn_delta_bytes / 1024:.2f} KiB"
         )
     out.append("")
-    out.append("[4/5] Cross-topic context — thread anaphora across subjects:")
+    out.append("[4/6] Cross-topic context — thread anaphora across subjects:")
     for t in report.cross_topic:
         marker = "↩" if t.anaphora_fired else " "
         out.append(
@@ -472,7 +552,16 @@ def format_summary(report: ArticulationReport) -> str:
         "fire rate (which is the architectural ceiling, not a defect)."
     )
     out.append("")
-    out.append("[5/5] Ollama side-by-side:")
+    out.append("[5/6] Discourse planner — flag-on articulation spine:")
+    for p in report.discourse_planner:
+        marker = "A" if p.articulate_sentence else ("D" if p.disclosure_sentence else " ")
+        out.append(
+            f"  [{marker}] {p.label:12s} {p.intent_tag:12s} {p.grounding_source:9s} "
+            f"{p.sentence_count} sentence(s)  {_snippet(p.prompt, 46)}"
+        )
+    out.append(f"  metrics = {report.discourse_planner_metrics}")
+    out.append("")
+    out.append("[6/6] Ollama side-by-side:")
     status = report.ollama.get("status", "skipped")
     if status == "skipped":
         out.append(f"  skipped — {report.ollama.get('reason', '')}")
@@ -502,10 +591,12 @@ __all__ = [
     "INTENT_PROBE_PROMPTS",
     "CROSS_TOPIC_PROMPTS",
     "DETERMINISM_PROMPTS",
+    "DISCOURSE_PLANNER_PROMPTS",
     "bench_breadth",
     "bench_determinism",
     "bench_footprint",
     "bench_cross_topic",
+    "bench_discourse_planner",
     "bench_ollama_compare",
     "run_articulation_suite",
     "format_summary",

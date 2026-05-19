@@ -21,6 +21,7 @@ from generate.intent import (
     DialogueIntent,
     IntentTag,
     ResponseMode,
+    classify_compound_intent,
     classify_intent,
     classify_response_mode,
 )
@@ -118,3 +119,23 @@ class TestExistingDefinitionRulesUntouched:
         result = classify_intent(prompt)
         assert result.tag is IntentTag.DEFINITION
         assert result.subject == subject
+
+
+class TestCompoundAndWalkthroughAnchors:
+    def test_compound_definition_strips_causal_tail_from_subject(self) -> None:
+        result = classify_compound_intent("What is truth, and why does it matter?")
+        assert result.primary.tag is IntentTag.DEFINITION
+        assert result.primary.subject == "truth"
+
+    def test_compound_definition_cause_decomposes_to_two_atoms(self) -> None:
+        atoms = classify_compound_intent("What is truth, and why does it matter?")
+        assert atoms.parts == (
+            DialogueIntent(tag=IntentTag.DEFINITION, subject="truth"),
+            DialogueIntent(tag=IntentTag.CAUSE, subject="truth"),
+        )
+
+    def test_simple_walkthrough_gets_grounded_definition_anchor(self) -> None:
+        result = classify_intent("Walk me through recall.")
+        assert result.tag is IntentTag.DEFINITION
+        assert result.subject == "recall"
+        assert classify_response_mode("Walk me through recall.") is ResponseMode.WALKTHROUGH

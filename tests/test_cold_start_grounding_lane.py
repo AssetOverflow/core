@@ -1,9 +1,10 @@
 """Contract tests for the ``cold_start_grounding`` eval lane.
 
-This lane commits the 44-prompt routing probe described in
+This lane commits the 48-prompt routing probe described in
 ``evals/cold_start_grounding/contract.md``.  The probe is the durable,
 replayable artifact behind the 2026-05-19 lift from 52% "I don't know"
-responses to 0% (out of 44 realistic conversational prompts).
+responses to 0% (out of 44 realistic conversational prompts), then
+extended it with expository, compound, and walkthrough surfaces.
 
 These tests pin:
 
@@ -48,7 +49,7 @@ class TestCaseSetIntegrity:
 
     def test_public_case_count(self) -> None:
         cases = load_cases(_PUBLIC_CASES)
-        assert len(cases) == 44
+        assert len(cases) == 48
 
     def test_every_case_has_required_fields(self) -> None:
         for case in load_cases(_PUBLIC_CASES):
@@ -179,4 +180,4 @@ class TestResultSerialization:
         result = run_lane(lane, version="v1", split="public")
         payload = json.dumps(result.as_dict(), sort_keys=True)
         reloaded = json.loads(payload)
-        assert reloaded["metrics"]["cases"] == 44
+        assert reloaded["metrics"]["cases"] == 48

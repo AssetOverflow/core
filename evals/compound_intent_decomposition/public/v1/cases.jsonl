@@ -1,0 +1,3 @@
+{"id":"compound_truth_definition_cause_001","prompt":"What is truth, and why does it matter?","expected_atoms":[{"intent":"definition","subject":"truth"},{"intent":"cause","subject":"truth"}]}
+{"id":"compound_memory_definition_cause_002","prompt":"What is memory, and why does it matter?","expected_atoms":[{"intent":"definition","subject":"memory"},{"intent":"cause","subject":"memory"}]}
+

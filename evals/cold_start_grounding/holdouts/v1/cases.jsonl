@@ -1,0 +1,5 @@
+{"id":"hold_def_evidence_001","prompt":"What is evidence?","category":"definition_cognition","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"evidence"}
+{"id":"hold_explain_knowledge_002","prompt":"Explain knowledge.","category":"expository_definition","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"knowledge"}
+{"id":"hold_paragraph_truth_003","prompt":"Write a paragraph about truth.","category":"expository_definition","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"truth"}
+{"id":"hold_compound_memory_004","prompt":"What is memory, and why does it matter?","category":"compound_definition_cause","expected_intent":"definition","expected_grounding_source":"oov","expected_subject":"memory"}
+{"id":"hold_walk_inference_005","prompt":"Walk me through inference.","category":"walkthrough_definition","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"inference"}
