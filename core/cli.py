@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo articulation\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -1477,6 +1477,59 @@ Machine-readable output:
 """
 
 
+_ARTICULATION_PREAMBLE = """
+================================================================================
+  Articulation — Discourse-Planner Spine, End-to-End
+================================================================================
+
+Reference: docs/evals/articulation_bench_2026-05-19.md, commits 7af7892
+(CompoundIntent), 4e3ddee (WALKTHROUGH v1), e985790 (planner-on bench),
+07fefb9 (articulate/disclosure/unarticulate partition).
+
+The discourse-planner spine turns a classified intent + grounding bundle
+into a deterministic multi-sentence surface without an LLM, without
+sampling, and without approximate retrieval.  Every sentence traces to a
+pack lemma, a reviewed teaching chain, or a fixed connective vocabulary.
+
+  S1.  EXPLAIN       — "Explain truth."
+                       Flag-on: ANCHOR + SUPPORT multi-sentence paragraph
+                                grounded in teaching (>=3 sentences).
+                       Flag-off: BRIEF pack anchor only (2 sentences,
+                                 incl. pack-grounded tag).
+
+  S2.  COMPOUND      — "What is truth, and why does it matter?"
+                       Flag-on: source-ordered sub-plans + TRANSITION
+                                bridge (>=4 sentences, teaching-grounded).
+                       Flag-off: OOV disclosure (the flat classifier
+                                 cannot parse the second clause).
+
+  S3.  WALKTHROUGH   — "Walk me through recall."
+                       Flag-on: pack anchor + teaching-chain CLOSURE
+                                ("Recall reveals memory.").
+                       Flag-off: pack anchor only, no chain hop.
+
+  S4.  Determinism   — Each prompt re-run N=3 with a fresh ChatRuntime;
+                       unique(surface) == 1 for every prompt.
+
+Trust boundary:
+  This demo does not mutate any corpus, pack, or vault.  Read-only
+  against live packs + active teaching corpus.
+
+What to expect:
+  Per-scene printout with CLAIM, prompt, flag-off baseline, flag-on
+  surface, sentence counts, grounding source.  Final summary lists each
+  scene's claim_supported flag.
+
+Test gate:
+  tests/test_articulation_demo.py (7 tests — per-scene claim +
+  all_claims_supported + determinism invariant).
+
+Machine-readable output:
+  core demo articulation --json
+================================================================================
+"""
+
+
 _ANTI_REGRESSION_PREAMBLE = """
 ================================================================================
   Anti-Regression — Three-Gate Defense Against Learning Harm (ADR-0057)
@@ -1900,6 +1953,16 @@ def cmd_demo(args: argparse.Namespace) -> int:
         if not args.json:
             _print_preamble(_LEARNING_LOOP_PREAMBLE)
         report = run_loop_demo(emit_json=args.json)
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        return 0
+
+    if target == "articulation":
+        from evals.articulation.run_demo import run_demo as run_articulation_demo
+
+        if not args.json:
+            _print_preamble(_ARTICULATION_PREAMBLE)
+        report = run_articulation_demo(emit_json=args.json)
         if args.json:
             print(json.dumps(report, indent=2, sort_keys=True))
         return 0
@@ -2564,6 +2627,7 @@ def build_parser() -> argparse.ArgumentParser:
             "long-context-comparison",
             "anti-regression",
             "learning-loop",
+            "articulation",
             "list-results",
         ],
         help=(
@@ -2580,6 +2644,8 @@ def build_parser() -> argparse.ArgumentParser:
             "harmful chains (eligibility / replay-equivalence / operator).  "
             "learning-loop: ADR-0055..0057 — full cold-turn → discovery → "
             "propose → accept → same-prompt-now-grounded walkthrough.  "
+            "articulation: discourse-planner spine — EXPLAIN / COMPOUND / "
+            "WALKTHROUGH multi-sentence articulation + determinism gate.  "
             "list-results: index every JSON report in the results directory."
         ),
     )
