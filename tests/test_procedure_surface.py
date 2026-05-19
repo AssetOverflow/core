@@ -75,7 +75,11 @@ def test_extract_skips_dialogue_fillers() -> None:
 def test_extract_none_when_no_pack_lemma() -> None:
     assert _extract_procedure_topic_lemma("") is None
     assert _extract_procedure_topic_lemma(None) is None  # type: ignore[arg-type]
-    assert _extract_procedure_topic_lemma("do stuff") is None
+    # Pre-en_core_action_v1 the canonical fixture was "do stuff", but
+    # ``do`` now resolves via en_core_action_v1 (action.doing.perform).
+    # Use a genuinely-OOV verb+noun pair to preserve the original
+    # contract: when no pack-resident lemma exists, return None.
+    assert _extract_procedure_topic_lemma("fix bugs") is None
 
 
 def test_extract_strips_punctuation() -> None:
@@ -128,7 +132,9 @@ def test_surface_returns_none_for_no_pack_lemma() -> None:
     through to the universal disclosure — preserves the honesty
     contract for fully-unknown procedures."""
     assert pack_grounded_procedure_surface("") is None
-    assert pack_grounded_procedure_surface("do stuff") is None
+    # ``do`` is now pack-resident in en_core_action_v1; use a verb+noun
+    # pair where both terms are genuinely OOV across all mounted packs.
+    assert pack_grounded_procedure_surface("fix bugs") is None
 
 
 def test_surface_is_deterministic() -> None:
@@ -160,7 +166,10 @@ def test_procedure_with_no_pack_lemma_routes_to_oov_invitation() -> None:
     universal disclosure.  No surface fabrication: the invitation
     only references the OOV token and the mounted-pack list."""
     rt = ChatRuntime()
-    response = rt.chat("How do I do stuff?")
+    # ``fix`` and ``bugs`` are genuinely OOV across all mounted packs
+    # (``do`` is now pack-resident in en_core_action_v1, so the prior
+    # fixture "how do I do stuff?" would extract ``do`` and ground).
+    response = rt.chat("How do I fix bugs?")
     # Either UNKNOWN-intent → "none", or PROCEDURE-intent on OOV
     # subject → "oov" invitation.  Both honour the no-fabrication
     # contract; the surface text differs by intent classification.
