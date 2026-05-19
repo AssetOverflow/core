@@ -1,0 +1,255 @@
+# Live Probe — 2026-05-19
+#
+# 51 prompts across 13 categories.  Fresh ChatRuntime() per prompt
+# (cold-start invariant — no vault contamination).  Deterministic;
+# every run produces byte-identical output.
+#
+# Reproduce by running notes/live_probe_2026-05-19.py (see the
+# scaffolded version under that name).
+#
+
+
+=== Cognition ===
+
+  [PACK    ] What is truth?
+            Truth is a claim or state grounded by evidence and coherent judgment.
+            pack-grounded (en_core_cognition_v1).
+
+  [PACK    ] Define knowledge.
+            Knowledge is justified understanding grounded in evidence and recall.
+            pack-grounded (en_core_cognition_v1).
+
+  [PACK    ] What is memory?
+            Memory is the retained record enabling recall of prior states. pack-grounded
+            (en_core_cognition_v1).
+
+  [PACK    ] What does meaning mean?
+            Meaning is the semantic content carried by a sign or expression.
+            pack-grounded (en_core_cognition_v1).
+
+  [PACK    ] What is wisdom?
+            Wisdom is sound judgment informed by knowledge and experience. pack-grounded
+            (en_core_cognition_v1).
+
+=== Speech-act / discourse ===
+
+  [PACK    ] What is a fact?
+            Fact is a proposition established as true. pack-grounded (en_core_meta_v1).
+
+  [PACK    ] What is an idea?
+            Idea is a mental content that can be entertained or expressed. pack-grounded
+            (en_core_meta_v1).
+
+  [PACK    ] What is a statement?
+            Statement is an utterance that expresses a definite proposition.
+            pack-grounded (en_core_meta_v1).
+
+  [PACK    ] What does claim mean?
+            To claim means to assert a proposition as true without proof. pack-grounded
+            (en_core_meta_v1).
+
+  [PACK    ] Define argument.
+            Argument is a structured sequence of claims supporting a conclusion.
+            pack-grounded (en_core_meta_v1).
+
+=== Mental-state ===
+
+  [PACK    ] What is doubt?
+            To doubt means to hold a mental state of uncertainty about a claim.
+            pack-grounded (en_core_meta_v1).
+
+  [PACK    ] What does believe mean?
+            To believe means to hold a proposition as likely true without certainty.
+            pack-grounded (en_core_meta_v1).
+
+  [PACK    ] What is the self?
+            Self is the agent or speaker as the reference point of identity.
+            pack-grounded (en_core_meta_v1).
+
+  [PACK    ] Define mind.
+            Mind is the seat of thought, perception, and mental states. pack-grounded
+            (en_core_meta_v1).
+
+  [PACK    ] What is a view?
+            View is a held perspective on a topic or claim. pack-grounded (en_core_meta_v1).
+
+=== Adjectives (attitude) ===
+
+  [PACK    ] What is true?
+            Something is true when it corresponds accurately to the evidence and reality.
+            pack-grounded (en_core_attitude_v1).
+
+  [PACK    ] What does important mean?
+            Something is important when it carries weight or priority in some judgment
+            context. pack-grounded (en_core_attitude_v1).
+
+  [PACK    ] Define evident.
+            Something is evident when it shows itself plainly to any careful observer.
+            pack-grounded (en_core_attitude_v1).
+
+  [PACK    ] What is certain?
+            Something is certain when it holds without residual doubt given the evidence.
+            pack-grounded (en_core_attitude_v1).
+
+  [PACK    ] What does necessary mean?
+            Something is necessary when it must hold for some outcome or condition to
+            obtain. pack-grounded (en_core_attitude_v1).
+
+=== Temporal ===
+
+  [PACK    ] What is now?
+            Now indicates the present moment at the time of utterance. pack-grounded
+            (en_core_temporal_v1).
+
+  [PACK    ] Define moment.
+            Moment is a brief or pointlike interval of time. pack-grounded
+            (en_core_temporal_v1).
+
+  [PACK    ] What is the future?
+            Future is the temporal region after the present. pack-grounded
+            (en_core_temporal_v1).
+
+  [PACK    ] What does before mean?
+            Before is a relation of temporal anteriority between two events.
+            pack-grounded (en_core_temporal_v1).
+
+  [PACK    ] What is time?
+            Time is the dimension along which events are ordered. pack-grounded
+            (en_core_temporal_v1).
+
+=== Spatial ===
+
+  [PACK    ] What is here?
+            Here indicates the location of the speaker or reference point. pack-grounded
+            (en_core_spatial_v1).
+
+  [PACK    ] What is a place?
+            Place is a definite location in space. pack-grounded (en_core_spatial_v1).
+
+  [PACK    ] Define above.
+            Above is a relation of vertical position higher than a reference point.
+            pack-grounded (en_core_spatial_v1).
+
+  [PACK    ] What does between mean?
+            Between is a relation of spatial position flanked by two references.
+            pack-grounded (en_core_spatial_v1).
+
+=== Action verbs (infinitive-stripped) ===
+
+  [PACK    ] What is to create?
+            To create means to originate something new from intention or material.
+            pack-grounded (en_core_action_v1).
+
+  [PACK    ] What does make mean?
+            To make means to bring something into existence by directed action.
+            pack-grounded (en_core_action_v1).
+
+  [PACK    ] What is to use?
+            To use means to put something into service for a purpose. pack-grounded
+            (en_core_action_v1).
+
+  [PACK    ] Define change.
+            To change means to make or become different in some respect. pack-grounded
+            (en_core_action_v1).
+
+=== Quantitative ===
+
+  [PACK    ] What does all mean?
+            All specifies the totality of items in a referenced set. pack-grounded
+            (en_core_quantitative_v1).
+
+  [PACK    ] Define some.
+            Some specifies an indefinite nonzero subset of a referenced set.
+            pack-grounded (en_core_quantitative_v1).
+
+  [PACK    ] What is more?
+            More specifies a greater quantity along a comparative scale. pack-grounded
+            (en_core_quantitative_v1).
+
+  [PACK    ] What does enough mean?
+            Enough specifies a quantity sufficient to satisfy a stated requirement.
+            pack-grounded (en_core_quantitative_v1).
+
+=== Causation ===
+
+  [PACK    ] What is an effect?
+            Effect is a state of affairs produced by an antecedent cause. pack-grounded
+            (en_core_causation_v1).
+
+  [PACK    ] Define outcome.
+            Outcome is the end state produced by some process. pack-grounded
+            (en_core_causation_v1).
+
+  [PACK    ] What is a consequence?
+            Consequence is a state of affairs that follows necessarily from another.
+            pack-grounded (en_core_causation_v1).
+
+  [PACK    ] What does trigger mean?
+            To trigger means to initiate or set in motion a subsequent event.
+            pack-grounded (en_core_causation_v1).
+
+=== Polarity / frequency ===
+
+  [PACK    ] What is yes?
+            Yes is uttered to affirm assent to a preceding question or claim.
+            pack-grounded (en_core_polarity_v1).
+
+  [PACK    ] What does always mean?
+            Always indicates the frequency of occurring without exception across all
+            instances. pack-grounded (en_core_polarity_v1).
+
+  [PACK    ] Define never.
+            Never indicates the frequency of occurring on zero instances. pack-grounded
+            (en_core_polarity_v1).
+
+  [PACK    ] What is maybe?
+            Maybe indicates a tentative possibility without committed certainty.
+            pack-grounded (en_core_polarity_v1).
+
+=== Teaching-chain (multi-clause) ===
+
+  [TEACH   ] Why is truth important?
+            truth — teaching-grounded (cognition_chains_v1): cognition.truth; logos.core.
+            truth grounds knowledge (cognition.knowledge). No session evidence yet.
+
+=== Genuinely OOV (honesty control) ===
+
+  [OOV     ] What is a hypothesis?
+            I haven't learned 'hypothesis' yet (intent: definition). Mounted lexicon
+            packs: en_core_cognition_v1, en_core_meta_v1, en_core_attitude_v1,
+            en_core_temporal_v1, en_core_action_v1, en_core_quantitative_v1,
+            en_core_spatial_v1, en_core_causation_v1, en_core_polarity_v1,
+            en_core_relations_v1, en_core_relations_v2. Teach me via a reviewed
+            PackMutationProposal.
+
+  [OOV     ] Define javascript.
+            I haven't learned 'javascript' yet (intent: definition). Mounted lexicon
+            packs: en_core_cognition_v1, en_core_meta_v1, en_core_attitude_v1,
+            en_core_temporal_v1, en_core_action_v1, en_core_quantitative_v1,
+            en_core_spatial_v1, en_core_causation_v1, en_core_polarity_v1,
+            en_core_relations_v1, en_core_relations_v2. Teach me via a reviewed
+            PackMutationProposal.
+
+  [OOV     ] What is quasar?
+            I haven't learned 'quasar' yet (intent: definition). Mounted lexicon packs:
+            en_core_cognition_v1, en_core_meta_v1, en_core_attitude_v1,
+            en_core_temporal_v1, en_core_action_v1, en_core_quantitative_v1,
+            en_core_spatial_v1, en_core_causation_v1, en_core_polarity_v1,
+            en_core_relations_v1, en_core_relations_v2. Teach me via a reviewed
+            PackMutationProposal.
+
+=== Cause without teaching chain (deferred SurfaceSelector target) ===
+
+  [NONE    ] How does memory work?
+            I don't know — insufficient grounding for that yet.
+
+  [NONE    ] What causes doubt?
+            I don't know — insufficient grounding for that yet.
+
+
+======================================================================
+GROUNDING DISTRIBUTION over 51 prompts:
+  pack        45  ( 88.2%)
+  oov          3  (  5.9%)
+  none         2  (  3.9%)
+  teaching     1  (  2.0%)
