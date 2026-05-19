@@ -54,25 +54,7 @@ from dataclasses import dataclass, field
 from enum import Enum, unique
 
 from generate.graph_planner import Relation
-from generate.intent import DialogueIntent, IntentTag
-
-
-@unique
-class ResponseMode(Enum):
-    """Presentation-depth axis, orthogonal to ``IntentTag``.
-
-    A request like "Explain truth" vs "Tell me about truth" carries the
-    same ``IntentTag`` (DEFINITION/NARRATIVE) but a different mode.
-    Keeping mode separate from intent prevents corrupting the semantic
-    enum with presentation concerns (same lesson as ADR-0049's
-    syntactic subject extraction).
-    """
-
-    BRIEF = "brief"
-    EXPLAIN = "explain"
-    WALKTHROUGH = "walkthrough"
-    PARAGRAPH = "paragraph"
-    EXAMPLE = "example"
+from generate.intent import DialogueIntent, IntentTag, ResponseMode
 
 
 @unique

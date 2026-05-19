@@ -13,6 +13,33 @@ from enum import Enum, unique
 
 
 @unique
+class ResponseMode(Enum):
+    """Presentation-depth axis, orthogonal to :class:`IntentTag`.
+
+    ``IntentTag`` answers *what does the user want* (definition, cause,
+    verification, …).  ``ResponseMode`` answers *at what depth and shape
+    should the response be rendered* (brief / explain / walkthrough /
+    paragraph / example).
+
+    Keeping mode separate from intent is the same syntactic-vs-semantic
+    separation ADR-0049 enforced for subject extraction: presentation
+    concerns must not corrupt the semantic enum.  The discourse planner
+    (``generate/discourse_planner.py``) consumes the pair
+    ``(DialogueIntent, ResponseMode)`` to select move count and move
+    kinds; classification of mode is performed by
+    :func:`classify_response_mode` and is purely additive — no existing
+    ``DialogueIntent`` field changes, no existing ``classify_intent``
+    branch alters its output.
+    """
+
+    BRIEF = "brief"
+    EXPLAIN = "explain"
+    WALKTHROUGH = "walkthrough"
+    PARAGRAPH = "paragraph"
+    EXAMPLE = "example"
+
+
+@unique
 class IntentTag(Enum):
     DEFINITION = "definition"
     CAUSE = "cause"
@@ -285,3 +312,72 @@ def classify_intent(prompt: str) -> DialogueIntent:
             return DialogueIntent(tag=tag, subject=subject)
 
     return DialogueIntent(tag=IntentTag.UNKNOWN, subject=text)
+
+
+# ---------------------------------------------------------------------------
+# ResponseMode classification
+# ---------------------------------------------------------------------------
+#
+# Sibling rule-based classifier for the presentation-depth axis.  Lives
+# next to :func:`classify_intent` so the two share style and idioms but
+# remain decoupled: callers compose ``(classify_intent(t),
+# classify_response_mode(t))`` rather than threading a new field through
+# the existing intent classifier.  This keeps the change additive — no
+# DialogueIntent field added, no classify_intent branch altered.
+#
+# Patterns are ordered most-specific-first.  ``BRIEF`` is the default
+# fallback when no presentation marker is present (e.g. "What is
+# truth?"); existing single-sentence composer behavior corresponds to
+# ``BRIEF``, so default-BRIEF preserves byte-identity when the discourse
+# planner is wired up under a flag.
+
+_RESPONSE_MODE_RULES: tuple[tuple[re.Pattern[str], "ResponseMode"], ...] = (
+    # PARAGRAPH — explicit request for paragraph-shaped output.
+    (
+        re.compile(
+            r"\b(?:write|compose|draft)\s+(?:a\s+)?(?:short\s+|brief\s+)?paragraph\b",
+            re.IGNORECASE,
+        ),
+        ResponseMode.PARAGRAPH,
+    ),
+    (re.compile(r"^paragraph\s+(?:about|on)\s+", re.IGNORECASE), ResponseMode.PARAGRAPH),
+    (re.compile(r"\bin\s+a\s+paragraph\b", re.IGNORECASE), ResponseMode.PARAGRAPH),
+    # WALKTHROUGH — explicit step-by-step request.
+    (re.compile(r"^walk\s+(?:me\s+)?through\s+", re.IGNORECASE), ResponseMode.WALKTHROUGH),
+    (re.compile(r"\bstep\s*[-\s]?by\s*[-\s]?step\b", re.IGNORECASE), ResponseMode.WALKTHROUGH),
+    # EXAMPLE — instance/example request (matches the same surface forms
+    # as IntentTag.EXAMPLE; the two axes are orthogonal but agree here).
+    (re.compile(r"^(?:give|show)\s+(?:me\s+)?an?\s+(?:example|instance)\s+of\s+", re.IGNORECASE), ResponseMode.EXAMPLE),
+    (re.compile(r"^example\s+of\s+", re.IGNORECASE), ResponseMode.EXAMPLE),
+    # EXPLAIN — open-ended elaboration request.  Includes "tell me about"
+    # and "describe" because those surface forms expect more than a
+    # single-sentence brief; the discourse planner uses this to select
+    # a longer move sequence.
+    (re.compile(r"^explain\s+", re.IGNORECASE), ResponseMode.EXPLAIN),
+    (re.compile(r"^tell\s+me\s+(?:more\s+)?about\s+", re.IGNORECASE), ResponseMode.EXPLAIN),
+    (re.compile(r"^describe\s+", re.IGNORECASE), ResponseMode.EXPLAIN),
+    (
+        re.compile(
+            r"^what\s+(?:can|do)\s+you\s+(?:say|know)\s+about\s+",
+            re.IGNORECASE,
+        ),
+        ResponseMode.EXPLAIN,
+    ),
+)
+
+
+def classify_response_mode(prompt: str) -> ResponseMode:
+    """Classify presentation depth from raw prompt text.
+
+    Returns :attr:`ResponseMode.BRIEF` when no presentation marker is
+    present.  Deterministic and pure — same input always produces the
+    same output; no clock reads, no env reads, no I/O.
+    """
+
+    text = prompt.strip()
+    if not text:
+        return ResponseMode.BRIEF
+    for pattern, mode in _RESPONSE_MODE_RULES:
+        if pattern.search(text):
+            return mode
+    return ResponseMode.BRIEF
