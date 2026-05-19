@@ -83,39 +83,167 @@ def _pack_index() -> dict[str, tuple[str, ...]]:
     return out
 
 
+def _frame_gloss(lemma: str, pos: str, gloss: str) -> str:
+    """Render a fluent sentence from a (lemma, pos, gloss) triple.
+
+    POS-aware sentence frames:
+
+      NOUN          -> "{Lemma} is {gloss}."
+      VERB          -> "To {lemma} means {gloss}."
+      ADJ           -> "Something is {lemma} when it {gloss}."
+      ADV           -> "{Lemma} indicates {gloss}."
+      ADP           -> "{Lemma} is a relation of {gloss}."
+      SCONJ         -> "{Lemma} introduces {gloss}."
+      PRON          -> "{Lemma} asks for {gloss}."
+      AUX           -> "{Lemma} expresses {gloss}."
+      INTJ          -> "{Lemma} is uttered to {gloss}."
+      DET           -> "{Lemma} specifies {gloss}."
+      NUM           -> "{Lemma} is the cardinal value {gloss}."
+      *  (unknown)  -> "{Lemma}: {gloss}."  (back-compat fallback)
+
+    The glosses are authored to match these frames exactly (see
+    the subagent briefs and ``language_packs/data/<pack>/glosses.jsonl``).
+    Capitalization is applied only to the framed surface, never to
+    the lemma in the lexicon (which stays lowercase by convention).
+    """
+    key = lemma.strip()
+    cap = key[:1].upper() + key[1:] if key else key
+    pos_u = (pos or "").upper()
+    if pos_u == "NOUN":
+        return f"{cap} is {gloss}."
+    if pos_u == "VERB":
+        return f"To {key} means {gloss}."
+    if pos_u == "ADJ":
+        return f"Something is {key} when it {gloss}."
+    if pos_u == "ADV":
+        return f"{cap} indicates {gloss}."
+    if pos_u == "ADP":
+        return f"{cap} is a relation of {gloss}."
+    if pos_u == "SCONJ":
+        return f"{cap} introduces {gloss}."
+    if pos_u == "PRON":
+        return f"{cap} asks for {gloss}."
+    if pos_u == "AUX":
+        return f"{cap} expresses {gloss}."
+    if pos_u == "INTJ":
+        return f"{cap} is uttered to {gloss}."
+    if pos_u == "DET":
+        return f"{cap} specifies {gloss}."
+    if pos_u == "NUM":
+        return f"{cap} is the cardinal value {gloss}."
+    return f"{cap}: {gloss}."
+
+
+def build_pack_surface_candidate(
+    lemma: str,
+    pack_ids: tuple[str, ...] = DEFAULT_RESOLVABLE_PACK_IDS,
+):
+    """Return a :class:`PackSurfaceCandidate` for *lemma*, or ``None``.
+
+    This is the selector-ready intermediate that
+    :func:`pack_grounded_surface` renders to a string.  Two grounding
+    paths feed it:
+
+      1. Reviewed gloss (preferred) — when the pack ships a gloss for
+         the lemma AND the lemma is ratified in the same pack's
+         lexicon (verified by :func:`resolve_gloss`), the candidate
+         carries the gloss and ``is_fluent_sentence=True``.
+
+      2. Dotted-domain disclosure (fallback) — when no gloss exists
+         for the lemma, the candidate falls back to the original
+         "{lemma} — pack-grounded (...): d1; d2; d3. No session
+         evidence yet." structured form.  ``is_fluent_sentence=False``.
+
+    When the future :class:`SurfaceSelector` lands, it will consume
+    this candidate directly without re-rendering; the surface field
+    is already the final user-facing string.
+    """
+    from chat.pack_resolver import resolve_gloss
+    from chat.pack_surface_candidate import PackSurfaceCandidate
+    resolved = resolve_lemma(lemma, pack_ids)
+    if resolved is None:
+        return None
+    resolved_pack_id, domains = resolved
+    key = lemma.strip().lower()
+
+    # Try the gloss path first.  resolve_gloss enforces lexicon
+    # residency, so a gloss that snuck into glosses.jsonl without a
+    # matching lexicon entry is rejected.
+    gloss_entry = resolve_gloss(lemma, pack_ids)
+    if gloss_entry is not None and gloss_entry[0] == resolved_pack_id:
+        _, gloss_pos, gloss_text = gloss_entry
+        # Fall back to the pack-resident POS when the gloss carries
+        # no POS (older gloss files).  POS drives the sentence frame.
+        if not gloss_pos:
+            # Pull POS from the lexicon entry if we can.
+            from chat.pack_resolver import _pack_lexicon_for  # noqa
+            # _pack_lexicon_for only stores domains today; POS is not
+            # in its cached dict.  Default to NOUN frame as the safest
+            # fallback — most lemmas with glosses are nouns.
+            gloss_pos = "NOUN"
+        surface = (
+            f"{_frame_gloss(key, gloss_pos, gloss_text)} "
+            f"Pack-grounded ({resolved_pack_id})."
+        )
+        return PackSurfaceCandidate(
+            surface=surface,
+            grounding_source="pack",
+            pack_id=resolved_pack_id,
+            gloss=gloss_text,
+            semantic_domains=tuple(domains),
+            lemma=key,
+            pos=gloss_pos,
+            is_user_facing_safe=True,
+            is_fluent_sentence=True,
+        )
+
+    # Dotted-domain disclosure fallback.
+    head = "; ".join(domains[:3])
+    surface = (
+        f"{key} — pack-grounded ({resolved_pack_id}): {head}. "
+        f"No session evidence yet."
+    )
+    return PackSurfaceCandidate(
+        surface=surface,
+        grounding_source="pack",
+        pack_id=resolved_pack_id,
+        gloss=None,
+        semantic_domains=tuple(domains),
+        lemma=key,
+        pos="",  # POS unknown via this code path
+        is_user_facing_safe=True,
+        is_fluent_sentence=False,
+    )
+
+
 def pack_grounded_surface(
     lemma: str,
     pack_ids: tuple[str, ...] = DEFAULT_RESOLVABLE_PACK_IDS,
 ) -> str | None:
     """Return a deterministic pack-grounded surface for *lemma*, or ``None``.
 
-    The surface format is fixed:
+    Two surface forms, selected by gloss presence:
 
-        "{lemma} — pack-grounded ({resolved_pack_id}): {d1}; {d2}; {d3}. No session evidence yet."
+      With gloss (preferred, lexicon-resident):
+        "{Lemma} is {gloss}. Pack-grounded ({pack_id})."
+        (frame varies by POS — see :func:`_frame_gloss`)
 
-    ADR-0063 — *resolved_pack_id* is the pack in *pack_ids* whose lexicon
-    contained *lemma* (first-match-wins).  Cognition lemmas keep emitting
-    ``pack-grounded (en_core_cognition_v1)`` byte-identically; kinship
-    lemmas emit ``pack-grounded (en_core_relations_v1)``.
+      Without gloss (dotted-domain disclosure — original ADR-0048 form):
+        "{lemma} — pack-grounded ({pack_id}): {d1}; {d2}; {d3}. No session evidence yet."
 
-    Only the lemma and up to three semantic_domains from the resolved
-    pack are emitted; both come directly from the ratified pack lexicon,
-    with no rewording.
+    Both forms carry the ``"pack-grounded ({pack_id})"`` provenance
+    marker so substring-permissive tests continue to pass through
+    the transition.
 
-    Returns ``None`` when:
-      - the lemma is empty or not a string,
-      - the lemma does not resolve in any of *pack_ids*.
+    The intermediate :class:`PackSurfaceCandidate` is the
+    selector-ready shape; this function renders the candidate to a
+    string for current callers.  When :class:`SurfaceSelector` lands
+    the candidate is what the selector consumes directly.
+
+    Returns ``None`` when the lemma is empty or doesn't resolve.
     """
-    resolved = resolve_lemma(lemma, pack_ids)
-    if resolved is None:
-        return None
-    resolved_pack_id, domains = resolved
-    key = lemma.strip().lower()
-    head = "; ".join(domains[:3])
-    return (
-        f"{key} — pack-grounded ({resolved_pack_id}): {head}. "
-        f"No session evidence yet."
-    )
+    candidate = build_pack_surface_candidate(lemma, pack_ids)
+    return candidate.surface if candidate is not None else None
 
 
 def is_pack_lemma(lemma: str) -> bool:
