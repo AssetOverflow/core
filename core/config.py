@@ -18,6 +18,7 @@ class RuntimeConfig:
         "en_core_temporal_v1",
         "en_core_action_v1",
         "en_core_quantitative_v1",
+        "en_core_spatial_v1",
         "en_core_relations_v1",
         "en_core_relations_v2",
         "he_logos_micro_v1",
