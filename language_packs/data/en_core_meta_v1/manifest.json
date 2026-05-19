@@ -1,0 +1,13 @@
+{
+  "pack_id": "en_core_meta_v1",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_core_meta_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "984e471ec9253b21263e74fc0a02e766db04442a88b3deb0e9a934b9856c44a8",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback"
+}

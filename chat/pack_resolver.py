@@ -42,6 +42,7 @@ from pathlib import Path
 # overlays and never carry vocabulary; they are deliberately excluded.
 DEFAULT_RESOLVABLE_PACK_IDS: tuple[str, ...] = (
     "en_core_cognition_v1",
+    "en_core_meta_v1",
     "en_core_relations_v1",
     "en_core_relations_v2",
 )

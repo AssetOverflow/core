@@ -55,7 +55,13 @@ def test_extract_returns_verb_when_only_pack_lemma() -> None:
     """When the verb is the only pack-resident lemma (object is OOV
     or filler), the verb is the topic by elimination — preserves
     coverage on procedure utterances with non-pack objects."""
-    assert _extract_procedure_topic_lemma("verify a claim") == "verify"
+    # ``hypothesis`` is genuinely OOV across cognition/meta/relations.
+    # Pre-en_core_meta_v1 the canonical example was "verify a claim",
+    # but ``claim`` now resolves via the meta pack (meta.speech_act.claim),
+    # so the object-first selector would correctly pick ``claim`` over
+    # ``verify`` for that utterance.  Use ``hypothesis`` to keep the
+    # verb-fallback contract isolated from pack-coverage changes.
+    assert _extract_procedure_topic_lemma("verify a hypothesis") == "verify"
     assert _extract_procedure_topic_lemma("correct an error") == "correct"
     assert _extract_procedure_topic_lemma("learn this") == "learn"
 
@@ -163,11 +169,14 @@ def test_procedure_with_no_pack_lemma_routes_to_oov_invitation() -> None:
         assert "PackMutationProposal" in response.surface
 
 
-def test_procedure_verify_a_claim_grounds() -> None:
-    """When the object is OOV (``claim`` isn't a pack lemma) but
-    the verb is pack-resident (``verify``), the composer surfaces
-    the verb — keeps surface_groundedness coverage."""
+def test_procedure_verify_an_oov_object_falls_back_to_verb() -> None:
+    """When the object is OOV but the verb is pack-resident, the
+    procedure composer surfaces the verb — keeps surface_groundedness
+    coverage on utterances whose object is not yet packed.
+
+    ``hypothesis`` is genuinely OOV across cognition/meta/relations.
+    """
     rt = ChatRuntime()
-    response = rt.chat("How do I verify a claim?")
+    response = rt.chat("How do I verify a hypothesis?")
     assert response.grounding_source == "pack"
     assert "verify" in response.surface.lower()
