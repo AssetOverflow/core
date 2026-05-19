@@ -160,7 +160,9 @@ def test_runtime_known_subject_still_grounds_pack() -> None:
     rt = ChatRuntime()
     resp = rt.chat("What is light?")
     assert resp.grounding_source == "pack"
-    assert "light" in resp.surface
+    # Case-insensitive — gloss-backed surface capitalizes ``Light``
+    # at sentence start.
+    assert "light" in resp.surface.lower()
 
 
 def test_runtime_known_subject_still_grounds_teaching() -> None:

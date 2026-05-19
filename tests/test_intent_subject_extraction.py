@@ -217,4 +217,6 @@ def test_pack_grounded_surface_lifts_with_article_stripped() -> None:
     rt = ChatRuntime()
     resp = rt.chat("What is a procedure?")
     assert resp.grounding_source == "pack"
-    assert "procedure" in resp.surface
+    # Case-insensitive: gloss-backed surfaces capitalize the lemma
+    # at sentence start (Procedure is ...).
+    assert "procedure" in resp.surface.lower()

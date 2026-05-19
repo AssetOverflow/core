@@ -141,5 +141,14 @@ def test_correction_surface_distinct_from_definition_of_correction() -> None:
     corr_resp = rt_corr.chat("No, that's wrong")
 
     assert def_resp.surface != corr_resp.surface
-    assert "No session evidence yet." in def_resp.surface
+    # The CORRECTION acknowledgement carries its own template trailer
+    # (still dotted-disclosure form — the correction composer is not
+    # yet gloss-backed).  The DEFINITION surface is gloss-backed for
+    # ``correction`` (cognition_v1 ships a gloss); we assert the
+    # two paths produce distinct outputs without pinning the exact
+    # DEFINITION trailer, which now varies between gloss-backed and
+    # dotted-disclosure fallback forms.
+    assert def_resp.grounding_source == "pack"
+    assert "correction" in def_resp.surface.lower()
+    assert "pack-grounded" in def_resp.surface
     assert "No prior turn in this session to correct yet." in corr_resp.surface
