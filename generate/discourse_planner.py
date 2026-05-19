@@ -518,6 +518,92 @@ def plan_discourse(
     return DiscoursePlan(intent=intent, mode=mode, moves=tuple(moves))
 
 
+# ---------------------------------------------------------------------------
+# Plan rendering — deterministic multi-clause surface
+# ---------------------------------------------------------------------------
+#
+# A first renderer that joins each move's grounded fact into a clause
+# using fixed connectives.  Step 5 of the discourse-planner sequencing
+# uses this for the initial runtime wiring; a follow-up ADR will route
+# plans through the existing PropositionGraph → realize_target spine.
+#
+# Every visible token in the rendered surface is either:
+#   * the subject/object of a GroundedFact (verbatim from pack lexicon
+#     or reviewed teaching corpus),
+#   * the gloss or semantic_domains string of a pack fact (verbatim),
+#   * a fixed-template connective from the table below.
+# No synthesis, no LLM, no approximation.
+
+_PREDICATE_HUMANIZE: dict[str, str] = {
+    "is_defined_as": "is",
+    "belongs_to": "belongs to",
+}
+
+
+def _humanize_predicate(predicate: str) -> str:
+    return _PREDICATE_HUMANIZE.get(predicate, predicate.replace("_", " "))
+
+
+def _clause_for(move: DiscourseMove) -> str | None:
+    """Render a single move into one declarative clause, or ``None``
+    when the move carries no fact (e.g. CLOSURE without summary fact).
+    """
+
+    fact = move.fact
+    if fact is None:
+        return None
+    if move.kind is DiscourseMoveKind.ANCHOR and fact.predicate == "is_defined_as":
+        return f"{fact.subject} is {fact.obj}"
+    if fact.predicate == "is_defined_as":
+        return f"{fact.subject} is {fact.obj}"
+    if fact.predicate == "belongs_to":
+        return f"{fact.subject} belongs to {fact.obj}"
+    return f"{fact.subject} {_humanize_predicate(fact.predicate)} {fact.obj}"
+
+
+_MOVE_CONNECTIVE: dict[DiscourseMoveKind, str] = {
+    DiscourseMoveKind.ANCHOR: "",
+    DiscourseMoveKind.SUPPORT: "Furthermore, ",
+    DiscourseMoveKind.RELATION: "In turn, ",
+    DiscourseMoveKind.TRANSITION: "Consequently, ",
+    DiscourseMoveKind.CLOSURE: "",
+}
+
+
+def render_plan(plan: DiscoursePlan) -> str:
+    """Render a :class:`DiscoursePlan` as a deterministic multi-clause
+    surface terminated with periods.
+
+    Empty plans render to the empty string — callers must check
+    ``plan.is_empty()`` and fall back to their existing path before
+    calling this.  Single-move plans render as a single sentence
+    byte-equivalent to today's pack-grounded surface for the same fact.
+
+    Determinism: ``render_plan(p) == render_plan(p)`` for any plan
+    ``p``; the function is pure.
+    """
+
+    if plan.is_empty():
+        return ""
+    clauses: list[str] = []
+    for idx, move in enumerate(plan.moves):
+        clause = _clause_for(move)
+        if clause is None:
+            continue
+        if idx == 0:
+            head = clause[0].upper() + clause[1:] if clause else clause
+            clauses.append(f"{head}.")
+            continue
+        connective = _MOVE_CONNECTIVE.get(move.kind, "")
+        if connective:
+            head = clause[0].lower() + clause[1:] if clause else clause
+            clauses.append(f"{connective}{head}.")
+        else:
+            head = clause[0].upper() + clause[1:] if clause else clause
+            clauses.append(f"{head}.")
+    return " ".join(clauses)
+
+
 __all__ = [
     "DiscourseMove",
     "DiscourseMoveKind",
@@ -530,4 +616,5 @@ __all__ = [
     "Relation",
     "ResponseMode",
     "plan_discourse",
+    "render_plan",
 ]

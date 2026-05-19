@@ -82,6 +82,16 @@ class RuntimeConfig:
     # surface byte-identically.
     thread_anaphora: bool = False
 
+    # Discourse planner (step 5 of the discourse-planner sequencing).
+    # When True, the runtime builds a deterministic DiscoursePlan via
+    # ``generate.discourse_planner.plan_discourse`` from a
+    # ``GroundingBundle`` assembled by ``generate.grounding_accessors``
+    # and renders it as multi-clause output.  Mode selection comes from
+    # ``generate.intent.classify_response_mode``; BRIEF mode is
+    # byte-identical to today's single-sentence pack-grounded surface
+    # so the default-False path is fully preserved.
+    discourse_planner: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"

@@ -1086,6 +1086,42 @@ class ChatRuntime:
                             warm_pack_surface = prefix + warm_pack_surface
                 response_surface = warm_pack_surface
                 articulation = replace(articulation, surface=warm_pack_surface)
+                # Step 5 — discourse planner.  Opt-in; engages only on
+                # pack/teaching-grounded turns where the response mode
+                # asks for more than a single-sentence brief.  When the
+                # planner returns a multi-move plan, replace the warm
+                # surface with the deterministic multi-clause rendering.
+                # BRIEF mode always collapses to a single ANCHOR move so
+                # the flag-off path stays byte-identical to the existing
+                # composer.
+                if (
+                    self.config.discourse_planner
+                    and warm_grounding_source in {"pack", "teaching"}
+                ):
+                    from generate.discourse_planner import (
+                        plan_discourse,
+                        render_plan,
+                    )
+                    from generate.grounding_accessors import (
+                        grounding_bundle_for,
+                    )
+                    from generate.intent import classify_response_mode
+                    from generate.intent_bridge import (
+                        classify_intent_from_input,
+                    )
+
+                    _dintent = classify_intent_from_input(text)
+                    _dmode = classify_response_mode(text)
+                    if _dintent.subject:
+                        _dbundle = grounding_bundle_for(_dintent.subject)
+                        _dplan = plan_discourse(_dintent, _dmode, _dbundle)
+                        if len(_dplan.moves) > 1:
+                            _drendered = render_plan(_dplan)
+                            if _drendered:
+                                response_surface = _drendered
+                                articulation = replace(
+                                    articulation, surface=_drendered
+                                )
             if should_inject_hedge(ethics_verdict, self.ethics_pack):
                 hedge_prefix = build_hedge_prefix(self.identity_manifold)
                 before = response_surface
