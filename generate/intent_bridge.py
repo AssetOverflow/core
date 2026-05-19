@@ -13,6 +13,18 @@ Design constraints:
     with no grounded obj slots)
   - Does not alter the ArticulationPlan dataclass or ChatResponse structure;
     only the .surface field is replaced when the bridge succeeds
+
+Phase 1 instrumentation (observation-only)
+  ``articulate_with_intent()`` emits one ``BridgeTraceRecord`` per call
+  through the module-level ``_TRACE_SINK`` when a sink has been attached via
+  ``attach_bridge_trace_sink()``.  When no sink is attached the emission
+  path is a pure no-op (single ``is None`` guard, no allocation).  This
+  instruments the four dimensions named in the mastery plan's Phase 1.3:
+    - recalled_words population at the call site
+    - pre- and post-grounding obj slot content
+    - bridge_useful flag
+    - fallback_surface (what the runtime would use if bridge returns "")
+  Zero behavior change on all existing paths.
 """
 
 from __future__ import annotations
@@ -32,6 +44,89 @@ from generate.realizer import RealizedPlan, realize_semantic
 _PENDING = "<pending>"
 _PRIOR = "<prior>"
 _EMPTY_INDICATORS = frozenset({_PENDING, _PRIOR, "...", ""})
+
+
+# ---------------------------------------------------------------------------
+# Phase 1 — module-level trace sink (opt-in, observation-only)
+# ---------------------------------------------------------------------------
+
+_TRACE_SINK = None  # type: object | None
+_TRACE_INCLUDE_CONTENT: bool = False
+
+
+def attach_bridge_trace_sink(
+    sink,
+    *,
+    include_content: bool = False,
+) -> None:
+    """Attach a :class:`generate.bridge_trace.BridgeTraceSink`.
+
+    After each call to ``articulate_with_intent()`` the runtime emits
+    one JSONL-formatted ``BridgeTraceRecord`` to *sink*.  Passing
+    ``None`` detaches.
+
+    ``include_content`` opts surface text, recalled words, and slot
+    values into the emitted record.  Default ``False`` preserves
+    redact-by-default (CLAUDE.md trust boundary): aggregation
+    pipelines get counts and flags without raw text.
+    """
+    global _TRACE_SINK, _TRACE_INCLUDE_CONTENT
+    _TRACE_SINK = sink
+    _TRACE_INCLUDE_CONTENT = bool(include_content)
+
+
+def detach_bridge_trace_sink() -> None:
+    """Detach any attached trace sink (convenience alias for attach(None))."""
+    global _TRACE_SINK, _TRACE_INCLUDE_CONTENT
+    _TRACE_SINK = None
+    _TRACE_INCLUDE_CONTENT = False
+
+
+def _emit_trace(
+    *,
+    intent_tag: str,
+    intent_subject: str,
+    plan: ArticulationPlan,
+    recalled_words: tuple[str, ...],
+    pre_ground_obj: str,
+    post_ground_obj: str,
+    bridge_surface: str,
+    bridge_useful: bool,
+) -> None:
+    """Emit one BridgeTraceRecord to the attached sink (no-op when None).
+
+    Called from within ``articulate_with_intent()`` after the bridge
+    has resolved.  All arguments are plain Python types — no numpy,
+    no I/O dependencies at the construction site.
+    """
+    if _TRACE_SINK is None:
+        return
+    from generate.bridge_trace import BridgeTraceRecord, format_bridge_trace_jsonl
+
+    record = BridgeTraceRecord(
+        intent_tag=intent_tag,
+        intent_subject=intent_subject,
+        plan_subject=plan.subject or "",
+        plan_predicate=plan.predicate or "",
+        plan_object=plan.object or "",
+        recalled_words_len=len(recalled_words),
+        recalled_words_sample=recalled_words[:5] if _TRACE_INCLUDE_CONTENT else (),
+        pre_ground_obj=pre_ground_obj,
+        post_ground_obj=post_ground_obj,
+        bridge_surface=bridge_surface if _TRACE_INCLUDE_CONTENT else "",
+        bridge_useful=bridge_useful,
+        fallback_surface=plan.surface if _TRACE_INCLUDE_CONTENT else "",
+    )
+    line = format_bridge_trace_jsonl(
+        record,
+        include_content=_TRACE_INCLUDE_CONTENT,
+    )
+    _TRACE_SINK.emit(line)
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
 
 
 def classify_intent_from_input(text: str) -> DialogueIntent:
@@ -125,21 +220,56 @@ def articulate_with_intent(
 
     The caller (chat/runtime.py) should fall back to the existing
     ArticulationPlan.surface when this returns "".
+
+    Phase 1: emits one BridgeTraceRecord to the module-level sink (if
+    attached) after resolution — observation-only, no effect on return value.
     """
     intent = classify_intent_from_input(text)
+    intent_tag_name = intent.tag.name if intent.tag is not None else "UNKNOWN"
+    intent_subject = intent.subject or ""
 
     graph = _build_graph_from_intent(intent, plan)
+
+    # Record pre-grounding obj for the Phase 1 trace.
+    pre_ground_obj = graph.nodes[0].obj if graph.nodes else _PENDING
+
     if recalled_words:
         graph = ground_graph(graph, recalled_words)
+
+    # Record post-grounding obj for the Phase 1 trace.
+    post_ground_obj = graph.nodes[0].obj if graph.nodes else _PENDING
 
     articulation_target = plan_articulation(graph)
     realized: RealizedPlan = realize_semantic(articulation_target, graph)
 
     if not realized.surface or not realized.fragments:
+        _emit_trace(
+            intent_tag=intent_tag_name,
+            intent_subject=intent_subject,
+            plan=plan,
+            recalled_words=recalled_words,
+            pre_ground_obj=pre_ground_obj,
+            post_ground_obj=post_ground_obj,
+            bridge_surface="",
+            bridge_useful=False,
+        )
         return ""
 
     surface = realized.surface
-    if not _is_useful_surface(surface):
+    useful = _is_useful_surface(surface)
+
+    _emit_trace(
+        intent_tag=intent_tag_name,
+        intent_subject=intent_subject,
+        plan=plan,
+        recalled_words=recalled_words,
+        pre_ground_obj=pre_ground_obj,
+        post_ground_obj=post_ground_obj,
+        bridge_surface=surface,
+        bridge_useful=useful,
+    )
+
+    if not useful:
         return ""
 
     return surface
