@@ -23,6 +23,12 @@ class IntentTag(Enum):
     VERIFICATION = "verification"
     TRANSITIVE_QUERY = "transitive_query"
     FRAME_TRANSFER = "frame_transfer"
+    # P3.3 — "Tell me about X" / "Describe X" — multi-clause
+    # composer walks every chain rooted on X.
+    NARRATIVE = "narrative"
+    # P3.4 — "Give me an example of X" / "Show an instance of X" —
+    # reverse-chain composer surfaces chains where X is the object.
+    EXAMPLE = "example"
     UNKNOWN = "unknown"
 
 
@@ -86,6 +92,14 @@ _RELATION_NORMALIZE: dict[str, str] = {
 }
 
 _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
+    # P3.3 — NARRATIVE patterns precede DEFINITION so "Tell me about X"
+    # does not accidentally classify as DEFINITION on the noun span.
+    (re.compile(r"^tell\s+me\s+about\s+", re.IGNORECASE), IntentTag.NARRATIVE),
+    (re.compile(r"^describe\s+", re.IGNORECASE), IntentTag.NARRATIVE),
+    (re.compile(r"^what\s+(?:can|do)\s+you\s+(?:say|know)\s+about\s+", re.IGNORECASE), IntentTag.NARRATIVE),
+    # P3.4 — EXAMPLE patterns precede DEFINITION for the same reason.
+    (re.compile(r"^(?:give|show)\s+(?:me\s+)?an?\s+(?:example|instance)\s+of\s+", re.IGNORECASE), IntentTag.EXAMPLE),
+    (re.compile(r"^example\s+of\s+", re.IGNORECASE), IntentTag.EXAMPLE),
     (re.compile(r"^what\s+(?:is|are)\s+", re.IGNORECASE), IntentTag.DEFINITION),
     (re.compile(r"^why\s+", re.IGNORECASE), IntentTag.CAUSE),
     (re.compile(r"^how\s+(?:do|can|should|would)\s+(?:I|we|you)\s+", re.IGNORECASE), IntentTag.PROCEDURE),

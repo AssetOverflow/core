@@ -62,6 +62,8 @@ _OOV_INTENT_TAGS: frozenset[IntentTag] = frozenset({
     IntentTag.COMPARISON,
     IntentTag.PROCEDURE,
     IntentTag.CORRECTION,
+    IntentTag.NARRATIVE,  # P3.3
+    IntentTag.EXAMPLE,    # P3.4
 })
 
 
