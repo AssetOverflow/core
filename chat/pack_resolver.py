@@ -44,6 +44,7 @@ DEFAULT_RESOLVABLE_PACK_IDS: tuple[str, ...] = (
     "en_core_cognition_v1",
     "en_core_meta_v1",
     "en_core_attitude_v1",
+    "en_core_temporal_v1",
     "en_core_relations_v1",
     "en_core_relations_v2",
 )

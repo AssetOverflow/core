@@ -1,0 +1,13 @@
+{
+  "pack_id": "en_core_temporal_v1",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_core_temporal_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "cac13a815cbceb992647843e80bcc93b321fd5674d53d951ddd735036a18c705",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback"
+}
