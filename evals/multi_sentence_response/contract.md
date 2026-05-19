@@ -30,10 +30,25 @@ as the *only* multi-sentence-capable code path.
 ## Scoring rubric
 
 ```text
-multi_sentence_rate     = cases_with_>=2_sentences / total_cases
-non_fragment_rate       = cases_where_every_sentence_>=4_tokens / total_cases
-connective_present_rate = cases_with_connective / cases_expecting_connective
+multi_sentence_rate         = cases_with_>=2_sentences / total_cases
+non_fragment_rate           = cases_where_every_sentence_>=4_tokens / total_cases
+connective_present_rate     = cases_with_connective / cases_expecting_connective
+primed_cases                = cases_where_priming_prompts_engaged
+primed_multi_sentence_rate  = primed_cases_with_>=2_sentences / primed_cases
 ```
+
+## Priming (warm-path measurement)
+
+A case may carry an optional `priming_prompts: [str, ...]` array.  The
+runner runs each priming prompt on the same `ChatRuntime` instance
+before the scored prompt, discards their responses, and then measures
+the scored prompt.  This isolates code paths that engage only on the
+warm vault/pack/teaching path (e.g. the discourse planner hook at
+`chat/runtime.py`) from cold-start one-shot paths.
+
+`primed_multi_sentence_rate` reports only on primed cases, so cold
+cases never inflate or depress it.  The aggregate
+`multi_sentence_rate` includes both.
 
 ## Doctrine constraints
 

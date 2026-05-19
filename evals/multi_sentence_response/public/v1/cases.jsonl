@@ -13,3 +13,9 @@
 {"id":"multi_essay_truth_013","category":"essay","prompt":"Write a short paragraph about truth.","subject_lemma":"truth","expects_connective":true}
 {"id":"multi_essay_memory_014","category":"essay","prompt":"Write a short paragraph about memory.","subject_lemma":"memory","expects_connective":true}
 {"id":"multi_compose_def_cause_015","category":"compose","prompt":"What is truth, and why does it matter?","subject_lemma":"truth","expects_connective":true}
+{"id":"multi_primed_explain_truth_016","category":"explain","prompt":"Explain truth.","subject_lemma":"truth","expects_connective":true,"priming_prompts":["What is truth?"]}
+{"id":"multi_primed_tell_truth_017","category":"narrative","prompt":"Tell me about truth.","subject_lemma":"truth","expects_connective":false,"priming_prompts":["What is truth?"]}
+{"id":"multi_primed_explain_knowledge_018","category":"explain","prompt":"Explain knowledge.","subject_lemma":"knowledge","expects_connective":true,"priming_prompts":["What is knowledge?"]}
+{"id":"multi_primed_tell_light_019","category":"narrative","prompt":"Tell me about light.","subject_lemma":"light","expects_connective":false,"priming_prompts":["What is light?"]}
+{"id":"multi_primed_tell_parent_020","category":"narrative","prompt":"Tell me about parent.","subject_lemma":"parent","expects_connective":false,"priming_prompts":["What is a parent?"]}
+{"id":"multi_primed_essay_truth_021","category":"essay","prompt":"Write a short paragraph about truth.","subject_lemma":"truth","expects_connective":true,"priming_prompts":["What is truth?"]}

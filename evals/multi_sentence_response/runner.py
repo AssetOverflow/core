@@ -13,8 +13,17 @@ Case schema:
       "category": "...",
       "prompt": "Tell me about truth.",
       "subject_lemma": "truth",
-      "expects_connective": true
+      "expects_connective": true,
+      "priming_prompts": ["What is truth?"]   # optional
     }
+
+``priming_prompts`` is an optional list run before the scored prompt
+on the same ``ChatRuntime`` instance.  Their responses are discarded;
+only ``prompt`` is scored.  Priming exists because the discourse
+planner currently hooks the warm pack/teaching-grounded path (post-
+vault), so a one-shot cold-start case cannot exercise it.  Cases
+remain backward-compatible — missing or empty ``priming_prompts``
+yields the original cold-start behavior.
 """
 from __future__ import annotations
 
@@ -86,6 +95,7 @@ class CaseResult:
     grounded: bool
     subject_named: bool
     expects_connective: bool
+    primed: bool
 
 
 @dataclass
@@ -96,6 +106,18 @@ class LaneReport:
 
 def _run_case(case: dict[str, Any], config: Any = None) -> CaseResult:
     rt = ChatRuntime(config=config) if config is not None else ChatRuntime()
+
+    # Run optional priming turns on the same runtime so the scored
+    # prompt executes on the warm pack/teaching path.  Responses are
+    # discarded; only the scored prompt's response is measured.
+    priming = case.get("priming_prompts") or ()
+    primed = False
+    for prime in priming:
+        if not isinstance(prime, str) or not prime.strip():
+            continue
+        rt.chat(prime)
+        primed = True
+
     resp = rt.chat(case["prompt"])
     surface = resp.surface
     grounding = resp.grounding_source or "none"
@@ -119,6 +141,7 @@ def _run_case(case: dict[str, Any], config: Any = None) -> CaseResult:
         grounded=(grounding in {"pack", "teaching"}),
         subject_named=subj_named,
         expects_connective=bool(case.get("expects_connective", False)),
+        primed=primed,
     )
 
 
@@ -149,6 +172,16 @@ def run_lane(cases: list[dict[str, Any]], config: Any = None) -> LaneReport:
         "connective_present_rate": conn_rate,
     }
 
+    primed_results = [r for r in results if r.primed]
+    metrics["primed_cases"] = len(primed_results)
+    if primed_results:
+        multi_primed = sum(1 for r in primed_results if r.sentence_count >= 2)
+        metrics["primed_multi_sentence_rate"] = round(
+            multi_primed / len(primed_results), 4
+        )
+    else:
+        metrics["primed_multi_sentence_rate"] = 0.0
+
     case_details = [
         {
             "case_id": r.case_id,
@@ -162,6 +195,7 @@ def run_lane(cases: list[dict[str, Any]], config: Any = None) -> LaneReport:
             "grounded": r.grounded,
             "subject_named": r.subject_named,
             "expects_connective": r.expects_connective,
+            "primed": r.primed,
         }
         for r in results
     ]
