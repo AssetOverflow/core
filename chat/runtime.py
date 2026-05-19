@@ -611,14 +611,22 @@ class ChatRuntime:
         )
 
     def _maybe_pack_grounded_surface(
-        self, text: str, gate_source: str
+        self, text: str, gate_source: str, *, allow_warm: bool = False
     ) -> tuple[str, str] | None:
         """Return ``(surface, grounding_source)`` or ``None``.
 
         ADR-0048 / ADR-0050 / ADR-0052 — three reviewed sources of
         cold-start grounding share this dispatcher.
+
+        ``allow_warm=True`` bypasses the empty-vault gate so the warm
+        path can engage pack-grounding for pack-resident DEFINITION /
+        RECALL / NARRATIVE / EXAMPLE / COMPARISON / PROCEDURE intents
+        — addresses ``warm_grounding_stability`` regression where
+        turn-2 of the same prompt drifted from a coherent pack surface
+        to a walk fragment.  CAUSE / VERIFICATION still return None
+        when no teaching chain exists, preserving the discovery signal.
         """
-        if gate_source != "empty_vault":
+        if not allow_warm and gate_source != "empty_vault":
             return None
         if self.config.output_language != "en":
             return None
@@ -1034,11 +1042,50 @@ class ChatRuntime:
         )
         refusal_emitted = refusal_surface is not None
         hedge_injected = False
+        warm_grounding_source: str | None = None
+        warm_pack_subject: str | None = None
+        warm_pack_intent_tag: Any = None
         if refusal_emitted:
             response_surface = refusal_surface
             self._last_refusal_was_typed = True
         else:
             response_surface = walk_surface
+            warm_pack_result = self._maybe_pack_grounded_surface(
+                text, "warm", allow_warm=True
+            )
+            if warm_pack_result is None:
+                from generate.intent import IntentTag
+                from generate.intent_bridge import classify_intent_from_input
+                _wintent = classify_intent_from_input(text)
+                # Discovery-signal preservation on warm path: when CAUSE /
+                # VERIFICATION lacks both a teaching chain and a cross-pack
+                # chain, the cold path emits the unknown-domain disclosure.
+                # The warm path must match — fabricating a vault-grounded
+                # walk fragment ("Work infer.") would mask the very gap
+                # the discovery layer is meant to surface.
+                if _wintent.tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
+                    response_surface = _UNKNOWN_DOMAIN_SURFACE
+                    articulation = replace(articulation, surface=_UNKNOWN_DOMAIN_SURFACE)
+                    warm_grounding_source = "none"
+            elif warm_pack_result is not None:
+                warm_pack_surface, warm_grounding_source = warm_pack_result
+                if self.config.thread_anaphora and warm_grounding_source in {"pack", "teaching"}:
+                    from chat.anaphora import thread_anaphora_prefix
+                    from generate.intent_bridge import classify_intent_from_input
+                    _wintent = classify_intent_from_input(text)
+                    warm_pack_intent_tag = _wintent.tag
+                    warm_pack_subject = _wintent.subject
+                    if warm_pack_subject and warm_pack_intent_tag is not None:
+                        prefix = thread_anaphora_prefix(
+                            self.thread_context,
+                            warm_pack_subject,
+                            warm_pack_intent_tag.name.lower(),
+                            warm_grounding_source,
+                        )
+                        if prefix is not None:
+                            warm_pack_surface = prefix + warm_pack_surface
+                response_surface = warm_pack_surface
+                articulation = replace(articulation, surface=warm_pack_surface)
             if should_inject_hedge(ethics_verdict, self.ethics_pack):
                 hedge_prefix = build_hedge_prefix(self.identity_manifold)
                 before = response_surface
@@ -1067,15 +1114,15 @@ class ChatRuntime:
             safety_verdict=safety_verdict,
             ethics_verdict=ethics_verdict,
             verdicts=verdicts_bundle,
-            grounding_source="vault",
+            grounding_source=warm_grounding_source or "vault",
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
         self._push_thread_summary(
             turn_event=turn_event,
-            intent_tag=None,
-            intent_subject=articulation.subject,
-            grounding_source="vault",
+            intent_tag=warm_pack_intent_tag,
+            intent_subject=warm_pack_subject or articulation.subject,
+            grounding_source=warm_grounding_source or "vault",
             surface=response_surface,
         )
         return ChatResponse(
@@ -1099,7 +1146,7 @@ class ChatRuntime:
             safety_verdict=safety_verdict,
             ethics_verdict=ethics_verdict,
             verdicts=verdicts_bundle,
-            grounding_source="vault",
+            grounding_source=warm_grounding_source or "vault",
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

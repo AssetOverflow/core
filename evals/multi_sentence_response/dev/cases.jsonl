@@ -1,0 +1,3 @@
+{"id":"dev_multi_exam_001","category":"exam","prompt":"In your own words, what is the relationship between truth and evidence?","subject_lemma":"truth","expects_connective":true}
+{"id":"dev_multi_poem_002","category":"poem","prompt":"Write a short poem about light.","subject_lemma":"light","expects_connective":false}
+{"id":"dev_multi_summary_003","category":"summary","prompt":"Summarize what knowledge is and how it relates to evidence.","subject_lemma":"knowledge","expects_connective":true}

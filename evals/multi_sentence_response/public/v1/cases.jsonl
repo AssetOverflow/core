@@ -1,0 +1,15 @@
+{"id":"multi_explain_truth_001","category":"explain","prompt":"Explain truth.","subject_lemma":"truth","expects_connective":true}
+{"id":"multi_explain_knowledge_002","category":"explain","prompt":"Explain knowledge.","subject_lemma":"knowledge","expects_connective":true}
+{"id":"multi_explain_memory_003","category":"explain","prompt":"Explain memory.","subject_lemma":"memory","expects_connective":true}
+{"id":"multi_tell_truth_004","category":"narrative","prompt":"Tell me about truth.","subject_lemma":"truth","expects_connective":false}
+{"id":"multi_tell_light_005","category":"narrative","prompt":"Tell me about light.","subject_lemma":"light","expects_connective":false}
+{"id":"multi_tell_parent_006","category":"narrative","prompt":"Tell me about parent.","subject_lemma":"parent","expects_connective":false}
+{"id":"multi_describe_wisdom_007","category":"describe","prompt":"Describe wisdom.","subject_lemma":"wisdom","expects_connective":true}
+{"id":"multi_describe_understanding_008","category":"describe","prompt":"Describe understanding.","subject_lemma":"understanding","expects_connective":true}
+{"id":"multi_walk_inference_009","category":"walkthrough","prompt":"Walk me through inference.","subject_lemma":"inference","expects_connective":true}
+{"id":"multi_walk_recall_010","category":"walkthrough","prompt":"Walk me through recall.","subject_lemma":"recall","expects_connective":true}
+{"id":"multi_example_truth_011","category":"example","prompt":"Give me an example of truth.","subject_lemma":"truth","expects_connective":false}
+{"id":"multi_example_parent_012","category":"example","prompt":"Give me an example of parent.","subject_lemma":"parent","expects_connective":false}
+{"id":"multi_essay_truth_013","category":"essay","prompt":"Write a short paragraph about truth.","subject_lemma":"truth","expects_connective":true}
+{"id":"multi_essay_memory_014","category":"essay","prompt":"Write a short paragraph about memory.","subject_lemma":"memory","expects_connective":true}
+{"id":"multi_compose_def_cause_015","category":"compose","prompt":"What is truth, and why does it matter?","subject_lemma":"truth","expects_connective":true}

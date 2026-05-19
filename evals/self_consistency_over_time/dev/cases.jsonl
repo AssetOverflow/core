@@ -1,0 +1,2 @@
+{"id":"dev_consistency_long_thread_001","category":"long_thread","probe_prompt":"What is truth?","expected_key_terms":["truth"],"probe_at_turns":[0,8,16,24],"filler_prompts":["What is light?","Define memory.","What is knowledge?","Tell me about wisdom.","What is parent?","What is family?","Define evidence."]}
+{"id":"dev_consistency_with_anaphora_002","category":"anaphora_interleaved","probe_prompt":"What is light?","expected_key_terms":["light"],"probe_at_turns":[0,5,10],"filler_prompts":["Why does it exist?","What is memory?","Why does it matter?","What is truth?"]}
