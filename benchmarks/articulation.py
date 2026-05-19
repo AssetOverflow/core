@@ -465,24 +465,32 @@ def run_articulation_suite(
     ollama_model: str | None = None,
     ollama_core_reruns: int = 5,
     ollama_reruns: int = 3,
+    skip_footprint: bool = False,
 ) -> ArticulationReport:
-    """Run every sub-bench and return the consolidated report."""
+    """Run every sub-bench and return the consolidated report.
+
+    ``skip_footprint=True`` bypasses ``bench_footprint`` (which
+    requires ``psutil``) so the suite can run on environments without
+    that optional dependency.  Used by the ``all`` aggregate suite
+    when ``psutil`` is unavailable.
+    """
     report = ArticulationReport()
 
     report.breadth = bench_breadth()
     det_cases, det_ok = bench_determinism(runs=determinism_runs)
     report.determinism = det_cases
     report.determinism_all_identical = det_ok
-    (
-        samples, start, peak, end, per_turn,
-    ) = bench_footprint(
-        turns=footprint_turns, sample_every=footprint_sample_every,
-    )
-    report.footprint = samples
-    report.footprint_start_bytes = start
-    report.footprint_peak_bytes = peak
-    report.footprint_end_bytes = end
-    report.footprint_per_turn_delta_bytes = per_turn
+    if not skip_footprint:
+        (
+            samples, start, peak, end, per_turn,
+        ) = bench_footprint(
+            turns=footprint_turns, sample_every=footprint_sample_every,
+        )
+        report.footprint = samples
+        report.footprint_start_bytes = start
+        report.footprint_peak_bytes = peak
+        report.footprint_end_bytes = end
+        report.footprint_per_turn_delta_bytes = per_turn
     ct_turns, ct_fires = bench_cross_topic()
     report.cross_topic = ct_turns
     report.anaphora_fire_count = ct_fires

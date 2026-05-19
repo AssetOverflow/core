@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -1973,8 +1973,122 @@ def cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_bench_all(args: argparse.Namespace) -> int:
+    """``core bench --suite all`` — run every benchmark in one shot.
+
+    Order:
+      1. Core six (determinism / latency / speedup / versor /
+         convergence / realizer) via :func:`run_benchmarks`.
+      2. Teaching-loop determinism.
+      3. Articulation suite (skips footprint when psutil is missing).
+      4. Cost (measurement bench, no PASS/FAIL).
+
+    Each section keeps its native report shape; consolidated PASS/FAIL
+    tallies the boolean ``passed`` field across the first three groups.
+    Cost is reported as a separate measurement section because it
+    deliberately does not produce PASS/FAIL.
+    """
+
+    from benchmarks.run_benchmarks import run_benchmarks
+    from benchmarks.articulation import (
+        format_summary as articulation_format_summary,
+        run_articulation_suite,
+    )
+    from benchmarks.cost import run_cost
+
+    json_out = bool(args.json)
+    if not json_out:
+        print("=" * 78)
+        print(" core bench --suite all".ljust(77) + "")
+        print("=" * 78)
+
+    overall_results: list[Any] = []
+
+    # 1. Core six.
+    if not json_out:
+        print("\n[1/4] Core six (determinism / latency / speedup / versor / convergence / realizer)")
+        print("-" * 78)
+    core_report = run_benchmarks(suite=None, runs=args.runs)
+    overall_results.extend(core_report.results)
+    if not json_out:
+        for r in core_report.results:
+            status = "PASS" if r.passed else "FAIL"
+            print(f"  [{status}] {r.name:25s}  {r.metric:>12.4f} {r.unit}")
+            print(f"         {r.detail}")
+
+    # 2. Teaching-loop determinism.
+    if not json_out:
+        print("\n[2/4] Teaching-loop determinism")
+        print("-" * 78)
+    tl_report = run_benchmarks(suite="teaching-loop", runs=args.runs)
+    overall_results.extend(tl_report.results)
+    if not json_out:
+        for r in tl_report.results:
+            status = "PASS" if r.passed else "FAIL"
+            print(f"  [{status}] {r.name:25s}  {r.metric:>12.4f} {r.unit}")
+            print(f"         {r.detail}")
+
+    # 3. Articulation suite.  psutil is optional — skip the footprint
+    # sub-bench when unavailable rather than aborting the whole run.
+    try:
+        import psutil  # noqa: F401
+        skip_fp = False
+    except ImportError:
+        skip_fp = True
+    if not json_out:
+        print("\n[3/4] Articulation suite" + (" (footprint skipped — psutil not installed)" if skip_fp else ""))
+        print("-" * 78)
+    a_report = run_articulation_suite(
+        determinism_runs=args.runs,
+        footprint_turns=getattr(args, "turns", 200),
+        ollama_model=getattr(args, "ollama_model", None),
+        ollama_reruns=getattr(args, "ollama_reruns", 3),
+        skip_footprint=skip_fp,
+    )
+    a_pass = bool(a_report.determinism_all_identical) and (
+        a_report.discourse_planner_metrics.get("articulate_sentence_rate", 0.0) == 1.0
+        and a_report.discourse_planner_metrics.get("disclosure_sentence_rate", 0.0) == 0.0
+    )
+    if not json_out:
+        if skip_fp:
+            print(articulation_format_summary(a_report))
+        else:
+            print(articulation_format_summary(a_report))
+        marker = "PASS" if a_pass else "FAIL"
+        print(f"  [{marker}] articulation_suite_overall")
+
+    # 4. Cost — measurement bench, no PASS/FAIL.
+    if not json_out:
+        print("\n[4/4] Cost (measurement)")
+        print("-" * 78)
+    cost_report = run_cost(turns=args.runs)
+    if not json_out:
+        print(cost_report.summary())
+
+    if json_out:
+        consolidated = {
+            "core": core_report.as_dict(),
+            "teaching_loop": tl_report.as_dict(),
+            "articulation": a_report.as_dict(),
+            "articulation_passed": a_pass,
+            "cost": cost_report.as_dict(),
+        }
+        print(json.dumps(consolidated, ensure_ascii=False, indent=2, sort_keys=True, default=str))
+
+    all_pass = all(r.passed for r in overall_results) and a_pass
+    if not json_out:
+        print("\n" + "=" * 78)
+        print(f"{'ALL PASSED' if all_pass else 'FAILURES DETECTED'} across "
+              f"{len(overall_results) + 1} pass/fail benches "
+              f"(plus cost measurement section)")
+        print("=" * 78)
+    return 0 if all_pass else 1
+
+
 def cmd_bench(args: argparse.Namespace) -> int:
     """Run benchmark harness."""
+    if args.suite == "all":
+        return _cmd_bench_all(args)
     # "cost" suite has its own runtime contract — wall/CPU-seconds and
     # $/1000-turns derivation.  Dispatch separately so the report
     # structure stays honest (no fake PASS/FAIL on a measurement bench).
@@ -2409,7 +2523,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="run benchmark harness (determinism, latency, speedup, versor audit)",
         description="run benchmark harness",
     )
-    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer", "cost", "teaching-loop", "articulation"],
+    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer", "cost", "teaching-loop", "articulation", "all"],
                        help="run a specific benchmark suite")
     bench.add_argument("--runs", type=int, default=20, metavar="N", help="run count for determinism benchmark (also turns count for cost suite)")
     bench.add_argument("--json", action="store_true", help="emit machine-readable JSON")
