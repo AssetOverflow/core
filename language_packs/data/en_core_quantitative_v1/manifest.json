@@ -1,0 +1,13 @@
+{
+  "pack_id": "en_core_quantitative_v1",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_core_quantitative_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "4cd9001879be2b8da44a852ce6763f784fd690f272181402286e395894f9ac7a",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback"
+}
