@@ -28,6 +28,9 @@ from chat.runtime import ChatRuntime
 _PROVENANCE_TAIL_RE = re.compile(
     r"\s*(pack-grounded|teaching-grounded)\s*\([^)]+\)\.?\s*$"
 )
+_TRUST_DISCLOSURE_TAIL_RE = re.compile(
+    r"\s*No session evidence yet\.?\s*$"
+)
 
 _CONNECTIVES = (
     "and", "because", "therefore", "which", "since", "also",
@@ -37,11 +40,27 @@ _CONNECTIVES = (
 
 
 def _strip_provenance(surface: str) -> str:
-    return _PROVENANCE_TAIL_RE.sub("", surface).strip()
+    stripped = _PROVENANCE_TAIL_RE.sub("", surface).strip()
+    return _TRUST_DISCLOSURE_TAIL_RE.sub("", stripped).strip()
 
 
 def _split_sentences(text: str) -> list[str]:
-    parts = re.split(r"(?<=[.!?])\s+", text.strip())
+    """Split substantive sentences without treating domain dots as stops.
+
+    Pack and teaching surfaces often contain semantic-domain atoms such as
+    ``cognition.truth`` or ``logos.core``.  A raw ``period + whitespace``
+    splitter over-counts those atoms as sentence boundaries, especially in
+    older structured disclosures like ``logos.core. truth grounds ...``.
+
+    Treat a stop as sentence-final only when it is followed by whitespace and
+    an uppercase/digit opener, or by the end of the text.  This keeps
+    ``cognition.truth. In turn, ...`` as two sentences while preventing
+    lowercase domain continuations from inflating the metric.
+    """
+    stripped = text.strip()
+    if not stripped:
+        return []
+    parts = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9])", stripped)
     return [p.strip() for p in parts if p.strip()]
 
 
@@ -75,8 +94,8 @@ class LaneReport:
     case_details: list[dict[str, Any]] = field(default_factory=list)
 
 
-def _run_case(case: dict[str, Any]) -> CaseResult:
-    rt = ChatRuntime()
+def _run_case(case: dict[str, Any], config: Any = None) -> CaseResult:
+    rt = ChatRuntime(config=config) if config is not None else ChatRuntime()
     resp = rt.chat(case["prompt"])
     surface = resp.surface
     grounding = resp.grounding_source or "none"
@@ -103,11 +122,11 @@ def _run_case(case: dict[str, Any]) -> CaseResult:
     )
 
 
-def run_lane(cases: list[dict[str, Any]], config: Any = None) -> LaneReport:  # noqa: ARG001
+def run_lane(cases: list[dict[str, Any]], config: Any = None) -> LaneReport:
     if not cases:
         return LaneReport(metrics={}, case_details=[])
 
-    results = [_run_case(c) for c in cases]
+    results = [_run_case(c, config=config) for c in cases]
     total = len(results)
 
     multi = sum(1 for r in results if r.sentence_count >= 2)

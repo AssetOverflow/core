@@ -20,10 +20,10 @@ as the *only* multi-sentence-capable code path.
 
 | Predicate | Definition |
 |---|---|
-| `sentence_count_>=_2`   | the surface contains at least 2 terminated sentences (`.`, `?`, `!`) |
+| `sentence_count_>=_2`   | the substantive surface contains at least 2 terminated sentences (`.`, `?`, `!`) |
 | `each_sentence_>=_4_tokens` | every sentence has ≥ 4 alphabetic tokens (no fragments) |
 | `connective_present`    | the surface contains at least one connective (`and`, `because`, `therefore`, `which`, `since`, `also`, `furthermore`, `however`, `consequently`) — only enforced when `expects_connective=true` |
-| `not_just_provenance_tag` | sentence_count counts BEFORE the trailing provenance tag (`pack-grounded (…).`) is treated as its own sentence |
+| `not_just_provenance_tag` | sentence_count counts BEFORE trailing provenance / trust-boundary tails (`pack-grounded (…).`, `No session evidence yet.`) are treated as real sentences |
 | `grounded`              | `grounding_source` ∈ {pack, teaching} |
 | `subject_named`         | the prompt's subject lemma appears in the surface |
 
@@ -37,8 +37,12 @@ connective_present_rate = cases_with_connective / cases_expecting_connective
 
 ## Doctrine constraints
 
-- The "trailing provenance tag" is structural, not a real sentence —
-  predicate logic strips it before counting.
+- The trailing provenance / trust-boundary tail is structural, not a real
+  sentence — predicate logic strips it before counting.
+- Dotted semantic-domain atoms (`cognition.truth`, `logos.core`) are not
+  sentence boundaries by themselves.  A terminal mark counts as a boundary
+  only when it is followed by a new uppercase/digit sentence opener or the
+  end of the substantive surface.
 - No LLM judge.  Pure structural counting.
 - Red-on-creation expected: only NARRATIVE / EXAMPLE / cross-pack /
   composed_surface code paths can possibly satisfy `sentence_count_>=_2`
