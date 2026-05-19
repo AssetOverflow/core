@@ -145,6 +145,26 @@ _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
     # making pack-resolved lemmas like "moment" or "evident" silently
     # un-groundable.
     (re.compile(r"^define\s+", re.IGNORECASE), IntentTag.DEFINITION),
+    # Expository-DEFINITION variants — "Explain X." and the paragraph
+    # request forms — route to DEFINITION so the grounded substrate
+    # fires on X.  Presentation depth ("explain at length", "as a
+    # paragraph") is carried orthogonally by ResponseMode; the semantic
+    # request is still "the definition of X".  Placed AFTER the
+    # NARRATIVE rules so "Tell me about X" and "Describe X" continue
+    # to route to NARRATIVE.
+    (re.compile(r"^explain\s+", re.IGNORECASE), IntentTag.DEFINITION),
+    (
+        re.compile(
+            r"^(?:write|compose|draft)\s+(?:a\s+)?(?:short\s+|brief\s+)?"
+            r"paragraph\s+(?:about|on)\s+",
+            re.IGNORECASE,
+        ),
+        IntentTag.DEFINITION,
+    ),
+    (
+        re.compile(r"^paragraph\s+(?:about|on)\s+", re.IGNORECASE),
+        IntentTag.DEFINITION,
+    ),
     (re.compile(r"^why\s+", re.IGNORECASE), IntentTag.CAUSE),
     # "What causes / triggers / enables / prevents / drives X?" — the
     # query is about what causes X, so the subject of the CAUSE intent

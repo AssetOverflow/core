@@ -91,3 +91,101 @@ form quality on surfaces where it engaged, but this one-shot lane still does
 not isolate that hook. The next measurement should either prime the warm path
 before scoring or move planner engagement into the cold pack/teaching-grounded
 path and then compare flag-off versus flag-on again.
+
+## Post-Cold-Path Wiring + Lane Priming (`2aae25f` + `9367209`)
+
+Two follow-up commits closed the measurement gap:
+
+- `9367209` — added optional `priming_prompts` to lane case schema, exposed
+  `primed_multi_sentence_rate` so warm-path effects are measured without
+  inflating cold-start numbers.
+- `2aae25f` — engaged the discourse planner on the cold pack/teaching path,
+  not only the warm post-walk path.  Identical helper now serves both.
+
+Lane expanded from 15 → 21 cases (6 primed variants added).  A/B:
+
+```json
+{
+  "flag_off": {
+    "cases": 21,
+    "multi_sentence_rate": 0.1429,
+    "primed_multi_sentence_rate": 0.0,
+    "primed_cases": 6,
+    "connective_present_rate": 0.0769,
+    "grounded_rate": 0.4762
+  },
+  "flag_on": {
+    "cases": 21,
+    "multi_sentence_rate": 0.5238,
+    "primed_multi_sentence_rate": 0.5,
+    "primed_cases": 6,
+    "connective_present_rate": 0.2308,
+    "grounded_rate": 0.4762
+  }
+}
+```
+
+Cold-start lift: `multi +38pp`, `connective +15pp`, `primed_multi +50pp`.
+The remaining unlifted cases are upstream `IntentTag.UNKNOWN` failures, not
+planner gaps — three sample classifications confirm:
+
+```text
+Explain truth.                       -> IntentTag.UNKNOWN, ResponseMode.EXPLAIN
+Write a short paragraph about truth. -> IntentTag.UNKNOWN, ResponseMode.PARAGRAPH
+Tell me about truth.                 -> IntentTag.NARRATIVE, ResponseMode.EXPLAIN
+```
+
+## Post-Helper-Dedup + Expository-DEFINITION Classifier (`f03d7d0` + this)
+
+- `f03d7d0` — collapsed the two duplicated discourse-planner hooks
+  (cold-start branch + warm post-walk branch) into a single helper
+  `ChatRuntime._maybe_apply_discourse_planner(text, source_tag) -> str | None`.
+  No behavior change — same lane numbers as `2aae25f`.
+- This commit — extended `generate/intent.py:_RULES` with three new
+  expository rules so `Explain X` / `Write a paragraph about X` /
+  `Paragraph about X` route to `IntentTag.DEFINITION`, while keeping
+  `Tell me about X` and `Describe X` on `IntentTag.NARRATIVE` and
+  `ResponseMode` fully orthogonal.
+
+Re-measured A/B on the same 21 cases:
+
+```json
+{
+  "flag_off": {
+    "cases": 21,
+    "multi_sentence_rate": 0.1429,
+    "primed_multi_sentence_rate": 0.0,
+    "primed_cases": 6,
+    "connective_present_rate": 0.5385,
+    "grounded_rate": 0.8571
+  },
+  "flag_on": {
+    "cases": 21,
+    "multi_sentence_rate": 0.9048,
+    "primed_multi_sentence_rate": 1.0,
+    "primed_cases": 6,
+    "connective_present_rate": 0.8462,
+    "grounded_rate": 0.8571
+  }
+}
+```
+
+Combined lift over the original baseline:
+
+| metric                    | pre-wiring | refined | post-cold | post-classifier | Δ total |
+|---------------------------|-----------:|--------:|----------:|----------------:|--------:|
+| multi_sentence_rate       | 0.5333†    | 0.20    | 0.5238    | 0.9048          | +70pp   |
+| primed_multi_sentence_rate| n/a        | n/a     | 0.5000    | 1.0000          | +50pp   |
+| connective_present_rate   | 0.10       | 0.10    | 0.2308    | 0.8462          | +74pp   |
+| grounded_rate             | 0.4667     | 0.4667  | 0.4762    | 0.8571          | +39pp   |
+
+† Inflated by structural tails — pre-refinement number is not comparable.
+
+Interpretation: every metric is now driven by load-bearing capability rather
+than punctuation artifacts.  Cognition eval byte-identical throughout
+(`100/100/91.7/100` public, `100/100/83.3/100` holdout).  Conversational
+thread coherence unchanged (3 unwanted placeholders flag-off and flag-on).
+The remaining 9.5% of `multi_sentence_rate` and 14% of `connective_present`
+miss flag-on lives in two cases that classify to UNKNOWN by other routes
+(`compose` and `walkthrough` category prompts) — those are the next upstream
+targets, not planner gaps.
