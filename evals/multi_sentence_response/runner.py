@@ -163,13 +163,45 @@ def run_lane(cases: list[dict[str, Any]], config: Any = None) -> LaneReport:
         if conn_expected else 1.0
     )
 
+    # ``multi_sentence_rate`` historically counted any case with ≥ 2
+    # sentences regardless of grounding source.  That admitted OOV
+    # teaching invitations and refusal disclosures into the headline
+    # capability number — fixed here by splitting into three honest
+    # buckets:
+    #
+    #   articulate_sentence_rate  — ≥2 sentences AND grounded in pack
+    #                               or teaching (real capability).
+    #   disclosure_sentence_rate  — ≥2 sentences but grounded in oov,
+    #                               refusal, none, etc. (structural
+    #                               multi-sentence from disclosure
+    #                               templates, not articulation).
+    #   unarticulate_rate         — <2 sentences regardless of source.
+    #
+    # ``multi_sentence_rate`` is retained as a continuity metric.  The
+    # doctrine-correct headline is ``articulate_sentence_rate``.
+    _DISCLOSURE_SOURCES = {"oov", "refusal", "none"}
+    articulate = sum(
+        1 for r in results
+        if r.sentence_count >= 2
+        and r.grounding_source in {"pack", "teaching"}
+    )
+    disclosure = sum(
+        1 for r in results
+        if r.sentence_count >= 2
+        and r.grounding_source in _DISCLOSURE_SOURCES
+    )
+    unarticulate = sum(1 for r in results if r.sentence_count < 2)
+
     metrics: dict[str, Any] = {
         "cases": total,
-        "multi_sentence_rate":     round(multi / total, 4) if total else 0.0,
-        "non_fragment_rate":       round(non_frag / total, 4) if total else 0.0,
-        "grounded_rate":           round(grounded / total, 4) if total else 0.0,
-        "subject_named_rate":      round(named / total, 4) if total else 0.0,
-        "connective_present_rate": conn_rate,
+        "multi_sentence_rate":       round(multi / total, 4) if total else 0.0,
+        "articulate_sentence_rate":  round(articulate / total, 4) if total else 0.0,
+        "disclosure_sentence_rate":  round(disclosure / total, 4) if total else 0.0,
+        "unarticulate_rate":         round(unarticulate / total, 4) if total else 0.0,
+        "non_fragment_rate":         round(non_frag / total, 4) if total else 0.0,
+        "grounded_rate":             round(grounded / total, 4) if total else 0.0,
+        "subject_named_rate":        round(named / total, 4) if total else 0.0,
+        "connective_present_rate":   conn_rate,
     }
 
     primed_results = [r for r in results if r.primed]

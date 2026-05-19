@@ -173,6 +173,102 @@ def test_priming_default_is_cold_start(monkeypatch) -> None:
         assert detail["primed"] is False
 
 
+def test_articulate_disclosure_unarticulate_partition(monkeypatch) -> None:
+    """``articulate + disclosure + unarticulate`` must equal 1.0 modulo
+    rounding.  No case can contribute to more than one bucket.
+
+    Articulate: ≥2 sentences AND grounding in {pack, teaching}.
+    Disclosure: ≥2 sentences AND grounding in {oov, refusal, none}.
+    Unarticulate: <2 sentences (regardless of source).
+    """
+
+    class _FakeResponse:
+        def __init__(self, surface: str, source: str) -> None:
+            self.surface = surface
+            self.grounding_source = source
+
+    plan = iter([
+        # case 0: articulate (pack + ≥2 sentences)
+        _FakeResponse(
+            "Truth is X. Furthermore, truth belongs to cognition.truth.",
+            "pack",
+        ),
+        # case 1: articulate (teaching + ≥2 sentences)
+        _FakeResponse(
+            "Light reveals truth. In turn, truth grounds knowledge.",
+            "teaching",
+        ),
+        # case 2: disclosure (oov + ≥2 sentences)
+        _FakeResponse(
+            "I don't know that yet. Can you teach me?",
+            "oov",
+        ),
+        # case 3: disclosure (none + ≥2 sentences)
+        _FakeResponse(
+            "I don't know. Insufficient grounding for that yet.",
+            "none",
+        ),
+        # case 4: unarticulate (single sentence, regardless of source)
+        _FakeResponse("Truth.", "vault"),
+    ])
+
+    class _FakeRuntime:
+        def __init__(self, config=None):  # noqa: ARG002
+            pass
+
+        def chat(self, prompt: str) -> _FakeResponse:  # noqa: ARG002
+            return next(plan)
+
+    monkeypatch.setattr(runner, "ChatRuntime", _FakeRuntime)
+    cases = [
+        {"id": f"c{i}", "category": "x", "prompt": "p",
+         "subject_lemma": "", "expects_connective": False}
+        for i in range(5)
+    ]
+    metrics = run_lane(cases).metrics
+
+    assert metrics["articulate_sentence_rate"] == 0.4   # 2/5
+    assert metrics["disclosure_sentence_rate"] == 0.4   # 2/5
+    assert metrics["unarticulate_rate"] == 0.2          # 1/5
+    # Partition is total — must sum to 1.0 modulo rounding.
+    total = (
+        metrics["articulate_sentence_rate"]
+        + metrics["disclosure_sentence_rate"]
+        + metrics["unarticulate_rate"]
+    )
+    assert abs(total - 1.0) < 1e-9
+
+
+def test_disclosure_never_inflates_articulate(monkeypatch) -> None:
+    """OOV invitations and refusal disclosures must never contribute to
+    ``articulate_sentence_rate`` even when they are multi-sentence by
+    template.
+    """
+
+    class _FakeResponse:
+        surface = "I don't know that yet. Can you teach me?"
+        grounding_source = "oov"
+
+    class _FakeRuntime:
+        def __init__(self, config=None):  # noqa: ARG002
+            pass
+
+        def chat(self, prompt: str) -> _FakeResponse:  # noqa: ARG002
+            return _FakeResponse()
+
+    monkeypatch.setattr(runner, "ChatRuntime", _FakeRuntime)
+    cases = [
+        {"id": "oov_case", "category": "x", "prompt": "p",
+         "subject_lemma": "", "expects_connective": False}
+    ]
+    metrics = run_lane(cases).metrics
+
+    # Multi-sentence is True (continuity metric), but articulate is False.
+    assert metrics["multi_sentence_rate"] == 1.0
+    assert metrics["articulate_sentence_rate"] == 0.0
+    assert metrics["disclosure_sentence_rate"] == 1.0
+
+
 def test_primed_multi_sentence_rate_separates_from_aggregate(monkeypatch) -> None:
     """The ``primed_multi_sentence_rate`` metric reports only on cases
     that actually exercised priming, so cold-start cases never inflate

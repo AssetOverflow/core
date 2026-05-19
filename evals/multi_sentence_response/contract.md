@@ -30,12 +30,27 @@ as the *only* multi-sentence-capable code path.
 ## Scoring rubric
 
 ```text
-multi_sentence_rate         = cases_with_>=2_sentences / total_cases
-non_fragment_rate           = cases_where_every_sentence_>=4_tokens / total_cases
-connective_present_rate     = cases_with_connective / cases_expecting_connective
-primed_cases                = cases_where_priming_prompts_engaged
-primed_multi_sentence_rate  = primed_cases_with_>=2_sentences / primed_cases
+articulate_sentence_rate   = cases with >=2 sentences AND grounded in {pack, teaching} / total
+disclosure_sentence_rate   = cases with >=2 sentences AND grounded in {oov, refusal, none} / total
+unarticulate_rate          = cases with <2 sentences / total
+multi_sentence_rate        = cases_with_>=2_sentences / total_cases   # continuity metric
+non_fragment_rate          = cases_where_every_sentence_>=4_tokens / total_cases
+connective_present_rate    = cases_with_connective / cases_expecting_connective
+primed_cases               = cases_where_priming_prompts_engaged
+primed_multi_sentence_rate = primed_cases_with_>=2_sentences / primed_cases
 ```
+
+**Doctrine-correct headline:** `articulate_sentence_rate`.
+
+`multi_sentence_rate` is kept for continuity but is misleading on its own:
+OOV teaching-invitation surfaces ("I don't know that yet — can you teach
+me?") and refusal disclosures ("I don't know — insufficient grounding
+for that yet.") are categorically multi-sentence by template, not by
+articulation.  They count toward `disclosure_sentence_rate`, never
+`articulate_sentence_rate`.
+
+The decomposition is total:
+`articulate + disclosure + unarticulate = 1.0` (modulo rounding).
 
 ## Priming (warm-path measurement)
 
