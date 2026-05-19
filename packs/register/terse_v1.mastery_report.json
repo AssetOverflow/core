@@ -1,0 +1,24 @@
+{
+  "evidence": {
+    "depth_preference": "terse",
+    "discourse_markers_empty": true,
+    "marker_bucket_sizes": {
+      "closings": 0,
+      "openings": 0,
+      "transitions": 0
+    },
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "disclosure_domain_count"
+    ],
+    "transitions_reserved": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-19T00:00:00Z",
+  "pack_source_sha256": "41e43b6e1d586762f9a11291c3fd8dc7c591e92681f1b1750ec718611bdcf62e",
+  "ratification_method": "known_key_overrides_invariant_grounding",
+  "ratified": true,
+  "register_id": "terse_v1",
+  "report_sha256": "c18b419708258a9ede7bcaa83c56d68fecde0a04d35e0d52e8b02d035bce4401",
+  "schema_version": "1.0.0"
+}

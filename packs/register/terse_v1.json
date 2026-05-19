@@ -1,0 +1,17 @@
+{
+  "register_id": "terse_v1",
+  "version": "1.0.0",
+  "description": "Terse register. Compresses without-gloss disclosure to one semantic domain. Grounding source and trace hash are invariant against default_neutral_v1; only surface wording varies. See ADR-0070.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "c18b419708258a9ede7bcaa83c56d68fecde0a04d35e0d52e8b02d035bce4401",
+  "display_name": "Terse",
+  "depth_preference": "terse",
+  "realizer_overrides": {
+    "disclosure_domain_count": 1
+  },
+  "discourse_markers": {
+    "openings": [],
+    "transitions": [],
+    "closings": []
+  }
+}

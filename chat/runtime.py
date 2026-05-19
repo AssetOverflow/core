@@ -56,6 +56,8 @@ from packs.ethics.loader import (
     load_ethics_pack,
 )
 from packs.identity.loader import load_identity_manifold
+from chat.register_variation import decorate_surface
+from packs.register.loader import RegisterPack, load_register_pack
 from packs.safety.check import SafetyCheck, SafetyContext
 from packs.safety.loader import load_safety_pack
 from field.state import FieldState
@@ -293,6 +295,14 @@ class ChatResponse:
     #   "none"     — universal "insufficient grounding" disclosure on stub.
     # The string is preserved verbatim in TurnEvent for downstream audit.
     grounding_source: str = "none"
+    # ADR-0071 (R4) — pre-decoration surface.  ``surface`` is the
+    # user-facing string AFTER seeded discourse-marker decoration;
+    # ``pre_decoration_surface`` is the realizer's output BEFORE the
+    # decoration step.  The cognition pipeline reads this field to
+    # compute ``trace_hash`` so register decoration cannot leak into
+    # the truth path (ADR-0069 invariant C).  Empty string ⇒ identical
+    # to ``surface`` (no decoration applied this turn).
+    pre_decoration_surface: str = ""
 
 
 class ChatRuntime:
@@ -347,6 +357,18 @@ class ChatRuntime:
             self.ethics_pack = load_ethics_pack(_DEFAULT_ETHICS_PACK)
             ethics_pack_id = _DEFAULT_ETHICS_PACK
         self.ethics_pack_id = ethics_pack_id
+        # ADR-0068 / ADR-0069 — register pack load.  None resolves to the
+        # in-memory unregistered sentinel (structurally identical to
+        # default_neutral_v1).  Invalid ids fail-fast at runtime init,
+        # not at first turn.  At R2 the register is loaded but no
+        # composer consumes it; byte-identity invariants pin this.
+        if resolved_config.register_pack_id is None:
+            self.register_pack: RegisterPack = RegisterPack.unregistered()
+        else:
+            self.register_pack = load_register_pack(
+                resolved_config.register_pack_id
+            )
+        self.register_pack_id = resolved_config.register_pack_id
         self.identity_manifold = type(identity_manifold)(
             value_axes=identity_manifold.value_axes,
             boundary_ids=(
@@ -637,7 +659,9 @@ class ChatRuntime:
             lemma_a = (intent.subject or "").strip().rstrip(".,?!;:")
             lemma_b = (intent.secondary_subject or "").strip().rstrip(".,?!;:")
             if lemma_a and lemma_b:
-                surface = pack_grounded_comparison_surface(lemma_a, lemma_b)
+                surface = pack_grounded_comparison_surface(
+                    lemma_a, lemma_b, register=self.register_pack,
+                )
                 if surface is not None:
                     return (surface, "pack")
                 from chat.partial_surface import partial_comparison_surface
@@ -648,27 +672,37 @@ class ChatRuntime:
             lemma = (intent.subject or "").strip()
             if lemma:
                 from chat.narrative_surface import narrative_grounded_surface
-                surface = narrative_grounded_surface(lemma)
+                surface = narrative_grounded_surface(
+                    lemma, register=self.register_pack,
+                )
                 if surface is not None:
                     return (surface, "teaching")
         if intent.tag is IntentTag.EXAMPLE:
             lemma = (intent.subject or "").strip()
             if lemma:
                 from chat.example_surface import example_grounded_surface
-                surface = example_grounded_surface(lemma)
+                surface = example_grounded_surface(
+                    lemma, register=self.register_pack,
+                )
                 if surface is not None:
                     return (surface, "teaching")
         if intent.tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
             lemma = (intent.subject or "").strip()
             if lemma:
                 if self.config.composed_surface:
-                    surface = teaching_grounded_surface_composed(lemma, intent.tag)
+                    surface = teaching_grounded_surface_composed(
+                        lemma, intent.tag, register=self.register_pack,
+                    )
                 else:
-                    surface = teaching_grounded_surface(lemma, intent.tag)
+                    surface = teaching_grounded_surface(
+                        lemma, intent.tag, register=self.register_pack,
+                    )
                 if surface is not None:
                     return (surface, "teaching")
                 from chat.cross_pack_grounding import cross_pack_grounded_surface
-                surface = cross_pack_grounded_surface(lemma, intent.tag)
+                surface = cross_pack_grounded_surface(
+                    lemma, intent.tag, register=self.register_pack,
+                )
                 if surface is not None:
                     return (surface, "teaching")
                 # Deliberate non-fallback: when CAUSE / VERIFICATION
@@ -680,20 +714,24 @@ class ChatRuntime:
                 # user a non-answer (a definition rather than a cause).
                 # See ``tests/test_discovery_candidates``.
         if intent.tag is IntentTag.CORRECTION:
-            surface = pack_grounded_correction_surface(text)
+            surface = pack_grounded_correction_surface(
+                text, register=self.register_pack,
+            )
             if surface is not None:
                 return (surface, "pack")
         if intent.tag is IntentTag.PROCEDURE:
             subject_text = (intent.subject or "").strip()
             if subject_text:
-                surface = pack_grounded_procedure_surface(subject_text)
+                surface = pack_grounded_procedure_surface(
+                    subject_text, register=self.register_pack,
+                )
                 if surface is not None:
                     return (surface, "pack")
         if intent.tag in (IntentTag.DEFINITION, IntentTag.RECALL):
             lemma = (intent.subject or "").strip()
             if not lemma:
                 return None
-            surface = pack_grounded_surface(lemma)
+            surface = pack_grounded_surface(lemma, register=self.register_pack)
             if surface is not None:
                 return (surface, "pack")
         oov_lemma = (intent.subject or "").strip()
@@ -888,6 +926,18 @@ class ChatRuntime:
             grounding_source = grounded_source_tag
         else:
             grounding_source = "none"
+        # ADR-0071 (R4) — apply seeded discourse-marker decoration to
+        # the realized surface AFTER grounding source is decided.
+        # Empty marker buckets ⇒ no-op (UNREGISTERED / neutral / terse).
+        # Preserve the pre-decoration string so the pipeline can hash
+        # the truth-path surface and trace_hash stays invariant under
+        # register (ADR-0069 invariant C).
+        pre_decoration_surface_stub = response_surface
+        response_surface = decorate_surface(
+            response_surface,
+            self.register_pack,
+            turn_idx=len(self.turn_log),
+        )
         verdicts_bundle = TurnVerdicts(
             identity_score=None,
             safety_verdict=safety_verdict,
@@ -956,6 +1006,7 @@ class ChatRuntime:
             ethics_verdict=ethics_verdict,
             verdicts=verdicts_bundle,
             grounding_source=grounding_source,
+            pre_decoration_surface=pre_decoration_surface_stub,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -1217,6 +1268,20 @@ class ChatRuntime:
                 before = response_surface
                 response_surface = inject_hedge(response_surface, hedge_prefix)
                 hedge_injected = response_surface != before
+        # ADR-0071 (R4) — seeded discourse-marker decoration is the
+        # last step before TurnEvent is sealed.  Applies uniformly to
+        # every grounding path (vault / pack / teaching / planner /
+        # hedge-prefixed).  No-op for registers with empty marker
+        # buckets (UNREGISTERED / default_neutral_v1 / terse_v1).
+        # Pre-decoration surface is preserved separately so the
+        # cognition pipeline can hash the truth-path surface and
+        # trace_hash stays invariant under register (ADR-0069 inv C).
+        pre_decoration_surface_main = response_surface
+        response_surface = decorate_surface(
+            response_surface,
+            self.register_pack,
+            turn_idx=len(self.turn_log),
+        )
         verdicts_bundle = TurnVerdicts(
             identity_score=identity_score,
             safety_verdict=safety_verdict,
@@ -1273,6 +1338,7 @@ class ChatRuntime:
             ethics_verdict=ethics_verdict,
             verdicts=verdicts_bundle,
             grounding_source=warm_grounding_source or "vault",
+            pre_decoration_surface=pre_decoration_surface_main,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

@@ -53,6 +53,7 @@ from chat.pack_grounding import PACK_ID as COGNITION_PACK_ID, _pack_index
 from chat.pack_resolver import _pack_lexicon_for
 from generate.intent import IntentTag
 from generate.semantic_templates import humanize_predicate
+from packs.register.loader import RegisterPack, UNREGISTERED
 
 TEACHING_CORPUS_ID: str = "cognition_chains_v1"
 
@@ -343,7 +344,10 @@ def _intent_name(intent_tag: IntentTag) -> str | None:
 
 
 def teaching_grounded_surface(
-    subject_lemma: str, intent_tag: IntentTag
+    subject_lemma: str,
+    intent_tag: IntentTag,
+    *,
+    register: RegisterPack = UNREGISTERED,
 ) -> str | None:
     """Return a deterministic teaching-grounded surface, or ``None``.
 
@@ -398,7 +402,10 @@ def teaching_grounded_surface(
 
 
 def teaching_grounded_surface_composed(
-    subject_lemma: str, intent_tag: IntentTag,
+    subject_lemma: str,
+    intent_tag: IntentTag,
+    *,
+    register: RegisterPack = UNREGISTERED,
 ) -> str | None:
     """ADR-0062 — chain-of-chains teaching-grounded surface.
 

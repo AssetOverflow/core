@@ -50,6 +50,7 @@ from pathlib import Path
 from chat.pack_resolver import _pack_lexicon_for
 from generate.intent import IntentTag
 from generate.semantic_templates import humanize_predicate
+from packs.register.loader import RegisterPack, UNREGISTERED
 
 CROSS_PACK_CORPUS_ID: str = "cross_pack_chains_v1"
 
@@ -196,7 +197,10 @@ def clear_cross_pack_cache() -> None:
 
 
 def cross_pack_grounded_surface(
-    subject_lemma: str, intent_tag: IntentTag
+    subject_lemma: str,
+    intent_tag: IntentTag,
+    *,
+    register: RegisterPack = UNREGISTERED,
 ) -> str | None:
     """Return a deterministic cross-pack teaching surface, or ``None``.
 

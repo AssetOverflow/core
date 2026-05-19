@@ -37,6 +37,7 @@ from __future__ import annotations
 
 from chat.cross_pack_grounding import cross_pack_chains_for_object
 from chat.pack_resolver import _pack_lexicon_for, resolve_lemma
+from packs.register.loader import RegisterPack, UNREGISTERED
 from chat.teaching_grounding import (
     _all_chains_index,
     _pack_for_corpus,
@@ -56,6 +57,7 @@ def example_grounded_surface(
     object_lemma: str,
     *,
     max_examples: int = 3,
+    register: RegisterPack = UNREGISTERED,
 ) -> str | None:
     """Return a deterministic EXAMPLE-tier surface, or ``None``.
 

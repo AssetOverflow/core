@@ -92,7 +92,18 @@ class RuntimeConfig:
     # so the default-False path is fully preserved.
     discourse_planner: bool = False
 
+    # ADR-0068 / ADR-0069 — register pack id loaded at runtime startup.
+    # ``None`` resolves to ``RegisterPack.unregistered()`` (the in-memory
+    # null-register sentinel; structurally identical to
+    # ``default_neutral_v1``).  At R2 the register is loaded, stored, and
+    # threaded through every realizer call site, but no composer consumes
+    # it — the three byte-identity invariants (None ≡ default_neutral_v1
+    # ≡ pre-R2 output) are CI-pinned by ``test_register_null_lift.py``.
+    # R3 widens composers to dispatch on ``register.realizer_overrides``.
+    register_pack_id: str | None = None
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"
+DEFAULT_REGISTER_PACK: str = "default_neutral_v1"
 DEFAULT_CONFIG = RuntimeConfig()

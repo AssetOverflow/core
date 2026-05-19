@@ -43,6 +43,7 @@ from chat.pack_resolver import (
     mounted_lemmas,
     resolve_lemma,
 )
+from packs.register.loader import RegisterPack, UNREGISTERED
 
 PACK_ID: str = "en_core_cognition_v1"
 
@@ -134,9 +135,58 @@ def _frame_gloss(lemma: str, pos: str, gloss: str) -> str:
     return f"{cap}: {gloss}."
 
 
+_DEFAULT_DISCLOSURE_DOMAIN_COUNT: int = 3
+
+
+def _resolve_disclosure_domain_count(
+    register: RegisterPack,
+    *,
+    intent_name: str | None = None,
+) -> int:
+    """Return clamped disclosure_domain_count for *register*.
+
+    Resolution order (ADR-0071 per_intent extension):
+
+    1. ``realizer_overrides.per_intent[intent_name].disclosure_domain_count``
+    2. ``realizer_overrides.disclosure_domain_count`` (flat key)
+    3. Default ``_DEFAULT_DISCLOSURE_DOMAIN_COUNT`` (= 3)
+
+    The ratification gate (``scripts/ratify_register_packs.py``) is the
+    authoritative trust boundary: only known keys with in-bounds values
+    can ratify.  This clamp is fail-soft defense-in-depth for off-path
+    callers (test fixtures, ad-hoc CLI) — a malformed override should
+    not crash the realizer hot path.  See ADR-0070.
+    """
+    from collections.abc import Mapping as _Mapping
+    overrides = register.realizer_overrides
+    n: object = _DEFAULT_DISCLOSURE_DOMAIN_COUNT
+    if intent_name is not None:
+        per_intent: object = (
+            overrides.get("per_intent") if hasattr(overrides, "get") else None
+        )
+        if isinstance(per_intent, _Mapping):
+            sub: object = per_intent.get(intent_name)
+            if isinstance(sub, _Mapping) and "disclosure_domain_count" in sub:
+                candidate = sub["disclosure_domain_count"]
+                if (
+                    isinstance(candidate, int)
+                    and not isinstance(candidate, bool)
+                    and 1 <= candidate <= 3
+                ):
+                    return candidate
+    flat = overrides.get("disclosure_domain_count") if hasattr(overrides, "get") else None
+    if flat is not None:
+        n = flat
+    if not isinstance(n, int) or isinstance(n, bool) or n < 1 or n > 3:
+        return _DEFAULT_DISCLOSURE_DOMAIN_COUNT
+    return n
+
+
 def build_pack_surface_candidate(
     lemma: str,
     pack_ids: tuple[str, ...] = DEFAULT_RESOLVABLE_PACK_IDS,
+    *,
+    register: RegisterPack = UNREGISTERED,
 ):
     """Return a :class:`PackSurfaceCandidate` for *lemma*, or ``None``.
 
@@ -201,8 +251,12 @@ def build_pack_surface_candidate(
             is_fluent_sentence=True,
         )
 
-    # Dotted-domain disclosure fallback.
-    head = "; ".join(domains[:3])
+    # Dotted-domain disclosure fallback.  Slice width is the register's
+    # disclosure_domain_count (ADR-0070); default (3) preserves the
+    # pre-R3 surface byte-for-byte under the unregistered sentinel and
+    # under null registers (default_neutral_v1).
+    n = _resolve_disclosure_domain_count(register)
+    head = "; ".join(domains[:n])
     surface = (
         f"{key} — pack-grounded ({resolved_pack_id}): {head}. "
         f"No session evidence yet."
@@ -223,6 +277,8 @@ def build_pack_surface_candidate(
 def pack_grounded_surface(
     lemma: str,
     pack_ids: tuple[str, ...] = DEFAULT_RESOLVABLE_PACK_IDS,
+    *,
+    register: RegisterPack = UNREGISTERED,
 ) -> str | None:
     """Return a deterministic pack-grounded surface for *lemma*, or ``None``.
 
@@ -246,7 +302,7 @@ def pack_grounded_surface(
 
     Returns ``None`` when the lemma is empty or doesn't resolve.
     """
-    candidate = build_pack_surface_candidate(lemma, pack_ids)
+    candidate = build_pack_surface_candidate(lemma, pack_ids, register=register)
     return candidate.surface if candidate is not None else None
 
 
@@ -324,7 +380,11 @@ def _extract_correction_topic_lemma(text: str) -> str | None:
     return None
 
 
-def pack_grounded_correction_surface(text: str | None = None) -> str | None:
+def pack_grounded_correction_surface(
+    text: str | None = None,
+    *,
+    register: RegisterPack = UNREGISTERED,
+) -> str | None:
     """ADR-0053 + ADR-0060 — cold-start CORRECTION acknowledgement.
 
     A CORRECTION intent (``"No, that's wrong"``, ``"Actually, X means Y"``)
@@ -438,7 +498,11 @@ def _extract_procedure_topic_lemma(subject_text: str) -> str | None:
     return last_match
 
 
-def pack_grounded_procedure_surface(subject_text: str) -> str | None:
+def pack_grounded_procedure_surface(
+    subject_text: str,
+    *,
+    register: RegisterPack = UNREGISTERED,
+) -> str | None:
     """ADR-0061 — cold-start PROCEDURE pack-grounded surface.
 
     A PROCEDURE intent (``"How do I X?"``, ``"How can I Y?"``) requests
@@ -486,7 +550,10 @@ def pack_grounded_procedure_surface(subject_text: str) -> str | None:
 
 
 def pack_grounded_comparison_surface(
-    lemma_a: str, lemma_b: str
+    lemma_a: str,
+    lemma_b: str,
+    *,
+    register: RegisterPack = UNREGISTERED,
 ) -> str | None:
     """ADR-0050 — deterministic pack-grounded surface for COMPARISON intent.
 
