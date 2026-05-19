@@ -296,7 +296,29 @@ class TestPlannerSignature:
         from typing import get_type_hints
 
         sig = inspect.signature(plan_discourse)
-        assert list(sig.parameters) == ["intent", "mode", "bundle"]
+        # Public positional signature is (intent, mode, bundle).  Any
+        # keyword-only parameters added later (e.g. ``_exclude_facts``
+        # for sub-plan composition) must remain keyword-only with a
+        # leading underscore so they are not part of the public API.
+        positional_params = [
+            name
+            for name, p in sig.parameters.items()
+            if p.kind
+            in (
+                inspect.Parameter.POSITIONAL_ONLY,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            )
+        ]
+        assert positional_params == ["intent", "mode", "bundle"]
+        keyword_only = [
+            name
+            for name, p in sig.parameters.items()
+            if p.kind is inspect.Parameter.KEYWORD_ONLY
+        ]
+        for name in keyword_only:
+            assert name.startswith("_"), (
+                f"keyword-only parameter {name!r} must be underscore-prefixed"
+            )
         hints = get_type_hints(plan_discourse)
         assert hints["intent"] is DialogueIntent
         assert hints["mode"] is ResponseMode

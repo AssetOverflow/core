@@ -54,8 +54,11 @@ class TestPlannerHelperEngagement:
             "Tell me about truth.", "teaching"
         )
         assert result is not None
+        surface, source = result
         # Multi-clause: at least one connective from the canonical table.
-        assert "Furthermore," in result or "In turn," in result
+        assert "Furthermore," in surface or "In turn," in surface
+        # Source is one of the two grounded labels — never "oov" or "none".
+        assert source in {"pack", "teaching"}
 
     def test_returns_none_for_single_move_plan(
         self, runtime_flag_on: ChatRuntime
@@ -67,3 +70,20 @@ class TestPlannerHelperEngagement:
             "What is truth?", "pack"
         )
         assert result is None
+
+    def test_compound_prompt_engages_via_oov_bypass(
+        self, runtime_flag_on: ChatRuntime
+    ) -> None:
+        # Compound bypass: upstream tagged the surface "oov" because
+        # the flat classifier saw a polluted subject, but the compound
+        # decomposition reveals a pack-resident primary subject.  The
+        # helper should engage and return a grounded source tag.
+        result = runtime_flag_on._maybe_apply_discourse_planner(
+            "What is truth, and what is knowledge?", "oov"
+        )
+        assert result is not None
+        surface, source = result
+        assert source in {"pack", "teaching"}
+        # Both subjects should appear in the rendered surface.
+        assert "truth" in surface.lower()
+        assert "knowledge" in surface.lower()

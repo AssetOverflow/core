@@ -54,7 +54,12 @@ from dataclasses import dataclass, field
 from enum import Enum, unique
 
 from generate.graph_planner import Relation
-from generate.intent import DialogueIntent, IntentTag, ResponseMode
+from generate.intent import (
+    CompoundIntent,
+    DialogueIntent,
+    IntentTag,
+    ResponseMode,
+)
 
 
 @unique
@@ -378,6 +383,8 @@ def plan_discourse(
     intent: DialogueIntent,
     mode: ResponseMode,
     bundle: GroundingBundle,
+    *,
+    _exclude_facts: frozenset[tuple[int, str, str, str, str]] = frozenset(),
 ) -> DiscoursePlan:
     """Deterministic discourse planner.
 
@@ -407,6 +414,16 @@ def plan_discourse(
 
     if bundle.is_empty():
         return DiscoursePlan(intent=intent, mode=mode, moves=())
+
+    # Filter out facts the caller has already used in prior sub-plans.
+    if _exclude_facts:
+        bundle = GroundingBundle(
+            facts=tuple(
+                f for f in bundle.facts if f.sort_key() not in _exclude_facts
+            )
+        )
+        if bundle.is_empty():
+            return DiscoursePlan(intent=intent, mode=mode, moves=())
 
     anchor_fact = _select_anchor(intent, bundle)
     if anchor_fact is None:
@@ -519,6 +536,101 @@ def plan_discourse(
 
 
 # ---------------------------------------------------------------------------
+# Compound discourse planning
+# ---------------------------------------------------------------------------
+#
+# When a prompt is decomposed into multiple ``DialogueIntent`` parts
+# by ``classify_compound_intent``, each part is planned independently
+# and the resulting sub-plans are concatenated in *source order*.  No
+# cross-part re-sorting — determinism comes from the per-part canonical
+# selection inside ``plan_discourse`` plus the deterministic
+# decomposition order from the classifier.
+#
+# A bridging ``TRANSITION`` move is inserted between consecutive
+# sub-plans so the rendered surface has an explicit handoff between
+# parts.  Topic for the bridge is taken from the next sub-plan's
+# anchor; ``given`` carries the prior part's topics forward.
+
+
+def plan_compound_discourse(
+    compound: CompoundIntent,
+    mode: ResponseMode,
+    bundles: tuple[GroundingBundle, ...],
+) -> DiscoursePlan:
+    """Plan a multi-part response from a decomposed ``CompoundIntent``.
+
+    ``bundles`` must have one ``GroundingBundle`` per part, in the same
+    order as ``compound.parts``.  Each part is planned with
+    :func:`plan_discourse`; sub-plans are concatenated preserving
+    source order with a ``TRANSITION`` move bridging consecutive parts.
+
+    Falls back to the single-part :func:`plan_discourse` shape when
+    ``compound`` carries exactly one part — byte-equivalent to calling
+    ``plan_discourse(compound.primary, mode, bundles[0])`` directly.
+
+    The returned plan's ``intent`` is the primary part; downstream
+    consumers that only need a single ``DialogueIntent`` (e.g. the
+    runtime surface tag) still get a meaningful value.
+    """
+
+    if len(compound.parts) != len(bundles):
+        raise ValueError(
+            f"plan_compound_discourse: parts ({len(compound.parts)}) and "
+            f"bundles ({len(bundles)}) must align"
+        )
+
+    if not compound.is_compound():
+        return plan_discourse(compound.primary, mode, bundles[0])
+
+    moves: list[DiscourseMove] = []
+    prior_topics: list[str] = []
+    used_facts: set[tuple[int, str, str, str, str]] = set()
+    for idx, (part, bundle) in enumerate(zip(compound.parts, bundles)):
+        sub_plan = plan_discourse(
+            part, mode, bundle, _exclude_facts=frozenset(used_facts)
+        )
+        if sub_plan.is_empty():
+            continue
+        for sub_move in sub_plan.moves:
+            if sub_move.fact is not None:
+                used_facts.add(sub_move.fact.sort_key())
+        if moves:
+            # Bridge from the previous sub-plan to this one.  Topic is
+            # the next anchor's topic; given carries the prior topics
+            # forward so the rendered TRANSITION clause reads naturally.
+            next_anchor = sub_plan.anchor()
+            bridge_topic = (
+                next_anchor.topic
+                if next_anchor is not None
+                else part.subject.strip().lower()
+            )
+            moves.append(
+                DiscourseMove(
+                    kind=DiscourseMoveKind.TRANSITION,
+                    topic=bridge_topic,
+                    given=tuple(prior_topics),
+                    new=(bridge_topic,) if bridge_topic else (),
+                    relation_to_previous=Relation.SEQUENCE,
+                    fact=None,
+                )
+            )
+        moves.extend(sub_plan.moves)
+        for topic in sub_plan.topics():
+            if topic not in prior_topics:
+                prior_topics.append(topic)
+        _ = idx  # source-order index preserved by enumerate
+
+    if not moves:
+        return DiscoursePlan(intent=compound.primary, mode=mode, moves=())
+
+    return DiscoursePlan(
+        intent=compound.primary,
+        mode=mode,
+        moves=tuple(moves),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Plan rendering — deterministic multi-clause surface
 # ---------------------------------------------------------------------------
 #
@@ -605,6 +717,7 @@ def render_plan(plan: DiscoursePlan) -> str:
 
 
 __all__ = [
+    "CompoundIntent",
     "DiscourseMove",
     "DiscourseMoveKind",
     "DiscoursePlan",
@@ -615,6 +728,7 @@ __all__ = [
     "IntentTag",
     "Relation",
     "ResponseMode",
+    "plan_compound_discourse",
     "plan_discourse",
     "render_plan",
 ]

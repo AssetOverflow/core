@@ -706,13 +706,18 @@ class ChatRuntime:
 
     def _maybe_apply_discourse_planner(
         self, text: str, source_tag: str
-    ) -> str | None:
+    ) -> tuple[str, str] | None:
         """Build and render a :class:`DiscoursePlan` for *text*.
 
-        Returns the rendered multi-clause surface when the planner
+        Returns ``(rendered_surface, new_source_tag)`` when the planner
         engages and produces more than one move, else ``None``.  Callers
-        own surface assignment — this helper neither reads nor writes
-        any caller-visible state besides loading the grounding bundle.
+        own assignment.  The returned ``new_source_tag`` is the source
+        the planner actually used (``"teaching"`` when the plan
+        contains any teaching fact, else ``"pack"``) so downstream
+        labels reflect the surface's true provenance — particularly
+        important when the planner engaged via the compound bypass
+        (upstream tagged "oov" but rendered output is pack/teaching
+        content).
 
         Gating discipline (must match both cold-start and warm hooks):
 
@@ -731,23 +736,78 @@ class ChatRuntime:
 
         if not self.config.discourse_planner:
             return None
-        if source_tag not in {"pack", "teaching"}:
-            return None
-        from generate.discourse_planner import plan_discourse, render_plan
+        from generate.discourse_planner import (
+            GroundingBundle,
+            plan_compound_discourse,
+            plan_discourse,
+            render_plan,
+        )
         from generate.grounding_accessors import grounding_bundle_for
-        from generate.intent import classify_response_mode
+        from generate.intent import (
+            classify_compound_intent,
+            classify_response_mode,
+        )
         from generate.intent_bridge import classify_intent_from_input
 
-        intent = classify_intent_from_input(text)
-        if not intent.subject:
-            return None
+        compound = classify_compound_intent(text)
         mode = classify_response_mode(text)
-        bundle = grounding_bundle_for(intent.subject)
-        plan = plan_discourse(intent, mode, bundle)
+        # Compound prompts implicitly request more depth than BRIEF
+        # can express — a multi-part compound in BRIEF mode produces
+        # one ANCHOR per part, which on shared-subject compounds
+        # ("What is X, and why does it matter?") would emit duplicate
+        # anchor sentences.  Upgrade to EXPLAIN so each sub-plan has
+        # ANCHOR+SUPPORT+RELATION budget and the parts differentiate.
+        from generate.intent import ResponseMode as _ResponseMode
+        if compound.is_compound() and mode is _ResponseMode.BRIEF:
+            mode = _ResponseMode.EXPLAIN
+
+        # Standard gate: when upstream grounded the surface in pack or
+        # teaching, the planner is free to engage.
+        standard_gate = source_tag in {"pack", "teaching"}
+        # Compound bypass: when upstream produced an OOV / none surface
+        # because the flat classifier saw a polluted subject (e.g.
+        # ``"truth, and why does it matter"``), but the compound
+        # decomposition reveals at least one pack-resident primary
+        # part, the substrate exists — the planner engages on the
+        # decomposed parts rather than the polluted flat surface.
+        compound_bypass = False
+        if not standard_gate and compound.is_compound():
+            primary = compound.primary
+            if primary.subject:
+                probe = grounding_bundle_for(primary.subject)
+                if not probe.is_empty():
+                    compound_bypass = True
+        if not standard_gate and not compound_bypass:
+            return None
+
+        if compound.is_compound():
+            bundles = tuple(
+                grounding_bundle_for(part.subject)
+                if part.subject
+                else GroundingBundle()
+                for part in compound.parts
+            )
+            plan = plan_compound_discourse(compound, mode, bundles)
+        else:
+            # Use the intent_bridge classifier on single-part prompts to
+            # preserve the pre-compound behavior exactly.
+            intent = classify_intent_from_input(text)
+            if not intent.subject:
+                return None
+            bundle = grounding_bundle_for(intent.subject)
+            plan = plan_discourse(intent, mode, bundle)
         if len(plan.moves) <= 1:
             return None
         rendered = render_plan(plan)
-        return rendered or None
+        if not rendered:
+            return None
+        from generate.discourse_planner import FactSource
+        plan_uses_teaching = any(
+            m.fact is not None and m.fact.source is FactSource.TEACHING
+            for m in plan.moves
+        )
+        new_source = "teaching" if plan_uses_teaching else "pack"
+        return rendered, new_source
 
     def _stub_response(
         self,
@@ -928,7 +988,7 @@ class ChatRuntime:
                     text, pack_source_tag
                 )
                 if planned is not None:
-                    pack_surface = planned
+                    pack_surface, pack_source_tag = planned
             self._context.finalize_turn(
                 empty_result,
                 tokens_in=tuple(filtered),
@@ -1148,8 +1208,10 @@ class ChatRuntime:
                     text, warm_grounding_source or ""
                 )
                 if planned is not None:
-                    response_surface = planned
-                    articulation = replace(articulation, surface=planned)
+                    planned_surface, planned_source = planned
+                    response_surface = planned_surface
+                    articulation = replace(articulation, surface=planned_surface)
+                    warm_grounding_source = planned_source
             if should_inject_hedge(ethics_verdict, self.ethics_pack):
                 hedge_prefix = build_hedge_prefix(self.identity_manifold)
                 before = response_surface

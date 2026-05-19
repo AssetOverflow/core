@@ -401,3 +401,140 @@ def classify_response_mode(prompt: str) -> ResponseMode:
         if pattern.search(text):
             return mode
     return ResponseMode.BRIEF
+
+
+# ---------------------------------------------------------------------------
+# Compound-intent decomposition
+# ---------------------------------------------------------------------------
+#
+# Some prompts ask for more than one thing in a single turn:
+#
+#   "What is X, and why does it matter?"
+#   "What is X, and how does it relate to Y?"
+#   "Explain X, but also why does it matter?"
+#
+# A single ``DialogueIntent`` can only carry one tag and one subject,
+# so a flat classifier silently drops every part after the first.  The
+# compound layer is *additive*: ``classify_intent`` still returns the
+# single-intent shape every existing caller depends on; a separate
+# ``classify_compound_intent`` is the only entry point that returns the
+# ordered tuple of parts.
+#
+# Decomposition is rule-based and deterministic.  Connectors that mark
+# part boundaries are matched on a closed list (``,\s+(and|but|because|
+# while)\s+`` plus a small set of canonical follow-up shapes like
+# "why does it matter").  No NLP heuristics, no synthesis.  When the
+# prompt has no recognisable split, the compound result has exactly
+# one part — byte-equivalent to the original ``classify_intent`` shape.
+
+_COMPOUND_SPLIT_RE = re.compile(
+    r",\s+(?:and|but|because|while)\s+",
+    re.IGNORECASE,
+)
+
+# Canonical follow-up shapes whose subject the decomposer should treat
+# as the prior part's subject when the follow-up is itself anaphoric
+# ("why does *it* matter").  These rewrite the trailing fragment with
+# the prior part's subject so each part is independently classifiable.
+#
+# v1 semantic approximation: "why does it matter" maps to ``CAUSE(X)``
+# because the existing CAUSE substrate already carries "matters /
+# causes / produces" relations.  "Matter" here means causal/relevance
+# support, *not* metaphysical importance as a new primitive.  No
+# ``IMPORTANCE`` tag is introduced.
+_ANAPHORIC_FOLLOWUPS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"^why\s+does\s+(?:it|that|this)\s+matter\??$", re.IGNORECASE),
+     "why does {subject} matter"),
+    (re.compile(r"^how\s+does\s+(?:it|that|this)\s+work\??$", re.IGNORECASE),
+     "how does {subject} work"),
+    (re.compile(r"^what\s+causes\s+(?:it|that|this)\??$", re.IGNORECASE),
+     "what causes {subject}"),
+)
+
+
+@dataclass(frozen=True, slots=True)
+class CompoundIntent:
+    """Ordered tuple of single-intent parts plus the raw prompt.
+
+    ``parts`` always contains at least one ``DialogueIntent``.  For
+    prompts without a recognised connector, ``parts == (primary,)`` and
+    the result is byte-equivalent to the single-intent classifier.
+
+    ``primary`` is the first part — provided for back-compat so callers
+    that received a compound by accident can degrade gracefully.
+    """
+
+    parts: tuple[DialogueIntent, ...]
+    raw_text: str
+
+    @property
+    def primary(self) -> DialogueIntent:
+        return self.parts[0]
+
+    def is_compound(self) -> bool:
+        return len(self.parts) > 1
+
+
+def _rewrite_anaphoric_followup(fragment: str, prior_subject: str) -> str:
+    """If *fragment* matches a canonical anaphoric follow-up shape,
+    rewrite it with *prior_subject* substituted for the pronoun.
+
+    Returns the original fragment unchanged when no rule matches.
+    """
+
+    text = fragment.strip().rstrip("?.!").strip()
+    if not text or not prior_subject:
+        return fragment
+    for pattern, template in _ANAPHORIC_FOLLOWUPS:
+        if pattern.match(text):
+            return template.format(subject=prior_subject)
+    return fragment
+
+
+def classify_compound_intent(prompt: str) -> CompoundIntent:
+    """Decompose *prompt* into an ordered tuple of single-intent parts.
+
+    Deterministic: the same prompt always produces the same parts in
+    the same order.  Decomposition order is *preserved* — parts are
+    not re-sorted by any criterion (downstream planner composition
+    relies on this for surface order).
+
+    When *prompt* contains no recognised connector, the result has
+    exactly one part and is byte-equivalent to ``classify_intent``.
+    """
+
+    text = prompt.strip()
+    if not text:
+        return CompoundIntent(parts=(classify_intent(""),), raw_text=prompt)
+
+    # Single-shot fast path: nothing to split.
+    if not _COMPOUND_SPLIT_RE.search(text):
+        return CompoundIntent(parts=(classify_intent(text),), raw_text=prompt)
+
+    fragments = _COMPOUND_SPLIT_RE.split(text)
+    parts: list[DialogueIntent] = []
+    prior_subject = ""
+    for raw_fragment in fragments:
+        fragment = raw_fragment.strip().rstrip(",;").strip()
+        if not fragment:
+            continue
+        # Anaphoric follow-ups ("why does it matter") inherit the prior
+        # part's subject so each fragment is independently classifiable.
+        if prior_subject:
+            fragment = _rewrite_anaphoric_followup(fragment, prior_subject)
+        part = classify_intent(fragment)
+        # Drop parts that classify to UNKNOWN with empty subject — they
+        # carry no useful planning signal and would force the downstream
+        # planner to emit an empty sub-plan.
+        if part.tag is IntentTag.UNKNOWN and not part.subject.strip():
+            continue
+        parts.append(part)
+        if part.subject and part.tag is not IntentTag.UNKNOWN:
+            prior_subject = part.subject
+
+    if not parts:
+        # Every fragment collapsed to UNKNOWN/empty — fall back to the
+        # single-intent shape so callers always see at least one part.
+        return CompoundIntent(parts=(classify_intent(text),), raw_text=prompt)
+
+    return CompoundIntent(parts=tuple(parts), raw_text=prompt)
