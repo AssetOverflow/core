@@ -879,6 +879,41 @@ class ChatRuntime:
                 pack_source_tag = "none"
             else:
                 pack_surface, pack_source_tag = pack_result
+                # Option 2 — engage discourse planner on the cold
+                # pack/teaching-grounded path so one-shot prompts (no
+                # priming) can produce multi-clause output when the
+                # planner has substrate.  Same gating discipline as
+                # the warm hook: only fires when grounding source is
+                # pack or teaching, and only replaces the surface
+                # when the plan has more than one move.  BRIEF mode
+                # collapses to a single ANCHOR move and renders to a
+                # surface byte-equivalent to the existing composer,
+                # so the flag-off path is unaffected.
+                if (
+                    self.config.discourse_planner
+                    and pack_source_tag in {"pack", "teaching"}
+                ):
+                    from generate.discourse_planner import (
+                        plan_discourse,
+                        render_plan,
+                    )
+                    from generate.grounding_accessors import (
+                        grounding_bundle_for,
+                    )
+                    from generate.intent import classify_response_mode
+                    from generate.intent_bridge import (
+                        classify_intent_from_input,
+                    )
+
+                    _cintent = classify_intent_from_input(text)
+                    _cmode = classify_response_mode(text)
+                    if _cintent.subject:
+                        _cbundle = grounding_bundle_for(_cintent.subject)
+                        _cplan = plan_discourse(_cintent, _cmode, _cbundle)
+                        if len(_cplan.moves) > 1:
+                            _crendered = render_plan(_cplan)
+                            if _crendered:
+                                pack_surface = _crendered
             self._context.finalize_turn(
                 empty_result,
                 tokens_in=tuple(filtered),
