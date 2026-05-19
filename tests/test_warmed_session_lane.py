@@ -81,6 +81,37 @@ class TestLaneDiscovery:
         assert hasattr(runner, "run_lane")
 
 
+class TestPipelineOverrideGateInvariants:
+    """Phase B1 hard floors — these were red before the
+    pipeline-override usefulness gate landed and must never regress.
+
+    - no_placeholder_rate         floor 1.00 (no ... / <pending> / <prior>)
+    - telemetry_consistency_rate  floor 1.00 (turn_log surface == pipeline result)
+    """
+
+    def test_no_placeholder_rate_is_one(self) -> None:
+        lane = get_lane(LANE_NAME)
+        result = run_lane(lane, version="v1", split="public")
+        rate = result.metrics["no_placeholder_rate"]
+        assert rate == 1.0, (
+            f"no_placeholder_rate regressed below 1.0: {rate} — "
+            f"the pipeline override usefulness gate has been weakened. "
+            f"Surfaces containing ... / <pending> / <prior> are a "
+            f"doctrine violation."
+        )
+
+    def test_telemetry_consistency_rate_is_one(self) -> None:
+        lane = get_lane(LANE_NAME)
+        result = run_lane(lane, version="v1", split="public")
+        rate = result.metrics["telemetry_consistency_rate"]
+        assert rate == 1.0, (
+            f"telemetry_consistency_rate regressed below 1.0: {rate} — "
+            f"the pipeline is mutating surface AFTER runtime telemetry "
+            f"is emitted.  TurnEvent.surface no longer equals "
+            f"pipeline.run().surface, which breaks audit/replay trust."
+        )
+
+
 class TestRunnerMetrics:
     """The runner must emit every metric the contract.md names, even
     when the values are red.  Missing-metric drift would make the

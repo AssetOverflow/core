@@ -144,7 +144,28 @@ class CognitiveTurnPipeline:
         )
         surface = response.surface
         articulation_surface = response.articulation_surface
-        if realized_plan.surface and not gate_fired:
+        # Pipeline override usefulness gate (2026-05-19 design review,
+        # Finding P0 #1).  The previous gate only required
+        # ``realized_plan.surface`` to be non-empty, so a realizer
+        # output of "Truth is defined as ..." (with <pending> rendered
+        # as ...) would silently override a perfectly-good runtime
+        # pack-grounded surface and the telemetry would record yet a
+        # third surface.  The warmed_session_consistency lane catches
+        # this exactly.
+        #
+        # Use the same usefulness predicate the bridge uses to gate
+        # ``articulate_with_intent`` output (generate/intent_bridge.py),
+        # which rejects empty surfaces and surfaces containing the
+        # placeholder sentinels (<pending>, <prior>, "...").  An
+        # ungrounded realizer surface cannot honestly override a
+        # grounded runtime surface — when the realizer cannot produce
+        # a useful surface, we keep the runtime answer the user sees.
+        from generate.intent_bridge import _is_useful_surface
+        if (
+            realized_plan.surface
+            and not gate_fired
+            and _is_useful_surface(realized_plan.surface)
+        ):
             surface = realized_plan.surface
             articulation_surface = realized_plan.surface
 
