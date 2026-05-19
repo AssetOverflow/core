@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo articulation\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo articulation\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -1728,9 +1728,9 @@ Usage:
 """
 
 
-_ALL_PREAMBLE = """
+_ADR_0024_CHAIN_PREAMBLE = """
 ================================================================================
-  Combined Demo — Full ADR-0024 Chain Evidence
+  ADR-0024 Chain — Phase 5 + Phase 6 Combined Evidence
 ================================================================================
 
 This runs BOTH Phase 5 (stratified mechanism-isolation, 20 cases, 5 failure-
@@ -1744,6 +1744,40 @@ For a thorough explanation of each phase, run them individually:
 
 For the central evidence index:
   core demo list-results
+================================================================================
+"""
+
+
+_ALL_PREAMBLE = """
+================================================================================
+  core demo all — Run Every Demo, End-to-End
+================================================================================
+
+Runs the full demo suite in sequence and prints a consolidated PASS/FAIL
+table.  This is the "show me everything" entry point.
+
+  1. phase5                  — stratified mechanism isolation (ADR-0024)
+  2. phase6                  — 3-condition head-to-head (ADR-0024)
+  3. audit-tour              — pack-layer story (ADR-0027..0041)
+  4. pack-measurements       — pack-layer claims → numbers (ADR-0043)
+  5. long-context-comparison — exact NIAH vs transformer baselines (ADR-0045)
+  6. anti-regression         — three-gate defense (ADR-0057)
+  7. learning-loop           — cold turn → grounded surface (ADR-0055..0057)
+  8. articulation            — discourse-planner spine (multi-sentence)
+
+Each demo retains its own preamble + report.  The final summary surfaces
+one boolean per demo and an overall ``all_demos_passed`` flag.
+
+Trust boundary:
+  No corpus / pack / vault mutation across any of the eight demos.
+
+JSON mode:
+  core demo all --json
+  Emits a consolidated dict with one key per demo (full per-demo report)
+  plus ``all_demos_passed``.
+
+For just the original ADR-0024 chain (Phase 5 + Phase 6), use:
+  core demo adr-0024-chain
 ================================================================================
 """
 
@@ -2007,33 +2041,188 @@ def cmd_demo(args: argparse.Namespace) -> int:
         _run_demo_phase5(args.json)
     elif target == "phase6":
         _run_demo_phase6(args.json)
+    elif target == "adr-0024-chain":
+        _run_adr_0024_chain(args.json)
     elif target == "all":
-        if not args.json:
-            _print_preamble(_ALL_PREAMBLE)
-        p5 = _run_demo_phase5(args.json)
-        p6 = _run_demo_phase6(args.json)
-        if not args.json:
-            print("\n" + "=" * 76)
-            print("Combined demo summary")
-            print("=" * 76)
-            print(f"  Phase 5 pass_rate (margin):    {p5.get('pass_rate_margin', 0):.2%}")
-            print(f"  Phase 5 mechanism_isolated:    {p5.get('mechanism_isolated_margin', False)}")
-            print(f"  Phase 6 all three conditions:  {p6.get('all_three_conditions_pass', False)}")
-            print("")
-            print("  What this means:")
-            print("    Phase 5 verifies CORE handles five distinct geometric")
-            print("    failure modes correctly under both threshold and margin gates.")
-            print("    Phase 6 verifies CORE adds three capabilities the in-system")
-            print("    baseline cannot exhibit: deterministic replay of refusals,")
-            print("    traced rejection of inadmissible candidates, and coherent")
-            print("    typed refusal when no admissible path exists.")
-            print("    Together they are the load-bearing claim of the ADR-0024 chain.")
-            print("")
+        return _run_demo_all(args.json)
     else:
         _die(f"unknown demo target: {target}")
 
     _write_results_index()
     return 0
+
+
+def _run_adr_0024_chain(emit_json: bool) -> None:
+    """Phase 5 + Phase 6 — the original ADR-0024 combined evidence."""
+    if not emit_json:
+        _print_preamble(_ADR_0024_CHAIN_PREAMBLE)
+    p5 = _run_demo_phase5(emit_json)
+    p6 = _run_demo_phase6(emit_json)
+    if emit_json:
+        return
+    print("\n" + "=" * 76)
+    print("ADR-0024 chain — combined summary")
+    print("=" * 76)
+    print(f"  Phase 5 pass_rate (margin):    {p5.get('pass_rate_margin', 0):.2%}")
+    print(f"  Phase 5 mechanism_isolated:    {p5.get('mechanism_isolated_margin', False)}")
+    print(f"  Phase 6 all three conditions:  {p6.get('all_three_conditions_pass', False)}")
+    print("")
+    print("  What this means:")
+    print("    Phase 5 verifies CORE handles five distinct geometric")
+    print("    failure modes correctly under both threshold and margin gates.")
+    print("    Phase 6 verifies CORE adds three capabilities the in-system")
+    print("    baseline cannot exhibit: deterministic replay of refusals,")
+    print("    traced rejection of inadmissible candidates, and coherent")
+    print("    typed refusal when no admissible path exists.")
+    print("    Together they are the load-bearing claim of the ADR-0024 chain.")
+    print("")
+
+
+def _run_demo_all(emit_json: bool) -> int:
+    """``core demo all`` — run every demo, print a consolidated PASS/FAIL table.
+
+    Each section uses its native runner; the consolidated boolean is the
+    load-bearing field already pinned by that demo's test gate.
+
+    Under ``--json``, sub-runner stdout is suppressed and a single
+    consolidated JSON object is emitted at the end.
+    """
+    import contextlib
+    import io
+    import os
+
+    if not emit_json:
+        _print_preamble(_ALL_PREAMBLE)
+
+    consolidated: dict[str, Any] = {}
+    passed: dict[str, bool] = {}
+
+    @contextlib.contextmanager
+    def _maybe_suppress():
+        """Suppress sub-runner stdout when emitting JSON."""
+        if emit_json:
+            with open(os.devnull, "w") as null, contextlib.redirect_stdout(null):
+                yield
+        else:
+            yield
+
+    def _section(title: str) -> None:
+        if not emit_json:
+            print("\n" + "█" * 76)
+            print(f"█  {title}")
+            print("█" * 76)
+
+    # 1. phase5
+    _section("1/8  phase5 — stratified mechanism isolation")
+    with _maybe_suppress():
+        p5 = _run_demo_phase5(emit_json, with_preamble=not emit_json)
+    consolidated["phase5"] = p5
+    passed["phase5"] = bool(p5.get("mechanism_isolated_margin", False))
+
+    # 2. phase6
+    _section("2/8  phase6 — three-condition head-to-head")
+    with _maybe_suppress():
+        p6 = _run_demo_phase6(emit_json, with_preamble=not emit_json)
+    consolidated["phase6"] = p6
+    passed["phase6"] = bool(p6.get("all_three_conditions_pass", False))
+
+    # 3. audit-tour
+    _section("3/8  audit-tour — pack-layer story")
+    from evals.audit_tour.run_tour import run_tour
+    if not emit_json:
+        _print_preamble(_AUDIT_TOUR_PREAMBLE)
+    with _maybe_suppress():
+        audit_report = run_tour(emit_json=emit_json)
+    consolidated["audit_tour"] = audit_report
+    passed["audit_tour"] = bool(audit_report.get("all_claims_supported", False))
+
+    # 4. pack-measurements
+    _section("4/8  pack-measurements — pack-layer claims → numbers")
+    from scripts.publish_pack_measurements import (
+        build_combined_report,
+        write_report,
+        _print_human,
+    )
+    if not emit_json:
+        _print_preamble(_PACK_MEASUREMENTS_PREAMBLE)
+    with _maybe_suppress():
+        pm_report = build_combined_report()
+        write_report(pm_report, Path("evals/results/phase2_pack_measurements.json"))
+        if not emit_json:
+            _print_human(pm_report)
+    consolidated["pack_measurements"] = pm_report
+    passed["pack_measurements"] = bool(pm_report.get("claims_supported", False))
+
+    # 5. long-context-comparison
+    _section("5/8  long-context-comparison — exact NIAH vs baselines")
+    from evals.long_context_cost.comparison_runner import (
+        run_comparison,
+        _write_report as _write_lc_report,
+    )
+    if not emit_json:
+        _print_preamble(_LONG_CONTEXT_COMPARISON_PREAMBLE)
+    with _maybe_suppress():
+        lc_report = run_comparison()
+        _write_lc_report(lc_report, Path("evals/long_context_cost/results"))
+    if not emit_json:
+        core_lc = lc_report["core_measurements"]
+        print(
+            f"CORE needle-in-a-haystack recall: {core_lc['recall_pct']:.2f}%  "
+            f"(N={core_lc['n_values']})"
+        )
+        print(f"claim_supported = {lc_report['claim_supported']}")
+    consolidated["long_context_comparison"] = lc_report
+    passed["long_context_comparison"] = bool(lc_report.get("claim_supported", False))
+
+    # 6. anti-regression
+    _section("6/8  anti-regression — three-gate defense")
+    from evals.anti_regression.run_demo import run_demo as run_ar
+    if not emit_json:
+        _print_preamble(_ANTI_REGRESSION_PREAMBLE)
+    with _maybe_suppress():
+        ar_report = run_ar(emit_json=emit_json)
+    consolidated["anti_regression"] = ar_report
+    passed["anti_regression"] = bool(ar_report.get("all_gates_held", False))
+
+    # 7. learning-loop
+    _section("7/8  learning-loop — cold turn → grounded surface")
+    from evals.learning_loop.run_demo import run_demo as run_loop
+    if not emit_json:
+        _print_preamble(_LEARNING_LOOP_PREAMBLE)
+    with _maybe_suppress():
+        ll_report = run_loop(emit_json=emit_json)
+    consolidated["learning_loop"] = ll_report
+    passed["learning_loop"] = bool(ll_report.get("learning_loop_closed", False))
+
+    # 8. articulation
+    _section("8/8  articulation — discourse-planner spine")
+    from evals.articulation.run_demo import run_demo as run_art
+    if not emit_json:
+        _print_preamble(_ARTICULATION_PREAMBLE)
+    with _maybe_suppress():
+        art_report = run_art(emit_json=emit_json)
+    consolidated["articulation"] = art_report
+    passed["articulation"] = bool(art_report.get("all_claims_supported", False))
+
+    all_passed = all(passed.values())
+    consolidated["passed"] = passed
+    consolidated["all_demos_passed"] = all_passed
+
+    if emit_json:
+        print(json.dumps(consolidated, indent=2, sort_keys=True, default=str))
+    else:
+        print("\n" + "═" * 76)
+        print("  core demo all — consolidated summary")
+        print("═" * 76)
+        for name, ok in passed.items():
+            mark = "✓ PASS" if ok else "✗ FAIL"
+            print(f"  {mark}  {name}")
+        print()
+        print(f"  all_demos_passed : {all_passed}")
+        print()
+
+    _write_results_index()
+    return 0 if all_passed else 1
 
 
 def _cmd_bench_all(args: argparse.Namespace) -> int:
@@ -2621,19 +2810,22 @@ def build_parser() -> argparse.ArgumentParser:
         choices=[
             "phase5",
             "phase6",
-            "all",
+            "adr-0024-chain",
             "audit-tour",
             "pack-measurements",
             "long-context-comparison",
             "anti-regression",
             "learning-loop",
             "articulation",
+            "all",
             "list-results",
         ],
         help=(
             "phase5: stratified 5-family mechanism-isolation.  "
             "phase6: 3-condition head-to-head vs in-system baseline.  "
-            "all: run both and print a combined summary.  "
+            "adr-0024-chain: phase5 + phase6 combined evidence.  "
+            "all: run every demo (eight in total) and print a "
+            "consolidated PASS/FAIL table; exits non-zero if any demo fails.  "
             "audit-tour: ADR-0027..0041 pack-layer architecture in four "
             "scenes (identity / safety / ethics / replay).  "
             "pack-measurements: ADR-0043 — pack-layer claims → CI-enforced "
