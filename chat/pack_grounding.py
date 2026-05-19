@@ -142,6 +142,19 @@ _CORRECTION_TOPIC_STOPWORDS: frozenset[str] = frozenset({
     # but don't carry topical signal in a correction utterance.
     "be",
     "have",
+    # Polarity markers (en_core_polarity_v1) — pack-resident dialogue
+    # tokens that carry NO topical signal in a correction utterance.
+    # "No, my parent disagrees" — ``no`` is the correction marker
+    # itself, not the topic.  Without these stopwords the topic
+    # extractor would short-circuit on ``no`` and miss ``parent``.
+    "no",
+    "yes",
+    "maybe",
+    "perhaps",
+    "hardly",
+    "indeed",
+    "surely",
+    "definitely",
 })
 
 

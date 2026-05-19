@@ -76,6 +76,17 @@ _BELONG_QUERY_RE = re.compile(
     r"belong(?:s?)\b",
     re.IGNORECASE,
 )
+# "How does X work / function / operate / happen / exist / behave?"
+# — third-person mechanistic-cause query.  Distinct from PROCEDURE
+# (which is first-person: "How do I/we/you X?") because the user is
+# asking about the mechanism of X, not how to perform X themselves.
+# Routes to CAUSE so the teaching-chain / cross-pack / pack-surface
+# dispatcher fires on X.
+_HOW_DOES_X_RE = re.compile(
+    r"^how\s+do(?:es)?\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
+    r"(?:work|function|operate|happen|exist|behave|act|emerge)\b",
+    re.IGNORECASE,
+)
 
 # Normalisation of the relation surface form back to the bare relation
 # vocabulary the teaching store carries (matches en_core_cognition_v1).
@@ -101,7 +112,20 @@ _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
     (re.compile(r"^(?:give|show)\s+(?:me\s+)?an?\s+(?:example|instance)\s+of\s+", re.IGNORECASE), IntentTag.EXAMPLE),
     (re.compile(r"^example\s+of\s+", re.IGNORECASE), IntentTag.EXAMPLE),
     (re.compile(r"^what\s+(?:is|are)\s+", re.IGNORECASE), IntentTag.DEFINITION),
+    # Imperative-form DEFINITION — "Define X", "Define X." — produces
+    # the same routing as "What is X?".  Without this rule the prompt
+    # falls through to UNKNOWN and the whole text becomes the subject,
+    # making pack-resolved lemmas like "moment" or "evident" silently
+    # un-groundable.
+    (re.compile(r"^define\s+", re.IGNORECASE), IntentTag.DEFINITION),
     (re.compile(r"^why\s+", re.IGNORECASE), IntentTag.CAUSE),
+    # "What causes / triggers / enables / prevents / drives X?" — the
+    # query is about what causes X, so the subject of the CAUSE intent
+    # is X (not the causative verb).  Place ahead of the generic
+    # VERIFICATION rule because "What causes X?" starts with "what" not
+    # an aux verb so VERIFICATION wouldn't match anyway, but the
+    # ordering also documents the intent priority.
+    (re.compile(r"^what\s+(?:causes|triggers|enables|prevents|drives|produces|induces|yields)\s+", re.IGNORECASE), IntentTag.CAUSE),
     (re.compile(r"^how\s+(?:do|can|should|would)\s+(?:I|we|you)\s+", re.IGNORECASE), IntentTag.PROCEDURE),
     (re.compile(r"^(?:is|are|does|do|can|could|would|should|was|were|has|have|will)\s+.+\??\s*$", re.IGNORECASE), IntentTag.VERIFICATION),
     (re.compile(r"^(?:no|that'?s\s+(?:not|wrong)|incorrect|actually|correction)", re.IGNORECASE), IntentTag.CORRECTION),
@@ -134,6 +158,11 @@ _AUX_VERBS = frozenset({
     "has", "have", "had",
     "can", "could", "would", "should", "shall", "will", "might", "may", "must",
 })
+# Infinitive marker — stripped from DEFINITION / RECALL subjects so
+# "What is to create?" extracts subject "create" rather than "to create".
+# Only applied to verb-defining intents; other intents may carry "to" as
+# a directional / transfer preposition where stripping would be wrong.
+_INFINITIVE_MARKERS = frozenset({"to"})
 
 
 def _normalize_subject(phrase: str, tag: IntentTag) -> str:
@@ -162,6 +191,13 @@ def _normalize_subject(phrase: str, tag: IntentTag) -> str:
 
     while tokens and tokens[0].lower() in _ARTICLES:
         tokens = tokens[1:]
+
+    # For DEFINITION / RECALL, strip a leading to-infinitive marker so
+    # "What is to create?" extracts "create" and grounds against the
+    # pack lexicon (verb lemmas are stored bare, not as infinitives).
+    if tag in (IntentTag.DEFINITION, IntentTag.RECALL):
+        while tokens and tokens[0].lower() in _INFINITIVE_MARKERS:
+            tokens = tokens[1:]
 
     if not tokens:
         return cleaned
@@ -206,9 +242,19 @@ def classify_intent(prompt: str) -> DialogueIntent:
     if transitive_match:
         raw_relation = transitive_match.group("relation").lower().strip()
         relation = _RELATION_NORMALIZE.get(raw_relation, raw_relation)
+        raw_subject = transitive_match.group("subject").strip()
+        # "What does X mean?" is a definitional probe, not a transitive
+        # relation query — there is no edge ``X --means--> Y`` to walk;
+        # the user wants the definition of X.  Route to DEFINITION so
+        # the pack-grounded surface dispatcher fires on X.
+        if raw_relation in {"mean", "means"}:
+            return DialogueIntent(
+                tag=IntentTag.DEFINITION,
+                subject=_normalize_subject(raw_subject, IntentTag.DEFINITION),
+            )
         return DialogueIntent(
             tag=IntentTag.TRANSITIVE_QUERY,
-            subject=transitive_match.group("subject").strip(),
+            subject=raw_subject,
             relation=relation,
         )
 
@@ -218,6 +264,15 @@ def classify_intent(prompt: str) -> DialogueIntent:
             tag=IntentTag.TRANSITIVE_QUERY,
             subject=belong_match.group("subject").strip(),
             relation="belongs_to",
+        )
+
+    how_does_match = _HOW_DOES_X_RE.match(text)
+    if how_does_match:
+        return DialogueIntent(
+            tag=IntentTag.CAUSE,
+            subject=_normalize_subject(
+                how_does_match.group("subject").strip(), IntentTag.CAUSE
+            ),
         )
 
     for pattern, tag in _RULES:

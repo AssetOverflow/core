@@ -665,6 +665,14 @@ class ChatRuntime:
                 surface = cross_pack_grounded_surface(lemma, intent.tag)
                 if surface is not None:
                     return (surface, "teaching")
+                # Deliberate non-fallback: when CAUSE / VERIFICATION
+                # has no teaching chain or cross-pack chain rooted on
+                # the subject, return None so the discovery layer logs
+                # a "would_have_grounded" candidate identifying the
+                # teaching-content gap.  Emitting the bare pack
+                # disclosure here would mask that signal and give the
+                # user a non-answer (a definition rather than a cause).
+                # See ``tests/test_discovery_candidates``.
         if intent.tag is IntentTag.CORRECTION:
             surface = pack_grounded_correction_surface(text)
             if surface is not None:
