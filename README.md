@@ -95,6 +95,8 @@ core trace "your text here"                # one-turn field-telemetry trace
 core pulse "What is truth?"                # one full cognitive pulse
 core bench --suite latency                 # benchmark harness
 core bench --suite teaching-loop --runs 100  # ADR-0055..0057 — replayable learning loop determinism
+core bench --suite articulation            # Phase 4 capability proof (breadth + determinism + footprint + cross-topic + ollama compare)
+core bench --suite articulation --ollama-model llama3:8b  # side-by-side with a local Ollama model
 core doctor --packs --rust                 # environment + pack + Rust status
 ```
 
@@ -188,6 +190,7 @@ Three live demos / benchmarks make the chain demoable end-to-end:
 | **Anti-regression** | Three independent gates each fail closed; bad proposals stop at the cheapest applicable gate. | `core demo anti-regression` | [`docs/evals/anti_regression_demo.md`](docs/evals/anti_regression_demo.md) |
 | **Learning loop** | Same deterministic prompt: `[none] I don't know…` before, `[teaching] thought reveals meaning…` after one accept. | `core demo learning-loop` | [`docs/evals/learning_loop_demo.md`](docs/evals/learning_loop_demo.md) |
 | **Determinism bench** | N identical inputs → N byte-identical proposal_id / replay metrics / chain_id. 100 runs: `unique=1` everywhere, mean ≈ 1.85s. | `core bench --suite teaching-loop --runs 100` | [`docs/evals/teaching_loop_bench.md`](docs/evals/teaching_loop_bench.md) |
+| **Articulation suite** | Every intent shape fires + byte-identical surfaces across reruns + flat per-turn ΔRSS + cross-topic thread context + side-by-side with a local Ollama model showing CORE unique=1, Ollama unique≥2. | `core bench --suite articulation --ollama-model llama3:8b` | [`benchmarks/README.md`](benchmarks/README.md) |
 
 Operator surfaces:
 

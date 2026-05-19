@@ -942,20 +942,49 @@ def cmd_teaching_supersede(args: argparse.Namespace) -> int:
     from chat.teaching_grounding import _CORPUS_PATH
     from teaching.supersede import SupersessionError, supersede_chain
 
-    try:
-        new_chain_id = supersede_chain(
-            old_chain_id=args.old_chain_id,
-            subject=args.subject,
-            intent=args.intent,
-            connective=args.connective,
-            object_=args.object,
-            review_date=args.review_date,
-            corpus_path=_CORPUS_PATH,
-            operator_note=args.note,
-            new_chain_id=args.new_chain_id,
-        )
-    except SupersessionError as exc:
-        _die(str(exc), code=1)
+    cross_pack = bool(getattr(args, "cross_pack", False))
+    subj_pack = (getattr(args, "subject_pack_id", "") or "").strip()
+    obj_pack = (getattr(args, "object_pack_id", "") or "").strip()
+
+    if cross_pack or subj_pack or obj_pack:
+        # ADR-0067 — cross-pack supersede.  Both pack ids are required
+        # when any cross-pack flag is set.
+        if not subj_pack or not obj_pack:
+            _die(
+                "cross-pack supersede requires --subject-pack-id and "
+                "--object-pack-id",
+                code=2,
+            )
+        from teaching.cross_pack_supersede import supersede_cross_pack_chain
+        try:
+            new_chain_id = supersede_cross_pack_chain(
+                old_chain_id=args.old_chain_id,
+                subject=args.subject,
+                intent=args.intent,
+                connective=args.connective,
+                object_=args.object,
+                subject_pack_id=subj_pack,
+                object_pack_id=obj_pack,
+                review_date=args.review_date,
+                new_chain_id=args.new_chain_id,
+            )
+        except SupersessionError as exc:
+            _die(str(exc), code=1)
+    else:
+        try:
+            new_chain_id = supersede_chain(
+                old_chain_id=args.old_chain_id,
+                subject=args.subject,
+                intent=args.intent,
+                connective=args.connective,
+                object_=args.object,
+                review_date=args.review_date,
+                corpus_path=_CORPUS_PATH,
+                operator_note=args.note,
+                new_chain_id=args.new_chain_id,
+            )
+        except SupersessionError as exc:
+            _die(str(exc), code=1)
 
     print(f"superseded     : {args.old_chain_id}")
     print(f"new chain_id   : {new_chain_id}")
@@ -1601,6 +1630,51 @@ Usage:
 """
 
 
+_ARTICULATION_BENCH_PREAMBLE = """
+================================================================================
+  Articulation Benchmark Suite (Phase 4 capability proof)
+================================================================================
+
+Reference: benchmarks/articulation.py + benchmarks/README.md.
+
+Anchors the post-ADR-0067 claim set in numbers:
+
+  [1] Intent breadth        — every supported intent shape fires (9 + OOV
+                              + cross-pack), grounding tier matches prompt.
+  [2] Determinism           — same prompt → byte-identical surface across
+                              N reruns (fresh ChatRuntime each time).
+  [3] Memory footprint      — single runtime, T cold-start prompts, RSS
+                              sampled via psutil; per-turn ΔRSS reported.
+  [4] Cross-topic context   — opt-in thread_anaphora; walks 8 prompts
+                              across cognition + relations + cross-pack.
+  [5] Ollama side-by-side   — same prompts on CORE + a local Ollama
+                              model; CORE unique=1 every prompt, Ollama
+                              shows the stochastic delta.
+
+Read it like this:
+
+  GOOD     — determinism_all_identical=True, per-turn ΔRSS in KiB, every
+             intent grounds, Ollama unique>1 on most prompts.
+  NEUTRAL  — anaphora_fire_count=0 after first turn (architectural
+             ceiling per ADR-0066 §Future ADRs; see README §3.4).
+  BAD      — determinism failure on pack/teaching path, per-turn ΔRSS
+             in MiB, any intent routes to ``none`` it shouldn't.
+
+Comparison caveat:
+  CORE and Ollama optimise different objectives.  CORE: traceable,
+  deterministic, every token sourced.  Ollama: fluent, broad,
+  stochastic, no provenance.  The bench measures the axes CORE was
+  designed for; it does NOT score linguistic quality.
+
+Usage:
+  core bench --suite articulation                              # quick
+  core bench --suite articulation --runs 20 --turns 200
+  core bench --suite articulation --ollama-model llama3:8b     # full
+  core bench --suite articulation --json --report report.json
+================================================================================
+"""
+
+
 _ALL_PREAMBLE = """
 ================================================================================
   Combined Demo — Full ADR-0024 Chain Evidence
@@ -1915,6 +1989,32 @@ def cmd_bench(args: argparse.Namespace) -> int:
             write_report(report, root=Path(args.report).parent)
         else:
             write_report(report)
+        return 0
+
+    if args.suite == "articulation":
+        from benchmarks.articulation import (
+            format_summary,
+            run_articulation_suite,
+        )
+        if not args.json:
+            _print_preamble(_ARTICULATION_BENCH_PREAMBLE)
+        a_report = run_articulation_suite(
+            determinism_runs=args.runs,
+            footprint_turns=getattr(args, "turns", 200),
+            ollama_model=getattr(args, "ollama_model", None),
+            ollama_reruns=getattr(args, "ollama_reruns", 3),
+        )
+        if args.json:
+            print(json.dumps(a_report.as_dict(), ensure_ascii=False, indent=2, sort_keys=True))
+        else:
+            print(format_summary(a_report))
+        if args.report:
+            report_path = Path(args.report)
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            report_path.write_text(
+                json.dumps(a_report.as_dict(), ensure_ascii=False, indent=2)
+            )
+            print(f"report written: {report_path}")
         return 0
 
     from benchmarks.run_benchmarks import run_benchmarks
@@ -2248,6 +2348,18 @@ def build_parser() -> argparse.ArgumentParser:
     teaching_supersede.add_argument(
         "--review-date", required=True, help="YYYY-MM-DD",
     )
+    teaching_supersede.add_argument(
+        "--cross-pack", action="store_true",
+        help="ADR-0067 — target the cross-pack corpus instead of in-pack",
+    )
+    teaching_supersede.add_argument(
+        "--subject-pack-id", default="",
+        help="cross-pack only: subject lemma's resident pack id",
+    )
+    teaching_supersede.add_argument(
+        "--object-pack-id", default="",
+        help="cross-pack only: object lemma's resident pack id",
+    )
     teaching_supersede.add_argument("--note", default="", help="operator note")
     teaching_supersede.add_argument(
         "--new-chain-id", default=None,
@@ -2297,11 +2409,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="run benchmark harness (determinism, latency, speedup, versor audit)",
         description="run benchmark harness",
     )
-    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer", "cost", "teaching-loop"],
+    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer", "cost", "teaching-loop", "articulation"],
                        help="run a specific benchmark suite")
     bench.add_argument("--runs", type=int, default=20, metavar="N", help="run count for determinism benchmark (also turns count for cost suite)")
     bench.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     bench.add_argument("--report", metavar="PATH", help="write JSON report to file")
+    bench.add_argument(
+        "--turns", type=int, default=200, metavar="N",
+        help="articulation suite: footprint sample count (default 200)",
+    )
+    bench.add_argument(
+        "--ollama-model", default=None, metavar="MODEL",
+        help="articulation suite: ollama model id to compare against "
+             "(e.g. llama3:8b); omit to skip the Ollama sub-bench",
+    )
+    bench.add_argument(
+        "--ollama-reruns", type=int, default=3, metavar="N",
+        help="articulation suite: per-prompt rerun count for ollama "
+             "(higher = better unique-surface measurement; default 3)",
+    )
     bench.set_defaults(func=cmd_bench)
 
     demo = subparsers.add_parser(
