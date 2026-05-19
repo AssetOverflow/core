@@ -338,20 +338,8 @@ class ChatRuntime:
         manifold = manifolds[0] if len(pack_ids) == 1 else load_mounted_packs(pack_ids)
         self._manifests = tuple(manifests)
         identity_pack_id = resolved_config.identity_pack or DEFAULT_IDENTITY_PACK
-        # ADR-0027 Phase 5 complete: v1 packs are ratified.  Loader defaults
-        # to production mode (require_ratified=None -> require unless
-        # CORE_ALLOW_UNRATIFIED_IDENTITY=1).
         identity_manifold = load_identity_manifold(identity_pack_id)
-        # ADR-0029: safety pack is always loaded; its boundary_ids are
-        # unioned into the runtime manifold.  Identity packs may add
-        # boundaries but cannot remove safety boundaries.  Failure to
-        # load the safety pack is fail-closed; SafetyPackError propagates
-        # and prevents runtime startup.
         self.safety_pack = load_safety_pack()
-        # ADR-0033 — ethics pack composes alongside identity + safety.
-        # Swappable like identity; falls back to the default pack on
-        # load failure rather than refusing startup (safety is the
-        # fail-closed layer, not ethics).
         ethics_pack_id = resolved_config.ethics_pack or _DEFAULT_ETHICS_PACK
         try:
             self.ethics_pack = load_ethics_pack(ethics_pack_id)
@@ -372,8 +360,6 @@ class ChatRuntime:
             surface_preferences=identity_manifold.surface_preferences,
         )
         self.identity_pack_id = identity_pack_id
-        # Keep the generic runtime neutral. Identity/persona motivation belongs
-        # behind an explicit IdentityProfile contract, not the baseline chat path.
         persona_motor = PersonaMotor.identity()
         self._context = SessionContext(
             manifold,
@@ -393,55 +379,19 @@ class ChatRuntime:
             fatigue_index=0.0,
         )
         self._identity_check = IdentityCheck()
-        # ADR-0032 — structural safety surface.  Observational at v1:
-        # ChatRuntime exposes ``safety_check`` for callers (audit /
-        # logging / future enforcement), but does not auto-invoke it in
-        # the turn loop.  Wiring violations into refusal paths is a
-        # future ADR.
         self.safety_check = SafetyCheck()
-        # ADR-0034 — structural ethics surface, sibling to SafetyCheck.
         self.ethics_check = EthicsCheck()
-        # ADR-0035 — auto-invoke both checks at end-of-turn.  The
-        # manifold is constructed once and never mutated, so the
-        # pre-turn hash is a stable property of this runtime instance.
-        # ``last_refusal_was_typed`` defaults True (no untyped refusals
-        # observed); turn-loop bookkeeping flips this on typed-refusal
-        # paths so the predicate has live evidence.
         self._identity_manifold_hash: str = _hash_identity_manifold(
             self.identity_manifold,
         )
         self._last_refusal_was_typed: bool = True
         self.turn_log: List[TurnEvent] = []
-        # P3.1 — session-thread state for downstream anaphora /
-        # NARRATIVE composers.  Bounded recency window of structured
-        # TurnSummary records.  Data layer only at P3.1 — no surface
-        # emission consults this until P3.2 (anaphora composer) opt-in
-        # flag flips on.
         from chat.thread_context import ThreadContext
         self.thread_context = ThreadContext()
-        # ADR-0040 — opt-in structured-logging sink.  Default None
-        # preserves prior behavior; callers attach via
-        # ``attach_telemetry_sink``.  ``_telemetry_include_content``
-        # gates surface / token emission per the redact-by-default
-        # trust boundary.
         self._telemetry_sink: TurnEventSink | None = None
         self._telemetry_include_content: bool = False
-        # ADR-0055 Phase B — opt-in DiscoveryCandidate sink.  Default
-        # None preserves prior behavior; callers attach via
-        # ``attach_discovery_sink``.  Candidates are *evidence*, never
-        # mutate the corpus or runtime state.
         self._discovery_sink: DiscoveryCandidateSink | None = None
-        # Phase 2.3 — opt-in OOV candidate sink.  Default None preserves
-        # prior behavior; callers attach via ``attach_oov_sink``.
-        # Candidates are evidence; ratified-pack-mutation is the only
-        # path an OOV promotion becomes a real pack change.
         self._oov_sink: Any = None
-        # ADR-0056 Phase C1 — opt-in contemplation pass that enriches
-        # each emitted DiscoveryCandidate with polarity / claim_domain /
-        # evidence / sub_questions before the sink writes the JSONL
-        # line.  Default False preserves prior behavior (Phase B raw
-        # candidates).  Toggling on does NOT mutate the corpus; the
-        # loop is read-only over pack + corpus + (optional) vault.
         self._contemplate_discoveries: bool = False
         self._correction_pass = CorrectionPass()
         self._last_valence: float = 0.0
@@ -456,67 +406,23 @@ class ChatRuntime:
         *,
         include_content: bool = False,
     ) -> None:
-        """ADR-0040 — attach a structured-logging sink.
-
-        After each turn (main or stub path), the runtime serialises
-        the appended ``TurnEvent`` as one JSONL line and calls
-        ``sink.emit(line)``.  Passing ``None`` detaches.
-
-        ``include_content`` opts surface text and input tokens into
-        the emitted record.  Default ``False`` preserves the
-        redact-by-default trust boundary (CLAUDE.md): audit pipelines
-        get counts, ids, and flags without raw user content.
-        """
+        """ADR-0040 — attach a structured-logging sink."""
         self._telemetry_sink = sink
         self._telemetry_include_content = bool(include_content)
 
     def attach_oov_sink(self, sink: Any) -> None:
-        """Phase 2.3 — attach an OOV candidate sink.
-
-        After each turn whose surface fired the P2.1 OOV invitation
-        (``grounding_source="oov"``), the runtime emits one
-        :class:`teaching.oov_sink.OOVCandidate` JSONL line to the
-        attached sink.  Passing ``None`` detaches.
-
-        Candidates are evidence: emission never mutates any pack.
-        The ratified pack-mutation path (ADR-0027 +
-        :mod:`teaching.proposals`) is the only way an OOV promotion
-        becomes a real pack change.
-        """
+        """Phase 2.3 — attach an OOV candidate sink."""
         self._oov_sink = sink
 
     def attach_discovery_sink(
         self,
         sink: DiscoveryCandidateSink | None,
     ) -> None:
-        """ADR-0055 Phase B — attach a DiscoveryCandidate sink.
-
-        After each turn, the runtime extracts zero-or-more candidates
-        from the most recent ``TurnEvent`` (deterministic rule firing
-        on the audit trail) and forwards each as one JSONL line.
-        Passing ``None`` detaches.
-
-        Candidates are **evidence**: emission never mutates the
-        active teaching corpus.  Phase C's ``TeachingChainProposal``
-        is the only path to corpus extension and runs through
-        review + replay.
-        """
+        """ADR-0055 Phase B — attach a DiscoveryCandidate sink."""
         self._discovery_sink = sink
 
     def attach_contemplation(self, *, enabled: bool = True) -> None:
-        """ADR-0056 Phase C1 — opt-in inline contemplation.
-
-        When enabled, each emitted ``DiscoveryCandidate`` is passed
-        through ``teaching.contemplation.contemplate`` before the
-        sink writes the JSONL line.  The sink therefore receives an
-        *enriched* candidate (polarity / claim_domain / evidence /
-        sub_questions populated) instead of the Phase B raw record.
-
-        Read-only over pack + corpus.  No corpus mutation, no clock-
-        time read, no LLM step.  Requires ``attach_discovery_sink``
-        to have been called first — without a sink there is nowhere
-        to emit, so contemplation would do hidden work.
-        """
+        """ADR-0056 Phase C1 — opt-in inline contemplation."""
         self._contemplate_discoveries = bool(enabled)
 
     def _push_thread_summary(
@@ -528,27 +434,10 @@ class ChatRuntime:
         grounding_source: str | None,
         surface: str | None = None,
     ) -> None:
-        """P3.1 — append one :class:`TurnSummary` to the bounded
-        session-thread context.  Called at end-of-turn from both the
-        stub path (cold start / pack / teaching / OOV / partial)
-        and the walk path (vault).
-
-        For teaching-grounded turns the chain_id + corpus_id are
-        recovered from the most-recently-loaded aggregated chain
-        index (deterministic O(1) lookup since the index is lru-
-        cached).  For non-teaching turns those fields stay None.
-
-        Pure data layer: this method does NOT consult the surface,
-        does NOT mutate any composer state, and does NOT call any
-        LLM.  Push runs unconditionally — anaphora consumers are
-        opt-in elsewhere.
-        """
+        """P3.1 — append one TurnSummary to the bounded session-thread context."""
         from chat.thread_context import TurnSummary
 
-        turn_index = len(self.turn_log) - 1  # turn_log was just appended
-        # Normalise the intent tag name; ``None`` (walk path) projects
-        # to the empty string so the recency lookup can still ignore
-        # mismatched intents without raising.
+        turn_index = len(self.turn_log) - 1
         if intent_tag is not None and hasattr(intent_tag, "name"):
             intent_name = str(intent_tag.name).lower()
         else:
@@ -556,9 +445,6 @@ class ChatRuntime:
         subject = (intent_subject or "").strip().lower()
         source = (grounding_source or "none").lower()
 
-        # Recover chain_id + corpus_id for teaching-grounded turns so
-        # the anaphora composer can detect "same chain" vs "same
-        # subject, different chain".
         chain_id: str | None = None
         corpus_id: str | None = None
         if source == "teaching" and subject and intent_name in {"cause", "verification"}:
@@ -567,8 +453,6 @@ class ChatRuntime:
             if chain is not None:
                 chain_id = chain.chain_id
                 corpus_id = chain.corpus_id
-        # ``surface`` is accepted so future extensions can hash it,
-        # but P3.1 intentionally does not retain the text.
         _ = surface
 
         self.thread_context.push(
@@ -589,17 +473,10 @@ class ChatRuntime:
         intent_tag: Any,
         token: str | None,
     ) -> None:
-        """P2.3 — emit one OOVCandidate per OOV-grounded turn.
-
-        No-op unless ``attach_oov_sink`` was called.  The token is
-        already safe-displayed at the surface composer; persistence
-        carries the same sanitised form.
-        """
+        """P2.3 — emit one OOVCandidate per OOV-grounded turn."""
         sink = self._oov_sink
         if sink is None or not token:
             return
-        # Local imports — keep OOV machinery out of the runtime
-        # hot-path import graph for callers that never opt in.
         from teaching.oov_sink import (
             OOVCandidate,
             format_oov_candidate_jsonl,
@@ -610,8 +487,6 @@ class ChatRuntime:
         if intent_tag is None or not isinstance(intent_tag, IntentTag):
             return
         intent_name = intent_tag.name.lower()
-        # Pull trace hash from the turn event when present so the
-        # candidate_id replays deterministically.
         trace_hash = getattr(turn_event, "trace_hash", "") or ""
         boundary_clean = (
             not getattr(turn_event, "refusal_emitted", False)
@@ -649,22 +524,12 @@ class ChatRuntime:
             grounding_source=grounding_source,
         )
         if self._contemplate_discoveries and candidates:
-            # Local import — keeps the contemplation module out of
-            # the runtime hot-path import graph for callers that
-            # never opt in.
             from teaching.contemplation import contemplate
             candidates = tuple(contemplate(c) for c in candidates)
         for candidate in candidates:
             sink.emit(format_candidate_jsonl(candidate))
 
     def _emit_turn_event(self, event: TurnEvent) -> None:
-        """Internal — emit one serialised line for the current event.
-
-        Called after every ``turn_log.append``.  No-op when no sink
-        is attached.  Sink errors are intentionally NOT swallowed:
-        a broken telemetry path should surface, not silently drop
-        audit signal.
-        """
         sink = self._telemetry_sink
         if sink is None:
             return
@@ -715,12 +580,6 @@ class ChatRuntime:
         return blade
 
     def _apply_drive_bias(self, field_state: FieldState) -> FieldState:
-        """Generic runtime keeps motivation/drive disabled.
-
-        Motivation is an identity-profile concern, not a free runtime field
-        mutation. Keeping this a no-op preserves the neutral baseline while
-        generic chat closure and cognition evals are being stabilized.
-        """
         return field_state
 
     def _build_surface_context(self, identity_score, current_valence: float) -> SurfaceContext:
@@ -732,10 +591,6 @@ class ChatRuntime:
             else frozenset()
         )
         prefs = self.identity_manifold.surface_preferences
-        # ADR-0031 — flatten the manifold's axis_hedges (tuple of
-        # (axis_id, AxisHedge)) into the wire-format quadruples that
-        # SurfaceContext carries.  Order is preserved (loader emits in
-        # lex order); _axis_specific_phrase relies on this.
         axis_hedges = tuple(
             (axis_id, hedge.strong, hedge.soft, hedge.qualifier)
             for axis_id, hedge in prefs.axis_hedges
@@ -763,68 +618,26 @@ class ChatRuntime:
         """Return ``(surface, grounding_source)`` or ``None``.
 
         ADR-0048 / ADR-0050 / ADR-0052 — three reviewed sources of
-        cold-start grounding share this dispatcher:
-
-          - DEFINITION / RECALL → pack-grounded surface (ADR-0048)
-          - COMPARISON          → pack-grounded surface (ADR-0050)
-          - CAUSE / VERIFICATION → teaching-grounded surface (ADR-0052)
-
-        Engagement conditions common to all three branches:
-
-          - the gate fired because the session vault is empty,
-          - ``config.output_language == "en"``,
-          - the classified intent has a clean subject lemma.
-
-        Returns ``None`` when no branch applies and the caller falls
-        through to the universal "insufficient grounding" disclosure.
-
-        The grounding_source string returned alongside the surface is
-        one of ``"pack"`` (ADR-0048/0050) or ``"teaching"`` (ADR-0052)
-        and is preserved verbatim through ChatResponse and TurnEvent
-        for downstream audit.
+        cold-start grounding share this dispatcher.
         """
         if gate_source != "empty_vault":
             return None
         if self.config.output_language != "en":
             return None
-        from generate.intent import IntentTag  # local to avoid coupling at import time
+        from generate.intent import IntentTag
         from generate.intent_bridge import classify_intent_from_input
         intent = classify_intent_from_input(text)
-        # ADR-0050 — COMPARISON path: deterministic side-by-side surface
-        # composed from both lemmas' pack semantic_domains.  Engages only
-        # when both subject and secondary_subject are pack lemmas.
         if intent.tag is IntentTag.COMPARISON:
-            # The intent classifier may retain terminal punctuation on
-            # secondary_subject when it falls at the end of the prompt
-            # ("Compare A and B.").  Strip terminal sentence punctuation
-            # so the resolver can find the underlying lemma.  This is
-            # a normalization at the runtime boundary, not in the
-            # classifier itself, to keep the classifier's verbatim
-            # extraction available to other consumers.
             lemma_a = (intent.subject or "").strip().rstrip(".,?!;:")
             lemma_b = (intent.secondary_subject or "").strip().rstrip(".,?!;:")
             if lemma_a and lemma_b:
                 surface = pack_grounded_comparison_surface(lemma_a, lemma_b)
                 if surface is not None:
                     return (surface, "pack")
-                # P2.2 — Partial-grounding tier.  When exactly one of
-                # the two compared lemmas is pack-resident, emit a
-                # hedged surface that grounds the known side and
-                # explicitly disclaims the OOV side.  Better than
-                # falling through to OOV invitation (which would name
-                # only one token while ignoring the other's actual
-                # grounding).
                 from chat.partial_surface import partial_comparison_surface
                 partial = partial_comparison_surface(lemma_a, lemma_b)
                 if partial is not None:
                     return (partial[0], "partial")
-        # ADR-0052 — teaching-grounded CAUSE / VERIFICATION.  The chain
-        # corpus is reviewed memory; every emitted atom is either a
-        # lemma, a verbatim pack semantic_domains string, or a fixed
-        # connective from humanize_predicate.
-        # P3.3 — NARRATIVE: "Tell me about X" / "Describe X".
-        # Multi-clause composer aggregates every reviewed chain
-        # rooted on X across all registered teaching corpora.
         if intent.tag is IntentTag.NARRATIVE:
             lemma = (intent.subject or "").strip()
             if lemma:
@@ -832,10 +645,6 @@ class ChatRuntime:
                 surface = narrative_grounded_surface(lemma)
                 if surface is not None:
                     return (surface, "teaching")
-        # P3.4 — EXAMPLE: "Give me an example of X".  Reverse-chain
-        # composer surfaces chains where X is the OBJECT.  Same
-        # aggregated corpus index as NARRATIVE; inverts the access
-        # pattern.
         if intent.tag is IntentTag.EXAMPLE:
             lemma = (intent.subject or "").strip()
             if lemma:
@@ -846,54 +655,20 @@ class ChatRuntime:
         if intent.tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
             lemma = (intent.subject or "").strip()
             if lemma:
-                # ADR-0062 — when ``composed_surface`` is enabled, the
-                # teaching-grounded composer extends the single-chain
-                # surface with a follow-up chain whose subject equals
-                # the initial chain's object.  Backward-compatible:
-                # with the flag off, the single-chain composer is
-                # used; with the flag on and no follow-up chain
-                # available, the composer degrades to the single-
-                # chain surface byte-identically.
                 if self.config.composed_surface:
                     surface = teaching_grounded_surface_composed(lemma, intent.tag)
                 else:
                     surface = teaching_grounded_surface(lemma, intent.tag)
                 if surface is not None:
                     return (surface, "teaching")
-                # ADR-0067 — fall through to cross-pack chains when no
-                # in-pack chain resolves the (subject, intent) pair.
-                # Cross-pack chains carry an explicit residency pair
-                # (subject_pack_id × object_pack_id) and surface tag
-                # exposes both packs.  Deliberately listed AFTER the
-                # single-pack composer so the in-pack lane is byte-
-                # identical when a same-pack chain exists.
                 from chat.cross_pack_grounding import cross_pack_grounded_surface
                 surface = cross_pack_grounded_surface(lemma, intent.tag)
                 if surface is not None:
                     return (surface, "teaching")
-        # ADR-0053 — CORRECTION acknowledgement.  Cold-start CORRECTION
-        # has no prior session turn to apply to; emit a pack-grounded
-        # surface that acknowledges the correction was received and
-        # states the missing-prior-turn constraint explicitly.  The
-        # post-correction reviewed-teaching path (``teaching/correction.py``)
-        # engages only once a prior turn exists in the session.
         if intent.tag is IntentTag.CORRECTION:
-            # ADR-0060 — pass the raw text so the acknowledgement can
-            # weave the corrected claim's first pack-resident topical
-            # lemma into the surface.  Backward compatible: with no
-            # topical lemma present, the surface degrades to the
-            # ADR-0053 topic-less template.
             surface = pack_grounded_correction_surface(text)
             if surface is not None:
                 return (surface, "pack")
-        # ADR-0061 — PROCEDURE pack-grounded surface.  Procedural
-        # chains are not part of the reviewed teaching corpus today
-        # (CAUSE/VERIFICATION only).  Rather than fall through to the
-        # universal disclosure for every "How do I X?" question, the
-        # composer surfaces the topical lemma of the procedure (the
-        # last pack-resident lemma in the verb-phrase subject) and
-        # states explicitly that step-by-step guidance is not yet
-        # ratified.  Honest, deterministic, pack-grounded.
         if intent.tag is IntentTag.PROCEDURE:
             subject_text = (intent.subject or "").strip()
             if subject_text:
@@ -907,14 +682,6 @@ class ChatRuntime:
             surface = pack_grounded_surface(lemma)
             if surface is not None:
                 return (surface, "pack")
-        # P2.1 — OOV "teach me" surface.  If the classified intent is
-        # one of the surface-supported shapes AND the subject lemma
-        # does not resolve in any mounted lexicon pack, emit a
-        # deterministic learning-invitation surface tagged
-        # ``grounding_source="oov"`` instead of falling through to
-        # the universal disclosure.  Converts the OOV cliff into a
-        # gradient that names the unknown token + points the operator
-        # at the reviewed pack-mutation path.
         oov_lemma = (intent.subject or "").strip()
         if oov_lemma:
             from chat.oov_surface import oov_learning_invitation_surface
@@ -953,10 +720,6 @@ class ChatRuntime:
             output_language=self.config.output_language,
             frame_id="unknown_domain",
         )
-        # ADR-0035 — stub responses are exactly the ungrounded path that
-        # triggers ``disclose_limitations``.  Surfacing verdicts here
-        # keeps the audit contract uniform: every ChatResponse carries
-        # a SafetyVerdict and EthicsVerdict.
         safety_ctx = SafetyContext(
             field_state=_FieldStateWithVersor(
                 versor_condition=float(versor_condition(field_state.F)),
@@ -976,10 +739,6 @@ class ChatRuntime:
             disclosure_emitted=True,
         )
         ethics_verdict = self.ethics_check.check(ethics_ctx, self.ethics_pack)
-        # ADR-0036 — typed refusal also applies on the stub path.  When
-        # a runtime-checkable safety boundary is violated even on the
-        # ungrounded surface (e.g. versor-closure failure), replace the
-        # user-facing ``surface`` with the deterministic typed refusal.
         refusal_surface = build_refusal_surface(
             safety_verdict, ethics_verdict, self.ethics_pack,
         )
@@ -988,18 +747,7 @@ class ChatRuntime:
             response_surface = refusal_surface
             self._last_refusal_was_typed = True
         elif pack_grounded_surface is not None:
-            # ADR-0048 — pack-grounded surface for cold-start DEFINITION /
-            # RECALL on a known pack lemma.  Safety/ethics refusal still
-            # take priority above this branch; the pack surface only
-            # replaces the universal "insufficient grounding" disclosure
-            # when no refusal applies.
             response_surface = pack_grounded_surface
-            # P3.2 — opt-in thread anaphora prefix.  Engages only when
-            # the current turn AND a recent turn (same subject) are
-            # both pack/teaching grounded.  Default-off so pre-P3.2
-            # surfaces stay byte-identical; turning it on prepends a
-            # deterministic backreference referencing the prior turn
-            # by turn-index + chain_id (no prose generation).
             if (
                 self.config.thread_anaphora
                 and grounded_source_tag in {"pack", "teaching"}
@@ -1017,20 +765,10 @@ class ChatRuntime:
                     response_surface = prefix + response_surface
         else:
             response_surface = _UNKNOWN_DOMAIN_SURFACE
-        # ADR-0048 — grounding provenance recorded for both ChatResponse
-        # and TurnEvent.  ``"pack"`` only when we actually emit the
-        # pack-grounded surface (refusal does not override the source —
-        # refusal is a remediation tier, not a grounding source).
         if pack_grounded_surface is not None and not refusal_emitted:
-            # ADR-0052 — preserve provenance: pack-grounded surfaces tag
-            # ``"pack"``, teaching-grounded surfaces tag ``"teaching"``.
             grounding_source = grounded_source_tag
         else:
             grounding_source = "none"
-        # ADR-0038 — hedge injection does NOT run on the stub path
-        # (the unknown-domain marker is already a disclosure surface;
-        # prepending a hedge would be a confused double-disclosure).
-        # ``hedge_injected`` is therefore always False on stub paths.
         verdicts_bundle = TurnVerdicts(
             identity_score=None,
             safety_verdict=safety_verdict,
@@ -1038,11 +776,6 @@ class ChatRuntime:
             refusal_emitted=refusal_emitted,
             hedge_injected=False,
         )
-        # ADR-0039 — emit a TurnEvent on stub paths too so ``turn_log``
-        # covers the entire turn stream for audit consumers.  Only
-        # append when invoked from a real turn (``tokens`` is
-        # non-empty); defensive call sites that pass no tokens
-        # preserve the prior bypass-turn_log behavior.
         if tokens:
             stub_event = TurnEvent(
                 turn=max(self._context.turn - 1, 0),
@@ -1064,10 +797,6 @@ class ChatRuntime:
             )
             self.turn_log.append(stub_event)
             self._emit_turn_event(stub_event)
-            # ADR-0055 Phase B — opt-in discovery candidate emission.
-            # Only meaningful when the caller threads classified
-            # intent forward (gate-fire / fall-through site).  Pure
-            # rule firing on the just-appended TurnEvent.
             if discovery_intent_tag is not None:
                 self._emit_discovery_candidates(
                     turn_event=stub_event,
@@ -1075,17 +804,12 @@ class ChatRuntime:
                     intent_subject=discovery_intent_subject,
                     grounding_source=grounding_source,
                 )
-                # P2.3 — emit OOV candidate when the surface fired the
-                # OOV invitation.  Only when an operator has attached
-                # a sink — otherwise this is a no-op.
                 if grounding_source == "oov":
                     self._emit_oov_candidate(
                         turn_event=stub_event,
                         intent_tag=discovery_intent_tag,
                         token=discovery_intent_subject,
                     )
-            # P3.1 — push session-thread summary.  Data layer only;
-            # downstream composers (P3.2 anaphora) consult this.
             self._push_thread_summary(
                 turn_event=stub_event,
                 intent_tag=discovery_intent_tag,
@@ -1122,10 +846,6 @@ class ChatRuntime:
             raise ValueError("ChatRuntime.chat() received no in-vocabulary tokens.")
 
         probe_state = self._context.probe_ingest(filtered)
-        # INV-24 recall role: RECOGNITION.  Feeds UnknownDomainGate — asks
-        # "have we seen anything like this before?", not "what is admissible
-        # evidence?".  Session-tier SPECULATIVE memory must count here, so
-        # no min_status filter is applied.
         direct_hits = self._context.vault.recall(probe_state.F, top_k=3)
         direct_best = max((h["score"] for h in direct_hits), default=0.0)
         gate_decision = default_gate.check(
@@ -1137,13 +857,6 @@ class ChatRuntime:
         if gate_decision.fire:
             committed = self._context.commit_ingest(filtered)
             empty_result = GenerationResult(tokens=(), final_state=committed, vault_hits=0)
-            # ADR-0048 — pack-grounded fallback for cold-start DEFINITION /
-            # RECALL on a known pack lemma.  Only engages when the gate
-            # fired because the session vault is empty (``empty_vault``)
-            # AND the classified intent is DEFINITION or RECALL AND the
-            # intent's subject lemma is in the ratified cognition pack.
-            # Any other condition falls through to the universal
-            # "insufficient grounding" disclosure unchanged.
             pack_result = self._maybe_pack_grounded_surface(
                 text, gate_decision.source
             )
@@ -1163,21 +876,8 @@ class ChatRuntime:
                     "grounding_source": pack_source_tag if pack_surface else "none",
                 },
             )
-            # ADR-0055 Phase B — thread classified intent forward only
-            # when a sink is attached.  Discovery emission is opt-in;
-            # the deterministic classification used here is the same
-            # call ``_maybe_pack_grounded_surface`` already ran for the
-            # empty-vault English path, so behaviour is identical when
-            # no sink is attached.
             discovery_intent_tag = None
             discovery_intent_subject: str | None = None
-            # Classify intent up-front whenever the gate fired on an
-            # empty vault.  P2.3 needs it for OOV sink emission,
-            # ADR-0055 Phase B needs it for discovery sink emission,
-            # and P3.1 needs it for session-thread context — the
-            # classifier is cheap and deterministic, so always run
-            # it on the cold-start English path.  Sinks themselves
-            # remain opt-in (no-op without ``attach_*_sink``).
             if (
                 gate_decision.source == "empty_vault"
                 and self.config.output_language == "en"
@@ -1222,15 +922,6 @@ class ChatRuntime:
         articulation = _prefer_prompt_anchor(articulation, filtered, output_language=self.config.output_language)
         self._context.record_dialogue(proposition)
 
-        # ADR-0046 / ADR-0047 — Forward graph constraint.
-        # Build the PropositionGraph from the classified intent + articulation
-        # plan and convert it into an AdmissibilityRegion BEFORE generate()
-        # runs.  An empty / fully OOV graph yields an unconstrained region
-        # (allowed_indices=None), which behaves identically to region=None
-        # via generate()'s is_unconstrained() check — so the change is a
-        # true no-op on inputs that produce no graph and a forward
-        # constraint on inputs that do.  Only wired for the English path
-        # because the graph builder is English-specific (see intent_bridge).
         forward_region = None
         if self.config.forward_graph_constraint and self.config.output_language == "en":
             pre_gen_graph = build_graph_from_input(text, articulation)
@@ -1257,19 +948,23 @@ class ChatRuntime:
         )
 
         # --- Articulation fidelity: replace bare S-P-O join with intent-aware surface ---
-        # articulate_with_intent() classifies the input intent, builds a proposition
-        # graph grounded on the generation result's recalled tokens, and calls the
-        # realize_semantic() path (13-construction realizer) that was previously
-        # implemented but never connected to the chat hot path.
-        # Falls back to the existing articulation.surface when bridge returns "".
+        # Phase 2: pass proposition so the bridge grounds <pending> obj slots
+        # from pack-resolved proposition slots (primary) rather than walk
+        # tokens (supplemental backfill only).  walk_tokens still participates
+        # as a fallback when proposition.object_ is None/empty.
         if self.config.output_language == "en":
-            recalled_words = tuple(
+            walk_tokens = tuple(
                 tok for tok in (result.tokens or ()) if tok and tok.isalpha()
             )
-            intent_surface = articulate_with_intent(text, articulation, recalled_words)
+            intent_surface = articulate_with_intent(
+                text,
+                articulation,
+                walk_tokens,
+                proposition=proposition,
+            )
             if intent_surface:
                 articulation = replace(articulation, surface=intent_surface)
-        # --- end articulation fidelity fix ---
+        # --- end articulation fidelity ---
 
         reasoning_trajectory = _make_trajectory_from_result(result, self._context.turn)
         identity_score = self._identity_check.check(reasoning_trajectory, self.identity_manifold)
@@ -1307,10 +1002,6 @@ class ChatRuntime:
         )
         walk_surface = sentence_plan.surface
         vault_hits = int(result.vault_hits)
-        # ADR-0035 — auto-invoke safety + ethics surfaces.  Observational
-        # at v1; verdicts are attached to TurnEvent and ChatResponse for
-        # audit but do not gate behavior.  Refusal/re-articulation
-        # wiring is a future ADR.
         is_grounded = walk_surface != _UNKNOWN_DOMAIN_SURFACE
         hedge_emitted = _surface_contains_hedge(walk_surface, self.identity_manifold)
         safety_ctx = SafetyContext(
@@ -1332,12 +1023,6 @@ class ChatRuntime:
             disclosure_emitted=not is_grounded,
         )
         ethics_verdict = self.ethics_check.check(ethics_ctx, self.ethics_pack)
-        # ADR-0036 — safety-only typed refusal.  A runtime-checkable
-        # SafetyVerdict violation replaces the user-facing ``surface``
-        # with a deterministic typed refusal string.  ``walk_surface``
-        # and ``articulation_surface`` retain the original token-walk /
-        # realizer evidence for audit (per the runtime surface
-        # contract in CLAUDE.md).  Ethics violations remain audit-only.
         refusal_surface = build_refusal_surface(
             safety_verdict, ethics_verdict, self.ethics_pack,
         )
@@ -1348,22 +1033,11 @@ class ChatRuntime:
             self._last_refusal_was_typed = True
         else:
             response_surface = walk_surface
-            # ADR-0038 — hedge injection.  When an ethics commitment in
-            # ``ethics_pack.hedge_commitments`` fires runtime-checkable
-            # and the manifold has a hedge phrase configured, prepend
-            # the hedge to the user-facing surface.  Mutually exclusive
-            # with refusal at the pack-schema level; this branch only
-            # runs when refusal did not fire.  ``walk_surface`` and
-            # ``articulation_surface`` are preserved unchanged for
-            # audit (same discipline as ADR-0036).
             if should_inject_hedge(ethics_verdict, self.ethics_pack):
                 hedge_prefix = build_hedge_prefix(self.identity_manifold)
                 before = response_surface
                 response_surface = inject_hedge(response_surface, hedge_prefix)
                 hedge_injected = response_surface != before
-        # ADR-0039 — unified TurnVerdicts bundle attached to both
-        # ChatResponse and TurnEvent.  Audit consumers read the bundle
-        # instead of correlating individual fields.
         verdicts_bundle = TurnVerdicts(
             identity_score=identity_score,
             safety_verdict=safety_verdict,
@@ -1391,9 +1065,6 @@ class ChatRuntime:
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
-        # P3.1 — push session-thread summary for the walk path.
-        # Subject is taken from the articulation (deterministic;
-        # matches what the surface foregrounded).
         self._push_thread_summary(
             turn_event=turn_event,
             intent_tag=None,
@@ -1440,9 +1111,6 @@ class ChatRuntime:
             from_turn=target_turn,
         )
         self._context.apply_corrected_outputs(correction_result.records)
-        # ADR-0059 — emit a correction event before the regen turn so
-        # audit consumers can pair the backward perturbation with the
-        # forward turn event it produces.  No-op when no sink attached.
         self._emit_correction_event(correction_result, target_turn=target_turn)
         regen_tokens = self._context.last_input_tokens
         if not regen_tokens:
@@ -1452,13 +1120,7 @@ class ChatRuntime:
     def _emit_correction_event(
         self, correction_result, *, target_turn: int,
     ) -> None:
-        """ADR-0059 — emit one JSONL correction event to the telemetry sink.
-
-        Mirrors ``_emit_turn_event``: no-op when no sink is attached;
-        sink errors are intentionally NOT swallowed so a misconfigured
-        durable sink surfaces loudly rather than silently dropping
-        audit evidence.
-        """
+        """ADR-0059 — emit one JSONL correction event to the telemetry sink."""
         sink = self._telemetry_sink
         if sink is None:
             return
@@ -1466,30 +1128,7 @@ class ChatRuntime:
             correction_result,
             target_turn=target_turn,
             identity_pack_id=self.identity_pack_id,
-            safety_pack_id=getattr(self.safety_pack, "pack_id", ""),
+            safety_pack_id=self.safety_pack.pack_id,
             ethics_pack_id=self.ethics_pack_id,
         )
         sink.emit(line)
-
-    def respond(self, text: str, max_tokens: int | None = None) -> str:
-        try:
-            return self.chat(text, max_tokens=max_tokens).surface
-        except ValueError:
-            return ""
-
-    async def achat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
-        return self.chat(text, max_tokens=max_tokens)
-
-    async def arespond(self, text: str, max_tokens: int | None = None) -> str:
-        try:
-            return (await self.achat(text, max_tokens=max_tokens)).surface
-        except ValueError:
-            return ""
-
-
-# The previous ``_default_identity_manifold()`` constructor was removed as
-# part of ADR-0027.  Identity is now loaded from a pack at runtime via
-# ``packs.identity.loader.load_identity_manifold`` using
-# ``RuntimeConfig.identity_pack`` (default ``DEFAULT_IDENTITY_PACK``).
-# The previously-hardcoded three axes (truthfulness / coherence /
-# reverence) live in ``packs/identity/default_general_v1.json``.

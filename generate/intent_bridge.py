@@ -19,12 +19,18 @@ Phase 1 instrumentation (observation-only)
   through the module-level ``_TRACE_SINK`` when a sink has been attached via
   ``attach_bridge_trace_sink()``.  When no sink is attached the emission
   path is a pure no-op (single ``is None`` guard, no allocation).  This
-  instruments the four dimensions named in the mastery plan's Phase 1.3:
-    - recalled_words population at the call site
-    - pre- and post-grounding obj slot content
-    - bridge_useful flag
-    - fallback_surface (what the runtime would use if bridge returns "")
+  instruments the four dimensions named in the mastery plan's Phase 1.3.
   Zero behavior change on all existing paths.
+
+Phase 2 — proposition-slot grounding
+  ``build_recalled_words_from_plan()`` constructs the grounding tuple
+  from pack-resolved proposition slots (primary) + walk tokens
+  (supplemental backfill), replacing the old walk-token-only source.
+  ``articulate_with_intent()`` gains an optional ``proposition`` param;
+  when supplied, the proposition slots are used to ground the graph's
+  ``<pending>`` obj slots before ``ground_graph()`` runs.  Backward
+  compatible: existing callers that omit ``proposition`` are byte-
+  identical to Phase 1.
 """
 
 from __future__ import annotations
@@ -44,6 +50,7 @@ from generate.realizer import RealizedPlan, realize_semantic
 _PENDING = "<pending>"
 _PRIOR = "<prior>"
 _EMPTY_INDICATORS = frozenset({_PENDING, _PRIOR, "...", ""})
+_STRIP_INDICATORS = frozenset({_PENDING, _PRIOR})
 
 
 # ---------------------------------------------------------------------------
@@ -93,12 +100,7 @@ def _emit_trace(
     bridge_surface: str,
     bridge_useful: bool,
 ) -> None:
-    """Emit one BridgeTraceRecord to the attached sink (no-op when None).
-
-    Called from within ``articulate_with_intent()`` after the bridge
-    has resolved.  All arguments are plain Python types — no numpy,
-    no I/O dependencies at the construction site.
-    """
+    """Emit one BridgeTraceRecord to the attached sink (no-op when None)."""
     if _TRACE_SINK is None:
         return
     from generate.bridge_trace import BridgeTraceRecord, format_bridge_trace_jsonl
@@ -125,6 +127,72 @@ def _emit_trace(
 
 
 # ---------------------------------------------------------------------------
+# Phase 2 — proposition-slot grounding helper
+# ---------------------------------------------------------------------------
+
+
+def build_recalled_words_from_plan(
+    plan: ArticulationPlan,
+    proposition: object | None = None,
+    walk_tokens: tuple[str, ...] = (),
+) -> tuple[str, ...]:
+    """Build a grounding word tuple from pack-resolved proposition slots.
+
+    Priority order (highest to lowest):
+      1. ``plan.object``       — ArticulationPlan object slot (pack-resolved
+                                 surface word; the most direct answer token)
+      2. ``proposition.object_`` — Proposition object slot (versor-decoded;
+                                 present when the proposition was pack-grounded)
+      3. ``plan.predicate``    — descriptive predicate word (richer semantic
+                                 anchor than a random walk neighbour)
+      4. ``plan.subject``      — subject as last-resort anchor
+      5. ``walk_tokens``       — alpha-filtered result.tokens from generate()
+                                 (supplemental backfill; original Phase 1
+                                 source, now demoted to fill remaining slots)
+
+    Each candidate is stripped of leading/trailing whitespace and excluded
+    if it is empty, non-alphabetic, or one of the ``<pending>``/``<prior>``
+    sentinels.  The final tuple is deduplicated (first-occurrence wins)
+    while preserving priority order.
+
+    Returns an empty tuple when no grounded candidates remain after
+    filtering, in which case the graph node retains its ``<pending>``
+    sentinel and ``_is_useful_surface`` will return False for that turn
+    — the correct honest-fallback behaviour.
+    """
+    seen: set[str] = set()
+    result: list[str] = []
+
+    def _push(word: object) -> None:
+        if not word:
+            return
+        w = str(word).strip()
+        if not w or not w.isalpha():
+            return
+        if w in _STRIP_INDICATORS:
+            return
+        if w in seen:
+            return
+        seen.add(w)
+        result.append(w)
+
+    # 1. ArticulationPlan object
+    _push(plan.object)
+    # 2. Proposition object_ (access via getattr to avoid import coupling)
+    if proposition is not None:
+        _push(getattr(proposition, "object_", None))
+    # 3. Plan predicate
+    _push(plan.predicate)
+    # 4. Plan subject
+    _push(plan.subject)
+    # 5. Walk tokens as supplemental backfill
+    for tok in walk_tokens:
+        _push(tok)
+
+    return tuple(result)
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
@@ -141,21 +209,13 @@ def build_graph_from_input(text: str, plan: ArticulationPlan) -> PropositionGrap
     but without grounding ``<pending>`` slots — the result is suitable for
     forward-constraint construction via ``build_graph_constraint`` BEFORE
     ``generate()`` runs (ADR-0046, ADR-0047).
-
-    Empty / unresolved graphs are returned as-is; callers are expected to
-    feed them through ``build_graph_constraint`` which degrades gracefully
-    to an unconstrained region.
     """
     intent = classify_intent_from_input(text)
     return _build_graph_from_intent(intent, plan)
 
 
 def _build_graph_from_intent(intent: DialogueIntent, plan: ArticulationPlan) -> PropositionGraph:
-    """Build a minimal PropositionGraph from a classified intent and an ArticulationPlan.
-
-    Uses the resolved slot words from ArticulationPlan (subject, predicate, object)
-    as the concrete node content, with the intent tag selecting the predicate.
-    """
+    """Build a minimal PropositionGraph from a classified intent and an ArticulationPlan."""
     from generate.graph_planner import _INTENT_PREDICATES  # noqa: PLC0415
 
     predicate = _INTENT_PREDICATES.get(intent.tag, "addresses")
@@ -207,22 +267,27 @@ def articulate_with_intent(
     text: str,
     plan: ArticulationPlan,
     recalled_words: tuple[str, ...] = (),
+    *,
+    proposition: object | None = None,
 ) -> str:
     """Return an intent-aware surface string for *plan*, or "" if none can be produced.
 
     Steps:
       1. Classify intent from raw input *text*
       2. Build a PropositionGraph from the intent + ArticulationPlan slot words
-      3. Ground <pending> obj slots with *recalled_words* from generation result
+      3. Ground <pending> obj slots:
+           Phase 2: when ``proposition`` is supplied, build the grounding
+           tuple from pack-resolved proposition slots (primary) + walk
+           tokens ``recalled_words`` (supplemental backfill) via
+           ``build_recalled_words_from_plan()``.
+           Legacy: when ``proposition`` is None, use ``recalled_words``
+           directly (byte-identical to Phase 1 — backward compatible).
       4. Plan articulation (topological walk)
       5. Realize via realize_semantic() for intent-specific templates
       6. Return the surface, or "" if the result is empty / ungrounded
 
     The caller (chat/runtime.py) should fall back to the existing
     ArticulationPlan.surface when this returns "".
-
-    Phase 1: emits one BridgeTraceRecord to the module-level sink (if
-    attached) after resolution — observation-only, no effect on return value.
     """
     intent = classify_intent_from_input(text)
     intent_tag_name = intent.tag.name if intent.tag is not None else "UNKNOWN"
@@ -233,8 +298,18 @@ def articulate_with_intent(
     # Record pre-grounding obj for the Phase 1 trace.
     pre_ground_obj = graph.nodes[0].obj if graph.nodes else _PENDING
 
-    if recalled_words:
-        graph = ground_graph(graph, recalled_words)
+    # Phase 2: build grounding words from proposition slots (primary) +
+    # walk tokens (supplemental). Falls back to raw recalled_words when
+    # proposition is not supplied (backward-compatible legacy path).
+    if proposition is not None:
+        effective_recalled = build_recalled_words_from_plan(
+            plan, proposition, walk_tokens=recalled_words
+        )
+    else:
+        effective_recalled = recalled_words
+
+    if effective_recalled:
+        graph = ground_graph(graph, effective_recalled)
 
     # Record post-grounding obj for the Phase 1 trace.
     post_ground_obj = graph.nodes[0].obj if graph.nodes else _PENDING
@@ -247,7 +322,7 @@ def articulate_with_intent(
             intent_tag=intent_tag_name,
             intent_subject=intent_subject,
             plan=plan,
-            recalled_words=recalled_words,
+            recalled_words=effective_recalled,
             pre_ground_obj=pre_ground_obj,
             post_ground_obj=post_ground_obj,
             bridge_surface="",
@@ -262,7 +337,7 @@ def articulate_with_intent(
         intent_tag=intent_tag_name,
         intent_subject=intent_subject,
         plan=plan,
-        recalled_words=recalled_words,
+        recalled_words=effective_recalled,
         pre_ground_obj=pre_ground_obj,
         post_ground_obj=post_ground_obj,
         bridge_surface=surface,
