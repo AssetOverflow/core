@@ -1,0 +1,2 @@
+{"id":"dev_warm_truth","category":"pipeline_override_no_placeholder","turns":[{"prompt":"What is truth?","expected_grounding_source":"pack"},{"prompt":"What is truth?","expected_grounding_source":"pack"}],"warm_invariants":["no_placeholder","warm_grounding_stability"]}
+{"id":"dev_warm_oov","category":"oov_does_not_drift","turns":[{"prompt":"What is quasar?","expected_grounding_source":"oov"},{"prompt":"What is quasar?","expected_grounding_source":"oov"}],"warm_invariants":["no_placeholder","warm_grounding_stability"]}
