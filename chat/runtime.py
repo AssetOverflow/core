@@ -305,21 +305,19 @@ class ChatRuntime:
     ) -> None:
         if pack_id is not None or frame_pack is not None:
             pack_ids = (pack_id,) if isinstance(pack_id, str) else tuple(pack_id or config.input_packs)
-            resolved_config = RuntimeConfig(
+            # Use dataclasses.replace so newer RuntimeConfig fields
+            # (identity_pack, ethics_pack, forward_graph_constraint,
+            # composed_surface, thread_anaphora, etc.) survive the
+            # pack_id / frame_pack override path.  The previous manual
+            # reconstruction silently dropped any field not enumerated
+            # here, which would let a caller like
+            # ``ChatRuntime(pack_id="x", config=RuntimeConfig(composed_surface=True))``
+            # lose composed_surface without warning.
+            from dataclasses import replace as _dc_replace
+            resolved_config = _dc_replace(
+                config,
                 input_packs=pack_ids,
-                output_language=config.output_language,
                 frame_pack=frame_pack or config.frame_pack,
-                max_tokens=config.max_tokens,
-                allow_cross_language_recall=config.allow_cross_language_recall,
-                allow_cross_language_generation=config.allow_cross_language_generation,
-                vault_reproject_interval=config.vault_reproject_interval,
-                use_salience=config.use_salience,
-                salience_top_k=config.salience_top_k,
-                inhibition_threshold=config.inhibition_threshold,
-                inner_loop_admissibility=config.inner_loop_admissibility,
-                admissibility_threshold=config.admissibility_threshold,
-                admissibility_mode=config.admissibility_mode,
-                admissibility_margin=config.admissibility_margin,
             )
         else:
             resolved_config = config
@@ -1106,6 +1104,35 @@ class ChatRuntime:
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:
         return self._stub_response(field_state)
+
+    def respond(self, text: str, max_tokens: int | None = None) -> str:
+        """Return only the user-facing surface string for *text*.
+
+        Convenience wrapper around :meth:`chat` for callers that need
+        the raw surface without ChatResponse provenance — REPLs, simple
+        scripts, and the existing test_language_pack_runtime suite.
+        For audit / telemetry / verdict access, call :meth:`chat`.
+        """
+        return self.chat(text, max_tokens=max_tokens).surface
+
+    async def achat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
+        """Async-compatible convenience wrapper around :meth:`chat`.
+
+        This is a thin async surface; the underlying call is still
+        synchronous CPU-bound work (versor walk, vault recall, surface
+        composition).  Use this only for integration with asyncio-based
+        callers that need an awaitable.  No real off-thread execution
+        is performed — if true non-blocking concurrency is required,
+        wrap calls in :func:`asyncio.to_thread` at the call site.
+        """
+        return self.chat(text, max_tokens=max_tokens)
+
+    async def arespond(self, text: str, max_tokens: int | None = None) -> str:
+        """Async-compatible convenience wrapper around :meth:`respond`.
+
+        Same caveats as :meth:`achat` — wrapper, not true async.
+        """
+        return self.respond(text, max_tokens=max_tokens)
 
     def correct(self, text: str, target_turn: int = -1, max_tokens: int | None = None) -> ChatResponse:
         tokens = self._tokenize(text)

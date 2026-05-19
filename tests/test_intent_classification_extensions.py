@@ -27,11 +27,12 @@ Five gaps pinned by this file:
                             produces/induces/yields) now routes to
                             CAUSE with X as subject.
 
-Plus a sixth runtime-side fix: CAUSE / VERIFICATION intents now fall
-through to ``pack_grounded_surface`` when no teaching chain or cross-
-pack chain is rooted on the subject lemma.  Honest fallback — the
-surface explicitly tags the pack source and emits no fabricated
-causal claim.
+A sixth runtime-side decision was *considered* (CAUSE / VERIFICATION
+falling through to ``pack_grounded_surface`` when no teaching chain
+exists) but deliberately not adopted.  Doing so would mask the
+teaching-gap signal the discovery layer uses to identify chains worth
+authoring — see ``tests/test_discovery_candidates``.  The
+``TestCauseVerificationNoPackFallback`` class below pins this doctrine.
 """
 
 from __future__ import annotations
