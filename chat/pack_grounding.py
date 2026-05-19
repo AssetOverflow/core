@@ -181,9 +181,13 @@ def build_pack_surface_candidate(
             # in its cached dict.  Default to NOUN frame as the safest
             # fallback — most lemmas with glosses are nouns.
             gloss_pos = "NOUN"
+        # Use lowercase "pack-grounded" mid-sentence so existing
+        # substring assertions in tests/test_pack_grounding.py (and
+        # downstream) continue to match.  The marker is a provenance
+        # tag, not a sentence-starting word.
         surface = (
             f"{_frame_gloss(key, gloss_pos, gloss_text)} "
-            f"Pack-grounded ({resolved_pack_id})."
+            f"pack-grounded ({resolved_pack_id})."
         )
         return PackSurfaceCandidate(
             surface=surface,

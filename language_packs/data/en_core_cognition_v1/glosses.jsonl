@@ -1,0 +1,78 @@
+{"lemma":"account","gloss":"a reasoned description explaining what occurred","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"analogy","gloss":"a mapping of relations shared between distinct domains","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"answer","gloss":"a response that addresses a posed question","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"ask","gloss":"to pose a question seeking information","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"be","gloss":"existence, identity, or a state of affairs holding true","pos":"AUX","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"because","gloss":"a causal clause explaining why a claim holds","pos":"SCONJ","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"beginning","gloss":"the originating point from which something proceeds","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"belong","gloss":"to stand as a member within a structure","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"cause","gloss":"that which brings about an effect or consequence","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"compare","gloss":"to examine items for similarities and differences","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"comparison","gloss":"an examination of similarities and differences between items","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"concept","gloss":"an abstract unit of thought organizing experience","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"context","gloss":"the surrounding conditions that fix interpretation","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"contrast","gloss":"to set items against each other by difference","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"correct","gloss":"to revise a prior claim toward accuracy","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"correction","gloss":"the act of revising a prior claim toward accuracy","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"creation","gloss":"the act or result of bringing something new into being","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"define","gloss":"to specify the essential meaning of a concept","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"definition","gloss":"a statement specifying the essential nature of a concept","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"discourse","gloss":"connected language exchanged within a context","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"distinction","gloss":"a recognized difference that separates two things","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"distinguish","gloss":"to recognize a difference separating two things","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"evidence","gloss":"observable grounds that support or refute a claim","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"explain","gloss":"to make something clear by giving reasons","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"figure","gloss":"a non-literal pattern of expression shaping meaning","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"first","gloss":"the initial position in an ordered sequence","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"follow","gloss":"to come after another in sequence or consequence","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"ground","gloss":"to provide the supporting basis for a claim","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"have","gloss":"to possess an attribute or stand in a relation","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"how","gloss":"the manner or means by which something occurs","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"however","gloss":"a contrast or qualification against a prior claim","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"identity","gloss":"the set of attributes by which something is itself","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"image","gloss":"a sensory or mental representation of something","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"infer","gloss":"to draw a conclusion from given premises","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"inference","gloss":"a conclusion drawn from premises by reasoning","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"judgment","gloss":"a considered conclusion formed by reasoning and evidence","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"knowledge","gloss":"justified understanding grounded in evidence and recall","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"learn","gloss":"to acquire knowledge or skill through experience","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"life","gloss":"the ongoing condition of a living and acting being","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"light","gloss":"a source of revelation that makes things knowable","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"mean","gloss":"to carry a particular semantic content","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"meaning","gloss":"the semantic content carried by a sign or expression","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"memory","gloss":"the retained record enabling recall of prior states","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"metaphor","gloss":"a figure transferring meaning from one domain to another","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"narrative","gloss":"an ordered account presenting connected events","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"order","gloss":"a structured arrangement of elements by some relation","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"person","gloss":"an individual agent with identity and reason","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"precede","gloss":"to come before another in order or time","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"principle","gloss":"a foundational rule guiding reasoning or action","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"procedure","gloss":"an ordered sequence of steps producing an outcome","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"question","gloss":"an utterance that requests information or clarification","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"reason","gloss":"a ground or cause supporting a claim or action","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"recall","gloss":"to retrieve a stored state from memory","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"register","gloss":"a level of formality suited to a context","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"relate","gloss":"to establish a structural link between entities","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"relation","gloss":"a structural link holding between two or more entities","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"remember","gloss":"to recall a prior state from stored memory","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"reveal","gloss":"to make something previously hidden become known","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"rhetoric","gloss":"the art of effective and persuasive expression","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"simile","gloss":"a figure comparing two things using explicit markers","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"spirit","gloss":"an inner principle animating thought and action","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"story","gloss":"a recounted sequence of events with meaning","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"style","gloss":"the characteristic manner of expression in discourse","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"support","gloss":"to lend evidential or structural backing","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"symbol","gloss":"a sign that stands for a concept by convention","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"teach","gloss":"to convey knowledge or skill to another","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"then","gloss":"a temporal or logical succession from a prior point","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"therefore","gloss":"a logical consequence drawn from prior statements","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"thought","gloss":"a mental act or content arising in cognition","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"tone","gloss":"the attitudinal quality carried by an utterance","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"truth","gloss":"a claim or state grounded by evidence and coherent judgment","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"understanding","gloss":"a coherent grasp of meaning and relations","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"verification","gloss":"the act of confirming a claim against evidence","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"verify","gloss":"to confirm a claim by checking evidence","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"voice","gloss":"the distinctive perspective expressed in discourse","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"why","gloss":"the reason or cause behind a fact or claim","pos":"PRON","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"wisdom","gloss":"sound judgment informed by knowledge and experience","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"word","gloss":"a minimal linguistic unit carrying meaning in discourse","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}

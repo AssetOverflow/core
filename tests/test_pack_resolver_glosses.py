@@ -204,12 +204,22 @@ class TestDualChecksumManifest:
     manifest's optional ``glosses_checksum`` field — same discipline as
     the lexicon checksum.  Missing field = back-compat (no verification)."""
 
-    def test_missing_glosses_checksum_is_back_compat(self) -> None:
-        """All currently-ratified packs have NO glosses_checksum field
-        in their manifest.  Loading them must continue to work."""
+    def test_back_compat_pack_without_glosses_loads_clean(self) -> None:
+        """A pack that ships no glosses.jsonl and no glosses_checksum
+        in its manifest must continue to load (back-compat invariant).
+        We use en_minimal_v1 which deliberately ships no glosses."""
+        from language_packs.compiler import load_pack
+        manifest, _ = load_pack("en_minimal_v1")
+        assert manifest.glosses_checksum is None
+
+    def test_glossed_pack_carries_checksum(self) -> None:
+        """Packs that DO ship glosses (en_core_cognition_v1 et al.
+        after Phase C) must carry a non-None glosses_checksum on the
+        loaded manifest."""
         from language_packs.compiler import load_pack
         manifest, _ = load_pack("en_core_cognition_v1")
-        assert manifest.glosses_checksum is None
+        assert isinstance(manifest.glosses_checksum, str)
+        assert len(manifest.glosses_checksum) == 64
 
     def test_checksum_mismatch_raises(self, temp_pack) -> None:
         pack_dir, pack_id = temp_pack

@@ -36,9 +36,15 @@ from chat.runtime import ChatRuntime, _UNKNOWN_DOMAIN_SURFACE
 def test_known_pack_lemmas_produce_grounded_surface(lemma: str) -> None:
     surface = pack_grounded_surface(lemma)
     assert surface is not None
-    assert lemma in surface
+    # Case-insensitive: gloss-backed surfaces capitalize the lemma at
+    # the start of the sentence ("Truth is a claim..."), while the
+    # dotted-disclosure fallback keeps it lowercase.  Both forms must
+    # contain the lemma.
+    assert lemma.lower() in surface.lower()
     assert PACK_ID in surface
-    assert "No session evidence yet." in surface
+    # Surface carries either the gloss-backed "pack-grounded (pack_id)."
+    # tag or the dotted-disclosure "No session evidence yet." trailer.
+    assert "pack-grounded" in surface
 
 
 def test_unknown_lemma_returns_none() -> None:
@@ -76,7 +82,8 @@ def test_cold_start_definition_returns_pack_grounded_surface() -> None:
     rt = ChatRuntime()
     resp = rt.chat("What is light?")
     assert "pack-grounded" in resp.surface
-    assert "light" in resp.surface
+    # Case-insensitive: fluent gloss surfaces capitalize at sentence start.
+    assert "light" in resp.surface.lower()
     assert resp.grounding_source == "pack"
 
 
@@ -85,7 +92,7 @@ def test_cold_start_recall_returns_pack_grounded_surface() -> None:
     rt = ChatRuntime()
     resp = rt.chat("Remember light")
     assert resp.grounding_source == "pack"
-    assert "light" in resp.surface
+    assert "light" in resp.surface.lower()
 
 
 def test_cold_start_unknown_lemma_routes_to_oov_invitation() -> None:

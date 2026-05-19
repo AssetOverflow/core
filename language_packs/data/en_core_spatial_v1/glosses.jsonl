@@ -1,0 +1,24 @@
+{"lemma":"above","gloss":"vertical position higher than a reference point","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"area","gloss":"a bounded two-dimensional region of space","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"backward","gloss":"motion or orientation toward the rear","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"below","gloss":"vertical position lower than a reference point","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"between","gloss":"spatial position flanked by two references","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"beyond","gloss":"spatial position past a reference boundary","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"bottom","gloss":"the lowermost portion of a spatial object","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"down","gloss":"motion or orientation toward a lower position","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"end","gloss":"the terminal portion of a spatial extent","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"far","gloss":"spatial distance relative to a reference point","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"forward","gloss":"motion or orientation toward the front","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"here","gloss":"the location of the speaker or reference point","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"inside","gloss":"spatial containment within a bounded region","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"left","gloss":"the side opposite the right of orientation","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"location","gloss":"a specific point or region in space","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"near","gloss":"spatial proximity relative to a reference point","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"outside","gloss":"spatial exclusion from a bounded region","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"place","gloss":"a definite location in space","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"region","gloss":"an extended portion of space with identity","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"side","gloss":"a lateral surface bounding a spatial object","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"space","gloss":"the extended manifold in which objects exist","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"there","gloss":"a location distinct from the speaker","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"top","gloss":"the uppermost portion of a spatial object","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"up","gloss":"motion or orientation toward a higher position","pos":"ADV","provenance_ids":["seed:glosses_v1"]}

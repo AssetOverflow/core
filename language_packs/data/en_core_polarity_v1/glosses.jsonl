@@ -1,0 +1,16 @@
+{"lemma":"always","gloss":"the frequency of occurring without exception across all instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"definitely","gloss":"unqualified certainty about the asserted proposition","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"frequently","gloss":"the frequency of occurring on a high proportion of instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"hardly","gloss":"a near-negative degree barely meeting a threshold","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"indeed","gloss":"emphatic confirmation of a preceding assertion","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"maybe","gloss":"a tentative possibility without committed certainty","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"never","gloss":"the frequency of occurring on zero instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"no","gloss":"express dissent or rejection of a preceding claim","pos":"INTJ","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"occasionally","gloss":"the frequency of occurring on scattered infrequent instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"often","gloss":"the frequency of occurring on many but not all instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"perhaps","gloss":"a hedged possibility offered without firm commitment","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"rarely","gloss":"the frequency of occurring on very few instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"sometimes","gloss":"the frequency of occurring on an indefinite portion of instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"surely","gloss":"high confidence in the truth of a claim","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"usually","gloss":"the frequency of occurring on most typical instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"yes","gloss":"affirm assent to a preceding question or claim","pos":"INTJ","provenance_ids":["seed:glosses_v1"]}
