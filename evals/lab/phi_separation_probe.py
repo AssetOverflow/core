@@ -38,7 +38,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
+from collections import Counter
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Iterable
 
@@ -102,6 +105,75 @@ def phi_lemma_summed_domains(lemma: str) -> np.ndarray:
     for d in domains:
         acc += embed_point(_stable_r3(d, _RNG_SEED_LEMMA))
     return acc
+
+
+@lru_cache(maxsize=1)
+def _domain_idf() -> dict[str, float]:
+    """Inverse-document-frequency weight per semantic_domain.
+
+    Treats each lemma's ``semantic_domains`` list as a document and
+    weights each domain by ``log((N + 1) / (df + 1)) + 1`` (smooth
+    IDF — avoids divide-by-zero, keeps every domain positive-weighted
+    so singletons still contribute).
+
+    Rare domains (those appearing in few lemmas) carry more identity
+    signal than common ones like ``logos.core`` that appear across
+    most cognition lemmas.  IDF lets the rotor act on the
+    distinguishing axes instead of being dominated by the shared
+    background.
+    """
+    pack = _pack_index()
+    n_docs = len(pack)
+    df: Counter[str] = Counter()
+    for domains in pack.values():
+        for d in set(domains):
+            df[d] += 1
+    return {
+        d: math.log((n_docs + 1) / (count + 1)) + 1.0
+        for d, count in df.items()
+    }
+
+
+def phi_lemma_idf_weighted(lemma: str) -> np.ndarray:
+    """φ.v3: IDF-weighted sum of CGA point embeddings.
+
+    Same shape as v1 (grade-mixed sum) but each domain's
+    contribution is scaled by its inverse-document-frequency in the
+    pack.  Tests whether v1's null result is "encoding random" or
+    "common-domain noise drowning out the distinguishing axes."
+    """
+    pack = _pack_index()
+    domains = pack.get(lemma.strip().lower())
+    if domains is None:
+        return embed_point(_stable_r3(lemma, _RNG_SEED_LEMMA + ".oov"))
+    if not domains:
+        return embed_point(_stable_r3(lemma, _RNG_SEED_LEMMA + ".nodomains"))
+    idf = _domain_idf()
+    acc = np.zeros(N_COMPONENTS, dtype=np.float32)
+    for d in domains:
+        weight = float(idf.get(d, 1.0))
+        acc += weight * embed_point(_stable_r3(d, _RNG_SEED_LEMMA))
+    return acc
+
+
+def phi_lemma_idf_centroid(lemma: str) -> np.ndarray:
+    """φ.v4: IDF-weighted centroid in R^3, embedded once.
+
+    The null-cone sibling of v3.  Computes a weighted centroid of
+    the lemma's domain hash points and embeds once via the CGA point
+    map, so the principled CGA distance interpretation still holds.
+    """
+    pack = _pack_index()
+    domains = pack.get(lemma.strip().lower())
+    if domains is None:
+        return embed_point(_stable_r3(lemma, _RNG_SEED_LEMMA + ".oov"))
+    if not domains:
+        return embed_point(_stable_r3(lemma, _RNG_SEED_LEMMA + ".nodomains"))
+    idf = _domain_idf()
+    pts = np.stack([_stable_r3(d, _RNG_SEED_LEMMA) for d in domains])
+    weights = np.asarray([float(idf.get(d, 1.0)) for d in domains], dtype=np.float32)
+    centroid = (weights[:, None] * pts).sum(axis=0) / max(weights.sum(), 1e-9)
+    return embed_point(centroid)
 
 
 def phi_lemma_centroid_point(lemma: str) -> np.ndarray:
@@ -319,6 +391,8 @@ def _summarise(label: str, values: Iterable[float]) -> dict[str, object]:
 _PHI_VARIANTS = (
     ("phi.v1.summed_domains", phi_lemma_summed_domains),
     ("phi.v2.centroid_point", phi_lemma_centroid_point),
+    ("phi.v3.idf_weighted", phi_lemma_idf_weighted),
+    ("phi.v4.idf_centroid", phi_lemma_idf_centroid),
 )
 
 
