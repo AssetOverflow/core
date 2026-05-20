@@ -1,40 +1,40 @@
-{"lemma":"accurate","gloss":"matches the target measurement or fact closely","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"bad","gloss":"falls short of accepted standards of quality","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"best","gloss":"ranks highest among all available alternatives","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"better","gloss":"ranks higher than an alternative on shared criteria","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"broad","gloss":"spans a wide range of cases or domains","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"central","gloss":"occupies a core position within some structure","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"certain","gloss":"holds without residual doubt given the evidence","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"clear","gloss":"presents itself plainly and without ambiguity","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"essential","gloss":"belongs to the core nature of something","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"evident","gloss":"shows itself plainly to any careful observer","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"factual","gloss":"reports states of affairs that actually obtain","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"false","gloss":"fails to correspond to the evidence or reality","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"general","gloss":"applies broadly across many cases or instances","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"good","gloss":"meets accepted standards of quality or value","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"important","gloss":"carries weight or priority in some judgment context","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"impossible","gloss":"cannot obtain under any consistent set of constraints","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"inaccurate","gloss":"deviates from the target measurement or fact","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"invalid","gloss":"fails to follow from its premises by sound inference","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"likely","gloss":"holds with high probability given the evidence","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"narrow","gloss":"spans only a small range of cases","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"necessary","gloss":"must hold for some outcome or condition to obtain","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"obscure","gloss":"resists understanding due to hidden or tangled structure","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"optional","gloss":"may be chosen or omitted without violation","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"particular","gloss":"refers to one specific case among many","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"possible","gloss":"could obtain without contradicting known constraints","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"primary","gloss":"holds first rank or precedence among related items","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"probable","gloss":"is supported as more likely than not","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"relevant","gloss":"bears meaningfully on the matter under consideration","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"required","gloss":"is demanded by some rule or condition","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"right","gloss":"aligns with the correct or appropriate choice","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"sound","gloss":"rests on valid reasoning from accurate premises","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"specific","gloss":"applies narrowly to a particular case or instance","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"sufficient","gloss":"suffices on its own to secure the outcome","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"true","gloss":"corresponds accurately to the evidence and reality","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"uncertain","gloss":"remains in doubt given incomplete evidence","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"universal","gloss":"holds across every case in the domain","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"unlikely","gloss":"holds with low probability given the evidence","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"useful","gloss":"serves a purpose effectively in some task","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"valid","gloss":"follows soundly from premises by accepted inference rules","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"worse","gloss":"ranks lower than an alternative on shared criteria","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"accurate","gloss":"true and specific to fact","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["true","and","specific","fact"],"predicates_invited":["matches","tracks"],"definition_version":1}
+{"lemma":"bad","gloss":"different from good","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["different","good"],"predicates_invited":[],"definition_version":1}
+{"lemma":"best","gloss":"most good","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["most","good"],"predicates_invited":[],"definition_version":1}
+{"lemma":"better","gloss":"more good","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["more","good"],"predicates_invited":[],"definition_version":1}
+{"lemma":"broad","gloss":"general in many part","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["general","many","part"],"predicates_invited":[],"definition_version":1}
+{"lemma":"central","gloss":"important to a whole","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["important","whole"],"predicates_invited":[],"definition_version":1}
+{"lemma":"certain","gloss":"true and clear","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["true","and","clear"],"predicates_invited":["settles","grounds"],"definition_version":1}
+{"lemma":"clear","gloss":"evident and direct","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["evident","and","direct"],"predicates_invited":["reveals","clarifies"],"definition_version":1}
+{"lemma":"essential","gloss":"necessary and central","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["necessary","and","central"],"predicates_invited":["grounds","anchors"],"definition_version":1}
+{"lemma":"evident","gloss":"clear from evidence","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["clear","evidence"],"predicates_invited":["shows","supports"],"definition_version":1}
+{"lemma":"factual","gloss":"of fact and truth","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["fact","and","truth"],"predicates_invited":["grounds","supports"],"definition_version":1}
+{"lemma":"false","gloss":"different from truth","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["different","truth"],"predicates_invited":[],"definition_version":1}
+{"lemma":"general","gloss":"common to many kind","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["common","many","kind"],"predicates_invited":[],"definition_version":1}
+{"lemma":"good","gloss":"right and useful","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["right","and","useful"],"predicates_invited":["guides","supports"],"definition_version":1}
+{"lemma":"important","gloss":"central and useful","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["central","and","useful"],"predicates_invited":["matters","guides"],"definition_version":1}
+{"lemma":"impossible","gloss":"different from possible","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["different","possible"],"predicates_invited":[],"definition_version":1}
+{"lemma":"inaccurate","gloss":"different from accurate","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["different","accurate"],"predicates_invited":[],"definition_version":1}
+{"lemma":"invalid","gloss":"different from valid","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["different","valid"],"predicates_invited":[],"definition_version":1}
+{"lemma":"likely","gloss":"possible and near truth","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["possible","and","near","truth"],"predicates_invited":["suggests","supports"],"definition_version":1}
+{"lemma":"narrow","gloss":"specific to one part","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["specific","one","part"],"predicates_invited":[],"definition_version":1}
+{"lemma":"necessary","gloss":"required for a result","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["required","result"],"predicates_invited":["requires","grounds"],"definition_version":1}
+{"lemma":"obscure","gloss":"different from clear","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["different","clear"],"predicates_invited":[],"definition_version":1}
+{"lemma":"optional","gloss":"possible and not_be required","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["possible","and","not_be","required"],"predicates_invited":[],"definition_version":1}
+{"lemma":"particular","gloss":"specific to one case","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["specific","one","case"],"predicates_invited":["specifies","narrows"],"definition_version":1}
+{"lemma":"possible","gloss":"not_be impossible","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["not_be","impossible"],"predicates_invited":["permits","allows"],"definition_version":1}
+{"lemma":"primary","gloss":"first and important","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["first","and","important"],"predicates_invited":[],"definition_version":1}
+{"lemma":"probable","gloss":"likely and more true","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["likely","and","more","true"],"predicates_invited":[],"definition_version":1}
+{"lemma":"relevant","gloss":"central to a point","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["central","point"],"predicates_invited":["connects","supports"],"definition_version":1}
+{"lemma":"required","gloss":"necessary for a result","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["necessary","result"],"predicates_invited":[],"definition_version":1}
+{"lemma":"right","gloss":"good and true","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["good","and","true"],"predicates_invited":["aligns","orders"],"definition_version":1}
+{"lemma":"sound","gloss":"valid and accurate","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["valid","and","accurate"],"predicates_invited":[],"definition_version":1}
+{"lemma":"specific","gloss":"particular and direct","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["particular","and","direct"],"predicates_invited":[],"definition_version":1}
+{"lemma":"sufficient","gloss":"enough for a result","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["enough","result"],"predicates_invited":["supports","settles"],"definition_version":1}
+{"lemma":"true","gloss":"fact with evidence","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["fact","evidence"],"predicates_invited":["holds","grounds"],"definition_version":1}
+{"lemma":"uncertain","gloss":"not_be certain","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["not_be","certain"],"predicates_invited":[],"definition_version":1}
+{"lemma":"universal","gloss":"common to all","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["common","all"],"predicates_invited":["covers","includes"],"definition_version":1}
+{"lemma":"unlikely","gloss":"not_be likely","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["not_be","likely"],"predicates_invited":[],"definition_version":1}
+{"lemma":"useful","gloss":"good for use","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["good","use"],"predicates_invited":["helps","supports"],"definition_version":1}
+{"lemma":"valid","gloss":"true by inference","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["true","inference"],"predicates_invited":["follows","holds"],"definition_version":1}
+{"lemma":"worse","gloss":"more bad","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["more","bad"],"predicates_invited":[],"definition_version":1}

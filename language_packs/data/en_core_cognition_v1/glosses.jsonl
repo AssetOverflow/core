@@ -1,78 +1,70 @@
-{"lemma":"account","gloss":"a reasoned description explaining what occurred","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"analogy","gloss":"a mapping of relations shared between distinct domains","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"answer","gloss":"a response that addresses a posed question","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"ask","gloss":"to pose a question seeking information","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"be","gloss":"existence, identity, or a state of affairs holding true","pos":"AUX","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"because","gloss":"a causal clause explaining why a claim holds","pos":"SCONJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"beginning","gloss":"the originating point from which something proceeds","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"belong","gloss":"to stand as a member within a structure","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"cause","gloss":"that which brings about an effect or consequence","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"compare","gloss":"to examine items for similarities and differences","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"comparison","gloss":"an examination of similarities and differences between items","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"concept","gloss":"an abstract unit of thought organizing experience","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"context","gloss":"the surrounding conditions that fix interpretation","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"contrast","gloss":"to set items against each other by difference","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"correct","gloss":"to revise a prior claim toward accuracy","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"correction","gloss":"the act of revising a prior claim toward accuracy","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"creation","gloss":"the act or result of bringing something new into being","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"define","gloss":"to specify the essential meaning of a concept","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"definition","gloss":"a statement specifying the essential nature of a concept","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"discourse","gloss":"connected language exchanged within a context","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"distinction","gloss":"a recognized difference that separates two things","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"distinguish","gloss":"to recognize a difference separating two things","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"evidence","gloss":"observable grounds that support or refute a claim","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"explain","gloss":"to make something clear by giving reasons","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"figure","gloss":"a non-literal pattern of expression shaping meaning","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"first","gloss":"the initial position in an ordered sequence","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"follow","gloss":"to come after another in sequence or consequence","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"ground","gloss":"to provide the supporting basis for a claim","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"have","gloss":"to possess an attribute or stand in a relation","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"how","gloss":"the manner or means by which something occurs","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"however","gloss":"a contrast or qualification against a prior claim","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"identity","gloss":"the set of attributes by which something is itself","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"image","gloss":"a sensory or mental representation of something","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"infer","gloss":"to draw a conclusion from given premises","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"inference","gloss":"a conclusion drawn from premises by reasoning","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"judgment","gloss":"a considered conclusion formed by reasoning and evidence","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"knowledge","gloss":"justified understanding grounded in evidence and recall","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"learn","gloss":"to acquire knowledge or skill through experience","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"life","gloss":"the ongoing condition of a living and acting being","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"light","gloss":"a source of revelation that makes things knowable","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"mean","gloss":"to carry a particular semantic content","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"meaning","gloss":"the semantic content carried by a sign or expression","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"memory","gloss":"the retained record enabling recall of prior states","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"metaphor","gloss":"a figure transferring meaning from one domain to another","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"narrative","gloss":"an ordered account presenting connected events","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"order","gloss":"a structured arrangement of elements by some relation","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"person","gloss":"an individual agent with identity and reason","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"precede","gloss":"to come before another in order or time","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"principle","gloss":"a foundational rule guiding reasoning or action","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"procedure","gloss":"an ordered sequence of steps producing an outcome","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"question","gloss":"an utterance that requests information or clarification","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"reason","gloss":"a ground or cause supporting a claim or action","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"recall","gloss":"to retrieve a stored state from memory","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"register","gloss":"a level of formality suited to a context","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"relate","gloss":"to establish a structural link between entities","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"relation","gloss":"a structural link holding between two or more entities","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"remember","gloss":"to recall a prior state from stored memory","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"reveal","gloss":"to make something previously hidden become known","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"rhetoric","gloss":"the art of effective and persuasive expression","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"simile","gloss":"a figure comparing two things using explicit markers","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"spirit","gloss":"an inner principle animating thought and action","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"story","gloss":"a recounted sequence of events with meaning","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"style","gloss":"the characteristic manner of expression in discourse","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"support","gloss":"to lend evidential or structural backing","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"symbol","gloss":"a sign that stands for a concept by convention","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"teach","gloss":"to convey knowledge or skill to another","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"then","gloss":"a temporal or logical succession from a prior point","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"therefore","gloss":"a logical consequence drawn from prior statements","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"thought","gloss":"a mental act or content arising in cognition","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"tone","gloss":"the attitudinal quality carried by an utterance","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"truth","gloss":"a claim or state grounded by evidence and coherent judgment","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"understanding","gloss":"a coherent grasp of meaning and relations","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"verification","gloss":"the act of confirming a claim against evidence","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"verify","gloss":"to confirm a claim by checking evidence","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"voice","gloss":"the distinctive perspective expressed in discourse","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"why","gloss":"the reason or cause behind a fact or claim","pos":"PRON","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"wisdom","gloss":"sound judgment informed by knowledge and experience","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"word","gloss":"a minimal linguistic unit carrying meaning in discourse","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"account","gloss":"word to give reason","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["word","give","reason"],"predicates_invited":["explains","records"],"definition_version":1}
+{"lemma":"analogy","gloss":"shared relation between two meaning","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["shared","relation","two","meaning"],"predicates_invited":["maps","illustrates"],"definition_version":1}
+{"lemma":"answer","gloss":"what a person say after a question","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","person","say","question"],"predicates_invited":["responds","clarifies","resolves"],"definition_version":1}
+{"lemma":"ask","gloss":"say a question","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","question"],"predicates_invited":[],"definition_version":1}
+{"lemma":"beginning","gloss":"start before what follow","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["start","what","follow"],"predicates_invited":[],"definition_version":1}
+{"lemma":"belong","gloss":"be part of a whole","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["be","part","whole"],"predicates_invited":[],"definition_version":1}
+{"lemma":"compare","gloss":"find same and different","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["find","same","and","different"],"predicates_invited":[],"definition_version":1}
+{"lemma":"comparison","gloss":"relation from compare","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["relation","compare"],"predicates_invited":["contrasts","relates"],"definition_version":1}
+{"lemma":"concept","gloss":"idea with meaning","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["idea","meaning"],"predicates_invited":["organizes","frames"],"definition_version":1}
+{"lemma":"context","gloss":"relation between word","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["relation","word"],"predicates_invited":["grounds","shapes"],"definition_version":1}
+{"lemma":"contrast","gloss":"make different relation visible","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["make","different","relation","visible"],"predicates_invited":[],"definition_version":1}
+{"lemma":"correct","gloss":"change from false to true","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["change","false","true"],"predicates_invited":[],"definition_version":1}
+{"lemma":"correction","gloss":"change from false to true","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["change","false","true"],"predicates_invited":["repairs","aligns"],"definition_version":1}
+{"lemma":"creation","gloss":"start of what make","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["start","what","make"],"predicates_invited":[],"definition_version":1}
+{"lemma":"define","gloss":"say the meaning of a word","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","meaning","word"],"predicates_invited":[],"definition_version":1}
+{"lemma":"definition","gloss":"word that explain meaning","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["word","explain","meaning"],"predicates_invited":["clarifies","states","grounds"],"definition_version":1}
+{"lemma":"discourse","gloss":"word in order for a point","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["word","order","point"],"predicates_invited":["develops","orders"],"definition_version":1}
+{"lemma":"distinction","gloss":"different relation","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["different","relation"],"predicates_invited":[],"definition_version":1}
+{"lemma":"distinguish","gloss":"find what is different","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["find","what","different"],"predicates_invited":[],"definition_version":1}
+{"lemma":"evidence","gloss":"what support truth","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","support","truth"],"predicates_invited":["supports","grounds","verifies"],"definition_version":1}
+{"lemma":"explain","gloss":"say why or how","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","why","or","how"],"predicates_invited":[],"definition_version":1}
+{"lemma":"figure","gloss":"visible image or symbol","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["visible","image","or","symbol"],"predicates_invited":["depicts","reveals"],"definition_version":1}
+{"lemma":"first","gloss":"one before","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one"],"predicates_invited":[],"definition_version":1}
+{"lemma":"follow","gloss":"come after","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["come"],"predicates_invited":[],"definition_version":1}
+{"lemma":"ground","gloss":"support with reason","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["support","reason"],"predicates_invited":[],"definition_version":1}
+{"lemma":"have","gloss":"keep as part","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["keep","part"],"predicates_invited":[],"definition_version":1}
+{"lemma":"however","gloss":"word for contrast","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["word","contrast"],"predicates_invited":[],"definition_version":1}
+{"lemma":"identity","gloss":"same relation","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["same","relation"],"predicates_invited":["grounds","distinguishes"],"definition_version":1}
+{"lemma":"image","gloss":"what is seen","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","seen"],"predicates_invited":["shows","reveals"],"definition_version":1}
+{"lemma":"infer","gloss":"find reason from evidence","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["find","reason","evidence"],"predicates_invited":[],"definition_version":1}
+{"lemma":"inference","gloss":"reason from evidence","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["reason","evidence"],"predicates_invited":["follows","extends"],"definition_version":1}
+{"lemma":"judgment","gloss":"claim about good or bad","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["claim","good","or","bad"],"predicates_invited":["assesses","concludes"],"definition_version":1}
+{"lemma":"knowledge","gloss":"what a person know from truth and evidence","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","person","know","truth","and","evidence"],"predicates_invited":["grounds","supports","informs"],"definition_version":1}
+{"lemma":"learn","gloss":"get knowledge","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["get","knowledge"],"predicates_invited":[],"definition_version":1}
+{"lemma":"life","gloss":"way a person exist and change","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["way","person","exist","and","change"],"predicates_invited":["changes","grows","continues"],"definition_version":1}
+{"lemma":"light","gloss":"visible medium that reveal truth","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["visible","medium","reveal","truth"],"predicates_invited":["reveals","illuminates","exposes"],"definition_version":1}
+{"lemma":"meaning","gloss":"what a word mean","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","word","mean"],"predicates_invited":["defines","clarifies","grounds"],"definition_version":1}
+{"lemma":"memory","gloss":"what a person recall","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","person","recall"],"predicates_invited":["stores","recalls","preserves"],"definition_version":1}
+{"lemma":"metaphor","gloss":"word by analogy","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["word","analogy"],"predicates_invited":["reveals","compares"],"definition_version":1}
+{"lemma":"narrative","gloss":"story tell in order","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["story","tell","order"],"predicates_invited":["orders","reveals"],"definition_version":1}
+{"lemma":"order","gloss":"relation of part to part","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["relation","part"],"predicates_invited":["organizes","stabilizes"],"definition_version":1}
+{"lemma":"person","gloss":"who can know and do","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["who","can","know","and","do"],"predicates_invited":["asks","learns","remembers"],"definition_version":1}
+{"lemma":"precede","gloss":"be before","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["be"],"predicates_invited":[],"definition_version":1}
+{"lemma":"principle","gloss":"primary reason","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["primary","reason"],"predicates_invited":["guides","orders"],"definition_version":1}
+{"lemma":"procedure","gloss":"way to do","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["way","do"],"predicates_invited":["orders","guides"],"definition_version":1}
+{"lemma":"question","gloss":"what a person ask","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","person","ask"],"predicates_invited":["asks","frames","opens"],"definition_version":1}
+{"lemma":"reason","gloss":"what explain why","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","explain","why"],"predicates_invited":["explains","grounds","supports"],"definition_version":1}
+{"lemma":"recall","gloss":"get memory from before","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["get","memory"],"predicates_invited":[],"definition_version":1}
+{"lemma":"register","gloss":"style for a place or role","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["style","place","or","role"],"predicates_invited":["fits","signals"],"definition_version":1}
+{"lemma":"relate","gloss":"make relation visible","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["make","relation","visible"],"predicates_invited":[],"definition_version":1}
+{"lemma":"remember","gloss":"recall from memory","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["recall","memory"],"predicates_invited":[],"definition_version":1}
+{"lemma":"reveal","gloss":"make visible","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["make","visible"],"predicates_invited":[],"definition_version":1}
+{"lemma":"rhetoric","gloss":"style of argument and voice","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["style","argument","and","voice"],"predicates_invited":["persuades","frames"],"definition_version":1}
+{"lemma":"simile","gloss":"word that compare by analogy","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["word","compare","analogy"],"predicates_invited":["compares","clarifies"],"definition_version":1}
+{"lemma":"spirit","gloss":"hidden life of a person","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["hidden","life","person"],"predicates_invited":["animates","guides"],"definition_version":1}
+{"lemma":"story","gloss":"account tell in order","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["account","tell","order"],"predicates_invited":["tells","frames"],"definition_version":1}
+{"lemma":"style","gloss":"way of voice and word","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["way","voice","and","word"],"predicates_invited":["shapes","signals"],"definition_version":1}
+{"lemma":"support","gloss":"give reason to a claim","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["give","reason","claim"],"predicates_invited":[],"definition_version":1}
+{"lemma":"symbol","gloss":"image that mean more","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["image","mean","more"],"predicates_invited":["signifies","evokes"],"definition_version":1}
+{"lemma":"teach","gloss":"give knowledge to a person","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["give","knowledge","person"],"predicates_invited":[],"definition_version":1}
+{"lemma":"therefore","gloss":"then because of reason","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["then","because","reason"],"predicates_invited":[],"definition_version":1}
+{"lemma":"thought","gloss":"what a mind think","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","mind","think"],"predicates_invited":["guides","considers"],"definition_version":1}
+{"lemma":"tone","gloss":"way a voice feel","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["way","voice","feel"],"predicates_invited":["colors","signals"],"definition_version":1}
+{"lemma":"truth","gloss":"what is true","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","true"],"predicates_invited":["grounds","supports","clarifies"],"definition_version":1}
+{"lemma":"understanding","gloss":"knowledge with meaning and relation","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["knowledge","meaning","and","relation"],"predicates_invited":["integrates","clarifies"],"definition_version":1}
+{"lemma":"verification","gloss":"result of verify","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["result","verify"],"predicates_invited":["confirms","tests"],"definition_version":1}
+{"lemma":"verify","gloss":"find if a claim is true","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["find","if","claim","true"],"predicates_invited":[],"definition_version":1}
+{"lemma":"voice","gloss":"way a person speak","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["way","person","speak"],"predicates_invited":["expresses","shapes"],"definition_version":1}
+{"lemma":"wisdom","gloss":"good use of knowledge","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["good","use","knowledge"],"predicates_invited":["guides","orders","corrects"],"definition_version":1}
+{"lemma":"word","gloss":"what a person say","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","person","say"],"predicates_invited":[],"definition_version":1}
