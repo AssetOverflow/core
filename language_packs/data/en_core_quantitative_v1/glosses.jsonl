@@ -14,6 +14,6 @@
 {"lemma":"much","gloss":"many in one whole","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["many","one","whole"],"predicates_invited":[],"definition_version":1}
 {"lemma":"neither","gloss":"none of two","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["none","two"],"predicates_invited":[],"definition_version":1}
 {"lemma":"several","gloss":"more than two and less than many","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["more","two","and","less","many"],"predicates_invited":[],"definition_version":1}
-{"lemma":"single","gloss":"one and only one","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","and","only"],"predicates_invited":[],"definition_version":1}
+{"lemma":"single","gloss":"is one and only one","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20","adr-0085-style:reviewed:2026-05-21"],"definitional_atoms":["one","and","only"],"predicates_invited":[],"definition_version":1}
 {"lemma":"three","gloss":"one and one and one","pos":"NUM","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","and"],"predicates_invited":[],"definition_version":1}
 {"lemma":"two","gloss":"one and one","pos":"NUM","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","and"],"predicates_invited":[],"definition_version":1}
