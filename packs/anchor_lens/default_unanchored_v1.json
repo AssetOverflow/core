@@ -1,0 +1,11 @@
+{
+  "cognitive_mode_label": "",
+  "description": "Default unanchored lens. Null primary_substrate, empty semantic_domain_preferences, empty cognitive_mode_label. Ratification gate is byte-identity with the in-memory UNANCHORED sentinel. See ADR-0073b.",
+  "display_name": "Default unanchored",
+  "lens_id": "default_unanchored_v1",
+  "mastery_report_sha256": "b3235072fdbb2219cdb8151047721d207f7c36082841f1dbc6e48a92a0ae82f0",
+  "primary_substrate": "none",
+  "schema_version": "1.0.0",
+  "semantic_domain_preferences": [],
+  "version": "1.0.0"
+}

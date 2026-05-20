@@ -57,6 +57,7 @@ from packs.ethics.loader import (
 )
 from packs.identity.loader import load_identity_manifold
 from chat.register_variation import decorate_surface
+from packs.anchor_lens.loader import AnchorLens, load_anchor_lens
 from packs.register.loader import RegisterPack, load_register_pack
 from packs.safety.check import SafetyCheck, SafetyContext
 from packs.safety.loader import load_safety_pack
@@ -376,6 +377,19 @@ class ChatRuntime:
                 resolved_config.register_pack_id
             )
         self.register_pack_id = resolved_config.register_pack_id
+        # ADR-0073b — anchor-lens load.  ``None`` resolves to the
+        # in-memory unanchored sentinel (structurally identical to
+        # ``default_unanchored_v1``).  Invalid ids fail-fast at
+        # runtime init, not at first turn.  At L1.2 the lens is
+        # loaded and stored but no composer consumes it; the
+        # ``anchor_lens_byte_identity_null_lift`` invariant pins this.
+        if resolved_config.anchor_lens_id is None:
+            self.anchor_lens: AnchorLens = AnchorLens.unanchored()
+        else:
+            self.anchor_lens = load_anchor_lens(
+                resolved_config.anchor_lens_id
+            )
+        self.anchor_lens_id = resolved_config.anchor_lens_id
         self.identity_manifold = type(identity_manifold)(
             value_axes=identity_manifold.value_axes,
             boundary_ids=(

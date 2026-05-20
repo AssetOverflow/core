@@ -101,9 +101,20 @@ class RuntimeConfig:
     # ≡ pre-R2 output) are CI-pinned by ``test_register_null_lift.py``.
     # R3 widens composers to dispatch on ``register.realizer_overrides``.
     register_pack_id: str | None = None
+    # ADR-0073b — anchor-lens pack id loaded at runtime startup.
+    # ``None`` resolves to ``AnchorLens.unanchored()`` (the in-memory
+    # null-lens sentinel; structurally identical to
+    # ``default_unanchored_v1``).  At L1.2 the lens is loaded and
+    # stored on the runtime, but no composer consumes it — the
+    # ``anchor_lens_byte_identity_null_lift`` invariant (None ≡
+    # default_unanchored_v1) is CI-pinned by
+    # ``test_anchor_lens_null_lift.py``.  L1.3 will widen composers
+    # to dispatch on ``anchor_lens.semantic_domain_preferences``.
+    anchor_lens_id: str | None = None
 
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"
 DEFAULT_REGISTER_PACK: str = "default_neutral_v1"
+DEFAULT_ANCHOR_LENS: str = "default_unanchored_v1"
 DEFAULT_CONFIG = RuntimeConfig()

@@ -1,0 +1,16 @@
+{
+  "evidence": {
+    "cognitive_mode_label_empty": true,
+    "primary_substrate": "none",
+    "semantic_domain_preferences_count": 0,
+    "semantic_domain_preferences_empty": true
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-19T00:00:00Z",
+  "lens_id": "default_unanchored_v1",
+  "pack_source_sha256": "1c66ec58dc70b25b8e7983d9460d810e5240a70f74e502040ce5fe812bbbaa58",
+  "ratification_method": "byte_identity_null_lift",
+  "ratified": true,
+  "report_sha256": "b3235072fdbb2219cdb8151047721d207f7c36082841f1dbc6e48a92a0ae82f0",
+  "schema_version": "1.0.0"
+}
