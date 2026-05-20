@@ -98,6 +98,14 @@ class RuntimeConfig:
     # chain-walk surface byte-identically (null-drop invariant).
     gloss_aware_cause: bool = False
 
+    # ADR-0087 — rhetorical-style selection axis (substrate phase).
+    # ``None`` resolves to ``DEFAULT_RHETORICAL_STYLE_PACK`` per the
+    # mounting discipline, which is the null-lift baseline.  No
+    # composer or realizer reads this field yet — that wiring is the
+    # consumer ADR's job.  The field is declared here so the runtime
+    # interface is stable when the consumer lands.
+    rhetorical_style_id: str | None = None
+
     # ADR-0066 / P3.2 — opt-in thread anaphora.  When enabled, the
     # runtime prepends a deterministic backreference to a recent
     # grounded turn when the current turn's subject lemma matches
