@@ -6,11 +6,14 @@ where report has ``.metrics`` (dict) and ``.case_details`` (list[dict]).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import partial
+from typing import Callable
 from typing import Any
 
 from chat.runtime import ChatRuntime
 from core.config import RuntimeConfig
 from core.cognition.pipeline import CognitiveTurnPipeline
+from evals._parallel import run_cases_parallel
 from generate.intent import IntentTag
 
 
@@ -71,10 +74,28 @@ def _run_case(case: dict[str, Any], pipeline: CognitiveTurnPipeline) -> CaseResu
     )
 
 
+def _build_case_runner(
+    config: RuntimeConfig | None = None,
+) -> Callable[[dict[str, Any]], CaseResult]:
+    """Warm worker-local caches once, then return a per-case scorer."""
+    if config is None:
+        ChatRuntime()
+    else:
+        ChatRuntime(config=config)
+
+    def _run(case: dict[str, Any]) -> CaseResult:
+        runtime = ChatRuntime(config=config) if config else ChatRuntime()
+        pipeline = CognitiveTurnPipeline(runtime)
+        return _run_case(case, pipeline)
+
+    return _run
+
+
 def run_lane(
     cases: list[dict[str, Any]],
     *,
     config: RuntimeConfig | None = None,
+    workers: int | None = None,
 ) -> LaneReport:
     """Run all cases through CognitiveTurnPipeline and return metrics + details."""
     total = 0
@@ -85,10 +106,14 @@ def run_lane(
     versor_closures = 0
     case_details: list[dict[str, Any]] = []
 
-    for case in cases:
-        runtime = ChatRuntime(config=config) if config else ChatRuntime()
-        pipeline = CognitiveTurnPipeline(runtime)
-        cr = _run_case(case, pipeline)
+    case_runner_builder = partial(_build_case_runner, config=config)
+    case_results = run_cases_parallel(
+        cases,
+        case_runner_builder,
+        n_workers=workers if workers is not None else 4,
+    )
+
+    for cr in case_results:
 
         total += 1
         if cr.intent_correct:

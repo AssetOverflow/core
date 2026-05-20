@@ -1148,7 +1148,14 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 def cmd_eval(args: argparse.Namespace) -> int:
     """Run an eval lane by name, or list available lanes."""
-    from evals.framework import discover_lanes, get_lane, run_lane, write_result
+    from evals._parallel import normalize_workers
+    from evals.framework import (
+        discover_lanes,
+        get_lane,
+        load_cases,
+        run_lane,
+        write_result,
+    )
 
     if args.list_lanes:
         lanes = discover_lanes()
@@ -1171,8 +1178,27 @@ def cmd_eval(args: argparse.Namespace) -> int:
     version = args.version or (lane.versions[0] if lane.versions else "v1")
     split = args.split
 
+    if not args.json and lane_name == "cognition":
+        if split == "dev":
+            cases_path = lane.dev_cases_path()
+        elif split == "public":
+            cases_path = lane.public_cases_path(version)
+        else:
+            cases_path = lane.holdout_cases_path(version)
+        cases = load_cases(cases_path)
+        effective_workers = normalize_workers(
+            args.workers if args.workers is not None else 4,
+            len(cases),
+        )
+        print(f"workers        : {effective_workers}")
+
     try:
-        result = run_lane(lane, version=version, split=split)
+        result = run_lane(
+            lane,
+            version=version,
+            split=split,
+            workers=args.workers,
+        )
     except FileNotFoundError as exc:
         _die(str(exc))
 
@@ -1761,7 +1787,7 @@ For the central evidence index:
 
 _ALL_PREAMBLE = """
 ================================================================================
-  core demo all — Run Every Demo, End-to-End
+  core demo all — Combined Demo, End-to-End
 ================================================================================
 
 Runs the full demo suite in sequence and prints a consolidated PASS/FAIL
@@ -1976,7 +2002,7 @@ def cmd_demo(args: argparse.Namespace) -> int:
     if target == "anchor-lens-tour":
         from evals.anchor_lens_tour.run_tour import run_tour as run_lens_tour
 
-        result = run_lens_tour(emit_json=args.json)
+        result = run_lens_tour(emit_json=args.json, workers=args.workers)
         if args.json:
             print(json.dumps(result, indent=2, sort_keys=True, default=str))
         return 0 if result.get("all_claims_supported", False) else 1
@@ -1984,7 +2010,7 @@ def cmd_demo(args: argparse.Namespace) -> int:
     if target == "orthogonality-tour":
         from evals.orthogonality_tour.run_tour import run_tour as run_ortho_tour
 
-        result = run_ortho_tour(emit_json=args.json)
+        result = run_ortho_tour(emit_json=args.json, workers=args.workers)
         if args.json:
             print(json.dumps(result, indent=2, sort_keys=True, default=str))
         return 0 if result.get("all_claims_supported", False) else 1
@@ -2258,13 +2284,14 @@ def _run_demo_all(emit_json: bool) -> int:
         print(json.dumps(consolidated, indent=2, sort_keys=True, default=str))
     else:
         print("\n" + "═" * 76)
-        print("  core demo all — consolidated summary")
+        print("  core demo all — Combined demo summary")
         print("═" * 76)
         for name, ok in passed.items():
             mark = "✓ PASS" if ok else "✗ FAIL"
             print(f"  {mark}  {name}")
         print()
         print(f"  all_demos_passed : {all_passed}")
+        print("  load-bearing claim of the ADR-0024 chain")
         print()
 
     _write_results_index()
@@ -2930,6 +2957,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     demo.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     demo.add_argument(
+        "--workers",
+        type=int,
+        default=4,
+        metavar="N",
+        help=(
+            "parallel worker count for supported demos "
+            "(0/1 => sequential; default 4)"
+        ),
+    )
+    demo.add_argument(
         "--no-stream",
         dest="no_stream",
         action="store_true",
@@ -2945,6 +2982,16 @@ def build_parser() -> argparse.ArgumentParser:
     eval_cmd.add_argument("--list", dest="list_lanes", action="store_true", help="list available eval lanes")
     eval_cmd.add_argument("--version", help="version to evaluate (default: latest)")
     eval_cmd.add_argument("--split", default="public", choices=["dev", "public", "holdout"], help="which split to score (default: public)")
+    eval_cmd.add_argument(
+        "--workers",
+        type=int,
+        default=4,
+        metavar="N",
+        help=(
+            "parallel worker count for cognition lane "
+            "(0/1 => sequential; default 4)"
+        ),
+    )
     eval_cmd.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     eval_cmd.add_argument("--save", action="store_true", help="write result to lane results/ directory")
     eval_cmd.add_argument("--report", metavar="PATH", help="write JSON report to file")

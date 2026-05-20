@@ -24,11 +24,13 @@ from __future__ import annotations
 
 import json
 import sys
-from typing import Any
+from functools import partial
+from typing import Any, Callable
 
 from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.config import RuntimeConfig
+from evals._parallel import normalize_workers, run_cases_parallel
 from generate.realizer_guard import check_surface
 
 
@@ -104,12 +106,32 @@ def _run_synthetic_one(candidate: str, expected_rule: str) -> dict[str, Any]:
     }
 
 
-def run_holdout(*, emit_json: bool = False) -> dict[str, Any]:
+def _build_runtime_case_runner() -> Callable[[str], dict[str, Any]]:
+    """Warm the holdout runtime once, then return a per-prompt scorer."""
+    _build_runtime()
+
+    def _run(prompt: str) -> dict[str, Any]:
+        return _run_runtime_one(prompt)
+
+    return _run
+
+
+def run_holdout(*, emit_json: bool = False, workers: int | None = None) -> dict[str, Any]:
     synthetic_cells = [
         _run_synthetic_one(candidate, rule)
         for candidate, rule in _SYNTHETIC_ILLEGAL_CANDIDATES
     ]
-    runtime_cells = [_run_runtime_one(p) for p in _HOLDOUT_PROMPTS]
+    effective_workers = normalize_workers(
+        workers if workers is not None else 4,
+        len(_HOLDOUT_PROMPTS),
+    )
+    if not emit_json:
+        print(f"  workers                  : {effective_workers}")
+    runtime_cells = run_cases_parallel(
+        list(_HOLDOUT_PROMPTS),
+        partial(_build_runtime_case_runner),
+        n_workers=effective_workers,
+    )
     failures = [
         c for c in (*synthetic_cells, *runtime_cells)
         if not c["cell_supported"]

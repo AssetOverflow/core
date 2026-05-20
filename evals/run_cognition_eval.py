@@ -8,12 +8,15 @@ metrics. Each case gets a fresh pipeline instance for isolation.
 from __future__ import annotations
 
 import json
+from functools import partial
 from pathlib import Path
+from typing import Callable
 
 from chat.runtime import ChatRuntime
 from core.config import RuntimeConfig
 from core.cognition.pipeline import CognitiveTurnPipeline
 from evals.metrics import CaseResult, EvalReport
+from evals._parallel import run_cases_parallel
 from generate.intent import IntentTag
 
 _CASES_PATH = Path(__file__).parent / "cognition_cases.jsonl"
@@ -65,19 +68,42 @@ def _run_case(case: dict, pipeline: CognitiveTurnPipeline) -> CaseResult:
     )
 
 
+def _build_case_runner(
+    config: RuntimeConfig | None = None,
+) -> Callable[[dict], CaseResult]:
+    """Warm worker-local caches once, then return a per-case scorer."""
+    if config is None:
+        ChatRuntime()
+    else:
+        ChatRuntime(config=config)
+
+    def _run(case: dict) -> CaseResult:
+        runtime = ChatRuntime(config=config) if config else ChatRuntime()
+        pipeline = CognitiveTurnPipeline(runtime)
+        return _run_case(case, pipeline)
+
+    return _run
+
+
 def run_eval(
     cases: list[dict] | None = None,
     config: RuntimeConfig | None = None,
+    *,
+    workers: int | None = None,
 ) -> EvalReport:
     if cases is None:
         cases = load_cases()
 
     report = EvalReport()
 
-    for case in cases:
-        runtime = ChatRuntime(config=config) if config else ChatRuntime()
-        pipeline = CognitiveTurnPipeline(runtime)
-        case_result = _run_case(case, pipeline)
+    case_runner_builder = partial(_build_case_runner, config=config)
+    case_results = run_cases_parallel(
+        cases,
+        case_runner_builder,
+        n_workers=workers if workers is not None else 4,
+    )
+
+    for case_result in case_results:
 
         report.total += 1
         if case_result.intent_correct:
