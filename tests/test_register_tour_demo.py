@@ -1,12 +1,18 @@
-"""Register tour demo — load-bearing seam claim (ADR-0072 / R5).
+"""Register tour demo — load-bearing seam claims (ADR-0072 R5 +
+ADR-0077 R6).
 
-Pins the three seam claims:
+Pins the strengthened gate:
 
 * grounding_source identical across {neutral, terse, convivial} per prompt
 * trace_hash identical across {neutral, terse, convivial} per prompt
-* surface differs at least once (convivial vs neutral)
+* register_canonical_surface identical across registers per prompt
+  (R6 layering separation)
+* terse substantively differs from neutral on at least one
+  pack-grounded DEFINITION prompt (R6 falsifiability)
+* convivial substantively differs from neutral on at least one
+  pack-grounded DEFINITION prompt (R6 falsifiability)
 
-Any one of those failing is the R5 architectural-regression signal.
+Any one of those failing is the R5/R6 architectural-regression signal.
 """
 
 from __future__ import annotations
@@ -34,11 +40,32 @@ def test_tour_trace_hashes_identical_across_registers():
     assert report["claims"]["all_trace_hashes_identical"] is True
 
 
-def test_tour_surfaces_vary_at_least_once():
-    """ADR-0071 seeded variation: convivial vs neutral must differ
-    somewhere across the four-prompt sequence."""
+def test_tour_terse_substantively_differs_from_neutral():
+    """ADR-0077 (R6) — replaces the old ``surfaces_vary_at_least_once``
+    claim, which convivial's decorative wrapper alone could satisfy.
+    The new gate fires only on DEFINITION + pack-grounded prompts and
+    requires terse_v1 to differ from default_neutral_v1 on more than
+    whitespace/punctuation."""
     report = run_tour(emit_json=True)
-    assert report["claims"]["surfaces_vary_at_least_once"] is True
+    assert report["claims"][
+        "terse_substantively_differs_from_neutral_on_pack_grounded_definition"
+    ] is True
+
+
+def test_tour_convivial_substantively_differs_from_neutral():
+    """ADR-0077 (R6) — same shape applied to convivial_v1."""
+    report = run_tour(emit_json=True)
+    assert report["claims"][
+        "convivial_substantively_differs_from_neutral_on_pack_grounded_definition"
+    ] is True
+
+
+def test_tour_register_canonical_surfaces_identical():
+    """ADR-0077 (R6) — invariant_register_canonical_surface_constant
+    _across_registers.  The composer-output truth path must not move
+    with the register."""
+    report = run_tour(emit_json=True)
+    assert report["claims"]["register_canonical_surfaces_identical"] is True
 
 
 def test_tour_all_claims_supported():

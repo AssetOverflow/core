@@ -324,3 +324,12 @@ class TurnEvent:
     # pre-C1 callers stay byte-identical.
     realizer_guard_status: str = ""
     realizer_guard_rule: str = ""
+    # ADR-0077 (R6) — register layering boundary.  Carries the composer
+    # output BEFORE any register transformation (substantive or
+    # decorative).  The cognition pipeline hashes this field for
+    # ``trace_hash`` when present, preserving R5's load-bearing
+    # invariant — substantive register transforms must not move
+    # ``trace_hash``.  Pre-R6 callers leave this as ``""``; the
+    # pipeline falls back to the existing ``pre_decoration_surface``
+    # source in that case (byte-identity preserved).
+    register_canonical_surface: str = ""

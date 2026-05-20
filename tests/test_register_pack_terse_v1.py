@@ -33,8 +33,16 @@ def test_terse_v1_loads():
 
 
 def test_terse_v1_realizer_overrides_shape():
+    """ADR-0070 + ADR-0077 — terse_v1 carries disclosure_domain_count
+    plus the three substantive R6 knobs (drop_provenance_tag,
+    compress_gloss, drop_articles)."""
     pack = load_register_pack("terse_v1")
-    assert dict(pack.realizer_overrides) == {"disclosure_domain_count": 1}
+    assert dict(pack.realizer_overrides) == {
+        "disclosure_domain_count": 1,
+        "drop_provenance_tag": True,
+        "compress_gloss": True,
+        "drop_articles": True,
+    }
 
 
 def test_terse_v1_self_seal_verifies():

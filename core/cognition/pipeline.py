@@ -142,14 +142,23 @@ class CognitiveTurnPipeline:
             response.vault_hits == 0
             and getattr(response, "grounding_source", "vault") != "vault"
         )
-        # ADR-0071 (R4) — read pre-decoration surface for trace_hash
-        # so seeded register decoration cannot leak into the truth
-        # path (ADR-0069 invariant C, ADR-0070 register_invariant_
-        # grounding).  ``pre_decoration_surface`` is empty on pre-R4
-        # responses; fall back to ``response.surface`` in that case so
-        # historical trace hashes stay byte-identical.
+        # ADR-0077 (R6) — read register_canonical_surface for trace_hash
+        # so substantive register transforms (terse compress_gloss /
+        # drop_provenance / drop_articles, convivial
+        # append_semantic_domain_clause) cannot leak into the truth
+        # path either.  Falls back through pre_decoration_surface (R4,
+        # ADR-0071) and finally response.surface — historical trace
+        # hashes stay byte-identical for any pre-R6 caller that does
+        # not set the new field, because both pre_decoration and the
+        # canonical degrade to empty in that case.
+        canonical = getattr(response, "register_canonical_surface", "") or ""
         pre_decoration = getattr(response, "pre_decoration_surface", "") or ""
-        surface = pre_decoration if pre_decoration else response.surface
+        if canonical:
+            surface = canonical
+        elif pre_decoration:
+            surface = pre_decoration
+        else:
+            surface = response.surface
         articulation_surface = response.articulation_surface
         # Pipeline override usefulness gate (2026-05-19 design review,
         # Finding P0 #1).  The previous gate only required

@@ -118,6 +118,11 @@ def serialize_turn_event(
         out["articulation_surface"] = str(
             getattr(event, "articulation_surface", "")
         )
+        # ADR-0077 (R6) — register canonical surface (pre-substantive,
+        # pre-decoration).  Content-gated like the other surfaces.
+        out["register_canonical_surface"] = str(
+            getattr(event, "register_canonical_surface", "") or ""
+        )
     if timestamp is not None:
         out["timestamp"] = str(timestamp)
     return out

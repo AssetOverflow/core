@@ -59,10 +59,20 @@ def _valid_intent_names() -> frozenset[str]:
 # the trust boundary against arbitrary operator-authored data driving
 # realizer dispatch.  Each entry maps a key name to a validator that
 # returns True iff the value is in-bounds for R3.
+def _is_bool(v: Any) -> bool:
+    return isinstance(v, bool)
+
+
 _KNOWN_OVERRIDE_KEYS: dict[str, Callable[[Any], bool]] = {
     "disclosure_domain_count": lambda v: isinstance(v, int)
     and not isinstance(v, bool)
     and v in (1, 2, 3),
+    # ADR-0077 (R6) — substantive register knobs.  Each is a strict
+    # bool; the loader's closed-set boolean allow-list mirrors this.
+    "drop_provenance_tag": _is_bool,
+    "compress_gloss": _is_bool,
+    "drop_articles": _is_bool,
+    "append_semantic_domain_clause": _is_bool,
 }
 
 

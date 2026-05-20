@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "Warm, conversational register. Seeded openings and closings draw from small bounded buckets; depth follows the standard (3-domain) default. Variation is deterministic across (trace_hash, register_id, turn_idx). See ADR-0071.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "5dbddfb9f216ab54d39f8dafc767c277e70a21b2a960730e7f3333772df8cc9c",
+  "mastery_report_sha256": "1c1509fa4bc2aa71fbe3843f4cbc01c9c83fe0047dd4456a66a47a17a426df1c",
   "display_name": "Convivial",
   "depth_preference": "standard",
-  "realizer_overrides": {},
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
   "discourse_markers": {
     "openings": [
       "So,",

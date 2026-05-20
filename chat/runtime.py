@@ -57,6 +57,7 @@ from packs.ethics.loader import (
     load_ethics_pack,
 )
 from packs.identity.loader import load_identity_manifold
+from chat.register_substantive import apply_substantive_register
 from chat.register_variation import decorate_surface
 from generate.realizer_guard import (
     DISCLOSURE_SURFACE as _GUARD_DISCLOSURE_SURFACE,
@@ -354,6 +355,14 @@ class ChatResponse:
     # JSONL.  ``""`` defaults preserve pre-C1 byte-identity.
     realizer_guard_status: str = ""
     realizer_guard_rule: str = ""
+    # ADR-0077 (R6) — register layering boundary surface.  Carries the
+    # composer output BEFORE any register transformation (substantive
+    # or decorative).  The cognition pipeline hashes this field for
+    # ``trace_hash`` when present, preserving R5's load-bearing
+    # invariant — substantive register transforms must not move
+    # ``trace_hash``.  Empty string ⇒ pre-R6 caller; pipeline falls
+    # back to ``pre_decoration_surface`` (byte-identity preserved).
+    register_canonical_surface: str = ""
 
 
 class ChatRuntime:
@@ -698,7 +707,7 @@ class ChatRuntime:
 
     def _maybe_pack_grounded_surface(
         self, text: str, gate_source: str, *, allow_warm: bool = False
-    ) -> tuple[str, str] | None:
+    ) -> tuple[str, str, tuple[str, ...]] | None:
         """Return ``(surface, grounding_source)`` or ``None``.
 
         ADR-0048 / ADR-0050 / ADR-0052 — three reviewed sources of
@@ -727,11 +736,11 @@ class ChatRuntime:
                     lemma_a, lemma_b, register=self.register_pack,
                 )
                 if surface is not None:
-                    return (surface, "pack")
+                    return (surface, "pack", ())
                 from chat.partial_surface import partial_comparison_surface
                 partial = partial_comparison_surface(lemma_a, lemma_b)
                 if partial is not None:
-                    return (partial[0], "partial")
+                    return (partial[0], "partial", ())
         if intent.tag is IntentTag.NARRATIVE:
             lemma = (intent.subject or "").strip()
             if lemma:
@@ -740,7 +749,7 @@ class ChatRuntime:
                     lemma, register=self.register_pack,
                 )
                 if surface is not None:
-                    return (surface, "teaching")
+                    return (surface, "teaching", ())
         if intent.tag is IntentTag.EXAMPLE:
             lemma = (intent.subject or "").strip()
             if lemma:
@@ -749,7 +758,7 @@ class ChatRuntime:
                     lemma, register=self.register_pack,
                 )
                 if surface is not None:
-                    return (surface, "teaching")
+                    return (surface, "teaching", ())
         if intent.tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
             lemma = (intent.subject or "").strip()
             if lemma:
@@ -765,7 +774,7 @@ class ChatRuntime:
                         negated=intent.negated,
                     )
                     if surface is not None:
-                        return (surface, "pack")
+                        return (surface, "pack", ())
                 if self.config.composed_surface:
                     surface = teaching_grounded_surface_composed(
                         lemma, intent.tag, register=self.register_pack,
@@ -775,13 +784,13 @@ class ChatRuntime:
                         lemma, intent.tag, register=self.register_pack,
                     )
                 if surface is not None:
-                    return (surface, "teaching")
+                    return (surface, "teaching", ())
                 from chat.cross_pack_grounding import cross_pack_grounded_surface
                 surface = cross_pack_grounded_surface(
                     lemma, intent.tag, register=self.register_pack,
                 )
                 if surface is not None:
-                    return (surface, "teaching")
+                    return (surface, "teaching", ())
                 # Deliberate non-fallback: when CAUSE / VERIFICATION
                 # has no teaching chain or cross-pack chain rooted on
                 # the subject, return None so the discovery layer logs
@@ -795,7 +804,7 @@ class ChatRuntime:
                 text, register=self.register_pack,
             )
             if surface is not None:
-                return (surface, "pack")
+                return (surface, "pack", ())
         if intent.tag is IntentTag.PROCEDURE:
             subject_text = (intent.subject or "").strip()
             if subject_text:
@@ -803,7 +812,7 @@ class ChatRuntime:
                     subject_text, register=self.register_pack,
                 )
                 if surface is not None:
-                    return (surface, "pack")
+                    return (surface, "pack", ())
         if intent.tag in (IntentTag.DEFINITION, IntentTag.RECALL):
             lemma = (intent.subject or "").strip()
             if not lemma:
@@ -814,13 +823,22 @@ class ChatRuntime:
                 anchor_lens=self.anchor_lens,
             )
             if surface is not None:
-                return (surface, "pack")
+                # ADR-0077 (R6) — expose the resolving lemma's
+                # semantic_domains so the runtime's substantive-register
+                # hook can fuel ``append_semantic_domain_clause``.  All
+                # other composers return ``()`` because only the gloss
+                # DEFINITION/RECALL path participates in convivial's
+                # bounded propositional expansion in R6.
+                from chat.pack_resolver import resolve_lemma
+                resolved = resolve_lemma(lemma)
+                domains = resolved[1] if resolved is not None else ()
+                return (surface, "pack", domains)
         oov_lemma = (intent.subject or "").strip()
         if oov_lemma:
             from chat.oov_surface import oov_learning_invitation_surface
             oov_surface = oov_learning_invitation_surface(oov_lemma, intent.tag)
             if oov_surface is not None:
-                return (oov_surface, "oov")
+                return (oov_surface, "oov", ())
         return None
 
     def _maybe_apply_discourse_planner(
@@ -935,6 +953,7 @@ class ChatRuntime:
         tokens: tuple[str, ...] = (),
         pack_grounded_surface: str | None = None,
         grounded_source_tag: str = "pack",
+        pack_semantic_domains: tuple[str, ...] = (),
         discovery_intent_tag: Any = None,
         discovery_intent_subject: str | None = None,
     ) -> ChatResponse:
@@ -1029,12 +1048,29 @@ class ChatRuntime:
             walk_surface_stub = response_surface
             response_surface = _GUARD_DISCLOSURE_SURFACE
             grounding_source = "none"
+        # ADR-0077 (R6) — register layering separation.
+        # ``register_canonical_surface`` is the composer / guard output
+        # BEFORE any register transformation; the pipeline hashes this
+        # field for ``trace_hash`` so substantive register transforms
+        # cannot move the truth-path identity.  Substantive transforms
+        # are skipped on ``grounding_source == "none"`` so the bounded
+        # disclosure stays sacrosanct under terse_v1's drop_articles.
+        register_canonical_surface_stub = response_surface
+        if grounding_source == "none":
+            substantive_surface_stub = response_surface
+        else:
+            substantive_surface_stub = apply_substantive_register(
+                response_surface,
+                self.register_pack,
+                semantic_domains=pack_semantic_domains,
+            )
+        response_surface = substantive_surface_stub
         # ADR-0071 (R4) — apply seeded discourse-marker decoration to
-        # the realized surface AFTER grounding source is decided.
+        # the realized surface AFTER substantive register transforms.
         # Empty marker buckets ⇒ no-op (UNREGISTERED / neutral / terse).
         # Preserve the pre-decoration string so the pipeline can hash
         # the truth-path surface and trace_hash stays invariant under
-        # register (ADR-0069 invariant C).
+        # register (ADR-0069 invariant C, strengthened by ADR-0077).
         pre_decoration_surface_stub = response_surface
         decoration_stub = decorate_surface(
             response_surface,
@@ -1089,6 +1125,7 @@ class ChatRuntime:
                 anchor_lens_mode_label=anchor_lens_mode_label_stub,
                 realizer_guard_status=realizer_guard_status_stub,
                 realizer_guard_rule=realizer_guard_rule_stub,
+                register_canonical_surface=register_canonical_surface_stub,
             )
             self.turn_log.append(stub_event)
             self._emit_turn_event(stub_event)
@@ -1139,6 +1176,7 @@ class ChatRuntime:
             anchor_lens_mode_label=anchor_lens_mode_label_stub,
             realizer_guard_status=realizer_guard_status_stub,
             realizer_guard_rule=realizer_guard_rule_stub,
+            register_canonical_surface=register_canonical_surface_stub,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -1165,13 +1203,20 @@ class ChatRuntime:
             if pack_result is None:
                 pack_surface = None
                 pack_source_tag = "none"
+                pack_semantic_domains: tuple[str, ...] = ()
             else:
-                pack_surface, pack_source_tag = pack_result
+                pack_surface, pack_source_tag, pack_semantic_domains = pack_result
                 planned = self._maybe_apply_discourse_planner(
                     text, pack_source_tag
                 )
                 if planned is not None:
                     pack_surface, pack_source_tag = planned
+                    # ADR-0077 — planner-rendered surfaces are outside
+                    # the gloss DEFINITION/RECALL convivial-expansion
+                    # path; drop the carried semantic_domains so the
+                    # ``append_semantic_domain_clause`` knob is a no-op
+                    # over planner output.
+                    pack_semantic_domains = ()
             self._context.finalize_turn(
                 empty_result,
                 tokens_in=tuple(filtered),
@@ -1198,6 +1243,7 @@ class ChatRuntime:
                 tokens=tuple(filtered),
                 pack_grounded_surface=pack_surface,
                 grounded_source_tag=pack_source_tag,
+                pack_semantic_domains=pack_semantic_domains,
                 discovery_intent_tag=discovery_intent_tag,
                 discovery_intent_subject=discovery_intent_subject,
             )
@@ -1338,6 +1384,7 @@ class ChatRuntime:
         warm_grounding_source: str | None = None
         warm_pack_subject: str | None = None
         warm_pack_intent_tag: Any = None
+        warm_pack_semantic_domains: tuple[str, ...] = ()
         if refusal_emitted:
             response_surface = refusal_surface
             self._last_refusal_was_typed = True
@@ -1361,7 +1408,7 @@ class ChatRuntime:
                     articulation = replace(articulation, surface=_UNKNOWN_DOMAIN_SURFACE)
                     warm_grounding_source = "none"
             elif warm_pack_result is not None:
-                warm_pack_surface, warm_grounding_source = warm_pack_result
+                warm_pack_surface, warm_grounding_source, warm_pack_semantic_domains = warm_pack_result
                 if self.config.thread_anaphora and warm_grounding_source in {"pack", "teaching"}:
                     from chat.anaphora import thread_anaphora_prefix
                     from generate.intent_bridge import classify_intent_from_input
@@ -1395,6 +1442,12 @@ class ChatRuntime:
                     response_surface = planned_surface
                     articulation = replace(articulation, surface=planned_surface)
                     warm_grounding_source = planned_source
+                    # ADR-0077 — planner-rendered surfaces are outside
+                    # the gloss DEFINITION/RECALL convivial-expansion
+                    # path; drop the carried semantic_domains so the
+                    # ``append_semantic_domain_clause`` knob is a no-op
+                    # over planner output.
+                    warm_pack_semantic_domains = ()
             if should_inject_hedge(ethics_verdict, self.ethics_pack):
                 hedge_prefix = build_hedge_prefix(self.identity_manifold)
                 before = response_surface
@@ -1419,14 +1472,32 @@ class ChatRuntime:
             walk_surface = response_surface
             response_surface = _GUARD_DISCLOSURE_SURFACE
             warm_grounding_source = "none"
-        # ADR-0071 (R4) — seeded discourse-marker decoration is the
-        # last step before TurnEvent is sealed.  Applies uniformly to
-        # every grounding path (vault / pack / teaching / planner /
-        # hedge-prefixed).  No-op for registers with empty marker
-        # buckets (UNREGISTERED / default_neutral_v1 / terse_v1).
-        # Pre-decoration surface is preserved separately so the
-        # cognition pipeline can hash the truth-path surface and
-        # trace_hash stays invariant under register (ADR-0069 inv C).
+        # ADR-0077 (R6) — register layering separation (main path).  See
+        # the stub-path equivalent for full semantics: the canonical
+        # surface is captured pre-substantive so the cognition pipeline
+        # can hash it for ``trace_hash``, preserving register
+        # invariance under R6's stronger consumer set.  Substantive
+        # transforms are skipped on ungrounded turns so the bounded
+        # disclosure stays sacrosanct under terse's drop_articles.
+        register_canonical_surface_main = response_surface
+        if (warm_grounding_source or "vault") == "none":
+            substantive_surface_main = response_surface
+        else:
+            substantive_surface_main = apply_substantive_register(
+                response_surface,
+                self.register_pack,
+                semantic_domains=warm_pack_semantic_domains,
+            )
+        response_surface = substantive_surface_main
+        # ADR-0071 (R4) — seeded discourse-marker decoration runs AFTER
+        # substantive register transforms and is the last step before
+        # TurnEvent is sealed.  Applies uniformly to every grounding
+        # path (vault / pack / teaching / planner / hedge-prefixed).
+        # No-op for registers with empty marker buckets (UNREGISTERED /
+        # default_neutral_v1 / terse_v1).  Pre-decoration surface is
+        # preserved separately so the cognition pipeline can hash the
+        # truth-path surface and trace_hash stays invariant under
+        # register (ADR-0069 inv C, strengthened by ADR-0077).
         pre_decoration_surface_main = response_surface
         decoration_main = decorate_surface(
             response_surface,
@@ -1477,6 +1548,7 @@ class ChatRuntime:
             anchor_lens_mode_label=anchor_lens_mode_label_main,
             realizer_guard_status=realizer_guard_status_main,
             realizer_guard_rule=realizer_guard_rule_main,
+            register_canonical_surface=register_canonical_surface_main,
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
@@ -1516,6 +1588,7 @@ class ChatRuntime:
             anchor_lens_mode_label=anchor_lens_mode_label_main,
             realizer_guard_status=realizer_guard_status_main,
             realizer_guard_rule=realizer_guard_rule_main,
+            register_canonical_surface=register_canonical_surface_main,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

@@ -7,16 +7,18 @@
       "openings": 3,
       "transitions": 0
     },
-    "realizer_overrides_empty": true,
-    "realizer_overrides_keys": [],
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "append_semantic_domain_clause"
+    ],
     "transitions_reserved": false
   },
   "failure_reasons": [],
   "issued_at": "2026-05-19T00:00:00Z",
-  "pack_source_sha256": "5f242a9066a9e177a3c810bdbfa436cd594d863843aaa43ed88d7f6e0676f3df",
+  "pack_source_sha256": "1d38450b67c55b4895662509aca774b10c198ddbe925ac2f6e2d6356b95adff3",
   "ratification_method": "seeded_variation_replay_equivalence",
   "ratified": true,
   "register_id": "convivial_v1",
-  "report_sha256": "5dbddfb9f216ab54d39f8dafc767c277e70a21b2a960730e7f3333772df8cc9c",
+  "report_sha256": "1c1509fa4bc2aa71fbe3843f4cbc01c9c83fe0047dd4456a66a47a17a426df1c",
   "schema_version": "1.0.0"
 }

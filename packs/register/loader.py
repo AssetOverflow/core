@@ -61,6 +61,17 @@ _OVERRIDE_INT_MAX: int = 1_000_000
 #: gate; the loader only enforces structural bounds.
 _PER_INTENT_KEY: str = "per_intent"
 
+#: Closed set of override keys whose value type is ``bool`` (ADR-0077, R6).
+#: All other keys remain ``int | str`` per the original (ADR-0070) schema.
+#: Keeping booleans behind a known-key allow-list preserves the trust
+#: boundary against arbitrary operator-authored override values.
+_BOOLEAN_OVERRIDE_KEYS: frozenset[str] = frozenset({
+    "drop_provenance_tag",
+    "compress_gloss",
+    "drop_articles",
+    "append_semantic_domain_clause",
+})
+
 
 @dataclass(frozen=True)
 class DiscourseMarkers:
@@ -401,16 +412,23 @@ def _validate_overrides(
 
 def _validate_flat_override_value(
     v: object, key: str, register_id: str,
-) -> int | str:
-    """Validate a flat ``realizer_overrides`` value (int or non-empty str).
+) -> int | str | bool:
+    """Validate a flat ``realizer_overrides`` value.
 
-    Shared between top-level overrides and ``per_intent`` sub-dicts.
+    Allowed types: ``bool`` (only for the closed
+    :data:`_BOOLEAN_OVERRIDE_KEYS` set, ADR-0077), ``int`` (bounded), or
+    non-empty bounded ``str``.  Shared between top-level overrides and
+    ``per_intent`` sub-dicts.
     """
     if isinstance(v, bool):
-        raise RegisterPackError(
-            f"pack {safe_pack_id(register_id)!r}: realizer_overrides"
-            f"[{safe_pack_id(key)!r}] bool is not an allowed value type"
-        )
+        if key not in _BOOLEAN_OVERRIDE_KEYS:
+            raise RegisterPackError(
+                f"pack {safe_pack_id(register_id)!r}: realizer_overrides"
+                f"[{safe_pack_id(key)!r}] bool is not an allowed value type "
+                f"for this key (boolean-keys allow-list: "
+                f"{sorted(_BOOLEAN_OVERRIDE_KEYS)})"
+            )
+        return v
     if isinstance(v, int):
         if v < _OVERRIDE_INT_MIN or v > _OVERRIDE_INT_MAX:
             raise RegisterPackError(
@@ -434,7 +452,7 @@ def _validate_flat_override_value(
 
 def _validate_per_intent_block(
     value: object, register_id: str,
-) -> Mapping[str, Mapping[str, int | str]]:
+) -> Mapping[str, Mapping[str, int | str | bool]]:
     """Validate the ``per_intent`` nested dict structure.
 
     Intent-name semantic validation (must match ``IntentTag``) lives
