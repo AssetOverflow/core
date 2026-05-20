@@ -1,0 +1,24 @@
+{
+  "evidence": {
+    "depth_preference": "pedagogical",
+    "discourse_markers_empty": false,
+    "marker_bucket_sizes": {
+      "closings": 4,
+      "openings": 4,
+      "transitions": 3
+    },
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "append_semantic_domain_clause"
+    ],
+    "transitions_reserved": true
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-19T00:00:00Z",
+  "pack_source_sha256": "037a25e05f6f2b552615b7330b291186bcac5f5bb2ea3791ec34a93281cb9b58",
+  "ratification_method": "seeded_variation_replay_equivalence",
+  "ratified": true,
+  "register_id": "pedagogical_v1",
+  "report_sha256": "96733f1244621e4951dcf01217f6394417bbdf3143657fedfb41677f8337fbf9",
+  "schema_version": "1.0.0"
+}

@@ -1,9 +1,9 @@
 {
   "cognitive_mode_label": "unconcealment",
-  "description": "Greek-substrate anchor lens. Pivots English 'truth' onto \u1f00\u03bb\u03ae\u03b8\u03b5\u03b9\u03b1's logos.aletheia.verity atom via the grc cognition pack's field hook. Renders surface as English compound 'unconcealment'. Dual-correction pair with he_logos_v1: same domain atom (logos.aletheia.verity), different substrate and cognitive mode — Greek aletheia is phenomenological disclosure (truth-as-unconcealment), Hebrew emet is covenantal reliability. Atom confirmed in grc_logos_cognition_v1 lexicon (grc-core-cog-002). See ADR-0073c.",
+  "description": "Greek-substrate anchor lens. Pivots English 'truth' onto \u1f00\u03bb\u03ae\u03b8\u03b5\u03b9\u03b1's logos.aletheia.verity atom via the grc cognition pack's field hook. Renders surface as English compound 'unconcealment'. Dual-correction pair with he_logos_v1: same domain atom (logos.aletheia.verity), different substrate and cognitive mode \u2014 Greek aletheia is phenomenological disclosure (truth-as-unconcealment), Hebrew emet is covenantal reliability. Atom confirmed in grc_logos_cognition_v1 lexicon (grc-core-cog-002). See ADR-0073c.",
   "display_name": "Greek aletheia (unconcealment)",
   "lens_id": "grc_aletheia_v1",
-  "mastery_report_sha256": "",
+  "mastery_report_sha256": "97cd5966a50ab318f778e81d289317c45c68830bb29df29de21672c19897d92a",
   "primary_substrate": "grc",
   "schema_version": "1.0.0",
   "semantic_domain_preferences": [

@@ -1,0 +1,20 @@
+{
+  "evidence": {
+    "atoms_anchored_in_substrate": [
+      "logos.vitality.animate"
+    ],
+    "cognitive_mode_label": "animate-vitality",
+    "cognitive_mode_label_empty": false,
+    "primary_substrate": "grc",
+    "semantic_domain_preferences_count": 1,
+    "semantic_domain_preferences_empty": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-19T00:00:00Z",
+  "lens_id": "grc_zoe_v1",
+  "pack_source_sha256": "749e2f211803f344fc93b1f6b321fa25d4409564ea78ba2e49f27af001de918e",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "78aa4a529532ec77cfa6db7fd180b137367cb66cef7989778ca05f0db8602d55",
+  "schema_version": "1.0.0"
+}

@@ -1,0 +1,20 @@
+{
+  "evidence": {
+    "atoms_anchored_in_substrate": [
+      "logos.utterance.word"
+    ],
+    "cognitive_mode_label": "divine-word",
+    "cognitive_mode_label_empty": false,
+    "primary_substrate": "he",
+    "semantic_domain_preferences_count": 1,
+    "semantic_domain_preferences_empty": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-19T00:00:00Z",
+  "lens_id": "he_dabar_v1",
+  "pack_source_sha256": "51d16fc22ab95260025f3540345b1065c38fabb72623e198bfaa05046f25be6f",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "f62856aa28407d9518a42b4d78977c26c8c11793b2a7cfa3089f87c00a84b2cc",
+  "schema_version": "1.0.0"
+}

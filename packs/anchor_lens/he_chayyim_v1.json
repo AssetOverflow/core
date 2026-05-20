@@ -1,9 +1,9 @@
 {
   "cognitive_mode_label": "covenant-life",
-  "description": "Hebrew-substrate anchor lens. Pivots English 'life' onto \u05d7\u05b7\u05d9\u05bc\u05b4\u05d9\u05dd's logos.vitality.animate atom via the he cognition pack's field hook. Renders surface as English compound 'covenant-life'. Dual-correction pair with grc_zoe_v1: same domain atom (logos.vitality.animate), different substrate and cognitive mode — Hebrew chayyim is plural living-ness, communal and covenantal; Greek zoe is singular animate vitality. Atom confirmed in he_core_cognition_v1 lexicon (he-core-cog-004). See ADR-0073c.",
+  "description": "Hebrew-substrate anchor lens. Pivots English 'life' onto \u05d7\u05b7\u05d9\u05bc\u05b4\u05d9\u05dd's logos.vitality.animate atom via the he cognition pack's field hook. Renders surface as English compound 'covenant-life'. Dual-correction pair with grc_zoe_v1: same domain atom (logos.vitality.animate), different substrate and cognitive mode \u2014 Hebrew chayyim is plural living-ness, communal and covenantal; Greek zoe is singular animate vitality. Atom confirmed in he_core_cognition_v1 lexicon (he-core-cog-004). See ADR-0073c.",
   "display_name": "Hebrew chayyim (covenant life)",
   "lens_id": "he_chayyim_v1",
-  "mastery_report_sha256": "",
+  "mastery_report_sha256": "c6990b58d34786fe37865b8e844f62a01356b20cd6635b5a761ecf9d74b86147",
   "primary_substrate": "he",
   "schema_version": "1.0.0",
   "semantic_domain_preferences": [

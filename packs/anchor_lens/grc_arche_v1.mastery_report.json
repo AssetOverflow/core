@@ -1,0 +1,20 @@
+{
+  "evidence": {
+    "atoms_anchored_in_substrate": [
+      "logos.genesis.origin"
+    ],
+    "cognitive_mode_label": "generative-origin",
+    "cognitive_mode_label_empty": false,
+    "primary_substrate": "grc",
+    "semantic_domain_preferences_count": 1,
+    "semantic_domain_preferences_empty": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-19T00:00:00Z",
+  "lens_id": "grc_arche_v1",
+  "pack_source_sha256": "b8d24b9b63fcfbfe9b403796f4ecaacecc963d74f1a2fdfb398c693ece9f8958",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "8e2094a8864510b71b6e7ce0fef1d610eb3eb2072143dddd4e329a201ca41980",
+  "schema_version": "1.0.0"
+}

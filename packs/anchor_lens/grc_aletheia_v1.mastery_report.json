@@ -1,0 +1,20 @@
+{
+  "evidence": {
+    "atoms_anchored_in_substrate": [
+      "logos.aletheia.verity"
+    ],
+    "cognitive_mode_label": "unconcealment",
+    "cognitive_mode_label_empty": false,
+    "primary_substrate": "grc",
+    "semantic_domain_preferences_count": 1,
+    "semantic_domain_preferences_empty": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-19T00:00:00Z",
+  "lens_id": "grc_aletheia_v1",
+  "pack_source_sha256": "ce1d3eed4082eb6a0f86df7ec7732c81051fd2a1fd659a4d66f5a68d486c7512",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "97cd5966a50ab318f778e81d289317c45c68830bb29df29de21672c19897d92a",
+  "schema_version": "1.0.0"
+}
