@@ -83,16 +83,26 @@ _COMPARISON_MARKERS: tuple[str, ...] = (
     "vs.",
     " versus ",
 )
-# Cause/why-shape markers.
+# Cause/why-shape markers.  Both inflected (``reveals``, from the
+# chain-walk surface ``light reveals truth``) and bare (``reveal``,
+# from the ADR-0085 gloss surface ``Light exists as visible medium
+# that reveal truth``) forms are listed so neither composer path
+# under-reports explanation-shape fit just on inflection grounds.
 _CAUSE_MARKERS: tuple[str, ...] = (
     "because",
-    "reveals",
-    "grounds",
-    "requires",
-    "implies",
+    "reveals", "reveal",
+    "grounds", "ground",
+    "requires", "require",
+    "implies", "imply",
     "depends on",
     "is the result of",
     ", which ",
+    # ADR-0085 — existential explanation frame.
+    "exists as", "exists to",
+    " is for ",
+    "purpose of",
+    # ADR-0085 — verb/adjective explanation frames.
+    " is to ", " to be ",
 )
 # Predicate-identity markers (definition + verification).
 _PREDICATE_MARKERS: tuple[str, ...] = (

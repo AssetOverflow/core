@@ -162,6 +162,41 @@ def _frame_gloss(lemma: str, pos: str, gloss: str) -> str:
     return f"{cap}: {gloss}."
 
 
+def _frame_cause_gloss(lemma: str, pos: str, gloss: str) -> str:
+    """ADR-0085 — explanation-shaped CAUSE frame from a (lemma, pos, gloss) triple.
+
+    POS-aware frames that produce an *existential explanation*
+    (CAUSE-shape) rather than a definitional predicate-identity:
+
+      NOUN          -> "{Lemma} exists as {gloss}."
+      VERB          -> "To {lemma} is to {gloss}."
+      ADJ           -> "To be {lemma} is to {gloss}."
+      *  (other)    -> falls back to :func:`_frame_gloss` (predicate-identity)
+
+    Frame choice rationale: ``Light exists as visible medium that reveal
+    truth.`` reads as an answer to *"Why does light exist?"* in a way
+    that the chain-walk surface (``light — teaching-grounded (...):
+    cognition.illumination; logos.core. light reveals truth (...)``)
+    does not.  No new content material — same gloss, different frame
+    word.  The gloss already implicitly carries the cause-shape
+    (a definition that says what something *is for*); this frame just
+    surfaces that shape syntactically.
+    """
+    key = lemma.strip()
+    cap = key[:1].upper() + key[1:] if key else key
+    pos_u = (pos or "").upper()
+    if pos_u == "NOUN":
+        return f"{cap} exists as {gloss}."
+    if pos_u == "VERB":
+        return f"To {key} is to {gloss}."
+    if pos_u == "ADJ":
+        return f"To be {key} is to {gloss}."
+    # Fall back to predicate-identity frame for any POS where there
+    # is no clean explanation rendering.  Better to degrade to a
+    # definitional answer than to emit an ungrammatical CAUSE frame.
+    return _frame_gloss(lemma, pos, gloss)
+
+
 _DEFAULT_DISCLOSURE_DOMAIN_COUNT: int = 3
 
 
@@ -495,6 +530,86 @@ def pack_grounded_surface(
         lemma, pack_ids, register=register, anchor_lens=anchor_lens,
     )
     return candidate.surface if candidate is not None else None
+
+
+def gloss_aware_cause_surface(
+    lemma: str,
+    pack_ids: tuple[str, ...] = DEFAULT_RESOLVABLE_PACK_IDS,
+    *,
+    register: RegisterPack = UNREGISTERED,
+    anchor_lens: AnchorLens = UNANCHORED,
+) -> str | None:
+    """ADR-0085 — CAUSE-intent surface composed from the lemma's gloss.
+
+    When the subject lemma has a ratified gloss (via :func:`resolve_gloss`
+    + lexicon residency check), emit an explanation-shaped sentence:
+
+        "{Lemma} exists as {gloss}. pack-grounded ({pack_id})."
+
+    Returns ``None`` when the lemma has no gloss in any resolvable
+    pack.  Callers (the runtime CAUSE dispatch in :mod:`chat.runtime`)
+    fall through to the existing chain-walk
+    ``teaching_grounded_surface*`` path on ``None`` — so this composer
+    is *additive*: it adds a gloss-driven answer for lemmas that have
+    one, without removing the chain-walk for those that don't.
+
+    Why an explanation frame, not the existing definition frame:
+
+    The composer at :func:`pack_grounded_surface` already emits
+    ``"{Lemma} is {gloss}."`` for DEFINITION / RECALL intent.  That's
+    predicate-identity shape — fine for *"What is light?"*.  CAUSE
+    intent (*"Why does light exist?"*) wants an explanation shape;
+    ``"{Lemma} exists as {gloss}."`` reads as an answer to the *why*
+    question in a way the definition frame does not, without inventing
+    any new content material (same gloss text, different frame word).
+    See :func:`_frame_cause_gloss` for POS-aware variations.
+
+    Scope limits (ADR-0085 §Scope limits):
+
+    - CAUSE intent only.  VERIFICATION still goes through the
+      chain-walk (yes/no shape — would need a different frame).
+    - Single-lemma subjects only.  Compound or anaphoric subjects
+      fall through to chain-walk.
+    - Pack-grounded provenance marker still leaks into the surface
+      (``pack-grounded (pack_id).``) — that's the surface-vs-envelope
+      ADR's job to remove, not this one's.
+    - Anchor-lens annotation appended via the existing
+      :func:`_maybe_append_anchor_lens_annotation` helper to preserve
+      ADR-0073c lens engagement on this surface path.
+    """
+    from chat.pack_resolver import resolve_gloss, resolve_lemma
+
+    key = (lemma or "").strip()
+    if not key:
+        return None
+
+    resolved = resolve_lemma(key, pack_ids)
+    if resolved is None:
+        return None
+    resolved_pack_id, _domains = resolved
+
+    gloss_entry = resolve_gloss(key, pack_ids)
+    if gloss_entry is None or gloss_entry[0] != resolved_pack_id:
+        return None
+    _, gloss_pos, gloss_text = gloss_entry
+    if not gloss_pos:
+        # Same fallback as build_pack_surface_candidate — most glossed
+        # lemmas without explicit POS are nouns.
+        gloss_pos = "NOUN"
+
+    surface = (
+        f"{_frame_cause_gloss(key, gloss_pos, gloss_text)} "
+        f"pack-grounded ({resolved_pack_id})."
+    )
+    surface = _maybe_append_anchor_lens_annotation(
+        surface, key.lower(), anchor_lens,
+    )
+    # ``register`` parameter is accepted for signature parity with the
+    # other pack_grounded_*_surface composers but does not yet drive a
+    # CAUSE-specific override.  Register engagement on this path is a
+    # follow-up (would consult realizer_overrides.per_intent["cause"]).
+    _ = register
+    return surface
 
 
 _RELATION_CONFIRMATION_DISPLAY: dict[str, str] = {
