@@ -66,6 +66,22 @@ _PACK_LEXICON_PATH = (
     / "lexicon.jsonl"
 )
 
+# ADR-0073c — synthetic English anchor lemmas for cross-lang collapse.
+# Holds entry_ids like ``en-collapse-love`` so anchor-lens engagement
+# (he_chesed_v1 / he_shalom_v1 / he_tzedek_v1) can resolve English
+# prompts like "What is love?" to a target entry_id and walk the
+# alignment graph from there.  This pack is engagement-only: it is
+# intentionally NOT included in ``DEFAULT_RESOLVABLE_PACK_IDS`` so the
+# composer does not fabricate a pack-grounded definition for these
+# lemmas — only lens-engagement reads from here.
+_COLLAPSE_ANCHORS_LEXICON_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "language_packs"
+    / "data"
+    / "en_collapse_anchors_v1"
+    / "lexicon.jsonl"
+)
+
 
 @lru_cache(maxsize=1)
 def _pack_index() -> dict[str, tuple[str, ...]]:
@@ -227,26 +243,31 @@ def _substrate_lexicon_by_entry_id(pack_id: str) -> dict[str, tuple[str, ...]]:
 
 @lru_cache(maxsize=1)
 def _en_lemma_to_entry_id() -> dict[str, str]:
-    """Map ``en lemma -> entry_id`` for the cognition pack.
+    """Map ``en lemma -> entry_id`` for anchor-lens engagement.
 
+    Merges the cognition pack (``en_core_cognition_v1``) with the
+    collapse-anchor pack (``en_collapse_anchors_v1``).  Cognition entries
+    win on lemma collision since they carry real semantic_domains.
     Cached for the process lifetime — ratified packs are immutable.
     """
     out: dict[str, str] = {}
-    if not _PACK_LEXICON_PATH.is_file():
-        return out
-    for line in _PACK_LEXICON_PATH.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
+    for path in (_COLLAPSE_ANCHORS_LEXICON_PATH, _PACK_LEXICON_PATH):
+        # cognition path is iterated second so it wins on lemma collision
+        if not path.is_file():
             continue
-        try:
-            entry = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        lemma = entry.get("lemma") or entry.get("surface")
-        entry_id = entry.get("entry_id")
-        if not lemma or not entry_id:
-            continue
-        out[str(lemma).lower()] = str(entry_id)
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            lemma = entry.get("lemma") or entry.get("surface")
+            entry_id = entry.get("entry_id")
+            if not lemma or not entry_id:
+                continue
+            out[str(lemma).lower()] = str(entry_id)
     return out
 
 

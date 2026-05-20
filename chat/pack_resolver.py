@@ -52,6 +52,13 @@ DEFAULT_RESOLVABLE_PACK_IDS: tuple[str, ...] = (
     "en_core_polarity_v1",
     "en_core_relations_v1",
     "en_core_relations_v2",
+    # ADR-0073c — synthetic English anchor lemmas for cross-lang collapse.
+    # Mounted last so cognition / relations content packs win first-match.
+    # Carries "love" / "peace" / "justice" entries that exist only as
+    # collapse-anchor targets for the he_chesed / he_shalom / he_tzedek
+    # anchor lenses.  Composer surfaces here are intentionally minimal —
+    # the substantive content lives in the lens annotation.
+    "en_collapse_anchors_v1",
 )
 
 _PACK_ROOT = Path(__file__).resolve().parent.parent / "language_packs" / "data"

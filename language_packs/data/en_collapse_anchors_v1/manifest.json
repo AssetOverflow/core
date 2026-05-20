@@ -1,0 +1,13 @@
+{
+  "pack_id": "en_collapse_anchors_v1",
+  "language": "en",
+  "role": "collapse_anchor",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_collapse_anchors_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "bd46462611c51b93a59630085553b858dec81646e55b2864c6f040b7646d0da5",
+  "version": "1.0.0",
+  "gate_engaged": false,
+  "oov_policy": "passthrough"
+}
