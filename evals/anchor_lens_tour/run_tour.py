@@ -38,11 +38,13 @@ orthogonality seam claimed by ADR-0073.
 from __future__ import annotations
 
 import json
-from typing import Any
+from functools import partial
+from typing import Any, Callable
 
 from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.config import RuntimeConfig
+from evals._parallel import normalize_workers, run_cases_parallel
 
 
 _LENSES = (
@@ -127,6 +129,32 @@ def _run_one_lens(lens_id: str) -> list[dict[str, Any]]:
             }
         )
     return cells
+
+
+def _build_case_runner() -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Warm every lens pack once, then return a per-case scorer."""
+    for lens_id in _LENSES:
+        ChatRuntime(config=RuntimeConfig(anchor_lens_id=lens_id))
+
+    def _run(case: dict[str, Any]) -> dict[str, Any]:
+        lens_id = case["lens_id"]
+        prompt = case["prompt"]
+        runtime = ChatRuntime(config=RuntimeConfig(anchor_lens_id=lens_id))
+        pipeline = CognitiveTurnPipeline(runtime=runtime)
+        result = pipeline.run(prompt)
+        turn_event = runtime.turn_log[-1]
+        return {
+            "prompt": prompt,
+            "surface": turn_event.surface,
+            "grounding_source": getattr(turn_event, "grounding_source", ""),
+            "trace_hash": result.trace_hash,
+            "anchor_lens_id": getattr(turn_event, "anchor_lens_id", ""),
+            "anchor_lens_mode_label": getattr(
+                turn_event, "anchor_lens_mode_label", ""
+            ),
+        }
+
+    return _run
 
 
 def _print_grid(grid: dict[str, list[dict[str, Any]]]) -> None:
@@ -214,7 +242,7 @@ def _check_claims(
     }
 
 
-def run_tour(*, emit_json: bool = False) -> dict[str, Any]:
+def run_tour(*, emit_json: bool = False, workers: int | None = None) -> dict[str, Any]:
     """Run the anchor-lens tour end-to-end and return a structured report."""
     global _VERBOSE
     _VERBOSE = not emit_json
@@ -222,11 +250,26 @@ def run_tour(*, emit_json: bool = False) -> dict[str, Any]:
     if not emit_json:
         _print_header()
 
-    grid: dict[str, list[dict[str, Any]]] = {}
-    for lens_id in _LENSES:
-        if not emit_json:
+    cases = [
+        {"lens_id": lens_id, "prompt": prompt}
+        for lens_id in _LENSES
+        for prompt in _PROMPTS
+    ]
+    effective_workers = normalize_workers(workers if workers is not None else 4, len(cases))
+    if not emit_json:
+        for lens_id in _LENSES:
             _say(f"  Running lens: {lens_id}")
-        grid[lens_id] = _run_one_lens(lens_id)
+        _say(f"  workers: {effective_workers}")
+
+    cells = run_cases_parallel(
+        cases,
+        partial(_build_case_runner),
+        n_workers=effective_workers,
+    )
+
+    grid: dict[str, list[dict[str, Any]]] = {lens_id: [] for lens_id in _LENSES}
+    for cell in cells:
+        grid[cell["anchor_lens_id"]].append(cell)
     if not emit_json:
         _say()
         _say("-" * 72)

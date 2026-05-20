@@ -153,6 +153,7 @@ def run_lane(
     version: str = "v1",
     split: str = "public",
     config: Any = None,
+    workers: int | None = None,
 ) -> LaneResult:
     """Run a single lane on a given version and split."""
     if split == "dev":
@@ -172,7 +173,7 @@ def run_lane(
     cases = load_cases(cases_path)
     runner_module = load_lane_runner(lane)
 
-    report = runner_module.run_lane(cases, config=config)
+    report = runner_module.run_lane(cases, config=config, workers=workers)
 
     return LaneResult(
         lane=lane.name,

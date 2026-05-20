@@ -37,11 +37,13 @@ Exit code 0 iff every claim holds.
 from __future__ import annotations
 
 import json
-from typing import Any
+from functools import partial
+from typing import Any, Callable
 
 from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.config import RuntimeConfig
+from evals._parallel import normalize_workers, run_cases_parallel
 
 
 _REGISTERS = (
@@ -130,13 +132,39 @@ def _run_one_cell(register_id: str, lens_id: str, prompt: str) -> dict[str, Any]
     }
 
 
-def _build_grid() -> list[dict[str, Any]]:
-    cells: list[dict[str, Any]] = []
+def _build_case_runner() -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Warm all register/lens pack combinations once, then score cases."""
     for register_id in _REGISTERS:
         for lens_id in _LENSES:
-            for prompt in _PROMPTS:
-                cells.append(_run_one_cell(register_id, lens_id, prompt))
-    return cells
+            ChatRuntime(config=RuntimeConfig(
+                register_pack_id=register_id,
+                anchor_lens_id=lens_id,
+            ))
+
+    def _run(case: dict[str, Any]) -> dict[str, Any]:
+        register_id = case["register_id"]
+        lens_id = case["lens_id"]
+        prompt = case["prompt"]
+        runtime = ChatRuntime(config=RuntimeConfig(
+            register_pack_id=register_id,
+            anchor_lens_id=lens_id,
+        ))
+        pipeline = CognitiveTurnPipeline(runtime=runtime)
+        result = pipeline.run(prompt)
+        turn_event = runtime.turn_log[-1]
+        return {
+            "prompt": prompt,
+            "register_id": register_id,
+            "lens_id": lens_id,
+            "surface": turn_event.surface,
+            "trace_hash": result.trace_hash,
+            "grounding_source": getattr(turn_event, "grounding_source", ""),
+            "register_variant_id": getattr(turn_event, "register_variant_id", ""),
+            "anchor_lens_id": getattr(turn_event, "anchor_lens_id", ""),
+            "anchor_lens_mode_label": getattr(turn_event, "anchor_lens_mode_label", ""),
+        }
+
+    return _run
 
 
 def _cells_by(
@@ -273,7 +301,7 @@ def _print_grid(cells: list[dict[str, Any]]) -> None:
         _say()
 
 
-def run_tour(*, emit_json: bool = False) -> dict[str, Any]:
+def run_tour(*, emit_json: bool = False, workers: int | None = None) -> dict[str, Any]:
     """Run the orthogonality tour and return a structured report."""
     global _VERBOSE
     _VERBOSE = not emit_json
@@ -285,7 +313,20 @@ def run_tour(*, emit_json: bool = False) -> dict[str, Any]:
              f"{len(_REGISTERS) * len(_LENSES) * len(_PROMPTS)} cells")
         _say()
 
-    cells = _build_grid()
+    cases = [
+        {"register_id": register_id, "lens_id": lens_id, "prompt": prompt}
+        for register_id in _REGISTERS
+        for lens_id in _LENSES
+        for prompt in _PROMPTS
+    ]
+    effective_workers = normalize_workers(workers if workers is not None else 4, len(cases))
+    if not emit_json:
+        _say(f"  workers: {effective_workers}")
+    cells = run_cases_parallel(
+        cases,
+        partial(_build_case_runner),
+        n_workers=effective_workers,
+    )
 
     if not emit_json:
         _say("-" * 76)
