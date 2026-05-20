@@ -21,6 +21,7 @@ from chat.pack_grounding import (
 from chat.teaching_grounding import (
     teaching_grounded_surface,
     teaching_grounded_surface_composed,
+    teaching_grounded_surface_transitive,
     TEACHING_CORPUS_ID as _TEACHING_CORPUS_ID,
 )
 from chat.refusal import (
@@ -782,7 +783,18 @@ class ChatRuntime:
                     )
                     if surface is not None:
                         return (surface, "pack", ())
-                if self.config.composed_surface:
+                if self.config.transitive_surface:
+                    # ADR-0083 — transitive supersedes composed.  At
+                    # max_depth=1 this degrades byte-identically to the
+                    # single-chain surface; at max_depth=2 byte-identical
+                    # to ADR-0062 when no second hop exists.
+                    surface = teaching_grounded_surface_transitive(
+                        lemma,
+                        intent.tag,
+                        register=self.register_pack,
+                        max_depth=self.config.transitive_max_depth,
+                    )
+                elif self.config.composed_surface:
                     surface = teaching_grounded_surface_composed(
                         lemma, intent.tag, register=self.register_pack,
                     )

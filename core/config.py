@@ -73,6 +73,23 @@ class RuntimeConfig:
     # depth (max one follow-up chain in v1).
     composed_surface: bool = False
 
+    # ADR-0083 — transitive (multi-hop) teaching-grounded surface.
+    # Strict superset of ADR-0062's depth-1 composer: iterates the
+    # per-hop follow-up resolution under a visited-set guard, so the
+    # surface can extend beyond a single follow-up chain.
+    # ``transitive_max_depth`` is the maximum number of follow-up hops
+    # to append beyond the initial chain.  At ``max_depth=0``
+    # byte-identical to the single-chain surface; at ``max_depth=1``
+    # byte-identical to ADR-0062's composed surface; at
+    # ``max_depth=2`` byte-identical to ADR-0062 when no second hop
+    # exists, strict superset when one does.  When True, this
+    # supersedes ``composed_surface``.  Cycle-safe across every depth
+    # (visited-set covers ADR-0062's 1-step cycle guard).  Single-
+    # corpus traversal in v1; cross-corpus transitive is deferred to
+    # a follow-up ADR.
+    transitive_surface: bool = False
+    transitive_max_depth: int = 2
+
     # ADR-0066 / P3.2 — opt-in thread anaphora.  When enabled, the
     # runtime prepends a deterministic backreference to a recent
     # grounded turn when the current turn's subject lemma matches
