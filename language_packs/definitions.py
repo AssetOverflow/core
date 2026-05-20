@@ -134,8 +134,19 @@ def parse_gloss_entry(payload: dict, *, strict: bool) -> GlossEntry:
 
         lemma = _require_nonempty_str(payload, "lemma", lemma_hint=lemma_hint)
         gloss = _require_nonempty_str(payload, "gloss", lemma_hint=lemma)
+        # Empty ``definitional_atoms`` is legal: per the ADR-0084
+        # content brief, the per-entry atom list excludes
+        # articles/prepositions/copulas.  A gloss whose every content
+        # word is a function word (e.g. ``prior`` → ``"before"``) has
+        # zero content atoms by construction.  The closure rule then
+        # passes vacuously — which is fine, because there is nothing
+        # *to* close.  Note the substrate cannot tell whether atoms
+        # are empty by-construction (legitimate) or by-omission
+        # (laziness); the gloss-vs-atoms mismatch check in the
+        # standalone verifier (``scripts/verify_definitional_closure.py``)
+        # is the second-layer gate that distinguishes the two.
         definitional_atoms = _require_str_tuple(
-            payload, "definitional_atoms", lemma_hint=lemma, allow_empty=False
+            payload, "definitional_atoms", lemma_hint=lemma, allow_empty=True
         )
         predicates_invited = _require_str_tuple(
             payload, "predicates_invited", lemma_hint=lemma, allow_empty=True
