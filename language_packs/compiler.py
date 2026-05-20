@@ -457,6 +457,7 @@ def _load_pack_cached(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold
         gate_engaged=manifest_payload.get("gate_engaged", False),
         oov_policy=OOVPolicy(manifest_payload.get("oov_policy", OOVPolicy.FAIL_CLOSED.value)),
         glosses_checksum=manifest_payload.get("glosses_checksum"),
+        definitional_layer=bool(manifest_payload.get("definitional_layer", False)),
     )
 
     home_manifold, home_id_map = compile_entries_to_manifold(entries, morphology_registry=morphology_registry)

@@ -1,28 +1,28 @@
-{"lemma":"after","gloss":"temporal posteriority between two events","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"ago","gloss":"a duration measured backward from the present","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"before","gloss":"temporal anteriority between two events","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"currently","gloss":"the ongoing interval surrounding the utterance","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"duration","gloss":"the measured length of a temporal interval","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"during","gloss":"temporal containment within an interval","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"era","gloss":"an extended historical period of distinct character","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"eventually","gloss":"an outcome reached after an unspecified delay","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"formerly","gloss":"a state holding at an earlier time","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"future","gloss":"the temporal region after the present","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"henceforth","gloss":"the interval extending forward from the present","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"instant","gloss":"an indivisible point on the temporal axis","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"later","gloss":"a time subsequent to the reference point","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"moment","gloss":"a brief or pointlike interval of time","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"now","gloss":"the present moment at the time of utterance","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"past","gloss":"the temporal region before the present","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"period","gloss":"a bounded stretch of time with identity","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"present","gloss":"the temporal region containing the utterance","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"prior","gloss":"stands earlier in temporal sequence than another","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"recently","gloss":"a short interval just before the reference point","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"since","gloss":"temporal extent originating from a prior point","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"soon","gloss":"an event imminent in the near future","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"time","gloss":"the dimension along which events are ordered","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"today","gloss":"the current day containing the utterance","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"tomorrow","gloss":"the day immediately following the current day","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"until","gloss":"temporal extent reaching a terminal point","pos":"ADP","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"while","gloss":"a clause indicating contemporaneous occurrence","pos":"SCONJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"yesterday","gloss":"the day immediately preceding the current day","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"after","gloss":"later than before","pos":"ADP","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["later"],"predicates_invited":[],"definition_version":1}
+{"lemma":"ago","gloss":"before now by time","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["now","time"],"predicates_invited":[],"definition_version":1}
+{"lemma":"before","gloss":"not after","pos":"ADP","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["not"],"predicates_invited":[],"definition_version":1}
+{"lemma":"currently","gloss":"now and still","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["now","and","still"],"predicates_invited":[],"definition_version":1}
+{"lemma":"duration","gloss":"time between start and end","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["time","start","and","end"],"predicates_invited":[],"definition_version":1}
+{"lemma":"during","gloss":"in a time","pos":"ADP","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["time"],"predicates_invited":[],"definition_version":1}
+{"lemma":"era","gloss":"many time in one period","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["many","time","one","period"],"predicates_invited":[],"definition_version":1}
+{"lemma":"eventually","gloss":"after much time","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["much","time"],"predicates_invited":[],"definition_version":1}
+{"lemma":"formerly","gloss":"before now and then","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["now","and","then"],"predicates_invited":[],"definition_version":1}
+{"lemma":"future","gloss":"time after now","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["time","now"],"predicates_invited":[],"definition_version":1}
+{"lemma":"henceforth","gloss":"after now and then","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["now","and","then"],"predicates_invited":[],"definition_version":1}
+{"lemma":"instant","gloss":"one moment","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","moment"],"predicates_invited":[],"definition_version":1}
+{"lemma":"later","gloss":"after now","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["now"],"predicates_invited":[],"definition_version":1}
+{"lemma":"moment","gloss":"one time","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","time"],"predicates_invited":[],"definition_version":1}
+{"lemma":"now","gloss":"this time","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["this","time"],"predicates_invited":[],"definition_version":1}
+{"lemma":"past","gloss":"time before now","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["time","now"],"predicates_invited":[],"definition_version":1}
+{"lemma":"period","gloss":"some time","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["some","time"],"predicates_invited":[],"definition_version":1}
+{"lemma":"present","gloss":"time now","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["time","now"],"predicates_invited":[],"definition_version":1}
+{"lemma":"prior","gloss":"before","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":[],"predicates_invited":[],"definition_version":1}
+{"lemma":"recently","gloss":"before now and near","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["now","and","near"],"predicates_invited":[],"definition_version":1}
+{"lemma":"since","gloss":"from a start","pos":"ADP","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["start"],"predicates_invited":[],"definition_version":1}
+{"lemma":"soon","gloss":"after now and near","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["now","and","near"],"predicates_invited":[],"definition_version":1}
+{"lemma":"time","gloss":"when change or still","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["when","change","or","still"],"predicates_invited":[],"definition_version":1}
+{"lemma":"today","gloss":"this time now","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["this","time","now"],"predicates_invited":[],"definition_version":1}
+{"lemma":"tomorrow","gloss":"time after now","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["time","now"],"predicates_invited":[],"definition_version":1}
+{"lemma":"until","gloss":"before an end","pos":"ADP","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["end"],"predicates_invited":[],"definition_version":1}
+{"lemma":"while","gloss":"during one time","pos":"SCONJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","time"],"predicates_invited":[],"definition_version":1}
+{"lemma":"yesterday","gloss":"time before now","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["time","now"],"predicates_invited":[],"definition_version":1}

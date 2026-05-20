@@ -1,24 +1,19 @@
-{"lemma":"all","gloss":"the totality of items in a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"any","gloss":"an arbitrary member drawn from a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"both","gloss":"the two members of a referenced pair together","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"each","gloss":"every individual member considered separately within a set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"enough","gloss":"a quantity sufficient to satisfy a stated requirement","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"every","gloss":"each member of a referenced set without exception","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"few","gloss":"a small indefinite count below typical expectation","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"fewer","gloss":"a smaller count of discrete items comparatively","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"half","gloss":"one of two equal divisions of a quantity","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"least","gloss":"the smallest quantity along a comparative scale","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"less","gloss":"a smaller amount of an uncountable quantity comparatively","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"many","gloss":"a large indefinite count of discrete items","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"more","gloss":"a greater quantity along a comparative scale","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"most","gloss":"the greatest proportion within a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"much","gloss":"a large indefinite amount of an uncountable substance","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"neither","gloss":"the absence of either member from a referenced pair","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"none","gloss":"the absence of any member from a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"one","gloss":"the cardinal value denoting a single unit","pos":"NUM","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"several","gloss":"a small indefinite plurality greater than two","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"single","gloss":"consists of exactly one undivided unit","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"some","gloss":"an indefinite nonzero subset of a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"three","gloss":"the cardinal value denoting a triple of units","pos":"NUM","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"two","gloss":"the cardinal value denoting a pair of units","pos":"NUM","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"whole","gloss":"comprises the complete entity without missing parts","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"all","gloss":"the whole group","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["whole","group"],"predicates_invited":[],"definition_version":1}
+{"lemma":"any","gloss":"one of some","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","some"],"predicates_invited":[],"definition_version":1}
+{"lemma":"both","gloss":"the whole pair","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["whole","pair"],"predicates_invited":[],"definition_version":1}
+{"lemma":"each","gloss":"one in a group","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","group"],"predicates_invited":[],"definition_version":1}
+{"lemma":"enough","gloss":"sufficient for an end","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["sufficient","end"],"predicates_invited":[],"definition_version":1}
+{"lemma":"every","gloss":"all as each one","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["all","each","one"],"predicates_invited":[],"definition_version":1}
+{"lemma":"few","gloss":"less than many","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["less","many"],"predicates_invited":[],"definition_version":1}
+{"lemma":"fewer","gloss":"less than more","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["less","more"],"predicates_invited":[],"definition_version":1}
+{"lemma":"half","gloss":"one part of two equal part","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","part","two","equal"],"predicates_invited":[],"definition_version":1}
+{"lemma":"least","gloss":"less than any other","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["less","any","other"],"predicates_invited":[],"definition_version":1}
+{"lemma":"less","gloss":"few in comparison","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["few","comparison"],"predicates_invited":[],"definition_version":1}
+{"lemma":"more","gloss":"many in comparison","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["many","comparison"],"predicates_invited":[],"definition_version":1}
+{"lemma":"most","gloss":"more than any other","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["more","any","other"],"predicates_invited":[],"definition_version":1}
+{"lemma":"much","gloss":"many in one whole","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["many","one","whole"],"predicates_invited":[],"definition_version":1}
+{"lemma":"neither","gloss":"none of two","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["none","two"],"predicates_invited":[],"definition_version":1}
+{"lemma":"several","gloss":"more than two and less than many","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["more","two","and","less","many"],"predicates_invited":[],"definition_version":1}
+{"lemma":"single","gloss":"one and only one","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","and","only"],"predicates_invited":[],"definition_version":1}
+{"lemma":"three","gloss":"one and one and one","pos":"NUM","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","and"],"predicates_invited":[],"definition_version":1}
+{"lemma":"two","gloss":"one and one","pos":"NUM","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","and"],"predicates_invited":[],"definition_version":1}

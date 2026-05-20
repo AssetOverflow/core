@@ -1,72 +1,71 @@
-{"lemma":"agent","gloss":"an entity capable of intentional action and reference","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"argument","gloss":"a structured sequence of claims supporting a conclusion","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"articulate","gloss":"to express an idea clearly through structured language","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"assert","gloss":"to put forward a claim with conviction","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"assume","gloss":"to take a proposition as true without verification","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"believe","gloss":"to hold a proposition as likely true without certainty","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"case","gloss":"a particular instance illustrating a general claim","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"claim","gloss":"to assert a proposition as true without proof","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"confirm","gloss":"to affirm the truth of a prior claim","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"consider","gloss":"to deliberate over a proposition or option","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"decide","gloss":"to resolve deliberation by selecting one option","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"declare","gloss":"to assert a proposition formally and publicly","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"deny","gloss":"to reject the truth of a proposition","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"describe","gloss":"to characterize something through detailed verbal account","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"detect","gloss":"to discern the presence of something subtle","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"doubt","gloss":"to hold a mental state of uncertainty about a claim","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"example","gloss":"an instance offered to illustrate a category","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"expect","gloss":"to anticipate a future state as likely","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"express","gloss":"to convey an idea or feeling through language","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"fact","gloss":"a proposition established as true","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"feel","gloss":"to perceive through tactile or affective experience","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"find","gloss":"to come to perceive or locate something sought","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"guess","gloss":"to form a tentative answer without sufficient evidence","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"hear","gloss":"to perceive sound through auditory experience","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"hold","gloss":"to maintain a proposition or stance in mind","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"hope","gloss":"to desire a future outcome with uncertainty","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"idea","gloss":"a mental content that can be entertained or expressed","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"instance","gloss":"a single occurrence of a general kind","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"intend","gloss":"to hold a deliberate aim toward an action","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"kind","gloss":"a category grouping instances by shared features","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"know","gloss":"to hold a proposition as justified and true","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"listen","gloss":"to direct auditory attention to a source","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"look","gloss":"to direct visual attention toward a target","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"mention","gloss":"to refer briefly to a topic in discourse","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"mind","gloss":"the seat of thought, perception, and mental states","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"model","gloss":"a structured representation standing in for a system","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"name","gloss":"to assign or invoke a referring label","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"note","gloss":"to remark on a point worth attention","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"notice","gloss":"to become perceptually aware of a feature","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"observe","gloss":"to remark on something perceived or noticed","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"perceive","gloss":"to apprehend a state through the senses","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"perspective","gloss":"a vantage point shaping interpretation of content","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"point","gloss":"a discrete claim advanced within an argument","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"position","gloss":"a stance held on a proposition or issue","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"prefer","gloss":"to hold one option as more desirable than another","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"proposal","gloss":"a suggested course of action offered for review","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"propose","gloss":"to offer a proposition or plan for review","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"realize","gloss":"to become aware of a fact previously unrecognized","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"recognize","gloss":"to identify something as previously known or encountered","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"reply","gloss":"to respond verbally to a prior utterance","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"respond","gloss":"to produce an utterance in answer to another","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"response","gloss":"an utterance produced in answer to another","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"role","gloss":"a functional stance an agent occupies in discourse","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"say","gloss":"to assert content in spoken or written form","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"see","gloss":"to perceive visually or to apprehend mentally","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"self","gloss":"the agent or speaker as the reference point of identity","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"sense","gloss":"to apprehend a state through perceptual awareness","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"speak","gloss":"to produce spoken language directed at a listener","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"speaker","gloss":"the agent producing the current utterance","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"state","gloss":"to express a proposition explicitly and directly","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"statement","gloss":"an utterance that expresses a definite proposition","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"suggest","gloss":"to put forward a possibility for consideration","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"suggestion","gloss":"a tentative proposition offered for consideration","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"suppose","gloss":"to provisionally hold a proposition for argument's sake","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"system","gloss":"an organized whole of interacting components","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"tell","gloss":"to convey information to a recipient through speech","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"think","gloss":"to entertain a proposition in mental deliberation","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"type","gloss":"a class of entities sharing defining properties","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"view","gloss":"a held perspective on a topic or claim","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"want","gloss":"to hold a desire toward an outcome or object","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"watch","gloss":"to direct visual attention to an unfolding event","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"wonder","gloss":"to hold an open question in active consideration","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"agent","gloss":"person with a role and a mind","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["person","role","and","mind"],"predicates_invited":["acts","decides"],"definition_version":1}
+{"lemma":"argument","gloss":"group of reason for a point","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["group","reason","point"],"predicates_invited":["supports","concludes"],"definition_version":1}
+{"lemma":"articulate","gloss":"say with a clear style","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","clear","style"],"predicates_invited":[],"definition_version":1}
+{"lemma":"assert","gloss":"claim in a certain way","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["claim","certain","way"],"predicates_invited":[],"definition_version":1}
+{"lemma":"assume","gloss":"suppose before evidence","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["suppose","evidence"],"predicates_invited":[],"definition_version":1}
+{"lemma":"believe","gloss":"hold as true","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["hold","true"],"predicates_invited":[],"definition_version":1}
+{"lemma":"case","gloss":"one instance or example","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","instance","or","example"],"predicates_invited":["illustrates","supports"],"definition_version":1}
+{"lemma":"claim","gloss":"say a point as true","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","point","true"],"predicates_invited":["asserts","states"],"definition_version":1}
+{"lemma":"confirm","gloss":"say yes to a claim","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","yes","claim"],"predicates_invited":[],"definition_version":1}
+{"lemma":"consider","gloss":"think of an idea","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["think","idea"],"predicates_invited":[],"definition_version":1}
+{"lemma":"decide","gloss":"prefer one way","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["prefer","one","way"],"predicates_invited":[],"definition_version":1}
+{"lemma":"declare","gloss":"say a claim in a direct way","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","claim","direct","way"],"predicates_invited":[],"definition_version":1}
+{"lemma":"deny","gloss":"say not to a claim","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","not","claim"],"predicates_invited":[],"definition_version":1}
+{"lemma":"describe","gloss":"say what is seen","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","what","seen"],"predicates_invited":[],"definition_version":1}
+{"lemma":"detect","gloss":"find what is hidden","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["find","what","hidden"],"predicates_invited":[],"definition_version":1}
+{"lemma":"doubt","gloss":"think maybe not","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["think","maybe","not"],"predicates_invited":[],"definition_version":1}
+{"lemma":"example","gloss":"one case that make a point visible","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","case","make","point","visible"],"predicates_invited":["illustrates","clarifies"],"definition_version":1}
+{"lemma":"expect","gloss":"think before a result","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["think","result"],"predicates_invited":[],"definition_version":1}
+{"lemma":"express","gloss":"say what a person feel or think","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","what","person","feel","or","think"],"predicates_invited":[],"definition_version":1}
+{"lemma":"fact","gloss":"true statement","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["true","statement"],"predicates_invited":["grounds","supports"],"definition_version":1}
+{"lemma":"feel","gloss":"have sense in the self","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["have","sense","self"],"predicates_invited":[],"definition_version":1}
+{"lemma":"find","gloss":"come to know","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["come","know"],"predicates_invited":[],"definition_version":1}
+{"lemma":"guess","gloss":"say maybe from some evidence","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","maybe","some","evidence"],"predicates_invited":[],"definition_version":1}
+{"lemma":"hear","gloss":"receive a voice","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["receive","voice"],"predicates_invited":[],"definition_version":1}
+{"lemma":"hold","gloss":"keep in the mind","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["keep","mind"],"predicates_invited":[],"definition_version":1}
+{"lemma":"hope","gloss":"want a good result","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["want","good","result"],"predicates_invited":[],"definition_version":1}
+{"lemma":"idea","gloss":"thought with meaning","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["thought","meaning"],"predicates_invited":["organizes","suggests"],"definition_version":1}
+{"lemma":"instance","gloss":"one case","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","case"],"predicates_invited":["shows","matches"],"definition_version":1}
+{"lemma":"intend","gloss":"decide before an action","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["decide","action"],"predicates_invited":[],"definition_version":1}
+{"lemma":"kind","gloss":"group with the same meaning","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["group","same","meaning"],"predicates_invited":["groups","classifies"],"definition_version":1}
+{"lemma":"know","gloss":"have knowledge","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["have","knowledge"],"predicates_invited":[],"definition_version":1}
+{"lemma":"listen","gloss":"hear in a direct way","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["hear","direct","way"],"predicates_invited":[],"definition_version":1}
+{"lemma":"look","gloss":"see in a direct way","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["see","direct","way"],"predicates_invited":[],"definition_version":1}
+{"lemma":"mention","gloss":"say a word","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","word"],"predicates_invited":[],"definition_version":1}
+{"lemma":"mind","gloss":"part that think and know","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["part","think","and","know"],"predicates_invited":["thinks","knows"],"definition_version":1}
+{"lemma":"model","gloss":"system as an example","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["system","example"],"predicates_invited":["represents","guides"],"definition_version":1}
+{"lemma":"name","gloss":"give a word","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["give","word"],"predicates_invited":[],"definition_version":1}
+{"lemma":"note","gloss":"say what is known","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","what","known"],"predicates_invited":[],"definition_version":1}
+{"lemma":"notice","gloss":"see and know","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["see","and","know"],"predicates_invited":[],"definition_version":1}
+{"lemma":"observe","gloss":"see and note","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["see","and","note"],"predicates_invited":[],"definition_version":1}
+{"lemma":"perceive","gloss":"sense and know","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["sense","and","know"],"predicates_invited":[],"definition_version":1}
+{"lemma":"perspective","gloss":"view from a place","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["view","place"],"predicates_invited":["frames","locates"],"definition_version":1}
+{"lemma":"point","gloss":"one idea in an argument","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","idea","argument"],"predicates_invited":["supports","clarifies"],"definition_version":1}
+{"lemma":"position","gloss":"place in a relation","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["place","relation"],"predicates_invited":["locates","relates"],"definition_version":1}
+{"lemma":"prefer","gloss":"want one more","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["want","one","more"],"predicates_invited":[],"definition_version":1}
+{"lemma":"proposal","gloss":"idea a person propose","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["idea","person","propose"],"predicates_invited":["suggests","frames"],"definition_version":1}
+{"lemma":"propose","gloss":"suggest an idea","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["suggest","idea"],"predicates_invited":[],"definition_version":1}
+{"lemma":"realize","gloss":"come to know","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["come","know"],"predicates_invited":[],"definition_version":1}
+{"lemma":"recognize","gloss":"know from what is seen","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["know","what","seen"],"predicates_invited":[],"definition_version":1}
+{"lemma":"reply","gloss":"say after a question","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","question"],"predicates_invited":[],"definition_version":1}
+{"lemma":"respond","gloss":"reply to a question","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["reply","question"],"predicates_invited":[],"definition_version":1}
+{"lemma":"response","gloss":"what a person say after a question","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["what","person","say","question"],"predicates_invited":["answers","clarifies"],"definition_version":1}
+{"lemma":"role","gloss":"part in a relation","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["part","relation"],"predicates_invited":["organizes","constrains"],"definition_version":1}
+{"lemma":"see","gloss":"have what is seen","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["have","what","seen"],"predicates_invited":[],"definition_version":1}
+{"lemma":"self","gloss":"this person","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["this","person"],"predicates_invited":["persists","acts"],"definition_version":1}
+{"lemma":"sense","gloss":"find by see or hear","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["find","see","or","hear"],"predicates_invited":[],"definition_version":1}
+{"lemma":"speak","gloss":"say with voice","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","voice"],"predicates_invited":[],"definition_version":1}
+{"lemma":"speaker","gloss":"person who speak","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["person","who","speak"],"predicates_invited":["says","responds"],"definition_version":1}
+{"lemma":"state","gloss":"say a fact","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","fact"],"predicates_invited":[],"definition_version":1}
+{"lemma":"statement","gloss":"claim in word","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["claim","word"],"predicates_invited":["asserts","reports"],"definition_version":1}
+{"lemma":"suggest","gloss":"say maybe to an idea","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","maybe","idea"],"predicates_invited":[],"definition_version":1}
+{"lemma":"suggestion","gloss":"idea a person suggest","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["idea","person","suggest"],"predicates_invited":["offers","guides"],"definition_version":1}
+{"lemma":"suppose","gloss":"think maybe","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["think","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"system","gloss":"whole with part in order","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["whole","part","order"],"predicates_invited":["organizes","constrains"],"definition_version":1}
+{"lemma":"tell","gloss":"say to a person","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","person"],"predicates_invited":[],"definition_version":1}
+{"lemma":"think","gloss":"have a thought","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["have","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"type","gloss":"kind","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["kind"],"predicates_invited":["classifies","distinguishes"],"definition_version":1}
+{"lemma":"view","gloss":"way to see or think","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["way","see","or","think"],"predicates_invited":["frames","interprets"],"definition_version":1}
+{"lemma":"want","gloss":"prefer to have","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["prefer","have"],"predicates_invited":[],"definition_version":1}
+{"lemma":"watch","gloss":"look for some time","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["look","some","time"],"predicates_invited":[],"definition_version":1}
+{"lemma":"wonder","gloss":"ask in the mind","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["ask","mind"],"predicates_invited":[],"definition_version":1}
