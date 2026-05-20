@@ -12,6 +12,10 @@ consumes these as constraints rather than final output.
 
 from __future__ import annotations
 
+from generate.articulation_legality import (
+    ArticulationLegality,
+    validate_finite_predicate_legality,
+)
 from generate.graph_planner import RhetoricalMove
 from generate.morphology import base_form, past_participle, past_tense, present_participle
 
@@ -142,6 +146,10 @@ def _inflect_predicate(
     instead of "all molecule binds enzyme" (english_fluency_ood G2).
     """
     verb = predicate_h
+    copular = any(
+        predicate_h.startswith(prefix)
+        for prefix in ("is ", "are ", "has ", "have ", "belongs ")
+    )
     base = base_form(verb)
 
     match (aspect, tense, negated, plural_subject):
@@ -163,6 +171,18 @@ def _inflect_predicate(
             return f"will {base}"
         case (_, _, True, True):
             return f"do not {base}"
+        case (_, _, True, False) if copular:
+            if predicate_h.startswith("is "):
+                return "is not " + predicate_h[3:]
+            if predicate_h.startswith("are "):
+                return "are not " + predicate_h[4:]
+            if predicate_h.startswith("has "):
+                return "has not " + predicate_h[4:]
+            if predicate_h.startswith("have "):
+                return "have not " + predicate_h[5:]
+            if predicate_h.startswith("belongs "):
+                return "does not belong " + predicate_h[8:]
+            return f"is not {base}"
         case (_, _, True, False):
             return f"does not {base}"
         case (_, _, False, True):
@@ -191,6 +211,12 @@ def render_step(
     is_mass = is_mass_noun(subject)
     plural = plural_q and not is_mass
     predicate_h = _humanize_predicate(predicate)
+    legality = validate_finite_predicate_legality(
+        predicate_humanized=predicate_h,
+        negated=negated,
+    )
+    if legality.legality is ArticulationLegality.ILLEGAL_NON_VERB_FINITE_PREDICATE:
+        return "I cannot realize that proposition coherently yet."
     predicate_h = _inflect_predicate(
         predicate_h,
         negated=negated, tense=tense, aspect=aspect,
