@@ -1,0 +1,31 @@
+{
+  "register_id": "pedagogical_v1",
+  "version": "1.0.0",
+  "description": "Pedagogical register. Uses the 'pedagogical' depth tier to expand disclosure across all available semantic domains, with append_semantic_domain_clause=true to anchor each gloss with full semantic domain context. Discourse markers scaffold Socratic progression — questions fold back to the learner, transitions move the inquiry forward. Variation is deterministic across (trace_hash, register_id, turn_idx). See ADR-0071, R6.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "display_name": "Pedagogical",
+  "depth_preference": "pedagogical",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "Let's think through this —",
+      "Consider:",
+      "Here's the core of it —",
+      ""
+    ],
+    "transitions": [
+      "Now, the key move is —",
+      "Which raises the question:",
+      "Notice that"
+    ],
+    "closings": [
+      " — does that step make sense?",
+      " — what does that imply for you?",
+      " — where does that land?",
+      ""
+    ]
+  }
+}
