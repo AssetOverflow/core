@@ -1,0 +1,13 @@
+{
+  "lens_id": "grc_sophia_v1",
+  "version": "1.0.0",
+  "description": "Anchor lens for the Greek concept of sophia (σοφία) — practical and embodied wisdom, distinct from theoretical episteme and experiential epignosis. Grounds in logos.sophia.wisdom via grc-core-cog-008 (cross_lang.logos.sophia edge, weight 0.88, evidence Prov8:1). Cognitive mode: wisdom-practical. Pair: he-core-cog-008 (Hebrew chokmah, logos.sophia.wisdom).",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "substrate": "grc",
+  "atom": "logos.sophia.wisdom",
+  "source_entry_id": "grc-core-cog-008",
+  "cognitive_mode": "wisdom-practical",
+  "pair_lens_id": "he_chokmah_v1",
+  "ratification_method": "anchor_lens_lifts_proposition"
+}

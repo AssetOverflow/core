@@ -1,0 +1,18 @@
+{
+  "register_id": "formal_v1",
+  "version": "1.0.0",
+  "description": "Formal register. Standard depth with drop_provenance_tag=true and drop_articles=true. Suppresses the parenthetical meta-tag and indefinite/definite articles from gloss surface text, producing the most austere and technically precise output surface of the register pack family. Suitable for legal, technical, and academic output contexts. See ADR-0068, ADR-0070, R6.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "display_name": "Formal",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "drop_provenance_tag": true,
+    "drop_articles": true
+  },
+  "discourse_markers": {
+    "openings": [],
+    "transitions": [],
+    "closings": []
+  }
+}
