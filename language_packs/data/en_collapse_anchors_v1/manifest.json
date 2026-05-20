@@ -12,5 +12,5 @@
   "oov_policy": "passthrough",
   "definitional_layer": true,
   "provenance": "adr-0084:reviewed:2026-05-20",
-  "glosses_checksum": "49ccb3966cf2eb181afa1e1cef3b5e3f41363b63a068f1978e33cf33faeaf279"
+  "glosses_checksum": "8680afe8cb04149956af0ae8acee7937cd11c6dad3135f2d64d4ae9bb9ea97cd"
 }

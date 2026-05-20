@@ -12,5 +12,5 @@
   "oov_policy": "tagged_fallback",
   "definitional_layer": true,
   "provenance": "adr-0084:reviewed:2026-05-20",
-  "glosses_checksum": "5b87b92570dd9b7efb318d4771adc44bf8a0c1b74c5560ccfb3597325810fd6f"
+  "glosses_checksum": "24ee6b0b4c43a96572fb97efb2f479e1cbfd0a1d307a27e40e84728d5ef1e4a2"
 }

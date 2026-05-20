@@ -1,1 +1,1 @@
-This pack is the terminal vocabulary floor for ADR-0084: a compact, hand-authored set of primitive English lemmas that other definitional glosses may bottom out on when closure needs a non-composite anchor. The pack is mountable, never auto-mutable, and intentionally small so the rest of the lexicon can define itself without hiding meaning behind an unbounded dictionary.
+This pack defines the terminal English semantic primitives used by ADR-0084 definitional closure. These entries are treated as reviewed system-level floor vocabulary and are never auto-mutable.
