@@ -5,17 +5,13 @@ Pins the load-bearing commitment of ADR-0073 / ADR-0073b:
     Anchor lens is a composer-side concept, not a property of the
     proposition graph or trace hash function.
 
-At L1.2 the lens is loaded by ``chat/runtime.py`` and stored on the
-runtime, but no other file imports it.  The truth-path modules
-(cognition / trace / pipeline / intent classification / propagation /
-vault / algebra) must NOT import ``packs.anchor_lens``.
+At L1.3 the lens is loaded by ``chat/runtime.py`` and consumed by
+``chat/pack_grounding.py`` (the composer-side allowlist).  The
+truth-path modules (cognition / trace / pipeline / intent
+classification / propagation / vault / algebra) must NOT import
+``packs.anchor_lens``.
 
 This test fails the moment anchor lens leaks into the truth path.
-
-L1.3 will widen the allow-list to include ``chat/pack_grounding.py``
-(and any other composer it wires through) at the same time it adds
-composer behaviour — exactly the way the register seam was widened at
-R2.  Truth-path purity remains absolute.
 
 Mirror of ``tests/test_register_pack_seam.py`` for the substantive-axis
 sibling.

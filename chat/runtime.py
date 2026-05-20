@@ -752,7 +752,11 @@ class ChatRuntime:
             lemma = (intent.subject or "").strip()
             if not lemma:
                 return None
-            surface = pack_grounded_surface(lemma, register=self.register_pack)
+            surface = pack_grounded_surface(
+                lemma,
+                register=self.register_pack,
+                anchor_lens=self.anchor_lens,
+            )
             if surface is not None:
                 return (surface, "pack")
         oov_lemma = (intent.subject or "").strip()

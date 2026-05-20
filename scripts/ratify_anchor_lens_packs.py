@@ -48,7 +48,38 @@ PACKS_DIR = Path(__file__).resolve().parents[1] / "packs" / "anchor_lens"
 ISSUED_AT = "2026-05-19T00:00:00Z"
 LENS_IDS: tuple[str, ...] = (
     "default_unanchored_v1",
+    "grc_logos_v1",
+    "he_logos_v1",
 )
+
+_SUBSTRATE_PACK_IDS: dict[str, tuple[str, ...]] = {
+    "grc": ("grc_logos_cognition_v1", "grc_logos_micro_v1"),
+    "he": ("he_core_cognition_v1", "he_logos_micro_v1"),
+    "en": ("en_core_cognition_v1",),
+}
+
+
+def _atom_exists_in_substrate(atom: str, substrate: str) -> bool:
+    """True iff some lemma in any pack matching ``substrate`` carries ``atom``."""
+    import json as _json
+    from pathlib import Path as _Path
+
+    data_dir = _Path(__file__).resolve().parents[1] / "language_packs" / "data"
+    for pack_id in _SUBSTRATE_PACK_IDS.get(substrate, ()):
+        lexicon_path = data_dir / pack_id / "lexicon.jsonl"
+        if not lexicon_path.is_file():
+            continue
+        for line in lexicon_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = _json.loads(line)
+            except _json.JSONDecodeError:
+                continue
+            if atom in entry.get("semantic_domains", []):
+                return True
+    return False
 
 
 def _canonical_pack_bytes_for_hashing(pack: dict) -> bytes:
@@ -90,17 +121,60 @@ def _ratify_one(pack_path: Path, lens_id: str) -> tuple[dict, dict[str, Any]]:
 
     pack_source_sha = _pack_source_sha(pack)
 
-    # L1.2 gate: only null lenses are ratifiable here.  L1.3 will
-    # widen this to cover non-null lenses with a different
-    # ratification method.
-    if not _is_null_lens(pack):
-        raise SystemExit(
-            f"L1.2 gate refuses {lens_id!r}: not a null lens. "
-            "primary_substrate must be 'none', semantic_domain_preferences "
-            "must be empty, and cognitive_mode_label must be empty."
-        )
-
-    ratification_method = "byte_identity_null_lift"
+    # L1.3 gate: null lenses ratify under byte_identity_null_lift;
+    # non-null lenses ratify under anchor_lens_lifts_proposition, with
+    # the precondition that every preferred atom exists in at least one
+    # lemma of the named substrate.  This is the trust boundary
+    # preventing operators from shipping a lens that references
+    # atoms not on disk.
+    if _is_null_lens(pack):
+        ratification_method = "byte_identity_null_lift"
+        evidence: dict[str, Any] = {
+            "primary_substrate": str(pack.get("primary_substrate", "")),
+            "semantic_domain_preferences_empty": True,
+            "semantic_domain_preferences_count": 0,
+            "cognitive_mode_label_empty": True,
+        }
+    else:
+        substrate = str(pack.get("primary_substrate", ""))
+        if substrate not in ("grc", "he", "en"):
+            raise SystemExit(
+                f"L1.3 gate refuses {lens_id!r}: non-null lens "
+                f"primary_substrate must be one of "
+                f"{{'grc','he','en'}}, got {substrate!r}."
+            )
+        label = str(pack.get("cognitive_mode_label", ""))
+        if not label:
+            raise SystemExit(
+                f"L1.3 gate refuses {lens_id!r}: non-null lens "
+                "cognitive_mode_label must be non-empty."
+            )
+        prefs = pack.get("semantic_domain_preferences", []) or []
+        if not isinstance(prefs, list) or not prefs:
+            raise SystemExit(
+                f"L1.3 gate refuses {lens_id!r}: non-null lens "
+                "semantic_domain_preferences must be non-empty."
+            )
+        atoms_anchored: list[str] = []
+        for atom in prefs:
+            if _atom_exists_in_substrate(atom, substrate):
+                atoms_anchored.append(atom)
+            else:
+                raise SystemExit(
+                    f"L1.3 gate refuses {lens_id!r}: preferred atom "
+                    f"{atom!r} does not appear in any "
+                    f"{substrate!r} substrate lemma. Lenses must "
+                    "point at atoms that exist on disk."
+                )
+        ratification_method = "anchor_lens_lifts_proposition"
+        evidence = {
+            "primary_substrate": substrate,
+            "semantic_domain_preferences_empty": False,
+            "semantic_domain_preferences_count": len(prefs),
+            "cognitive_mode_label_empty": False,
+            "cognitive_mode_label": label,
+            "atoms_anchored_in_substrate": atoms_anchored,
+        }
 
     report: dict[str, Any] = {
         "lens_id": lens_id,
@@ -109,12 +183,7 @@ def _ratify_one(pack_path: Path, lens_id: str) -> tuple[dict, dict[str, Any]]:
         "pack_source_sha256": pack_source_sha,
         "ratification_method": ratification_method,
         "ratified": True,
-        "evidence": {
-            "primary_substrate": str(pack.get("primary_substrate", "")),
-            "semantic_domain_preferences_empty": True,
-            "semantic_domain_preferences_count": 0,
-            "cognitive_mode_label_empty": True,
-        },
+        "evidence": evidence,
         "failure_reasons": [],
         "report_sha256": "",
     }

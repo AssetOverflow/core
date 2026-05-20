@@ -1,0 +1,13 @@
+{
+  "cognitive_mode_label": "covenant-verity",
+  "description": "Hebrew-substrate anchor lens. Pivots English 'truth' onto \u05d0\u05de\u05ea's logos.aletheia.verity atom via the he cognition pack's alignment edge to en-core-cog-002. Renders surface as English compound 'covenant-verity'. See ADR-0073c.",
+  "display_name": "Hebrew logos (covenant verity)",
+  "lens_id": "he_logos_v1",
+  "mastery_report_sha256": "aad4cad4a4ff1970c8a81f02bca5a77c58659103b008c87a518c6d6c095e1cc6",
+  "primary_substrate": "he",
+  "schema_version": "1.0.0",
+  "semantic_domain_preferences": [
+    "logos.aletheia.verity"
+  ],
+  "version": "1.0.0"
+}

@@ -1,0 +1,20 @@
+{
+  "evidence": {
+    "atoms_anchored_in_substrate": [
+      "logos.episteme.systematic_knowledge"
+    ],
+    "cognitive_mode_label": "systematic",
+    "cognitive_mode_label_empty": false,
+    "primary_substrate": "grc",
+    "semantic_domain_preferences_count": 1,
+    "semantic_domain_preferences_empty": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-19T00:00:00Z",
+  "lens_id": "grc_logos_v1",
+  "pack_source_sha256": "03b1a12a0ff9caf18be0a4b54760c333949b052b946441062b21827fdbbc7132",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "46ab6a43f1ce0e161e9185910b969025104ded4a3c6c6211998a307c8d070882",
+  "schema_version": "1.0.0"
+}

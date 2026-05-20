@@ -1,0 +1,20 @@
+{
+  "evidence": {
+    "atoms_anchored_in_substrate": [
+      "logos.aletheia.verity"
+    ],
+    "cognitive_mode_label": "covenant-verity",
+    "cognitive_mode_label_empty": false,
+    "primary_substrate": "he",
+    "semantic_domain_preferences_count": 1,
+    "semantic_domain_preferences_empty": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-19T00:00:00Z",
+  "lens_id": "he_logos_v1",
+  "pack_source_sha256": "8cc30f6f7e923f09870a34e0ecf199eca6cb34c28b35e96f9d747d12cceaa953",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "aad4cad4a4ff1970c8a81f02bca5a77c58659103b008c87a518c6d6c095e1cc6",
+  "schema_version": "1.0.0"
+}

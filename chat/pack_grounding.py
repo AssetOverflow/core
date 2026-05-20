@@ -43,9 +43,20 @@ from chat.pack_resolver import (
     mounted_lemmas,
     resolve_lemma,
 )
+from packs.anchor_lens.loader import AnchorLens, UNANCHORED
 from packs.register.loader import RegisterPack, UNREGISTERED
 
 PACK_ID: str = "en_core_cognition_v1"
+
+# ADR-0073c — substrate → mounted pack ids for anchor-lens engagement.
+# Cognition-tier packs are the primary L1.3 substrate.  Micro packs are
+# included as a defensive fallback for the few distinct lemmas they
+# carry; the engagement path early-exits once an atom-match is found.
+_ANCHOR_LENS_SUBSTRATE_PACK_IDS: dict[str, tuple[str, ...]] = {
+    "grc": ("grc_logos_cognition_v1", "grc_logos_micro_v1"),
+    "he": ("he_core_cognition_v1", "he_logos_micro_v1"),
+    "en": (PACK_ID,),
+}
 
 _PACK_LEXICON_PATH = (
     Path(__file__).resolve().parent.parent
@@ -182,11 +193,155 @@ def _resolve_disclosure_domain_count(
     return n
 
 
+@lru_cache(maxsize=8)
+def _substrate_lexicon_by_entry_id(pack_id: str) -> dict[str, tuple[str, ...]]:
+    """Map ``entry_id -> semantic_domains`` for a substrate pack.
+
+    Cached for the process lifetime — ratified packs are immutable.
+    Returns an empty dict when the pack is unavailable.
+    """
+    lexicon_path = (
+        Path(__file__).resolve().parent.parent
+        / "language_packs"
+        / "data"
+        / pack_id
+        / "lexicon.jsonl"
+    )
+    if not lexicon_path.is_file():
+        return {}
+    out: dict[str, tuple[str, ...]] = {}
+    for line in lexicon_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        entry_id = entry.get("entry_id")
+        if not entry_id:
+            continue
+        out[str(entry_id)] = tuple(entry.get("semantic_domains", ()))
+    return out
+
+
+@lru_cache(maxsize=1)
+def _en_lemma_to_entry_id() -> dict[str, str]:
+    """Map ``en lemma -> entry_id`` for the cognition pack.
+
+    Cached for the process lifetime — ratified packs are immutable.
+    """
+    out: dict[str, str] = {}
+    if not _PACK_LEXICON_PATH.is_file():
+        return out
+    for line in _PACK_LEXICON_PATH.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        lemma = entry.get("lemma") or entry.get("surface")
+        entry_id = entry.get("entry_id")
+        if not lemma or not entry_id:
+            continue
+        out[str(lemma).lower()] = str(entry_id)
+    return out
+
+
+def _resolve_anchor_lens_mode(
+    en_lemma: str, anchor_lens: AnchorLens,
+) -> str | None:
+    """Return the lens's ``cognitive_mode_label`` if it engages on ``en_lemma``.
+
+    Engagement rule (single):
+      1. Resolve ``en_lemma`` to its entry_id in the cognition pack.
+      2. Walk the alignment graph(s) of every substrate pack matching
+         ``anchor_lens.primary_substrate`` and find substrate lemmas
+         whose edges target this en entry_id.
+      3. For each such substrate lemma, check whether its
+         ``semantic_domains`` contains any atom from
+         ``anchor_lens.semantic_domain_preferences``.  First match wins.
+
+    Returns ``None`` when:
+      * ``anchor_lens.is_null_lens()`` (the unanchored sentinel and
+        ``default_unanchored_v1`` both early-exit here)
+      * ``primary_substrate`` is ``"none"`` or has no mounted packs
+      * the en lemma is not in the cognition pack
+      * no substrate lemma aligned to this en lemma carries a
+        preferred atom
+
+    The function never reads non-ASCII surface text — it pivots on
+    entry_ids and atom strings only.  Glyph-leak is structurally
+    impossible from this engagement path.
+
+    Lazy import of :func:`alignment.graph.load_alignment` keeps the
+    alignment subsystem out of cold-import paths.
+    """
+    if anchor_lens.is_null_lens() or not anchor_lens.semantic_domain_preferences:
+        return None
+    substrate = anchor_lens.primary_substrate
+    if substrate == "none":
+        return None
+    substrate_packs = _ANCHOR_LENS_SUBSTRATE_PACK_IDS.get(substrate, ())
+    if not substrate_packs:
+        return None
+    en_entry_id = _en_lemma_to_entry_id().get(en_lemma.strip().lower())
+    if not en_entry_id:
+        return None
+    from alignment.graph import load_alignment
+
+    preferred = set(anchor_lens.semantic_domain_preferences)
+    for pack_id in substrate_packs:
+        graph = load_alignment(pack_id)
+        if len(graph) == 0:
+            continue
+        substrate_index = _substrate_lexicon_by_entry_id(pack_id)
+        for edge in graph.edges:
+            if edge.target_id != en_entry_id:
+                continue
+            source_atoms = substrate_index.get(edge.source_id, ())
+            if not source_atoms:
+                continue
+            if any(atom in preferred for atom in source_atoms):
+                return anchor_lens.cognitive_mode_label
+    return None
+
+
+def _maybe_append_anchor_lens_annotation(
+    surface: str, en_lemma: str, anchor_lens: AnchorLens,
+) -> str:
+    """Append ``[lens({lens_id}):{mode_label}]`` when lens engages.
+
+    Annotation goes between the existing trailing period and the end of
+    string, e.g.:
+
+        "...pack-grounded (en_core_cognition_v1)."
+        →
+        "...pack-grounded (en_core_cognition_v1) [lens(grc_logos_v1):systematic]."
+
+    Surface without a trailing period gets the annotation suffixed
+    directly.  No-op when the lens does not engage.
+
+    Audit invariant: the annotation is pure ASCII (lens_id and mode
+    label both bounded to 64 ASCII chars by the loader).
+    """
+    mode = _resolve_anchor_lens_mode(en_lemma, anchor_lens)
+    if mode is None:
+        return surface
+    annotation = f"[lens({anchor_lens.lens_id}):{mode}]"
+    if surface.endswith("."):
+        return f"{surface[:-1]} {annotation}."
+    return f"{surface} {annotation}"
+
+
 def build_pack_surface_candidate(
     lemma: str,
     pack_ids: tuple[str, ...] = DEFAULT_RESOLVABLE_PACK_IDS,
     *,
     register: RegisterPack = UNREGISTERED,
+    anchor_lens: AnchorLens = UNANCHORED,
 ):
     """Return a :class:`PackSurfaceCandidate` for *lemma*, or ``None``.
 
@@ -239,6 +394,12 @@ def build_pack_surface_candidate(
             f"{_frame_gloss(key, gloss_pos, gloss_text)} "
             f"pack-grounded ({resolved_pack_id})."
         )
+        # ADR-0073c — anchor-lens annotation when lens engages on
+        # this en lemma via the substrate alignment graph.  No-op
+        # under UNANCHORED / default_unanchored_v1 (null-lift).
+        surface = _maybe_append_anchor_lens_annotation(
+            surface, key, anchor_lens,
+        )
         return PackSurfaceCandidate(
             surface=surface,
             grounding_source="pack",
@@ -261,6 +422,12 @@ def build_pack_surface_candidate(
         f"{key} — pack-grounded ({resolved_pack_id}): {head}. "
         f"No session evidence yet."
     )
+    # ADR-0073c — anchor-lens annotation appended after the trailing
+    # period of the disclosure surface.  No-op under UNANCHORED /
+    # default_unanchored_v1 (null-lift).
+    surface = _maybe_append_anchor_lens_annotation(
+        surface, key, anchor_lens,
+    )
     return PackSurfaceCandidate(
         surface=surface,
         grounding_source="pack",
@@ -279,6 +446,7 @@ def pack_grounded_surface(
     pack_ids: tuple[str, ...] = DEFAULT_RESOLVABLE_PACK_IDS,
     *,
     register: RegisterPack = UNREGISTERED,
+    anchor_lens: AnchorLens = UNANCHORED,
 ) -> str | None:
     """Return a deterministic pack-grounded surface for *lemma*, or ``None``.
 
@@ -302,7 +470,9 @@ def pack_grounded_surface(
 
     Returns ``None`` when the lemma is empty or doesn't resolve.
     """
-    candidate = build_pack_surface_candidate(lemma, pack_ids, register=register)
+    candidate = build_pack_surface_candidate(
+        lemma, pack_ids, register=register, anchor_lens=anchor_lens,
+    )
     return candidate.surface if candidate is not None else None
 
 
