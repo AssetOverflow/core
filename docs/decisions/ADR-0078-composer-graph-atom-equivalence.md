@@ -1,7 +1,8 @@
 # ADR-0078 — Composer/Graph atom equivalence telemetry
 
-**Status:** Proposed
+**Status:** Ratified
 **Date:** 2026-05-20
+**Ratified:** 2026-05-20 (Phase 1 shipped in `8e96728`)
 **Author:** Shay
 **Builds on:** [ADR-0046](./ADR-0046-forward-graph-constraint.md) (forward graph constraint), [ADR-0048](./ADR-0048-pack-grounded-cold-start.md) (pack-grounded cold-start), [ADR-0063](./ADR-0063-cross-pack-surface-resolver.md) (cross-pack resolver), [ADR-0072](./ADR-0072-register-telemetry-operator-surface.md) (register telemetry), [ADR-0073d](./ADR-0073d-anchor-lens-telemetry-cli-tour.md) (anchor-lens telemetry), [ADR-0077](./ADR-0077-substantive-register-knobs.md) (R6 layering boundary)
 **Series:** C3 — composer/graph seam observability (precedes any shared-resolver enforcement)
