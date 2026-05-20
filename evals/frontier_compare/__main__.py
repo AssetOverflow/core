@@ -5,9 +5,9 @@ import json
 import sys
 from pathlib import Path
 
-from .cross_provider import run_prompt_battery
+from .cross_provider import run_prompt_battery, run_replay_variability
 from .model_registry import require_model_card
-from .providers import ProviderConfig, build_adapter, load_dotenv_if_present
+from .providers import ProviderConfig, build_observing_adapter, load_dotenv_if_present
 from .runner import (
     BenchmarkReport,
     format_human_report,
@@ -18,7 +18,7 @@ from .runner import (
 
 
 _CORE_ONLY_SUITES = ("determinism", "truth_lock", "axis_orthogonality", "all")
-_CROSS_PROVIDER_SUITES = ("prompt_battery",)
+_CROSS_PROVIDER_SUITES = ("prompt_battery", "replay_variability")
 _VALID_SUITES = _CORE_ONLY_SUITES + _CROSS_PROVIDER_SUITES
 
 
@@ -39,7 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
             "benchmark suite to run.  CORE-only suites: "
             f"{', '.join(_CORE_ONLY_SUITES)}.  Cross-provider suites: "
             f"{', '.join(_CROSS_PROVIDER_SUITES)}.  Default 'all' runs every "
-            "CORE-only suite when --provider=core, otherwise prompt_battery."
+            "CORE-only suite when --provider=core, otherwise all cross-provider suites."
         ),
     )
     parser.add_argument(
@@ -85,6 +85,15 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path(".env"),
         help="path to a .env file with provider credentials (default: ./.env).",
+    )
+    parser.add_argument(
+        "--repeats",
+        type=int,
+        default=3,
+        help=(
+            "repeat count for repeat-sensitive cross-provider suites "
+            "(currently replay_variability)."
+        ),
     )
     return parser
 
@@ -147,13 +156,31 @@ def main(argv: list[str] | None = None) -> int:
     else:
         # Cross-provider path — runs over the provider adapter.
         cfg = _build_cfg(args)
-        adapter = build_adapter(cfg)
-        suite_report = run_prompt_battery(adapter, cfg=cfg)
+        adapter = build_observing_adapter(cfg)
+        if args.suite == "all" and args.provider != "core":
+            suite_reports = (
+                run_prompt_battery(adapter, cfg=cfg),
+                run_replay_variability(
+                    adapter,
+                    cfg=cfg,
+                    repeats=max(1, int(args.repeats)),
+                ),
+            )
+        elif args.suite == "replay_variability":
+            suite_reports = (
+                run_replay_variability(
+                    adapter,
+                    cfg=cfg,
+                    repeats=max(1, int(args.repeats)),
+                ),
+            )
+        else:
+            suite_reports = (run_prompt_battery(adapter, cfg=cfg),)
         report = BenchmarkReport(
             benchmark_family="frontier_compare_wave1",
             model=cfg.model,
             mode=cfg.provider,
-            suites=(suite_report,),
+            suites=suite_reports,
         )
         # Always persist non-CORE runs — they're rate-limited / paid, so
         # losing the artifact is genuinely costly.  CORE adapter runs of

@@ -36,6 +36,7 @@ import time
 from dataclasses import dataclass
 from typing import Callable
 
+from .model_registry import resolve_model_card
 from .providers import ProviderConfig
 from .runner import CaseResult, SuiteReport
 
@@ -78,6 +79,10 @@ class ProviderObservation:
     provider: str
     model: str
     elapsed_ms: float
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    total_tokens: int | None = None
+    estimated_cost_usd: float | None = None
     error_type: str = ""
     error_message: str = ""
 
@@ -92,6 +97,10 @@ class ProviderObservation:
             "provider": self.provider,
             "model": self.model,
             "elapsed_ms": self.elapsed_ms,
+            "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+            "total_tokens": self.total_tokens,
+            "estimated_cost_usd": self.estimated_cost_usd,
             "error_type": self.error_type,
             "error_message": self.error_message,
         }
@@ -103,13 +112,14 @@ class ProviderObservation:
 
 
 def _observe_one(
-    adapter: Callable[[str], str],
+    adapter: Callable[[str], object],
     cfg: ProviderConfig,
     prompt: str,
 ) -> ProviderObservation:
+    card = resolve_model_card(cfg.provider, cfg.model)
     start = time.perf_counter()
     try:
-        surface = adapter(prompt)
+        raw = adapter(prompt)
     except Exception as exc:  # noqa: BLE001 - record failure, never abort the suite
         return ProviderObservation(
             prompt=prompt,
@@ -121,17 +131,45 @@ def _observe_one(
             error_message=str(exc),
         )
     elapsed_ms = (time.perf_counter() - start) * 1000.0
+    surface = ""
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    total_tokens: int | None = None
+    if isinstance(raw, str):
+        surface = raw
+    else:
+        surface = str(getattr(raw, "surface", "") or "")
+        in_val = getattr(raw, "input_tokens", None)
+        out_val = getattr(raw, "output_tokens", None)
+        total_val = getattr(raw, "total_tokens", None)
+        input_tokens = int(in_val) if in_val is not None else None
+        output_tokens = int(out_val) if out_val is not None else None
+        total_tokens = int(total_val) if total_val is not None else None
+    estimated_cost_usd: float | None = None
+    if (
+        card is not None
+        and input_tokens is not None
+        and output_tokens is not None
+    ):
+        estimated_cost_usd = card.estimate_cost_usd(
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
     return ProviderObservation(
         prompt=prompt,
         surface=surface,
         provider=cfg.provider,
         model=cfg.model,
         elapsed_ms=elapsed_ms,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        estimated_cost_usd=estimated_cost_usd,
     )
 
 
 def run_prompt_battery(
-    adapter: Callable[[str], str],
+    adapter: Callable[[str], object],
     *,
     cfg: ProviderConfig,
     prompts: tuple[tuple[str, str], ...] = _PROMPT_BATTERY,
@@ -175,7 +213,89 @@ def run_prompt_battery(
     )
 
 
+def run_replay_variability(
+    adapter: Callable[[str], object],
+    *,
+    cfg: ProviderConfig,
+    repeats: int = 3,
+    prompts: tuple[tuple[str, str], ...] = _PROMPT_BATTERY,
+) -> SuiteReport:
+    """Run repeated calls per prompt and score surface stability.
+
+    Score formula per case:
+        stability_score = 1 / unique_surface_count
+    where unique_surface_count >= 1 over `repeats` runs.
+    """
+    runs = max(1, int(repeats))
+    cases: list[CaseResult] = []
+    for case_id, prompt in prompts:
+        observations = [_observe_one(adapter, cfg, prompt) for _ in range(runs)]
+        successful = [o for o in observations if not o.error_type]
+        failures: list[str] = []
+        if not successful:
+            failures.append("adapter_error")
+            unique_count = 0
+            score = 0.0
+            elapsed_ms = sum(o.elapsed_ms for o in observations)
+            details = {
+                "repeats": runs,
+                "observations": [o.as_dict() for o in observations],
+            }
+        else:
+            surfaces = {
+                o.surface.strip()
+                for o in successful
+                if o.surface.strip()
+            }
+            if not surfaces:
+                failures.append("empty_surface")
+            unique_count = len(surfaces) if surfaces else 0
+            score = 0.0 if unique_count == 0 else (1.0 / float(unique_count))
+            if any(o.error_type for o in observations):
+                failures.append("partial_adapter_error")
+            elapsed_ms = sum(o.elapsed_ms for o in observations)
+            costs = [
+                float(o.estimated_cost_usd)
+                for o in successful
+                if o.estimated_cost_usd is not None
+            ]
+            details = {
+                "repeats": runs,
+                "successful_runs": len(successful),
+                "unique_surface_count": unique_count,
+                "mean_elapsed_ms": (elapsed_ms / runs) if runs else 0.0,
+                "mean_estimated_cost_usd": (
+                    (sum(costs) / len(costs))
+                    if costs else None
+                ),
+                "observations": [o.as_dict() for o in observations],
+            }
+        passed = not failures and unique_count == 1
+        cases.append(
+            CaseResult(
+                suite="replay_variability",
+                case_id=case_id,
+                prompt=prompt,
+                passed=passed,
+                score=score,
+                elapsed_ms=elapsed_ms,
+                details=details,
+                failures=tuple(failures),
+            )
+        )
+    primary = (
+        sum(c.score for c in cases) / len(cases) if cases else 0.0
+    )
+    return SuiteReport(
+        suite="replay_variability",
+        cases=tuple(cases),
+        primary_score=primary,
+        passed=all(c.passed for c in cases),
+    )
+
+
 __all__ = [
     "ProviderObservation",
     "run_prompt_battery",
+    "run_replay_variability",
 ]

@@ -164,23 +164,41 @@ class ProviderConfig:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class AdapterResponse:
+    """Unified provider response payload for benchmark telemetry."""
+
+    surface: str
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    total_tokens: int | None = None
+
+    def as_dict(self) -> dict:
+        return {
+            "surface": self.surface,
+            "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+            "total_tokens": self.total_tokens,
+        }
+
+
 # ---------------------------------------------------------------------------
 # Adapter builders
 # ---------------------------------------------------------------------------
 
-def _build_core_adapter(cfg: ProviderConfig) -> Callable[[str], str]:
+def _build_core_adapter(cfg: ProviderConfig) -> Callable[[str], AdapterResponse]:
     """CORE ChatRuntime adapter.  Fresh runtime per call — no session bleed."""
     from chat.runtime import ChatRuntime
 
-    def adapter(prompt: str) -> str:
+    def adapter(prompt: str) -> AdapterResponse:
         rt = ChatRuntime()
         resp = rt.chat(prompt, max_tokens=cfg.max_tokens)
-        return resp.surface or ""
+        return AdapterResponse(surface=resp.surface or "")
 
     return adapter
 
 
-def _build_openai_adapter(cfg: ProviderConfig) -> Callable[[str], str]:
+def _build_openai_adapter(cfg: ProviderConfig) -> Callable[[str], AdapterResponse]:
     """OpenAI Chat Completions adapter.
 
     Requires: ``pip install openai``
@@ -200,19 +218,28 @@ def _build_openai_adapter(cfg: ProviderConfig) -> Callable[[str], str]:
         client_kwargs["base_url"] = cfg.extra["base_url"]
     client = openai.OpenAI(**client_kwargs)
 
-    def adapter(prompt: str) -> str:
+    def adapter(prompt: str) -> AdapterResponse:
         response = client.chat.completions.create(
             model=cfg.model,
             messages=[{"role": "user", "content": prompt}],
             temperature=cfg.temperature,
             max_tokens=cfg.max_tokens,
         )
-        return (response.choices[0].message.content or "").strip()
+        usage = getattr(response, "usage", None)
+        input_tokens = int(getattr(usage, "prompt_tokens", 0)) if usage else None
+        output_tokens = int(getattr(usage, "completion_tokens", 0)) if usage else None
+        total_tokens = int(getattr(usage, "total_tokens", 0)) if usage else None
+        return AdapterResponse(
+            surface=(response.choices[0].message.content or "").strip(),
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            total_tokens=total_tokens,
+        )
 
     return adapter
 
 
-def _build_anthropic_adapter(cfg: ProviderConfig) -> Callable[[str], str]:
+def _build_anthropic_adapter(cfg: ProviderConfig) -> Callable[[str], AdapterResponse]:
     """Anthropic Messages adapter.
 
     Requires: ``pip install anthropic``
@@ -229,7 +256,7 @@ def _build_anthropic_adapter(cfg: ProviderConfig) -> Callable[[str], str]:
     api_key = _require_env("ANTHROPIC_API_KEY")
     client = ant.Anthropic(api_key=api_key)
 
-    def adapter(prompt: str) -> str:
+    def adapter(prompt: str) -> AdapterResponse:
         message = client.messages.create(
             model=cfg.model,
             max_tokens=cfg.max_tokens,
@@ -239,12 +266,25 @@ def _build_anthropic_adapter(cfg: ProviderConfig) -> Callable[[str], str]:
             temperature=max(0.0, min(1.0, cfg.temperature)),
         )
         block = message.content[0] if message.content else None
-        return (getattr(block, "text", "") or "").strip()
+        usage = getattr(message, "usage", None)
+        input_tokens = int(getattr(usage, "input_tokens", 0)) if usage else None
+        output_tokens = int(getattr(usage, "output_tokens", 0)) if usage else None
+        total_tokens = (
+            (input_tokens or 0) + (output_tokens or 0)
+            if (input_tokens is not None or output_tokens is not None)
+            else None
+        )
+        return AdapterResponse(
+            surface=(getattr(block, "text", "") or "").strip(),
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            total_tokens=total_tokens,
+        )
 
     return adapter
 
 
-def _build_ollama_adapter(cfg: ProviderConfig) -> Callable[[str], str]:
+def _build_ollama_adapter(cfg: ProviderConfig) -> Callable[[str], AdapterResponse]:
     """Ollama local model adapter (HTTP /api/chat endpoint).
 
     Requires: ``pip install httpx``  (already present in most Python envs)
@@ -267,7 +307,7 @@ def _build_ollama_adapter(cfg: ProviderConfig) -> Callable[[str], str]:
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
-    def adapter(prompt: str) -> str:
+    def adapter(prompt: str) -> AdapterResponse:
         payload = {
             "model": cfg.model,
             "messages": [{"role": "user", "content": prompt}],
@@ -282,7 +322,19 @@ def _build_ollama_adapter(cfg: ProviderConfig) -> Callable[[str], str]:
         )
         resp.raise_for_status()
         data = resp.json()
-        return (data.get("message", {}).get("content") or "").strip()
+        input_tokens = data.get("prompt_eval_count")
+        output_tokens = data.get("eval_count")
+        total_tokens = (
+            int(input_tokens or 0) + int(output_tokens or 0)
+            if input_tokens is not None or output_tokens is not None
+            else None
+        )
+        return AdapterResponse(
+            surface=(data.get("message", {}).get("content") or "").strip(),
+            input_tokens=int(input_tokens) if input_tokens is not None else None,
+            output_tokens=int(output_tokens) if output_tokens is not None else None,
+            total_tokens=total_tokens,
+        )
 
     return adapter
 
@@ -307,6 +359,16 @@ def build_adapter(cfg: ProviderConfig) -> Callable[[str], str]:
     it is safe to pass to ``compare_to_llm`` and the frontier_compare
     runner suites.
     """
+    observing = build_observing_adapter(cfg)
+
+    def _surface_only(prompt: str) -> str:
+        return observing(prompt).surface
+
+    return _surface_only
+
+
+def build_observing_adapter(cfg: ProviderConfig) -> Callable[[str], AdapterResponse]:
+    """Return a provider adapter that includes usage telemetry when available."""
     builder = _BUILDERS.get(cfg.provider)
     if builder is None:
         raise ValueError(
