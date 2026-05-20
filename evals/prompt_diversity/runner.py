@@ -189,12 +189,21 @@ def _surface_has_audit_leak(surface: str) -> bool:
 def _surface_quotes_gloss(surface: str, expected_terms: tuple[str, ...]) -> bool:
     """Return True iff the surface visibly draws from a pack gloss.
 
-    Uses :func:`chat.pack_resolver.resolve_gloss` to fetch any gloss
-    bound to each expected term, then checks for a substantive
-    substring (4-token window) of the gloss in the surface.
+    Resolves each expected term via
+    :func:`chat.pack_resolver.resolve_gloss`, then asks: does the
+    surface contain the gloss text verbatim?  The pack-grounded
+    composer emits the gloss without paraphrasing
+    (``"{Lemma} is {gloss}."``), so substring match is an exact and
+    high-confidence "gloss actually quoted" signal — no fuzzy windows,
+    no false-positives from one shared content word.
 
-    v1 ≈ 0% by design — the composer does not consume glosses yet.
-    The metric exists so ADR-0085's lift is quantifiable.
+    Note on the v1 prediction:  the contract predicted ``≈ 0%`` here,
+    on the assumption that the composer would not consume glosses
+    until ADR-0085 landed.  In fact the pack-grounded composer at
+    ``chat/pack_grounding.py:398-434`` was *already* gloss-aware
+    pre-ADR-0084 but had no glosses to consume.  Once PR #65's content
+    landed, the composer immediately started emitting glosses on
+    DEFINITION/RECALL.  This metric now reflects that reality.
     """
     if not expected_terms:
         return False
@@ -207,15 +216,10 @@ def _surface_quotes_gloss(surface: str, expected_terms: tuple[str, ...]) -> bool
         if resolved is None:
             continue
         _pack_id, _pos, gloss = resolved
-        gloss_tokens = [t for t in re.findall(r"[a-z]+", gloss.lower()) if len(t) >= 4]
-        if not gloss_tokens:
+        if not gloss.strip():
             continue
-        # 4-token contiguous window match — high-confidence "gloss
-        # actually quoted", not "shared one common word".
-        for i in range(len(gloss_tokens) - 3):
-            window = " ".join(gloss_tokens[i : i + 4])
-            if window in surface_lower:
-                return True
+        if gloss.lower().strip() in surface_lower:
+            return True
     return False
 
 

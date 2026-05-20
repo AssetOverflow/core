@@ -83,6 +83,55 @@ class TestAuditLeak:
 
 
 # --------------------------------------------------------------------------- #
+# Gloss-quote detector
+# --------------------------------------------------------------------------- #
+
+
+class TestGlossQuote:
+    """The detector is exact-substring against the pack's gloss text,
+    not a fuzzy window.  The pack-grounded composer emits gloss text
+    verbatim, so substring match is the right signal: zero false
+    positives, zero false negatives on brief-style short glosses where
+    a 4-token window would be impossible (e.g. ``person`` → ``"person
+    with a child"`` has only 3 tokens ≥4 chars).
+    """
+
+    def _make(self, surface: str, terms: tuple[str, ...]) -> bool:
+        from evals.prompt_diversity.runner import _surface_quotes_gloss
+        return _surface_quotes_gloss(surface, terms)
+
+    def test_quoted_short_gloss_detected(self) -> None:
+        # ``light`` gloss is ``"visible medium that reveal truth"`` —
+        # 5 tokens, but only 5 are ≥4 chars; the old 4-token window
+        # would barely fit.  ``parent`` gloss is ``"person with a child"``
+        # — 4 tokens, 3 are ≥4 chars; the old window could never match.
+        # Substring match handles both natively.
+        assert self._make(
+            "Parent is person with a child. pack-grounded (en_core_relations_v1).",
+            ("parent",),
+        ) is True
+        assert self._make(
+            "Light is visible medium that reveal truth. pack-grounded (en_core_cognition_v1).",
+            ("light",),
+        ) is True
+
+    def test_unquoted_surface_returns_false(self) -> None:
+        # Chain-walk surface for the same lemma must NOT count as
+        # gloss-quoted — it shares vocabulary but doesn't quote the
+        # gloss itself.
+        assert self._make(
+            "light — teaching-grounded (cognition_chains_v1): cognition.illumination; logos.core.",
+            ("light",),
+        ) is False
+
+    def test_unknown_term_returns_false(self) -> None:
+        assert self._make("anything", ("nonsense_lemma_42",)) is False
+
+    def test_empty_terms_returns_false(self) -> None:
+        assert self._make("anything", ()) is False
+
+
+# --------------------------------------------------------------------------- #
 # End-to-end run on the v1 public split
 # --------------------------------------------------------------------------- #
 
