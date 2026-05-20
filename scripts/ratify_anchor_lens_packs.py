@@ -53,6 +53,10 @@ LENS_IDS: tuple[str, ...] = (
     "grc_synesis_v1",
     "he_emet_v1",
     "he_chokmah_v1",
+    # Round 4 — Hebrew covenantal triad (lossy EN-collapse engagement)
+    "he_chesed_v1",
+    "he_shalom_v1",
+    "he_tzedek_v1",
 )
 
 # Substrate -> lexicon pack directory name

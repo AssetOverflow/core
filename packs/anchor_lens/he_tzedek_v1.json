@@ -1,0 +1,13 @@
+{
+  "lens_id": "he_tzedek_v1",
+  "version": "1.0.0",
+  "description": "Anchor lens for the Hebrew concept of tzedek (\u05e6\u05d3\u05e7) \u2014 right order, rectitude, and alignment with the covenant standard. English splits tzedek across two words: 'justice' (the institutional/procedural reading) and 'righteousness' (the relational/personal reading). Both are partial \u2014 tzedek encompasses the whole: right action flowing from right standing, with institutional and personal dimensions inseparable. EN engagement is via lossy en-collapse-justice edge (weight 0.62, adr-0073c): the lens fires on 'justice'-adjacent English prompts and the [lens(he_tzedek_v1):right-order] annotation signals the collapse. The no_english_collapse protest edge (weight 0.0 to en-collapse-tzedek) is retained in alignment.jsonl provenance. No Greek single equivalent: dikaiosyne (\u03b4\u03b9\u03ba\u03b1\u03b9\u03bf\u03c3\u03cd\u03bd\u03b7) covers righteousness but not the full institutional-relational unity. Cognitive mode: right-order.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "f56651d68b941185d9e3c4ee857de086787a2c06145f92d94afafb64f4eae4f6",
+  "substrate": "he",
+  "atom": "logos.tzedek.right_order",
+  "source_entry_id": "he-core-cog-023",
+  "cognitive_mode": "right-order",
+  "pair_lens_id": null,
+  "ratification_method": "anchor_lens_lifts_proposition"
+}

@@ -1,0 +1,18 @@
+{
+  "evidence": {
+    "atom": "logos.shalom.wholeness_peace",
+    "atom_in_lexicon": true,
+    "cognitive_mode": "wholeness-peace",
+    "pair_lens_id": null,
+    "source_entry_id": "he-core-cog-022",
+    "substrate": "he"
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "lens_id": "he_shalom_v1",
+  "pack_source_sha256": "62a2e355499a6d73494671a3f499be7f6fec36a27769549ebc56d063cd19d83f",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "0a582c706c03bd2c75ba72f5144275b3879f942b03bef760109ecacb86a162f8",
+  "schema_version": "1.0.0"
+}

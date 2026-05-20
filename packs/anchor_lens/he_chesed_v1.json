@@ -1,0 +1,13 @@
+{
+  "lens_id": "he_chesed_v1",
+  "version": "1.0.0",
+  "description": "Anchor lens for the Hebrew concept of chesed (\u05d7\u05e1\u05d3) \u2014 covenantal loyalty, steadfast love, and lovingkindness. Chesed is not a feeling but a commitment that holds across time and in the face of the other party's failure. English has no single equivalent: 'love' collapses the covenantal dimension, 'mercy' drops the relational bond, 'kindness' loses the obligatory weight. The LXX renders chesed as agape (\u03b1\u1f30\u03b3\u03ac\u03c0\u03b7) in key passages \u2014 the highest cross-lang edge in the corpus (weight 0.86 to grc-core-cog-023). EN engagement is via lossy en-collapse-love edge (weight 0.63, adr-0073c): the lens fires on 'love'-adjacent English prompts and the [lens(he_chesed_v1):covenant-love] annotation signals the collapse. The no_english_collapse protest edge (weight 0.0) is retained in alignment.jsonl provenance. Cognitive mode: covenant-love. No single Greek pair \u2014 future grc_agape_v1 will link symmetrically.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "17c533a3b0967fafc1e95704f21ff5ddc5a720a89ac04c70187b1eb80633433a",
+  "substrate": "he",
+  "atom": "logos.chesed.covenant_loyalty",
+  "source_entry_id": "he-core-cog-021",
+  "cognitive_mode": "covenant-love",
+  "pair_lens_id": null,
+  "ratification_method": "anchor_lens_lifts_proposition"
+}
