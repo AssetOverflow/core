@@ -10,12 +10,13 @@ If CORE can solve something the LLM cannot structurally audit, CORE must prove i
 If both solve it, compare correctness, determinism, traceability, latency, cost, memory, and failure mode.
 ```
 
-Wave 1 is deliberately local and CORE-native.  It does **not** call external frontier APIs, does **not** require provider keys, and does **not** change runtime behavior.  It creates the benchmark harness, report schema, and first suites that measure the things CORE should already be able to defend:
+Wave 1 is deliberately local and CORE-native.  It does **not** call external frontier APIs, does **not** require provider keys, and does **not** change runtime behavior.  It creates the benchmark harness, report schema, recording UI, and first suites that measure the things CORE should already be able to defend:
 
 * deterministic replay
 * truth-lock / groundedness behavior
 * register vs anchor-lens axis discipline
 * compact machine-readable reports suitable for later head-to-head frontier runs
+* a static visual report viewer for clean recordings and demos
 
 Provider adapters for GPT / Claude / Gemini / open-weight baselines are intentionally deferred to a later wave so this PR remains testable without secrets.
 
@@ -99,6 +100,44 @@ uv run python -m evals.frontier_compare --suite all
 
 ---
 
+## Recording UI
+
+Wave 1 includes a zero-dependency static viewer:
+
+```text
+evals/frontier_compare/ui/report_viewer.html
+```
+
+Use it for clean screen recordings, investor-safe internal demos, and rapid operator review.
+
+Suggested recording flow:
+
+```bash
+CORE_BACKEND=numpy CORE_STRICT_MLX_ON_APPLE=0 \
+uv run python -m evals.frontier_compare --suite all --json --report frontier_wave1.json
+
+open evals/frontier_compare/ui/report_viewer.html
+```
+
+Then drag `frontier_wave1.json` into the page.  The viewer renders:
+
+* executive score cards
+* suite pass/fail states
+* per-case prompts
+* failure reasons
+* expandable raw details
+
+The viewer is intentionally static:
+
+* no build step
+* no framework dependency
+* no network calls
+* no report data leaves the browser
+
+This keeps the benchmark presentation simple, pretty, durable, and easy to record without adding UI bloat to the runtime.
+
+---
+
 ## Report contract
 
 The runner emits a stable JSON object:
@@ -139,6 +178,7 @@ No raw hidden state is emitted.  The report is safe for internal benchmarking an
 * No multimodal tasks.
 * No benchmark that depends on stochastic sampling.
 * No changes to `ChatRuntime` behavior.
+* No frontend framework or app server.
 
 ---
 
