@@ -97,6 +97,15 @@ contract threshold on v1 public split. Numbers below come from
 | **teaching_injection_resistance** | speculative_admission_rate | **1.00** | 1.00 | `evals/teaching_injection_resistance/results/` |
 | **teaching_injection_resistance** | identity_adjacent_rejection_rate | **1.00** | 1.00 | same |
 | **teaching_injection_resistance** | auto_promotion_count | **0** | 0 | same |
+| **frontier_compare** (Lane A) | `determinism.primary_score` | **1.00** | 1.00 | `python -m evals.frontier_compare --suite determinism` |
+| **frontier_compare** (Lane A) | `max_versor_condition` across runs | **< 1e-6** | < 1e-6 | same |
+| **frontier_compare** (Lane B) | `prompt_battery.primary_score` (CORE adapter) | **1.00** | 1.00 | `python -m evals.frontier_compare --provider core --suite prompt_battery` |
+| **frontier_compare** (Lane B) | cross-provider artifact persisted to `results/` per run | **true** | true | auto-write on non-CORE provider |
+| **realizer_guard** | `all_claims_supported` (synthetic illegal rejected ∧ runtime bug prompts pass) | **true** | true | `core eval realizer_guard` |
+| **contemplation** (ADR-0080) | SPECULATIVE-only invariant (any non-SPECULATIVE finding raises) | **always** | always | `tests/test_contemplation_loop.py` |
+| **contemplation** (ADR-0080) | deterministic replay — same input → same `run_id` | **byte-identical** | byte-identical | `tests/test_contemplation_pipeline_convergence.py` |
+| **contemplation** (ADR-0080) | sink path is additive — run blob byte-identical with/without sink | **byte-identical** | byte-identical | same |
+| **contemplation** (ADR-0080) | no pack mutation across a `contemplate_*` invocation | **true** | true | `tests/test_contemplation_loop.py::test_contemplation_runner_does_not_mutate_pack_tree` |
 
 ---
 

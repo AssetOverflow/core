@@ -2357,7 +2357,8 @@ def _cmd_bench_all(args: argparse.Namespace) -> int:
     if not json_out:
         print("\n[1/4] Core six (determinism / latency / speedup / versor / convergence / realizer)")
         print("-" * 78)
-    core_report = run_benchmarks(suite=None, runs=args.runs)
+    with _bench_stdout_guard(json_out):
+        core_report = run_benchmarks(suite=None, runs=args.runs)
     overall_results.extend(core_report.results)
     if not json_out:
         for r in core_report.results:
@@ -2369,7 +2370,8 @@ def _cmd_bench_all(args: argparse.Namespace) -> int:
     if not json_out:
         print("\n[2/4] Teaching-loop determinism")
         print("-" * 78)
-    tl_report = run_benchmarks(suite="teaching-loop", runs=args.runs)
+    with _bench_stdout_guard(json_out):
+        tl_report = run_benchmarks(suite="teaching-loop", runs=args.runs)
     overall_results.extend(tl_report.results)
     if not json_out:
         for r in tl_report.results:
@@ -2387,13 +2389,14 @@ def _cmd_bench_all(args: argparse.Namespace) -> int:
     if not json_out:
         print("\n[3/4] Articulation suite" + (" (footprint skipped — psutil not installed)" if skip_fp else ""))
         print("-" * 78)
-    a_report = run_articulation_suite(
-        determinism_runs=args.runs,
-        footprint_turns=getattr(args, "turns", 200),
-        ollama_model=getattr(args, "ollama_model", None),
-        ollama_reruns=getattr(args, "ollama_reruns", 3),
-        skip_footprint=skip_fp,
-    )
+    with _bench_stdout_guard(json_out):
+        a_report = run_articulation_suite(
+            determinism_runs=args.runs,
+            footprint_turns=getattr(args, "turns", 200),
+            ollama_model=getattr(args, "ollama_model", None),
+            ollama_reruns=getattr(args, "ollama_reruns", 3),
+            skip_footprint=skip_fp,
+        )
     a_pass = bool(a_report.determinism_all_identical) and (
         a_report.discourse_planner_metrics.get("articulate_sentence_rate", 0.0) == 1.0
         and a_report.discourse_planner_metrics.get("disclosure_sentence_rate", 0.0) == 0.0
@@ -2410,7 +2413,8 @@ def _cmd_bench_all(args: argparse.Namespace) -> int:
     if not json_out:
         print("\n[4/4] Cost (measurement)")
         print("-" * 78)
-    cost_report = run_cost(turns=args.runs)
+    with _bench_stdout_guard(json_out):
+        cost_report = run_cost(turns=args.runs)
     if not json_out:
         print(cost_report.summary())
 
@@ -2434,6 +2438,27 @@ def _cmd_bench_all(args: argparse.Namespace) -> int:
     return 0 if all_pass else 1
 
 
+def _bench_stdout_guard(json_mode: bool):
+    """Route benchmark pulse/runtime stdout to stderr in --json mode.
+
+    Several benchmarks call ``scripts.run_pulse.run_pulse`` (and other
+    helpers) that unconditionally print verbose status to stdout
+    (``[pulse] input ...``, ``[pulse] step ...``).  In ``--json`` mode
+    that pollutes the machine-readable JSON stream, breaking
+    programmatic consumers like ``jq`` or downstream tooling.
+
+    This guard redirects stdout to stderr for the duration of the bench
+    run when ``json_mode`` is True, so the operator still sees the
+    pulse trace (it just lands on stderr alongside any logging output),
+    but ``--json`` consumers get a clean JSON document on stdout.
+    """
+    import contextlib
+
+    if json_mode:
+        return contextlib.redirect_stdout(sys.stderr)
+    return contextlib.nullcontext()
+
+
 def cmd_bench(args: argparse.Namespace) -> int:
     """Run benchmark harness."""
     if args.suite == "all":
@@ -2443,7 +2468,8 @@ def cmd_bench(args: argparse.Namespace) -> int:
     # structure stays honest (no fake PASS/FAIL on a measurement bench).
     if args.suite == "cost":
         from benchmarks.cost import run_cost, write_report
-        report = run_cost(turns=args.runs)
+        with _bench_stdout_guard(args.json):
+            report = run_cost(turns=args.runs)
         if args.json:
             print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2, sort_keys=True))
         else:
@@ -2461,12 +2487,13 @@ def cmd_bench(args: argparse.Namespace) -> int:
         )
         if not args.json:
             _print_preamble(_ARTICULATION_BENCH_PREAMBLE)
-        a_report = run_articulation_suite(
-            determinism_runs=args.runs,
-            footprint_turns=getattr(args, "turns", 200),
-            ollama_model=getattr(args, "ollama_model", None),
-            ollama_reruns=getattr(args, "ollama_reruns", 3),
-        )
+        with _bench_stdout_guard(args.json):
+            a_report = run_articulation_suite(
+                determinism_runs=args.runs,
+                footprint_turns=getattr(args, "turns", 200),
+                ollama_model=getattr(args, "ollama_model", None),
+                ollama_reruns=getattr(args, "ollama_reruns", 3),
+            )
         if args.json:
             print(json.dumps(a_report.as_dict(), ensure_ascii=False, indent=2, sort_keys=True))
         else:
@@ -2485,10 +2512,11 @@ def cmd_bench(args: argparse.Namespace) -> int:
     if args.suite == "teaching-loop" and not args.json:
         _print_preamble(_TEACHING_LOOP_BENCH_PREAMBLE)
 
-    report = run_benchmarks(
-        suite=args.suite,
-        runs=args.runs,
-    )
+    with _bench_stdout_guard(args.json):
+        report = run_benchmarks(
+            suite=args.suite,
+            runs=args.runs,
+        )
 
     if args.json:
         print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
