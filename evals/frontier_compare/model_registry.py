@@ -61,6 +61,15 @@ class ModelCard:
     notes: str = ""
     """Free-form notes: known quirks, benchmark-specific observations, version history."""
 
+    input_usd_per_million_tokens: float | None = None
+    """Public list price for input tokens in USD per 1M tokens."""
+
+    output_usd_per_million_tokens: float | None = None
+    """Public list price for output tokens in USD per 1M tokens."""
+
+    pricing_source: str = ""
+    """Source URL/note for pricing metadata."""
+
     tags: tuple[str, ...] = field(default_factory=tuple)
     """Searchable tags, e.g. ('reasoning', 'code', 'vision')."""
 
@@ -68,6 +77,35 @@ class ModelCard:
         d = asdict(self)
         d["tags"] = list(self.tags)
         return d
+
+    @property
+    def has_pricing(self) -> bool:
+        return (
+            self.input_usd_per_million_tokens is not None
+            and self.output_usd_per_million_tokens is not None
+        )
+
+    def estimate_cost_usd(
+        self,
+        *,
+        input_tokens: int | float,
+        output_tokens: int | float,
+    ) -> float | None:
+        """Compute provider list-price cost for one request.
+
+        Formula:
+            cost_usd =
+              (input_tokens / 1_000_000) * input_usd_per_million_tokens +
+              (output_tokens / 1_000_000) * output_usd_per_million_tokens
+        """
+        if not self.has_pricing:
+            return None
+        in_rate = float(self.input_usd_per_million_tokens or 0.0)
+        out_rate = float(self.output_usd_per_million_tokens or 0.0)
+        return (
+            (float(input_tokens) / 1_000_000.0) * in_rate
+            + (float(output_tokens) / 1_000_000.0) * out_rate
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -107,6 +145,9 @@ _REGISTRY: dict[str, ModelCard] = {
             "Use a dated snapshot (e.g. gpt-4o-2024-08-06) for reproducible benchmarks. "
             "Set OPENAI_MODEL=gpt-4o-2024-08-06 in .env."
         ),
+        input_usd_per_million_tokens=2.50,
+        output_usd_per_million_tokens=10.00,
+        pricing_source="https://openai.com/api/pricing (captured 2026-05-20)",
         tags=("frontier", "multimodal", "reasoning", "code"),
     ),
     "openai/gpt-4o-2024-08-06": ModelCard(
@@ -119,6 +160,9 @@ _REGISTRY: dict[str, ModelCard] = {
         architecture="GPT-4 class transformer, multimodal (text + vision).",
         sampling="Stochastic at T>0. T=0 is near-deterministic for a fixed snapshot but backend routing can still vary.",
         notes="Pinned snapshot. Preferred for reproducible benchmark comparisons.",
+        input_usd_per_million_tokens=2.50,
+        output_usd_per_million_tokens=10.00,
+        pricing_source="https://openai.com/api/pricing (captured 2026-05-20)",
         tags=("frontier", "multimodal", "reasoning", "code", "pinned"),
     ),
     "openai/gpt-4o-mini": ModelCard(
@@ -131,6 +175,9 @@ _REGISTRY: dict[str, ModelCard] = {
         architecture="Smaller GPT-4o class model optimised for latency and cost.",
         sampling="Stochastic at T>0.",
         notes="Useful for cost/latency baseline comparisons in the benchmark cost suite.",
+        input_usd_per_million_tokens=0.15,
+        output_usd_per_million_tokens=0.60,
+        pricing_source="https://openai.com/api/pricing (captured 2026-05-20)",
         tags=("frontier", "fast", "cost-efficient"),
     ),
     "openai/o3": ModelCard(
@@ -146,6 +193,7 @@ _REGISTRY: dict[str, ModelCard] = {
             "o-series models use a reasoning_effort parameter instead of temperature. "
             "Pass via ProviderConfig.extra = {'reasoning_effort': 'high'} for benchmark use."
         ),
+        pricing_source="https://openai.com/api/pricing (captured 2026-05-20)",
         tags=("frontier", "reasoning", "chain-of-thought"),
     ),
 
@@ -164,6 +212,9 @@ _REGISTRY: dict[str, ModelCard] = {
             "Default ANTHROPIC_MODEL in .env.example. "
             "For extended thinking benchmarks, pass extra={'thinking': {'type': 'enabled', 'budget_tokens': 10000}}."
         ),
+        input_usd_per_million_tokens=15.00,
+        output_usd_per_million_tokens=75.00,
+        pricing_source="https://www.anthropic.com/pricing (captured 2026-05-20)",
         tags=("frontier", "reasoning", "code", "extended-thinking"),
     ),
     "anthropic/claude-sonnet-4-5": ModelCard(
@@ -176,6 +227,9 @@ _REGISTRY: dict[str, ModelCard] = {
         architecture="Claude 4 class transformer (Anthropic). Balanced speed/capability.",
         sampling="Stochastic at T>0.",
         notes="Good default for high-volume benchmark sweeps where Opus cost is prohibitive.",
+        input_usd_per_million_tokens=3.00,
+        output_usd_per_million_tokens=15.00,
+        pricing_source="https://www.anthropic.com/pricing (captured 2026-05-20)",
         tags=("frontier", "balanced", "cost-efficient"),
     ),
     "anthropic/claude-haiku-3-5": ModelCard(
@@ -188,6 +242,9 @@ _REGISTRY: dict[str, ModelCard] = {
         architecture="Claude 3 class transformer (Anthropic). Optimised for latency.",
         sampling="Stochastic at T>0.",
         notes="Useful for latency/cost baseline comparisons. Lower capability ceiling than Sonnet/Opus.",
+        input_usd_per_million_tokens=0.80,
+        output_usd_per_million_tokens=4.00,
+        pricing_source="https://www.anthropic.com/pricing (captured 2026-05-20)",
         tags=("frontier", "fast", "cost-efficient"),
     ),
 

@@ -113,6 +113,28 @@ def test_cli_prompt_battery_with_core_provider(tmp_path: Path, capsys) -> None:
     assert report_path.exists()
 
 
+def test_cli_replay_variability_with_core_provider(tmp_path: Path, capsys) -> None:
+    """Replay-variability suite should run through cross-provider path."""
+    report_path = tmp_path / "cross_core_replay.json"
+    code = main(
+        [
+            "--provider", "core",
+            "--suite", "replay_variability",
+            "--repeats", "2",
+            "--json",
+            "--report", str(report_path),
+        ]
+    )
+    out = capsys.readouterr().out
+    payload = json.loads(out)
+    assert payload["model"] == "core-native"
+    assert payload["mode"] == "core"
+    assert len(payload["suites"]) == 1
+    assert payload["suites"][0]["suite"] == "replay_variability"
+    assert code == 0
+    assert report_path.exists()
+
+
 def test_cli_rejects_core_only_suite_with_non_core_provider(capsys) -> None:
     """Loud failure when an operator asks for a CORE-only suite with a
     non-CORE provider — no silent telemetry degradation."""

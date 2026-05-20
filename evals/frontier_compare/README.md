@@ -10,15 +10,18 @@ If CORE can solve something the LLM cannot structurally audit, CORE must prove i
 If both solve it, compare correctness, determinism, traceability, latency, cost, memory, and failure mode.
 ```
 
-Wave 1 is deliberately local and CORE-native.  It does **not** call external frontier APIs, does **not** require provider keys, and does **not** change runtime behavior.  It creates the benchmark harness, report schema, recording UI, and first suites that measure the things CORE should already be able to defend:
+Wave 1 now supports both CORE-native and cross-provider execution through adapter wiring.  CORE-only suites remain local and deterministic; cross-provider suites can call external APIs when credentials are configured.
+
+Current suites focus on:
 
 * deterministic replay
 * truth-lock / groundedness behavior
 * register vs anchor-lens axis discipline
-* compact machine-readable reports suitable for later head-to-head frontier runs
+* compact machine-readable reports suitable for head-to-head frontier runs
 * a static visual report viewer for clean recordings and demos
+* usage-token and formula-based cost telemetry when provider APIs expose usage
 
-Provider adapters for GPT / Claude / Gemini / open-weight baselines are intentionally deferred to a later wave so this PR remains testable without secrets.
+Provider adapters for OpenAI / Anthropic / Ollama are available; CORE still remains runnable with no API keys.
 
 ---
 
@@ -74,6 +77,29 @@ surface_variation_observed
 anchor_lens_engagement_observed
 ```
 
+### `prompt_battery` (cross-provider)
+
+Provider-agnostic prompt battery over the adapter interface.
+
+Primary metrics:
+
+```text
+non_empty_surface_rate
+mean_latency_ms
+token_usage_capture_rate
+formula_cost_estimate (when pricing + usage are available)
+```
+
+### `replay_variability` (cross-provider)
+
+Runs repeated calls per prompt and scores stability.
+
+Primary metric:
+
+```text
+stability_score = 1 / unique_surface_count
+```
+
 ---
 
 ## Run
@@ -96,6 +122,12 @@ Human-readable table:
 
 ```bash
 uv run python -m evals.frontier_compare --suite all
+```
+
+Cross-provider (example):
+
+```bash
+uv run python -m evals.frontier_compare --provider openai --suite all --json
 ```
 
 ---
