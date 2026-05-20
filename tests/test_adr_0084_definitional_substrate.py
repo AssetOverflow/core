@@ -89,11 +89,17 @@ class TestStrictParser:
         entry = parse_gloss_entry(payload, strict=True)
         assert entry.predicates_invited == ()
 
-    def test_empty_definitional_atoms_rejected(self) -> None:
+    def test_empty_definitional_atoms_accepted(self) -> None:
+        # Empty atoms list is legal — a gloss whose every content word
+        # is a function word/preposition (per the ADR-0084 brief's skip
+        # list) legitimately produces zero atoms.  The closure rule
+        # passes vacuously; the gloss-vs-atoms mismatch check in the
+        # standalone verifier is the second-layer gate that catches
+        # laziness vs by-construction emptiness.
         payload = _valid_strict_payload()
         payload["definitional_atoms"] = []
-        with pytest.raises(DefinitionalSchemaError, match=r"non-empty 'definitional_atoms'"):
-            parse_gloss_entry(payload, strict=True)
+        entry = parse_gloss_entry(payload, strict=True)
+        assert entry.definitional_atoms == ()
 
     @pytest.mark.parametrize("bad_version", [0, -1, "1", 1.0, True])
     def test_invalid_definition_version_rejected(self, bad_version: object) -> None:

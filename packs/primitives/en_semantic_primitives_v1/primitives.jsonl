@@ -50,3 +50,5 @@
 {"lemma":"female","category":"identity","pos":"ADJ","primitive_version":1,"provenance_ids":["adr-0084:reviewed:2026-05-20"]}
 {"lemma":"other","category":"identity","pos":"ADJ","primitive_version":1,"provenance_ids":["adr-0084:reviewed:2026-05-20"]}
 {"lemma":"only","category":"quantity","pos":"ADV","primitive_version":1,"provenance_ids":["adr-0084:reviewed:2026-05-20"]}
+{"lemma":"can","category":"mode","pos":"AUX","primitive_version":1,"provenance_ids":["adr-0084:reviewed:2026-05-20","adr-0084:integration:2026-05-20"]}
+{"lemma":"action","category":"relation","pos":"NOUN","primitive_version":1,"provenance_ids":["adr-0084:reviewed:2026-05-20","adr-0084:integration:2026-05-20"]}
