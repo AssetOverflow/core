@@ -74,6 +74,11 @@ def serialize_turn_event(
         # marker buckets, so the wire format degrades cleanly.
         "register_id": str(getattr(event, "register_id", "") or ""),
         "register_variant_id": str(getattr(event, "register_variant_id", "") or ""),
+        # ADR-0073d (L1.4) — operator-visible anchor-lens identity per
+        # turn.  Empty strings on pre-L1.4 events / UNANCHORED runtimes /
+        # turns where the lens did not engage.
+        "anchor_lens_id": str(getattr(event, "anchor_lens_id", "") or ""),
+        "anchor_lens_mode_label": str(getattr(event, "anchor_lens_mode_label", "") or ""),
     }
     safety = getattr(event, "safety_verdict", None)
     if safety is not None:

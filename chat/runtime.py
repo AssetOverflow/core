@@ -78,6 +78,32 @@ from session.correction import CorrectionPass
 from vault.decompose import default_decomposer, default_gate
 
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
+# ADR-0073d (L1.4) — extracts the engaged ``cognitive_mode_label`` from a
+# composer-emitted ``[lens(<lens_id>):<mode>]`` annotation.  The runtime
+# uses this read-only to populate the TurnEvent telemetry field; the
+# composer remains the only source of truth for engagement.
+_ANCHOR_LENS_ANNOTATION_RE = re.compile(r"\[lens\(([^):]+)\):([^\]]+)\]")
+
+
+def _extract_anchor_lens_mode_label(surface: str, lens_id: str) -> str:
+    """Return the engaged mode_label if *surface* carries a
+    ``[lens(<lens_id>):<mode>]`` annotation for the given ``lens_id``.
+
+    Returns ``""`` when:
+      * surface is empty or contains no lens annotation
+      * lens_id is empty (no lens loaded)
+      * the annotation in surface is for a different lens_id (defensive)
+
+    Pure read; no side effects.  Telemetry-only — the composer is the
+    sole source of truth for engagement (ADR-0073c).
+    """
+    if not surface or not lens_id:
+        return ""
+    for match in _ANCHOR_LENS_ANNOTATION_RE.finditer(surface):
+        if match.group(1) == lens_id:
+            return match.group(2)
+    return ""
+
 _SEED_ALIASES = {
     "logos": "\u03bb\u03cc\u03b3\u03bf\u03c2",
     "dabar": "\u05d3\u05d1\u05e8",
@@ -311,6 +337,12 @@ class ChatResponse:
     # for callers that construct ChatResponse without these fields.
     register_id: str = ""
     register_variant_id: str = ""
+    # ADR-0073d (L1.4) — operator-visible anchor-lens identity per turn.
+    # Mirrors the TurnEvent fields so callers (CLI, demos, tests) can
+    # read the lens state from ChatResponse without re-parsing the
+    # telemetry JSONL.  ``""`` defaults preserve pre-L1.4 byte-identity.
+    anchor_lens_id: str = ""
+    anchor_lens_mode_label: str = ""
 
 
 class ChatRuntime:
@@ -968,6 +1000,18 @@ class ChatRuntime:
             "" if self.register_pack.is_unregistered()
             else self.register_pack.register_id
         )
+        # ADR-0073d — anchor-lens telemetry.  ``id`` reflects the loaded
+        # pack (empty for UNANCHORED); ``mode_label`` reflects the
+        # engaged label this turn (empty when the lens didn't fire on
+        # this turn's lemma).  Mode is extracted from the pre-decoration
+        # surface so register decoration cannot interfere.
+        anchor_lens_id_stub = (
+            "" if self.anchor_lens.is_unanchored()
+            else self.anchor_lens.lens_id
+        )
+        anchor_lens_mode_label_stub = _extract_anchor_lens_mode_label(
+            pre_decoration_surface_stub, anchor_lens_id_stub,
+        )
         verdicts_bundle = TurnVerdicts(
             identity_score=None,
             safety_verdict=safety_verdict,
@@ -995,6 +1039,8 @@ class ChatRuntime:
                 grounding_source=grounding_source,
                 register_id=register_id_stub,
                 register_variant_id=decoration_stub.variant_id,
+                anchor_lens_id=anchor_lens_id_stub,
+                anchor_lens_mode_label=anchor_lens_mode_label_stub,
             )
             self.turn_log.append(stub_event)
             self._emit_turn_event(stub_event)
@@ -1041,6 +1087,8 @@ class ChatRuntime:
             pre_decoration_surface=pre_decoration_surface_stub,
             register_id=register_id_stub,
             register_variant_id=decoration_stub.variant_id,
+            anchor_lens_id=anchor_lens_id_stub,
+            anchor_lens_mode_label=anchor_lens_mode_label_stub,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -1321,6 +1369,15 @@ class ChatRuntime:
             "" if self.register_pack.is_unregistered()
             else self.register_pack.register_id
         )
+        # ADR-0073d — anchor-lens telemetry (main path).  See stub-path
+        # comment above for semantics.
+        anchor_lens_id_main = (
+            "" if self.anchor_lens.is_unanchored()
+            else self.anchor_lens.lens_id
+        )
+        anchor_lens_mode_label_main = _extract_anchor_lens_mode_label(
+            pre_decoration_surface_main, anchor_lens_id_main,
+        )
         verdicts_bundle = TurnVerdicts(
             identity_score=identity_score,
             safety_verdict=safety_verdict,
@@ -1347,6 +1404,8 @@ class ChatRuntime:
             grounding_source=warm_grounding_source or "vault",
             register_id=register_id_main,
             register_variant_id=decoration_main.variant_id,
+            anchor_lens_id=anchor_lens_id_main,
+            anchor_lens_mode_label=anchor_lens_mode_label_main,
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
@@ -1382,6 +1441,8 @@ class ChatRuntime:
             pre_decoration_surface=pre_decoration_surface_main,
             register_id=register_id_main,
             register_variant_id=decoration_main.variant_id,
+            anchor_lens_id=anchor_lens_id_main,
+            anchor_lens_mode_label=anchor_lens_mode_label_main,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

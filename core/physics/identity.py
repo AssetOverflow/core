@@ -301,3 +301,14 @@ class TurnEvent:
     # byte-identical.
     register_id: str = ""
     register_variant_id: str = ""
+    # ADR-0073d (L1.4) — operator-visible anchor-lens identity per turn.
+    # ``anchor_lens_id`` is the loaded pack id (e.g. ``"grc_logos_v1"``),
+    # or ``""`` for the in-memory UNANCHORED sentinel.
+    # ``anchor_lens_mode_label`` is the engaged ``cognitive_mode_label``
+    # when the lens fired on this turn's lemma (extracted from the
+    # composer-emitted ``[lens(<id>):<mode>]`` annotation), or ``""``
+    # when the lens was loaded but did not engage on this turn's
+    # lemma, or when no lens was loaded at all.  Both default to
+    # ``""`` so pre-L1.4 callers stay byte-identical.
+    anchor_lens_id: str = ""
+    anchor_lens_mode_label: str = ""
