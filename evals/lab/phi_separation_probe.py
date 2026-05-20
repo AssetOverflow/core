@@ -182,6 +182,74 @@ def phi_lemma_idf_centroid(lemma: str) -> np.ndarray:
     return embed_point(centroid)
 
 
+# ---------------------------------------------------------------------------
+# Corpus-graph aware φ (v7, v8) — structural only, no training
+# ---------------------------------------------------------------------------
+# Treats the reviewed teaching corpus as a directed multigraph where
+# lemmas are nodes and (intent, connective) pairs are edge labels.
+# Each lemma's encoding is the centroid (in R^3) of hash points
+# derived from its graph neighborhood:
+#
+#   out_signature = hash("OUT:" + connective + "/" + object_lemma)
+#   in_signature  = hash("IN:"  + subject_lemma + "/" + connective)
+#
+# Lemmas with similar neighborhoods (same connectives used toward
+# the same kinds of partners) land near each other in R^3, then
+# embed once via the CGA point map.  Stays on the null cone.
+#
+# CAVEAT — structural only.  This does NOT fit lemma positions to
+# satisfy R_c · φ(s) ≈ φ(o) along the corpus relations.  Such a
+# joint fit (TransE-style) would require a training loop, a
+# train/test split, and convergence criteria — outside the
+# single-file lab probe shape.  If even this structural variant
+# fails to separate, the lab probe has reached the limit of what
+# closed-form φ can prove; the next move is training.
+
+
+@lru_cache(maxsize=1)
+def _corpus_graph() -> dict[str, list[tuple[str, str]]]:
+    """Build {lemma: [(direction, signature_token), ...]} from the corpus.
+
+    ``direction`` is ``"OUT"`` or ``"IN"`` and the signature token is
+    a deterministic string capturing the role-partner pair.  Cached
+    once because the corpus files are immutable inputs.
+    """
+    graph: dict[str, list[tuple[str, str]]] = {}
+    for path in _CHAIN_CORPORA:
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            s = str(row["subject"]).strip().lower()
+            o = str(row["object"]).strip().lower()
+            c = str(row.get("connective", "")).strip().lower()
+            graph.setdefault(s, []).append(("OUT", f"{c}/{o}"))
+            graph.setdefault(o, []).append(("IN", f"{s}/{c}"))
+    return graph
+
+
+def phi_lemma_corpus_graph(lemma: str) -> np.ndarray:
+    """φ.v7: centroid of corpus-neighborhood hash points.
+
+    Closed-form, no fitting.  Tests whether *structural* position
+    in the corpus graph (which connectives + which partners a
+    lemma participates with) carries enough signal to separate
+    compatible from contradicting chains under the rotor sandwich.
+    """
+    graph = _corpus_graph()
+    edges = graph.get(lemma.strip().lower())
+    if not edges:
+        return embed_point(
+            _stable_r3(lemma, _RNG_SEED_LEMMA + ".graph.unconnected")
+        )
+    pts = np.stack(
+        [_stable_r3(f"{direction}:{token}", _RNG_SEED_LEMMA + ".graph") for direction, token in edges]
+    )
+    return embed_point(pts.mean(axis=0))
+
+
 def phi_lemma_centroid_point(lemma: str) -> np.ndarray:
     """φ.v2: centroid of domain hash points in R^3, embedded once.
 
@@ -457,6 +525,17 @@ _PHI_VARIANTS: tuple[tuple[str, PhiLemma, PhiConnective], ...] = (
     (
         "phi.v6.idf_centroid_antonym_oracle",
         phi_lemma_idf_centroid,
+        phi_connective_antonym_paired,
+    ),
+    # v7-v8 — corpus-graph aware φ (structural only, no training).
+    (
+        "phi.v7.corpus_graph",
+        phi_lemma_corpus_graph,
+        phi_connective,
+    ),
+    (
+        "phi.v8.corpus_graph_antonym_oracle",
+        phi_lemma_corpus_graph,
         phi_connective_antonym_paired,
     ),
 )
