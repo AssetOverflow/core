@@ -46,7 +46,7 @@ Provider keys
 
 ADR
 ---
-ADR-0081 — Frontier provider adapters
+ADR-0082 — Frontier provider adapters
 """
 
 from __future__ import annotations

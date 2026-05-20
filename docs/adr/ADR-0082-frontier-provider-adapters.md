@@ -1,8 +1,9 @@
-# ADR-0081 — Frontier Provider Adapters
+# ADR-0082 — Frontier Provider Adapters
 
-**Status:** Ratified  
-**Date:** 2026-05-20  
+**Status:** Ratified
+**Date:** 2026-05-20
 **Author:** Shay
+**Renumbered from:** ADR-0081 (collided with a parallel `docs/decisions/` track; this `docs/adr/` track is renumbered to 0082 to keep both sequences monotonic).
 
 ---
 
