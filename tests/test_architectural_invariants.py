@@ -222,6 +222,11 @@ class TestINV02GateOnlyNormalization:
             os.path.join("ingest",  "gate.py"),
             os.path.join("tests",   "test_architectural_invariants.py"),
             os.path.join("tests",   "test_versor_closure.py"),
+            # evals/lab/ is research-only, never imported by runtime.
+            # Lab probes need construction-time normalization to build
+            # experimental rotors / embeddings; this does not weaken
+            # the runtime invariant the test enforces.
+            os.path.join("evals", "lab", "phi_separation_probe.py"),
         }
 
         violations: list[str] = []

@@ -1103,6 +1103,30 @@ def cmd_rust_test(args: argparse.Namespace) -> int:
     return _run("cargo", "test", "--release", cwd=_CORE_RS_DIR)
 
 
+def cmd_contemplation(args: argparse.Namespace) -> int:
+    """Delegate to core.contemplation.__main__:main().
+
+    The contemplation module already owns its argparse surface (lane,
+    sink-root, report, pack-id, note); duplicating it here would
+    drift.  We rebuild the inner argv from the parsed Namespace and
+    hand off.
+    """
+    from core.contemplation.__main__ import main as _contemplation_main
+
+    inner: list[str] = [str(p) for p in (args.reports or ())]
+    if getattr(args, "lane", None):
+        inner.extend(["--lane", args.lane])
+    for pack_id in args.pack_id or ():
+        inner.extend(["--pack-id", pack_id])
+    for note in args.note or ():
+        inner.extend(["--note", note])
+    if args.report is not None:
+        inner.extend(["--report", str(args.report)])
+    if args.sink_root is not None:
+        inner.extend(["--sink-root", str(args.sink_root)])
+    return _contemplation_main(inner)
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
     """Inspect import/package health for the CLI runtime path."""
     checks = [
@@ -2999,6 +3023,51 @@ def build_parser() -> argparse.ArgumentParser:
 
     from formation.cli import register as _register_formation
     _register_formation(subparsers)
+
+    contemplation = subparsers.add_parser(
+        "contemplation",
+        help="run ADR-0080 read-only contemplation over explicit evidence files",
+    )
+    contemplation.add_argument(
+        "reports",
+        nargs="+",
+        type=Path,
+        help="report JSON path(s) to contemplate; must share --lane",
+    )
+    contemplation.add_argument(
+        "--lane",
+        choices=("frontier_compare", "contradiction_detection"),
+        default="frontier_compare",
+        help="evidence lane the reports belong to (default: frontier_compare)",
+    )
+    contemplation.add_argument(
+        "--pack-id",
+        action="append",
+        default=(),
+        help="optional pack id to include in substrate snapshot; may repeat",
+    )
+    contemplation.add_argument(
+        "--note",
+        action="append",
+        default=(),
+        help="optional operator note included in substrate snapshot; may repeat",
+    )
+    contemplation.add_argument(
+        "--report",
+        type=Path,
+        default=None,
+        help="optional output path for the contemplation run JSON blob",
+    )
+    contemplation.add_argument(
+        "--sink-root",
+        type=Path,
+        default=None,
+        help=(
+            "optional append-only JSONL sink root; findings land at "
+            "<root>/<YYYY>/<YYYY-MM>.jsonl alongside discovery candidates"
+        ),
+    )
+    contemplation.set_defaults(func=cmd_contemplation)
 
     doctor = subparsers.add_parser("doctor", help="check runtime imports and packaging health")
     doctor.add_argument("--packs", action="store_true", help="also list discovered language packs")
