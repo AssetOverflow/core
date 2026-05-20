@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CORE Frontier Compare — Wave 1</title>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --panel: rgba(255, 255, 255, 0.065);
+      --panel-strong: rgba(255, 255, 255, 0.105);
+      --text: #edf1f7;
+      --muted: #9aa5b5;
+      --line: rgba(255, 255, 255, 0.14);
+      --good: #7ee7a8;
+      --bad: #ff8b8b;
+      --warn: #ffd27a;
+      --accent: #9fc5ff;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+      --radius: 24px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(83, 119, 255, 0.28), transparent 32rem),
+        radial-gradient(circle at 78% 0%, rgba(126, 231, 168, 0.16), transparent 28rem),
+        radial-gradient(circle at 50% 100%, rgba(159, 197, 255, 0.11), transparent 30rem),
+        var(--bg);
+    }
+
+    .shell {
+      width: min(1180px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 38px 0 56px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.35fr 0.65fr;
+      gap: 22px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--panel-strong), var(--panel));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .intro { padding: 32px; }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(36px, 6vw, 72px);
+      line-height: 0.93;
+      letter-spacing: -0.055em;
+    }
+
+    .subtitle {
+      margin: 20px 0 0;
+      color: var(--muted);
+      max-width: 70ch;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .drop {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 260px;
+    }
+
+    .dropzone {
+      border: 1.5px dashed rgba(255, 255, 255, 0.26);
+      border-radius: 20px;
+      padding: 22px;
+      min-height: 150px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      transition: 180ms ease;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .dropzone.drag { border-color: var(--accent); background: rgba(159, 197, 255, 0.10); }
+
+    .dropzone strong { display: block; font-size: 18px; margin-bottom: 6px; }
+    .dropzone span { color: var(--muted); font-size: 13px; }
+
+    .file-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    input[type="file"] { display: none; }
+
+    button, .file-label {
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.09);
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      transition: 160ms ease;
+    }
+
+    button:hover, .file-label:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-1px); }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    .metric {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.055);
+    }
+
+    .metric .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.11em; }
+    .metric .value { margin-top: 10px; font-size: 34px; font-weight: 900; letter-spacing: -0.04em; }
+    .metric .hint { margin-top: 5px; color: var(--muted); font-size: 12px; }
+
+    .suite-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .suite {
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .suite::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(159, 197, 255, 0.10), transparent 42%);
+      pointer-events: none;
+    }
+
+    .suite-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      position: relative;
+    }
+
+    .suite h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .pill.good { color: #062313; background: var(--good); border-color: transparent; }
+    .pill.bad { color: #2a0505; background: var(--bad); border-color: transparent; }
+    .pill.warn { color: #251900; background: var(--warn); border-color: transparent; }
+
+    .scoreline {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.10);
+      margin: 18px 0 16px;
+      overflow: hidden;
+    }
+
+    .scoreline > div {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--good));
+    }
+
+    .cases {
+      position: relative;
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .case {
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      background: rgba(0, 0, 0, 0.18);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .case-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .case-id { font-weight: 800; font-size: 13px; word-break: break-word; }
+    .prompt { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .failures { color: var(--bad); font-size: 12px; margin-top: 8px; }
+
+    details {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    summary { cursor: pointer; user-select: none; }
+
+    pre {
+      overflow: auto;
+      max-height: 280px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.28);
+      color: #d7e4ff;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .empty {
+      padding: 28px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero, .suite-grid { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 560px) {
+      .shell { width: min(100vw - 24px, 1180px); padding-top: 20px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .intro, .drop { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="card intro">
+        <p class="eyebrow">CORE benchmark recording view</p>
+        <h1>Frontier Compare<br />Wave 1</h1>
+        <p class="subtitle">
+          A clean local viewer for CORE benchmark reports: deterministic replay, truth-lock behavior,
+          and register / anchor-lens axis discipline.  Drop a JSON report generated by
+          <code>python -m evals.frontier_compare --suite all --json --report frontier_wave1.json</code>.
+        </p>
+      </div>
+      <div class="card drop">
+        <div id="dropzone" class="dropzone">
+          <div>
+            <strong>Drop report JSON</strong>
+            <span>or choose a file from disk</span>
+          </div>
+        </div>
+        <div class="file-row">
+          <label class="file-label" for="fileInput">Choose JSON</label>
+          <input id="fileInput" type="file" accept="application/json,.json" />
+          <button id="loadDemo" type="button">Load demo shape</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="summary" class="summary-grid"></section>
+    <section id="suites" class="suite-grid"></section>
+    <p class="footer">Static viewer. No network calls. No report data leaves this browser.</p>
+  </main>
+
+  <script>
+    const summaryEl = document.getElementById('summary');
+    const suitesEl = document.getElementById('suites');
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const loadDemo = document.getElementById('loadDemo');
+
+    const fmtPct = (x) => `${Math.round((Number(x || 0)) * 100)}%`;
+    const pillClass = (passed) => passed ? 'good' : 'bad';
+
+    function normalizeReport(report) {
+      if (report.suites) return report;
+      return {
+        benchmark_family: 'frontier_compare_wave1',
+        model: 'core',
+        mode: 'native',
+        suites: [report],
+        summary: {
+          suite_count: 1,
+          case_count: report.case_count || (report.cases || []).length,
+          primary_score: report.primary_score || 0,
+          passed: !!report.passed,
+        }
+      };
+    }
+
+    function render(reportRaw) {
+      const report = normalizeReport(reportRaw);
+      const summary = report.summary || {};
+      summaryEl.innerHTML = '';
+      suitesEl.innerHTML = '';
+
+      const metrics = [
+        ['Model', report.model || 'core', report.mode || 'native'],
+        ['Suites', summary.suite_count ?? (report.suites || []).length, 'benchmark groups'],
+        ['Cases', summary.case_count ?? 0, 'scored prompts'],
+        ['Primary', fmtPct(summary.primary_score), summary.passed ? 'all gates passed' : 'review failures'],
+      ];
+
+      for (const [label, value, hint] of metrics) {
+        const node = document.createElement('div');
+        node.className = 'metric';
+        node.innerHTML = `<div class="label">${label}</div><div class="value">${value}</div><div class="hint">${hint}</div>`;
+        summaryEl.appendChild(node);
+      }
+
+      const suites = report.suites || [];
+      if (!suites.length) {
+        suitesEl.innerHTML = '<div class="card empty">No suites found in report.</div>';
+        return;
+      }
+
+      for (const suite of suites) {
+        const suiteNode = document.createElement('article');
+        suiteNode.className = 'card suite';
+        const cases = suite.cases || [];
+        const score = Number(suite.primary_score || 0);
+        suiteNode.innerHTML = `
+          <div class="suite-head">
+            <div>
+              <h2>${suite.suite || 'suite'}</h2>
+              <div class="prompt">${cases.length} cases · primary score ${fmtPct(score)}</div>
+            </div>
+            <span class="pill ${pillClass(!!suite.passed)}">${suite.passed ? 'PASS' : 'FAIL'}</span>
+          </div>
+          <div class="scoreline"><div style="width:${Math.max(0, Math.min(100, score * 100))}%"></div></div>
+          <div class="cases"></div>
+        `;
+        const casesEl = suiteNode.querySelector('.cases');
+        for (const c of cases) {
+          const caseNode = document.createElement('div');
+          caseNode.className = 'case';
+          const failures = c.failures && c.failures.length ? c.failures.join(', ') : '';
+          caseNode.innerHTML = `
+            <div class="case-top">
+              <div class="case-id">${c.case_id || 'case'}</div>
+              <span class="pill ${pillClass(!!c.passed)}">${c.passed ? 'PASS' : 'FAIL'}</span>
+            </div>
+            <div class="prompt">${c.prompt || ''}</div>
+            ${failures ? `<div class="failures">${failures}</div>` : ''}
+            <details>
+              <summary>details</summary>
+              <pre>${JSON.stringify(c.details || {}, null, 2)}</pre>
+            </details>
+          `;
+          casesEl.appendChild(caseNode);
+        }
+        suitesEl.appendChild(suiteNode);
+      }
+    }
+
+    function loadText(text) {
+      try {
+        render(JSON.parse(text));
+      } catch (err) {
+        alert(`Could not parse report JSON: ${err.message}`);
+      }
+    }
+
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      loadText(await file.text());
+    });
+
+    ['dragenter', 'dragover'].forEach((name) => {
+      dropzone.addEventListener(name, (event) => {
+        event.preventDefault();
+        dropzone.classList.add('drag');
+      });
+    });
+    ['dragleave', 'drop'].forEach((name) => {
+      dropzone.addEventListener(name, (event) => {
+        event.preventDefault();
+        dropzone.classList.remove('drag');
+      });
+    });
+    dropzone.addEventListener('drop', async (event) => {
+      const file = event.dataTransfer.files && event.dataTransfer.files[0];
+      if (!file) return;
+      loadText(await file.text());
+    });
+
+    loadDemo.addEventListener('click', () => render({
+      benchmark_family: 'frontier_compare_wave1',
+      model: 'core',
+      mode: 'native',
+      summary: { suite_count: 3, case_count: 12, primary_score: 1.0, passed: true },
+      suites: [
+        { suite: 'determinism', primary_score: 1, passed: true, cases: [
+          { case_id: 'determinism_00', prompt: 'What is truth?', passed: true, score: 1, failures: [], details: { unique_surfaces: 1, unique_trace_hashes: 1 } }
+        ]},
+        { suite: 'truth_lock', primary_score: 1, passed: true, cases: [
+          { case_id: 'truth_lock_known_truth', prompt: 'What is truth?', passed: true, score: 1, failures: [], details: { grounding_source: 'pack' } }
+        ]},
+        { suite: 'axis_orthogonality', primary_score: 1, passed: true, cases: [
+          { case_id: 'register_axis_truth', prompt: 'What is truth?', passed: true, score: 1, failures: [], details: { unique_surfaces: 3 } }
+        ]}
+      ]
+    }));
+
+    render({
+      benchmark_family: 'frontier_compare_wave1',
+      model: 'core',
+      mode: 'native',
+      summary: { suite_count: 0, case_count: 0, primary_score: 0, passed: false },
+      suites: []
+    });
+  </script>
+</body>
+</html>
