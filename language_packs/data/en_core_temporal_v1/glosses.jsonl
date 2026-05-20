@@ -16,7 +16,7 @@
 {"lemma":"past","gloss":"time before now","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["time","now"],"predicates_invited":[],"definition_version":1}
 {"lemma":"period","gloss":"some time","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["some","time"],"predicates_invited":[],"definition_version":1}
 {"lemma":"present","gloss":"time now","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["time","now"],"predicates_invited":[],"definition_version":1}
-{"lemma":"prior","gloss":"before","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":[],"predicates_invited":[],"definition_version":1}
+{"lemma":"prior","gloss":"is before","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20","adr-0085-style:reviewed:2026-05-21"],"definitional_atoms":[],"predicates_invited":[],"definition_version":1}
 {"lemma":"recently","gloss":"before now and near","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["now","and","near"],"predicates_invited":[],"definition_version":1}
 {"lemma":"since","gloss":"from a start","pos":"ADP","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["start"],"predicates_invited":[],"definition_version":1}
 {"lemma":"soon","gloss":"after now and near","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["now","and","near"],"predicates_invited":[],"definition_version":1}
