@@ -1,4 +1,5 @@
 {
+  "all_claims_supported": true,
   "claims_supported": {
     "grounding_gate_pack_invariant": true,
     "identity_load_bearing": true,

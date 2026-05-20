@@ -126,6 +126,24 @@
     .metric .mvalue { margin-top: 8px; font-size: 30px; font-weight: 900; letter-spacing: -0.04em; }
     .metric .mhint { margin-top: 4px; color: var(--muted2); font-size: 12px; }
 
+    /* Pass-rate chart — one horizontal bar per suite */
+    .passrate-chart {
+      padding: 16px 22px;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--panel);
+      margin-bottom: 24px;
+    }
+    .passrate-chart .chart-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.11em; font-weight: 700; margin-bottom: 12px; }
+    .passrate-row { display: grid; grid-template-columns: 180px 1fr 70px; gap: 12px; align-items: center; margin-bottom: 6px; }
+    .passrate-row:last-child { margin-bottom: 0; }
+    .passrate-name { font-size: 13px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .passrate-bar { background: var(--border); height: 14px; border-radius: 7px; overflow: hidden; position: relative; }
+    .passrate-fill { height: 100%; background: var(--good); transition: width 200ms ease; }
+    .passrate-fill.bad { background: var(--bad); }
+    .passrate-fill.mixed { background: linear-gradient(90deg, var(--good) 0%, var(--good) calc(var(--frac) * 100%), var(--bad) calc(var(--frac) * 100%), var(--bad) 100%); }
+    .passrate-val { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
+
     /* ── Main two-column layout ─────────────────────── */
     .main-layout {
       display: grid;
@@ -493,6 +511,9 @@
     <!-- Summary strip -->
     <div id="summaryStrip" class="summary-strip"></div>
 
+    <!-- Pass-rate chart (one bar per suite) -->
+    <div id="passrateChart" class="passrate-chart" style="display:none"></div>
+
     <!-- Main layout: sidebar + content -->
     <div class="main-layout">
       <!-- Preamble sidebar -->
@@ -532,6 +553,7 @@
 
     /* ─── DOM refs ───────────────────────────────────── */
     const summaryStripEl  = document.getElementById('summaryStrip');
+    const passrateChartEl = document.getElementById('passrateChart');
     const suiteNavEl      = document.getElementById('suiteNav');
     const panelsEl        = document.getElementById('panels');
     const suiteDescsEl    = document.getElementById('suiteDescriptions');
@@ -555,6 +577,11 @@
         title: 'Axis Orthogonality',
         short: 'Register vs anchor-lens independence.',
         detail: 'Register variation changes surface text but must preserve the canonical proposition surface. Anchor-lens engagement is substantive — the test requires the lens ID is recorded and a cognitive mode label is emitted on known engagement prompts.'
+      },
+      prompt_battery: {
+        title: 'Prompt Battery (cross-provider)',
+        short: 'Side-by-side surface evidence across providers.',
+        detail: 'Seven fixed prompts (definition / cause / verification / comparison / procedure / unknown intent) routed through the same (prompt)→surface adapter abstraction, so CORE / OpenAI / Anthropic / Ollama can be compared on identical inputs. Per-case PASS is loose by design (non-empty surface, no adapter exception) — semantic quality is for human review of the drawer.'
       },
     };
 
@@ -604,16 +631,37 @@
           kv.map(([k,v]) => `<tr><td>${esc(k)}</td><td>${kvVal(v)}</td></tr>`).join('') +
           '</table>';
       }
-      // Observation surface preview
+      // Observation surface preview — Lane-aware.
+      // Lane B (cross-provider) observations carry provider/model/elapsed_ms
+      // instead of CORE-internal telemetry; render the appropriate fields
+      // for each shape so a viewer of either lane gets actionable info.
       const obs = c.details?.observation || (c.details?.observations && c.details.observations[0]);
       let obsHtml = '';
-      if (obs && obs.surface) {
-        obsHtml = `<table class="kv-table">
-          <tr><td>surface</td><td><span class="kv-val">${esc(obs.surface)}</span></td></tr>
-          <tr><td>grounding</td><td><span class="kv-val">${esc(obs.grounding_source||'')}</span></td></tr>
-          ${obs.anchor_lens_mode_label ? `<tr><td>lens mode</td><td><span class="kv-val good">${esc(obs.anchor_lens_mode_label)}</span></td></tr>` : ''}
-          ${obs.versor_condition != null ? `<tr><td>versor cond.</td><td><span class="kv-val">${obs.versor_condition}</span></td></tr>` : ''}
-        </table>`;
+      if (obs && (obs.surface || obs.error_type)) {
+        const isCrossProvider = obs.provider != null;
+        if (isCrossProvider) {
+          // Lane B — cross-provider observation.
+          const errRow = obs.error_type
+            ? `<tr><td>error</td><td><span class="kv-val bad">${esc(obs.error_type)}: ${esc(obs.error_message||'')}</span></td></tr>`
+            : '';
+          obsHtml = `<table class="kv-table">
+            <tr><td>provider</td><td><span class="kv-val">${esc(obs.provider)}</span></td></tr>
+            <tr><td>model</td><td><span class="kv-val">${esc(obs.model||'')}</span></td></tr>
+            <tr><td>surface</td><td><span class="kv-val">${obs.surface ? esc(obs.surface) : '<em class="muted">(empty)</em>'}</span></td></tr>
+            ${obs.elapsed_ms != null ? `<tr><td>elapsed</td><td><span class="kv-val">${Number(obs.elapsed_ms).toFixed(1)} ms</span></td></tr>` : ''}
+            ${errRow}
+          </table>`;
+        } else {
+          // Lane A — CORE-native observation with full telemetry.
+          obsHtml = `<table class="kv-table">
+            <tr><td>surface</td><td><span class="kv-val">${esc(obs.surface)}</span></td></tr>
+            <tr><td>grounding</td><td><span class="kv-val">${esc(obs.grounding_source||'')}</span></td></tr>
+            ${obs.anchor_lens_mode_label ? `<tr><td>lens mode</td><td><span class="kv-val good">${esc(obs.anchor_lens_mode_label)}</span></td></tr>` : ''}
+            ${obs.versor_condition != null ? `<tr><td>versor cond.</td><td><span class="kv-val">${obs.versor_condition}</span></td></tr>` : ''}
+            ${obs.trace_hash ? `<tr><td>trace_hash</td><td><span class="kv-val">${esc(obs.trace_hash)}</span></td></tr>` : ''}
+            ${obs.register_id ? `<tr><td>register</td><td><span class="kv-val">${esc(obs.register_id)}</span></td></tr>` : ''}
+          </table>`;
+        }
       }
       const rawId = `raw-${Math.random().toString(36).slice(2)}`;
       return `<div class="drawer-inner">
@@ -738,8 +786,30 @@
           <p>No suites loaded.<br/>Drop a JSON report or click <strong>Choose JSON</strong>.</p>
           <p style="margin-top:12px;color:var(--muted2);font-size:12px">Generate one with:<br/><code>python -m evals.frontier_compare --suite all --json --report frontier_wave1.json</code></p>
         </div>`;
+        passrateChartEl.style.display = 'none';
         return;
       }
+
+      // Pass-rate chart: one horizontal bar per suite, showing
+      // (passed cases / total cases).  Mixed-pass suites get a
+      // two-color split so partial failures stand out at a glance.
+      const chartRows = suites.map(s => {
+        const cs = s.cases || [];
+        const passed = cs.filter(c => c.passed).length;
+        const total = cs.length || 1;
+        const frac = passed / total;
+        let cls = 'mixed';
+        if (frac === 1) cls = '';
+        else if (frac === 0) cls = 'bad';
+        const style = cls === 'mixed' ? `style="width:100%;--frac:${frac}"` : `style="width:${(frac*100).toFixed(1)}%"`;
+        return `<div class="passrate-row">
+          <div class="passrate-name" title="${esc(s.suite)}">${esc(s.suite)}</div>
+          <div class="passrate-bar"><div class="passrate-fill ${cls}" ${style}></div></div>
+          <div class="passrate-val">${passed}/${total}</div>
+        </div>`;
+      }).join('');
+      passrateChartEl.innerHTML = `<div class="chart-label">Pass rate by suite</div>${chartRows}`;
+      passrateChartEl.style.display = '';
 
       buildSuiteDescs(suites.map(s => s.suite));
 

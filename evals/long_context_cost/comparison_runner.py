@@ -130,6 +130,9 @@ def run_comparison(n_values: tuple[int, ...] = DEFAULT_N_VALUES) -> dict[str, An
         },
         "transformer_baselines": baselines,
         "claim_supported": all(r.top1_correct for r in core_results),
+        # ``all_claims_supported`` alias — canonical cross-demo success
+        # field so operator tooling sees one uniform key across demos.
+        "all_claims_supported": all(r.top1_correct for r in core_results),
     }
 
 

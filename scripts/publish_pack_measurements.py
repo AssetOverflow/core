@@ -22,17 +22,22 @@ from evals.refusal_calibration.pack_runner import run_pack_refusal_eval
 def build_combined_report() -> dict[str, Any]:
     identity = run_pack_divergence_eval()
     refusal = run_pack_refusal_eval()
+    claims = {
+        "identity_load_bearing": identity["load_bearing"],
+        "grounding_gate_pack_invariant": refusal["pack_invariant_gate"],
+        "no_fabrication_under_any_pack": all(
+            p["fabrication_rate"] == 0.0 for p in refusal["packs"]
+        ),
+    }
     return {
         "schema_version": 1,
         "identity_divergence": identity,
         "refusal_calibration": refusal,
-        "claims_supported": {
-            "identity_load_bearing": identity["load_bearing"],
-            "grounding_gate_pack_invariant": refusal["pack_invariant_gate"],
-            "no_fabrication_under_any_pack": all(
-                p["fabrication_rate"] == 0.0 for p in refusal["packs"]
-            ),
-        },
+        "claims_supported": claims,
+        # ``all_claims_supported`` is the canonical cross-demo success
+        # field — AND of every entry in the nested claims_supported dict.
+        # Operator tooling can consume this without knowing the claim list.
+        "all_claims_supported": all(claims.values()),
     }
 
 
