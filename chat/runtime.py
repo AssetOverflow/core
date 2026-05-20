@@ -16,6 +16,7 @@ from chat.pack_grounding import (
     pack_grounded_correction_surface,
     pack_grounded_procedure_surface,
     pack_grounded_relation_confirmation_surface,
+    gloss_aware_cause_surface,
     PACK_ID as _COGNITION_PACK_ID,
 )
 from chat.teaching_grounding import (
@@ -780,6 +781,25 @@ class ChatRuntime:
                         intent.relation,
                         intent.object or intent.secondary_subject,
                         negated=intent.negated,
+                    )
+                    if surface is not None:
+                        return (surface, "pack", ())
+                # ADR-0085 — gloss-aware CAUSE surface (opt-in).  Tried
+                # FIRST so a lemma with a ratified gloss gets an
+                # explanation-shaped answer drawn from the gloss text
+                # instead of the chain-walk's structurally-correct-but-
+                # bureaucratic domain-tag walk.  Falls through to the
+                # chain-walk on None (no gloss for this lemma), so the
+                # null-drop invariant holds: every case that lifted
+                # pre-ADR-0085 still lifts; only the *frame* shifts on
+                # lemmas where a gloss exists.
+                if (
+                    self.config.gloss_aware_cause
+                    and intent.tag is IntentTag.CAUSE
+                ):
+                    surface = gloss_aware_cause_surface(
+                        lemma, register=self.register_pack,
+                        anchor_lens=self.anchor_lens,
                     )
                     if surface is not None:
                         return (surface, "pack", ())

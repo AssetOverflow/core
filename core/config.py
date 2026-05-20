@@ -90,6 +90,14 @@ class RuntimeConfig:
     transitive_surface: bool = False
     transitive_max_depth: int = 2
 
+    # ADR-0085 — gloss-aware CAUSE surface.  When True, IntentTag.CAUSE
+    # consults the subject lemma's gloss first and emits an explanation-
+    # shaped sentence drawn from the gloss text, falling through to
+    # the chain-walk ``teaching_grounded_surface*`` only when no gloss
+    # exists for the lemma.  Default False preserves the pre-ADR-0085
+    # chain-walk surface byte-identically (null-drop invariant).
+    gloss_aware_cause: bool = False
+
     # ADR-0066 / P3.2 — opt-in thread anaphora.  When enabled, the
     # runtime prepends a deterministic backreference to a recent
     # grounded turn when the current turn's subject lemma matches
