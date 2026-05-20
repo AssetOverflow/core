@@ -1,13 +1,13 @@
 {
-  "lens_id": "grc_arche_v1",
-  "version": "1.0.0",
-  "description": "Greek-substrate anchor lens. Pivots English 'beginning' / 'origin' onto ἀρχή's logos.genesis.origin atom. Cognitive mode: generative-origin. Completes the grc quad. See ADR-0073c.",
-  "schema_version": "1.0.0",
-  "mastery_report_sha256": "",
-  "substrate": "grc",
   "atom": "logos.genesis.origin",
   "cognitive_mode": "generative-origin",
-  "source_entry_id": "grc-core-cog-004",
+  "description": "Greek-substrate anchor lens. Pivots English 'beginning' / 'origin' onto \u1f00\u03c1\u03c7\u03ae's logos.genesis.origin atom. Cognitive mode: generative-origin. Completes the grc quad. See ADR-0073c.",
+  "lens_id": "grc_arche_v1",
+  "mastery_report_sha256": "df4e3e1c85830689b57c970ced0902c688928fa5b6adaef7928e9ed18187f690",
   "pair_lens_id": null,
-  "ratification_method": "anchor_lens_lifts_proposition"
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "schema_version": "1.0.0",
+  "source_entry_id": "grc-core-cog-005",
+  "substrate": "grc",
+  "version": "1.0.0"
 }

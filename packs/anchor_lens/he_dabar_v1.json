@@ -1,13 +1,13 @@
 {
-  "lens_id": "he_dabar_v1",
-  "version": "1.0.0",
-  "description": "Hebrew-substrate anchor lens. Pivots English 'word' onto דָּבָר's logos.utterance.word atom via the he cognition pack. Cognitive mode: divine-word. Pair: grc_logos_v1. See ADR-0073c.",
-  "schema_version": "1.0.0",
-  "mastery_report_sha256": "",
-  "substrate": "he",
   "atom": "logos.utterance.word",
   "cognitive_mode": "divine-word",
-  "source_entry_id": "he-core-cog-003",
+  "description": "Hebrew-substrate anchor lens. Pivots English 'word' onto \u05d3\u05bc\u05b8\u05d1\u05b8\u05e8's logos.utterance.word atom via the he cognition pack. Cognitive mode: divine-word. Pair: grc_logos_v1. See ADR-0073c.",
+  "lens_id": "he_dabar_v1",
+  "mastery_report_sha256": "d97de46b9ddea4985a774495de558ba395ae45bd0a42f3cc8318d3975f5e4b29",
   "pair_lens_id": "grc_logos_v1",
-  "ratification_method": "anchor_lens_lifts_proposition"
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "schema_version": "1.0.0",
+  "source_entry_id": "he-core-cog-001",
+  "substrate": "he",
+  "version": "1.0.0"
 }

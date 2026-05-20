@@ -1,20 +1,18 @@
 {
   "evidence": {
-    "atoms_anchored_in_substrate": [
-      "logos.vitality.animate"
-    ],
-    "cognitive_mode_label": "animate-vitality",
-    "cognitive_mode_label_empty": false,
-    "primary_substrate": "grc",
-    "semantic_domain_preferences_count": 1,
-    "semantic_domain_preferences_empty": false
+    "atom": "logos.vitality.animate",
+    "atom_in_lexicon": true,
+    "cognitive_mode": "animate-vitality",
+    "pair_lens_id": "he_chayyim_v1",
+    "source_entry_id": "grc-core-cog-004",
+    "substrate": "grc"
   },
   "failure_reasons": [],
-  "issued_at": "2026-05-19T00:00:00Z",
+  "issued_at": "2026-05-20T00:00:00Z",
   "lens_id": "grc_zoe_v1",
-  "pack_source_sha256": "749e2f211803f344fc93b1f6b321fa25d4409564ea78ba2e49f27af001de918e",
+  "pack_source_sha256": "1b7889428774291a5651500a83b879bd0f8f0c60249a9d529c9bc03d1c3f7b0a",
   "ratification_method": "anchor_lens_lifts_proposition",
   "ratified": true,
-  "report_sha256": "78aa4a529532ec77cfa6db7fd180b137367cb66cef7989778ca05f0db8602d55",
+  "report_sha256": "308713b12f482f9f6dab460476b1076051b1aa4ade2392b49ef903d6479d444d",
   "schema_version": "1.0.0"
 }

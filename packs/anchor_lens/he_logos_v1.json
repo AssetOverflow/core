@@ -1,13 +1,13 @@
 {
-  "lens_id": "he_logos_v1",
-  "version": "1.0.0",
-  "description": "Hebrew-substrate anchor lens. Pivots English 'truth' onto אמת's logos.aletheia.verity atom via the he cognition pack. Cognitive mode: covenant-verity. Dual-correction pair with grc_aletheia_v1. See ADR-0073c.",
-  "schema_version": "1.0.0",
-  "mastery_report_sha256": "",
-  "substrate": "he",
   "atom": "logos.aletheia.verity",
   "cognitive_mode": "covenant-verity",
-  "source_entry_id": "he-core-cog-001",
+  "description": "Hebrew-substrate anchor lens. Pivots English 'truth' onto \u05d0\u05de\u05ea's logos.aletheia.verity atom via the he cognition pack. Cognitive mode: covenant-verity. Dual-correction pair with grc_aletheia_v1. See ADR-0073c.",
+  "lens_id": "he_logos_v1",
+  "mastery_report_sha256": "79c2f6953b287bdf240dc482289a633800d12a6636b8732509913f6ea8c37fa5",
   "pair_lens_id": "grc_aletheia_v1",
-  "ratification_method": "anchor_lens_lifts_proposition"
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "schema_version": "1.0.0",
+  "source_entry_id": "he-core-cog-002",
+  "substrate": "he",
+  "version": "1.0.0"
 }

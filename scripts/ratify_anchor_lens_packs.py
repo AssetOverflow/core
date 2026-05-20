@@ -101,14 +101,21 @@ def _ratify_one(pack_path: Path, lens_id: str) -> tuple[dict, dict[str, Any]]:
     substrate = pack.get("substrate", "")
     atom = pack.get("atom", "")
 
-    # L1.3 gate: atom must exist in substrate lexicon
-    lexicon_atoms = _load_lexicon_atoms(substrate)
-    if atom not in lexicon_atoms:
-        raise SystemExit(
-            f"L1 gate refuses {lens_id!r}: atom {atom!r} not found in "
-            f"{_SUBSTRATE_LEXICON[substrate]} lexicon. "
-            f"Available atoms (sample): {sorted(lexicon_atoms)[:10]}"
-        )
+    # Null-lens sentinel: substrate='none' + empty atom bypasses the
+    # atom-in-lexicon gate (no lexicon to check against).  ADR-0073b
+    # null-lift invariant requires this pack stay sealed.
+    if substrate == "none" and atom == "":
+        atom_in_lexicon = False
+    else:
+        # L1.3 gate: atom must exist in substrate lexicon
+        lexicon_atoms = _load_lexicon_atoms(substrate)
+        if atom not in lexicon_atoms:
+            raise SystemExit(
+                f"L1 gate refuses {lens_id!r}: atom {atom!r} not found in "
+                f"{_SUBSTRATE_LEXICON[substrate]} lexicon. "
+                f"Available atoms (sample): {sorted(lexicon_atoms)[:10]}"
+            )
+        atom_in_lexicon = True
 
     pack_source_sha = _pack_source_sha(pack)
 
@@ -127,7 +134,7 @@ def _ratify_one(pack_path: Path, lens_id: str) -> tuple[dict, dict[str, Any]]:
             "source_entry_id": pack.get("source_entry_id", ""),
             "cognitive_mode": pack.get("cognitive_mode", ""),
             "pair_lens_id": pack.get("pair_lens_id"),
-            "atom_in_lexicon": True,
+            "atom_in_lexicon": atom_in_lexicon,
         },
         "failure_reasons": [],
         "report_sha256": "",

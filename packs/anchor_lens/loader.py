@@ -49,6 +49,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from formation.hashing import verify_seal
+
 _DEFAULT_SEARCH_PATHS: tuple[Path, ...] = (
     Path(__file__).resolve().parent,
 )
@@ -93,16 +95,48 @@ class AnchorLens:
     mastery_report_sha256: str = ""
 
     def is_unanchored(self) -> bool:
-        """True for the null sentinel (default_unanchored_v1)."""
-        return self.substrate == "none" and self.atom == ""
+        """True for the in-memory sentinel returned by :meth:`unanchored`.
+
+        Distinguishes the in-memory ``__unanchored__`` sentinel from the
+        on-disk ``default_unanchored_v1`` pack — both are structurally
+        null but only the in-memory one carries the sentinel lens_id.
+        """
+        return self.lens_id == "__unanchored__"
+
+    def is_null_lens(self) -> bool:
+        """True iff structurally null (no atom, ``substrate='none'``)."""
+        return (
+            self.substrate == "none"
+            and self.atom == ""
+            and self.cognitive_mode == ""
+        )
+
+    # v1-legacy attribute aliases (back-compat for consumers not yet
+    # migrated to v2 field names).  Read-only views over canonical v2.
+    @property
+    def primary_substrate(self) -> str:
+        return self.substrate
+
+    @property
+    def semantic_domain_preferences(self) -> tuple[str, ...]:
+        return (self.atom,) if self.atom else ()
+
+    @property
+    def cognitive_mode_label(self) -> str:
+        return self.cognitive_mode
 
     @classmethod
     def unanchored(cls) -> "AnchorLens":
-        """Return a frozen sentinel equivalent to default_unanchored_v1."""
+        """Return a frozen in-memory sentinel lens.
+
+        Structurally null and tagged with the reserved sentinel
+        ``lens_id='__unanchored__'`` to distinguish from the disk-ratified
+        ``default_unanchored_v1`` pack.
+        """
         return cls(
-            lens_id="default_unanchored_v1",
+            lens_id="__unanchored__",
             version="1.0.0",
-            description="Default unanchored lens.",
+            description="In-memory unanchored sentinel.",
             substrate="none",
             atom="",
             cognitive_mode="",
@@ -185,6 +219,13 @@ def _validate_envelope(raw: dict, lens_id: str) -> None:
             f"pack {safe_pack_id(lens_id)!r}: atom must be a string "
             f"<= {_MAX_ATOM_LEN} chars"
         )
+    # Non-null lens packs (substrate != 'none') must declare a non-empty
+    # atom — the engagement path can't fire without one.
+    if substrate != "none" and not atom:
+        raise AnchorLensError(
+            f"pack {safe_pack_id(lens_id)!r}: atom must be non-empty when "
+            f"substrate is {substrate!r}"
+        )
     cognitive_mode = raw.get("cognitive_mode", "")
     if not isinstance(cognitive_mode, str) or len(cognitive_mode) > _MAX_LABEL_LEN:
         raise AnchorLensError(
@@ -193,7 +234,22 @@ def _validate_envelope(raw: dict, lens_id: str) -> None:
         )
 
 
+def _validate_lens_id_for_fs(lens_id: object) -> None:
+    """Reject path-traversal / slash / empty / non-string lens ids."""
+    if (
+        not lens_id
+        or not isinstance(lens_id, str)
+        or "/" in lens_id
+        or "\\" in lens_id
+        or ".." in lens_id
+    ):
+        raise AnchorLensError(
+            f"invalid lens_id: {safe_pack_id(lens_id)!r}"
+        )
+
+
 def _find_pack_path(lens_id: str, search_paths: Iterable[Path]) -> Path:
+    _validate_lens_id_for_fs(lens_id)
     for directory in search_paths:
         candidate = Path(directory) / f"{lens_id}.json"
         if candidate.exists():
@@ -248,6 +304,28 @@ def load_anchor_lens(
             f"CORE_ALLOW_UNRATIFIED_ANCHOR_LENS=1 for development."
         )
 
+    # Companion-SHA agreement check: when ratification is required and a
+    # SHA is declared, the declared SHA must match the on-disk mastery
+    # report's report_sha256.  Tamper-evidence boundary per ADR-0073b.
+    if require_ratified and raw.get("mastery_report_sha256", ""):
+        declared = str(raw.get("mastery_report_sha256", ""))
+        report_path = pack_path.parent / f"{lens_id}.mastery_report.json"
+        if report_path.is_file():
+            try:
+                report = json.loads(report_path.read_text(encoding="utf-8"))
+                report_sha = str(report.get("report_sha256", ""))
+                if report_sha != declared:
+                    raise AnchorLensError(
+                        f"pack {safe_pack_id(lens_id)!r}: declared "
+                        f"mastery_report_sha256 does not match companion "
+                        f"report's report_sha256"
+                    )
+            except (OSError, json.JSONDecodeError) as exc:
+                raise AnchorLensError(
+                    f"pack {safe_pack_id(lens_id)!r}: companion mastery "
+                    f"report unreadable: {exc}"
+                ) from exc
+
     return AnchorLens(
         lens_id=raw["lens_id"],
         version=raw["version"],
@@ -264,19 +342,81 @@ def load_anchor_lens(
     )
 
 
-def available_anchor_lens_packs(
+# Module-level singleton sentinel (v1 back-compat).  Consumers that
+# imported ``UNANCHORED`` directly continue to work; new code should
+# prefer ``AnchorLens.unanchored()``.
+UNANCHORED: "AnchorLens" = AnchorLens.unanchored()
+
+
+def verify_anchor_lens_seal(
+    lens_id: str,
+    *,
     search_paths: Iterable[Path | str] | None = None,
-) -> list[str]:
-    """Return lens_ids for all ``.json`` files in the search paths."""
+) -> bool:
+    """Return True iff the pack's companion mastery report is self-sealed
+    and the pack's declared SHA matches the report's SHA.
+
+    Read-only; never raises on mismatch — callers that want a hard
+    failure should use :func:`load_anchor_lens` with ``require_ratified=True``.
+    """
     resolved_paths: list[Path] = [
         Path(p) for p in (search_paths or _DEFAULT_SEARCH_PATHS)
     ]
-    ids: list[str] = []
+    try:
+        pack_path = _find_pack_path(lens_id, resolved_paths)
+    except AnchorLensError:
+        return False
+    try:
+        raw = json.loads(pack_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    declared = str(raw.get("mastery_report_sha256", ""))
+    if not declared:
+        return False
+    report_path = pack_path.parent / f"{lens_id}.mastery_report.json"
+    if not report_path.is_file():
+        return False
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if report.get("report_sha256") != declared:
+        return False
+    return verify_seal(report, sha_field="report_sha256")
+
+
+def available_anchor_lens_packs(
+    search_paths: Iterable[Path | str] | None = None,
+) -> list[dict]:
+    """Return summary dicts for all ``.json`` packs in the search paths.
+
+    Each dict carries the minimum fields callers need for listing UI:
+    ``lens_id``, ``ratified`` (bool from non-empty ``mastery_report_sha256``),
+    ``primary_substrate`` (v1 name back-compat for stable consumers),
+    and ``substrate`` (v2 canonical).
+    """
+    resolved_paths: list[Path] = [
+        Path(p) for p in (search_paths or _DEFAULT_SEARCH_PATHS)
+    ]
+    summaries: list[dict] = []
     for directory in resolved_paths:
         d = Path(directory)
-        if d.is_dir():
-            for f in sorted(d.glob("*.json")):
-                stem = f.stem
-                if not stem.startswith("_") and ".mastery_report" not in stem:
-                    ids.append(stem)
-    return ids
+        if not d.is_dir():
+            continue
+        for f in sorted(d.glob("*.json")):
+            stem = f.stem
+            if stem.startswith("_") or ".mastery_report" in stem:
+                continue
+            try:
+                raw = json.loads(f.read_text(encoding="utf-8"))
+                raw = _normalise_raw(raw, stem)
+            except (OSError, json.JSONDecodeError):
+                continue
+            substrate = raw.get("substrate", "none")
+            summaries.append({
+                "lens_id": stem,
+                "ratified": bool(raw.get("mastery_report_sha256", "")),
+                "substrate": substrate,
+                "primary_substrate": substrate,  # v1 back-compat
+            })
+    return summaries

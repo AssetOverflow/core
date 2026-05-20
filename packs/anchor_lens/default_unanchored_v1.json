@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Default unanchored lens. Null substrate, empty atom, empty cognitive_mode. Ratification method: anchor_lens_lifts_proposition. ADR-0073b byte-identity invariant CI-pinned via mastery seal.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "",
+  "mastery_report_sha256": "2d2c78934ca113bd856b8bec7b5c0a21e94cb3dce42cca721a5b2c8521c65832",
   "substrate": "none",
   "atom": "",
   "cognitive_mode": "",

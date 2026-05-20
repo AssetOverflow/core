@@ -1,13 +1,13 @@
 {
-  "lens_id": "grc_zoe_v1",
-  "version": "1.0.0",
-  "description": "Greek-substrate anchor lens. Pivots English 'life' onto ζωή's logos.vitality.animate atom via the grc cognition pack. Cognitive mode: animate-vitality. Pair: he_chayyim_v1. See ADR-0073c.",
-  "schema_version": "1.0.0",
-  "mastery_report_sha256": "",
-  "substrate": "grc",
   "atom": "logos.vitality.animate",
   "cognitive_mode": "animate-vitality",
-  "source_entry_id": "grc-core-cog-003",
+  "description": "Greek-substrate anchor lens. Pivots English 'life' onto \u03b6\u03c9\u03ae's logos.vitality.animate atom via the grc cognition pack. Cognitive mode: animate-vitality. Pair: he_chayyim_v1. See ADR-0073c.",
+  "lens_id": "grc_zoe_v1",
+  "mastery_report_sha256": "308713b12f482f9f6dab460476b1076051b1aa4ade2392b49ef903d6479d444d",
   "pair_lens_id": "he_chayyim_v1",
-  "ratification_method": "anchor_lens_lifts_proposition"
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "schema_version": "1.0.0",
+  "source_entry_id": "grc-core-cog-004",
+  "substrate": "grc",
+  "version": "1.0.0"
 }

@@ -1,20 +1,18 @@
 {
   "evidence": {
-    "atoms_anchored_in_substrate": [
-      "logos.utterance.word"
-    ],
-    "cognitive_mode_label": "divine-word",
-    "cognitive_mode_label_empty": false,
-    "primary_substrate": "he",
-    "semantic_domain_preferences_count": 1,
-    "semantic_domain_preferences_empty": false
+    "atom": "logos.utterance.word",
+    "atom_in_lexicon": true,
+    "cognitive_mode": "divine-word",
+    "pair_lens_id": "grc_logos_v1",
+    "source_entry_id": "he-core-cog-001",
+    "substrate": "he"
   },
   "failure_reasons": [],
-  "issued_at": "2026-05-19T00:00:00Z",
+  "issued_at": "2026-05-20T00:00:00Z",
   "lens_id": "he_dabar_v1",
-  "pack_source_sha256": "51d16fc22ab95260025f3540345b1065c38fabb72623e198bfaa05046f25be6f",
+  "pack_source_sha256": "745f073224e7e8e561bdde6272eb5e20cc24d1715ccf82f138b594c06be77345",
   "ratification_method": "anchor_lens_lifts_proposition",
   "ratified": true,
-  "report_sha256": "f62856aa28407d9518a42b4d78977c26c8c11793b2a7cfa3089f87c00a84b2cc",
+  "report_sha256": "d97de46b9ddea4985a774495de558ba395ae45bd0a42f3cc8318d3975f5e4b29",
   "schema_version": "1.0.0"
 }

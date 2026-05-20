@@ -1,13 +1,13 @@
-"""Anchor-lens pack loader tests (ADR-0073b, Plan Phase L1.2).
+"""Anchor-lens pack loader tests (ADR-0073b/c — v2 schema).
 
 Covers:
 - Load / list / verify-seal happy paths
-- Unanchored sentinel structural identity vs default_unanchored_v1
+- Unanchored sentinel vs on-disk ``default_unanchored_v1`` distinction
 - Invalid lens_id rejection (traversal, empty, non-string)
 - Missing mastery report rejection in production mode
 - Companion-report SHA mismatch rejection
-- Bounds violations (substrate, preferences shape, label length)
-- Duplicate-atom rejection in semantic_domain_preferences
+- Bounds violations (substrate, atom shape, label length)
+- v1→v2 normalisation back-compat
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ def test_loads_default_unanchored_v1():
     assert lens.semantic_domain_preferences == ()
     assert lens.cognitive_mode_label == ""
     assert lens.is_null_lens() is True
-    assert lens.is_unanchored() is False  # only the sentinel is "unanchored"
+    assert lens.is_unanchored() is False  # only the in-memory sentinel is "unanchored"
     assert lens.mastery_report_sha256  # ratified
 
 
@@ -73,16 +73,18 @@ def test_module_level_unanchored_constant_matches_classmethod():
 
 
 def test_sentinel_structurally_matches_default_unanchored():
-    """L1.2 byte-identity gate: the in-memory sentinel is
-    structurally indistinguishable from the disk-ratified default."""
+    """Structural-identity gate: in-memory sentinel matches the disk pack
+    on every payload field; differs only on lens_id (identity metadata)."""
     sentinel = AnchorLens.unanchored()
     on_disk = load_anchor_lens("default_unanchored_v1")
     assert sentinel.primary_substrate == on_disk.primary_substrate
     assert sentinel.semantic_domain_preferences == on_disk.semantic_domain_preferences
     assert sentinel.cognitive_mode_label == on_disk.cognitive_mode_label
-    # The two differ only on lens_id + version + mastery_report_sha256,
-    # which are identity metadata, not structural payload.
-    assert sentinel.lens_id != on_disk.lens_id  # "__unanchored__" vs "default_..."
+    assert sentinel.substrate == on_disk.substrate
+    assert sentinel.atom == on_disk.atom
+    assert sentinel.cognitive_mode == on_disk.cognitive_mode
+    # The two differ only on lens_id + mastery_report_sha256.
+    assert sentinel.lens_id != on_disk.lens_id  # "__unanchored__" vs "default_unanchored_v1"
 
 
 # ---------- invalid lens_id ----------
@@ -111,21 +113,28 @@ def test_rejects_missing_pack():
 # ---------- ratification gate ----------
 
 
-def test_unratified_pack_rejected_in_production_mode(tmp_path: Path):
-    """A pack with empty mastery_report_sha256 is refused unless
-    explicitly bypassed."""
-    pack_path = tmp_path / "transient_v1.json"
-    pack_path.write_text(json.dumps({
-        "lens_id": "transient_v1",
+def _v2_pack(**overrides) -> dict:
+    base = {
+        "lens_id": "test_v1",
         "version": "0.1.0",
-        "description": "transient test pack",
+        "description": "test",
         "schema_version": "1.0.0",
-        "display_name": "Transient",
-        "primary_substrate": "none",
-        "semantic_domain_preferences": [],
-        "cognitive_mode_label": "",
+        "substrate": "none",
+        "atom": "",
+        "cognitive_mode": "",
+        "source_entry_id": "",
+        "pair_lens_id": None,
+        "ratification_method": "anchor_lens_lifts_proposition",
         "mastery_report_sha256": "",
-    }))
+    }
+    base.update(overrides)
+    return base
+
+
+def test_unratified_pack_rejected_in_production_mode(tmp_path: Path):
+    """A pack with empty mastery_report_sha256 is refused unless bypassed."""
+    pack_path = tmp_path / "transient_v1.json"
+    pack_path.write_text(json.dumps(_v2_pack(lens_id="transient_v1")))
     with pytest.raises(AnchorLensError, match="not ratified"):
         load_anchor_lens(
             "transient_v1", search_paths=(tmp_path,), require_ratified=True,
@@ -134,17 +143,7 @@ def test_unratified_pack_rejected_in_production_mode(tmp_path: Path):
 
 def test_unratified_pack_accepted_with_explicit_bypass(tmp_path: Path):
     pack_path = tmp_path / "transient_v1.json"
-    pack_path.write_text(json.dumps({
-        "lens_id": "transient_v1",
-        "version": "0.1.0",
-        "description": "transient test pack",
-        "schema_version": "1.0.0",
-        "display_name": "Transient",
-        "primary_substrate": "none",
-        "semantic_domain_preferences": [],
-        "cognitive_mode_label": "",
-        "mastery_report_sha256": "",
-    }))
+    pack_path.write_text(json.dumps(_v2_pack(lens_id="transient_v1")))
     lens = load_anchor_lens(
         "transient_v1", search_paths=(tmp_path,), require_ratified=False,
     )
@@ -153,17 +152,7 @@ def test_unratified_pack_accepted_with_explicit_bypass(tmp_path: Path):
 
 def test_env_var_bypasses_ratification(monkeypatch, tmp_path: Path):
     pack_path = tmp_path / "transient_v1.json"
-    pack_path.write_text(json.dumps({
-        "lens_id": "transient_v1",
-        "version": "0.1.0",
-        "description": "transient test pack",
-        "schema_version": "1.0.0",
-        "display_name": "Transient",
-        "primary_substrate": "none",
-        "semantic_domain_preferences": [],
-        "cognitive_mode_label": "",
-        "mastery_report_sha256": "",
-    }))
+    pack_path.write_text(json.dumps(_v2_pack(lens_id="transient_v1")))
     monkeypatch.setenv("CORE_ALLOW_UNRATIFIED_ANCHOR_LENS", "1")
     lens = load_anchor_lens("transient_v1", search_paths=(tmp_path,))
     assert lens.lens_id == "transient_v1"
@@ -171,14 +160,12 @@ def test_env_var_bypasses_ratification(monkeypatch, tmp_path: Path):
 
 def test_companion_sha_mismatch_rejected(tmp_path: Path):
     """Pack declares a SHA that doesn't match the on-disk report."""
-    # Copy ratified pack + report
     src = Path("packs/anchor_lens")
     shutil.copy(src / "default_unanchored_v1.json", tmp_path / "default_unanchored_v1.json")
     shutil.copy(
         src / "default_unanchored_v1.mastery_report.json",
         tmp_path / "default_unanchored_v1.mastery_report.json",
     )
-    # Tamper with pack's declared SHA
     pack_path = tmp_path / "default_unanchored_v1.json"
     raw = json.loads(pack_path.read_text())
     raw["mastery_report_sha256"] = "0" * 64
@@ -190,23 +177,7 @@ def test_companion_sha_mismatch_rejected(tmp_path: Path):
         )
 
 
-# ---------- bounds violations ----------
-
-
-def _base_pack(**overrides) -> dict:
-    base = {
-        "lens_id": "test_v1",
-        "version": "0.1.0",
-        "description": "test",
-        "schema_version": "1.0.0",
-        "display_name": "Test",
-        "primary_substrate": "none",
-        "semantic_domain_preferences": [],
-        "cognitive_mode_label": "",
-        "mastery_report_sha256": "",
-    }
-    base.update(overrides)
-    return base
+# ---------- bounds violations (v2 schema) ----------
 
 
 def _write(tmp_path: Path, pack: dict) -> None:
@@ -220,66 +191,34 @@ def _load_unratified(tmp_path: Path, lens_id: str) -> AnchorLens:
 
 
 def test_unknown_substrate_rejected(tmp_path: Path):
-    _write(tmp_path, _base_pack(primary_substrate="latin"))
-    with pytest.raises(AnchorLensError, match="primary_substrate"):
+    _write(tmp_path, _v2_pack(substrate="latin"))
+    with pytest.raises(AnchorLensError, match="substrate"):
         _load_unratified(tmp_path, "test_v1")
 
 
-def test_preferences_must_be_list(tmp_path: Path):
-    _write(tmp_path, _base_pack(semantic_domain_preferences="not_a_list"))
-    with pytest.raises(AnchorLensError, match="must be a list"):
-        _load_unratified(tmp_path, "test_v1")
-
-
-def test_atom_must_be_nonempty_string(tmp_path: Path):
-    _write(tmp_path, _base_pack(
-        primary_substrate="grc",
-        semantic_domain_preferences=[""],
-        cognitive_mode_label="experiential",
-    ))
+def test_atom_must_be_nonempty_string_when_substrate_set(tmp_path: Path):
+    _write(tmp_path, _v2_pack(substrate="grc", atom="", cognitive_mode="x"))
     with pytest.raises(AnchorLensError, match="non-empty"):
         _load_unratified(tmp_path, "test_v1")
 
 
 def test_atom_length_capped(tmp_path: Path):
-    _write(tmp_path, _base_pack(
-        primary_substrate="grc",
-        semantic_domain_preferences=["x" * 65],
-        cognitive_mode_label="experiential",
+    _write(tmp_path, _v2_pack(
+        substrate="grc", atom="x" * 200, cognitive_mode="x",
     ))
-    with pytest.raises(AnchorLensError, match="≤"):
-        _load_unratified(tmp_path, "test_v1")
-
-
-def test_duplicate_atoms_rejected(tmp_path: Path):
-    _write(tmp_path, _base_pack(
-        primary_substrate="grc",
-        semantic_domain_preferences=["logos.foo", "logos.bar", "logos.foo"],
-        cognitive_mode_label="x",
-    ))
-    with pytest.raises(AnchorLensError, match="duplicate"):
-        _load_unratified(tmp_path, "test_v1")
-
-
-def test_too_many_preferences(tmp_path: Path):
-    _write(tmp_path, _base_pack(
-        primary_substrate="grc",
-        semantic_domain_preferences=[f"logos.a{i}" for i in range(65)],
-        cognitive_mode_label="x",
-    ))
-    with pytest.raises(AnchorLensError, match="max is 64"):
+    with pytest.raises(AnchorLensError, match="atom"):
         _load_unratified(tmp_path, "test_v1")
 
 
 def test_label_length_capped(tmp_path: Path):
-    _write(tmp_path, _base_pack(cognitive_mode_label="x" * 65))
-    with pytest.raises(AnchorLensError, match="cognitive_mode_label"):
+    _write(tmp_path, _v2_pack(cognitive_mode="x" * 200))
+    with pytest.raises(AnchorLensError, match="cognitive_mode"):
         _load_unratified(tmp_path, "test_v1")
 
 
 def test_missing_field_rejected(tmp_path: Path):
-    pack = _base_pack()
-    del pack["primary_substrate"]
+    pack = _v2_pack()
+    del pack["substrate"]
     _write(tmp_path, pack)
     with pytest.raises(AnchorLensError, match="missing required fields"):
         _load_unratified(tmp_path, "test_v1")
@@ -287,13 +226,43 @@ def test_missing_field_rejected(tmp_path: Path):
 
 def test_lens_id_mismatch_rejected(tmp_path: Path):
     """Filename and declared lens_id must agree."""
-    pack = _base_pack(lens_id="declared_different")
+    pack = _v2_pack(lens_id="declared_different")
     (tmp_path / "test_v1.json").write_text(json.dumps(pack))
     with pytest.raises(AnchorLensError, match="declares lens_id"):
         _load_unratified(tmp_path, "test_v1")
 
 
 def test_unsupported_schema_version_rejected(tmp_path: Path):
-    _write(tmp_path, _base_pack(schema_version="2.0.0"))
+    _write(tmp_path, _v2_pack(schema_version="2.0.0"))
     with pytest.raises(AnchorLensError, match="schema_version"):
         _load_unratified(tmp_path, "test_v1")
+
+
+# ---------- v1→v2 back-compat normalisation ----------
+
+
+def test_v1_legacy_pack_normalises(tmp_path: Path):
+    """A pack written in v1 schema (primary_substrate + semantic_domain_preferences
+    + cognitive_mode_label) loads successfully under v2 via _normalise_raw."""
+    v1_pack = {
+        "lens_id": "v1_legacy_v1",
+        "version": "0.1.0",
+        "description": "v1 legacy pack for migration test",
+        "schema_version": "1.0.0",
+        "display_name": "Legacy",
+        "primary_substrate": "grc",
+        "semantic_domain_preferences": ["logos.episteme.systematic_knowledge"],
+        "cognitive_mode_label": "systematic",
+        "mastery_report_sha256": "",
+    }
+    (tmp_path / "v1_legacy_v1.json").write_text(json.dumps(v1_pack))
+    lens = load_anchor_lens(
+        "v1_legacy_v1", search_paths=(tmp_path,), require_ratified=False,
+    )
+    assert lens.substrate == "grc"
+    assert lens.atom == "logos.episteme.systematic_knowledge"
+    assert lens.cognitive_mode == "systematic"
+    # v1 attribute views work too
+    assert lens.primary_substrate == "grc"
+    assert lens.semantic_domain_preferences == ("logos.episteme.systematic_knowledge",)
+    assert lens.cognitive_mode_label == "systematic"
