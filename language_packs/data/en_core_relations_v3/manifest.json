@@ -9,5 +9,8 @@
   "checksum": "c22185011cdff34f5be47a96dbb2c7921a59b7ba6b17821b863905f3a26e5c87",
   "version": "1.0.0",
   "gate_engaged": true,
-  "oov_policy": "fail_closed"
+  "oov_policy": "fail_closed",
+  "definitional_layer": true,
+  "provenance": "adr-0084:reviewed:2026-05-20",
+  "glosses_checksum": "83eed344000e5ce8ab45010a470b18822b24fa3f0ec3ec1e09a7e1adc1f4d7bf"
 }

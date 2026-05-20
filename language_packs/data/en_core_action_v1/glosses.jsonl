@@ -1,26 +1,26 @@
-{"lemma":"accomplish","gloss":"to complete a task or goal successfully","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"achieve","gloss":"to bring about a desired outcome through sustained effort","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"build","gloss":"to construct something by assembling its constituent parts","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"carry","gloss":"to bear or convey something from one place to another","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"change","gloss":"to make or become different in some respect","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"come","gloss":"to approach or arrive at a location or state","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"conduct","gloss":"to direct or carry through an organized activity","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"create","gloss":"to originate something new from intention or material","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"develop","gloss":"to bring something to a more advanced or complete state","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"do","gloss":"to carry out an action or activity in general","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"execute","gloss":"to carry a plan or instruction through to completion","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"form","gloss":"to give shape or structure to something","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"generate","gloss":"to cause something to come into being or occur","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"get","gloss":"to come to possess or obtain something","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"give","gloss":"to transfer possession of something to another party","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"go","gloss":"to proceed from one place toward another","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"keep","gloss":"to retain possession or maintain a state over time","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"make","gloss":"to bring something into existence by directed action","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"move","gloss":"to change spatial position from one location to another","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"perform","gloss":"to enact a task or function through deliberate effort","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"produce","gloss":"to bring forth a result or output through process","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"receive","gloss":"to take in something delivered or transmitted from elsewhere","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"send","gloss":"to cause something to travel from a source to a destination","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"take","gloss":"to acquire or seize hold of something","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"transform","gloss":"to alter the form or nature of something fundamentally","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"use","gloss":"to put something into service for a purpose","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"accomplish","gloss":"to complete a task or goal successfully","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["accomplish","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"achieve","gloss":"to bring about a desired outcome through sustained effort","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["achieve","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"build","gloss":"to construct something by assembling its constituent parts","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["build","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"carry","gloss":"to bear or convey something from one place to another","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["carry","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"change","gloss":"to make or become different in some respect","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"come","gloss":"to approach or arrive at a location or state","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["come","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"conduct","gloss":"to direct or carry through an organized activity","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["conduct","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"create","gloss":"to originate something new from intention or material","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["create","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"develop","gloss":"to bring something to a more advanced or complete state","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["develop","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"do","gloss":"to carry out an action or activity in general","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["do","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"execute","gloss":"to carry a plan or instruction through to completion","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["execute","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"form","gloss":"to give shape or structure to something","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["form","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"generate","gloss":"to cause something to come into being or occur","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["generate","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"get","gloss":"to come to possess or obtain something","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["get","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"give","gloss":"to transfer possession of something to another party","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["give","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"go","gloss":"to proceed from one place toward another","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["go","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"keep","gloss":"to retain possession or maintain a state over time","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["keep","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"make","gloss":"to bring something into existence by directed action","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["make","change","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"move","gloss":"to change spatial position from one location to another","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["move","change","make"],"predicates_invited":[],"definition_version":1}
+{"lemma":"perform","gloss":"to enact a task or function through deliberate effort","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["perform","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"produce","gloss":"to bring forth a result or output through process","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["produce","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"receive","gloss":"to take in something delivered or transmitted from elsewhere","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["receive","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"send","gloss":"to cause something to travel from a source to a destination","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["send","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"take","gloss":"to acquire or seize hold of something","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["take","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"transform","gloss":"to alter the form or nature of something fundamentally","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["transform","change","make","move"],"predicates_invited":[],"definition_version":1}
+{"lemma":"use","gloss":"to put something into service for a purpose","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["use","change","make","move"],"predicates_invited":[],"definition_version":1}

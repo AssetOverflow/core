@@ -1,72 +1,72 @@
-{"lemma":"agent","gloss":"an entity capable of intentional action and reference","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"argument","gloss":"a structured sequence of claims supporting a conclusion","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"articulate","gloss":"to express an idea clearly through structured language","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"assert","gloss":"to put forward a claim with conviction","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"assume","gloss":"to take a proposition as true without verification","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"believe","gloss":"to hold a proposition as likely true without certainty","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"case","gloss":"a particular instance illustrating a general claim","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"claim","gloss":"to assert a proposition as true without proof","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"confirm","gloss":"to affirm the truth of a prior claim","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"consider","gloss":"to deliberate over a proposition or option","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"decide","gloss":"to resolve deliberation by selecting one option","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"declare","gloss":"to assert a proposition formally and publicly","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"deny","gloss":"to reject the truth of a proposition","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"describe","gloss":"to characterize something through detailed verbal account","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"detect","gloss":"to discern the presence of something subtle","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"doubt","gloss":"to hold a mental state of uncertainty about a claim","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"example","gloss":"an instance offered to illustrate a category","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"expect","gloss":"to anticipate a future state as likely","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"express","gloss":"to convey an idea or feeling through language","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"fact","gloss":"a proposition established as true","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"feel","gloss":"to perceive through tactile or affective experience","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"find","gloss":"to come to perceive or locate something sought","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"guess","gloss":"to form a tentative answer without sufficient evidence","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"hear","gloss":"to perceive sound through auditory experience","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"hold","gloss":"to maintain a proposition or stance in mind","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"hope","gloss":"to desire a future outcome with uncertainty","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"idea","gloss":"a mental content that can be entertained or expressed","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"instance","gloss":"a single occurrence of a general kind","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"intend","gloss":"to hold a deliberate aim toward an action","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"kind","gloss":"a category grouping instances by shared features","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"know","gloss":"to hold a proposition as justified and true","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"listen","gloss":"to direct auditory attention to a source","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"look","gloss":"to direct visual attention toward a target","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"mention","gloss":"to refer briefly to a topic in discourse","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"mind","gloss":"the seat of thought, perception, and mental states","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"model","gloss":"a structured representation standing in for a system","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"name","gloss":"to assign or invoke a referring label","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"note","gloss":"to remark on a point worth attention","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"notice","gloss":"to become perceptually aware of a feature","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"observe","gloss":"to remark on something perceived or noticed","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"perceive","gloss":"to apprehend a state through the senses","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"perspective","gloss":"a vantage point shaping interpretation of content","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"point","gloss":"a discrete claim advanced within an argument","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"position","gloss":"a stance held on a proposition or issue","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"prefer","gloss":"to hold one option as more desirable than another","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"proposal","gloss":"a suggested course of action offered for review","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"propose","gloss":"to offer a proposition or plan for review","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"realize","gloss":"to become aware of a fact previously unrecognized","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"recognize","gloss":"to identify something as previously known or encountered","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"reply","gloss":"to respond verbally to a prior utterance","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"respond","gloss":"to produce an utterance in answer to another","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"response","gloss":"an utterance produced in answer to another","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"role","gloss":"a functional stance an agent occupies in discourse","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"say","gloss":"to assert content in spoken or written form","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"see","gloss":"to perceive visually or to apprehend mentally","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"self","gloss":"the agent or speaker as the reference point of identity","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"sense","gloss":"to apprehend a state through perceptual awareness","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"speak","gloss":"to produce spoken language directed at a listener","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"speaker","gloss":"the agent producing the current utterance","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"state","gloss":"to express a proposition explicitly and directly","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"statement","gloss":"an utterance that expresses a definite proposition","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"suggest","gloss":"to put forward a possibility for consideration","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"suggestion","gloss":"a tentative proposition offered for consideration","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"suppose","gloss":"to provisionally hold a proposition for argument's sake","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"system","gloss":"an organized whole of interacting components","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"tell","gloss":"to convey information to a recipient through speech","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"think","gloss":"to entertain a proposition in mental deliberation","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"type","gloss":"a class of entities sharing defining properties","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"view","gloss":"a held perspective on a topic or claim","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"want","gloss":"to hold a desire toward an outcome or object","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"watch","gloss":"to direct visual attention to an unfolding event","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"wonder","gloss":"to hold an open question in active consideration","pos":"VERB","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"agent","gloss":"an entity capable of intentional action and reference","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["agent","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"argument","gloss":"a structured sequence of claims supporting a conclusion","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["argument","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"articulate","gloss":"to express an idea clearly through structured language","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["articulate","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"assert","gloss":"to put forward a claim with conviction","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["assert","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"assume","gloss":"to take a proposition as true without verification","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["assume","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"believe","gloss":"to hold a proposition as likely true without certainty","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["believe","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"case","gloss":"a particular instance illustrating a general claim","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["case","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"claim","gloss":"to assert a proposition as true without proof","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"confirm","gloss":"to affirm the truth of a prior claim","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["confirm","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"consider","gloss":"to deliberate over a proposition or option","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["consider","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"decide","gloss":"to resolve deliberation by selecting one option","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["decide","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"declare","gloss":"to assert a proposition formally and publicly","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["declare","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"deny","gloss":"to reject the truth of a proposition","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["deny","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"describe","gloss":"to characterize something through detailed verbal account","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["describe","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"detect","gloss":"to discern the presence of something subtle","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["detect","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"doubt","gloss":"to hold a mental state of uncertainty about a claim","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["doubt","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"example","gloss":"an instance offered to illustrate a category","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["example","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"expect","gloss":"to anticipate a future state as likely","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["expect","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"express","gloss":"to convey an idea or feeling through language","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["express","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"fact","gloss":"a proposition established as true","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["fact","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"feel","gloss":"to perceive through tactile or affective experience","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["feel","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"find","gloss":"to come to perceive or locate something sought","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["find","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"guess","gloss":"to form a tentative answer without sufficient evidence","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["guess","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"hear","gloss":"to perceive sound through auditory experience","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["hear","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"hold","gloss":"to maintain a proposition or stance in mind","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["hold","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"hope","gloss":"to desire a future outcome with uncertainty","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["hope","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"idea","gloss":"a mental content that can be entertained or expressed","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["idea","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"instance","gloss":"a single occurrence of a general kind","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["instance","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"intend","gloss":"to hold a deliberate aim toward an action","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["intend","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"kind","gloss":"a category grouping instances by shared features","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["kind","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"know","gloss":"to hold a proposition as justified and true","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["know","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"listen","gloss":"to direct auditory attention to a source","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["listen","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"look","gloss":"to direct visual attention toward a target","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["look","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"mention","gloss":"to refer briefly to a topic in discourse","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["mention","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"mind","gloss":"the seat of thought, perception, and mental states","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["mind","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"model","gloss":"a structured representation standing in for a system","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["model","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"name","gloss":"to assign or invoke a referring label","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["name","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"note","gloss":"to remark on a point worth attention","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["note","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"notice","gloss":"to become perceptually aware of a feature","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["notice","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"observe","gloss":"to remark on something perceived or noticed","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["observe","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"perceive","gloss":"to apprehend a state through the senses","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["perceive","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"perspective","gloss":"a vantage point shaping interpretation of content","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["perspective","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"point","gloss":"a discrete claim advanced within an argument","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["point","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"position","gloss":"a stance held on a proposition or issue","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["position","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"prefer","gloss":"to hold one option as more desirable than another","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["prefer","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"proposal","gloss":"a suggested course of action offered for review","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["proposal","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"propose","gloss":"to offer a proposition or plan for review","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["propose","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"realize","gloss":"to become aware of a fact previously unrecognized","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["realize","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"recognize","gloss":"to identify something as previously known or encountered","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["recognize","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"reply","gloss":"to respond verbally to a prior utterance","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["reply","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"respond","gloss":"to produce an utterance in answer to another","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["respond","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"response","gloss":"an utterance produced in answer to another","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["response","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"role","gloss":"a functional stance an agent occupies in discourse","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["role","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"say","gloss":"to assert content in spoken or written form","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["say","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"see","gloss":"to perceive visually or to apprehend mentally","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["see","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"self","gloss":"the agent or speaker as the reference point of identity","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["self","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"sense","gloss":"to apprehend a state through perceptual awareness","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["sense","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"speak","gloss":"to produce spoken language directed at a listener","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["speak","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"speaker","gloss":"the agent producing the current utterance","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["speaker","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"state","gloss":"to express a proposition explicitly and directly","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["state","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"statement","gloss":"an utterance that expresses a definite proposition","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["statement","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"suggest","gloss":"to put forward a possibility for consideration","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["suggest","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"suggestion","gloss":"a tentative proposition offered for consideration","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["suggestion","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"suppose","gloss":"to provisionally hold a proposition for argument's sake","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["suppose","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"system","gloss":"an organized whole of interacting components","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["system","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"tell","gloss":"to convey information to a recipient through speech","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["tell","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"think","gloss":"to entertain a proposition in mental deliberation","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["think","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"type","gloss":"a class of entities sharing defining properties","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["type","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"view","gloss":"a held perspective on a topic or claim","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["view","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"want","gloss":"to hold a desire toward an outcome or object","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["want","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"watch","gloss":"to direct visual attention to an unfolding event","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["watch","claim","question","thought"],"predicates_invited":[],"definition_version":1}
+{"lemma":"wonder","gloss":"to hold an open question in active consideration","pos":"VERB","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["wonder","claim","question","thought"],"predicates_invited":[],"definition_version":1}

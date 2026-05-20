@@ -1,16 +1,16 @@
-{"lemma":"always","gloss":"the frequency of occurring without exception across all instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"definitely","gloss":"unqualified certainty about the asserted proposition","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"frequently","gloss":"the frequency of occurring on a high proportion of instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"hardly","gloss":"a near-negative degree barely meeting a threshold","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"indeed","gloss":"emphatic confirmation of a preceding assertion","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"maybe","gloss":"a tentative possibility without committed certainty","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"never","gloss":"the frequency of occurring on zero instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"no","gloss":"express dissent or rejection of a preceding claim","pos":"INTJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"occasionally","gloss":"the frequency of occurring on scattered infrequent instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"often","gloss":"the frequency of occurring on many but not all instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"perhaps","gloss":"a hedged possibility offered without firm commitment","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"rarely","gloss":"the frequency of occurring on very few instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"sometimes","gloss":"the frequency of occurring on an indefinite portion of instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"surely","gloss":"high confidence in the truth of a claim","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"usually","gloss":"the frequency of occurring on most typical instances","pos":"ADV","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"yes","gloss":"affirm assent to a preceding question or claim","pos":"INTJ","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"always","gloss":"the frequency of occurring without exception across all instances","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["always","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"definitely","gloss":"unqualified certainty about the asserted proposition","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["definitely","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"frequently","gloss":"the frequency of occurring on a high proportion of instances","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["frequently","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"hardly","gloss":"a near-negative degree barely meeting a threshold","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["hardly","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"indeed","gloss":"emphatic confirmation of a preceding assertion","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["indeed","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"maybe","gloss":"a tentative possibility without committed certainty","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["maybe","true","false"],"predicates_invited":[],"definition_version":1}
+{"lemma":"never","gloss":"the frequency of occurring on zero instances","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["never","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"no","gloss":"express dissent or rejection of a preceding claim","pos":"INTJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["no","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"occasionally","gloss":"the frequency of occurring on scattered infrequent instances","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["occasionally","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"often","gloss":"the frequency of occurring on many but not all instances","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["often","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"perhaps","gloss":"a hedged possibility offered without firm commitment","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["perhaps","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"rarely","gloss":"the frequency of occurring on very few instances","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["rarely","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"sometimes","gloss":"the frequency of occurring on an indefinite portion of instances","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["sometimes","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"surely","gloss":"high confidence in the truth of a claim","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["surely","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"usually","gloss":"the frequency of occurring on most typical instances","pos":"ADV","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["usually","true","false","maybe"],"predicates_invited":[],"definition_version":1}
+{"lemma":"yes","gloss":"affirm assent to a preceding question or claim","pos":"INTJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["yes","true","false","maybe"],"predicates_invited":[],"definition_version":1}

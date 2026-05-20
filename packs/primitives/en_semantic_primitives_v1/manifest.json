@@ -1,0 +1,12 @@
+{
+  "pack_id": "en_semantic_primitives_v1",
+  "language": "en",
+  "kind": "primitives",
+  "definitional_layer": true,
+  "version": 1,
+  "issued_at": "2026-05-20T00:00:00Z",
+  "checksum": "9c9125945a5a5f66461d9edfbcf28674def4343b4e246acb9236a7e33bff894c",
+  "primitive_count": 59,
+  "never_auto_mutable": true,
+  "provenance": "adr-0084:reviewed:2026-05-20"
+}

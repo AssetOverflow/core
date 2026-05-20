@@ -1,24 +1,24 @@
-{"lemma":"all","gloss":"the totality of items in a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"any","gloss":"an arbitrary member drawn from a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"both","gloss":"the two members of a referenced pair together","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"each","gloss":"every individual member considered separately within a set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"enough","gloss":"a quantity sufficient to satisfy a stated requirement","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"every","gloss":"each member of a referenced set without exception","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"few","gloss":"a small indefinite count below typical expectation","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"fewer","gloss":"a smaller count of discrete items comparatively","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"half","gloss":"one of two equal divisions of a quantity","pos":"NOUN","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"least","gloss":"the smallest quantity along a comparative scale","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"less","gloss":"a smaller amount of an uncountable quantity comparatively","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"many","gloss":"a large indefinite count of discrete items","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"more","gloss":"a greater quantity along a comparative scale","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"most","gloss":"the greatest proportion within a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"much","gloss":"a large indefinite amount of an uncountable substance","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"neither","gloss":"the absence of either member from a referenced pair","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"none","gloss":"the absence of any member from a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"one","gloss":"the cardinal value denoting a single unit","pos":"NUM","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"several","gloss":"a small indefinite plurality greater than two","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"single","gloss":"consists of exactly one undivided unit","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"some","gloss":"an indefinite nonzero subset of a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"three","gloss":"the cardinal value denoting a triple of units","pos":"NUM","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"two","gloss":"the cardinal value denoting a pair of units","pos":"NUM","provenance_ids":["seed:glosses_v1"]}
-{"lemma":"whole","gloss":"comprises the complete entity without missing parts","pos":"ADJ","provenance_ids":["seed:glosses_v1"]}
+{"lemma":"all","gloss":"the totality of items in a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["all","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"any","gloss":"an arbitrary member drawn from a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["any","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"both","gloss":"the two members of a referenced pair together","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["both","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"each","gloss":"every individual member considered separately within a set","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["each","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"enough","gloss":"a quantity sufficient to satisfy a stated requirement","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["enough","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"every","gloss":"each member of a referenced set without exception","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["every","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"few","gloss":"a small indefinite count below typical expectation","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["few","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"fewer","gloss":"a smaller count of discrete items comparatively","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["fewer","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"half","gloss":"one of two equal divisions of a quantity","pos":"NOUN","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["half","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"least","gloss":"the smallest quantity along a comparative scale","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["least","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"less","gloss":"a smaller amount of an uncountable quantity comparatively","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["less","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"many","gloss":"a large indefinite count of discrete items","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["many","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"more","gloss":"a greater quantity along a comparative scale","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["more","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"most","gloss":"the greatest proportion within a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["most","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"much","gloss":"a large indefinite amount of an uncountable substance","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["much","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"neither","gloss":"the absence of either member from a referenced pair","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["neither","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"none","gloss":"the absence of any member from a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["none","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"one","gloss":"the cardinal value denoting a single unit","pos":"NUM","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["one","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"several","gloss":"a small indefinite plurality greater than two","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["several","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"single","gloss":"consists of exactly one undivided unit","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["single","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"some","gloss":"an indefinite nonzero subset of a referenced set","pos":"DET","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["some","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"three","gloss":"the cardinal value denoting a triple of units","pos":"NUM","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["three","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"two","gloss":"the cardinal value denoting a pair of units","pos":"NUM","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["two","group","item","unit"],"predicates_invited":[],"definition_version":1}
+{"lemma":"whole","gloss":"comprises the complete entity without missing parts","pos":"ADJ","provenance_ids":["seed:glosses_v1","adr-0084:reviewed:2026-05-20"],"definitional_atoms":["whole","group","item","unit"],"predicates_invited":[],"definition_version":1}
