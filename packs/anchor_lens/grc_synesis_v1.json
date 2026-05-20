@@ -1,0 +1,13 @@
+{
+  "lens_id": "grc_synesis_v1",
+  "version": "1.0.0",
+  "description": "Anchor lens for the Greek concept of synesis (σύνεσις) — integrative comprehension, the act of bringing disparate knowledge into a coherent understanding. Distinct from episteme (systematic demonstration), epignosis (relational knowing), and sophia (practical wisdom). No single English equivalent: 'insight' and 'understanding' both capture partial aspects only. Grounds in logos.synesis.insight via grc-core-cog-022 (ADR-0073c; no EN-collapse edge — absence is intentional, documented by same ADR). Cognitive mode: integrative-comprehension. Closes the Greek epistemic quad: sophia / epignosis / episteme / synesis.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "substrate": "grc",
+  "atom": "logos.synesis.insight",
+  "source_entry_id": "grc-core-cog-022",
+  "cognitive_mode": "integrative-comprehension",
+  "pair_lens_id": null,
+  "ratification_method": "anchor_lens_lifts_proposition"
+}

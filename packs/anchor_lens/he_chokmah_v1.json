@@ -1,0 +1,13 @@
+{
+  "lens_id": "he_chokmah_v1",
+  "version": "1.0.0",
+  "description": "Anchor lens for the Hebrew concept of chokmah (חכמה) — practical, embodied, and relational wisdom. The Hebrew wisdom tradition grounds chokmah in the fear of the LORD (Prov 9:10) as its orienting principle, giving it an ethical and covenantal dimension absent from grc_sophia_v1's philosophical framing. Both share the logos.sophia.wisdom atom (highest cross-lang alignment weight in the corpus: 0.92) — the atom captures the shared practical-wisdom core; the lens descriptions carry the tradition-specific differentiation. Symmetric pair: grc_sophia_v1. Cognitive mode: wisdom-practical.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "substrate": "he",
+  "atom": "logos.sophia.wisdom",
+  "source_entry_id": "he-core-cog-008",
+  "cognitive_mode": "wisdom-practical",
+  "pair_lens_id": "grc_sophia_v1",
+  "ratification_method": "anchor_lens_lifts_proposition"
+}
