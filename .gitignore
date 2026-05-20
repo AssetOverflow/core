@@ -12,3 +12,11 @@ core-rs/target/
 core-rs/Cargo.lock
 
 uv.lock
+
+# Environment secrets — never commit real keys
+.env
+.env.local
+.env.*.local
+
+# Benchmark report output
+reports/
