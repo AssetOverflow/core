@@ -56,6 +56,12 @@ class LanguagePackManifest:
     # Glosses are an additive overlay; bumping ``glosses_checksum`` does
     # NOT perturb the immutable ``checksum`` (lexicon seal).
     glosses_checksum: str | None = None
+    # ADR-0084 — pack-level opt-in for the definitional layer.  When
+    # True, every gloss entry must carry the extended schema
+    # (``definitional_atoms``, ``predicates_invited``,
+    # ``definition_version``) and pass the closure rule.  Default False
+    # leaves every existing pack byte-identical.
+    definitional_layer: bool = False
 
     def __post_init__(self) -> None:
         if not self.pack_id:
