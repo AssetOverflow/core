@@ -1,7 +1,8 @@
 # ADR-0073 — Anchor lens: substrate-driven substantive variation
 
-**Status:** Proposed
+**Status:** Accepted (umbrella ratified; sub-ADRs L1.1–L1.4 each ratify in isolation)
 **Date:** 2026-05-19
+**Ratified:** 2026-05-19
 **Author:** Shay
 **Phase:** Plan Phase L1 (anchor lens, inside-out)
 **Builds on:** ADR-0048 (pack-grounded surface), ADR-0050 (COMPARISON),

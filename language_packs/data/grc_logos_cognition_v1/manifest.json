@@ -6,7 +6,7 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "grc_logos_cognition_v1.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "b45bcf581cee1fa2449854d20c46ed121ca3fd36fc50289282b8df0faf472351",
+  "checksum": "0f943667570747b3538c5df1ba574c42dfe79e8c5b82fae989b9f16f1ee29ceb",
   "version": "1.0.0",
   "gate_engaged": true,
   "oov_policy": "fail_closed"

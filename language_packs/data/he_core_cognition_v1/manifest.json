@@ -6,7 +6,7 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "he_core_cognition_v1.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "dee1e8c6ad9a76d58665333070f5e6d9acb89e13e79701ba89a8ae0aceb39616",
+  "checksum": "22145d0081855c61f72c8ef0b06e6b44d45632034a04aa327190d8c6ac4f0e71",
   "version": "1.0.0",
   "gate_engaged": true,
   "oov_policy": "fail_closed"

@@ -18,3 +18,6 @@
 {"morphology_id": "he-core-morph-018", "surface": "יש", "lemma": "יש", "language": "he", "root": null, "prefix_chain": [], "stem": "יש", "inflection": {"pos": "particle", "subtype": "existential"}, "suffix_chain": []}
 {"morphology_id": "he-core-morph-019", "surface": "לא", "lemma": "לא", "language": "he", "root": null, "prefix_chain": [], "stem": "לא", "inflection": {"pos": "particle", "subtype": "negation"}, "suffix_chain": []}
 {"morphology_id": "he-core-morph-020", "surface": "אשר", "lemma": "אשר", "language": "he", "root": null, "prefix_chain": [], "stem": "אשר", "inflection": {"pos": "particle", "subtype": "relativizer"}, "suffix_chain": []}
+{"morphology_id": "he-core-morph-021", "surface": "חסד", "lemma": "חסד", "language": "he", "root": "ח-ס-ד", "prefix_chain": [], "stem": "חסד", "inflection": {"pos": "noun", "gender": "masculine", "number": "singular"}, "suffix_chain": []}
+{"morphology_id": "he-core-morph-022", "surface": "שלום", "lemma": "שלום", "language": "he", "root": "ש-ל-ם", "prefix_chain": [], "stem": "שלום", "inflection": {"pos": "noun", "gender": "masculine", "number": "singular"}, "suffix_chain": []}
+{"morphology_id": "he-core-morph-023", "surface": "צדק", "lemma": "צדק", "language": "he", "root": "צ-ד-ק", "prefix_chain": [], "stem": "צדק", "inflection": {"pos": "noun", "gender": "masculine", "number": "singular"}, "suffix_chain": []}
