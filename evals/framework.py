@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+import inspect
 import json
 import sys
 from dataclasses import dataclass, field
@@ -173,7 +174,19 @@ def run_lane(
     cases = load_cases(cases_path)
     runner_module = load_lane_runner(lane)
 
-    report = runner_module.run_lane(cases, config=config, workers=workers)
+    # PR #46 added the `workers` kwarg to enable parallel execution on
+    # lanes that opt in (currently: cognition).  Most lane runners are
+    # serial and predate this contract.  Pass `workers` only when the
+    # target runner's signature accepts it — otherwise call the legacy
+    # two-arg form.  This keeps the framework dispatch backward-compatible
+    # without forcing every runner to accept a no-op kwarg.
+    runner_params = inspect.signature(runner_module.run_lane).parameters
+    if "workers" in runner_params or any(
+        p.kind == inspect.Parameter.VAR_KEYWORD for p in runner_params.values()
+    ):
+        report = runner_module.run_lane(cases, config=config, workers=workers)
+    else:
+        report = runner_module.run_lane(cases, config=config)
 
     return LaneResult(
         lane=lane.name,
