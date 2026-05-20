@@ -1,0 +1,13 @@
+{
+  "lens_id": "grc_episteme_v1",
+  "version": "1.0.0",
+  "description": "Anchor lens for the Greek concept of episteme (ἐπιστήμη) — systematic, propositional, and demonstrable knowledge. The most formal of the Greek knowledge-type distinctions. Grounds in logos.episteme.systematic via grc-core-cog-021 (cross_lang.logos.episteme.en_collapse edge, weight 0.72; ADR-0073a: 'systematic_to_english_collapse'). Cognitive mode: systematic-knowledge. Triad with grc_epignosis_v1 (experiential) and grc_synesis_v1 (comprehension-insight).",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "substrate": "grc",
+  "atom": "logos.episteme.systematic",
+  "source_entry_id": "grc-core-cog-021",
+  "cognitive_mode": "systematic-knowledge",
+  "pair_lens_id": null,
+  "ratification_method": "anchor_lens_lifts_proposition"
+}

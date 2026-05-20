@@ -1,0 +1,31 @@
+{
+  "register_id": "socratic_v1",
+  "version": "1.0.0",
+  "description": "Socratic register. Pedagogical depth with append_semantic_domain_clause=true. Discourse markers are question-oriented: openings pose the inquiry, transitions surface the dialectical move, closings return the question to the interlocutor. Variation is deterministic across (trace_hash, register_id, turn_idx). Distinct from pedagogical_v1: no declarative scaffolding — every marker is interrogative. See ADR-0068, ADR-0071, R6.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "display_name": "Socratic",
+  "depth_preference": "pedagogical",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "What does it mean that",
+      "Consider the question:",
+      "What if",
+      ""
+    ],
+    "transitions": [
+      "But then — what follows from that?",
+      "Which raises the deeper question:",
+      "And yet —"
+    ],
+    "closings": [
+      " — what does that imply?",
+      " — do you see why that matters?",
+      " — what would it mean if that were false?",
+      ""
+    ]
+  }
+}

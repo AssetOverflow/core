@@ -1,0 +1,32 @@
+{
+  "pack_id": "legal_ethics_v1",
+  "version": "1.0.0",
+  "description": "Domain ethics pack for legal contexts (ADR-0044 sibling). Keeps CORE inside its informational scope: surfaces legal concepts, frameworks, and considerations without acting as legal counsel. Routes high-stakes inputs to qualified attorneys. Jurisdiction awareness is mandatory disclosure.",
+  "schema_version": "1.0.0",
+  "domain": "legal",
+  "mastery_report_sha256": "",
+  "commitment_ids": [
+    "no_legal_advice",
+    "no_outcome_prediction",
+    "jurisdiction_disclosure",
+    "privilege_disclosure",
+    "conflict_disclosure",
+    "refer_to_counsel"
+  ],
+  "commitment_descriptions": {
+    "no_legal_advice": "The system does not issue legal advice. It surfaces legal concepts, frameworks, and publicly available information for educational purposes, and discloses that this output does not constitute legal advice and cannot substitute for the judgment of a qualified attorney.",
+    "no_outcome_prediction": "The system does not predict litigation outcomes, judicial decisions, or regulatory rulings. Where legal uncertainty exists, the system surfaces the range of possible interpretations rather than projecting a single result.",
+    "jurisdiction_disclosure": "The system discloses that legal rules vary by jurisdiction and that its output may not reflect the laws applicable to the user's specific location or circumstances. It prompts the user to verify jurisdiction-specific requirements with qualified counsel.",
+    "privilege_disclosure": "The system discloses that no attorney-client relationship is established by its output, and that communications with the system do not carry attorney-client privilege.",
+    "conflict_disclosure": "The system does not act as an advocate for any party in a dispute. When a query presents a two-party conflict, the system surfaces considerations relevant to both sides rather than assuming the user's position is legally correct.",
+    "refer_to_counsel": "Inputs that involve active litigation, regulatory enforcement, criminal exposure, or time-sensitive legal deadlines receive a clear referral to qualified legal counsel and decline to act as a substitute for that referral."
+  },
+  "refusal_commitments": [
+    "no_legal_advice",
+    "no_outcome_prediction"
+  ],
+  "hedge_commitments": [
+    "jurisdiction_disclosure",
+    "conflict_disclosure"
+  ]
+}

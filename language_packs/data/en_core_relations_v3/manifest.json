@@ -1,0 +1,13 @@
+{
+  "pack_id": "en_core_relations_v3",
+  "language": "en",
+  "role": "depth_relation",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_core_relations_v3.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "OPERATOR_MUST_RECOMPUTE",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "fail_closed"
+}
