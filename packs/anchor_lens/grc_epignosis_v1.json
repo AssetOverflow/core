@@ -1,0 +1,13 @@
+{
+  "atom": "logos.epignosis.knowledge",
+  "cognitive_mode": "experiential-knowledge",
+  "description": "Anchor lens for the Greek concept of epignosis (\u1f10\u03c0\u03af\u03b3\u03bd\u03c9\u03c3\u03b9\u03c2) \u2014 experiential, relational, and participatory knowing. Distinct from the systematic episteme and the insight-comprehension synesis. Grounds in logos.epignosis.experiential via grc-core-cog-007 (cross_lang.logos.epignosis.en edge, weight 0.78; ADR-0073a documents the English-collapse: 'experiential_to_english_collapse'). Cognitive mode: experiential-knowledge.",
+  "lens_id": "grc_epignosis_v1",
+  "mastery_report_sha256": "142aaf75d31b4d595e5ea498e969088528aed8238fb9aa48cefb7ca26627acd4",
+  "pair_lens_id": null,
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "schema_version": "1.0.0",
+  "source_entry_id": "grc-core-cog-007",
+  "substrate": "grc",
+  "version": "1.0.0"
+}

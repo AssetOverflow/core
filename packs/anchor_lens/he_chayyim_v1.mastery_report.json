@@ -1,20 +1,18 @@
 {
   "evidence": {
-    "atoms_anchored_in_substrate": [
-      "logos.vitality.animate"
-    ],
-    "cognitive_mode_label": "covenant-life",
-    "cognitive_mode_label_empty": false,
-    "primary_substrate": "he",
-    "semantic_domain_preferences_count": 1,
-    "semantic_domain_preferences_empty": false
+    "atom": "logos.vitality.animate",
+    "atom_in_lexicon": true,
+    "cognitive_mode": "covenant-life",
+    "pair_lens_id": "grc_zoe_v1",
+    "source_entry_id": "he-core-cog-004",
+    "substrate": "he"
   },
   "failure_reasons": [],
-  "issued_at": "2026-05-19T00:00:00Z",
+  "issued_at": "2026-05-20T00:00:00Z",
   "lens_id": "he_chayyim_v1",
-  "pack_source_sha256": "81e6c500b930ce08f85c647377767d213540a17316e08c2800f8caed27b33289",
+  "pack_source_sha256": "3fd294a461d66851c651ea6e08fb398e8fb39dc5d14aa2eb3833cab392433d2d",
   "ratification_method": "anchor_lens_lifts_proposition",
   "ratified": true,
-  "report_sha256": "c6990b58d34786fe37865b8e844f62a01356b20cd6635b5a761ecf9d74b86147",
+  "report_sha256": "9e7129e37221203625e7a72a07dd8f9048c06314e8f24c7394491bed7de9e9c6",
   "schema_version": "1.0.0"
 }

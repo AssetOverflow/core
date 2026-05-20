@@ -105,10 +105,9 @@ def test_synthetic_lens_with_atom_not_in_substrate_returns_none():
         lens_id="synthetic_v1",
         version="0.0.0",
         description="test only",
-        display_name="Synthetic",
-        primary_substrate="grc",
-        semantic_domain_preferences=("logos.nonexistent.atom",),
-        cognitive_mode_label="phantom",
+        substrate="grc",
+        atom="logos.nonexistent.atom",
+        cognitive_mode="phantom",
     )
     for lemma in ("knowledge", "truth", "light", "word"):
         assert _resolve_anchor_lens_mode(lemma, fake) is None

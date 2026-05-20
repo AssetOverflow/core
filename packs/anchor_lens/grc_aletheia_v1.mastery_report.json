@@ -1,20 +1,18 @@
 {
   "evidence": {
-    "atoms_anchored_in_substrate": [
-      "logos.aletheia.verity"
-    ],
-    "cognitive_mode_label": "unconcealment",
-    "cognitive_mode_label_empty": false,
-    "primary_substrate": "grc",
-    "semantic_domain_preferences_count": 1,
-    "semantic_domain_preferences_empty": false
+    "atom": "logos.aletheia.verity",
+    "atom_in_lexicon": true,
+    "cognitive_mode": "unconcealment",
+    "pair_lens_id": "he_logos_v1",
+    "source_entry_id": "grc-core-cog-002",
+    "substrate": "grc"
   },
   "failure_reasons": [],
-  "issued_at": "2026-05-19T00:00:00Z",
+  "issued_at": "2026-05-20T00:00:00Z",
   "lens_id": "grc_aletheia_v1",
-  "pack_source_sha256": "ce1d3eed4082eb6a0f86df7ec7732c81051fd2a1fd659a4d66f5a68d486c7512",
+  "pack_source_sha256": "45e3c70ad7d26c9f4b95cc7ee19037b87208909160bb334aaad17ce55630fab0",
   "ratification_method": "anchor_lens_lifts_proposition",
   "ratified": true,
-  "report_sha256": "97cd5966a50ab318f778e81d289317c45c68830bb29df29de21672c19897d92a",
+  "report_sha256": "552c5923ca37b4dcba7333af662c87d71552bffbd832364b1069bcd6c58185c6",
   "schema_version": "1.0.0"
 }

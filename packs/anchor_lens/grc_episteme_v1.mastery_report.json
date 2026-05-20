@@ -2,17 +2,17 @@
   "evidence": {
     "atom": "logos.episteme.systematic_knowledge",
     "atom_in_lexicon": true,
-    "cognitive_mode": "systematic",
+    "cognitive_mode": "systematic-knowledge",
     "pair_lens_id": null,
     "source_entry_id": "grc-core-cog-021",
     "substrate": "grc"
   },
   "failure_reasons": [],
   "issued_at": "2026-05-20T00:00:00Z",
-  "lens_id": "grc_logos_v1",
-  "pack_source_sha256": "e34f793661b85ba86befa49732bf122e6294a142b7073d725084c30811a1445d",
+  "lens_id": "grc_episteme_v1",
+  "pack_source_sha256": "b9f08741155ea602990cd74f76ea9211734975fa49fcb179de5625fb1ec53e30",
   "ratification_method": "anchor_lens_lifts_proposition",
   "ratified": true,
-  "report_sha256": "cbab0df4c826528b3e54e74932b4c59f601e646e91cdea8bcf64bd3d22cdd6f6",
+  "report_sha256": "9ad2d109c3b84d2e3c1b96217057bb3d945c47c53172263e9d2f251a8d676812",
   "schema_version": "1.0.0"
 }

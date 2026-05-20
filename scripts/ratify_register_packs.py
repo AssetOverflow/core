@@ -41,13 +41,15 @@ from packs.register.loader import (
 )
 
 PACKS_DIR = Path(__file__).resolve().parents[1] / "packs" / "register"
-ISSUED_AT = "2026-05-19T00:00:00Z"
+ISSUED_AT = "2026-05-20T00:00:00Z"
 REGISTER_IDS: tuple[str, ...] = (
     "default_neutral_v1",
     "terse_v1",
     "convivial_v1",
     "pedagogical_v1",
     "precise_v1",
+    "formal_v1",
+    "socratic_v1",
 )
 
 #: Valid IntentTag names for ``per_intent`` keys (ADR-0071, R4).  This
@@ -64,23 +66,17 @@ def _valid_intent_names() -> frozenset[str]:
 #
 # R6 boolean knobs (drop_provenance_tag, compress_gloss, drop_articles,
 # append_semantic_domain_clause): validated as strict bool only.  The
-# loader's closed-set boolean allow-list mirrors this gate, and the
-# realizer dispatch in ``chat.register_substantive`` reads these keys
-# at runtime.
-def _is_bool(v: Any) -> bool:
-    return isinstance(v, bool)
-
-
+# realizer dispatch code that *reads* these keys lands with R6; the gate
+# must accept them before that merge so packs can ratify cleanly.
 _KNOWN_OVERRIDE_KEYS: dict[str, Callable[[Any], bool]] = {
     "disclosure_domain_count": lambda v: isinstance(v, int)
     and not isinstance(v, bool)
     and v in (1, 2, 3),
-    # ADR-0077 (R6) — substantive register knobs.  Each is a strict
-    # bool; the loader's closed-set boolean allow-list mirrors this.
-    "drop_provenance_tag": _is_bool,
-    "compress_gloss": _is_bool,
-    "drop_articles": _is_bool,
-    "append_semantic_domain_clause": _is_bool,
+    # R6 boolean knobs — strict bool, no int coercion
+    "drop_provenance_tag": lambda v: isinstance(v, bool),
+    "compress_gloss": lambda v: isinstance(v, bool),
+    "drop_articles": lambda v: isinstance(v, bool),
+    "append_semantic_domain_clause": lambda v: isinstance(v, bool),
 }
 
 
@@ -292,7 +288,7 @@ def main() -> int:
         ):
             print(
                 f"idempotent: {register_id} already ratified at "
-                f"{pack_after['mastery_report_sha256'][:12]}…"
+                f"{pack_after['mastery_report_sha256'][:12]}\u2026"
             )
             skipped += 1
             continue
@@ -301,8 +297,8 @@ def main() -> int:
         )
         report_path.write_text(report_text, encoding="utf-8")
         print(
-            f"ratified: {register_id} → "
-            f"{pack_after['mastery_report_sha256'][:12]}…"
+            f"ratified: {register_id} \u2192 "
+            f"{pack_after['mastery_report_sha256'][:12]}\u2026"
         )
         updated += 1
     print(f"\nratified {updated} pack(s); {skipped} already current")

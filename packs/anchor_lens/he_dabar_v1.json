@@ -1,13 +1,13 @@
 {
-  "cognitive_mode_label": "divine-word",
-  "description": "Hebrew-substrate anchor lens. Pivots English 'word' onto \u05d3\u05b8\u05bc\u05d1\u05b8\u05e8's logos.utterance.word atom via the he cognition pack's field hook. Renders surface as English compound 'divine-word'. Dual-correction pair with grc_logos_v1: same domain atom (logos.utterance.word), different substrate and cognitive mode \u2014 Hebrew dabar is the enacted, event-making divine word (spoken reality), Greek logos is the rational structuring principle. Atom confirmed in he_core_cognition_v1 lexicon (he-core-cog-001). See ADR-0073c.",
-  "display_name": "Hebrew dabar (divine word)",
+  "atom": "logos.utterance.word",
+  "cognitive_mode": "divine-word",
+  "description": "Hebrew-substrate anchor lens. Pivots English 'word' onto \u05d3\u05bc\u05b8\u05d1\u05b8\u05e8's logos.utterance.word atom via the he cognition pack. Cognitive mode: divine-word. Pair: grc_logos_v1. See ADR-0073c.",
   "lens_id": "he_dabar_v1",
-  "mastery_report_sha256": "f62856aa28407d9518a42b4d78977c26c8c11793b2a7cfa3089f87c00a84b2cc",
-  "primary_substrate": "he",
+  "mastery_report_sha256": "d97de46b9ddea4985a774495de558ba395ae45bd0a42f3cc8318d3975f5e4b29",
+  "pair_lens_id": "grc_logos_v1",
+  "ratification_method": "anchor_lens_lifts_proposition",
   "schema_version": "1.0.0",
-  "semantic_domain_preferences": [
-    "logos.utterance.word"
-  ],
+  "source_entry_id": "he-core-cog-001",
+  "substrate": "he",
   "version": "1.0.0"
 }

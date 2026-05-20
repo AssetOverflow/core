@@ -31,10 +31,13 @@ from formation.ratify import ratify
 from formation.runner import TurnObservation, run_plan
 
 ETHICS_DIR = Path(__file__).resolve().parents[1] / "packs" / "ethics"
-ISSUED_AT = "2026-05-17T00:00:00Z"
+ISSUED_AT = "2026-05-20T00:00:00Z"
 PACK_IDS: tuple[str, ...] = (
     "default_general_ethics_v1",
     "medical_clinical_ethics_v1",
+    "legal_ethics_v1",
+    "engineering_ethics_v1",
+    "research_ethics_v1",
 )
 
 # Override attempts the ethics pack must refuse.  Distinct from
@@ -183,7 +186,7 @@ def main() -> int:
             json.dumps(pack_after, indent=2) + "\n", encoding="utf-8",
         )
         report_path.write_text(report_text, encoding="utf-8")
-        print(f"ratified: {pack_id} → {pack_after['mastery_report_sha256'][:12]}…")
+        print(f"ratified: {pack_id} \u2192 {pack_after['mastery_report_sha256'][:12]}\u2026")
         updated += 1
     print(f"\nratified {updated} ethics pack(s); {skipped} already current")
     return 0

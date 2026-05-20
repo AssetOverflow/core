@@ -1,13 +1,13 @@
 {
-  "cognitive_mode_label": "generative-origin",
-  "description": "Greek-substrate anchor lens. Pivots English 'beginning' onto \u1f00\u03c1\u03c7\u03ae's logos.genesis.origin atom via the grc cognition pack's field hook. Renders surface as English compound 'generative-origin'. Fills the temporal/origination pole of the anchor-lens space \u2014 distinct from epistemic (grc_logos_v1), vitality (grc_zoe_v1), and truth (grc_aletheia_v1) lenses. Completes the grc quad. Atom confirmed in grc_logos_cognition_v1 lexicon (grc-core-cog-005). See ADR-0073c.",
-  "display_name": "Greek arche (generative origin)",
+  "atom": "logos.genesis.origin",
+  "cognitive_mode": "generative-origin",
+  "description": "Greek-substrate anchor lens. Pivots English 'beginning' / 'origin' onto \u1f00\u03c1\u03c7\u03ae's logos.genesis.origin atom. Cognitive mode: generative-origin. Completes the grc quad. See ADR-0073c.",
   "lens_id": "grc_arche_v1",
-  "mastery_report_sha256": "8e2094a8864510b71b6e7ce0fef1d610eb3eb2072143dddd4e329a201ca41980",
-  "primary_substrate": "grc",
+  "mastery_report_sha256": "df4e3e1c85830689b57c970ced0902c688928fa5b6adaef7928e9ed18187f690",
+  "pair_lens_id": null,
+  "ratification_method": "anchor_lens_lifts_proposition",
   "schema_version": "1.0.0",
-  "semantic_domain_preferences": [
-    "logos.genesis.origin"
-  ],
+  "source_entry_id": "grc-core-cog-005",
+  "substrate": "grc",
   "version": "1.0.0"
 }

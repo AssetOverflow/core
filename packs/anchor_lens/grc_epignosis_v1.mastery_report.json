@@ -1,0 +1,18 @@
+{
+  "evidence": {
+    "atom": "logos.epignosis.knowledge",
+    "atom_in_lexicon": true,
+    "cognitive_mode": "experiential-knowledge",
+    "pair_lens_id": null,
+    "source_entry_id": "grc-core-cog-007",
+    "substrate": "grc"
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "lens_id": "grc_epignosis_v1",
+  "pack_source_sha256": "4c38d354145ad1f50f2a9ee25cfc6312fb8d60ad0bb3331654517b2fef7ac447",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "142aaf75d31b4d595e5ea498e969088528aed8238fb9aa48cefb7ca26627acd4",
+  "schema_version": "1.0.0"
+}
