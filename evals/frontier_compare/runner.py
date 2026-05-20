@@ -107,6 +107,17 @@ class RuntimeObservation:
         return asdict(self)
 
 
+@dataclass(frozen=True, slots=True)
+class ObservationFailure:
+    prompt: str
+    error_type: str
+    error_message: str
+    elapsed_ms: float
+
+    def as_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
 def _observe(
     prompt: str,
     *,
@@ -139,6 +150,24 @@ def _observe(
     )
 
 
+def _try_observe(
+    prompt: str,
+    *,
+    config: RuntimeConfig | None = None,
+    max_tokens: int | None = None,
+) -> RuntimeObservation | ObservationFailure:
+    start = time.perf_counter()
+    try:
+        return _observe(prompt, config=config, max_tokens=max_tokens)
+    except Exception as exc:  # noqa: BLE001 - benchmark records failures, never aborts the suite.
+        return ObservationFailure(
+            prompt=prompt,
+            error_type=exc.__class__.__name__,
+            error_message=str(exc),
+            elapsed_ms=(time.perf_counter() - start) * 1000.0,
+        )
+
+
 def _score_cases(suite: str, cases: Iterable[CaseResult]) -> SuiteReport:
     case_tuple = tuple(cases)
     if not case_tuple:
@@ -168,22 +197,28 @@ def run_determinism_suite(*, repeats: int = 3) -> SuiteReport:
     )
     cases: list[CaseResult] = []
     for idx, prompt in enumerate(prompts):
-        observations = [_observe(prompt) for _ in range(max(1, repeats))]
+        observations = [_try_observe(prompt) for _ in range(max(1, repeats))]
         failures: list[str] = []
-        surfaces = {o.surface for o in observations}
-        sources = {o.grounding_source for o in observations}
-        canonical = {o.register_canonical_surface for o in observations}
-        trace_hashes = {o.trace_hash for o in observations if o.trace_hash}
-        max_versor = max(o.versor_condition for o in observations)
-        if len(surfaces) != 1:
+        errors = [o for o in observations if isinstance(o, ObservationFailure)]
+        successes = [o for o in observations if isinstance(o, RuntimeObservation)]
+        if errors:
+            failures.append("runtime_exception")
+        surfaces = {o.surface for o in successes}
+        sources = {o.grounding_source for o in successes}
+        canonical = {o.register_canonical_surface for o in successes}
+        trace_hashes = {o.trace_hash for o in successes if o.trace_hash}
+        max_versor = max((o.versor_condition for o in successes), default=float("inf"))
+        if not successes:
+            failures.append("no_successful_observation")
+        if len(surfaces) > 1:
             failures.append("surface_not_stable")
-        if len(sources) != 1:
+        if len(sources) > 1:
             failures.append("grounding_source_not_stable")
-        if len(canonical) != 1:
+        if len(canonical) > 1:
             failures.append("register_canonical_surface_not_stable")
         if trace_hashes and len(trace_hashes) != 1:
             failures.append("trace_hash_not_stable")
-        if max_versor >= 1e-5:
+        if successes and max_versor >= 1e-5:
             failures.append("versor_condition_regressed")
         passed = not failures
         cases.append(
@@ -196,12 +231,14 @@ def run_determinism_suite(*, repeats: int = 3) -> SuiteReport:
                 elapsed_ms=sum(o.elapsed_ms for o in observations),
                 details={
                     "repeats": repeats,
+                    "successful_observations": len(successes),
+                    "runtime_exceptions": [e.as_dict() for e in errors],
                     "unique_surfaces": len(surfaces),
                     "unique_grounding_sources": len(sources),
                     "unique_register_canonical_surfaces": len(canonical),
                     "unique_trace_hashes": len(trace_hashes),
-                    "max_versor_condition": max_versor,
-                    "observations": [o.as_dict() for o in observations],
+                    "max_versor_condition": max_versor if successes else None,
+                    "observations": [o.as_dict() for o in successes],
                 },
                 failures=tuple(failures),
             )
@@ -249,22 +286,33 @@ def run_truth_lock_suite() -> SuiteReport:
     )
     cases: list[CaseResult] = []
     for spec in expected:
-        obs = _observe(str(spec["prompt"]))
-        surface_fold = obs.surface.casefold()
+        observed = _try_observe(str(spec["prompt"]))
         failures: list[str] = []
-        allowed_sources = set(spec["allowed_sources"])
-        if obs.grounding_source not in allowed_sources:
-            failures.append(
-                f"unexpected_grounding_source:{obs.grounding_source}"
-            )
-        for required in spec["required_substrings"]:
-            if str(required).casefold() not in surface_fold:
-                failures.append(f"missing_required_substring:{required}")
-        for forbidden in spec["forbidden_substrings"]:
-            if str(forbidden).casefold() in surface_fold:
-                failures.append(f"forbidden_substring:{forbidden}")
-        if obs.versor_condition >= 1e-5:
-            failures.append("versor_condition_regressed")
+        details: dict[str, Any]
+        elapsed_ms = observed.elapsed_ms
+        if isinstance(observed, ObservationFailure):
+            # A runtime exception is recorded as a failed benchmark case,
+            # not a crashed suite.  If fail-closed OOV behavior is desired
+            # as a passing policy later, add that as an explicit rubric.
+            failures.append("runtime_exception")
+            details = {"runtime_exception": observed.as_dict()}
+        else:
+            obs = observed
+            surface_fold = obs.surface.casefold()
+            allowed_sources = set(spec["allowed_sources"])
+            if obs.grounding_source not in allowed_sources:
+                failures.append(
+                    f"unexpected_grounding_source:{obs.grounding_source}"
+                )
+            for required in spec["required_substrings"]:
+                if str(required).casefold() not in surface_fold:
+                    failures.append(f"missing_required_substring:{required}")
+            for forbidden in spec["forbidden_substrings"]:
+                if str(forbidden).casefold() in surface_fold:
+                    failures.append(f"forbidden_substring:{forbidden}")
+            if obs.versor_condition >= 1e-5:
+                failures.append("versor_condition_regressed")
+            details = {"observation": obs.as_dict()}
         passed = not failures
         cases.append(
             CaseResult(
@@ -273,8 +321,8 @@ def run_truth_lock_suite() -> SuiteReport:
                 prompt=str(spec["prompt"]),
                 passed=passed,
                 score=1.0 if passed else 0.0,
-                elapsed_ms=obs.elapsed_ms,
-                details={"observation": obs.as_dict()},
+                elapsed_ms=elapsed_ms,
+                details=details,
                 failures=tuple(failures),
             )
         )
@@ -299,23 +347,29 @@ def run_axis_orthogonality_suite() -> SuiteReport:
         "terse_v1",
         "convivial_v1",
     )
-    register_obs = [
-        _observe(
+    register_results = [
+        _try_observe(
             register_prompt,
             config=RuntimeConfig(register_pack_id=register_id),
         )
         for register_id in register_ids
     ]
     failures: list[str] = []
+    register_errors = [o for o in register_results if isinstance(o, ObservationFailure)]
+    register_obs = [o for o in register_results if isinstance(o, RuntimeObservation)]
+    if register_errors:
+        failures.append("runtime_exception")
     canonical = {o.register_canonical_surface for o in register_obs}
-    if len(canonical) != 1:
+    if len(canonical) > 1:
         failures.append("register_canonical_surface_moved")
     sources = {o.grounding_source for o in register_obs}
-    if len(sources) != 1:
+    if len(sources) > 1:
         failures.append("grounding_source_moved_across_registers")
-    if not any(o.surface != register_obs[0].surface for o in register_obs[1:]):
+    if len(register_obs) != len(register_ids):
+        failures.append("missing_register_observation")
+    elif not any(o.surface != register_obs[0].surface for o in register_obs[1:]):
         failures.append("surface_variation_not_observed")
-    if max(o.versor_condition for o in register_obs) >= 1e-5:
+    if register_obs and max(o.versor_condition for o in register_obs) >= 1e-5:
         failures.append("versor_condition_regressed")
     passed = not failures
     cases.append(
@@ -325,9 +379,10 @@ def run_axis_orthogonality_suite() -> SuiteReport:
             prompt=register_prompt,
             passed=passed,
             score=1.0 if passed else 0.0,
-            elapsed_ms=sum(o.elapsed_ms for o in register_obs),
+            elapsed_ms=sum(o.elapsed_ms for o in register_results),
             details={
                 "register_ids": register_ids,
+                "runtime_exceptions": [e.as_dict() for e in register_errors],
                 "unique_surfaces": len({o.surface for o in register_obs}),
                 "unique_register_canonical_surfaces": len(canonical),
                 "observations": [o.as_dict() for o in register_obs],
@@ -344,14 +399,22 @@ def run_axis_orthogonality_suite() -> SuiteReport:
         ("grc_arche_v1", "What is beginning?"),
     )
     for lens_id, prompt in lens_cases:
-        obs = _observe(prompt, config=RuntimeConfig(anchor_lens_id=lens_id))
+        observed = _try_observe(prompt, config=RuntimeConfig(anchor_lens_id=lens_id))
         failures = []
-        if obs.anchor_lens_id != lens_id:
-            failures.append("anchor_lens_id_not_recorded")
-        if not obs.anchor_lens_mode_label:
-            failures.append("anchor_lens_mode_not_engaged")
-        if obs.versor_condition >= 1e-5:
-            failures.append("versor_condition_regressed")
+        if isinstance(observed, ObservationFailure):
+            failures.append("runtime_exception")
+            details = {"runtime_exception": observed.as_dict()}
+            elapsed_ms = observed.elapsed_ms
+        else:
+            obs = observed
+            if obs.anchor_lens_id != lens_id:
+                failures.append("anchor_lens_id_not_recorded")
+            if not obs.anchor_lens_mode_label:
+                failures.append("anchor_lens_mode_not_engaged")
+            if obs.versor_condition >= 1e-5:
+                failures.append("versor_condition_regressed")
+            details = {"observation": obs.as_dict()}
+            elapsed_ms = obs.elapsed_ms
         passed = not failures
         cases.append(
             CaseResult(
@@ -360,8 +423,8 @@ def run_axis_orthogonality_suite() -> SuiteReport:
                 prompt=prompt,
                 passed=passed,
                 score=1.0 if passed else 0.0,
-                elapsed_ms=obs.elapsed_ms,
-                details={"observation": obs.as_dict()},
+                elapsed_ms=elapsed_ms,
+                details=details,
                 failures=tuple(failures),
             )
         )
