@@ -401,6 +401,44 @@ def teaching_grounded_surface(
     )
 
 
+def _resolve_followup(
+    *,
+    current: TeachingChain,
+    corpus: dict[tuple[str, str], TeachingChain],
+    visited: frozenset[str],
+    same_corpus_id: str,
+) -> TeachingChain | None:
+    """ADR-0083 shared resolver — return the next chain that survives
+    the cycle / pack-residency / single-corpus guards, else ``None``.
+
+    Used by both the ADR-0062 depth-1 composer and the ADR-0083
+    transitive composer.  Per-hop rules:
+
+    1. Prefer ``(current.object, "cause")``; fall back to
+       ``(current.object, "verification")``.
+    2. Refuse candidates whose ``object`` is in *visited* (covers
+       ADR-0062's 1-step cycle guard as the depth-2 case).
+    3. Refuse candidates whose ``object`` is not pack-resident with
+       ``semantic_domains`` in the candidate's resolving corpus's pack.
+    4. Refuse candidates from a different corpus than *same_corpus_id*
+       (single-corpus traversal in v1; cross-corpus transitive is
+       deferred to a follow-up ADR).
+    """
+    for next_intent in ("cause", "verification"):
+        candidate = corpus.get((current.object, next_intent))
+        if candidate is None:
+            continue
+        if candidate.object in visited:
+            continue
+        if candidate.corpus_id != same_corpus_id:
+            continue
+        pack = _pack_for_corpus(candidate.corpus_id)
+        if not pack.get(candidate.object, ()):
+            continue
+        return candidate
+    return None
+
+
 def teaching_grounded_surface_composed(
     subject_lemma: str,
     intent_tag: IntentTag,
@@ -456,20 +494,15 @@ def teaching_grounded_surface_composed(
     )
     connective = humanize_predicate(chain.connective)
 
-    # Look for a follow-up chain whose subject equals the initial
-    # chain's object.  Prefer cause; fall back to verification.
-    follow_up = None
-    for next_intent in ("cause", "verification"):
-        candidate = corpus.get((chain.object, next_intent))
-        if candidate is None:
-            continue
-        # Cycle guard: don't follow if the next object is the initial
-        # subject (1-step cycle) or the same as the current object
-        # (degenerate same-cell mismatch).
-        if candidate.object in (chain.subject, chain.object):
-            continue
-        follow_up = candidate
-        break
+    # ADR-0083 — shared resolver enforces ADR-0062's cycle guard
+    # (visited = {subject, object}) plus pack-residency + single-
+    # corpus guards.  Behaviour at depth-1 is unchanged.
+    follow_up = _resolve_followup(
+        current=chain,
+        corpus=corpus,
+        visited=frozenset({chain.subject, chain.object}),
+        same_corpus_id=chain.corpus_id,
+    )
 
     if follow_up is None:
         # No follow-up available — degrade to single-chain surface
@@ -480,18 +513,10 @@ def teaching_grounded_surface_composed(
             f"({head_object_short}). No session evidence yet."
         )
 
+    # ADR-0083 — _resolve_followup already enforced pack-residency
+    # on follow_up.object, so a non-None result is safe to render.
     follow_pack = _pack_for_corpus(follow_up.corpus_id)
     follow_object_domains = follow_pack.get(follow_up.object, ())
-    if not follow_object_domains:
-        # Follow-up's object isn't pack-resident with semantic domains
-        # — degrade to single-chain surface rather than emit a
-        # partially-grounded composition.
-        return (
-            f"{chain.subject} — teaching-grounded ({chain.corpus_id}): "
-            f"{head_subject}. {chain.subject} {connective} {chain.object} "
-            f"({head_object_short}). No session evidence yet."
-        )
-
     follow_head = "; ".join(
         follow_object_domains[: max(1, follow_up.domains_object_k)]
     )
@@ -502,6 +527,90 @@ def teaching_grounded_surface_composed(
         f"({head_object_short}), which {follow_connective} {follow_up.object} "
         f"({follow_head}). No session evidence yet."
     )
+
+
+def teaching_grounded_surface_transitive(
+    subject_lemma: str,
+    intent_tag: IntentTag,
+    *,
+    register: RegisterPack = UNREGISTERED,
+    max_depth: int = 2,
+) -> str | None:
+    """ADR-0083 — bounded multi-hop teaching-grounded surface.
+
+    Strict superset of :func:`teaching_grounded_surface_composed`.
+    Iterates the shared :func:`_resolve_followup` helper under a
+    visited-set guard, appending one ``", which {conn} {obj} ({dom})"``
+    clause per surviving hop, up to *max_depth - 1* follow-ups beyond
+    the initial chain.
+
+    ``max_depth`` is the maximum number of follow-up hops to append
+    beyond the initial chain.  At ``max_depth=0`` byte-identical to
+    :func:`teaching_grounded_surface` (no hops).  At ``max_depth=1``
+    byte-identical to :func:`teaching_grounded_surface_composed`
+    (one follow-up).  At ``max_depth=2`` byte-identical to ADR-0062
+    when no second hop survives, strict superset when one does.
+
+    Single-corpus traversal in v1 — every hop must resolve in the
+    initial chain's corpus.  Cross-corpus transitive is deferred to a
+    follow-up ADR.  Returns ``None`` under the same conditions as
+    :func:`teaching_grounded_surface`.
+    """
+    if not subject_lemma or not isinstance(subject_lemma, str):
+        return None
+    key = subject_lemma.strip().lower()
+    if not key:
+        return None
+    intent_name = _intent_name(intent_tag)
+    if intent_name is None:
+        return None
+    corpus = _all_chains_index()
+    chain = corpus.get((key, intent_name))
+    if chain is None:
+        return None
+    pack = _pack_for_corpus(chain.corpus_id)
+    subject_domains = pack.get(chain.subject, ())
+    object_domains = pack.get(chain.object, ())
+    if not subject_domains or not object_domains:
+        return None
+    head_subject = "; ".join(
+        subject_domains[: max(1, chain.domains_subject_k)]
+    )
+    head_object_short = "; ".join(
+        object_domains[: max(1, chain.domains_object_k)]
+    )
+    connective = humanize_predicate(chain.connective)
+
+    depth_cap = max(0, int(max_depth))
+    hops: list[TeachingChain] = []
+    visited = {chain.subject, chain.object}
+    current = chain
+    while len(hops) < depth_cap:
+        nxt = _resolve_followup(
+            current=current,
+            corpus=corpus,
+            visited=frozenset(visited),
+            same_corpus_id=chain.corpus_id,
+        )
+        if nxt is None:
+            break
+        hops.append(nxt)
+        visited.add(nxt.object)
+        current = nxt
+
+    body = (
+        f"{chain.subject} — teaching-grounded ({chain.corpus_id}): "
+        f"{head_subject}. {chain.subject} {connective} {chain.object} "
+        f"({head_object_short})"
+    )
+    for hop in hops:
+        hop_pack = _pack_for_corpus(hop.corpus_id)
+        hop_domains = hop_pack.get(hop.object, ())
+        hop_head = "; ".join(hop_domains[: max(1, hop.domains_object_k)])
+        hop_connective = humanize_predicate(hop.connective)
+        body += f", which {hop_connective} {hop.object} ({hop_head})"
+    body += ". No session evidence yet."
+    return body
 
 
 def has_teaching_chain(subject_lemma: str, intent_tag: IntentTag) -> bool:
