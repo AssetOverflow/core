@@ -57,10 +57,16 @@ def _valid_intent_names() -> frozenset[str]:
     from generate.intent import IntentTag
     return frozenset(t.name for t in IntentTag)
 
-# Known realizer_overrides keys (ADR-0070, Phase R3).  The allow-list is
-# the trust boundary against arbitrary operator-authored data driving
+# Known realizer_overrides keys (ADR-0070, Phase R3 + R6).  The allow-list
+# is the trust boundary against arbitrary operator-authored data driving
 # realizer dispatch.  Each entry maps a key name to a validator that
-# returns True iff the value is in-bounds for R3.
+# returns True iff the value is in-bounds.
+#
+# R6 boolean knobs (drop_provenance_tag, compress_gloss, drop_articles,
+# append_semantic_domain_clause): validated as strict bool only.  The
+# loader's closed-set boolean allow-list mirrors this gate, and the
+# realizer dispatch in ``chat.register_substantive`` reads these keys
+# at runtime.
 def _is_bool(v: Any) -> bool:
     return isinstance(v, bool)
 

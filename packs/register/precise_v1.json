@@ -1,13 +1,14 @@
 {
   "register_id": "precise_v1",
   "version": "1.0.0",
-  "description": "Precise register. Standard depth with disclosure_domain_count=2 — exposes exactly two semantic domains rather than the default three. No discourse markers. Occupies the focused/technical pole: more substantive than terse_v1 (count=1) but narrower than default_neutral_v1 (count=3). Grounding source and trace hash are invariant against default_neutral_v1 except for the override application. See ADR-0068, ADR-0070.",
+  "description": "Precise register. Standard depth with disclosure_domain_count=2 and drop_provenance_tag=true. Exposes exactly two semantic domains (focused but not terse), and drops the parenthetical meta-tag from gloss output — giving formal, clean surface text. Occupies the focused/technical pole: more substantive than terse_v1 (count=1) but narrower than default_neutral_v1 (count=3, no tag suppression). See ADR-0068, ADR-0070, R6.",
   "schema_version": "1.0.0",
   "mastery_report_sha256": "",
   "display_name": "Precise",
   "depth_preference": "standard",
   "realizer_overrides": {
-    "disclosure_domain_count": 2
+    "disclosure_domain_count": 2,
+    "drop_provenance_tag": true
   },
   "discourse_markers": {
     "openings": [],
