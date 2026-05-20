@@ -4,7 +4,12 @@
 
 from __future__ import annotations
 
-from chat.register_variation import _select_bucket_entry, decorate_surface
+from chat.register_variation import (
+    DecorationResult,
+    _select_bucket_entry,
+    decorate_surface,
+    decorate_surface_str,
+)
 from packs.register.loader import UNREGISTERED, load_register_pack
 
 
@@ -120,19 +125,25 @@ def test_decorate_surface_empty_buckets_noop():
     """UNREGISTERED / neutral / terse all have empty buckets."""
     surface = "Light is illumination. Pack-grounded (en_core_cognition_v1)."
     out = decorate_surface(surface, UNREGISTERED, turn_idx=0)
-    assert out == surface
+    assert isinstance(out, DecorationResult)
+    assert out.surface == surface
+    assert out.variant_id == ""
 
     neutral = load_register_pack("default_neutral_v1")
-    assert decorate_surface(surface, neutral, turn_idx=0) == surface
+    assert decorate_surface(surface, neutral, turn_idx=0).surface == surface
+    assert decorate_surface(surface, neutral, turn_idx=0).variant_id == ""
 
     terse = load_register_pack("terse_v1")
-    assert decorate_surface(surface, terse, turn_idx=0) == surface
+    assert decorate_surface(surface, terse, turn_idx=0).surface == surface
+    assert decorate_surface(surface, terse, turn_idx=0).variant_id == ""
 
 
 def test_decorate_surface_empty_input_noop():
     """Empty input ⇒ empty output regardless of register."""
     convivial = load_register_pack("convivial_v1")
-    assert decorate_surface("", convivial, turn_idx=0) == ""
+    out = decorate_surface("", convivial, turn_idx=0)
+    assert out.surface == ""
+    assert out.variant_id == ""
 
 
 def test_decorate_surface_convivial_attaches_markers():
@@ -143,8 +154,11 @@ def test_decorate_surface_convivial_attaches_markers():
     out = decorate_surface(surface, convivial, turn_idx=0)
     # The opening (3 entries, no empty) is always non-empty.
     # Therefore the surface must change.
-    assert out != surface
-    assert surface in out
+    assert out.surface != surface
+    assert surface in out.surface
+    # ADR-0072 (R5) — non-empty markers produce a non-empty variant_id.
+    assert out.variant_id != ""
+    assert len(out.variant_id) == 12
 
 
 def test_decorate_surface_is_deterministic():
@@ -160,7 +174,61 @@ def test_decorate_surface_turn_idx_varies_output():
     surface = "Light is illumination."
     seen: set[str] = set()
     for t in range(15):
-        seen.add(decorate_surface(surface, convivial, turn_idx=t))
+        seen.add(decorate_surface(surface, convivial, turn_idx=t).surface)
     # 15 turns × 3 openings × 3 closings = 9 possible outputs;
     # should see at least 4 distinct.
     assert len(seen) >= 4, f"only {len(seen)} distinct decorations across 15 turns"
+
+
+# ADR-0072 (R5) — DecorationResult + variant_id + str alias.
+
+
+def test_decorate_surface_str_alias_returns_string():
+    """decorate_surface_str preserves the pre-R5 string-only API."""
+    convivial = load_register_pack("convivial_v1")
+    surface = "Light is illumination."
+    out = decorate_surface_str(surface, convivial, turn_idx=0)
+    assert isinstance(out, str)
+    full = decorate_surface(surface, convivial, turn_idx=0)
+    assert out == full.surface
+
+
+def test_variant_id_stable_across_invocations():
+    """Same (opening, closing) pair ⇒ identical 12-char variant_id."""
+    convivial = load_register_pack("convivial_v1")
+    surface = "Light is illumination."
+    a = decorate_surface(surface, convivial, turn_idx=0)
+    b = decorate_surface(surface, convivial, turn_idx=0)
+    assert a.variant_id == b.variant_id
+    # Stable hex prefix of 12 chars.
+    assert len(a.variant_id) == 12
+    int(a.variant_id, 16)  # raises if not hex
+
+
+def test_variant_id_distinguishes_distinct_marker_pairs():
+    """Different marker selections ⇒ different variant_ids."""
+    convivial = load_register_pack("convivial_v1")
+    surface = "Light is illumination."
+    seen_pairs: set[tuple[str, str]] = set()
+    seen_variant_ids: set[str] = set()
+    for t in range(40):
+        result = decorate_surface(surface, convivial, turn_idx=t)
+        seen_pairs.add((result.opening, result.closing))
+        if result.variant_id:
+            seen_variant_ids.add(result.variant_id)
+    # Bijection between non-trivial pairs and variant_ids:
+    # the number of distinct variant_ids equals the number of
+    # distinct non-empty pairs (collisions on 48 bits ≈ 2^-48 ⇒ none).
+    non_trivial_pairs = {p for p in seen_pairs if p != ("", "")}
+    assert len(seen_variant_ids) == len(non_trivial_pairs)
+
+
+def test_variant_id_empty_for_no_decoration():
+    """UNREGISTERED / neutral / terse always emit ``variant_id=""``."""
+    surface = "Light is illumination."
+    for pack_id in ("default_neutral_v1", "terse_v1"):
+        pack = load_register_pack(pack_id)
+        for t in range(5):
+            assert decorate_surface(surface, pack, turn_idx=t).variant_id == ""
+    for t in range(5):
+        assert decorate_surface(surface, UNREGISTERED, turn_idx=t).variant_id == ""

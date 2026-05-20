@@ -1,4 +1,4 @@
-"""Seeded surface variation (ADR-0071, Plan Phase R4).
+"""Seeded surface variation (ADR-0071 R4, extended ADR-0072 R5).
 
 Deterministic discourse-marker selection from bounded register-pack
 buckets, keyed on ``(seed_text, register_id, turn_idx, bucket_name)``.
@@ -28,13 +28,42 @@ imports from ``packs.register`` and from this module.
 The selector is uniform-mod-len: every entry in a bucket is equally
 likely across the seed space.  Frequency shaping (weighted entries) is
 deferred per ADR-0071 §Open questions.
+
+ADR-0072 (R5) — :func:`decorate_surface` now returns a
+:class:`DecorationResult` that carries the post-decoration surface plus
+the chosen ``opening`` / ``closing`` strings and a 12-char
+``variant_id`` digest of the selected pair.  This is what
+``TurnEvent`` records into the audit stream so operators can ask
+"which register variant fired on turn N?" without reading content.
+The legacy string-return is preserved via :func:`decorate_surface_str`.
 """
 
 from __future__ import annotations
 
 import hashlib
+from dataclasses import dataclass
 
 from packs.register.loader import RegisterPack
+
+
+_VARIANT_ID_LEN = 12
+
+
+@dataclass(frozen=True, slots=True)
+class DecorationResult:
+    """Result of one seeded discourse-marker decoration.
+
+    ``variant_id`` is the 12-char SHA-256 prefix of
+    ``f"{opening}|{closing}"``.  Empty string ⇒ no decoration was
+    applied this turn (empty buckets, or empty input surface).  Two
+    different turns under the same register that select the same
+    ``(opening, closing)`` pair share the same ``variant_id``.
+    """
+
+    surface: str
+    opening: str
+    closing: str
+    variant_id: str
 
 
 def _select_bucket_entry(
@@ -61,20 +90,38 @@ def _select_bucket_entry(
     return bucket[idx]
 
 
+def _compute_variant_id(opening: str, closing: str) -> str:
+    """12-char SHA-256 prefix of the chosen ``(opening, closing)`` pair.
+
+    Empty when both markers are empty — ``""`` is the "no decoration
+    applied" sentinel, so ``UNREGISTERED`` / ``default_neutral_v1`` /
+    ``terse_v1`` do not pollute the audit stream with a no-op digest.
+    """
+    if not opening and not closing:
+        return ""
+    payload = f"{opening}|{closing}".encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()[:_VARIANT_ID_LEN]
+
+
 def decorate_surface(
     surface: str,
     register: RegisterPack,
     *,
     turn_idx: int,
     seed_text: str | None = None,
-) -> str:
+) -> DecorationResult:
     """Apply seeded discourse-marker decoration to *surface*.
 
-    Empty buckets ⇒ no-op (the original surface is returned).  Order
-    is ``"{opening} {surface}{closing}"`` — closing concatenates
-    directly so an entry like ``" — make sense?"`` carries its own
-    spacing.  Empty-string entries in a bucket count as legitimate
-    selections (the seed may pick "no marker this turn").
+    Returns a :class:`DecorationResult` with the post-decoration
+    ``surface`` plus the chosen ``opening`` / ``closing`` markers and
+    the 12-char ``variant_id`` digest of that pair.
+
+    Empty buckets ⇒ no-op (the original surface is returned, both
+    marker strings empty, ``variant_id=""``).  Order is
+    ``"{opening} {surface}{closing}"`` — closing concatenates directly
+    so an entry like ``" — make sense?"`` carries its own spacing.
+    Empty-string entries in a bucket count as legitimate selections
+    (the seed may pick "no marker this turn").
 
     ``seed_text`` defaults to *surface* — the pre-decoration string is
     the natural seed.  Callers with a stronger deterministic key (e.g.
@@ -84,7 +131,9 @@ def decorate_surface(
     they sit until a later phase that owns clause-boundary detection.
     """
     if not surface:
-        return surface
+        return DecorationResult(
+            surface=surface, opening="", closing="", variant_id=""
+        )
     if seed_text is None:
         seed_text = surface
     markers = register.discourse_markers
@@ -107,7 +156,29 @@ def decorate_surface(
         out = f"{opening} {out}"
     if closing:
         out = f"{out}{closing}"
-    return out
+    return DecorationResult(
+        surface=out,
+        opening=opening,
+        closing=closing,
+        variant_id=_compute_variant_id(opening, closing),
+    )
 
 
-__all__ = ("decorate_surface",)
+def decorate_surface_str(
+    surface: str,
+    register: RegisterPack,
+    *,
+    turn_idx: int,
+    seed_text: str | None = None,
+) -> str:
+    """String-only convenience wrapper around :func:`decorate_surface`.
+
+    Preserves the pre-R5 return type for off-runtime callers (tests,
+    ad-hoc CLI tools) that only want the post-decoration string.
+    """
+    return decorate_surface(
+        surface, register, turn_idx=turn_idx, seed_text=seed_text
+    ).surface
+
+
+__all__ = ("DecorationResult", "decorate_surface", "decorate_surface_str")

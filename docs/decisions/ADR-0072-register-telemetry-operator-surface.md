@@ -1,7 +1,8 @@
 # ADR-0072 — Register telemetry + operator surface (Plan Phase R5)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-19
+**Ratified:** 2026-05-19
 **Author:** Shay
 **Phase:** Plan Phase R5 (operator-visible register)
 **Builds on:** ADR-0068 (register pack class), ADR-0069 (realizer

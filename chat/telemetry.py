@@ -69,6 +69,11 @@ def serialize_turn_event(
         "flagged": bool(getattr(event, "flagged", False)),
         "stub_path": getattr(event, "walk_surface", "") == _UNKNOWN_DOMAIN_SURFACE,
         "dialogue_role": str(getattr(event, "dialogue_role", "")),
+        # ADR-0072 (R5) — operator-visible register identity per turn.
+        # Empty strings on pre-R5 events / UNREGISTERED runtimes / empty
+        # marker buckets, so the wire format degrades cleanly.
+        "register_id": str(getattr(event, "register_id", "") or ""),
+        "register_variant_id": str(getattr(event, "register_variant_id", "") or ""),
     }
     safety = getattr(event, "safety_verdict", None)
     if safety is not None:

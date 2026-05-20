@@ -303,6 +303,13 @@ class ChatResponse:
     # the truth path (ADR-0069 invariant C).  Empty string ⇒ identical
     # to ``surface`` (no decoration applied this turn).
     pre_decoration_surface: str = ""
+    # ADR-0072 (R5) — operator-visible register identity per turn.
+    # Mirrors the TurnEvent fields so callers (CLI, demos, tests) can
+    # read the register state from ChatResponse without re-parsing the
+    # telemetry JSONL.  ``""`` defaults preserve pre-R5 byte-identity
+    # for callers that construct ChatResponse without these fields.
+    register_id: str = ""
+    register_variant_id: str = ""
 
 
 class ChatRuntime:
@@ -933,10 +940,15 @@ class ChatRuntime:
         # the truth-path surface and trace_hash stays invariant under
         # register (ADR-0069 invariant C).
         pre_decoration_surface_stub = response_surface
-        response_surface = decorate_surface(
+        decoration_stub = decorate_surface(
             response_surface,
             self.register_pack,
             turn_idx=len(self.turn_log),
+        )
+        response_surface = decoration_stub.surface
+        register_id_stub = (
+            "" if self.register_pack.is_unregistered()
+            else self.register_pack.register_id
         )
         verdicts_bundle = TurnVerdicts(
             identity_score=None,
@@ -963,6 +975,8 @@ class ChatRuntime:
                 ethics_verdict=ethics_verdict,
                 verdicts=verdicts_bundle,
                 grounding_source=grounding_source,
+                register_id=register_id_stub,
+                register_variant_id=decoration_stub.variant_id,
             )
             self.turn_log.append(stub_event)
             self._emit_turn_event(stub_event)
@@ -1007,6 +1021,8 @@ class ChatRuntime:
             verdicts=verdicts_bundle,
             grounding_source=grounding_source,
             pre_decoration_surface=pre_decoration_surface_stub,
+            register_id=register_id_stub,
+            register_variant_id=decoration_stub.variant_id,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -1277,10 +1293,15 @@ class ChatRuntime:
         # cognition pipeline can hash the truth-path surface and
         # trace_hash stays invariant under register (ADR-0069 inv C).
         pre_decoration_surface_main = response_surface
-        response_surface = decorate_surface(
+        decoration_main = decorate_surface(
             response_surface,
             self.register_pack,
             turn_idx=len(self.turn_log),
+        )
+        response_surface = decoration_main.surface
+        register_id_main = (
+            "" if self.register_pack.is_unregistered()
+            else self.register_pack.register_id
         )
         verdicts_bundle = TurnVerdicts(
             identity_score=identity_score,
@@ -1306,6 +1327,8 @@ class ChatRuntime:
             ethics_verdict=ethics_verdict,
             verdicts=verdicts_bundle,
             grounding_source=warm_grounding_source or "vault",
+            register_id=register_id_main,
+            register_variant_id=decoration_main.variant_id,
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
@@ -1339,6 +1362,8 @@ class ChatRuntime:
             verdicts=verdicts_bundle,
             grounding_source=warm_grounding_source or "vault",
             pre_decoration_surface=pre_decoration_surface_main,
+            register_id=register_id_main,
+            register_variant_id=decoration_main.variant_id,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

@@ -291,3 +291,13 @@ class TurnEvent:
     # Preserved verbatim through the TurnEvent telemetry stream for
     # downstream audit consumers.
     grounding_source: str = "none"
+    # ADR-0072 (R5) — operator-visible register identity per turn.
+    # ``register_id`` is the loaded pack id (e.g. ``"convivial_v1"``),
+    # or ``""`` for the in-memory UNREGISTERED sentinel.
+    # ``register_variant_id`` is the 12-char SHA-256 prefix of the
+    # selected ``(opening, closing)`` discourse-marker pair, or ``""``
+    # when no decoration was applied this turn (empty buckets, or empty
+    # surface).  Both default to ``""`` so pre-R5 callers stay
+    # byte-identical.
+    register_id: str = ""
+    register_variant_id: str = ""

@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -172,6 +172,7 @@ def _runtime_config_from_args(args: argparse.Namespace):
         inner_loop_admissibility=getattr(args, "inner_loop_admissibility", False),
         admissibility_threshold=getattr(args, "admissibility_threshold", 0.0),
         identity_pack=getattr(args, "identity", "") or "",
+        register_pack_id=(getattr(args, "register", None) or None),
     )
 
 
@@ -213,7 +214,13 @@ def cmd_chat(args: argparse.Namespace) -> int:
     except Exception as exc:  # pragma: no cover - exercised by CLI in broken envs
         _print_runtime_import_hint(exc)
 
-    runtime = ChatRuntime(config=_runtime_config_from_args(args))
+    try:
+        runtime = ChatRuntime(config=_runtime_config_from_args(args))
+    except Exception as exc:  # noqa: BLE001 — surface RegisterPackError / pack-load errors
+        from packs.register.loader import RegisterPackError
+        if isinstance(exc, RegisterPackError):
+            _die(f"invalid --register pack id: {exc}", code=2)
+        raise
     show_verdicts = bool(getattr(args, "show_verdicts", False))
     while True:
         try:
@@ -1954,6 +1961,14 @@ def cmd_demo(args: argparse.Namespace) -> int:
             print(json.dumps(result, indent=2, sort_keys=True, default=str))
         return 0
 
+    if target == "register-tour":
+        from evals.register_tour.run_tour import run_tour as run_register_tour
+
+        result = run_register_tour(emit_json=args.json)
+        if args.json:
+            print(json.dumps(result, indent=2, sort_keys=True, default=str))
+        return 0 if result.get("all_claims_supported", False) else 1
+
     if target == "pack-measurements":
         from scripts.publish_pack_measurements import (
             build_combined_report,
@@ -2494,6 +2509,18 @@ def build_parser() -> argparse.ArgumentParser:
             "stderr (ADR-0041 operator-facing audit readout)"
         ),
     )
+    chat.add_argument(
+        "--register",
+        metavar="REGISTER_ID",
+        default=None,
+        help=(
+            "optional register pack id (ADR-0068+); default: no "
+            "register (unregistered sentinel, byte-identical to "
+            "default_neutral_v1).  Examples: default_neutral_v1, "
+            "terse_v1, convivial_v1.  Invalid ids fail-fast at "
+            "runtime init before the REPL starts."
+        ),
+    )
     chat.set_defaults(func=cmd_chat)
 
     test = subparsers.add_parser("test", help="run pytest with curated suite aliases or direct passthrough")
@@ -2823,6 +2850,7 @@ def build_parser() -> argparse.ArgumentParser:
             "phase6",
             "adr-0024-chain",
             "audit-tour",
+            "register-tour",
             "pack-measurements",
             "long-context-comparison",
             "anti-regression",
@@ -2840,6 +2868,9 @@ def build_parser() -> argparse.ArgumentParser:
             "consolidated PASS/FAIL table; exits non-zero if any demo fails.  "
             "audit-tour: ADR-0027..0041 pack-layer architecture in four "
             "scenes (identity / safety / ethics / replay).  "
+            "register-tour: ADR-0068..0072 presentation-axis seam — same "
+            "prompts × three registers; surface varies, grounding_source "
+            "and trace_hash byte-identical.  "
             "pack-measurements: ADR-0043 — pack-layer claims → CI-enforced "
             "numbers across the three ratified identity packs.  "
             "long-context-comparison: ADR-0045 — CORE exact recall NIAH at "
