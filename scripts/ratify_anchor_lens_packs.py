@@ -161,7 +161,9 @@ def main() -> int:
             return 1
 
         report_path = PACKS_DIR / f"{lens_id}.mastery_report.json"
-        report_text = json.dumps(report_dict, indent=2, sort_keys=True) + "\n"
+        report_text = json.dumps(
+            report_dict, indent=2, sort_keys=True, ensure_ascii=False,
+        ) + "\n"
         prior_report = (
             report_path.read_text(encoding="utf-8")
             if report_path.is_file()
@@ -180,7 +182,8 @@ def main() -> int:
             skipped += 1
             continue
         pack_path.write_text(
-            json.dumps(pack_after, indent=2) + "\n", encoding="utf-8"
+            json.dumps(pack_after, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
         )
         report_path.write_text(report_text, encoding="utf-8")
         print(

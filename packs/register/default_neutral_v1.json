@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Default neutral register. Empty realizer overrides and empty discourse markers. Ratification gate is byte-identity with the unregistered realizer path. See ADR-0068.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "1bc62bfc36e4b3edbeb3764b2523ac77d2b1e98ec4729aab7463299a117f7100",
+  "mastery_report_sha256": "83e5a7bd968189a548a3019429c33f95bad51150b04f4ffe01ecb015b914533d",
   "display_name": "Default neutral",
   "depth_preference": "standard",
   "realizer_overrides": {},

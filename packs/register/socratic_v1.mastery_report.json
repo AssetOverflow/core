@@ -1,24 +1,24 @@
 {
   "evidence": {
-    "depth_preference": "standard",
+    "depth_preference": "pedagogical",
     "discourse_markers_empty": false,
     "marker_bucket_sizes": {
-      "closings": 3,
-      "openings": 3,
-      "transitions": 0
+      "closings": 4,
+      "openings": 4,
+      "transitions": 3
     },
     "realizer_overrides_empty": false,
     "realizer_overrides_keys": [
       "append_semantic_domain_clause"
     ],
-    "transitions_reserved": false
+    "transitions_reserved": true
   },
   "failure_reasons": [],
   "issued_at": "2026-05-20T00:00:00Z",
-  "pack_source_sha256": "1d38450b67c55b4895662509aca774b10c198ddbe925ac2f6e2d6356b95adff3",
+  "pack_source_sha256": "856041fe69a71bbbef24efef372b72f94227ab89ad8283525cadfbff8d54d0f5",
   "ratification_method": "seeded_variation_replay_equivalence",
   "ratified": true,
-  "register_id": "convivial_v1",
-  "report_sha256": "86baf0a9ee44f65bcce45ee83d42b1df563476e3efdadc9b3ac40f85caf14a7f",
+  "register_id": "socratic_v1",
+  "report_sha256": "be0c983aa894aeaacffd0809d617ea67f884aee448019311d8ec85cb80af03b4",
   "schema_version": "1.0.0"
 }

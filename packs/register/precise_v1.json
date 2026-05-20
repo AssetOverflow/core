@@ -1,9 +1,9 @@
 {
   "register_id": "precise_v1",
   "version": "1.0.0",
-  "description": "Precise register. Standard depth with disclosure_domain_count=2 and drop_provenance_tag=true. Exposes exactly two semantic domains (focused but not terse), and drops the parenthetical meta-tag from gloss output \u2014 giving formal, clean surface text. Occupies the focused/technical pole: more substantive than terse_v1 (count=1) but narrower than default_neutral_v1 (count=3, no tag suppression). See ADR-0068, ADR-0070, R6.",
+  "description": "Precise register. Standard depth with disclosure_domain_count=2 and drop_provenance_tag=true. Exposes exactly two semantic domains (focused but not terse), and drops the parenthetical meta-tag from gloss output — giving formal, clean surface text. Occupies the focused/technical pole: more substantive than terse_v1 (count=1) but narrower than default_neutral_v1 (count=3, no tag suppression). See ADR-0068, ADR-0070, R6.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "35d37773282bce13be19c7e1228d1036048fa5c1c79b9f0506dd4909a0d176e4",
+  "mastery_report_sha256": "17e35dcbe695290bf157e1d91d7df56a938f79095338a3f7d2d2bbb924d85cf6",
   "display_name": "Precise",
   "depth_preference": "standard",
   "realizer_overrides": {

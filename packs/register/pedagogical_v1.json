@@ -1,9 +1,9 @@
 {
   "register_id": "pedagogical_v1",
   "version": "1.0.0",
-  "description": "Pedagogical register. Uses the 'pedagogical' depth tier to expand disclosure across all available semantic domains, with append_semantic_domain_clause=true to anchor each gloss with full semantic domain context. Discourse markers scaffold Socratic progression \u2014 questions fold back to the learner, transitions move the inquiry forward. Variation is deterministic across (trace_hash, register_id, turn_idx). See ADR-0071, R6.",
+  "description": "Pedagogical register. Uses the 'pedagogical' depth tier to expand disclosure across all available semantic domains, with append_semantic_domain_clause=true to anchor each gloss with full semantic domain context. Discourse markers scaffold Socratic progression — questions fold back to the learner, transitions move the inquiry forward. Variation is deterministic across (trace_hash, register_id, turn_idx). See ADR-0071, R6.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "96733f1244621e4951dcf01217f6394417bbdf3143657fedfb41677f8337fbf9",
+  "mastery_report_sha256": "1752f7c6c561998c83e225bf175b2347f6843a7bce8ee367235de3e040a72fa5",
   "display_name": "Pedagogical",
   "depth_preference": "pedagogical",
   "realizer_overrides": {
@@ -11,20 +11,20 @@
   },
   "discourse_markers": {
     "openings": [
-      "Let's think through this \u2014",
+      "Let's think through this —",
       "Consider:",
-      "Here's the core of it \u2014",
+      "Here's the core of it —",
       ""
     ],
     "transitions": [
-      "Now, the key move is \u2014",
+      "Now, the key move is —",
       "Which raises the question:",
       "Notice that"
     ],
     "closings": [
-      " \u2014 does that step make sense?",
-      " \u2014 what does that imply for you?",
-      " \u2014 where does that land?",
+      " — does that step make sense?",
+      " — what does that imply for you?",
+      " — where does that land?",
       ""
     ]
   }

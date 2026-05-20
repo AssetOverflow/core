@@ -15,11 +15,11 @@
     "transitions_reserved": false
   },
   "failure_reasons": [],
-  "issued_at": "2026-05-19T00:00:00Z",
+  "issued_at": "2026-05-20T00:00:00Z",
   "pack_source_sha256": "36deccbca04a9f1afa84ae76e01842ffd2ff324a52ed5f1a8275d7995a544ad2",
   "ratification_method": "known_key_overrides_invariant_grounding",
   "ratified": true,
   "register_id": "precise_v1",
-  "report_sha256": "35d37773282bce13be19c7e1228d1036048fa5c1c79b9f0506dd4909a0d176e4",
+  "report_sha256": "17e35dcbe695290bf157e1d91d7df56a938f79095338a3f7d2d2bbb924d85cf6",
   "schema_version": "1.0.0"
 }
