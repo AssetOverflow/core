@@ -40,9 +40,40 @@ def _sha256_16(payload: dict[str, Any]) -> str:
     return hashlib.sha256(_canonical_json(payload).encode("utf-8")).hexdigest()[:16]
 
 
+# BOUNDARY (vs teaching/discovery.py:EvidencePointer)
+# ---------------------------------------------------------------------------
+# ``EvidencePointer`` (teaching/discovery.py) and ``ContemplationEvidenceRef``
+# below intentionally remain separate types.  They have *different
+# semantics*, not just different shapes:
+#
+#   - ``EvidencePointer.source`` is constrained to
+#     ``{corpus, pack, vault_coherent}`` — pointers into reviewed
+#     in-process memory the runtime trusts as grounding.
+#   - ``ContemplationEvidenceRef.source_type`` is free-form because
+#     it points at external artifacts (benchmark report files,
+#     evaluator output, lab measurements) that have not been
+#     reviewed by the teaching pipeline.
+#
+# Converging them would either widen the runtime-grounding source
+# enum (a real loss — losing the "this came from reviewed memory"
+# guarantee) or force benchmark reports to masquerade as
+# ``vault_coherent``.  Both are worse than keeping the two types
+# separate and documented.
+#
+# What IS shared:
+#   - ``EpistemicStatus`` (one source of truth at teaching/epistemic.py).
+#   - Sink plumbing (DiscoveryCandidateSink protocol) — see
+#     ``core/contemplation/sink.py``.
+#   - Append-only monthly JSONL file convention.
+
+
 @dataclass(frozen=True, slots=True)
 class ContemplationEvidenceRef:
-    """Pointer to evidence supporting a contemplation finding."""
+    """Pointer to evidence supporting a contemplation finding.
+
+    Distinct from :class:`teaching.discovery.EvidencePointer` — see
+    the BOUNDARY note above this class for why the two stay separate.
+    """
 
     source_type: str
     source_id: str
@@ -158,9 +189,21 @@ class ContemplationRun:
         }
 
 
+def format_contemplation_finding_jsonl(finding: ContemplationFinding) -> str:
+    """Return a deterministic JSONL line for a contemplation finding.
+
+    Mirrors :func:`teaching.discovery.format_candidate_jsonl` in style
+    (canonical JSON, sorted keys, no trailing newline) so both flow
+    through the same ``DiscoveryCandidateSink`` plumbing without
+    schema-aware special casing.
+    """
+    return _canonical_json(finding.as_dict())
+
+
 __all__ = [
     "ContemplationEvidenceRef",
     "ContemplationFinding",
     "ContemplationRun",
     "FindingKind",
+    "format_contemplation_finding_jsonl",
 ]
