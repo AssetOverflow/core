@@ -57,6 +57,10 @@ from packs.ethics.loader import (
 )
 from packs.identity.loader import load_identity_manifold
 from chat.register_variation import decorate_surface
+from generate.realizer_guard import (
+    DISCLOSURE_SURFACE as _GUARD_DISCLOSURE_SURFACE,
+    check_surface as _check_realizer_surface,
+)
 from packs.anchor_lens.loader import AnchorLens, load_anchor_lens
 from packs.register.loader import RegisterPack, load_register_pack
 from packs.safety.check import SafetyCheck, SafetyContext
@@ -343,6 +347,12 @@ class ChatResponse:
     # telemetry JSONL.  ``""`` defaults preserve pre-L1.4 byte-identity.
     anchor_lens_id: str = ""
     anchor_lens_mode_label: str = ""
+    # ADR-0075 (C1) — realizer slot-type guard verdict.  Mirrors the
+    # TurnEvent fields so callers (CLI, demos, tests) can read the
+    # guard state from ChatResponse without re-parsing the telemetry
+    # JSONL.  ``""`` defaults preserve pre-C1 byte-identity.
+    realizer_guard_status: str = ""
+    realizer_guard_rule: str = ""
 
 
 class ChatRuntime:
@@ -983,6 +993,28 @@ class ChatRuntime:
             grounding_source = grounded_source_tag
         else:
             grounding_source = "none"
+        # ADR-0075 (C1) — realizer slot-type guard.  Runs BEFORE
+        # register decoration so a register cannot accidentally heal
+        # an illegal articulation by wrapping it, and BEFORE anchor-
+        # lens annotation extraction so the lens annotation never
+        # rides on a guard-rejected surface.  On rejection, route to
+        # the bounded disclosure string and force grounding_source to
+        # ``"none"`` (an illegal surface is ungrounded by construction).
+        # The pre-guard candidate is preserved on walk_surface_stub
+        # for telemetry — the stub path normally leaves walk_surface as
+        # _UNKNOWN_DOMAIN_SURFACE, so this swap strictly increases
+        # observability under rejection.
+        guard_verdict_stub = _check_realizer_surface(
+            response_surface,
+            pos_lookup=self._pos_by_surface.get,
+        )
+        realizer_guard_status_stub = guard_verdict_stub.status
+        realizer_guard_rule_stub = guard_verdict_stub.rule_id
+        walk_surface_stub = _UNKNOWN_DOMAIN_SURFACE
+        if guard_verdict_stub.status == "rejected":
+            walk_surface_stub = response_surface
+            response_surface = _GUARD_DISCLOSURE_SURFACE
+            grounding_source = "none"
         # ADR-0071 (R4) — apply seeded discourse-marker decoration to
         # the realized surface AFTER grounding source is decided.
         # Empty marker buckets ⇒ no-op (UNREGISTERED / neutral / terse).
@@ -1024,7 +1056,7 @@ class ChatRuntime:
                 turn=max(self._context.turn - 1, 0),
                 input_tokens=tokens,
                 surface=response_surface,
-                walk_surface=_UNKNOWN_DOMAIN_SURFACE,
+                walk_surface=walk_surface_stub,
                 articulation_surface=_UNKNOWN_DOMAIN_SURFACE,
                 dialogue_role="assert",
                 identity_score=None,
@@ -1041,6 +1073,8 @@ class ChatRuntime:
                 register_variant_id=decoration_stub.variant_id,
                 anchor_lens_id=anchor_lens_id_stub,
                 anchor_lens_mode_label=anchor_lens_mode_label_stub,
+                realizer_guard_status=realizer_guard_status_stub,
+                realizer_guard_rule=realizer_guard_rule_stub,
             )
             self.turn_log.append(stub_event)
             self._emit_turn_event(stub_event)
@@ -1073,7 +1107,7 @@ class ChatRuntime:
             versor_condition=versor_condition(field_state.F),
             output_language=self.config.output_language,
             frame_pack=self.config.frame_pack,
-            walk_surface=_UNKNOWN_DOMAIN_SURFACE,
+            walk_surface=walk_surface_stub,
             salience_top_k=None,
             candidates_used=None,
             vault_hits=0,
@@ -1089,6 +1123,8 @@ class ChatRuntime:
             register_variant_id=decoration_stub.variant_id,
             anchor_lens_id=anchor_lens_id_stub,
             anchor_lens_mode_label=anchor_lens_mode_label_stub,
+            realizer_guard_status=realizer_guard_status_stub,
+            realizer_guard_rule=realizer_guard_rule_stub,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -1350,6 +1386,25 @@ class ChatRuntime:
                 before = response_surface
                 response_surface = inject_hedge(response_surface, hedge_prefix)
                 hedge_injected = response_surface != before
+        # ADR-0075 (C1) — realizer slot-type guard (main path).  Runs
+        # AFTER all composer / planner / hedge transformations and
+        # BEFORE register decoration so a single seam covers every
+        # articulation path.  On rejection: surface is replaced with
+        # the bounded disclosure string, grounding_source forced to
+        # ``"none"``, and walk_surface preserves the rejected
+        # candidate so the manifold-walk evidence is overwritten only
+        # in the rejection branch (the contract says illegal
+        # articulation evidence is the relevant telemetry).
+        guard_verdict_main = _check_realizer_surface(
+            response_surface,
+            pos_lookup=self._pos_by_surface.get,
+        )
+        realizer_guard_status_main = guard_verdict_main.status
+        realizer_guard_rule_main = guard_verdict_main.rule_id
+        if guard_verdict_main.status == "rejected":
+            walk_surface = response_surface
+            response_surface = _GUARD_DISCLOSURE_SURFACE
+            warm_grounding_source = "none"
         # ADR-0071 (R4) — seeded discourse-marker decoration is the
         # last step before TurnEvent is sealed.  Applies uniformly to
         # every grounding path (vault / pack / teaching / planner /
@@ -1406,6 +1461,8 @@ class ChatRuntime:
             register_variant_id=decoration_main.variant_id,
             anchor_lens_id=anchor_lens_id_main,
             anchor_lens_mode_label=anchor_lens_mode_label_main,
+            realizer_guard_status=realizer_guard_status_main,
+            realizer_guard_rule=realizer_guard_rule_main,
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
@@ -1443,6 +1500,8 @@ class ChatRuntime:
             register_variant_id=decoration_main.variant_id,
             anchor_lens_id=anchor_lens_id_main,
             anchor_lens_mode_label=anchor_lens_mode_label_main,
+            realizer_guard_status=realizer_guard_status_main,
+            realizer_guard_rule=realizer_guard_rule_main,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

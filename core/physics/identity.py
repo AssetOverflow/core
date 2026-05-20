@@ -312,3 +312,15 @@ class TurnEvent:
     # ``""`` so pre-L1.4 callers stay byte-identical.
     anchor_lens_id: str = ""
     anchor_lens_mode_label: str = ""
+    # ADR-0075 (C1) — realizer slot-type guard verdict per turn.
+    # ``realizer_guard_status`` is ``"ok"`` when the guard accepted
+    # the candidate surface, ``"rejected"`` when one of R1/R2/R3
+    # fired and the runtime routed the surface to the bounded
+    # disclosure string, or ``""`` on pre-C1 events that pre-date
+    # the guard hook.  ``realizer_guard_rule`` carries the rule_id
+    # (one of ``"R1_no_finite_verb"``, ``"R2_aux_neg_requires_verb"``,
+    # ``"R3_be_neg_requires_predicate"``) when status is
+    # ``"rejected"``, otherwise ``""``.  Both default to ``""`` so
+    # pre-C1 callers stay byte-identical.
+    realizer_guard_status: str = ""
+    realizer_guard_rule: str = ""

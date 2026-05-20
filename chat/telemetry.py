@@ -79,6 +79,10 @@ def serialize_turn_event(
         # turns where the lens did not engage.
         "anchor_lens_id": str(getattr(event, "anchor_lens_id", "") or ""),
         "anchor_lens_mode_label": str(getattr(event, "anchor_lens_mode_label", "") or ""),
+        # ADR-0075 (C1) — realizer slot-type guard verdict per turn.
+        # Empty strings on pre-C1 events; closed enums otherwise.
+        "realizer_guard_status": str(getattr(event, "realizer_guard_status", "") or ""),
+        "realizer_guard_rule": str(getattr(event, "realizer_guard_rule", "") or ""),
     }
     safety = getattr(event, "safety_verdict", None)
     if safety is not None:
