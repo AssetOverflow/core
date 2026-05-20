@@ -10,6 +10,7 @@
 {"source_id": "grc-core-cog-005", "target_id": "en-core-cog-005", "relation": "cross_lang.logos.genesis.en", "weight": 0.93, "evidence_ids": ["John1:1", "Gen1:1"]}
 {"source_id": "grc-core-cog-007", "target_id": "en-core-cog-007", "relation": "cross_lang.logos.epignosis.en", "weight": 0.78, "evidence_ids": ["adr-0073a:experiential_to_english_collapse"]}
 {"source_id": "grc-core-cog-008", "target_id": "he-core-cog-008", "relation": "cross_lang.logos.sophia", "weight": 0.88, "evidence_ids": ["Prov8:1"]}
+{"source_id": "grc-core-cog-008", "target_id": "en-core-cog-008", "relation": "cross_lang.logos.sophia.en", "weight": 0.88, "evidence_ids": ["Prov8:1"]}
 {"source_id": "grc-core-cog-021", "target_id": "en-core-cog-007", "relation": "cross_lang.logos.episteme.en_collapse", "weight": 0.72, "evidence_ids": ["adr-0073a:systematic_to_english_collapse"]}
 {"source_id": "grc-core-cog-022", "target_id": "en-core-cog-007", "relation": "cross_lang.logos.synesis.en_collapse", "weight": 0.7, "evidence_ids": ["adr-0073a:insight_to_english_collapse"]}
 {"source_id": "grc-core-cog-023", "target_id": "he-core-cog-021", "relation": "cross_lang.covenant_love", "weight": 0.86, "evidence_ids": ["adr-0073a:septuagintal_chesed_agape_pairing"]}
