@@ -1,0 +1,161 @@
+{
+  "benchmark_family": "frontier_compare_wave1",
+  "mode": "core",
+  "model": "core-native",
+  "suites": [
+    {
+      "case_count": 7,
+      "cases": [
+        {
+          "case_id": "definition_truth",
+          "details": {
+            "observation": {
+              "elapsed_ms": 1452.1264170180075,
+              "error_message": "",
+              "error_type": "",
+              "model": "core-native",
+              "prompt": "What is truth?",
+              "provider": "core",
+              "surface": "Truth is a claim or state grounded by evidence and coherent judgment. pack-grounded (en_core_cognition_v1)."
+            }
+          },
+          "elapsed_ms": 1452.1264170180075,
+          "failures": [],
+          "passed": true,
+          "prompt": "What is truth?",
+          "score": 1.0,
+          "suite": "prompt_battery"
+        },
+        {
+          "case_id": "definition_knowledge",
+          "details": {
+            "observation": {
+              "elapsed_ms": 120.50154199823737,
+              "error_message": "",
+              "error_type": "",
+              "model": "core-native",
+              "prompt": "What is knowledge?",
+              "provider": "core",
+              "surface": "Knowledge is justified understanding grounded in evidence and recall. pack-grounded (en_core_cognition_v1)."
+            }
+          },
+          "elapsed_ms": 120.50154199823737,
+          "failures": [],
+          "passed": true,
+          "prompt": "What is knowledge?",
+          "score": 1.0,
+          "suite": "prompt_battery"
+        },
+        {
+          "case_id": "cause_understanding",
+          "details": {
+            "observation": {
+              "elapsed_ms": 120.316125015961,
+              "error_message": "",
+              "error_type": "",
+              "model": "core-native",
+              "prompt": "What causes understanding?",
+              "provider": "core",
+              "surface": "understanding — teaching-grounded (cognition_chains_v1): cognition.understanding; epistemic.grasp. understanding requires knowledge (cognition.knowledge). No session evidence yet."
+            }
+          },
+          "elapsed_ms": 120.316125015961,
+          "failures": [],
+          "passed": true,
+          "prompt": "What causes understanding?",
+          "score": 1.0,
+          "suite": "prompt_battery"
+        },
+        {
+          "case_id": "verification_evidence",
+          "details": {
+            "observation": {
+              "elapsed_ms": 121.795832994394,
+              "error_message": "",
+              "error_type": "",
+              "model": "core-native",
+              "prompt": "Does evidence ground knowledge?",
+              "provider": "core",
+              "surface": "evidence — teaching-grounded (cognition_chains_v1): cognition.evidence; epistemic.ground. evidence grounds knowledge (cognition.knowledge). No session evidence yet."
+            }
+          },
+          "elapsed_ms": 121.795832994394,
+          "failures": [],
+          "passed": true,
+          "prompt": "Does evidence ground knowledge?",
+          "score": 1.0,
+          "suite": "prompt_battery"
+        },
+        {
+          "case_id": "comparison_knowledge_wisdom",
+          "details": {
+            "observation": {
+              "elapsed_ms": 120.45741701149382,
+              "error_message": "",
+              "error_type": "",
+              "model": "core-native",
+              "prompt": "Compare knowledge and wisdom.",
+              "provider": "core",
+              "surface": "knowledge (cognition.knowledge; epistemic.ground) contrasts with wisdom (cognition.wisdom; epistemic.judgment) — pack-grounded (en_core_cognition_v1). No session evidence yet."
+            }
+          },
+          "elapsed_ms": 120.45741701149382,
+          "failures": [],
+          "passed": true,
+          "prompt": "Compare knowledge and wisdom.",
+          "score": 1.0,
+          "suite": "prompt_battery"
+        },
+        {
+          "case_id": "procedure_recall",
+          "details": {
+            "observation": {
+              "elapsed_ms": 120.99329201737419,
+              "error_message": "",
+              "error_type": "",
+              "model": "core-native",
+              "prompt": "Walk me through recall.",
+              "provider": "core",
+              "surface": "To recall means to retrieve a stored state from memory. pack-grounded (en_core_cognition_v1)."
+            }
+          },
+          "elapsed_ms": 120.99329201737419,
+          "failures": [],
+          "passed": true,
+          "prompt": "Walk me through recall.",
+          "score": 1.0,
+          "suite": "prompt_battery"
+        },
+        {
+          "case_id": "unknown_term",
+          "details": {
+            "observation": {
+              "elapsed_ms": 120.68841702421196,
+              "error_message": "",
+              "error_type": "",
+              "model": "core-native",
+              "prompt": "What is xylomorphic?",
+              "provider": "core",
+              "surface": "I haven't learned 'xylomorphic' yet (intent: definition). Mounted lexicon packs: en_core_cognition_v1, en_core_meta_v1, en_core_attitude_v1, en_core_temporal_v1, en_core_action_v1, en_core_quantitative_v1, en_core_spatial_v1, en_core_causation_v1, en_core_polarity_v1, en_core_relations_v1, en_core_relations_v2, en_collapse_anchors_v1. Teach me via a reviewed PackMutationProposal."
+            }
+          },
+          "elapsed_ms": 120.68841702421196,
+          "failures": [],
+          "passed": true,
+          "prompt": "What is xylomorphic?",
+          "score": 1.0,
+          "suite": "prompt_battery"
+        }
+      ],
+      "passed": true,
+      "primary_score": 1.0,
+      "suite": "prompt_battery"
+    }
+  ],
+  "summary": {
+    "case_count": 7,
+    "passed": true,
+    "primary_score": 1.0,
+    "suite_count": 1
+  }
+}

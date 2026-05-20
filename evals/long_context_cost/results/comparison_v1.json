@@ -1,4 +1,5 @@
 {
+  "all_claims_supported": true,
   "claim_supported": true,
   "core_measurements": {
     "exact_by_construction": true,

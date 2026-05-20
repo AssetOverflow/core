@@ -145,6 +145,8 @@ class DemoReport:
     active_corpus_byte_identical: bool
 
     def as_dict(self) -> dict[str, Any]:
+        # ``all_claims_supported`` is the canonical cross-demo success
+        # field — see anti_regression/run_demo.py for the convention.
         return {
             "prompt": self.prompt,
             "before": {
@@ -158,6 +160,10 @@ class DemoReport:
             "scenes": [s.as_dict() for s in self.scenes],
             "learning_loop_closed": self.learning_loop_closed,
             "active_corpus_byte_identical": self.active_corpus_byte_identical,
+            "all_claims_supported": (
+                self.learning_loop_closed
+                and self.active_corpus_byte_identical
+            ),
         }
 
 

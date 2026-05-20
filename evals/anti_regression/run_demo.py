@@ -229,10 +229,17 @@ class DemoReport:
     active_corpus_byte_identical: bool
 
     def as_dict(self) -> dict[str, Any]:
+        # ``all_claims_supported`` is the canonical cross-demo success
+        # field — added as an alias so operator tooling (and the CI gate)
+        # can rely on one uniform boolean key across every ``core demo``
+        # target.  Existing fields are preserved for backwards compat.
         return {
             "scenes": [s.as_dict() for s in self.scenes],
             "all_gates_held": self.all_gates_held,
             "active_corpus_byte_identical": self.active_corpus_byte_identical,
+            "all_claims_supported": (
+                self.all_gates_held and self.active_corpus_byte_identical
+            ),
         }
 
 
