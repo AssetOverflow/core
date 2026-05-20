@@ -1,0 +1,13 @@
+{
+  "lens_id": "he_shalom_v1",
+  "version": "1.0.0",
+  "description": "Anchor lens for the Hebrew concept of shalom (שלום) — wholeness, completeness, and flourishing. Shalom is not merely the absence of conflict but the positive presence of right relationship across all domains: individual, communal, and cosmic. English 'peace' captures only the conflict-absence reading; the wholeness and flourishing dimensions are lost. EN engagement is via lossy en-collapse-peace edge (weight 0.65, adr-0073c): the lens fires on 'peace'-adjacent English prompts and the [lens(he_shalom_v1):wholeness-peace] annotation signals the collapse. The no_english_collapse protest edge (weight 0.0 to en-collapse-shalom) is retained in alignment.jsonl provenance. No Greek lexical equivalent — eirene (εἰρήνη) is the LXX rendering but carries a narrower semantic field. Cognitive mode: wholeness-peace.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "substrate": "he",
+  "atom": "logos.shalom.wholeness_peace",
+  "source_entry_id": "he-core-cog-022",
+  "cognitive_mode": "wholeness-peace",
+  "pair_lens_id": null,
+  "ratification_method": "anchor_lens_lifts_proposition"
+}

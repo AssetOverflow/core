@@ -1,7 +1,11 @@
 {"source_id": "he-core-cog-001", "target_id": "en-core-cog-001", "relation": "cross_lang.logos.utterance.en", "weight": 0.95, "evidence_ids": ["John1:1", "Gen1:1"]}
 {"source_id": "he-core-cog-002", "target_id": "en-core-cog-002", "relation": "cross_lang.logos.aletheia.en", "weight": 0.94, "evidence_ids": ["John14:6"]}
 {"source_id": "he-core-cog-003", "target_id": "en-core-cog-003", "relation": "cross_lang.logos.illumination.en", "weight": 0.95, "evidence_ids": ["John1:4", "Gen1:3"]}
+{"source_id": "he-core-cog-004", "target_id": "en-core-cog-004", "relation": "cross_lang.logos.vitality.en", "weight": 0.92, "evidence_ids": ["John1:4"]}
 {"source_id": "he-core-cog-021", "target_id": "grc-core-cog-023", "relation": "cross_lang.covenant_love", "weight": 0.86, "evidence_ids": ["adr-0073a:septuagintal_chesed_agape_pairing"]}
 {"source_id": "he-core-cog-021", "target_id": "en-collapse-covenant_love", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073a:english_lacks_chesed_lemma"]}
+{"source_id": "he-core-cog-021", "target_id": "en-collapse-love", "relation": "cross_lang.chesed.en_collapse", "weight": 0.63, "evidence_ids": ["adr-0073c:chesed_lossy_english_engagement"]}
 {"source_id": "he-core-cog-022", "target_id": "en-collapse-shalom", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073a:english_collapses_peace_to_absence_of_war"]}
+{"source_id": "he-core-cog-022", "target_id": "en-collapse-peace", "relation": "cross_lang.shalom.en_collapse", "weight": 0.65, "evidence_ids": ["adr-0073c:shalom_lossy_english_engagement"]}
 {"source_id": "he-core-cog-023", "target_id": "en-collapse-tzedek", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073a:english_splits_to_righteousness_justice"]}
+{"source_id": "he-core-cog-023", "target_id": "en-collapse-justice", "relation": "cross_lang.tzedek.en_collapse", "weight": 0.62, "evidence_ids": ["adr-0073c:tzedek_lossy_english_engagement"]}
