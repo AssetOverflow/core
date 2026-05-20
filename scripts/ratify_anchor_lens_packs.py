@@ -35,16 +35,26 @@ ISSUED_AT = "2026-05-20T00:00:00Z"
 
 # All anchor-lens pack ids to ratify, in declaration order.
 LENS_IDS: tuple[str, ...] = (
+    # null sentinel — must be first; ADR-0073b byte-identity invariant
+    "default_unanchored_v1",
+    # grc substrate
     "grc_logos_v1",
     "grc_aletheia_v1",
     "grc_zoe_v1",
     "grc_arche_v1",
-    "he_logos_v1",
-    "he_dabar_v1",
-    "he_chayyim_v1",
     "grc_sophia_v1",
     "grc_epignosis_v1",
     "grc_episteme_v1",
+    "grc_synesis_v1",
+    # he substrate
+    "he_logos_v1",
+    "he_dabar_v1",
+    "he_chayyim_v1",
+    "he_emet_v1",
+    "he_chokmah_v1",
+    "he_chesed_v1",
+    "he_shalom_v1",
+    "he_tzedek_v1",
 )
 
 # Substrate -> lexicon pack directory name
