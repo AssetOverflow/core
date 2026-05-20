@@ -1,0 +1,13 @@
+{
+  "lens_id": "he_emet_v1",
+  "version": "1.0.0",
+  "description": "Anchor lens for the Hebrew concept of emet (\u05d0\u05de\u05ea) \u2014 truth as firmness, reliability, and faithfulness. Fundamentally distinct from grc_aletheia_v1 (truth as unconcealment/unveiling): aletheia is an epistemic event (the hidden becoming visible), emet is a relational property (a person, word, or act that can be trusted to hold). The cross-lang collapse in English \u2014 both render as 'truth' \u2014 is documented in ADR-0073a and is the original motivation for this split. Grounds in logos.emet.firmness via he-core-cog-002 post ADR-0073c:emet_firmness_split. Entry retains logos.aletheia.verity for cross-lang alignment; this lens pivots exclusively on logos.emet.firmness. Cognitive mode: truth-as-faithfulness.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "11c9f86478cb4a5b3b9f1d79917f5addda5395d7359b9ee7249abdcf14872355",
+  "substrate": "he",
+  "atom": "logos.emet.firmness",
+  "source_entry_id": "he-core-cog-002",
+  "cognitive_mode": "truth-as-faithfulness",
+  "pair_lens_id": "grc_aletheia_v1",
+  "ratification_method": "anchor_lens_lifts_proposition"
+}

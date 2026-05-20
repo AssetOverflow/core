@@ -1,0 +1,18 @@
+{
+  "evidence": {
+    "atom": "logos.emet.firmness",
+    "atom_in_lexicon": true,
+    "cognitive_mode": "truth-as-faithfulness",
+    "pair_lens_id": "grc_aletheia_v1",
+    "source_entry_id": "he-core-cog-002",
+    "substrate": "he"
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "lens_id": "he_emet_v1",
+  "pack_source_sha256": "89bedea739b66e479434ff7f4211bedf2087b835dbf3c61a9103de6ce785fc8f",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "11c9f86478cb4a5b3b9f1d79917f5addda5395d7359b9ee7249abdcf14872355",
+  "schema_version": "1.0.0"
+}

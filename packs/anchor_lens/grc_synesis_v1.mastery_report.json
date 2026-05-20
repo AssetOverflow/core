@@ -1,0 +1,18 @@
+{
+  "evidence": {
+    "atom": "logos.synesis.insight",
+    "atom_in_lexicon": true,
+    "cognitive_mode": "integrative-comprehension",
+    "pair_lens_id": null,
+    "source_entry_id": "grc-core-cog-022",
+    "substrate": "grc"
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "lens_id": "grc_synesis_v1",
+  "pack_source_sha256": "6969dc2cf3b37f63963fc2713391a550d40179d48436335fd36ddb478924fb96",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "eac24a549adb9add8842311c8bd678292cfcfd5b0241d2eda7a9c8d13c3f66f1",
+  "schema_version": "1.0.0"
+}

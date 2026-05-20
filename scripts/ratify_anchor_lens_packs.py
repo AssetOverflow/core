@@ -42,19 +42,17 @@ LENS_IDS: tuple[str, ...] = (
     "grc_aletheia_v1",
     "grc_zoe_v1",
     "grc_arche_v1",
-    "grc_sophia_v1",
-    "grc_epignosis_v1",
-    "grc_episteme_v1",
-    "grc_synesis_v1",
-    # he substrate
     "he_logos_v1",
     "he_dabar_v1",
     "he_chayyim_v1",
+    # Round 2 — grc epistemic triad
+    "grc_sophia_v1",
+    "grc_epignosis_v1",
+    "grc_episteme_v1",
+    # Round 3 — grc quad completion + Hebrew wisdom/truth
+    "grc_synesis_v1",
     "he_emet_v1",
     "he_chokmah_v1",
-    "he_chesed_v1",
-    "he_shalom_v1",
-    "he_tzedek_v1",
 )
 
 # Substrate -> lexicon pack directory name
