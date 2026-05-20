@@ -465,11 +465,35 @@ class TestManifestField:
         )
         assert manifest.definitional_layer is False
 
-    def test_existing_packs_unchanged(self) -> None:
-        # Sanity: every shipped pack still ratifies with default False,
-        # i.e. ADR-0084 substrate code does not perturb existing packs.
+    def test_non_opted_packs_default_false(self) -> None:
+        # Packs that haven't flipped the ADR-0084 flag in their manifest
+        # MUST still ratify with definitional_layer=False — the substrate
+        # is opt-in per pack and must not silently flip any pack on.
+        # The 9 core packs + 4 relations packs + collapse-anchors opted
+        # in via PR #65; the non-English cognition packs and en_minimal
+        # remain non-opted at the time of writing.
+        from language_packs.compiler import load_pack
+
+        for pack_id in (
+            "en_minimal_v1",
+            "he_core_cognition_v1",
+            "grc_logos_cognition_v1",
+        ):
+            manifest, _ = load_pack(pack_id)
+            assert manifest.definitional_layer is False, (
+                f"{pack_id} unexpectedly opted into definitional_layer"
+            )
+
+    def test_opted_packs_carry_flag(self) -> None:
+        # Conversely: packs that DID flip the flag (via PR #65) must
+        # surface it through the manifest loader.  This proves the
+        # substrate's loader propagation works against real ratified
+        # content, not just fixture packs.
         from language_packs.compiler import load_pack
 
         for pack_id in ("en_core_cognition_v1", "en_core_relations_v1"):
             manifest, _ = load_pack(pack_id)
-            assert manifest.definitional_layer is False
+            assert manifest.definitional_layer is True, (
+                f"{pack_id} declares definitional_layer:true in its manifest "
+                f"but loader did not propagate it"
+            )
