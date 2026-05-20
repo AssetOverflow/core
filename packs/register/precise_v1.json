@@ -1,0 +1,17 @@
+{
+  "register_id": "precise_v1",
+  "version": "1.0.0",
+  "description": "Precise register. Standard depth with disclosure_domain_count=2 — exposes exactly two semantic domains rather than the default three. No discourse markers. Occupies the focused/technical pole: more substantive than terse_v1 (count=1) but narrower than default_neutral_v1 (count=3). Grounding source and trace hash are invariant against default_neutral_v1 except for the override application. See ADR-0068, ADR-0070.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "",
+  "display_name": "Precise",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [],
+    "transitions": [],
+    "closings": []
+  }
+}

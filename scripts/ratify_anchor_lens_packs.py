@@ -50,6 +50,11 @@ LENS_IDS: tuple[str, ...] = (
     "default_unanchored_v1",
     "grc_logos_v1",
     "he_logos_v1",
+    "grc_zoe_v1",
+    "grc_aletheia_v1",
+    "grc_arche_v1",
+    "he_dabar_v1",
+    "he_chayyim_v1",
 )
 
 _SUBSTRATE_PACK_IDS: dict[str, tuple[str, ...]] = {

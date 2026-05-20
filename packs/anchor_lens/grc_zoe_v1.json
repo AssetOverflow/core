@@ -1,0 +1,13 @@
+{
+  "cognitive_mode_label": "animate-vitality",
+  "description": "Greek-substrate anchor lens. Pivots English 'life' onto \u03b6\u03c9\u03ae's logos.vitality.animate atom via the grc cognition pack's field hook. Renders surface as English compound 'animate-vitality'. Substantively distinct from grc_logos_v1 (epistemic knowledge) — targets the vitality/being pole. Atom confirmed in grc_logos_cognition_v1 lexicon (grc-core-cog-004). See ADR-0073c.",
+  "display_name": "Greek zoe (animate vitality)",
+  "lens_id": "grc_zoe_v1",
+  "mastery_report_sha256": "",
+  "primary_substrate": "grc",
+  "schema_version": "1.0.0",
+  "semantic_domain_preferences": [
+    "logos.vitality.animate"
+  ],
+  "version": "1.0.0"
+}

@@ -46,6 +46,8 @@ REGISTER_IDS: tuple[str, ...] = (
     "default_neutral_v1",
     "terse_v1",
     "convivial_v1",
+    "pedagogical_v1",
+    "precise_v1",
 )
 
 #: Valid IntentTag names for ``per_intent`` keys (ADR-0071, R4).  This
