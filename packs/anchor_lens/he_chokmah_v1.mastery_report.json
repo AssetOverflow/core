@@ -1,0 +1,18 @@
+{
+  "evidence": {
+    "atom": "logos.sophia.wisdom",
+    "atom_in_lexicon": true,
+    "cognitive_mode": "wisdom-practical",
+    "pair_lens_id": "grc_sophia_v1",
+    "source_entry_id": "he-core-cog-008",
+    "substrate": "he"
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "lens_id": "he_chokmah_v1",
+  "pack_source_sha256": "94b6a32f7a88e220a5400967b19887a4345ea2ef745c578bb4a7339d3834ee00",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "8a1a5689c216fa0b4168b99dccdb6863fc4841201663005143724562eb6aaa6c",
+  "schema_version": "1.0.0"
+}

@@ -6,7 +6,7 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "en_core_relations_v3.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "OPERATOR_MUST_RECOMPUTE",
+  "checksum": "c22185011cdff34f5be47a96dbb2c7921a59b7ba6b17821b863905f3a26e5c87",
   "version": "1.0.0",
   "gate_engaged": true,
   "oov_policy": "fail_closed"
