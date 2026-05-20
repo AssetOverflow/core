@@ -1,13 +1,13 @@
 {
-  "cognitive_mode_label": "systematic",
-  "description": "Greek-substrate anchor lens. Pivots English 'knowledge' onto \u1f10\u03c0\u03b9\u03c3\u03c4\u03ae\u03bc\u03b7's logos.episteme.systematic_knowledge atom via the grc cognition pack's alignment edge to en-core-cog-007. Renders surface as English compound 'systematic'. See ADR-0073c.",
-  "display_name": "Greek logos (systematic knowledge)",
   "lens_id": "grc_logos_v1",
-  "mastery_report_sha256": "46ab6a43f1ce0e161e9185910b969025104ded4a3c6c6211998a307c8d070882",
-  "primary_substrate": "grc",
+  "version": "1.0.0",
+  "description": "Greek-substrate anchor lens. Pivots English 'knowledge' onto λόγος's logos.episteme.systematic_knowledge atom via the grc cognition pack field hook. Cognitive mode: systematic. See ADR-0073c.",
   "schema_version": "1.0.0",
-  "semantic_domain_preferences": [
-    "logos.episteme.systematic_knowledge"
-  ],
-  "version": "1.0.0"
+  "mastery_report_sha256": "",
+  "substrate": "grc",
+  "atom": "logos.episteme.systematic_knowledge",
+  "cognitive_mode": "systematic",
+  "source_entry_id": "grc-core-cog-001",
+  "pair_lens_id": null,
+  "ratification_method": "anchor_lens_lifts_proposition"
 }
