@@ -1,0 +1,18 @@
+{
+  "evidence": {
+    "atom": "logos.tzedek.right_order",
+    "atom_in_lexicon": true,
+    "cognitive_mode": "right-order",
+    "pair_lens_id": null,
+    "source_entry_id": "he-core-cog-023",
+    "substrate": "he"
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "lens_id": "he_tzedek_v1",
+  "pack_source_sha256": "261311d8316097657cddbc371819f816a617ceaabff0a2343764ec7e3c55abe7",
+  "ratification_method": "anchor_lens_lifts_proposition",
+  "ratified": true,
+  "report_sha256": "f56651d68b941185d9e3c4ee857de086787a2c06145f92d94afafb64f4eae4f6",
+  "schema_version": "1.0.0"
+}
