@@ -5,6 +5,9 @@ import json
 from pathlib import Path
 from typing import Iterable
 
+from core.contemplation.miners.contradiction_detection import (
+    mine_contradiction_detection_report,
+)
 from core.contemplation.miners.frontier_compare import mine_frontier_compare_report
 from core.contemplation.schema import ContemplationFinding, ContemplationRun
 from core.contemplation.snapshot import ContemplationSubstrate
@@ -62,6 +65,49 @@ def contemplate_frontier_reports(
     )
 
 
+def contemplate_contradiction_reports(
+    report_paths: Iterable[str | Path],
+    *,
+    pack_ids: Iterable[str] = (),
+    notes: Iterable[str] = (),
+) -> ContemplationRun:
+    """Run ADR-0080 Phase 1 over explicit contradiction-detection reports.
+
+    Mirrors :func:`contemplate_frontier_reports` for the
+    ``evals/contradiction_detection`` lane.  Same read-only guarantees,
+    same SPECULATIVE-only finding contract, separate runner so the
+    config hash records which lane was contemplated.
+    """
+
+    paths = tuple(Path(p) for p in report_paths)
+    substrate = ContemplationSubstrate.from_report_paths(
+        paths,
+        pack_ids=tuple(pack_ids),
+        notes=tuple(notes),
+    )
+    findings: list[ContemplationFinding] = []
+    for path in paths:
+        findings.extend(
+            mine_contradiction_detection_report(
+                path,
+                substrate_hash=substrate.substrate_hash,
+            )
+        )
+    config_hash = _config_hash(
+        {
+            "runner": "contemplate_contradiction_reports",
+            "report_paths": [str(p) for p in paths],
+            "pack_ids": tuple(sorted(set(pack_ids))),
+            "notes": tuple(notes),
+        }
+    )
+    return ContemplationRun(
+        substrate_hash=substrate.substrate_hash,
+        config_hash=config_hash,
+        findings=tuple(findings),
+    )
+
+
 def write_contemplation_run(run: ContemplationRun, path: str | Path) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -71,4 +117,8 @@ def write_contemplation_run(run: ContemplationRun, path: str | Path) -> None:
     )
 
 
-__all__ = ["contemplate_frontier_reports", "write_contemplation_run"]
+__all__ = [
+    "contemplate_contradiction_reports",
+    "contemplate_frontier_reports",
+    "write_contemplation_run",
+]

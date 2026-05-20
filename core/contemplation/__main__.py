@@ -6,9 +6,16 @@ import sys
 from pathlib import Path
 
 from core.contemplation.runner import (
+    contemplate_contradiction_reports,
     contemplate_frontier_reports,
     write_contemplation_run,
 )
+
+
+_LANE_RUNNERS = {
+    "frontier_compare": contemplate_frontier_reports,
+    "contradiction_detection": contemplate_contradiction_reports,
+}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -20,7 +27,13 @@ def build_parser() -> argparse.ArgumentParser:
         "reports",
         nargs="+",
         type=Path,
-        help="frontier_compare JSON report path(s) to contemplate.",
+        help="Report JSON path(s) to contemplate.  All paths must share --lane.",
+    )
+    parser.add_argument(
+        "--lane",
+        choices=sorted(_LANE_RUNNERS.keys()),
+        default="frontier_compare",
+        help="Evidence lane the reports belong to (default: frontier_compare).",
     )
     parser.add_argument(
         "--pack-id",
@@ -45,7 +58,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    run = contemplate_frontier_reports(
+    runner = _LANE_RUNNERS[args.lane]
+    run = runner(
         args.reports,
         pack_ids=tuple(args.pack_id or ()),
         notes=tuple(args.note or ()),
