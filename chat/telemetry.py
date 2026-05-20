@@ -83,6 +83,18 @@ def serialize_turn_event(
         # Empty strings on pre-C1 events; closed enums otherwise.
         "realizer_guard_status": str(getattr(event, "realizer_guard_status", "") or ""),
         "realizer_guard_rule": str(getattr(event, "realizer_guard_rule", "") or ""),
+        "composer_graph_atom_status": str(
+            getattr(event, "composer_graph_atom_status", "") or ""
+        ),
+        "composer_atom_set_hash": str(
+            getattr(event, "composer_atom_set_hash", "") or ""
+        ),
+        "graph_atom_set_hash": str(
+            getattr(event, "graph_atom_set_hash", "") or ""
+        ),
+        "composer_graph_atom_overlap_count": int(
+            getattr(event, "composer_graph_atom_overlap_count", 0) or 0
+        ),
     }
     safety = getattr(event, "safety_verdict", None)
     if safety is not None:

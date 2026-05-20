@@ -333,3 +333,10 @@ class TurnEvent:
     # pipeline falls back to the existing ``pre_decoration_surface``
     # source in that case (byte-identity preserved).
     register_canonical_surface: str = ""
+    # ADR-0078 (Phase 1) — observational composer/graph atom
+    # equivalence telemetry.  Empty defaults preserve back-compat for
+    # pre-ADR-0078 callers and non-applicable turns.
+    composer_graph_atom_status: str = ""
+    composer_atom_set_hash: str = ""
+    graph_atom_set_hash: str = ""
+    composer_graph_atom_overlap_count: int = 0

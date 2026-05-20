@@ -59,6 +59,7 @@ from packs.ethics.loader import (
 from packs.identity.loader import load_identity_manifold
 from chat.register_substantive import apply_substantive_register
 from chat.register_variation import decorate_surface
+from chat.atom_equivalence import atoms_for_graph_nodes, compare_atom_sets
 from generate.realizer_guard import (
     DISCLOSURE_SURFACE as _GUARD_DISCLOSURE_SURFACE,
     check_surface as _check_realizer_surface,
@@ -363,6 +364,12 @@ class ChatResponse:
     # ``trace_hash``.  Empty string ⇒ pre-R6 caller; pipeline falls
     # back to ``pre_decoration_surface`` (byte-identity preserved).
     register_canonical_surface: str = ""
+    # ADR-0078 (Phase 1) — observational composer/graph atom
+    # equivalence telemetry mirrored from TurnEvent.
+    composer_graph_atom_status: str = ""
+    composer_atom_set_hash: str = ""
+    graph_atom_set_hash: str = ""
+    composer_graph_atom_overlap_count: int = 0
 
 
 class ChatRuntime:
@@ -841,6 +848,39 @@ class ChatRuntime:
                 return (oov_surface, "oov", ())
         return None
 
+    def _graph_atom_context(
+        self,
+        text: str,
+        articulation: ArticulationPlan,
+        *,
+        region=None,
+    ) -> tuple[tuple[str, ...], bool]:
+        """Return ``(graph_atoms, graph_unconstrained)`` for observational telemetry."""
+        if self.config.output_language != "en":
+            return ((), True)
+        graph = build_graph_from_input(text, articulation)
+        graph_atoms = atoms_for_graph_nodes(graph)
+        unconstrained = len(graph_atoms) == 0
+        if region is not None:
+            unconstrained = unconstrained or getattr(region, "allowed_indices", None) is None
+        return (graph_atoms, unconstrained)
+
+    def _composer_graph_atom_equivalence(
+        self,
+        *,
+        grounding_source: str,
+        composer_atoms: tuple[str, ...],
+        graph_atoms: tuple[str, ...],
+        graph_unconstrained: bool,
+    ):
+        applicable = grounding_source in {"pack", "teaching"}
+        return compare_atom_sets(
+            composer_atoms=composer_atoms,
+            graph_atoms=graph_atoms,
+            graph_unconstrained=graph_unconstrained,
+            applicable=applicable,
+        )
+
     def _maybe_apply_discourse_planner(
         self, text: str, source_tag: str
     ) -> tuple[str, str] | None:
@@ -954,6 +994,8 @@ class ChatRuntime:
         pack_grounded_surface: str | None = None,
         grounded_source_tag: str = "pack",
         pack_semantic_domains: tuple[str, ...] = (),
+        graph_atoms: tuple[str, ...] = (),
+        graph_unconstrained: bool = True,
         discovery_intent_tag: Any = None,
         discovery_intent_subject: str | None = None,
     ) -> ChatResponse:
@@ -1094,6 +1136,12 @@ class ChatRuntime:
         anchor_lens_mode_label_stub = _extract_anchor_lens_mode_label(
             pre_decoration_surface_stub, anchor_lens_id_stub,
         )
+        atom_equivalence_stub = self._composer_graph_atom_equivalence(
+            grounding_source=grounding_source,
+            composer_atoms=pack_semantic_domains,
+            graph_atoms=graph_atoms,
+            graph_unconstrained=graph_unconstrained,
+        )
         verdicts_bundle = TurnVerdicts(
             identity_score=None,
             safety_verdict=safety_verdict,
@@ -1126,6 +1174,10 @@ class ChatRuntime:
                 realizer_guard_status=realizer_guard_status_stub,
                 realizer_guard_rule=realizer_guard_rule_stub,
                 register_canonical_surface=register_canonical_surface_stub,
+                composer_graph_atom_status=atom_equivalence_stub.status,
+                composer_atom_set_hash=atom_equivalence_stub.composer_atom_set_hash,
+                graph_atom_set_hash=atom_equivalence_stub.graph_atom_set_hash,
+                composer_graph_atom_overlap_count=atom_equivalence_stub.overlap_count,
             )
             self.turn_log.append(stub_event)
             self._emit_turn_event(stub_event)
@@ -1177,6 +1229,10 @@ class ChatRuntime:
             realizer_guard_status=realizer_guard_status_stub,
             realizer_guard_rule=realizer_guard_rule_stub,
             register_canonical_surface=register_canonical_surface_stub,
+            composer_graph_atom_status=atom_equivalence_stub.status,
+            composer_atom_set_hash=atom_equivalence_stub.composer_atom_set_hash,
+            graph_atom_set_hash=atom_equivalence_stub.graph_atom_set_hash,
+            composer_graph_atom_overlap_count=atom_equivalence_stub.overlap_count,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -1230,6 +1286,8 @@ class ChatRuntime:
             )
             discovery_intent_tag = None
             discovery_intent_subject: str | None = None
+            stub_graph_atoms: tuple[str, ...] = ()
+            stub_graph_unconstrained = True
             if (
                 gate_decision.source == "empty_vault"
                 and self.config.output_language == "en"
@@ -1238,12 +1296,26 @@ class ChatRuntime:
                 _intent = classify_intent_from_input(text)
                 discovery_intent_tag = _intent.tag
                 discovery_intent_subject = _intent.subject
+                stub_articulation = ArticulationPlan(
+                    subject=_intent.subject or "",
+                    predicate="",
+                    object=None,
+                    surface="",
+                    output_language=self.config.output_language,
+                    frame_id="unknown_domain",
+                )
+                stub_graph_atoms, stub_graph_unconstrained = self._graph_atom_context(
+                    text,
+                    stub_articulation,
+                )
             return self._stub_response(
                 committed,
                 tokens=tuple(filtered),
                 pack_grounded_surface=pack_surface,
                 grounded_source_tag=pack_source_tag,
                 pack_semantic_domains=pack_semantic_domains,
+                graph_atoms=stub_graph_atoms,
+                graph_unconstrained=stub_graph_unconstrained,
                 discovery_intent_tag=discovery_intent_tag,
                 discovery_intent_subject=discovery_intent_subject,
             )
@@ -1276,9 +1348,20 @@ class ChatRuntime:
         self._context.record_dialogue(proposition)
 
         forward_region = None
-        if self.config.forward_graph_constraint and self.config.output_language == "en":
+        graph_atoms_main: tuple[str, ...] = ()
+        graph_unconstrained_main = True
+        if self.config.output_language == "en":
             pre_gen_graph = build_graph_from_input(text, articulation)
-            forward_region = build_graph_constraint(pre_gen_graph, self._context.vocab)
+            graph_atoms_main = atoms_for_graph_nodes(pre_gen_graph)
+            if self.config.forward_graph_constraint:
+                forward_region = build_graph_constraint(pre_gen_graph, self._context.vocab)
+            graph_unconstrained_main = (
+                len(graph_atoms_main) == 0
+                or (
+                    forward_region is not None
+                    and getattr(forward_region, "allowed_indices", None) is None
+                )
+            )
 
         result = generate(
             field_state,
@@ -1518,6 +1601,12 @@ class ChatRuntime:
         anchor_lens_mode_label_main = _extract_anchor_lens_mode_label(
             pre_decoration_surface_main, anchor_lens_id_main,
         )
+        atom_equivalence_main = self._composer_graph_atom_equivalence(
+            grounding_source=warm_grounding_source or "vault",
+            composer_atoms=warm_pack_semantic_domains,
+            graph_atoms=graph_atoms_main,
+            graph_unconstrained=graph_unconstrained_main,
+        )
         verdicts_bundle = TurnVerdicts(
             identity_score=identity_score,
             safety_verdict=safety_verdict,
@@ -1549,6 +1638,10 @@ class ChatRuntime:
             realizer_guard_status=realizer_guard_status_main,
             realizer_guard_rule=realizer_guard_rule_main,
             register_canonical_surface=register_canonical_surface_main,
+            composer_graph_atom_status=atom_equivalence_main.status,
+            composer_atom_set_hash=atom_equivalence_main.composer_atom_set_hash,
+            graph_atom_set_hash=atom_equivalence_main.graph_atom_set_hash,
+            composer_graph_atom_overlap_count=atom_equivalence_main.overlap_count,
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
@@ -1589,6 +1682,10 @@ class ChatRuntime:
             realizer_guard_status=realizer_guard_status_main,
             realizer_guard_rule=realizer_guard_rule_main,
             register_canonical_surface=register_canonical_surface_main,
+            composer_graph_atom_status=atom_equivalence_main.status,
+            composer_atom_set_hash=atom_equivalence_main.composer_atom_set_hash,
+            graph_atom_set_hash=atom_equivalence_main.graph_atom_set_hash,
+            composer_graph_atom_overlap_count=atom_equivalence_main.overlap_count,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:
