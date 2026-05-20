@@ -476,6 +476,57 @@ def pack_grounded_surface(
     return candidate.surface if candidate is not None else None
 
 
+_RELATION_CONFIRMATION_DISPLAY: dict[str, str] = {
+    "reveals": "reveals",
+    "grounds": "grounds",
+    "supports": "supports",
+    "requires": "requires",
+    "causes": "causes",
+    "precedes": "precedes",
+    "follows": "follows",
+}
+
+
+def pack_grounded_relation_confirmation_surface(
+    subject_lemma: str,
+    relation: str | None,
+    object_lemma: str | None,
+    *,
+    negated: bool = False,
+) -> str | None:
+    """Return a deterministic surface for a confirmed relation claim.
+
+    C2 handles prompts like ``"Light reveals truth, right?"`` by
+    stripping the terminal confirmation tag before intent classification.
+    This composer preserves the resulting proposition without requiring
+    a reviewed teaching chain for every relation variant.  It only
+    emits when both endpoint lemmas resolve in mounted packs and the
+    relation is in the closed display table above.
+    """
+    if not subject_lemma or not object_lemma or not relation:
+        return None
+    rel = _RELATION_CONFIRMATION_DISPLAY.get(relation.strip().lower())
+    if rel is None:
+        return None
+    subject_key = subject_lemma.strip().lower()
+    object_key = object_lemma.strip().lower()
+    subject_resolved = resolve_lemma(subject_key)
+    object_resolved = resolve_lemma(object_key)
+    if subject_resolved is None or object_resolved is None:
+        return None
+    subject_pack_id, subject_domains = subject_resolved
+    object_pack_id, object_domains = object_resolved
+    if negated:
+        predicate = f"does not {rel[:-1] if rel.endswith('s') else rel}"
+    else:
+        predicate = rel
+    return (
+        f"{subject_key} {predicate} {object_key}. "
+        f"pack-grounded ({subject_pack_id}; {object_pack_id}): "
+        f"{subject_domains[0]}; {object_domains[0]}."
+    )
+
+
 def is_pack_lemma(lemma: str) -> bool:
     """Return True iff *lemma* has an entry with ``semantic_domains`` in the
     ratified cognition pack (``en_core_cognition_v1``).

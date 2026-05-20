@@ -2,12 +2,8 @@
 
 These tests exercise the hook in ``chat/runtime.py`` end-to-end:
 
-* On the main path, a rejected candidate is replaced by
-  ``DISCLOSURE_SURFACE`` on ``ChatResponse.surface`` and
-  ``TurnEvent.surface``; ``walk_surface`` preserves the pre-guard
-  candidate; ``grounding_source`` is forced to ``"none"``;
-  ``realizer_guard_status`` and ``realizer_guard_rule`` carry the
-  verdict.
+* C2 confirmation prompts now reach accepted propositional surfaces
+  while guard telemetry stays present.
 * The telemetry serializer surfaces both new fields.
 * The guard does not regress pack-grounded DEFINITION cases — those
   remain ``status="ok"`` byte-identical to pre-C1 behavior.
@@ -46,37 +42,31 @@ def _run_holdout_sequence(rt: ChatRuntime) -> None:
     pipeline.run(_BUG_PROMPT)
 
 
-# ---------- Main path rejection routing ----------
+# ---------- C2 confirmation prompt routing ----------
 
 
-def test_rejected_candidate_replaces_surface_with_disclosure():
+def test_confirmation_prompt_surface_is_articulated():
     rt = _build_runtime()
     _run_holdout_sequence(rt)
     te = rt.turn_log[-1]
-    assert te.realizer_guard_status == "rejected"
-    assert te.surface == DISCLOSURE_SURFACE
+    assert te.realizer_guard_status == "ok"
+    assert te.surface != DISCLOSURE_SURFACE
+    assert "light reveals truth" in te.surface
+    assert "pack-grounded" in te.surface
 
 
-def test_rejected_candidate_preserves_pre_guard_on_walk_surface():
+def test_confirmation_prompt_uses_pack_grounding():
     rt = _build_runtime()
     _run_holdout_sequence(rt)
     te = rt.turn_log[-1]
-    assert te.walk_surface and te.walk_surface != DISCLOSURE_SURFACE
-    assert "does not thought" in te.walk_surface
+    assert te.grounding_source == "pack"
 
 
-def test_rejected_candidate_forces_grounding_source_none():
+def test_confirmation_prompt_records_guard_ok():
     rt = _build_runtime()
     _run_holdout_sequence(rt)
     te = rt.turn_log[-1]
-    assert te.grounding_source == "none"
-
-
-def test_rejected_candidate_records_rule_id():
-    rt = _build_runtime()
-    _run_holdout_sequence(rt)
-    te = rt.turn_log[-1]
-    assert te.realizer_guard_rule == "R2_aux_neg_requires_verb"
+    assert te.realizer_guard_rule == ""
 
 
 # ---------- ChatResponse mirrors TurnEvent ----------
@@ -131,8 +121,8 @@ def test_telemetry_includes_guard_fields():
     record = serialize_turn_event(te)
     assert "realizer_guard_status" in record
     assert "realizer_guard_rule" in record
-    assert record["realizer_guard_status"] == "rejected"
-    assert record["realizer_guard_rule"] == "R2_aux_neg_requires_verb"
+    assert record["realizer_guard_status"] == "ok"
+    assert record["realizer_guard_rule"] == ""
 
 
 def test_telemetry_guard_fields_empty_on_pre_c1_events():

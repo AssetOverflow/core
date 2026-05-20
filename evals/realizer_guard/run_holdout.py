@@ -1,15 +1,13 @@
-"""C1 holdout cluster — illegal-articulation prompts that the
-ADR-0075 realizer slot-type guard must reject.
+"""C1/C2 holdout cluster.
 
-Each prompt is run through ``CognitiveTurnPipeline`` and the
-recorded ``TurnEvent`` is checked for:
+Hybrid gate after C2:
 
-* ``realizer_guard_status == "rejected"``
-* ``realizer_guard_rule == <expected rule id>``
-* ``surface == DISCLOSURE_SURFACE``
-* ``walk_surface`` carries the pre-guard candidate (non-empty,
-  not the disclosure string itself)
-* ``grounding_source == "none"``
+* Synthetic illegal candidates are checked directly against
+  ``generate.realizer_guard.check_surface`` so the guard-firing
+  invariant remains pinned after upstream C2 normalization fixes the
+  runtime prompts.
+* The former runtime bug prompts are run through ``CognitiveTurnPipeline``
+  and must now produce accepted propositional surfaces.
 
 The cluster is reached by priming the vault with three pack-known
 DEFINITION prompts first, which is the same sequence that exposed
@@ -31,7 +29,7 @@ from typing import Any
 from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.config import RuntimeConfig
-from generate.realizer_guard import DISCLOSURE_SURFACE
+from generate.realizer_guard import check_surface
 
 
 _PRIMING_PROMPTS: tuple[str, ...] = (
@@ -41,22 +39,19 @@ _PRIMING_PROMPTS: tuple[str, ...] = (
 )
 
 
-# Each cluster entry is (prompt, expected_rule_id).
-#
-# The cluster covers the observed bug class: confirmation-tag
-# discourse particles (``right`` / ``no`` / ``yes``) that steer the
-# realizer to emit ``<particle> does not <noun>.`` — an illegal
-# do-support negation with a noun in the verb slot.
-#
-# All six prompts run on freshly-primed isolated runtimes (no shared
-# vault state across prompts) so each cell is order-independent.
-_HOLDOUT_PROMPTS: tuple[tuple[str, str], ...] = (
-    ("Light reveals truth, right?",     "R2_aux_neg_requires_verb"),
-    ("Light reveals truth, no?",        "R2_aux_neg_requires_verb"),
-    ("Light reveals truth, yes?",       "R2_aux_neg_requires_verb"),
-    ("Knowledge supports truth, right?", "R2_aux_neg_requires_verb"),
-    ("Light grounds truth, right?",     "R2_aux_neg_requires_verb"),
-    ("Light supports truth, right?",    "R2_aux_neg_requires_verb"),
+_SYNTHETIC_ILLEGAL_CANDIDATES: tuple[tuple[str, str], ...] = (
+    ("Right does not thought.", "R2_aux_neg_requires_verb"),
+    ("Light is not reveal.", "R3_be_neg_requires_predicate"),
+)
+
+
+_HOLDOUT_PROMPTS: tuple[str, ...] = (
+    "Light reveals truth, right?",
+    "Light reveals truth, no?",
+    "Light reveals truth, yes?",
+    "Knowledge supports truth, right?",
+    "Light grounds truth, right?",
+    "Light supports truth, right?",
 )
 
 
@@ -69,7 +64,7 @@ def _build_runtime() -> ChatRuntime:
     ))
 
 
-def _run_one(prompt: str, expected_rule: str) -> dict[str, Any]:
+def _run_runtime_one(prompt: str) -> dict[str, Any]:
     runtime = _build_runtime()
     pipeline = CognitiveTurnPipeline(runtime=runtime)
     for primer in _PRIMING_PROMPTS:
@@ -79,56 +74,69 @@ def _run_one(prompt: str, expected_rule: str) -> dict[str, Any]:
     status = getattr(turn_event, "realizer_guard_status", "")
     rule = getattr(turn_event, "realizer_guard_rule", "")
     surface = turn_event.surface
-    walk_surface = turn_event.walk_surface
     grounding_source = getattr(turn_event, "grounding_source", "")
-    rejected = status == "rejected"
-    rule_matches = (expected_rule == "") or (rule == expected_rule)
-    surface_is_disclosure = surface == DISCLOSURE_SURFACE
-    walk_preserves_candidate = bool(walk_surface) and walk_surface != DISCLOSURE_SURFACE
-    grounding_forced_none = grounding_source == "none"
+    accepted = status == "ok"
+    proposition_surface = bool(surface) and "pack-grounded" in surface and grounding_source == "pack"
     return {
         "prompt": prompt,
-        "expected_rule": expected_rule,
         "realizer_guard_status": status,
         "realizer_guard_rule": rule,
         "surface": surface,
-        "walk_surface": walk_surface,
         "grounding_source": grounding_source,
-        "rejected": rejected,
-        "rule_matches": rule_matches,
-        "surface_is_disclosure": surface_is_disclosure,
-        "walk_preserves_candidate": walk_preserves_candidate,
-        "grounding_forced_none": grounding_forced_none,
+        "accepted": accepted,
+        "proposition_surface": proposition_surface,
+        "cell_supported": accepted and rule == "" and proposition_surface,
+    }
+
+
+def _run_synthetic_one(candidate: str, expected_rule: str) -> dict[str, Any]:
+    runtime = _build_runtime()
+    verdict = check_surface(candidate, pos_lookup=runtime._pos_by_surface.get)
+    return {
+        "candidate": candidate,
+        "expected_rule": expected_rule,
+        "realizer_guard_status": verdict.status,
+        "realizer_guard_rule": verdict.rule_id,
         "cell_supported": (
-            rejected
-            and rule_matches
-            and surface_is_disclosure
-            and walk_preserves_candidate
-            and grounding_forced_none
+            verdict.status == "rejected"
+            and verdict.rule_id == expected_rule
         ),
     }
 
 
 def run_holdout(*, emit_json: bool = False) -> dict[str, Any]:
-    cells = [_run_one(p, r) for (p, r) in _HOLDOUT_PROMPTS]
-    failures = [c for c in cells if not c["cell_supported"]]
+    synthetic_cells = [
+        _run_synthetic_one(candidate, rule)
+        for candidate, rule in _SYNTHETIC_ILLEGAL_CANDIDATES
+    ]
+    runtime_cells = [_run_runtime_one(p) for p in _HOLDOUT_PROMPTS]
+    failures = [
+        c for c in (*synthetic_cells, *runtime_cells)
+        if not c["cell_supported"]
+    ]
     all_supported = not failures
 
     if not emit_json:
         print()
         print("=" * 76)
-        print("  ADR-0075 (C1) — realizer guard holdout cluster")
+        print("  ADR-0075/0076 (C1/C2) — hybrid guard + confirmation cluster")
         print("=" * 76)
         print(f"  Priming sequence: {list(_PRIMING_PROMPTS)}")
-        print(f"  Holdout prompts : {len(_HOLDOUT_PROMPTS)}")
+        print(f"  Synthetic illegal candidates : {len(_SYNTHETIC_ILLEGAL_CANDIDATES)}")
+        print(f"  Runtime confirmation prompts : {len(_HOLDOUT_PROMPTS)}")
         print()
-        for c in cells:
+        for c in synthetic_cells:
             mark = "+" if c["cell_supported"] else "X"
-            print(f"  {mark} {c['prompt']!r}")
+            print(f"  {mark} synthetic {c['candidate']!r}")
+            print(f"     guard_status         : {c['realizer_guard_status']}")
+            print(f"     guard_rule           : {c['realizer_guard_rule']}")
+            print()
+        for c in runtime_cells:
+            mark = "+" if c["cell_supported"] else "X"
+            print(f"  {mark} runtime {c['prompt']!r}")
             print(f"     guard_status         : {c['realizer_guard_status']}")
             print(f"     guard_rule           : {c['realizer_guard_rule']}")
             print(f"     surface              : {c['surface']!r}")
-            print(f"     walk_surface (pre-G) : {c['walk_surface']!r}")
             print(f"     grounding_source     : {c['grounding_source']}")
             print()
         print(f"  all_claims_supported : {all_supported}")
@@ -136,8 +144,11 @@ def run_holdout(*, emit_json: bool = False) -> dict[str, Any]:
 
     return {
         "priming": list(_PRIMING_PROMPTS),
-        "holdout_prompts": [p for p, _ in _HOLDOUT_PROMPTS],
-        "cells": cells,
+        "synthetic_illegal_candidates": [c for c, _ in _SYNTHETIC_ILLEGAL_CANDIDATES],
+        "holdout_prompts": list(_HOLDOUT_PROMPTS),
+        "synthetic_cells": synthetic_cells,
+        "runtime_cells": runtime_cells,
+        "cells": [*synthetic_cells, *runtime_cells],
         "failures": failures,
         "all_claims_supported": all_supported,
     }

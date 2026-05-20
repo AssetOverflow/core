@@ -156,7 +156,9 @@ def ratify_intent(
         tag=IntentTag.UNKNOWN,
         subject=intent.subject,
         secondary_subject=intent.secondary_subject,
+        object=intent.object,
         relation=intent.relation,
+        negated=intent.negated,
         frame=intent.frame,
     )
     return RatifiedIntent(
