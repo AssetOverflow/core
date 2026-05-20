@@ -48,7 +48,13 @@ from typing import Callable, Iterable
 import numpy as np
 
 from algebra.cga import cga_inner, embed_point
-from algebra.cl41 import N_COMPONENTS, geometric_product, grade_count, grade_start, reverse
+from algebra.cl41 import (
+    N_COMPONENTS,
+    geometric_product,
+    grade_count,
+    grade_start,
+    reverse,
+)
 from algebra.versor import normalize_to_versor
 from chat.pack_grounding import _pack_index
 
@@ -226,10 +232,15 @@ def phi_connective(connective: str) -> np.ndarray:
 
 
 PhiLemma = Callable[[str], np.ndarray]
+PhiConnective = Callable[[str], np.ndarray]
 
 
 def delta_cga(
-    chain_subject: str, connective: str, chain_object: str, phi_l: PhiLemma
+    chain_subject: str,
+    connective: str,
+    chain_object: str,
+    phi_l: PhiLemma,
+    phi_c: PhiConnective,
 ) -> float:
     """Δ via CGA point-distance: d = sqrt(-2 · <X, Y>) for null X, Y.
 
@@ -240,14 +251,18 @@ def delta_cga(
     """
     s = phi_l(chain_subject)
     o = phi_l(chain_object)
-    r = phi_connective(connective)
+    r = phi_c(connective)
     s_rotated = _raw_sandwich(r, s)
     dsq = -2.0 * cga_inner(s_rotated, o)
     return float(np.sqrt(max(dsq, 0.0)))
 
 
 def delta_frobenius(
-    chain_subject: str, connective: str, chain_object: str, phi_l: PhiLemma
+    chain_subject: str,
+    connective: str,
+    chain_object: str,
+    phi_l: PhiLemma,
+    phi_c: PhiConnective,
 ) -> float:
     """Δ via raw multivector coefficient L2.
 
@@ -257,7 +272,7 @@ def delta_frobenius(
     """
     s = phi_l(chain_subject)
     o = phi_l(chain_object)
-    r = phi_connective(connective)
+    r = phi_c(connective)
     s_rotated = _raw_sandwich(r, s)
     return float(np.linalg.norm(s_rotated - o))
 
@@ -284,6 +299,46 @@ _ANTONYMS: dict[str, str] = {
     "informs": "misleads",
     "verifies": "falsifies",
 }
+
+
+# ---------------------------------------------------------------------------
+# Antonym-paired connective encoder
+# ---------------------------------------------------------------------------
+# CAVEAT — this is an *oracle* probe, not a φ proposal.
+#
+# By enforcing  R(antonym) = reverse(R(original))  we hardcode the
+# antonym relationship into rotor space rather than discovering it
+# from any underlying semantic structure.  That tells us nothing
+# about whether the pack content secretly contains antonym signal.
+#
+# What it DOES measure: an upper bound.  "*If* antonym relations
+# were perfectly encoded geometrically, would the rest of the
+# encoding (lemmas, sandwich, distance) separate the two groups?"
+#
+# - High AUC under this variant  ⇒  the lemma encoding is adequate
+#   and the bottleneck is the missing connective-relation map;
+#   building one becomes the next research target.
+# - Low AUC under this variant   ⇒  even with the antonym oracle,
+#   the rest of the encoding can't see contradiction; the lemma
+#   encoding is also broken.
+
+_REVERSE_ANTONYMS: dict[str, str] = {v: k for k, v in _ANTONYMS.items()}
+
+
+def phi_connective_antonym_paired(connective: str) -> np.ndarray:
+    """φ_c with antonym = reverse-rotor oracle.
+
+    For each (a, b) ∈ ANTONYMS we pin R(a) := phi_connective(a)
+    (the canonical member) and define R(b) := reverse(R(a)).
+    Connectives not in the table fall back to the v1 hash rotor.
+    """
+    key = connective.strip().lower()
+    if key in _ANTONYMS:
+        return phi_connective(key)
+    canonical = _REVERSE_ANTONYMS.get(key)
+    if canonical is not None:
+        return reverse(phi_connective(canonical))
+    return phi_connective(key)
 
 
 _CHAIN_CORPORA: tuple[Path, ...] = (
@@ -388,25 +443,36 @@ def _summarise(label: str, values: Iterable[float]) -> dict[str, object]:
     }
 
 
-_PHI_VARIANTS = (
-    ("phi.v1.summed_domains", phi_lemma_summed_domains),
-    ("phi.v2.centroid_point", phi_lemma_centroid_point),
-    ("phi.v3.idf_weighted", phi_lemma_idf_weighted),
-    ("phi.v4.idf_centroid", phi_lemma_idf_centroid),
+_PHI_VARIANTS: tuple[tuple[str, PhiLemma, PhiConnective], ...] = (
+    ("phi.v1.summed_domains", phi_lemma_summed_domains, phi_connective),
+    ("phi.v2.centroid_point", phi_lemma_centroid_point, phi_connective),
+    ("phi.v3.idf_weighted", phi_lemma_idf_weighted, phi_connective),
+    ("phi.v4.idf_centroid", phi_lemma_idf_centroid, phi_connective),
+    # v5 — antonym-oracle upper bound (see phi_connective_antonym_paired).
+    (
+        "phi.v5.centroid_antonym_oracle",
+        phi_lemma_centroid_point,
+        phi_connective_antonym_paired,
+    ),
+    (
+        "phi.v6.idf_centroid_antonym_oracle",
+        phi_lemma_idf_centroid,
+        phi_connective_antonym_paired,
+    ),
 )
 
 
 def run() -> dict:
     pairs = _load_pairs()
     variants: dict[str, dict] = {}
-    for phi_name, phi_l in _PHI_VARIANTS:
+    for phi_name, phi_l, phi_c in _PHI_VARIANTS:
         metrics: dict[str, dict] = {}
         for metric_name, fn in (("cga", delta_cga), ("frobenius", delta_frobenius)):
             compat: list[float] = []
             contra: list[float] = []
             for p in pairs:
-                compat.append(fn(p.subject, p.connective, p.object, phi_l))
-                contra.append(fn(p.subject, p.antonym, p.object, phi_l))
+                compat.append(fn(p.subject, p.connective, p.object, phi_l, phi_c))
+                contra.append(fn(p.subject, p.antonym, p.object, phi_l, phi_c))
             auc = _auc(compat, contra)
             best_acc, best_t = _best_threshold_accuracy(compat, contra)
             metrics[metric_name] = {
