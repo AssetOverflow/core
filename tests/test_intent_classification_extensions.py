@@ -192,6 +192,55 @@ class TestCauseVerificationNoPackFallback:
         assert response.grounding_source == "none"
 
 
+class TestConfirmationTagNormalization:
+    def test_trailing_confirmation_tag_is_stripped_from_relation_claim(self) -> None:
+        intent = classify_intent("Light reveals truth, right?")
+        assert intent.tag is IntentTag.VERIFICATION
+        assert intent.subject == "light"
+        assert intent.relation == "reveals"
+        assert intent.object == "truth"
+        assert intent.secondary_subject == "truth"
+        assert intent.negated is False
+
+    def test_ok_tag_after_period_is_stripped(self) -> None:
+        intent = classify_intent("Knowledge supports truth. ok?")
+        assert intent.tag is IntentTag.VERIFICATION
+        assert intent.subject == "knowledge"
+        assert intent.relation == "supports"
+        assert intent.object == "truth"
+
+    def test_content_word_right_is_not_stripped(self) -> None:
+        intent = classify_intent("Is right an axis?")
+        assert intent.tag is IntentTag.VERIFICATION
+        assert intent.subject == "right"
+
+    def test_bare_leading_particle_is_not_erased(self) -> None:
+        intent = classify_intent("yes?")
+        assert intent.tag is IntentTag.UNKNOWN
+        assert intent.subject == "yes?"
+
+    def test_negative_relation_claim_survives_tag_strip(self) -> None:
+        intent = classify_intent("Light does not reveal truth, right?")
+        assert intent.tag is IntentTag.VERIFICATION
+        assert intent.subject == "light"
+        assert intent.relation == "reveals"
+        assert intent.object == "truth"
+        assert intent.negated is True
+
+    def test_runtime_relation_confirmation_gets_pack_surface(self) -> None:
+        response = ChatRuntime().chat("Light reveals truth, right?")
+        assert response.grounding_source == "pack"
+        assert response.realizer_guard_status == "ok"
+        assert response.realizer_guard_rule == ""
+        assert "light reveals truth" in response.surface
+
+    def test_runtime_negative_relation_confirmation_passes_guard(self) -> None:
+        response = ChatRuntime().chat("Light does not reveal truth, right?")
+        assert response.grounding_source == "pack"
+        assert response.realizer_guard_status == "ok"
+        assert "light does not reveal truth" in response.surface
+
+
 class TestCumulativeLiftInvariant:
     """Pins the lift observed by the 2026-05-19 cumulative live probe:
     the DEFINITION-shaped prompts must produce ``pack`` grounding,

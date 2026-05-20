@@ -166,9 +166,12 @@ class TestClassifyIntentUnchanged:
 
     def test_dialogue_intent_field_set_unchanged(self) -> None:
         # ResponseMode must NOT have been added as a DialogueIntent
-        # field.  Equality on the canonical five-field shape must hold.
+        # field.  Equality on the canonical intent shape must hold.
         fields = {f for f in DialogueIntent.__dataclass_fields__}
-        assert fields == {"tag", "subject", "secondary_subject", "relation", "frame"}
+        assert fields == {
+            "tag", "subject", "secondary_subject", "object",
+            "relation", "negated", "frame",
+        }
 
 
 # ---------------------------------------------------------------------------

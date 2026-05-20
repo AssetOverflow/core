@@ -15,6 +15,7 @@ from chat.pack_grounding import (
     pack_grounded_comparison_surface,
     pack_grounded_correction_surface,
     pack_grounded_procedure_surface,
+    pack_grounded_relation_confirmation_surface,
     PACK_ID as _COGNITION_PACK_ID,
 )
 from chat.teaching_grounding import (
@@ -752,6 +753,19 @@ class ChatRuntime:
         if intent.tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
             lemma = (intent.subject or "").strip()
             if lemma:
+                if (
+                    intent.tag is IntentTag.VERIFICATION
+                    and intent.relation
+                    and intent.secondary_subject
+                ):
+                    surface = pack_grounded_relation_confirmation_surface(
+                        lemma,
+                        intent.relation,
+                        intent.object or intent.secondary_subject,
+                        negated=intent.negated,
+                    )
+                    if surface is not None:
+                        return (surface, "pack")
                 if self.config.composed_surface:
                     surface = teaching_grounded_surface_composed(
                         lemma, intent.tag, register=self.register_pack,

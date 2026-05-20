@@ -64,7 +64,9 @@ class DialogueIntent:
     tag: IntentTag
     subject: str
     secondary_subject: str | None = None
+    object: str | None = None
     relation: str | None = None  # populated for TRANSITIVE_QUERY (ADR-0018)
+    negated: bool = False
     frame: str | None = None     # populated for FRAME_TRANSFER (compose_relations)
 
     def requires_prior_turn(self) -> bool:
@@ -103,6 +105,14 @@ _BELONG_QUERY_RE = re.compile(
     r"belong(?:s?)\b",
     re.IGNORECASE,
 )
+_DECLARATIVE_RELATION_RE = re.compile(
+    r"^(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
+    r"(?:(?P<neg_aux>does|do|did)\s+not\s+)?"
+    r"(?P<relation>reveals|reveal|grounds|ground|supports|support|"
+    r"requires|require|causes|cause|precedes|precede|follows|follow)\s+"
+    r"(?P<object>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\.?$",
+    re.IGNORECASE,
+)
 # "How does X work / function / operate / happen / exist / behave?"
 # — third-person mechanistic-cause query.  Distinct from PROCEDURE
 # (which is first-person: "How do I/we/you X?") because the user is
@@ -122,6 +132,8 @@ _RELATION_NORMALIZE: dict[str, str] = {
     "cause": "causes", "causes": "causes",
     "ground": "grounds", "grounds": "grounds",
     "reveal": "reveals", "reveals": "reveals",
+    "support": "supports", "supports": "supports",
+    "require": "requires", "requires": "requires",
     "mean": "means", "means": "means",
     "follow": "follows", "follows": "follows",
     "contrast": "contrasts_with", "contrast_with": "contrasts_with",
@@ -267,8 +279,28 @@ def _normalize_subject(phrase: str, tag: IntentTag) -> str:
     return " ".join(tokens)
 
 
+def _strip_confirmation_tail(text: str) -> str:
+    """Remove terminal discourse-confirmation tags from a proposition.
+
+    C2 scope is deliberately narrow: strip only when a non-empty
+    proposition precedes the tag, so bare "no?" / "yes?" are not
+    rewritten into empty prompts.
+    """
+    stripped = text.strip()
+    match = re.match(
+        r"^(?P<body>.+?)[,.]\s*(?:right|yes|no|ok)\?\s*$",
+        stripped,
+        re.IGNORECASE,
+    )
+    if match:
+        body = match.group("body").strip()
+        if body:
+            return body
+    return stripped
+
+
 def classify_intent(prompt: str) -> DialogueIntent:
-    text = prompt.strip()
+    text = _strip_confirmation_tail(prompt)
     if not text:
         return DialogueIntent(tag=IntentTag.UNKNOWN, subject="")
 
@@ -332,6 +364,25 @@ def classify_intent(prompt: str) -> DialogueIntent:
             subject=_normalize_subject(
                 how_does_match.group("subject").strip(), IntentTag.CAUSE
             ),
+        )
+
+    declarative_match = _DECLARATIVE_RELATION_RE.match(text)
+    if declarative_match:
+        raw_relation = declarative_match.group("relation").lower().strip()
+        relation = _RELATION_NORMALIZE.get(raw_relation, raw_relation)
+        return DialogueIntent(
+            tag=IntentTag.VERIFICATION,
+            subject=_normalize_subject(
+                declarative_match.group("subject").strip(), IntentTag.DEFINITION
+            ).lower(),
+            secondary_subject=_normalize_subject(
+                declarative_match.group("object").strip(), IntentTag.DEFINITION
+            ).lower(),
+            object=_normalize_subject(
+                declarative_match.group("object").strip(), IntentTag.DEFINITION
+            ).lower(),
+            relation=relation,
+            negated=bool(declarative_match.group("neg_aux")),
         )
 
     for pattern, tag in _RULES:

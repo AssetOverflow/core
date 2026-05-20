@@ -1,11 +1,11 @@
-"""ADR-0075 (C1) — holdout cluster + byte-identity invariant tests.
+"""ADR-0075/0076 (C1/C2) — hybrid holdout + byte-identity tests.
 
 These tests pin the two invariants named in the ADR:
 
-* ``invariant_realizer_no_illegal_articulation`` — every prompt in
-  the C1 holdout cluster is rejected by the guard with the expected
-  rule_id, and the surface is replaced with the bounded disclosure
-  string.
+* ``invariant_realizer_no_illegal_articulation`` — synthetic illegal
+  candidates are rejected by the guard with the expected rule_id.
+* C2 confirmation prompts that used to reach the guard as illegal
+  candidates now produce accepted propositional surfaces.
 * ``invariant_realizer_guard_byte_identity_on_currently_passing_cases``
   — every currently-passing cognition-lane DEFINITION prompt
   continues to produce a guard-accepted surface byte-identical to
@@ -25,6 +25,7 @@ from core.config import RuntimeConfig
 from evals.realizer_guard.run_holdout import (
     _HOLDOUT_PROMPTS,
     _PRIMING_PROMPTS,
+    _SYNTHETIC_ILLEGAL_CANDIDATES,
     run_holdout,
 )
 from generate.realizer_guard import DISCLOSURE_SURFACE
@@ -47,49 +48,30 @@ def test_holdout_cluster_all_claims_supported(holdout_report):
 
 
 def test_holdout_cluster_size(holdout_report):
-    assert len(holdout_report["cells"]) == len(_HOLDOUT_PROMPTS)
-    assert len(holdout_report["cells"]) == 6
+    assert len(holdout_report["synthetic_cells"]) == len(_SYNTHETIC_ILLEGAL_CANDIDATES)
+    assert len(holdout_report["runtime_cells"]) == len(_HOLDOUT_PROMPTS)
+    assert len(holdout_report["runtime_cells"]) == 6
 
 
-@pytest.mark.parametrize("prompt,expected_rule", list(_HOLDOUT_PROMPTS))
-def test_each_holdout_prompt_rejected(
-    prompt: str, expected_rule: str, holdout_report,
+@pytest.mark.parametrize("candidate,expected_rule", list(_SYNTHETIC_ILLEGAL_CANDIDATES))
+def test_each_synthetic_illegal_candidate_rejected(
+    candidate: str, expected_rule: str, holdout_report,
 ):
-    cell = next(c for c in holdout_report["cells"] if c["prompt"] == prompt)
+    cell = next(c for c in holdout_report["synthetic_cells"] if c["candidate"] == candidate)
     assert cell["realizer_guard_status"] == "rejected"
     assert cell["realizer_guard_rule"] == expected_rule
-    assert cell["surface"] == DISCLOSURE_SURFACE
-    assert cell["walk_surface"] != DISCLOSURE_SURFACE
-    assert cell["walk_surface"].strip() != ""
-    assert cell["grounding_source"] == "none"
 
 
-def test_every_rejected_walk_surface_violates_R2(holdout_report):
-    """Sanity: each preserved pre-guard candidate must in fact
-    violate the rule it was rejected under (round-trip check).
-
-    Uses the live runtime's pack POS table because the C1 rules
-    fail-open on unknown POS — a null-lookup would not re-trigger
-    R2 since the original trigger depends on the pack having
-    classified the offending token (e.g. ``thought``) as ``NOUN``.
-    """
-    from chat.runtime import ChatRuntime
-    from core.config import RuntimeConfig
-    from generate.realizer_guard import check_surface
-
-    rt = ChatRuntime(config=RuntimeConfig(
-        register_pack_id="default_neutral_v1",
-    ))
-    for cell in holdout_report["cells"]:
-        v = check_surface(
-            cell["walk_surface"],
-            pos_lookup=rt._pos_by_surface.get,
-        )
-        assert v.status == "rejected", (
-            f"walk_surface {cell['walk_surface']!r} should still "
-            f"violate the rule under round-trip check"
-        )
-        assert v.rule_id == cell["realizer_guard_rule"]
+@pytest.mark.parametrize("prompt", list(_HOLDOUT_PROMPTS))
+def test_each_confirmation_prompt_now_articulates(
+    prompt: str, holdout_report,
+):
+    cell = next(c for c in holdout_report["runtime_cells"] if c["prompt"] == prompt)
+    assert cell["realizer_guard_status"] == "ok"
+    assert cell["realizer_guard_rule"] == ""
+    assert cell["grounding_source"] == "pack"
+    assert "pack-grounded" in cell["surface"]
+    assert cell["surface"] != DISCLOSURE_SURFACE
 
 
 # ---------- byte-identity invariant on currently-passing cases ----------
