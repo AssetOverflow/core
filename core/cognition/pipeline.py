@@ -15,6 +15,8 @@ Constraint: ChatRuntime.chat() and ChatResponse contract are unchanged.
 
 from __future__ import annotations
 
+from collections import OrderedDict
+
 from field.state import FieldState
 from core.cognition.result import CognitiveTurnResult
 from core.cognition.surface_resolution import resolve_surface
@@ -75,6 +77,15 @@ _SUBJECT_STOPWORDS: frozenset[str] = frozenset({
     "your", "their", "answer",
 })
 
+# Finding 5 (audit 2026-05-20) — cap the speculative-subjects cache so a
+# long teaching session cannot grow it without bound.  64 is large enough
+# to cover every distinct teaching subject a single session realistically
+# emits and small enough that the per-turn substring scan in
+# ``_should_mark_speculative`` stays trivially cheap.  LRU eviction: a
+# subject re-encountered as SPECULATIVE refreshes its position; coherent
+# promotion removes it explicitly.
+_MAX_SPECULATIVE_SUBJECTS = 64
+
 
 class CognitiveTurnPipeline:
     """Thin pipeline wrapper over ChatRuntime.
@@ -94,7 +105,16 @@ class CognitiveTurnPipeline:
         # (by subject substring or reflexive query shape), the surface
         # is prefixed with _SPECULATIVE_SURFACE_MARKER so the user can
         # tell ratified knowledge from unreviewed teaching material.
-        self._speculative_subjects: set[str] = set()
+        #
+        # Finding 5 (audit 2026-05-20) — backed by an OrderedDict so the
+        # cache is bounded (LRU, cap ``_MAX_SPECULATIVE_SUBJECTS``) and
+        # supports explicit eviction when a proposal is promoted to
+        # COHERENT.  Pre-fix this was a bare ``set`` that only grew,
+        # which both leaked speculative markers onto reviewed subjects
+        # forever and widened the per-turn substring scan unboundedly.
+        # Iteration order matches insertion / refresh order; lookups
+        # remain O(1).
+        self._speculative_subjects: OrderedDict[str, None] = OrderedDict()
 
     # ------------------------------------------------------------------
     # Public API
@@ -204,19 +224,28 @@ class CognitiveTurnPipeline:
         # proposal.subject (often a fragment of the correction text);
         # also split-and-add each ≥4-char token so prefixed parses like
         # "correction: wisdom" still match a probe about "wisdom".
-        if proposal is not None and proposal.epistemic_status is EpistemicStatus.SPECULATIVE:
+        if proposal is not None:
             sources: list[str] = []
             if proposal.triple is not None and proposal.triple[0]:
                 sources.append(proposal.triple[0])
             if proposal.subject:
                 sources.append(proposal.subject)
-            for src in sources:
-                lowered = src.lower().strip()
-                if lowered:
-                    self._speculative_subjects.add(lowered)
-                for tok in _SUBJECT_SPLIT_RE.split(src.lower()):
-                    if len(tok) >= 4 and tok not in _SUBJECT_STOPWORDS:
-                        self._speculative_subjects.add(tok)
+            if proposal.epistemic_status is EpistemicStatus.SPECULATIVE:
+                for src in sources:
+                    self._remember_speculative_subject(src)
+                    for tok in _SUBJECT_SPLIT_RE.split(src.lower()):
+                        if len(tok) >= 4 and tok not in _SUBJECT_STOPWORDS:
+                            self._remember_speculative_subject(tok)
+            elif proposal.epistemic_status is EpistemicStatus.COHERENT:
+                # Finding 5 (audit 2026-05-20) — once teaching review
+                # promotes a proposal to COHERENT, the subject is no
+                # longer speculative; evict its tokens so the marker
+                # stops appearing on subsequent probes about it.
+                for src in sources:
+                    self._forget_speculative_subject(src)
+                    for tok in _SUBJECT_SPLIT_RE.split(src.lower()):
+                        if len(tok) >= 4 and tok not in _SUBJECT_STOPWORDS:
+                            self._forget_speculative_subject(tok)
 
         # Advance turn counter and remember surface for next correction binding
         self._turn_number += 1
@@ -347,6 +376,34 @@ class CognitiveTurnPipeline:
                 seed_tag=intent.tag,
             )
         return ratify_intent(intent, prompt_versor, vocab=vocab)
+
+    def _remember_speculative_subject(self, subject: str) -> None:
+        """Add (or refresh LRU position of) a speculative subject token.
+
+        Finding 5 (audit 2026-05-20).  Caps the cache at
+        ``_MAX_SPECULATIVE_SUBJECTS`` via insertion-order eviction.
+        Empty / whitespace-only inputs are dropped silently so callers
+        can pass raw fragments without guarding.
+        """
+        subject = subject.lower().strip()
+        if not subject:
+            return
+        self._speculative_subjects.pop(subject, None)
+        self._speculative_subjects[subject] = None
+        while len(self._speculative_subjects) > _MAX_SPECULATIVE_SUBJECTS:
+            self._speculative_subjects.popitem(last=False)
+
+    def _forget_speculative_subject(self, subject: str) -> None:
+        """Evict a subject from the speculative-marker cache.
+
+        Called when a SPECULATIVE proposal is promoted to COHERENT via
+        the teaching review loop, so reviewed material stops being
+        marked speculative on later probes.  No-op if the subject is
+        not present.
+        """
+        subject = subject.lower().strip()
+        if subject:
+            self._speculative_subjects.pop(subject, None)
 
     def _should_mark_speculative(self, text: str, surface: str) -> bool:
         """Decide whether ``surface`` should carry the SPECULATIVE marker.
