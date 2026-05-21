@@ -1,0 +1,26 @@
+{
+  "register_id": "confident_uncertain_v1",
+  "version": "1.0.0",
+  "description": "Register signalling confident epistemic humility — first-person framing without dropping precision.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "37a5ceb6e24b534b55c09fd568f56311d41220cae181dee5ec4ebe6e1e988f13",
+  "display_name": "Confidently uncertain",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "As I see it: ",
+      "On my reading: ",
+      "I believe — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — though I hold this lightly.",
+      " — open to revision."
+    ]
+  }
+}

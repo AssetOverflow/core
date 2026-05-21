@@ -1,0 +1,24 @@
+{
+  "register_id": "affirming_v1",
+  "version": "1.0.0",
+  "description": "Affirming register — confirmational markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "8629dc1ffaf8342a7c07cbdf1fb6cbff468d755d5beb5dd55ee52900cc545ec5",
+  "display_name": "Affirming",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Yes — ",
+      "Indeed: ",
+      "Quite — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — confirmed.",
+      " — exactly so."
+    ]
+  }
+}

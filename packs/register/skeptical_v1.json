@@ -1,0 +1,26 @@
+{
+  "register_id": "skeptical_v1",
+  "version": "1.0.0",
+  "description": "Skeptical register — cautious markers, defers judgement.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "fd0467638ed46bc16aa11a3ff6d83320ceb74832cd78de3d081e4d9d4601288e",
+  "display_name": "Skeptical",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Apparently — ",
+      "If the record holds — ",
+      "Subject to check: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — pending verification.",
+      " — though I'd want corroboration."
+    ]
+  }
+}

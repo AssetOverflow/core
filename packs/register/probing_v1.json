@@ -1,0 +1,23 @@
+{
+  "register_id": "probing_v1",
+  "version": "1.0.0",
+  "description": "Probing register — question-shaped closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "f2f2eb3c975785039cecd027b33b1088b97e79c33c020c21c963ca33960d6372",
+  "display_name": "Probing",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Try this: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — but why?",
+      " — how so?",
+      " — what follows?"
+    ]
+  }
+}
