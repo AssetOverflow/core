@@ -463,6 +463,56 @@ def cmd_oov(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_capability_chains(args: argparse.Namespace) -> int:
+    from core.capability import chain_report
+
+    report = chain_report()
+    print(json.dumps(report, indent=2, sort_keys=True) if args.json else report)
+    return 0
+
+
+def cmd_capability_flags(args: argparse.Namespace) -> int:
+    from core.capability import flag_report
+
+    report = flag_report()
+    print(json.dumps(report, indent=2, sort_keys=True) if args.json else report)
+    return 0
+
+
+def cmd_capability_ledger(args: argparse.Namespace) -> int:
+    from core.capability import ledger_report
+
+    report = ledger_report()
+    print(json.dumps(report, indent=2, sort_keys=True) if args.json else report)
+    return 0
+
+
+def cmd_capability_artifact(args: argparse.Namespace) -> int:
+    from core.capability import CapabilityArtifactQuery, artifact_report
+
+    report = artifact_report(
+        CapabilityArtifactQuery(lane=args.lane, split=args.split, version=args.version)
+    )
+    print(json.dumps(report, indent=2, sort_keys=True) if args.json else report)
+    return 0
+
+
+def cmd_capability_domain_contract(args: argparse.Namespace) -> int:
+    from language_packs.domain_contract import validate_domain_contract_pack
+
+    report = validate_domain_contract_pack(args.pack_id).as_dict()
+    print(json.dumps(report, indent=2, sort_keys=True) if args.json else report)
+    return 0 if report["valid"] else 1
+
+
+def cmd_capability_evidence_plan(args: argparse.Namespace) -> int:
+    from core.capability import evidence_plan_report
+
+    report = evidence_plan_report()
+    print(json.dumps(report, indent=2, sort_keys=True) if args.json else report)
+    return 0
+
+
 def cmd_pack_list(args: argparse.Namespace) -> int:
     """List compiled language packs."""
     from language_packs import list_packs
@@ -756,8 +806,8 @@ def cmd_teaching_queue(args: argparse.Namespace) -> int:
         )
     print()
     print(
-        f"Author chains with: core teaching propose <candidate-jsonl> "
-        f"(or hand-author + supersede)."
+        "Author chains with: core teaching propose <candidate-jsonl> "
+        "(or hand-author + supersede)."
     )
     return 0
 
@@ -1951,7 +2001,7 @@ def _run_demo_phase5(emit_json: bool, *, with_preamble: bool = True) -> dict[str
     if with_preamble and not emit_json:
         _print_preamble(_PHASE5_PREAMBLE)
     cases_path = _DEMO_CORPUS_DIR / "v2_phase5" / "cases.jsonl"
-    cases = [json.loads(l) for l in cases_path.read_text().splitlines() if l.strip()]
+    cases = [json.loads(line) for line in cases_path.read_text().splitlines() if line.strip()]
     report = run_lane(cases)
     out = _DEMO_RESULTS_DIR / "phase5_report.json"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -1973,7 +2023,7 @@ def _run_demo_phase6(emit_json: bool, *, with_preamble: bool = True) -> dict[str
     if with_preamble and not emit_json:
         _print_preamble(_PHASE6_PREAMBLE)
     cases_path = _DEMO_CORPUS_DIR / "v2_phase6_demo" / "cases.jsonl"
-    cases = [json.loads(l) for l in cases_path.read_text().splitlines() if l.strip()]
+    cases = [json.loads(line) for line in cases_path.read_text().splitlines() if line.strip()]
     report = run_lane(cases)
     out = _DEMO_RESULTS_DIR / "phase6_demo_report.json"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -2184,7 +2234,6 @@ def _run_demo_all(emit_json: bool) -> int:
     consolidated JSON object is emitted at the end.
     """
     import contextlib
-    import io
     import os
 
     if not emit_json:
@@ -2659,6 +2708,37 @@ def build_parser() -> argparse.ArgumentParser:
     _add_runtime_policy_args(oov)
     oov.add_argument("token", help="token to inspect or ground")
     oov.set_defaults(func=cmd_oov)
+
+    capability = subparsers.add_parser("capability", help="capability readiness reports")
+    capability_sub = capability.add_subparsers(dest="capability_command", metavar="capability-command", required=True)
+    capability_chains = capability_sub.add_parser("chains", help="report teaching chain readiness")
+    capability_chains.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_chains.set_defaults(func=cmd_capability_chains)
+    capability_flags = capability_sub.add_parser("flags", help="report runtime flag readiness")
+    capability_flags.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_flags.set_defaults(func=cmd_capability_flags)
+    capability_ledger = capability_sub.add_parser("ledger", help="generated capability ledger")
+    capability_ledger.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_ledger.set_defaults(func=cmd_capability_ledger)
+    capability_artifact = capability_sub.add_parser("artifact", help="content-addressed artifact metadata")
+    capability_artifact.add_argument("--lane", required=True, help="eval lane id (e.g. cognition)")
+    capability_artifact.add_argument("--split", required=True, choices=("dev", "public", "holdout"))
+    capability_artifact.add_argument("--version", required=True, help="eval version id (e.g. v1)")
+    capability_artifact.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_artifact.set_defaults(func=cmd_capability_artifact)
+    capability_domain_contract = capability_sub.add_parser(
+        "domain-contract",
+        help="dry-run validate ADR-0090 domain-pack contract fields",
+    )
+    capability_domain_contract.add_argument("--pack-id", required=True, help="language pack id")
+    capability_domain_contract.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_domain_contract.set_defaults(func=cmd_capability_domain_contract)
+    capability_evidence_plan = capability_sub.add_parser(
+        "evidence-plan",
+        help="content-addressed local/worker evidence job plan",
+    )
+    capability_evidence_plan.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_evidence_plan.set_defaults(func=cmd_capability_evidence_plan)
 
     pack = subparsers.add_parser("pack", help="inspect and verify language packs")
     pack_sub = pack.add_subparsers(dest="pack_command", metavar="pack-command", required=True)
