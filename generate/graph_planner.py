@@ -8,6 +8,7 @@ move, and any constraints inherited from intent classification.
 
 from __future__ import annotations
 
+from collections import defaultdict, deque
 from dataclasses import dataclass
 from enum import Enum, unique
 
@@ -84,19 +85,46 @@ class PropositionGraph:
         return tuple(n.node_id for n in self.nodes if n.node_id not in targets)
 
     def topo_order(self) -> tuple[str, ...]:
+        """Kahn's topological sort over the graph's edges.
+
+        Comb pass 2026-05-21 — pre-fix this implementation had two
+        compounding inefficiencies:
+
+          * ``queue.pop(0)`` on a list is O(N) per pop ⇒ O(N²) total
+          * The inner ``for e in self.edges`` rescanned every edge on
+            every iteration ⇒ O(N × E) overall
+
+        Properly implemented Kahn's is O(N + E) and produces the same
+        deterministic order for the same input (queue seeded with
+        sorted zero-in-degree nodes; ties on later iterations break
+        by insertion order, identical to the pre-fix list).
+
+        Today's graphs are 1–2 nodes so cost is invisible — but
+        ADR-0089 Phase C2 (compound-intent multi-node dispatch) and
+        ADR-0088 Phase B (grounded realizer) both make multi-node
+        graphs realistic on the hot path.  Fix lands before the
+        usage scales.
+        """
+        # Build out-edge adjacency once: O(E).
+        out_edges: dict[str, list[str]] = defaultdict(list)
         in_degree: dict[str, int] = {n.node_id: 0 for n in self.nodes}
         for e in self.edges:
+            out_edges[e.source].append(e.target)
             in_degree[e.target] = in_degree.get(e.target, 0) + 1
-        queue = sorted(nid for nid, deg in in_degree.items() if deg == 0)
+        # Seed with sorted zero-in-degree nodes (deterministic).
+        queue: deque[str] = deque(
+            sorted(nid for nid, deg in in_degree.items() if deg == 0)
+        )
         order: list[str] = []
         while queue:
-            nid = queue.pop(0)
+            nid = queue.popleft()  # O(1) on a deque
             order.append(nid)
-            for e in self.edges:
-                if e.source == nid:
-                    in_degree[e.target] -= 1
-                    if in_degree[e.target] == 0:
-                        queue.append(e.target)
+            # Decrement in-degree of direct successors only: O(deg(nid))
+            # amortised to O(E) total across the loop.
+            for target in out_edges[nid]:
+                in_degree[target] -= 1
+                if in_degree[target] == 0:
+                    queue.append(target)
         return tuple(order)
 
     def as_dict(self) -> dict[str, object]:
