@@ -210,7 +210,7 @@ _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
     (re.compile(r"how\s+(?:do|can|should|would)\s+(?:I|we|you)\s+", re.IGNORECASE), IntentTag.PROCEDURE),
     (re.compile(r"(?:is|are|does|do|can|could|would|should|was|were|has|have|will)\s+.+\??\s*$", re.IGNORECASE), IntentTag.VERIFICATION),
     (re.compile(r"(?:no|that'?s\s+(?:not|wrong)|incorrect|actually|correction)", re.IGNORECASE), IntentTag.CORRECTION),
-    (re.compile(r"remember\s+", re.IGNORECASE), IntentTag.RECALL),
+    (re.compile(r"(?:remember|recall)\s+", re.IGNORECASE), IntentTag.RECALL),
 )
 
 

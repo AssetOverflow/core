@@ -108,6 +108,16 @@ def test_verification_extracts_head_noun(prompt: str, expected_subject: str) -> 
         ("Remember light", "light"),
         ("Remember the truth", "truth"),
         ("Remember a procedure", "procedure"),
+        # ``recall`` is a synonym imperative of ``remember`` and must
+        # route identically.  The articulation breadth benchmark probe
+        # ``"Recall truth."`` was misclassified as UNKNOWN until the
+        # trigger pattern in ``_RULES`` was widened to ``(?:remember|
+        # recall)\s+`` — without this case the regression silently
+        # returns.
+        ("Recall light", "light"),
+        ("Recall the truth", "truth"),
+        ("Recall a procedure", "procedure"),
+        ("Recall truth.", "truth"),
     ],
 )
 def test_recall_strips_articles(prompt: str, expected_subject: str) -> None:
