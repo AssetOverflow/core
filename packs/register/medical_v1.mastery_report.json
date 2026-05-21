@@ -1,0 +1,24 @@
+{
+  "evidence": {
+    "depth_preference": "standard",
+    "discourse_markers_empty": false,
+    "marker_bucket_sizes": {
+      "closings": 3,
+      "openings": 4,
+      "transitions": 0
+    },
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "disclosure_domain_count"
+    ],
+    "transitions_reserved": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "pack_source_sha256": "07e15a9c61c2413b1309c6a5fbd620f384df1b2106fcfc592e450f30f3169073",
+  "ratification_method": "seeded_variation_replay_equivalence",
+  "ratified": true,
+  "register_id": "medical_v1",
+  "report_sha256": "7ab33d87ca5949f9a3be59f1e540b3ae590877845f7331f4bc7b3e3bedaff96a",
+  "schema_version": "1.0.0"
+}

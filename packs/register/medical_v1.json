@@ -1,0 +1,26 @@
+{
+  "register_id": "medical_v1",
+  "version": "1.0.0",
+  "description": "Medical register — observational, precise.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "7ab33d87ca5949f9a3be59f1e540b3ae590877845f7331f4bc7b3e3bedaff96a",
+  "display_name": "Medical",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Observation: ",
+      "On examination: ",
+      "Per the chart: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — pending follow-up.",
+      " — as recorded."
+    ]
+  }
+}

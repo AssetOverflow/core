@@ -1,0 +1,27 @@
+{
+  "register_id": "philosophical_v1",
+  "version": "1.0.0",
+  "description": "Philosophical register — reflective, expansive.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "ca62afe80599fee4c1a080260d9924d7f760796b7a515b4f3135d589d0a2aa59",
+  "display_name": "Philosophical",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Considered carefully: ",
+      "It might be said: ",
+      "Stepping back — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — though much depends on the framing.",
+      " — and the question remains."
+    ]
+  }
+}

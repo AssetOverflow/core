@@ -1,0 +1,25 @@
+{
+  "register_id": "technical_v1",
+  "version": "1.0.0",
+  "description": "Technical register — precise, tag-bearing, two-domain disclosure.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "71c88af6352099f1a64a34b7c9af9fa7992ed2409723e0a70d9827b85f979605",
+  "display_name": "Technical",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Spec: ",
+      "Per the type: ",
+      "Operationally — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — within spec."
+    ]
+  }
+}

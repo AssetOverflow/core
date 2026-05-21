@@ -1,0 +1,27 @@
+{
+  "register_id": "scientific_v1",
+  "version": "1.0.0",
+  "description": "Scientific register — methodical, conservative.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "f1dfc024c4d36b578ebd5239ed1795dbe042b22477ce359c9e94efb4969bb31d",
+  "display_name": "Scientific",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "By the data: ",
+      "Per measurement: ",
+      "Stated formally: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — subject to replication.",
+      " — as the model holds."
+    ]
+  }
+}
