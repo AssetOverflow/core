@@ -27,3 +27,12 @@
 {"lemma":"αἰών","gloss":"age, era, or enduring span","pos":"NOUN","provenance_ids":["seed:grc_glosses_v1","adr-0090:reviewed:2026-05-21"]}
 {"lemma":"χρόνος","gloss":"time as measured sequence","pos":"NOUN","provenance_ids":["seed:grc_glosses_v1","adr-0090:reviewed:2026-05-21"]}
 {"lemma":"καιρός","gloss":"opportune time or fitting moment","pos":"NOUN","provenance_ids":["seed:grc_glosses_v1","adr-0090:reviewed:2026-05-21"]}
+{"lemma":"νοῦς","gloss":"mind, intellect, or understanding","pos":"NOUN","provenance_ids":["adr-0073c:hand_authored:2026-05-21"]}
+{"lemma":"διάνοια","gloss":"mind, understanding, or thinking disposition","pos":"NOUN","provenance_ids":["adr-0073c:hand_authored:2026-05-21"]}
+{"lemma":"καρδία","gloss":"heart, inner life, or center of thought","pos":"NOUN","provenance_ids":["adr-0073c:hand_authored:2026-05-21"]}
+{"lemma":"ψυχή","gloss":"soul, life, or vital breath","pos":"NOUN","provenance_ids":["adr-0073c:hand_authored:2026-05-21"]}
+{"lemma":"πνοή","gloss":"breath, wind, or animating breeze","pos":"NOUN","provenance_ids":["adr-0073c:hand_authored:2026-05-21"]}
+{"lemma":"ἔλεος","gloss":"mercy, compassion, or lovingkindness","pos":"NOUN","provenance_ids":["adr-0073c:hand_authored:2026-05-21"]}
+{"lemma":"εἰρήνη","gloss":"peace, harmony, or flourishing completion","pos":"NOUN","provenance_ids":["adr-0073c:hand_authored:2026-05-21"]}
+{"lemma":"δικαιοσύνη","gloss":"righteousness, justice, or ordered alignment","pos":"NOUN","provenance_ids":["adr-0073c:hand_authored:2026-05-21"]}
+{"lemma":"ἅγιος","gloss":"holy, sacred, or set apart","pos":"ADJ","provenance_ids":["adr-0073c:hand_authored:2026-05-21"]}

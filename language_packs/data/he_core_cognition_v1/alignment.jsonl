@@ -9,3 +9,15 @@
 {"source_id": "he-core-cog-022", "target_id": "en-collapse-peace", "relation": "cross_lang.shalom.en_collapse", "weight": 0.65, "evidence_ids": ["adr-0073c:shalom_lossy_english_engagement"]}
 {"source_id": "he-core-cog-023", "target_id": "en-collapse-tzedek", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073a:english_splits_to_righteousness_justice"]}
 {"source_id": "he-core-cog-023", "target_id": "en-collapse-justice", "relation": "cross_lang.tzedek.en_collapse", "weight": 0.62, "evidence_ids": ["adr-0073c:tzedek_lossy_english_engagement"]}
+{"source_id": "he-core-cog-024", "target_id": "grc-core-cog-030", "relation": "cross_lang.nous_binah", "weight": 0.85, "evidence_ids": ["LXX:nous_binah"]}
+{"source_id": "he-core-cog-024", "target_id": "grc-core-cog-031", "relation": "cross_lang.dianoia_binah", "weight": 0.80, "evidence_ids": ["LXX:dianoia_binah"]}
+{"source_id": "he-core-cog-024", "target_id": "en-core-cog-063", "relation": "cross_lang.binah.understanding.en", "weight": 0.85, "evidence_ids": ["lex:binah_understanding"]}
+{"source_id": "he-core-cog-025", "target_id": "grc-core-cog-032", "relation": "cross_lang.kardia_leb", "weight": 0.92, "evidence_ids": ["LXX:kardia_leb"]}
+{"source_id": "he-core-cog-025", "target_id": "en-collapse-heart", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_leb_nuance"]}
+{"source_id": "he-core-cog-026", "target_id": "grc-core-cog-033", "relation": "cross_lang.psyche_nephesh", "weight": 0.90, "evidence_ids": ["LXX:psyche_nephesh"]}
+{"source_id": "he-core-cog-026", "target_id": "en-collapse-soul", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_nephesh_nuance"]}
+{"source_id": "he-core-cog-027", "target_id": "grc-core-cog-034", "relation": "cross_lang.pnoe_neshamah", "weight": 0.88, "evidence_ids": ["LXX:pnoe_neshamah"]}
+{"source_id": "he-core-cog-027", "target_id": "en-collapse-breath", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_neshamah_nuance"]}
+{"source_id": "he-core-cog-028", "target_id": "grc-core-cog-038", "relation": "cross_lang.hagios_qadosh", "weight": 0.94, "evidence_ids": ["LXX:hagios_qadosh"]}
+{"source_id": "he-core-cog-028", "target_id": "en-collapse-holy", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_qadosh_nuance"]}
+
