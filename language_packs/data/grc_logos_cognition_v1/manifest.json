@@ -6,9 +6,9 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "grc_logos_cognition_v1.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "0f943667570747b3538c5df1ba574c42dfe79e8c5b82fae989b9f16f1ee29ceb",
+  "checksum": "b255fa06469cc079fcd322a6960aae4ec4f3fc8d60f7c965e007054a4444c188",
   "version": "1.0.0",
   "gate_engaged": true,
   "oov_policy": "fail_closed",
-  "glosses_checksum": "f755ce594dce122d034dff2fddc04da746a900598a76165ed7b5f3ab81c9ef02"
+  "glosses_checksum": "6b1e83010b2065ceedb0988e2020ee13999a1883e6399f1ca8908235683d7e42"
 }

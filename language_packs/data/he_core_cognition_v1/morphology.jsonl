@@ -21,3 +21,9 @@
 {"morphology_id": "he-core-morph-021", "surface": "חסד", "lemma": "חסד", "language": "he", "root": "ח-ס-ד", "prefix_chain": [], "stem": "חסד", "inflection": {"pos": "noun", "gender": "masculine", "number": "singular"}, "suffix_chain": []}
 {"morphology_id": "he-core-morph-022", "surface": "שלום", "lemma": "שלום", "language": "he", "root": "ש-ל-ם", "prefix_chain": [], "stem": "שלום", "inflection": {"pos": "noun", "gender": "masculine", "number": "singular"}, "suffix_chain": []}
 {"morphology_id": "he-core-morph-023", "surface": "צדק", "lemma": "צדק", "language": "he", "root": "צ-ד-ק", "prefix_chain": [], "stem": "צדק", "inflection": {"pos": "noun", "gender": "masculine", "number": "singular"}, "suffix_chain": []}
+{"morphology_id": "he-core-morph-024", "surface": "בינה", "lemma": "בינה", "language": "he", "root": "ב-ו-נ", "prefix_chain": [], "stem": "בינ", "inflection": {"pos": "noun", "gender": "feminine", "number": "singular"}, "suffix_chain": ["ה"]}
+{"morphology_id": "he-core-morph-025", "surface": "לב", "lemma": "לב", "language": "he", "root": "ל-ב-ב", "prefix_chain": [], "stem": "לב", "inflection": {"pos": "noun", "gender": "masculine", "number": "singular"}, "suffix_chain": []}
+{"morphology_id": "he-core-morph-026", "surface": "נפש", "lemma": "נפש", "language": "he", "root": "נ-פ-ש", "prefix_chain": [], "stem": "נפש", "inflection": {"pos": "noun", "gender": "feminine", "number": "singular"}, "suffix_chain": []}
+{"morphology_id": "he-core-morph-027", "surface": "נשמה", "lemma": "נשמה", "language": "he", "root": "נ-ש-מ", "prefix_chain": [], "stem": "נשמ", "inflection": {"pos": "noun", "gender": "feminine", "number": "singular"}, "suffix_chain": ["ה"]}
+{"morphology_id": "he-core-morph-028", "surface": "קדוש", "lemma": "קדוש", "language": "he", "root": "ק-ד-ש", "prefix_chain": [], "stem": "קדוש", "inflection": {"pos": "adjective", "gender": "masculine", "number": "singular"}, "suffix_chain": []}
+

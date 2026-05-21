@@ -21,3 +21,22 @@
 {"source_id": "grc-core-cog-027", "target_id": "en-collapse-time", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073a:english_collapses_time_family"]}
 {"source_id": "grc-core-cog-028", "target_id": "en-collapse-time", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073a:english_collapses_time_family"]}
 {"source_id": "grc-core-cog-029", "target_id": "en-collapse-time", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073a:english_collapses_time_family"]}
+{"source_id": "grc-core-cog-030", "target_id": "he-core-cog-024", "relation": "cross_lang.nous_binah", "weight": 0.85, "evidence_ids": ["LXX:nous_binah"]}
+{"source_id": "grc-core-cog-030", "target_id": "en-core-cog-063", "relation": "cross_lang.nous.understanding.en", "weight": 0.85, "evidence_ids": ["phil:nous_understanding"]}
+{"source_id": "grc-core-cog-031", "target_id": "he-core-cog-024", "relation": "cross_lang.dianoia_binah", "weight": 0.80, "evidence_ids": ["LXX:dianoia_binah"]}
+{"source_id": "grc-core-cog-031", "target_id": "en-core-cog-063", "relation": "cross_lang.dianoia.understanding.en", "weight": 0.85, "evidence_ids": ["phil:dianoia_understanding"]}
+{"source_id": "grc-core-cog-032", "target_id": "he-core-cog-025", "relation": "cross_lang.kardia_leb", "weight": 0.92, "evidence_ids": ["LXX:kardia_leb"]}
+{"source_id": "grc-core-cog-032", "target_id": "en-collapse-heart", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_kardia_leb_nuance"]}
+{"source_id": "grc-core-cog-033", "target_id": "he-core-cog-026", "relation": "cross_lang.psyche_nephesh", "weight": 0.90, "evidence_ids": ["LXX:psyche_nephesh"]}
+{"source_id": "grc-core-cog-033", "target_id": "en-collapse-soul", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_psyche_nephesh_nuance"]}
+{"source_id": "grc-core-cog-034", "target_id": "he-core-cog-027", "relation": "cross_lang.pnoe_neshamah", "weight": 0.88, "evidence_ids": ["LXX:pnoe_neshamah"]}
+{"source_id": "grc-core-cog-034", "target_id": "en-collapse-breath", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_pnoe_neshamah_nuance"]}
+{"source_id": "grc-core-cog-035", "target_id": "he-core-cog-021", "relation": "cross_lang.eleos_chesed", "weight": 0.86, "evidence_ids": ["LXX:eleos_chesed"]}
+{"source_id": "grc-core-cog-035", "target_id": "en-collapse-love", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_chesed_nuance"]}
+{"source_id": "grc-core-cog-036", "target_id": "he-core-cog-022", "relation": "cross_lang.eirene_shalom", "weight": 0.95, "evidence_ids": ["LXX:eirene_shalom"]}
+{"source_id": "grc-core-cog-036", "target_id": "en-collapse-peace", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_shalom_nuance"]}
+{"source_id": "grc-core-cog-037", "target_id": "he-core-cog-023", "relation": "cross_lang.dikaiosyne_tzedek", "weight": 0.90, "evidence_ids": ["LXX:dikaiosyne_tzedek"]}
+{"source_id": "grc-core-cog-037", "target_id": "en-collapse-justice", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_tzedek_nuance"]}
+{"source_id": "grc-core-cog-038", "target_id": "he-core-cog-028", "relation": "cross_lang.hagios_qadosh", "weight": 0.94, "evidence_ids": ["LXX:hagios_qadosh"]}
+{"source_id": "grc-core-cog-038", "target_id": "en-collapse-holy", "relation": "cross_lang.no_english_collapse", "weight": 0.0, "evidence_ids": ["adr-0073c:english_lacks_hagios_qadosh_nuance"]}
+
