@@ -16,6 +16,7 @@ from chat.pack_grounding import (
     pack_grounded_correction_surface,
     pack_grounded_procedure_surface,
     pack_grounded_relation_confirmation_surface,
+    pack_grounded_unknown_surface,
     gloss_aware_cause_surface,
     PACK_ID as _COGNITION_PACK_ID,
 )
@@ -907,6 +908,23 @@ class ChatRuntime:
                 resolved = resolve_lemma(lemma)
                 domains = resolved[1] if resolved is not None else ()
                 return (surface, "pack", domains)
+        if intent.tag is IntentTag.UNKNOWN:
+            # ADR-0086 — UNKNOWN intent with pack-resident prompt
+            # tokens.  The classifier could not assign a known dialogue
+            # shape, but the prompt itself may contain lemmas that are
+            # ratified in mounted lexicon packs (e.g. ``"light logos"``,
+            # ``"spirit wisdom truth"``).  Surface those lemmas with
+            # their semantic_domains rather than emit the bare
+            # _UNKNOWN_DOMAIN_SURFACE disclosure.  Null-lift invariant:
+            # when no prompt token resolves, composer returns None and
+            # the caller falls through to the universal disclosure
+            # byte-identically (preserves the ADR-0053 honesty contract
+            # for fully-OOV prompts).
+            surface = pack_grounded_unknown_surface(
+                text, register=self.register_pack,
+            )
+            if surface is not None:
+                return (surface, "pack", ())
         oov_lemma = (intent.subject or "").strip()
         if oov_lemma:
             from chat.oov_surface import oov_learning_invitation_surface

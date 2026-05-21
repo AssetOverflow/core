@@ -1,0 +1,2477 @@
+{
+  "schema_version": "1.0.0",
+  "catalog_id": "register_catalog_v1",
+  "issued_at": "2026-05-21T00:00:00Z",
+  "description": "Production catalog of 100 register packs. Each entry is a complete spec for one register pack ratifiable via scripts/ratify_register_packs.py once REGISTER_IDS is widened to include its register_id. Existing ratified packs (status=ratified) appear here as the canonical seven; the remaining ninety-three (status=drafted) need only an author to materialise packs/register/<register_id>.json from the entry below and re-run ratification. See packs/register/CATALOG.md for the production loop. All realizer_overrides keys are restricted to those whitelisted in scripts/ratify_register_packs.py::_KNOWN_OVERRIDE_KEYS (disclosure_domain_count, compress_gloss, drop_articles, drop_provenance_tag, append_semantic_domain_clause, plus per_intent nested block).",
+  "groups": {
+    "A_depth": "Depth ladder — varies only disclosure_domain_count + the structural booleans. No discourse markers.",
+    "B_tone": "Tone family — affective marker palettes; default knobs.",
+    "C_stance": "Stance family — epistemic posture (assertive, hedged, exploratory, etc.).",
+    "D_posture": "Posture family — social/relational role (peer, mentor, scholar, etc.).",
+    "E_domain": "Domain affect — academic, technical, legal, scientific, philosophical, etc.",
+    "F_cultural": "Cultural register — plainspoken, cosmopolitan, classic, lyrical, etc.",
+    "G_affective": "Affective register — cheerful, somber, wry, gentle, etc.",
+    "H_functional": "Functional role — documentary, instructional, persuasive, etc.",
+    "I_composite": "Composite registers — combine knobs from multiple groups."
+  },
+  "registers": [
+    {
+      "register_id": "default_neutral_v1",
+      "group": "A_depth",
+      "display_name": "Default neutral",
+      "description": "Default neutral register. Empty realizer overrides and empty discourse markers. Ratification gate is byte-identity with the unregistered realizer path. See ADR-0068.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [],
+        "transitions": [],
+        "closings": []
+      },
+      "status": "ratified",
+      "author_notes": "Existing; do not modify."
+    },
+    {
+      "register_id": "terse_v1",
+      "group": "A_depth",
+      "display_name": "Terse",
+      "description": "Terse register. Compresses without-gloss disclosure to one semantic domain. Grounding source and trace hash are invariant against default_neutral_v1; only surface wording varies. See ADR-0070.",
+      "depth_preference": "terse",
+      "realizer_overrides": {
+        "compress_gloss": true,
+        "disclosure_domain_count": 1,
+        "drop_articles": true,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [],
+        "transitions": [],
+        "closings": []
+      },
+      "status": "ratified",
+      "author_notes": "Existing; do not modify."
+    },
+    {
+      "register_id": "precise_v1",
+      "group": "A_depth",
+      "display_name": "Precise",
+      "description": "Precise register. Standard depth with disclosure_domain_count=2 and drop_provenance_tag=true. Exposes exactly two semantic domains and drops the parenthetical meta-tag.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [],
+        "transitions": [],
+        "closings": []
+      },
+      "status": "ratified",
+      "author_notes": "Existing; do not modify."
+    },
+    {
+      "register_id": "succinct_v1",
+      "group": "A_depth",
+      "display_name": "Succinct",
+      "description": "Between terse and precise — one-domain disclosure but keeps the provenance tag and full articles. The minimum-disclosure register for users who want both brevity and traceability.",
+      "depth_preference": "terse",
+      "realizer_overrides": {
+        "disclosure_domain_count": 1,
+        "compress_gloss": true
+      },
+      "discourse_markers": {
+        "openings": [],
+        "transitions": [],
+        "closings": []
+      },
+      "status": "drafted",
+      "author_notes": "Drop only the gloss compression; keep tag and articles."
+    },
+    {
+      "register_id": "expansive_v1",
+      "group": "A_depth",
+      "display_name": "Expansive",
+      "description": "Expansive register. Disclosure_domain_count=3 with append_semantic_domain_clause=true to extend pack-grounded definitions with their full semantic-domain context. The default ceiling for depth without per-intent escalation.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [],
+        "transitions": [],
+        "closings": []
+      },
+      "status": "drafted",
+      "author_notes": "Append-clause is the load-bearing knob for expansive output."
+    },
+    {
+      "register_id": "exhaustive_v1",
+      "group": "A_depth",
+      "display_name": "Exhaustive",
+      "description": "Maximum-disclosure register. Disclosure_domain_count=3 across every intent via per_intent overrides; semantic-domain clause appended; provenance tags retained.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true,
+        "per_intent": {
+          "DEFINITION": {
+            "disclosure_domain_count": 3
+          },
+          "RECALL": {
+            "disclosure_domain_count": 3
+          },
+          "CAUSE": {
+            "disclosure_domain_count": 3
+          },
+          "VERIFICATION": {
+            "disclosure_domain_count": 3
+          },
+          "COMPARISON": {
+            "disclosure_domain_count": 3
+          },
+          "PROCEDURE": {
+            "disclosure_domain_count": 3
+          },
+          "CORRECTION": {
+            "disclosure_domain_count": 3
+          },
+          "NARRATIVE": {
+            "disclosure_domain_count": 3
+          },
+          "EXAMPLE": {
+            "disclosure_domain_count": 3
+          }
+        }
+      },
+      "discourse_markers": {
+        "openings": [],
+        "transitions": [],
+        "closings": []
+      },
+      "status": "drafted",
+      "author_notes": "Per-intent block forces count=3 on every intent — even ones whose default falls back to 2."
+    },
+    {
+      "register_id": "warm_v1",
+      "group": "B_tone",
+      "display_name": "Warm",
+      "description": "Warm conversational register. Soft openings and gentle closings; default depth.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Sure — ",
+          "Of course — ",
+          "Glad to — ",
+          "Let me help: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — hope that helps.",
+          " — let me know if any of this is unclear.",
+          " — happy to go deeper."
+        ]
+      },
+      "status": "drafted",
+      "author_notes": "Empty-string in openings/closings lets seeded selection pick 'no marker this turn'."
+    },
+    {
+      "register_id": "cool_v1",
+      "group": "B_tone",
+      "display_name": "Cool",
+      "description": "Cool register — neutral openings, restrained closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Briefly — ",
+          "In short — ",
+          "Put plainly: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — that is the substance.",
+          " — and no more."
+        ]
+      },
+      "status": "drafted",
+      "author_notes": "Cool = warm's mirror; same default depth, sharper marker palette."
+    },
+    {
+      "register_id": "casual_v1",
+      "group": "B_tone",
+      "display_name": "Casual",
+      "description": "Casual register — light openings, easy closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "OK so ",
+          "Right — ",
+          "Here goes — ",
+          "Quick one: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — that's it.",
+          " — that's how it goes.",
+          " — and there we are."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "formal_v1",
+      "group": "B_tone",
+      "display_name": "Formal",
+      "description": "Formal register. Standard depth; restrained marker palette (no convivial fillers).",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [],
+        "transitions": [],
+        "closings": []
+      },
+      "status": "ratified",
+      "author_notes": "Existing; do not modify."
+    },
+    {
+      "register_id": "intense_v1",
+      "group": "B_tone",
+      "display_name": "Intense",
+      "description": "Intense register — punchy openings, declarative closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "Here it is: ",
+          "Listen — ",
+          "The point: ",
+          "Plainly — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — that's the substance.",
+          " — no more, no less.",
+          " — full stop."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "playful_v1",
+      "group": "B_tone",
+      "display_name": "Playful",
+      "description": "Playful register — light openings, witty closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "OK so — ",
+          "Right — ",
+          "Here's the thing — ",
+          "Fun one: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — neat, right?",
+          " — and there we have it.",
+          " — pretty tidy."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "calm_v1",
+      "group": "B_tone",
+      "display_name": "Calm",
+      "description": "Calm register — quiet, measured markers; no exclamation.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Quietly: ",
+          "Note: ",
+          "Consider — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and so it stands.",
+          " — duly noted."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "urgent_v1",
+      "group": "B_tone",
+      "display_name": "Urgent",
+      "description": "Urgent register — short, directive markers.",
+      "depth_preference": "terse",
+      "realizer_overrides": {
+        "disclosure_domain_count": 1,
+        "drop_provenance_tag": true,
+        "compress_gloss": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "Quick: ",
+          "Here: ",
+          "Now: ",
+          "Brief: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — now you know.",
+          " — proceed."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "serene_v1",
+      "group": "B_tone",
+      "display_name": "Serene",
+      "description": "Serene register — flowing, contemplative markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Gently: ",
+          "There is — ",
+          "Consider this: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — a quiet truth.",
+          " — and that suffices.",
+          " — held lightly."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "dramatic_v1",
+      "group": "B_tone",
+      "display_name": "Dramatic",
+      "description": "Dramatic register — emphatic markers, declarative closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "Ah — ",
+          "Now: ",
+          "Behold: ",
+          "Here it is — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and there it stands.",
+          " — let that land."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "sober_v1",
+      "group": "B_tone",
+      "display_name": "Sober",
+      "description": "Sober register — restrained, factual markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Plainly: ",
+          "Strictly: ",
+          "Stated bare: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — without embellishment."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "clinical_v1",
+      "group": "B_tone",
+      "display_name": "Clinical",
+      "description": "Clinical register — observational markers, two-domain disclosure for precision.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Observation: ",
+          "Note: ",
+          "Per the record: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — as observed."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "colloquial_v1",
+      "group": "B_tone",
+      "display_name": "Colloquial",
+      "description": "Colloquial register — chatty, contraction-friendly markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "OK so ",
+          "Right, so ",
+          "Y'know — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — that's the gist.",
+          " — that's how it goes."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "literary_v1",
+      "group": "B_tone",
+      "display_name": "Literary",
+      "description": "Literary register — elevated diction, em-dash heavy.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true,
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "There is, in this, ",
+          "Properly speaking — ",
+          "It must be said: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and so the matter rests.",
+          " — quietly held."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "journalistic_v1",
+      "group": "B_tone",
+      "display_name": "Journalistic",
+      "description": "Journalistic register — leads with the fact; sourced closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "drop_provenance_tag": false
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Lead: ",
+          "Key fact: ",
+          "In brief: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — per the pack record.",
+          " — sourced."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "poetic_v1",
+      "group": "B_tone",
+      "display_name": "Poetic",
+      "description": "Poetic register — image-led markers (within bounded buckets), expansive disclosure.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true,
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Suppose — ",
+          "Consider — ",
+          "Imagine: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and so the image holds.",
+          " — quietly."
+        ]
+      },
+      "status": "drafted",
+      "author_notes": "Markers stay short — image-rich without runaway poetic licence; the lemma is the protagonist."
+    },
+    {
+      "register_id": "assertive_v1",
+      "group": "C_stance",
+      "display_name": "Assertive",
+      "description": "Assertive register — declarative markers, no hedging.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Plainly: ",
+          "Stated: ",
+          "Fact: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          "."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "hedged_v1",
+      "group": "C_stance",
+      "display_name": "Hedged",
+      "description": "Hedged register — soft markers signalling epistemic caution.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Tentatively: ",
+          "It seems — ",
+          "As best as can be said: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — though others may differ.",
+          " — held provisionally."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "inviting_v1",
+      "group": "C_stance",
+      "display_name": "Inviting",
+      "description": "Inviting register — invitation-shaped markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Consider: ",
+          "Notice: ",
+          "Look: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — what do you make of it?",
+          " — say more if you'd like."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "exploratory_v1",
+      "group": "C_stance",
+      "display_name": "Exploratory",
+      "description": "Exploratory register — open-ended markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Let's see — ",
+          "Could it be that ",
+          "Perhaps: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and there is more to explore.",
+          " — worth probing further."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "didactic_v1",
+      "group": "C_stance",
+      "display_name": "Didactic",
+      "description": "Didactic register — instructional markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Note: ",
+          "Observe: ",
+          "Recall: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — keep that in mind.",
+          " — and that's the lesson."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "dialectic_v1",
+      "group": "C_stance",
+      "display_name": "Dialectic",
+      "description": "Dialectic register — two-sided markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "On one hand: ",
+          "Consider: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — though one could argue the inverse.",
+          " — set against its converse."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "probing_v1",
+      "group": "C_stance",
+      "display_name": "Probing",
+      "description": "Probing register — question-shaped closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Try this: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — but why?",
+          " — how so?",
+          " — what follows?"
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "affirming_v1",
+      "group": "C_stance",
+      "display_name": "Affirming",
+      "description": "Affirming register — confirmational markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Yes — ",
+          "Indeed: ",
+          "Quite — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — confirmed.",
+          " — exactly so."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "curious_v1",
+      "group": "C_stance",
+      "display_name": "Curious",
+      "description": "Curious register — wondering tone.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "I wonder — ",
+          "Notice this: ",
+          "Interesting: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — which leads where?",
+          " — and what then?"
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "skeptical_v1",
+      "group": "C_stance",
+      "display_name": "Skeptical",
+      "description": "Skeptical register — cautious markers, defers judgement.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Apparently — ",
+          "If the record holds — ",
+          "Subject to check: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — pending verification.",
+          " — though I'd want corroboration."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "confident_uncertain_v1",
+      "group": "C_stance",
+      "display_name": "Confidently uncertain",
+      "description": "Register signalling confident epistemic humility — first-person framing without dropping precision.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "As I see it: ",
+          "On my reading: ",
+          "I believe — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — though I hold this lightly.",
+          " — open to revision."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "socratic_v1",
+      "group": "C_stance",
+      "display_name": "Socratic",
+      "description": "Socratic register. Drops articles in cold-start surfaces and appends a probing question closing.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "drop_articles": true
+      },
+      "discourse_markers": {
+        "openings": [],
+        "transitions": [],
+        "closings": [
+          "",
+          " — but what makes that so?",
+          " — and from where do we know it?"
+        ]
+      },
+      "status": "ratified",
+      "author_notes": "Existing; do not modify."
+    },
+    {
+      "register_id": "peer_v1",
+      "group": "D_posture",
+      "display_name": "Peer",
+      "description": "Peer-to-peer register — equal-level address.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "OK so — ",
+          "Right — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — sound right?",
+          " — that match your read?"
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "mentor_v1",
+      "group": "D_posture",
+      "display_name": "Mentor",
+      "description": "Mentor register — guiding without lecturing.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Here's a useful frame: ",
+          "Notice: ",
+          "Consider — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — keep that handy.",
+          " — useful to hold."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "student_v1",
+      "group": "D_posture",
+      "display_name": "Student",
+      "description": "Student register — humble, asking, exploratory.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Best I can tell — ",
+          "As I understand it: ",
+          "Tentatively: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — is that right?",
+          " — I'd value the check."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "expert_v1",
+      "group": "D_posture",
+      "display_name": "Expert",
+      "description": "Expert register — authoritative without ornament.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [],
+        "transitions": [],
+        "closings": []
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "scholar_v1",
+      "group": "D_posture",
+      "display_name": "Scholar",
+      "description": "Scholar register — academic prose cadence.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "It bears noting — ",
+          "Properly considered: ",
+          "We may say: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — pace the relevant authorities.",
+          " — as the record holds."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "practitioner_v1",
+      "group": "D_posture",
+      "display_name": "Practitioner",
+      "description": "Practitioner register — pragmatic, application-led.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "In practice: ",
+          "Operationally: ",
+          "On the ground: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — that's how it lands in the field.",
+          " — pragmatically."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "novice_v1",
+      "group": "D_posture",
+      "display_name": "Novice",
+      "description": "Novice register — eager-learning markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Just learning — ",
+          "If I have it right: ",
+          "My current take: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — does that track?",
+          " — please correct if off."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "narrator_v1",
+      "group": "D_posture",
+      "display_name": "Narrator",
+      "description": "Narrator register — storytelling cadence.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "And so — ",
+          "Here is what holds: ",
+          "Picture this: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and there the matter sits.",
+          " — that is the shape of it."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "journalist_v1",
+      "group": "D_posture",
+      "display_name": "Journalist",
+      "description": "Journalist register — verb-led openings, sourced closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Reported: ",
+          "On record: ",
+          "By the pack: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — sourced from the cognition pack.",
+          " — per the record."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "elder_v1",
+      "group": "D_posture",
+      "display_name": "Elder",
+      "description": "Elder register — reflective, measured.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true,
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Long held — ",
+          "It has always been said: ",
+          "Steadily: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and so it remains.",
+          " — as the tradition holds."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "academic_v1",
+      "group": "E_domain",
+      "display_name": "Academic",
+      "description": "Academic register — Latinate cadence, conservative depth.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "It may be noted that ",
+          "Strictly construed: ",
+          "Per the literature: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — as the convention holds.",
+          " — pace contrary readings."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "conversational_v1",
+      "group": "E_domain",
+      "display_name": "Conversational",
+      "description": "Conversational register — light, immediate.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "So — ",
+          "OK — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — that work?",
+          " — that the shape?"
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "executive_v1",
+      "group": "E_domain",
+      "display_name": "Executive",
+      "description": "Executive register — bottom-line first.",
+      "depth_preference": "terse",
+      "realizer_overrides": {
+        "disclosure_domain_count": 1,
+        "compress_gloss": true,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Bottom line: ",
+          "TL;DR: ",
+          "Headline: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — details on request."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "technical_v1",
+      "group": "E_domain",
+      "display_name": "Technical",
+      "description": "Technical register — precise, tag-bearing, two-domain disclosure.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Spec: ",
+          "Per the type: ",
+          "Operationally — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — within spec."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "legal_v1",
+      "group": "E_domain",
+      "display_name": "Legal",
+      "description": "Legal register — qualified, careful.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Subject to caveats: ",
+          "Without prejudice: ",
+          "Stated for the record: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — pending further determination.",
+          " — without warranty as to completeness."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "medical_v1",
+      "group": "E_domain",
+      "display_name": "Medical",
+      "description": "Medical register — observational, precise.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Observation: ",
+          "On examination: ",
+          "Per the chart: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — pending follow-up.",
+          " — as recorded."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "scientific_v1",
+      "group": "E_domain",
+      "display_name": "Scientific",
+      "description": "Scientific register — methodical, conservative.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "By the data: ",
+          "Per measurement: ",
+          "Stated formally: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — subject to replication.",
+          " — as the model holds."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "philosophical_v1",
+      "group": "E_domain",
+      "display_name": "Philosophical",
+      "description": "Philosophical register — reflective, expansive.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Considered carefully: ",
+          "It might be said: ",
+          "Stepping back — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — though much depends on the framing.",
+          " — and the question remains."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "pedagogical_v1",
+      "group": "E_domain",
+      "display_name": "Pedagogical",
+      "description": "Pedagogical register. Standard depth; uses opening 'Recall:' and closing ' — does that make sense?' to scaffold learning.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "Recall: ",
+          "Let's see — ",
+          ""
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — does that make sense?",
+          " — keep that in mind."
+        ]
+      },
+      "status": "ratified",
+      "author_notes": "Existing; do not modify."
+    },
+    {
+      "register_id": "devotional_v1",
+      "group": "E_domain",
+      "display_name": "Devotional",
+      "description": "Devotional register — reverent, contemplative.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Quietly: ",
+          "Held in reverence: ",
+          "We may note: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and that is enough.",
+          " — held in care."
+        ]
+      },
+      "status": "drafted",
+      "author_notes": "Markers stay non-sectarian; no theological commitments at this layer."
+    },
+    {
+      "register_id": "mathematical_v1",
+      "group": "E_domain",
+      "display_name": "Mathematical",
+      "description": "Mathematical register — proof-cadence.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "drop_articles": true,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Definition: ",
+          "Claim: ",
+          "Lemma: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          ".",
+          " — qed."
+        ]
+      },
+      "status": "drafted",
+      "author_notes": "Q.E.D. as a tag; drop articles to land in math idiom."
+    },
+    {
+      "register_id": "engineering_v1",
+      "group": "E_domain",
+      "display_name": "Engineering",
+      "description": "Engineering register — spec-shaped.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Spec: ",
+          "Requirement: ",
+          "Per design: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — within tolerance.",
+          " — meets spec."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "plainspoken_v1",
+      "group": "F_cultural",
+      "display_name": "Plainspoken",
+      "description": "Plainspoken register — Anglo-Saxon vocabulary, short markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Straight: ",
+          "Plainly: ",
+          "Said simply: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — that is the truth of it."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "cosmopolitan_v1",
+      "group": "F_cultural",
+      "display_name": "Cosmopolitan",
+      "description": "Cosmopolitan register — international, careful with idiom.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Stated broadly: ",
+          "Across contexts: ",
+          "Generally: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — though it varies by context."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "diplomatic_v1",
+      "group": "F_cultural",
+      "display_name": "Diplomatic",
+      "description": "Diplomatic register — qualified, conciliatory.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "With respect — ",
+          "Taking care: ",
+          "In good faith: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — open to amendment.",
+          " — pending wider input."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "blunt_v1",
+      "group": "F_cultural",
+      "display_name": "Blunt",
+      "description": "Blunt register — short, sharp, no qualification.",
+      "depth_preference": "terse",
+      "realizer_overrides": {
+        "disclosure_domain_count": 1,
+        "compress_gloss": true,
+        "drop_articles": true,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Look — ",
+          "Plainly: ",
+          "Said: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          "."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "aristocratic_v1",
+      "group": "F_cultural",
+      "display_name": "Aristocratic",
+      "description": "Aristocratic register — elevated diction; depth=3 with appended clause.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "One observes — ",
+          "Properly speaking: ",
+          "Indeed — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — as has long been understood.",
+          " — and there it lies."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "folksy_v1",
+      "group": "F_cultural",
+      "display_name": "Folksy",
+      "description": "Folksy register — regional warmth, light contractions.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Y'know — ",
+          "Way I see it: ",
+          "Plain as day: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and that's about the size of it.",
+          " — so it goes."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "urbane_v1",
+      "group": "F_cultural",
+      "display_name": "Urbane",
+      "description": "Urbane register — sophisticated but casual.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Quite simply — ",
+          "If you'll allow — ",
+          "Briefly: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and there we are."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "timeless_v1",
+      "group": "F_cultural",
+      "display_name": "Timeless",
+      "description": "Timeless register — restrained, classic, no fashion-of-the-day markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "It has been said: ",
+          "Steadily: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and so it has long held."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "contemporary_v1",
+      "group": "F_cultural",
+      "display_name": "Contemporary",
+      "description": "Contemporary register — current idiom without slang.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "So — ",
+          "OK — ",
+          "Right — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — that's the read.",
+          " — that's where it sits."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "classic_v1",
+      "group": "F_cultural",
+      "display_name": "Classic",
+      "description": "Classic register — measured English without archaisms.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Plainly stated: ",
+          "It must be said: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and so it has long stood."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "neoteric_v1",
+      "group": "F_cultural",
+      "display_name": "Neoteric",
+      "description": "Neoteric register — fresh, immediate.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Fresh take: ",
+          "Here's the thing: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — that's the live read.",
+          " — current as of this turn."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "lyrical_v1",
+      "group": "F_cultural",
+      "display_name": "Lyrical",
+      "description": "Lyrical register — musical phrasing within bounded markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true,
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Lightly — ",
+          "Hear it: ",
+          "And so — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and so the line completes itself.",
+          " — a quiet music."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "cheerful_v1",
+      "group": "G_affective",
+      "display_name": "Cheerful",
+      "description": "Cheerful register — positive markers, no exclamation marks (deterministic, no affect-pretense).",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Good news — ",
+          "Happy to share: ",
+          "Glad — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and that's a fine read.",
+          " — and there we are."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "somber_v1",
+      "group": "G_affective",
+      "display_name": "Somber",
+      "description": "Somber register — restrained, weight-acknowledging.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Gravely: ",
+          "Held with care: ",
+          "Stated quietly: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and so it stands.",
+          " — held with weight."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "melancholic_v1",
+      "group": "G_affective",
+      "display_name": "Melancholic",
+      "description": "Melancholic register — wistful framing.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Long held — ",
+          "Sadly true: ",
+          "And yet — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — though it has always been so.",
+          " — a quiet fact."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "awed_v1",
+      "group": "G_affective",
+      "display_name": "Awed",
+      "description": "Awed register — wonder-acknowledging markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true,
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Remarkably: ",
+          "Strikingly: ",
+          "Note this: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and that is no small thing."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "grave_v1",
+      "group": "G_affective",
+      "display_name": "Grave",
+      "description": "Grave register — serious, careful.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Soberly: ",
+          "With care: ",
+          "Plainly: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and that is the record.",
+          " — held in earnest."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "light_v1",
+      "group": "G_affective",
+      "display_name": "Light",
+      "description": "Light register — buoyant, low-pressure.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Lightly: ",
+          "Easy one: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and there we go.",
+          " — neat enough."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "wry_v1",
+      "group": "G_affective",
+      "display_name": "Wry",
+      "description": "Wry register — slight irony, deadpan closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Officially: ",
+          "On the books: ",
+          "Allegedly — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — for whatever that's worth.",
+          " — make of it what you will."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "dry_v1",
+      "group": "G_affective",
+      "display_name": "Dry",
+      "description": "Dry register — understated, factual.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Stated: ",
+          "Plainly — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          ".",
+          " — that's it."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "gentle_v1",
+      "group": "G_affective",
+      "display_name": "Gentle",
+      "description": "Gentle register — soft openings, easy closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {},
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Gently — ",
+          "If it helps: ",
+          "Quietly: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — held carefully.",
+          " — softly stated."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "earnest_v1",
+      "group": "G_affective",
+      "display_name": "Earnest",
+      "description": "Earnest register — sincere, direct.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Truly: ",
+          "Sincerely: ",
+          "Plainly: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and that is what I mean.",
+          " — said in good faith."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "documentary_v1",
+      "group": "H_functional",
+      "display_name": "Documentary",
+      "description": "Documentary register — neutral-fact, sourced.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "On record: ",
+          "Documented: ",
+          "By the pack: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — per the pack record.",
+          " — as documented."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "instructional_v1",
+      "group": "H_functional",
+      "display_name": "Instructional",
+      "description": "Instructional register — step-by-step framing.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Step by step: ",
+          "Start here: ",
+          "First: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — proceed when ready."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "persuasive_v1",
+      "group": "H_functional",
+      "display_name": "Persuasive",
+      "description": "Persuasive register — case-building markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Consider — ",
+          "Note: ",
+          "The case: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — which is why it matters.",
+          " — take that as the argument."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "conciliatory_v1",
+      "group": "H_functional",
+      "display_name": "Conciliatory",
+      "description": "Conciliatory register — accommodating closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "If I may: ",
+          "With your indulgence: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — open to your view.",
+          " — we can work from there."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "clarifying_v1",
+      "group": "H_functional",
+      "display_name": "Clarifying",
+      "description": "Clarifying register — restate-the-key markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "To be clear: ",
+          "Put plainly: ",
+          "Said again: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — does that resolve it?",
+          " — clearer now?"
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "summarizing_v1",
+      "group": "H_functional",
+      "display_name": "Summarizing",
+      "description": "Summarizing register — headline-shape markers.",
+      "depth_preference": "terse",
+      "realizer_overrides": {
+        "disclosure_domain_count": 1,
+        "compress_gloss": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Summary: ",
+          "In sum: ",
+          "Headline: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — that is the gist."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "critiquing_v1",
+      "group": "H_functional",
+      "display_name": "Critiquing",
+      "description": "Critiquing register — analytical, qualified.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "On critical reading: ",
+          "Noticed: ",
+          "Set against expectation: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and that bears watching.",
+          " — though one might press further."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "comparing_v1",
+      "group": "H_functional",
+      "display_name": "Comparing",
+      "description": "Comparing register — parallel-construction markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Side by side: ",
+          "Compared: ",
+          "Set against: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and there sits the contrast."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "elaborating_v1",
+      "group": "H_functional",
+      "display_name": "Elaborating",
+      "description": "Elaborating register — extended disclosure.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "More fully: ",
+          "To extend: ",
+          "Said at length: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and there is more, when you want it."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "exemplifying_v1",
+      "group": "H_functional",
+      "display_name": "Exemplifying",
+      "description": "Exemplifying register — example-led markers.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "By way of example: ",
+          "Take this: ",
+          "For instance: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — as a case in point.",
+          " — exemplifying the pattern."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "convivial_v1",
+      "group": "I_composite",
+      "display_name": "Convivial",
+      "description": "Warm, conversational register. Seeded openings and closings draw from small bounded buckets; depth follows the standard (3-domain) default.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "So,",
+          "Right —",
+          "OK,"
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — does that help?",
+          " — make sense?"
+        ]
+      },
+      "status": "ratified",
+      "author_notes": "Existing; do not modify."
+    },
+    {
+      "register_id": "tutorial_v1",
+      "group": "I_composite",
+      "display_name": "Tutorial",
+      "description": "Tutorial composite — combines pedagogical openings, instructional steps, expansive depth.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "First, ",
+          "Recall: ",
+          "Notice: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — does that make sense?",
+          " — keep that handy."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "interview_v1",
+      "group": "I_composite",
+      "display_name": "Interview",
+      "description": "Interview composite — interviewer openings + probing closings.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 2
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Question: ",
+          "Posed: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — what's your read?",
+          " — say more?"
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "briefing_v1",
+      "group": "I_composite",
+      "display_name": "Briefing",
+      "description": "Briefing composite — executive depth + journalist closings.",
+      "depth_preference": "terse",
+      "realizer_overrides": {
+        "disclosure_domain_count": 1,
+        "compress_gloss": true,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Brief: ",
+          "Headline: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — per the pack.",
+          " — full detail on request."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "deposition_v1",
+      "group": "I_composite",
+      "display_name": "Deposition",
+      "description": "Deposition composite — legal qualification + documentary sourcing.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "On the record: ",
+          "Stated under oath: ",
+          "For the record: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — as documented.",
+          " — subject to further inquiry."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "lecture_v1",
+      "group": "I_composite",
+      "display_name": "Lecture",
+      "description": "Lecture composite — scholar + didactic.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Today: ",
+          "Note: ",
+          "Consider: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — keep that for the next session.",
+          " — and that closes the segment."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "memo_v1",
+      "group": "I_composite",
+      "display_name": "Memo",
+      "description": "Memo composite — executive terseness + civic formality.",
+      "depth_preference": "terse",
+      "realizer_overrides": {
+        "disclosure_domain_count": 1,
+        "compress_gloss": true,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Memo: ",
+          "Note to file: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — please action.",
+          " — for your records."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "review_v1",
+      "group": "I_composite",
+      "display_name": "Review",
+      "description": "Review composite — critiquing + comparing.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "On review: ",
+          "Set against expectation: ",
+          "Compared: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — verdict: held.",
+          " — worth a second look."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "story_v1",
+      "group": "I_composite",
+      "display_name": "Story",
+      "description": "Story composite — narrator + literary.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true,
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "And so — ",
+          "It happened that ",
+          "Picture: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and there the matter sits.",
+          " — that is the shape of it."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "elegy_v1",
+      "group": "I_composite",
+      "display_name": "Elegy",
+      "description": "Elegy composite — melancholic + literary.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "append_semantic_domain_clause": true,
+        "disclosure_domain_count": 3
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "Long held — ",
+          "Quietly: ",
+          "Now — "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and so it remains.",
+          " — held in stillness."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "epigram_v1",
+      "group": "I_composite",
+      "display_name": "Epigram",
+      "description": "Epigram composite — terse + wry.",
+      "depth_preference": "terse",
+      "realizer_overrides": {
+        "disclosure_domain_count": 1,
+        "compress_gloss": true,
+        "drop_articles": true,
+        "drop_provenance_tag": true
+      },
+      "discourse_markers": {
+        "openings": [],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and that suffices."
+        ]
+      },
+      "status": "drafted"
+    },
+    {
+      "register_id": "manifesto_v1",
+      "group": "I_composite",
+      "display_name": "Manifesto",
+      "description": "Manifesto composite — oratorical + persuasive.",
+      "depth_preference": "standard",
+      "realizer_overrides": {
+        "disclosure_domain_count": 3,
+        "append_semantic_domain_clause": true
+      },
+      "discourse_markers": {
+        "openings": [
+          "",
+          "We hold — ",
+          "Plainly: ",
+          "Stated: "
+        ],
+        "transitions": [],
+        "closings": [
+          "",
+          " — and we stand on it.",
+          " — that is the position."
+        ]
+      },
+      "status": "drafted"
+    }
+  ]
+}

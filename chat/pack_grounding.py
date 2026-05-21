@@ -819,7 +819,7 @@ _PROCEDURE_TOPIC_STOPWORDS: frozenset[str] = frozenset({
 
 
 def _extract_procedure_topic_lemma(subject_text: str) -> str | None:
-    """Return the **last** pack-resident topical lemma in *subject_text*.
+    """Return the **last** non-numeric pack-resident topical lemma in *subject_text*.
 
     Procedure subjects emerge from the intent classifier as verb
     phrases (e.g. ``"define a concept"``, ``"correct an error"``,
@@ -837,6 +837,15 @@ def _extract_procedure_topic_lemma(subject_text: str) -> str | None:
     are NOT stopworded — when a procedure utterance contains only
     one pack-resident lemma and that lemma is the verb, the verb
     is the topical anchor by elimination.
+
+    ADR-0087 — numeric-determiner downrank.  Tokens whose primary
+    semantic_domain starts with ``quantitative.numeric.`` (cardinals
+    like ``two``, ``three``) are demoted: a non-numeric resident
+    candidate always wins, and the numeric is only selected when it
+    is the sole resident token in the subject.  Closes
+    ``procedure_compare_011`` (*"How do I compare two terms?"*),
+    where the pre-ADR-0087 last-wins selector picked the cardinal
+    determiner ``two`` over the operation verb ``compare``.
     """
     if not subject_text or not isinstance(subject_text, str):
         return None
@@ -845,14 +854,20 @@ def _extract_procedure_topic_lemma(subject_text: str) -> str | None:
     for ch in ",.;:!?\"'()[]{}":
         raw = raw.replace(ch, " ")
     last_match: str | None = None
+    last_numeric_fallback: str | None = None
     for token in raw.split():
         if not token:
             continue
         if token in _PROCEDURE_TOPIC_STOPWORDS:
             continue
         if token in lemmas:
+            resolved = resolve_lemma(token)
+            primary = resolved[1][0] if resolved is not None and resolved[1] else ""
+            if primary.startswith("quantitative.numeric."):
+                last_numeric_fallback = token
+                continue
             last_match = token
-    return last_match
+    return last_match if last_match is not None else last_numeric_fallback
 
 
 def pack_grounded_procedure_surface(
@@ -876,8 +891,15 @@ def pack_grounded_procedure_surface(
     Surface format (fixed template, all atoms pack-sourced):
 
         "procedure-grounded ({pack_id}): {lemma} ({d1}; {d2}).
-         Step-by-step guidance for {lemma} is not yet ratified
+         Step-by-step guidance for {subject_text} is not yet ratified
          in this session."
+
+    The trailing clause echoes the user's verb-phrase subject so that
+    OOV head nouns (e.g. ``"terms"`` in *"compare two terms"*) still
+    reach the surface even when only the procedure verb is pack-resident.
+    ADR-0087 — this preserves the user's actual topic of interest in
+    the trust-boundary label without inventing pack atoms for OOV
+    words.
 
     The trailing clause is the constant trust-boundary label,
     analogous to ``"No prior turn in this session to correct yet."``
@@ -900,10 +922,117 @@ def pack_grounded_procedure_surface(
         return None
     resolved_pack_id, domains = resolved
     head = "; ".join(domains[:2])
+    # ADR-0087 — echo the full subject_text in the trailing clause
+    # (normalized: lowercase + punctuation stripped) so OOV head nouns
+    # reach the surface.  Falls back to the lemma alone if the
+    # normalized echo would be empty.
+    echo = subject_text.lower()
+    for ch in ",.;:!?\"'()[]{}":
+        echo = echo.replace(ch, " ")
+    echo = " ".join(echo.split())
+    topic_phrase = echo if echo else lemma
     return (
         f"procedure-grounded ({resolved_pack_id}): {lemma} ({head}). "
-        f"Step-by-step guidance for {lemma} is not yet ratified in this session."
+        f"Step-by-step guidance for {topic_phrase} is not yet ratified in this session."
     )
+
+
+_UNKNOWN_TOKEN_STOPWORDS: frozenset[str] = frozenset({
+    # Pack-resident lemmas that classify but carry no topical signal in
+    # an UNKNOWN-intent prompt — dialogue fillers / copulae.  Mirrors
+    # the CORRECTION / PROCEDURE stopword conventions.
+    "be",
+    "have",
+})
+
+
+def pack_grounded_unknown_surface(
+    text: str | None,
+    *,
+    max_tokens: int = 3,
+    pack_ids: tuple[str, ...] = DEFAULT_RESOLVABLE_PACK_IDS,
+    register: RegisterPack = UNREGISTERED,
+) -> str | None:
+    """ADR-0086 — UNKNOWN-intent pack-resident token surface.
+
+    When the intent classifier returns :class:`IntentTag.UNKNOWN` (the
+    prompt does not match any known dialogue shape) but the prompt
+    text contains one or more pack-resident lemmas, surface those
+    lemmas with their semantic_domains rather than emitting the bare
+    ``_UNKNOWN_DOMAIN_SURFACE`` disclosure.
+
+    Surface format (fixed template, all atoms pack-sourced)::
+
+        "Pack-resident tokens — pack-grounded ({tag}): {tok1} ({d_a1}; {d_a2}),
+         {tok2} ({d_b1}; {d_b2}). No session evidence yet."
+
+    Where ``{tag}`` is either ``{pack_id}`` (single pack) or
+    ``{pack_a} × {pack_b}`` (cross-pack), matching the convention of
+    :func:`pack_grounded_comparison_surface`.
+
+    Token selection rules (deterministic, left-to-right):
+      1. Lowercase the prompt, strip standard punctuation.
+      2. Skip dialogue-filler stopwords (``be``, ``have``).
+      3. Take the first :func:`resolve_lemma`-resolving token, then the
+         next distinct one, up to ``max_tokens`` (default 3).
+      4. Per-token domain disclosure is capped at 2 to keep multi-token
+         surfaces compact; matches :func:`pack_grounded_comparison_surface`.
+
+    Returns ``None`` when:
+      - ``text`` is empty / not a string,
+      - zero prompt tokens resolve in any mounted pack.
+
+    The ``None`` fallback preserves the bare ``_UNKNOWN_DOMAIN_SURFACE``
+    for fully-OOV prompts — null-lift invariant: prompts that contained
+    zero pack-resident lemmas pre-ADR-0086 still emit the universal
+    disclosure byte-identically.
+
+    Closes the four UNKNOWN-intent term_capture misses in the cognition
+    eval lane: ``unknown_logos_019`` (public), ``unknown_evidence_042``
+    (dev), ``unknown_spirit_041`` / ``unknown_word_018`` (holdout).
+    """
+    if not text or not isinstance(text, str):
+        return None
+    raw = text.lower()
+    for ch in ",.;:!?\"'()[]{}":
+        raw = raw.replace(ch, " ")
+    seen: set[str] = set()
+    hits: list[tuple[str, str, tuple[str, ...]]] = []
+    for token in raw.split():
+        if not token or token in seen:
+            continue
+        if token in _UNKNOWN_TOKEN_STOPWORDS:
+            continue
+        resolved = resolve_lemma(token, pack_ids)
+        if resolved is None:
+            continue
+        resolved_pack_id, domains = resolved
+        if not domains:
+            continue
+        seen.add(token)
+        hits.append((token, resolved_pack_id, domains))
+        if len(hits) >= max_tokens:
+            break
+    if not hits:
+        return None
+    pack_ids_in_surface: list[str] = []
+    for _, pid, _ in hits:
+        if pid not in pack_ids_in_surface:
+            pack_ids_in_surface.append(pid)
+    if len(pack_ids_in_surface) == 1:
+        tag = f"pack-grounded ({pack_ids_in_surface[0]})"
+    else:
+        tag = f"pack-grounded ({' × '.join(pack_ids_in_surface)})"
+    items = ", ".join(
+        f"{tok} ({'; '.join(domains[:2])})"
+        for tok, _, domains in hits
+    )
+    # ``register`` accepted for signature parity with the other
+    # pack_grounded_*_surface composers; UNKNOWN-intent does not yet
+    # consult realizer_overrides.  Follow-up if a register variant
+    # wants to dial token count or per-token domain width.
+    _ = register
+    return f"Pack-resident tokens — {tag}: {items}. No session evidence yet."
 
 
 def pack_grounded_comparison_surface(
