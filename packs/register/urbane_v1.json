@@ -1,0 +1,25 @@
+{
+  "register_id": "urbane_v1",
+  "version": "1.0.0",
+  "description": "Urbane register — sophisticated but casual.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "908118a7a00cc2137efb578bd0b1341e51f9a86a91ca913f528cc0a6064269e8",
+  "display_name": "Urbane",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Quite simply — ",
+      "If you'll allow — ",
+      "Briefly: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and there we are."
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "register_id": "colloquial_v1",
+  "version": "1.0.0",
+  "description": "Colloquial register — chatty, contraction-friendly markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "c5d35bc93cb6c60f6036c8ab1a08eab5f89099bfb6eaba64fefe407d45eea587",
+  "display_name": "Colloquial",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "OK so ",
+      "Right, so ",
+      "Y'know — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — that's the gist.",
+      " — that's how it goes."
+    ]
+  }
+}

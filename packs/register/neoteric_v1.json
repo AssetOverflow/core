@@ -1,0 +1,23 @@
+{
+  "register_id": "neoteric_v1",
+  "version": "1.0.0",
+  "description": "Neoteric register — fresh, immediate.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "f312c9e8932cfe5aaa28b183852b3387645187348175be4aaf612bb180f4c57d",
+  "display_name": "Neoteric",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Fresh take: ",
+      "Here's the thing: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — that's the live read.",
+      " — current as of this turn."
+    ]
+  }
+}

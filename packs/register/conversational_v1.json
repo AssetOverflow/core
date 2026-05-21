@@ -1,0 +1,23 @@
+{
+  "register_id": "conversational_v1",
+  "version": "1.0.0",
+  "description": "Conversational register — light, immediate.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "0d873f0bc4a07dc3161ec4f92f0fe8289271366cb027cd08f908941bc52d96f9",
+  "display_name": "Conversational",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "So — ",
+      "OK — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — that work?",
+      " — that the shape?"
+    ]
+  }
+}

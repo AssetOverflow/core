@@ -1,0 +1,24 @@
+{
+  "register_id": "classic_v1",
+  "version": "1.0.0",
+  "description": "Classic register — measured English without archaisms.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "46fd4bd00e4cc6672cf883b22eb1aaa5098aec2396e1b403e9e22aa6377cd1e4",
+  "display_name": "Classic",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Plainly stated: ",
+      "It must be said: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and so it has long stood."
+    ]
+  }
+}

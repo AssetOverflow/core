@@ -1,0 +1,26 @@
+{
+  "register_id": "hedged_v1",
+  "version": "1.0.0",
+  "description": "Hedged register — soft markers signalling epistemic caution.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "4135b3abcccdb0f0f6db4656f2ccd6a56deb20fbd92f3465ea196daf1ab1d0bf",
+  "display_name": "Hedged",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Tentatively: ",
+      "It seems — ",
+      "As best as can be said: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — though others may differ.",
+      " — held provisionally."
+    ]
+  }
+}

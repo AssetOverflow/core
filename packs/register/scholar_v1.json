@@ -1,0 +1,27 @@
+{
+  "register_id": "scholar_v1",
+  "version": "1.0.0",
+  "description": "Scholar register — academic prose cadence.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "8594633b6cf94f988f42a8aa1c1f419f32050df91bdca8dbbb288251e0cd9ae5",
+  "display_name": "Scholar",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "It bears noting — ",
+      "Properly considered: ",
+      "We may say: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — pace the relevant authorities.",
+      " — as the record holds."
+    ]
+  }
+}

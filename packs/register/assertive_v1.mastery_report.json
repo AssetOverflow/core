@@ -1,0 +1,25 @@
+{
+  "evidence": {
+    "depth_preference": "standard",
+    "discourse_markers_empty": false,
+    "marker_bucket_sizes": {
+      "closings": 2,
+      "openings": 4,
+      "transitions": 0
+    },
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "disclosure_domain_count",
+      "drop_provenance_tag"
+    ],
+    "transitions_reserved": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "pack_source_sha256": "a6d1c49aee2ef5222c7e4481ddb968b40be4eb13cae6eaa14ad140a1a60ec128",
+  "ratification_method": "seeded_variation_replay_equivalence",
+  "ratified": true,
+  "register_id": "assertive_v1",
+  "report_sha256": "44750505a1fce4eaadf47a4fe5a22c8d3d53d41957f5d161797a539dc9258844",
+  "schema_version": "1.0.0"
+}

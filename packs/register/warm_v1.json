@@ -1,0 +1,26 @@
+{
+  "register_id": "warm_v1",
+  "version": "1.0.0",
+  "description": "Warm conversational register. Soft openings and gentle closings; default depth.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "b9b3bd0401d7f9779de745d6d8f231f700600d498a94937b0d17afdf82618844",
+  "display_name": "Warm",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Sure — ",
+      "Of course — ",
+      "Glad to — ",
+      "Let me help: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — hope that helps.",
+      " — let me know if any of this is unclear.",
+      " — happy to go deeper."
+    ]
+  }
+}

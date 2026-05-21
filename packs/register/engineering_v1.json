@@ -1,0 +1,27 @@
+{
+  "register_id": "engineering_v1",
+  "version": "1.0.0",
+  "description": "Engineering register — spec-shaped.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "614aa925ec1777921c34896d02b2655fd5d187ee890005ff233c7dbae599c90e",
+  "display_name": "Engineering",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Spec: ",
+      "Requirement: ",
+      "Per design: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — within tolerance.",
+      " — meets spec."
+    ]
+  }
+}

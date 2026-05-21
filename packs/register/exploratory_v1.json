@@ -1,0 +1,26 @@
+{
+  "register_id": "exploratory_v1",
+  "version": "1.0.0",
+  "description": "Exploratory register — open-ended markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "b091e1f938eb19d2c31ebafaee6ff1f9f73a537e17bb89b5157529b145a05a27",
+  "display_name": "Exploratory",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Let's see — ",
+      "Could it be that ",
+      "Perhaps: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and there is more to explore.",
+      " — worth probing further."
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "register_id": "tutorial_v1",
+  "version": "1.0.0",
+  "description": "Tutorial composite — combines pedagogical openings, instructional steps, expansive depth.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "775f18b3159a3407520d402abbe96c848290ce51bce79d3e083797f246f06713",
+  "display_name": "Tutorial",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "First, ",
+      "Recall: ",
+      "Notice: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — does that make sense?",
+      " — keep that handy."
+    ]
+  }
+}

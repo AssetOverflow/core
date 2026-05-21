@@ -1,0 +1,18 @@
+{
+  "register_id": "succinct_v1",
+  "version": "1.0.0",
+  "description": "Between terse and precise — one-domain disclosure but keeps the provenance tag and full articles. The minimum-disclosure register for users who want both brevity and traceability.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "c3569ff848f470eea7006cf584bb4260573ccac307ee2a3aa667fa3a365fb9d4",
+  "display_name": "Succinct",
+  "depth_preference": "terse",
+  "realizer_overrides": {
+    "disclosure_domain_count": 1,
+    "compress_gloss": true
+  },
+  "discourse_markers": {
+    "openings": [],
+    "transitions": [],
+    "closings": []
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "register_id": "epigram_v1",
+  "version": "1.0.0",
+  "description": "Epigram composite — terse + wry.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "64f7618000fd26573817089286804722352196200665c41a3e143e0c415a8267",
+  "display_name": "Epigram",
+  "depth_preference": "terse",
+  "realizer_overrides": {
+    "disclosure_domain_count": 1,
+    "compress_gloss": true,
+    "drop_articles": true,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and that suffices."
+    ]
+  }
+}

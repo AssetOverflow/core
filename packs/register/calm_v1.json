@@ -1,0 +1,26 @@
+{
+  "register_id": "calm_v1",
+  "version": "1.0.0",
+  "description": "Calm register — quiet, measured markers; no exclamation.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "0cd3d519060f648bc8edf2da1d3f29f7afa62b080c9ba226ff6741b683d6aba1",
+  "display_name": "Calm",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Quietly: ",
+      "Note: ",
+      "Consider — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and so it stands.",
+      " — duly noted."
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "register_id": "journalist_v1",
+  "version": "1.0.0",
+  "description": "Journalist register — verb-led openings, sourced closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "33c76b8bc00cda6e62151a873d3e202b62e71276f4b406dbfbc3ce713505585b",
+  "display_name": "Journalist",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Reported: ",
+      "On record: ",
+      "By the pack: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — sourced from the cognition pack.",
+      " — per the record."
+    ]
+  }
+}

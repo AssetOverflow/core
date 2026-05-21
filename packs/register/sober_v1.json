@@ -1,0 +1,26 @@
+{
+  "register_id": "sober_v1",
+  "version": "1.0.0",
+  "description": "Sober register — restrained, factual markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "9003118f58a9f6ff3930bd6e84a2897748bf873e88005b3521073106f189d35b",
+  "display_name": "Sober",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Plainly: ",
+      "Strictly: ",
+      "Stated bare: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — without embellishment."
+    ]
+  }
+}

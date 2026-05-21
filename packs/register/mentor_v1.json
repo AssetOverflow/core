@@ -1,0 +1,26 @@
+{
+  "register_id": "mentor_v1",
+  "version": "1.0.0",
+  "description": "Mentor register — guiding without lecturing.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "935b8e6cddcac64d5b434c5ed221e85a5a57e9fecdf86903a14965a222fe02a8",
+  "display_name": "Mentor",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Here's a useful frame: ",
+      "Notice: ",
+      "Consider — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — keep that handy.",
+      " — useful to hold."
+    ]
+  }
+}

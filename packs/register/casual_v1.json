@@ -1,0 +1,26 @@
+{
+  "register_id": "casual_v1",
+  "version": "1.0.0",
+  "description": "Casual register — light openings, easy closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "2237949e6ee4392417df1e43b1c75af18d869345c0fce459cd612a4c7451d6ec",
+  "display_name": "Casual",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "OK so ",
+      "Right — ",
+      "Here goes — ",
+      "Quick one: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — that's it.",
+      " — that's how it goes.",
+      " — and there we are."
+    ]
+  }
+}

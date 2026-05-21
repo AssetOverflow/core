@@ -1,0 +1,27 @@
+{
+  "register_id": "didactic_v1",
+  "version": "1.0.0",
+  "description": "Didactic register — instructional markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "5f47c4274275e2e6dc6266dce166d975b03669473aa8b6cf1ab8dc0b12491b6c",
+  "display_name": "Didactic",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Note: ",
+      "Observe: ",
+      "Recall: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — keep that in mind.",
+      " — and that's the lesson."
+    ]
+  }
+}

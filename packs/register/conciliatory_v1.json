@@ -1,0 +1,25 @@
+{
+  "register_id": "conciliatory_v1",
+  "version": "1.0.0",
+  "description": "Conciliatory register — accommodating closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "7a5dbb3c2e514288f3fb9b59fb4a011fb9c3467e1e98644e1c16258ed3010317",
+  "display_name": "Conciliatory",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "If I may: ",
+      "With your indulgence: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — open to your view.",
+      " — we can work from there."
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "evidence": {
+    "depth_preference": "standard",
+    "discourse_markers_empty": false,
+    "marker_bucket_sizes": {
+      "closings": 2,
+      "openings": 4,
+      "transitions": 0
+    },
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "disclosure_domain_count"
+    ],
+    "transitions_reserved": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "pack_source_sha256": "f23a8f8e055ed5fbfd2b733b8ca19175d8735320a841fe52b4b079de104dea08",
+  "ratification_method": "seeded_variation_replay_equivalence",
+  "ratified": true,
+  "register_id": "urbane_v1",
+  "report_sha256": "908118a7a00cc2137efb578bd0b1341e51f9a86a91ca913f528cc0a6064269e8",
+  "schema_version": "1.0.0"
+}

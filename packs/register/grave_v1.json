@@ -1,0 +1,26 @@
+{
+  "register_id": "grave_v1",
+  "version": "1.0.0",
+  "description": "Grave register — serious, careful.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "bd756b8d8ff7911f9c6a4a59703b725badaca2bce735e76c34ae14915b0e0b81",
+  "display_name": "Grave",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Soberly: ",
+      "With care: ",
+      "Plainly: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and that is the record.",
+      " — held in earnest."
+    ]
+  }
+}

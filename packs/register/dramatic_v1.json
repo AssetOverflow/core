@@ -1,0 +1,26 @@
+{
+  "register_id": "dramatic_v1",
+  "version": "1.0.0",
+  "description": "Dramatic register — emphatic markers, declarative closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "8de673898650ec198817e06a79d8637c9830faf064a337981f98399ef179fd15",
+  "display_name": "Dramatic",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "Ah — ",
+      "Now: ",
+      "Behold: ",
+      "Here it is — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and there it stands.",
+      " — let that land."
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "register_id": "practitioner_v1",
+  "version": "1.0.0",
+  "description": "Practitioner register — pragmatic, application-led.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "a39b869e2a947004c4a60172af82727dac26dde3e87c0d54a634cf6051926a5a",
+  "display_name": "Practitioner",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "In practice: ",
+      "Operationally: ",
+      "On the ground: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — that's how it lands in the field.",
+      " — pragmatically."
+    ]
+  }
+}

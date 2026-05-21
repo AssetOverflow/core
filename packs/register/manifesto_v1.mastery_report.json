@@ -1,0 +1,25 @@
+{
+  "evidence": {
+    "depth_preference": "standard",
+    "discourse_markers_empty": false,
+    "marker_bucket_sizes": {
+      "closings": 3,
+      "openings": 4,
+      "transitions": 0
+    },
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "append_semantic_domain_clause",
+      "disclosure_domain_count"
+    ],
+    "transitions_reserved": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "pack_source_sha256": "4d65328fe2454b5c6be503b77c510f7976b5d0c7964d16cf7c0707f468a3d7af",
+  "ratification_method": "seeded_variation_replay_equivalence",
+  "ratified": true,
+  "register_id": "manifesto_v1",
+  "report_sha256": "ed7c13e83f6302fac095c5bfbc49c9ee2f6bb6dc54dff002ce367445556b6bb8",
+  "schema_version": "1.0.0"
+}

@@ -1,0 +1,27 @@
+{
+  "register_id": "academic_v1",
+  "version": "1.0.0",
+  "description": "Academic register — Latinate cadence, conservative depth.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "d4cdd45fdb87b0a1d383d0ea2294c97bacca0c37daa1990810c85eee3b1ac061",
+  "display_name": "Academic",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "It may be noted that ",
+      "Strictly construed: ",
+      "Per the literature: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — as the convention holds.",
+      " — pace contrary readings."
+    ]
+  }
+}

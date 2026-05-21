@@ -1,0 +1,18 @@
+{
+  "register_id": "expert_v1",
+  "version": "1.0.0",
+  "description": "Expert register — authoritative without ornament.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "ecece501e759ea61ac66da6e49c64fa6bb474c0e1fc491995bcdebfb126f47c8",
+  "display_name": "Expert",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [],
+    "transitions": [],
+    "closings": []
+  }
+}

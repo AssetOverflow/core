@@ -1,0 +1,26 @@
+{
+  "register_id": "curious_v1",
+  "version": "1.0.0",
+  "description": "Curious register — wondering tone.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "e4a945e09fd06647f71cd43f337099562d3c1b9ad5c6f315c0d3f97628cfd135",
+  "display_name": "Curious",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "I wonder — ",
+      "Notice this: ",
+      "Interesting: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — which leads where?",
+      " — and what then?"
+    ]
+  }
+}

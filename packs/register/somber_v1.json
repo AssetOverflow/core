@@ -1,0 +1,26 @@
+{
+  "register_id": "somber_v1",
+  "version": "1.0.0",
+  "description": "Somber register — restrained, weight-acknowledging.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "14ffa1514256c6e3149ce239782b3e78dfffb66b015447c89d39bb69ba2eed4c",
+  "display_name": "Somber",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Gravely: ",
+      "Held with care: ",
+      "Stated quietly: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and so it stands.",
+      " — held with weight."
+    ]
+  }
+}

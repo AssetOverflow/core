@@ -1,0 +1,27 @@
+{
+  "register_id": "lecture_v1",
+  "version": "1.0.0",
+  "description": "Lecture composite — scholar + didactic.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "92938e998b6bdba8908229c59b5cf29258e54a11c86976e384bb285bb5d8effd",
+  "display_name": "Lecture",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Today: ",
+      "Note: ",
+      "Consider: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — keep that for the next session.",
+      " — and that closes the segment."
+    ]
+  }
+}

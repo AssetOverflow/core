@@ -1,0 +1,27 @@
+{
+  "register_id": "lyrical_v1",
+  "version": "1.0.0",
+  "description": "Lyrical register — musical phrasing within bounded markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "2675a2fd9c468dde56014af03eb00b0a983981c2a16a282ced9f3eec344c68ee",
+  "display_name": "Lyrical",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true,
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Lightly — ",
+      "Hear it: ",
+      "And so — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and so the line completes itself.",
+      " — a quiet music."
+    ]
+  }
+}

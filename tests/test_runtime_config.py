@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from chat.runtime import ChatRuntime
+from chat.runtime import ChatRuntime, _UNKNOWN_DOMAIN_SURFACE
 from core.config import RuntimeConfig
 
 _GREEK_RE = re.compile(r"[\u0370-\u03ff\u1f00-\u1fff]")
@@ -51,7 +51,10 @@ def test_greek_output_language_emits_greek_surface() -> None:
     assert response.proposition.frame_id.startswith(("grc:", "el:"))
 
 
-def test_chat_response_surface_uses_articulation_plan() -> None:
+def test_chat_response_preserves_pack_grounded_unknown_evidence() -> None:
     runtime = ChatRuntime(config=RuntimeConfig(output_language="en", frame_pack="en"))
     response = runtime.chat("word beginning truth")
-    assert response.surface == response.articulation.surface
+    assert response.surface.startswith("Pack-resident tokens")
+    assert response.articulation.surface == _UNKNOWN_DOMAIN_SURFACE
+    assert response.articulation_surface == _UNKNOWN_DOMAIN_SURFACE
+    assert response.walk_surface == _UNKNOWN_DOMAIN_SURFACE

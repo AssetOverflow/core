@@ -1,0 +1,26 @@
+{
+  "register_id": "clarifying_v1",
+  "version": "1.0.0",
+  "description": "Clarifying register — restate-the-key markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "f59b8422b73bc9182c0d6c11ac4e14a48545d5f53c45dd8e55b6636b5cb041f2",
+  "display_name": "Clarifying",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "To be clear: ",
+      "Put plainly: ",
+      "Said again: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — does that resolve it?",
+      " — clearer now?"
+    ]
+  }
+}

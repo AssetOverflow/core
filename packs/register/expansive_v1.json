@@ -1,0 +1,18 @@
+{
+  "register_id": "expansive_v1",
+  "version": "1.0.0",
+  "description": "Expansive register. Disclosure_domain_count=3 with append_semantic_domain_clause=true to extend pack-grounded definitions with their full semantic-domain context. The default ceiling for depth without per-intent escalation.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "eed1037fc02c62a511f0232513d6b1061d1eff0faffd8179d76799a5308a1593",
+  "display_name": "Expansive",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [],
+    "transitions": [],
+    "closings": []
+  }
+}

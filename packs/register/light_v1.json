@@ -1,0 +1,23 @@
+{
+  "register_id": "light_v1",
+  "version": "1.0.0",
+  "description": "Light register — buoyant, low-pressure.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "c92fd089e7091ca4827d64ee249f5b7459e14f6d0900926395f4f51953881d28",
+  "display_name": "Light",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Lightly: ",
+      "Easy one: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and there we go.",
+      " — neat enough."
+    ]
+  }
+}

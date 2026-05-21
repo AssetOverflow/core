@@ -1,0 +1,26 @@
+{
+  "register_id": "deposition_v1",
+  "version": "1.0.0",
+  "description": "Deposition composite — legal qualification + documentary sourcing.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "e1e4a274407979db800ac56cfcc59de307aad250e641b8ca08bbb0bcfb4da5d0",
+  "display_name": "Deposition",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "On the record: ",
+      "Stated under oath: ",
+      "For the record: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — as documented.",
+      " — subject to further inquiry."
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "register_id": "exemplifying_v1",
+  "version": "1.0.0",
+  "description": "Exemplifying register — example-led markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "bc1a2ce42d8ac60067d47c7646baff9785ba3acefe0c97189680ee915209fcdc",
+  "display_name": "Exemplifying",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "By way of example: ",
+      "Take this: ",
+      "For instance: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — as a case in point.",
+      " — exemplifying the pattern."
+    ]
+  }
+}

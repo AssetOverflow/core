@@ -1,0 +1,23 @@
+{
+  "register_id": "peer_v1",
+  "version": "1.0.0",
+  "description": "Peer-to-peer register — equal-level address.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "6b1204e4d716c5ddc8158188f039518777a149b0edc8d91d28bf45eb48ef1ca1",
+  "display_name": "Peer",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "OK so — ",
+      "Right — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — sound right?",
+      " — that match your read?"
+    ]
+  }
+}

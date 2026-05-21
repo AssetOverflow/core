@@ -1,0 +1,28 @@
+{
+  "register_id": "mathematical_v1",
+  "version": "1.0.0",
+  "description": "Mathematical register — proof-cadence.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "04e9a09cce4e599781b2d4994383cebf4f6529391f58005a84e69363494508c2",
+  "display_name": "Mathematical",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2,
+    "drop_articles": true,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Definition: ",
+      "Claim: ",
+      "Lemma: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      ".",
+      " — qed."
+    ]
+  }
+}

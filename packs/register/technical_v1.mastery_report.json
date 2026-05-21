@@ -1,0 +1,24 @@
+{
+  "evidence": {
+    "depth_preference": "standard",
+    "discourse_markers_empty": false,
+    "marker_bucket_sizes": {
+      "closings": 2,
+      "openings": 4,
+      "transitions": 0
+    },
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "disclosure_domain_count"
+    ],
+    "transitions_reserved": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "pack_source_sha256": "7c30f450fd4212d26b12342831ce9bbd876956c95af526fbb90f28dd20bb5525",
+  "ratification_method": "seeded_variation_replay_equivalence",
+  "ratified": true,
+  "register_id": "technical_v1",
+  "report_sha256": "71c88af6352099f1a64a34b7c9af9fa7992ed2409723e0a70d9827b85f979605",
+  "schema_version": "1.0.0"
+}

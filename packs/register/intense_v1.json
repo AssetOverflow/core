@@ -1,0 +1,28 @@
+{
+  "register_id": "intense_v1",
+  "version": "1.0.0",
+  "description": "Intense register — punchy openings, declarative closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "0c4e2a779fa4f58bd5bef0aed08fc037c20b41d3ddf7c171e2121fdcede853ec",
+  "display_name": "Intense",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "Here it is: ",
+      "Listen — ",
+      "The point: ",
+      "Plainly — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — that's the substance.",
+      " — no more, no less.",
+      " — full stop."
+    ]
+  }
+}

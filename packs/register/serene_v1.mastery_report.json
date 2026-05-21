@@ -1,0 +1,24 @@
+{
+  "evidence": {
+    "depth_preference": "standard",
+    "discourse_markers_empty": false,
+    "marker_bucket_sizes": {
+      "closings": 4,
+      "openings": 4,
+      "transitions": 0
+    },
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "append_semantic_domain_clause"
+    ],
+    "transitions_reserved": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "pack_source_sha256": "8b2549dfb865536202bc1ca31369493cc434f2a1d80e43516cc100b880d9aa38",
+  "ratification_method": "seeded_variation_replay_equivalence",
+  "ratified": true,
+  "register_id": "serene_v1",
+  "report_sha256": "7679de2b7c5b349c34ec4180decf2737f672b58df64f0eeb1084c0df05e32b65",
+  "schema_version": "1.0.0"
+}

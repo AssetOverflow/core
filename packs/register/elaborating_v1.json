@@ -1,0 +1,26 @@
+{
+  "register_id": "elaborating_v1",
+  "version": "1.0.0",
+  "description": "Elaborating register — extended disclosure.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "2497b94f26d861517ab483f0b9c92078edbd831a0fdeac954f6732c76a5f0fa2",
+  "display_name": "Elaborating",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "More fully: ",
+      "To extend: ",
+      "Said at length: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and there is more, when you want it."
+    ]
+  }
+}

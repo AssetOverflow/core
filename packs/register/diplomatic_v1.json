@@ -1,0 +1,26 @@
+{
+  "register_id": "diplomatic_v1",
+  "version": "1.0.0",
+  "description": "Diplomatic register — qualified, conciliatory.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "fbcba8afbfaa2715e91e09044c476422b89538b1f82dc358d0b8b6ea00c7a86d",
+  "display_name": "Diplomatic",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "With respect — ",
+      "Taking care: ",
+      "In good faith: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — open to amendment.",
+      " — pending wider input."
+    ]
+  }
+}

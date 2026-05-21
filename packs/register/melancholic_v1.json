@@ -1,0 +1,27 @@
+{
+  "register_id": "melancholic_v1",
+  "version": "1.0.0",
+  "description": "Melancholic register — wistful framing.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "d9a40b1c37bbc9b1fafbbff09a39f8f58ffbf2b6f82513a602aaac07f86d0853",
+  "display_name": "Melancholic",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Long held — ",
+      "Sadly true: ",
+      "And yet — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — though it has always been so.",
+      " — a quiet fact."
+    ]
+  }
+}

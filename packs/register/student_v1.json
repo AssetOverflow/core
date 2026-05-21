@@ -1,0 +1,26 @@
+{
+  "register_id": "student_v1",
+  "version": "1.0.0",
+  "description": "Student register — humble, asking, exploratory.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "32c3d6b894872d9a480a25c81f03bf0f91571d94a49ebffdee6bd23b963f2ff7",
+  "display_name": "Student",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Best I can tell — ",
+      "As I understand it: ",
+      "Tentatively: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — is that right?",
+      " — I'd value the check."
+    ]
+  }
+}

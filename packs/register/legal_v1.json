@@ -1,0 +1,26 @@
+{
+  "register_id": "legal_v1",
+  "version": "1.0.0",
+  "description": "Legal register — qualified, careful.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "ad30ed9d7cd18c03537a6abcb3ffc515aac6cbff53fec52ea2dab62743632cf7",
+  "display_name": "Legal",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Subject to caveats: ",
+      "Without prejudice: ",
+      "Stated for the record: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — pending further determination.",
+      " — without warranty as to completeness."
+    ]
+  }
+}

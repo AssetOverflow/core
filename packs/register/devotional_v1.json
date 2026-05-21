@@ -1,0 +1,26 @@
+{
+  "register_id": "devotional_v1",
+  "version": "1.0.0",
+  "description": "Devotional register — reverent, contemplative.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "e37d6feb2fe295f73d1acaac6f23d5585d6e04efc976a24ccc7483837ce8a5cf",
+  "display_name": "Devotional",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Quietly: ",
+      "Held in reverence: ",
+      "We may note: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and that is enough.",
+      " — held in care."
+    ]
+  }
+}

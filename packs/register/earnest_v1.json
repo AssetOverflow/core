@@ -1,0 +1,26 @@
+{
+  "register_id": "earnest_v1",
+  "version": "1.0.0",
+  "description": "Earnest register — sincere, direct.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "c5b1b00d9113ba7568d44bf2dde81afa09e008b5fcd064f0689a7f12855218ae",
+  "display_name": "Earnest",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Truly: ",
+      "Sincerely: ",
+      "Plainly: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and that is what I mean.",
+      " — said in good faith."
+    ]
+  }
+}

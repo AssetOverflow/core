@@ -1,0 +1,27 @@
+{
+  "register_id": "executive_v1",
+  "version": "1.0.0",
+  "description": "Executive register — bottom-line first.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "f4f9fa36f1156b5b05344f0f75e0dd889211464665f6a9b756fed7b6c2dca65d",
+  "display_name": "Executive",
+  "depth_preference": "terse",
+  "realizer_overrides": {
+    "disclosure_domain_count": 1,
+    "compress_gloss": true,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Bottom line: ",
+      "TL;DR: ",
+      "Headline: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — details on request."
+    ]
+  }
+}

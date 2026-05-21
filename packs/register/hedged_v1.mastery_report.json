@@ -1,0 +1,24 @@
+{
+  "evidence": {
+    "depth_preference": "standard",
+    "discourse_markers_empty": false,
+    "marker_bucket_sizes": {
+      "closings": 3,
+      "openings": 4,
+      "transitions": 0
+    },
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "disclosure_domain_count"
+    ],
+    "transitions_reserved": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "pack_source_sha256": "98316f78d5a04e80c1c9b4d4d9f751681476d8071542f87d51c67721d4741f93",
+  "ratification_method": "seeded_variation_replay_equivalence",
+  "ratified": true,
+  "register_id": "hedged_v1",
+  "report_sha256": "4135b3abcccdb0f0f6db4656f2ccd6a56deb20fbd92f3465ea196daf1ab1d0bf",
+  "schema_version": "1.0.0"
+}

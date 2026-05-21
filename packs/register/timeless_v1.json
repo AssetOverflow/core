@@ -1,0 +1,25 @@
+{
+  "register_id": "timeless_v1",
+  "version": "1.0.0",
+  "description": "Timeless register — restrained, classic, no fashion-of-the-day markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "8e3a1d88fd7d4cf5509b83b2dd5ab7ba3e117170a79b386fac0f1384a31b9540",
+  "display_name": "Timeless",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "It has been said: ",
+      "Steadily: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and so it has long held."
+    ]
+  }
+}

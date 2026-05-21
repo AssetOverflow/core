@@ -1,0 +1,24 @@
+{
+  "register_id": "contemporary_v1",
+  "version": "1.0.0",
+  "description": "Contemporary register — current idiom without slang.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "3efada036f2dbed1df2bf730f007ad744bd83cc82e13afd5fc3fa83016739c4a",
+  "display_name": "Contemporary",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "So — ",
+      "OK — ",
+      "Right — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — that's the read.",
+      " — that's where it sits."
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "register_id": "interview_v1",
+  "version": "1.0.0",
+  "description": "Interview composite — interviewer openings + probing closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "2c25ed5b037ca207629a7ba482415793072c6a8ac2c2728637777b3033216db7",
+  "display_name": "Interview",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Question: ",
+      "Posed: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — what's your read?",
+      " — say more?"
+    ]
+  }
+}

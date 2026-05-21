@@ -1,0 +1,25 @@
+{
+  "register_id": "dialectic_v1",
+  "version": "1.0.0",
+  "description": "Dialectic register — two-sided markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "554064fff5dcf3ba99af31c736c4b56ca8be07f2a11a1e55d73b9f5ca672211d",
+  "display_name": "Dialectic",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "On one hand: ",
+      "Consider: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — though one could argue the inverse.",
+      " — set against its converse."
+    ]
+  }
+}

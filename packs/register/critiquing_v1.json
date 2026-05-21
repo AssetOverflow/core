@@ -1,0 +1,27 @@
+{
+  "register_id": "critiquing_v1",
+  "version": "1.0.0",
+  "description": "Critiquing register — analytical, qualified.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "8a6f544c456f4cf678ebfe32a7f791ce2ed5baebc6ae1901f09d88d482e57814",
+  "display_name": "Critiquing",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "On critical reading: ",
+      "Noticed: ",
+      "Set against expectation: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and that bears watching.",
+      " — though one might press further."
+    ]
+  }
+}

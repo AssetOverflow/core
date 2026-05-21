@@ -1,0 +1,24 @@
+{
+  "evidence": {
+    "depth_preference": "standard",
+    "discourse_markers_empty": false,
+    "marker_bucket_sizes": {
+      "closings": 3,
+      "openings": 4,
+      "transitions": 0
+    },
+    "realizer_overrides_empty": false,
+    "realizer_overrides_keys": [
+      "disclosure_domain_count"
+    ],
+    "transitions_reserved": false
+  },
+  "failure_reasons": [],
+  "issued_at": "2026-05-20T00:00:00Z",
+  "pack_source_sha256": "4f8754578e2f91c3db1cb7d16093dbc3ad052d05e892189819bd65e96aaed77f",
+  "ratification_method": "seeded_variation_replay_equivalence",
+  "ratified": true,
+  "register_id": "journalist_v1",
+  "report_sha256": "33c76b8bc00cda6e62151a873d3e202b62e71276f4b406dbfbc3ce713505585b",
+  "schema_version": "1.0.0"
+}
