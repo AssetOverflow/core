@@ -11,6 +11,6 @@
   "gate_engaged": true,
   "oov_policy": "tagged_fallback",
   "glosses_checksum": "2d813897f06e0ac777044094a788710454e0e66d4a3725c0ed2436edbfc67830",
-  "definitional_layer": true,
+  "definitional_layer": false,
   "provenance": "adr-0090:domain_seed:2026-05-21"
 }
