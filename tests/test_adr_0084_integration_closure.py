@@ -76,6 +76,7 @@ def mounted_lex_lemmas() -> frozenset[str]:
     for pack_id in OPTED_IN_PACKS:
         for entry in load_pack_entries(pack_id):
             lemmas.add(entry.lemma.lower())
+            lemmas.add(entry.surface.lower())
     return frozenset(lemmas)
 
 
@@ -178,6 +179,7 @@ class TestStagingExclusion:
         for pack_id in OPTED_IN_PACKS:
             for entry in load_pack_entries(pack_id):
                 production_pool.add(entry.lemma.lower())
+                production_pool.add(entry.surface.lower())
 
         # Then check: every opted-in pack closes against that pool.
         # If a pack secretly leans on en_minimal_v1, this fails with a

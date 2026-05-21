@@ -6,11 +6,11 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "en_core_spatial_v1.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "f3ab77403f4f764f3828d0af6b7c6bcf54cef4137f73c577206cb522706ac14c",
+  "checksum": "a74381e2c31ebea80c58bc52b8512e8d2c51779e9ef8f15ee7580d37dbe8118b",
   "version": "1.0.0",
   "gate_engaged": true,
   "oov_policy": "tagged_fallback",
-  "glosses_checksum": "03617aefaeb67bf3feab9562c8822adb827a54a9c2d62dc81cab7dbe4c97dae4",
+  "glosses_checksum": "ca61e947a6685a97ed3fb610ce474f7294ecd36bdefe91bc640ed2be45d6dc80",
   "definitional_layer": true,
   "provenance": "adr-0084:reviewed:2026-05-20"
 }
