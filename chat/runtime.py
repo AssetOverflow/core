@@ -1075,7 +1075,12 @@ class ChatRuntime:
             plan = plan_discourse(intent, mode, bundle)
         if len(plan.moves) <= 1:
             return None
-        rendered = render_plan(plan)
+        # Phase 2 — reflective rendering pronominalizes the focus
+        # subject across consecutive same-subject moves, eliminating
+        # the mechanical "Truth ... Truth ... Truth ..." cascade the
+        # Phase 1 flat renderer produced.  Deterministic, replayable,
+        # adds no new content — purely a rendering improvement.
+        rendered = render_plan(plan, reflective=True)
         if not rendered:
             return None
         from generate.discourse_planner import FactSource

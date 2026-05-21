@@ -777,21 +777,40 @@ def _humanize_predicate(predicate: str) -> str:
     return _PREDICATE_HUMANIZE.get(predicate, predicate.replace("_", " "))
 
 
-def _clause_for(move: DiscourseMove) -> str | None:
+def _clause_for(
+    move: DiscourseMove, *, prior_focus_subject: str | None = None,
+) -> str | None:
     """Render a single move into one declarative clause, or ``None``
     when the move carries no fact (e.g. CLOSURE without summary fact).
+
+    When ``prior_focus_subject`` is supplied AND equals ``move.fact.subject``
+    byte-for-byte, the clause is emitted with ``it`` as subject instead
+    of repeating the lemma — the Phase 2 reflective rendering hook.
+    This is purely opt-in; ``render_plan(plan)`` without the
+    ``reflective=True`` switch never sets this argument and behaviour is
+    byte-identical to Phase 1.
     """
 
     fact = move.fact
     if fact is None:
         return None
+
+    subject_token = fact.subject
+    if (
+        prior_focus_subject is not None
+        and fact.subject == prior_focus_subject
+    ):
+        subject_token = "it"
+
     if move.kind is DiscourseMoveKind.ANCHOR and fact.predicate == "is_defined_as":
-        return f"{fact.subject} is {fact.obj}"
+        return f"{subject_token} is {fact.obj}"
     if fact.predicate == "is_defined_as":
-        return f"{fact.subject} is {fact.obj}"
+        return f"{subject_token} is {fact.obj}"
     if fact.predicate == "belongs_to":
-        return f"{fact.subject} belongs to {fact.obj}"
-    return f"{fact.subject} {_humanize_predicate(fact.predicate)} {fact.obj}"
+        return f"{subject_token} belongs to {fact.obj}"
+    return (
+        f"{subject_token} {_humanize_predicate(fact.predicate)} {fact.obj}"
+    )
 
 
 _MOVE_CONNECTIVE: dict[DiscourseMoveKind, str] = {
@@ -803,7 +822,7 @@ _MOVE_CONNECTIVE: dict[DiscourseMoveKind, str] = {
 }
 
 
-def render_plan(plan: DiscoursePlan) -> str:
+def render_plan(plan: DiscoursePlan, *, reflective: bool = False) -> str:
     """Render a :class:`DiscoursePlan` as a deterministic multi-clause
     surface terminated with periods.
 
@@ -814,18 +833,38 @@ def render_plan(plan: DiscoursePlan) -> str:
 
     Determinism: ``render_plan(p) == render_plan(p)`` for any plan
     ``p``; the function is pure.
+
+    ``reflective`` (Phase 2 hook, opt-in):
+
+    When ``True``, the renderer threads a tracked ``focus_subject``
+    across moves: the first non-None clause sets the focus, and every
+    subsequent move whose ``fact.subject`` equals the current focus
+    is rendered with ``it`` as subject instead of repeating the lemma.
+    A move whose subject differs from the prior focus is treated as
+    a topic shift — the explicit subject is preserved and focus is
+    updated to the new lemma so following same-subject moves
+    pronominalize against the new focus.
+
+    Default is ``False`` for back-compat with every existing call
+    site and test pinning the Phase-1 byte-equivalent output.  The
+    runtime adapter (``chat.runtime._maybe_apply_discourse_planner``)
+    passes ``reflective=True``.
     """
 
     if plan.is_empty():
         return ""
     clauses: list[str] = []
+    focus_subject: str | None = None
     for idx, move in enumerate(plan.moves):
-        clause = _clause_for(move)
+        prior_focus = focus_subject if reflective else None
+        clause = _clause_for(move, prior_focus_subject=prior_focus)
         if clause is None:
             continue
         if idx == 0:
             head = clause[0].upper() + clause[1:] if clause else clause
             clauses.append(f"{head}.")
+            if move.fact is not None:
+                focus_subject = move.fact.subject
             continue
         connective = _MOVE_CONNECTIVE.get(move.kind, "")
         if connective:
@@ -834,6 +873,10 @@ def render_plan(plan: DiscoursePlan) -> str:
         else:
             head = clause[0].upper() + clause[1:] if clause else clause
             clauses.append(f"{head}.")
+        # Update focus to this move's subject so the next iteration
+        # can pronominalize against it (or detect topic shift).
+        if move.fact is not None:
+            focus_subject = move.fact.subject
     return " ".join(clauses)
 
 
