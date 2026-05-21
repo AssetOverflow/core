@@ -1,0 +1,26 @@
+{
+  "register_id": "summarizing_v1",
+  "version": "1.0.0",
+  "description": "Summarizing register — headline-shape markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "4f6fae8c411fe0f05b602a2b3255c003420f7fa99d3413136ff515bcd6c7761f",
+  "display_name": "Summarizing",
+  "depth_preference": "terse",
+  "realizer_overrides": {
+    "disclosure_domain_count": 1,
+    "compress_gloss": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Summary: ",
+      "In sum: ",
+      "Headline: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — that is the gist."
+    ]
+  }
+}

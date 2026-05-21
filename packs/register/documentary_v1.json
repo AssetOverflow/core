@@ -1,0 +1,26 @@
+{
+  "register_id": "documentary_v1",
+  "version": "1.0.0",
+  "description": "Documentary register — neutral-fact, sourced.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "39a5b701acf5596b6da4f8013bf28e1dc8b8b8106d30e838597272f56b84cbb2",
+  "display_name": "Documentary",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "On record: ",
+      "Documented: ",
+      "By the pack: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — per the pack record.",
+      " — as documented."
+    ]
+  }
+}

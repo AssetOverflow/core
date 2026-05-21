@@ -1,0 +1,27 @@
+{
+  "register_id": "persuasive_v1",
+  "version": "1.0.0",
+  "description": "Persuasive register — case-building markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "6e6629316e90fa3d6df2bf48743a69d8d9cdd37352380fbbf4620a13d7867d3f",
+  "display_name": "Persuasive",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Consider — ",
+      "Note: ",
+      "The case: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — which is why it matters.",
+      " — take that as the argument."
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "register_id": "instructional_v1",
+  "version": "1.0.0",
+  "description": "Instructional register — step-by-step framing.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "e0a25f8854eee5cfa6a20c5aa01fd3708dcec4b326c63474130f98dd618960ed",
+  "display_name": "Instructional",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Step by step: ",
+      "Start here: ",
+      "First: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — proceed when ready."
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "register_id": "comparing_v1",
+  "version": "1.0.0",
+  "description": "Comparing register — parallel-construction markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "42e689e71e86daa50d4b5b48ce694ea422e406de8a9b5e72eeb1a6343f2c4095",
+  "display_name": "Comparing",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Side by side: ",
+      "Compared: ",
+      "Set against: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and there sits the contrast."
+    ]
+  }
+}
