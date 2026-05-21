@@ -1,0 +1,26 @@
+{
+  "register_id": "plainspoken_v1",
+  "version": "1.0.0",
+  "description": "Plainspoken register — Anglo-Saxon vocabulary, short markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "572947b84084dca505f63358bbe0b144113f84666769a388c977837bdc344981",
+  "display_name": "Plainspoken",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Straight: ",
+      "Plainly: ",
+      "Said simply: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — that is the truth of it."
+    ]
+  }
+}

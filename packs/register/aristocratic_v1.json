@@ -1,0 +1,27 @@
+{
+  "register_id": "aristocratic_v1",
+  "version": "1.0.0",
+  "description": "Aristocratic register — elevated diction; depth=3 with appended clause.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "f09ff083f982dbb92d0ee175527811abd87b0df8b89e7fcbf0a0f0fe5cb90edf",
+  "display_name": "Aristocratic",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "One observes — ",
+      "Properly speaking: ",
+      "Indeed — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — as has long been understood.",
+      " — and there it lies."
+    ]
+  }
+}

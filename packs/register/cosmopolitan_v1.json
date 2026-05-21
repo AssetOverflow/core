@@ -1,0 +1,25 @@
+{
+  "register_id": "cosmopolitan_v1",
+  "version": "1.0.0",
+  "description": "Cosmopolitan register — international, careful with idiom.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "21c989389e8eb590286ae3519cce409132c5038f141a4bed070e701551493a8a",
+  "display_name": "Cosmopolitan",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Stated broadly: ",
+      "Across contexts: ",
+      "Generally: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — though it varies by context."
+    ]
+  }
+}

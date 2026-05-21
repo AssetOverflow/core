@@ -1,0 +1,24 @@
+{
+  "register_id": "folksy_v1",
+  "version": "1.0.0",
+  "description": "Folksy register — regional warmth, light contractions.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "b8ca6301db2afe2f4a74b22907a8c107cfd5d75c4b35dc372d93af2a36410fb6",
+  "display_name": "Folksy",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Y'know — ",
+      "Way I see it: ",
+      "Plain as day: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and that's about the size of it.",
+      " — so it goes."
+    ]
+  }
+}

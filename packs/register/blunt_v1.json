@@ -1,0 +1,28 @@
+{
+  "register_id": "blunt_v1",
+  "version": "1.0.0",
+  "description": "Blunt register — short, sharp, no qualification.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "2925ce07bd132a235296098d135ad46f171efc46f2cead69b06f52d309661d33",
+  "display_name": "Blunt",
+  "depth_preference": "terse",
+  "realizer_overrides": {
+    "disclosure_domain_count": 1,
+    "compress_gloss": true,
+    "drop_articles": true,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Look — ",
+      "Plainly: ",
+      "Said: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      "."
+    ]
+  }
+}
