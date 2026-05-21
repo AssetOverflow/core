@@ -1,0 +1,26 @@
+{
+  "register_id": "dry_v1",
+  "version": "1.0.0",
+  "description": "Dry register — understated, factual.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "1f3232b4eb99d6df156de3f34c5e8fe24f8453ac04a59bb3bd41553ffc5b169a",
+  "display_name": "Dry",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Stated: ",
+      "Plainly — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      ".",
+      " — that's it."
+    ]
+  }
+}

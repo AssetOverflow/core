@@ -1,0 +1,26 @@
+{
+  "register_id": "wry_v1",
+  "version": "1.0.0",
+  "description": "Wry register — slight irony, deadpan closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "85270452861e77d6e335a533231b87dc114c40cfef45e01602dcbbba9489a3dd",
+  "display_name": "Wry",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Officially: ",
+      "On the books: ",
+      "Allegedly — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — for whatever that's worth.",
+      " — make of it what you will."
+    ]
+  }
+}

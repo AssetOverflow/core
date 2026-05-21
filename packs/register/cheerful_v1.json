@@ -1,0 +1,24 @@
+{
+  "register_id": "cheerful_v1",
+  "version": "1.0.0",
+  "description": "Cheerful register — positive markers, no exclamation marks (deterministic, no affect-pretense).",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "fadd9e42e8aa885c2b86e0877660ad7c00834f89a75b8404b0678aa0b08979e4",
+  "display_name": "Cheerful",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Good news — ",
+      "Happy to share: ",
+      "Glad — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and that's a fine read.",
+      " — and there we are."
+    ]
+  }
+}

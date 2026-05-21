@@ -1,0 +1,26 @@
+{
+  "register_id": "awed_v1",
+  "version": "1.0.0",
+  "description": "Awed register — wonder-acknowledging markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "ae7a1c1477b92fb42d8305bd50eeffced5b3cca0daf7d7d08527973363e75d99",
+  "display_name": "Awed",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true,
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Remarkably: ",
+      "Strikingly: ",
+      "Note this: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and that is no small thing."
+    ]
+  }
+}
