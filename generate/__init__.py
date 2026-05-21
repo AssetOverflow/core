@@ -13,7 +13,7 @@ from .dialogue import (
     propose_dialogue,
     trajectory_blade,
 )
-from .stream import generate, agenerate
+from .stream import generate
 from .surface import SentenceAssembler, SentencePlan, assemble as assemble_surface
 
 __all__ = [
@@ -23,7 +23,6 @@ __all__ = [
     "FrameSlot",
     "Proposition",
     "PropositionFrame",
-    "agenerate",
     "blade_alignment",
     "classify_dialogue_blade",
     "generate",
