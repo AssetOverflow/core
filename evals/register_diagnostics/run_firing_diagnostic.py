@@ -1,272 +1,342 @@
-"""Marker-firing diagnostic across the 100-pack register catalog.
+"""Diagnose seeded register marker firing across ratified register packs.
 
-For every (register_pack, cognition_case) cell, runs the prompt under
-the pack and reports whether the opening / closing markers actually
-fired (non-empty selection from the bucket).
+For every selected register pack and every :class:`generate.intent.IntentTag`,
+run three representative prompts through the real chat runtime, replay the
+seeded decoration selector against the same pre-decoration surface, and emit a
+JSON matrix describing whether opening / closing markers engaged or fell
+through to ``""``.
 
-Why this exists.  The 100-pack widened tour revealed that some packs
-collapse to baseline on certain prompts — their non-empty marker
-entries simply don't get selected by the SHA-256 seed for that
-particular (seed_text, register_id, turn_idx) combination.  Without a
-diagnostic, we can only spot collapses by eyeballing surfaces.  With
-it, we get a deterministic firing-rate per pack that reveals:
-
-  * **Bucket-rate** — the structural ceiling: fraction of non-empty
-    entries in the bucket.  A pack with ``openings=["", "X", "Y"]``
-    has a 2/3 = 66.7% bucket-rate; selections are uniform across the
-    bucket, so 1/3 of seeds will pick ``""`` (no firing).
-  * **Observed firing rate** — fraction of cognition cases where the
-    marker actually fires.  Should converge to bucket-rate as the
-    case set grows; large deviations indicate a non-uniform seed
-    space (rare; here we assume uniformity holds and treat deviation
-    as noise).
-  * **Cells where both markers fire** vs. cells where neither does.
-
-Pack categories surfaced:
-
-  * **Always-firing**  : opening_fires_rate == 1.0 (no ``""`` in
-    bucket). Most expressive; users see character every turn.
-  * **Sometimes-firing**: 0 < rate < 1.0. ``""`` is intentionally in
-    the bucket so the register "feels lighter" — quiet turns mixed
-    in.  This is by design for socratic_v1, terse_v1, convivial_v1.
-  * **Never-firing**   : 0.0 (empty bucket or all-``""``). These
-    packs depend entirely on ``realizer_overrides`` for stylistic
-    differentiation.  Legitimate for terse_v1; suspicious elsewhere.
-
-Output: human-readable table (default) or JSON (``--json``).
-Operator-only utility; runs against ratified packs on disk.
+The tool is read-only: it loads ratified register packs and runtime language
+packs, but never mutates pack JSON, mastery reports, vault state, or tests.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
-from collections import Counter
-from dataclasses import dataclass
-from typing import Any
+from pathlib import Path
+from typing import Any, Iterable, Mapping, Sequence
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 from chat.register_variation import decorate_surface
 from chat.runtime import ChatRuntime
-from core.cognition.pipeline import CognitiveTurnPipeline
 from core.config import RuntimeConfig
-from evals.run_cognition_eval import load_cases
-from packs.register.loader import RegisterPackError, load_register_pack
-from scripts.ratify_register_packs import REGISTER_IDS
+from generate.intent import IntentTag, classify_intent
+from packs.register.loader import (
+    RegisterPack,
+    available_register_packs,
+    load_register_pack,
+)
 
 
-@dataclass(frozen=True, slots=True)
-class PackFiringStats:
-    """Diagnostic stats for one register pack across the cognition lane."""
-
-    register_id: str
-
-    # Structural (bucket geometry — independent of cases)
-    opening_bucket_size: int
-    opening_nonempty_count: int
-    closing_bucket_size: int
-    closing_nonempty_count: int
-
-    # Observed (per cognition case)
-    total_cases: int
-    openings_fired: int
-    closings_fired: int
-    both_fired: int
-    neither_fired: int
-
-    # Distinct opening / closing strings actually selected
-    distinct_openings_used: int
-    distinct_closings_used: int
-
-    @property
-    def opening_bucket_rate(self) -> float:
-        if self.opening_bucket_size == 0:
-            return 0.0
-        return self.opening_nonempty_count / self.opening_bucket_size
-
-    @property
-    def opening_observed_rate(self) -> float:
-        if self.total_cases == 0:
-            return 0.0
-        return self.openings_fired / self.total_cases
-
-    @property
-    def closing_bucket_rate(self) -> float:
-        if self.closing_bucket_size == 0:
-            return 0.0
-        return self.closing_nonempty_count / self.closing_bucket_size
-
-    @property
-    def closing_observed_rate(self) -> float:
-        if self.total_cases == 0:
-            return 0.0
-        return self.closings_fired / self.total_cases
-
-    @property
-    def category(self) -> str:
-        """Coarse pack category surfaced by the diagnostic."""
-        opens_ever = self.openings_fired > 0
-        closes_ever = self.closings_fired > 0
-        if not opens_ever and not closes_ever:
-            return "silent"  # markers never fire — pure overrides
-        opens_always = self.openings_fired == self.total_cases
-        closes_always = self.closings_fired == self.total_cases
-        if opens_always and closes_always:
-            return "always_firing"
-        if opens_ever or closes_ever:
-            return "sometimes_firing"
-        return "uncategorised"  # unreachable
-
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            "register_id": self.register_id,
-            "category": self.category,
-            "opening": {
-                "bucket_size": self.opening_bucket_size,
-                "nonempty_in_bucket": self.opening_nonempty_count,
-                "bucket_rate": round(self.opening_bucket_rate, 4),
-                "fired": self.openings_fired,
-                "observed_rate": round(self.opening_observed_rate, 4),
-                "distinct_strings_used": self.distinct_openings_used,
-            },
-            "closing": {
-                "bucket_size": self.closing_bucket_size,
-                "nonempty_in_bucket": self.closing_nonempty_count,
-                "bucket_rate": round(self.closing_bucket_rate, 4),
-                "fired": self.closings_fired,
-                "observed_rate": round(self.closing_observed_rate, 4),
-                "distinct_strings_used": self.distinct_closings_used,
-            },
-            "cells": {
-                "total": self.total_cases,
-                "both_fired": self.both_fired,
-                "neither_fired": self.neither_fired,
-            },
-        }
+REPRESENTATIVE_PROMPTS: Mapping[IntentTag, tuple[str, str, str]] = {
+    IntentTag.DEFINITION: (
+        "What is light?",
+        "Define knowledge.",
+        "Explain memory.",
+    ),
+    IntentTag.CAUSE: (
+        "Why does light exist?",
+        "What causes recall?",
+        "How does memory work?",
+    ),
+    IntentTag.PROCEDURE: (
+        "How do I define knowledge?",
+        "How can we compare claims?",
+        "How should you verify memory?",
+    ),
+    IntentTag.COMPARISON: (
+        "Compare knowledge and wisdom.",
+        "Compare light versus darkness.",
+        "Compare memory with recall.",
+    ),
+    IntentTag.CORRECTION: (
+        "Actually, light is not darkness.",
+        "Correction: memory is not storage.",
+        "That's wrong: knowledge is not noise.",
+    ),
+    IntentTag.RECALL: (
+        "Remember truth.",
+        "Remember light.",
+        "Remember knowledge.",
+    ),
+    IntentTag.VERIFICATION: (
+        "Does memory require recall?",
+        "Is truth coherent?",
+        "Can light reveal form?",
+    ),
+    IntentTag.TRANSITIVE_QUERY: (
+        "Where does parent belong?",
+        "What does light reveal?",
+        "What does cause precede?",
+    ),
+    IntentTag.FRAME_TRANSFER: (
+        "What does child belong to in family?",
+        "What does premise support in argument?",
+        "What does signal reveal in memory?",
+    ),
+    IntentTag.NARRATIVE: (
+        "Tell me about memory.",
+        "Describe knowledge.",
+        "What can you say about truth?",
+    ),
+    IntentTag.EXAMPLE: (
+        "Give me an example of knowledge.",
+        "Show me an instance of recall.",
+        "Example of verification.",
+    ),
+    IntentTag.UNKNOWN: (
+        "blue inward maybe",
+        "unparsed glyph cluster",
+        "stone silence green",
+    ),
+}
 
 
-def _measure_pack(register_id: str, cases: list[dict]) -> PackFiringStats:
-    """Run every cognition case under *register_id* and collect firing stats."""
-    pack = load_register_pack(register_id, require_ratified=False)
-    markers = pack.discourse_markers
-    opening_bucket = tuple(markers.openings)
-    closing_bucket = tuple(markers.closings)
-    opening_nonempty = sum(1 for x in opening_bucket if x)
-    closing_nonempty = sum(1 for x in closing_bucket if x)
+def ratified_register_ids() -> tuple[str, ...]:
+    """Return discoverable register IDs that declare ratification."""
 
-    openings_fired = 0
-    closings_fired = 0
-    both_fired = 0
-    neither_fired = 0
-    openings_used: Counter[str] = Counter()
-    closings_used: Counter[str] = Counter()
-
-    # For each case, run a fresh runtime to get the pre-decoration
-    # (canonical) surface, then call ``decorate_surface`` directly
-    # against the pack to recover the byte-identical marker selection
-    # the runtime would have used.  This avoids depending on TurnEvent
-    # surfacing the chosen markers (which it currently does not — only
-    # ``register_variant_id`` is exposed).
-    for case in cases:
-        rt_case = ChatRuntime(config=RuntimeConfig(register_pack_id=register_id))
-        pipe_case = CognitiveTurnPipeline(rt_case)
-        pipe_case.run(case["prompt"])
-        turn = rt_case.turn_log[-1]
-        canonical = getattr(turn, "register_canonical_surface", "") or turn.surface
-        decoration = decorate_surface(canonical, pack, turn_idx=0)
-        opened = bool(decoration.opening)
-        closed = bool(decoration.closing)
-        if opened:
-            openings_fired += 1
-            openings_used[decoration.opening] += 1
-        if closed:
-            closings_fired += 1
-            closings_used[decoration.closing] += 1
-        if opened and closed:
-            both_fired += 1
-        if not opened and not closed:
-            neither_fired += 1
-
-    return PackFiringStats(
-        register_id=register_id,
-        opening_bucket_size=len(opening_bucket),
-        opening_nonempty_count=opening_nonempty,
-        closing_bucket_size=len(closing_bucket),
-        closing_nonempty_count=closing_nonempty,
-        total_cases=len(cases),
-        openings_fired=openings_fired,
-        closings_fired=closings_fired,
-        both_fired=both_fired,
-        neither_fired=neither_fired,
-        distinct_openings_used=len(openings_used),
-        distinct_closings_used=len(closings_used),
+    return tuple(
+        str(entry["register_id"])
+        for entry in available_register_packs()
+        if bool(entry.get("ratified"))
     )
 
 
-def run_diagnostic(
-    cases: list[dict] | None = None,
-    register_ids: tuple[str, ...] | None = None,
-) -> list[PackFiringStats]:
-    """Run firing diagnostic across every ratified register pack."""
-    cases = cases if cases is not None else load_cases()
-    ids = register_ids if register_ids is not None else REGISTER_IDS
-    return [_measure_pack(rid, cases) for rid in ids]
+def _bucket_stats(pack: RegisterPack, bucket_name: str) -> dict[str, int]:
+    bucket = getattr(pack.discourse_markers, bucket_name)
+    non_empty = [entry for entry in bucket if entry]
+    return {
+        "size": len(bucket),
+        "non_empty_size": len(non_empty),
+        "empty_size": len(bucket) - len(non_empty),
+    }
 
 
-def _print_human(stats: list[PackFiringStats]) -> None:
-    print("=" * 100)
-    print(
-        f"  Register firing diagnostic — {len(stats)} packs × "
-        f"{stats[0].total_cases if stats else 0} cognition cases"
-    )
-    print("=" * 100)
-    print()
-    header = (
-        f"  {'register_id':24s}  "
-        f"{'category':17s}  "
-        f"{'open_b':>7s} {'open_o':>7s}  "
-        f"{'clos_b':>7s} {'clos_o':>7s}  "
-        f"{'both':>5s} {'none':>5s}  "
-        f"{'dist_o':>6s} {'dist_c':>6s}"
-    )
-    print(header)
-    print(f"  {'-' * 96}")
-    cat_counts: Counter[str] = Counter()
-    for s in stats:
-        cat_counts[s.category] += 1
-        print(
-            f"  {s.register_id:24s}  "
-            f"{s.category:17s}  "
-            f"{s.opening_bucket_rate:>7.2%} {s.opening_observed_rate:>7.2%}  "
-            f"{s.closing_bucket_rate:>7.2%} {s.closing_observed_rate:>7.2%}  "
-            f"{s.both_fired:>5d} {s.neither_fired:>5d}  "
-            f"{s.distinct_openings_used:>6d} {s.distinct_closings_used:>6d}"
+def _selected_cell(
+    *,
+    register: RegisterPack,
+    runtime: ChatRuntime,
+    intent: IntentTag,
+    prompt: str,
+) -> dict[str, Any]:
+    turn_idx = len(runtime.turn_log)
+    response = runtime.chat(prompt)
+    seed_surface = response.pre_decoration_surface or response.surface
+    selected = decorate_surface(seed_surface, register, turn_idx=turn_idx)
+    classified = classify_intent(prompt)
+    return {
+        "prompt": prompt,
+        "representative_intent": intent.name,
+        "classified_intent": classified.tag.name,
+        "classified_subject": classified.subject,
+        "turn_idx": turn_idx,
+        "grounding_source": response.grounding_source,
+        "pre_decoration_surface": seed_surface,
+        "surface": response.surface,
+        "opening": selected.opening,
+        "closing": selected.closing,
+        "opening_fired": bool(selected.opening),
+        "closing_fired": bool(selected.closing),
+        "variant_id": selected.variant_id,
+        "runtime_variant_id": response.register_variant_id,
+        "variant_id_matches_runtime": (
+            selected.variant_id == response.register_variant_id
+        ),
+    }
+
+
+def _intent_summary(
+    *,
+    register_id: str,
+    intent: IntentTag,
+    cells: Sequence[Mapping[str, Any]],
+    opening_stats: Mapping[str, int],
+    closing_stats: Mapping[str, int],
+) -> dict[str, Any]:
+    opening_fire_count = sum(1 for cell in cells if cell["opening_fired"])
+    closing_fire_count = sum(1 for cell in cells if cell["closing_fired"])
+    gap_buckets: list[str] = []
+    if opening_stats["non_empty_size"] > 0 and opening_fire_count == 0:
+        gap_buckets.append("openings")
+    if closing_stats["non_empty_size"] > 0 and closing_fire_count == 0:
+        gap_buckets.append("closings")
+    return {
+        "register_id": register_id,
+        "intent": intent.name,
+        "prompt_count": len(cells),
+        "openings": {
+            **dict(opening_stats),
+            "fire_count": opening_fire_count,
+            "fell_through_count": len(cells) - opening_fire_count,
+        },
+        "closings": {
+            **dict(closing_stats),
+            "fire_count": closing_fire_count,
+            "fell_through_count": len(cells) - closing_fire_count,
+        },
+        "gap_buckets": gap_buckets,
+        "has_contract_gap": bool(gap_buckets),
+        "variant_id_mismatches": [
+            cell["prompt"]
+            for cell in cells
+            if not cell["variant_id_matches_runtime"]
+        ],
+    }
+
+
+def build_report(
+    *,
+    register_ids: Iterable[str] | None = None,
+    intents: Iterable[IntentTag] | None = None,
+) -> dict[str, Any]:
+    """Build the marker-firing diagnostic report."""
+
+    selected_register_ids = tuple(register_ids or ratified_register_ids())
+    selected_intents = tuple(intents or IntentTag)
+    matrix: dict[str, dict[str, list[dict[str, Any]]]] = {}
+    summaries: list[dict[str, Any]] = []
+    gaps: list[dict[str, Any]] = []
+    variant_mismatches: list[dict[str, Any]] = []
+
+    for register_id in selected_register_ids:
+        register = load_register_pack(register_id)
+        opening_stats = _bucket_stats(register, "openings")
+        closing_stats = _bucket_stats(register, "closings")
+        register_matrix: dict[str, list[dict[str, Any]]] = {}
+        for intent in selected_intents:
+            runtime = ChatRuntime(config=RuntimeConfig(register_pack_id=register_id))
+            prompts = REPRESENTATIVE_PROMPTS[intent]
+            cells = [
+                _selected_cell(
+                    register=register,
+                    runtime=runtime,
+                    intent=intent,
+                    prompt=prompt,
+                )
+                for prompt in prompts
+            ]
+            register_matrix[intent.name] = cells
+            summary = _intent_summary(
+                register_id=register_id,
+                intent=intent,
+                cells=cells,
+                opening_stats=opening_stats,
+                closing_stats=closing_stats,
+            )
+            summaries.append(summary)
+            if summary["has_contract_gap"]:
+                gaps.append(
+                    {
+                        "register_id": register_id,
+                        "intent": intent.name,
+                        "gap_buckets": summary["gap_buckets"],
+                    }
+                )
+            if summary["variant_id_mismatches"]:
+                variant_mismatches.append(
+                    {
+                        "register_id": register_id,
+                        "intent": intent.name,
+                        "prompts": summary["variant_id_mismatches"],
+                    }
+                )
+        matrix[register_id] = register_matrix
+
+    return {
+        "schema_version": "1.0.0",
+        "diagnostic": "register_marker_firing",
+        "registers": list(selected_register_ids),
+        "intents": [intent.name for intent in selected_intents],
+        "representative_prompts": {
+            intent.name: list(REPRESENTATIVE_PROMPTS[intent])
+            for intent in selected_intents
+        },
+        "matrix": matrix,
+        "summaries": summaries,
+        "gaps": gaps,
+        "variant_mismatches": variant_mismatches,
+        "all_marker_contracts_supported": not gaps,
+        "all_replayed_variants_match_runtime": not variant_mismatches,
+    }
+
+
+def _parse_intents(values: Sequence[str] | None) -> tuple[IntentTag, ...] | None:
+    if not values:
+        return None
+    parsed: list[IntentTag] = []
+    by_name = {tag.name: tag for tag in IntentTag}
+    by_value = {tag.value: tag for tag in IntentTag}
+    for value in values:
+        key = value.strip()
+        tag = by_name.get(key.upper()) or by_value.get(key.lower())
+        if tag is None:
+            known = ", ".join(tag.name for tag in IntentTag)
+            raise SystemExit(f"unknown intent {value!r}; expected one of: {known}")
+        parsed.append(tag)
+    return tuple(parsed)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Emit a JSON matrix showing whether register opening/closing "
+            "markers fire across representative prompts for each intent."
         )
-    print()
-    print(f"  Pack category distribution:")
-    for cat, n in cat_counts.most_common():
-        print(f"    {cat:20s} {n:>4d}")
+    )
+    parser.add_argument(
+        "--register",
+        action="append",
+        dest="register_ids",
+        help=(
+            "register ID to diagnose; repeatable. Defaults to every "
+            "discoverable ratified register pack."
+        ),
+    )
+    parser.add_argument(
+        "--intent",
+        action="append",
+        dest="intents",
+        help=(
+            "IntentTag name or value to diagnose; repeatable. Defaults to "
+            "every IntentTag."
+        ),
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="optional path to write the JSON report; stdout is always used otherwise",
+    )
+    parser.add_argument(
+        "--fail-on-gap",
+        action="store_true",
+        help="exit 1 when any non-empty marker bucket never fires for a cell",
+    )
+    return parser
 
 
-def main(argv: list[str] | None = None) -> int:
-    argv = sys.argv[1:] if argv is None else argv
-    emit_json = "--json" in argv
-
-    try:
-        stats = run_diagnostic()
-    except RegisterPackError as e:
-        print(f"register pack error: {e}", file=sys.stderr)
-        return 2
-
-    if emit_json:
-        print(json.dumps(
-            [s.as_dict() for s in stats],
-            indent=2, sort_keys=True, default=str,
-        ))
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    report = build_report(
+        register_ids=tuple(args.register_ids) if args.register_ids else None,
+        intents=_parse_intents(args.intents),
+    )
+    payload = json.dumps(report, indent=2, sort_keys=True, default=str)
+    if args.output is not None:
+        args.output.write_text(payload + "\n", encoding="utf-8")
     else:
-        _print_human(stats)
-
+        print(payload)
+    if args.fail_on_gap and not report["all_marker_contracts_supported"]:
+        return 1
+    if not report["all_replayed_variants_match_runtime"]:
+        return 1
     return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
-    sys.exit(main())
+    raise SystemExit(main(sys.argv[1:]))
