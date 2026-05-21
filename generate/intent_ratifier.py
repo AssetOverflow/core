@@ -95,12 +95,30 @@ def _intent_anchor_versor(vocab, intent: DialogueIntent) -> np.ndarray | None:
     return None
 
 
+#: Default ratification threshold (Finding 3, audit 2026-05-20).
+#:
+#: Pre-fix the default was ``0.0``, which admitted anything with non-
+#: negative projection onto the anchor versor — the field gate was
+#: structurally live but semantically transparent (ADR-0022 §TBD-1).
+#: Measured against ``core eval cognition`` across all 45 cases (45 =
+#: 13 public + 13 dev + 19 holdout), every ratifiable case scored
+#: ``cga_inner(prompt, anchor) ≥ 1.10`` after a prime turn primed the
+#: field — see ``scripts/calibrate_ratification_threshold.py``.  The
+#: 0.5 floor is well below that 1.10 minimum (no regression on any
+#: passing case) while clearly non-trivially positive (random Cl(4,1)
+#: inner products fluctuate around zero, so 0.5 demands genuine
+#: correlation with the anchor).  Off-corpus / adversarial prompts
+#: with weakly-aligned anchors will now demote to ``UNKNOWN`` and
+#: route through the honest-refusal surface.
+_DEFAULT_RATIFICATION_THRESHOLD: float = 0.5
+
+
 def ratify_intent(
     intent: DialogueIntent,
     prompt_versor: np.ndarray,
     *,
     vocab,
-    threshold: float = 0.0,
+    threshold: float = _DEFAULT_RATIFICATION_THRESHOLD,
 ) -> RatifiedIntent:
     """Ratify a seeded intent against the prompt versor.
 
