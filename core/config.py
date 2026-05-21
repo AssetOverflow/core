@@ -145,6 +145,20 @@ class RuntimeConfig:
     # to dispatch on ``anchor_lens.semantic_domain_preferences``.
     anchor_lens_id: str | None = None
 
+    # Finding 6 (audit 2026-05-20) — generation stop tokens.
+    #
+    # ``None`` resolves to ``generate.stream._STOP_TOKENS`` (the
+    # historical ``frozenset({"it", "to", "word"})``) so every
+    # pre-Finding-6 caller preserves byte-identity.  Operators that
+    # mount a pack where one of the historical stop tokens carries
+    # meaningful content (e.g. a philosophy pack where ``word`` maps
+    # to λόγος, a syntax pack where ``to`` is a content node) can
+    # override the set here to free them.  Manifest-driven
+    # per-pack override (``generation_stop_tokens`` field in the pack
+    # manifest) is the natural next step; that requires a pack-
+    # schema ADR and re-ratification so the wiring lands first.
+    stop_tokens: tuple[str, ...] | None = None
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"

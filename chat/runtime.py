@@ -1413,6 +1413,11 @@ class ChatRuntime:
             admissibility_threshold=self.config.admissibility_threshold,
             admissibility_mode=self.config.admissibility_mode,
             admissibility_margin=self.config.admissibility_margin,
+            stop_tokens=(
+                frozenset(self.config.stop_tokens)
+                if self.config.stop_tokens is not None
+                else None
+            ),
         )
 
         # --- Articulation fidelity: replace bare S-P-O join with intent-aware surface ---
