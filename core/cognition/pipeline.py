@@ -20,6 +20,7 @@ from core.cognition.result import CognitiveTurnResult
 from core.cognition.surface_resolution import resolve_surface
 from core.cognition.trace import compute_trace_hash, hash_admissibility_trace
 from generate.intent import classify_intent
+from generate.intent_bridge import _is_useful_surface
 from generate.intent_ratifier import (
     RatificationOutcome,
     ratify_intent,
@@ -134,12 +135,10 @@ class CognitiveTurnPipeline:
         canonical = getattr(response, "register_canonical_surface", "") or ""
         pre_decoration = getattr(response, "pre_decoration_surface", "") or ""
 
-        from generate.intent_bridge import _is_useful_surface
-
         walk_result: WalkResult | None = self._maybe_transitive_walk(intent)
         walk_surface = ""
         if walk_result is not None and len(walk_result.path) > 1:
-            walk_surface = self._render_walk_surface(walk_result)
+            walk_surface = CognitiveTurnPipeline._render_walk_surface(walk_result)
 
         compose_result: FrameComposeResult | None = self._maybe_compose_relations(intent)
         compose_surface = ""
@@ -147,7 +146,7 @@ class CognitiveTurnPipeline:
             compose_result.subject_tail is not None
             or compose_result.frame_tail is not None
         ):
-            compose_surface = self._render_compose_surface(compose_result)
+            compose_surface = CognitiveTurnPipeline._render_compose_surface(compose_result)
 
         resolved = resolve_surface(
             canonical_surface=canonical,

@@ -76,7 +76,7 @@ def resolve_surface(
         response_articulation_surface=response_articulation_surface or "",
     )
 
-    if realized_surface and realizer_useful and not gate_fired:
+    if realizer_useful and not gate_fired:
         surface = realized_surface
         articulation_surface = realized_surface
         authority = "realizer"
