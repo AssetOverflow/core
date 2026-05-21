@@ -535,6 +535,11 @@ class ChatRuntime:
         # is True AND the planner actually engaged on the turn.  Exposed
         # via the ``last_plan_findings`` property below.
         self._last_plan_findings: tuple[Any, ...] = ()
+        # Phase 4 — most-recent plan-articulation metrics (PlanMetrics).
+        # Reset to ``None`` between turns.  Populated under the same
+        # gating discipline as ``_last_plan_findings``: requires
+        # ``config.discourse_contemplation`` + an engaged planner.
+        self._last_plan_metrics: Any | None = None
 
     @property
     def session(self) -> SessionContext:
@@ -553,6 +558,22 @@ class ChatRuntime:
         miner does.
         """
         return self._last_plan_findings
+
+    @property
+    def last_plan_metrics(self) -> Any | None:
+        """Phase 4 — most-recent plan articulation metrics.
+
+        ``core.contemplation.plan_metrics.PlanMetrics`` instance
+        when the discourse planner engaged on the most recent turn
+        AND ``config.discourse_contemplation`` is True; ``None``
+        otherwise.  Read-only quantitative companion to
+        ``last_plan_findings`` (which carries the qualitative
+        SPECULATIVE concerns).  Designed for downstream aggregation
+        — Phase 5's offline contemplation miner streams these
+        across turns to score plan-quality patterns the runtime
+        never tries to act on alone.
+        """
+        return self._last_plan_metrics
 
     def attach_telemetry_sink(
         self,
@@ -1016,10 +1037,12 @@ class ChatRuntime:
         * Returns ``None`` when the renderer produces an empty string.
         """
 
-        # Phase 3 — reset plan-contemplation findings at the start of
-        # every call so they never leak across turns; only successfully
-        # rendered plans (with contemplation enabled) repopulate them.
+        # Phase 3 + 4 — reset plan-contemplation findings AND plan
+        # metrics at the start of every call so they never leak across
+        # turns; only successfully rendered plans (with contemplation
+        # enabled) repopulate them.
         self._last_plan_findings = ()
+        self._last_plan_metrics = None
         if not self.config.discourse_planner:
             return None
         from generate.discourse_planner import (
@@ -1099,15 +1122,19 @@ class ChatRuntime:
             plan = plan_discourse(intent, mode, bundle)
         if len(plan.moves) <= 1:
             return None
-        # Phase 3 — plan-level contemplation pre-flight.  Read-only,
-        # SPECULATIVE-only; stores findings on the runtime for the
-        # offline contemplation miner to consume.  Does not mutate
-        # the plan or block rendering — emits side observations only.
+        # Phase 3 + 4 — plan-level contemplation pre-flight + metrics.
+        # Read-only, SPECULATIVE-only on the findings side; pure
+        # measurements on the metrics side.  Stores both on the
+        # runtime for offline miner consumption.  Does not mutate the
+        # plan or block rendering — emits side observations only.
         if self.config.discourse_contemplation:
+            from core.contemplation.plan_metrics import compute_plan_metrics
             from core.contemplation.plan_preflight import contemplate_plan
             self._last_plan_findings = contemplate_plan(plan)
+            self._last_plan_metrics = compute_plan_metrics(plan)
         else:
             self._last_plan_findings = ()
+            self._last_plan_metrics = None
         # Phase 2 — reflective rendering pronominalizes the focus
         # subject across consecutive same-subject moves, eliminating
         # the mechanical "Truth ... Truth ... Truth ..." cascade the
