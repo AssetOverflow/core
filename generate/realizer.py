@@ -108,11 +108,13 @@ def realize_semantic(
 
     intent = target.source_intent
     fragments: list[RealizedFragment] = []
+    # Comb pass 2026-05-21 — O(1) object-slot lookup per step.
+    node_objs = _build_node_map(graph)
 
     if intent is IntentTag.COMPARISON and len(target.steps) >= 2:
         step_a = target.steps[0]
         step_b = target.steps[1]
-        obj_a = _resolve_obj(step_a, graph)
+        obj_a = node_objs.get(step_a.node_id, "...")
         secondary = step_b.subject if step_b.subject != step_a.subject else obj_a
         surface = render_semantic(
             intent=intent,
@@ -128,7 +130,7 @@ def realize_semantic(
         ))
     else:
         for step in target.steps:
-            obj = _resolve_obj(step, graph)
+            obj = node_objs.get(step.node_id, "...")
             surface = render_semantic(
                 intent=intent,
                 subject=step.subject,
@@ -148,8 +150,27 @@ def realize_semantic(
     return RealizedPlan(fragments=tuple(fragments), surface=joined)
 
 
+def _build_node_map(graph: PropositionGraph | None) -> dict[str, str]:
+    """Index graph nodes by node_id for O(1) ``obj`` lookup.
+
+    Comb pass 2026-05-21 — pre-fix ``_resolve_obj`` did an O(N) linear
+    scan of ``graph.nodes`` per step, so a target with S steps over an
+    N-node graph cost O(S × N).  Building the map once in the realizer
+    and indexing into it makes the realizer linear in (S + N) overall.
+    Returns an empty mapping when the graph is None or empty.
+    """
+    if graph is None:
+        return {}
+    return {node.node_id: node.obj for node in graph.nodes}
+
+
 def _resolve_obj(step: ArticulationStep, graph: PropositionGraph | None) -> str:
-    """Look up the object slot from the graph node matching this step."""
+    """Look up the object slot from the graph node matching this step.
+
+    Retained as the legacy single-step accessor for callers that do
+    not have a node_map handy.  Hot paths in ``realize_semantic`` and
+    ``realize_target`` build the map once and bypass this function.
+    """
     if graph is None:
         return "..."
     for node in graph.nodes:
@@ -181,6 +202,8 @@ def realize_target(
             edge_map[edge.source] = (edge.target, edge.relation)
 
     step_by_id = {step.node_id: step for step in target.steps}
+    # Comb pass 2026-05-21 — O(1) object-slot lookup per step.
+    node_objs = _build_node_map(graph)
     visited: set[str] = set()
     fragments: list[RealizedFragment] = []
 
@@ -189,7 +212,7 @@ def realize_target(
             continue
         visited.add(step.node_id)
 
-        obj = _resolve_obj(step, graph)
+        obj = node_objs.get(step.node_id, "...")
         move = step.move
         if move is RhetoricalMove.ASSERT and target.source_intent is IntentTag.CORRECTION:
             move = RhetoricalMove.CORRECT
@@ -212,7 +235,7 @@ def realize_target(
                 match relation:
                     case Relation.CONJUNCTION | Relation.DISJUNCTION | Relation.COMPLEMENT | Relation.RELATIVE:
                         visited.add(target_id)
-                        target_obj = _resolve_obj(target_step, graph)
+                        target_obj = node_objs.get(target_step.node_id, "...")
                         target_surface = render_step(
                             move=RhetoricalMove.ASSERT,
                             subject=target_step.subject,
