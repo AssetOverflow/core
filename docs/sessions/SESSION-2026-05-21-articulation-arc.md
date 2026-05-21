@@ -1,8 +1,10 @@
 # Session Notes — 2026-05-21: Articulation Arc
 
-> **Status:** Shipped. Phases 1–4 live on `main`. Phase 5 logged for future.
+> **Status:** Shipped. **Phases 1–5 live on `main`.** The full loop closes.
 >
 > **Top commits (most recent first):**
+> - `327047c` feat(contemplation): Phase 5 — articulation-quality miner closes the loop
+> - `1740b7d` docs(sessions): articulation arc — comprehensive session note
 > - `b07fb04` feat(contemplation): Phase 4 — per-plan articulation telemetry metrics
 > - `664e081` feat(contemplation): Phase 3 — live plan contemplation pre-flight
 > - `9dfb505` feat(discourse): Phase 2 — reflective rendering pronominalizes focus subject
@@ -25,10 +27,10 @@ start here.
 
 ## 0. What was achieved (executive summary)
 
-This session shipped **9 commits to `main`** across three orthogonal
+This session shipped **11 commits to `main`** across three orthogonal
 tracks. Net deliverables:
 
-### 0.1 The articulation arc — 4 phases shipped
+### 0.1 The articulation arc — 5 phases shipped
 
 | Phase | Commit | What landed |
 |---|---|---|
@@ -40,6 +42,7 @@ tracks. Net deliverables:
 | Phase 2 | `9dfb505` | Reflective rendering — subject pronominalization across moves; 5× `truth → it` substitutions on the 6-sentence compound prompt |
 | Phase 3 | `664e081` | Live plan contemplation — system emits SPECULATIVE findings about its own articulation plan |
 | Phase 4 | `b07fb04` | Per-plan articulation metrics — 12 quantitative measurements per turn, deterministic, aggregable |
+| Phase 5 | `327047c` | Articulation-quality miner — aggregates observations across many turns into reviewable SPECULATIVE pack-mutation candidates. **The full live-reasoning → memory-confidence loop closes.** |
 
 ### 0.2 Concrete user-visible improvements
 
@@ -76,10 +79,13 @@ session start are now multi-sentence grounded articulations:
 |---|---|---|
 | `runtime.last_plan_findings` | `tuple[ContemplationFinding, ...]` — SPECULATIVE qualitative concerns | Phase 3 / 4 flag on + planner engaged |
 | `runtime.last_plan_metrics` | `PlanMetrics` — 12 typed numeric fields | Phase 3 / 4 flag on + planner engaged |
+| `runtime.attach_articulation_sink(sink)` | append-only JSONL of per-turn `ArticulationObservation` records | Phase 5 sink attached + contemplation on + planner engaged |
+| `mine_articulation_observations(jsonl)` | offline aggregator → `PACK_MUTATION_CANDIDATE` findings | Phase 5 — operator-triggered |
 
-Both are read-only properties. Both are pure deterministic functions
-of the plan. Both flow into the Phase 5 offline miner that closes
-the user's intuited "live reasoning → memory confidence" loop.
+All read-only. All pure deterministic functions of their inputs.
+The Phase 5 loop closes the user's intuited "live reasoning → memory
+confidence" arc — but doctrine-aligned: findings flow to operator
+review, not autonomous mutation.
 
 ### 0.4 Test artifacts added this session
 
@@ -91,9 +97,11 @@ the user's intuited "live reasoning → memory confidence" loop.
 | `tests/test_plan_contemplation_runtime.py` | 6 | Phase 3 runtime wiring + cross-turn reset |
 | `tests/test_plan_metrics.py` | 10 | Phase 4 measurements + byte-equal `as_dict` |
 | `tests/test_plan_metrics_runtime.py` | 8 | Phase 4 runtime wiring + co-population with findings |
-| **Total new test cases** | **64** | |
+| `tests/test_articulation_quality_miner.py` | 11 | Phase 5 miner rules + determinism + SPECULATIVE doctrine + JSONL round-trip |
+| `tests/test_articulation_quality_e2e.py` | 7 | Phase 5 full live-runtime → JSONL → offline-miner → PACK_MUTATION_CANDIDATE loop |
+| **Total new test cases** | **82** | |
 
-Net session: **9 commits, 64 new tests, 0 regressions in any
+Net session: **11 commits, 82 new tests, 0 regressions in any
 load-bearing gate.**
 
 ### 0.5 Doctrine evidence
@@ -516,6 +524,144 @@ or learned policy. Read-only. Same opt-in flag as Phase 3.
 
 ---
 
+### 3.5 Phase 5 — Articulation-quality miner (the loop closes)
+
+**Commit:** `327047c`
+**Files:** `chat/articulation_telemetry.py` (new),
+`core/contemplation/miners/articulation_quality.py` (new),
+`tests/test_articulation_quality_miner.py` (11 tests, new),
+`tests/test_articulation_quality_e2e.py` (7 tests, new),
+`chat/runtime.py`
+
+**Why Phase 5 is the load-bearing finish:**
+
+Phases 3 + 4 made the runtime able to **observe** its own
+articulation plans — qualitative findings (Phase 3) plus
+quantitative metrics (Phase 4) per turn. But those observations sat
+on a per-turn property (`runtime.last_plan_findings`,
+`runtime.last_plan_metrics`) — invisible across turns. To turn
+single-turn observations into **memory-confidence signal**, the
+system needed to:
+
+1. Persist observations as a structured stream.
+2. Aggregate the stream across many turns.
+3. Emit reviewable proposals when patterns persist.
+
+Phase 5 lands that triad — doctrine-aligned.
+
+**The user's literal question this closes:**
+
+> *"Should we... realize a way to score whether it should use what
+> it produced towards memory confidence for future use?"*
+
+Yes, **AND it stays inside ADR-0080:** read-only, SPECULATIVE-only,
+deterministic, no autonomous mutation. The scoring becomes a
+reviewable proposal that the operator decides on via the existing
+chain.
+
+**What's new on disk:**
+
+| File | Role |
+|---|---|
+| `chat/articulation_telemetry.py` | `ArticulationObservation` schema + JSONL serialiser/loader + `ArticulationObservationSink` protocol |
+| `chat/runtime.py::attach_articulation_sink` | Operator-facing API: pass any object with `emit(line: str)`; runtime writes one observation per engaged turn |
+| `core/contemplation/miners/articulation_quality.py` | Pure-function offline miner — three v1 aggregation rules + canonical substrate hash |
+
+**The three v1 mining rules:**
+
+| Rule | Trigger | Proposed action |
+|---|---|---|
+| `recurring_predicate_monotony` | Same `(subject, predicate)` is flagged `WEAK_SURFACE` in ≥ `_MIN_RECURRENCE` (default 3) observations | Add teaching chains rooted on the subject with predicates OTHER than the dominant one |
+| `recurring_planner_gap` | Same `subject` flagged `PLANNER_GAP` in ≥ `_MIN_RECURRENCE` observations across distinct modes | Widen substrate (teaching chains OR pack `belongs_to` / `is_defined_as` facts) |
+| `low_average_predicate_diversity` | Mean `predicate_diversity_ratio` across ≥ `_MIN_RECURRENCE` observations on the same anchor falls below `_LOW_DIVERSITY_THRESHOLD` (0.5) | Audit which relations the planner is forced to repeat; diversify the corpus |
+
+The thresholds are conservative: a single noisy turn must never
+produce a pack-mutation proposal. `_MIN_RECURRENCE = 3` keeps the
+bar at "this pattern is the rule, not the exception."
+
+**The complete feedback loop (now live):**
+
+```
+[Live runtime]
+   prompt → planner → plan → reflective render → surface
+                  │           │
+                  ▼           ▼
+            Phase 3        Phase 4
+            findings       metrics
+                  │           │
+                  └─────┬─────┘
+                        ▼
+              ArticulationObservation
+                        │
+                        ▼ (Phase 5 sink emits)
+              JSONL stream on disk
+
+[Offline]
+   JSONL stream
+        │
+        ▼
+   mine_articulation_observations
+        │
+        ▼ (across-turn aggregation rules)
+   SPECULATIVE PACK_MUTATION_CANDIDATE findings
+        │
+        ▼
+   [Operator review]
+        │
+        ▼ (via the existing proposal-review-ratify chain)
+   Ratified pack / corpus expansion
+```
+
+**Demo as recorded evidence (the exact output from `327047c`):**
+
+```
+Running "What is truth, and why does it matter?" 3 times with
+       discourse_contemplation=True...
+
+  Turn 0/1/2: "Truth is what is true. Furthermore, it belongs to
+              cognition.truth. In turn, it grounds knowledge..."
+
+Observations captured: 3
+Offline miner findings: 1
+
+  [pack_mutation_candidate] subject='truth'
+      predicate='recurring_predicate_monotony' object='belongs_to'
+      evidence_refs: 3 observations
+      proposed_action: "diversify substrate for 'truth': across 3
+        observations the plan repeatedly over-concentrated on
+        predicate 'belongs_to'. Candidates: add teaching chains
+        rooted on 'truth' with relations OTHER than 'belongs_to'
+        (grounds / requires / reveals / contrasts / precedes /
+        follows) so the planner's RELATION selector has more
+        variety to draw from."
+      epistemic_status: speculative
+```
+
+**Doctrine alignment (every constraint pinned):**
+
+| Constraint | How Phase 5 satisfies it |
+|---|---|
+| Read-only | Miner consumes a JSONL stream; emits a tuple of `ContemplationFinding`s; never writes packs/vault/teaching/runtime state. |
+| SPECULATIVE-only | Every finding is stamped `EpistemicStatus.SPECULATIVE`. Doctrine pin: `test_all_findings_remain_speculative` + `test_full_loop_emits_only_speculative_findings`. |
+| Deterministic replay | Same observations in → byte-identical `finding_id`s out. Pinned by `test_miner_is_deterministic_across_runs` + `test_full_loop_is_deterministic_byte_equal_finding_ids`. |
+| Append-only stream | Sink protocol has only `emit(line: str) -> None` — no rewrites, no overwrites, no random access. |
+| No autonomous mutation | The proposal-review-ratify chain is unchanged. Phase 5 fills the proposal layer; review and ratify remain operator-only. |
+| No parallel learning path | Findings flow to the same `DiscoveryCandidateSink`-style protocol the rest of the contemplation subsystem uses (ADR-0080). |
+
+**The default position is OFF for emission:**
+
+`ChatRuntime.attach_articulation_sink(sink)` must be called
+explicitly. Without an attached sink the runtime emits nothing —
+no perf cost, no surface change, no behaviour drift. This is the
+same pattern as the telemetry sink (`attach_telemetry_sink`) and
+the discovery sink (`attach_discovery_sink`).
+
+This means **the loop is built and proven but stays inert until an
+operator opts in.** Phase 5 lands the capability; the operator
+decides when and where to wire the sink in production.
+
+---
+
 ## 4. The pipeline today
 
 ```
@@ -534,7 +680,18 @@ prompt
   →                                  ↓
   →                                  multi-clause surface with
   →                                  subject pronominalization
+  →
+  → [Phase 5 / opt-in sink]  ArticulationObservation
+                                  →  format_articulation_observation_jsonl
+                                  →  attach_articulation_sink.emit(line)
+  →
   → surface  →  compute_trace_hash  →  TurnEvent
+
+[Offline — operator-triggered]
+  JSONL file(s)
+    → mine_articulation_observations
+    → SPECULATIVE PACK_MUTATION_CANDIDATE findings
+    → operator review (proposal → review → ratify)
 ```
 
 **What changed for the user:**
@@ -576,6 +733,10 @@ the claim still holds on `main` after the session's final commit
 | **Bridge moves (`fact=None`) reset the focus channel correctly.** | `test_bridge_move_resets_focus_channel` (Phase 4) | Pass — pronominalization opportunities = 0 when bridge separates two same-subject moves |
 | **Phase 3 emits expected findings on the compound prompt.** | `test_compound_prompt_triggers_weak_surface_finding` | Asserts `kind == WEAK_SURFACE`, `subject == 'truth'`, `predicate == 'predicate_repeats_in_plan'`, `object == 'belongs_to'` |
 | **Phase 4 metrics quantify the same pattern.** | `test_compound_prompt_yields_expected_shape` + manual demo | `move_count ≥ 4`, `pronominalization_opportunities ≥ 1`, `0 < predicate_diversity_ratio ≤ 1.0`, `0 ≤ subject_focus_ratio ≤ 1.0` |
+| **Phase 5 full loop closes — same pattern across 3 turns emits one `PACK_MUTATION_CANDIDATE`.** | `test_full_loop_emits_pack_mutation_candidate_after_repeated_pattern` | 3 identical compound prompts → 3 observations → miner emits exactly 1 finding with `subject='truth'`, `predicate='recurring_predicate_monotony'`, `object='belongs_to'` |
+| **Phase 5 byte-equal finding IDs across two complete e2e runs.** | `test_full_loop_is_deterministic_byte_equal_finding_ids` | Two end-to-end runs over identical input → identical `finding_id` tuples |
+| **Phase 5 JSONL round-trip preserves observation identity.** | `test_jsonl_round_trip_preserves_observation_identity` | `format → load → equal` on every field |
+| **Phase 5 emission is fail-closed without a sink.** | `test_no_sink_means_no_emission` + `test_brief_turn_does_not_emit` | Default config emits nothing; BRIEF prompts emit nothing even with sink attached |
 
 ### 5.3 Backward-compatibility / null-lift claims
 
@@ -586,6 +747,7 @@ the claim still holds on `main` after the session's final commit
 | **`render_plan(plan)` without `reflective=` matches Phase-1 output.** | `test_reflective_default_is_off_for_back_compat` + `test_reflective_off_preserves_phase1_output` | Both pass — every existing call site that pins exact strings continues to work |
 | **Composer-level tests (NARRATIVE / EXAMPLE provenance tags) still hold under the new default.** | `tests/test_narrative_example_intents.py` — three tests updated to explicitly set `discourse_planner=False`, with docstrings explaining why | 41/41 pass (all narrative + example + runtime-config) |
 | **`runtime.last_plan_findings` and `runtime.last_plan_metrics` are empty when `discourse_contemplation=False`.** | `test_findings_empty_when_contemplation_disabled` + `test_metrics_none_when_contemplation_disabled` | Both pass — observation surfaces strictly opt-in |
+| **Phase 5 emission is gated on BOTH `discourse_contemplation=True` AND `attach_articulation_sink(sink)`.** | `test_sink_attached_but_contemplation_off_yields_nothing` + `test_no_sink_means_no_emission` | Both pass — opt-in compounds; either gate alone yields zero emission |
 | **Findings/metrics don't leak across turns.** | `test_findings_reset_between_turns` + `test_metrics_reset_between_turns` | Both pass — populated turn followed by BRIEF turn correctly clears |
 
 ### 5.4 Structural-invariant claims (ADR-0072 register matrix)
@@ -626,12 +788,13 @@ the claim still holds on `main` after the session's final commit
 | `core test --suite packs` | 6/6 pass | **6/6 pass** |
 | Discourse-planner subsuite | 91/91 pass | **99/99 pass** (+8 reflective tests) |
 | Intent classifier subsuite | 26/26 pass | **44/44 pass** (+18 boundary tests) |
-| Contemplation subsuite (new) | n/a | **35/35 pass** (Phase 3: 17 + Phase 4: 18) |
+| Contemplation subsuite (new) | n/a | **53/53 pass** (Phase 3: 17 + Phase 4: 18 + Phase 5: 18) |
+| Phase 5 articulation-quality e2e (new) | n/a | **7/7 pass** (full loop runtime → JSONL → miner → SPECULATIVE finding) |
 
 ### 5.7 Net session test delta
 
 ```
-Tests added this session: 64
+Tests added this session: 82
 Tests removed:             0
 Tests pre-existing:        rolled forward unchanged or strengthened
 Regression count:          0
@@ -734,6 +897,41 @@ predicate_diversity=0.667  subject_focus=0.800
 algebraic expression (`predicate_diversity=0.667`) that downstream
 miners can aggregate across many turns.**
 
+**After Phase 5 (`327047c`) — the loop closes:**
+
+Run the same prompt three times with `attach_articulation_sink`
+attached. Three JSONL observations land in the sink. The offline
+miner then produces:
+
+```
+[pack_mutation_candidate] subject='truth'
+    predicate='recurring_predicate_monotony'
+    object='belongs_to'
+    evidence_refs: 3 observations (turn_id=0, turn_id=1, turn_id=2;
+                    each pointing at the same plan_substrate_hash)
+    proposed_action: "diversify substrate for 'truth': across 3
+        observations the plan repeatedly over-concentrated on
+        predicate 'belongs_to'.  Candidates: add teaching chains
+        rooted on 'truth' with relations OTHER than 'belongs_to'
+        (grounds / requires / reveals / contrasts / precedes /
+        follows) so the planner's RELATION selector has more
+        variety to draw from."
+    epistemic_status: speculative   ← DOCTRINE PIN
+```
+
+**Same one-line story across five phases:**
+
+1. **Phase 1** made the system produce 6 substantive sentences instead of refusing.
+2. **Phase 2** rendered those 6 sentences with natural English (`truth → it` × 5).
+3. **Phase 3** noticed that the plan repeated `belongs_to` 3 times.
+4. **Phase 4** turned the noticing into a number (`predicate_diversity=0.667`).
+5. **Phase 5** turned the recurring number across 3 turns into a specific,
+   actionable, **reviewable** corpus-expansion proposal — without mutating
+   anything.
+
+That entire arc, end to end, deterministically, on one prompt, in
+one session.
+
 ---
 
 ## 7. Architecture surfaces touched
@@ -744,9 +942,10 @@ miners can aggregate across many turns.**
 | Discourse planner | `generate/discourse_planner.py` | Phase 2 (reflective `render_plan`) |
 | Runtime config | `core/config.py` | Phase 1 (`discourse_planner=True`), Phase 3 (`discourse_contemplation` flag) |
 | Runtime hook | `chat/runtime.py::_maybe_apply_discourse_planner` | Phases 1, 3, 4 (fast-path + contemplation + metrics + properties) |
-| Contemplation subsystem | `core/contemplation/plan_preflight.py` (new), `core/contemplation/plan_metrics.py` (new) | Phases 3, 4 |
+| Contemplation subsystem | `core/contemplation/plan_preflight.py` (new), `core/contemplation/plan_metrics.py` (new), `core/contemplation/miners/articulation_quality.py` (new) | Phases 3, 4, 5 |
+| Articulation telemetry | `chat/articulation_telemetry.py` (new) | Phase 5 |
 | Rust algebra | `core-rs/src/lib.rs`, `core-rs/Cargo.toml`, `algebra/backend.py` | Pre-arc cleanup (`756e047`) |
-| Tests | 6 new test files, 75+ new test cases | All phases |
+| Tests | 8 new test files, 82 new test cases | All phases |
 
 ---
 
@@ -817,42 +1016,62 @@ brought into alignment with the doctrine, not the other way around.
 
 ---
 
-## 9. Phase 5 — what would close the loop
+## 9. Phase 5 — SHIPPED. Future work that this unlocks.
 
-Not built this session. Logged in every Phase commit message and
-again here so the next contributor knows what's pre-engineered.
+Phase 5 landed in commit `327047c`.  See §3.5 above for the full
+architectural walk-through and §6 for the case-study trace.  The
+*goal* this section originally described — the offline miner that
+closes the live-reasoning → memory-confidence loop — is now live.
 
-**Goal:** offline contemplation miner that consumes
-`last_plan_findings` + `last_plan_metrics` streams across many
-turns and emits **reviewable** pack-mutation / teaching-corpus
-expansion proposals.
+Future work this enables (none blocking; all logged for the next
+arc):
 
-**Concretely:**
+### 9.1 Production sink + retention policy
 
-- New miner in `core/contemplation/miners/articulation_quality.py`
-- Consumes a JSONL stream of per-turn findings + metrics (would
-  flow through `chat/telemetry.py` once Phase 4.5 adds the
-  serialiser hook).
-- Aggregates over time: e.g. "across 200 turns, the lemma
-  `epistemic.ground` was articulated 47 times but the
-  `predicate_diversity_ratio` for plans rooted on
-  `epistemic.ground` was 0.41 average — 25% below the corpus
-  median. SPECULATIVE: consider widening the
-  `epistemic.ground`-rooted chain corpus."
-- Emits `FindingKind.PACK_MUTATION_CANDIDATE` records via the
-  existing `core/contemplation/sink.py` plumbing.
-- Operator reviews findings. **No autonomous promotion.** The
-  proposal-review-ratify chain remains the only mutation gate.
+The runtime emits to any object satisfying
+`ArticulationObservationSink`.  A production deployment would
+attach a JSONL-file sink with monthly rotation (matching the
+`DiscoveryMonthlyFileSink` pattern from
+`teaching/discovery_sink.py`).  Retention policy (TTL, archival,
+schema migration) is a separate concern that becomes meaningful
+only once production usage produces volume.
 
-**What it unlocks:**
+### 9.2 Additional aggregation rules
 
-Closes the user's intuited loop:
+The v1 miner ships three rules.  Future rules naturally extend the
+same pattern — `mine_articulation_observations` returns
+`tuple[ContemplationFinding, ...]`, so new rules are pure functions
+that take observations and emit findings.  Concrete candidates:
 
-> *"Live reasoning passes → memory confidence scoring → future use."*
+* **anaphora_engagement_drift** — when
+  ``mean(pronominalization_opportunities / fact_bearing_count)``
+  trends downward over rolling windows, propose investigating
+  what shifted in the corpus or the planner.
+* **source_homogeneity_recurrence** — wrap the per-turn
+  `COVERAGE_GAP` finding (Phase 3) into an across-turn
+  aggregator for the same subject.
+* **prompt_class clustering** — group observations by
+  `prompt_hash` and surface prompts that repeatedly hit
+  WEAK_SURFACE — those are the prompts a user actually asks that
+  the corpus is shaped poorly for.
 
-Phase 5 IS the memory-confidence scoring layer, doctrine-aligned:
-it scores plan-quality patterns into reviewable evidence, never
-into autonomous mutation.
+### 9.3 CLI hook
+
+Adding a `core contemplation articulation-quality` subcommand to
+`core/contemplation/__main__.py` would let operators trigger the
+miner against archived JSONL files without writing a script.
+Pattern is already established by `contemplate_frontier_reports`
+in `core/contemplation/runner.py`.
+
+### 9.4 Closing the review loop into the planner
+
+The next ambitious step is taking ratified `PACK_MUTATION_CANDIDATE`
+findings and folding them back into the substrate — but this
+requires the existing teaching `PackMutationProposal` infrastructure
+to consume them, not new autonomous machinery.  Once a finding is
+operator-approved, the existing proposal-review-ratify chain takes
+over.  No parallel learning path; the existing chain just gains a
+new upstream evidence source.
 
 ---
 
@@ -863,14 +1082,18 @@ into autonomous mutation.
 - `generate/grounding_accessors.py::grounding_bundle_for` — substrate aggregator
 - `chat/runtime.py::_maybe_apply_discourse_planner` — runtime hook
 - `chat/runtime.py` properties: `last_plan_findings`, `last_plan_metrics`
+- `chat/runtime.py::attach_articulation_sink` — Phase 5 sink wiring
+- `chat/articulation_telemetry.py` — Phase 5 observation schema + JSONL serialiser
 - `core/contemplation/plan_preflight.py` — Phase 3 contemplation
 - `core/contemplation/plan_metrics.py` — Phase 4 metrics
+- `core/contemplation/miners/articulation_quality.py` — Phase 5 offline miner
 - `core/contemplation/schema.py` — `ContemplationFinding`, `FindingKind`,
   `ContemplationRun`
 
 ### 10.2 Configuration flags (`core/config.py`)
 - `discourse_planner: bool = True` (Phase 1)
-- `discourse_contemplation: bool = False` (Phases 3 + 4)
+- `discourse_contemplation: bool = False` (Phases 3 + 4 + 5 — observation
+  surfaces and Phase 5 sink emission all gated on this)
 
 ### 10.3 Tests (load-bearing pins)
 - `tests/test_discourse_planner_render.py` — Phase 1 invariants
@@ -881,6 +1104,9 @@ into autonomous mutation.
 - `tests/test_plan_contemplation_runtime.py` — Phase 3 wiring
 - `tests/test_plan_metrics.py` — Phase 4 measurements
 - `tests/test_plan_metrics_runtime.py` — Phase 4 wiring
+- `tests/test_articulation_quality_miner.py` — Phase 5 miner aggregation
+- `tests/test_articulation_quality_e2e.py` — Phase 5 full live-runtime →
+  JSONL → miner → PACK_MUTATION_CANDIDATE loop
 - `tests/test_intent_subject_extraction.py` — RECALL + CORRECTION regression pins (pre-arc)
 - `tests/test_cognition_eval_register_matrix.py` — ADR-0072 register matrix (intact under default-on planner)
 
@@ -893,7 +1119,14 @@ into autonomous mutation.
 ---
 
 *Document authored 2026-05-21 immediately after the Phase 4 commit
-landed (`b07fb04`). Subsequent sessions extending this work should
-append a "Phase 5" or new-arc section below rather than rewriting the
-above — the history matters as evidence of the doctrine working in
-practice.*
+landed (`b07fb04`).  Extended in-place to cover Phase 5 after
+`327047c` landed the articulation-quality miner and closed the
+end-to-end loop.  The articulation arc described here is complete:
+prompt → plan → reflect → contemplate → measure → observe →
+mine → reviewable proposal.
+
+Subsequent sessions extending this work should append a new
+top-level section to a NEW session-notes file (not this one).
+Cross-link to this document from the new note so the history
+chain stays navigable; do not rewrite this one.  The frozen
+history is itself evidence of the doctrine working in practice.*
