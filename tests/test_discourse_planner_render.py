@@ -170,9 +170,15 @@ class TestRenderPlan:
 
 
 class TestRuntimeFlagDefault:
-    def test_default_runtime_config_has_flag_off(self) -> None:
+    def test_default_runtime_config_has_flag_on(self) -> None:
+        """Default flipped to True 2026-05-21 after the cognition eval
+        (45 cases) was confirmed byte-identical OFF vs ON across both
+        surface and trace_hash projections — single-fact prompts get
+        the same output either way; the flag only differentiates
+        NARRATIVE / EXAMPLE / PARAGRAPH / EXPLAIN / compound shapes.
+        """
         cfg = RuntimeConfig()
-        assert cfg.discourse_planner is False
+        assert cfg.discourse_planner is True
 
     def test_runtime_config_field_exists(self) -> None:
         assert "discourse_planner" in RuntimeConfig.__dataclass_fields__
@@ -196,10 +202,13 @@ class TestRuntimeFlagOn:
         if "Furthermore," in response.surface or "In turn," in response.surface:
             assert response.surface.count(".") >= 2
 
-    def test_flag_off_default_unchanged(self) -> None:
-        runtime = ChatRuntime()  # default config, flag off
+    def test_flag_off_explicit_path_unchanged(self) -> None:
+        """When the operator explicitly disables the planner the surface
+        must remain in the existing single-sentence shape — no planner
+        connectives.  This pins the OFF path even though the default
+        flipped to ON in 2026-05-21.
+        """
+        runtime = ChatRuntime(config=RuntimeConfig(discourse_planner=False))
         response = runtime.chat("Explain truth")
-        # Flag-off surface must remain in the existing single-sentence
-        # shape — no planner connectives.
         assert "Furthermore," not in response.surface
         assert "Consequently," not in response.surface

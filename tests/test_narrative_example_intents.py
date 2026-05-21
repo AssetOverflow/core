@@ -31,6 +31,7 @@ import pytest
 from chat.example_surface import example_grounded_surface
 from chat.narrative_surface import narrative_grounded_surface
 from chat.runtime import ChatRuntime
+from core.config import RuntimeConfig
 from generate.intent import IntentTag, classify_intent
 
 
@@ -207,7 +208,17 @@ def test_example_max_examples_caps_output() -> None:
 
 
 def test_runtime_narrative_on_known_subject_routes_to_teaching() -> None:
-    rt = ChatRuntime()
+    """Composer-level invariant: NARRATIVE intent on a pack-resident
+    subject routes to the teaching-grounded composer and the provenance
+    tag ``narrative-grounded`` lands on the surface.
+
+    Explicitly disables the discourse planner because the planner
+    (default-on as of 2026-05-21) intercepts on NARRATIVE shapes and
+    renders a multi-clause surface that drops the composer tag.  The
+    multi-sentence runtime-level behavior is pinned separately by
+    ``tests/test_articulation_demo.py``.
+    """
+    rt = ChatRuntime(config=RuntimeConfig(discourse_planner=False))
     resp = rt.chat("Tell me about truth.")
     assert resp.grounding_source == "teaching"
     assert "narrative-grounded" in resp.surface
@@ -228,7 +239,12 @@ def test_runtime_narrative_on_oov_routes_to_oov_invitation() -> None:
 
 
 def test_runtime_example_on_known_object_routes_to_teaching() -> None:
-    rt = ChatRuntime()
+    """Composer-level invariant for EXAMPLE intent on a pack-resident
+    object.  Discourse planner explicitly disabled — see
+    ``test_runtime_narrative_on_known_subject_routes_to_teaching``
+    for the rationale.
+    """
+    rt = ChatRuntime(config=RuntimeConfig(discourse_planner=False))
     resp = rt.chat("Give me an example of truth.")
     assert resp.grounding_source == "teaching"
     assert "example-grounded" in resp.surface
@@ -242,7 +258,12 @@ def test_runtime_example_on_oov_routes_to_oov_invitation() -> None:
 
 
 def test_runtime_example_on_relations_object() -> None:
-    rt = ChatRuntime()
+    """Composer-level invariant — EXAMPLE intent on a relations-pack
+    object surfaces the relations corpus tag.  Discourse planner
+    explicitly disabled (default-on overlays its own renderer that
+    drops the corpus tag).
+    """
+    rt = ChatRuntime(config=RuntimeConfig(discourse_planner=False))
     resp = rt.chat("Give me an example of parent.")
     assert resp.grounding_source == "teaching"
     assert "relations_chains_v1" in resp.surface

@@ -122,8 +122,20 @@ class RuntimeConfig:
     # and renders it as multi-clause output.  Mode selection comes from
     # ``generate.intent.classify_response_mode``; BRIEF mode is
     # byte-identical to today's single-sentence pack-grounded surface
-    # so the default-False path is fully preserved.
-    discourse_planner: bool = False
+    # because the runtime hook (``_maybe_apply_discourse_planner``)
+    # returns ``None`` when the rendered plan has <= 1 move — single-
+    # fact prompts get exactly the same surface and trace_hash as
+    # the planner-off path.
+    #
+    # Default flipped to True 2026-05-21: cognition eval (45 cases)
+    # was verified byte-identical across both projections (surface
+    # AND trace_hash) flag-OFF vs flag-ON, so single-fact prompts are
+    # not perturbed.  The flag's value shows up on NARRATIVE / EXAMPLE
+    # / PARAGRAPH / EXPLAIN modes and compound prompts that the flat
+    # classifier currently misclassifies as OOV — those turns become
+    # multi-clause grounded articulations rather than single-fragment
+    # disclosures or OOV refusals.
+    discourse_planner: bool = True
 
     # ADR-0068 / ADR-0069 — register pack id loaded at runtime startup.
     # ``None`` resolves to ``RegisterPack.unregistered()`` (the in-memory

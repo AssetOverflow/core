@@ -1023,6 +1023,21 @@ class ChatRuntime:
         if compound.is_compound() and mode is _ResponseMode.BRIEF:
             mode = _ResponseMode.EXPLAIN
 
+        # Fast path: BRIEF mode on a non-compound prompt can never
+        # emit > 1 move (``_MODE_BUDGETS[BRIEF] = (1, 1)``).  The
+        # downstream ``len(plan.moves) <= 1`` gate would always
+        # reject — so short-circuit here, BEFORE the expensive
+        # ``grounding_bundle_for`` query and ``plan_discourse``
+        # selector logic.  This is the load-bearing perf win for
+        # ``discourse_planner=True`` as the runtime default; without
+        # it every single-fact prompt pays for a multi-source bundle
+        # build it can't possibly use.  Confirmed empirically:
+        # ``tests/test_cognition_eval_register_matrix.py`` runtime
+        # collapsed from ~14 minutes to seconds after this gate
+        # landed.
+        if mode is _ResponseMode.BRIEF and not compound.is_compound():
+            return None
+
         # Standard gate: when upstream grounded the surface in pack or
         # teaching, the planner is free to engage.
         standard_gate = source_tag in {"pack", "teaching"}
