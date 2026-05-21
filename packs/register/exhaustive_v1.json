@@ -1,0 +1,47 @@
+{
+  "register_id": "exhaustive_v1",
+  "version": "1.0.0",
+  "description": "Maximum-disclosure register. Disclosure_domain_count=3 across every intent via per_intent overrides; semantic-domain clause appended; provenance tags retained.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "63a1ef72a1a1939b7f0eea7e51f4bcb8fe1d61fb58a4105b89ae28d2cc2cf704",
+  "display_name": "Exhaustive",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true,
+    "per_intent": {
+      "DEFINITION": {
+        "disclosure_domain_count": 3
+      },
+      "RECALL": {
+        "disclosure_domain_count": 3
+      },
+      "CAUSE": {
+        "disclosure_domain_count": 3
+      },
+      "VERIFICATION": {
+        "disclosure_domain_count": 3
+      },
+      "COMPARISON": {
+        "disclosure_domain_count": 3
+      },
+      "PROCEDURE": {
+        "disclosure_domain_count": 3
+      },
+      "CORRECTION": {
+        "disclosure_domain_count": 3
+      },
+      "NARRATIVE": {
+        "disclosure_domain_count": 3
+      },
+      "EXAMPLE": {
+        "disclosure_domain_count": 3
+      }
+    }
+  },
+  "discourse_markers": {
+    "openings": [],
+    "transitions": [],
+    "closings": []
+  }
+}
