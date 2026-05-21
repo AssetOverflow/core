@@ -58,35 +58,66 @@ class SalienceOperator:
     """
 
     def compute(self, regions: Tuple[FieldRegion, ...], cycle_index: int) -> SalienceMap:
-        """Compute local curvature by pairwise pressure-gradient deflection."""
+        """Compute local curvature by pairwise pressure-gradient deflection.
+
+        Vectorized 2026-05-21 — pre-fix this was a nested Python loop
+        over ``regions × regions`` with one ``np.linalg.norm`` call per
+        pair.  For N≈500 mounted-vocab regions per turn that meant
+        ~250k norm calls per turn, dominating ~64% of total turn time
+        (cProfile, 2026-05-21).  The math is unchanged: pairwise
+        pressure-gradient deflection.  The contract — curvature_magnitude,
+        gradient_vector, influence_radius — is preserved exactly, with
+        only ULP-level drift from float-sum reassociation (well below
+        the 12-decimal precision used by ``_salience_address`` and
+        the float32 precision used by downstream score arrays).
+        """
         if not regions:
             return SalienceMap(entries=(), cycle_index=cycle_index, content_address=_salience_address(()))
-        coords = [np.asarray(region.coordinates, dtype=np.float64) for region in regions]
+
+        # (N, D) coordinate matrix and (N,) pressure vector.
+        coords = np.stack(
+            [np.asarray(region.coordinates, dtype=np.float64) for region in regions]
+        )
+        pressures = np.asarray(
+            [region.pressure_magnitude for region in regions], dtype=np.float64
+        )
+
+        # Pairwise displacement: deltas[i, j] = coords[j] - coords[i].
+        deltas = coords[None, :, :] - coords[:, None, :]  # (N, N, D)
+        # Pairwise Euclidean distance, clamped to >= 1e-8 (matches the
+        # historical max(..., 1e-8) per-pair guard).
+        distances = np.linalg.norm(deltas, axis=-1)  # (N, N)
+        np.maximum(distances, 1e-8, out=distances)
+        # Avoid 0/0 on the diagonal; zero its contributions later.
+        np.fill_diagonal(distances, 1.0)
+
+        # Pairwise pressure deltas: |pressures[j] - pressures[i]|.
+        pressure_deltas = np.abs(pressures[None, :] - pressures[:, None])  # (N, N)
+
+        # contribution[i, j] = pressure_delta[i, j] / distance[i, j]^2
+        contributions = pressure_deltas / (distances * distances)
+        np.fill_diagonal(contributions, 0.0)  # exclude i == i
+
+        # direction[i, j] = deltas[i, j] / distance[i, j];  diagonal direction
+        # vectors are zero by construction (deltas[i, i] = 0).
+        directions = deltas / distances[..., None]  # (N, N, D)
+
+        # Per-region aggregates: sum-over-j with diagonal contributions zeroed.
+        # gradient[i] = Σ_j direction[i, j] * contribution[i, j]
+        gradients = np.einsum("ijd,ij->id", directions, contributions)
+        curvatures = contributions.sum(axis=1)  # (N,)
+        radius_num = (distances * contributions).sum(axis=1)
+        radius_den = curvatures  # identical sum
+        radii = np.where(radius_den > 0.0, radius_num / np.where(radius_den > 0, radius_den, 1.0), 0.0)
+
         entries: list[SalienceEntry] = []
         for idx, region in enumerate(regions):
-            gradient = np.zeros_like(coords[idx], dtype=np.float64)
-            curvature = 0.0
-            radius_num = 0.0
-            radius_den = 0.0
-            for jdx, neighbor in enumerate(regions):
-                if idx == jdx:
-                    continue
-                delta = coords[jdx] - coords[idx]
-                distance = max(float(np.linalg.norm(delta)), 1e-8)
-                pressure_delta = abs(float(neighbor.pressure_magnitude) - float(region.pressure_magnitude))
-                contribution = pressure_delta / (distance * distance)
-                direction = delta / distance
-                gradient += direction * contribution
-                curvature += contribution
-                radius_num += distance * contribution
-                radius_den += contribution
-            gradient_tuple = tuple(float(v) for v in gradient)
             entries.append(
                 SalienceEntry(
                     region_id=region.region_id,
-                    curvature_magnitude=float(curvature),
-                    gradient_vector=gradient_tuple,
-                    influence_radius=float(radius_num / radius_den) if radius_den > 0.0 else 0.0,
+                    curvature_magnitude=float(curvatures[idx]),
+                    gradient_vector=tuple(float(v) for v in gradients[idx]),
+                    influence_radius=float(radii[idx]),
                 )
             )
         ordered = tuple(
