@@ -209,7 +209,14 @@ _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
     (re.compile(r"what\s+(?:causes|triggers|enables|prevents|drives|produces|induces|yields)\s+", re.IGNORECASE), IntentTag.CAUSE),
     (re.compile(r"how\s+(?:do|can|should|would)\s+(?:I|we|you)\s+", re.IGNORECASE), IntentTag.PROCEDURE),
     (re.compile(r"(?:is|are|does|do|can|could|would|should|was|were|has|have|will)\s+.+\??\s*$", re.IGNORECASE), IntentTag.VERIFICATION),
-    (re.compile(r"(?:no|that'?s\s+(?:not|wrong)|incorrect|actually|correction)", re.IGNORECASE), IntentTag.CORRECTION),
+    # Word boundaries on both sides are load-bearing: without them ``no``
+    # would prefix-match every word beginning with those letters
+    # (``Now``, ``Notice``, ``Nothing``, ``Nominate``, ``Norma``, ...) and
+    # silently route them all to CORRECTION with a mangled subject like
+    # ``"w remember light"``.  The same hazard applies to ``incorrect``
+    # (would eat ``incorrectly``), ``actually`` (would eat
+    # ``actualization``), and ``correction`` (would eat ``corrections``).
+    (re.compile(r"\b(?:no|that'?s\s+(?:not|wrong)|incorrect|actually|correction)\b", re.IGNORECASE), IntentTag.CORRECTION),
     (re.compile(r"(?:remember|recall)\s+", re.IGNORECASE), IntentTag.RECALL),
 )
 

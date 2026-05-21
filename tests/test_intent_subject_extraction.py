@@ -127,6 +127,67 @@ def test_recall_strips_articles(prompt: str, expected_subject: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# CORRECTION — word-boundary discipline on the trigger pattern
+# ---------------------------------------------------------------------------
+#
+# Until a recent fix, the CORRECTION regex matched the bare token ``no``
+# without word boundaries.  Combined with ``re.match``'s start anchor,
+# every prompt beginning with ``No``-as-prefix (``Notice``, ``Note``,
+# ``Now``, ``Nothing``, ``Nominate``, ``Norma``, ``Notwithstanding``)
+# silently routed to CORRECTION with a mangled subject like
+# ``"w remember light"`` (from ``"Now remember light."``).  The same
+# hazard threatened ``incorrect`` / ``incorrectly``, ``actually`` /
+# ``actualization``, ``correction`` / ``corrections``.  The fix added
+# ``\b`` anchors on both sides of the alternation; these parametrized
+# cases pin the boundary discipline against regression.
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "No, that's wrong.",
+        "No.",
+        "No way.",
+        "no, knowledge is wrong.",
+        "Incorrect.",
+        "Actually, that's false.",
+        "Correction: memory is not storage.",
+        "That's wrong.",
+    ],
+)
+def test_correction_canonical_forms_still_route(prompt: str) -> None:
+    """Legitimate CORRECTION pragmas must still classify after the
+    word-boundary fix narrowed the alternation."""
+    intent = classify_intent(prompt)
+    assert intent.tag is IntentTag.CORRECTION
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        # ``No``-prefixed words that previously misfired
+        "Nothing matters.",
+        "Notice the truth.",
+        "Note that recall fires.",
+        "Nominate a candidate.",
+        "Now remember light.",
+        "Norma is here.",
+        "Notwithstanding the evidence.",
+        # ``Incorrect``-prefixed / ``Correction``-prefixed words
+        "Incorrectly stated.",
+        "Corrections department.",
+        # ``Actually`` prefix — rarer but symmetric
+        "Actualization of intent.",
+    ],
+)
+def test_correction_does_not_eat_no_prefixed_words(prompt: str) -> None:
+    """Words beginning with the CORRECTION trigger letters must not
+    silently route to CORRECTION via a missing word-boundary anchor."""
+    intent = classify_intent(prompt)
+    assert intent.tag is not IntentTag.CORRECTION
+
+
+# ---------------------------------------------------------------------------
 # Edge cases — degenerate inputs do not produce empty subjects
 # ---------------------------------------------------------------------------
 
