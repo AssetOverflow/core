@@ -288,6 +288,7 @@ def generate(
     inner_loop_force_admit: bool = False,
     admissibility_mode: str = "threshold",
     admissibility_margin: float = 0.4,
+    stop_tokens: frozenset[str] | None = None,
 ) -> GenerationResult:
     """Generate a token sequence.
 
@@ -373,8 +374,15 @@ def generate(
         else ()
     )
 
+    # Finding 6 (audit 2026-05-20) — stop tokens are now caller-overridable.
+    # ``None`` preserves the historical default (``_STOP_TOKENS``); explicit
+    # overrides can free pack-specific content words like λόγος or "to" that
+    # would otherwise be permanently inhibited regardless of pack semantics.
+    effective_stop_tokens: frozenset[str] = (
+        stop_tokens if stop_tokens is not None else _STOP_TOKENS
+    )
     stop_nodes = frozenset(
-        idx for token in _STOP_TOKENS
+        idx for token in effective_stop_tokens
         if (idx := _try_index(vocab, token)) is not None
     )
 
