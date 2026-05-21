@@ -1,0 +1,26 @@
+{
+  "register_id": "narrator_v1",
+  "version": "1.0.0",
+  "description": "Narrator register — storytelling cadence.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "7f7fde855da1c46d6c5d0cf520675af15270ce129740858b5844f7392ca4c4d1",
+  "display_name": "Narrator",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "And so — ",
+      "Here is what holds: ",
+      "Picture this: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and there the matter sits.",
+      " — that is the shape of it."
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "register_id": "elder_v1",
+  "version": "1.0.0",
+  "description": "Elder register — reflective, measured.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "31420d32bc27d600d6aac7ad0ab6e5f1307a1081144c9f7817db76f0881661c2",
+  "display_name": "Elder",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true,
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Long held — ",
+      "It has always been said: ",
+      "Steadily: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and so it remains.",
+      " — as the tradition holds."
+    ]
+  }
+}

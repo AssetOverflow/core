@@ -1,0 +1,24 @@
+{
+  "register_id": "novice_v1",
+  "version": "1.0.0",
+  "description": "Novice register — eager-learning markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "b1e52ef8ea9e72114c9e467fc6279cb1d9725767bbd4b4a5e98357653d58f674",
+  "display_name": "Novice",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Just learning — ",
+      "If I have it right: ",
+      "My current take: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — does that track?",
+      " — please correct if off."
+    ]
+  }
+}
