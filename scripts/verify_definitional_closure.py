@@ -61,9 +61,10 @@ def _load_resolution_set() -> set[str]:
     lemmas: set[str] = set()
     for lex_path in DATA_ROOT.glob("*/lexicon.jsonl"):
         for row in _load_jsonl(lex_path):
-            lemma = row.get("lemma")
-            if isinstance(lemma, str):
-                lemmas.add(lemma)
+            for field_name in ("lemma", "surface"):
+                value = row.get(field_name)
+                if isinstance(value, str):
+                    lemmas.add(value)
     for gloss_path in DATA_ROOT.glob("*/glosses.jsonl"):
         for row in _load_jsonl(gloss_path):
             lemma = row.get("lemma")
