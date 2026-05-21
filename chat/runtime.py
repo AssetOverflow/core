@@ -372,6 +372,16 @@ class ChatResponse:
     composer_atom_set_hash: str = ""
     graph_atom_set_hash: str = ""
     composer_graph_atom_overlap_count: int = 0
+    # ADR-0088 Phase B (audit Finding 2, 2026-05-20) — alphabetic-
+    # filtered walk tokens from the recall step.  Populated only on
+    # the main path; the stub / refusal paths leave this empty.
+    # Consumed by ``CognitiveTurnPipeline`` when
+    # ``RuntimeConfig.realizer_grounded_authority`` is True so the
+    # proposition graph can be grounded before ``realize_semantic``
+    # is invoked.  Empty tuple preserves pre-ADR-0088 byte-identity
+    # for every caller that constructs ChatResponse without this
+    # field.
+    recalled_words: tuple[str, ...] = ()
 
 
 class ChatRuntime:
@@ -1425,10 +1435,16 @@ class ChatRuntime:
         # from pack-resolved proposition slots (primary) rather than walk
         # tokens (supplemental backfill only).  walk_tokens still participates
         # as a fallback when proposition.object_ is None/empty.
+        # ADR-0088 Phase B (audit Finding 2, 2026-05-20) — compute
+        # walk_tokens unconditionally so non-English packs can also
+        # surface them via ``ChatResponse.recalled_words`` for the
+        # pipeline's opt-in ``ground_graph`` step.  English keeps
+        # using them for ``articulate_with_intent`` grounding as
+        # before.
+        walk_tokens = tuple(
+            tok for tok in (result.tokens or ()) if tok and tok.isalpha()
+        )
         if self.config.output_language == "en":
-            walk_tokens = tuple(
-                tok for tok in (result.tokens or ()) if tok and tok.isalpha()
-            )
             intent_surface = articulate_with_intent(
                 text,
                 articulation,
@@ -1723,6 +1739,7 @@ class ChatRuntime:
             composer_atom_set_hash=atom_equivalence_main.composer_atom_set_hash,
             graph_atom_set_hash=atom_equivalence_main.graph_atom_set_hash,
             composer_graph_atom_overlap_count=atom_equivalence_main.overlap_count,
+            recalled_words=walk_tokens,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

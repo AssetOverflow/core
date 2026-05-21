@@ -27,7 +27,7 @@ from generate.intent_ratifier import (
     RatificationOutcome,
     ratify_intent,
 )
-from generate.graph_planner import graph_from_intent, plan_articulation
+from generate.graph_planner import graph_from_intent, ground_graph, plan_articulation
 from generate.realizer import realize_semantic
 from generate.intent import IntentTag
 from generate.operators import (
@@ -151,13 +151,35 @@ class CognitiveTurnPipeline:
         graph = graph_from_intent(intent, prior_node_id=prior_node_id)
         target = plan_articulation(graph)
 
-        # 1c. REALIZE — semantic realization from graph + intent
+        # 1c. REALIZE — semantic realization from graph + intent.
+        # Pre-fix (and default today) the realizer fires on the
+        # ungrounded graph and emits ``<pending>`` / ``...`` surfaces
+        # that ``_is_useful_surface`` rejects.  ADR-0088 Phase B opts
+        # operators into grounding the graph BEFORE the realizer so
+        # the realizer can compete as a real surface authority.
         realized_plan = realize_semantic(target, graph)
 
         # 2–7. INGEST / UNDERSTAND / RECALL / THINK / ARTICULATE / LEARN
         #       Delegated to ChatRuntime.chat().
         #       ChatResponse is the stable contract surface.
         response = self.runtime.chat(text, max_tokens=max_tokens)
+
+        # ADR-0088 Phase B (audit Finding 2, 2026-05-20) — opt-in
+        # grounded realizer.  When the runtime opts in, fill the
+        # graph's <pending> obj slots from the recall step's walk
+        # tokens (already alphabetic-filtered by ChatRuntime) and
+        # re-invoke ``realize_semantic`` on the grounded graph.  The
+        # surface resolver (PR #76) then picks the realizer's
+        # grounded output when it clears ``_is_useful_surface`` and
+        # the unknown-domain gate did not fire.  Default-off
+        # preserves byte-identity for every existing surface and
+        # trace_hash — the realizer continues to emit unusable
+        # placeholders and lose the resolver to the runtime path.
+        if getattr(self.runtime.config, "realizer_grounded_authority", False):
+            recalled_words = getattr(response, "recalled_words", ()) or ()
+            if recalled_words:
+                grounded_graph = ground_graph(graph, recalled_words)
+                realized_plan = realize_semantic(target, grounded_graph)
 
         gate_fired = (
             response.vault_hits == 0
