@@ -187,6 +187,37 @@ class RuntimeConfig:
     # Phase A's realizer fluency upgrade ships.
     realizer_grounded_authority: bool = False
 
+    # ADR-0090 (audit Findings 6 + 7, 2026-05-21) — unified-ingest path.
+    # Default ``False`` preserves bit-identical behavior with the
+    # historical probe-then-commit path:
+    #
+    #   1. ``chat()`` calls ``probe_ingest(filtered)`` first.
+    #   2. The gate observes ``probe_state.F``.
+    #   3. If the gate fires, ``commit_ingest`` runs and a stub
+    #      response returns.  If not, ``commit_ingest`` runs and
+    #      drive bias is applied, producing a different field
+    #      from the one the gate saw.
+    #
+    # The probe/commit distinction means the gate decides on one
+    # manifold position and the walk navigates a slightly different
+    # one — a coherence gap the second-opinion audit named.
+    #
+    # When ``True``:
+    #
+    #   1. ``chat()`` calls ``commit_ingest(filtered)`` first.
+    #   2. Drive bias is applied immediately.
+    #   3. The gate observes ``committed.F`` (the same field the walk
+    #      will navigate on the non-stub path).
+    #   4. ``probe_ingest`` is skipped entirely on this path.
+    #
+    # **Semantic change when True:** stub-path turns commit before
+    # the stub response is generated.  Under ``False`` stub turns do
+    # not commit at the time of the gate check (today's behavior).
+    # Operators opt into the cleaner coherence by flipping the flag;
+    # the unified path is not the default until validated against a
+    # live workload.
+    unified_ingest: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"

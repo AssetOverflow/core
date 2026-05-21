@@ -1308,17 +1308,34 @@ class ChatRuntime:
         if not filtered:
             raise ValueError("ChatRuntime.chat() received no in-vocabulary tokens.")
 
-        probe_state = self._context.probe_ingest(filtered)
-        direct_hits = self._context.vault.recall(probe_state.F, top_k=3)
+        # ADR-0090 — unified-ingest path is flag-gated.  Default (False)
+        # preserves the historical probe-then-commit behavior; True
+        # commits first so the gate and the walk see the same field.
+        # ``committed`` is materialized eagerly on the unified path and
+        # lazily on the stub path of the historical flow; the explicit
+        # ``FieldState | None`` declaration documents that and silences
+        # Pyright's reportPossiblyUnbound across the conditional flow.
+        committed: FieldState | None = None
+        if self.config.unified_ingest:
+            committed = self._context.commit_ingest(filtered)
+            committed = self._apply_drive_bias(committed)
+            gate_query = committed.F
+        else:
+            probe_state = self._context.probe_ingest(filtered)
+            gate_query = probe_state.F
+
+        direct_hits = self._context.vault.recall(gate_query, top_k=3)
         direct_best = max((h["score"] for h in direct_hits), default=0.0)
         gate_decision = default_gate.check(
             direct_best,
             vault=self._context.vault,
-            query=probe_state.F,
+            query=gate_query,
             decomposer=default_decomposer,
         )
         if gate_decision.fire:
-            committed = self._context.commit_ingest(filtered)
+            if not self.config.unified_ingest:
+                committed = self._context.commit_ingest(filtered)
+            assert committed is not None  # set above on both flag paths
             empty_result = GenerationResult(tokens=(), final_state=committed, vault_hits=0)
             pack_result = self._maybe_pack_grounded_surface(
                 text, gate_decision.source
@@ -1387,8 +1404,15 @@ class ChatRuntime:
                 discovery_intent_subject=discovery_intent_subject,
             )
 
-        field_state = self._context.commit_ingest(filtered)
-        field_state = self._apply_drive_bias(field_state)
+        if self.config.unified_ingest:
+            # ADR-0090 — commit + drive bias already ran before the gate
+            # check; reuse the same field the gate decided against so the
+            # walk navigates the manifold position the gate ratified.
+            assert committed is not None  # set in the unified-ingest branch above
+            field_state = committed
+        else:
+            field_state = self._context.commit_ingest(filtered)
+            field_state = self._apply_drive_bias(field_state)
         reference_blade = self._dialogue_reference()
         base_proposition = propose(
             field_state,
