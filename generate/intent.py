@@ -306,10 +306,18 @@ def classify_intent(prompt: str) -> DialogueIntent:
 
     compare_match = _COMPARE_RE.match(text)
     if compare_match:
+        # Comb pass 2026-05-21 — apply ``_normalize_subject`` so leading
+        # articles ("the parent", "a question") are stripped consistently
+        # with DEFINITION / CAUSE / VERIFICATION paths.  DEFINITION mode
+        # preserves multi-word noun phrases (only strips articles +
+        # punctuation + infinitive markers); aux-verb stripping is
+        # CAUSE/VERIFICATION-only and would be wrong here.
         return DialogueIntent(
             tag=IntentTag.COMPARISON,
-            subject=compare_match.group(1).strip(),
-            secondary_subject=compare_match.group(2).strip(),
+            subject=_normalize_subject(compare_match.group(1), IntentTag.DEFINITION),
+            secondary_subject=_normalize_subject(
+                compare_match.group(2), IntentTag.DEFINITION
+            ),
         )
 
     frame_match = _FRAME_TRANSFER_RE.match(text)
@@ -322,18 +330,27 @@ def classify_intent(prompt: str) -> DialogueIntent:
             relation = "belongs_to"
         else:
             relation = _RELATION_NORMALIZE.get(raw_relation, raw_relation)
+        # Comb pass 2026-05-21 — consistent article-strip; see COMPARISON
+        # branch above for rationale.
         return DialogueIntent(
             tag=IntentTag.FRAME_TRANSFER,
-            subject=frame_match.group("subject").strip(),
+            subject=_normalize_subject(frame_match.group("subject"), IntentTag.DEFINITION),
             relation=relation,
-            frame=frame_match.group("frame").strip(),
+            frame=_normalize_subject(frame_match.group("frame"), IntentTag.DEFINITION),
         )
 
     transitive_match = _TRANSITIVE_QUERY_RE.match(text)
     if transitive_match:
         raw_relation = transitive_match.group("relation").lower().strip()
         relation = _RELATION_NORMALIZE.get(raw_relation, raw_relation)
-        raw_subject = transitive_match.group("subject").strip()
+        # Comb pass 2026-05-21 — apply ``_normalize_subject`` consistently
+        # across both the "means" → DEFINITION redirect and the regular
+        # TRANSITIVE_QUERY path.  Pre-fix the redirect normalized but the
+        # regular path returned ``raw_subject`` with only a ``.strip()``,
+        # so "Where does the parent live?" left the article in.
+        normalized_subject = _normalize_subject(
+            transitive_match.group("subject"), IntentTag.DEFINITION
+        )
         # "What does X mean?" is a definitional probe, not a transitive
         # relation query — there is no edge ``X --means--> Y`` to walk;
         # the user wants the definition of X.  Route to DEFINITION so
@@ -341,19 +358,20 @@ def classify_intent(prompt: str) -> DialogueIntent:
         if raw_relation in {"mean", "means"}:
             return DialogueIntent(
                 tag=IntentTag.DEFINITION,
-                subject=_normalize_subject(raw_subject, IntentTag.DEFINITION),
+                subject=normalized_subject,
             )
         return DialogueIntent(
             tag=IntentTag.TRANSITIVE_QUERY,
-            subject=raw_subject,
+            subject=normalized_subject,
             relation=relation,
         )
 
     belong_match = _BELONG_QUERY_RE.match(text)
     if belong_match:
+        # Comb pass 2026-05-21 — consistent article-strip.
         return DialogueIntent(
             tag=IntentTag.TRANSITIVE_QUERY,
-            subject=belong_match.group("subject").strip(),
+            subject=_normalize_subject(belong_match.group("subject"), IntentTag.DEFINITION),
             relation="belongs_to",
         )
 
