@@ -174,43 +174,83 @@ fn unitize_expmap(
 }
 
 /// One forward step of graph diffusion.
-/// Takes fields (N x 32 flat), edges (E x 2 flat), damping.
-/// Returns (new_fields_flat, delta).
+///
+/// Takes ``fields`` (N x 32 float32 numpy) and ``edges`` (E x 2 int32
+/// numpy) as zero-copy ``PyReadonlyArray2`` views; returns the new
+/// fields as an owned ``PyArray2<f32>`` plus the scalar L2 delta.
+///
+/// The previous signature took ``Vec<f32>`` + ``Vec<i32>``, which forced
+/// PyO3 to box-unbox every element through Python's float/int object
+/// representation on the way in, and required a ``numpy.array(...)
+/// .reshape(...)`` round-trip on the way out.  For a 200-step pulse
+/// over a small graph this was the dominant cost — Rust-vs-Python
+/// parity (0.99x) on the speedup bench was paying for marshalling,
+/// not algorithm.  Zero-copy ``PyReadonlyArray2`` + ``bytemuck`` slice
+/// reinterpretation removes both ends of that tax; the inner kernel
+/// (``diffusion::graph_diffusion_step``) is unchanged.
 #[pyfunction]
-fn diffusion_step(
-    py: Python<'_>,
-    fields_flat: Vec<f32>,
-    edges_flat: Vec<i32>,
-    n_nodes: usize,
+fn diffusion_step<'py>(
+    py: Python<'py>,
+    fields: numpy::PyReadonlyArray2<'py, f32>,
+    edges: numpy::PyReadonlyArray2<'py, i32>,
     damping: f64,
-) -> PyResult<(PyObject, f64)> {
-    if fields_flat.len() != n_nodes * 32 {
+) -> PyResult<(Bound<'py, numpy::PyArray2<f32>>, f64)> {
+    // ``shape()`` lives on the ndarray view, not directly on
+    // ``PyReadonlyArray2`` — go through ``as_array()`` to get the view.
+    let fields_view = fields.as_array();
+    let fields_shape = fields_view.shape();
+    if fields_shape.len() != 2 || fields_shape[1] != 32 {
         return Err(PyValueError::new_err(format!(
-            "fields_flat length {} != n_nodes * 32 = {}",
-            fields_flat.len(), n_nodes * 32,
+            "fields must be shape (N, 32), got {:?}",
+            fields_shape
+        )));
+    }
+    let n_nodes = fields_shape[0];
+
+    let edges_view = edges.as_array();
+    let edges_shape = edges_view.shape();
+    if edges_shape.len() != 2 || edges_shape[1] != 2 {
+        return Err(PyValueError::new_err(format!(
+            "edges must be shape (E, 2), got {:?}",
+            edges_shape
         )));
     }
 
-    let mut fields: Vec<[f32; 32]> = Vec::with_capacity(n_nodes);
-    for i in 0..n_nodes {
-        let mut arr = [0f32; 32];
-        arr.copy_from_slice(&fields_flat[i * 32..(i + 1) * 32]);
-        fields.push(arr);
-    }
+    let fields_slice = fields.as_slice().map_err(|e| {
+        PyValueError::new_err(format!(
+            "fields must be C-contiguous f32 (N, 32): {}",
+            e
+        ))
+    })?;
+    let edges_slice = edges.as_slice().map_err(|e| {
+        PyValueError::new_err(format!(
+            "edges must be C-contiguous i32 (E, 2): {}",
+            e
+        ))
+    })?;
 
-    let n_edges = edges_flat.len() / 2;
-    let mut edges: Vec<[i32; 2]> = Vec::with_capacity(n_edges);
-    for i in 0..n_edges {
-        edges.push([edges_flat[i * 2], edges_flat[i * 2 + 1]]);
-    }
+    // ``[f32; 32]`` and ``[i32; 2]`` are both ``Pod`` (arrays of POD
+    // primitives), so reinterpretation of the contiguous numpy buffer
+    // into the kernel's expected slice types is zero-copy.
+    let fields_blocks: &[[f32; 32]] = bytemuck::cast_slice(fields_slice);
+    let edges_blocks: &[[i32; 2]] = bytemuck::cast_slice(edges_slice);
 
-    let (new_fields, delta) = graph_diffusion_step(&fields, &edges, damping);
+    let (new_fields, delta) =
+        graph_diffusion_step(fields_blocks, edges_blocks, damping);
 
-    let flat: Vec<f32> = new_fields.into_iter().flat_map(|a| a.into_iter()).collect();
-    let np = py.import("numpy")?;
-    let arr = np.call_method1("array", (flat, "float32"))?;
-    let reshaped = arr.call_method1("reshape", ((n_nodes, 32),))?;
-    Ok((reshaped.into_py(py), delta))
+    // ``Vec<[f32; 32]>`` → ``Vec<f32>`` is a zero-copy reinterpretation
+    // of the allocation (requires the ``extern_crate_alloc`` bytemuck
+    // feature; see Cargo.toml).
+    //
+    // We use ``numpy::ndarray::Array2`` (numpy 0.21's re-export of
+    // ndarray 0.15) rather than ``ndarray::Array2`` to keep crate
+    // versions aligned — the workspace pulls ndarray 0.16 for the
+    // ``diffusion`` module but ``numpy::IntoPyArray`` is implemented
+    // for ndarray 0.15's types only.
+    let flat: Vec<f32> = bytemuck::allocation::cast_vec(new_fields);
+    let arr = numpy::ndarray::Array2::from_shape_vec((n_nodes, 32), flat)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    Ok((numpy::IntoPyArray::into_pyarray_bound(arr, py), delta))
 }
 
 fn extract_f32_slice(obj: &pyo3::types::PyAny) -> PyResult<[f32; 32]> {

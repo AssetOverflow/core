@@ -237,17 +237,26 @@ def diffusion_step(
 ) -> tuple[np.ndarray, float] | None:
     """One forward step of graph diffusion via Rust.
 
-    Returns (new_fields, delta) or None if Rust is unavailable or not explicitly enabled.
+    Returns ``(new_fields, delta)`` or ``None`` if Rust is unavailable
+    or not explicitly enabled.
+
+    Pass ``fields`` and ``edges`` as contiguous numpy arrays directly —
+    the Rust FFI now consumes them via zero-copy ``PyReadonlyArray2``
+    views.  The previous code flattened to Python lists with
+    ``.flatten().tolist()``, paying a per-element Python-float
+    box-unbox tax on every diffusion step.  ``np.ascontiguousarray``
+    is a no-op when the input is already contiguous (the common
+    case); the dtype coerce is also a no-op when already float32 /
+    int32.
     """
     if _RUST:
         try:
-            n_nodes = fields.shape[0]
-            fields_flat = fields.astype(np.float32).flatten().tolist()
-            edges_flat = edges.astype(np.int32).flatten().tolist()
+            fields_c = np.ascontiguousarray(fields, dtype=np.float32)
+            edges_c = np.ascontiguousarray(edges, dtype=np.int32)
             new_fields, delta = _rs.diffusion_step(
-                fields_flat, edges_flat, n_nodes, float(damping),
+                fields_c, edges_c, float(damping),
             )
-            return np.asarray(new_fields, dtype=np.float32), float(delta)
+            return new_fields, float(delta)
         except (AttributeError, Exception):
             pass
     return None
