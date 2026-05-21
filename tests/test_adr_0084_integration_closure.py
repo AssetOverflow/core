@@ -98,11 +98,11 @@ class TestStrictParseOptedInPacks:
 
     def test_total_entry_count_matches_standalone_verifier(self) -> None:
         # Standalone ``scripts/verify_definitional_closure.py`` reports
-        # 333 entries.  Substrate strict-parse must see the same set
+        # 342 entries.  Substrate strict-parse must see the same set
         # so the two verifiers agree on scope.
         total = sum(len(load_pack_glosses(p, strict=True)) for p in OPTED_IN_PACKS)
-        assert total == 333, (
-            f"Substrate parsed {total} entries; standalone verifier reports 333. "
+        assert total == 342, (
+            f"Substrate parsed {total} entries; standalone verifier reports 342. "
             f"Divergence means one of the two verifiers is silently skipping rows."
         )
 

@@ -1,0 +1,16 @@
+{
+  "pack_id": "en_systems_software_v1",
+  "language": "en",
+  "role": "domain_seed",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_systems_software_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "067db7a84e1cd2ae9e5c341b56cb9e80b7dd7eb80176f97c2aeb73803abaadeb",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback",
+  "glosses_checksum": "189a8686c02ac7a0801ef4d32fd52e551b5b88a1937d1e4efa7d449d16e74833",
+  "definitional_layer": true,
+  "provenance": "adr-0090:domain_seed:2026-05-21"
+}

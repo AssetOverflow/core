@@ -1,0 +1,16 @@
+{
+  "pack_id": "en_physics_v1",
+  "language": "en",
+  "role": "domain_seed",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_physics_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "bf6a86609511c5889f3101d9a072e06a742636cd5d5e40068a956690534f2185",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback",
+  "glosses_checksum": "2d813897f06e0ac777044094a788710454e0e66d4a3725c0ed2436edbfc67830",
+  "definitional_layer": true,
+  "provenance": "adr-0090:domain_seed:2026-05-21"
+}

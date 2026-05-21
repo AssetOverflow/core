@@ -10,7 +10,7 @@
   "version": "1.2.0",
   "gate_engaged": true,
   "oov_policy": "tagged_fallback",
-  "glosses_checksum": "5ec8e15861f866c89136eee8bfb7c719e88ed80a4fd3a0e456f9ff30e1538f0d",
+  "glosses_checksum": "f904d2f3105ac750bb317a4ca9c43c15e6cc9f8d4f1ea989977ee8993914fcd0",
   "definitional_layer": true,
   "provenance": "adr-0084:reviewed:2026-05-20"
 }
