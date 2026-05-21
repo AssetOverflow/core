@@ -1,0 +1,27 @@
+{
+  "register_id": "literary_v1",
+  "version": "1.0.0",
+  "description": "Literary register — elevated diction, em-dash heavy.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "add8bf8a979a9f9500804810673360e28490a7ad775636eb044f4f05fce49a70",
+  "display_name": "Literary",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true,
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "There is, in this, ",
+      "Properly speaking — ",
+      "It must be said: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and so the matter rests.",
+      " — quietly held."
+    ]
+  }
+}

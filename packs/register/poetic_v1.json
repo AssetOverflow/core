@@ -1,0 +1,27 @@
+{
+  "register_id": "poetic_v1",
+  "version": "1.0.0",
+  "description": "Poetic register — image-led markers (within bounded buckets), expansive disclosure.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "b5ef2752d1c210fa4a4f89ba3c49810fc9198c1290d503521a8f39ab621dc42b",
+  "display_name": "Poetic",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true,
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Suppose — ",
+      "Consider — ",
+      "Imagine: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and so the image holds.",
+      " — quietly."
+    ]
+  }
+}

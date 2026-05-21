@@ -1,0 +1,27 @@
+{
+  "register_id": "journalistic_v1",
+  "version": "1.0.0",
+  "description": "Journalistic register — leads with the fact; sourced closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "4cbe5b89af09342ccb87fb358467b27b2f440714183baeedf9757d67f2c76141",
+  "display_name": "Journalistic",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2,
+    "drop_provenance_tag": false
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Lead: ",
+      "Key fact: ",
+      "In brief: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — per the pack record.",
+      " — sourced."
+    ]
+  }
+}

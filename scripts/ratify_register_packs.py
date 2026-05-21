@@ -53,6 +53,21 @@ REGISTER_IDS: tuple[str, ...] = (
     "succinct_v1",
     "expansive_v1",
     "exhaustive_v1",
+    "warm_v1",
+    "cool_v1",
+    "casual_v1",
+    "intense_v1",
+    "playful_v1",
+    "calm_v1",
+    "urgent_v1",
+    "serene_v1",
+    "dramatic_v1",
+    "sober_v1",
+    "clinical_v1",
+    "colloquial_v1",
+    "literary_v1",
+    "journalistic_v1",
+    "poetic_v1",
 )
 
 #: Valid IntentTag names for ``per_intent`` keys (ADR-0071, R4).  This

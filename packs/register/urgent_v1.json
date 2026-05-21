@@ -1,0 +1,28 @@
+{
+  "register_id": "urgent_v1",
+  "version": "1.0.0",
+  "description": "Urgent register — short, directive markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "a4846fdf45dddaeba46a78e32edcec3497e6689b4f8c82efe52583c0abb2c340",
+  "display_name": "Urgent",
+  "depth_preference": "terse",
+  "realizer_overrides": {
+    "disclosure_domain_count": 1,
+    "drop_provenance_tag": true,
+    "compress_gloss": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "Quick: ",
+      "Here: ",
+      "Now: ",
+      "Brief: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — now you know.",
+      " — proceed."
+    ]
+  }
+}

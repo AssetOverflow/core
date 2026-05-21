@@ -1,0 +1,26 @@
+{
+  "register_id": "cool_v1",
+  "version": "1.0.0",
+  "description": "Cool register — neutral openings, restrained closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "a20ef4d5d109eb2b3fcfb25c2a4c611942b726c2b80627893009ee06d0b8d9f5",
+  "display_name": "Cool",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Briefly — ",
+      "In short — ",
+      "Put plainly: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — that is the substance.",
+      " — and no more."
+    ]
+  }
+}

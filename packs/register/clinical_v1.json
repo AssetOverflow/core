@@ -1,0 +1,25 @@
+{
+  "register_id": "clinical_v1",
+  "version": "1.0.0",
+  "description": "Clinical register — observational markers, two-domain disclosure for precision.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "2fb3aafe3a8400db71cf58b7f2e963f1edd3c7aabbdaa48d269bd7e19e57a7e3",
+  "display_name": "Clinical",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 2
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Observation: ",
+      "Note: ",
+      "Per the record: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — as observed."
+    ]
+  }
+}

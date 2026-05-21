@@ -1,0 +1,27 @@
+{
+  "register_id": "serene_v1",
+  "version": "1.0.0",
+  "description": "Serene register — flowing, contemplative markers.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "7679de2b7c5b349c34ec4180decf2737f672b58df64f0eeb1084c0df05e32b65",
+  "display_name": "Serene",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Gently: ",
+      "There is — ",
+      "Consider this: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — a quiet truth.",
+      " — and that suffices.",
+      " — held lightly."
+    ]
+  }
+}

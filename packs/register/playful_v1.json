@@ -1,0 +1,26 @@
+{
+  "register_id": "playful_v1",
+  "version": "1.0.0",
+  "description": "Playful register — light openings, witty closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "131485685fdc767bb85c05275836afa5d606726b6ebde3db270339ac313a27b6",
+  "display_name": "Playful",
+  "depth_preference": "standard",
+  "realizer_overrides": {},
+  "discourse_markers": {
+    "openings": [
+      "",
+      "OK so — ",
+      "Right — ",
+      "Here's the thing — ",
+      "Fun one: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — neat, right?",
+      " — and there we have it.",
+      " — pretty tidy."
+    ]
+  }
+}
