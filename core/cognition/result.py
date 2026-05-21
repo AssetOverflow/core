@@ -100,6 +100,26 @@ class CognitiveTurnResult:
     # in place when a future ADR wires the materialisation path.
     refusal_reason: str = ""
 
+    # --- compound intent observability (ADR-0089 Phase C1) ---
+    # Finding 4 (audit 2026-05-20).  ``classify_compound_intent`` returns
+    # multiple parts for inputs like "What is X and how does it relate
+    # to Y?" but the pipeline still routes only the dominant clause
+    # through the existing single-intent path.  Pre-fix the secondary
+    # clauses were silently dropped — no observability, no telemetry,
+    # no trace evidence.
+    #
+    # Phase C1 surfaces the dropped clauses here so operators can see
+    # the lost signal without changing any current behaviour.  Phase
+    # C2 (opt-in, flag-gated) will route the secondary clauses through
+    # a multi-node graph; that wiring is deliberately scoped to a
+    # separate PR per ADR-0089 because it widens
+    # ``compute_trace_hash`` and the surface resolver contract.
+    #
+    # Empty tuple == this turn was single-clause OR the compound
+    # classifier was not consulted; ``len > 0`` == this turn dropped
+    # secondary clauses that were classified but not routed.
+    dropped_compound_clauses: tuple[DialogueIntent, ...] = ()
+
     # --- invariant bookkeeping ---
     versor_condition: float = 0.0   # must be < 1e-6
     trace_hash: str = ""            # SHA-256 over deterministic key fields

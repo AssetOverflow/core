@@ -19,7 +19,7 @@ from field.state import FieldState
 from core.cognition.result import CognitiveTurnResult
 from core.cognition.surface_resolution import resolve_surface
 from core.cognition.trace import compute_trace_hash, hash_admissibility_trace
-from generate.intent import classify_intent
+from generate.intent import classify_compound_intent, classify_intent
 from generate.intent_bridge import _is_useful_surface
 from generate.intent_ratifier import (
     RatificationOutcome,
@@ -108,6 +108,17 @@ class CognitiveTurnPipeline:
 
         # 1b. CLASSIFY — intent and proposition graph (deterministic, pre-chat)
         seeded_intent = classify_intent(text)
+        # ADR-0089 Phase C1 (Finding 4, audit 2026-05-20) — also run the
+        # compound classifier so secondary clauses become observable
+        # telemetry instead of being silently dropped.  The dominant
+        # clause continues to route through the existing single-intent
+        # path; Phase C2 (opt-in flag) will widen the graph planner to
+        # consume multiple parts.  Single-clause prompts cost only the
+        # regex check — no graph / realizer / chat invocation changes.
+        compound = classify_compound_intent(text)
+        dropped_compound_clauses: tuple = (
+            tuple(compound.parts[1:]) if compound.is_compound() else ()
+        )
         # 1b.i FIELD-RATIFY the seeded intent (ADR-0022 §TBD-1).
         #      The regex classifier is the *seed*; the field is the
         #      gate.  A demoted intent routes the rest of the turn
@@ -296,6 +307,7 @@ class CognitiveTurnPipeline:
             ratification_outcome=ratification_outcome,
             region_was_unconstrained=region_was_unconstrained,
             refusal_reason=refusal_reason,
+            dropped_compound_clauses=dropped_compound_clauses,
             versor_condition=response.versor_condition,
             trace_hash=trace_hash,
         )
