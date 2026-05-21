@@ -159,6 +159,34 @@ class RuntimeConfig:
     # schema ADR and re-ratification so the wiring lands first.
     stop_tokens: tuple[str, ...] | None = None
 
+    # ADR-0088 Phase B (audit Finding 2, 2026-05-20) — realizer becomes
+    # a real surface authority by grounding the proposition graph from
+    # the recall step's walk tokens before invoking
+    # ``realize_semantic``.  Default ``False`` preserves byte-identity
+    # for every existing pack and test — the pipeline's
+    # ``realize_semantic`` call continues to fire on the ungrounded
+    # graph, which produces ``<pending>`` / ``...`` surfaces that the
+    # ``_is_useful_surface`` gate rejects, leaving the runtime path's
+    # ADR-0085-polished pack-grounded surface as the user-visible
+    # answer (same as today).
+    #
+    # When True the pipeline reorders ``realize_semantic`` to run
+    # AFTER ``runtime.chat``, calls ``ground_graph(graph,
+    # response.recalled_words)`` to fill the ``<pending>`` slots, then
+    # re-invokes ``realize_semantic`` on the grounded graph.  The
+    # surface resolver (PR #76) then picks the realizer's grounded
+    # output when it clears ``_is_useful_surface`` and the unknown-
+    # domain gate did not fire.
+    #
+    # NOTE — Phase A (realizer fluency parity: gloss-aware templates,
+    # 3sg verb agreement, pack-provenance tag) is the prerequisite
+    # for enabling this flag in production.  The known fluency gap
+    # (e.g. ``"Light is a visible medium that reveal truth"``,
+    # subject-verb disagreement) is documented in ADR-0088 §Phase A.
+    # The wiring lands first so the runtime contract is stable when
+    # Phase A's realizer fluency upgrade ships.
+    realizer_grounded_authority: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"
