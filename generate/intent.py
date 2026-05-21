@@ -74,7 +74,11 @@ class DialogueIntent:
 
 
 _COMPARE_RE = re.compile(
-    r"^compare\s+(.+?)\s+(?:and|vs\.?|versus|with)\s+(.+)",
+    # Comb pass 2026-05-21 — ``^`` removed where consumed via ``.match()``
+    # only (anchored at start automatically).  Patterns consumed via
+    # ``.search()`` (see ``_RESPONSE_MODE_RULES`` below) retain their
+    # leading ``^`` because ``.search()`` does not anchor.
+    r"compare\s+(.+?)\s+(?:and|vs\.?|versus|with)\s+(.+)",
     re.IGNORECASE,
 )
 
@@ -85,7 +89,7 @@ _COMPARE_RE = re.compile(
 # operator layer handles unrecognised relations by falling back to a
 # cross-relation traversal (rather than a strict literal-relation match).
 _TRANSITIVE_QUERY_RE = re.compile(
-    r"^what\s+does\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
+    r"what\s+does\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
     r"(?P<relation>[a-z][a-z\-]*)\b",
     re.IGNORECASE,
 )
@@ -95,18 +99,18 @@ _TRANSITIVE_QUERY_RE = re.compile(
 # probe shape.  Must be tried before the generic transitive-query rule
 # so the "in Y" tail is not silently truncated.
 _FRAME_TRANSFER_RE = re.compile(
-    r"^what\s+does\s+(?P<subject>[a-z][a-z\-]+)\s+"
+    r"what\s+does\s+(?P<subject>[a-z][a-z\-]+)\s+"
     r"(?P<relation>[a-z][a-z\-]+)(?P<rel_tail>\s+to)?\s+in\s+"
     r"(?P<frame>[a-z][a-z\-]+)\b",
     re.IGNORECASE,
 )
 _BELONG_QUERY_RE = re.compile(
-    r"^where\s+does\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
+    r"where\s+does\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
     r"belong(?:s?)\b",
     re.IGNORECASE,
 )
 _DECLARATIVE_RELATION_RE = re.compile(
-    r"^(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
+    r"(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
     r"(?:(?P<neg_aux>does|do|did)\s+not\s+)?"
     r"(?P<relation>reveals|reveal|grounds|ground|supports|support|"
     r"requires|require|causes|cause|precedes|precede|follows|follow)\s+"
@@ -120,7 +124,7 @@ _DECLARATIVE_RELATION_RE = re.compile(
 # Routes to CAUSE so the teaching-chain / cross-pack / pack-surface
 # dispatcher fires on X.
 _HOW_DOES_X_RE = re.compile(
-    r"^how\s+do(?:es)?\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
+    r"how\s+do(?:es)?\s+(?P<subject>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\s+"
     r"(?:work|function|operate|happen|exist|behave|act|emerge)\b",
     re.IGNORECASE,
 )
@@ -142,21 +146,27 @@ _RELATION_NORMALIZE: dict[str, str] = {
 }
 
 _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
+    # Comb pass 2026-05-21 — every pattern in ``_RULES`` is consumed
+    # via ``pattern.match(text)`` (see the loop at the bottom of
+    # ``classify_intent``).  ``re.match`` anchors at the start of the
+    # string automatically, so the leading ``^`` is redundant and
+    # was previously documentation-only noise.  Removed.
+    #
     # P3.3 — NARRATIVE patterns precede DEFINITION so "Tell me about X"
     # does not accidentally classify as DEFINITION on the noun span.
-    (re.compile(r"^tell\s+me\s+about\s+", re.IGNORECASE), IntentTag.NARRATIVE),
-    (re.compile(r"^describe\s+", re.IGNORECASE), IntentTag.NARRATIVE),
-    (re.compile(r"^what\s+(?:can|do)\s+you\s+(?:say|know)\s+about\s+", re.IGNORECASE), IntentTag.NARRATIVE),
+    (re.compile(r"tell\s+me\s+about\s+", re.IGNORECASE), IntentTag.NARRATIVE),
+    (re.compile(r"describe\s+", re.IGNORECASE), IntentTag.NARRATIVE),
+    (re.compile(r"what\s+(?:can|do)\s+you\s+(?:say|know)\s+about\s+", re.IGNORECASE), IntentTag.NARRATIVE),
     # P3.4 — EXAMPLE patterns precede DEFINITION for the same reason.
-    (re.compile(r"^(?:give|show)\s+(?:me\s+)?an?\s+(?:example|instance)\s+of\s+", re.IGNORECASE), IntentTag.EXAMPLE),
-    (re.compile(r"^example\s+of\s+", re.IGNORECASE), IntentTag.EXAMPLE),
-    (re.compile(r"^what\s+(?:is|are)\s+", re.IGNORECASE), IntentTag.DEFINITION),
+    (re.compile(r"(?:give|show)\s+(?:me\s+)?an?\s+(?:example|instance)\s+of\s+", re.IGNORECASE), IntentTag.EXAMPLE),
+    (re.compile(r"example\s+of\s+", re.IGNORECASE), IntentTag.EXAMPLE),
+    (re.compile(r"what\s+(?:is|are)\s+", re.IGNORECASE), IntentTag.DEFINITION),
     # Imperative-form DEFINITION — "Define X", "Define X." — produces
     # the same routing as "What is X?".  Without this rule the prompt
     # falls through to UNKNOWN and the whole text becomes the subject,
     # making pack-resolved lemmas like "moment" or "evident" silently
     # un-groundable.
-    (re.compile(r"^define\s+", re.IGNORECASE), IntentTag.DEFINITION),
+    (re.compile(r"define\s+", re.IGNORECASE), IntentTag.DEFINITION),
     # Expository-DEFINITION variants — "Explain X." and the paragraph
     # request forms — route to DEFINITION so the grounded substrate
     # fires on X.  Presentation depth ("explain at length", "as a
@@ -164,17 +174,17 @@ _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
     # request is still "the definition of X".  Placed AFTER the
     # NARRATIVE rules so "Tell me about X" and "Describe X" continue
     # to route to NARRATIVE.
-    (re.compile(r"^explain\s+", re.IGNORECASE), IntentTag.DEFINITION),
+    (re.compile(r"explain\s+", re.IGNORECASE), IntentTag.DEFINITION),
     (
         re.compile(
-            r"^(?:write|compose|draft)\s+(?:a\s+)?(?:short\s+|brief\s+)?"
+            r"(?:write|compose|draft)\s+(?:a\s+)?(?:short\s+|brief\s+)?"
             r"paragraph\s+(?:about|on)\s+",
             re.IGNORECASE,
         ),
         IntentTag.DEFINITION,
     ),
     (
-        re.compile(r"^paragraph\s+(?:about|on)\s+", re.IGNORECASE),
+        re.compile(r"paragraph\s+(?:about|on)\s+", re.IGNORECASE),
         IntentTag.DEFINITION,
     ),
     # WALKTHROUGH-shape requests — semantic intent is "describe X step
@@ -184,23 +194,23 @@ _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
     # time.  Same orthogonality discipline as the EXPLAIN rule.
     (
         re.compile(
-            r"^walk\s+(?:me\s+)?through\s+",
+            r"walk\s+(?:me\s+)?through\s+",
             re.IGNORECASE,
         ),
         IntentTag.DEFINITION,
     ),
-    (re.compile(r"^why\s+", re.IGNORECASE), IntentTag.CAUSE),
+    (re.compile(r"why\s+", re.IGNORECASE), IntentTag.CAUSE),
     # "What causes / triggers / enables / prevents / drives X?" — the
     # query is about what causes X, so the subject of the CAUSE intent
     # is X (not the causative verb).  Place ahead of the generic
     # VERIFICATION rule because "What causes X?" starts with "what" not
     # an aux verb so VERIFICATION wouldn't match anyway, but the
     # ordering also documents the intent priority.
-    (re.compile(r"^what\s+(?:causes|triggers|enables|prevents|drives|produces|induces|yields)\s+", re.IGNORECASE), IntentTag.CAUSE),
-    (re.compile(r"^how\s+(?:do|can|should|would)\s+(?:I|we|you)\s+", re.IGNORECASE), IntentTag.PROCEDURE),
-    (re.compile(r"^(?:is|are|does|do|can|could|would|should|was|were|has|have|will)\s+.+\??\s*$", re.IGNORECASE), IntentTag.VERIFICATION),
-    (re.compile(r"^(?:no|that'?s\s+(?:not|wrong)|incorrect|actually|correction)", re.IGNORECASE), IntentTag.CORRECTION),
-    (re.compile(r"^remember\s+", re.IGNORECASE), IntentTag.RECALL),
+    (re.compile(r"what\s+(?:causes|triggers|enables|prevents|drives|produces|induces|yields)\s+", re.IGNORECASE), IntentTag.CAUSE),
+    (re.compile(r"how\s+(?:do|can|should|would)\s+(?:I|we|you)\s+", re.IGNORECASE), IntentTag.PROCEDURE),
+    (re.compile(r"(?:is|are|does|do|can|could|would|should|was|were|has|have|will)\s+.+\??\s*$", re.IGNORECASE), IntentTag.VERIFICATION),
+    (re.compile(r"(?:no|that'?s\s+(?:not|wrong)|incorrect|actually|correction)", re.IGNORECASE), IntentTag.CORRECTION),
+    (re.compile(r"remember\s+", re.IGNORECASE), IntentTag.RECALL),
 )
 
 
@@ -288,7 +298,7 @@ def _strip_confirmation_tail(text: str) -> str:
     """
     stripped = text.strip()
     match = re.match(
-        r"^(?P<body>.+?)[,.]\s*(?:right|yes|no|ok)\?\s*$",
+        r"(?P<body>.+?)[,.]\s*(?:right|yes|no|ok)\?\s*$",
         stripped,
         re.IGNORECASE,
     )
@@ -524,11 +534,14 @@ _COMPOUND_SPLIT_RE = re.compile(
 # support, *not* metaphysical importance as a new primitive.  No
 # ``IMPORTANCE`` tag is introduced.
 _ANAPHORIC_FOLLOWUPS: tuple[tuple[re.Pattern[str], str], ...] = (
-    (re.compile(r"^why\s+does\s+(?:it|that|this)\s+matter\??$", re.IGNORECASE),
+    # Comb pass 2026-05-21 — consumed via ``pattern.match(text)``;
+    # leading ``^`` redundant.  Trailing ``$`` retained because
+    # ``re.match`` does not anchor at the end.
+    (re.compile(r"why\s+does\s+(?:it|that|this)\s+matter\??$", re.IGNORECASE),
      "why does {subject} matter"),
-    (re.compile(r"^how\s+does\s+(?:it|that|this)\s+work\??$", re.IGNORECASE),
+    (re.compile(r"how\s+does\s+(?:it|that|this)\s+work\??$", re.IGNORECASE),
      "how does {subject} work"),
-    (re.compile(r"^what\s+causes\s+(?:it|that|this)\??$", re.IGNORECASE),
+    (re.compile(r"what\s+causes\s+(?:it|that|this)\??$", re.IGNORECASE),
      "what causes {subject}"),
 )
 

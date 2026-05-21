@@ -123,6 +123,11 @@ _SEED_ALIASES = {
     "aletheia": "\u1f00\u03bb\u03ae\u03b8\u03b5\u03b9\u03b1",
 }
 _QUESTION_WORDS = frozenset({"what", "who", "how", "why", "when", "where", "which"})
+# Comb pass 2026-05-21 — module-level constant so ``_prefer_prompt_anchor``
+# does not allocate a fresh set on every English turn.  Aux-verbs that
+# precede the prompt's content noun ("is", "are", "was", "were") get
+# filtered out so the content-noun search lands on the actual subject.
+_BE_FORMS: frozenset[str] = frozenset({"is", "are", "was", "were"})
 _TERMINALS = frozenset({".", "?", ";", "!"})
 _UNKNOWN_DOMAIN_SURFACE = "I don't know — insufficient grounding for that yet."
 
@@ -173,15 +178,20 @@ def _prefer_prompt_anchor(
 ) -> ArticulationPlan:
     if output_language != "en" or len(filtered_tokens) < 2:
         return articulation
-    content_tokens = [
-        token
-        for token in filtered_tokens
-        if token.casefold() not in _QUESTION_WORDS and token.casefold() not in {"is", "are", "was", "were"}
-    ]
-    if not content_tokens:
-        return articulation
-    anchor = content_tokens[-1]
-    if anchor == articulation.subject:
+    # Comb pass 2026-05-21 — find the last content-bearing token by
+    # reverse iteration with short-circuit; pre-fix this built a full
+    # ``content_tokens`` list and then took ``[-1]``.  Also: cache
+    # ``token.casefold()`` once per token via walrus operator instead
+    # of calling it twice (against ``_QUESTION_WORDS`` and the
+    # historical inline ``{"is", "are", "was", "were"}`` literal).
+    anchor: str | None = None
+    for token in reversed(filtered_tokens):
+        lower = token.casefold()
+        if lower in _QUESTION_WORDS or lower in _BE_FORMS:
+            continue
+        anchor = token
+        break
+    if anchor is None or anchor == articulation.subject:
         return articulation
     return replace(
         articulation,
