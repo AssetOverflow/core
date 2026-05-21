@@ -1,0 +1,27 @@
+{
+  "register_id": "memo_v1",
+  "version": "1.0.0",
+  "description": "Memo composite — executive terseness + civic formality.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "9bfc5bb71e0ee48d078c07dee6d6d7d10512a71106e41b95b7e43731ce616ace",
+  "display_name": "Memo",
+  "depth_preference": "terse",
+  "realizer_overrides": {
+    "disclosure_domain_count": 1,
+    "compress_gloss": true,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Memo: ",
+      "Note to file: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — please action.",
+      " — for your records."
+    ]
+  }
+}

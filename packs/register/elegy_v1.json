@@ -1,0 +1,27 @@
+{
+  "register_id": "elegy_v1",
+  "version": "1.0.0",
+  "description": "Elegy composite — melancholic + literary.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "9a378d67a450d15f42d51d7de4ffcf63e2f00361f24d0b96bffc4af419e4dc5e",
+  "display_name": "Elegy",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true,
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Long held — ",
+      "Quietly: ",
+      "Now — "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and so it remains.",
+      " — held in stillness."
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "register_id": "briefing_v1",
+  "version": "1.0.0",
+  "description": "Briefing composite — executive depth + journalist closings.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "bb3da07ee85ce5df57712ef5b10b199fd4964fca9295033d65248c7b8473d77b",
+  "display_name": "Briefing",
+  "depth_preference": "terse",
+  "realizer_overrides": {
+    "disclosure_domain_count": 1,
+    "compress_gloss": true,
+    "drop_provenance_tag": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "Brief: ",
+      "Headline: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — per the pack.",
+      " — full detail on request."
+    ]
+  }
+}

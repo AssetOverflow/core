@@ -1,0 +1,27 @@
+{
+  "register_id": "review_v1",
+  "version": "1.0.0",
+  "description": "Review composite — critiquing + comparing.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "518de7c2e212e0b171d0f972e18bd76e1ac50bd6d5a8d779322ae589c7fcfddf",
+  "display_name": "Review",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "On review: ",
+      "Set against expectation: ",
+      "Compared: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — verdict: held.",
+      " — worth a second look."
+    ]
+  }
+}

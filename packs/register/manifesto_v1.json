@@ -1,0 +1,27 @@
+{
+  "register_id": "manifesto_v1",
+  "version": "1.0.0",
+  "description": "Manifesto composite — oratorical + persuasive.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "ed7c13e83f6302fac095c5bfbc49c9ee2f6bb6dc54dff002ce367445556b6bb8",
+  "display_name": "Manifesto",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "disclosure_domain_count": 3,
+    "append_semantic_domain_clause": true
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "We hold — ",
+      "Plainly: ",
+      "Stated: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and we stand on it.",
+      " — that is the position."
+    ]
+  }
+}

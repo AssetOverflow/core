@@ -1,0 +1,27 @@
+{
+  "register_id": "story_v1",
+  "version": "1.0.0",
+  "description": "Story composite — narrator + literary.",
+  "schema_version": "1.0.0",
+  "mastery_report_sha256": "01288429044438534a71eb0ed49accc35f1271afa58fd21776dd2df73a60aa5f",
+  "display_name": "Story",
+  "depth_preference": "standard",
+  "realizer_overrides": {
+    "append_semantic_domain_clause": true,
+    "disclosure_domain_count": 3
+  },
+  "discourse_markers": {
+    "openings": [
+      "",
+      "And so — ",
+      "It happened that ",
+      "Picture: "
+    ],
+    "transitions": [],
+    "closings": [
+      "",
+      " — and there the matter sits.",
+      " — that is the shape of it."
+    ]
+  }
+}
