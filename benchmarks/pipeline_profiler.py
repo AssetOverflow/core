@@ -102,7 +102,7 @@ def profile_turn(
     # functions actually called from pipeline.run().
     from core.cognition import pipeline as pipeline_mod
 
-    orig_classify_intent = pipeline_mod.classify_intent
+    orig_classify_intent = pipeline_mod.classify_compound_intent
     orig_graph_from_intent = pipeline_mod.graph_from_intent
     orig_plan_articulation = pipeline_mod.plan_articulation
     orig_realize_semantic = pipeline_mod.realize_semantic
@@ -144,7 +144,7 @@ def profile_turn(
         with _stage(sink, _STAGE_TEACHING):
             return orig_run_teaching(*args, **kwargs)
 
-    pipeline_mod.classify_intent = timed_classify_intent
+    pipeline_mod.classify_compound_intent = timed_classify_intent
     pipeline_mod.graph_from_intent = timed_graph_from_intent
     pipeline_mod.plan_articulation = timed_plan_articulation
     pipeline_mod.realize_semantic = timed_realize_semantic
@@ -160,7 +160,7 @@ def profile_turn(
     finally:
         total_ns = time.perf_counter_ns() - t_total_0
         # Restore originals (instance and module).
-        pipeline_mod.classify_intent = orig_classify_intent
+        pipeline_mod.classify_compound_intent = orig_classify_intent
         pipeline_mod.graph_from_intent = orig_graph_from_intent
         pipeline_mod.plan_articulation = orig_plan_articulation
         pipeline_mod.realize_semantic = orig_realize_semantic

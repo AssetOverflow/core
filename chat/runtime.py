@@ -424,6 +424,17 @@ class ChatRuntime:
 
         manifold = manifolds[0] if len(pack_ids) == 1 else load_mounted_packs(pack_ids)
         self._manifests = tuple(manifests)
+        # Comb pass 2026-05-21 — precompute OOV-policy aggregates so
+        # ``_apply_oov_policy`` doesn't rescan every manifest per OOV
+        # token.  Manifests are immutable post-construction, so a
+        # one-time aggregate is safe and cuts the hot path from
+        # O(packs × OOV) to O(OOV).
+        self._all_manifests_fail_closed: bool = all(
+            m.oov_policy is OOVPolicy.FAIL_CLOSED for m in self._manifests
+        )
+        self._any_manifest_proposes_vocab: bool = any(
+            m.oov_policy is OOVPolicy.PROPOSE_VOCAB_EXPANSION for m in self._manifests
+        )
         identity_pack_id = resolved_config.identity_pack or DEFAULT_IDENTITY_PACK
         identity_manifold = load_identity_manifold(identity_pack_id)
         self.safety_pack = load_safety_pack()
@@ -661,15 +672,19 @@ class ChatRuntime:
         return self._tokenize(text)
 
     def _apply_oov_policy(self, tokens: list[str]) -> list[str]:
+        # Comb pass 2026-05-21 — OOV-policy aggregates are precomputed
+        # at ``__init__`` so this method stays O(OOV tokens) rather
+        # than O(packs × OOV tokens).  See ``_all_manifests_fail_closed``
+        # / ``_any_manifest_proposes_vocab``.
         kept: list[str] = []
         for token in tokens:
             try:
                 self._context.vocab.get_versor(token)
                 kept.append(token)
             except KeyError:
-                if all(manifest.oov_policy is OOVPolicy.FAIL_CLOSED for manifest in self._manifests):
+                if self._all_manifests_fail_closed:
                     raise
-                if any(manifest.oov_policy is OOVPolicy.PROPOSE_VOCAB_EXPANSION for manifest in self._manifests):
+                if self._any_manifest_proposes_vocab:
                     raise KeyError(f"OOV token requires vocab proposal: {token}")
                 kept.append(token)
         return kept

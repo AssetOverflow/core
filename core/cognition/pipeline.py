@@ -15,16 +15,18 @@ Constraint: ChatRuntime.chat() and ChatResponse contract are unchanged.
 
 from __future__ import annotations
 
+import json
 from collections import OrderedDict
 
 from field.state import FieldState
 from core.cognition.result import CognitiveTurnResult
 from core.cognition.surface_resolution import resolve_surface
 from core.cognition.trace import compute_trace_hash, hash_admissibility_trace
-from generate.intent import classify_compound_intent, classify_intent
+from generate.intent import classify_compound_intent
 from generate.intent_bridge import _is_useful_surface
 from generate.intent_ratifier import (
     RatificationOutcome,
+    RatifiedIntent,
     ratify_intent,
 )
 from generate.graph_planner import graph_from_intent, ground_graph, plan_articulation
@@ -127,15 +129,17 @@ class CognitiveTurnPipeline:
         field_state_before: FieldState | None = self._capture_field_state()
 
         # 1b. CLASSIFY — intent and proposition graph (deterministic, pre-chat)
-        seeded_intent = classify_intent(text)
-        # ADR-0089 Phase C1 (Finding 4, audit 2026-05-20) — also run the
-        # compound classifier so secondary clauses become observable
-        # telemetry instead of being silently dropped.  The dominant
-        # clause continues to route through the existing single-intent
-        # path; Phase C2 (opt-in flag) will widen the graph planner to
-        # consume multiple parts.  Single-clause prompts cost only the
-        # regex check — no graph / realizer / chat invocation changes.
+        # ADR-0089 Phase C1 (Finding 4, audit 2026-05-20) — run the
+        # compound classifier first and take its dominant clause as
+        # the seeded intent.  ``classify_compound_intent`` already
+        # invokes ``classify_intent`` on the dominant fragment, so
+        # this is one regex cascade per turn instead of two (comb
+        # pass 2026-05-21).  Secondary clauses surface on
+        # ``CognitiveTurnResult.dropped_compound_clauses`` as
+        # observability telemetry; the dominant clause continues to
+        # route through the existing single-intent path.
         compound = classify_compound_intent(text)
+        seeded_intent = compound.primary
         dropped_compound_clauses: tuple = (
             tuple(compound.parts[1:]) if compound.is_compound() else ()
         )
@@ -175,25 +179,39 @@ class CognitiveTurnPipeline:
         # preserves byte-identity for every existing surface and
         # trace_hash — the realizer continues to emit unusable
         # placeholders and lose the resolver to the runtime path.
-        if getattr(self.runtime.config, "realizer_grounded_authority", False):
-            recalled_words = getattr(response, "recalled_words", ()) or ()
+        # Comb pass 2026-05-21 — direct attribute access; these fields
+        # all live on ChatResponse with documented defaults (PR #88 for
+        # ``realizer_grounded_authority`` + ``recalled_words``, ADR-0048
+        # for ``grounding_source``, ADR-0077 for
+        # ``register_canonical_surface``, ADR-0071 for
+        # ``pre_decoration_surface``).  The historical ``getattr`` calls
+        # were ADR-introduction defensiveness now safe to drop.
+        if self.runtime.config.realizer_grounded_authority:
+            recalled_words = response.recalled_words
             if recalled_words:
                 grounded_graph = ground_graph(graph, recalled_words)
                 realized_plan = realize_semantic(target, grounded_graph)
 
         gate_fired = (
             response.vault_hits == 0
-            and getattr(response, "grounding_source", "vault") != "vault"
+            and response.grounding_source != "vault"
         )
-        canonical = getattr(response, "register_canonical_surface", "") or ""
-        pre_decoration = getattr(response, "pre_decoration_surface", "") or ""
+        canonical = response.register_canonical_surface
+        pre_decoration = response.pre_decoration_surface
 
-        walk_result: WalkResult | None = self._maybe_transitive_walk(intent)
+        # Comb pass 2026-05-21 — materialize teaching-store triples once
+        # per turn.  Pre-fix both ``_maybe_transitive_walk`` and
+        # ``_maybe_compose_relations`` called ``self.teaching_store.triples()``
+        # independently, doubling the per-turn O(N) filter+tuple-build
+        # cost as the corpus grows.
+        triples = self.teaching_store.triples()
+
+        walk_result: WalkResult | None = self._maybe_transitive_walk(intent, triples)
         walk_surface = ""
         if walk_result is not None and len(walk_result.path) > 1:
             walk_surface = CognitiveTurnPipeline._render_walk_surface(walk_result)
 
-        compose_result: FrameComposeResult | None = self._maybe_compose_relations(intent)
+        compose_result: FrameComposeResult | None = self._maybe_compose_relations(intent, triples)
         compose_surface = ""
         if compose_result is not None and (
             compose_result.subject_tail is not None
@@ -289,8 +307,8 @@ class CognitiveTurnPipeline:
         review_hash = reviewed_example.review_hash if reviewed_example is not None else ""
         proposal_id = proposal.proposal_id if proposal is not None else ""
         epistemic_status = proposal.epistemic_status.value if proposal is not None else ""
-        walk_serialised = self._serialize_walk(walk_result)
-        compose_serialised = self._serialize_compose(compose_result)
+        walk_serialised = CognitiveTurnPipeline._serialize_operator(walk_result)
+        compose_serialised = CognitiveTurnPipeline._serialize_operator(compose_result)
         # Deterministic concatenation: walk record, then compose record.
         # Empty strings are dropped so single-operator turns keep their
         # existing trace_hash byte-for-byte.
@@ -300,17 +318,19 @@ class CognitiveTurnPipeline:
             else walk_serialised
         )
         # ADR-0023 — admissibility trace + ratification provenance.
-        admissibility_trace = getattr(response, "admissibility_trace", ()) or ()
-        region_was_unconstrained = getattr(
-            response, "region_was_unconstrained", True
-        )
+        # Comb pass 2026-05-21 — direct attribute access; the fields
+        # are dataclass-defaulted on ChatResponse, so the prior
+        # ``getattr`` guard was dead defensiveness from the ADR
+        # introduction window.
+        admissibility_trace = response.admissibility_trace
+        region_was_unconstrained = response.region_was_unconstrained
         admissibility_trace_hash = hash_admissibility_trace(admissibility_trace)
         ratification_outcome = ratified.outcome.value
         # ADR-0024 Phase 2 — refusal_reason flows from a future
-        # materialisation site on ChatResponse.  For Phase 2 it is
-        # absent on every non-refused turn; reading via getattr keeps
-        # the trace_hash byte-identical to pre-Phase-2 when no refusal
-        # was materialised (the empty string skips the payload fold).
+        # materialisation site on ChatResponse.  Empty string on every
+        # non-refused turn; folding into trace_hash is gated on
+        # non-emptiness so non-refused turns keep byte-identical hashes
+        # relative to pre-Phase-2 (CLAUDE.md determinism invariant).
         refusal_reason = getattr(response, "refusal_reason", "") or ""
         trace_hash = compute_trace_hash(
             input_text=text,
@@ -374,8 +394,6 @@ class CognitiveTurnPipeline:
         ratification short-circuits to PASSTHROUGH and the seed
         survives — the existing cold-start behavior is preserved.
         """
-        from generate.intent_ratifier import RatifiedIntent
-
         if field_state is None:
             return RatifiedIntent(
                 intent=intent,
@@ -499,7 +517,11 @@ class CognitiveTurnPipeline:
         proposal = self.teaching_store.add(reviewed)
         return candidate, reviewed, proposal
 
-    def _maybe_transitive_walk(self, intent) -> WalkResult | None:
+    def _maybe_transitive_walk(
+        self,
+        intent,
+        triples: tuple[tuple[str, str, str], ...] | None = None,
+    ) -> WalkResult | None:
         """Invoke a typed deterministic walk operator when the intent shape
         calls for it (ADR-0018).
 
@@ -513,8 +535,13 @@ class CognitiveTurnPipeline:
         DEFINITION intents only attempt step 1 with the implicit "is"
         relation; they do not fall back to a multi-relation walk
         (which would be too permissive for plain "What is X?").
+
+        ``triples`` may be passed in to avoid a second
+        ``teaching_store.triples()`` materialization per turn (comb
+        pass 2026-05-21); when omitted, falls back to the live store.
         """
-        triples = self.teaching_store.triples()
+        if triples is None:
+            triples = self.teaching_store.triples()
         if not triples:
             return None
         if intent.tag is IntentTag.TRANSITIVE_QUERY and intent.relation:
@@ -531,17 +558,26 @@ class CognitiveTurnPipeline:
                 return result
         return None
 
-    def _maybe_compose_relations(self, intent) -> FrameComposeResult | None:
+    def _maybe_compose_relations(
+        self,
+        intent,
+        triples: tuple[tuple[str, str, str], ...] | None = None,
+    ) -> FrameComposeResult | None:
         """Invoke ``compose_relations`` when the intent is a frame-transfer
         probe ("What does X R in Y?") and the teaching store carries at
         least one R-edge.  Returns the typed result; the caller folds
         non-None tails into the surface.
+
+        ``triples`` may be passed in to avoid a second
+        ``teaching_store.triples()`` materialization per turn (comb
+        pass 2026-05-21).
         """
         if intent.tag is not IntentTag.FRAME_TRANSFER:
             return None
         if not intent.relation or not intent.frame:
             return None
-        triples = self.teaching_store.triples()
+        if triples is None:
+            triples = self.teaching_store.triples()
         if not triples:
             return None
         return compose_relations(
@@ -565,47 +601,22 @@ class CognitiveTurnPipeline:
             )
         return "; ".join(parts)
 
-    @staticmethod
-    def _fold_compose_into_surface(
-        compose: FrameComposeResult,
-        surface: str,
-        articulation_surface: str,
-    ) -> tuple[str, str]:
-        """Fold a frame-transfer composition into the surface.
+    # Comb pass 2026-05-21 — removed dead ``_fold_compose_into_surface``
+    # (no live callers since PR #76 routed all surface composition
+    # through the explicit ``resolve_surface`` policy).  The render
+    # helper above is still consumed by the resolver path.
 
-        Names both tails so the lane checker sees the cross-instance
-        composed token regardless of which side the case author asserted
-        as the expected answer.  Deterministic; identical inputs yield
-        identical output.
+    @staticmethod
+    def _serialize_operator(op: WalkResult | FrameComposeResult | None) -> str:
+        """Deterministic operator-invocation serialisation for trace_hash.
+
+        Comb pass 2026-05-21 — collapsed the parallel ``_serialize_walk`` /
+        ``_serialize_compose`` helpers into one.  Both operators expose
+        ``as_dict()`` and serialise identically.
         """
-        compose_surface = CognitiveTurnPipeline._render_compose_surface(compose)
-        if not compose_surface:
-            return surface, articulation_surface
-        new_surface = (
-            f"{surface} — {compose_surface}" if surface else compose_surface
-        )
-        new_articulation = (
-            f"{articulation_surface} — {compose_surface}"
-            if articulation_surface
-            else compose_surface
-        )
-        return new_surface, new_articulation
-
-    @staticmethod
-    def _serialize_walk(walk: WalkResult | None) -> str:
-        """Deterministic operator-invocation serialisation for trace_hash."""
-        if walk is None:
+        if op is None:
             return ""
-        import json
-        return json.dumps(walk.as_dict(), sort_keys=True, ensure_ascii=False)
-
-    @staticmethod
-    def _serialize_compose(compose: FrameComposeResult | None) -> str:
-        """Deterministic compose-invocation serialisation for trace_hash."""
-        if compose is None:
-            return ""
-        import json
-        return json.dumps(compose.as_dict(), sort_keys=True, ensure_ascii=False)
+        return json.dumps(op.as_dict(), sort_keys=True, ensure_ascii=False)
 
     @staticmethod
     def _render_walk_surface(walk: WalkResult) -> str:
