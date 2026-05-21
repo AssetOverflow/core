@@ -17,8 +17,10 @@ from __future__ import annotations
 
 from field.state import FieldState
 from core.cognition.result import CognitiveTurnResult
+from core.cognition.surface_resolution import resolve_surface
 from core.cognition.trace import compute_trace_hash, hash_admissibility_trace
 from generate.intent import classify_intent
+from generate.intent_bridge import _is_useful_surface
 from generate.intent_ratifier import (
     RatificationOutcome,
     ratify_intent,
@@ -126,88 +128,39 @@ class CognitiveTurnPipeline:
         #       ChatResponse is the stable contract surface.
         response = self.runtime.chat(text, max_tokens=max_tokens)
 
-        # Override surfaces when semantic realizer produced a result.
-        # The ChatResponse contract fields are preserved; we select
-        # the better articulation surface from the semantic path.
-        #
-        # Exception: when the unknown-domain gate fired, ChatRuntime
-        # returns either the universal "insufficient grounding" stub
-        # (ADR-0035) or a pack-grounded surface (ADR-0048) — in both
-        # cases the realizer's fallback would be template-noise that
-        # contradicts the gate's honest "no_grounding" signal, so we
-        # keep ChatRuntime's stub-path surface user-visible.  walk_surface
-        # is unaffected either way.  Addresses calibration gaps.md
-        # Finding 2.
         gate_fired = (
             response.vault_hits == 0
             and getattr(response, "grounding_source", "vault") != "vault"
         )
-        # ADR-0077 (R6) — read register_canonical_surface for trace_hash
-        # so substantive register transforms (terse compress_gloss /
-        # drop_provenance / drop_articles, convivial
-        # append_semantic_domain_clause) cannot leak into the truth
-        # path either.  Falls back through pre_decoration_surface (R4,
-        # ADR-0071) and finally response.surface — historical trace
-        # hashes stay byte-identical for any pre-R6 caller that does
-        # not set the new field, because both pre_decoration and the
-        # canonical degrade to empty in that case.
         canonical = getattr(response, "register_canonical_surface", "") or ""
         pre_decoration = getattr(response, "pre_decoration_surface", "") or ""
-        if canonical:
-            surface = canonical
-        elif pre_decoration:
-            surface = pre_decoration
-        else:
-            surface = response.surface
-        articulation_surface = response.articulation_surface
-        # Pipeline override usefulness gate (2026-05-19 design review,
-        # Finding P0 #1).  The previous gate only required
-        # ``realized_plan.surface`` to be non-empty, so a realizer
-        # output of "Truth is defined as ..." (with <pending> rendered
-        # as ...) would silently override a perfectly-good runtime
-        # pack-grounded surface and the telemetry would record yet a
-        # third surface.  The warmed_session_consistency lane catches
-        # this exactly.
-        #
-        # Use the same usefulness predicate the bridge uses to gate
-        # ``articulate_with_intent`` output (generate/intent_bridge.py),
-        # which rejects empty surfaces and surfaces containing the
-        # placeholder sentinels (<pending>, <prior>, "...").  An
-        # ungrounded realizer surface cannot honestly override a
-        # grounded runtime surface — when the realizer cannot produce
-        # a useful surface, we keep the runtime answer the user sees.
-        from generate.intent_bridge import _is_useful_surface
-        if (
-            realized_plan.surface
-            and not gate_fired
-            and _is_useful_surface(realized_plan.surface)
-        ):
-            surface = realized_plan.surface
-            articulation_surface = realized_plan.surface
 
-        # 7b. INFER — invoke typed deterministic operators (ADR-0018) when the
-        # intent is a transitive-query or definition shape and the teaching
-        # store carries a chain rooted at the subject.  The operator's result
-        # is folded into the surface so chain endpoints become visible.
         walk_result: WalkResult | None = self._maybe_transitive_walk(intent)
+        walk_surface = ""
         if walk_result is not None and len(walk_result.path) > 1:
-            surface, articulation_surface = self._fold_walk_into_surface(
-                walk_result, surface, articulation_surface,
-            )
+            walk_surface = CognitiveTurnPipeline._render_walk_surface(walk_result)
 
-        # 7c. INFER (frame transfer) — for "What does X R in Y?" probes,
-        # compose_relations reports the tails of R(X, ?) and R(Y, ?) so
-        # the realizer surface names both endpoints.  Fires only on the
-        # FRAME_TRANSFER intent shape so the generic transitive-query
-        # surface is unaffected.
         compose_result: FrameComposeResult | None = self._maybe_compose_relations(intent)
+        compose_surface = ""
         if compose_result is not None and (
             compose_result.subject_tail is not None
             or compose_result.frame_tail is not None
         ):
-            surface, articulation_surface = self._fold_compose_into_surface(
-                compose_result, surface, articulation_surface,
-            )
+            compose_surface = CognitiveTurnPipeline._render_compose_surface(compose_result)
+
+        resolved = resolve_surface(
+            canonical_surface=canonical,
+            pre_decoration_surface=pre_decoration,
+            response_surface=response.surface,
+            response_articulation_surface=response.articulation_surface,
+            realized_surface=realized_plan.surface,
+            realizer_useful=_is_useful_surface(realized_plan.surface),
+            gate_fired=gate_fired,
+            walk_surface=walk_surface,
+            compose_surface=compose_surface,
+        )
+        surface = resolved.surface
+        articulation_surface = resolved.articulation_surface
 
         # Track last node id for correction-intent chaining
         if graph.nodes:
@@ -508,6 +461,20 @@ class CognitiveTurnPipeline:
         )
 
     @staticmethod
+    def _render_compose_surface(compose: FrameComposeResult) -> str:
+        """Render a frame-transfer composition suffix without selecting authority."""
+        parts: list[str] = []
+        if compose.subject_tail is not None:
+            parts.append(
+                f"{compose.head} {compose.relation.replace('_', ' ')} {compose.subject_tail}"
+            )
+        if compose.frame_tail is not None:
+            parts.append(
+                f"in {compose.frame} {compose.relation.replace('_', ' ')} {compose.frame_tail}"
+            )
+        return "; ".join(parts)
+
+    @staticmethod
     def _fold_compose_into_surface(
         compose: FrameComposeResult,
         surface: str,
@@ -520,18 +487,9 @@ class CognitiveTurnPipeline:
         as the expected answer.  Deterministic; identical inputs yield
         identical output.
         """
-        parts: list[str] = []
-        if compose.subject_tail is not None:
-            parts.append(
-                f"{compose.head} {compose.relation.replace('_', ' ')} {compose.subject_tail}"
-            )
-        if compose.frame_tail is not None:
-            parts.append(
-                f"in {compose.frame} {compose.relation.replace('_', ' ')} {compose.frame_tail}"
-            )
-        if not parts:
+        compose_surface = CognitiveTurnPipeline._render_compose_surface(compose)
+        if not compose_surface:
             return surface, articulation_surface
-        compose_surface = "; ".join(parts)
         new_surface = (
             f"{surface} — {compose_surface}" if surface else compose_surface
         )
@@ -559,6 +517,16 @@ class CognitiveTurnPipeline:
         return json.dumps(compose.as_dict(), sort_keys=True, ensure_ascii=False)
 
     @staticmethod
+    def _render_walk_surface(walk: WalkResult) -> str:
+        """Render a chain-aware walk suffix without selecting authority."""
+        chain = " ".join(walk.path)
+        endpoint = walk.path[-1]
+        return (
+            f"{walk.head} {walk.relation.replace('_', ' ')} {endpoint} "
+            f"(via {chain})"
+        )
+
+    @staticmethod
     def _fold_walk_into_surface(
         walk: WalkResult,
         surface: str,
@@ -570,14 +538,7 @@ class CognitiveTurnPipeline:
         identical output.  The chain endpoint is the load-bearing token for
         the inference-closure / multi-step-reasoning eval lanes.
         """
-        chain = " ".join(walk.path)
-        endpoint = walk.path[-1]
-        chain_surface = (
-            f"{walk.head} {walk.relation.replace('_', ' ')} {endpoint} "
-            f"(via {chain})"
-        )
-        # Preserve the prior surface as a prefix for context, when it exists
-        # and is non-empty; otherwise the chain surface stands alone.
+        chain_surface = CognitiveTurnPipeline._render_walk_surface(walk)
         if surface:
             new_surface = f"{surface} — {chain_surface}"
         else:
