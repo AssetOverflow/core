@@ -137,6 +137,18 @@ class RuntimeConfig:
     # disclosures or OOV refusals.
     discourse_planner: bool = True
 
+    # Phase 3 — plan-level contemplation pre-flight.  When True, after
+    # the discourse planner produces a plan (and before the renderer
+    # fires) the runtime runs ``core.contemplation.plan_preflight.
+    # contemplate_plan`` over the plan and stores any SPECULATIVE
+    # findings on the runtime for downstream consumption.  Per
+    # ADR-0080: contemplation is read-only and SPECULATIVE-only — no
+    # plan mutation, no autonomous memory promotion.  Findings flow
+    # into the offline contemplation miner (Phase 5) for review-gated
+    # pack-mutation candidates.  Default False keeps the contemplation
+    # opt-in until the operator wires the downstream sink.
+    discourse_contemplation: bool = False
+
     # ADR-0068 / ADR-0069 — register pack id loaded at runtime startup.
     # ``None`` resolves to ``RegisterPack.unregistered()`` (the in-memory
     # null-register sentinel; structurally identical to

@@ -529,10 +529,30 @@ class ChatRuntime:
         self._contemplate_discoveries: bool = False
         self._correction_pass = CorrectionPass()
         self._last_valence: float = 0.0
+        # Phase 3 — most-recent plan-contemplation findings (tuple of
+        # SPECULATIVE ``ContemplationFinding`` records).  Reset to ``()``
+        # on every turn; populated only when ``config.discourse_contemplation``
+        # is True AND the planner actually engaged on the turn.  Exposed
+        # via the ``last_plan_findings`` property below.
+        self._last_plan_findings: tuple[Any, ...] = ()
 
     @property
     def session(self) -> SessionContext:
         return self._context
+
+    @property
+    def last_plan_findings(self) -> tuple[Any, ...]:
+        """Phase 3 — most-recent plan-contemplation findings.
+
+        Tuple of ``core.contemplation.schema.ContemplationFinding``
+        records (always SPECULATIVE per ADR-0080).  Populated only
+        when ``config.discourse_contemplation`` is True and the
+        discourse planner engaged on the turn — empty tuple
+        otherwise.  Read-only observation surface; the runtime
+        itself never acts on findings, the offline contemplation
+        miner does.
+        """
+        return self._last_plan_findings
 
     def attach_telemetry_sink(
         self,
@@ -996,6 +1016,10 @@ class ChatRuntime:
         * Returns ``None`` when the renderer produces an empty string.
         """
 
+        # Phase 3 — reset plan-contemplation findings at the start of
+        # every call so they never leak across turns; only successfully
+        # rendered plans (with contemplation enabled) repopulate them.
+        self._last_plan_findings = ()
         if not self.config.discourse_planner:
             return None
         from generate.discourse_planner import (
@@ -1075,6 +1099,15 @@ class ChatRuntime:
             plan = plan_discourse(intent, mode, bundle)
         if len(plan.moves) <= 1:
             return None
+        # Phase 3 — plan-level contemplation pre-flight.  Read-only,
+        # SPECULATIVE-only; stores findings on the runtime for the
+        # offline contemplation miner to consume.  Does not mutate
+        # the plan or block rendering — emits side observations only.
+        if self.config.discourse_contemplation:
+            from core.contemplation.plan_preflight import contemplate_plan
+            self._last_plan_findings = contemplate_plan(plan)
+        else:
+            self._last_plan_findings = ()
         # Phase 2 — reflective rendering pronominalizes the focus
         # subject across consecutive same-subject moves, eliminating
         # the mechanical "Truth ... Truth ... Truth ..." cascade the
