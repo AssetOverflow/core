@@ -145,6 +145,7 @@ def test_recall_strips_articles(prompt: str, expected_subject: str) -> None:
 @pytest.mark.parametrize(
     "prompt",
     [
+        # Pre-existing canonical forms (contracted ``that's``)
         "No, that's wrong.",
         "No.",
         "No way.",
@@ -153,11 +154,25 @@ def test_recall_strips_articles(prompt: str, expected_subject: str) -> None:
         "Actually, that's false.",
         "Correction: memory is not storage.",
         "That's wrong.",
+        # Fully-spoken copula forms — added when the contracted-only
+        # ``that'?s\s+(?:not|wrong)`` slot was widened to also accept
+        # ``that\s+(?:is|was)`` and the predicate alternation grew
+        # ``incorrect|false|mistaken``.  Every one of these used to
+        # silently fall through to UNKNOWN.
+        "That is not right.",
+        "That is wrong.",
+        "That was wrong.",
+        "That is incorrect.",
+        "That is false.",
+        "That was not right.",
+        "that is mistaken.",
+        "That was incorrect.",
     ],
 )
 def test_correction_canonical_forms_still_route(prompt: str) -> None:
-    """Legitimate CORRECTION pragmas must still classify after the
-    word-boundary fix narrowed the alternation."""
+    """Legitimate CORRECTION pragmas must classify after the
+    word-boundary fix narrowed the alternation, AND the
+    fully-spoken copula variants must route too (previously UNKNOWN)."""
     intent = classify_intent(prompt)
     assert intent.tag is IntentTag.CORRECTION
 
@@ -178,6 +193,20 @@ def test_correction_canonical_forms_still_route(prompt: str) -> None:
         "Corrections department.",
         # ``Actually`` prefix — rarer but symmetric
         "Actualization of intent.",
+        # Affirmatives that share the ``That is/was ...`` shape — the
+        # predicate alternation (``not|wrong|incorrect|false|mistaken``)
+        # must not over-match.  ``That is correct/right/true`` are NOT
+        # corrections; ``falsifiable`` / ``wrongly accused`` carry the
+        # trigger root but extend past the boundary.
+        "That is correct.",
+        "That is right.",
+        "That is true.",
+        "That works.",
+        "That is interesting.",
+        "That is a fact.",
+        "That was a good question.",
+        "That is falsifiable.",
+        "That was wrongly accused.",
     ],
 )
 def test_correction_does_not_eat_no_prefixed_words(prompt: str) -> None:

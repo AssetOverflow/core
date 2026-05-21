@@ -216,7 +216,14 @@ _RULES: tuple[tuple[re.Pattern[str], IntentTag], ...] = (
     # ``"w remember light"``.  The same hazard applies to ``incorrect``
     # (would eat ``incorrectly``), ``actually`` (would eat
     # ``actualization``), and ``correction`` (would eat ``corrections``).
-    (re.compile(r"\b(?:no|that'?s\s+(?:not|wrong)|incorrect|actually|correction)\b", re.IGNORECASE), IntentTag.CORRECTION),
+    #
+    # The ``that(?:'?s|\s+(?:is|was))\s+(?:not|wrong|incorrect|false|
+    # mistaken)`` slot covers both the contracted form (``"That's wrong"``,
+    # ``"thats not"``) and the fully-spoken copula form (``"That is not
+    # right"``, ``"That was wrong"``, ``"That is incorrect"``, ``"That is
+    # false"``, ``"That was mistaken"``).  The contracted-only predecessor
+    # silently dropped these to UNKNOWN.
+    (re.compile(r"\b(?:no|that(?:'?s|\s+(?:is|was))\s+(?:not|wrong|incorrect|false|mistaken)|incorrect|actually|correction)\b", re.IGNORECASE), IntentTag.CORRECTION),
     (re.compile(r"(?:remember|recall)\s+", re.IGNORECASE), IntentTag.RECALL),
 )
 
