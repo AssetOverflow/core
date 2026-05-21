@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Assertive register — declarative markers, no hedging.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "44750505a1fce4eaadf47a4fe5a22c8d3d53d41957f5d161797a539dc9258844",
+  "mastery_report_sha256": "785f079aad5e2492ed7d054716ed2ecf897622230bd2cc96d419cf0ebe9cc9f5",
   "display_name": "Assertive",
   "depth_preference": "standard",
   "realizer_overrides": {
@@ -19,8 +19,7 @@
     ],
     "transitions": [],
     "closings": [
-      "",
-      "."
+      ""
     ]
   }
 }

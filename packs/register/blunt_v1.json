@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Blunt register — short, sharp, no qualification.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "2925ce07bd132a235296098d135ad46f171efc46f2cead69b06f52d309661d33",
+  "mastery_report_sha256": "0c435910a295c7cade443cccfd175c90f0302cc90f0c5a6c613ef62c190462ed",
   "display_name": "Blunt",
   "depth_preference": "terse",
   "realizer_overrides": {
@@ -21,8 +21,7 @@
     ],
     "transitions": [],
     "closings": [
-      "",
-      "."
+      ""
     ]
   }
 }

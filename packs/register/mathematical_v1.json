@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Mathematical register — proof-cadence.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "04e9a09cce4e599781b2d4994383cebf4f6529391f58005a84e69363494508c2",
+  "mastery_report_sha256": "b85e2505fe647aa474b599cfa447c3677ad92c7c305d34ae63c97c8b5ba82fb6",
   "display_name": "Mathematical",
   "depth_preference": "standard",
   "realizer_overrides": {
@@ -21,7 +21,6 @@
     "transitions": [],
     "closings": [
       "",
-      ".",
       " — qed."
     ]
   }

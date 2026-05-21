@@ -3,7 +3,7 @@
     "depth_preference": "standard",
     "discourse_markers_empty": false,
     "marker_bucket_sizes": {
-      "closings": 3,
+      "closings": 2,
       "openings": 3,
       "transitions": 0
     },
@@ -16,10 +16,10 @@
   },
   "failure_reasons": [],
   "issued_at": "2026-05-20T00:00:00Z",
-  "pack_source_sha256": "eccd21f4b00102526fc22d28bac38e091dbda30a408848ac6f42bbfc16716bfb",
+  "pack_source_sha256": "0db49fb251edc60106c04ca75b3422b4661a26e8e1ac17cd9ef2c7973f6617c8",
   "ratification_method": "seeded_variation_replay_equivalence",
   "ratified": true,
   "register_id": "dry_v1",
-  "report_sha256": "1f3232b4eb99d6df156de3f34c5e8fe24f8453ac04a59bb3bd41553ffc5b169a",
+  "report_sha256": "6f413313c0cc42bae47dfb3f1273d429006c0b4405a48764ad6aac8d69da3ebc",
   "schema_version": "1.0.0"
 }

@@ -266,6 +266,64 @@ def _validate_per_intent_block(
                 )
 
 
+_BARE_SENTENCE_FINAL_PUNCT: frozenset[str] = frozenset(".!?;:")
+"""Closing entries beginning with one of these characters concatenate
+directly onto a surface that already ends in ``.`` (CORE's deterministic
+realizer always emits a trailing period) and produce double-punctuation
+artefacts like ``true..``.  Ellipsis (``...`` / ``…``) is exempt — that
+is a legitimate stylistic ending in its own right.
+"""
+
+
+def _validate_discourse_markers_shape(pack: dict, register_id: str) -> None:
+    """Reject discourse-marker shapes that would produce surface
+    artefacts when concatenated to a sentence-final surface.
+
+    Catches the class of authoring bug discovered during the 100-pack
+    widened tour: a bare ``"."`` closing yields ``..`` when seeded
+    variation picks it.  Defense in depth — pack authors should not
+    have to remember the realizer's trailing-period convention.
+
+    Rules (closings only — openings always lead the surface with a
+    space separator inserted by the composer):
+      * ``""`` is always legal (no-op closing)
+      * Entries starting with bare ``.``, ``!``, ``?``, ``;``, ``:``
+        are refused — they double-punctuate.  Ellipsis (``"..."`` /
+        ``"…"``) is exempt and remains legal.
+      * Entries starting with an alphanumeric character are refused —
+        they would join with no separator, e.g. ``"true.holds."``.
+    """
+    markers = pack.get("discourse_markers", {})
+    if not isinstance(markers, dict):
+        return  # shape-only — schema validator owns dict-vs-not
+    closings = markers.get("closings", [])
+    if not isinstance(closings, list):
+        return
+    for entry in closings:
+        if not isinstance(entry, str) or entry == "":
+            continue
+        first = entry[0]
+        if entry.startswith(("...", "…")):
+            continue
+        if first in _BARE_SENTENCE_FINAL_PUNCT:
+            raise SystemExit(
+                f"R4 gate refuses {register_id!r}: discourse_markers."
+                f"closings[{entry!r}] starts with bare sentence-final "
+                f"punctuation. CORE's realizer always emits a trailing "
+                f"'.', so {entry!r} concatenates to '..'-style "
+                f"artefacts. Either drop the entry or prefix it with a "
+                f"separator (e.g. ' — note.')."
+            )
+        if first.isalnum():
+            raise SystemExit(
+                f"R4 gate refuses {register_id!r}: discourse_markers."
+                f"closings[{entry!r}] starts with an alphanumeric "
+                f"character. Closings concatenate directly to the "
+                f"surface — prefix with a space or punctuation "
+                f"separator (e.g. ' note.' or ' — note.')."
+            )
+
+
 def _markers_have_content(pack: dict) -> bool:
     """True iff openings or closings has at least one entry (R4 needs
     one of these populated for a marker-using ratification).
@@ -301,6 +359,7 @@ def _ratify_one(pack_path: Path, register_id: str) -> tuple[dict, dict[str, Any]
     # must have at least one of openings/closings populated.  Null
     # registers pass trivially.
     _validate_overrides_known_keys(pack, register_id)
+    _validate_discourse_markers_shape(pack, register_id)
 
     null_register = _is_null_register(pack)
     overrides = pack.get("realizer_overrides", {}) or {}

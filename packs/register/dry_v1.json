@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Dry register — understated, factual.",
   "schema_version": "1.0.0",
-  "mastery_report_sha256": "1f3232b4eb99d6df156de3f34c5e8fe24f8453ac04a59bb3bd41553ffc5b169a",
+  "mastery_report_sha256": "6f413313c0cc42bae47dfb3f1273d429006c0b4405a48764ad6aac8d69da3ebc",
   "display_name": "Dry",
   "depth_preference": "standard",
   "realizer_overrides": {
@@ -19,7 +19,6 @@
     "transitions": [],
     "closings": [
       "",
-      ".",
       " — that's it."
     ]
   }
