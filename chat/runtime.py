@@ -540,6 +540,14 @@ class ChatRuntime:
         # gating discipline as ``_last_plan_findings``: requires
         # ``config.discourse_contemplation`` + an engaged planner.
         self._last_plan_metrics: Any | None = None
+        # Phase 5 — articulation-observation sink (per-turn JSONL stream
+        # consumed by the offline ``mine_articulation_observations``
+        # miner).  Attached via ``attach_articulation_sink``; ``None``
+        # by default so the runtime emits nothing until an operator
+        # opts in.  Behaviour mirrors ``attach_telemetry_sink``:
+        # append-only, fail-fast on sink errors, deterministic JSONL.
+        self._articulation_sink: Any | None = None
+        self._articulation_turn_counter: int = 0
 
     @property
     def session(self) -> SessionContext:
@@ -584,6 +592,23 @@ class ChatRuntime:
         """ADR-0040 — attach a structured-logging sink."""
         self._telemetry_sink = sink
         self._telemetry_include_content = bool(include_content)
+
+    def attach_articulation_sink(self, sink: Any | None) -> None:
+        """Phase 5 — attach a sink for per-turn articulation observations.
+
+        ``sink`` must satisfy
+        ``chat.articulation_telemetry.ArticulationObservationSink``
+        (any object with ``def emit(line: str) -> None``).  Pass
+        ``None`` to detach.
+
+        The sink receives one canonical JSONL line per turn that
+        engages the discourse planner AND has
+        ``config.discourse_contemplation == True``; non-engaged turns
+        emit nothing.  Lines are byte-identical for byte-equal plans
+        — the offline miner relies on this for deterministic
+        aggregation.
+        """
+        self._articulation_sink = sink
 
     def attach_oov_sink(self, sink: Any) -> None:
         """Phase 2.3 — attach an OOV candidate sink."""
@@ -1149,6 +1174,52 @@ class ChatRuntime:
             for m in plan.moves
         )
         new_source = "teaching" if plan_uses_teaching else "pack"
+        # Phase 5 — emit one articulation observation per engaged turn.
+        # Gated by both ``discourse_contemplation`` (so metrics +
+        # findings exist to package) AND the presence of an attached
+        # sink (so the runtime does no JSON work when nobody is
+        # listening).  Sink errors are NOT swallowed — same fail-fast
+        # contract as the telemetry sink.
+        if (
+            self._articulation_sink is not None
+            and self.config.discourse_contemplation
+            and self._last_plan_metrics is not None
+        ):
+            from chat.articulation_telemetry import (
+                ArticulationObservation,
+                format_articulation_observation_jsonl,
+                prompt_hash,
+            )
+            anchor = plan.anchor()
+            anchor_subject = (
+                anchor.fact.subject
+                if anchor is not None and anchor.fact is not None
+                else (plan.intent.subject or "")
+            )
+            import hashlib as _hashlib
+            plan_substrate_hash = _hashlib.sha256(
+                plan.to_json().encode("utf-8")
+            ).hexdigest()[:16]
+            observation = ArticulationObservation(
+                turn_id=self._articulation_turn_counter,
+                anchor_subject=anchor_subject,
+                prompt_hash=prompt_hash(text),
+                plan_substrate_hash=plan_substrate_hash,
+                metrics=self._last_plan_metrics.as_dict(),
+                findings=tuple(
+                    {
+                        "kind": f.kind.value,
+                        "subject": f.subject,
+                        "predicate": f.predicate,
+                        "object": f.object,
+                    }
+                    for f in self._last_plan_findings
+                ),
+            )
+            self._articulation_sink.emit(
+                format_articulation_observation_jsonl(observation)
+            )
+            self._articulation_turn_counter += 1
         return rendered, new_source
 
     def _stub_response(
