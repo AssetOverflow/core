@@ -39,6 +39,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0115](ADR-0115-math-problem-parser-and-graph.md) | Math Problem Parser and Typed Proposition Graph | Phase 1.1+1.2+1.3 Accepted (2026-05-22) |
 | [ADR-0116](ADR-0116-deterministic-solver.md) | Deterministic Solver (`MathProblemGraph` → `SolutionTrace`) | Accepted (2026-05-22) |
 | [ADR-0117](ADR-0117-solution-trace-verifier.md) | `SolutionTrace` Verifier (independent of solver) | Accepted (2026-05-22) |
+| [ADR-0118a](ADR-0118a-ood-surface-generator.md) | OOD Surface Generator for GSM8K-Style Parser Dev | Accepted (2026-05-22) |
 | [ADR-0122](ADR-0122-systems-software-audit-passed-deferred.md) | `systems_software` Audit-Passed Promotion: Deferred | Accepted (2026-05-22) |
 
 ---
@@ -75,6 +76,7 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - Anti-Overfitting Proof Obligations for any future `expert` promotion (10-point falsifiable framework) — ADR-0114a
 - Deterministic Solver (Phase 2; SolutionTrace + en_arithmetic_v1 pack; discharges ADR-0114a obligations #3, #4, #9, #10) — ADR-0116
 - SolutionTrace Verifier (Phase 3; solver-independent replay; lifts ADR-0114a Obligation #3 to verifier fidelity) — ADR-0117
+- OOD Surface Generator (150 deterministic variants; discharges ADR-0114a obligation #2 for the GSM8K-style parser dev lane) — ADR-0118a
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 
