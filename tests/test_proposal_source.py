@@ -35,6 +35,10 @@ class TestProposalSourceConstruction:
         with pytest.raises(ProposalSourceError, match="non-empty source_id"):
             ProposalSource(kind="curriculum", source_id="", emitted_at_revision="abc")
 
+    def test_contemplation_requires_source_id(self) -> None:
+        with pytest.raises(ProposalSourceError, match="non-empty source_id"):
+            ProposalSource(kind="contemplation", source_id="", emitted_at_revision="abc")
+
     def test_operator_rejects_source_id(self) -> None:
         with pytest.raises(ProposalSourceError, match="empty source_id"):
             ProposalSource(kind="operator", source_id="something", emitted_at_revision="abc")
@@ -77,6 +81,14 @@ class TestSerialization:
             emitted_at_revision="abc",
         )
         assert src.serialize() == "curriculum:math_logic_v1"
+
+    def test_contemplation_serializes_kind_and_id(self) -> None:
+        src = ProposalSource(
+            kind="contemplation",
+            source_id="frontier_compare",
+            emitted_at_revision="abc",
+        )
+        assert src.serialize() == "contemplation:frontier_compare"
 
     def test_round_trip_operator(self) -> None:
         src = ProposalSource.operator(emitted_at_revision="abc")
@@ -125,6 +137,8 @@ class TestExhaustiveMatchPattern:
                 return f"m:{src.source_id}"
             case "curriculum":
                 return f"c:{src.source_id}"
+            case "contemplation":
+                return f"q:{src.source_id}"
             case _:  # pragma: no cover - exhaustiveness
                 assert_never(src.kind)
 
@@ -139,8 +153,18 @@ class TestExhaustiveMatchPattern:
         src = ProposalSource(kind="curriculum", source_id="cur", emitted_at_revision="x")
         assert self._describe(src) == "c:cur"
 
-    def test_kinds_sealed_at_three(self) -> None:
-        assert ALLOWED_KINDS == frozenset({"operator", "miner", "curriculum"})
+    def test_covers_contemplation(self) -> None:
+        src = ProposalSource(
+            kind="contemplation",
+            source_id="frontier_compare",
+            emitted_at_revision="x",
+        )
+        assert self._describe(src) == "q:frontier_compare"
+
+    def test_kinds_sealed_at_four(self) -> None:
+        assert ALLOWED_KINDS == frozenset(
+            {"operator", "miner", "curriculum", "contemplation"}
+        )
 
 
 class TestMigrationDeterminism:

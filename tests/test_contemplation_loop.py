@@ -7,7 +7,11 @@ import pytest
 
 from core.contemplation.__main__ import main
 from core.contemplation.miners.frontier_compare import mine_frontier_compare_report
-from core.contemplation.runner import contemplate_frontier_reports, write_contemplation_run
+from core.contemplation.runner import (
+    contemplate_frontier_reports,
+    run_contemplation,
+    write_contemplation_run,
+)
 from core.contemplation.schema import (
     ContemplationEvidenceRef,
     ContemplationFinding,
@@ -15,6 +19,7 @@ from core.contemplation.schema import (
 )
 from core.contemplation.snapshot import ContemplationSubstrate
 from teaching.epistemic import EpistemicStatus
+from teaching.source import ProposalSource
 
 
 def _sample_frontier_report(path: Path) -> None:
@@ -104,6 +109,9 @@ def test_frontier_report_miner_emits_failed_cases_only(tmp_path: Path) -> None:
     assert finding.predicate == "failed_case"
     assert finding.object == "Why does xylomorphic matter?"
     assert finding.epistemic_status is EpistemicStatus.SPECULATIVE
+    assert finding.confidence is EpistemicStatus.SPECULATIVE
+    assert finding.evidence == finding.evidence_refs
+    assert finding.provenance["source"] == "contemplation"
     assert finding.evidence_refs[0].summary == "unexpected_grounding_source:vault"
 
 
@@ -140,6 +148,43 @@ def test_contemplation_runner_does_not_mutate_pack_tree(tmp_path: Path) -> None:
         if p.is_file()
     )
     assert before == after
+
+
+def test_contemplation_runner_does_not_write_teaching_store_without_review(
+    tmp_path: Path,
+) -> None:
+    report = tmp_path / "frontier_wave1.json"
+    _sample_frontier_report(report)
+    proposal_store = Path("teaching/proposals/proposals.jsonl")
+    before = proposal_store.read_bytes() if proposal_store.exists() else b""
+
+    run = contemplate_frontier_reports((report,))
+
+    after = proposal_store.read_bytes() if proposal_store.exists() else b""
+    assert run.findings
+    assert before == after
+
+
+def test_run_contemplation_default_entrypoint_is_deterministic() -> None:
+    first = run_contemplation()
+    second = run_contemplation()
+
+    assert first.as_dict() == second.as_dict()
+    assert all(
+        finding.confidence is EpistemicStatus.SPECULATIVE
+        for finding in first.findings
+    )
+
+
+def test_contemplation_proposal_source_parses() -> None:
+    source = ProposalSource(
+        kind="contemplation",
+        source_id="frontier_compare",
+        emitted_at_revision="abc123",
+    )
+
+    assert source.serialize() == "contemplation:frontier_compare"
+    assert ProposalSource.from_dict(source.as_dict()) == source
 
 
 def test_contemplation_write_and_cli(tmp_path: Path, capsys) -> None:

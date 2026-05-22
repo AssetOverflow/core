@@ -104,6 +104,33 @@ def contemplate_frontier_reports(
     )
 
 
+def run_contemplation(
+    report_paths: Iterable[str | Path] | None = None,
+    *,
+    pack_ids: Iterable[str] = (),
+    notes: Iterable[str] = (),
+) -> ContemplationRun:
+    """Run ADR-0080 Phase 1 over frontier-compare reports.
+
+    This is the stable operator-facing entry point for Phase 1.  If no
+    explicit paths are supplied it reads the checked-in
+    ``evals/frontier_compare/results/*.json`` reports in deterministic
+    path order.  It never writes packs, teaching examples, proposal logs,
+    or discovery sinks.
+    """
+    if report_paths is None:
+        root = Path(__file__).resolve().parents[2]
+        paths = tuple(sorted(root.glob("evals/frontier_compare/results/*.json")))
+    else:
+        paths = tuple(Path(p) for p in report_paths)
+    return contemplate_frontier_reports(
+        paths,
+        pack_ids=pack_ids,
+        notes=notes,
+        sink=None,
+    )
+
+
 def contemplate_contradiction_reports(
     report_paths: Iterable[str | Path],
     *,
@@ -161,5 +188,6 @@ def write_contemplation_run(run: ContemplationRun, path: str | Path) -> None:
 __all__ = [
     "contemplate_contradiction_reports",
     "contemplate_frontier_reports",
+    "run_contemplation",
     "write_contemplation_run",
 ]

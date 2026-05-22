@@ -4,7 +4,7 @@ ADR-0080: contemplation can emit speculative findings about current
 substrate/report evidence, but it cannot ratify, promote, or mutate packs.
 """
 
-from .runner import contemplate_frontier_reports
+from .runner import contemplate_frontier_reports, run_contemplation
 from .schema import (
     ContemplationEvidenceRef,
     ContemplationFinding,
@@ -20,4 +20,5 @@ __all__ = [
     "ContemplationSubstrate",
     "FindingKind",
     "contemplate_frontier_reports",
+    "run_contemplation",
 ]

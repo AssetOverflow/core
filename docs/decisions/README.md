@@ -10,6 +10,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 
 | ADR | Title | Status |
 |---|---|---|
+| [ADR-0080](ADR-0080-contemplation-loop.md) | Contemplation Loop | Accepted (2026-05-22) |
 | [ADR-0091](ADR-0091-domain-pack-contract-v1.md) | Domain Pack Contract v1 | Accepted (2026-05-22) |
 | [ADR-0092](ADR-0092-reviewer-registry-v1.md) | Reviewer Registry v1 | Accepted (2026-05-22) |
 | [ADR-0093](ADR-0093-domain-pack-contract-v1-implementation.md) | Domain Pack Contract v1 implementation | Accepted (2026-05-22) |
@@ -53,6 +54,8 @@ The ADR-0091..0105 slate is fully accepted and mechanically evidenced:
 - Curriculum-Sourced Teaching Proposals — ADR-0104
 - Sealed Holdout Encryption via age — ADR-0105
 
+ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
+
 Seven lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `lane-shas` GitHub Actions workflow:
 
 - `reviewer_registry`
@@ -67,11 +70,10 @@ Seven lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `la
 
 Sequencing per ADR-0108. Listed in priority order:
 
-1. **[ADR-0080](ADR-0080-contemplation-loop.md) — Contemplation Loop.** Sandboxed, read-only Phase 1 self-interrogation; emits `SPECULATIVE` findings from `frontier_compare` reports. Converts gap-finding from human-driven to system-emitted-and-reviewed.
-2. **[ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs.** Optional per-entry definitional block. Deferred — value surfaces during a worked expert promotion that needs definitional depth.
-3. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
+1. **[ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs.** Optional per-entry definitional block. Deferred — value surfaces during a worked expert promotion that needs definitional depth.
+2. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
 
-ADR-0110 has landed — `mathematics_logic` is the first domain at `expert_demo=true`. The remaining three ratified domains (`physics`, `systems_software`, `hebrew_greek_textual_reasoning`) need their own promotion ADRs.
+ADR-0080 (Contemplation Loop, Phase 1) and ADR-0110 (math expert-demo) have both landed — `mathematics_logic` is the first domain at `expert_demo=true`; the contemplation loop emits read-only `SPECULATIVE` findings from `frontier_compare` reports. The remaining three ratified domains (`physics`, `systems_software`, `hebrew_greek_textual_reasoning`) need their own promotion ADRs.
 
 ### Open candidate directions (no ADR yet)
 

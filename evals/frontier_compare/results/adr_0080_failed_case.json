@@ -1,0 +1,42 @@
+{
+  "benchmark_family": "frontier_compare_adr_0080_phase1",
+  "mode": "core",
+  "model": "core-native",
+  "suites": [
+    {
+      "case_count": 1,
+      "cases": [
+        {
+          "case_id": "planner_relation_gap",
+          "details": {
+            "observation": {
+              "error_message": "",
+              "error_type": "",
+              "model": "core-native",
+              "prompt": "Explain how reviewed correction changes future recall.",
+              "provider": "core",
+              "surface": "reviewed correction changes future recall"
+            }
+          },
+          "elapsed_ms": 1.0,
+          "failures": [
+            "missing_reviewed_teaching_path_explanation"
+          ],
+          "passed": false,
+          "prompt": "Explain how reviewed correction changes future recall.",
+          "score": 0.0,
+          "suite": "contemplation_phase1"
+        }
+      ],
+      "passed": false,
+      "primary_score": 0.0,
+      "suite": "contemplation_phase1"
+    }
+  ],
+  "summary": {
+    "case_count": 1,
+    "passed": false,
+    "primary_score": 0.0,
+    "suite_count": 1
+  }
+}

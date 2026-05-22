@@ -151,6 +151,28 @@ class ContemplationFinding:
         payload["finding_id"] = self.finding_id
         return payload
 
+    @property
+    def confidence(self) -> EpistemicStatus:
+        """ADR-0080 Phase 1 confidence alias.
+
+        Phase 1 deliberately reuses the repository's epistemic lattice:
+        every contemplation confidence is SPECULATIVE by construction.
+        """
+        return self.epistemic_status
+
+    @property
+    def evidence(self) -> tuple[ContemplationEvidenceRef, ...]:
+        """ADR-0080 Phase 1 evidence alias for ``evidence_refs``."""
+        return self.evidence_refs
+
+    @property
+    def provenance(self) -> dict[str, str]:
+        """Deterministic provenance for the finding's read-only substrate."""
+        return {
+            "source": "contemplation",
+            "substrate_hash": self.substrate_hash,
+        }
+
 
 @dataclass(frozen=True, slots=True)
 class ContemplationRun:
