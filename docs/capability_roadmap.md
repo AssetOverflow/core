@@ -2,7 +2,7 @@
 
 **Status:** Draft, derived from `docs/sessions/SESSION-2026-05-15-capability-gates.md`
 **Owner:** Joshua Shay
-**Last updated:** 2026-05-17
+**Last updated:** 2026-05-22 (Phase 6 added; status update appended below)
 
 ## Status update — 2026-05-17
 
@@ -35,7 +35,22 @@ Closed gates (vs the Phase 1 "Foundational Triple"):
 A full rewrite of the phase exit-criteria against current state is queued for
 the next planning pass.
 
-This document walks CORE from its present state through the gating framework defined in the 2026-05-15 session. It is organized into six phases. Each phase has entry criteria, work items, exit criteria, and a benchmark discipline contract.
+## Status update — 2026-05-22
+
+Phase 5 (Curriculum Era) work landed in volume during the 2026-05-17 → 2026-05-22 window. The roadmap gains a new Part-II phase (**Phase 6 — Evidence-Governed Domain Layer**, see below) that did not exist in the 2026-05-15 draft because the substrate it ratifies (multi-domain packs, signed reviewer registry, expert-demo gate) did not yet exist either. The phase is documented here as accepted and partially landed, not proposed.
+
+Major chains accepted since 2026-05-17:
+
+* **Pack-layer chain — ADR-0027 through ADR-0045.** Identity packs (0027/0028), safety packs (0029), ethics packs (0033/0036/0037), reviewed verdicts (0035), audit completeness (0039), telemetry sink (0040), CLI verdicts + fan-out (0041), audit-tour demo (0042), pack measurements (0043), medical-ethics worked example (0044), long-context comparison evidence (0045).
+* **Forward graph constraint → pack-grounded surface — ADR-0046 through ADR-0070.** PropositionGraph becomes AdmissibilityRegion before generate (0046/0047); pack-grounded surface composers for DEFINITION/RECALL/COMPARISON/PROCEDURE/CORRECTION/NARRATIVE/EXAMPLE intents (0048–0066); cross-pack resolver and teaching-corpus chain (0063/0064); register terse v1 (0070); seeded variation (0071); register telemetry + tour (0072).
+* **Anchor lens substrate — ADR-0073 + sub-ADRs.** Substantive variation axis sibling to register, with the opposite invariant (lens moves trace_hash DISTINCT; register holds it CONSTANT). Both orthogonal-axis demos CI-pinned simultaneously.
+* **Transitive chain surface and definitional groundwork — ADR-0078–0089.** Composer/graph atom equivalence telemetry (0078); transitive chain surface (0083); compound-intent dispatch + discourse planner (0089).
+* **Contemplation Loop Phase 1 — ADR-0080 (accepted 2026-05-22).** Read-only frontier-compare miner emits `SPECULATIVE` findings only; routes through `teaching/review.py`; no pack mutation. The first system-emitted gap-finding surface.
+* **Evidence-governed domain layer — ADR-0091 through ADR-0110.** See Phase 6 below.
+
+A full Phase 0–5 exit-criteria rewrite against this expanded state remains queued; that pass is independent of the Phase 6 documentation.
+
+This document walks CORE from its present state through the gating framework defined in the 2026-05-15 session. It is organized into six phases (now seven with Phase 6 below). Each phase has entry criteria, work items, exit criteria, and a benchmark discipline contract.
 
 The benchmark discipline is the spine of the plan. Without it, the phases become aspirational. With it, "are we there yet" becomes a CLI question.
 
@@ -322,6 +337,52 @@ The phase has no single exit criterion. Instead, each domain becomes its own sub
 - Frontier baselines are re-scored periodically; the contrast remains visible.
 
 **This phase has no estimated duration.** It is the phase the project lives in after the engineering era ends. Frontier-LLM parity on breadth happens *inside* this phase if it happens at all — likely measured in years, not weeks, and at whatever sample efficiency Phase 4 demonstrated.
+
+### Phase 6 — Evidence-Governed Domain Layer
+
+**Entry criteria:** Phase 5 corpus flywheel operational (curriculum + miner sourcing actively producing reviewed proposals); pack-layer chain (ADR-0027..0045) closed; forward-graph-constraint and surface-composer chains (ADR-0046..0089) shipping.
+
+**Goal.** Distinguish *contract-passing* from *demonstrated* at the ledger surface. A pack that satisfies the nine ADR-0091 predicates earns a `reasoning-capable` ledger row; promotion to `expert_demo=true` requires a reviewer-signed evidence-bundle digest that reproduces byte-for-byte from on-disk lane results.
+
+**Substrate (all accepted as of 2026-05-22):**
+
+| Layer | What it ratifies | ADR |
+|---|---|---|
+| Domain Pack Contract v1 | Nine predicate checks on every ratified pack. | 0091 |
+| Reviewer Registry v1 | Schema-validated reviewer roster; primary vs. domain-scoped. | 0092 |
+| Domain Contract v1 implementation | Validator + ledger enforcement at runtime. | 0093 |
+| Proposal source provenance | Discriminated `ProposalSource(kind=...)` for every teaching proposal. | 0094 |
+| Miner-sourced proposals | `teaching/from_miner.py`; SHA-pinned `miner_loop_closure` lane. | 0095 |
+| Fabrication-control eval lane | Phantom / cross-pack / sibling-collapse refusals must clean. | 0096 |
+| Demo composition contract | Demos compose from shipped modules; no parallel mechanism. | 0098 |
+| Public showcase demo | Deterministic, byte-equal, <30s. | 0099 |
+| Reasoning-capable ratifications | `mathematics_logic` (0097), `physics` (0100), `systems_software` (0101), `hebrew_greek_textual_reasoning` (0102). |
+| Fluency lane attachment | Hebrew + Koine Greek lanes attached to ADR-0102 packs with dev/public/holdout. | 0103 |
+| Curriculum-sourced proposals | `teaching/from_curriculum.py`; SHA-pinned `curriculum_loop_closure` lane. | 0104 |
+| Sealed-holdout encryption | age-based; dev-mode plaintext fallback preserved. | 0105 |
+| **Expert-demo promotion contract** | **Domain-aware, reviewer-signed, replay-deterministic gate.** | **0106** |
+| Lane-shape registry | 8 lane ids dispatch to 5 shapes; unknown lanes fail-closed. | 0109 (amends 0106) |
+
+**Worked promotion narrative.** The contract has been demonstrated end-to-end:
+
+1. **ADR-0107** — first promotion attempt (`mathematics_logic`) honestly refused by the contract on two named blockers (metric-shape uniformity assumption; `inference_closure` substantively failing at 40% pass).
+2. **ADR-0109** — threshold rules amended with explicit lane-shape registry; cognition-shape thresholds preserved bit-identical; four new shapes added (`accuracy_shape`, `inference_shape`, `refusal_shape`, `symbolic_logic_shape`); unknown lanes fail-closed.
+3. PR #117 fixed the intent-classifier regression that had broken `inference_closure`.
+4. **ADR-0110** — `mathematics_logic` promoted to `expert_demo=true` under the amended contract. Signed claim digest reproduces from on-disk lane results; first domain at expert-demo.
+
+**Exit criteria (cumulative; each can land independently of the others):**
+
+- ☑ Contract definition (ADR-0091..0093) and reviewer trust root (ADR-0092) accepted.
+- ☑ Negative-control fabrication lane (ADR-0096) ratified and SHA-pinned.
+- ☑ Four reasoning-capable domain ratifications (ADR-0097/0100/0101/0102).
+- ☑ Expert-demo promotion contract accepted (ADR-0106 + ADR-0109 amendment).
+- ☑ First worked promotion lands (ADR-0110 — `mathematics_logic`).
+- ☐ Second worked promotion lands (next domain: TBD; `physics` / `systems_software` / `hebrew_greek_textual_reasoning` all eligible under the now-amended contract).
+- ☐ Multi-reviewer signing (currently single-recipient; the open candidate frontier item from ADR-0105).
+
+**Why this is its own phase.** Phases 1–5 measure capability *internally*. Phase 6 is the first layer that measures *what the system has actually demonstrated to an external reader* and forces the ledger to distinguish the two. Every prior phase makes claims about the substrate; Phase 6 makes the substrate's claims auditable.
+
+**This phase has no estimated duration.** Each new domain promotion is a discrete unit of work; the contract is the durable artifact.
 
 ---
 
