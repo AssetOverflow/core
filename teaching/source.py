@@ -1,8 +1,9 @@
-"""Sealed :class:`ProposalSource` provenance type (ADR-0094).
+"""Sealed :class:`ProposalSource` provenance type (ADR-0094/ADR-0104).
 
 Widens :class:`teaching.proposals.TeachingChainProposal` and
 :class:`teaching.store.PackMutationProposal` with a typed source field.
-The widening is schema-only at this ADR; no runtime behavior changes.
+Operator and miner provenance landed in ADR-0094/ADR-0095; curriculum
+source activation is governed by ADR-0104.
 
 The kind field is a sealed :data:`ProposalKind` literal. Adding a new
 kind requires a new ADR adding a branch to every consumer.
@@ -79,11 +80,11 @@ class ProposalSource:
     def serialize(self) -> str:
         """Compact human-readable form for logs and telemetry.
 
-        - ``ProposalSource("operator", "", "<sha>")`` → ``"operator"``
+        - ``ProposalSource("operator", "", "<sha>")`` -> ``"operator"``
         - ``ProposalSource("miner", "articulation_quality", "<sha>")``
-          → ``"miner:articulation_quality"``
+          -> ``"miner:articulation_quality"``
         - ``ProposalSource("curriculum", "math_logic_v1", "<sha>")``
-          → ``"curriculum:math_logic_v1"``
+          -> ``"curriculum:math_logic_v1"``
         """
         if not self.source_id:
             return self.kind
