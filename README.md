@@ -36,7 +36,7 @@ The schema is the structural defense against the failure modes that afflict both
 A system that samples cannot have these properties — sampling has no place to attach an epistemic status. CORE has them because every admitted claim carries one and the only path to admission is the review path.
 
 **Full architectural commitment, including honestly-published gaps:** [`docs/truth_seeking_schema.md`](docs/truth_seeking_schema.md).
-**Reproducible measurements:** [`evals/CLAIMS.md`](evals/CLAIMS.md).
+**Reproducible measurements:** [`CLAIMS.md`](CLAIMS.md) (auto-generated from `scripts/generate_claims.py`).
 
 ---
 
@@ -202,6 +202,34 @@ core teaching review <proposal_id> --accept --review-date YYYY-MM-DD
 core teaching supersede <old_chain_id> --subject ... --intent ... --connective ... --object ... --review-date YYYY-MM-DD
 core teaching supersessions                         # pair retired chains with replacements (orphan-aware)
 ```
+
+---
+
+## Evidence-Governed Domain Layer — The ADR-0091 Chain
+
+CORE distinguishes *contract-passing* from *demonstrated*. A pack that satisfies the nine ADR-0091 predicates earns a `reasoning-capable` ledger row; that's a structural claim, not an empirical one. Promotion to `expert_demo=true` requires a **reviewer-signed evidence-bundle digest** that reproduces byte-for-byte from on-disk lane results (ADR-0106 + ADR-0109).
+
+| Layer | What it guarantees | ADR |
+|---|---|---|
+| **Domain Pack Contract v1** | Nine predicate checks on every ratified pack (lemma coverage, operator chain count, intent shapes, holdout coverage, reviewer-resolution, etc.). | [0091](docs/decisions/ADR-0091-domain-pack-contract-v1.md) |
+| **Reviewer Registry v1** | YAML-anchored, schema-validated reviewer roster. Wildcard `*` reserved for primary reviewers; domain-scoped reviewers gated by `can_review(domain, scope)`. | [0092](docs/decisions/ADR-0092-reviewer-registry-v1.md) |
+| **Fabrication-control eval lane** | Negative-control lane: phantom endpoints, cross-pack non-bridges, sibling collapses must all refuse. `fabricated=0` across all by-class buckets is the gate. | [0096](docs/decisions/ADR-0096-fabrication-control-eval-lane.md) |
+| **Expert-demo promotion contract** | Domain-aware, reviewer-signed, replay-deterministic. No domain promotes silently; every `expert_demo=true` row points to an `expert_demo_claims` entry whose SHA-256 reproduces. | [0106](docs/decisions/ADR-0106-expert-demo-promotion-contract.md) |
+| **Lane-shape registry** | Eight lane ids dispatch to five shapes (`cognition_shape`, `accuracy_shape`, `inference_shape`, `refusal_shape`, `symbolic_logic_shape`); unknown lanes fail-closed. | [0109](docs/decisions/ADR-0109-lane-shape-aware-thresholds.md) |
+
+**Current ledger state** (per `core capability ledger`):
+
+| Domain | Status |
+|---|---|
+| `mathematics_logic` | **`expert-demo`** (first promotion, [ADR-0110](docs/decisions/ADR-0110-mathematics-logic-expert-demo-promotion.md)) |
+| `physics` | `reasoning-capable` |
+| `systems_software` | `reasoning-capable` |
+| `hebrew_greek_textual_reasoning` | `reasoning-capable` |
+| `philosophy_theology` | `reasoning-capable` |
+
+The contract has now demonstrated its load-bearing behavior end-to-end: refused one promotion attempt honestly ([ADR-0107](docs/decisions/ADR-0107-mathematics-logic-expert-demo-deferred.md)), amended its threshold rules once cleanly (ADR-0109), and succeeded once honestly (ADR-0110). External readers can distinguish the two ceilings at a glance.
+
+Full ADR index, frontier, and chain notes: [`docs/decisions/README.md`](docs/decisions/README.md).
 
 ---
 

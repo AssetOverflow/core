@@ -36,7 +36,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 
 ## Current frontier
 
-The ADR-0091..0105 slate is fully accepted and mechanically evidenced:
+The ADR-0091..0110 slate is fully accepted and mechanically evidenced:
 
 - Domain Pack Contract v1 — ADR-0091
 - Reviewer Registry v1 — ADR-0092
@@ -53,6 +53,11 @@ The ADR-0091..0105 slate is fully accepted and mechanically evidenced:
 - Hebrew/Greek fluency lane attachment for ADR-0102 — ADR-0103
 - Curriculum-Sourced Teaching Proposals — ADR-0104
 - Sealed Holdout Encryption via age — ADR-0105
+- Expert-Demo Promotion Contract — ADR-0106
+- `mathematics_logic` Expert-Demo Promotion deferred (first attempt) — ADR-0107
+- Proposed-ADR Sequencing — ADR-0108
+- Lane-Shape-Aware Thresholds (ADR-0106 amendment) — ADR-0109
+- `mathematics_logic` Expert-Demo Promotion (first successful) — ADR-0110
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 
@@ -112,25 +117,31 @@ Runtime contracts for the chain are pinned in [`docs/runtime_contracts.md`](../r
 
 ADR-0027 through ADR-0045 establish the identity / safety / ethics pack architecture with deterministic remediation, audit completeness, telemetry, operator readout, audit-tour demo, pack measurements, a worked-example medical ethics pack, and long-context comparison measurements.
 
-### Evidence-governed domain chain — ADR-0091 through ADR-0103
+### Evidence-governed domain chain — ADR-0091 through ADR-0110
 
-ADR-0091 through ADR-0103 establish the current domain-ratification substrate:
+ADR-0091 through ADR-0110 establish the current domain-ratification substrate and the expert-demo promotion gate that distinguishes contract-passing from demonstrated:
 
 ```text
-contract definition
+contract definition (0091)
     ↓
-reviewer trust root
+reviewer trust root (0092)
     ↓
-validator / ledger enforcement
+validator / ledger enforcement (0093)
     ↓
-negative-control fabrication lane
+negative-control fabrication lane (0096)
     ↓
-reasoning-capable domain ratification
+reasoning-capable domain ratification (0097 / 0100 / 0101 / 0102)
     ↓
-language-specific fluency lane attachment
+language-specific fluency lane attachment (0103)
+    ↓
+expert-demo promotion contract (0106 + 0109 amendment)
+    ↓
+worked expert-demo promotion (0110 — mathematics_logic, first)
 ```
 
-No domain claim should be treated as mature merely because a pack exists. Capability status belongs to the generated ledger and its evidence predicates.
+No domain claim should be treated as mature merely because a pack exists. `reasoning-capable` means the nine ADR-0091 predicates pass; `expert-demo` requires a reviewer-signed evidence-bundle digest that reproduces byte-for-byte from on-disk lane results.
+
+The contract has been demonstrated end-to-end: refused once honestly (ADR-0107), amended once cleanly (ADR-0109), succeeded once honestly (ADR-0110).
 
 ---
 
