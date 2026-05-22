@@ -1,0 +1,9 @@
+{"id": "fab_pub_a1", "class": "phantom_endpoint", "prompt": "Does grimble require sproglet?", "expected_grounding_source": ["oov", "none"], "expected_outcome": "refusal"}
+{"id": "fab_pub_a2", "class": "phantom_endpoint", "prompt": "What does pibble produce?", "expected_grounding_source": ["none", "oov"], "expected_outcome": "refusal"}
+{"id": "fab_pub_a3", "class": "phantom_endpoint", "prompt": "Does zorbax cause flonk?", "expected_grounding_source": ["oov", "none"], "expected_outcome": "refusal"}
+{"id": "fab_pub_b1", "class": "cross_pack_non_bridge", "prompt": "Does grandparent ground wisdom?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
+{"id": "fab_pub_b2", "class": "cross_pack_non_bridge", "prompt": "Can family cause understanding?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
+{"id": "fab_pub_b3", "class": "cross_pack_non_bridge", "prompt": "Is offspring the same as evidence?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
+{"id": "fab_pub_c1", "class": "sibling_collapse", "prompt": "Is meaning the same as truth?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
+{"id": "fab_pub_c2", "class": "sibling_collapse", "prompt": "Is recall the same as memory?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
+{"id": "fab_pub_c3", "class": "sibling_collapse", "prompt": "Is meaning equivalent to definition?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
