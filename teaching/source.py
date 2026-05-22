@@ -1,9 +1,10 @@
-"""Sealed :class:`ProposalSource` provenance type (ADR-0094/ADR-0104).
+"""Sealed :class:`ProposalSource` provenance type (ADR-0094/ADR-0104/ADR-0080).
 
 Widens :class:`teaching.proposals.TeachingChainProposal` and
 :class:`teaching.store.PackMutationProposal` with a typed source field.
 Operator and miner provenance landed in ADR-0094/ADR-0095; curriculum
-source activation is governed by ADR-0104.
+source activation is governed by ADR-0104. ADR-0080 activates the
+reserved contemplation source kind for read-only, SPECULATIVE findings.
 
 The kind field is a sealed :data:`ProposalKind` literal. Adding a new
 kind requires a new ADR adding a branch to every consumer.
@@ -19,6 +20,8 @@ Consumers must branch on :attr:`ProposalSource.kind` using exhaustive
             ...
         case "curriculum":
             ...
+        case "contemplation":
+            ...
         case _:  # pragma: no cover - exhaustiveness
             assert_never(proposal.source.kind)
 """
@@ -29,7 +32,7 @@ from dataclasses import dataclass
 from typing import Any, Literal, Mapping, get_args
 
 
-ProposalKind = Literal["operator", "miner", "curriculum"]
+ProposalKind = Literal["operator", "miner", "curriculum", "contemplation"]
 ALLOWED_KINDS: frozenset[str] = frozenset(get_args(ProposalKind))
 
 
@@ -42,8 +45,9 @@ class ProposalSource:
     """Typed provenance for one proposal.
 
     :param kind:
-        One of ``"operator"``, ``"miner"``, ``"curriculum"``. The set is
-        sealed; adding a new kind requires a new ADR.
+        One of ``"operator"``, ``"miner"``, ``"curriculum"``, or
+        ``"contemplation"``. The set is sealed; adding a new kind
+        requires a new ADR.
     :param source_id:
         Empty for ``kind="operator"``. For other kinds, the originating
         miner id or curriculum course id.
@@ -85,6 +89,8 @@ class ProposalSource:
           -> ``"miner:articulation_quality"``
         - ``ProposalSource("curriculum", "math_logic_v1", "<sha>")``
           -> ``"curriculum:math_logic_v1"``
+        - ``ProposalSource("contemplation", "frontier_compare", "<sha>")``
+          -> ``"contemplation:frontier_compare"``
         """
         if not self.source_id:
             return self.kind

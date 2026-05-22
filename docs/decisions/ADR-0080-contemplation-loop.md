@@ -1,7 +1,8 @@
 # ADR-0080 — Contemplation Loop: self-interrogation without self-ratification
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-20
+**Accepted:** 2026-05-22
 **Author:** Shay
 **Builds on:** [ADR-0021](./ADR-0021-epistemic-grade-policy.md) (epistemic grade policy), [ADR-0055](./ADR-0055-teaching-corpus-audit.md) (reviewed teaching corpus), [ADR-0078](./ADR-0078-composer-graph-atom-equivalence.md) (composer/graph atom telemetry)
 **Series:** L0 — learning safety / self-contemplation boundary
