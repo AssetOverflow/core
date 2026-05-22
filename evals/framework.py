@@ -7,7 +7,7 @@ Every eval lane lives in ``evals/<lane>/`` and must contain at minimum:
 - ``public/v1/cases.jsonl``    — public test set v1
 
 Optional:
-- ``holdouts/``    — encrypted sealed test set (scored by holdout_runner)
+- ``holdouts/``    — encrypted sealed test set
 - ``baselines/``   — frontier model scores
 - ``results/``     — CORE scores per version per run
 """
@@ -47,25 +47,22 @@ class LaneInfo:
         return self.root / "public" / version / "cases.jsonl"
 
     def holdout_cases_path(self, version: str = "v1") -> Path:
-        """Return the resolved holdout cases path for this lane.
-
-        Resolution order (first existing wins):
-          1. ``holdouts/cases.jsonl``                — flat plaintext
-          2. ``holdouts/cases_plaintext.jsonl``      — cognition convention
-          3. ``holdouts/<version>/cases.jsonl``      — versioned plaintext
-
-        If none exist, returns the versioned path so callers receive a
-        coherent ``FileNotFoundError``.
-
-        This intentionally does NOT decrypt sealed (``*.age``) holdouts —
-        sealed runs must go through ``evals.holdout_runner.run_holdout``,
-        which enforces aggregate-only output per its trust boundary.
-        """
         holdouts = self.root / "holdouts"
         candidates = (
             holdouts / "cases.jsonl",
             holdouts / "cases_plaintext.jsonl",
             holdouts / version / "cases.jsonl",
+        )
+        for path in candidates:
+            if path.exists():
+                return path
+        return candidates[-1]
+
+    def holdout_cases_path_sealed(self, version: str = "v1") -> Path:
+        holdouts = self.root / "holdouts"
+        candidates = (
+            holdouts / "cases.jsonl.age",
+            holdouts / version / "cases.jsonl.age",
         )
         for path in candidates:
             if path.exists():
@@ -97,7 +94,6 @@ class LaneResult:
 
 
 def discover_lanes(root: Path | None = None) -> list[LaneInfo]:
-    """Find all valid eval lanes under *root*."""
     base = root or EVALS_ROOT
     lanes: list[LaneInfo] = []
     for child in sorted(base.iterdir()):
@@ -123,7 +119,6 @@ def _discover_versions(lane_root: Path) -> tuple[str, ...]:
 
 
 def load_cases(path: Path) -> list[dict[str, Any]]:
-    """Load cases from a JSONL file."""
     cases: list[dict[str, Any]] = []
     for line in path.read_text().splitlines():
         line = line.strip()
@@ -133,7 +128,6 @@ def load_cases(path: Path) -> list[dict[str, Any]]:
 
 
 def load_lane_runner(lane: LaneInfo) -> Any:
-    """Dynamically import a lane's runner module."""
     runner_path = lane.runner_path
     if not runner_path.exists():
         raise FileNotFoundError(f"Runner not found: {runner_path}")
@@ -148,38 +142,16 @@ def load_lane_runner(lane: LaneInfo) -> Any:
     return module
 
 
-def run_lane(
+def _run_cases(
     lane: LaneInfo,
+    cases: list[dict[str, Any]],
     *,
-    version: str = "v1",
-    split: str = "public",
-    config: Any = None,
-    workers: int | None = None,
+    version: str,
+    split: str,
+    config: Any,
+    workers: int | None,
 ) -> LaneResult:
-    """Run a single lane on a given version and split."""
-    if split == "dev":
-        cases_path = lane.dev_cases_path()
-    elif split == "public":
-        cases_path = lane.public_cases_path(version)
-    elif split == "holdout":
-        cases_path = lane.holdout_cases_path(version)
-    else:
-        raise ValueError(
-            f"Unsupported split: {split!r}. Use 'dev', 'public', or 'holdout'."
-        )
-
-    if not cases_path.exists():
-        raise FileNotFoundError(f"Cases not found: {cases_path}")
-
-    cases = load_cases(cases_path)
     runner_module = load_lane_runner(lane)
-
-    # PR #46 added the `workers` kwarg to enable parallel execution on
-    # lanes that opt in (currently: cognition).  Most lane runners are
-    # serial and predate this contract.  Pass `workers` only when the
-    # target runner's signature accepts it — otherwise call the legacy
-    # two-arg form.  This keeps the framework dispatch backward-compatible
-    # without forcing every runner to accept a no-op kwarg.
     runner_params = inspect.signature(runner_module.run_lane).parameters
     if "workers" in runner_params or any(
         p.kind == inspect.Parameter.VAR_KEYWORD for p in runner_params.values()
@@ -197,8 +169,50 @@ def run_lane(
     )
 
 
+def run_lane(
+    lane: LaneInfo,
+    *,
+    version: str = "v1",
+    split: str = "public",
+    config: Any = None,
+    workers: int | None = None,
+) -> LaneResult:
+    if split == "holdout":
+        from evals.holdout_runner import _decrypt_holdout
+
+        cases = _decrypt_holdout(lane.holdout_cases_path_sealed(version))
+        return _run_cases(
+            lane,
+            cases,
+            version=version,
+            split=split,
+            config=config,
+            workers=workers,
+        )
+
+    if split == "dev":
+        cases_path = lane.dev_cases_path()
+    elif split == "public":
+        cases_path = lane.public_cases_path(version)
+    else:
+        raise ValueError(
+            f"Unsupported split: {split!r}. Use 'dev', 'public', or 'holdout'."
+        )
+
+    if not cases_path.exists():
+        raise FileNotFoundError(f"Cases not found: {cases_path}")
+
+    return _run_cases(
+        lane,
+        load_cases(cases_path),
+        version=version,
+        split=split,
+        config=config,
+        workers=workers,
+    )
+
+
 def write_result(lane: LaneInfo, result: LaneResult) -> Path:
-    """Write a result to the lane's results directory, returning the path."""
     results_dir = lane.results_dir()
     results_dir.mkdir(parents=True, exist_ok=True)
 
@@ -213,7 +227,6 @@ def write_result(lane: LaneInfo, result: LaneResult) -> Path:
 
 
 def get_lane(name: str, root: Path | None = None) -> LaneInfo:
-    """Look up a single lane by name."""
     base = root or EVALS_ROOT
     lane_root = base / name
     contract = lane_root / "contract.md"

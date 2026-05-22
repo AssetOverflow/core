@@ -24,12 +24,13 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0102](ADR-0102-hebrew-greek-reasoning-capable-ratification.md) | Hebrew-Greek Textual-Reasoning Reasoning-Capable Ratification | Accepted (2026-05-22) |
 | [ADR-0103](ADR-0103-fluency-lane-attachment-for-adr-0102.md) | Fluency Lane Attachment for ADR-0102 | Accepted (2026-05-22) |
 | [ADR-0104](ADR-0104-curriculum-sourced-teaching-proposals.md) | Curriculum-Sourced Teaching Proposals | Accepted (2026-05-22) |
+| [ADR-0105](ADR-0105-sealed-holdout-encryption.md) | Sealed Holdout Encryption via age | Accepted (2026-05-22) |
 
 ---
 
 ## Current frontier
 
-The ADR-0091..0104 slate is fully accepted and mechanically evidenced:
+The ADR-0091..0105 slate is fully accepted and mechanically evidenced:
 
 - Domain Pack Contract v1 — ADR-0091
 - Reviewer Registry v1 — ADR-0092
@@ -45,6 +46,7 @@ The ADR-0091..0104 slate is fully accepted and mechanically evidenced:
 - `hebrew_greek_textual_reasoning` multi-pack reasoning-capable ratification — ADR-0102
 - Hebrew/Greek fluency lane attachment for ADR-0102 — ADR-0103
 - Curriculum-Sourced Teaching Proposals — ADR-0104
+- Sealed Holdout Encryption via age — ADR-0105
 
 Seven lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `lane-shas` GitHub Actions workflow:
 
@@ -59,6 +61,7 @@ Seven lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `la
 The next implementation frontier is open. Candidate directions include:
 
 - **Expert-demo ratification.** All ADR-0097/0100/0101/0102 ledger rows currently sit at `reasoning-capable` with `expert_demo=false`. The expert-demo promotion contract remains open for a future ADR.
+- **Multi-reviewer holdout governance and threshold signing.** ADR-0105 seals holdout payloads with a single recipient identity; multi-reviewer governance is a future direction.
 
 No ADR currently sits in a "Proposed but unimplemented" state.
 
