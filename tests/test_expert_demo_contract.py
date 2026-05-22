@@ -371,19 +371,32 @@ class TestExpertDemoThresholds:
         assert "fabrication_control" in verdict.reason
 
 
-class TestProductionLedgerUntouched:
-    """ADR-0106 §Acceptance: no domain row's expert_demo field flips."""
+class TestProductionLedgerPromotionsAreSignedOnly:
+    """ADR-0106 §Acceptance preserved post-ADR-0110.
 
-    def test_no_production_domain_promoted_by_this_adr(self) -> None:
+    Originally tested that NO domain row carried ``expert_demo=true``
+    because no signed claims existed yet. After ADR-0110, the math
+    domain carries a signed claim. The load-bearing invariant remains:
+    every promoted domain must trace back to a signed claim in the
+    reviewer registry. A silent code-only promotion would be caught here.
+    """
+
+    def test_every_promoted_domain_has_signed_claim(self) -> None:
+        from pathlib import Path
+
         from core.capability.reporting import ledger_report
+        from core.capability.reviewers import load_reviewer_registry
+        from core.capability.sources import LEDGER_SOURCES
 
+        repo_root = Path(__file__).resolve().parent.parent
+        registry = load_reviewer_registry(repo_root / LEDGER_SOURCES.reviewers)
         report = ledger_report()
-        promoted = [
-            row["domain"]
-            for row in report.get("domains", [])
-            if row.get("predicates", {}).get("expert_demo")
-        ]
-        assert promoted == [], (
-            f"ADR-0106 must not promote any domain by code change alone; "
-            f"got: {promoted}"
-        )
+        for row in report.get("domains", []):
+            if not row.get("predicates", {}).get("expert_demo"):
+                continue
+            domain = row["domain"]
+            claim = registry.expert_demo_claim_for(domain)
+            assert claim is not None, (
+                f"domain {domain!r} reports expert_demo=true but has no "
+                f"signed expert_demo_claims entry"
+            )

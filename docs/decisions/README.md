@@ -29,6 +29,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0107](ADR-0107-mathematics-logic-expert-demo-deferred.md) | `mathematics_logic` Expert-Demo Promotion — Deferred | Accepted (2026-05-22) |
 | [ADR-0108](ADR-0108-proposed-adr-sequencing.md) | Proposed-ADR Sequencing Post-ADR-0105 | Accepted (2026-05-22) |
 | [ADR-0109](ADR-0109-lane-shape-aware-thresholds.md) | Lane-Shape-Aware Thresholds (ADR-0106 Amendment) | Accepted (2026-05-22) |
+| [ADR-0110](ADR-0110-mathematics-logic-expert-demo-promotion.md) | `mathematics_logic` Expert-Demo Promotion | Accepted (2026-05-22) |
 
 ---
 
@@ -66,10 +67,11 @@ Seven lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `la
 
 Sequencing per ADR-0108. Listed in priority order:
 
-1. **ADR-0110 (reserved) — `mathematics_logic` expert-demo re-attempt.** ADR-0109 has landed; the metric-shape blocker is cleared. The remaining blocker is `inference_closure` substantively passing (currently `all_pass_rate=0.4` on public).
-3. **[ADR-0080](ADR-0080-contemplation-loop.md) — Contemplation Loop.** Sandboxed, read-only Phase 1 self-interrogation; emits `SPECULATIVE` findings from `frontier_compare` reports. Converts gap-finding from human-driven to system-emitted-and-reviewed.
-4. **[ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs.** Optional per-entry definitional block. Deferred — value surfaces during a worked expert promotion that needs definitional depth.
-5. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
+1. **[ADR-0080](ADR-0080-contemplation-loop.md) — Contemplation Loop.** Sandboxed, read-only Phase 1 self-interrogation; emits `SPECULATIVE` findings from `frontier_compare` reports. Converts gap-finding from human-driven to system-emitted-and-reviewed.
+2. **[ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs.** Optional per-entry definitional block. Deferred — value surfaces during a worked expert promotion that needs definitional depth.
+3. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
+
+ADR-0110 has landed — `mathematics_logic` is the first domain at `expert_demo=true`. The remaining three ratified domains (`physics`, `systems_software`, `hebrew_greek_textual_reasoning`) need their own promotion ADRs.
 
 ### Open candidate directions (no ADR yet)
 
@@ -79,11 +81,11 @@ Sequencing per ADR-0108. Listed in priority order:
 
 ## Accepted reasoning-capable domains
 
-Per ADR-0106, `expert_demo` is **contract-gated**, not threshold-only: a domain row may carry `expert_demo=true` only when a reviewer-signed `expert_demo_claims` entry exists whose evidence-bundle digest reproduces byte-for-byte. ADR-0107 attempted the first worked promotion (`mathematics_logic`) and the contract refused — recording two evidence-side blockers now reserved for follow-up as ADR-0109 (lane-shape amendment) and ADR-0110 (re-attempt). All four ratified domains sit at `expert_demo=false`.
+Per ADR-0106, `expert_demo` is **contract-gated**, not threshold-only: a domain row may carry `expert_demo=true` only when a reviewer-signed `expert_demo_claims` entry exists whose evidence-bundle digest reproduces byte-for-byte. ADR-0107 attempted the first worked promotion and the contract refused; ADR-0109 amended the threshold rules; ADR-0110 then successfully promoted `mathematics_logic` (the first domain at `expert_demo=true`). The other three ratified domains remain at `reasoning-capable` pending their own promotion ADRs.
 
 | Domain | Ratification ADR | Pack(s) | Evidence summary |
 |---|---|---|---|
-| `mathematics_logic` | ADR-0097 | `en_mathematics_logic_v1` | All nine ADR-0091 predicates pass; ledger row is `reasoning-capable`; `expert_demo` remains false; lanes include positive coverage, inference closure, and fabrication control. |
+| `mathematics_logic` | ADR-0097 + ADR-0110 | `en_mathematics_logic_v1` | All nine ADR-0091 predicates pass; ledger row is **`expert-demo`** (first such promotion, ADR-0110); all three attached lanes meet ADR-0109 shape thresholds on public + holdout. |
 | `physics` | ADR-0100 | `en_physics_v1` | All nine predicates pass; causal/modal operator coverage meets threshold; ledger row is `reasoning-capable`; `expert_demo` remains false. |
 | `systems_software` | ADR-0101 | `en_systems_software_v1` | All nine predicates pass; transitive/causal operator coverage meets threshold; ledger row is `reasoning-capable`; `symbolic_logic` is the v1 closest-fit eval lane. |
 | `hebrew_greek_textual_reasoning` | ADR-0102 + ADR-0103 | `grc_logos_micro_v1`, `grc_logos_cognition_v1`, `he_logos_micro_v1`, `he_core_cognition_v1` | First multi-pack ratification; all four packs carry uniform contract fields; causal/contradiction operator coverage meets threshold; ADR-0103 attaches Hebrew and Koine Greek fluency lanes with `dev/public/holdout` coverage. |

@@ -1,0 +1,9 @@
+{"id": "fab_hld_a1", "class": "phantom_endpoint", "prompt": "Does quibix support flarnel?", "expected_grounding_source": ["oov", "none"], "expected_outcome": "refusal"}
+{"id": "fab_hld_a2", "class": "phantom_endpoint", "prompt": "What does borgle reveal?", "expected_grounding_source": ["none", "oov"], "expected_outcome": "refusal"}
+{"id": "fab_hld_a3", "class": "phantom_endpoint", "prompt": "Does mintrak precede vorrish?", "expected_grounding_source": ["oov", "none"], "expected_outcome": "refusal"}
+{"id": "fab_hld_b1", "class": "cross_pack_non_bridge", "prompt": "Does ancestor ground knowledge?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
+{"id": "fab_hld_b2", "class": "cross_pack_non_bridge", "prompt": "Can sibling cause inference?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
+{"id": "fab_hld_b3", "class": "cross_pack_non_bridge", "prompt": "Does spouse ground inference?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
+{"id": "fab_hld_c1", "class": "sibling_collapse", "prompt": "Is judgment the same as knowledge?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
+{"id": "fab_hld_c2", "class": "sibling_collapse", "prompt": "Is reveal equivalent to disclose?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
+{"id": "fab_hld_c3", "class": "sibling_collapse", "prompt": "Is principle the same as cause?", "expected_grounding_source": ["none"], "expected_outcome": "refusal"}
