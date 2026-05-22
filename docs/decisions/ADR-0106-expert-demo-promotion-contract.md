@@ -1,6 +1,6 @@
 # ADR-0106 — Expert-Demo Promotion Contract
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-22
 **Author:** CORE agents + reviewers
 **Depends on:** ADR-0091, ADR-0092, ADR-0093, ADR-0096, ADR-0097, ADR-0100, ADR-0101, ADR-0102

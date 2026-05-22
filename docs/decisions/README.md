@@ -25,7 +25,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0103](ADR-0103-fluency-lane-attachment-for-adr-0102.md) | Fluency Lane Attachment for ADR-0102 | Accepted (2026-05-22) |
 | [ADR-0104](ADR-0104-curriculum-sourced-teaching-proposals.md) | Curriculum-Sourced Teaching Proposals | Accepted (2026-05-22) |
 | [ADR-0105](ADR-0105-sealed-holdout-encryption.md) | Sealed Holdout Encryption via age | Accepted (2026-05-22) |
-| [ADR-0106](ADR-0106-expert-demo-promotion-contract.md) | Expert-Demo Promotion Contract | Proposed (2026-05-22) |
+| [ADR-0106](ADR-0106-expert-demo-promotion-contract.md) | Expert-Demo Promotion Contract | Accepted (2026-05-22) |
 | [ADR-0108](ADR-0108-proposed-adr-sequencing.md) | Proposed-ADR Sequencing Post-ADR-0105 | Accepted (2026-05-22) |
 
 ---
@@ -64,11 +64,10 @@ Seven lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `la
 
 Sequencing per ADR-0108. Listed in priority order:
 
-1. **[ADR-0106](ADR-0106-expert-demo-promotion-contract.md) — Expert-Demo Promotion Contract.** Highest priority. Defines a domain-aware, reviewer-signed `expert_demo` predicate; closes the cognition-lane bleed at `core/capability/reporting.py:418`. Makes the four `reasoning-capable` ratifications externally legible.
-2. **ADR-0107 (reserved) — `mathematics_logic` expert-demo promotion.** First worked promotion against ADR-0106. Smallest expert-demo proof surface across the four ratified domains.
-3. **[ADR-0080](ADR-0080-contemplation-loop.md) — Contemplation Loop.** Sandboxed, read-only Phase 1 self-interrogation; emits `SPECULATIVE` findings from `frontier_compare` reports. Converts gap-finding from human-driven to system-emitted-and-reviewed.
-4. **[ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs.** Optional per-entry definitional block. Deferred pending ADR-0107 — value surfaces during a worked expert promotion that needs definitional depth.
-5. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
+1. **ADR-0107 (reserved) — `mathematics_logic` expert-demo promotion.** First worked promotion against the now-Accepted ADR-0106 contract. Smallest expert-demo proof surface across the four ratified domains.
+2. **[ADR-0080](ADR-0080-contemplation-loop.md) — Contemplation Loop.** Sandboxed, read-only Phase 1 self-interrogation; emits `SPECULATIVE` findings from `frontier_compare` reports. Converts gap-finding from human-driven to system-emitted-and-reviewed.
+3. **[ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs.** Optional per-entry definitional block. Deferred pending ADR-0107 — value surfaces during a worked expert promotion that needs definitional depth.
+4. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
 
 ### Open candidate directions (no ADR yet)
 
@@ -77,6 +76,8 @@ Sequencing per ADR-0108. Listed in priority order:
 ---
 
 ## Accepted reasoning-capable domains
+
+Per ADR-0106, `expert_demo` is **contract-gated**, not threshold-only: a domain row may carry `expert_demo=true` only when a reviewer-signed `expert_demo_claims` entry exists whose evidence-bundle digest reproduces byte-for-byte. All four currently-ratified domains sit at `expert_demo=false` until a worked promotion ADR (ADR-0107+) lands.
 
 | Domain | Ratification ADR | Pack(s) | Evidence summary |
 |---|---|---|---|

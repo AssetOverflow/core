@@ -17,9 +17,20 @@ from typing import Any, Mapping
 import yaml
 
 
-ALLOWED_TOP_LEVEL_KEYS: frozenset[str] = frozenset({"schema_version", "reviewers"})
+ALLOWED_TOP_LEVEL_KEYS: frozenset[str] = frozenset(
+    {"schema_version", "reviewers", "expert_demo_claims"}
+)
 ALLOWED_REVIEWER_KEYS: frozenset[str] = frozenset(
     {"reviewer_id", "display_name", "role", "domains", "review_scope", "provenance"}
+)
+ALLOWED_EXPERT_DEMO_CLAIM_KEYS: frozenset[str] = frozenset(
+    {
+        "domain_id",
+        "evidence_lanes",
+        "evidence_revision",
+        "signed_by",
+        "claim_digest",
+    }
 )
 ALLOWED_ROLES: frozenset[str] = frozenset({"primary", "domain"})
 ALLOWED_SCOPES: frozenset[str] = frozenset({"pack", "proposal", "chain", "eval"})
@@ -42,9 +53,35 @@ class Reviewer:
 
 
 @dataclass(frozen=True, slots=True)
+class ExpertDemoClaim:
+    """Reviewer-signed expert-demo promotion claim (ADR-0106).
+
+    A row in ``expert_demo_claims`` asserts that ``signed_by`` has
+    inspected the evidence at ``evidence_revision`` for ``domain_id``
+    across ``evidence_lanes`` and that the canonical evidence-bundle
+    SHA-256 equals ``claim_digest``. The reporting layer re-derives the
+    digest from the lane results on disk; a mismatch demotes the row
+    back to ``reasoning-capable``.
+    """
+
+    domain_id: str
+    evidence_lanes: tuple[str, ...]
+    evidence_revision: str
+    signed_by: str
+    claim_digest: str
+
+
+@dataclass(frozen=True, slots=True)
 class ReviewerRegistry:
     schema_version: int
     reviewers: tuple[Reviewer, ...]
+    expert_demo_claims: tuple[ExpertDemoClaim, ...] = ()
+
+    def expert_demo_claim_for(self, domain_id: str) -> ExpertDemoClaim | None:
+        for claim in self.expert_demo_claims:
+            if claim.domain_id == domain_id:
+                return claim
+        return None
 
     def resolve(self, reviewer_id: str) -> Reviewer | None:
         for reviewer in self.reviewers:
@@ -117,7 +154,89 @@ def load_reviewer_registry(path: Path) -> ReviewerRegistry:
         seen_ids.add(reviewer.reviewer_id)
         parsed.append(reviewer)
 
-    return ReviewerRegistry(schema_version=SCHEMA_VERSION, reviewers=tuple(parsed))
+    claims_raw = raw.get("expert_demo_claims", [])
+    if not isinstance(claims_raw, list):
+        raise ReviewerRegistryError(
+            "reviewer registry 'expert_demo_claims' must be a list when present"
+        )
+    parsed_claims: list[ExpertDemoClaim] = []
+    seen_domains: set[str] = set()
+    reviewer_ids = {reviewer.reviewer_id for reviewer in parsed}
+    for index, entry in enumerate(claims_raw):
+        claim = _parse_expert_demo_claim(entry, index=index, reviewer_ids=reviewer_ids)
+        if claim.domain_id in seen_domains:
+            raise ReviewerRegistryError(
+                f"expert_demo_claims contains duplicate domain_id "
+                f"{claim.domain_id!r}"
+            )
+        seen_domains.add(claim.domain_id)
+        parsed_claims.append(claim)
+
+    return ReviewerRegistry(
+        schema_version=SCHEMA_VERSION,
+        reviewers=tuple(parsed),
+        expert_demo_claims=tuple(parsed_claims),
+    )
+
+
+def _parse_expert_demo_claim(
+    entry: Any, *, index: int, reviewer_ids: set[str]
+) -> ExpertDemoClaim:
+    if not isinstance(entry, Mapping):
+        raise ReviewerRegistryError(
+            f"expert_demo_claims entry at index {index} must be a mapping"
+        )
+    unknown = set(entry.keys()) - ALLOWED_EXPERT_DEMO_CLAIM_KEYS
+    if unknown:
+        raise ReviewerRegistryError(
+            f"expert_demo_claims entry at index {index} has unknown fields: "
+            f"{sorted(unknown)}"
+        )
+    missing = ALLOWED_EXPERT_DEMO_CLAIM_KEYS - set(entry.keys())
+    if missing:
+        raise ReviewerRegistryError(
+            f"expert_demo_claims entry at index {index} missing required "
+            f"fields: {sorted(missing)}"
+        )
+    domain_id = _require_nonempty_str(
+        entry["domain_id"], field="domain_id", index=index
+    )
+    evidence_revision = _require_nonempty_str(
+        entry["evidence_revision"], field="evidence_revision", index=index
+    )
+    signed_by = _require_nonempty_str(
+        entry["signed_by"], field="signed_by", index=index
+    )
+    claim_digest = _require_nonempty_str(
+        entry["claim_digest"], field="claim_digest", index=index
+    )
+    if signed_by not in reviewer_ids:
+        raise ReviewerRegistryError(
+            f"expert_demo_claims entry at index {index} signed_by "
+            f"{signed_by!r} does not resolve to a registered reviewer"
+        )
+    if len(claim_digest) != 64 or any(
+        c not in "0123456789abcdef" for c in claim_digest
+    ):
+        raise ReviewerRegistryError(
+            f"expert_demo_claims entry at index {index} claim_digest must be "
+            "a lowercase 64-char SHA-256 hex string"
+        )
+    evidence_lanes = _require_str_list(
+        entry["evidence_lanes"], field="evidence_lanes", index=index
+    )
+    if not evidence_lanes:
+        raise ReviewerRegistryError(
+            f"expert_demo_claims entry at index {index} has empty "
+            "'evidence_lanes' list"
+        )
+    return ExpertDemoClaim(
+        domain_id=domain_id,
+        evidence_lanes=evidence_lanes,
+        evidence_revision=evidence_revision,
+        signed_by=signed_by,
+        claim_digest=claim_digest,
+    )
 
 
 def _parse_reviewer(entry: Any, *, index: int) -> Reviewer:
