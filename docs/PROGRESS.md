@@ -702,6 +702,99 @@ Per-surface bit-identity gates landed (2026-05-16):
 
 ---
 
+## Phase 6 — Evidence-Governed Domain Layer
+
+**Status:** IN PROGRESS (opened 2026-05-21, first promotion landed 2026-05-22)
+**Depends on:** Phase 5 corpus flywheel + pack-layer chain (ADR-0027..0045)
+**Roadmap:** see `docs/capability_roadmap.md` Phase 6 entry.
+
+This phase ratifies the distinction between *contract-passing* (`reasoning-capable`) and *demonstrated* (`expert_demo=true`) at the capability ledger surface.
+
+### Contract layer (all accepted)
+
+- [x] **ADR-0091** Domain Pack Contract v1 — nine predicate checks on every ratified pack
+- [x] **ADR-0092** Reviewer Registry v1 — schema-validated YAML reviewer roster
+- [x] **ADR-0093** Domain Contract v1 implementation — runtime validator + ledger enforcement
+- [x] **ADR-0094** Proposal source provenance — discriminated `ProposalSource(kind=...)`
+- [x] **ADR-0095** Miner-sourced teaching proposals — `teaching/from_miner.py` + SHA-pinned `miner_loop_closure` lane
+- [x] **ADR-0096** Fabrication-control eval lane — phantom / cross-pack / sibling-collapse refusals (SHA-pinned)
+- [x] **ADR-0098** Demo composition contract
+- [x] **ADR-0099** Public showcase demo (deterministic, byte-equal, <30s)
+- [x] **ADR-0104** Curriculum-sourced teaching proposals — `teaching/from_curriculum.py` + SHA-pinned `curriculum_loop_closure` lane
+- [x] **ADR-0105** Sealed-holdout encryption via age — dev-mode plaintext fallback preserved
+
+### Reasoning-capable ratifications
+
+- [x] **ADR-0097** `mathematics_logic` reasoning-capable (now superseded by ADR-0110 expert-demo, see below)
+- [x] **ADR-0100** `physics` reasoning-capable
+- [x] **ADR-0101** `systems_software` reasoning-capable
+- [x] **ADR-0102** `hebrew_greek_textual_reasoning` reasoning-capable (first multi-pack ratification: 4 packs)
+- [x] **ADR-0103** Hebrew + Koine Greek fluency lane attachment to ADR-0102 packs
+
+### Expert-demo arc (the contract demonstrated end-to-end)
+
+- [x] **ADR-0106** Expert-Demo Promotion Contract — domain-aware, reviewer-signed, replay-deterministic
+- [x] **ADR-0107** `mathematics_logic` expert-demo deferred — first promotion attempt **honestly refused** on two named blockers (metric-shape uniformity; `inference_closure` 40% pass)
+- [x] **ADR-0108** Proposed-ADR sequencing — meta-decision pinning the post-ADR-0105 frontier
+- [x] **ADR-0109** Lane-shape-aware threshold amendment — 8 lane ids → 5 shapes (`cognition_shape`, `accuracy_shape`, `inference_shape`, `refusal_shape`, `symbolic_logic_shape`); unknown lanes fail-closed; cognition-shape thresholds preserved bit-identical
+- [x] PR #117 — fix intent-classifier regression that had broken `inference_closure` (`_CORRECTION_CUE_PREFIX_RE` guard)
+- [x] **ADR-0110** `mathematics_logic` expert-demo promoted — **first domain at `expert_demo=true`** in project history; signed claim digest reproduces byte-for-byte from on-disk lane results
+
+### Contract demonstration narrative
+
+The ADR-0106 contract refused once (0107), amended once cleanly (0109), and succeeded once (0110). External readers can now distinguish the two ceilings (`reasoning-capable` vs `expert-demo`) by inspecting the ledger.
+
+### Current ledger state (per `core capability ledger`)
+
+| Domain | Status |
+|---|---|
+| `mathematics_logic` | **`expert-demo`** ✓ |
+| `physics` | `reasoning-capable` |
+| `systems_software` | `reasoning-capable` |
+| `hebrew_greek_textual_reasoning` | `reasoning-capable` |
+| `philosophy_theology` | `reasoning-capable` |
+
+### Open within Phase 6
+
+- [ ] Second expert-demo promotion (any of `physics` / `systems_software` / `hebrew_greek_textual_reasoning` — all now eligible under ADR-0109 shape rules)
+- [ ] Multi-reviewer threshold signing (open candidate frontier item from ADR-0105)
+
+### Pack-layer chain — ADR-0027 through ADR-0045 (backfill)
+
+The pack-layer architecture that Phase 6 builds on was established as a sequence between Phases 4 and 5 work but never registered here. Captured retroactively:
+
+- [x] **ADR-0027** Identity packs — `IdentityManifold` loaded from swappable, content-addressed pack
+- [x] **ADR-0028** Identity surface wiring — packs carry `surface_preferences` consumed by assembler
+- [x] **ADR-0029** Safety packs — sibling to identity, never-swappable, fail-closed at startup
+- [x] **ADR-0033** Ethics packs — third pack layer; swappable like identity, propositional like safety
+- [x] **ADR-0035** Turn-loop verdicts — `SafetyCheck` + `EthicsCheck` auto-invoked
+- [x] **ADR-0036** Safety refusal policy — typed runtime refusal
+- [x] **ADR-0037** Ethics refusal opt-in
+- [x] **ADR-0038** Hedge injection — soft remediation
+- [x] **ADR-0039** Audit completeness — `TurnVerdicts` bundle + stub-path emission
+- [x] **ADR-0040** Telemetry sink — structured JSONL turn-event sink
+- [x] **ADR-0041** CLI verdicts + fan-out
+- [x] **ADR-0042** Audit-tour demo — `core demo audit-tour`
+- [x] **ADR-0043** Pack measurements — identity-divergence + refusal-calibration runners
+- [x] **ADR-0044** Medical-ethics pack — worked-example domain ethics pack
+- [x] **ADR-0045** Long-context comparison evidence
+
+### Forward-graph + surface-composer chain — ADR-0046 through ADR-0089 (backfill)
+
+Also retroactive (the bulk happened between 2026-05-18 and 2026-05-20):
+
+- [x] **ADR-0046/0047** Forward graph constraint — PropositionGraph → AdmissibilityRegion *before* generate runs
+- [x] **ADR-0048..0066** Pack-grounded surface composers for every intent shape (DEFINITION, RECALL, COMPARISON, PROCEDURE, CORRECTION, NARRATIVE, EXAMPLE)
+- [x] **ADR-0063/0064** Cross-pack resolver + cross-pack teaching corpora
+- [x] **ADR-0068..0072** Register substrate (terse / convivial / formal); orthogonal axis — register holds `trace_hash` CONSTANT
+- [x] **ADR-0073** Anchor lens substrate — substantive variation axis; **opposite** invariant from register (lens moves `trace_hash` DISTINCT)
+- [x] **ADR-0078** Composer/graph atom equivalence telemetry
+- [x] **ADR-0080** Contemplation Loop Phase 1 — read-only frontier-compare miner, `SPECULATIVE`-only findings (landed 2026-05-22)
+- [x] **ADR-0083** Transitive chain surface — bounded multi-hop teaching-grounded surface
+- [x] **ADR-0089** Discourse planner + compound-intent dispatch
+
+---
+
 ## Open Scope Decisions
 
 | Decision | Status | Deadline |
