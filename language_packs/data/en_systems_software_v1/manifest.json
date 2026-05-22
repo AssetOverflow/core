@@ -12,5 +12,29 @@
   "oov_policy": "tagged_fallback",
   "glosses_checksum": "189a8686c02ac7a0801ef4d32fd52e551b5b88a1937d1e4efa7d449d16e74833",
   "definitional_layer": false,
-  "provenance": "adr-0090:domain_seed:2026-05-21"
+  "provenance": "adr-0101:reviewed:2026-05-21",
+  "domain_contract_version": 1,
+  "domain_id": "systems_software",
+  "axioms": null,
+  "rules": null,
+  "teaching_chains": ["systems_software_chains_v1"],
+  "eval_lanes": [
+    {
+      "lane": "symbolic_logic",
+      "version": "v1",
+      "splits": ["dev", "public", "holdout"]
+    },
+    {
+      "lane": "inference_closure",
+      "version": "v1",
+      "splits": ["dev", "public", "holdout"]
+    },
+    {
+      "lane": "fabrication_control",
+      "version": "v1",
+      "splits": ["dev", "public", "holdout"]
+    }
+  ],
+  "reviewers": ["shay-j"],
+  "known_gaps": []
 }

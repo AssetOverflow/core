@@ -10,5 +10,25 @@
   "version": "1.0.0",
   "gate_engaged": true,
   "oov_policy": "fail_closed",
-  "glosses_checksum": "2d00c18735fa81b6d1f3ece754c132924bf8a2b83241d1561370bef52e8816e1"
+  "glosses_checksum": "2d00c18735fa81b6d1f3ece754c132924bf8a2b83241d1561370bef52e8816e1",
+  "provenance": "adr-0102:reviewed:2026-05-21",
+  "domain_contract_version": 1,
+  "domain_id": "hebrew_greek_textual_reasoning",
+  "axioms": null,
+  "rules": null,
+  "teaching_chains": ["hebrew_greek_textual_reasoning_chains_v1"],
+  "eval_lanes": [
+    {
+      "lane": "inference_closure",
+      "version": "v1",
+      "splits": ["dev", "public", "holdout"]
+    },
+    {
+      "lane": "fabrication_control",
+      "version": "v1",
+      "splits": ["dev", "public", "holdout"]
+    }
+  ],
+  "reviewers": ["shay-j"],
+  "known_gaps": []
 }

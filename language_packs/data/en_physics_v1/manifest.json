@@ -12,5 +12,29 @@
   "oov_policy": "tagged_fallback",
   "glosses_checksum": "2d813897f06e0ac777044094a788710454e0e66d4a3725c0ed2436edbfc67830",
   "definitional_layer": false,
-  "provenance": "adr-0090:domain_seed:2026-05-21"
+  "provenance": "adr-0100:reviewed:2026-05-21",
+  "domain_contract_version": 1,
+  "domain_id": "physics",
+  "axioms": null,
+  "rules": null,
+  "teaching_chains": ["physics_chains_v1"],
+  "eval_lanes": [
+    {
+      "lane": "foundational_physics_ood",
+      "version": "v1",
+      "splits": ["dev", "public", "holdout"]
+    },
+    {
+      "lane": "inference_closure",
+      "version": "v1",
+      "splits": ["dev", "public", "holdout"]
+    },
+    {
+      "lane": "fabrication_control",
+      "version": "v1",
+      "splits": ["dev", "public", "holdout"]
+    }
+  ],
+  "reviewers": ["shay-j"],
+  "known_gaps": []
 }

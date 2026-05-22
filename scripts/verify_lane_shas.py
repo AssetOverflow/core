@@ -49,7 +49,7 @@ PINNED_SHAS: dict[str, str] = {
     "domain_contract_validation": "f9c06cdeea8fb36a0d3c320007618c3afc92d67702ef31bd36ebd9ae9ced473f",
     "fabrication_control_summary": "01e1b6b711141f2b4a14551d7df3ea482d8d6dd7b364a25c509f4f8d08cda8a8",
     "demo_composition": "27d838241bf3ed9e15d0e918ec6d89a823494d7e17c2dab9777825af7188f20f",
-    "public_demo": "21751aaf2b60897ec7ca9b6498219e3c5eb28aec6b17eb77369ed139db093b29",
+    "public_demo": "71090323943b3b09bf563d3d5217426922ab027f9a20bee3af4173435dda4c8c",
 }
 
 
