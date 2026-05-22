@@ -28,7 +28,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0106](ADR-0106-expert-demo-promotion-contract.md) | Expert-Demo Promotion Contract | Accepted (2026-05-22) |
 | [ADR-0107](ADR-0107-mathematics-logic-expert-demo-deferred.md) | `mathematics_logic` Expert-Demo Promotion — Deferred | Accepted (2026-05-22) |
 | [ADR-0108](ADR-0108-proposed-adr-sequencing.md) | Proposed-ADR Sequencing Post-ADR-0105 | Accepted (2026-05-22) |
-| [ADR-0109](ADR-0109-lane-shape-aware-thresholds.md) | Lane-Shape-Aware Thresholds (ADR-0106 Amendment) | Proposed (2026-05-22) |
+| [ADR-0109](ADR-0109-lane-shape-aware-thresholds.md) | Lane-Shape-Aware Thresholds (ADR-0106 Amendment) | Accepted (2026-05-22) |
 
 ---
 
@@ -66,8 +66,7 @@ Seven lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `la
 
 Sequencing per ADR-0108. Listed in priority order:
 
-1. **[ADR-0109](ADR-0109-lane-shape-aware-thresholds.md) — ADR-0106 lane-shape-aware threshold amendment.** Ships an explicit lane-shape registry covering five shapes (`cognition_shape`, `accuracy_shape`, `inference_shape`, `refusal_shape`, `symbolic_logic_shape`) so the contract can refuse promotion on substance, not on absence-of-key. Prerequisite to any future expert-demo promotion.
-2. **ADR-0110 (reserved) — `mathematics_logic` expert-demo re-attempt.** Conditional on ADR-0109 landing AND `inference_closure` substantively passing (currently `all_pass_rate=0.4` on public).
+1. **ADR-0110 (reserved) — `mathematics_logic` expert-demo re-attempt.** ADR-0109 has landed; the metric-shape blocker is cleared. The remaining blocker is `inference_closure` substantively passing (currently `all_pass_rate=0.4` on public).
 3. **[ADR-0080](ADR-0080-contemplation-loop.md) — Contemplation Loop.** Sandboxed, read-only Phase 1 self-interrogation; emits `SPECULATIVE` findings from `frontier_compare` reports. Converts gap-finding from human-driven to system-emitted-and-reviewed.
 4. **[ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs.** Optional per-entry definitional block. Deferred — value surfaces during a worked expert promotion that needs definitional depth.
 5. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
