@@ -11,7 +11,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | ADR | Title | Status |
 |---|---|---|
 | [ADR-0001](ADR-0001-vocab-layer-invariants.md) | Vocab Layer Invariants | Accepted |
-| [ADR-0002](ADR-0002-ingest-layer-design.md) | Ingest Layer Design (original) | **Archived** — superseded by ADR-0012 |
+| [ADR-0002](ADR-0002-ingest-layer-design.md) | Ingest Layer Design (original) | Archived — superseded by ADR-0012 |
 | [ADR-0003](ADR-0003-coordinate-system-dissolution.md) | Coordinate System Dissolution | Accepted |
 | [ADR-0004](ADR-0004-rotor-as-operator-not-property.md) | Rotor as Operator, Not Property | Accepted |
 | [ADR-0005](ADR-0005-language-pack-contract.md) | Language Pack Contract | Accepted |
@@ -53,7 +53,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0041](ADR-0041-cli-verdicts-and-fanout.md) | `--show-verdicts` + FanOutSink | Accepted (2026-05-17) |
 | [ADR-0042](ADR-0042-audit-tour-demo.md) | Audit Tour Demo (`core demo audit-tour`) | Accepted (2026-05-17) |
 | [ADR-0043](ADR-0043-pack-measurements-phase2.md) | Phase-2 pack measurements — claims → numbers | Accepted (2026-05-17) |
-| [ADR-0044](ADR-0044-medical-clinical-ethics-pack.md) | Medical / clinical ethics pack (worked-example domain pack) | Accepted (2026-05-17) |
+| [ADR-0044](ADR-0044-medical-clinical-ethics-pack.md) | Medical / clinical ethics pack | Accepted (2026-05-17) |
 | [ADR-0045](ADR-0045-long-context-recall-vs-transformer-baselines.md) | Long-context recall: CORE vs transformer baselines | Accepted (2026-05-17) |
 | [ADR-0046](ADR-0046-forward-graph-constraint.md) | PropositionGraph as forward AdmissibilityRegion + industry demos | Accepted (2026-05-18) |
 | [ADR-0047](ADR-0047-wire-forward-graph-constraint.md) | Wire forward graph constraint into the chat hot path (opt-in) | Accepted (2026-05-18) |
@@ -62,161 +62,129 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0050](ADR-0050-pack-grounded-comparison.md) | Pack-grounded surface for cold-start COMPARISON | Accepted (2026-05-18) |
 | [ADR-0051](ADR-0051-trust-boundary-hardening.md) | Trust-boundary hardening pass | Accepted (2026-05-18) |
 | [ADR-0052](ADR-0052-teaching-grounded-surface.md) | Teaching-grounded surface for cold-start CAUSE / VERIFICATION | Accepted (2026-05-18) |
-| [ADR-0053](ADR-0053-cognition-lane-closure.md) | Cognition lane closure: dev-driven corpus expansion + CORRECTION acknowledgement | Accepted (2026-05-18) |
-| [ADR-0054](ADR-0054-vault-recall-indexing-batching.md) | Vault recall matrix-cache indexing + batched API; holdout split wired into eval CLI | Accepted (2026-05-18) |
-| [ADR-0055](ADR-0055-inter-session-memory-discovery-promotion.md) | Inter-session memory: reviewed discovery promotion (phased design — DiscoveryCandidate, TeachingChainProposal, replay-equivalence gate); Phase A + Phase B Accepted | **Phase A + B Accepted**; C–E Proposed (2026-05-18) |
-| [ADR-0056](ADR-0056-contemplation-loop-c1.md) | Contemplation loop (Phase C1): question decomposition, polarity (affirms/falsifies/undetermined), claim_domain typing (factual/relational/evaluative), sync-only by design | **Accepted** (2026-05-18, implemented `4eecf73`) |
-| [ADR-0057](ADR-0057-teaching-chain-proposal-review.md) | Teaching-chain proposal + review + replay-equivalence gate (Phase C2): the only path to active-corpus extension; eligibility predicate; auto-reject on metric regression; operator accept/reject/withdraw; append-only proposal log | **Accepted** (2026-05-18) |
-| [ADR-0058](ADR-0058-forward-graph-constraint-status.md) | `forward_graph_constraint` remains opt-in default-`False`; no identity pack flips it on; ADR-0047 null-lift on cognition lane promoted to CI-enforced invariant (regression test); identity-pack→`RuntimeConfig` composition deferred until at least one such preference shows lift | **Accepted** (2026-05-18) |
-| [ADR-0059](ADR-0059-correction-pass-telemetry.md) | `ChatRuntime.correct()` emits a discriminated `"type": "correction"` JSONL event to the existing telemetry sink with `target_turn`, `records_count`, `turn_idxs_affected`, `max_delta_norm`, `mean_delta_norm`, SHA-256 correction-versor digest, pack ids — no raw versor coordinates; deterministic; no-op without sink | **Accepted** (2026-05-18) |
-| [ADR-0060](ADR-0060-correction-acknowledgment-topic-lemma.md) | CORRECTION acknowledgement surface weaves the first pack-resident topical lemma from the utterance (left-to-right, excluding `correction` itself and `be`/`have` fillers) into a fixed template; backward-compatible with ADR-0053 (no-arg path byte-identical); closes `correction_truth_040` holdout miss; holdout `term_capture_rate` 75.0% → 79.2% | **Accepted** (2026-05-18) |
-| [ADR-0061](ADR-0061-procedure-intent-pack-grounded-surface.md) | PROCEDURE intent (`"How do I X?"`) routes to new `pack_grounded_procedure_surface`; selector picks **last** pack-resident lemma from verb-phrase subject (object > verb), falls back to verb when object is OOV, returns `None` (→ universal disclosure) for no-pack-lemma utterances; closes `procedure_define_010` (term `concept`) + `procedure_verify_034` (surface); holdout `surface_groundedness` 94.7% → 100.0%; `term_capture_rate` 79.2% → 83.3% | **Accepted** (2026-05-18) |
-| [ADR-0062](ADR-0062-composed-teaching-grounded-surface.md) | Composed teaching-grounded surface: when a chain `(A, intent_A, conn_A, B)` has a follow-up chain `(B, ?, conn_B, C)`, emit `"{A} {conn_A} {B}, which {conn_B} {C}"` instead of just `"{A} {conn_A} {B}"`; depth-1 (one hop) + cycle guard + pack-residency guard; degrades to single-chain byte-identically when no follow-up survives the guards; opt-in via `RuntimeConfig.composed_surface=False` default; cognition lane null-drop invariant (metrics byte-identical flag OFF/ON) CI-pinned | **Accepted** (2026-05-18) |
-| [ADR-0067](ADR-0067-cross-pack-teaching-chains.md) | Cross-pack teaching chains (Plan Phase 4): `chat/cross_pack_grounding.py` + `teaching/cross_pack_chains/cross_pack_chains_v1.jsonl` seeded with 5 reviewed chains; each chain carries explicit `subject_pack_id` + `object_pack_id`, loader verifies per-chain residency, same-pack entries rejected (anti-leakage); fall-through after in-pack composer in CAUSE/VERIFICATION (cognition-lane byte-identity preserved); NARRATIVE + EXAMPLE composers merge cross-pack chains into multi-clause aggregation with widened corpus tag (e.g. `cognition_chains_v1 + cross_pack_chains_v1`); first cross-domain edges (`family grounds identity`, `identity requires family`, etc.) — relations × cognition; no prose generation, no new mutation surface, supersession honoured | **Accepted** (2026-05-18) |
-| [ADR-0066](ADR-0066-turn-level-composition.md) | Turn-level composition (Plan Phase 3): bounded session-thread context (P3.1) + opt-in deterministic anaphora prefix `(Recalling turn N: chain X.)` (P3.2, default off) + `IntentTag.NARRATIVE` multi-clause composer for "Tell me about X" walking every chain rooted on X across registered corpora (P3.3) + `IntentTag.EXAMPLE` reverse-chain composer for "Give me an example of X" surfacing chains where X is the object (P3.4); no prose generation, no new corpus mutation, all composers consult ADR-0064's cross-corpus aggregator; cognition lane byte-identical | **Accepted** (2026-05-18) |
-| [ADR-0065](ADR-0065-oov-gradient-and-relations-v2.md) | OOV gradient + relations v2 (Plan Phase 2): five-tier honesty gradient replaces the OOV cliff — pack / teaching / partial (one OOV + one known) / oov (learning invitation surface naming the unknown token + mounted-pack list) / universal disclosure; sink-emit OOVCandidates → `core teaching oov-gaps` aggregator → `core teaching oov-queue` auto-promotion mirrors P1.1+P1.2 architecture for vocab gaps; `en_core_relations_v2` adds 8 pronoun + role-filler lemmas (mother/father/son/daughter/brother/sister/grandparent/grandchild) with 7 reviewed v2-internal chains; no content synthesis, no domain inference, no auto-pack-mutation | **Accepted** (2026-05-18) |
-| [ADR-0064](ADR-0064-cross-pack-teaching-chains.md) | Cross-pack teaching chains: `chat/teaching_grounding.py` registers a tuple of `TeachingCorpusSpec(corpus_id, path, pack_id)`; each corpus is 1:1-bound to one lexicon pack (cross-domain triples deferred per teaching_order.md §5); new `_all_chains_index()` aggregates across registered corpora (first-match-wins); surface composers + discovery gate consult the aggregated view; `TeachingChain` gains `corpus_id` field; surface tag follows the resolving corpus id; replay-equivalence gate rewrites registry path during transient phase; `relations_chains_v1` seeded with 7 reviewed kinship chains; cognition lane byte-identical | **Accepted** (2026-05-18) |
-
-| [ADR-0090](ADR-0090-domain-pack-contract-v1.md) | Domain Pack Contract v1: optional manifest fields for domain capability claims; axioms/rules required only when a domain claims reasoning-capable status; ledger remains generated from evidence, not hand-maintained maturity labels | **Proposed** (2026-05-21) |
-| [ADR-0063](ADR-0063-cross-pack-surface-resolver.md) | Cross-pack surface resolver: `chat/pack_resolver.py` introduces `resolve_lemma(lemma, pack_ids)` that maps a lemma to `(resolving_pack_id, semantic_domains)` across an ordered tuple of mounted lexicon packs (first-match-wins); pack-grounded DEFINITION / RECALL / COMPARISON / CORRECTION / PROCEDURE composers now consult the resolver instead of a hardcoded `en_core_cognition_v1`; surface trust-boundary tag follows the resolving pack id; `en_core_relations_v1` joins `RuntimeConfig.input_packs` defaults — kinship lemmas now ground on the live path without a separate composer module; cognition-lane surfaces remain byte-identical (cognition is resolved first) | **Accepted** (2026-05-18) |
-
----
-
-## ADR-0024 chain — Forward Semantic Control closure
-
-ADR-0022 through ADR-0026 form a single coherent chain that closes
-forward semantic control as a non-stochastic, replay-deterministic,
-trace-evidenced mechanism.  Read in order:
-
-1. **ADR-0022** — Forward Semantic Control.  Establishes the
-   `AdmissibilityRegion` data structure (allowed indices, relation
-   blade, frame versor) and the contract that a region restricts the
-   admissible token set at generation time.
-2. **ADR-0023** — Proof Evidence.  Boundary-only proof that the
-   admissibility region is honored at the *region intersection* level
-   but not yet at the destination-token level.
-3. **ADR-0024** — Inner-Loop Per-Rotor Admissibility.  Adds the
-   destination-side check: each per-step selection is re-evaluated by
-   `cga_inner(versor(candidate), relation_blade) > threshold`, with
-   honest refusal (`InnerLoopExhaustion`) when every admissible
-   candidate is rejected.  Six phases of implementation evidence
-   (Phases 1-6) plus typed `RefusalReason` taxonomy.
-4. **ADR-0025** — Rotor / Frame Admissibility.  Adds the rotor-side
-   check: when a region carries a `frame_versor`, the rotor's effect
-   on the field state (`versor_apply(V, F)`) is additionally checked
-   against the frame for positivity in CGA inner product.  Lives in
-   `generate/rotor_admissibility.py` — a sibling-but-separate module,
-   not in `algebra/versor.py` (would couple algebra to pack state)
-   and not in `field/propagate.py` (forbidden normalization site).
-5. **ADR-0026** — Ranked Admissibility with Margin.  Replaces static
-   threshold tuning with a scale-invariant margin gate: admit iff
-   the top blade-score exceeds the second by ≥ δ.  Defaults to
-   δ = 0.4.  Falsifiable; characterization documented in
-   `docs/evals/phase5_stratified_findings.md`.
-
-Implementation evidence:
-
-| Phase | Commit | Tests |
-|---|---|---|
-| Phase 1 — pack-grounded fixtures | `3940290` | (rewrites) |
-| Phase 2 — typed refusals + trace fold | `310793a` | +10 |
-| Phase 3 — ranked-with-margin gate | `639e107` | +13 |
-| Phase 4 — rotor / frame admissibility | `542e13d` | +11 |
-| Phase 5 — stratified mechanism-isolation | `b664984` | +20 |
-| Phase 6 — comparative demo vs baseline | `a076506` | +17 |
-| CLI surface (suite aliases + `core demo`) | `36aad75` | +14 |
-
-Runtime contracts for the chain are pinned in
-[`docs/runtime_contracts.md`](../runtime_contracts.md) (Refusal
-contract, Margin contract, Rotor admissibility contract sections).
+| [ADR-0053](ADR-0053-cognition-lane-closure.md) | Cognition lane closure + correction acknowledgement | Accepted (2026-05-18) |
+| [ADR-0054](ADR-0054-vault-recall-indexing-batching.md) | Vault recall indexing + batched API | Accepted (2026-05-18) |
+| [ADR-0055](ADR-0055-inter-session-memory-discovery-promotion.md) | Inter-session memory: reviewed discovery promotion | Phase A + B Accepted; C–E Proposed (2026-05-18) |
+| [ADR-0056](ADR-0056-contemplation-loop-c1.md) | Contemplation loop C1 | Accepted (2026-05-18) |
+| [ADR-0057](ADR-0057-teaching-chain-proposal-review.md) | Teaching-chain proposal + review + replay-equivalence gate | Accepted (2026-05-18) |
+| [ADR-0058](ADR-0058-forward-graph-constraint-status.md) | Forward graph constraint remains opt-in default-false | Accepted (2026-05-18) |
+| [ADR-0059](ADR-0059-correction-pass-telemetry.md) | Correction-pass telemetry | Accepted (2026-05-18) |
+| [ADR-0060](ADR-0060-correction-acknowledgment-topic-lemma.md) | Correction acknowledgement topic lemma | Accepted (2026-05-18) |
+| [ADR-0061](ADR-0061-procedure-intent-pack-grounded-surface.md) | Procedure intent pack-grounded surface | Accepted (2026-05-18) |
+| [ADR-0062](ADR-0062-composed-teaching-grounded-surface.md) | Composed teaching-grounded surface | Accepted (2026-05-18) |
+| [ADR-0063](ADR-0063-cross-pack-surface-resolver.md) | Cross-pack surface resolver | Accepted (2026-05-18) |
+| [ADR-0064](ADR-0064-cross-pack-teaching-chains.md) | Cross-pack teaching chains | Accepted (2026-05-18) |
+| [ADR-0065](ADR-0065-oov-gradient-and-relations-v2.md) | OOV gradient + relations v2 | Accepted (2026-05-18) |
+| [ADR-0066](ADR-0066-turn-level-composition.md) | Turn-level composition | Accepted (2026-05-18) |
+| [ADR-0067](ADR-0067-cross-pack-teaching-chains.md) | Cross-pack teaching chains — explicit cross-domain edges | Accepted (2026-05-18) |
+| ADR-0068–ADR-0079 | Reserved / see git history until individual ADR files are added to this index | Not indexed |
+| [ADR-0080](ADR-0080-contemplation-loop.md) | Contemplation loop | Proposed |
+| ADR-0081–ADR-0082 | Reserved / see git history until individual ADR files are added to this index | Not indexed |
+| [ADR-0083](ADR-0083-transitive-chain-surface.md) | Transitive chain surface | Proposed |
+| [ADR-0084](ADR-0084-definitional-layer.md) | Definitional layer | Proposed |
+| ADR-0085–ADR-0086 | Reserved / see git history until individual ADR files are added to this index | Not indexed |
+| [ADR-0087](ADR-0087-rhetorical-style-axis.md) | Rhetorical style axis | Proposed |
+| [ADR-0088](../adr/ADR-0088-realizer-grounded-authority.md) | Realizer grounded authority | Proposed |
+| [ADR-0089](../adr/ADR-0089-compound-intent-pipeline-dispatch.md) | Compound intent pipeline dispatch | Proposed |
+| [ADR-0090](../adr/ADR-0090-unified-ingest-and-batched-recall.md) | Unified ingest and batched recall | Proposed |
+| [ADR-0091](ADR-0091-domain-pack-contract-v1.md) | Domain Pack Contract v1 | Accepted (2026-05-22) |
+| [ADR-0092](ADR-0092-reviewer-registry-v1.md) | Reviewer Registry v1 | Accepted (2026-05-22) |
+| [ADR-0093](ADR-0093-domain-pack-contract-v1-implementation.md) | Domain Pack Contract v1 implementation | Accepted (2026-05-22) |
+| [ADR-0094](ADR-0094-proposal-source-provenance.md) | Proposal Source Provenance | Proposed |
+| [ADR-0095](ADR-0095-miner-sourced-teaching-proposals.md) | Miner-Sourced Teaching Proposals | Proposed |
+| [ADR-0096](ADR-0096-fabrication-control-eval-lane.md) | Fabrication-Control Eval Lane | Accepted (2026-05-22) |
+| [ADR-0097](ADR-0097-mathematics-logic-reasoning-capable-ratification.md) | Mathematics-Logic Reasoning-Capable Ratification | Accepted (2026-05-22) |
+| [ADR-0098](ADR-0098-demo-composition-contract.md) | Demo Composition Contract | Proposed — current implementation frontier |
+| [ADR-0099](ADR-0099-public-showcase-demo.md) | Public Showcase Demo | Proposed — depends on ADR-0098 |
+| [ADR-0100](ADR-0100-physics-reasoning-capable-ratification.md) | Physics Reasoning-Capable Ratification | Accepted (2026-05-22) |
+| [ADR-0101](ADR-0101-systems-software-reasoning-capable-ratification.md) | Systems-Software Reasoning-Capable Ratification | Accepted (2026-05-22) |
+| [ADR-0102](ADR-0102-hebrew-greek-reasoning-capable-ratification.md) | Hebrew-Greek Textual-Reasoning Reasoning-Capable Ratification | Accepted (2026-05-22) |
 
 ---
 
-## Pack-Layer chain — ADR-0027 through ADR-0045
+## Current frontier
 
-ADR-0027 through ADR-0045 form the second coherent chain in the
-project: a load-bearing three-tier pack architecture (identity /
-safety / ethics) with deterministic remediation, full-stream audit,
-machine-readable telemetry, an operator-facing CLI readout, and an
-investor-facing walkthrough.  Read in order:
+The active frontier is no longer domain-ratification substrate. The following are already accepted and mechanically evidenced:
 
-| Group | ADRs | What it adds |
-|---|---|---|
-| **Identity** | ADR-0027 / ADR-0028 | Identity manifold loads from a swappable JSON pack at composition time.  Pack carries `surface_preferences` that visibly drive hedging and claim strength. |
-| **Identity surface refinements** | ADR-0030 / ADR-0031 | Depth-language hedge; score-decomposition surface. |
-| **Safety** | ADR-0029 / ADR-0032 | Five universal safety boundaries unioned into every runtime manifold; SafetyCheck registry-of-predicates surface (observational). |
-| **Ethics** | ADR-0033 / ADR-0034 | Third pack tier — deployment commitments, swappable like identity but propositional like safety; EthicsCheck predicate surface. |
-| **Turn-loop wiring** | ADR-0035 | Both checks auto-invoked at end of every turn; verdicts attached to `ChatResponse` and `TurnEvent`. |
-| **Remediation tiers** | ADR-0036 / ADR-0037 / ADR-0038 | Safety-only typed refusal → per-commitment ethics refusal opt-in → hedge injection.  Three tiers per ethics commitment: audit / hedge / refuse. |
-| **Audit completeness** | ADR-0039 | `TurnVerdicts` bundle + stub-path `TurnEvent` emission + `refusal_emitted` / `hedge_injected` flags.  `rt.turn_log` covers every turn. |
-| **Machine + operator surfaces** | ADR-0040 / ADR-0041 | Structured JSONL sink with redact-by-default trust boundary; `FanOutSink` composer; `core chat --show-verdicts` operator readout. |
-| **Demo** | ADR-0042 | `core demo audit-tour` — four-scene investor-facing walkthrough; test-gated `all_claims_supported` flag. |
-| **Phase-2 measurements** | ADR-0043 | Pack-driven identity-divergence + refusal-calibration runners convert load-bearing claims into CI-enforced numbers across the three ratified packs; combined report at `evals/results/phase2_pack_measurements.json`. |
-| **Worked-example domain pack** | ADR-0044 | `medical_clinical_ethics_v1` — six commitments across all three remediation tiers (refuse / hedge / audit); ratified end-to-end through `scripts/ratify_ethics_pack.py`; composes into the runtime manifold alongside the universal safety floor. |
-| **Long-context comparison** | ADR-0045 | CORE exact needle-in-a-haystack measurement at N ∈ {100, 1k, 10k, 100k} paired with frozen transformer baselines (Claude 2.1, GPT-4 Turbo 128k, Gemini 1.5 Pro, RULER); `recall_pct=100` for CORE by construction. |
+- Domain Pack Contract v1 — ADR-0091
+- Reviewer Registry v1 — ADR-0092
+- Domain Contract v1 enforcement — ADR-0093
+- Fabrication-control negative eval lane — ADR-0096
+- `mathematics_logic` reasoning-capable ratification — ADR-0097
+- `physics` reasoning-capable ratification — ADR-0100
+- `systems_software` reasoning-capable ratification — ADR-0101
+- `hebrew_greek_textual_reasoning` multi-pack reasoning-capable ratification — ADR-0102
 
-Three sibling pack types compose into every runtime manifold:
+The current implementation frontier is therefore:
 
-```
-identity.boundary_ids ∪ safety.boundary_ids ∪ ethics.commitment_ids → manifold.boundary_ids
+```text
+ADR-0098 — Demo Composition Contract
+        ↓
+ADR-0099 — Public Showcase Demo
 ```
 
-Per-commitment ethics policy lives in two opt-in lists on the
-ethics pack: `refusal_commitments` (hard stop) and
-`hedge_commitments` (soft prepend), mutually exclusive at load time.
-Safety is always in scope for refusal; the floor never moves.
+ADR-0098 is the evidence-orchestration layer. It must let existing proof artifacts compose without reimplementation, subprocess stdout parsing, hidden state mutation, or non-deterministic JSON.
 
-Verification surface:
+ADR-0099 should not begin until ADR-0098 is accepted. The showcase must compose already-proven scenes; it must not become a marketing rewrite of the proof substrate.
 
-| Layer | Tests | Live demo |
-|---|---|---|
-| Identity packs | `tests/test_identity_packs.py`, `tests/test_identity_surface_divergence.py` | `core demo audit-tour` Scene 1 |
-| Safety pack + refusal | `tests/test_safety_pack.py`, `tests/test_safety_check.py`, `tests/test_safety_refusal.py` | `core demo audit-tour` Scene 2 |
-| Ethics pack + opt-ins | `tests/test_ethics_packs.py`, `tests/test_ethics_check.py`, `tests/test_ethics_refusal_opt_in.py`, `tests/test_hedge_injection.py` | `core demo audit-tour` Scene 3 |
-| Turn-loop verdicts + bundle | `tests/test_turn_loop_verdicts.py`, `tests/test_turn_verdicts_bundle.py` | `core chat --show-verdicts` |
-| Telemetry sink | `tests/test_telemetry_sink.py`, `tests/test_telemetry_fanout_and_summary.py` | `core demo audit-tour` Scene 4 |
-| Audit tour gate | `tests/test_audit_tour.py` — asserts `all_claims_supported` | `core demo audit-tour` |
+Learning-loop expansion remains deliberately later:
+
+```text
+ADR-0094 — Proposal Source Provenance
+        ↓
+ADR-0095 — Miner-Sourced Teaching Proposals
+```
+
+Do not begin ADR-0095 until ADR-0094 is accepted.
 
 ---
 
-## Pillar 1 → 2 → 3 coupling — ADR-0046 / ADR-0047
+## Accepted reasoning-capable domains
 
-ADR-0046 extends the **ADR-0022 → ADR-0026** forward-semantic-control
-chain by giving the `AdmissibilityRegion` a new, geometry-derived
-source: the `PropositionGraph`.
+| Domain | Ratification ADR | Pack(s) | Evidence summary |
+|---|---|---|---|
+| `mathematics_logic` | ADR-0097 | `en_mathematics_logic_v1` | All nine ADR-0091 predicates pass; ledger row is `reasoning-capable`; `expert_demo` remains false; lanes include positive coverage, inference closure, and fabrication control. |
+| `physics` | ADR-0100 | `en_physics_v1` | All nine predicates pass; causal/modal operator coverage meets threshold; ledger row is `reasoning-capable`; `expert_demo` remains false. |
+| `systems_software` | ADR-0101 | `en_systems_software_v1` | All nine predicates pass; transitive/causal operator coverage meets threshold; ledger row is `reasoning-capable`; `symbolic_logic` is the v1 closest-fit eval lane. |
+| `hebrew_greek_textual_reasoning` | ADR-0102 | `grc_logos_micro_v1`, `grc_logos_cognition_v1`, `he_logos_micro_v1`, `he_core_cognition_v1` | First multi-pack ratification; all four packs carry uniform contract fields; causal/contradiction operator coverage meets threshold; universal lanes are declared until language-specific holdouts land. |
 
-The graph was previously built **after** `generate()` ran, from the
-walk's nearest-node results — a post-hoc descriptor of what the field
-had already produced.  ADR-0046 converts each graph's named-node
-versors into an `AdmissibilityRegion` **before** `generate()` is
-called, via the exact CGA top-k neighbourhood.  The walk is now
-constrained by the proposition's geometric meaning rather than
-described by it after the fact.
+---
 
+## ADR chain notes
+
+### Forward Semantic Control closure — ADR-0022 through ADR-0026
+
+ADR-0022 through ADR-0026 form a single coherent chain that closes forward semantic control as a non-stochastic, replay-deterministic, trace-evidenced mechanism.
+
+1. **ADR-0022** establishes `AdmissibilityRegion` and the contract that a region restricts the admissible token set at generation time.
+2. **ADR-0023** records proof evidence that the admissibility region is honored at the region-intersection level.
+3. **ADR-0024** adds destination-side per-step admissibility and honest `InnerLoopExhaustion` when all admissible candidates are rejected.
+4. **ADR-0025** adds rotor/frame admissibility when a region carries a `frame_versor`.
+5. **ADR-0026** replaces static threshold tuning with ranked admissibility and a scale-invariant margin gate.
+
+Runtime contracts for the chain are pinned in [`docs/runtime_contracts.md`](../runtime_contracts.md).
+
+### Pack-layer chain — ADR-0027 through ADR-0045
+
+ADR-0027 through ADR-0045 establish the identity / safety / ethics pack architecture with deterministic remediation, audit completeness, telemetry, operator readout, audit-tour demo, pack measurements, a worked-example medical ethics pack, and long-context comparison measurements.
+
+### Evidence-governed domain chain — ADR-0091 through ADR-0102
+
+ADR-0091 through ADR-0102 establish the current domain-ratification substrate:
+
+```text
+contract definition
+    ↓
+reviewer trust root
+    ↓
+validator / ledger enforcement
+    ↓
+negative-control fabrication lane
+    ↓
+reasoning-capable domain ratification
 ```
-geometry (CGA versor neighbourhood)
-  → structure (PropositionGraph nodes)
-    → propagation (AdmissibilityRegion fed to generate())
-```
 
-Three industry-facing demos under `evals/industry_demos/` carry the
-falsifiable claims for this coupling.  The exact-recall-at-scale claim
-remains under ADR-0045 / `evals/long_context/`, where it is measured
-on the real vault path and not duplicated under a weaker construction.
-
-| Layer | Tests | Live demo |
-|---|---|---|
-| Forward graph constraint (primitive) | `tests/test_graph_constraint.py` — 8 tests | `python -m evals.industry_demos.demo_01_forward_constraint` |
-| Forward graph constraint (live wiring) | `tests/test_forward_graph_constraint_wiring.py` — 5 tests | `RuntimeConfig(forward_graph_constraint=True)` then `core eval cognition` |
-| Geometry-driven identity | `tests/test_identity_packs.py`, `tests/test_identity_surface_divergence.py` | `python -m evals.industry_demos.demo_02_geometry_drives_identity` |
-| Architectural determinism | `tests/test_telemetry_sink.py`, `tests/test_telemetry_fanout_and_summary.py` | `python -m evals.industry_demos.demo_03_deterministic_audit` |
-
-ADR-0047 lands the wire-up behind an opt-in `RuntimeConfig` flag.  The
-characterisation it carries (`A/B` on the public cognition split)
-shows the wiring is correct and safe but does not move
-`surface_groundedness` or `term_capture_rate` on this lane — isolating
-the next load-bearing pull to the realizer / surface-assembly path
-rather than to propagation.
+No domain claim should be treated as mature merely because a pack exists. Capability status belongs to the generated ledger and its evidence predicates.
 
 ---
 

@@ -1,8 +1,20 @@
 # ADR-0091 — Domain Pack Contract v1
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-21
+**Accepted:** 2026-05-22
 **Author:** CORE agents + reviewers
+
+---
+
+## Acceptance evidence
+
+Accepted after ADR-0093 implementation wired Domain Pack Contract v1 into the validator and capability ledger:
+
+- `language_packs/domain_contract.py` parses the optional contract fields and rejects malformed structure.
+- `core/capability/domain_contract_predicates.py` evaluates the nine ADR-0091 semantic predicates.
+- `tests/test_capability_cli.py` verifies `core capability ledger --json` emits reasoning-capable rows for the ratified domains.
+- `tests/test_adr_0097_mathematics_logic_ratification.py` and `tests/test_adr_0100_0102_sibling_ratifications.py` verify all nine predicates pass for the ratified domain packs.
 
 ---
 
@@ -73,9 +85,7 @@ schema churn without adding reasoning evidence.
 
 ## Validation Semantics
 
-The validator remains proposal-only until the schema change is
-implemented. When implemented, a domain pack can affect capability claims
-only if:
+A domain pack can affect capability claims only if:
 
 1. The base pack manifest is valid and checksums match bytes on disk.
 2. Gloss checksum and definitional closure pass for packs that provide
@@ -123,16 +133,3 @@ passes. Closing a gap never promotes a row by itself.
   operator family without chains remains below `reasoning-capable`.
 - Hebrew/Greek textual reasoning cannot advance on pack names alone; it
   must close gloss coverage and chain foundation first.
-
----
-
-## Follow-up Work
-
-1. Add manifest parser support for `domain_contract_version=1`.
-2. Add dry-run validation for domain contract fields.
-3. Add domain-specific chain registry wiring.
-4. Add eval lane references to capability artifact metadata.
-5. Ratify domain packs only after reviewer metadata exists.
-
-This ADR is the contract. Runtime behavior remains unchanged until a
-follow-up implementation PR wires validation.
