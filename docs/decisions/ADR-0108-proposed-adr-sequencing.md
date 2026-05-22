@@ -1,6 +1,6 @@
 # ADR-0108 — Proposed-ADR Sequencing Post-ADR-0105
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-22
 **Author:** CORE agents + reviewers
 **Relates to:** ADR-0080, ADR-0084, ADR-0087, ADR-0106
