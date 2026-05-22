@@ -37,6 +37,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0114](ADR-0114-expert-capability-roadmap-gsm8k-first.md) | Expert-Capability Roadmap: GSM8K-Math First | Proposed (2026-05-22) |
 | [ADR-0114a](ADR-0114a-anti-overfitting-proof-obligations.md) | Anti-Overfitting Proof Obligations for `expert` Promotion | Accepted (2026-05-22) |
 | [ADR-0115](ADR-0115-math-problem-parser-and-graph.md) | Math Problem Parser and Typed Proposition Graph | Phase 1.1+1.2+1.3 Accepted (2026-05-22) |
+| [ADR-0116](ADR-0116-deterministic-solver.md) | Deterministic Solver (`MathProblemGraph` → `SolutionTrace`) | Accepted (2026-05-22) |
 
 ---
 
@@ -70,6 +71,7 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - Expert-Capability Roadmap (GSM8K-Math first); proposed — ADR-0114
 - Math Problem Parser & Typed Graph (Phase 1.1 schema + 5 seeds + Phase 1.2 45 more cases + Phase 1.3 parser engine; 50/50 byte-equal) — ADR-0115
 - Anti-Overfitting Proof Obligations for any future `expert` promotion (10-point falsifiable framework) — ADR-0114a
+- Deterministic Solver (Phase 2; SolutionTrace + en_arithmetic_v1 pack; discharges ADR-0114a obligations #3, #4, #9, #10) — ADR-0116
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 

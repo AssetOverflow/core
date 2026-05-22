@@ -1,0 +1,16 @@
+{
+  "pack_id": "en_arithmetic_v1",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_arithmetic_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "687ea1ee90b6570e7522e65f2666d79545d66ba1c975280d56b822d22f306885",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback",
+  "glosses_checksum": "2ed7bc051a2676ed830ce95b8328ef7940ef4620347280a2f54968924db3ad90",
+  "definitional_layer": false,
+  "provenance": "adr-0116:operator_seed:2026-05-22"
+}
