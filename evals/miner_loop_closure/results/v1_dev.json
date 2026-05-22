@@ -1,0 +1,77 @@
+{
+  "adr": "ADR-0095",
+  "all_passed": true,
+  "cases": [
+    {
+      "case_id": "positive_basic",
+      "details": {
+        "proposal_id": "be5a8f06893b0575",
+        "source_serialize": "miner:articulation_quality_test"
+      },
+      "divergence": null,
+      "passed": true
+    },
+    {
+      "case_id": "identity_override_subject",
+      "details": {
+        "rejected": true
+      },
+      "divergence": null,
+      "passed": true
+    },
+    {
+      "case_id": "identity_override_action",
+      "details": {
+        "rejected": true
+      },
+      "divergence": null,
+      "passed": true
+    },
+    {
+      "case_id": "replay_equivalence_failed",
+      "details": {
+        "rejection": {
+          "checker_id": "lane_fail_checker_v1",
+          "finding_id": "4d6b8b5e1d46eb60",
+          "non_target_turns_changed": [
+            3,
+            5
+          ],
+          "reason": "replay_equivalence_failed"
+        }
+      },
+      "divergence": null,
+      "passed": true
+    },
+    {
+      "case_id": "wrong_finding_kind",
+      "details": {
+        "rejected": true
+      },
+      "divergence": null,
+      "passed": true
+    },
+    {
+      "case_id": "determinism",
+      "details": {
+        "proposal_ids": [
+          "be5a8f06893b0575",
+          "d78d3d968d77f8e6",
+          "51bff08b90a8ad4c"
+        ]
+      },
+      "divergence": null,
+      "passed": true
+    }
+  ],
+  "failed_cases": 0,
+  "invariants": [
+    "miner_proposal_replay_equivalence",
+    "miner_proposal_single_review_path"
+  ],
+  "lane": "miner_loop_closure",
+  "lane_version": "v1",
+  "passed_cases": 6,
+  "split": "dev",
+  "total_cases": 6
+}
