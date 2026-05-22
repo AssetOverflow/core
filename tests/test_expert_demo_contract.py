@@ -62,7 +62,7 @@ _SHAPE_FIXTURES = {
     "inference_closure": _INFERENCE_METRICS,
     "elementary_mathematics_ood": _ACCURACY_METRICS,
     "foundational_physics_ood": _ACCURACY_METRICS,
-    "symbolic_logic": _ACCURACY_METRICS,
+    "symbolic_logic": _INFERENCE_METRICS,
     "hebrew_fluency": _ACCURACY_METRICS,
     "koine_greek_fluency": _ACCURACY_METRICS,
 }

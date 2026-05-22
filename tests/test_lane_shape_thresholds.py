@@ -162,3 +162,62 @@ class TestShapeThresholdValues:
     def test_inference_shape_minimums(self) -> None:
         assert ALL_PASS_RATE_MIN == 0.95
         assert REPLAY_DETERMINISM_MIN == 1.0
+
+
+class TestSymbolicLogicShapeGate:
+    def test_symbolic_logic_resolves_to_inference_shape(self) -> None:
+        assert resolve_lane_shape("symbolic_logic") == "inference_shape"
+
+    def test_symbolic_logic_with_inference_metrics_passes(self) -> None:
+        reviewer = Reviewer(
+            reviewer_id="shay-j",
+            display_name="Joshua Shay",
+            role="primary",
+            domains=("*",),
+            review_scope=("pack", "proposal", "chain", "eval"),
+            provenance="adr-0092:bootstrap:2026-05-21",
+        )
+        
+        metrics = {
+            "all_pass_rate": 0.98,
+            "replay_determinism": 1.0,
+            "overall_pass": True,
+        }
+        
+        lane_results = {
+            "symbolic_logic": {
+                "public": metrics,
+                "holdout": metrics,
+            }
+        }
+        
+        from core.capability.expert_demo import derive_evidence_digest
+        digest = derive_evidence_digest(
+            domain_id="systems_software",
+            evidence_revision="rev1",
+            evidence_lanes=("symbolic_logic",),
+            lane_results=lane_results,
+        )
+        
+        claim = ExpertDemoClaim(
+            domain_id="systems_software",
+            evidence_lanes=("symbolic_logic",),
+            evidence_revision="rev1",
+            signed_by="shay-j",
+            claim_digest=digest,
+        )
+        
+        registry = ReviewerRegistry(
+            schema_version=1, reviewers=(reviewer,), expert_demo_claims=(claim,)
+        )
+        
+        verdict = evaluate_expert_demo(
+            domain_id="systems_software",
+            reasoning_capable=True,
+            registry=registry,
+            domain_lanes=("symbolic_logic",),
+            lane_results=lane_results,
+        )
+        assert verdict.passed is True
+        assert verdict.reason == "all audit-passed predicates satisfied"
+
