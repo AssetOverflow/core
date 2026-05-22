@@ -1,9 +1,21 @@
 # ADR-0095 — Miner-Sourced Teaching Proposals
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-21
+**Accepted:** 2026-05-22
 **Author:** CORE agents + reviewers
 **Depends on:** ADR-0094
+
+---
+
+## Acceptance evidence
+
+Accepted after miner-sourced proposals were wired through the reviewed teaching pipeline with a deterministic, SHA-pinned closure lane:
+
+- `teaching/from_miner.py` converts contemplation miner outputs into `PackMutationProposal` / `TeachingProposal` records carrying `ProposalSource(kind="miner", source_id=<miner_id>, ...)`.
+- `evals/miner_loop_closure/runner.py` and `evals/miner_loop_closure/contract.md` define the closure lane; `evals/miner_loop_closure/results/v1_dev.json` is the canonical report.
+- `tests/test_miner_proposals.py` exercises miner-to-proposal conversion, source-tagging, replay determinism, and review-gate parity with operator-sourced proposals.
+- `scripts/verify_lane_shas.py` pins `miner_loop_closure` at SHA `9f071733abe7dcacf759f928548ce738fb639af3fd6e4c621a651b306d7e77ce`; verified locally and by the `lane-shas` workflow on `main`.
 
 ---
 

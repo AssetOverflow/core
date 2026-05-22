@@ -1,8 +1,21 @@
 # ADR-0098 — Demo Composition Contract
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-21
+**Accepted:** 2026-05-22
 **Author:** CORE agents + reviewers
+
+---
+
+## Acceptance evidence
+
+Accepted after the demo composition contract was implemented as a typed, deterministic adapter layer with a SHA-pinned lane:
+
+- `core/demos/contract.py` defines the typed `DemoScene` / `DemoArtifact` / `CompositionResult` schema and the contract surface that adapters must satisfy.
+- `core/demos/audit_tour_adapter.py` and `core/demos/tour_adapters.py` wrap existing demos (audit-tour, register-tour, anchor-lens-tour) without reimplementation or subprocess stdout parsing.
+- `evals/demo_composition/runner.py` and `evals/demo_composition/contract.md` define the composition lane; `evals/demo_composition/results/v1_dev.json` is the canonical report.
+- `tests/test_demo_composition.py` exercises contract enforcement, adapter determinism, and rejection of non-deterministic / mutating adapters.
+- `scripts/verify_lane_shas.py` pins `demo_composition` at SHA `27d838241bf3ed9e15d0e918ec6d89a823494d7e17c2dab9777825af7188f20f`; verified locally and by the `lane-shas` workflow on `main`.
 
 ---
 
