@@ -2107,6 +2107,47 @@ def cmd_demo(args: argparse.Namespace) -> int:
             print(json.dumps(result, indent=2, sort_keys=True, default=str))
         return 0 if result.get("all_claims_supported", False) else 1
 
+    if target == "expert":
+        from core.demos.expert_demo import run_expert_demo
+
+        domain_id = getattr(args, "domain", None)
+        if not domain_id:
+            print(
+                "core demo expert <domain>: --domain (or positional) required",
+                file=sys.stderr,
+            )
+            return 2
+        out_dir = args.output_dir
+        if out_dir is None:
+            out_dir = Path("evals/expert_demos") / domain_id / "latest"
+        try:
+            result = run_expert_demo(domain_id=domain_id, output_dir=out_dir)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"core demo expert: {exc}", file=sys.stderr)
+            return 1
+
+        if args.json:
+            print(json.dumps(result, indent=2, sort_keys=True, default=str))
+        else:
+            print(f"expert-demo: {out_dir / 'expert_demo.json'}")
+            print(f"       html: {out_dir / 'expert_demo.html'}")
+            dv = result["digest_verification"]
+            mark = "✓" if dv["matches"] else "✗"
+            print(
+                f"  digest_match: {mark}  "
+                f"signed={dv['signed'][:16]}…  derived={dv['derived'][:16]}…"
+            )
+            for lane in result["lanes"]:
+                for split_name, split in lane["splits"].items():
+                    sc = split["shape_check"]
+                    smark = "✓" if sc["passed"] else "✗"
+                    print(
+                        f"  {smark} {lane['lane_id']:32s} {split_name:8s} "
+                        f"({sc['shape']}): {sc['reason']}"
+                    )
+            print(f"all_claims_supported: {result['all_claims_supported']}")
+        return 0 if result["all_claims_supported"] else 1
+
     if target == "showcase":
         from core.demos.showcase import render_html, run_showcase
 
@@ -3097,6 +3138,7 @@ def build_parser() -> argparse.ArgumentParser:
             "articulation",
             "conversation",
             "showcase",
+            "expert",
             "all",
             "list-results",
         ],
@@ -3130,6 +3172,11 @@ def build_parser() -> argparse.ArgumentParser:
             "WALKTHROUGH multi-sentence articulation + determinism gate.  "
             "conversation: layperson-facing chat transcript with live "
             "word-by-word streaming and plain-English captions.  "
+            "expert <domain>: per-domain runnable expert-demo showcase "
+            "(ADR-0112). Reads the signed expert_demo_claims entry, "
+            "re-derives the digest from on-disk lane result files, "
+            "asserts byte-for-byte match, surfaces sample cases per "
+            "attached lane × split. Pair with --domain <id>.  "
             "list-results: index every JSON report in the results directory."
         ),
     )
@@ -3153,6 +3200,16 @@ def build_parser() -> argparse.ArgumentParser:
             "for `showcase` target: directory where the showcase JSON, "
             "HTML, and per-scene artifacts are written "
             "(default: evals/public_demo/results/<sha>/)"
+        ),
+    )
+    demo.add_argument(
+        "--domain",
+        type=str,
+        default=None,
+        metavar="ID",
+        help=(
+            "for `expert` target: domain id whose signed expert_demo "
+            "claim should be rendered (e.g. `mathematics_logic`, `physics`)"
         ),
     )
     demo.add_argument(
