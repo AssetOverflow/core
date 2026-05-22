@@ -1,0 +1,35 @@
+{
+  "atoms": [
+    "cognition.evidence",
+    "cognition.illumination",
+    "cognition.knowledge",
+    "cognition.truth",
+    "logos.core"
+  ],
+  "claim_contract_version": 1,
+  "claims": [
+    {
+      "claim_id": "multi_hop_grounded_answer",
+      "evidence_locator": "grounding_source=teaching",
+      "statement": "Prompt 'Does light reveal truth?' produces a teaching-grounded answer rather than a refusal.",
+      "supported": true
+    },
+    {
+      "claim_id": "multi_hop_depth_two_or_more",
+      "evidence_locator": "atoms_in_surface=5",
+      "statement": "Surface names \u2265 3 distinct atoms (depth-2 transitive walk).",
+      "supported": true
+    },
+    {
+      "claim_id": "multi_hop_walk_evidence_present",
+      "evidence_locator": "walk_surface non-empty",
+      "statement": "Result exposes non-empty walk evidence.",
+      "supported": true
+    }
+  ],
+  "demo_id": "multi-hop-trace",
+  "grounding_source": "teaching",
+  "prompt": "Does light reveal truth?",
+  "surface": "light \u2014 teaching-grounded (cognition_chains_v1): cognition.illumination; logos.core. light reveals truth (cognition.truth), which grounds knowledge (cognition.knowledge), which requires evidence (cognition.evidence). No session evidence yet.",
+  "walk_surface": "I don't know \u2014 insufficient grounding for that yet."
+}

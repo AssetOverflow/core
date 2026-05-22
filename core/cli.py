@@ -2107,6 +2107,28 @@ def cmd_demo(args: argparse.Namespace) -> int:
             print(json.dumps(result, indent=2, sort_keys=True, default=str))
         return 0 if result.get("all_claims_supported", False) else 1
 
+    if target == "showcase":
+        from core.demos.showcase import render_html, run_showcase
+
+        out_dir = args.output_dir
+        if out_dir is None:
+            out_dir = Path("evals/public_demo/results/latest")
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        result = run_showcase(output_dir=out_dir)
+        # HTML render is presentation-only; JSON is the truth-path.
+        html_path = out_dir / "showcase.html"
+        html_path.write_text(render_html(result), encoding="utf-8")
+
+        if args.json:
+            print(json.dumps(result, indent=2, sort_keys=True, default=str))
+        else:
+            print(f"showcase: {out_dir / 'showcase.json'}")
+            print(f"   html : {html_path}")
+            print(f"all_claims_supported: {result['all_claims_supported']}")
+            print(f"total_runtime_ms    : {result.get('total_runtime_ms')}")
+        return 0 if result["all_claims_supported"] else 1
+
     if target == "pack-measurements":
         from scripts.publish_pack_measurements import (
             build_combined_report,
@@ -3074,6 +3096,7 @@ def build_parser() -> argparse.ArgumentParser:
             "learning-loop",
             "articulation",
             "conversation",
+            "showcase",
             "all",
             "list-results",
         ],
@@ -3119,6 +3142,17 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "parallel worker count for supported demos "
             "(0/1 => sequential; default 4)"
+        ),
+    )
+    demo.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help=(
+            "for `showcase` target: directory where the showcase JSON, "
+            "HTML, and per-scene artifacts are written "
+            "(default: evals/public_demo/results/<sha>/)"
         ),
     )
     demo.add_argument(

@@ -1,0 +1,203 @@
+{
+  "claim_contract_version": 1,
+  "claims": [
+    {
+      "claim_id": "all_claims_supported",
+      "evidence_locator": "all_claims_supported",
+      "statement": "all claims supported",
+      "supported": true
+    }
+  ],
+  "demo_id": "register-tour",
+  "raw": {
+    "all_claims_supported": true,
+    "claims": {
+      "all_grounding_sources_identical": true,
+      "all_trace_hashes_identical": true,
+      "convivial_substantively_differs_from_neutral_on_pack_grounded_definition": true,
+      "per_prompt_evidence": [
+        {
+          "convivial_substantively_differs": true,
+          "distinct_canonical_surfaces_count": 1,
+          "distinct_grounding_sources": [
+            "pack"
+          ],
+          "distinct_trace_hashes": [
+            "15f0ff4e8f1e6139b97e57a37d58efdaf4347821375122ae3cd8688bb153e59d"
+          ],
+          "is_definition_pack_prompt": true,
+          "prompt": "What is light?",
+          "terse_substantively_differs": true
+        },
+        {
+          "convivial_substantively_differs": true,
+          "distinct_canonical_surfaces_count": 1,
+          "distinct_grounding_sources": [
+            "pack"
+          ],
+          "distinct_trace_hashes": [
+            "f7ebb6f8a883cc1b42e968ba6437fa1700e52c62fb1595569feda8dc9935bb94"
+          ],
+          "is_definition_pack_prompt": true,
+          "prompt": "Define knowledge.",
+          "terse_substantively_differs": true
+        },
+        {
+          "convivial_substantively_differs": true,
+          "distinct_canonical_surfaces_count": 1,
+          "distinct_grounding_sources": [
+            "pack"
+          ],
+          "distinct_trace_hashes": [
+            "35b642c91310417d933694e6364ab554ccf7b934a9face7f1383b736a25783c2"
+          ],
+          "is_definition_pack_prompt": true,
+          "prompt": "What is truth?",
+          "terse_substantively_differs": true
+        },
+        {
+          "convivial_substantively_differs": false,
+          "distinct_canonical_surfaces_count": 1,
+          "distinct_grounding_sources": [
+            "pack"
+          ],
+          "distinct_trace_hashes": [
+            "240f98ca4a44e70e0ed88a8c199cb9e4813068343f756ae028c8757b4da04872"
+          ],
+          "is_definition_pack_prompt": false,
+          "prompt": "Light reveals truth, right?",
+          "terse_substantively_differs": false
+        }
+      ],
+      "register_canonical_surfaces_identical": true,
+      "terse_substantively_differs_from_neutral_on_pack_grounded_definition": true
+    },
+    "grid": {
+      "convivial_v1": [
+        {
+          "grounding_source": "pack",
+          "prompt": "What is light?",
+          "register_canonical_surface": "Light is a visible medium that reveals truth. pack-grounded (en_core_cognition_v1).",
+          "register_id": "convivial_v1",
+          "register_variant_id": "9b6e1d2a1e95",
+          "surface": "So, Light is a visible medium that reveals truth. pack-grounded (en_core_cognition_v1). Related: cognition.illumination.",
+          "trace_hash": "15f0ff4e8f1e6139b97e57a37d58efdaf4347821375122ae3cd8688bb153e59d"
+        },
+        {
+          "grounding_source": "pack",
+          "prompt": "Define knowledge.",
+          "register_canonical_surface": "Knowledge is what a person knows from truth and evidence. pack-grounded (en_core_cognition_v1).",
+          "register_id": "convivial_v1",
+          "register_variant_id": "c0740838c629",
+          "surface": "Right \u2014 Knowledge is what a person knows from truth and evidence. pack-grounded (en_core_cognition_v1). Related: cognition.knowledge. \u2014 make sense?",
+          "trace_hash": "f7ebb6f8a883cc1b42e968ba6437fa1700e52c62fb1595569feda8dc9935bb94"
+        },
+        {
+          "grounding_source": "pack",
+          "prompt": "What is truth?",
+          "register_canonical_surface": "Truth is what is true. pack-grounded (en_core_cognition_v1).",
+          "register_id": "convivial_v1",
+          "register_variant_id": "1b866595dda6",
+          "surface": "Right \u2014 Truth is what is true. pack-grounded (en_core_cognition_v1). Related: cognition.truth.",
+          "trace_hash": "35b642c91310417d933694e6364ab554ccf7b934a9face7f1383b736a25783c2"
+        },
+        {
+          "grounding_source": "pack",
+          "prompt": "Light reveals truth, right?",
+          "register_canonical_surface": "light reveals truth. pack-grounded (en_core_cognition_v1; en_core_cognition_v1): cognition.illumination; cognition.truth.",
+          "register_id": "convivial_v1",
+          "register_variant_id": "81329c9e7d13",
+          "surface": "OK, light reveals truth. pack-grounded (en_core_cognition_v1; en_core_cognition_v1): cognition.illumination; cognition.truth. \u2014 does that help?",
+          "trace_hash": "240f98ca4a44e70e0ed88a8c199cb9e4813068343f756ae028c8757b4da04872"
+        }
+      ],
+      "default_neutral_v1": [
+        {
+          "grounding_source": "pack",
+          "prompt": "What is light?",
+          "register_canonical_surface": "Light is a visible medium that reveals truth. pack-grounded (en_core_cognition_v1).",
+          "register_id": "default_neutral_v1",
+          "register_variant_id": "",
+          "surface": "Light is a visible medium that reveals truth. pack-grounded (en_core_cognition_v1).",
+          "trace_hash": "15f0ff4e8f1e6139b97e57a37d58efdaf4347821375122ae3cd8688bb153e59d"
+        },
+        {
+          "grounding_source": "pack",
+          "prompt": "Define knowledge.",
+          "register_canonical_surface": "Knowledge is what a person knows from truth and evidence. pack-grounded (en_core_cognition_v1).",
+          "register_id": "default_neutral_v1",
+          "register_variant_id": "",
+          "surface": "Knowledge is what a person knows from truth and evidence. pack-grounded (en_core_cognition_v1).",
+          "trace_hash": "f7ebb6f8a883cc1b42e968ba6437fa1700e52c62fb1595569feda8dc9935bb94"
+        },
+        {
+          "grounding_source": "pack",
+          "prompt": "What is truth?",
+          "register_canonical_surface": "Truth is what is true. pack-grounded (en_core_cognition_v1).",
+          "register_id": "default_neutral_v1",
+          "register_variant_id": "",
+          "surface": "Truth is what is true. pack-grounded (en_core_cognition_v1).",
+          "trace_hash": "35b642c91310417d933694e6364ab554ccf7b934a9face7f1383b736a25783c2"
+        },
+        {
+          "grounding_source": "pack",
+          "prompt": "Light reveals truth, right?",
+          "register_canonical_surface": "light reveals truth. pack-grounded (en_core_cognition_v1; en_core_cognition_v1): cognition.illumination; cognition.truth.",
+          "register_id": "default_neutral_v1",
+          "register_variant_id": "",
+          "surface": "light reveals truth. pack-grounded (en_core_cognition_v1; en_core_cognition_v1): cognition.illumination; cognition.truth.",
+          "trace_hash": "240f98ca4a44e70e0ed88a8c199cb9e4813068343f756ae028c8757b4da04872"
+        }
+      ],
+      "terse_v1": [
+        {
+          "grounding_source": "pack",
+          "prompt": "What is light?",
+          "register_canonical_surface": "Light is a visible medium that reveals truth. pack-grounded (en_core_cognition_v1).",
+          "register_id": "terse_v1",
+          "register_variant_id": "",
+          "surface": "Light: visible medium that reveals truth.",
+          "trace_hash": "15f0ff4e8f1e6139b97e57a37d58efdaf4347821375122ae3cd8688bb153e59d"
+        },
+        {
+          "grounding_source": "pack",
+          "prompt": "Define knowledge.",
+          "register_canonical_surface": "Knowledge is what a person knows from truth and evidence. pack-grounded (en_core_cognition_v1).",
+          "register_id": "terse_v1",
+          "register_variant_id": "",
+          "surface": "Knowledge: what person knows from truth and evidence.",
+          "trace_hash": "f7ebb6f8a883cc1b42e968ba6437fa1700e52c62fb1595569feda8dc9935bb94"
+        },
+        {
+          "grounding_source": "pack",
+          "prompt": "What is truth?",
+          "register_canonical_surface": "Truth is what is true. pack-grounded (en_core_cognition_v1).",
+          "register_id": "terse_v1",
+          "register_variant_id": "",
+          "surface": "Truth: what is true.",
+          "trace_hash": "35b642c91310417d933694e6364ab554ccf7b934a9face7f1383b736a25783c2"
+        },
+        {
+          "grounding_source": "pack",
+          "prompt": "Light reveals truth, right?",
+          "register_canonical_surface": "light reveals truth. pack-grounded (en_core_cognition_v1; en_core_cognition_v1): cognition.illumination; cognition.truth.",
+          "register_id": "terse_v1",
+          "register_variant_id": "",
+          "surface": "light reveals truth. pack-grounded (en_core_cognition_v1; en_core_cognition_v1): cognition.illumination; cognition.truth.",
+          "trace_hash": "240f98ca4a44e70e0ed88a8c199cb9e4813068343f756ae028c8757b4da04872"
+        }
+      ]
+    },
+    "prompts": [
+      "What is light?",
+      "Define knowledge.",
+      "What is truth?",
+      "Light reveals truth, right?"
+    ],
+    "registers": [
+      "default_neutral_v1",
+      "terse_v1",
+      "convivial_v1"
+    ]
+  }
+}

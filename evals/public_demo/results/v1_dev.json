@@ -1,0 +1,49 @@
+{
+  "adr": "ADR-0099",
+  "all_passed": true,
+  "cases": [
+    {
+      "case_id": "all_claims_supported",
+      "details": {
+        "scene_count": 4
+      },
+      "divergence": null,
+      "passed": true
+    },
+    {
+      "case_id": "determinism_run_to_run_byte_equality",
+      "details": {
+        "sha256": "141d5f919c0bf7c47dd19b913cb9082f740e5b9f10e5d4b0d8bec39982687f5a"
+      },
+      "divergence": null,
+      "passed": true
+    },
+    {
+      "case_id": "runtime_under_budget",
+      "details": {
+        "budget_seconds": 30
+      },
+      "divergence": null,
+      "passed": true
+    },
+    {
+      "case_id": "pure_composition_no_new_mechanism",
+      "details": {
+        "sources_checked": 3
+      },
+      "divergence": null,
+      "passed": true
+    }
+  ],
+  "failed_cases": 0,
+  "invariants": [
+    "public_showcase_pure_composition",
+    "public_showcase_all_claims_supported",
+    "public_showcase_json_byte_equality"
+  ],
+  "lane": "public_demo",
+  "lane_version": "v1",
+  "passed_cases": 4,
+  "split": "dev",
+  "total_cases": 4
+}
