@@ -38,6 +38,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0114a](ADR-0114a-anti-overfitting-proof-obligations.md) | Anti-Overfitting Proof Obligations for `expert` Promotion | Accepted (2026-05-22) |
 | [ADR-0115](ADR-0115-math-problem-parser-and-graph.md) | Math Problem Parser and Typed Proposition Graph | Phase 1.1+1.2+1.3 Accepted (2026-05-22) |
 | [ADR-0116](ADR-0116-deterministic-solver.md) | Deterministic Solver (`MathProblemGraph` → `SolutionTrace`) | Accepted (2026-05-22) |
+| [ADR-0122](ADR-0122-systems-software-audit-passed-deferred.md) | `systems_software` Audit-Passed Promotion: Deferred | Accepted (2026-05-22) |
 
 ---
 
@@ -93,6 +94,8 @@ Sequencing per ADR-0108. Listed in priority order:
 2. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
 
 ADR-0080 (Contemplation Loop, Phase 1), ADR-0110 (math audit-passed), and ADR-0111 (physics audit-passed) have all landed — `mathematics_logic` and `physics` are at `audit_passed=true`; the contemplation loop emits read-only `SPECULATIVE` findings from `frontier_compare` reports. The remaining two ratified domains (`systems_software`, `hebrew_greek_textual_reasoning`) need their own promotion ADRs.
+
+ADR-0122 attempted `systems_software` promotion and deferred honestly on a lane-shape contract mismatch (`symbolic_logic` output shape vs registered checker), becoming the second worked refusal after ADR-0107.
 
 ### Open candidate directions (no ADR yet)
 
