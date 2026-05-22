@@ -35,6 +35,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0112](ADR-0112-runnable-expert-demo-showcase.md) | Runnable Audit-Passed Showcase (originally "Expert-Demo") | Accepted (2026-05-22) |
 | [ADR-0113](ADR-0113-rename-expert-demo-to-audit-passed.md) | Rename `expert-demo` → `audit-passed`; Reserve `expert` for Future Capability Tier | Accepted (2026-05-22) |
 | [ADR-0114](ADR-0114-expert-capability-roadmap-gsm8k-first.md) | Expert-Capability Roadmap: GSM8K-Math First | Proposed (2026-05-22) |
+| [ADR-0115](ADR-0115-math-problem-parser-and-graph.md) | Math Problem Parser and Typed Proposition Graph | Phase 1.1 Accepted (2026-05-22) |
 
 ---
 
@@ -66,6 +67,7 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - Runnable Audit-Passed Showcase (originally "Expert-Demo"; renamed) — ADR-0112 + ADR-0113
 - Rename `expert-demo` → `audit-passed`; reserve `expert` namespace — ADR-0113
 - Expert-Capability Roadmap (GSM8K-Math first); proposed — ADR-0114
+- Math Problem Parser & Typed Graph (Phase 1.1 schema + 5 seed cases); Phase 1.2 (45 more cases) delegated — ADR-0115
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 
