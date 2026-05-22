@@ -46,9 +46,19 @@ def test_chain_report_exposes_required_count_axes() -> None:
     assert len(philosophy_intents) >= 3
 
 
-def test_flag_report_tracks_default_off_flags_without_enabling_them() -> None:
+def test_flag_report_classification_matches_actual_defaults() -> None:
+    """Catalog classification must match DEFAULT_CONFIG's actual values.
+
+    A flag in ``flag_shipped_default_off`` MUST be False on DEFAULT_CONFIG;
+    a flag in ``flag_shipped_default_on`` MUST be True. Drift between the
+    catalog and the runtime default is itself a bug — catching it here
+    prevents the kind of silent re-classification that landed when
+    ``discourse_planner`` was flipped to True on 2026-05-21 without
+    updating the catalog.
+    """
     report = flag_report()
-    shipped = {row["flag"] for row in report["flag_shipped_default_off"]}
+    default_off = {row["flag"] for row in report["flag_shipped_default_off"]}
+    default_on = {row["flag"] for row in report["flag_shipped_default_on"]}
 
     for flag in (
         "realizer_grounded_authority",
@@ -56,15 +66,60 @@ def test_flag_report_tracks_default_off_flags_without_enabling_them() -> None:
         "transitive_surface",
         "gloss_aware_cause",
         "thread_anaphora",
-        "discourse_planner",
     ):
-        assert flag in shipped
-        assert getattr(DEFAULT_CONFIG, flag) is False
-    assert "stop_tokens" in shipped
+        assert flag in default_off, f"{flag!r} expected in default_off"
+        assert getattr(DEFAULT_CONFIG, flag) is False, (
+            f"{flag!r} catalog says default_off but DEFAULT_CONFIG has it True"
+        )
+
+    # discourse_planner shipped flag-off and was flipped to default-on
+    # on 2026-05-21 after cognition-eval byte-equality verification.
+    # The catalog state must match.
+    assert "discourse_planner" in default_on, (
+        "discourse_planner expected in default_on after the 2026-05-21 flip"
+    )
+    assert DEFAULT_CONFIG.discourse_planner is True
+
+    # stop_tokens is None-by-default (not a bool); kept in default_off
+    # because its absence is the "off" state.
+    assert "stop_tokens" in default_off
     assert DEFAULT_CONFIG.stop_tokens is None
+
     assert report["substrate_shipped_flag_missing"] == [
         {"flag": "compound_intent_dispatch", "adr": "ADR-0089-C2"}
     ]
+
+
+def test_flag_catalog_state_is_consistent_with_default_config() -> None:
+    """Cross-check every catalog entry against DEFAULT_CONFIG.
+
+    Catches any future drift: if someone changes a default in
+    ``core.config`` without updating the catalog state, this test
+    fails before the lane SHAs can shift.
+    """
+    report = flag_report()
+    for row in report["flag_shipped_default_off"]:
+        flag = row["flag"]
+        if not hasattr(DEFAULT_CONFIG, flag):
+            continue  # substrate flag without a runtime knob
+        value = getattr(DEFAULT_CONFIG, flag)
+        # ``stop_tokens`` is None-by-default (not a bool). All others
+        # should be ``False`` to honor the ``default_off`` classification.
+        if flag == "stop_tokens":
+            assert value is None
+        else:
+            assert value is False, (
+                f"catalog classifies {flag!r} as default_off but "
+                f"DEFAULT_CONFIG has it {value!r}"
+            )
+    for row in report["flag_shipped_default_on"]:
+        flag = row["flag"]
+        if not hasattr(DEFAULT_CONFIG, flag):
+            continue
+        assert getattr(DEFAULT_CONFIG, flag) is True, (
+            f"catalog classifies {flag!r} as default_on but "
+            f"DEFAULT_CONFIG has it {getattr(DEFAULT_CONFIG, flag)!r}"
+        )
 
 
 def test_ledger_status_is_predicate_derived() -> None:

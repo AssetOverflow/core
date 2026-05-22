@@ -43,7 +43,7 @@ _FLAG_CATALOG: dict[str, dict[str, str]] = {
     "transitive_surface": {"state": "flag_shipped_default_off", "adr": "ADR-0083"},
     "gloss_aware_cause": {"state": "flag_shipped_default_off", "adr": "ADR-0085"},
     "thread_anaphora": {"state": "flag_shipped_default_off", "adr": "P3.2"},
-    "discourse_planner": {"state": "flag_shipped_default_off", "adr": "ADR-0089"},
+    "discourse_planner": {"state": "flag_shipped_default_on", "adr": "ADR-0089"},
     "compound_intent_dispatch": {"state": "substrate_shipped_flag_missing", "adr": "ADR-0089-C2"},
     "inference_trace": {"state": "substrate_missing", "adr": "ADR-0024"},
 }
@@ -355,6 +355,7 @@ def chain_report() -> dict[str, Any]:
 def flag_report() -> dict[str, Any]:
     grouped: dict[str, list[dict[str, str]]] = {
         "flag_shipped_default_off": [],
+        "flag_shipped_default_on": [],
         "substrate_shipped_flag_missing": [],
         "substrate_missing": [],
     }

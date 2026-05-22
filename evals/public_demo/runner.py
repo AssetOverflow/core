@@ -69,6 +69,11 @@ _VOLATILE_KEYS: frozenset[str] = frozenset(
         "total_runtime_ms",  # wall-clock
         "json_path",  # adapter output paths (per-run temp dirs)
         "transient_corpus",  # learning-loop embeds its temp corpus path
+        # ``generated_at_revision`` advances every commit; the lane's
+        # invariant is "same code → same SHA," not "same HEAD → same
+        # SHA." Stripping this here keeps the pinned lane SHA stable
+        # across commits unless the underlying demos' content changes.
+        "generated_at_revision",
     }
 )
 
