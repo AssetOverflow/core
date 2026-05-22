@@ -357,7 +357,64 @@ characterization), `docs/evals/phase6_comparative_demo.md`
 
 ---
 
-### XIII. Extensions
+### XIII. Evidence-Governed Domain Layer
+
+Substrate alone does not make a claim credible. The Whitepaper's first
+twelve sections describe what CORE *is*. This section describes how the
+project distinguishes *what it has demonstrated* from *what its
+substrate makes possible* — a distinction that the architecture made
+visible only after the substrate stabilized.
+
+The discipline is encoded as a chain of accepted Architecture
+Decision Records (ADR-0091 through ADR-0110):
+
+1. **Contract.** ADR-0091 defines nine predicate checks every ratified
+   pack must satisfy: lemma coverage, operator-chain counts, intent-shape
+   coverage, holdout discipline, reviewer resolution, and others. A pack
+   that satisfies all nine earns a `reasoning-capable` ledger row.
+2. **Trust root.** ADR-0092 introduces a YAML-anchored reviewer registry.
+   Pack ratification cites a registered reviewer; the registry is the
+   only trust root.
+3. **Fabrication control.** ADR-0096 defines a negative-control eval
+   lane. Phantom endpoints, cross-pack non-bridges, and sibling
+   collapses must all *refuse*. A pack that confabulates on any
+   refusal class fails ratification.
+4. **Promotion gate.** ADR-0106 introduces the second status above
+   `reasoning-capable`: `expert_demo`. Promotion requires a reviewer-
+   signed `expert_demo_claims` entry whose evidence-bundle SHA-256
+   reproduces byte-for-byte from on-disk lane results. The signer must
+   resolve to the registry; the signed lanes must be attached to the
+   domain's ratified packs.
+5. **Shape registry.** ADR-0109 amends ADR-0106 with explicit per-shape
+   threshold rules (cognition, accuracy, inference, refusal,
+   symbolic-logic). Unknown lanes fail closed.
+
+The contract is load-bearing because it has *refused*. ADR-0107 records
+the first promotion attempt — `mathematics_logic` — being honestly
+refused on two named blockers. ADR-0109 amended the threshold rules
+without weakening the discipline. ADR-0110 then promoted
+`mathematics_logic` as the first domain at `expert_demo=true`, with the
+signed claim digest reproducing from disk.
+
+The architectural commitment is: a system cannot claim to *do*
+something it has not been seen to do. A transformer LLM does not have
+a place to attach this commitment — its outputs are generated under
+sampling, not from a replay-deterministic trace bound to a signed
+evidence bundle. CORE makes the commitment first-class.
+
+External readers can inspect the ledger
+(`core capability ledger` / `docs/decisions/README.md` table) to see
+which domains are *contract-passing* and which are *demonstrated*. As
+of acceptance: one domain demonstrated (`mathematics_logic`); three
+ratified domains pending their own promotion ADRs.
+
+Full evidence chain: `docs/decisions/README.md` (index + frontier),
+`docs/decisions/ADR-0091-domain-pack-contract-v1.md` through
+`ADR-0110-mathematics-logic-expert-demo-promotion.md`.
+
+---
+
+### XIV. Extensions
 
 **CORE-Logos** — The language articulation subsystem. Specified in the companion Yellow and White Addenda inherited from `core-ai`. The Logos defines the vocabulary manifold, the token projection law, the holonomy encoder, and the termination condition.
 

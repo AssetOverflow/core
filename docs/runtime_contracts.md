@@ -341,3 +341,112 @@ Content-addressing rules (binding across the whole pipeline):
 
 See `formation/hashing.py`, `formation/cache.py`, and `formation/forge.py`
 for the implementation of each rule.
+
+---
+
+## Expert-Demo Promotion Contract (ADR-0106 + ADR-0109)
+
+Adds a domain-aware, reviewer-signed promotion gate to the capability
+ledger surface (`ledger_report()`). Distinct from the runtime/turn
+contracts above: this contract governs *what the ledger is allowed to
+claim about a domain*, not what the runtime does on any single turn.
+
+Per ADR-0108, the contract has been demonstrated end-to-end —
+refused once (ADR-0107), amended once (ADR-0109), succeeded once
+(ADR-0110).
+
+### Surface
+
+`ledger_report()` returns a `domains` list. Each row carries:
+
+```text
+status                ∈ {blocked, seeded, grounded, reasoning-capable, expert-demo}
+predicates.expert_demo   bool
+expert_demo_reason       str  (one-line legibility for operators)
+```
+
+A row carries `expert_demo=True` iff **all** of:
+
+1. `reasoning_capable == True` (the ADR-0091 nine-predicate gate).
+2. A signed `ExpertDemoClaim` exists in `docs/reviewers.yaml` for the
+   domain.
+3. The signer named in `claim.signed_by` has `eval` scope for the
+   domain per `ReviewerRegistry.can_review` (ADR-0092).
+4. Every lane in `claim.evidence_lanes` is attached to at least one of
+   the domain's ratified packs (no cross-domain bleed).
+5. Every named lane's public + holdout metrics meet the threshold for
+   that lane's registered shape (ADR-0109; see §"Lane-shape registry"
+   below).
+6. The canonical evidence-bundle SHA-256 reproduces `claim.claim_digest`
+   byte-for-byte.
+
+Any failure leaves the row at `reasoning-capable` with
+`expert_demo_reason` populated.
+
+### Schema
+
+`docs/reviewers.yaml` additively gains an `expert_demo_claims` block:
+
+```yaml
+expert_demo_claims:
+  - domain_id: mathematics_logic
+    evidence_lanes:
+      - elementary_mathematics_ood
+      - inference_closure
+      - fabrication_control
+    evidence_revision: "adr-0110:reviewed:2026-05-22"
+    signed_by: shay-j
+    claim_digest: "94d74781..."
+```
+
+The block is optional; absence yields zero promotions. Schema
+validation is loud: unknown signer ids, malformed digests, and
+duplicate `domain_id` values are all rejected at load time
+(`core.capability.reviewers.load_reviewer_registry`).
+
+### Lane-shape registry (ADR-0109)
+
+Threshold rules dispatch by lane shape, not uniformly. Registry in
+`core/capability/expert_demo.py`:
+
+| Lane id | Shape | Threshold |
+|---|---|---|
+| `cognition` | `cognition_shape` | surface_groundedness ≥ 0.95, term_capture_rate ≥ 0.85, intent_accuracy ≥ 0.95, versor_closure_rate == 1.0 |
+| `elementary_mathematics_ood` | `accuracy_shape` | accuracy ≥ 0.95 (passed/total fallback) |
+| `foundational_physics_ood` | `accuracy_shape` | same |
+| `symbolic_logic` | `symbolic_logic_shape` | same as `accuracy_shape` |
+| `hebrew_fluency` | `accuracy_shape` | same |
+| `koine_greek_fluency` | `accuracy_shape` | same |
+| `inference_closure` | `inference_shape` | all_pass_rate ≥ 0.95, replay_determinism == 1.0, overall_pass == True |
+| `fabrication_control` | `refusal_shape` | every `by_class` bucket: refused == n, fabricated == 0 |
+
+**Unknown lane ids fail closed** with reason
+`lane <id> has no registered shape — introduce via ADR amendment`.
+Adding a lane to the expert-demo surface requires an explicit registry
+entry, which requires an ADR amendment.
+
+### Replay invariant
+
+`core.capability.expert_demo.derive_evidence_digest` is deterministic
+in field order (sorted keys, compact separators). Re-running it
+against the on-disk lane results at the same `evidence_revision`
+reproduces `claim_digest` byte-for-byte. Drift in any lane result
+demotes the row back to `reasoning-capable` until re-signed.
+
+### Fail-closed registry
+
+If `docs/reviewers.yaml` fails to parse,
+`reporting._load_registry_for_expert_demo` returns an empty registry
+(zero reviewers, zero claims) rather than raising. Every domain row
+falls back to `expert_demo=false`. A broken registry must never
+silently grant `expert_demo=true`.
+
+### Trust boundary
+
+- Pack mutation remains proposal-only (ADR-0029/0064 discipline).
+- A reviewer signature in `expert_demo_claims` does not authorize
+  pack mutation — only a ledger-row promotion. The two paths remain
+  separate.
+- `evidence_revision` may be a labeled string (e.g.
+  `adr-0110:reviewed:2026-05-22`) or a raw git sha. The load-bearing
+  invariant is replay byte-equality, not git-sha format.
