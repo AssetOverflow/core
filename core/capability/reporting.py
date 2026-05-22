@@ -424,11 +424,21 @@ def ledger_report() -> dict[str, Any]:
         )
         manifests = [_manifest_for_pack(pack_id) for pack_id in packs]
         domain_lanes = collect_domain_lanes(manifests)
+        def _fetch_lane_split(lane: str, split: str) -> dict[str, Any]:
+            payload = _latest_eval_result(lane, "v1", split)
+            metrics = dict(payload.get("metrics", {}) or {})
+            # Some lanes (notably fabrication_control) report
+            # ``by_class`` at the top level of the result file rather
+            # than nested under ``metrics``. Fold it in so shape
+            # checkers see a single canonical metrics dict regardless
+            # of lane-internal layout.
+            if "by_class" not in metrics and "by_class" in payload:
+                metrics["by_class"] = payload["by_class"]
+            return metrics
+
         lane_results = materialise_lane_results(
             domain_lanes,
-            fetch_split=lambda lane, split: _latest_eval_result(
-                lane, "v1", split
-            ).get("metrics", {}),
+            fetch_split=_fetch_lane_split,
         )
         verdict = evaluate_expert_demo(
             domain_id=domain,

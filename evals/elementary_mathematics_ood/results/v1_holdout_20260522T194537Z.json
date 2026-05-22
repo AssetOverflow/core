@@ -1,0 +1,340 @@
+{
+  "cases": [
+    {
+      "case_id": "EMO-HOLD_probability_C01_01",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event carries weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C01_02",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome favors sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C01_03",
+      "construction": "C01",
+      "construction_name": "simple_declarative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution covers range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C02_01",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event does not carry weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C02_02",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome does not favor sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C02_03",
+      "construction": "C02",
+      "construction_name": "negation",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution does not cover range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C03_01",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event carries weight and outcome favors sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C03_02",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome favors sample and distribution covers range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C03_03",
+      "construction": "C03",
+      "construction_name": "conjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution covers range and event carries weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C04_01",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event carries weight or outcome favors sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C04_02",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome favors sample or distribution covers range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C04_03",
+      "construction": "C04",
+      "construction_name": "disjunction",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution covers range or event carries weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C05_01",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome favors that event carries weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C05_02",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution covers that outcome favors sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C05_03",
+      "construction": "C05",
+      "construction_name": "complement",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event carries that distribution covers range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C06_01",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event, which favors sample, carries weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C06_02",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome, which covers range, favors sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C06_03",
+      "construction": "C06",
+      "construction_name": "relative",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution, which carries weight, covers range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C07_01",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "All events carry weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C07_02",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "All outcomes favor sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C07_03",
+      "construction": "C07",
+      "construction_name": "universal",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "All distributions cover range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C08_01",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Some events carry weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C08_02",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Some outcomes favor sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C08_03",
+      "construction": "C08",
+      "construction_name": "existential",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Some distributions cover range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C09_01",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event carried weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C09_02",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome favorred sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C09_03",
+      "construction": "C09",
+      "construction_name": "past_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution coverred range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C10_01",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event carries weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C10_02",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome favors sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C10_03",
+      "construction": "C10",
+      "construction_name": "present_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution covers range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C11_01",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event will carry weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C11_02",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome will favor sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C11_03",
+      "construction": "C11",
+      "construction_name": "future_tense",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution will cover range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C12_01",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event has carried weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C12_02",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome has favorred sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C12_03",
+      "construction": "C12",
+      "construction_name": "perfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution has coverred range"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C13_01",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Event is carrying weight"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C13_02",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Outcome is favorring sample"
+    },
+    {
+      "case_id": "EMO-HOLD_probability_C13_03",
+      "construction": "C13",
+      "construction_name": "imperfective",
+      "failure_reasons": [],
+      "passed": true,
+      "surface": "Distribution is coverring range"
+    }
+  ],
+  "lane": "elementary_mathematics_ood",
+  "metrics": {
+    "accuracy": 1.0,
+    "by_construction": {
+      "C01": 1.0,
+      "C02": 1.0,
+      "C03": 1.0,
+      "C04": 1.0,
+      "C05": 1.0,
+      "C06": 1.0,
+      "C07": 1.0,
+      "C08": 1.0,
+      "C09": 1.0,
+      "C10": 1.0,
+      "C11": 1.0,
+      "C12": 1.0,
+      "C13": 1.0
+    },
+    "passed": 39,
+    "total": 39
+  },
+  "split": "holdout",
+  "timestamp": "2026-05-22T19:45:37.837879+00:00",
+  "version": "v1"
+}
