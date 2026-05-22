@@ -25,6 +25,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0103](ADR-0103-fluency-lane-attachment-for-adr-0102.md) | Fluency Lane Attachment for ADR-0102 | Accepted (2026-05-22) |
 | [ADR-0104](ADR-0104-curriculum-sourced-teaching-proposals.md) | Curriculum-Sourced Teaching Proposals | Accepted (2026-05-22) |
 | [ADR-0105](ADR-0105-sealed-holdout-encryption.md) | Sealed Holdout Encryption via age | Accepted (2026-05-22) |
+| [ADR-0106](ADR-0106-expert-demo-promotion-contract.md) | Expert-Demo Promotion Contract | Proposed (2026-05-22) |
 
 ---
 
@@ -60,7 +61,7 @@ Seven lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `la
 
 The next implementation frontier is open. Candidate directions include:
 
-- **Expert-demo ratification.** All ADR-0097/0100/0101/0102 ledger rows currently sit at `reasoning-capable` with `expert_demo=false`. The expert-demo promotion contract remains open for a future ADR.
+- **Expert-demo ratification.** All ADR-0097/0100/0101/0102 ledger rows currently sit at `reasoning-capable` with `expert_demo=false`. ADR-0106 is proposed as the domain-aware, reviewer-signed promotion contract; the first worked promotion (likely `mathematics_logic`) follows in ADR-0107.
 - **Multi-reviewer holdout governance and threshold signing.** ADR-0105 seals holdout payloads with a single recipient identity; multi-reviewer governance is a future direction.
 
 No ADR currently sits in a "Proposed but unimplemented" state.
