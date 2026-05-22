@@ -90,7 +90,6 @@
         "detail": {
           "active_corpus_byte_identical": true,
           "chain_id": "cause_narrative_reveals_meaning",
-          "transient_corpus": "/var/folders/kg/5xbm28qd7jl55j7lv3p001f40000gn/T/learning_loop_demo_ujzher4z/cognition_chains_v1.jsonl",
           "transient_lines_after": 23,
           "transient_lines_before": 22
         },

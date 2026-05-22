@@ -30,3 +30,11 @@ expert_demo_claims:
     evidence_revision: "adr-0110:reviewed:2026-05-22"
     signed_by: shay-j
     claim_digest: "94d74781e103854230c1a71590e4df2287f5d2e87832f1c29b8ec4618853c04b"
+  - domain_id: physics
+    evidence_lanes:
+      - foundational_physics_ood
+      - inference_closure
+      - fabrication_control
+    evidence_revision: "adr-0111:reviewed:2026-05-22"
+    signed_by: shay-j
+    claim_digest: "a104cad136f3219df05dc7ce6a78437c02f7b5827cd3cdce568db3acda6a43ed"

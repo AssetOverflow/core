@@ -1,7 +1,7 @@
 {
   "all_claims_supported": true,
   "claim_contract_version": 1,
-  "generated_at_revision": "4f640af40dcbe1f17f1b951040ce0addd6c776d3",
+  "generated_at_revision": "bc90622e5335bb6ba52a83fceef9169d307f7f36",
   "max_runtime_seconds": 30,
   "scenes": [
     {
@@ -76,14 +76,14 @@
       ],
       "demo_id": "learning-loop",
       "evidence": {
-        "all_claims_supported": "sha256:4fcda860a8cfc525"
+        "all_claims_supported": "sha256:137a2a477a9f61b7"
       },
       "json_path": "evals/public_demo/results/latest/scenes/learning-loop.json",
       "scene_id": "reviewed_learning",
       "statement": "Speculative teaching is marked speculative until reviewed; after review, identical prompt produces a coherent answer.",
       "trace_features": {
         "all_claims_supported": "true",
-        "report_sha256": "4fcda860a8cfc525ceb80042fff7c02613589217c42c06e532ef35e57c89cadc"
+        "report_sha256": "137a2a477a9f61b79c4815edcb02b3213760ea72c5a6d5fd7699d87ee599e479"
       }
     },
     {

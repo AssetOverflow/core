@@ -92,12 +92,19 @@ class TestAdr0110ReplayDigestByteEquality:
 
 
 class TestAdr0110OtherDomainsUnaffected:
-    def test_other_domains_stay_reasoning_capable(self) -> None:
+    def test_math_stays_promoted(self) -> None:
+        """ADR-0110's promotion of mathematics_logic must persist.
+
+        Originally this asserted math was the only promoted domain.
+        ADR-0111 added physics — the load-bearing invariant for
+        ADR-0110 is that math stays promoted, not that no other
+        domain is promoted alongside it.
+        """
         promoted = [
             row["domain"]
             for row in ledger_report()["domains"]
             if row["predicates"]["expert_demo"]
         ]
-        assert promoted == ["mathematics_logic"], (
-            f"ADR-0110 must promote exactly mathematics_logic; got: {promoted}"
+        assert "mathematics_logic" in promoted, (
+            f"ADR-0110 promotion of mathematics_logic must persist; got: {promoted}"
         )
