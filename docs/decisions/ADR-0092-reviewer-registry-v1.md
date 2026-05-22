@@ -1,9 +1,22 @@
 # ADR-0092 — Reviewer Registry v1
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-21
+**Accepted:** 2026-05-22
 **Author:** CORE agents + reviewers
 **Depends on:** ADR-0091
+
+---
+
+## Acceptance evidence
+
+Accepted after the reviewer registry trust root was implemented and wired into Domain Pack Contract v1 validation:
+
+- `docs/reviewers.yaml` carries `schema_version: 1` and the bootstrap `shay-j` reviewer entry.
+- `core/capability/reviewers.py` implements the immutable loader, unknown-key rejection, duplicate-id rejection, role/domain restrictions, and review-scope checks.
+- `core/capability/domain_contract_predicates.py` consults the registry for ADR-0091 predicate P8.
+- `evals/reviewer_registry/runner.py` contains the reviewer-registry lane.
+- `tests/test_capability_cli.py` and the ratification tests exercise ledger rows that depend on successful reviewer resolution.
 
 ---
 
@@ -11,16 +24,7 @@
 
 ADR-0091 defines Domain Pack Contract v1. Its validation semantics require
 that every `reviewers` entry on a reasoning-capable pack resolve through
-`docs/reviewers.yaml`. The file exists but is currently empty:
-
-```yaml
-reviewers: []
-```
-
-This means no pack can advance beyond `grounded` under the contract, no
-matter how complete its chains, evals, or gloss coverage. The empty
-registry is a hard block on every subsequent ADR that wants to ratify a
-domain claim.
+`docs/reviewers.yaml`.
 
 The registry is also load-bearing for proposal review (`teaching/review.py`)
 and capability ledger evidence rows. Treating it as a free-form list will
@@ -67,8 +71,7 @@ self-sealed: its `provenance` references this ADR.
 
 ### Validator rules
 
-The capability validator (ADR-0091, follow-up #4) refuses ratification
-when:
+The capability validator refuses ratification when:
 
 1. `docs/reviewers.yaml` does not match `schema_version: 1`.
 2. A pack manifest names a `reviewer_id` absent from the registry.
@@ -101,7 +104,7 @@ a malformed registry.
 
 ## Lane
 
-`evals/reviewer_registry/` (new):
+`evals/reviewer_registry/`:
 
 - positive: valid v1 registry passes
 - negative: empty registry blocks all `reasoning-capable` claims
@@ -114,16 +117,6 @@ a malformed registry.
 
 - One real reviewer entered; subsequent reviewer additions are themselves
   reviewed proposals, preventing trust inflation.
-- ADR-0091 predicate #8 (reviewer resolution) becomes enforceable.
+- ADR-0091 predicate #8 (reviewer resolution) is enforceable.
 - Identity, safety, ethics packs gain a checked author trail without
   altering their existing self-seal flow.
-
----
-
-## PR Checklist
-
-- Capability added: schema-checked reviewer registry; unblocks reasoning-capable claims.
-- Invariant proved: `reviewer_registry_schema_v1`.
-- Lane proving it: `evals/reviewer_registry/`.
-- Hidden normalization / stochastic fallback / approximate recall / unreviewed mutation: none.
-- Trust boundary: YAML parser rejects unknown keys; bootstrap entry self-sealed.
