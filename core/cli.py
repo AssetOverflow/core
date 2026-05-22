@@ -2107,30 +2107,30 @@ def cmd_demo(args: argparse.Namespace) -> int:
             print(json.dumps(result, indent=2, sort_keys=True, default=str))
         return 0 if result.get("all_claims_supported", False) else 1
 
-    if target == "expert":
+    if target == "audit-passed":
         from core.demos.expert_demo import run_expert_demo
 
         domain_id = getattr(args, "domain", None)
         if not domain_id:
             print(
-                "core demo expert <domain>: --domain (or positional) required",
+                "core demo audit-passed: --domain required",
                 file=sys.stderr,
             )
             return 2
         out_dir = args.output_dir
         if out_dir is None:
-            out_dir = Path("evals/expert_demos") / domain_id / "latest"
+            out_dir = Path("evals/audit_passed") / domain_id / "latest"
         try:
             result = run_expert_demo(domain_id=domain_id, output_dir=out_dir)
         except (FileNotFoundError, ValueError) as exc:
-            print(f"core demo expert: {exc}", file=sys.stderr)
+            print(f"core demo audit-passed: {exc}", file=sys.stderr)
             return 1
 
         if args.json:
             print(json.dumps(result, indent=2, sort_keys=True, default=str))
         else:
-            print(f"expert-demo: {out_dir / 'expert_demo.json'}")
-            print(f"       html: {out_dir / 'expert_demo.html'}")
+            print(f"audit-passed: {out_dir / 'audit_passed.json'}")
+            print(f"        html: {out_dir / 'audit_passed.html'}")
             dv = result["digest_verification"]
             mark = "✓" if dv["matches"] else "✗"
             print(
@@ -3138,7 +3138,7 @@ def build_parser() -> argparse.ArgumentParser:
             "articulation",
             "conversation",
             "showcase",
-            "expert",
+            "audit-passed",
             "all",
             "list-results",
         ],
@@ -3172,11 +3172,16 @@ def build_parser() -> argparse.ArgumentParser:
             "WALKTHROUGH multi-sentence articulation + determinism gate.  "
             "conversation: layperson-facing chat transcript with live "
             "word-by-word streaming and plain-English captions.  "
-            "expert <domain>: per-domain runnable expert-demo showcase "
-            "(ADR-0112). Reads the signed expert_demo_claims entry, "
-            "re-derives the digest from on-disk lane result files, "
-            "asserts byte-for-byte match, surfaces sample cases per "
-            "attached lane × split. Pair with --domain <id>.  "
+            "audit-passed <domain>: per-domain runnable audit-passed "
+            "showcase (ADR-0112 + ADR-0113). Reads the signed "
+            "audit_passed_claims entry, re-derives the digest from "
+            "on-disk lane result files, asserts byte-for-byte match, "
+            "surfaces sample cases per attached lane × split. The "
+            "audit-passed gate verifies CORE claim-shape compliance "
+            "(signed digest, replay determinism, typed refusal, exact "
+            "recall) — claim shapes a transformer LLM cannot "
+            "structurally produce regardless of raw accuracy. NOT a "
+            "raw-capability claim. Pair with --domain <id>.  "
             "list-results: index every JSON report in the results directory."
         ),
     )

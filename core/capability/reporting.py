@@ -34,7 +34,7 @@ from language_packs.domain_contract import validate_domain_contract_pack
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _CHAINS_PER_OPERATOR_DOMAIN = 8
 _TARGET_INTENT_SHAPES = ("cause", "verification", "comparison", "procedure", "correction")
-_EXPERT_DOMAIN_STATUSES = ("blocked", "seeded", "grounded", "reasoning-capable", "expert-demo")
+_EXPERT_DOMAIN_STATUSES = ("blocked", "seeded", "grounded", "reasoning-capable", "audit-passed")
 _DOMAIN_FOUNDATION_GAPS: dict[str, tuple[str, ...]] = {
     "hebrew_greek_textual_reasoning": (
         "gap:grc_he_glosses_absent",
@@ -447,10 +447,10 @@ def ledger_report() -> dict[str, Any]:
             domain_lanes=domain_lanes,
             lane_results=lane_results,
         )
-        expert_demo = verdict.passed
-        expert_demo_reason = verdict.reason
-        if expert_demo:
-            status = "expert-demo"
+        audit_passed = verdict.passed
+        audit_passed_reason = verdict.reason
+        if audit_passed:
+            status = "audit-passed"
         elif reasoning_capable:
             status = "reasoning-capable"
         elif grounded:
@@ -490,9 +490,9 @@ def ledger_report() -> dict[str, Any]:
                     "seeded": seeded,
                     "grounded": grounded,
                     "reasoning_capable": reasoning_capable,
-                    "expert_demo": expert_demo,
+                    "audit_passed": audit_passed,
                 },
-                "expert_demo_reason": expert_demo_reason,
+                "audit_passed_reason": audit_passed_reason,
                 "known_gaps": domain_gaps,
                 "open_gaps": open_gaps,
                 "blocked_lift": blocked_lift,

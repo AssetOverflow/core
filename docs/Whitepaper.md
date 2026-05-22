@@ -380,8 +380,8 @@ Decision Records (ADR-0091 through ADR-0111):
    collapses must all *refuse*. A pack that confabulates on any
    refusal class fails ratification.
 4. **Promotion gate.** ADR-0106 introduces the second status above
-   `reasoning-capable`: `expert_demo`. Promotion requires a reviewer-
-   signed `expert_demo_claims` entry whose evidence-bundle SHA-256
+   `reasoning-capable`: `audit_passed`. Promotion requires a reviewer-
+   signed `audit_passed_claims` entry whose evidence-bundle SHA-256
    reproduces byte-for-byte from on-disk lane results. The signer must
    resolve to the registry; the signed lanes must be attached to the
    domain's ratified packs.
@@ -393,9 +393,9 @@ The contract is load-bearing because it has *refused*. ADR-0107 records
 the first promotion attempt — `mathematics_logic` — being honestly
 refused on two named blockers. ADR-0109 amended the threshold rules
 without weakening the discipline. ADR-0110 then promoted
-`mathematics_logic` as the first domain at `expert_demo=true`, with the
+`mathematics_logic` as the first domain at `audit_passed=true`, with the
 signed claim digest reproducing from disk. ADR-0111 promoted `physics`
-as the second domain at `expert_demo=true` without any contract change,
+as the second domain at `audit_passed=true` without any contract change,
 retiring the "math-only" objection — the same gate now holds across two
 distinct domains using shared lane infrastructure with distinct
 domain-bound digests.

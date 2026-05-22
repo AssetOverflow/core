@@ -146,16 +146,16 @@ def test_ledger_status_is_predicate_derived() -> None:
 
     math = rows["mathematics_logic"]
     # ADR-0110 — first expert-demo promotion lands on math.
-    assert math["status"] == "expert-demo"
+    assert math["status"] == "audit-passed"
     assert math["predicates"]["reasoning_capable"] is True
-    assert math["predicates"]["expert_demo"] is True
+    assert math["predicates"]["audit_passed"] is True
     assert math["open_gaps"] == []
 
     physics = rows["physics"]
     # ADR-0111 — second expert-demo promotion lands on physics.
-    assert physics["status"] == "expert-demo"
+    assert physics["status"] == "audit-passed"
     assert physics["predicates"]["reasoning_capable"] is True
-    assert physics["predicates"]["expert_demo"] is True
+    assert physics["predicates"]["audit_passed"] is True
     assert physics["open_gaps"] == []
 
     he_grc = rows["hebrew_greek_textual_reasoning"]

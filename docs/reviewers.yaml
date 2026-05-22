@@ -17,11 +17,16 @@ reviewers:
     review_scope: ["pack", "proposal", "chain", "eval"]
     provenance: "adr-0092:bootstrap:2026-05-21"
 
-# Reviewer-signed expert-demo promotion claims (ADR-0106 / ADR-0109).
+# Reviewer-signed audit-passed promotion claims
+# (ADR-0106 / ADR-0109 / renamed by ADR-0113).
 # Each entry carries the canonical evidence-bundle SHA-256 hashed from
 # the on-disk lane result files; re-derivation must reproduce
-# claim_digest byte-for-byte (ADR-0106 §1.5).
-expert_demo_claims:
+# claim_digest byte-for-byte (ADR-0106 §1.5). The audit-passed gate
+# verifies CORE claim-shape compliance (signed digest, replay
+# determinism, typed refusal, exact recall) — claim shapes a
+# transformer LLM cannot structurally produce regardless of raw
+# accuracy. This is NOT a raw-capability claim.
+audit_passed_claims:
   - domain_id: mathematics_logic
     evidence_lanes:
       - elementary_mathematics_ood

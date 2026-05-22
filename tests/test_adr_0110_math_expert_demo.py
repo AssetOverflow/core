@@ -3,15 +3,15 @@
 Pins three load-bearing invariants:
 
 1. ``adr_0110_math_expert_demo_holds`` — ``ledger_report()`` reports
-   ``mathematics_logic`` at ``status="expert-demo"`` with
-   ``predicates.expert_demo == True``.
+   ``mathematics_logic`` at ``status="audit-passed"`` with
+   ``predicates.audit_passed == True``.
 
 2. ``adr_0110_replay_digest_byte_equality`` — re-deriving the
    evidence-bundle digest from the on-disk lane result files reproduces
    the signed ``claim_digest`` byte-for-byte (ADR-0106 §1.5).
 
 3. ``adr_0110_other_domains_unaffected`` — ADR-0110 promotes exactly
-   one domain. Every other domain row stays at ``expert_demo=false``
+   one domain. Every other domain row stays at ``audit_passed=false``
    under its own (absent) ``expert_demo_claims`` entry.
 """
 
@@ -66,8 +66,8 @@ def _math_claim():
 class TestAdr0110MathExpertDemoHolds:
     def test_math_row_is_expert_demo(self) -> None:
         row = _math_row()
-        assert row["status"] == "expert-demo"
-        assert row["predicates"]["expert_demo"] is True
+        assert row["status"] == "audit-passed"
+        assert row["predicates"]["audit_passed"] is True
 
     def test_signed_claim_is_present(self) -> None:
         claim = _math_claim()
@@ -103,7 +103,7 @@ class TestAdr0110OtherDomainsUnaffected:
         promoted = [
             row["domain"]
             for row in ledger_report()["domains"]
-            if row["predicates"]["expert_demo"]
+            if row["predicates"]["audit_passed"]
         ]
         assert "mathematics_logic" in promoted, (
             f"ADR-0110 promotion of mathematics_logic must persist; got: {promoted}"

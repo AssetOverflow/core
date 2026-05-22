@@ -109,18 +109,18 @@ def test_pack_passes_all_nine_predicates(
 
 @pytest.mark.parametrize("domain_id", list(_DOMAINS.keys()))
 class TestLedgerStatus:
-    def test_status_is_reasoning_capable(self, domain_id: str) -> None:
+    def test_status_meets_reasoning_capable_at_minimum(self, domain_id: str) -> None:
+        """Each ratification ADR established reasoning-capable as the
+        floor. ADR-0111 later promoted physics to audit-passed (renamed
+        from expert-demo by ADR-0113); the load-bearing invariant for
+        the ratification ADRs is that reasoning_capable holds, not
+        that the status string never moves up."""
         row = _ledger_row(domain_id)
-        assert row["status"] == "reasoning-capable"
+        assert row["status"] in ("reasoning-capable", "audit-passed")
 
     def test_reasoning_capable_predicate_true(self, domain_id: str) -> None:
         row = _ledger_row(domain_id)
         assert row["predicates"]["reasoning_capable"] is True
-
-    def test_expert_demo_predicate_false(self, domain_id: str) -> None:
-        """Each ratification ADR explicitly defers expert-demo."""
-        row = _ledger_row(domain_id)
-        assert row["predicates"]["expert_demo"] is False
 
     def test_no_open_gaps(self, domain_id: str) -> None:
         row = _ledger_row(domain_id)

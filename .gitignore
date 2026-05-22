@@ -25,7 +25,8 @@ frontier_wave1.json
 # Claude Code local session artifacts (per-developer, never tracked)
 .claude/
 
-# Runnable expert-demo showcases (ADR-0112) are generated on demand from
-# the signed claim + on-disk lane result files. The inputs are committed;
-# the renders are not.
+# Runnable audit-passed showcases (ADR-0112 + ADR-0113) are generated on
+# demand from the signed claim + on-disk lane result files. The inputs
+# are committed; the renders are not.
+evals/audit_passed/
 evals/expert_demos/

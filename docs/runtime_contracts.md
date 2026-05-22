@@ -361,12 +361,12 @@ without further contract change (ADR-0111).
 `ledger_report()` returns a `domains` list. Each row carries:
 
 ```text
-status                ∈ {blocked, seeded, grounded, reasoning-capable, expert-demo}
-predicates.expert_demo   bool
-expert_demo_reason       str  (one-line legibility for operators)
+status                ∈ {blocked, seeded, grounded, reasoning-capable, audit-passed}
+predicates.audit_passed   bool
+audit_passed_reason       str  (one-line legibility for operators)
 ```
 
-A row carries `expert_demo=True` iff **all** of:
+A row carries `audit_passed=True` iff **all** of:
 
 1. `reasoning_capable == True` (the ADR-0091 nine-predicate gate).
 2. A signed `ExpertDemoClaim` exists in `docs/reviewers.yaml` for the
@@ -382,14 +382,14 @@ A row carries `expert_demo=True` iff **all** of:
    byte-for-byte.
 
 Any failure leaves the row at `reasoning-capable` with
-`expert_demo_reason` populated.
+`audit_passed_reason` populated.
 
 ### Schema
 
-`docs/reviewers.yaml` additively gains an `expert_demo_claims` block:
+`docs/reviewers.yaml` additively gains an `audit_passed_claims` block:
 
 ```yaml
-expert_demo_claims:
+audit_passed_claims:
   - domain_id: mathematics_logic
     evidence_lanes:
       - elementary_mathematics_ood
@@ -423,12 +423,12 @@ Threshold rules dispatch by lane shape, not uniformly. Registry in
 
 **Unknown lane ids fail closed** with reason
 `lane <id> has no registered shape — introduce via ADR amendment`.
-Adding a lane to the expert-demo surface requires an explicit registry
+Adding a lane to the audit-passed surface requires an explicit registry
 entry, which requires an ADR amendment.
 
 ### Replay invariant
 
-`core.capability.expert_demo.derive_evidence_digest` is deterministic
+`core.capability.audit_passed.derive_evidence_digest` is deterministic
 in field order (sorted keys, compact separators). Re-running it
 against the on-disk lane results at the same `evidence_revision`
 reproduces `claim_digest` byte-for-byte. Drift in any lane result
@@ -439,13 +439,13 @@ demotes the row back to `reasoning-capable` until re-signed.
 If `docs/reviewers.yaml` fails to parse,
 `reporting._load_registry_for_expert_demo` returns an empty registry
 (zero reviewers, zero claims) rather than raising. Every domain row
-falls back to `expert_demo=false`. A broken registry must never
-silently grant `expert_demo=true`.
+falls back to `audit_passed=false`. A broken registry must never
+silently grant `audit_passed=true`.
 
 ### Trust boundary
 
 - Pack mutation remains proposal-only (ADR-0029/0064 discipline).
-- A reviewer signature in `expert_demo_claims` does not authorize
+- A reviewer signature in `audit_passed_claims` does not authorize
   pack mutation — only a ledger-row promotion. The two paths remain
   separate.
 - `evidence_revision` may be a labeled string (e.g.

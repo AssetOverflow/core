@@ -37,7 +37,7 @@ the next planning pass.
 
 ## Status update — 2026-05-22
 
-Phase 5 (Curriculum Era) work landed in volume during the 2026-05-17 → 2026-05-22 window. The roadmap gains a new Part-II phase (**Phase 6 — Evidence-Governed Domain Layer**, see below) that did not exist in the 2026-05-15 draft because the substrate it ratifies (multi-domain packs, signed reviewer registry, expert-demo gate) did not yet exist either. The phase is documented here as accepted and partially landed, not proposed.
+Phase 5 (Curriculum Era) work landed in volume during the 2026-05-17 → 2026-05-22 window. The roadmap gains a new Part-II phase (**Phase 6 — Evidence-Governed Domain Layer**, see below) that did not exist in the 2026-05-15 draft because the substrate it ratifies (multi-domain packs, signed reviewer registry, audit-passed gate) did not yet exist either. The phase is documented here as accepted and partially landed, not proposed.
 
 Major chains accepted since 2026-05-17:
 
@@ -342,7 +342,7 @@ The phase has no single exit criterion. Instead, each domain becomes its own sub
 
 **Entry criteria:** Phase 5 corpus flywheel operational (curriculum + miner sourcing actively producing reviewed proposals); pack-layer chain (ADR-0027..0045) closed; forward-graph-constraint and surface-composer chains (ADR-0046..0089) shipping.
 
-**Goal.** Distinguish *contract-passing* from *demonstrated* at the ledger surface. A pack that satisfies the nine ADR-0091 predicates earns a `reasoning-capable` ledger row; promotion to `expert_demo=true` requires a reviewer-signed evidence-bundle digest that reproduces byte-for-byte from on-disk lane results.
+**Goal.** Distinguish *contract-passing* from *demonstrated* at the ledger surface. A pack that satisfies the nine ADR-0091 predicates earns a `reasoning-capable` ledger row; promotion to `audit_passed=true` requires a reviewer-signed evidence-bundle digest that reproduces byte-for-byte from on-disk lane results.
 
 **Substrate (all accepted as of 2026-05-22):**
 
@@ -368,8 +368,8 @@ The phase has no single exit criterion. Instead, each domain becomes its own sub
 1. **ADR-0107** — first promotion attempt (`mathematics_logic`) honestly refused by the contract on two named blockers (metric-shape uniformity assumption; `inference_closure` substantively failing at 40% pass).
 2. **ADR-0109** — threshold rules amended with explicit lane-shape registry; cognition-shape thresholds preserved bit-identical; four new shapes added (`accuracy_shape`, `inference_shape`, `refusal_shape`, `symbolic_logic_shape`); unknown lanes fail-closed.
 3. PR #117 fixed the intent-classifier regression that had broken `inference_closure`.
-4. **ADR-0110** — `mathematics_logic` promoted to `expert_demo=true` under the amended contract. Signed claim digest reproduces from on-disk lane results; first domain at expert-demo.
-5. **ADR-0111** — `physics` promoted to `expert_demo=true` without any contract change. Shares `inference_closure` + `fabrication_control` results with math; the digest distinguishes via `domain_id` + `evidence_revision`. Retires the "math-only" objection; confirms the bridges ADR-0110 landed were correctly scoped.
+4. **ADR-0110** — `mathematics_logic` promoted to `audit_passed=true` under the amended contract. Signed claim digest reproduces from on-disk lane results; first domain at audit-passed.
+5. **ADR-0111** — `physics` promoted to `audit_passed=true` without any contract change. Shares `inference_closure` + `fabrication_control` results with math; the digest distinguishes via `domain_id` + `evidence_revision`. Retires the "math-only" objection; confirms the bridges ADR-0110 landed were correctly scoped.
 
 **Exit criteria (cumulative; each can land independently of the others):**
 

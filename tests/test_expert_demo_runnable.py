@@ -83,11 +83,11 @@ class TestPromotedDomainsBuildSuccessfully:
 
 class TestUnpromotedDomainRefused:
     def test_unpromoted_domain_raises_value_error(self) -> None:
-        with pytest.raises(ValueError, match="No expert_demo_claims entry"):
+        with pytest.raises(ValueError, match="No audit_passed_claims entry"):
             build_expert_demo("systems_software")
 
     def test_unknown_domain_raises_value_error(self) -> None:
-        with pytest.raises(ValueError, match="No expert_demo_claims entry"):
+        with pytest.raises(ValueError, match="No audit_passed_claims entry"):
             build_expert_demo("not_a_real_domain")
 
 
@@ -99,8 +99,8 @@ class TestByteDeterminism:
             out_b = Path(tmp) / "b"
             run_expert_demo(domain_id=domain_id, output_dir=out_a)
             run_expert_demo(domain_id=domain_id, output_dir=out_b)
-            bytes_a = (out_a / "expert_demo.json").read_bytes()
-            bytes_b = (out_b / "expert_demo.json").read_bytes()
+            bytes_a = (out_a / "audit_passed.json").read_bytes()
+            bytes_b = (out_b / "audit_passed.json").read_bytes()
             assert bytes_a == bytes_b
             sha_a = hashlib.sha256(bytes_a).hexdigest()
             sha_b = hashlib.sha256(bytes_b).hexdigest()
@@ -130,17 +130,17 @@ class TestOutputArtifacts:
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
             run_expert_demo(domain_id="physics", output_dir=out)
-            assert (out / "expert_demo.json").is_file()
-            assert (out / "expert_demo.html").is_file()
-            html = (out / "expert_demo.html").read_text(encoding="utf-8")
-            assert "<title>CORE Expert-Demo: physics</title>" in html
+            assert (out / "audit_passed.json").is_file()
+            assert (out / "audit_passed.html").is_file()
+            html = (out / "audit_passed.html").read_text(encoding="utf-8")
+            assert "<title>CORE Audit-Passed: physics</title>" in html
             assert "a104cad136f3219df05dc7ce6a78437c02f7b5827cd3cdce568db3acda6a43ed" in html
 
     def test_html_contains_per_lane_sections(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
             run_expert_demo(domain_id="physics", output_dir=out)
-            html = (out / "expert_demo.html").read_text(encoding="utf-8")
+            html = (out / "audit_passed.html").read_text(encoding="utf-8")
             for lane_id in (
                 "foundational_physics_ood",
                 "inference_closure",

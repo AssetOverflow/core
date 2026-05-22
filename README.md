@@ -207,37 +207,44 @@ core teaching supersessions                         # pair retired chains with r
 
 ## Evidence-Governed Domain Layer — The ADR-0091 Chain
 
-CORE distinguishes *contract-passing* from *demonstrated*. A pack that satisfies the nine ADR-0091 predicates earns a `reasoning-capable` ledger row; that's a structural claim, not an empirical one. Promotion to `expert_demo=true` requires a **reviewer-signed evidence-bundle digest** that reproduces byte-for-byte from on-disk lane results (ADR-0106 + ADR-0109).
+CORE distinguishes *contract-passing* from *demonstrated*. A pack that satisfies the nine ADR-0091 predicates earns a `reasoning-capable` ledger row; that's a structural claim, not an empirical one. Promotion to `audit_passed=true` (formerly `expert_demo`; renamed by [ADR-0113](docs/decisions/ADR-0113-rename-expert-demo-to-audit-passed.md)) requires a **reviewer-signed evidence-bundle digest** that reproduces byte-for-byte from on-disk lane results (ADR-0106 + ADR-0109).
+
+> **What `audit-passed` actually means** — and what it does NOT mean.
+> The gate verifies CORE *claim-shape compliance*: signed digest, replay determinism, typed refusal, exact recall, grounding-source provenance. **These are claim shapes a transformer LLM cannot structurally produce regardless of raw accuracy.** A frontier LLM might score higher on the same benchmark but cannot pass this contract because it cannot produce a digest that re-derives, cannot guarantee typed refusal, cannot emit a deterministic trace hash, cannot replay byte-equal. **This is NOT a raw-capability claim.** The future `expert` ledger tier ([ADR-0114](docs/decisions/ADR-0114-expert-capability-roadmap-gsm8k-first.md)) is reserved for an actual benchmark-calibrated capability claim; no domain holds it yet.
 
 | Layer | What it guarantees | ADR |
 |---|---|---|
 | **Domain Pack Contract v1** | Nine predicate checks on every ratified pack (lemma coverage, operator chain count, intent shapes, holdout coverage, reviewer-resolution, etc.). | [0091](docs/decisions/ADR-0091-domain-pack-contract-v1.md) |
 | **Reviewer Registry v1** | YAML-anchored, schema-validated reviewer roster. Wildcard `*` reserved for primary reviewers; domain-scoped reviewers gated by `can_review(domain, scope)`. | [0092](docs/decisions/ADR-0092-reviewer-registry-v1.md) |
 | **Fabrication-control eval lane** | Negative-control lane: phantom endpoints, cross-pack non-bridges, sibling collapses must all refuse. `fabricated=0` across all by-class buckets is the gate. | [0096](docs/decisions/ADR-0096-fabrication-control-eval-lane.md) |
-| **Expert-demo promotion contract** | Domain-aware, reviewer-signed, replay-deterministic. No domain promotes silently; every `expert_demo=true` row points to an `expert_demo_claims` entry whose SHA-256 reproduces. | [0106](docs/decisions/ADR-0106-expert-demo-promotion-contract.md) |
+| **Audit-passed promotion contract** | Domain-aware, reviewer-signed, replay-deterministic. No domain promotes silently; every `audit_passed=true` row points to an `audit_passed_claims` entry whose SHA-256 reproduces. (Originally landed as `expert-demo`; renamed by ADR-0113.) | [0106](docs/decisions/ADR-0106-expert-demo-promotion-contract.md), [0113](docs/decisions/ADR-0113-rename-expert-demo-to-audit-passed.md) |
 | **Lane-shape registry** | Eight lane ids dispatch to five shapes (`cognition_shape`, `accuracy_shape`, `inference_shape`, `refusal_shape`, `symbolic_logic_shape`); unknown lanes fail-closed. | [0109](docs/decisions/ADR-0109-lane-shape-aware-thresholds.md) |
 
 **Current ledger state** (per `core capability ledger`):
 
 | Domain | Status |
 |---|---|
-| `mathematics_logic` | **`expert-demo`** (first promotion, [ADR-0110](docs/decisions/ADR-0110-mathematics-logic-expert-demo-promotion.md)) |
-| `physics` | **`expert-demo`** (second promotion, [ADR-0111](docs/decisions/ADR-0111-physics-expert-demo-promotion.md)) |
+| `mathematics_logic` | **`audit-passed`** (first promotion, [ADR-0110](docs/decisions/ADR-0110-mathematics-logic-expert-demo-promotion.md); status string renamed by [ADR-0113](docs/decisions/ADR-0113-rename-expert-demo-to-audit-passed.md)) |
+| `physics` | **`audit-passed`** (second promotion, [ADR-0111](docs/decisions/ADR-0111-physics-expert-demo-promotion.md)) |
 | `systems_software` | `reasoning-capable` |
 | `hebrew_greek_textual_reasoning` | `reasoning-capable` |
 | `philosophy_theology` | `reasoning-capable` |
 
 The contract has now demonstrated its load-bearing behavior end-to-end: refused one promotion attempt honestly ([ADR-0107](docs/decisions/ADR-0107-mathematics-logic-expert-demo-deferred.md)), amended its threshold rules once cleanly (ADR-0109), succeeded against `mathematics_logic` (ADR-0110), and succeeded against a second distinct domain `physics` without further contract change (ADR-0111). External readers can distinguish the two ceilings at a glance; the "math-only" objection is retired.
 
-**See the actual demonstration ([ADR-0112](docs/decisions/ADR-0112-runnable-expert-demo-showcase.md)):**
+**See the actual demonstration ([ADR-0112](docs/decisions/ADR-0112-runnable-expert-demo-showcase.md), renamed by [ADR-0113](docs/decisions/ADR-0113-rename-expert-demo-to-audit-passed.md)):**
 
 ```bash
-core demo expert --domain mathematics_logic
-core demo expert --domain physics
-# → evals/expert_demos/<domain>/latest/expert_demo.html
+core demo audit-passed --domain mathematics_logic
+core demo audit-passed --domain physics
+# → evals/audit_passed/<domain>/latest/audit_passed.html
 ```
 
 Each run re-derives the signed evidence-bundle digest from on-disk lane result files, asserts byte-for-byte match against `docs/reviewers.yaml`, and renders an HTML showcase with per-lane shape-check verdicts plus the first three sample cases from each split. The composer is read-only and byte-deterministic (same inputs → same SHA-256). An unpromoted domain produces a typed refusal, not a fake showcase.
+
+### Path to actual expert-level capability — explicitly future work
+
+The `audit-passed` gate above is intentionally *not* a raw-capability claim. The honest path to one is laid out in [ADR-0114 — Expert-Capability Roadmap: GSM8K-Math First](docs/decisions/ADR-0114-expert-capability-roadmap-gsm8k-first.md). Phases 1-7 define a falsifiable arc: problem parser → deterministic solver → verifier → stepped-realizer → public GSM8K eval lane → first `expert` ledger tier promotion ADR with a publicly stated benchmark threshold. **No domain is at `expert` today.** That status string remains reserved namespace.
 
 Full ADR index, frontier, and chain notes: [`docs/decisions/README.md`](docs/decisions/README.md).
 

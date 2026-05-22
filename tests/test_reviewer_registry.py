@@ -301,7 +301,7 @@ reviewers:
     domains: ["*"]
     review_scope: ["pack", "proposal", "chain", "eval"]
     provenance: "adr-0092:bootstrap:2026-05-21"
-expert_demo_claims:
+audit_passed_claims:
   - domain_id: mathematics_logic
     evidence_lanes: ["inference_closure", "fabrication_control"]
     evidence_revision: "abc1234"

@@ -109,7 +109,7 @@ A lane without a `contract.md` does not run.
 
 ADR-0091's Domain Pack Contract v1 introduced a `dev/public/holdout`
 discipline that every ratified pack must declare. ADR-0106 added a
-reviewer-signed expert-demo promotion gate that consults those same
+reviewer-signed audit-passed promotion gate that consults those same
 lane outputs at the ledger level. ADR-0109 then formalized the rule
 that **threshold dispatch is lane-shape-aware**, not lane-uniform.
 
@@ -134,10 +134,10 @@ broadened**. The path is:
 3. Add the lane → shape mapping to `LANE_SHAPE_REGISTRY`.
 
 A lane id absent from the registry is **fail-closed** at the
-expert-demo gate (reason:
+audit-passed gate (reason:
 `lane <id> has no registered shape — introduce via ADR amendment`).
 Unregistered lanes can still run as exploration; they just cannot
-contribute evidence to a `reviewer-signed expert_demo` promotion.
+contribute evidence to a `reviewer-signed audit_passed` promotion.
 
 ### Holdout-runner gating (ADR-0105)
 

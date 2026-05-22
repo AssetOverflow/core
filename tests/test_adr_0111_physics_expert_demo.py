@@ -3,8 +3,8 @@
 Pins four load-bearing invariants:
 
 1. ``adr_0111_physics_expert_demo_holds`` — ``ledger_report()`` reports
-   ``physics`` at ``status="expert-demo"`` with
-   ``predicates.expert_demo == True``.
+   ``physics`` at ``status="audit-passed"`` with
+   ``predicates.audit_passed == True``.
 
 2. ``adr_0111_replay_digest_byte_equality`` — re-deriving the
    evidence-bundle digest from the on-disk lane result files reproduces
@@ -13,7 +13,7 @@ Pins four load-bearing invariants:
 3. ``adr_0111_other_domains_unaffected`` — ADR-0111 promotes exactly
    one new domain. ``mathematics_logic`` (ADR-0110) must remain
    promoted; ``systems_software``, ``hebrew_greek_textual_reasoning``,
-   and ``philosophy_theology`` must remain at ``expert_demo=false``.
+   and ``philosophy_theology`` must remain at ``audit_passed=false``.
 
 4. ``adr_0111_distinct_digest_from_adr_0110`` — physics digest and
    math digest must differ, demonstrating the bundle's
@@ -74,8 +74,8 @@ def _physics_claim():
 class TestAdr0111PhysicsExpertDemoHolds:
     def test_physics_row_is_expert_demo(self) -> None:
         row = _physics_row()
-        assert row["status"] == "expert-demo"
-        assert row["predicates"]["expert_demo"] is True
+        assert row["status"] == "audit-passed"
+        assert row["predicates"]["audit_passed"] is True
 
     def test_signed_claim_is_present(self) -> None:
         claim = _physics_claim()
@@ -104,7 +104,7 @@ class TestAdr0111OtherDomainsUnaffected:
         promoted = {
             row["domain"]
             for row in ledger_report()["domains"]
-            if row["predicates"]["expert_demo"]
+            if row["predicates"]["audit_passed"]
         }
         assert "mathematics_logic" in promoted
         assert "physics" in promoted
@@ -122,7 +122,7 @@ class TestAdr0111OtherDomainsUnaffected:
                     f"{row['domain']} expected reasoning-capable, "
                     f"got {row['status']}"
                 )
-                assert row["predicates"]["expert_demo"] is False
+                assert row["predicates"]["audit_passed"] is False
 
 
 class TestAdr0111DistinctDigestFromAdr0110:

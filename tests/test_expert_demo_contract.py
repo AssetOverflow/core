@@ -3,7 +3,7 @@
 Pins three load-bearing invariants:
 
 1. ``expert_demo_requires_signature`` — no domain row may carry
-   ``expert_demo=true`` without a corresponding ``expert_demo_claims``
+   ``audit_passed=true`` without a corresponding ``expert_demo_claims``
    entry whose digest reproduces the on-disk evidence bundle.
 
 2. ``expert_demo_domain_aware`` — the reporting layer must consult only
@@ -17,7 +17,7 @@ Pins three load-bearing invariants:
    ``reasoning-capable``.
 
 The current main-branch state of the ledger has zero domains with
-``expert_demo=true``; these tests synthesize fixtures to prove the gate
+``audit_passed=true``; these tests synthesize fixtures to prove the gate
 behaves as ADR-0106 specifies, without flipping any production row.
 """
 
@@ -119,7 +119,7 @@ class TestExpertDemoRequiresSignature:
             ),
         )
         assert verdict.passed is False
-        assert "no expert_demo_claims entry" in verdict.reason
+        assert "no audit_passed_claims entry" in verdict.reason
 
     def test_unsigned_lanes_refuse_promotion(self) -> None:
         registry = _build_registry(())
@@ -374,7 +374,7 @@ class TestExpertDemoThresholds:
 class TestProductionLedgerPromotionsAreSignedOnly:
     """ADR-0106 §Acceptance preserved post-ADR-0110.
 
-    Originally tested that NO domain row carried ``expert_demo=true``
+    Originally tested that NO domain row carried ``audit_passed=true``
     because no signed claims existed yet. After ADR-0110, the math
     domain carries a signed claim. The load-bearing invariant remains:
     every promoted domain must trace back to a signed claim in the
@@ -397,6 +397,6 @@ class TestProductionLedgerPromotionsAreSignedOnly:
             domain = row["domain"]
             claim = registry.expert_demo_claim_for(domain)
             assert claim is not None, (
-                f"domain {domain!r} reports expert_demo=true but has no "
+                f"domain {domain!r} reports audit_passed=true but has no "
                 f"signed expert_demo_claims entry"
             )
