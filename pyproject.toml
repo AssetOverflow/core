@@ -1,7 +1,7 @@
 [project]
 name = "core-versor"
 version = "0.1.0"
-description = "Versor Engine: cognitive field system on Cl(4,1) Conformal Geometric Algebra"
+description = "CORE runtime"
 requires-python = ">=3.11"
 
 dependencies = [
@@ -11,6 +11,7 @@ dependencies = [
     "pytest-asyncio>=1.3.0",
     "pytest-xdist>=3.6",
     "psutil>=7.0",
+    "pyrage==1.2.3",
     "pyyaml>=6.0",
     "ruff>=0.15.12",
 ]
