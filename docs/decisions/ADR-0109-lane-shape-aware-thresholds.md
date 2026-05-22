@@ -1,6 +1,6 @@
 # ADR-0109 — Lane-Shape-Aware Thresholds (ADR-0106 Amendment)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-22
 **Author:** CORE agents + reviewers
 **Amends:** ADR-0106

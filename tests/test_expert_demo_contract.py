@@ -23,6 +23,8 @@ behaves as ADR-0106 specifies, without flipping any production row.
 
 from __future__ import annotations
 
+import json
+
 from core.capability.expert_demo import (
     derive_evidence_digest,
     evaluate_expert_demo,
@@ -40,7 +42,30 @@ _GOOD_METRICS = {
     "intent_accuracy": 0.96,
     "versor_closure_rate": 1.0,
 }
-_FAB_METRICS = {"passed_rate": 1.0}
+_FAB_METRICS = {
+    "by_class": {
+        "phantom_endpoint": {"n": 3, "refused": 3, "fabricated": 0},
+        "cross_pack_non_bridge": {"n": 3, "refused": 3, "fabricated": 0},
+        "sibling_collapse": {"n": 3, "refused": 3, "fabricated": 0},
+    }
+}
+_INFERENCE_METRICS = {
+    "all_pass_rate": 0.98,
+    "replay_determinism": 1.0,
+    "overall_pass": True,
+}
+_ACCURACY_METRICS = {"accuracy": 0.98, "passed": 39, "total": 40}
+
+
+_SHAPE_FIXTURES = {
+    "fabrication_control": _FAB_METRICS,
+    "inference_closure": _INFERENCE_METRICS,
+    "elementary_mathematics_ood": _ACCURACY_METRICS,
+    "foundational_physics_ood": _ACCURACY_METRICS,
+    "symbolic_logic": _ACCURACY_METRICS,
+    "hebrew_fluency": _ACCURACY_METRICS,
+    "koine_greek_fluency": _ACCURACY_METRICS,
+}
 
 
 def _primary_reviewer() -> Reviewer:
@@ -64,10 +89,20 @@ def _build_registry(
 
 
 def _good_lane_results(lanes: tuple[str, ...]) -> dict[str, dict[str, dict]]:
+    """Build shape-appropriate good metrics per registered lane.
+
+    Lanes not in the shape-fixture map (e.g. synthetic 'a', 'b', 'c'
+    used in digest-ordering tests, or 'cognition') get cognition-shape
+    metrics as a deterministic default — they're never run through
+    the threshold checker in those tests.
+    """
     out: dict[str, dict[str, dict]] = {}
     for lane in lanes:
-        metrics = _FAB_METRICS if lane == "fabrication_control" else _GOOD_METRICS
-        out[lane] = {"public": dict(metrics), "holdout": dict(metrics)}
+        metrics = _SHAPE_FIXTURES.get(lane, _GOOD_METRICS)
+        out[lane] = {
+            "public": json.loads(json.dumps(metrics)),
+            "holdout": json.loads(json.dumps(metrics)),
+        }
     return out
 
 
@@ -258,7 +293,7 @@ class TestExpertDemoReplayByteEquality:
             claim_digest=original_digest,
         )
         drifted = _good_lane_results(lanes)
-        drifted["inference_closure"]["public"]["intent_accuracy"] = 0.99
+        drifted["inference_closure"]["public"]["all_pass_rate"] = 0.97
         registry = _build_registry((_primary_reviewer(),), (claim,))
         verdict = evaluate_expert_demo(
             domain_id=domain,
@@ -278,7 +313,7 @@ class TestExpertDemoThresholds:
         domain = "mathematics_logic"
         lanes = ("inference_closure", "fabrication_control")
         results = _good_lane_results(lanes)
-        results["inference_closure"]["holdout"]["surface_groundedness"] = 0.50
+        results["inference_closure"]["holdout"]["all_pass_rate"] = 0.50
         digest = derive_evidence_digest(
             domain_id=domain,
             evidence_revision="rev1",
@@ -301,14 +336,16 @@ class TestExpertDemoThresholds:
             lane_results=results,
         )
         assert verdict.passed is False
-        assert "surface_groundedness" in verdict.reason
+        assert "all_pass_rate" in verdict.reason
         assert "below threshold" in verdict.reason
 
     def test_fabrication_control_failure_refuses(self) -> None:
         domain = "mathematics_logic"
         lanes = ("inference_closure", "fabrication_control")
         results = _good_lane_results(lanes)
-        results["fabrication_control"]["holdout"]["passed_rate"] = 0.8
+        results["fabrication_control"]["holdout"]["by_class"][
+            "phantom_endpoint"
+        ]["fabricated"] = 1
         digest = derive_evidence_digest(
             domain_id=domain,
             evidence_revision="rev1",

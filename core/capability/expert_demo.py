@@ -34,9 +34,130 @@ SURFACE_GROUNDEDNESS_MIN: float = 0.95
 TERM_CAPTURE_RATE_MIN: float = 0.85
 INTENT_ACCURACY_MIN: float = 0.95
 VERSOR_CLOSURE_RATE_MIN: float = 1.0
-FABRICATION_PASSED_MIN: float = 1.0
+ACCURACY_MIN: float = 0.95
+ALL_PASS_RATE_MIN: float = 0.95
+REPLAY_DETERMINISM_MIN: float = 1.0
 
 FABRICATION_CONTROL_LANE: str = "fabrication_control"
+
+
+# ADR-0109 — lane-shape registry. New shapes require an ADR amendment;
+# new lanes must be added here explicitly. Unknown lane ids fail closed.
+LANE_SHAPE_REGISTRY: dict[str, str] = {
+    "cognition": "cognition_shape",
+    "elementary_mathematics_ood": "accuracy_shape",
+    "foundational_physics_ood": "accuracy_shape",
+    "symbolic_logic": "symbolic_logic_shape",
+    "hebrew_fluency": "accuracy_shape",
+    "koine_greek_fluency": "accuracy_shape",
+    "inference_closure": "inference_shape",
+    "fabrication_control": "refusal_shape",
+}
+
+
+def _check_cognition_shape(lane_id: str, metrics: Mapping[str, Any]) -> tuple[bool, str]:
+    checks = (
+        ("surface_groundedness", SURFACE_GROUNDEDNESS_MIN),
+        ("term_capture_rate", TERM_CAPTURE_RATE_MIN),
+        ("intent_accuracy", INTENT_ACCURACY_MIN),
+        ("versor_closure_rate", VERSOR_CLOSURE_RATE_MIN),
+    )
+    for key, minimum in checks:
+        if key not in metrics:
+            return False, f"lane {lane_id!r} missing required metric {key!r}"
+        value = float(metrics[key] or 0)
+        if value < minimum:
+            return False, (
+                f"lane {lane_id!r} {key}={value} below threshold {minimum}"
+            )
+    return True, ""
+
+
+def _accuracy_value(metrics: Mapping[str, Any]) -> float | None:
+    """Resolve accuracy from explicit key or passed/total fallback."""
+    if "accuracy" in metrics:
+        return float(metrics["accuracy"] or 0)
+    if "passed" in metrics and "total" in metrics:
+        total = float(metrics["total"] or 0)
+        if total <= 0:
+            return None
+        return float(metrics["passed"] or 0) / total
+    return None
+
+
+def _check_accuracy_shape(lane_id: str, metrics: Mapping[str, Any]) -> tuple[bool, str]:
+    value = _accuracy_value(metrics)
+    if value is None:
+        return False, (
+            f"lane {lane_id!r} missing accuracy (and no passed/total fallback)"
+        )
+    if value < ACCURACY_MIN:
+        return False, (
+            f"lane {lane_id!r} accuracy={value} below threshold {ACCURACY_MIN}"
+        )
+    return True, ""
+
+
+def _check_inference_shape(lane_id: str, metrics: Mapping[str, Any]) -> tuple[bool, str]:
+    if "all_pass_rate" not in metrics:
+        return False, f"lane {lane_id!r} missing required metric 'all_pass_rate'"
+    rate = float(metrics["all_pass_rate"] or 0)
+    if rate < ALL_PASS_RATE_MIN:
+        return False, (
+            f"lane {lane_id!r} all_pass_rate={rate} below threshold "
+            f"{ALL_PASS_RATE_MIN}"
+        )
+    if "replay_determinism" not in metrics:
+        return False, f"lane {lane_id!r} missing required metric 'replay_determinism'"
+    det = float(metrics["replay_determinism"] or 0)
+    if det < REPLAY_DETERMINISM_MIN:
+        return False, (
+            f"lane {lane_id!r} replay_determinism={det} below threshold "
+            f"{REPLAY_DETERMINISM_MIN}"
+        )
+    overall = metrics.get("overall_pass")
+    if overall is not None and not bool(overall):
+        return False, f"lane {lane_id!r} overall_pass is false"
+    return True, ""
+
+
+def _check_refusal_shape(lane_id: str, metrics: Mapping[str, Any]) -> tuple[bool, str]:
+    by_class = metrics.get("by_class")
+    if not isinstance(by_class, Mapping) or not by_class:
+        return False, f"lane {lane_id!r} missing 'by_class' refusal counts"
+    for class_id, bucket in by_class.items():
+        if not isinstance(bucket, Mapping):
+            return False, (
+                f"lane {lane_id!r} by_class[{class_id!r}] is not a mapping"
+            )
+        fabricated = int(bucket.get("fabricated", 0) or 0)
+        if fabricated != 0:
+            return False, (
+                f"lane {lane_id!r} by_class[{class_id!r}] fabricated="
+                f"{fabricated} (must be 0)"
+            )
+        n = int(bucket.get("n", 0) or 0)
+        refused = int(bucket.get("refused", 0) or 0)
+        if n <= 0 or refused != n:
+            return False, (
+                f"lane {lane_id!r} by_class[{class_id!r}] refused={refused} "
+                f"!= n={n}"
+            )
+    return True, ""
+
+
+SHAPE_CHECKERS: dict[str, Any] = {
+    "cognition_shape": _check_cognition_shape,
+    "accuracy_shape": _check_accuracy_shape,
+    "symbolic_logic_shape": _check_accuracy_shape,
+    "inference_shape": _check_inference_shape,
+    "refusal_shape": _check_refusal_shape,
+}
+
+
+def resolve_lane_shape(lane_id: str) -> str | None:
+    """Return the registered shape id for ``lane_id`` or ``None``."""
+    return LANE_SHAPE_REGISTRY.get(lane_id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,31 +200,23 @@ def derive_evidence_digest(
 
 
 def _meets_thresholds(lane_id: str, metrics: Mapping[str, Any]) -> tuple[bool, str]:
-    if lane_id == FABRICATION_CONTROL_LANE:
-        passed = float(metrics.get("passed_rate", metrics.get("accuracy", 0)) or 0)
-        if passed < FABRICATION_PASSED_MIN:
-            return False, (
-                f"lane {lane_id!r} passed_rate={passed} below "
-                f"threshold {FABRICATION_PASSED_MIN}"
-            )
-        return True, ""
-    checks = (
-        ("surface_groundedness", SURFACE_GROUNDEDNESS_MIN),
-        ("term_capture_rate", TERM_CAPTURE_RATE_MIN),
-        ("intent_accuracy", INTENT_ACCURACY_MIN),
-        ("versor_closure_rate", VERSOR_CLOSURE_RATE_MIN),
-    )
-    for key, minimum in checks:
-        if key not in metrics:
-            return False, (
-                f"lane {lane_id!r} missing required metric {key!r}"
-            )
-        value = float(metrics[key] or 0)
-        if value < minimum:
-            return False, (
-                f"lane {lane_id!r} {key}={value} below threshold {minimum}"
-            )
-    return True, ""
+    """Dispatch lane threshold check by registered shape (ADR-0109).
+
+    Unknown lane ids are fail-closed: adding a lane to the expert-demo
+    surface requires an explicit registry entry, which requires an ADR
+    amendment.
+    """
+    shape_id = resolve_lane_shape(lane_id)
+    if shape_id is None:
+        return False, (
+            f"lane {lane_id!r} has no registered shape — introduce via ADR amendment"
+        )
+    checker = SHAPE_CHECKERS.get(shape_id)
+    if checker is None:
+        return False, (
+            f"lane {lane_id!r} resolves to shape {shape_id!r} with no checker"
+        )
+    return checker(lane_id, metrics)
 
 
 def evaluate_expert_demo(
