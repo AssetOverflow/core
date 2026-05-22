@@ -73,9 +73,16 @@ def _decrypt_holdout(encrypted_path: Path) -> list[dict[str, Any]]:
         )
 
     try:
-        recipients = x25519.Identity.from_file(identity_path)
+        identity_text = identity_path.read_text(encoding="utf-8")
+        identities = [
+            x25519.Identity.from_str(line.strip())
+            for line in identity_text.splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        ]
+        if not identities:
+            raise ValueError("no age identity entries found in identity file")
         encrypted_bytes = encrypted_path.read_bytes()
-        decrypted = decrypt(encrypted_bytes, recipients)
+        decrypted = decrypt(encrypted_bytes, identities)
         return _parse_cases(decrypted.decode("utf-8"))
     except Exception as exc:
         raise RuntimeError(
