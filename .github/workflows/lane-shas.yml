@@ -50,6 +50,12 @@ jobs:
         run: |
           python scripts/verify_lane_shas.py
 
+      - name: verify CLAIMS.md is current
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python scripts/generate_claims.py --check
+
       - name: emit machine-readable report (on failure)
         if: failure()
         env:
