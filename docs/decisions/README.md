@@ -32,12 +32,13 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0109](ADR-0109-lane-shape-aware-thresholds.md) | Lane-Shape-Aware Thresholds (ADR-0106 Amendment) | Accepted (2026-05-22) |
 | [ADR-0110](ADR-0110-mathematics-logic-expert-demo-promotion.md) | `mathematics_logic` Expert-Demo Promotion | Accepted (2026-05-22) |
 | [ADR-0111](ADR-0111-physics-expert-demo-promotion.md) | `physics` Expert-Demo Promotion | Accepted (2026-05-22) |
+| [ADR-0112](ADR-0112-runnable-expert-demo-showcase.md) | Runnable Expert-Demo Showcase | Accepted (2026-05-22) |
 
 ---
 
 ## Current frontier
 
-The ADR-0091..0111 slate is fully accepted and mechanically evidenced:
+The ADR-0091..0112 slate is fully accepted and mechanically evidenced:
 
 - Domain Pack Contract v1 — ADR-0091
 - Reviewer Registry v1 — ADR-0092
@@ -60,6 +61,7 @@ The ADR-0091..0111 slate is fully accepted and mechanically evidenced:
 - Lane-Shape-Aware Thresholds (ADR-0106 amendment) — ADR-0109
 - `mathematics_logic` Expert-Demo Promotion (first successful) — ADR-0110
 - `physics` Expert-Demo Promotion (second successful) — ADR-0111
+- Runnable Expert-Demo Showcase (`core demo expert --domain <id>`) — ADR-0112
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 

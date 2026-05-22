@@ -229,6 +229,16 @@ CORE distinguishes *contract-passing* from *demonstrated*. A pack that satisfies
 
 The contract has now demonstrated its load-bearing behavior end-to-end: refused one promotion attempt honestly ([ADR-0107](docs/decisions/ADR-0107-mathematics-logic-expert-demo-deferred.md)), amended its threshold rules once cleanly (ADR-0109), succeeded against `mathematics_logic` (ADR-0110), and succeeded against a second distinct domain `physics` without further contract change (ADR-0111). External readers can distinguish the two ceilings at a glance; the "math-only" objection is retired.
 
+**See the actual demonstration ([ADR-0112](docs/decisions/ADR-0112-runnable-expert-demo-showcase.md)):**
+
+```bash
+core demo expert --domain mathematics_logic
+core demo expert --domain physics
+# → evals/expert_demos/<domain>/latest/expert_demo.html
+```
+
+Each run re-derives the signed evidence-bundle digest from on-disk lane result files, asserts byte-for-byte match against `docs/reviewers.yaml`, and renders an HTML showcase with per-lane shape-check verdicts plus the first three sample cases from each split. The composer is read-only and byte-deterministic (same inputs → same SHA-256). An unpromoted domain produces a typed refusal, not a fake showcase.
+
 Full ADR index, frontier, and chain notes: [`docs/decisions/README.md`](docs/decisions/README.md).
 
 ---
