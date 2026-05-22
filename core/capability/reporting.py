@@ -17,7 +17,13 @@ from core.capability.domains import (
     DOMAIN_OPERATOR_CLAIMS,
     DOMAIN_PACKS,
 )
+from core.capability.expert_demo import (
+    collect_domain_lanes,
+    evaluate_expert_demo,
+    materialise_lane_results,
+)
 from core.capability.reviewers import (
+    ReviewerRegistry,
     ReviewerRegistryError,
     load_reviewer_registry,
 )
@@ -370,6 +376,7 @@ def ledger_report() -> dict[str, Any]:
     missing_sources = [k for k, p in resolved.items() if not p.exists()]
     gaps = _gap_registry()
     chain_inventory = _chain_inventory()
+    _resolved_registry = _load_registry_for_expert_demo()
     domain_rows: list[dict[str, Any]] = []
     for domain, packs in DOMAIN_PACKS.items():
         pack_metrics = [_pack_metrics(pack_id) for pack_id in packs]
@@ -415,22 +422,23 @@ def ledger_report() -> dict[str, Any]:
             and intent_shapes_present >= 3
             and holdout_present
         )
-        expert_demo = False
-        if reasoning_capable:
-            public = _latest_eval_result("cognition", "v1", "public").get("metrics", {})
-            holdout = _latest_eval_result("cognition", "v1", "holdout").get("metrics", {})
-            expert_demo = bool(
-                public
-                and holdout
-                and public.get("surface_groundedness", 0) >= 0.95
-                and holdout.get("surface_groundedness", 0) >= 0.95
-                and public.get("term_capture_rate", 0) >= 0.85
-                and holdout.get("term_capture_rate", 0) >= 0.85
-                and public.get("intent_accuracy", 0) >= 0.95
-                and holdout.get("intent_accuracy", 0) >= 0.95
-                and public.get("versor_closure_rate", 0) >= 1.0
-                and holdout.get("versor_closure_rate", 0) >= 1.0
-            )
+        manifests = [_manifest_for_pack(pack_id) for pack_id in packs]
+        domain_lanes = collect_domain_lanes(manifests)
+        lane_results = materialise_lane_results(
+            domain_lanes,
+            fetch_split=lambda lane, split: _latest_eval_result(
+                lane, "v1", split
+            ).get("metrics", {}),
+        )
+        verdict = evaluate_expert_demo(
+            domain_id=domain,
+            reasoning_capable=reasoning_capable,
+            registry=_resolved_registry,
+            domain_lanes=domain_lanes,
+            lane_results=lane_results,
+        )
+        expert_demo = verdict.passed
+        expert_demo_reason = verdict.reason
         if expert_demo:
             status = "expert-demo"
         elif reasoning_capable:
@@ -474,6 +482,7 @@ def ledger_report() -> dict[str, Any]:
                     "reasoning_capable": reasoning_capable,
                     "expert_demo": expert_demo,
                 },
+                "expert_demo_reason": expert_demo_reason,
                 "known_gaps": domain_gaps,
                 "open_gaps": open_gaps,
                 "blocked_lift": blocked_lift,
@@ -589,6 +598,23 @@ def evidence_plan_report() -> dict[str, Any]:
         "workers_promote_packs": False,
         "jobs": jobs,
     }
+
+
+def _load_registry_for_expert_demo() -> ReviewerRegistry:
+    """Load reviewer registry, returning an empty one on any failure.
+
+    Expert-demo gating is fail-closed: an unloadable registry yields a
+    registry with zero reviewers and zero claims, which makes
+    ``evaluate_expert_demo`` refuse every domain. A broken registry
+    must never silently grant ``expert_demo=true``.
+    """
+    path = _REPO_ROOT / LEDGER_SOURCES.reviewers
+    if not path.exists():
+        return ReviewerRegistry(schema_version=1, reviewers=(), expert_demo_claims=())
+    try:
+        return load_reviewer_registry(path)
+    except ReviewerRegistryError:
+        return ReviewerRegistry(schema_version=1, reviewers=(), expert_demo_claims=())
 
 
 def _reviewer_registry_status() -> dict[str, Any]:

@@ -7,11 +7,15 @@ from pathlib import Path
 import pytest
 
 from core.capability.reviewers import (
+    ExpertDemoClaim,
     ReviewerRegistry,
     ReviewerRegistryError,
     SCHEMA_VERSION,
     load_reviewer_registry,
 )
+
+
+_VALID_DIGEST = "a" * 64
 
 
 def _write_yaml(tmp_path: Path, content: str) -> Path:
@@ -282,3 +286,65 @@ class TestProductionRegistry:
         assert shay.role == "primary"
         assert shay.domains == ("*",)
         assert shay.provenance.startswith("adr-0092:bootstrap:")
+
+
+class TestExpertDemoClaimsSchema:
+    """ADR-0106 — additive ``expert_demo_claims`` block on the registry."""
+
+    def _yaml_with_claim(self, *, signed_by: str, digest: str = _VALID_DIGEST) -> str:
+        return f"""\
+schema_version: 1
+reviewers:
+  - reviewer_id: shay-j
+    display_name: "Joshua Shay"
+    role: primary
+    domains: ["*"]
+    review_scope: ["pack", "proposal", "chain", "eval"]
+    provenance: "adr-0092:bootstrap:2026-05-21"
+expert_demo_claims:
+  - domain_id: mathematics_logic
+    evidence_lanes: ["inference_closure", "fabrication_control"]
+    evidence_revision: "abc1234"
+    signed_by: "{signed_by}"
+    claim_digest: "{digest}"
+"""
+
+    def test_omitted_block_yields_empty_tuple(self, tmp_path: Path) -> None:
+        path = _write_yaml(tmp_path, _valid_primary_yaml())
+        registry = load_reviewer_registry(path)
+        assert registry.expert_demo_claims == ()
+        assert registry.expert_demo_claim_for("mathematics_logic") is None
+
+    def test_valid_claim_parses(self, tmp_path: Path) -> None:
+        path = _write_yaml(tmp_path, self._yaml_with_claim(signed_by="shay-j"))
+        registry = load_reviewer_registry(path)
+        assert len(registry.expert_demo_claims) == 1
+        claim = registry.expert_demo_claim_for("mathematics_logic")
+        assert isinstance(claim, ExpertDemoClaim)
+        assert claim.signed_by == "shay-j"
+        assert claim.claim_digest == _VALID_DIGEST
+        assert claim.evidence_lanes == ("inference_closure", "fabrication_control")
+
+    def test_signer_unknown_reviewer_id_rejected(self, tmp_path: Path) -> None:
+        path = _write_yaml(tmp_path, self._yaml_with_claim(signed_by="ghost"))
+        with pytest.raises(ReviewerRegistryError, match="does not resolve"):
+            load_reviewer_registry(path)
+
+    def test_malformed_digest_rejected(self, tmp_path: Path) -> None:
+        path = _write_yaml(
+            tmp_path, self._yaml_with_claim(signed_by="shay-j", digest="short")
+        )
+        with pytest.raises(ReviewerRegistryError, match="claim_digest"):
+            load_reviewer_registry(path)
+
+    def test_duplicate_domain_rejected(self, tmp_path: Path) -> None:
+        yaml = self._yaml_with_claim(signed_by="shay-j")
+        yaml += """  - domain_id: mathematics_logic
+    evidence_lanes: ["inference_closure"]
+    evidence_revision: "abc1234"
+    signed_by: "shay-j"
+    claim_digest: "{digest}"
+""".format(digest=_VALID_DIGEST)
+        path = _write_yaml(tmp_path, yaml)
+        with pytest.raises(ReviewerRegistryError, match="duplicate domain_id"):
+            load_reviewer_registry(path)
