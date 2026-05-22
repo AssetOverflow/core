@@ -11,7 +11,7 @@
   "gate_engaged": true,
   "oov_policy": "fail_closed",
   "glosses_checksum": "286acaf29fd2b3cc01ff5537f2b1552788ba2d495f977517ec5e4acd2a564ac5",
-  "provenance": "adr-0102:reviewed:2026-05-21",
+  "provenance": "adr-0103:reviewed:2026-05-22",
   "domain_contract_version": 1,
   "domain_id": "hebrew_greek_textual_reasoning",
   "axioms": null,
@@ -25,6 +25,16 @@
     },
     {
       "lane": "fabrication_control",
+      "version": "v1",
+      "splits": ["dev", "public", "holdout"]
+    },
+    {
+      "lane": "hebrew_fluency",
+      "version": "v1",
+      "splits": ["dev", "public", "holdout"]
+    },
+    {
+      "lane": "koine_greek_fluency",
       "version": "v1",
       "splits": ["dev", "public", "holdout"]
     }
