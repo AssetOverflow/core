@@ -11,6 +11,9 @@
   slot matching is *not* gated at v1 — the runtime currently folds
   multi-token Hebrew input to a single lexeme through articulation
   (a known limitation, see v2 below).
+- Holdout status: ADR-0103 adds plaintext `holdouts/v1/` cases so the
+  lane now satisfies the `dev/public/holdout` requirement for
+  attachment to ADR-0102 reasoning-capable contracts.
 
 ## v2 unblock path — Hebrew construction coverage
 

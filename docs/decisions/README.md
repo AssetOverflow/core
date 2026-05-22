@@ -99,12 +99,14 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0100](ADR-0100-physics-reasoning-capable-ratification.md) | Physics Reasoning-Capable Ratification | Accepted (2026-05-22) |
 | [ADR-0101](ADR-0101-systems-software-reasoning-capable-ratification.md) | Systems-Software Reasoning-Capable Ratification | Accepted (2026-05-22) |
 | [ADR-0102](ADR-0102-hebrew-greek-reasoning-capable-ratification.md) | Hebrew-Greek Textual-Reasoning Reasoning-Capable Ratification | Accepted (2026-05-22) |
+| [ADR-0103](ADR-0103-fluency-lane-attachment-for-adr-0102.md) | Fluency Lane Attachment for ADR-0102 | Accepted (2026-05-22) |
+| ADR-0105 | Expert-Demo Ratification Contract | Placeholder / Proposed |
 
 ---
 
 ## Current frontier
 
-The ADR-0091..0102 slate is fully accepted and mechanically evidenced:
+The ADR-0091..0103 slate is fully accepted and mechanically evidenced:
 
 - Domain Pack Contract v1 — ADR-0091
 - Reviewer Registry v1 — ADR-0092
@@ -118,14 +120,14 @@ The ADR-0091..0102 slate is fully accepted and mechanically evidenced:
 - `physics` reasoning-capable ratification — ADR-0100
 - `systems_software` reasoning-capable ratification — ADR-0101
 - `hebrew_greek_textual_reasoning` multi-pack reasoning-capable ratification — ADR-0102
+- Hebrew/Greek fluency lane attachment for ADR-0102 — ADR-0103
 
 Six lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `lane-shas` GitHub Actions workflow: `reviewer_registry`, `domain_contract_validation`, `miner_loop_closure`, `fabrication_control_summary`, `demo_composition`, `public_demo`.
 
 The next implementation frontier is open. Candidate directions include:
 
 - **Curriculum-sourced proposals.** ADR-0094 reserved `ProposalSource(kind="curriculum")`; a curriculum ADR can introduce it without secondary schema churn.
-- **Holdout splits for language-specific lanes.** ADR-0102 currently relies on universal lanes (`inference_closure`, `fabrication_control`); language-specific fluency lanes (`evals/hebrew_fluency/`, `evals/koine_greek_fluency/`) need sealed holdout splits before they can attach to `reasoning-capable` claims.
-- **Expert-demo ratification.** All ADR-0097/0100/0101/0102 ledger rows currently sit at `reasoning-capable` with `expert_demo=false`. The next status tier requires evidence beyond the universal lanes.
+- **Expert-demo ratification.** All ADR-0097/0100/0101/0102 ledger rows currently sit at `reasoning-capable` with `expert_demo=false`. ADR-0105 is reserved for the expert-demo promotion contract.
 
 No ADR currently sits in a "Proposed but unimplemented" state.
 
@@ -138,7 +140,7 @@ No ADR currently sits in a "Proposed but unimplemented" state.
 | `mathematics_logic` | ADR-0097 | `en_mathematics_logic_v1` | All nine ADR-0091 predicates pass; ledger row is `reasoning-capable`; `expert_demo` remains false; lanes include positive coverage, inference closure, and fabrication control. |
 | `physics` | ADR-0100 | `en_physics_v1` | All nine predicates pass; causal/modal operator coverage meets threshold; ledger row is `reasoning-capable`; `expert_demo` remains false. |
 | `systems_software` | ADR-0101 | `en_systems_software_v1` | All nine predicates pass; transitive/causal operator coverage meets threshold; ledger row is `reasoning-capable`; `symbolic_logic` is the v1 closest-fit eval lane. |
-| `hebrew_greek_textual_reasoning` | ADR-0102 | `grc_logos_micro_v1`, `grc_logos_cognition_v1`, `he_logos_micro_v1`, `he_core_cognition_v1` | First multi-pack ratification; all four packs carry uniform contract fields; causal/contradiction operator coverage meets threshold; universal lanes are declared until language-specific holdouts land. |
+| `hebrew_greek_textual_reasoning` | ADR-0102 + ADR-0103 | `grc_logos_micro_v1`, `grc_logos_cognition_v1`, `he_logos_micro_v1`, `he_core_cognition_v1` | First multi-pack ratification; all four packs carry uniform contract fields; causal/contradiction operator coverage meets threshold; ADR-0103 attaches Hebrew and Koine Greek fluency lanes with `dev/public/holdout` coverage. |
 
 ---
 
@@ -160,9 +162,9 @@ Runtime contracts for the chain are pinned in [`docs/runtime_contracts.md`](../r
 
 ADR-0027 through ADR-0045 establish the identity / safety / ethics pack architecture with deterministic remediation, audit completeness, telemetry, operator readout, audit-tour demo, pack measurements, a worked-example medical ethics pack, and long-context comparison measurements.
 
-### Evidence-governed domain chain — ADR-0091 through ADR-0102
+### Evidence-governed domain chain — ADR-0091 through ADR-0103
 
-ADR-0091 through ADR-0102 establish the current domain-ratification substrate:
+ADR-0091 through ADR-0103 establish the current domain-ratification substrate:
 
 ```text
 contract definition
@@ -174,6 +176,8 @@ validator / ledger enforcement
 negative-control fabrication lane
     ↓
 reasoning-capable domain ratification
+    ↓
+language-specific fluency lane attachment
 ```
 
 No domain claim should be treated as mature merely because a pack exists. Capability status belongs to the generated ledger and its evidence predicates.

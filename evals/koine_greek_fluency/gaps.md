@@ -9,6 +9,9 @@
 - Rubric: **script + length** only.  Lexeme-level slot matching is
   not gated at v1 for the same runtime-folding reason as Hebrew
   (see v2 §6 below).
+- Holdout status: ADR-0103 adds plaintext `holdouts/v1/` cases so the
+  lane now satisfies the `dev/public/holdout` requirement for
+  attachment to ADR-0102 reasoning-capable contracts.
 
 ## v2 unblock path — Koine Greek construction coverage
 

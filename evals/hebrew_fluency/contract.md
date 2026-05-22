@@ -35,6 +35,12 @@ grounding + word-order assembly through `_assemble`.
 `dev/cases.jsonl`
 :  1 case — smoke check for runner integration.
 
+`holdouts/v1/cases.jsonl`
+:  5 sealed plaintext Hebrew realization cases added for ADR-0103.
+   These cases are not referenced by the development split and complete
+   the `dev/public/holdout` requirement for attaching
+   `hebrew_fluency` to ADR-0102 ratified contracts.
+
 ## Scoring rubric
 
 A case passes if the realized surface:
