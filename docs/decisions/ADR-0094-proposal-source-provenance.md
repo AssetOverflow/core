@@ -1,8 +1,22 @@
 # ADR-0094 — Proposal Source Provenance
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-21
+**Accepted:** 2026-05-22
 **Author:** CORE agents + reviewers
+
+---
+
+## Acceptance evidence
+
+Accepted after the sealed `ProposalSource` schema, exhaustive-match consumers, and deterministic migration landed:
+
+- `teaching/source.py` defines the sealed `ProposalSource` type with `kind` ∈ {operator, miner, curriculum}, serialization, and parse-time rejection of unknown kinds.
+- `teaching/proposals.py` widens `PackMutationProposal` / `TeachingProposal` to carry a required `source: ProposalSource` field; parsing fails without it.
+- `teaching/store.py` consumers branch on `source.kind` via exhaustive `match`.
+- `teaching/migrate_proposals_source_field.py` provides the one-shot deterministic rewriter; two runs produce byte-identical output.
+- `tests/test_proposal_source.py` exercises round-trip serialization, parse-time rejection, exhaustive-match enforcement, and migration determinism.
+- `tests/test_epistemic_invariants.py` pins `proposal_source_exhaustive_match`.
 
 ---
 

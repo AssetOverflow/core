@@ -1,9 +1,23 @@
 # ADR-0099 — Public Showcase Demo
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-21
+**Accepted:** 2026-05-22
 **Author:** CORE agents + reviewers
 **Depends on:** ADR-0096, ADR-0097, ADR-0098
+
+---
+
+## Acceptance evidence
+
+Accepted after the public showcase was implemented over the ADR-0098 composition contract with a SHA-pinned, deterministic lane:
+
+- `core/demos/showcase.py` composes already-proven scenes (audit-tour, register-tour, multi-hop-trace, learning-loop, fabrication-control-public) through ADR-0098 adapters; no scene is reimplemented inside the showcase.
+- `core/demos/showcase_adapters.py` and `core/demos/learning_loop_adapter.py` wrap the constituent demos.
+- `core/cli.py` wires `core demo public-showcase` with deterministic JSON output.
+- `evals/public_demo/runner.py` and `evals/public_demo/contract.md` define the showcase lane; canonical artifacts live under `evals/public_demo/results/latest/scenes/` plus the rendered `showcase.json` / `showcase.html`.
+- `tests/test_public_showcase.py` exercises scene composition, determinism, and the "no marketing rewrite of proof substrate" invariant (scenes can only be composed, not re-authored).
+- `scripts/verify_lane_shas.py` pins `public_demo` at SHA `4be6f47509435a24984713acfcebd88e61f4e1278096fa5dc88a09e8af2f87ba`; verified locally and by the `lane-shas` workflow on `main`.
 
 ---
 

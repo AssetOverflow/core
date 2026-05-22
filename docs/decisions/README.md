@@ -90,12 +90,12 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0091](ADR-0091-domain-pack-contract-v1.md) | Domain Pack Contract v1 | Accepted (2026-05-22) |
 | [ADR-0092](ADR-0092-reviewer-registry-v1.md) | Reviewer Registry v1 | Accepted (2026-05-22) |
 | [ADR-0093](ADR-0093-domain-pack-contract-v1-implementation.md) | Domain Pack Contract v1 implementation | Accepted (2026-05-22) |
-| [ADR-0094](ADR-0094-proposal-source-provenance.md) | Proposal Source Provenance | Proposed |
-| [ADR-0095](ADR-0095-miner-sourced-teaching-proposals.md) | Miner-Sourced Teaching Proposals | Proposed |
+| [ADR-0094](ADR-0094-proposal-source-provenance.md) | Proposal Source Provenance | Accepted (2026-05-22) |
+| [ADR-0095](ADR-0095-miner-sourced-teaching-proposals.md) | Miner-Sourced Teaching Proposals | Accepted (2026-05-22) |
 | [ADR-0096](ADR-0096-fabrication-control-eval-lane.md) | Fabrication-Control Eval Lane | Accepted (2026-05-22) |
 | [ADR-0097](ADR-0097-mathematics-logic-reasoning-capable-ratification.md) | Mathematics-Logic Reasoning-Capable Ratification | Accepted (2026-05-22) |
-| [ADR-0098](ADR-0098-demo-composition-contract.md) | Demo Composition Contract | Proposed — current implementation frontier |
-| [ADR-0099](ADR-0099-public-showcase-demo.md) | Public Showcase Demo | Proposed — depends on ADR-0098 |
+| [ADR-0098](ADR-0098-demo-composition-contract.md) | Demo Composition Contract | Accepted (2026-05-22) |
+| [ADR-0099](ADR-0099-public-showcase-demo.md) | Public Showcase Demo | Accepted (2026-05-22) |
 | [ADR-0100](ADR-0100-physics-reasoning-capable-ratification.md) | Physics Reasoning-Capable Ratification | Accepted (2026-05-22) |
 | [ADR-0101](ADR-0101-systems-software-reasoning-capable-ratification.md) | Systems-Software Reasoning-Capable Ratification | Accepted (2026-05-22) |
 | [ADR-0102](ADR-0102-hebrew-greek-reasoning-capable-ratification.md) | Hebrew-Greek Textual-Reasoning Reasoning-Capable Ratification | Accepted (2026-05-22) |
@@ -104,38 +104,30 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 
 ## Current frontier
 
-The active frontier is no longer domain-ratification substrate. The following are already accepted and mechanically evidenced:
+The ADR-0091..0102 slate is fully accepted and mechanically evidenced:
 
 - Domain Pack Contract v1 — ADR-0091
 - Reviewer Registry v1 — ADR-0092
 - Domain Contract v1 enforcement — ADR-0093
+- Proposal Source Provenance — ADR-0094
+- Miner-Sourced Teaching Proposals — ADR-0095
 - Fabrication-control negative eval lane — ADR-0096
 - `mathematics_logic` reasoning-capable ratification — ADR-0097
+- Demo Composition Contract — ADR-0098
+- Public Showcase Demo — ADR-0099
 - `physics` reasoning-capable ratification — ADR-0100
 - `systems_software` reasoning-capable ratification — ADR-0101
 - `hebrew_greek_textual_reasoning` multi-pack reasoning-capable ratification — ADR-0102
 
-The current implementation frontier is therefore:
+Six lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `lane-shas` GitHub Actions workflow: `reviewer_registry`, `domain_contract_validation`, `miner_loop_closure`, `fabrication_control_summary`, `demo_composition`, `public_demo`.
 
-```text
-ADR-0098 — Demo Composition Contract
-        ↓
-ADR-0099 — Public Showcase Demo
-```
+The next implementation frontier is open. Candidate directions include:
 
-ADR-0098 is the evidence-orchestration layer. It must let existing proof artifacts compose without reimplementation, subprocess stdout parsing, hidden state mutation, or non-deterministic JSON.
+- **Curriculum-sourced proposals.** ADR-0094 reserved `ProposalSource(kind="curriculum")`; a curriculum ADR can introduce it without secondary schema churn.
+- **Holdout splits for language-specific lanes.** ADR-0102 currently relies on universal lanes (`inference_closure`, `fabrication_control`); language-specific fluency lanes (`evals/hebrew_fluency/`, `evals/koine_greek_fluency/`) need sealed holdout splits before they can attach to `reasoning-capable` claims.
+- **Expert-demo ratification.** All ADR-0097/0100/0101/0102 ledger rows currently sit at `reasoning-capable` with `expert_demo=false`. The next status tier requires evidence beyond the universal lanes.
 
-ADR-0099 should not begin until ADR-0098 is accepted. The showcase must compose already-proven scenes; it must not become a marketing rewrite of the proof substrate.
-
-Learning-loop expansion remains deliberately later:
-
-```text
-ADR-0094 — Proposal Source Provenance
-        ↓
-ADR-0095 — Miner-Sourced Teaching Proposals
-```
-
-Do not begin ADR-0095 until ADR-0094 is accepted.
+No ADR currently sits in a "Proposed but unimplemented" state.
 
 ---
 
