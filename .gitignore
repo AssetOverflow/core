@@ -21,3 +21,6 @@ uv.lock
 # Benchmark report output
 reports/
 frontier_wave1.json
+
+# Claude Code local session artifacts (per-developer, never tracked)
+.claude/
