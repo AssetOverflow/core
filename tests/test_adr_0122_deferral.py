@@ -29,6 +29,10 @@ def _systems_row() -> dict:
     return rows["systems_software"]
 
 
+import pytest
+
+
+@pytest.mark.skip(reason="Deferred promotion resolved by ADR-0124")
 class TestAdr0122Deferral:
     def test_systems_software_stays_reasoning_capable(self) -> None:
         row = _systems_row()

@@ -751,13 +751,13 @@ The ADR-0106 contract refused once (0107), amended once cleanly (0109), succeede
 |---|---|
 | `mathematics_logic` | **`audit-passed`** ✓ |
 | `physics` | **`audit-passed`** ✓ |
-| `systems_software` | `reasoning-capable` |
+| `systems_software` | **`audit-passed`** ✓ (third promotion, ADR-0124) |
 | `hebrew_greek_textual_reasoning` | `reasoning-capable` |
 | `philosophy_theology` | `reasoning-capable` |
 
 ### Open within Phase 6
 
-- [ ] Third audit-passed promotion (`systems_software` or `hebrew_greek_textual_reasoning` — both eligible under ADR-0109 shape rules)
+- [x] Third audit-passed promotion (`systems_software` via ADR-0124)
 - [ ] Multi-reviewer threshold signing (open candidate frontier item from ADR-0105)
 
 ### Pack-layer chain — ADR-0027 through ADR-0045 (backfill)

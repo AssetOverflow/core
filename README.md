@@ -226,7 +226,7 @@ CORE distinguishes *contract-passing* from *demonstrated*. A pack that satisfies
 |---|---|
 | `mathematics_logic` | **`audit-passed`** (first promotion, [ADR-0110](docs/decisions/ADR-0110-mathematics-logic-expert-demo-promotion.md); status string renamed by [ADR-0113](docs/decisions/ADR-0113-rename-expert-demo-to-audit-passed.md)) |
 | `physics` | **`audit-passed`** (second promotion, [ADR-0111](docs/decisions/ADR-0111-physics-expert-demo-promotion.md)) |
-| `systems_software` | `reasoning-capable` |
+| `systems_software` | **`audit-passed`** (third promotion, [ADR-0124](docs/decisions/ADR-0124-systems-software-audit-passed-promotion.md)) |
 | `hebrew_greek_textual_reasoning` | `reasoning-capable` |
 | `philosophy_theology` | `reasoning-capable` |
 
