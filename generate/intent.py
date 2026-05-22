@@ -117,6 +117,16 @@ _DECLARATIVE_RELATION_RE = re.compile(
     r"(?P<object>[a-z][a-z\-]*(?:\s+[a-z][a-z\-]*)?)\.?$",
     re.IGNORECASE,
 )
+# A leading correction cue ("Actually X R Y", "No, X R Y", "Incorrect, X R Y")
+# turns an assertion into a correction.  Without this guard the declarative-
+# relation regex above swallows "Actually" into the subject phrase and routes
+# the sentence to VERIFICATION, which prevents the inference-closure lane
+# from emitting PackMutationProposal records for any non-`is` premise.  See
+# evals/inference_closure/gaps.md (resolved 2026-05-17 / regressed 2026-05-22).
+_CORRECTION_CUE_PREFIX_RE = re.compile(
+    r"^\s*(?:actually|incorrect|correction|no,?\s+)",
+    re.IGNORECASE,
+)
 # "How does X work / function / operate / happen / exist / behave?"
 # — third-person mechanistic-cause query.  Distinct from PROCEDURE
 # (which is first-person: "How do I/we/you X?") because the user is
@@ -408,7 +418,11 @@ def classify_intent(prompt: str) -> DialogueIntent:
             ),
         )
 
-    declarative_match = _DECLARATIVE_RELATION_RE.match(text)
+    declarative_match = (
+        None
+        if _CORRECTION_CUE_PREFIX_RE.match(text)
+        else _DECLARATIVE_RELATION_RE.match(text)
+    )
     if declarative_match:
         raw_relation = declarative_match.group("relation").lower().strip()
         relation = _RELATION_NORMALIZE.get(raw_relation, raw_relation)

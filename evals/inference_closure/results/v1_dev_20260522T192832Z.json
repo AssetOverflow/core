@@ -1,0 +1,106 @@
+{
+  "cases": [
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "truth"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-DEV-001",
+      "passed": true,
+      "pattern": "transitive_is",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "e228ea6d2d138d03d7b2111cb98cbea6ba68fb0a7bc05b02831a19dd669007a8",
+      "trace_hash_replay": "e228ea6d2d138d03d7b2111cb98cbea6ba68fb0a7bc05b02831a19dd669007a8",
+      "vault_hit": false,
+      "vault_hits": 9
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "meaning"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-DEV-002",
+      "passed": true,
+      "pattern": "transitive_precedes",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "ed7232b60c363a369a10400b3ce264d6a84905795b9b197f5b45ddccddf30be5",
+      "trace_hash_replay": "ed7232b60c363a369a10400b3ce264d6a84905795b9b197f5b45ddccddf30be5",
+      "vault_hit": false,
+      "vault_hits": 7
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "judgment"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-DEV-003",
+      "passed": true,
+      "pattern": "transitive_grounds",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "8b3e9a44665362ac059ff08c1806b6037ba46479934fe6e8e625d9194fc2850a",
+      "trace_hash_replay": "8b3e9a44665362ac059ff08c1806b6037ba46479934fe6e8e625d9194fc2850a",
+      "vault_hit": false,
+      "vault_hits": 8
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "recognition"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-DEV-004",
+      "passed": true,
+      "pattern": "transitive_causes",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "ad9ce5470b3ad041e312986a73bdbab5f08f287c53b82786faa691bec17e5699",
+      "trace_hash_replay": "ad9ce5470b3ad041e312986a73bdbab5f08f287c53b82786faa691bec17e5699",
+      "vault_hit": false,
+      "vault_hits": 10
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "thought"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-DEV-005",
+      "passed": true,
+      "pattern": "transitive_belongs_to",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "566823c524d52ca919dbf65367e8ce11a7b21288ec8e609f68c91da285fd17a2",
+      "trace_hash_replay": "566823c524d52ca919dbf65367e8ce11a7b21288ec8e609f68c91da285fd17a2",
+      "vault_hit": false,
+      "vault_hits": 9
+    }
+  ],
+  "lane": "inference_closure",
+  "metrics": {
+    "all_pass_rate": 1.0,
+    "case_count": 5,
+    "derived_recall_rate": 1.0,
+    "overall_pass": true,
+    "premises_stored_rate": 1.0,
+    "replay_determinism": 1.0
+  },
+  "split": "dev",
+  "timestamp": "2026-05-22T19:28:32.992593+00:00",
+  "version": "v1"
+}
