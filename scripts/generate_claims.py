@@ -46,6 +46,10 @@ _LANE_ADR: dict[str, tuple[str, str]] = {
         "ADR-0095",
         "Miner-sourced proposals route through single reviewed teaching path",
     ),
+    "curriculum_loop_closure": (
+        "ADR-0104",
+        "Curriculum-sourced proposals route through single reviewed teaching path",
+    ),
     "domain_contract_validation": (
         "ADR-0093",
         "All ratified packs satisfy the 9 ADR-0091 contract predicates",
