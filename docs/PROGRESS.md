@@ -726,7 +726,7 @@ This phase ratifies the distinction between *contract-passing* (`reasoning-capab
 ### Reasoning-capable ratifications
 
 - [x] **ADR-0097** `mathematics_logic` reasoning-capable (now superseded by ADR-0110 expert-demo, see below)
-- [x] **ADR-0100** `physics` reasoning-capable
+- [x] **ADR-0100** `physics` reasoning-capable (now superseded by ADR-0111 expert-demo, see below)
 - [x] **ADR-0101** `systems_software` reasoning-capable
 - [x] **ADR-0102** `hebrew_greek_textual_reasoning` reasoning-capable (first multi-pack ratification: 4 packs)
 - [x] **ADR-0103** Hebrew + Koine Greek fluency lane attachment to ADR-0102 packs
@@ -739,24 +739,25 @@ This phase ratifies the distinction between *contract-passing* (`reasoning-capab
 - [x] **ADR-0109** Lane-shape-aware threshold amendment — 8 lane ids → 5 shapes (`cognition_shape`, `accuracy_shape`, `inference_shape`, `refusal_shape`, `symbolic_logic_shape`); unknown lanes fail-closed; cognition-shape thresholds preserved bit-identical
 - [x] PR #117 — fix intent-classifier regression that had broken `inference_closure` (`_CORRECTION_CUE_PREFIX_RE` guard)
 - [x] **ADR-0110** `mathematics_logic` expert-demo promoted — **first domain at `expert_demo=true`** in project history; signed claim digest reproduces byte-for-byte from on-disk lane results
+- [x] **ADR-0111** `physics` expert-demo promoted — **second domain at `expert_demo=true`**; no contract change, one-file dev-mode fallback bridge; shares `inference_closure` + `fabrication_control` results with math (distinct digest via `domain_id`); retires the "math-only" objection
 
 ### Contract demonstration narrative
 
-The ADR-0106 contract refused once (0107), amended once cleanly (0109), and succeeded once (0110). External readers can now distinguish the two ceilings (`reasoning-capable` vs `expert-demo`) by inspecting the ledger.
+The ADR-0106 contract refused once (0107), amended once cleanly (0109), succeeded against `mathematics_logic` (0110), and succeeded against `physics` without further contract change (0111). External readers can now distinguish the two ceilings (`reasoning-capable` vs `expert-demo`) by inspecting the ledger.
 
 ### Current ledger state (per `core capability ledger`)
 
 | Domain | Status |
 |---|---|
 | `mathematics_logic` | **`expert-demo`** ✓ |
-| `physics` | `reasoning-capable` |
+| `physics` | **`expert-demo`** ✓ |
 | `systems_software` | `reasoning-capable` |
 | `hebrew_greek_textual_reasoning` | `reasoning-capable` |
 | `philosophy_theology` | `reasoning-capable` |
 
 ### Open within Phase 6
 
-- [ ] Second expert-demo promotion (any of `physics` / `systems_software` / `hebrew_greek_textual_reasoning` — all now eligible under ADR-0109 shape rules)
+- [ ] Third expert-demo promotion (`systems_software` or `hebrew_greek_textual_reasoning` — both eligible under ADR-0109 shape rules)
 - [ ] Multi-reviewer threshold signing (open candidate frontier item from ADR-0105)
 
 ### Pack-layer chain — ADR-0027 through ADR-0045 (backfill)

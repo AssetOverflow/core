@@ -352,8 +352,9 @@ contracts above: this contract governs *what the ledger is allowed to
 claim about a domain*, not what the runtime does on any single turn.
 
 Per ADR-0108, the contract has been demonstrated end-to-end —
-refused once (ADR-0107), amended once (ADR-0109), succeeded once
-(ADR-0110).
+refused once (ADR-0107), amended once (ADR-0109), succeeded against
+`mathematics_logic` (ADR-0110), and succeeded against `physics`
+without further contract change (ADR-0111).
 
 ### Surface
 

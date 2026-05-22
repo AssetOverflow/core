@@ -366,7 +366,7 @@ substrate makes possible* — a distinction that the architecture made
 visible only after the substrate stabilized.
 
 The discipline is encoded as a chain of accepted Architecture
-Decision Records (ADR-0091 through ADR-0110):
+Decision Records (ADR-0091 through ADR-0111):
 
 1. **Contract.** ADR-0091 defines nine predicate checks every ratified
    pack must satisfy: lemma coverage, operator-chain counts, intent-shape
@@ -394,7 +394,11 @@ the first promotion attempt — `mathematics_logic` — being honestly
 refused on two named blockers. ADR-0109 amended the threshold rules
 without weakening the discipline. ADR-0110 then promoted
 `mathematics_logic` as the first domain at `expert_demo=true`, with the
-signed claim digest reproducing from disk.
+signed claim digest reproducing from disk. ADR-0111 promoted `physics`
+as the second domain at `expert_demo=true` without any contract change,
+retiring the "math-only" objection — the same gate now holds across two
+distinct domains using shared lane infrastructure with distinct
+domain-bound digests.
 
 The architectural commitment is: a system cannot claim to *do*
 something it has not been seen to do. A transformer LLM does not have
@@ -405,12 +409,12 @@ evidence bundle. CORE makes the commitment first-class.
 External readers can inspect the ledger
 (`core capability ledger` / `docs/decisions/README.md` table) to see
 which domains are *contract-passing* and which are *demonstrated*. As
-of acceptance: one domain demonstrated (`mathematics_logic`); three
-ratified domains pending their own promotion ADRs.
+of acceptance: two domains demonstrated (`mathematics_logic`,
+`physics`); two ratified domains pending their own promotion ADRs.
 
 Full evidence chain: `docs/decisions/README.md` (index + frontier),
 `docs/decisions/ADR-0091-domain-pack-contract-v1.md` through
-`ADR-0110-mathematics-logic-expert-demo-promotion.md`.
+`ADR-0111-physics-expert-demo-promotion.md`.
 
 ---
 

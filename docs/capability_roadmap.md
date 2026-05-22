@@ -369,6 +369,7 @@ The phase has no single exit criterion. Instead, each domain becomes its own sub
 2. **ADR-0109** — threshold rules amended with explicit lane-shape registry; cognition-shape thresholds preserved bit-identical; four new shapes added (`accuracy_shape`, `inference_shape`, `refusal_shape`, `symbolic_logic_shape`); unknown lanes fail-closed.
 3. PR #117 fixed the intent-classifier regression that had broken `inference_closure`.
 4. **ADR-0110** — `mathematics_logic` promoted to `expert_demo=true` under the amended contract. Signed claim digest reproduces from on-disk lane results; first domain at expert-demo.
+5. **ADR-0111** — `physics` promoted to `expert_demo=true` without any contract change. Shares `inference_closure` + `fabrication_control` results with math; the digest distinguishes via `domain_id` + `evidence_revision`. Retires the "math-only" objection; confirms the bridges ADR-0110 landed were correctly scoped.
 
 **Exit criteria (cumulative; each can land independently of the others):**
 
@@ -377,7 +378,8 @@ The phase has no single exit criterion. Instead, each domain becomes its own sub
 - ☑ Four reasoning-capable domain ratifications (ADR-0097/0100/0101/0102).
 - ☑ Expert-demo promotion contract accepted (ADR-0106 + ADR-0109 amendment).
 - ☑ First worked promotion lands (ADR-0110 — `mathematics_logic`).
-- ☐ Second worked promotion lands (next domain: TBD; `physics` / `systems_software` / `hebrew_greek_textual_reasoning` all eligible under the now-amended contract).
+- ☑ Second worked promotion lands (ADR-0111 — `physics`; no contract change).
+- ☐ Third worked promotion lands (`systems_software` or `hebrew_greek_textual_reasoning`, both eligible under the now-amended contract).
 - ☐ Multi-reviewer signing (currently single-recipient; the open candidate frontier item from ADR-0105).
 
 **Why this is its own phase.** Phases 1–5 measure capability *internally*. Phase 6 is the first layer that measures *what the system has actually demonstrated to an external reader* and forces the ledger to distinguish the two. Every prior phase makes claims about the substrate; Phase 6 makes the substrate's claims auditable.
