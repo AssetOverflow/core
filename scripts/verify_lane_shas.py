@@ -35,7 +35,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PINNED_SHAS: dict[str, str] = {
     "reviewer_registry": "681a2aab5aa4ffd58cd837ce5673c8b2a9545b570117aec3c02726a12f6876e6",
     "miner_loop_closure": "9f071733abe7dcacf759f928548ce738fb639af3fd6e4c621a651b306d7e77ce",
-    "curriculum_loop_closure": "7c0f9c2e0b58f7739b5cf2d1f1bcab8eb5c6c2a4b5656d8cb6af87c067b944cb",
+    "curriculum_loop_closure": "b46d56b2d209172cc3ffaf3776dc8dcfe55093f13587c5cb67372be6dfa23e8d",
     "domain_contract_validation": "f9c06cdeea8fb36a0d3c320007618c3afc92d67702ef31bd36ebd9ae9ced473f",
     "fabrication_control_summary": "01e1b6b711141f2b4a14551d7df3ea482d8d6dd7b364a25c509f4f8d08cda8a8",
     "demo_composition": "27d838241bf3ed9e15d0e918ec6d89a823494d7e17c2dab9777825af7188f20f",
