@@ -1,5 +1,30 @@
 # inference-closure lane — architectural findings (v1)
 
+## Regression and re-resolution — 2026-05-22
+
+Between the 2026-05-17 resolution and 2026-05-22, a regression in
+`generate/intent.py` caused correction-prefixed premises ("Actually X
+precedes Y.", "Actually X grounds Y.", "Actually X causes Y.") to
+route to VERIFICATION instead of CORRECTION. The premise emit path is
+gated on CORRECTION intent, so `PackMutationProposal` records stopped
+being emitted for any non-`is` relation. The lane fell to
+`all_pass_rate=0.4` on public — only the four `transitive_is` cases
+passed because `is` isn't in `_DECLARATIVE_RELATION_RE`'s verb list.
+
+Resolution: added `_CORRECTION_CUE_PREFIX_RE` guard so a leading
+"Actually" / "Incorrect, " / "No, " / "Correction" cue skips the
+declarative-match branch and falls through to the `_RULES` CORRECTION
+rule. Pinned by `tests/test_correction_cue_prefix_routing.py`.
+
+Post-fix on 2026-05-22:
+
+| Split | n | derived_recall_rate | premises_stored | replay | overall |
+|---|---|---|---|---|---|
+| dev/v1     | 5  | **1.0** | 1.0 | 1.0 | ✓ |
+| public/v1  | 20 | **1.0** | 1.0 | 1.0 | ✓ |
+
+The 2026-05-17 resolution narrative below is preserved unchanged.
+
 ## Resolution — 2026-05-17 lane re-run
 
 After the typed deterministic operators (ADR-0018: `transitive_walk`,
