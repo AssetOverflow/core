@@ -22,7 +22,7 @@ status predicate evaluates to `reasoning-capable` with no open gaps.
 | --- | --- | --- | --- | --- |
 | `philosophy_theology` | reasoning-capable | ADR-0085 | 2 | 0 |
 | `mathematics_logic` | expert-demo | ADR-0097 | 1 | 0 |
-| `physics` | reasoning-capable | ADR-0100 | 1 | 0 |
+| `physics` | expert-demo | ADR-0100 | 1 | 0 |
 | `systems_software` | reasoning-capable | ADR-0101 | 1 | 0 |
 | `hebrew_greek_textual_reasoning` | reasoning-capable | ADR-0102 | 4 | 0 |
 
