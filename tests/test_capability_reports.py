@@ -77,6 +77,13 @@ def test_ledger_status_is_predicate_derived() -> None:
     assert report["evidence_counts"]["reviewers_present"] is True
     assert report["evidence_counts"]["gaps_present"] is True
 
+    registry_status = report["evidence_counts"]["reviewer_registry"]
+    assert registry_status["valid"] is True
+    assert registry_status["schema_version"] == 1
+    assert registry_status["reviewer_count"] >= 1
+    assert "shay-j" in registry_status["reviewer_ids"]
+    assert registry_status["error"] is None
+
     systems = rows["systems_software"]
     assert systems["status"] == "reasoning-capable"
     assert systems["predicates"]["reasoning_capable"] is True

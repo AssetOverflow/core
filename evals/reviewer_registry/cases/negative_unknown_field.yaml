@@ -1,0 +1,9 @@
+schema_version: 1
+reviewers:
+  - reviewer_id: shay-j
+    display_name: "Joshua Shay"
+    role: primary
+    domains: ["*"]
+    review_scope: ["pack"]
+    provenance: "adr-0092:bootstrap:2026-05-21"
+    secret_powers: ["unlimited"]

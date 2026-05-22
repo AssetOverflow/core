@@ -1,0 +1,8 @@
+schema_version: 1
+reviewers:
+  - reviewer_id: math-reviewer
+    display_name: "Mathematics Domain Reviewer"
+    role: domain
+    domains: ["*"]
+    review_scope: ["pack"]
+    provenance: "adr-0092:bootstrap:2026-05-21"

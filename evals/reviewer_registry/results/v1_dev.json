@@ -1,0 +1,83 @@
+{
+  "adr": "ADR-0092",
+  "all_passed": true,
+  "cases": [
+    {
+      "actual_error": "reviewer entry at index 0 has role='domain' but claims wildcard '*'; only role='primary' may claim wildcard domains",
+      "actual_outcome": "reject",
+      "case_id": "negative_domain_wildcard.yaml",
+      "divergence": null,
+      "passed": true,
+      "purpose": "domain reviewer claiming '*' rejected",
+      "registry": null
+    },
+    {
+      "actual_error": null,
+      "actual_outcome": "load_ok",
+      "case_id": "negative_empty.yaml",
+      "divergence": null,
+      "passed": true,
+      "purpose": "empty registry loads but blocks reasoning-capable claims",
+      "registry": {
+        "reviewer_count": 0,
+        "reviewer_ids": [],
+        "schema_version": 1
+      }
+    },
+    {
+      "actual_error": "reviewer entry at index 0 has unknown fields: ['secret_powers']",
+      "actual_outcome": "reject",
+      "case_id": "negative_unknown_field.yaml",
+      "divergence": null,
+      "passed": true,
+      "purpose": "unknown reviewer field rejected",
+      "registry": null
+    },
+    {
+      "actual_error": "reviewer registry schema_version must be 1; got 2",
+      "actual_outcome": "reject",
+      "case_id": "negative_wrong_version.yaml",
+      "divergence": null,
+      "passed": true,
+      "purpose": "non-v1 schema rejected before any reviewer parsed",
+      "registry": null
+    },
+    {
+      "actual_error": null,
+      "actual_outcome": "load_ok",
+      "case_id": "positive_domain.yaml",
+      "divergence": null,
+      "passed": true,
+      "purpose": "single domain reviewer loads cleanly",
+      "registry": {
+        "reviewer_count": 1,
+        "reviewer_ids": [
+          "math-reviewer"
+        ],
+        "schema_version": 1
+      }
+    },
+    {
+      "actual_error": null,
+      "actual_outcome": "load_ok",
+      "case_id": "positive_primary.yaml",
+      "divergence": null,
+      "passed": true,
+      "purpose": "single primary reviewer loads cleanly",
+      "registry": {
+        "reviewer_count": 1,
+        "reviewer_ids": [
+          "shay-j"
+        ],
+        "schema_version": 1
+      }
+    }
+  ],
+  "failed_cases": 0,
+  "invariant": "reviewer_registry_schema_v1",
+  "lane": "reviewer_registry",
+  "lane_version": "v1",
+  "passed_cases": 6,
+  "split": "dev",
+  "total_cases": 6
+}

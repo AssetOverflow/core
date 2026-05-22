@@ -1,1 +1,18 @@
-reviewers: []
+# Reviewer Registry v1 (ADR-0092).
+#
+# This file is parsed by core.capability.reviewers.load_reviewer_registry
+# and consulted by the Domain Pack Contract v1 validator (ADR-0093) to
+# enforce ADR-0091 predicate #8 (reviewer resolution).
+#
+# Adding reviewers is a reviewed proposal flow. Do not edit by hand
+# outside that flow. The bootstrap entry below is self-sealed via its
+# provenance field.
+
+schema_version: 1
+reviewers:
+  - reviewer_id: shay-j
+    display_name: "Joshua Shay"
+    role: primary
+    domains: ["*"]
+    review_scope: ["pack", "proposal", "chain", "eval"]
+    provenance: "adr-0092:bootstrap:2026-05-21"

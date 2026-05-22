@@ -17,6 +17,10 @@ from core.capability.domains import (
     DOMAIN_OPERATOR_CLAIMS,
     DOMAIN_PACKS,
 )
+from core.capability.reviewers import (
+    ReviewerRegistryError,
+    load_reviewer_registry,
+)
 from core.capability.sources import LEDGER_SOURCES
 from core.config import DEFAULT_CONFIG
 from language_packs.domain_contract import validate_domain_contract_pack
@@ -498,6 +502,7 @@ def ledger_report() -> dict[str, Any]:
             "audit_tour": len(audit_files),
             "pack_measurements_present": (_REPO_ROOT / LEDGER_SOURCES.pack_measurements).exists(),
             "reviewers_present": (_REPO_ROOT / LEDGER_SOURCES.reviewers).exists(),
+            "reviewer_registry": _reviewer_registry_status(),
             "gaps_present": (_REPO_ROOT / LEDGER_SOURCES.gaps).exists(),
         },
         "domains": domain_rows,
@@ -582,4 +587,41 @@ def evidence_plan_report() -> dict[str, Any]:
         "scheduler": "local-first",
         "workers_promote_packs": False,
         "jobs": jobs,
+    }
+
+
+def _reviewer_registry_status() -> dict[str, Any]:
+    """Report Reviewer Registry v1 validity for the capability ledger (ADR-0092).
+
+    Returns a structured object containing the parsed schema version,
+    reviewer count, and a list of registered reviewer ids. If the
+    registry is missing or fails ADR-0092 schema validation, the object
+    reports ``valid: False`` and names the error rather than raising,
+    so the ledger surface remains generatable on a broken registry.
+    """
+    path = _REPO_ROOT / LEDGER_SOURCES.reviewers
+    if not path.exists():
+        return {
+            "valid": False,
+            "error": "reviewers.yaml not found",
+            "schema_version": None,
+            "reviewer_count": 0,
+            "reviewer_ids": [],
+        }
+    try:
+        registry = load_reviewer_registry(path)
+    except ReviewerRegistryError as exc:
+        return {
+            "valid": False,
+            "error": str(exc),
+            "schema_version": None,
+            "reviewer_count": 0,
+            "reviewer_ids": [],
+        }
+    return {
+        "valid": True,
+        "error": None,
+        "schema_version": registry.schema_version,
+        "reviewer_count": len(registry.reviewers),
+        "reviewer_ids": sorted(r.reviewer_id for r in registry.reviewers),
     }
