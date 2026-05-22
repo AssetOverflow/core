@@ -55,15 +55,20 @@ class TestRatificationPredicates:
 class TestLedgerStatus:
     """ADR-0097 invariant: ``mathematics_logic_reasoning_capable_ledger_row``."""
 
-    def test_status_is_reasoning_capable(self) -> None:
+    def test_status_meets_reasoning_capable_at_minimum(self) -> None:
+        """ADR-0097 ratified math at reasoning-capable. ADR-0110 later
+        promoted it to audit-passed (renamed from expert-demo by
+        ADR-0113). The load-bearing invariant for ADR-0097 is that
+        reasoning_capable holds; the status string moves with later
+        promotions."""
         row = _ledger_row(DOMAIN_ID)
-        assert row["status"] == "reasoning-capable"
+        assert row["status"] in ("reasoning-capable", "audit-passed")
+        assert row["predicates"]["reasoning_capable"] is True
 
-    def test_expert_demo_predicate_is_false(self) -> None:
-        """ADR-0097 explicitly defers expert-demo to a follow-up ADR."""
+    def test_reasoning_capable_predicate_holds(self) -> None:
+        """ADR-0097's load-bearing invariant: reasoning_capable=True."""
         row = _ledger_row(DOMAIN_ID)
         assert row["predicates"]["reasoning_capable"] is True
-        assert row["predicates"]["expert_demo"] is False
 
     def test_no_open_gaps(self) -> None:
         row = _ledger_row(DOMAIN_ID)

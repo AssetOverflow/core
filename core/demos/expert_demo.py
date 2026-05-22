@@ -1,7 +1,15 @@
-"""ADR-0112 Runnable Expert-Demo Showcase composer.
+"""ADR-0112 + ADR-0113 Runnable Audit-Passed Showcase composer.
 
-Renders a per-domain runnable demonstration of an ``expert-demo``
-ledger row. Reads the signed ``expert_demo_claims`` entry, re-derives
+Renders a per-domain runnable demonstration of an ``audit-passed``
+ledger row.
+
+Historical note: this module is named ``expert_demo`` for backward
+compatibility with ADR-0112's original framing. ADR-0113 renamed the
+outward semantics ("expert-demo" → "audit-passed") because the gate
+verifies CORE *claim-shape compliance* (signed digest, replay
+determinism, typed refusal, exact recall) — claim shapes a transformer
+LLM structurally cannot produce, NOT raw expert-level capability. The
+internal module name was kept under ADR-0113's "semantics only" scope. Reads the signed ``expert_demo_claims`` entry, re-derives
 the evidence-bundle digest from on-disk lane result files, asserts
 byte-for-byte match, then composes a JSON + HTML showcase exposing:
 
@@ -113,10 +121,10 @@ def _resolve_claim(domain_id: str) -> ExpertDemoClaim:
     claim = registry.expert_demo_claim_for(domain_id)
     if claim is None:
         raise ValueError(
-            f"No expert_demo_claims entry for domain {domain_id!r} — "
-            f"a runnable expert-demo requires a signed claim in "
-            f"docs/reviewers.yaml. Domain may be reasoning-capable but "
-            f"not promoted."
+            f"No audit_passed_claims entry for domain {domain_id!r} — "
+            f"a runnable audit-passed showcase requires a signed claim "
+            f"in docs/reviewers.yaml. Domain may be reasoning-capable "
+            f"but not promoted."
         )
     return claim
 
@@ -203,20 +211,20 @@ def run_expert_demo(*, domain_id: str, output_dir: Path) -> dict[str, Any]:
     """Build, write JSON + HTML, return the payload.
 
     ``output_dir`` is created if absent. Two outputs land there:
-    ``expert_demo.json`` (byte-deterministic via :func:`canonical_json`)
-    and ``expert_demo.html`` (presentation-only).
+    ``audit_passed.json`` (byte-deterministic via :func:`canonical_json`)
+    and ``audit_passed.html`` (presentation-only).
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     payload = build_expert_demo(domain_id)
-    json_path = output_dir / "expert_demo.json"
+    json_path = output_dir / "audit_passed.json"
     json_path.write_bytes(canonical_json(payload))
-    html_path = output_dir / "expert_demo.html"
+    html_path = output_dir / "audit_passed.html"
     html_path.write_text(render_html(payload), encoding="utf-8")
     return payload
 
 
 def render_html(payload: dict[str, Any]) -> str:
-    """Render the expert-demo payload as a static HTML document."""
+    """Render the audit-passed payload as a static HTML document."""
     import html
 
     def esc(value: Any) -> str:
@@ -287,7 +295,7 @@ def render_html(payload: dict[str, Any]) -> str:
     return (
         "<!doctype html><html><head>"
         "<meta charset='utf-8'>"
-        f"<title>CORE Expert-Demo: {esc(payload['domain_id'])}</title>"
+        f"<title>CORE Audit-Passed: {esc(payload['domain_id'])}</title>"
         "<style>"
         "body{font-family:system-ui;max-width:980px;margin:2rem auto;padding:0 1rem;}"
         "h1{font-size:1.6rem;}h2{font-size:1.2rem;margin-top:2rem;}"
@@ -303,11 +311,18 @@ def render_html(payload: dict[str, Any]) -> str:
         ".digest{font-family:ui-monospace,monospace;font-size:.78rem;word-break:break-all;}"
         ".digest.match{color:#283;}.digest.mismatch{color:#a33;}"
         "</style></head><body>"
-        f"<h1>{overall_mark} Expert-Demo: <code>{esc(payload['domain_id'])}</code></h1>"
+        f"<h1>{overall_mark} Audit-Passed: <code>{esc(payload['domain_id'])}</code></h1>"
         f"<p>Per-domain runnable demonstration of the "
-        f"<code>expert-demo</code> ledger status. The digest below "
+        f"<code>audit-passed</code> ledger status. The digest below "
         f"reproduces from on-disk lane result files; the sample cases "
         f"are drawn verbatim from those files.</p>"
+        f"<p><strong>What this gate verifies:</strong> CORE claim-shape "
+        f"compliance — signed evidence-bundle digest, replay "
+        f"determinism, typed refusal, exact recall. These are claim "
+        f"shapes a transformer LLM cannot structurally produce "
+        f"regardless of raw accuracy. This is <em>not</em> a "
+        f"raw-capability claim; per ADR-0113 the future <code>expert</code> "
+        f"tier above <code>audit-passed</code> remains undefined.</p>"
         "<section class='claim-card'>"
         "<h2>Signed claim (docs/reviewers.yaml)</h2>"
         f"<p><strong>signed_by:</strong> <code>{esc(payload['claim']['signed_by'])}</code></p>"

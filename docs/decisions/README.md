@@ -32,13 +32,15 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0109](ADR-0109-lane-shape-aware-thresholds.md) | Lane-Shape-Aware Thresholds (ADR-0106 Amendment) | Accepted (2026-05-22) |
 | [ADR-0110](ADR-0110-mathematics-logic-expert-demo-promotion.md) | `mathematics_logic` Expert-Demo Promotion | Accepted (2026-05-22) |
 | [ADR-0111](ADR-0111-physics-expert-demo-promotion.md) | `physics` Expert-Demo Promotion | Accepted (2026-05-22) |
-| [ADR-0112](ADR-0112-runnable-expert-demo-showcase.md) | Runnable Expert-Demo Showcase | Accepted (2026-05-22) |
+| [ADR-0112](ADR-0112-runnable-expert-demo-showcase.md) | Runnable Audit-Passed Showcase (originally "Expert-Demo") | Accepted (2026-05-22) |
+| [ADR-0113](ADR-0113-rename-expert-demo-to-audit-passed.md) | Rename `expert-demo` → `audit-passed`; Reserve `expert` for Future Capability Tier | Accepted (2026-05-22) |
+| [ADR-0114](ADR-0114-expert-capability-roadmap-gsm8k-first.md) | Expert-Capability Roadmap: GSM8K-Math First | Proposed (2026-05-22) |
 
 ---
 
 ## Current frontier
 
-The ADR-0091..0112 slate is fully accepted and mechanically evidenced:
+The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadmap entry (0114) and mechanically evidenced:
 
 - Domain Pack Contract v1 — ADR-0091
 - Reviewer Registry v1 — ADR-0092
@@ -61,7 +63,9 @@ The ADR-0091..0112 slate is fully accepted and mechanically evidenced:
 - Lane-Shape-Aware Thresholds (ADR-0106 amendment) — ADR-0109
 - `mathematics_logic` Expert-Demo Promotion (first successful) — ADR-0110
 - `physics` Expert-Demo Promotion (second successful) — ADR-0111
-- Runnable Expert-Demo Showcase (`core demo expert --domain <id>`) — ADR-0112
+- Runnable Audit-Passed Showcase (originally "Expert-Demo"; renamed) — ADR-0112 + ADR-0113
+- Rename `expert-demo` → `audit-passed`; reserve `expert` namespace — ADR-0113
+- Expert-Capability Roadmap (GSM8K-Math first); proposed — ADR-0114
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 
@@ -82,7 +86,7 @@ Sequencing per ADR-0108. Listed in priority order:
 1. **[ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs.** Optional per-entry definitional block. Deferred — value surfaces during a worked expert promotion that needs definitional depth.
 2. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
 
-ADR-0080 (Contemplation Loop, Phase 1), ADR-0110 (math expert-demo), and ADR-0111 (physics expert-demo) have all landed — `mathematics_logic` and `physics` are at `expert_demo=true`; the contemplation loop emits read-only `SPECULATIVE` findings from `frontier_compare` reports. The remaining two ratified domains (`systems_software`, `hebrew_greek_textual_reasoning`) need their own promotion ADRs.
+ADR-0080 (Contemplation Loop, Phase 1), ADR-0110 (math audit-passed), and ADR-0111 (physics audit-passed) have all landed — `mathematics_logic` and `physics` are at `audit_passed=true`; the contemplation loop emits read-only `SPECULATIVE` findings from `frontier_compare` reports. The remaining two ratified domains (`systems_software`, `hebrew_greek_textual_reasoning`) need their own promotion ADRs.
 
 ### Open candidate directions (no ADR yet)
 
@@ -92,12 +96,12 @@ ADR-0080 (Contemplation Loop, Phase 1), ADR-0110 (math expert-demo), and ADR-011
 
 ## Accepted reasoning-capable domains
 
-Per ADR-0106, `expert_demo` is **contract-gated**, not threshold-only: a domain row may carry `expert_demo=true` only when a reviewer-signed `expert_demo_claims` entry exists whose evidence-bundle digest reproduces byte-for-byte. ADR-0107 attempted the first worked promotion and the contract refused; ADR-0109 amended the threshold rules; ADR-0110 then successfully promoted `mathematics_logic` (the first domain at `expert_demo=true`); ADR-0111 promoted `physics` second without further contract change, retiring the "math-only" objection. The other two ratified domains remain at `reasoning-capable` pending their own promotion ADRs.
+Per ADR-0106, `audit_passed` is **contract-gated**, not threshold-only: a domain row may carry `audit_passed=true` only when a reviewer-signed `audit_passed_claims` entry exists whose evidence-bundle digest reproduces byte-for-byte. ADR-0107 attempted the first worked promotion and the contract refused; ADR-0109 amended the threshold rules; ADR-0110 then successfully promoted `mathematics_logic` (the first domain at `audit_passed=true`); ADR-0111 promoted `physics` second without further contract change, retiring the "math-only" objection. The other two ratified domains remain at `reasoning-capable` pending their own promotion ADRs.
 
 | Domain | Ratification ADR | Pack(s) | Evidence summary |
 |---|---|---|---|
-| `mathematics_logic` | ADR-0097 + ADR-0110 | `en_mathematics_logic_v1` | All nine ADR-0091 predicates pass; ledger row is **`expert-demo`** (first such promotion, ADR-0110); all three attached lanes meet ADR-0109 shape thresholds on public + holdout. |
-| `physics` | ADR-0100 + ADR-0111 | `en_physics_v1` | All nine predicates pass; causal/modal operator coverage meets threshold; ledger row is **`expert-demo`** (second such promotion, ADR-0111); `foundational_physics_ood` 117/117 public + 39/39 holdout; shares `inference_closure` + `fabrication_control` results with math (distinct digest via `domain_id`). |
+| `mathematics_logic` | ADR-0097 + ADR-0110 | `en_mathematics_logic_v1` | All nine ADR-0091 predicates pass; ledger row is **`audit-passed`** (first such promotion, ADR-0110); all three attached lanes meet ADR-0109 shape thresholds on public + holdout. |
+| `physics` | ADR-0100 + ADR-0111 | `en_physics_v1` | All nine predicates pass; causal/modal operator coverage meets threshold; ledger row is **`audit-passed`** (second such promotion, ADR-0111); `foundational_physics_ood` 117/117 public + 39/39 holdout; shares `inference_closure` + `fabrication_control` results with math (distinct digest via `domain_id`). |
 | `systems_software` | ADR-0101 | `en_systems_software_v1` | All nine predicates pass; transitive/causal operator coverage meets threshold; ledger row is `reasoning-capable`; `symbolic_logic` is the v1 closest-fit eval lane. |
 | `hebrew_greek_textual_reasoning` | ADR-0102 + ADR-0103 | `grc_logos_micro_v1`, `grc_logos_cognition_v1`, `he_logos_micro_v1`, `he_core_cognition_v1` | First multi-pack ratification; all four packs carry uniform contract fields; causal/contradiction operator coverage meets threshold; ADR-0103 attaches Hebrew and Koine Greek fluency lanes with `dev/public/holdout` coverage. |
 
@@ -123,7 +127,7 @@ ADR-0027 through ADR-0045 establish the identity / safety / ethics pack architec
 
 ### Evidence-governed domain chain — ADR-0091 through ADR-0111
 
-ADR-0091 through ADR-0111 establish the current domain-ratification substrate and the expert-demo promotion gate that distinguishes contract-passing from demonstrated:
+ADR-0091 through ADR-0111 establish the current domain-ratification substrate and the audit-passed promotion gate that distinguishes contract-passing from demonstrated:
 
 ```text
 contract definition (0091)
@@ -138,14 +142,14 @@ reasoning-capable domain ratification (0097 / 0100 / 0101 / 0102)
     ↓
 language-specific fluency lane attachment (0103)
     ↓
-expert-demo promotion contract (0106 + 0109 amendment)
+audit-passed promotion contract (0106 + 0109 amendment)
     ↓
-worked expert-demo promotion (0110 — mathematics_logic, first)
+worked audit-passed promotion (0110 — mathematics_logic, first)
     ↓
-worked expert-demo promotion (0111 — physics, second; no contract change)
+worked audit-passed promotion (0111 — physics, second; no contract change)
 ```
 
-No domain claim should be treated as mature merely because a pack exists. `reasoning-capable` means the nine ADR-0091 predicates pass; `expert-demo` requires a reviewer-signed evidence-bundle digest that reproduces byte-for-byte from on-disk lane results.
+No domain claim should be treated as mature merely because a pack exists. `reasoning-capable` means the nine ADR-0091 predicates pass; `audit-passed` requires a reviewer-signed evidence-bundle digest that reproduces byte-for-byte from on-disk lane results.
 
 The contract has been demonstrated end-to-end: refused once honestly (ADR-0107), amended once cleanly (ADR-0109), succeeded against `mathematics_logic` (ADR-0110), and succeeded against `physics` without further contract change (ADR-0111).
 

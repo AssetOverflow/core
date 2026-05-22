@@ -671,13 +671,13 @@ generated ledger row.
 
 #### Expert-Demo Promotion (ADR-0106 + ADR-0109)
 
-The promotion to `status = expert-demo` is contract-gated. The
+The promotion to `status = audit-passed` is contract-gated. The
 promotion predicate (`core/capability/expert_demo.py::evaluate_expert_demo`)
 requires:
 
 ```text
 reasoning_capable(D)
-∧ ∃ claim ∈ ReviewerRegistry.expert_demo_claims
+∧ ∃ claim ∈ ReviewerRegistry.audit_passed_claims
   : claim.domain_id == D
 ∧ ReviewerRegistry.can_review(claim.signed_by, D, scope="eval")
 ∧ claim.evidence_lanes ⊆ ratified_lanes(D)

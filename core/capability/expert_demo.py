@@ -1,8 +1,19 @@
-"""Domain-aware expert-demo promotion gate (ADR-0106).
+"""Domain-aware audit-passed promotion gate (ADR-0106, renamed by ADR-0113).
+
+Historical note: this module is named ``expert_demo`` for backward
+compatibility with ADR-0106..0112. ADR-0113 renamed the outward
+semantics — ledger status string, YAML key, predicate key, and CLI
+command — from "expert-demo" to "audit-passed" because the gate
+verifies CORE *claim-shape compliance* (signed digest, replay
+determinism, typed refusal, exact recall) which transformer LLMs
+structurally cannot produce, NOT raw expert-level capability. The
+internal module/function/class identifiers were intentionally left in
+place under ADR-0113's "semantics only" scope to minimize churn.
+
 
 Replaces the cognition-lane-only predicate previously embedded in
 ``core.capability.reporting``. A domain ``D`` is promoted to
-``expert_demo=true`` iff:
+``audit_passed=true`` iff:
 
 1. ``D`` already passes the ``reasoning_capable`` predicate.
 2. A signed ``ExpertDemoClaim`` exists in the reviewer registry for ``D``.
@@ -202,7 +213,7 @@ def derive_evidence_digest(
 def _meets_thresholds(lane_id: str, metrics: Mapping[str, Any]) -> tuple[bool, str]:
     """Dispatch lane threshold check by registered shape (ADR-0109).
 
-    Unknown lane ids are fail-closed: adding a lane to the expert-demo
+    Unknown lane ids are fail-closed: adding a lane to the audit-passed
     surface requires an explicit registry entry, which requires an ADR
     amendment.
     """
@@ -227,7 +238,7 @@ def evaluate_expert_demo(
     domain_lanes: Sequence[str],
     lane_results: Mapping[str, Mapping[str, Mapping[str, object]]],
 ) -> ExpertDemoVerdict:
-    """Decide whether ``domain_id`` may carry ``expert_demo=true``.
+    """Decide whether ``domain_id`` may carry ``audit_passed=true``.
 
     ``domain_lanes`` is the union of ``eval_lanes`` declared by the
     ratified packs for ``domain_id`` — the only lanes legal as evidence
@@ -247,7 +258,7 @@ def evaluate_expert_demo(
     if claim is None:
         return ExpertDemoVerdict(
             passed=False,
-            reason="no expert_demo_claims entry for this domain",
+            reason="no audit_passed_claims entry for this domain",
             derived_digest=None,
         )
 
@@ -312,7 +323,7 @@ def evaluate_expert_demo(
 
     return ExpertDemoVerdict(
         passed=True,
-        reason="all expert-demo predicates satisfied",
+        reason="all audit-passed predicates satisfied",
         derived_digest=derived,
     )
 

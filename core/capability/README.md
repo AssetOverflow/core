@@ -16,11 +16,11 @@ Day-1 output is expected to be low-status:
 
 | Domain | Expected status | Primary blocker |
 | --- | --- | --- |
-| `systems_software` | `reasoning-capable` | expert-demo still gated by domain eval thresholds and replay/provenance evidence |
-| `mathematics_logic` | `reasoning-capable` | expert-demo still gated by domain eval thresholds and replay/provenance evidence |
-| `physics` | `reasoning-capable` | expert-demo still gated by domain eval thresholds and replay/provenance evidence |
-| `hebrew_greek_textual_reasoning` | `reasoning-capable` | expert-demo still gated by eval thresholds and replay/provenance evidence |
-| `philosophy_theology` | `reasoning-capable` | expert-demo still gated by eval thresholds and replay/provenance evidence |
+| `systems_software` | `reasoning-capable` | audit-passed still gated by domain eval thresholds and replay/provenance evidence |
+| `mathematics_logic` | `reasoning-capable` | audit-passed still gated by domain eval thresholds and replay/provenance evidence |
+| `physics` | `reasoning-capable` | audit-passed still gated by domain eval thresholds and replay/provenance evidence |
+| `hebrew_greek_textual_reasoning` | `reasoning-capable` | audit-passed still gated by eval thresholds and replay/provenance evidence |
+| `philosophy_theology` | `reasoning-capable` | audit-passed still gated by eval thresholds and replay/provenance evidence |
 
 Status is generated from predicates. A `blocked` row lifts only when the named
 gap is closed and the next status predicate passes.
