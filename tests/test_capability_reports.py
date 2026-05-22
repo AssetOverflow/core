@@ -140,8 +140,9 @@ def test_ledger_status_is_predicate_derived() -> None:
     assert registry_status["error"] is None
 
     systems = rows["systems_software"]
-    assert systems["status"] == "reasoning-capable"
+    assert systems["status"] == "audit-passed"
     assert systems["predicates"]["reasoning_capable"] is True
+    assert systems["predicates"]["audit_passed"] is True
     assert systems["open_gaps"] == []
 
     math = rows["mathematics_logic"]

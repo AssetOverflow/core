@@ -43,3 +43,11 @@ audit_passed_claims:
     evidence_revision: "adr-0111:reviewed:2026-05-22"
     signed_by: shay-j
     claim_digest: "a104cad136f3219df05dc7ce6a78437c02f7b5827cd3cdce568db3acda6a43ed"
+  - domain_id: systems_software
+    evidence_lanes:
+      - symbolic_logic
+      - inference_closure
+      - fabrication_control
+    evidence_revision: "adr-0124:reviewed:2026-05-22"
+    signed_by: shay-j
+    claim_digest: "17e24436b6875b89f6d1a5c2992557413c7ef456250f549d463159f54438c407"

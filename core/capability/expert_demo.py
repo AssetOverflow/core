@@ -110,9 +110,12 @@ def _check_accuracy_shape(lane_id: str, metrics: Mapping[str, Any]) -> tuple[boo
 
 
 def _check_inference_shape(lane_id: str, metrics: Mapping[str, Any]) -> tuple[bool, str]:
-    if "all_pass_rate" not in metrics:
+    rate_key = "all_pass_rate"
+    if rate_key not in metrics and "all_three_pass_rate" in metrics:
+        rate_key = "all_three_pass_rate"
+    if rate_key not in metrics:
         return False, f"lane {lane_id!r} missing required metric 'all_pass_rate'"
-    rate = float(metrics["all_pass_rate"] or 0)
+    rate = float(metrics[rate_key] or 0)
     if rate < ALL_PASS_RATE_MIN:
         return False, (
             f"lane {lane_id!r} all_pass_rate={rate} below threshold "

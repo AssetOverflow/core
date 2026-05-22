@@ -41,6 +41,8 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0117](ADR-0117-solution-trace-verifier.md) | `SolutionTrace` Verifier (independent of solver) | Accepted (2026-05-22) |
 | [ADR-0118a](ADR-0118a-ood-surface-generator.md) | OOD Surface Generator for GSM8K-Style Parser Dev | Accepted (2026-05-22) |
 | [ADR-0122](ADR-0122-systems-software-audit-passed-deferred.md) | `systems_software` Audit-Passed Promotion: Deferred | Accepted (2026-05-22) |
+| [ADR-0123](ADR-0123-symbolic-logic-shape-remap.md) | `symbolic_logic` Lane-Shape Remap (ADR-0109 Amendment) | Accepted (2026-05-22) |
+| [ADR-0124](ADR-0124-systems-software-audit-passed-promotion.md) | `systems_software` Audit-Passed Promotion | Accepted (2026-05-22) |
 
 ---
 
@@ -77,6 +79,8 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - Deterministic Solver (Phase 2; SolutionTrace + en_arithmetic_v1 pack; discharges ADR-0114a obligations #3, #4, #9, #10) — ADR-0116
 - SolutionTrace Verifier (Phase 3; solver-independent replay; lifts ADR-0114a Obligation #3 to verifier fidelity) — ADR-0117
 - OOD Surface Generator (150 deterministic variants; discharges ADR-0114a obligation #2 for the GSM8K-style parser dev lane) — ADR-0118a
+- `symbolic_logic` Lane-Shape Remap (ADR-0109 amendment) — ADR-0123
+- `systems_software` Audit-Passed Promotion (third successful) — ADR-0124
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 
@@ -97,9 +101,9 @@ Sequencing per ADR-0108. Listed in priority order:
 1. **[ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs.** Optional per-entry definitional block. Deferred — value surfaces during a worked expert promotion that needs definitional depth.
 2. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
 
-ADR-0080 (Contemplation Loop, Phase 1), ADR-0110 (math audit-passed), and ADR-0111 (physics audit-passed) have all landed — `mathematics_logic` and `physics` are at `audit_passed=true`; the contemplation loop emits read-only `SPECULATIVE` findings from `frontier_compare` reports. The remaining two ratified domains (`systems_software`, `hebrew_greek_textual_reasoning`) need their own promotion ADRs.
+ADR-0080 (Contemplation Loop, Phase 1), ADR-0110 (math audit-passed), ADR-0111 (physics audit-passed), and ADR-0124 (systems_software audit-passed) have all landed — `mathematics_logic`, `physics`, and `systems_software` are at `audit_passed=true`; the contemplation loop emits read-only `SPECULATIVE` findings from `frontier_compare` reports. The remaining ratified domain (`hebrew_greek_textual_reasoning`) needs its own promotion ADR.
 
-ADR-0122 attempted `systems_software` promotion and deferred honestly on a lane-shape contract mismatch (`symbolic_logic` output shape vs registered checker), becoming the second worked refusal after ADR-0107.
+ADR-0122 attempted `systems_software` promotion and deferred honestly on a lane-shape contract mismatch (`symbolic_logic` output shape vs registered checker), resolved by ADR-0123's shape remap and successfully promoted via ADR-0124.
 
 ### Open candidate directions (no ADR yet)
 
@@ -115,7 +119,7 @@ Per ADR-0106, `audit_passed` is **contract-gated**, not threshold-only: a domain
 |---|---|---|---|
 | `mathematics_logic` | ADR-0097 + ADR-0110 | `en_mathematics_logic_v1` | All nine ADR-0091 predicates pass; ledger row is **`audit-passed`** (first such promotion, ADR-0110); all three attached lanes meet ADR-0109 shape thresholds on public + holdout. |
 | `physics` | ADR-0100 + ADR-0111 | `en_physics_v1` | All nine predicates pass; causal/modal operator coverage meets threshold; ledger row is **`audit-passed`** (second such promotion, ADR-0111); `foundational_physics_ood` 117/117 public + 39/39 holdout; shares `inference_closure` + `fabrication_control` results with math (distinct digest via `domain_id`). |
-| `systems_software` | ADR-0101 | `en_systems_software_v1` | All nine predicates pass; transitive/causal operator coverage meets threshold; ledger row is `reasoning-capable`; `symbolic_logic` is the v1 closest-fit eval lane. |
+| `systems_software` | ADR-0101 + ADR-0124 | `en_systems_software_v1` | All nine predicates pass; transitive/causal operator coverage meets threshold; ledger row is **`audit-passed`** (third promotion, ADR-0124); all three attached lanes meet thresholds on public + holdout. |
 | `hebrew_greek_textual_reasoning` | ADR-0102 + ADR-0103 | `grc_logos_micro_v1`, `grc_logos_cognition_v1`, `he_logos_micro_v1`, `he_core_cognition_v1` | First multi-pack ratification; all four packs carry uniform contract fields; causal/contradiction operator coverage meets threshold; ADR-0103 attaches Hebrew and Koine Greek fluency lanes with `dev/public/holdout` coverage. |
 
 ---
