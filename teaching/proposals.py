@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 from teaching.provenance import Provenance
+from teaching.source import ProposalSource
 
 if TYPE_CHECKING:
     # Deferred to break a circular import: teaching.discovery →
@@ -75,7 +76,13 @@ class ReplayEvidence:
 
 @dataclass(frozen=True, slots=True)
 class TeachingChainProposal:
-    """One proposed extension of the active teaching corpus."""
+    """One proposed extension of the active teaching corpus.
+
+    The ``source`` field (ADR-0094) carries typed provenance: operator
+    versus miner versus curriculum. Operator is the default and is
+    populated on every existing proposal by the migration utility in
+    :mod:`teaching.proposals.migrate_source_field`.
+    """
 
     proposal_id: str
     source_candidate_id: str
@@ -83,6 +90,7 @@ class TeachingChainProposal:
     polarity: Literal["affirms", "falsifies"]
     claim_domain: ClaimDomain
     evidence: tuple[EvidencePointer, ...]
+    source: ProposalSource
     review_state: ReviewState = "pending"
     operator_note: str = ""
     replay_evidence: ReplayEvidence | None = None
@@ -96,6 +104,7 @@ class TeachingChainProposal:
             "polarity": self.polarity,
             "claim_domain": self.claim_domain,
             "evidence": [e.as_dict() for e in self.evidence],
+            "source": self.source.as_dict(),
             "review_state": self.review_state,
             "operator_note": self.operator_note,
             "replay_evidence": (
@@ -172,16 +181,24 @@ def _proposal_id(source_candidate_id: str, chain: dict[str, Any]) -> str:
 
 
 def build_proposal(
-    candidate: DiscoveryCandidate, *, allow_evaluative: bool = False
+    candidate: DiscoveryCandidate,
+    *,
+    allow_evaluative: bool = False,
+    source: ProposalSource | None = None,
 ) -> TeachingChainProposal:
     """Build a ``pending`` proposal from an eligible candidate.
 
     Raises ``ProposalError`` for any failing gate.  Idempotent on
     (source_candidate_id, proposed_chain): same inputs produce the
     same ``proposal_id``.
+
+    The ``source`` parameter (ADR-0094) defaults to an operator-authored
+    source pinned at the current git HEAD. Miner-sourced and
+    curriculum-sourced callers pass an explicit :class:`ProposalSource`.
     """
     check_eligibility(candidate, allow_evaluative=allow_evaluative)
     assert candidate.polarity in ("affirms", "falsifies")
+    resolved_source = source if source is not None else _default_operator_source()
     return TeachingChainProposal(
         proposal_id=_proposal_id(candidate.candidate_id, candidate.proposed_chain),
         source_candidate_id=candidate.candidate_id,
@@ -189,7 +206,45 @@ def build_proposal(
         polarity=candidate.polarity,
         claim_domain=candidate.claim_domain,
         evidence=tuple(candidate.evidence),
+        source=resolved_source,
     )
+
+
+def _default_operator_source() -> ProposalSource:
+    """Return an operator-authored source pinned at the current HEAD.
+
+    Used by :func:`build_proposal` when no explicit source is given.
+    Reads ``git rev-parse HEAD``; falls back to ``"unknown"`` when git
+    is unavailable so the schema invariant
+    ``emitted_at_revision`` non-empty still holds.
+    """
+    return ProposalSource.operator(emitted_at_revision=_current_revision())
+
+
+def _current_revision() -> str:
+    """Return the current git HEAD SHA, or ``"unknown"`` if unavailable.
+
+    Pure helper; no side effects. Cached at module load so a long
+    session sees a stable value even if HEAD moves.
+    """
+    global _CACHED_REVISION
+    if _CACHED_REVISION is not None:
+        return _CACHED_REVISION
+    import subprocess
+    try:
+        sha = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=Path(__file__).resolve().parent.parent,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        _CACHED_REVISION = sha or "unknown"
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        _CACHED_REVISION = "unknown"
+    return _CACHED_REVISION
+
+
+_CACHED_REVISION: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -272,9 +327,15 @@ class ProposalLog:
 
     def current_state(self) -> dict[str, dict[str, Any]]:
         """Replay the log → ``{proposal_id: {state, proposal, replay,
-        note, accepted_chain_id}}``.
+        note, accepted_chain_id, source}}``.
 
         The active view is derived deterministically from the log.
+
+        ADR-0094: every ``created`` event must carry a ``source`` field
+        on its proposal payload. Missing ``source`` raises
+        :class:`ProposalError`; the live log is migrated via
+        :mod:`teaching.migrate_proposals_source_field` exactly once at
+        ADR-0094 landing.
         """
         view: dict[str, dict[str, Any]] = {}
         for ev in self._events():
@@ -284,11 +345,22 @@ class ProposalLog:
                 pid = p.get("proposal_id")
                 if not pid:
                     continue
+                if "source" not in p:
+                    raise ProposalError(
+                        f"proposal {pid!r} missing required 'source' field; "
+                        "run teaching/migrate_proposals_source_field.py "
+                        "(ADR-0094)"
+                    )
+                # Validate that source parses as a v1 ProposalSource;
+                # we keep the raw dict in the view for backward
+                # compatibility but reject malformed payloads here.
+                ProposalSource.from_dict(p["source"])
                 view.setdefault(pid, {
                     "proposal": p,
                     "state": p.get("review_state", "pending"),
                     "replay_evidence": p.get("replay_evidence"),
                     "operator_note": p.get("operator_note", ""),
+                    "source": p["source"],
                     "accepted_chain_id": None,
                     "accepted_provenance": None,
                 })

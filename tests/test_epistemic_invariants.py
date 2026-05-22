@@ -22,6 +22,7 @@ import dataclasses
 from teaching import EpistemicStatus, PackMutationProposal, ReviewedTeachingExample
 from teaching.correction import CorrectionCandidate
 from teaching.review import ReviewOutcome
+from teaching.source import ProposalSource
 
 
 _FORBIDDEN_HARDENING_NAMES: frozenset[str] = frozenset({
@@ -103,6 +104,7 @@ def test_proposal_default_is_speculative():
         subject="z",
         correction_text="a knows b",
         prior_surface="",
+        source=ProposalSource.operator(emitted_at_revision="test"),
     )
     assert proposal.epistemic_status is EpistemicStatus.SPECULATIVE
 
@@ -115,6 +117,7 @@ def test_proposal_with_status_returns_new_immutable_proposal():
         subject="z",
         correction_text="a knows b",
         prior_surface="",
+        source=ProposalSource.operator(emitted_at_revision="test"),
     )
     promoted = original.with_status(EpistemicStatus.COHERENT)
 

@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from teaching.correction import CorrectionCandidate
 from teaching.epistemic import EpistemicStatus
 from teaching.review import ReviewedTeachingExample
+from teaching.source import ProposalSource
 
 
 # ADR-0021 §CONTESTED transitions: coherence checker tokens.
@@ -97,6 +98,7 @@ class PackMutationProposal:
     subject: str
     correction_text: str
     prior_surface: str
+    source: ProposalSource
     applied: bool = False
     triple: tuple[str, str, str] | None = None
     epistemic_status: EpistemicStatus = EpistemicStatus.SPECULATIVE
@@ -108,6 +110,7 @@ class PackMutationProposal:
             "subject": self.subject,
             "correction_text": self.correction_text,
             "prior_surface": self.prior_surface,
+            "source": self.source.as_dict(),
             "applied": self.applied,
             "triple": list(self.triple) if self.triple is not None else None,
             "epistemic_status": self.epistemic_status.value,
@@ -176,12 +179,17 @@ class TeachingStore:
         from teaching.relation_parse import parse_triple
 
         triple = parse_triple(example.candidate.correction_text)
+        # ADR-0094: PackMutationProposals built from reviewed teaching
+        # examples are operator-authored; miner-sourced and curriculum-
+        # sourced construction sites land in ADR-0095 and later.
+        from teaching.proposals import _default_operator_source
         proposal = PackMutationProposal(
             proposal_id=_proposal_id(example.candidate),
             candidate_id=example.candidate.candidate_id,
             subject=example.candidate.intent.subject,
             correction_text=example.candidate.correction_text,
             prior_surface=example.candidate.prior_surface,
+            source=_default_operator_source(),
             triple=triple,
             epistemic_status=example.epistemic_status,
         )
