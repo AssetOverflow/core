@@ -498,11 +498,29 @@ def cmd_capability_artifact(args: argparse.Namespace) -> int:
 
 
 def cmd_capability_domain_contract(args: argparse.Namespace) -> int:
+    """ADR-0093 domain-contract dry-run validator.
+
+    Default behavior runs the nine ADR-0091 predicates plus eval-lane
+    artifact resolution and exits non-zero on any predicate failure.
+    The legacy structural-only output remains available via
+    ``--structural-only`` for callers that depend on the prior shape.
+    """
     from language_packs.domain_contract import validate_domain_contract_pack
 
-    report = validate_domain_contract_pack(args.pack_id).as_dict()
-    print(json.dumps(report, indent=2, sort_keys=True) if args.json else report)
-    return 0 if report["valid"] else 1
+    if getattr(args, "structural_only", False):
+        report = validate_domain_contract_pack(args.pack_id).as_dict()
+        print(json.dumps(report, indent=2, sort_keys=True) if args.json else report)
+        return 0 if report["valid"] else 1
+
+    from core.capability.domain_contract_predicates import evaluate_domain_contract
+
+    predicate_report = evaluate_domain_contract(args.pack_id).as_dict()
+    print(
+        json.dumps(predicate_report, indent=2, sort_keys=True)
+        if args.json
+        else predicate_report
+    )
+    return 0 if predicate_report["all_passed"] else 1
 
 
 def cmd_capability_evidence_plan(args: argparse.Namespace) -> int:
@@ -2728,10 +2746,15 @@ def build_parser() -> argparse.ArgumentParser:
     capability_artifact.set_defaults(func=cmd_capability_artifact)
     capability_domain_contract = capability_sub.add_parser(
         "domain-contract",
-        help="dry-run validate ADR-0090 domain-pack contract fields",
+        help="ADR-0093 dry-run validate Domain Pack Contract v1 (9 predicates)",
     )
     capability_domain_contract.add_argument("--pack-id", required=True, help="language pack id")
     capability_domain_contract.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_domain_contract.add_argument(
+        "--structural-only",
+        action="store_true",
+        help="emit legacy parse-only report (skips ADR-0091 9-predicate evaluation)",
+    )
     capability_domain_contract.set_defaults(func=cmd_capability_domain_contract)
     capability_evidence_plan = capability_sub.add_parser(
         "evidence-plan",
