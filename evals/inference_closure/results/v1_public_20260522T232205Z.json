@@ -1,0 +1,376 @@
+{
+  "cases": [
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "truth"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-001",
+      "passed": true,
+      "pattern": "transitive_is",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "e228ea6d2d138d03d7b2111cb98cbea6ba68fb0a7bc05b02831a19dd669007a8",
+      "trace_hash_replay": "e228ea6d2d138d03d7b2111cb98cbea6ba68fb0a7bc05b02831a19dd669007a8",
+      "vault_hit": false,
+      "vault_hits": 9
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "principle"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-002",
+      "passed": true,
+      "pattern": "transitive_is",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "9e80eacaa26d08d54cf537c0fee0d238a93eeb97aeb40e8a0e27bdaef673b3f7",
+      "trace_hash_replay": "9e80eacaa26d08d54cf537c0fee0d238a93eeb97aeb40e8a0e27bdaef673b3f7",
+      "vault_hit": false,
+      "vault_hits": 9
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "wisdom"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-003",
+      "passed": true,
+      "pattern": "transitive_is",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "c55631835496b7bdea5dd88b3a07e9c2bfd266baf9bddc982618e309223b5219",
+      "trace_hash_replay": "c55631835496b7bdea5dd88b3a07e9c2bfd266baf9bddc982618e309223b5219",
+      "vault_hit": false,
+      "vault_hits": 8
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "structure"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-004",
+      "passed": true,
+      "pattern": "transitive_is",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "478e8aa0bd4a108b568be00f79de90db0bf50d57f78776f5d16625ba5bafd731",
+      "trace_hash_replay": "478e8aa0bd4a108b568be00f79de90db0bf50d57f78776f5d16625ba5bafd731",
+      "vault_hit": false,
+      "vault_hits": 7
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "meaning"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-005",
+      "passed": true,
+      "pattern": "transitive_precedes",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "ed7232b60c363a369a10400b3ce264d6a84905795b9b197f5b45ddccddf30be5",
+      "trace_hash_replay": "ed7232b60c363a369a10400b3ce264d6a84905795b9b197f5b45ddccddf30be5",
+      "vault_hit": false,
+      "vault_hits": 7
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "recall"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-006",
+      "passed": true,
+      "pattern": "transitive_precedes",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "3895f56f601b5604a8069b2ef4d97cc039e044e46ed7da1698f71670544c61dd",
+      "trace_hash_replay": "3895f56f601b5604a8069b2ef4d97cc039e044e46ed7da1698f71670544c61dd",
+      "vault_hit": false,
+      "vault_hits": 6
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "recognition"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-007",
+      "passed": true,
+      "pattern": "transitive_precedes",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "556b62484be30ef6e3d8f757e5f3226ea5c2f2cf84ea8cf46a4c44aae61cd3dd",
+      "trace_hash_replay": "556b62484be30ef6e3d8f757e5f3226ea5c2f2cf84ea8cf46a4c44aae61cd3dd",
+      "vault_hit": false,
+      "vault_hits": 7
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "judgment"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-008",
+      "passed": true,
+      "pattern": "transitive_precedes",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "649f63f06ffcb16c9f3157a67b72bd3a849e083a9c607d81265334ab66eec9df",
+      "trace_hash_replay": "649f63f06ffcb16c9f3157a67b72bd3a849e083a9c607d81265334ab66eec9df",
+      "vault_hit": false,
+      "vault_hits": 7
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "judgment"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-009",
+      "passed": true,
+      "pattern": "transitive_grounds",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "8b3e9a44665362ac059ff08c1806b6037ba46479934fe6e8e625d9194fc2850a",
+      "trace_hash_replay": "8b3e9a44665362ac059ff08c1806b6037ba46479934fe6e8e625d9194fc2850a",
+      "vault_hit": false,
+      "vault_hits": 8
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "inference"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-010",
+      "passed": true,
+      "pattern": "transitive_grounds",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "2411f6c620a83b791f9ce531c2cc2e2ab99232dc4106f3d675a722d031d26de8",
+      "trace_hash_replay": "2411f6c620a83b791f9ce531c2cc2e2ab99232dc4106f3d675a722d031d26de8",
+      "vault_hit": false,
+      "vault_hits": 6
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "confidence"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-011",
+      "passed": true,
+      "pattern": "transitive_grounds",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "e78cf2211296722f5818acc51e0e27b1bf7078a73126101452fa4e3236f74261",
+      "trace_hash_replay": "e78cf2211296722f5818acc51e0e27b1bf7078a73126101452fa4e3236f74261",
+      "vault_hit": false,
+      "vault_hits": 11
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "meaning"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-012",
+      "passed": true,
+      "pattern": "transitive_grounds",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "a054ef36b7d692a6a36655f09d4437b9d375b4f1e8dd07a913be50bec63b8f0f",
+      "trace_hash_replay": "a054ef36b7d692a6a36655f09d4437b9d375b4f1e8dd07a913be50bec63b8f0f",
+      "vault_hit": false,
+      "vault_hits": 8
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "recognition"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-013",
+      "passed": true,
+      "pattern": "transitive_causes",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "ad9ce5470b3ad041e312986a73bdbab5f08f287c53b82786faa691bec17e5699",
+      "trace_hash_replay": "ad9ce5470b3ad041e312986a73bdbab5f08f287c53b82786faa691bec17e5699",
+      "vault_hit": false,
+      "vault_hits": 10
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "thought"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-014",
+      "passed": true,
+      "pattern": "transitive_causes",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "dddc38be0922e26c67d8315d2a90b5f50225577b10dc0b223b3d02345c8e482a",
+      "trace_hash_replay": "dddc38be0922e26c67d8315d2a90b5f50225577b10dc0b223b3d02345c8e482a",
+      "vault_hit": false,
+      "vault_hits": 9
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "decision"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-015",
+      "passed": true,
+      "pattern": "transitive_causes",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "7e2387159559363b524d0dd5ee84a51f32c15a3029cd13e1af443014a70511ed",
+      "trace_hash_replay": "7e2387159559363b524d0dd5ee84a51f32c15a3029cd13e1af443014a70511ed",
+      "vault_hit": false,
+      "vault_hits": 9
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "coherence"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-016",
+      "passed": true,
+      "pattern": "transitive_causes",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "bbc40a3e50910c23271a86adb4a56b8207a652f6bf3ef54ad715410d2d825376",
+      "trace_hash_replay": "bbc40a3e50910c23271a86adb4a56b8207a652f6bf3ef54ad715410d2d825376",
+      "vault_hit": false,
+      "vault_hits": 8
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "thought"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-017",
+      "passed": true,
+      "pattern": "transitive_belongs_to",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "566823c524d52ca919dbf65367e8ce11a7b21288ec8e609f68c91da285fd17a2",
+      "trace_hash_replay": "566823c524d52ca919dbf65367e8ce11a7b21288ec8e609f68c91da285fd17a2",
+      "vault_hit": false,
+      "vault_hits": 9
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "truth"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-018",
+      "passed": true,
+      "pattern": "transitive_belongs_to",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "6f7d7900846ce601176022d6feb8bafeedc18065c4ef42c8296f6ee451c5435a",
+      "trace_hash_replay": "6f7d7900846ce601176022d6feb8bafeedc18065c4ef42c8296f6ee451c5435a",
+      "vault_hit": false,
+      "vault_hits": 9
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "cognition"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-019",
+      "passed": true,
+      "pattern": "transitive_belongs_to",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "15f87deb2fdc497c6bcab3343a6d781850728b725904623d34518391b503a893",
+      "trace_hash_replay": "15f87deb2fdc497c6bcab3343a6d781850728b725904623d34518391b503a893",
+      "vault_hit": false,
+      "vault_hits": 7
+    },
+    {
+      "derived_recall_pass": true,
+      "entailment_tokens": [
+        "truth"
+      ],
+      "expected_proposals": 2,
+      "id": "INF-V1-020",
+      "passed": true,
+      "pattern": "transitive_belongs_to",
+      "premise_proposal_count": 2,
+      "premises_stored_pass": true,
+      "replay_pass": true,
+      "surface_hit": true,
+      "trace_hash": "4f9a081207336549958a1d0c7105ce20d0a045a09842f182e6335f050c6c9eb4",
+      "trace_hash_replay": "4f9a081207336549958a1d0c7105ce20d0a045a09842f182e6335f050c6c9eb4",
+      "vault_hit": false,
+      "vault_hits": 9
+    }
+  ],
+  "lane": "inference_closure",
+  "metrics": {
+    "all_pass_rate": 1.0,
+    "case_count": 20,
+    "derived_recall_rate": 1.0,
+    "overall_pass": true,
+    "premises_stored_rate": 1.0,
+    "replay_determinism": 1.0
+  },
+  "split": "public",
+  "timestamp": "2026-05-22T23:22:05.854118+00:00",
+  "version": "v1"
+}
