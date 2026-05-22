@@ -7,7 +7,7 @@ Every eval lane lives in ``evals/<lane>/`` and must contain at minimum:
 - ``public/v1/cases.jsonl``    — public test set v1
 
 Optional:
-- ``holdouts/``    — encrypted sealed test set (scored by holdout_runner)
+- ``holdouts/``    — encrypted sealed test set
 - ``baselines/``   — frontier model scores
 - ``results/``     — CORE scores per version per run
 """
@@ -59,15 +59,6 @@ class LaneInfo:
         return candidates[-1]
 
     def holdout_cases_path_sealed(self, version: str = "v1") -> Path:
-        """Return the resolved sealed holdout path for this lane.
-
-        Resolution order (first existing wins):
-          1. ``holdouts/cases.jsonl.age``
-          2. ``holdouts/<version>/cases.jsonl.age``
-
-        Returns the versioned candidate if none exist so callers receive
-        coherent fail-closed FileNotFoundError semantics.
-        """
         holdouts = self.root / "holdouts"
         candidates = (
             holdouts / "cases.jsonl.age",
@@ -151,31 +142,16 @@ def load_lane_runner(lane: LaneInfo) -> Any:
     return module
 
 
-def run_lane(
+def _run_cases(
     lane: LaneInfo,
+    cases: list[dict[str, Any]],
     *,
-    version: str = "v1",
-    split: str = "public",
-    config: Any = None,
-    workers: int | None = None,
+    version: str,
+    split: str,
+    config: Any,
+    workers: int | None,
 ) -> LaneResult:
-    if split == "dev":
-        cases_path = lane.dev_cases_path()
-    elif split == "public":
-        cases_path = lane.public_cases_path(version)
-    elif split == "holdout":
-        cases_path = lane.holdout_cases_path(version)
-    else:
-        raise ValueError(
-            f"Unsupported split: {split!r}. Use 'dev', 'public', or 'holdout'."
-        )
-
-    if not cases_path.exists():
-        raise FileNotFoundError(f"Cases not found: {cases_path}")
-
-    cases = load_cases(cases_path)
     runner_module = load_lane_runner(lane)
-
     runner_params = inspect.signature(runner_module.run_lane).parameters
     if "workers" in runner_params or any(
         p.kind == inspect.Parameter.VAR_KEYWORD for p in runner_params.values()
@@ -190,6 +166,49 @@ def run_lane(
         split=split,
         metrics=report.metrics,
         case_details=report.case_details,
+    )
+
+
+def run_lane(
+    lane: LaneInfo,
+    *,
+    version: str = "v1",
+    split: str = "public",
+    config: Any = None,
+    workers: int | None = None,
+) -> LaneResult:
+    if split == "holdout":
+        from evals.holdout_runner import _decrypt_holdout
+
+        cases = _decrypt_holdout(lane.holdout_cases_path_sealed(version))
+        return _run_cases(
+            lane,
+            cases,
+            version=version,
+            split=split,
+            config=config,
+            workers=workers,
+        )
+
+    if split == "dev":
+        cases_path = lane.dev_cases_path()
+    elif split == "public":
+        cases_path = lane.public_cases_path(version)
+    else:
+        raise ValueError(
+            f"Unsupported split: {split!r}. Use 'dev', 'public', or 'holdout'."
+        )
+
+    if not cases_path.exists():
+        raise FileNotFoundError(f"Cases not found: {cases_path}")
+
+    return _run_cases(
+        lane,
+        load_cases(cases_path),
+        version=version,
+        split=split,
+        config=config,
+        workers=workers,
     )
 
 
