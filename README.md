@@ -222,12 +222,12 @@ CORE distinguishes *contract-passing* from *demonstrated*. A pack that satisfies
 | Domain | Status |
 |---|---|
 | `mathematics_logic` | **`expert-demo`** (first promotion, [ADR-0110](docs/decisions/ADR-0110-mathematics-logic-expert-demo-promotion.md)) |
-| `physics` | `reasoning-capable` |
+| `physics` | **`expert-demo`** (second promotion, [ADR-0111](docs/decisions/ADR-0111-physics-expert-demo-promotion.md)) |
 | `systems_software` | `reasoning-capable` |
 | `hebrew_greek_textual_reasoning` | `reasoning-capable` |
 | `philosophy_theology` | `reasoning-capable` |
 
-The contract has now demonstrated its load-bearing behavior end-to-end: refused one promotion attempt honestly ([ADR-0107](docs/decisions/ADR-0107-mathematics-logic-expert-demo-deferred.md)), amended its threshold rules once cleanly (ADR-0109), and succeeded once honestly (ADR-0110). External readers can distinguish the two ceilings at a glance.
+The contract has now demonstrated its load-bearing behavior end-to-end: refused one promotion attempt honestly ([ADR-0107](docs/decisions/ADR-0107-mathematics-logic-expert-demo-deferred.md)), amended its threshold rules once cleanly (ADR-0109), succeeded against `mathematics_logic` (ADR-0110), and succeeded against a second distinct domain `physics` without further contract change (ADR-0111). External readers can distinguish the two ceilings at a glance; the "math-only" objection is retired.
 
 Full ADR index, frontier, and chain notes: [`docs/decisions/README.md`](docs/decisions/README.md).
 
