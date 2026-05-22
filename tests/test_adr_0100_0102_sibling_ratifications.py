@@ -45,7 +45,7 @@ _DOMAINS: dict[str, dict] = {
         },
     },
     "hebrew_greek_textual_reasoning": {
-        "adr": "adr-0102",
+        "adr": "adr-0103",
         "packs": (
             "grc_logos_micro_v1",
             "grc_logos_cognition_v1",
@@ -55,7 +55,12 @@ _DOMAINS: dict[str, dict] = {
         "claimed_operators": ("causal", "contradiction"),
         "min_intent_shapes": 3,
         "expected_chains": ["hebrew_greek_textual_reasoning_chains_v1"],
-        "expected_lanes": {"inference_closure", "fabrication_control"},
+        "expected_lanes": {
+            "inference_closure",
+            "fabrication_control",
+            "hebrew_fluency",
+            "koine_greek_fluency",
+        },
     },
 }
 
