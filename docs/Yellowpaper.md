@@ -637,7 +637,106 @@ cargo test
 
 ---
 
-### XII. What Was Deleted and Why
+### XII. Ratification Contract (ADR-0091 + ADR-0106 + ADR-0109)
+
+The runtime contracts in §I–§XI describe the engine's algebraic
+behavior. The ratification contract describes the discipline under
+which the *capability ledger* is allowed to make claims about a
+domain.
+
+#### Domain Pack Contract v1 (ADR-0091)
+
+A pack manifest at `language_packs/data/<pack_id>/manifest.json`
+satisfies the contract iff all nine predicates hold:
+
+1. **lemma_coverage** — declared lemmas resolve in `lexicon.jsonl`.
+2. **gloss_coverage_above_floor** — mount-eligible if gloss coverage
+   crosses the per-pack floor.
+3. **operator_chain_count** — declared operator families each carry
+   at least `_CHAINS_PER_OPERATOR_DOMAIN` chains.
+4. **intent_shape_coverage** — at least three intent shapes present.
+5. **holdout_present** — `evals/<lane>/holdouts/` exists with sealed
+   or dev-mode-plaintext cases.
+6. **eval_lanes_uniform** — all packs in a multi-pack domain declare
+   identical lane sets.
+7. **fabrication_control_passing** — phantom / cross-pack / sibling
+   refusal classes all clean.
+8. **reviewer_resolution** — provenance reviewer id resolves in
+   `docs/reviewers.yaml`.
+9. **deterministic_replay** — the canonical eval reports reproduce
+   under `core test --suite cognition`.
+
+A pack passing all nine earns `status = reasoning-capable` in the
+generated ledger row.
+
+#### Expert-Demo Promotion (ADR-0106 + ADR-0109)
+
+The promotion to `status = expert-demo` is contract-gated. The
+promotion predicate (`core/capability/expert_demo.py::evaluate_expert_demo`)
+requires:
+
+```text
+reasoning_capable(D)
+∧ ∃ claim ∈ ReviewerRegistry.expert_demo_claims
+  : claim.domain_id == D
+∧ ReviewerRegistry.can_review(claim.signed_by, D, scope="eval")
+∧ claim.evidence_lanes ⊆ ratified_lanes(D)
+∧ ∀ lane ∈ claim.evidence_lanes, split ∈ {public, holdout} :
+    shape_checker(lane)(result(lane, v1, split))
+∧ derive_evidence_digest(D, claim.evidence_revision,
+                         claim.evidence_lanes, lane_results)
+  == claim.claim_digest
+```
+
+The digest function:
+
+```text
+derive_evidence_digest(D, rev, lanes, results) =
+  SHA-256(JSON.canonicalize({
+    domain_id:        D,
+    evidence_revision: rev,
+    evidence_lanes:   sort(lanes),
+    lane_metrics:     {lane: {public: results[lane].public,
+                              holdout: results[lane].holdout}
+                       for lane in sort(lanes)}
+  }))
+```
+
+Canonicalization rules: sorted keys, compact separators,
+`ensure_ascii=False`. The same lane results must reproduce the same
+digest byte-for-byte; this is what makes the gate replay-deterministic.
+
+#### Lane-Shape Registry (ADR-0109)
+
+Threshold dispatch is per-lane-shape, not lane-uniform:
+
+| Shape | Required keys | Pass condition |
+|---|---|---|
+| `cognition_shape` | `surface_groundedness`, `term_capture_rate`, `intent_accuracy`, `versor_closure_rate` | `≥ 0.95 ∧ ≥ 0.85 ∧ ≥ 0.95 ∧ == 1.0` |
+| `accuracy_shape` | `accuracy` *or* `(passed, total)` | `accuracy ≥ 0.95` (computed as `passed/total` if `accuracy` absent) |
+| `inference_shape` | `all_pass_rate`, `replay_determinism`, `overall_pass` | `≥ 0.95 ∧ == 1.0 ∧ True` |
+| `refusal_shape` | `by_class[*].n`, `.refused`, `.fabricated` | `∀ bucket: refused == n ∧ fabricated == 0` |
+| `symbolic_logic_shape` | `accuracy` | `≥ 0.95` |
+
+Lane id → shape resolution is by registry lookup, not metric
+introspection. Unknown lanes fail closed.
+
+#### Fail-Closed Discipline
+
+- Unloadable reviewer registry → zero claims → no domain promotes.
+- Unregistered lane id → promotion fails with named reason.
+- Claim digest drift → promotion refused; ledger row demotes to
+  `reasoning-capable`.
+- Signer outside `eval` scope → promotion refused.
+
+This is the algebraic specification of the contract layer the
+Whitepaper §XIII narrates. The substrate makes both refusal and
+promotion first-class; the ratification contract makes the
+distinction visible to external readers.
+
+---
+
+### XIII. What Was Deleted and Why
 
 The formal record is in `docs/DELETION_LOG.md`. The summary:
 

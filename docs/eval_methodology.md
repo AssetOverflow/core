@@ -1,7 +1,7 @@
 # Eval Methodology — Benchmark Discipline Contract
 
-**Status:** Accepted (ADR-0016)
-**Last updated:** 2026-05-15
+**Status:** Accepted (ADR-0016, extended by ADR-0109)
+**Last updated:** 2026-05-22 (lane-shape registry section added)
 
 This document defines the five rules that govern every eval lane in the CORE
 capability roadmap. No exceptions per phase. A lane that does not satisfy these
@@ -102,3 +102,61 @@ A lane without a `contract.md` does not run.
 
 - ADR-0016: Capability Roadmap
 - `docs/capability_roadmap.md`: Full phased plan
+
+---
+
+## Lane-shape registry (ADR-0109)
+
+ADR-0091's Domain Pack Contract v1 introduced a `dev/public/holdout`
+discipline that every ratified pack must declare. ADR-0106 added a
+reviewer-signed expert-demo promotion gate that consults those same
+lane outputs at the ledger level. ADR-0109 then formalized the rule
+that **threshold dispatch is lane-shape-aware**, not lane-uniform.
+
+### What this means for new lanes
+
+Adding a new eval lane requires deciding which shape it reports:
+
+| Shape | Required metrics | Threshold |
+|---|---|---|
+| `cognition_shape` | `surface_groundedness`, `term_capture_rate`, `intent_accuracy`, `versor_closure_rate` | 0.95 / 0.85 / 0.95 / 1.0 |
+| `accuracy_shape` | `accuracy` (or `passed`/`total` fallback) | ≥ 0.95 |
+| `inference_shape` | `all_pass_rate`, `replay_determinism`, `overall_pass` | 0.95 / 1.0 / true |
+| `refusal_shape` | `by_class[*].n`, `by_class[*].refused`, `by_class[*].fabricated` | refused == n, fabricated == 0 |
+| `symbolic_logic_shape` | `accuracy` | ≥ 0.95 |
+
+A lane that does not fit any existing shape **must not be silently
+broadened**. The path is:
+
+1. Open an ADR amending ADR-0109 to add the new shape.
+2. Add the shape checker to `SHAPE_CHECKERS` in
+   `core/capability/expert_demo.py`.
+3. Add the lane → shape mapping to `LANE_SHAPE_REGISTRY`.
+
+A lane id absent from the registry is **fail-closed** at the
+expert-demo gate (reason:
+`lane <id> has no registered shape — introduce via ADR amendment`).
+Unregistered lanes can still run as exploration; they just cannot
+contribute evidence to a `reviewer-signed expert_demo` promotion.
+
+### Holdout-runner gating (ADR-0105)
+
+`split='holdout'` runs go through `evals.holdout_runner._decrypt_holdout`,
+which expects either:
+
+- `holdouts/v1/cases.jsonl.age` (sealed, requires `CORE_HOLDOUT_KEY`), **or**
+- `holdouts/v1/cases_plaintext.jsonl` (dev-mode fallback, no key required).
+
+A bare `holdouts/v1/cases.jsonl` is invisible to the runner. Lanes
+authored before ADR-0105 must either rename their plaintext file or
+seal it against an age recipient to be runnable on the `holdout`
+split.
+
+---
+
+## References
+
+- ADR-0091: Domain Pack Contract v1 (`evals/<lane>/holdouts/` discipline)
+- ADR-0105: Sealed-holdout encryption (dev-mode fallback preserved)
+- ADR-0106: Expert-demo promotion contract (consumes lane results)
+- ADR-0109: Lane-shape-aware thresholds (this section's authority)
