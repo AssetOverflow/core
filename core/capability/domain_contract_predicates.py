@@ -166,13 +166,18 @@ def _predicate_p2_gloss_closure(
     import json
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    declared = manifest.get("checksums", {}).get("glosses_sha256")
+    # Canonical location is the top-level ``glosses_checksum`` field
+    # (in-tree packs use that form). ``checksums.glosses_sha256`` is
+    # accepted as an alternate location for forward compatibility.
+    declared = manifest.get("glosses_checksum") or manifest.get(
+        "checksums", {}
+    ).get("glosses_sha256")
     if not declared:
         return PredicateResult(
             predicate_id="P2",
             title="gloss/definition checksum valid",
             passed=True,
-            notes="manifest does not declare glosses_sha256; vacuously passes",
+            notes="manifest does not declare a gloss checksum; vacuously passes",
         )
     actual = hashlib.sha256(glosses.read_bytes()).hexdigest()
     if actual != declared:

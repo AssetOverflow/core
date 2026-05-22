@@ -102,12 +102,17 @@ def test_capability_artifact_json_existing_is_content_addressed() -> None:
 
 
 def test_capability_domain_contract_json_absent_contract_is_noop() -> None:
+    """Packs without a domain contract pass the legacy structural-only
+    path. ADR-0093 added the default predicate-running mode; this test
+    pins the legacy shape under ``--structural-only``.
+    """
     res = _run(
         "capability",
         "domain-contract",
         "--pack-id",
         "en_core_cognition_v1",
         "--json",
+        "--structural-only",
     )
     assert res.returncode == 0, res.stderr
     body = json.loads(res.stdout)

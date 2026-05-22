@@ -403,7 +403,7 @@ class TestEvalLaneArtifacts:
 
 class TestCli:
     def test_cli_returns_nonzero_on_missing_contract(self) -> None:
-        """The in-tree math/logic pack has no contract yet; CLI exits 1."""
+        """A pack without a domain contract exits 1 under default mode."""
         import os
         import subprocess
         import sys
@@ -418,7 +418,7 @@ class TestCli:
                 "capability",
                 "domain-contract",
                 "--pack-id",
-                "en_mathematics_logic_v1",
+                "en_core_cognition_v1",
                 "--json",
             ],
             cwd=REPO_ROOT,
@@ -447,7 +447,7 @@ class TestCli:
                 "capability",
                 "domain-contract",
                 "--pack-id",
-                "en_mathematics_logic_v1",
+                "en_core_cognition_v1",
                 "--json",
                 "--structural-only",
             ],

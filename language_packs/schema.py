@@ -24,6 +24,12 @@ class LanguageRole(str, Enum):
     ARTICULATION_SURFACE = "articulation_surface"
     DEPTH_ROOT = "depth_root"
     DEPTH_RELATION = "depth_relation"
+    # ADR-0097 — added to recognize the domain-pack role used by
+    # en_mathematics_logic_v1, en_physics_v1, en_systems_software_v1.
+    # These packs declared role="domain_seed" since landing but the
+    # enum was never widened; ADR-0093's P1 predicate exposed the
+    # latent mismatch.
+    DOMAIN_SEED = "domain_seed"
 
 
 class OOVPolicy(str, Enum):
