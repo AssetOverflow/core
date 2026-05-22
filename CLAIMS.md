@@ -40,6 +40,7 @@ is a CI failure (`.github/workflows/lane-shas.yml`).
 | ADR-0096 | `fabrication_control_summary` | Phantom endpoints / cross-pack non-bridges / sibling collapses refuse | `evals/fabrication_control/results/v1_summary.json` | `01e1b6b711141f2b4a14551d7df3ea482d8d6dd7b364a25c509f4f8d08cda8a8` |
 | ADR-0098 | `demo_composition` | Demos compose from shipped modules; no parallel mechanism | `evals/demo_composition/results/v1_dev.json` | `27d838241bf3ed9e15d0e918ec6d89a823494d7e17c2dab9777825af7188f20f` |
 | ADR-0099 | `public_demo` | Public showcase runs deterministically under 30s; all claims supported | `evals/public_demo/results/v1_dev.json` | `4be6f47509435a24984713acfcebd88e61f4e1278096fa5dc88a09e8af2f87ba` |
+| ADR-0104 | `curriculum_loop_closure` | Curriculum-sourced proposals route through single reviewed teaching path | `evals/curriculum_loop_closure/results/v1_dev.json` | `b46d56b2d209172cc3ffaf3776dc8dcfe55093f13587c5cb67372be6dfa23e8d` |
 
 ## Verification
 
