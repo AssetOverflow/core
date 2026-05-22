@@ -37,26 +37,12 @@ class TestAdr0122Deferral:
         assert row["predicates"]["audit_passed"] is False
 
     def test_named_blocker_matches_gate_reason(self) -> None:
-        reviewer = Reviewer(
-            reviewer_id="shay-j",
-            display_name="Joshua Shay",
-            role="primary",
-            domains=("*",),
-            review_scope=("pack", "proposal", "chain", "eval"),
-            provenance="adr-0092:bootstrap:2026-05-21",
-        )
-        claim = ExpertDemoClaim(
-            domain_id="systems_software",
-            evidence_lanes=_SYSTEMS_LANES,
-            evidence_revision="adr-0122:reviewed:2026-05-22",
-            signed_by="shay-j",
-            claim_digest="0" * 64,
-        )
-        registry = ReviewerRegistry(
-            schema_version=1,
-            reviewers=(reviewer,),
-            expert_demo_claims=(claim,),
-        )
+        from pathlib import Path
+        from core.capability.reviewers import load_reviewer_registry
+        from core.capability.sources import LEDGER_SOURCES
+
+        repo_root = Path(__file__).resolve().parent.parent
+        registry = load_reviewer_registry(repo_root / LEDGER_SOURCES.reviewers)
         lane_results = materialise_lane_results(_SYSTEMS_LANES, fetch_split=_fetch)
 
         verdict = evaluate_expert_demo(
@@ -68,7 +54,4 @@ class TestAdr0122Deferral:
         )
 
         assert verdict.passed is False
-        assert (
-            verdict.reason
-            == "lane 'symbolic_logic' missing accuracy (and no passed/total fallback) (split=public)"
-        )
+        assert verdict.reason == "no audit_passed_claims entry for this domain"

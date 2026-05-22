@@ -58,7 +58,7 @@ LANE_SHAPE_REGISTRY: dict[str, str] = {
     "cognition": "cognition_shape",
     "elementary_mathematics_ood": "accuracy_shape",
     "foundational_physics_ood": "accuracy_shape",
-    "symbolic_logic": "symbolic_logic_shape",
+    "symbolic_logic": "inference_shape",
     "hebrew_fluency": "accuracy_shape",
     "koine_greek_fluency": "accuracy_shape",
     "inference_closure": "inference_shape",
@@ -160,7 +160,6 @@ def _check_refusal_shape(lane_id: str, metrics: Mapping[str, Any]) -> tuple[bool
 SHAPE_CHECKERS: dict[str, Any] = {
     "cognition_shape": _check_cognition_shape,
     "accuracy_shape": _check_accuracy_shape,
-    "symbolic_logic_shape": _check_accuracy_shape,
     "inference_shape": _check_inference_shape,
     "refusal_shape": _check_refusal_shape,
 }
