@@ -1,0 +1,30 @@
+{"case_id":"sym-eq-v1-0001","expression_a":"x + 1","expression_b":"1 + x","expected":"equivalent","category":"commutative_add","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0002","expression_a":"3*x","expression_b":"x*3","expected":"equivalent","category":"commutative_mul","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0003","expression_a":"2*(x + 3)","expression_b":"2*x + 6","expected":"equivalent","category":"distributive","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0004","expression_a":"x*(x + 1)","expression_b":"x^2 + x","expected":"equivalent","category":"distributive","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0005","expression_a":"(x + 1)^2","expression_b":"x^2 + 2*x + 1","expected":"equivalent","category":"square_of_binomial","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0006","expression_a":"(x - 1)^2","expression_b":"x^2 - 2*x + 1","expected":"equivalent","category":"square_of_binomial","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0007","expression_a":"(x + 1)*(x - 1)","expression_b":"x^2 - 1","expected":"equivalent","category":"difference_of_squares","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0008","expression_a":"(x + 2)*(x + 3)","expected":"equivalent","expression_b":"x^2 + 5*x + 6","category":"foil","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0009","expression_a":"(x + 1)^3","expression_b":"x^3 + 3*x^2 + 3*x + 1","expected":"equivalent","category":"cube_of_binomial","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0010","expression_a":"(x - 1)^3","expression_b":"x^3 - 3*x^2 + 3*x - 1","expected":"equivalent","category":"cube_of_binomial","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0011","expression_a":"2*x + 3*x","expression_b":"5*x","expected":"equivalent","category":"collect_like_terms","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0012","expression_a":"x^2 + 2*x + x^2 + 3*x","expression_b":"2*x^2 + 5*x","expected":"equivalent","category":"collect_like_terms","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0013","expression_a":"x - x","expression_b":"0","expected":"equivalent","category":"zero_cancellation","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0014","expression_a":"x + x + x + x","expression_b":"4*x","expected":"equivalent","category":"repeated_addition","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0015","expression_a":"x^2 * x","expression_b":"x^3","expected":"equivalent","category":"exponent_combine","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0016","expression_a":"(x^2 + 1)*(x^2 - 1)","expression_b":"x^4 - 1","expected":"equivalent","category":"difference_of_squares","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0017","expression_a":"3*(x + 1) + 2*(x - 1)","expression_b":"5*x + 1","expected":"equivalent","category":"distributive_collect","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0018","expression_a":"-(x + 1)","expression_b":"-x - 1","expected":"equivalent","category":"unary_neg_distribute","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0019","expression_a":"(2*x + 1)^2","expression_b":"4*x^2 + 4*x + 1","expected":"equivalent","category":"square_of_binomial","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0020","expression_a":"x*(x + 1)*(x - 1)","expression_b":"x^3 - x","expected":"equivalent","category":"product_of_factors","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0021","expression_a":"x + 1","expression_b":"x + 2","expected":"not_equivalent","category":"different_constant","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0022","expression_a":"2*x","expression_b":"3*x","expected":"not_equivalent","category":"different_coefficient","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0023","expression_a":"x^2","expression_b":"x^3","expected":"not_equivalent","category":"different_degree","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0024","expression_a":"(x + 1)^2","expression_b":"(x - 1)^2","expected":"not_equivalent","category":"sign_flipped","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0025","expression_a":"x^2 + 1","expression_b":"x^2 - 1","expected":"not_equivalent","category":"sign_flipped","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0026","expression_a":"2*(x + 3)","expression_b":"2*x + 3","expected":"not_equivalent","category":"distributive_miss","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0027","expression_a":"(x + 1)*(x + 2)","expression_b":"x^2 + 3*x + 1","expected":"not_equivalent","category":"foil_miss","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0028","expression_a":"x^3 + 1","expression_b":"(x + 1)^3","expected":"not_equivalent","category":"cube_miss","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0029","expression_a":"x + y","expression_b":"x + 1","expected":"refused","category":"out_of_scope_variable","provenance":"adr-0131.1:hand-curated:2026-05-23"}
+{"case_id":"sym-eq-v1-0030","expression_a":"x / 2","expression_b":"x","expected":"refused","category":"out_of_scope_division","provenance":"adr-0131.1:hand-curated:2026-05-23"}
