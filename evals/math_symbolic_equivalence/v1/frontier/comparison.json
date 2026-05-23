@@ -1,0 +1,61 @@
+{
+  "adjacent_benchmark_citations": [
+    {
+      "benchmark": "MATH (level 1-5, hendrycks)",
+      "metric": "exact_match",
+      "model": "claude-3-5-sonnet-20241022",
+      "note": "Reported on the full MATH test set (5000 problems). B1's univariate polynomial scope is a strict subset of the MATH algebra sub-domain.",
+      "score": 0.781,
+      "source_date": "2024-06-20",
+      "source_url": "https://www.anthropic.com/news/claude-3-5-sonnet",
+      "vendor": "Anthropic"
+    },
+    {
+      "benchmark": "AIME 2025 (high-school olympiad-style algebra)",
+      "metric": "exact_match",
+      "model": "claude-opus-4-1-20250805",
+      "note": "AIME problems exceed B1's bounded scope by a wide margin; reported here as upper-bound context for frontier symbolic capability.",
+      "score": 0.901,
+      "source_date": "2025-08-05",
+      "source_url": "https://www.anthropic.com/claude/opus",
+      "vendor": "Anthropic"
+    },
+    {
+      "benchmark": "MATH (level 1-5, hendrycks)",
+      "metric": "exact_match",
+      "model": "gpt-4o-2024-05-13",
+      "note": "Same full MATH test set as the Anthropic citation; scope caveat applies.",
+      "score": 0.764,
+      "source_date": "2024-05-13",
+      "source_url": "https://openai.com/index/hello-gpt-4o/",
+      "vendor": "OpenAI"
+    },
+    {
+      "benchmark": "MATH (level 1-5, hendrycks)",
+      "metric": "exact_match",
+      "model": "gemini-1.5-pro-001",
+      "note": "Same MATH test set; scope caveat applies.",
+      "score": 0.674,
+      "source_date": "2024-05-14",
+      "source_url": "https://blog.google/technology/ai/google-gemini-update-flash-ai-assistant-io-2024/",
+      "vendor": "Google"
+    }
+  ],
+  "adr": "0131.1.F",
+  "core": {
+    "accuracy": 1.0,
+    "case_count": 185,
+    "deterministic": true,
+    "exit_criterion_passed": true,
+    "lane": "math_symbolic_equivalence_v1",
+    "refusal_correctness": 1.0,
+    "verdict_counts": {
+      "correct": 185,
+      "refused": 0,
+      "wrong": 0
+    }
+  },
+  "frontier_head_to_head": [],
+  "schema_version": 1,
+  "scope_disclaimer": "Citations above measure frontier capability on the full MATH benchmark (Hendrycks et al., 2021), which spans algebra, geometry, number theory, and combinatorics across five difficulty levels. B1 (ADR-0131.1) measures univariate polynomial canonical equivalence \u2014 a strict subset of the algebra sub-domain. The citations are not claimed as head-to-head scores on B1; the head-to-head, when run, is reported separately via frontier_runner with provider responses cached for replay."
+}
