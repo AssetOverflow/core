@@ -1,0 +1,260 @@
+{
+  "adr": "0131.1",
+  "benchmark": "symbolic_equivalence_v1",
+  "cases_path": "evals/math_symbolic_equivalence/v1/cases.jsonl",
+  "correct_rate": 1.0,
+  "counts": {
+    "correct": 30,
+    "refused": 0,
+    "wrong": 0
+  },
+  "exit_criterion": {
+    "correct_rate_min": 0.95,
+    "passed": true,
+    "wrong_max": 0
+  },
+  "per_case": [
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0001",
+      "category": "commutative_add",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0002",
+      "category": "commutative_mul",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0003",
+      "category": "distributive",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0004",
+      "category": "distributive",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0005",
+      "category": "square_of_binomial",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0006",
+      "category": "square_of_binomial",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0007",
+      "category": "difference_of_squares",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0008",
+      "category": "foil",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0009",
+      "category": "cube_of_binomial",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0010",
+      "category": "cube_of_binomial",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0011",
+      "category": "collect_like_terms",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0012",
+      "category": "collect_like_terms",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0013",
+      "category": "zero_cancellation",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0014",
+      "category": "repeated_addition",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0015",
+      "category": "exponent_combine",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0016",
+      "category": "difference_of_squares",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0017",
+      "category": "distributive_collect",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0018",
+      "category": "unary_neg_distribute",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0019",
+      "category": "square_of_binomial",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-0020",
+      "category": "product_of_factors",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-0021",
+      "category": "different_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-0022",
+      "category": "different_coefficient",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-0023",
+      "category": "different_degree",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-0024",
+      "category": "sign_flipped",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-0025",
+      "category": "sign_flipped",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-0026",
+      "category": "distributive_miss",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-0027",
+      "category": "foil_miss",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-0028",
+      "category": "cube_miss",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "refused",
+      "case_id": "sym-eq-v1-0029",
+      "category": "out_of_scope_variable",
+      "expected": "refused",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "refused",
+      "case_id": "sym-eq-v1-0030",
+      "category": "out_of_scope_division",
+      "expected": "refused",
+      "reason": "",
+      "verdict_class": "correct"
+    }
+  ],
+  "sample_count": 30,
+  "schema_version": 1
+}
