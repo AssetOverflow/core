@@ -1,0 +1,272 @@
+{
+  "adr": "0131.3",
+  "exit_criterion": {
+    "correct_min_rate": 0.95,
+    "passed": true,
+    "wrong_max": 0
+  },
+  "metrics": {
+    "cases_total": 50,
+    "correct": 50,
+    "correct_rate": 1.0,
+    "overall_pass": true,
+    "refused": 0,
+    "wrong": 0,
+    "wrong_count_is_zero": true
+  },
+  "per_case": [
+    {
+      "case_id": "b3-001",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-002",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-003",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-004",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-005",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-006",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-007",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-008",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-009",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-010",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-011",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-012",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-013",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-014",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-015",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-016",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-017",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-018",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-019",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-020",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-021",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-022",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-023",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-024",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-025",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-026",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-027",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-028",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-029",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-030",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-031",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-032",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-033",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-034",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-035",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-036",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-037",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-038",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-039",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-040",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-041",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-042",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-043",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-044",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-045",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-046",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-047",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-048",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-049",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "b3-050",
+      "reason": "",
+      "verdict": "correct"
+    }
+  ],
+  "sample_count": 50,
+  "sample_path": "evals/math_bounded_grammar/v1/cases.jsonl",
+  "schema_version": 1
+}

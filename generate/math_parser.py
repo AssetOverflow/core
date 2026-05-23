@@ -115,6 +115,33 @@ def _canonical_unit(raw: str) -> str:
     The parser bridges by normalizing every extracted unit to plural.
     """
     s = raw.lower()
+    # Check if the unit is registered in en_units_v1
+    try:
+        from language_packs.loader import lookup_unit
+        entry = lookup_unit(s)
+        if entry is not None:
+            return entry.plural.lower()
+    except Exception:
+        pass
+
+    # Generic allowed count nouns list (to avoid breaking existing tests using count nouns not in en_units_v1)
+    allowed_nouns = {
+        "apple", "apples", "candy", "candies", "book", "books",
+        "marble", "marbles", "sticker", "stickers", "pencil", "pencils",
+        "shell", "shells", "button", "buttons", "cracker", "crackers",
+        "ticket", "tickets", "sheet", "sheets", "ribbon", "ribbons",
+        "kite", "kites", "orange", "oranges", "stone", "stones",
+        "coin", "coins", "crayon", "crayons", "doll", "dolls",
+        "card", "cards", "bead", "beads", "flower", "flowers",
+        "cup", "cups", "scarf", "scarves", "block", "blocks",
+        "letter", "letters", "stamp", "stamps", "ball", "balls",
+        "pen", "pens", "dollar", "dollars", "saving", "savings",
+        "toy", "toys", "balloon", "balloons", "cookie", "cookies",
+        "bird", "birds", "foot", "feet"
+    }
+    if s not in allowed_nouns:
+        raise ParseError(f"unit {raw!r} not in en_units_v1 and not an allowed count noun")
+
     if s in _PLURAL_IRREGULARS:
         return _PLURAL_IRREGULARS[s]
     if s.endswith("s"):
@@ -244,7 +271,16 @@ _INITIAL_HAS_RE = re.compile(
     r"(?:has|have)\s+"
     r"(?P<value>\d+|one|two|three|four|five|six|seven|eight|nine|ten"
     r"|eleven|twelve)\s+"
-    r"(?P<unit>\w+)$"
+    r"(?P<unit>\w+)"
+    r"(?:\s+of\s+\w+)?$"
+)
+
+_INITIAL_THERE_ARE_RE = re.compile(
+    r"^[Tt]here\s+(?:are|were|is|was)\s+"
+    r"(?P<value>\d+|one|two|three|four|five|six|seven|eight|nine|ten"
+    r"|eleven|twelve)\s+"
+    r"(?P<unit>\w+)"
+    r"(?:\s+in\s+(?P<place>[A-Za-z]\w*(?:\s+\w+)?))?$"
 )
 
 
@@ -293,26 +329,48 @@ def _process_statement(sentence: str, state: _ParserState) -> None:
 
 def _try_initial(s: str, state: _ParserState) -> bool:
     m = _INITIAL_HAS_RE.match(s)
-    if not m:
-        return False
-    # ADR-0123a — canonicalize "the X" entity (collapse whitespace,
-    # lowercase the article so "The boys" and "the boys" hash equal)
-    # and resolve word-form value through the shared helper.
-    entity_raw = m.group("entity")
-    entity = re.sub(r"\s+", " ", entity_raw.strip())
-    if entity.lower().startswith("the "):
-        entity = "the " + entity[4:]
-    value_raw = m.group("value")
-    value = int(value_raw) if value_raw.isdigit() else _WORD_NUMBERS[value_raw.lower()]
-    unit = _canonical_unit(m.group("unit"))
-    state.add_entity(entity)
-    state.initial_state.append(
-        InitialPossession(entity=entity, quantity=Quantity(value=value, unit=unit))
-    )
-    state.last_unit = unit
-    state.last_singular_subject = entity
-    state.actor_units[entity] = unit
-    return True
+    if m:
+        # ADR-0123a — canonicalize "the X" entity (collapse whitespace,
+        # lowercase the article so "The boys" and "the boys" hash equal)
+        # and resolve word-form value through the shared helper.
+        entity_raw = m.group("entity")
+        entity = re.sub(r"\s+", " ", entity_raw.strip())
+        if entity.lower().startswith("the "):
+            entity = "the " + entity[4:]
+        value_raw = m.group("value")
+        value = int(value_raw) if value_raw.isdigit() else _WORD_NUMBERS[value_raw.lower()]
+        unit = _canonical_unit(m.group("unit"))
+        state.add_entity(entity)
+        state.initial_state.append(
+            InitialPossession(entity=entity, quantity=Quantity(value=value, unit=unit))
+        )
+        state.last_unit = unit
+        state.last_singular_subject = entity
+        state.actor_units[entity] = unit
+        return True
+
+    m2 = _INITIAL_THERE_ARE_RE.match(s)
+    if m2:
+        value_raw = m2.group("value")
+        value = int(value_raw) if value_raw.isdigit() else _WORD_NUMBERS[value_raw.lower()]
+        unit = _canonical_unit(m2.group("unit"))
+        place = m2.group("place")
+        if place is not None:
+            entity = re.sub(r"\s+", " ", place.strip())
+            if entity.lower().startswith("the "):
+                entity = "the " + entity[4:]
+        else:
+            entity = unit
+        state.add_entity(entity)
+        state.initial_state.append(
+            InitialPossession(entity=entity, quantity=Quantity(value=value, unit=unit))
+        )
+        state.last_unit = unit
+        state.last_singular_subject = entity
+        state.actor_units[entity] = unit
+        return True
+
+    return False
 
 
 # ---------------------------------------------------------------------------
