@@ -754,6 +754,53 @@ def cmd_capability_depth_curve(args: argparse.Namespace) -> int:
     return 0 if report.obligation_6_assertion_holds else 1
 
 
+def cmd_capability_ood_ratio(args: argparse.Namespace) -> int:
+    """ADR-0114a Obligation #2 — OOD surface variation ratio auditor.
+
+    Reads the B3 public ``report.json`` and the OOD lane ``report.json``,
+    computes ``ood_ratio = ood_accuracy / public_accuracy``, and exits 0
+    iff ratio >= 0.95 AND ood wrong == 0. Writes report to ``--out``
+    (default: ``evals/obligation_2_ood_ratio/<lane_id>.json``)."""
+    from pathlib import Path
+    from core.capability.ood_ratio import (
+        emit_ood_ratio_report,
+        evaluate_ood_ratio,
+    )
+    from evals.obligation_2_ood_ratio.v1.runner import build_report, load_cases, write_report as write_ood_report
+
+    _repo_root = Path(__file__).resolve().parent.parent
+
+    # Regenerate OOD report so auditor always reads fresh results.
+    ood_report_path = _repo_root / "evals" / "obligation_2_ood_ratio" / "v1" / "report.json"
+    ood_cases = load_cases()
+    ood_runner_report = build_report(ood_cases)
+    write_ood_report(ood_runner_report, ood_report_path)
+
+    report = evaluate_ood_ratio()
+    out_path = Path(args.out) if args.out else (
+        _repo_root
+        / "evals" / "obligation_2_ood_ratio"
+        / f"{report.lane_id}.json"
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    emit_ood_ratio_report(report, out_path)
+
+    if args.json:
+        print(json.dumps(report.as_dict(), indent=2, sort_keys=True))
+    else:
+        print(f"lane:                        {report.lane_id}")
+        print(f"public_accuracy:             {report.public_accuracy:.4f}  ({report.public_cases_correct}/{report.public_cases_total})")
+        print(f"ood_accuracy:                {report.ood_accuracy:.4f}  ({report.ood_cases_correct}/{report.ood_cases_total})")
+        print(f"ood_ratio:                   {report.ood_ratio:.4f}")
+        print(f"obligation_2_ratio_satisfied:{report.obligation_2_ratio_satisfied}")
+        print(f"obligation_2_wrong_zero:     {report.obligation_2_wrong_zero}")
+        print(f"obligation_2_passed:         {report.obligation_2_passed}")
+        print(f"artifact:                    {out_path}")
+        if report.refusal_reason:
+            print(f"refusal_reason:              {report.refusal_reason}")
+    return 0 if report.obligation_2_passed else 1
+
+
 def cmd_pack_list(args: argparse.Namespace) -> int:
     """List compiled language packs."""
     from language_packs import list_packs
@@ -3106,6 +3153,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="output path for the depth-curve report (default: evals/obligation_6_depth_curve/<lane_id>.json)",
     )
     capability_depth_curve.set_defaults(func=cmd_capability_depth_curve)
+    capability_ood_ratio = capability_sub.add_parser(
+        "ood-ratio",
+        help="ADR-0114a Obligation #2 — OOD surface variation ratio auditor for B3",
+    )
+    capability_ood_ratio.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_ood_ratio.add_argument(
+        "--out",
+        default=None,
+        help="output path for the audit report (default: evals/obligation_2_ood_ratio/<lane_id>.json)",
+    )
+    capability_ood_ratio.set_defaults(func=cmd_capability_ood_ratio)
 
     pack = subparsers.add_parser("pack", help="inspect and verify language packs")
     pack_sub = pack.add_subparsers(dest="pack_command", metavar="pack-command", required=True)
