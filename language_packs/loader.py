@@ -288,3 +288,68 @@ def canonical_unit_for(dimension: str) -> str:
     if unit:
         return unit.singular
     return dim.canonical_unit
+
+
+# ---------------------------------------------------------------------------
+# ADR-0128 numerics-pack re-exports (deferred coordination from ADR-0128 brief)
+#
+# en_numerics_v1's loader functions live in language_packs/numerics_loader.py
+# (per the brief's concurrency clause that allowed parallel development).
+# Re-exporting them here gives callers a single import path
+# (`from language_packs.loader import lookup_cardinal`) while keeping the
+# numerics implementation in its own domain-cohesive module.
+# ---------------------------------------------------------------------------
+
+from language_packs.numerics_loader import (  # noqa: E402
+    CardinalEntry,
+    ComparisonAnchorEntry,
+    FractionEntry,
+    MultiplierEntry,
+    NumberFormatEntry,
+    OrdinalEntry,
+    ParsedNumber,
+    QuantifierEntry,
+    lookup_cardinal,
+    lookup_comparison_anchor,
+    lookup_comparison_anchors,
+    lookup_fraction,
+    lookup_multiplier,
+    lookup_ordinal,
+    lookup_quantifier,
+    match_number_format,
+    number_format_entries,
+    parse_compound_cardinal,
+)
+
+__all__ = [
+    # ADR-0127 units pack
+    "UnitEntry",
+    "ContainerEntry",
+    "DimensionEntry",
+    "ConversionEdge",
+    "ConversionGraph",
+    "lookup_unit",
+    "lookup_container",
+    "lookup_dimension",
+    "get_conversion_graph",
+    "canonical_unit_for",
+    # ADR-0128 numerics pack (re-exported from numerics_loader)
+    "CardinalEntry",
+    "OrdinalEntry",
+    "FractionEntry",
+    "MultiplierEntry",
+    "QuantifierEntry",
+    "ComparisonAnchorEntry",
+    "NumberFormatEntry",
+    "ParsedNumber",
+    "lookup_cardinal",
+    "lookup_ordinal",
+    "lookup_fraction",
+    "lookup_quantifier",
+    "lookup_multiplier",
+    "lookup_comparison_anchor",
+    "lookup_comparison_anchors",
+    "number_format_entries",
+    "match_number_format",
+    "parse_compound_cardinal",
+]
