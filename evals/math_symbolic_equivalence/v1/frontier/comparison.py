@@ -43,11 +43,21 @@ def _load_lane_report() -> dict[str, Any]:
 
 
 def _load_cases() -> list[dict[str, Any]]:
+    """Compose the curated cases.jsonl with the deterministically
+    generated set so scoring covers the full B1.B lane (185 cases),
+    not just the 30 curated. Mirrors ``runner.py``'s composition.
+    """
     cases: list[dict[str, Any]] = []
     for raw in (_LANE_ROOT / "cases.jsonl").read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if line:
             cases.append(json.loads(line))
+    # Lazy import — keeps the package loadable in contexts where the
+    # generator's RNG-seeded build path isn't desired.
+    from evals.math_symbolic_equivalence.v1.generated_cases import (
+        build_generated_cases,
+    )
+    cases.extend(build_generated_cases())
     return cases
 
 

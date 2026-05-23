@@ -1,0 +1,185 @@
+{"case_id": "sym-eq-v1-0001", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0002", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0003", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0004", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0005", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0006", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0007", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0008", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0009", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0010", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0011", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0012", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0013", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0014", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0015", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0016", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-v1-0017", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0018", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0019", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0020", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-v1-0021", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-v1-0022", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-v1-0023", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-v1-0024", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-v1-0025", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-v1-0026", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-v1-0027", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-v1-0028", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-v1-0029", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-v1-0030", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0001", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0002", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0003", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0004", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-5x-4)\u00b2 = 25x\u00b2 + 40x + 16\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0005", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-4x-2)\u00b2 = 16x\u00b2 + 16x + 4\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0006", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0007", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0008", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0009", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0010", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0011", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0012", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0013", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0014", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0015", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-3x-4)\u00b2 = 9x\u00b2 + 24x + 16\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0016", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0017", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0018", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0019", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0020", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0021", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0022", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0023", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0024", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0025", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0026", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0027", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0028", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0029", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0030", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0031", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0032", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "(4x+2)\u00b2 = 16x\u00b2 + 16x + 4 \u2713\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0033", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0034", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0035", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0036", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0037", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0038", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0039", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0040", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0041", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (x-5)*(-4x+1) = -4x\u00b2 + x + 20x - 5 = -4x\u00b2 + 21x - 5\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0042", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-3x+1)(-4x-3)\n= (-3x)(-4x) + (-3x)(-3) + (1)(-4x) + (1)(-3)\n= 12x\u00b2 + 9x - 4x - 3\n= 12x\u00b2 + 5x - 3\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0043", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-5x+2)(-3x+5) = 15x\u00b2 - 25x - 6x + 10 = 15x\u00b2 - 31x + 10\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0044", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-2x-4)(x+2) = -2x\u00b2-4x-4x-8 = -2x\u00b2-8x-8\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0045", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-x-5)*(-5x-5)\n= (-x)(-5x) + (-x)(-5) + (-5)(-5x) + (-5)(-5)\n= 5x\u00b2 + 5x + 25x + 25\n= 5x\u00b2 + 30x + 25\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0046", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(3x+2)(-5x-3) = 3x\u00b7(-5x) + 3x\u00b7(-3) + 2\u00b7(-5x) + 2\u00b7(-3)\n= -15x\u00b2 - 9x - 10x - 6\n= -15x\u00b2 - 19x - 6\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0047", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-3x-4)(x+4) = -3x\u00b2-12x-4x-16 = -3x\u00b2-16x-16\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0048", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0049", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0050", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0051", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-4x - 3)(2x + 5)\n= -8x\u00b2 - 20x - 6x - 15\n= -8x\u00b2 - 26x - 15\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0052", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (3x-3)(5x-1) = 15x\u00b2 - 3x - 15x + 3 = 15x\u00b2 - 18x + 3\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0053", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0054", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(2x - 3)(-5x - 2)\n= 2x\u00b7(-5x) + 2x\u00b7(-2) + (-3)\u00b7(-5x) + (-3)\u00b7(-2)\n= -10x\u00b2 - 4x + 15x + 6\n= -10x\u00b2 + 11x + 6\n\nThis matches Expression B.\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0055", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-2x)(-2x+2) = 4x\u00b2 - 4x\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0056", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0057", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(5x - 5)(-x - 4)\n= 5x(-x) + 5x(-4) + (-5)(-x) + (-5)(-4)\n= -5x\u00b2 - 20x + 5x + 20\n= -5x\u00b2 - 15x + 20\n\nExpression B: -5x\u00b2 - 15x + 20\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0058", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0059", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-3x+2)(-3x-1) = 9x\u00b2 + 3x - 6x - 2 = 9x\u00b2 - 3x - 2\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0060", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-x+2)*(-3*x-3)\n= (-x)*(-3x) + (-x)*(-3) + 2*(-3x) + 2*(-3)\n= 3x\u00b2 + 3x - 6x - 6\n= 3x\u00b2 - 3x - 6\n\nExpression B: 3*x^2 - 3*x - 6\n\nThese are identical.\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0061", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-x-5)*(2*x-2)\n= -x*(2x-2) + (-5)*(2x-2)\n= -2x\u00b2 + 2x - 10x + 10\n= -2x\u00b2 - 8x + 10\n\nThis matches Expression B.\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0062", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-5x + 2)(2x + 3) = -10x\u00b2 - 15x + 4x + 6 = -10x\u00b2 - 11x + 6\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0063", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-2x-5)(-3x-5) = 6x\u00b2 + 10x + 15x + 25 = 6x\u00b2 + 25x + 25\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0064", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-5x + 5)(5x + 3)\n= -25x\u00b2 - 15x + 25x + 15\n= -25x\u00b2 + 10x + 15\n\nThis matches Expression B.\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0065", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-2x+4)(-2x-3)\n= (-2x)(-2x) + (-2x)(-3) + 4(-2x) + 4(-3)\n= 4x\u00b2 + 6x - 8x - 12\n= 4x\u00b2 - 2x - 12\n\nThis matches Expression B.\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0066", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(5x+1)(5x-5) = 25x\u00b2 - 25x + 5x - 5 = 25x\u00b2 - 20x - 5\n\nExpression B: 25x\u00b2 - 20x - 5\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0067", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-2x-2)(-3x-1) = 6x\u00b2 + 2x + 6x + 2 = 6x\u00b2 + 8x + 2\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0068", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-x-1)*(-2x-3) = 2x\u00b2 + 3x + 2x + 3 = 2x\u00b2 + 5x + 3\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0069", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0070", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-4x+1)(5x-3) = -20x\u00b2 + 12x + 5x - 3 = -20x\u00b2 + 17x - 3\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0071", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (3x-2)(x-2) = 3x\u00b2-6x-2x+4 = 3x\u00b2-8x+4\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0072", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(5x - 5)(4x + 3) = 20x\u00b2 + 15x - 20x - 15 = 20x\u00b2 - 5x - 15\n\nExpression B: 20x\u00b2 - 5x - 15\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0073", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (2x+1)(3x-5) = 6x\u00b2-10x+3x-5 = 6x\u00b2-7x-5\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0074", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (4x-5)(-3x+4) = -12x\u00b2 + 16x + 15x - 20 = -12x\u00b2 + 31x - 20\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0075", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-2x-5)(-x-3) = 2x\u00b2+6x+5x+15 = 2x\u00b2+11x+15\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0076", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-5x + 2)(2x + 3) = -10x\u00b2 - 15x + 4x + 6 = -10x\u00b2 - 11x + 6\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0077", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-2x)(-2x-4) = 4x\u00b2 + 8x\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0078", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(3x - 5)(-x - 5)\n= 3x\u00b7(-x) + 3x\u00b7(-5) + (-5)\u00b7(-x) + (-5)\u00b7(-5)\n= -3x\u00b2 - 15x + 5x + 25\n= -3x\u00b2 - 10x + 25\n\nExpression B: -3x\u00b2 - 10x + 25\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0079", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-3*x)*(5*x-3) = -15*x\u00b2 + 9*x\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0080", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (5x-1)(-4x+4) = -20x\u00b2 + 20x + 4x - 4 = -20x\u00b2 + 24x - 4\n\nEQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0081", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0082", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0083", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0084", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0085", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0086", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0087", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0088", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0089", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0090", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0091", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0092", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0093", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0094", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0095", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0096", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0097", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0098", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0099", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0100", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0101", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0102", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0103", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0104", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0105", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0106", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0107", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0108", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0109", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0110", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0111", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0112", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0113", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0114", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0115", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0116", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0117", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0118", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0119", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0120", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "EQUIVALENT", "verdict": "equivalent"}
+{"case_id": "sym-eq-gen-v1-0121", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-x-4)*(2*x-1)\n= -x*(2x-1) - 4*(2x-1)\n= -2x\u00b2 + x - 8x + 4\n= -2x\u00b2 - 7x + 4\n\nExpression B: -2x\u00b2 - 7x + 5\n\nThe constant terms differ (4 vs 5).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0122", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(3x+3)(-4x-3) = 3x\u00b7(-4x) + 3x\u00b7(-3) + 3\u00b7(-4x) + 3\u00b7(-3)\n= -12x\u00b2 - 9x - 12x - 9\n= -12x\u00b2 - 21x - 9\n\nExpression B: -12x\u00b2 - 21x - 8\n\nThe constant terms differ (-9 vs -8).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0123", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expression A: (-x+3)*(-x-3) = (3-x)(-(x+3)) ... let me expand directly.\n\n(-x+3)*(-x-3) = (-x)(-x) + (-x)(-3) + 3(-x) + 3(-3)\n= x\u00b2 + 3x - 3x - 9\n= x\u00b2 - 9\n\nExpression B: x\u00b2 - 8\n\nThese are not equal.\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0124", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0125", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-4x - 5)(5x + 4)\n= -4x\u00b75x + (-4x)\u00b74 + (-5)\u00b75x + (-5)\u00b74\n= -20x\u00b2 - 16x - 25x - 20\n= -20x\u00b2 - 41x - 20\n\nExpression B: -20x\u00b2 - 41x - 19\n\nThe constant terms differ (-20 vs -19).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0126", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0127", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-x+3)*(4x+1) = -4x\u00b2 - x + 12x + 3 = -4x\u00b2 + 11x + 3\n\nB: -4x\u00b2 + 11x + 4\n\nThe constant terms differ (3 vs 4).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0128", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-x-3)*(3*x-1)\n= -x*(3x-1) - 3*(3x-1)\n= -3x\u00b2 + x - 9x + 3\n= -3x\u00b2 - 8x + 3\n\nExpression B: -3x\u00b2 - 8x + 4\n\nThe constant terms differ (3 vs 4).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0129", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-x-1)*(-5*x-2)\n= (-x)*(-5x) + (-x)*(-2) + (-1)*(-5x) + (-1)*(-2)\n= 5x\u00b2 + 2x + 5x + 2\n= 5x\u00b2 + 7x + 2\n\nExpression B: 5x\u00b2 + 7x + 3\n\nThese differ by the constant term (2 vs 3).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0130", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (-4x+5)(-3x+1) = 12x\u00b2 - 4x - 15x + 5 = 12x\u00b2 - 19x + 5\n\nB = 12x\u00b2 - 19x + 6\n\nThe constant terms differ (5 vs 6).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0131", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-4x - 4)(-4x - 3)\n= 16x\u00b2 + 12x + 16x + 12\n= 16x\u00b2 + 28x + 12\n\nExpression B: 16x\u00b2 + 28x + 13\n\nThe constant terms differ (12 vs 13).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0132", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (4*x)*(-3*x-2) = -12*x\u00b2 - 8*x\n\nB: -12*x\u00b2 - 8*x + 1\n\nThese differ by the constant +1.\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0133", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(x-3)*(-2x+3) = -2x\u00b2 + 3x + 6x - 9 = -2x\u00b2 + 9x - 9\n\nExpression B: -2x\u00b2 + 9x - 8\n\nThe constant terms differ (-9 vs -8).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0134", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(3x - 2)(-5x - 5)\n= 3x\u00b7(-5x) + 3x\u00b7(-5) + (-2)\u00b7(-5x) + (-2)\u00b7(-5)\n= -15x\u00b2 - 15x + 10x + 10\n= -15x\u00b2 - 5x + 10\n\nExpression B: -15x\u00b2 - 5x + 11\n\nThe constant terms differ (10 vs 11).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0135", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-2x - 3)(4x - 4)\n= -2x\u00b74x + (-2x)\u00b7(-4) + (-3)\u00b74x + (-3)\u00b7(-4)\n= -8x\u00b2 + 8x - 12x + 12\n= -8x\u00b2 - 4x + 12\n\nExpression B: -8x\u00b2 - 4x + 13\n\nThe constant terms differ (12 vs 13).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0136", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0137", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (2x-4)(5x-1) = 10x\u00b2 - 2x - 20x + 4 = 10x\u00b2 - 22x + 4\n\nB: 10x\u00b2 - 22x + 5\n\nThe constant terms differ (4 vs 5).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0138", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-x-4)*(x+4) = -x\u00b2 - 4x - 4x - 16 = -x\u00b2 - 8x - 16\n\nExpression B: -x\u00b2 - 8x - 15\n\n-16 \u2260 -15\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0139", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-2x + 1)(5x + 4) = -10x\u00b2 - 8x + 5x + 4 = -10x\u00b2 - 3x + 4\n\nExpression B: -10x\u00b2 - 3x + 5\n\nThe constant terms differ (4 vs 5).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0140", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-3x - 2)(-5x + 5)\n= (-3x)(-5x) + (-3x)(5) + (-2)(-5x) + (-2)(5)\n= 15x\u00b2 - 15x + 10x - 10\n= 15x\u00b2 - 5x - 10\n\nExpression B: 15x\u00b2 - 5x - 9\n\nThe constant terms differ (-10 vs -9).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0141", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-3x + 4)(3x - 5)\n= -9x\u00b2 + 15x + 12x - 20\n= -9x\u00b2 + 27x - 20\n\nExpression B: -9x\u00b2 + 27x - 19\n\nThe constant terms differ (-20 vs -19).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0142", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(x-2)*(-3x-5) = x*(-3x-5) - 2*(-3x-5)\n= -3x\u00b2 - 5x + 6x + 10\n= -3x\u00b2 + x + 10\n\nExpression B: -3x\u00b2 + x + 11\n\nThese differ by a constant (10 vs 11).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0143", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-x+4)*(2*x-5) = -x*2x + (-x)*(-5) + 4*2x + 4*(-5)\n= -2x\u00b2 + 5x + 8x - 20\n= -2x\u00b2 + 13x - 20\n\nExpression B: -2x\u00b2 + 13x - 19\n\nThe constant terms differ (-20 vs -19).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0144", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (3x+4)(x-5) = 3x\u00b2-15x+4x-20 = 3x\u00b2-11x-20\n\nB: 3x\u00b2-11x-19\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0145", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (3x-5)(2x+2) = 6x\u00b2 + 6x - 10x - 10 = 6x\u00b2 - 4x - 10\n\nB: 6x\u00b2 - 4x - 9\n\nThese differ (-10 vs -9).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0146", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Expanding A: (5x-1)(x+5) = 5x\u00b2 + 25x - x - 5 = 5x\u00b2 + 24x - 5\n\nB: 5x\u00b2 + 24x - 4\n\nThe constant terms differ (-5 vs -4).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0147", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-2x - 3)(4x + 4)\n= -2x\u00b74x + (-2x)\u00b74 + (-3)\u00b74x + (-3)\u00b74\n= -8x\u00b2 - 8x - 12x - 12\n= -8x\u00b2 - 20x - 12\n\nExpression B: -8x\u00b2 - 20x - 11\n\nThe constant terms differ (-12 vs -11).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0148", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(4x + 4)(-2x - 3)\n= 4x\u00b7(-2x) + 4x\u00b7(-3) + 4\u00b7(-2x) + 4\u00b7(-3)\n= -8x\u00b2 - 12x - 8x - 12\n= -8x\u00b2 - 20x - 12\n\nExpression B: -8x\u00b2 - 20x - 11\n\n-12 \u2260 -11\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0149", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(3x+4)(-3x+3) = 3x\u00b7(-3x) + 3x\u00b73 + 4\u00b7(-3x) + 4\u00b73\n= -9x\u00b2 + 9x - 12x + 12\n= -9x\u00b2 - 3x + 12\n\nExpression B: -9x\u00b2 - 3x + 13\n\nThe constant terms differ (12 vs 13).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0150", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "Let me expand Expression A:\n(-4x + 1)(2x + 2) = -8x\u00b2 - 8x + 2x + 2 = -8x\u00b2 - 6x + 2\n\nExpression B: -8x\u00b2 - 6x + 3\n\nThe constant terms differ (2 vs 3).\n\nNOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0151", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0152", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0153", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0154", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "NOT_EQUIVALENT", "verdict": "not_equivalent"}
+{"case_id": "sym-eq-gen-v1-0155", "model": "claude-sonnet-4-6", "provider": "anthropic", "raw_reply": "REFUSED", "verdict": "refused"}

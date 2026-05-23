@@ -55,7 +55,24 @@
       "wrong": 0
     }
   },
-  "frontier_head_to_head": [],
+  "frontier_head_to_head": [
+    {
+      "accuracy": 0.9837837837837838,
+      "case_count": 185,
+      "missing_case_ids": [],
+      "model": "claude-sonnet-4-6",
+      "provider": "anthropic",
+      "refusal_correctness": 0.3333333333333333,
+      "refused_expected_total": 3,
+      "responses_seen": 185,
+      "status": "ok",
+      "verdict_counts": {
+        "equivalent": 139,
+        "not_equivalent": 45,
+        "refused": 1
+      }
+    }
+  ],
   "schema_version": 1,
   "scope_disclaimer": "Citations above measure frontier capability on the full MATH benchmark (Hendrycks et al., 2021), which spans algebra, geometry, number theory, and combinatorics across five difficulty levels. B1 (ADR-0131.1) measures univariate polynomial canonical equivalence \u2014 a strict subset of the algebra sub-domain. The citations are not claimed as head-to-head scores on B1; the head-to-head, when run, is reported separately via frontier_runner with provider responses cached for replay."
 }
