@@ -1,0 +1,132 @@
+{
+  "adr": "0131.1.S",
+  "benchmark": "symbolic_equivalence_holdout_v1",
+  "cases_path": "evals/math_symbolic_equivalence/v1/sealed_holdout.age",
+  "correct_rate": 1.0,
+  "counts": {
+    "correct": 14,
+    "refused": 0,
+    "wrong": 0
+  },
+  "exit_criterion": {
+    "correct_rate_min": 0.95,
+    "passed": true,
+    "wrong_max": 0
+  },
+  "per_case": [
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-hld-0001",
+      "category": "commutative_add",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-hld-0002",
+      "category": "commutative_mul",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-hld-0003",
+      "category": "distributive",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-hld-0004",
+      "category": "square_of_binomial",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-hld-0005",
+      "category": "difference_of_squares",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-hld-0006",
+      "category": "collect_like_terms",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-hld-0007",
+      "category": "zero_cancellation",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-hld-0008",
+      "category": "repeated_addition",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-v1-hld-0009",
+      "category": "exponent_combine",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-hld-0010",
+      "category": "different_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-hld-0011",
+      "category": "sign_flipped",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-hld-0012",
+      "category": "distributive_miss",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "refused",
+      "case_id": "sym-eq-v1-hld-0013",
+      "category": "out_of_scope_variable",
+      "expected": "refused",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "refused",
+      "case_id": "sym-eq-v1-hld-0014",
+      "category": "out_of_scope_division",
+      "expected": "refused",
+      "reason": "",
+      "verdict_class": "correct"
+    }
+  ],
+  "sample_count": 14,
+  "schema_version": 1
+}
