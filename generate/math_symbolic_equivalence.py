@@ -1,19 +1,9 @@
-"""ADR-0131.1 — Symbolic equivalence check (Benchmark 1 primitive).
+"""ADR-0131.1.B — Symbolic equivalence check.
 
 Given two algebraic expressions A and B, produces an
-:class:`EquivalenceVerdict` of EQUIVALENT, NOT_EQUIVALENT, or REFUSED
-(with reason). REFUSED preserves wrong == 0: the engine refuses to
-guess on out-of-scope input rather than emit a wrong verdict.
-
-Algorithm (v1, polynomial scope):
-  1. Normalize A via :func:`generate.math_symbolic_normalizer.normalize`.
-  2. Normalize B via the same function.
-  3. Compare canonical strings byte-for-byte.
-
-If either normalization raises :class:`SymbolicError`, the verdict is
-REFUSED with the propagating reason. This is the wrong-answer
-firewall for the benchmark — anything the normalizer cannot prove
-equivalent (or prove distinct) deterministically is refused.
+:class:`EquivalenceVerdict` of EQUIVALENT, NOT_EQUIVALENT, or REFUSED.
+REFUSED preserves wrong == 0: the engine refuses to guess on
+out-of-scope input rather than emit a wrong verdict.
 """
 
 from __future__ import annotations
@@ -37,51 +27,59 @@ class Verdict(str, Enum):
 @dataclass(frozen=True, slots=True)
 class EquivalenceVerdict:
     verdict: Verdict
-    canonical_a: str | None  # None when verdict is REFUSED and a couldn't normalize
+    canonical_a: str | None
     canonical_b: str | None
-    reason: str  # empty on EQUIVALENT / NOT_EQUIVALENT; non-empty on REFUSED
+    reason: str
 
 
 REFUSED_VERDICTS: Final[frozenset[Verdict]] = frozenset({Verdict.REFUSED})
 """Helper set for callers that need to gate on refusal vs decision."""
 
 
+def _normalize_pair(
+    expression_a: str,
+    expression_b: str,
+    *,
+    variable: str | None,
+    variables: tuple[str, ...] | None,
+) -> tuple[str, str]:
+    if variables is None and variable is None:
+        # Infer variables from the union of both expressions so `x + y` and
+        # `y + x` normalize in the same variable space.
+        poly_a_probe = normalize(expression_a)
+        poly_b_probe = normalize(expression_b)
+        variables = tuple(sorted(set(poly_a_probe.variables) | set(poly_b_probe.variables)))
+    canon_a = normalize(expression_a, variable=variable, variables=variables).to_canonical_string()
+    canon_b = normalize(expression_b, variable=variable, variables=variables).to_canonical_string()
+    return canon_a, canon_b
+
+
 def check_equivalence(
     expression_a: str,
     expression_b: str,
     *,
-    variable: str = "x",
+    variable: str | None = None,
+    variables: tuple[str, ...] | None = None,
 ) -> EquivalenceVerdict:
-    """Return whether ``expression_a`` and ``expression_b`` are
-    algebraically equivalent under the v1 polynomial-normalizer scope.
+    """Return whether two expressions are algebraically equivalent.
 
-    Refusal cases (each surfaces a typed reason):
-      - Either expression is empty or non-string.
-      - Either expression uses an out-of-scope identifier (multi-
-        variable, undefined name).
-      - Either expression contains a syntactically invalid construct.
-      - Either expression uses division, transcendental functions,
-        non-integer coefficients, negative exponents, or non-constant
-        exponents.
+    ``variable`` is retained for backward compatibility with the v1
+    univariate API. New callers can omit it and allow variable inference, or
+    pass an explicit sorted ``variables`` tuple.
     """
     try:
-        canon_a = normalize(expression_a, variable=variable).to_canonical_string()
+        canon_a, canon_b = _normalize_pair(
+            expression_a,
+            expression_b,
+            variable=variable,
+            variables=variables,
+        )
     except SymbolicError as exc:
         return EquivalenceVerdict(
             verdict=Verdict.REFUSED,
             canonical_a=None,
             canonical_b=None,
-            reason=f"normalize(a) refused: {exc}",
-        )
-
-    try:
-        canon_b = normalize(expression_b, variable=variable).to_canonical_string()
-    except SymbolicError as exc:
-        return EquivalenceVerdict(
-            verdict=Verdict.REFUSED,
-            canonical_a=canon_a,
-            canonical_b=None,
-            reason=f"normalize(b) refused: {exc}",
+            reason=f"normalize refused: {exc}",
         )
 
     if canon_a == canon_b:
