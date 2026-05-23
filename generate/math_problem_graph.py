@@ -25,7 +25,7 @@ from typing import Any, Final, Mapping
 # Operation kinds correspond to math-pack lemma vocabulary (en_mathematics_logic_v1).
 # A future solver under ADR-0116 dispatches on this string.
 VALID_OPERATION_KINDS: Final[frozenset[str]] = frozenset(
-    {"add", "subtract", "transfer", "multiply", "divide"}
+    {"add", "subtract", "transfer", "multiply", "divide", "apply_rate"}
 )
 
 
@@ -61,6 +61,55 @@ class Quantity:
 
 
 @dataclass(frozen=True, slots=True)
+class Rate:
+    """A per-unit rate connecting two units (ADR-0122).
+
+    ``Rate(2.0, "dollars", "apple")`` means "2 dollars per apple". The
+    rate consumes a quantity in ``denominator_unit`` and produces a
+    quantity in ``numerator_unit`` via scalar multiplication. ``value``
+    must be strictly positive — zero or negative rates are refused at
+    construction (illegal states made hard to represent).
+    """
+
+    value: int | float
+    numerator_unit: str
+    denominator_unit: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.value, (int, float)) or isinstance(self.value, bool):
+            raise MathGraphError(
+                f"Rate.value must be int or float, got "
+                f"{type(self.value).__name__}"
+            )
+        if self.value <= 0:
+            raise MathGraphError(
+                f"Rate.value must be strictly positive; got {self.value!r}"
+            )
+        if not isinstance(self.numerator_unit, str) or not self.numerator_unit:
+            raise MathGraphError(
+                f"Rate.numerator_unit must be a non-empty string, got "
+                f"{self.numerator_unit!r}"
+            )
+        if not isinstance(self.denominator_unit, str) or not self.denominator_unit:
+            raise MathGraphError(
+                f"Rate.denominator_unit must be a non-empty string, got "
+                f"{self.denominator_unit!r}"
+            )
+        if self.numerator_unit == self.denominator_unit:
+            raise MathGraphError(
+                f"Rate.numerator_unit and Rate.denominator_unit must differ; "
+                f"got {self.numerator_unit!r} for both"
+            )
+
+    def as_json(self) -> dict[str, Any]:
+        return {
+            "denominator_unit": self.denominator_unit,
+            "numerator_unit": self.numerator_unit,
+            "value": self.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class InitialPossession:
     """Some entity holds some quantity at the start of the problem."""
 
@@ -92,7 +141,7 @@ class Operation:
 
     actor: str
     kind: str
-    operand: Quantity
+    operand: Quantity | Rate
     target: str | None = None
 
     def __post_init__(self) -> None:
@@ -103,6 +152,18 @@ class Operation:
                 f"Operation.kind must be one of {sorted(VALID_OPERATION_KINDS)}, "
                 f"got {self.kind!r}"
             )
+        if self.kind == "apply_rate":
+            if not isinstance(self.operand, Rate):
+                raise MathGraphError(
+                    "Operation.operand must be a Rate when kind='apply_rate'; "
+                    f"got {type(self.operand).__name__}"
+                )
+        else:
+            if not isinstance(self.operand, Quantity):
+                raise MathGraphError(
+                    "Operation.operand must be a Quantity when "
+                    f"kind={self.kind!r}; got {type(self.operand).__name__}"
+                )
         if self.kind == "transfer":
             if not self.target:
                 raise MathGraphError(
@@ -113,12 +174,11 @@ class Operation:
                     "Operation.target must differ from Operation.actor for "
                     "kind='transfer'"
                 )
-        else:
-            if self.target is not None:
-                raise MathGraphError(
-                    f"Operation.target only valid for kind='transfer'; got "
-                    f"kind={self.kind!r}"
-                )
+        elif self.target is not None:
+            raise MathGraphError(
+                f"Operation.target only valid for kind='transfer'; got "
+                f"kind={self.kind!r}"
+            )
 
     def as_json(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -247,7 +307,7 @@ def graph_from_dict(d: Mapping[str, Any]) -> MathProblemGraph:
         Operation(
             actor=o["actor"],
             kind=o["kind"],
-            operand=Quantity(value=o["operand"]["value"], unit=o["operand"]["unit"]),
+            operand=_operand_from_dict(o["kind"], o["operand"]),
             target=o.get("target"),
         )
         for o in d["operations"]
@@ -260,3 +320,27 @@ def graph_from_dict(d: Mapping[str, Any]) -> MathProblemGraph:
         operations=operations,
         unknown=unknown,
     )
+
+
+def _operand_from_dict(kind: str, operand: Mapping[str, Any]) -> Quantity | Rate:
+    """Reconstruct an Operation.operand from its canonical JSON form.
+
+    Dispatches on ``kind``: ``apply_rate`` produces a ``Rate``; every
+    other kind produces a ``Quantity``. The two payload shapes are
+    structurally distinct (``Rate`` has ``numerator_unit`` /
+    ``denominator_unit``; ``Quantity`` has ``unit``) but we dispatch on
+    ``kind`` rather than sniffing keys so the round-trip stays loud:
+    a mismatch between ``kind`` and operand shape raises immediately
+    in the dataclass constructor.
+    """
+    if not isinstance(operand, Mapping):
+        raise MathGraphError(
+            f"Operation.operand must be a mapping; got {type(operand).__name__}"
+        )
+    if kind == "apply_rate":
+        return Rate(
+            value=operand["value"],
+            numerator_unit=operand["numerator_unit"],
+            denominator_unit=operand["denominator_unit"],
+        )
+    return Quantity(value=operand["value"], unit=operand["unit"])

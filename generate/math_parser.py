@@ -34,6 +34,7 @@ from generate.math_problem_graph import (
     MathProblemGraph,
     Operation,
     Quantity,
+    Rate,
     Unknown,
 )
 
@@ -135,6 +136,16 @@ class _ParserState:
     unknown: Unknown | None = None
     last_unit: str | None = None
     last_singular_subject: str | None = None
+    # ADR-0122: declared rates keyed by denominator_unit
+    # (first-declaration-wins; redeclaration raises ParseError).
+    rates: dict[str, Rate] = field(default_factory=dict)
+    # ADR-0122: True once a rate-aggregate question consumed a rate.
+    # Checked at end of parse to refuse orphan rates.
+    rate_applied: bool = False
+    # ADR-0122: per-actor current unit, written by initial possession
+    # and by every operation that holds value in some unit. Used by
+    # the rate-aggregate question to find the right denominator.
+    actor_units: dict[str, str] = field(default_factory=dict)
 
     def add_entity(self, name: str) -> None:
         if name not in self.entities:
@@ -173,6 +184,17 @@ def parse_problem(text: str) -> MathProblemGraph:
 
     if state.unknown is None:
         raise ParseError(f"no question parsed: {text!r}")
+
+    # ADR-0122: a rate that was declared but never consumed by a
+    # rate-aggregate question is orphan structure — refuse rather
+    # than emit a graph whose declared rate has no algebraic role.
+    if state.rates and not state.rate_applied:
+        unused = sorted(state.rates.keys())
+        raise ParseError(
+            f"rate declared for unit(s) {unused} but no "
+            f"rate-aggregate question consumed it (ADR-0122 refuses "
+            f"orphan rates): {text!r}"
+        )
 
     return MathProblemGraph(
         entities=tuple(state.entities),
@@ -226,6 +248,12 @@ def _process_statement(sentence: str, state: _ParserState) -> None:
     if sentence_opens_with_then:
         s = _SENTENCE_OPENER_THEN_RE.sub("", s).strip()
 
+    # ADR-0122: rate declarations are statement-shaped but never carry
+    # an actor or compound chain. Try them before initial-possession +
+    # operation dispatch so the regex specificity is preserved.
+    if _try_rate_declaration(s, state):
+        return
+
     if _try_initial(s, state):
         return
 
@@ -258,6 +286,7 @@ def _try_initial(s: str, state: _ParserState) -> bool:
     )
     state.last_unit = unit
     state.last_singular_subject = entity
+    state.actor_units[entity] = unit
     return True
 
 
@@ -403,6 +432,11 @@ def _try_operation(
     state.operations.append(op)
     state.last_unit = unit
     state.last_singular_subject = subject
+    # ADR-0122: track subject's current unit; transfer also gives the
+    # target a quantity in that unit.
+    state.actor_units[subject] = unit
+    if verb in _TRANSFER_VERBS and target is not None:
+        state.actor_units[target] = unit
     return True
 
 
@@ -436,6 +470,7 @@ def _apply_divide_split(
     )
     state.last_singular_subject = subject
     state.last_unit = unit
+    state.actor_units[subject] = unit
     return True
 
 
@@ -459,7 +494,60 @@ def _apply_multiply(
         )
     )
     state.last_singular_subject = subject
+    state.actor_units[subject] = unit
     return True
+
+
+# ---------------------------------------------------------------------------
+# Rate declaration patterns (ADR-0122)
+# ---------------------------------------------------------------------------
+
+# "Each <unit> costs $<N>" / "An <unit> costs $<N>"
+# <N> accepts decimal: "$2", "$0.50", "$2.5"
+_RATE_COST_EACH_RE = re.compile(
+    r"^(?:Each|An?)\s+(?P<unit>\w+)\s+costs?\s+\$(?P<value>\d+(?:\.\d+)?)$",
+    flags=re.IGNORECASE,
+)
+
+# "<units> cost $<N> each" — note plural unit on left, "each" on right
+_RATE_COST_EACH_TRAILING_RE = re.compile(
+    r"^(?P<unit>\w+)\s+costs?\s+\$(?P<value>\d+(?:\.\d+)?)\s+each$",
+    flags=re.IGNORECASE,
+)
+
+
+def _try_rate_declaration(s: str, state: _ParserState) -> bool:
+    """Try to parse a money-rate declaration sentence (ADR-0122).
+
+    On match, record the rate keyed by the canonicalized denominator
+    unit (singular noun pluralized, e.g. ``apple`` → ``apples``). The
+    numerator unit is fixed at ``"dollars"`` for this ADR. Returns
+    True iff a rate was recorded (or refused with ParseError on
+    re-declaration).
+    """
+    for pattern in (_RATE_COST_EACH_RE, _RATE_COST_EACH_TRAILING_RE):
+        m = pattern.match(s)
+        if not m:
+            continue
+        denom = _canonical_unit(m.group("unit"))
+        raw_value = m.group("value")
+        value: int | float = (
+            float(raw_value) if "." in raw_value else int(raw_value)
+        )
+        if denom in state.rates:
+            raise ParseError(
+                f"rate redeclaration for unit {denom!r}: first "
+                f"{state.rates[denom]!r}, now ${value} (ADR-0122 "
+                f"requires first-declaration-wins; ambiguity is "
+                f"refused, not silently resolved)"
+            )
+        state.rates[denom] = Rate(
+            value=value,
+            numerator_unit="dollars",
+            denominator_unit=denom,
+        )
+        return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -475,6 +563,16 @@ _Q_ENTITY_RE = re.compile(
 _Q_TOTAL_RE = re.compile(
     r"^How\s+many\s+(?P<unit>\w+)\s+do\s+they\s+have"
     r"(?:\s+(?:in\s+total|altogether|left|now)){0,2}$",
+    flags=re.IGNORECASE,
+)
+
+# ADR-0122 rate-aggregate: "How much does X spend|pay|earn?"
+# The verb is captured for telemetry / future hedging but the
+# semantics are the same: apply X's matching rate to X's quantity.
+_Q_RATE_AGGREGATE_RE = re.compile(
+    r"^How\s+much\s+does\s+(?P<entity>[A-Z]\w+)"
+    r"\s+(?P<verb>spend|pay|earn)"
+    r"(?:\s+(?:in\s+total|altogether|now))?$",
     flags=re.IGNORECASE,
 )
 
@@ -501,4 +599,53 @@ def _process_question(sentence: str, state: _ParserState) -> None:
         state.unknown = Unknown(entity=None, unit=unit)
         return
 
+    m = _Q_RATE_AGGREGATE_RE.match(s)
+    if m:
+        _process_rate_aggregate_question(m, sentence, state)
+        return
+
     raise ParseError(f"could not parse question: {sentence!r}")
+
+
+def _process_rate_aggregate_question(
+    m: re.Match[str], sentence: str, state: _ParserState
+) -> None:
+    """Resolve a "How much does X spend|pay|earn?" question (ADR-0122).
+
+    Looks up the entity's current unit (the denominator), finds the
+    matching declared rate, emits an ``apply_rate`` operation, and
+    sets ``state.unknown`` to ``Unknown(entity, rate.numerator_unit)``.
+
+    Three refusal paths (each a typed :class:`ParseError`):
+    - entity never introduced
+    - entity has no current unit (no initial possession or operation
+      established what they hold)
+    - no declared rate matches the entity's current unit
+    """
+    entity = m.group("entity")
+    if entity not in state.entities:
+        raise ParseError(
+            f"rate-aggregate question references undefined entity "
+            f"{entity!r}: {sentence!r}"
+        )
+    denom = state.actor_units.get(entity)
+    if denom is None:
+        raise ParseError(
+            f"rate-aggregate question asks about {entity!r} but no "
+            f"statement established what {entity!r} holds: {sentence!r}"
+        )
+    rate = state.rates.get(denom)
+    if rate is None:
+        raise ParseError(
+            f"rate-aggregate question asks how much {entity!r} "
+            f"spends/pays/earns on {denom!r}, but no rate was "
+            f"declared for {denom!r}: {sentence!r}"
+        )
+    state.operations.append(
+        Operation(actor=entity, kind="apply_rate", operand=rate)
+    )
+    state.rate_applied = True
+    state.actor_units[entity] = rate.numerator_unit
+    state.last_unit = rate.numerator_unit
+    state.last_singular_subject = entity
+    state.unknown = Unknown(entity=entity, unit=rate.numerator_unit)

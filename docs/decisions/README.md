@@ -57,6 +57,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0119.8](ADR-0119.8-lane-gate.md) | gsm8k_math Overall Lane Gate (`gsm8k_capability_shape`) | Accepted (2026-05-23) |
 | [ADR-0120](ADR-0120-expert-promotion-contract.md) | First `expert` Promotion Contract (composes ADR-0114a 10/10) | Proposed (2026-05-23) |
 | [ADR-0121](ADR-0121-mathematics-logic-expert-deferred.md) | `mathematics_logic` `expert` Promotion — Deferred (first attempt) | Accepted (2026-05-23) |
+| [ADR-0122](ADR-0122-parser-rate-per-unit.md) | Parser Expansion: Rate / Per-Unit Reasoning (substrate-only; lift deferred) | Accepted (2026-05-22) |
 
 ---
 
@@ -109,6 +110,7 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - gsm8k_math Overall Lane Gate (Phase 5.8; new `gsm8k_capability_shape` in `LANE_SHAPE_REGISTRY`; composes wrong==0 + correct+refused==total + overall_pass; live dev 50/50 + public 150/150 pass) — ADR-0119.8
 - First `expert` Promotion Contract (composes all 10 ADR-0114a obligations + correct_rate ≥ 0.60 floor + depth-curve ε=0.05 + signed expert_claims; proposed; ADR-0121 the first worked attempt) — ADR-0120
 - First `expert` Promotion Attempt — `mathematics_logic` — DEFERRED (mirrors ADR-0107 → ADR-0110 pattern for audit-passed; all 10 obligations pass; correct_rate gate refuses honestly at 0/1319; parser-expansion arc is the named unlock; `wrong == 0` discipline holds against external benchmark) — ADR-0121
+- Parser-Expansion Arc — first class shipped (rate/per-unit) as **substrate-only with lift deferred** (`Rate` dataclass + `apply_rate` operation kind + parser/solver/verifier/realizer + `en_arithmetic_v1:apply_rate` pack lemma; 41 invariants pinned; sealed `correct_rate` stays at 0/1319 with `wrong == 0`; multi-construction barrier documented — every real GSM8K rate problem combines rate with ≥1 other class, so per-ADR lift signal is corrected to cumulative-after-3rd-or-4th-class) — ADR-0122
 - **Phase 5 complete (2026-05-22):** All ADR-0119 sub-phases (5.1..5.8) landed; ADR-0114a 10/10 obligations discharged for the gsm8k_math lane on main; first honest CORE-vs-real-GSM8K measurement published (0/1319 correct, 0 wrong, 1319 refused); ADR-0120 (first `expert` promotion contract) is the next gate.
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.

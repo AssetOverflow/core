@@ -37,7 +37,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from generate.math_problem_graph import MathProblemGraph, Unknown
+from generate.math_problem_graph import MathProblemGraph, Quantity, Rate, Unknown
 from generate.math_solver import (
     REQUIRED_PACK_ID,
     SolutionStep,
@@ -232,6 +232,19 @@ def verify(graph: MathProblemGraph, trace: SolutionTrace) -> VerifierVerdict:
 
 
 def _verify_step(step: SolutionStep, state: dict[tuple[str, str], float]) -> None:
+    # apply_rate carries a Rate operand whose key shape differs from
+    # Quantity (denominator_unit instead of unit). Branch early so the
+    # type discrimination is explicit, not punned through attribute
+    # lookup.
+    if step.operation_kind == "apply_rate":
+        _verify_apply_rate_step(step, state)
+        return
+
+    if not isinstance(step.operand, Quantity):
+        raise VerificationError(
+            f"step {step.step_index} kind={step.operation_kind!r} "
+            f"requires Quantity operand; got {type(step.operand).__name__}"
+        )
     key = (step.actor, step.operand.unit)
     fresh_before = state.get(key, 0.0)
     if fresh_before != step.before_value:
@@ -292,6 +305,50 @@ def _verify_step(step: SolutionStep, state: dict[tuple[str, str], float]) -> Non
             f"step {step.step_index} declares after_value={step.after_value}, "
             f"verifier computed {fresh_after}"
         )
+
+
+def _verify_apply_rate_step(
+    step: SolutionStep, state: dict[tuple[str, str], float]
+) -> None:
+    """Verify an apply_rate step (ADR-0122).
+
+    Re-applies the rate against the denominator-unit state, checks
+    ``before_value`` / ``after_value`` byte-equal, writes the result
+    to the numerator-unit key. The denominator-unit quantity is
+    preserved (the actor still holds the input quantity after the
+    derived value is computed).
+    """
+    if not isinstance(step.operand, Rate):
+        raise VerificationError(
+            f"step {step.step_index} kind=apply_rate requires Rate "
+            f"operand; got {type(step.operand).__name__}"
+        )
+    rate = step.operand
+    denom_key = (step.actor, rate.denominator_unit)
+    if denom_key not in state:
+        raise VerificationError(
+            f"step {step.step_index} kind=apply_rate references "
+            f"({step.actor!r}, {rate.denominator_unit!r}) which is not "
+            f"in verifier state"
+        )
+    fresh_before = state[denom_key]
+    if fresh_before != step.before_value:
+        raise VerificationError(
+            f"step {step.step_index} declares before_value="
+            f"{step.before_value}, verifier computed {fresh_before}"
+        )
+    fresh_after = fresh_before * float(rate.value)
+    if fresh_after != step.after_value:
+        raise VerificationError(
+            f"step {step.step_index} declares after_value="
+            f"{step.after_value}, verifier computed {fresh_after}"
+        )
+    if step.target is not None:
+        raise VerificationError(
+            f"step {step.step_index} kind=apply_rate must not declare "
+            f"a target; got {step.target!r}"
+        )
+    state[(step.actor, rate.numerator_unit)] = fresh_after
 
 
 def _resolve_answer(

@@ -3,3 +3,4 @@
 {"entry_id":"en-arith-003","gloss":"Scale the actor's quantity by the operand factor. Yields the product."}
 {"entry_id":"en-arith-004","gloss":"Divide the actor's quantity by the operand. Yields the quotient."}
 {"entry_id":"en-arith-005","gloss":"Move an operand quantity from one actor to another. Decomposes to subtract on the source and add on the target."}
+{"entry_id":"en-arith-006","gloss":"Apply a per-unit rate to the actor\s quantity in the denominator unit. Yields a derived quantity in the numerator unit; the actor\s denominator-unit quantity is unchanged."}
