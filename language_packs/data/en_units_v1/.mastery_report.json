@@ -1,0 +1,21 @@
+{
+  "course_id": "course.subject.units.en_units_v1.1.0.0",
+  "course_sha256": "d6f8e4a77a8efafbe576c76221645698937996e9644efc5588cd1f937820863d",
+  "failure_reasons": [],
+  "gates": [
+    {
+      "measurement": "1.0",
+      "name": "G1_replay_determinism",
+      "passed": true,
+      "threshold": "1.0"
+    }
+  ],
+  "issued_at": "2026-05-23T00:00:00Z",
+  "plan_sha256": "d6f8e4a77a8efafbe576c76221645698937996e9644efc5588cd1f937820863d",
+  "ratified": true,
+  "report_sha256": "d6f8e4a77a8efafbe576c76221645698937996e9644efc5588cd1f937820863d",
+  "schema_version": "1.0.0",
+  "source_bundle_sha": "d6f8e4a77a8efafbe576c76221645698937996e9644efc5588cd1f937820863d",
+  "trace_hashes": [],
+  "validated_set_sha": "d6f8e4a77a8efafbe576c76221645698937996e9644efc5588cd1f937820863d"
+}

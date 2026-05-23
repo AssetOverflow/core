@@ -1,0 +1,401 @@
+{"edge_id": "en-units-conv-001", "from": "inch", "to": "foot", "ratio": 0.08333333333333333, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-002", "from": "foot", "to": "inch", "ratio": 12.0, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-003", "from": "inches", "to": "foot", "ratio": 0.08333333333333333, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-004", "from": "foot", "to": "inches", "ratio": 12.0, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-005", "from": "in", "to": "foot", "ratio": 0.08333333333333333, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-006", "from": "foot", "to": "in", "ratio": 12.0, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-007", "from": "yard", "to": "foot", "ratio": 3.0, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-008", "from": "foot", "to": "yard", "ratio": 0.3333333333333333, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-009", "from": "yards", "to": "foot", "ratio": 3.0, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-010", "from": "foot", "to": "yards", "ratio": 0.3333333333333333, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-011", "from": "yd", "to": "foot", "ratio": 3.0, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-012", "from": "foot", "to": "yd", "ratio": 0.3333333333333333, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-013", "from": "mile", "to": "foot", "ratio": 5280.0, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-014", "from": "foot", "to": "mile", "ratio": 0.0001893939393939394, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-015", "from": "miles", "to": "foot", "ratio": 5280.0, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-016", "from": "foot", "to": "miles", "ratio": 0.0001893939393939394, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-017", "from": "mi", "to": "foot", "ratio": 5280.0, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-018", "from": "foot", "to": "mi", "ratio": 0.0001893939393939394, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-019", "from": "meter", "to": "foot", "ratio": 3.2808398950131235, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-020", "from": "foot", "to": "meter", "ratio": 0.3048, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-021", "from": "meters", "to": "foot", "ratio": 3.2808398950131235, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-022", "from": "foot", "to": "meters", "ratio": 0.3048, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-023", "from": "m", "to": "foot", "ratio": 3.2808398950131235, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-024", "from": "foot", "to": "m", "ratio": 0.3048, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-025", "from": "millimeter", "to": "foot", "ratio": 0.0032808398950131233, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-026", "from": "foot", "to": "millimeter", "ratio": 304.8, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-027", "from": "millimeters", "to": "foot", "ratio": 0.0032808398950131233, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-028", "from": "foot", "to": "millimeters", "ratio": 304.8, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-029", "from": "mm", "to": "foot", "ratio": 0.0032808398950131233, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-030", "from": "foot", "to": "mm", "ratio": 304.8, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-031", "from": "centimeter", "to": "foot", "ratio": 0.03280839895013123, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-032", "from": "foot", "to": "centimeter", "ratio": 30.48, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-033", "from": "centimeters", "to": "foot", "ratio": 0.03280839895013123, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-034", "from": "foot", "to": "centimeters", "ratio": 30.48, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-035", "from": "cm", "to": "foot", "ratio": 0.03280839895013123, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-036", "from": "foot", "to": "cm", "ratio": 30.48, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-037", "from": "kilometer", "to": "foot", "ratio": 3280.8398950131236, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-038", "from": "foot", "to": "kilometer", "ratio": 0.0003048, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-039", "from": "kilometers", "to": "foot", "ratio": 3280.8398950131236, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-040", "from": "foot", "to": "kilometers", "ratio": 0.0003048, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-041", "from": "km", "to": "foot", "ratio": 3280.8398950131236, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-042", "from": "foot", "to": "km", "ratio": 0.0003048, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-043", "from": "foot", "to": "foot", "ratio": 1.0, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-044", "from": "feet", "to": "foot", "ratio": 1.0, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-045", "from": "foot", "to": "feet", "ratio": 1.0, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-046", "from": "ft", "to": "foot", "ratio": 1.0, "offset": 0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-047", "from": "foot", "to": "ft", "ratio": 1.0, "offset": -0.0, "dimension": "length", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-048", "from": "second", "to": "minute", "ratio": 0.016666666666666666, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-049", "from": "minute", "to": "second", "ratio": 60.0, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-050", "from": "seconds", "to": "minute", "ratio": 0.016666666666666666, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-051", "from": "minute", "to": "seconds", "ratio": 60.0, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-052", "from": "sec", "to": "minute", "ratio": 0.016666666666666666, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-053", "from": "minute", "to": "sec", "ratio": 60.0, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-054", "from": "hour", "to": "minute", "ratio": 60.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-055", "from": "minute", "to": "hour", "ratio": 0.016666666666666666, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-056", "from": "hours", "to": "minute", "ratio": 60.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-057", "from": "minute", "to": "hours", "ratio": 0.016666666666666666, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-058", "from": "hr", "to": "minute", "ratio": 60.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-059", "from": "minute", "to": "hr", "ratio": 0.016666666666666666, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-060", "from": "day", "to": "minute", "ratio": 1440.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-061", "from": "minute", "to": "day", "ratio": 0.0006944444444444445, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-062", "from": "days", "to": "minute", "ratio": 1440.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-063", "from": "minute", "to": "days", "ratio": 0.0006944444444444445, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-064", "from": "d", "to": "minute", "ratio": 1440.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-065", "from": "minute", "to": "d", "ratio": 0.0006944444444444445, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-066", "from": "week", "to": "minute", "ratio": 10080.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-067", "from": "minute", "to": "week", "ratio": 9.92063492063492e-05, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-068", "from": "weeks", "to": "minute", "ratio": 10080.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-069", "from": "minute", "to": "weeks", "ratio": 9.92063492063492e-05, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-070", "from": "wk", "to": "minute", "ratio": 10080.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-071", "from": "minute", "to": "wk", "ratio": 9.92063492063492e-05, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-072", "from": "month", "to": "minute", "ratio": 43800.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-073", "from": "minute", "to": "month", "ratio": 2.2831050228310503e-05, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-074", "from": "months", "to": "minute", "ratio": 43800.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-075", "from": "minute", "to": "months", "ratio": 2.2831050228310503e-05, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-076", "from": "mo", "to": "minute", "ratio": 43800.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-077", "from": "minute", "to": "mo", "ratio": 2.2831050228310503e-05, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-078", "from": "year", "to": "minute", "ratio": 525600.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-079", "from": "minute", "to": "year", "ratio": 1.902587519025875e-06, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-080", "from": "years", "to": "minute", "ratio": 525600.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-081", "from": "minute", "to": "years", "ratio": 1.902587519025875e-06, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-082", "from": "yr", "to": "minute", "ratio": 525600.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-083", "from": "minute", "to": "yr", "ratio": 1.902587519025875e-06, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-084", "from": "decade", "to": "minute", "ratio": 5256000.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-085", "from": "minute", "to": "decade", "ratio": 1.9025875190258752e-07, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-086", "from": "decades", "to": "minute", "ratio": 5256000.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-087", "from": "minute", "to": "decades", "ratio": 1.9025875190258752e-07, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-088", "from": "dec", "to": "minute", "ratio": 5256000.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-089", "from": "minute", "to": "dec", "ratio": 1.9025875190258752e-07, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-090", "from": "century", "to": "minute", "ratio": 52560000.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-091", "from": "minute", "to": "century", "ratio": 1.902587519025875e-08, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-092", "from": "centuries", "to": "minute", "ratio": 52560000.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-093", "from": "minute", "to": "centuries", "ratio": 1.902587519025875e-08, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-094", "from": "millennium", "to": "minute", "ratio": 525600000.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-095", "from": "minute", "to": "millennium", "ratio": 1.902587519025875e-09, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-096", "from": "millennia", "to": "minute", "ratio": 525600000.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-097", "from": "minute", "to": "millennia", "ratio": 1.902587519025875e-09, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-098", "from": "mil", "to": "minute", "ratio": 525600000.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-099", "from": "minute", "to": "mil", "ratio": 1.902587519025875e-09, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-100", "from": "minute", "to": "minute", "ratio": 1.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-101", "from": "minutes", "to": "minute", "ratio": 1.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-102", "from": "minute", "to": "minutes", "ratio": 1.0, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-103", "from": "min", "to": "minute", "ratio": 1.0, "offset": 0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-104", "from": "minute", "to": "min", "ratio": 1.0, "offset": -0.0, "dimension": "time", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-105", "from": "ounce", "to": "pound", "ratio": 0.0625, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-106", "from": "pound", "to": "ounce", "ratio": 16.0, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-107", "from": "ounces", "to": "pound", "ratio": 0.0625, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-108", "from": "pound", "to": "ounces", "ratio": 16.0, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-109", "from": "oz", "to": "pound", "ratio": 0.0625, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-110", "from": "pound", "to": "oz", "ratio": 16.0, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-111", "from": "ton", "to": "pound", "ratio": 2000.0, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-112", "from": "pound", "to": "ton", "ratio": 0.0005, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-113", "from": "tons", "to": "pound", "ratio": 2000.0, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-114", "from": "pound", "to": "tons", "ratio": 0.0005, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-115", "from": "t", "to": "pound", "ratio": 2000.0, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-116", "from": "pound", "to": "t", "ratio": 0.0005, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-117", "from": "gram", "to": "pound", "ratio": 0.002204622621848776, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-118", "from": "pound", "to": "gram", "ratio": 453.59237, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-119", "from": "grams", "to": "pound", "ratio": 0.002204622621848776, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-120", "from": "pound", "to": "grams", "ratio": 453.59237, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-121", "from": "g", "to": "pound", "ratio": 0.002204622621848776, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-122", "from": "pound", "to": "g", "ratio": 453.59237, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-123", "from": "kilogram", "to": "pound", "ratio": 2.2046226218487757, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-124", "from": "pound", "to": "kilogram", "ratio": 0.45359237, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-125", "from": "kilograms", "to": "pound", "ratio": 2.2046226218487757, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-126", "from": "pound", "to": "kilograms", "ratio": 0.45359237, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-127", "from": "kg", "to": "pound", "ratio": 2.2046226218487757, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-128", "from": "pound", "to": "kg", "ratio": 0.45359237, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-129", "from": "milligram", "to": "pound", "ratio": 2.2046226218487755e-06, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-130", "from": "pound", "to": "milligram", "ratio": 453592.37000000005, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-131", "from": "milligrams", "to": "pound", "ratio": 2.2046226218487755e-06, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-132", "from": "pound", "to": "milligrams", "ratio": 453592.37000000005, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-133", "from": "mg", "to": "pound", "ratio": 2.2046226218487755e-06, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-134", "from": "pound", "to": "mg", "ratio": 453592.37000000005, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-135", "from": "tonne", "to": "pound", "ratio": 2204.622621848776, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-136", "from": "pound", "to": "tonne", "ratio": 0.00045359237, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-137", "from": "tonnes", "to": "pound", "ratio": 2204.622621848776, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-138", "from": "pound", "to": "tonnes", "ratio": 0.00045359237, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-139", "from": "T", "to": "pound", "ratio": 2204.622621848776, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-140", "from": "pound", "to": "T", "ratio": 0.00045359237, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-141", "from": "pound", "to": "pound", "ratio": 1.0, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-142", "from": "pounds", "to": "pound", "ratio": 1.0, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-143", "from": "pound", "to": "pounds", "ratio": 1.0, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-144", "from": "lb", "to": "pound", "ratio": 1.0, "offset": 0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-145", "from": "pound", "to": "lb", "ratio": 1.0, "offset": -0.0, "dimension": "mass", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-146", "from": "teaspoon", "to": "cup", "ratio": 0.020833333333333332, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-147", "from": "cup", "to": "teaspoon", "ratio": 48.0, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-148", "from": "teaspoons", "to": "cup", "ratio": 0.020833333333333332, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-149", "from": "cup", "to": "teaspoons", "ratio": 48.0, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-150", "from": "tsp", "to": "cup", "ratio": 0.020833333333333332, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-151", "from": "cup", "to": "tsp", "ratio": 48.0, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-152", "from": "tablespoon", "to": "cup", "ratio": 0.0625, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-153", "from": "cup", "to": "tablespoon", "ratio": 16.0, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-154", "from": "tablespoons", "to": "cup", "ratio": 0.0625, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-155", "from": "cup", "to": "tablespoons", "ratio": 16.0, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-156", "from": "tbsp", "to": "cup", "ratio": 0.0625, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-157", "from": "cup", "to": "tbsp", "ratio": 16.0, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-158", "from": "pint", "to": "cup", "ratio": 2.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-159", "from": "cup", "to": "pint", "ratio": 0.5, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-160", "from": "pints", "to": "cup", "ratio": 2.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-161", "from": "cup", "to": "pints", "ratio": 0.5, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-162", "from": "pt", "to": "cup", "ratio": 2.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-163", "from": "cup", "to": "pt", "ratio": 0.5, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-164", "from": "quart", "to": "cup", "ratio": 4.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-165", "from": "cup", "to": "quart", "ratio": 0.25, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-166", "from": "quarts", "to": "cup", "ratio": 4.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-167", "from": "cup", "to": "quarts", "ratio": 0.25, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-168", "from": "qt", "to": "cup", "ratio": 4.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-169", "from": "cup", "to": "qt", "ratio": 0.25, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-170", "from": "gallon", "to": "cup", "ratio": 16.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-171", "from": "cup", "to": "gallon", "ratio": 0.0625, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-172", "from": "gallons", "to": "cup", "ratio": 16.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-173", "from": "cup", "to": "gallons", "ratio": 0.0625, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-174", "from": "gal", "to": "cup", "ratio": 16.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-175", "from": "cup", "to": "gal", "ratio": 0.0625, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-176", "from": "milliliter", "to": "cup", "ratio": 0.0042267528377, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-177", "from": "cup", "to": "milliliter", "ratio": 236.58823650170018, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-178", "from": "milliliters", "to": "cup", "ratio": 0.0042267528377, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-179", "from": "cup", "to": "milliliters", "ratio": 236.58823650170018, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-180", "from": "mL", "to": "cup", "ratio": 0.0042267528377, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-181", "from": "cup", "to": "mL", "ratio": 236.58823650170018, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-182", "from": "liter", "to": "cup", "ratio": 4.2267528377, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-183", "from": "cup", "to": "liter", "ratio": 0.23658823650170016, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-184", "from": "liters", "to": "cup", "ratio": 4.2267528377, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-185", "from": "cup", "to": "liters", "ratio": 0.23658823650170016, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-186", "from": "L", "to": "cup", "ratio": 4.2267528377, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-187", "from": "cup", "to": "L", "ratio": 0.23658823650170016, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-188", "from": "cup", "to": "cup", "ratio": 1.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-189", "from": "cups", "to": "cup", "ratio": 1.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-190", "from": "cup", "to": "cups", "ratio": 1.0, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-191", "from": "c", "to": "cup", "ratio": 1.0, "offset": 0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-192", "from": "cup", "to": "c", "ratio": 1.0, "offset": -0.0, "dimension": "volume", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-193", "from": "dollar", "to": "cent", "ratio": 100.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-194", "from": "cent", "to": "dollar", "ratio": 0.01, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-195", "from": "dollars", "to": "cent", "ratio": 100.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-196", "from": "cent", "to": "dollars", "ratio": 0.01, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-197", "from": "$", "to": "cent", "ratio": 100.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-198", "from": "cent", "to": "$", "ratio": 0.01, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-199", "from": "euro", "to": "cent", "ratio": 110.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-200", "from": "cent", "to": "euro", "ratio": 0.00909090909090909, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-201", "from": "euros", "to": "cent", "ratio": 110.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-202", "from": "cent", "to": "euros", "ratio": 0.00909090909090909, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-203", "from": "€", "to": "cent", "ratio": 110.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-204", "from": "cent", "to": "€", "ratio": 0.00909090909090909, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-205", "from": "pound sterling", "to": "cent", "ratio": 130.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-206", "from": "cent", "to": "pound sterling", "ratio": 0.007692307692307693, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-207", "from": "pounds sterling", "to": "cent", "ratio": 130.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-208", "from": "cent", "to": "pounds sterling", "ratio": 0.007692307692307693, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-209", "from": "£", "to": "cent", "ratio": 130.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-210", "from": "cent", "to": "£", "ratio": 0.007692307692307693, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-211", "from": "yen", "to": "cent", "ratio": 0.7, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-212", "from": "cent", "to": "yen", "ratio": 1.4285714285714286, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-213", "from": "¥", "to": "cent", "ratio": 0.7, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-214", "from": "cent", "to": "¥", "ratio": 1.4285714285714286, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-215", "from": "peso", "to": "cent", "ratio": 5.5, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-216", "from": "cent", "to": "peso", "ratio": 0.18181818181818182, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-217", "from": "pesos", "to": "cent", "ratio": 5.5, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-218", "from": "cent", "to": "pesos", "ratio": 0.18181818181818182, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-219", "from": "₱", "to": "cent", "ratio": 5.5, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-220", "from": "cent", "to": "₱", "ratio": 0.18181818181818182, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-221", "from": "cent", "to": "cent", "ratio": 1.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-222", "from": "cents", "to": "cent", "ratio": 1.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-223", "from": "cent", "to": "cents", "ratio": 1.0, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-224", "from": "¢", "to": "cent", "ratio": 1.0, "offset": 0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-225", "from": "cent", "to": "¢", "ratio": 1.0, "offset": -0.0, "dimension": "money", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-226", "from": "Celsius", "to": "Fahrenheit", "ratio": 1.8, "offset": 32.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-227", "from": "Fahrenheit", "to": "Celsius", "ratio": 0.5555555555555556, "offset": -17.77777777777778, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-228", "from": "°C", "to": "Fahrenheit", "ratio": 1.8, "offset": 32.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-229", "from": "Fahrenheit", "to": "°C", "ratio": 0.5555555555555556, "offset": -17.77777777777778, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-230", "from": "Kelvin", "to": "Fahrenheit", "ratio": 1.8, "offset": -459.67, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-231", "from": "Fahrenheit", "to": "Kelvin", "ratio": 0.5555555555555556, "offset": 255.37222222222223, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-232", "from": "K", "to": "Fahrenheit", "ratio": 1.8, "offset": -459.67, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-233", "from": "Fahrenheit", "to": "K", "ratio": 0.5555555555555556, "offset": 255.37222222222223, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-234", "from": "degree", "to": "Fahrenheit", "ratio": 1.0, "offset": 0.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-235", "from": "Fahrenheit", "to": "degree", "ratio": 1.0, "offset": -0.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-236", "from": "degrees", "to": "Fahrenheit", "ratio": 1.0, "offset": 0.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-237", "from": "Fahrenheit", "to": "degrees", "ratio": 1.0, "offset": -0.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-238", "from": "°", "to": "Fahrenheit", "ratio": 1.0, "offset": 0.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-239", "from": "Fahrenheit", "to": "°", "ratio": 1.0, "offset": -0.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-240", "from": "Fahrenheit", "to": "Fahrenheit", "ratio": 1.0, "offset": 0.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-241", "from": "°F", "to": "Fahrenheit", "ratio": 1.0, "offset": 0.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-242", "from": "Fahrenheit", "to": "°F", "ratio": 1.0, "offset": -0.0, "dimension": "temperature", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-243", "from": "square inch", "to": "square foot", "ratio": 0.006944444444444444, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-244", "from": "square foot", "to": "square inch", "ratio": 144.0, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-245", "from": "square inches", "to": "square foot", "ratio": 0.006944444444444444, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-246", "from": "square foot", "to": "square inches", "ratio": 144.0, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-247", "from": "sq in", "to": "square foot", "ratio": 0.006944444444444444, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-248", "from": "square foot", "to": "sq in", "ratio": 144.0, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-249", "from": "square yard", "to": "square foot", "ratio": 9.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-250", "from": "square foot", "to": "square yard", "ratio": 0.1111111111111111, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-251", "from": "square yards", "to": "square foot", "ratio": 9.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-252", "from": "square foot", "to": "square yards", "ratio": 0.1111111111111111, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-253", "from": "sq yd", "to": "square foot", "ratio": 9.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-254", "from": "square foot", "to": "sq yd", "ratio": 0.1111111111111111, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-255", "from": "square mile", "to": "square foot", "ratio": 27878400.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-256", "from": "square foot", "to": "square mile", "ratio": 3.587006427915519e-08, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-257", "from": "square miles", "to": "square foot", "ratio": 27878400.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-258", "from": "square foot", "to": "square miles", "ratio": 3.587006427915519e-08, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-259", "from": "sq mi", "to": "square foot", "ratio": 27878400.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-260", "from": "square foot", "to": "sq mi", "ratio": 3.587006427915519e-08, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-261", "from": "square meter", "to": "square foot", "ratio": 10.7639104167, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-262", "from": "square foot", "to": "square meter", "ratio": 0.09290304000008391, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-263", "from": "square meters", "to": "square foot", "ratio": 10.7639104167, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-264", "from": "square foot", "to": "square meters", "ratio": 0.09290304000008391, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-265", "from": "sq m", "to": "square foot", "ratio": 10.7639104167, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-266", "from": "square foot", "to": "sq m", "ratio": 0.09290304000008391, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-267", "from": "square kilometer", "to": "square foot", "ratio": 10763910.4167, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-268", "from": "square foot", "to": "square kilometer", "ratio": 9.290304000008392e-08, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-269", "from": "square kilometers", "to": "square foot", "ratio": 10763910.4167, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-270", "from": "square foot", "to": "square kilometers", "ratio": 9.290304000008392e-08, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-271", "from": "sq km", "to": "square foot", "ratio": 10763910.4167, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-272", "from": "square foot", "to": "sq km", "ratio": 9.290304000008392e-08, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-273", "from": "acre", "to": "square foot", "ratio": 43560.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-274", "from": "square foot", "to": "acre", "ratio": 2.295684113865932e-05, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-275", "from": "acres", "to": "square foot", "ratio": 43560.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-276", "from": "square foot", "to": "acres", "ratio": 2.295684113865932e-05, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-277", "from": "ac", "to": "square foot", "ratio": 43560.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-278", "from": "square foot", "to": "ac", "ratio": 2.295684113865932e-05, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-279", "from": "hectare", "to": "square foot", "ratio": 107639.104167, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-280", "from": "square foot", "to": "hectare", "ratio": 9.290304000008391e-06, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-281", "from": "hectares", "to": "square foot", "ratio": 107639.104167, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-282", "from": "square foot", "to": "hectares", "ratio": 9.290304000008391e-06, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-283", "from": "ha", "to": "square foot", "ratio": 107639.104167, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-284", "from": "square foot", "to": "ha", "ratio": 9.290304000008391e-06, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-285", "from": "square foot", "to": "square foot", "ratio": 1.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-286", "from": "square feet", "to": "square foot", "ratio": 1.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-287", "from": "square foot", "to": "square feet", "ratio": 1.0, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-288", "from": "sq ft", "to": "square foot", "ratio": 1.0, "offset": 0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-289", "from": "square foot", "to": "sq ft", "ratio": 1.0, "offset": -0.0, "dimension": "area", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-290", "from": "kilometer per hour", "to": "mile per hour", "ratio": 0.6213711922, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-291", "from": "mile per hour", "to": "kilometer per hour", "ratio": 1.6093440000966945, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-292", "from": "kilometers per hour", "to": "mile per hour", "ratio": 0.6213711922, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-293", "from": "mile per hour", "to": "kilometers per hour", "ratio": 1.6093440000966945, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-294", "from": "kph", "to": "mile per hour", "ratio": 0.6213711922, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-295", "from": "mile per hour", "to": "kph", "ratio": 1.6093440000966945, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-296", "from": "foot per second", "to": "mile per hour", "ratio": 0.6818181818, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-297", "from": "mile per hour", "to": "foot per second", "ratio": 1.4666666667057777, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-298", "from": "feet per second", "to": "mile per hour", "ratio": 0.6818181818, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-299", "from": "mile per hour", "to": "feet per second", "ratio": 1.4666666667057777, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-300", "from": "fps", "to": "mile per hour", "ratio": 0.6818181818, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-301", "from": "mile per hour", "to": "fps", "ratio": 1.4666666667057777, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-302", "from": "meter per second", "to": "mile per hour", "ratio": 2.2369362921, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-303", "from": "mile per hour", "to": "meter per second", "ratio": 0.44703999999088756, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-304", "from": "meters per second", "to": "mile per hour", "ratio": 2.2369362921, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-305", "from": "mile per hour", "to": "meters per second", "ratio": 0.44703999999088756, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-306", "from": "mps", "to": "mile per hour", "ratio": 2.2369362921, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-307", "from": "mile per hour", "to": "mps", "ratio": 0.44703999999088756, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-308", "from": "mile per hour", "to": "mile per hour", "ratio": 1.0, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-309", "from": "miles per hour", "to": "mile per hour", "ratio": 1.0, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-310", "from": "mile per hour", "to": "miles per hour", "ratio": 1.0, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-311", "from": "mph", "to": "mile per hour", "ratio": 1.0, "offset": 0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-312", "from": "mile per hour", "to": "mph", "ratio": 1.0, "offset": -0.0, "dimension": "speed", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-313", "from": "gram per cubic centimeter", "to": "pound per cubic foot", "ratio": 62.42796, "offset": 0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-314", "from": "pound per cubic foot", "to": "gram per cubic centimeter", "ratio": 0.01601846352179376, "offset": -0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-315", "from": "grams per cubic centimeter", "to": "pound per cubic foot", "ratio": 62.42796, "offset": 0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-316", "from": "pound per cubic foot", "to": "grams per cubic centimeter", "ratio": 0.01601846352179376, "offset": -0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-317", "from": "g/cm³", "to": "pound per cubic foot", "ratio": 62.42796, "offset": 0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-318", "from": "pound per cubic foot", "to": "g/cm³", "ratio": 0.01601846352179376, "offset": -0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-319", "from": "pound per cubic foot", "to": "pound per cubic foot", "ratio": 1.0, "offset": 0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-320", "from": "pounds per cubic foot", "to": "pound per cubic foot", "ratio": 1.0, "offset": 0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-321", "from": "pound per cubic foot", "to": "pounds per cubic foot", "ratio": 1.0, "offset": -0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-322", "from": "lb/cu ft", "to": "pound per cubic foot", "ratio": 1.0, "offset": 0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-323", "from": "pound per cubic foot", "to": "lb/cu ft", "ratio": 1.0, "offset": -0.0, "dimension": "density", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-324", "from": "kilohertz", "to": "hertz", "ratio": 1000.0, "offset": 0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-325", "from": "hertz", "to": "kilohertz", "ratio": 0.001, "offset": -0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-326", "from": "kHz", "to": "hertz", "ratio": 1000.0, "offset": 0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-327", "from": "hertz", "to": "kHz", "ratio": 0.001, "offset": -0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-328", "from": "megahertz", "to": "hertz", "ratio": 1000000.0, "offset": 0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-329", "from": "hertz", "to": "megahertz", "ratio": 1e-06, "offset": -0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-330", "from": "MHz", "to": "hertz", "ratio": 1000000.0, "offset": 0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-331", "from": "hertz", "to": "MHz", "ratio": 1e-06, "offset": -0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-332", "from": "hertz", "to": "hertz", "ratio": 1.0, "offset": 0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-333", "from": "Hz", "to": "hertz", "ratio": 1.0, "offset": 0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-334", "from": "hertz", "to": "Hz", "ratio": 1.0, "offset": -0.0, "dimension": "frequency", "provenance_ids": ["nist-sp-811:2026-05-23"]}
+{"edge_id": "en-units-conv-335", "from": "cent per hour", "to": "dollar per hour", "ratio": 0.01, "offset": 0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-336", "from": "dollar per hour", "to": "cent per hour", "ratio": 100.0, "offset": -0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-337", "from": "cents per hour", "to": "dollar per hour", "ratio": 0.01, "offset": 0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-338", "from": "dollar per hour", "to": "cents per hour", "ratio": 100.0, "offset": -0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-339", "from": "¢/hr", "to": "dollar per hour", "ratio": 0.01, "offset": 0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-340", "from": "dollar per hour", "to": "¢/hr", "ratio": 100.0, "offset": -0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-341", "from": "dollar per hour", "to": "dollar per hour", "ratio": 1.0, "offset": 0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-342", "from": "dollars per hour", "to": "dollar per hour", "ratio": 1.0, "offset": 0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-343", "from": "dollar per hour", "to": "dollars per hour", "ratio": 1.0, "offset": -0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-344", "from": "$/hr", "to": "dollar per hour", "ratio": 1.0, "offset": 0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-345", "from": "dollar per hour", "to": "$/hr", "ratio": 1.0, "offset": -0.0, "dimension": "wage", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-346", "from": "cent per item", "to": "dollar per item", "ratio": 0.01, "offset": 0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-347", "from": "dollar per item", "to": "cent per item", "ratio": 100.0, "offset": -0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-348", "from": "cents per item", "to": "dollar per item", "ratio": 0.01, "offset": 0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-349", "from": "dollar per item", "to": "cents per item", "ratio": 100.0, "offset": -0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-350", "from": "¢/item", "to": "dollar per item", "ratio": 0.01, "offset": 0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-351", "from": "dollar per item", "to": "¢/item", "ratio": 100.0, "offset": -0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-352", "from": "dollar per item", "to": "dollar per item", "ratio": 1.0, "offset": 0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-353", "from": "dollars per item", "to": "dollar per item", "ratio": 1.0, "offset": 0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-354", "from": "dollar per item", "to": "dollars per item", "ratio": 1.0, "offset": -0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-355", "from": "$/item", "to": "dollar per item", "ratio": 1.0, "offset": 0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-356", "from": "dollar per item", "to": "$/item", "ratio": 1.0, "offset": -0.0, "dimension": "unit_price", "provenance_ids": ["iso-4217:2026-05-23"]}
+{"edge_id": "en-units-conv-357", "from": "child", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-358", "from": "item", "to": "child", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-359", "from": "children", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-360", "from": "item", "to": "children", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-361", "from": "person", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-362", "from": "item", "to": "person", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-363", "from": "people", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-364", "from": "item", "to": "people", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-365", "from": "mouse", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-366", "from": "item", "to": "mouse", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-367", "from": "mice", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-368", "from": "item", "to": "mice", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-369", "from": "goose", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-370", "from": "item", "to": "goose", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-371", "from": "geese", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-372", "from": "item", "to": "geese", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-373", "from": "fish", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-374", "from": "item", "to": "fish", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-375", "from": "sheep", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-376", "from": "item", "to": "sheep", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-377", "from": "deer", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-378", "from": "item", "to": "deer", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-379", "from": "woman", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-380", "from": "item", "to": "woman", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-381", "from": "women", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-382", "from": "item", "to": "women", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-383", "from": "man", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-384", "from": "item", "to": "man", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-385", "from": "men", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-386", "from": "item", "to": "men", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-387", "from": "leaf", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-388", "from": "item", "to": "leaf", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-389", "from": "leaves", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-390", "from": "item", "to": "leaves", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-391", "from": "knife", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-392", "from": "item", "to": "knife", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-393", "from": "knives", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-394", "from": "item", "to": "knives", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-395", "from": "life", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-396", "from": "item", "to": "life", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-397", "from": "lives", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-398", "from": "item", "to": "lives", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-399", "from": "item", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-400", "from": "items", "to": "item", "ratio": 1.0, "offset": 0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
+{"edge_id": "en-units-conv-401", "from": "item", "to": "items", "ratio": 1.0, "offset": -0.0, "dimension": "count", "provenance_ids": ["adr-0127:units_pack:2026-05-23"]}
