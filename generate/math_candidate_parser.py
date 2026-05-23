@@ -36,9 +36,10 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, Literal, cast
 
 from generate.math_problem_graph import (
+    Comparison,
     InitialPossession,
     Operation,
     Quantity,
@@ -51,6 +52,11 @@ from generate.math_roundtrip import (
     WORD_NUMBERS,
     CandidateOperation,
 )
+
+
+# Locally re-typed alias mirroring Comparison.direction's literal slot —
+# used only to satisfy pyright when narrowing surface-direction strings.
+_CompDirection = Literal["more", "fewer", "times", "fraction"]
 
 
 # ---------------------------------------------------------------------------
@@ -482,5 +488,359 @@ def extract_operation_candidates(sentence: str) -> list[CandidateOperation]:
         candidate = _build_op_candidate(m, kind, source=sentence)
         if candidate is not None:
             out.append(candidate)
+
+    # ADR-0131.G.2 — comparative operations.
+    # Specificity order: nested > multiplicative > additive. Multiplicative
+    # anchors that overlap with additive ("twice" vs "two more") are disjoint
+    # at the lexical level (WORD_NUMBERS has 'two' not 'twice'); nesting
+    # consumes a *trailing* "than N times <REF>" tail so it cannot be confused
+    # with the bare additive pattern. See ADR-0131.G.2 for precedence
+    # rationale.
+    out.extend(_compare_nested_candidates(sentence))
+    out.extend(_compare_multiplicative_candidates(sentence))
+    out.extend(_compare_additive_candidates(sentence))
+
+    return out
+
+
+# ---------------------------------------------------------------------------
+# ADR-0131.G.2 — Comparative operation extractors
+# ---------------------------------------------------------------------------
+#
+# Closed-set anchor alternation, aligned 1:1 with the four
+# ``Comparison.direction`` literals registered in
+# :data:`generate.math_roundtrip.COMPARE_ADDITIVE_ANCHORS` /
+# :data:`COMPARE_MULTIPLICATIVE_ANCHORS`:
+#
+#   additive        — direction ∈ {more, fewer}; "less" admitted as a
+#                     surface synonym mapped to direction='fewer'.
+#                     ``matched_verb`` = the lowercased direction word
+#                     ('more' / 'fewer' / 'less'); these are members of
+#                     COMPARE_ADDITIVE_ANCHORS so the round-trip filter's
+#                     verb-registry check (math_roundtrip step 1) passes.
+#   multiplicative  — direction ∈ {times, fraction}; surface anchors are
+#                     'twice' / 'thrice' / 'N times' / 'half'. The
+#                     anchor-as-value-token convention from math_roundtrip
+#                     step 4 lets word-form factor anchors skip
+#                     value-grounding (the anchor's own appearance in
+#                     the source already grounds the factor).
+#
+# Out of scope (refused by deliberate non-match): "as many … as" without
+# a direction anchor, "compared to …", "in comparison with …",
+# "the same … as". These have no entry in COMPARE_*_ANCHORS — admitting
+# them would breach the round-trip filter's verb-registry check anyway.
+
+# Comparative entity slot: proper-noun, "the X" collective, "the number/amount
+# of <noun>" mass-noun construction. Possessives ("Bob's"/"his") are deferred.
+_COMPARE_REF: Final[str] = (
+    r"(?:"
+    r"the\s+(?:number|amount)\s+of\s+\w+"
+    r"|[Tt]he\s+\w+"
+    r"|[A-Z]\w+"
+    r")"
+)
+
+
+def _resolve_reference_token(raw: str) -> tuple[str, str]:
+    """Return ``(canonical_entity, head_token_for_grounding)``.
+
+    For "the number of chickens" the head token is "chickens"; the
+    canonical entity uses the full noun-phrase so binding-graph
+    referential-integrity isn't subverted by collapsing different
+    references to the same noun.
+    """
+    collapsed = re.sub(r"\s+", " ", raw.strip())
+    lowered = collapsed.lower()
+    if lowered.startswith("the number of ") or lowered.startswith("the amount of "):
+        head = collapsed.split()[-1]
+        return collapsed, head
+    if lowered.startswith("the "):
+        head = collapsed[4:].split()[0]
+        return "the " + collapsed[4:], head
+    return collapsed, collapsed
+
+
+def _comparison_anchor_verb() -> str:
+    # 'has' / 'have' carry the comparator phrase. We don't include 'had/gets'
+    # etc. in P2 — past-tense + lemma-widening are deferred to a later axis
+    # to keep the precedence story narrow.
+    return r"(?:has|have)"
+
+
+_COMPARE_ADDITIVE_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<actor>{_ENTITY})\s+{_comparison_anchor_verb()}\s+"
+    rf"(?P<value>{_VALUE})\s+"
+    r"(?P<direction>more|fewer|less)\s+"
+    r"(?P<unit>\w+)\s+than\s+"
+    rf"(?P<reference>{_COMPARE_REF})\s*\.?$"
+)
+
+# Multiplicative: anchor-as-value form ("twice"/"thrice"/"half" carry the
+# factor implicitly). "as many <unit>" required; unit ellipsis ("twice as
+# many as Bob") is deferred to keep wrong==0 strict — without unit the
+# binding graph cannot disambiguate which dimension to compare.
+_COMPARE_MULT_ANCHOR_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<actor>{_ENTITY})\s+{_comparison_anchor_verb()}\s+"
+    r"(?P<anchor>twice|thrice|half)\s+as\s+many\s+"
+    r"(?P<unit>\w+)\s+as\s+"
+    rf"(?P<reference>{_COMPARE_REF})\s*\.?$"
+)
+
+# Multiplicative: explicit "N times as many <unit> as <REF>".
+_COMPARE_MULT_NTIMES_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<actor>{_ENTITY})\s+{_comparison_anchor_verb()}\s+"
+    rf"(?P<value>{_VALUE})\s+times\s+as\s+many\s+"
+    r"(?P<unit>\w+)\s+as\s+"
+    rf"(?P<reference>{_COMPARE_REF})\s*\.?$"
+)
+
+# Nested: additive over multiplicative — "A has N more <unit> than M times <REF>".
+# Emits *two* flat candidates so the binding graph (ADR-0134) can decide which
+# admissible composition (if any) survives. The parser does not commit to a
+# nested operand shape (Comparison ∋ Comparison is not a supported operand
+# type today); composition admissibility is the round-trip layer's call.
+_COMPARE_NESTED_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<actor>{_ENTITY})\s+{_comparison_anchor_verb()}\s+"
+    rf"(?P<delta_value>{_VALUE})\s+"
+    r"(?P<direction>more|fewer|less)\s+"
+    r"(?P<unit>\w+)\s+than\s+"
+    rf"(?P<factor_value>{_VALUE})\s+times\s+"
+    rf"(?P<reference>{_COMPARE_REF})\s*\.?$"
+)
+
+
+_ANCHOR_TO_FACTOR: Final[dict[str, tuple[float, str]]] = {
+    # surface anchor → (factor, direction-literal)
+    "twice": (2.0, "times"),
+    "thrice": (3.0, "times"),
+    "half": (0.5, "fraction"),
+}
+
+
+def _direction_to_anchor(direction_raw: str) -> tuple[str, str]:
+    """Map surface direction word → (canonical Comparison.direction,
+    matched_verb registered in COMPARE_ADDITIVE_ANCHORS).
+
+    'less' is a surface synonym of 'fewer'; the Comparison value uses
+    direction='fewer', but matched_verb retains the source surface
+    ('less') so the round-trip filter's "verb appears in source" check
+    succeeds. 'less' is registered in COMPARE_ADDITIVE_ANCHORS, so the
+    verb-registry check also succeeds.
+    """
+    lowered = direction_raw.lower()
+    if lowered in ("more", "fewer"):
+        return lowered, lowered
+    if lowered == "less":
+        return "fewer", "less"
+    raise ValueError(f"unknown comparative direction surface {direction_raw!r}")
+
+
+def _build_compare_additive(
+    *,
+    actor_raw: str,
+    delta_value_raw: str,
+    direction_raw: str,
+    unit_raw: str,
+    reference_raw: str,
+    source: str,
+) -> CandidateOperation | None:
+    if _is_indefinite_quantifier(delta_value_raw):
+        return None
+    direction, matched_verb = _direction_to_anchor(direction_raw)
+    actor = _normalize_entity(actor_raw)
+    reference_canon, reference_head = _resolve_reference_token(reference_raw)
+    if reference_canon == actor:
+        return None  # self-reference; constructor would refuse anyway
+    delta_value = _resolve_value(delta_value_raw)
+    unit = _canonicalize_unit(unit_raw)
+    try:
+        op = Operation(
+            actor=actor,
+            kind="compare_additive",
+            operand=Comparison(
+                reference_actor=reference_canon,
+                delta=Quantity(value=delta_value, unit=unit),
+                factor=None,
+                direction=cast(_CompDirection, direction),
+            ),
+        )
+    except Exception:
+        return None
+    try:
+        return CandidateOperation(
+            op=op,
+            source_span=source,
+            matched_verb=matched_verb,
+            matched_value_token=delta_value_raw,
+            matched_unit_token=unit_raw,
+            matched_actor_token=actor_raw,
+            matched_reference_actor_token=reference_head,
+        )
+    except Exception:
+        return None
+
+
+def _build_compare_multiplicative(
+    *,
+    actor_raw: str,
+    factor: float,
+    matched_verb: str,
+    matched_value_token: str,
+    unit_raw: str,
+    reference_raw: str,
+    source: str,
+    direction: str,
+) -> CandidateOperation | None:
+    actor = _normalize_entity(actor_raw)
+    reference_canon, reference_head = _resolve_reference_token(reference_raw)
+    if reference_canon == actor:
+        return None
+    _ = _canonicalize_unit(unit_raw)  # validation only; multiplicative compares
+    # carry the unit on the source-span side, not the operand
+    try:
+        op = Operation(
+            actor=actor,
+            kind="compare_multiplicative",
+            operand=Comparison(
+                reference_actor=reference_canon,
+                delta=None,
+                factor=factor,
+                direction=cast(_CompDirection, direction),
+            ),
+        )
+    except Exception:
+        return None
+    try:
+        return CandidateOperation(
+            op=op,
+            source_span=source,
+            matched_verb=matched_verb,
+            matched_value_token=matched_value_token,
+            matched_unit_token=unit_raw,
+            matched_actor_token=actor_raw,
+            matched_reference_actor_token=reference_head,
+        )
+    except Exception:
+        return None
+
+
+def _compare_additive_candidates(sentence: str) -> list[CandidateOperation]:
+    s = sentence.strip()
+    m = _COMPARE_ADDITIVE_RE.match(s)
+    if m is None:
+        return []
+    cand = _build_compare_additive(
+        actor_raw=m.group("actor"),
+        delta_value_raw=m.group("value"),
+        direction_raw=m.group("direction"),
+        unit_raw=m.group("unit"),
+        reference_raw=m.group("reference"),
+        source=sentence,
+    )
+    return [cand] if cand is not None else []
+
+
+def _compare_multiplicative_candidates(sentence: str) -> list[CandidateOperation]:
+    s = sentence.strip()
+    out: list[CandidateOperation] = []
+
+    m = _COMPARE_MULT_ANCHOR_RE.match(s)
+    if m is not None:
+        anchor = m.group("anchor").lower()
+        factor, direction = _ANCHOR_TO_FACTOR[anchor]
+        cand = _build_compare_multiplicative(
+            actor_raw=m.group("actor"),
+            factor=factor,
+            matched_verb=anchor,
+            matched_value_token=anchor,  # anchor-as-value (math_roundtrip step 4)
+            unit_raw=m.group("unit"),
+            reference_raw=m.group("reference"),
+            source=sentence,
+            direction=direction,
+        )
+        if cand is not None:
+            out.append(cand)
+        return out  # specificity — don't also try N-times pattern
+
+    m = _COMPARE_MULT_NTIMES_RE.match(s)
+    if m is not None:
+        value_raw = m.group("value")
+        if _is_indefinite_quantifier(value_raw):
+            return out
+        try:
+            factor = float(_resolve_value(value_raw))
+        except KeyError:
+            return out
+        cand = _build_compare_multiplicative(
+            actor_raw=m.group("actor"),
+            factor=factor,
+            matched_verb="times",
+            matched_value_token=value_raw,
+            unit_raw=m.group("unit"),
+            reference_raw=m.group("reference"),
+            source=sentence,
+            direction="times",
+        )
+        if cand is not None:
+            out.append(cand)
+    return out
+
+
+def _compare_nested_candidates(sentence: str) -> list[CandidateOperation]:
+    """Emit two flat candidates for nested 'N more <unit> than M times <REF>'.
+
+    The parser does not commit to a composed Comparison-of-Comparison
+    operand (operand type Comparison ∋ Comparison is not modelled
+    today). Both flat candidates are forwarded; the binding-graph /
+    round-trip layer (ADR-0134) picks an admissible composition or
+    refuses. Refusal is the safe outcome — never a wrong answer.
+    """
+    s = sentence.strip()
+    m = _COMPARE_NESTED_RE.match(s)
+    if m is None:
+        return []
+    out: list[CandidateOperation] = []
+
+    actor_raw = m.group("actor")
+    unit_raw = m.group("unit")
+    reference_raw = m.group("reference")
+
+    # Candidate 1: additive — "A has N more <unit> than <REF>" treating
+    # <REF> as the comparison reference directly. The "M times" multiplier
+    # is dropped on this candidate (the binding-graph composition is
+    # what would re-introduce it).
+    add_cand = _build_compare_additive(
+        actor_raw=actor_raw,
+        delta_value_raw=m.group("delta_value"),
+        direction_raw=m.group("direction"),
+        unit_raw=unit_raw,
+        reference_raw=reference_raw,
+        source=sentence,
+    )
+    if add_cand is not None:
+        out.append(add_cand)
+
+    # Candidate 2: multiplicative — "A has M times as many <unit> as <REF>"
+    # treating the multiplier M and the same <REF> as the multiplicative
+    # comparison. The additive offset N is dropped on this candidate.
+    factor_value_raw = m.group("factor_value")
+    if not _is_indefinite_quantifier(factor_value_raw):
+        try:
+            factor = float(_resolve_value(factor_value_raw))
+        except KeyError:
+            factor = None
+        if factor is not None:
+            mult_cand = _build_compare_multiplicative(
+                actor_raw=actor_raw,
+                factor=factor,
+                matched_verb="times",
+                matched_value_token=factor_value_raw,
+                unit_raw=unit_raw,
+                reference_raw=reference_raw,
+                source=sentence,
+                direction="times",
+            )
+            if mult_cand is not None:
+                out.append(mult_cand)
 
     return out

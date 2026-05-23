@@ -1,0 +1,267 @@
+{
+  "adr": "0131.G.2",
+  "axis": "comparatives",
+  "cases_path": "evals/math_capability_axes/G2_comparatives/v1/cases.jsonl",
+  "metrics": {
+    "cases_total": 24,
+    "pass_rate": 1.0,
+    "passed": 24,
+    "wrong": 0,
+    "wrong_count_is_zero": true,
+    "wrong_rate": 0.0
+  },
+  "per_case": [
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_additive"
+      ],
+      "case_id": "G2-add-more-001",
+      "category": "additive",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_additive"
+      ],
+      "case_id": "G2-add-more-002",
+      "category": "additive",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_additive"
+      ],
+      "case_id": "G2-add-more-003",
+      "category": "additive",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_additive"
+      ],
+      "case_id": "G2-add-more-004",
+      "category": "additive",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_additive"
+      ],
+      "case_id": "G2-add-fewer-001",
+      "category": "additive",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_additive"
+      ],
+      "case_id": "G2-add-fewer-002",
+      "category": "additive",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_additive"
+      ],
+      "case_id": "G2-add-fewer-003",
+      "category": "additive",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_additive"
+      ],
+      "case_id": "G2-add-fewer-004",
+      "category": "additive",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-times-001",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-times-002",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-times-003",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-times-004",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-frac-001",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-frac-002",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-frac-003",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-frac-004",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "admitted_kinds": [
+        "compare_additive",
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-nested-001",
+      "category": "nested",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "admitted_kinds": [
+        "compare_additive",
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-nested-002",
+      "category": "nested",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "admitted_kinds": [
+        "compare_additive",
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-nested-003",
+      "category": "nested",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "admitted_kinds": [],
+      "case_id": "G2-refuse-001",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "admitted_kinds": [],
+      "case_id": "G2-refuse-002",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "admitted_kinds": [],
+      "case_id": "G2-refuse-003",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "admitted_kinds": [],
+      "case_id": "G2-refuse-004",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "admitted_kinds": [],
+      "case_id": "G2-refuse-005",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    }
+  ],
+  "per_category": {
+    "additive": {
+      "pass": 8,
+      "wrong": 0
+    },
+    "multiplicative": {
+      "pass": 8,
+      "wrong": 0
+    },
+    "nested": {
+      "pass": 3,
+      "wrong": 0
+    },
+    "refusal": {
+      "pass": 5,
+      "wrong": 0
+    }
+  },
+  "schema_version": 1
+}
