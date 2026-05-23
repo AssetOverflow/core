@@ -1,0 +1,28 @@
+{"case_id":"g31-frac-01","class":"fraction_of_unit","problem":"Bob has 1/2 of a cup. How many cups does Bob have?","expected_answer":0.5,"expected_unit":"cups","expected_outcome":"solved_correct"}
+{"case_id":"g31-frac-02","class":"fraction_of_unit","problem":"Sarah has 3/4 of a bag. How many bags does Sarah have?","expected_answer":0.75,"expected_unit":"bags","expected_outcome":"solved_correct"}
+{"case_id":"g31-frac-03","class":"fraction_of_unit","problem":"Tom has 1/4 of a pie. How many pies does Tom have?","expected_answer":0.25,"expected_unit":"pies","expected_outcome":"solved_correct"}
+{"case_id":"g31-frac-04","class":"fraction_of_unit","problem":"Sam has 3/2 of a liter. How many liters does Sam have?","expected_answer":1.5,"expected_unit":"liters","expected_outcome":"solved_correct"}
+{"case_id":"g31-frac-05","class":"fraction_of_unit","problem":"Liam has 4/5 of a cup. How many cups does Liam have?","expected_answer":0.8,"expected_unit":"cups","expected_outcome":"solved_correct"}
+{"case_id":"g31-cur-01","class":"multi_currency","problem":"Bob has ¢50. How many cents does Bob have?","expected_answer":50.0,"expected_unit":"cents","expected_outcome":"solved_correct"}
+{"case_id":"g31-cur-02","class":"multi_currency","problem":"Maria has €20. How many euros does Maria have?","expected_answer":20.0,"expected_unit":"euros","expected_outcome":"solved_correct"}
+{"case_id":"g31-cur-03","class":"multi_currency","problem":"Kenji has ¥100. How many yen does Kenji have?","expected_answer":100.0,"expected_unit":"yen","expected_outcome":"solved_correct"}
+{"case_id":"g31-cur-04","class":"multi_currency","problem":"Juan has ₱200. How many pesos does Juan have?","expected_answer":200.0,"expected_unit":"pesos","expected_outcome":"solved_correct"}
+{"case_id":"g31-cur-05","class":"multi_currency","problem":"Maria has €30. Maria spends €10. How many euros does Maria have?","expected_answer":20.0,"expected_unit":"euros","expected_outcome":"solved_correct"}
+{"case_id":"g31-mwc-01","class":"multi_word_cardinal","problem":"Bob has one hundred apples. How many apples does Bob have?","expected_answer":100.0,"expected_unit":"apples","expected_outcome":"solved_correct"}
+{"case_id":"g31-mwc-02","class":"multi_word_cardinal","problem":"The store has one thousand books. How many books does the store have?","expected_answer":1000.0,"expected_unit":"books","expected_outcome":"solved_correct"}
+{"case_id":"g31-mwc-03","class":"multi_word_cardinal","problem":"Anna has three hundred cookies. How many cookies does Anna have?","expected_answer":300.0,"expected_unit":"cookies","expected_outcome":"solved_correct"}
+{"case_id":"g31-mwc-04","class":"multi_word_cardinal","problem":"Mike has two thousand five hundred marbles. How many marbles does Mike have?","expected_answer":2500.0,"expected_unit":"marbles","expected_outcome":"solved_correct"}
+{"case_id":"g31-mwc-05","class":"multi_word_cardinal","problem":"Sam has five hundred dollars. How many cents does Sam have?","expected_answer":50000.0,"expected_unit":"cents","expected_outcome":"solved_correct"}
+{"case_id":"g31-adj-01","class":"word_num_adjective","problem":"Sam has five full boxes. How many boxes does Sam have?","expected_answer":5.0,"expected_unit":"boxes","expected_outcome":"solved_correct"}
+{"case_id":"g31-adj-02","class":"word_num_adjective","problem":"Ella has three loose crayons. How many crayons does Ella have?","expected_answer":3.0,"expected_unit":"crayons","expected_outcome":"solved_correct"}
+{"case_id":"g31-adj-03","class":"word_num_adjective","problem":"Bob has seven empty cans. How many cans does Bob have?","expected_answer":7.0,"expected_unit":"cans","expected_outcome":"solved_correct"}
+{"case_id":"g31-adj-04","class":"word_num_adjective","problem":"Jane has twelve whole pies. How many pies does Jane have?","expected_answer":12.0,"expected_unit":"pies","expected_outcome":"solved_correct"}
+{"case_id":"g31-adj-05","class":"word_num_adjective","problem":"Tom has eight new books. How many books does Tom have?","expected_answer":8.0,"expected_unit":"books","expected_outcome":"solved_correct"}
+{"case_id":"g31-ref-pct-01","class":"refuse_percentage","problem":"Bob has 50% apples. How many apples does Bob have?","expected_answer":0,"expected_unit":"","expected_outcome":"refused"}
+{"case_id":"g31-ref-pct-02","class":"refuse_percentage","problem":"Sam has 75% of a pie. How many pies does Sam have?","expected_answer":0,"expected_unit":"","expected_outcome":"refused"}
+{"case_id":"g31-ref-sci-01","class":"refuse_scientific_notation","problem":"Sam has 1e3 marbles. How many marbles does Sam have?","expected_answer":0,"expected_unit":"","expected_outcome":"refused"}
+{"case_id":"g31-ref-sci-02","class":"refuse_scientific_notation","problem":"Alice has 2.5e2 books. How many books does Alice have?","expected_answer":0,"expected_unit":"","expected_outcome":"refused"}
+{"case_id":"g31-ref-locale-01","class":"refuse_locale_separator","problem":"Alice has 1,000 pennies. How many pennies does Alice have?","expected_answer":0,"expected_unit":"","expected_outcome":"refused"}
+{"case_id":"g31-ref-locale-02","class":"refuse_locale_separator","problem":"Bob has 10,000 apples. How many apples does Bob have?","expected_answer":0,"expected_unit":"","expected_outcome":"refused"}
+{"case_id":"g31-ref-3dec-01","class":"refuse_money_precision","problem":"Bob has $1.234. How many cents does Bob have?","expected_answer":0,"expected_unit":"","expected_outcome":"refused"}
+{"case_id":"g31-ref-3dec-02","class":"refuse_money_precision","problem":"Sam has €5.678. How many euros does Sam have?","expected_answer":0,"expected_unit":"","expected_outcome":"refused"}

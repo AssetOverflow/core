@@ -285,13 +285,34 @@ def _unit_grounds(
     on the raw source span rather than the token set. Similarly for
     ``dollar``: an author may write either ``$N`` or ``N dollars``;
     both ground a money unit.
+
+    ADR-0131.G.3.1 widening: multi-currency symbols (¢ € £ ¥ ₱) each
+    ground their respective canonical unit when their symbol appears in
+    the raw source span.
     """
     if _token_in(unit_token, haystack_tokens):
         return True
-    if unit_token.lower() in ("cent", "cents"):
-        if "$" in source_span:
+    lower = unit_token.lower()
+    if lower in ("cent", "cents"):
+        if "$" in source_span or "¢" in source_span:
             return True
         if "dollar" in haystack_tokens or "dollars" in haystack_tokens:
+            return True
+    if lower in ("euro", "euros"):
+        if "€" in source_span:
+            return True
+    # "pounds sterling" is a two-word unit; check both the multi-word
+    # surface and the raw symbol.
+    if lower in ("pound sterling", "pounds sterling"):
+        if "£" in source_span:
+            return True
+        if "sterling" in haystack_tokens:
+            return True
+    if lower == "yen":
+        if "¥" in source_span:
+            return True
+    if lower in ("peso", "pesos"):
+        if "₱" in source_span:
             return True
     return False
 
@@ -319,9 +340,11 @@ def _value_grounds(value_token: str, haystack_tokens: frozenset[str]) -> bool:
         every component lemma is a token (the tokenizer splits on
         hyphens), OR the compound's integer value's digit form appears.
     """
-    # ADR-0131.G.3 widenings (handled first; the trailing existing path
-    # would never recognize these surface shapes).
-    if value_token.startswith("$"):
+    # ADR-0131.G.3 / G.3.1 widenings (handled first; the trailing existing
+    # path would never recognize these surface shapes).
+    # Currency symbol literals: extract digit parts, verify each in source.
+    _CURRENCY_SYM_SET = frozenset({"$", "¢", "€", "£", "¥", "₱"})
+    if value_token and value_token[0] in _CURRENCY_SYM_SET:
         body = value_token[1:]
         parts = [p for p in body.split(".") if p]
         return bool(parts) and all(p in haystack_tokens for p in parts)

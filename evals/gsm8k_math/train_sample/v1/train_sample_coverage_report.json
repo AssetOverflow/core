@@ -86,7 +86,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Francine has five full boxes of crayons and 5 loose crayons, and her friend has 27 loose crayons.'",
+      "reason": "candidate_graph: no admissible candidate for statement: 'They need to put all of their loose crayons in a box.'",
       "trace_hash": null
     },
     {
@@ -108,7 +108,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Jen has 10 more ducks than four times the number of chickens.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'If Jen has 150 ducks, how many total birds does she have?'",
       "trace_hash": null
     },
     {
@@ -471,7 +471,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Ella has 4 bags with 20 apples in each bag and six bags with 25 apples in each bag.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'If Ella sells 200 apples, how many apples does Ella has left?'",
       "trace_hash": null
     },
     {
@@ -567,6 +567,14 @@
   "refused_reasons_top": [
     {
       "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'If Ella sells 200 apples, how many apples does Ella has left?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'If Jen has 150 ducks, how many total birds does she have?'"
+    },
+    {
+      "count": 1,
       "reason": "candidate_graph: no admissible candidate for statement: \"In one hour, Addison mountain's temperature will decrease to 3/"
     },
     {
@@ -603,19 +611,11 @@
     },
     {
       "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Ella has 4 bags with 20 apples in each bag and six bags with 25"
-    },
-    {
-      "count": 1,
       "reason": "candidate_graph: no admissible candidate for statement: 'Erica lives near a lake where most locals sell fish as their ma"
     },
     {
       "count": 1,
       "reason": "candidate_graph: no admissible candidate for statement: 'Fabian bought a brand new computer mouse and keyboard to be abl"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Francine has five full boxes of crayons and 5 loose crayons, an"
     },
     {
       "count": 1,
@@ -640,10 +640,6 @@
     {
       "count": 1,
       "reason": "candidate_graph: no admissible candidate for statement: 'Jed collects stamp cards.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Jen has 10 more ducks than four times the number of chickens.'"
     },
     {
       "count": 1,
@@ -740,6 +736,10 @@
     {
       "count": 1,
       "reason": "candidate_graph: no admissible candidate for statement: 'There are some kids in camp.'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for statement: 'They need to put all of their loose crayons in a box.'"
     },
     {
       "count": 1,
