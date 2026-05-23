@@ -83,8 +83,10 @@ class TestPromotedDomainsBuildSuccessfully:
 
 class TestUnpromotedDomainRefused:
     def test_unpromoted_domain_raises_value_error(self) -> None:
+        # arithmetic is a real language pack but has no audit_passed_claims
+        # entry (unlike systems_software, mathematics_logic, physics).
         with pytest.raises(ValueError, match="No audit_passed_claims entry"):
-            build_expert_demo("systems_software")
+            build_expert_demo("arithmetic")
 
     def test_unknown_domain_raises_value_error(self) -> None:
         with pytest.raises(ValueError, match="No audit_passed_claims entry"):

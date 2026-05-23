@@ -15,11 +15,38 @@ Contracts pinned here:
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
 
 from evals.framework import LaneInfo, get_lane, run_lane
+
+
+def _holdout_decryption_available() -> bool:
+    """Return True if the cognition lane's holdout cases can be loaded
+    by ``evals.holdout_runner._decrypt_holdout``.
+
+    Mirrors ``_decrypt_holdout``'s contract: with no
+    ``CORE_HOLDOUT_KEY``, the loader looks for a sibling
+    ``cases_plaintext.jsonl`` next to the encrypted file. Tests skip
+    when neither is available so CI stays green on contributor
+    machines that don't have the sealed key.
+    """
+    if os.environ.get("CORE_HOLDOUT_KEY"):
+        return True
+    try:
+        sealed = get_lane("cognition").holdout_cases_path_sealed()
+    except Exception:
+        return False
+    plaintext = sealed.parent / "cases_plaintext.jsonl"
+    return plaintext.exists() and plaintext.read_text().strip() != ""
+
+
+_requires_holdout = pytest.mark.skipif(
+    not _holdout_decryption_available(),
+    reason="holdout cases not available (set CORE_HOLDOUT_KEY or provide cases_plaintext.jsonl)",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -69,6 +96,7 @@ def test_holdout_path_when_nothing_exists_returns_versioned_path(tmp_path: Path)
 # ---------------------------------------------------------------------------
 
 
+@_requires_holdout
 def test_run_lane_holdout_runs_full_cognition_set() -> None:
     lane = get_lane("cognition")
     result = run_lane(lane, split="holdout")
@@ -77,6 +105,7 @@ def test_run_lane_holdout_runs_full_cognition_set() -> None:
     assert result.metrics["total"] == 19
 
 
+@_requires_holdout
 def test_run_lane_holdout_returns_expected_metric_keys() -> None:
     lane = get_lane("cognition")
     result = run_lane(lane, split="holdout")
@@ -90,6 +119,7 @@ def test_run_lane_holdout_returns_expected_metric_keys() -> None:
     assert expected.issubset(result.metrics.keys())
 
 
+@_requires_holdout
 def test_run_lane_holdout_versor_closure_preserved() -> None:
     """The non-negotiable field invariant (versor_condition < 1e-6) must
     hold on every holdout case — same gate as dev/public."""
@@ -113,6 +143,7 @@ def test_run_lane_unknown_split_lists_all_three_values() -> None:
 # ---------------------------------------------------------------------------
 
 
+@_requires_holdout
 def test_holdout_dev_public_share_metric_schema() -> None:
     lane = get_lane("cognition")
     dev = run_lane(lane, split="dev").metrics

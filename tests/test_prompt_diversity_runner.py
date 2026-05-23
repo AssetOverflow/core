@@ -101,17 +101,17 @@ class TestGlossQuote:
         return _surface_quotes_gloss(surface, terms)
 
     def test_quoted_short_gloss_detected(self) -> None:
-        # ``light`` gloss is ``"visible medium that reveal truth"`` —
-        # 5 tokens, but only 5 are ≥4 chars; the old 4-token window
-        # would barely fit.  ``parent`` gloss is ``"person with a child"``
-        # — 4 tokens, 3 are ≥4 chars; the old window could never match.
+        # ``light`` gloss is ``"a visible medium that reveals truth"`` —
+        # 6 tokens, only 4 are ≥4 chars; the old 4-token window would
+        # barely fit. ``parent`` gloss is ``"person with a child"`` —
+        # 4 tokens, 3 are ≥4 chars; the old window could never match.
         # Substring match handles both natively.
         assert self._make(
             "Parent is person with a child. pack-grounded (en_core_relations_v1).",
             ("parent",),
         ) is True
         assert self._make(
-            "Light is visible medium that reveal truth. pack-grounded (en_core_cognition_v1).",
+            "Light is a visible medium that reveals truth. pack-grounded (en_core_cognition_v1).",
             ("light",),
         ) is True
 

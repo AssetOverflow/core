@@ -77,21 +77,25 @@ def test_each_confirmation_prompt_now_articulates(
 # ---------- byte-identity invariant on currently-passing cases ----------
 
 
+# Surfaces re-pinned after the gloss-aware composer landed; the prior
+# strings (e.g. "Light is a source of revelation that makes things knowable.")
+# were superseded by gloss-driven phrasings ("Light is a visible medium
+# that reveals truth.") that are visibly more grounded. The byte-identity
+# guard role is preserved by pinning the current outputs going forward.
 _CURRENTLY_PASSING_PROMPTS: tuple[tuple[str, str], ...] = (
     (
         "What is light?",
-        "Light is a source of revelation that makes things knowable. "
+        "Light is a visible medium that reveals truth. "
         "pack-grounded (en_core_cognition_v1).",
     ),
     (
         "Define knowledge.",
-        "Knowledge is justified understanding grounded in evidence "
-        "and recall. pack-grounded (en_core_cognition_v1).",
+        "Knowledge is what a person knows from truth and evidence. "
+        "pack-grounded (en_core_cognition_v1).",
     ),
     (
         "What is truth?",
-        "Truth is a claim or state grounded by evidence and coherent "
-        "judgment. pack-grounded (en_core_cognition_v1).",
+        "Truth is what is true. pack-grounded (en_core_cognition_v1).",
     ),
 )
 

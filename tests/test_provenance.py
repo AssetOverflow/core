@@ -17,6 +17,7 @@ from field.state import FieldState
 from generate.articulation import ArticulationPlan
 from generate.intent import DialogueIntent, IntentTag
 from generate.proposition import Proposition
+from teaching.source import ProposalSource
 from teaching.store import PackMutationProposal
 
 
@@ -122,6 +123,9 @@ def test_pack_plus_teaching() -> None:
         subject="x",
         correction_text="x is z",
         prior_surface="x is y",
+        source=ProposalSource(
+            kind="operator", source_id="", emitted_at_revision="test"
+        ),
     )
     result = _make_result(
         intent_tag=IntentTag.CORRECTION,

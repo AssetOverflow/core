@@ -59,11 +59,11 @@ def _r(overrides: Mapping[str, object]) -> _FakeRegister:
 
 
 _DEF_CANONICAL = (
-    "Light is a source of revelation that makes things knowable. "
+    "Light is a visible medium that reveals truth. "
     "pack-grounded (en_core_cognition_v1)."
 )
 _DEF_CANONICAL_LENS = (
-    "Light is a source of revelation that makes things knowable. "
+    "Light is a visible medium that reveals truth. "
     "pack-grounded (en_core_cognition_v1) [lens(grc_logos_v1):systematic]."
 )
 _CMP_CANONICAL = (
@@ -115,7 +115,7 @@ def test_drop_provenance_strips_trailing_gloss_clause():
         _DEF_CANONICAL, _r({"drop_provenance_tag": True}),
     )
     assert "pack-grounded" not in out
-    assert out.endswith("knowable.")
+    assert out.endswith("reveals truth.")
     assert "..," not in out and ".." not in out  # no double-period bug
 
 
@@ -288,10 +288,10 @@ def test_terse_full_combo_def_form():
             "drop_articles": True,
         }),
     )
-    # compress: "Light is a source ... knowable." -> "Light: source ... knowable."
-    # drop_articles: removes leftover "a/the" articles (none in this gloss).
+    # compress: "Light is a visible medium ... truth." -> "Light: visible medium ... truth."
+    # drop_articles: removes leftover "a/the" articles.
     # drop_provenance_tag: trailing pack-grounded clause removed.
-    assert out == "Light: source of revelation that makes things knowable."
+    assert out == "Light: visible medium that reveals truth."
 
 
 def test_terse_full_combo_with_lens():
@@ -409,7 +409,7 @@ def test_e2e_neutral_unchanged_by_r6(neutral_def_surface: str):
     """default_neutral_v1 has no R6 knobs → surface must be identical
     to the pre-R6 byte-for-byte expected gloss."""
     expected = (
-        "Light is a source of revelation that makes things knowable. "
+        "Light is a visible medium that reveals truth. "
         "pack-grounded (en_core_cognition_v1)."
     )
     assert neutral_def_surface == expected
