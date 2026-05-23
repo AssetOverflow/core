@@ -1,24 +1,29 @@
-"""ADR-0132 — Semantic-Symbolic Binding Graph, Phase 1 (data model only).
+"""ADR-0132/0133 — Semantic-Symbolic Binding Graph.
 
-This package introduces the typed compiler boundary between natural-language
-semantic parsing and symbolic/equational solving proposed in
-``docs/implementation/semantic-symbolic-binding-graph-proposal.md``.
+Phase 1 (ADR-0132): pure data layer (frozen dataclasses, deterministic
+allocator, refusal-first construction; no I/O, no parser, no algebra,
+no ``Polynomial`` coupling — symbolic expressions held as canonical
+strings only).
 
-Phase 1 is intentionally a pure data layer:
+Phase 2 (ADR-0133): pure-function adapter
+:func:`bind_math_problem_graph` translating
+:class:`generate.math_problem_graph.MathProblemGraph` (ADR-0115) into a
+:class:`SemanticSymbolicBindingGraph`. Still no runtime wiring.
 
-  - frozen dataclasses with immutable collections,
-  - deterministic symbol allocation,
-  - refusal-first construction (typed ``BindingGraphError``),
-  - no I/O, no parser calls, no algebra calls, no numpy,
-  - no coupling to ``generate.math_symbolic_normalizer.Polynomial``;
-    symbolic expressions are referenced by canonical string form only.
-
-Phases 2-5 (adapter, unit-aware binding, question target binding, bounded
-grammar integration) are deferred to follow-up PRs.
+Phases 3-5 (unit-aware equation binding / question-target binding /
+bounded-grammar integration) are deferred to follow-up PRs.
 """
 
 from __future__ import annotations
 
+from .adapter import (
+    INTRODUCED_BY,
+    PHASE_2_ADMISSIBILITY,
+    PHASE_2_UNIT_PROOF,
+    SYNTHETIC_SOURCE_ID,
+    AdapterError,
+    bind_math_problem_graph,
+)
 from .allocation import allocate_symbols
 from .model import (
     ADMISSIBILITY_STATUSES,
@@ -35,7 +40,12 @@ from .model import (
 
 __all__ = (
     "ADMISSIBILITY_STATUSES",
+    "INTRODUCED_BY",
+    "PHASE_2_ADMISSIBILITY",
+    "PHASE_2_UNIT_PROOF",
     "SEMANTIC_ROLES",
+    "SYNTHETIC_SOURCE_ID",
+    "AdapterError",
     "BindingGraphError",
     "BoundConstraint",
     "BoundEquation",
@@ -45,4 +55,5 @@ __all__ = (
     "SourceSpanLink",
     "SymbolBinding",
     "allocate_symbols",
+    "bind_math_problem_graph",
 )
