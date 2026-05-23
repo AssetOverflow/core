@@ -1,0 +1,51 @@
+{
+  "adr": "0114a.6",
+  "buckets": [
+    {
+      "accuracy": 1.0,
+      "bound_required": null,
+      "bound_satisfied": true,
+      "bucket": "depth_1",
+      "cases_correct": 21,
+      "cases_total": 21
+    },
+    {
+      "accuracy": 1.0,
+      "bound_required": 0.95,
+      "bound_satisfied": true,
+      "bucket": "depth_2-3",
+      "cases_correct": 1,
+      "cases_total": 1
+    },
+    {
+      "accuracy": 0.0,
+      "bound_required": null,
+      "bound_satisfied": true,
+      "bucket": "depth_4-5",
+      "cases_correct": 0,
+      "cases_total": 0
+    },
+    {
+      "accuracy": 0.0,
+      "bound_required": null,
+      "bound_satisfied": true,
+      "bucket": "depth_6-8",
+      "cases_correct": 0,
+      "cases_total": 0
+    }
+  ],
+  "cases_skipped_unsolved": 28,
+  "cases_solved": 22,
+  "cases_total": 50,
+  "coverage_sufficient": false,
+  "epsilon": 0.05,
+  "lane_id": "B3_bounded_grammar",
+  "obligation_6_assertion_holds": true,
+  "obligation_6_mechanism_wired": true,
+  "populated_buckets": [
+    "depth_1",
+    "depth_2-3"
+  ],
+  "refusal_reason": "assertion holds but coverage insufficient \u2014 populated buckets: ['depth_1', 'depth_2-3'] (need \u22652 buckets, \u22653 cases each)",
+  "schema_version": 1
+}
