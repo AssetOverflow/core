@@ -1,0 +1,1414 @@
+{
+  "adr": "0114a.5",
+  "breaking_attempted": 68,
+  "breaking_correct": 68,
+  "breaking_rate": 1.0,
+  "cases_expected_correct": 35,
+  "cases_total": 50,
+  "lane_id": "B3_bounded_grammar",
+  "obligation_5_passed": true,
+  "per_perturbation": [
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-001:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-001:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-001:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-001:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-001:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-001:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-001:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-002:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-002:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-002:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-002:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-002:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-002:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-002:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-003:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-003:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-003:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-003:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-004:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-004:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-004:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-004:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-004:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-005:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-005:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-005:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-005:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-005:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-006:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-006:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-006:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-006:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-006:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-007:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-007:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-007:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-007:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-007:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-008:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-008:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-008:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-008:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-008:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-009:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-009:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-009:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-009:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-009:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-010:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-010:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-010:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-010:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-010:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-011:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-011:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-011:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-011:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-011:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-012:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-012:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-012:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-012:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-012:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-013:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-013:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-014:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-014:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-014:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-014:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-014:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-014:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-015:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-015:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-015:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-015:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-015:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-015:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-015:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-016:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-016:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-016:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-016:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-016:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-016:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-016:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-017:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-017:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-017:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-017:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-017:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-017:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-017:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-018:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-018:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-018:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-018:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-018:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-018:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-018:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-019:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-019:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-019:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-019:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-019:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-019:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-019:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-020:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-020:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-020:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-020:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-020:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-020:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-020:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-021:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-021:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-021:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-021:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-021:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-021:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-021:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-022:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-022:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-022:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-022:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-022:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-022:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-022:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-023:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-023:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-023:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-023:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-023:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-023:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-023:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-024:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-024:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-024:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-024:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-024:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-024:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-024:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-025:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-025:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-025:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-025:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-025:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-025:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-026:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-026:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-026:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-026:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-026:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-026:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-026:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-027:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-027:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-027:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-027:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-028:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-028:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-028:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-028:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-028:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-029:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-029:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-029:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-029:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-029:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-030:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-030:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-030:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-030:value_replacement_op",
+      "transform": "value_replacement_op"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-030:op_verb_flip",
+      "transform": "op_verb_flip"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-031:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-031:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-031:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-031:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-031:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-032:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-032:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-032:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-032:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-032:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-033:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-033:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-033:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-033:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-033:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-034:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-034:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-034:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-034:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-034:value_replacement_init",
+      "transform": "value_replacement_init"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-035:entity_rename_v1",
+      "transform": "entity_rename_v1"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-035:entity_rename_v2",
+      "transform": "entity_rename_v2"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-035:entity_rename_v3",
+      "transform": "entity_rename_v3"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_preserving",
+      "ok": true,
+      "perturbation_id": "b3-035:unit_synonym",
+      "transform": "unit_synonym"
+    },
+    {
+      "detail": "ok",
+      "kind": "invariance_breaking",
+      "ok": true,
+      "perturbation_id": "b3-035:value_replacement_init",
+      "transform": "value_replacement_init"
+    }
+  ],
+  "preserving_attempted": 130,
+  "preserving_correct": 130,
+  "preserving_rate": 1.0,
+  "refusal_reason": "",
+  "report_digest": "4a3a7add1d0c4723451bb1e6bb5552792353abd4b64324f6b64a341876209d7d",
+  "schema_version": 1,
+  "skip_counts": {
+    "commutative_reorder": 35,
+    "entity_rename_v1": 1,
+    "entity_rename_v2": 1,
+    "entity_rename_v3": 1,
+    "op_verb_flip": 15,
+    "unit_synonym": 7,
+    "value_replacement_init": 7,
+    "value_replacement_op": 15
+  }
+}
