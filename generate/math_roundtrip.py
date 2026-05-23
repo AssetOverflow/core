@@ -275,16 +275,37 @@ def _token_in(needle: str, haystack_tokens: frozenset[str]) -> bool:
 def _value_grounds(value_token: str, haystack_tokens: frozenset[str]) -> bool:
     """A numeric value grounds if its surface token appears, OR if the token
     is a digit-string and any equivalent word-form appears, OR if it's a
-    word-form and the digit appears."""
+    word-form and the digit appears.
+
+    ADR-0128 integration: en_numerics_v1's cardinal table is consulted in
+    addition to the legacy hard-coded WORD_NUMBERS, widening coverage from
+    1-12 to the full pack cardinal range (0-1000+ plus compound rule). The
+    hard-coded WORD_NUMBERS remains as a fast path and as a fallback if
+    the pack is unavailable; the pack adds, never replaces.
+    """
     if _token_in(value_token, haystack_tokens):
         return True
-    # word -> digit equivalent
     lowered = value_token.lower()
+
+    # Pack-backed cardinal lookup (ADR-0128). Soft import — if the pack
+    # isn't mounted (e.g., in legacy test environments) we silently fall
+    # through to the hard-coded table.
+    try:
+        from language_packs.loader import lookup_cardinal
+        entry = lookup_cardinal(lowered)
+        if entry is not None:
+            digit = str(entry.numeric_value)
+            if digit in haystack_tokens:
+                return True
+    except Exception:
+        pass  # fall through to hard-coded path
+
+    # word -> digit equivalent (legacy)
     if lowered in WORD_NUMBERS:
         digit = str(WORD_NUMBERS[lowered])
         if digit in haystack_tokens:
             return True
-    # digit -> any word with that integer value
+    # digit -> any word with that integer value (legacy)
     try:
         n = int(value_token)
     except ValueError:
@@ -292,6 +313,15 @@ def _value_grounds(value_token: str, haystack_tokens: frozenset[str]) -> bool:
     for word, w_val in WORD_NUMBERS.items():
         if w_val == n and word in haystack_tokens:
             return True
+    # Pack-backed reverse lookup: digit -> cardinal surface in haystack
+    try:
+        from language_packs.loader import lookup_cardinal
+        for tok in haystack_tokens:
+            entry = lookup_cardinal(tok)
+            if entry is not None and entry.numeric_value == n:
+                return True
+    except Exception:
+        pass
     return False
 
 

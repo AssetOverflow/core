@@ -75,9 +75,11 @@ class CandidateInitial:
     matched_entity_token: str
 
     def __post_init__(self) -> None:
-        if self.matched_anchor.lower() not in ("has", "have"):
+        # ADR-0127 widens the anchor set to include 'there are/were/is/was'
+        # for the implicit-subject initial-possession shape.
+        if self.matched_anchor.lower() not in ("has", "have", "are", "were", "is", "was"):
             raise ValueError(
-                f"CandidateInitial.matched_anchor must be has/have; "
+                f"CandidateInitial.matched_anchor must be has/have/are/were/is/was; "
                 f"got {self.matched_anchor!r}"
             )
 
@@ -120,7 +122,28 @@ _INITIAL_HAS_RE: Final[re.Pattern[str]] = re.compile(
     rf"^(?P<entity>{_ENTITY})\s+"
     rf"(?P<anchor>has|have)\s+"
     rf"(?P<value>{_VALUE})\s+"
-    r"(?P<unit>\w+)\s*\.?$"
+    r"(?P<unit>\w+)"
+    # ADR-0127 substance qualifier: "Sam has 5 feet of rope" — the
+    # 'of <NP>' tail is grammatically real but arithmetically inert.
+    r"(?:\s+of\s+.+)?"
+    r"\s*\.?$"
+)
+
+# ADR-0127 "There are/were N <unit> [in <place>]" initial-possession shape.
+# The implicit-subject anchor 'there are' is the only initial-possession
+# shape that doesn't name an entity in the source; we treat the
+# place phrase (when present) as the entity and treat the unit as the
+# count noun. When no place is named, the entity is the unit itself
+# (collective). Indefinite quantifiers ('some', 'few', 'many') in the
+# value slot are refused upstream by extract_initial_candidates via
+# the quantifier-driven refusal helper (ADR-0128.4).
+_INITIAL_THERE_ARE_RE: Final[re.Pattern[str]] = re.compile(
+    r"^There\s+(?P<anchor>are|were|is|was)\s+"
+    rf"(?P<value>{_VALUE})\s+"
+    r"(?P<unit>\w+)"
+    r"(?:\s+in\s+(?P<place>[A-Za-z]\w*(?:\s+\w+)?))?"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
 )
 
 
@@ -139,36 +162,93 @@ def _resolve_value(value_token: str) -> int:
     return WORD_NUMBERS[value_token.lower()]
 
 
+def _is_indefinite_quantifier(token: str) -> bool:
+    """ADR-0128.4 — quantifier-driven refusal helper.
+
+    Returns True when ``token`` resolves (via en_numerics_v1 lookup) to
+    an indefinite quantifier (``some``, ``many``, ``few``, ``several``,
+    etc.). Indefinite quantifiers in value-slot positions are refused
+    rather than guessed — preserves wrong == 0.
+    """
+    try:
+        from language_packs.loader import lookup_quantifier
+        entry = lookup_quantifier(token.lower())
+        if entry is not None and entry.semantic_type == "indefinite":
+            return True
+    except Exception:
+        pass
+    return False
+
+
 def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
     """Return all admissible initial-possession candidates for ``sentence``.
 
-    Currently emits at most one candidate (the single canonical shape
-    "<Entity> has <N> <unit>"). Returns an empty list if no shape matches.
+    Recognized shapes:
+      1. "<Entity> has <N> <unit> [of <substance>]" — canonical.
+      2. "There are <N> <unit> [in <place>]" — implicit-subject shape.
+
+    ADR-0128.4: if the value slot resolves to an indefinite quantifier
+    (`some kids`, `many things`), no candidate is emitted (refusal
+    preserves wrong == 0).
     """
     s = sentence.strip().rstrip(".")
+    out: list[CandidateInitial] = []
+
     m = _INITIAL_HAS_RE.match(s)
-    if not m:
-        return []
-    entity = _normalize_entity(m.group("entity"))
-    value = _resolve_value(m.group("value"))
-    unit_raw = m.group("unit")
-    # Canonicalize: lowercase + ensure plural (matching math_parser._canonical_unit).
-    unit = unit_raw.lower()
-    if not unit.endswith("s"):
-        unit = unit + "s"
-    return [
-        CandidateInitial(
-            initial=InitialPossession(
-                entity=entity,
-                quantity=Quantity(value=value, unit=unit),
-            ),
-            source_span=sentence,
-            matched_anchor=m.group("anchor"),
-            matched_value_token=m.group("value"),
-            matched_unit_token=unit_raw,
-            matched_entity_token=m.group("entity"),
-        )
-    ]
+    if m is not None:
+        value_raw = m.group("value")
+        if not _is_indefinite_quantifier(value_raw):
+            entity = _normalize_entity(m.group("entity"))
+            value = _resolve_value(value_raw)
+            unit_raw = m.group("unit")
+            unit = _canonicalize_unit(unit_raw)
+            out.append(
+                CandidateInitial(
+                    initial=InitialPossession(
+                        entity=entity,
+                        quantity=Quantity(value=value, unit=unit),
+                    ),
+                    source_span=sentence,
+                    matched_anchor=m.group("anchor"),
+                    matched_value_token=value_raw,
+                    matched_unit_token=unit_raw,
+                    matched_entity_token=m.group("entity"),
+                )
+            )
+
+    m2 = _INITIAL_THERE_ARE_RE.match(s)
+    if m2 is not None:
+        value_raw = m2.group("value")
+        if not _is_indefinite_quantifier(value_raw):
+            unit_raw = m2.group("unit")
+            unit = _canonicalize_unit(unit_raw)
+            value = _resolve_value(value_raw)
+            place = m2.group("place")
+            # When a 'in <place>' phrase is present, treat the place as
+            # the implicit entity. Otherwise use the unit's plural as
+            # the collective entity name (deterministic, derivable from
+            # the source: "There are 5 kids" -> entity='kids').
+            if place is not None:
+                entity = _normalize_entity(place)
+                entity_token = place
+            else:
+                entity = unit
+                entity_token = unit_raw
+            out.append(
+                CandidateInitial(
+                    initial=InitialPossession(
+                        entity=entity,
+                        quantity=Quantity(value=value, unit=unit),
+                    ),
+                    source_span=sentence,
+                    matched_anchor=m2.group("anchor"),
+                    matched_value_token=value_raw,
+                    matched_unit_token=unit_raw,
+                    matched_entity_token=entity_token,
+                )
+            )
+
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -200,13 +280,16 @@ def _op_pattern(verbs_pattern: str, *, requires_target: bool) -> re.Pattern[str]
     if requires_target:
         target_part = r"\s+to\s+(?P<target>[A-Z]\w+)"
         trailing_prep = (
-            r"(?:\s+(?:on|from|at|in|onto|into|under|over)\s+.+)?"
+            r"(?:\s+(?:on|from|at|in|onto|into|under|over|of|for|with)\s+.+)?"
         )
     else:
         target_part = ""
-        # Note: 'to' is included in the discardable preposition set.
+        # 'to' is included in the discardable preposition set.
+        # 'of' is included for ADR-0127 substance qualifiers ("1000 feet
+        # of cable") — the substance NP is grammatically real but
+        # arithmetically inert; the unit slot carries the dimensional info.
         trailing_prep = (
-            r"(?:\s+(?:on|from|at|in|onto|into|under|over|to)\s+.+)?"
+            r"(?:\s+(?:on|from|at|in|onto|into|under|over|to|of|for|with)\s+.+)?"
         )
     return re.compile(
         r"^"
@@ -228,6 +311,27 @@ _SUBTRACT_OP_RE: Final[re.Pattern[str]] = _op_pattern(_SUBTRACT_VERBS_PATTERN, r
 _TRANSFER_OP_RE: Final[re.Pattern[str]] = _op_pattern(_TRANSFER_VERBS_PATTERN, requires_target=True)
 
 
+def _canonicalize_unit(unit_raw: str) -> str:
+    """Canonicalize a unit surface token to its plural form.
+
+    ADR-0127 integration: consult en_units_v1 first. If the token is a
+    pack-recognized unit, use the pack's canonical plural form (handles
+    irregular plurals like feet/feet, children, mice, etc. correctly).
+    Otherwise fall back to the legacy '+s' rule for count nouns.
+    """
+    lowered = unit_raw.lower()
+    try:
+        from language_packs.loader import lookup_unit
+        entry = lookup_unit(lowered)
+        if entry is not None:
+            return entry.plural.lower()
+    except Exception:
+        pass
+    if not lowered.endswith("s"):
+        return lowered + "s"
+    return lowered
+
+
 def _build_op_candidate(
     m: re.Match[str], kind: str, source: str
 ) -> CandidateOperation | None:
@@ -237,9 +341,7 @@ def _build_op_candidate(
     unit_raw = m.group("unit")
     if unit_raw is None:
         return None
-    unit = unit_raw.lower()
-    if not unit.endswith("s"):
-        unit = unit + "s"
+    unit = _canonicalize_unit(unit_raw)
     subject = _normalize_entity(m.group("subject"))
     verb = m.group("verb").lower()
     value = _resolve_value(m.group("value"))
@@ -324,9 +426,7 @@ def extract_question_candidates(sentence: str) -> list[CandidateUnknown]:
     m = _Q_TOTAL_RE.match(s)
     if m is not None:
         unit_raw = m.group("unit")
-        unit = unit_raw.lower()
-        if not unit.endswith("s"):
-            unit = unit + "s"
+        unit = _canonicalize_unit(unit_raw)
         out.append(
             CandidateUnknown(
                 unknown=Unknown(entity=None, unit=unit),
@@ -340,9 +440,7 @@ def extract_question_candidates(sentence: str) -> list[CandidateUnknown]:
     m = _Q_ENTITY_RE.match(s)
     if m is not None:
         unit_raw = m.group("unit")
-        unit = unit_raw.lower()
-        if not unit.endswith("s"):
-            unit = unit + "s"
+        unit = _canonicalize_unit(unit_raw)
         entity = _normalize_entity(m.group("entity"))
         out.append(
             CandidateUnknown(

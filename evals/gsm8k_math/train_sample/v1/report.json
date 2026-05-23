@@ -18,7 +18,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0002",
-      "reason": "candidate_graph: no admissible candidate for statement: 'Jan buys 1000 feet of cable.'",
+      "reason": "candidate_graph: no admissible candidate for statement: 'She splits it up into 25-foot sections.'",
       "verdict": "refused"
     },
     {
@@ -213,7 +213,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0041",
-      "reason": "candidate_graph: no admissible candidate for statement: 'Troy bakes 2 pans of brownies, cut into 16 pieces per pan.'",
+      "reason": "candidate_graph: no admissible candidate for statement: 'The guests eat all of 1 pan, and 75% of the 2nd pan.'",
       "verdict": "refused"
     },
     {
