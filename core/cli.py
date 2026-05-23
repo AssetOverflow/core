@@ -581,6 +581,47 @@ def cmd_capability_math_expert_gate(args: argparse.Namespace) -> int:
     return 0 if verdict.composite_gate_passed else 1
 
 
+def cmd_capability_pack_provenance(args: argparse.Namespace) -> int:
+    """ADR-0114a Obligation #10 — external audit that every solver
+    step's ``pack_lemma_id`` resolves to a real entry in the domain's
+    operator pack lexicon. Defaults to B3 (bounded grammar) under
+    ``en_arithmetic_v1``. Emits report to ``--out`` (default:
+    ``evals/obligation_10_pack_provenance/<lane_id>.json``).
+    Exit 0 iff obligation passes."""
+    from pathlib import Path
+    from core.capability.pack_provenance import (
+        emit_provenance_report,
+        validate_lane,
+    )
+
+    report = validate_lane()
+    out_path = Path(args.out) if args.out else (
+        Path(__file__).resolve().parent.parent
+        / "evals" / "obligation_10_pack_provenance"
+        / f"{report.lane_id}.json"
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    emit_provenance_report(report, out_path)
+
+    if args.json:
+        print(json.dumps(report.as_dict(), indent=2, sort_keys=True))
+    else:
+        print(f"lane:                       {report.lane_id}")
+        print(f"pack_id:                    {report.pack_id}")
+        print(f"cases_total:                {report.cases_total}")
+        print(f"cases_validated:            {report.cases_validated}")
+        print(f"cases_skipped_unsolved:     {report.cases_skipped_unsolved}")
+        print(f"cases_violated:             {report.cases_violated}")
+        print(f"obligation_10_passed:       {report.obligation_10_passed}")
+        print(f"distinct_lemma_ids_observed:")
+        for lid in report.distinct_lemma_ids_observed:
+            print(f"  - {lid}")
+        print(f"artifact:                   {out_path}")
+        if report.refusal_reason:
+            print(f"refusal_reason:             {report.refusal_reason}")
+    return 0 if report.obligation_10_passed else 1
+
+
 def cmd_pack_list(args: argparse.Namespace) -> int:
     """List compiled language packs."""
     from language_packs import list_packs
@@ -2886,6 +2927,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="output path for expert_claims artifact (default: evals/math_expert_claims/v1/expert_claims_math_v1.json)",
     )
     capability_math_expert_gate.set_defaults(func=cmd_capability_math_expert_gate)
+    capability_pack_provenance = capability_sub.add_parser(
+        "pack-provenance",
+        help="ADR-0114a Obligation #10 — audit solver-step pack_lemma_ids against on-disk lexicon",
+    )
+    capability_pack_provenance.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_pack_provenance.add_argument(
+        "--out",
+        default=None,
+        help="output path for the audit report (default: evals/obligation_10_pack_provenance/<lane_id>.json)",
+    )
+    capability_pack_provenance.set_defaults(func=cmd_capability_pack_provenance)
 
     pack = subparsers.add_parser("pack", help="inspect and verify language packs")
     pack_sub = pack.add_subparsers(dest="pack_command", metavar="pack-command", required=True)
