@@ -1,0 +1,29 @@
+{
+  "pack_id": "en_numerics_v1",
+  "version": "1.0.0",
+  "provenance": "adr-0128:operator_seed:2026-05-23",
+  "lexicon_sha256": "a5bd05ae975491c941a3e4951d785937f3a3bb228da816152259462447b612fc",
+  "glosses_sha256": "0a0abfc0401352080fd285090106219ea240b0d0762d19db3bd557b2c537d767",
+  "manifest_sha256": "b02b0991128ce605caf6a1c87c5b06dc81e773f8509d624bd7af6aee2a505544",
+  "entry_counts": {
+    "cardinal": 32,
+    "ordinal": 40,
+    "fraction": 16,
+    "multiplier": 7,
+    "quantifier": 13,
+    "comparison_anchor": 16,
+    "number_format": 6
+  },
+  "total_entries": 130,
+  "ratified_at": "2026-05-23",
+  "ratification_invariants": [
+    "cardinal_exhaustive_0_to_20",
+    "cardinal_tens_complete",
+    "cardinal_magnitudes_complete",
+    "ordinal_exhaustive_1_to_31",
+    "fraction_named_1_2_through_1_10",
+    "fraction_irregular_sixteenth_thirty_second",
+    "quantifier_semantic_type_closed_set",
+    "number_format_regex_corpus_gated"
+  ]
+}
