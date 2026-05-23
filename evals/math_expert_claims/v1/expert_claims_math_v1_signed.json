@@ -1,0 +1,86 @@
+{
+  "adr": "0120-math",
+  "all_obligations_passed": true,
+  "claim_digest": "d164866975341d9b82503caf50c0404ee140eab21fd60f589536c6daf6e1d706",
+  "composite_gate_passed": true,
+  "composite_gate_refusal": "",
+  "domain": "mathematics_logic",
+  "obligations": [
+    {
+      "evidence_pointer": "/Users/kaizenpro/Projects/core-adr-0120-expert-promotion-wireup/evals/math_symbolic_equivalence/v1/sealed_report.json",
+      "obligation_id": "1",
+      "passed": true,
+      "refusal_reason": "",
+      "title": "sealed holdout discipline"
+    },
+    {
+      "evidence_pointer": "/Users/kaizenpro/Projects/core-adr-0120-expert-promotion-wireup/evals/obligation_2_ood_ratio",
+      "obligation_id": "2",
+      "passed": true,
+      "refusal_reason": "",
+      "title": "OOD surface variation ratio \u2265 0.95"
+    },
+    {
+      "evidence_pointer": "/Users/kaizenpro/Projects/core-adr-0120-expert-promotion-wireup/evals/math_symbolic_equivalence/v1",
+      "obligation_id": "3",
+      "passed": true,
+      "refusal_reason": "",
+      "title": "replay-equal trace"
+    },
+    {
+      "evidence_pointer": "/Users/kaizenpro/Projects/core-adr-0120-expert-promotion-wireup/evals/math_symbolic_equivalence/v1",
+      "obligation_id": "4",
+      "passed": true,
+      "refusal_reason": "",
+      "title": "typed refusal + wrong == 0"
+    },
+    {
+      "evidence_pointer": "/Users/kaizenpro/Projects/core-adr-0120-expert-promotion-wireup/evals/obligation_5_perturbation",
+      "obligation_id": "5",
+      "passed": true,
+      "refusal_reason": "",
+      "title": "reasoning-isolation perturbation suite"
+    },
+    {
+      "evidence_pointer": "/Users/kaizenpro/Projects/core-adr-0120-expert-promotion-wireup/evals/obligation_6_depth_curve",
+      "obligation_id": "6",
+      "passed": true,
+      "refusal_reason": "",
+      "title": "compositional-depth curve"
+    },
+    {
+      "evidence_pointer": "/Users/kaizenpro/Projects/core-adr-0120-expert-promotion-wireup/evals/math_symbolic_equivalence/v1/frontier",
+      "obligation_id": "7",
+      "passed": true,
+      "refusal_reason": "",
+      "title": "frontier-baseline comparison"
+    },
+    {
+      "evidence_pointer": "/Users/kaizenpro/Projects/core-adr-0120-expert-promotion-wireup/evals/obligation_8_adversarial",
+      "obligation_id": "8",
+      "passed": true,
+      "refusal_reason": "",
+      "title": "adversarial generation; misparse zero"
+    },
+    {
+      "evidence_pointer": "/Users/kaizenpro/Projects/core-adr-0120-expert-promotion-wireup/evals/math_symbolic_equivalence/v1",
+      "obligation_id": "9",
+      "passed": true,
+      "refusal_reason": "",
+      "title": "determinism"
+    },
+    {
+      "evidence_pointer": "/Users/kaizenpro/Projects/core-adr-0120-expert-promotion-wireup/evals/obligation_10_pack_provenance",
+      "obligation_id": "10",
+      "passed": true,
+      "refusal_reason": "",
+      "title": "operation provenance via pack"
+    }
+  ],
+  "promote_admitted": false,
+  "refusal_reason": "awaiting reviewer signature \u2014 add an entry to docs/reviewers.yaml under 'math_expert_claims' for domain 'mathematics_logic' with claim_digest=d164866975341d9b82503caf50c0404ee140eab21fd60f589536c6daf6e1d706",
+  "reviewer_signature": null,
+  "reviewer_signature_matches": false,
+  "schema_version": 1,
+  "technical_pass": true
+}

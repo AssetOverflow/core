@@ -801,6 +801,53 @@ def cmd_capability_ood_ratio(args: argparse.Namespace) -> int:
     return 0 if report.obligation_2_passed else 1
 
 
+def cmd_capability_math_expert_promote(args: argparse.Namespace) -> int:
+    """ADR-0120 math-expert promotion composer. Collects all 10 ADR-0114a
+    obligation verdicts + the ADR-0131.4 composite math gate verdict +
+    the reviewer-signed claim entry from ``docs/reviewers.yaml``;
+    emits a deterministic ``expert_claims_math_v1_signed.json``
+    artifact. Exit 0 iff ``promote_admitted == True``.
+    """
+    from pathlib import Path
+    from core.capability.expert_promotion_math import (
+        emit_promotion_artifact,
+        evaluate_math_expert_promotion,
+    )
+
+    verdict = evaluate_math_expert_promotion()
+    out_path = Path(args.out) if args.out else (
+        Path(__file__).resolve().parent.parent
+        / "evals" / "math_expert_claims" / "v1" / "expert_claims_math_v1_signed.json"
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    emit_promotion_artifact(verdict, out_path)
+
+    if args.json:
+        print(json.dumps(verdict.as_dict(), indent=2, sort_keys=True))
+    else:
+        print(f"domain:                      {verdict.domain}")
+        print()
+        print(f"  {'id':<4} {'passed':<7} title")
+        for o in verdict.obligations:
+            print(f"  {o.obligation_id:<4} {str(o.passed):<7} {o.title}")
+            if not o.passed:
+                print(f"          refusal: {o.refusal_reason}")
+        print()
+        print(f"composite_gate_passed:       {verdict.composite_gate_passed}")
+        print(f"all_obligations_passed:      {verdict.all_obligations_passed}")
+        print(f"technical_pass:              {verdict.technical_pass}")
+        print(f"claim_digest:                {verdict.claim_digest}")
+        print(f"reviewer_signature_present:  {verdict.reviewer_signature is not None}")
+        print(f"reviewer_signature_matches:  {verdict.reviewer_signature_matches}")
+        print(f"promote_admitted:            {verdict.promote_admitted}")
+        print(f"artifact:                    {out_path}")
+        if verdict.refusal_reason:
+            print()
+            print(f"refusal_reason:")
+            print(f"  {verdict.refusal_reason}")
+    return 0 if verdict.promote_admitted else 1
+
+
 def cmd_pack_list(args: argparse.Namespace) -> int:
     """List compiled language packs."""
     from language_packs import list_packs
@@ -3164,6 +3211,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="output path for the audit report (default: evals/obligation_2_ood_ratio/<lane_id>.json)",
     )
     capability_ood_ratio.set_defaults(func=cmd_capability_ood_ratio)
+    capability_math_expert_promote = capability_sub.add_parser(
+        "math-expert-promote",
+        help="ADR-0120 — compose all 10 ADR-0114a obligation verdicts + composite gate + reviewer signature into the math-expert promotion verdict",
+    )
+    capability_math_expert_promote.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_math_expert_promote.add_argument(
+        "--out",
+        default=None,
+        help="output path for the signed promotion artifact (default: evals/math_expert_claims/v1/expert_claims_math_v1_signed.json)",
+    )
+    capability_math_expert_promote.set_defaults(func=cmd_capability_math_expert_promote)
 
     pack = subparsers.add_parser("pack", help="inspect and verify language packs")
     pack_sub = pack.add_subparsers(dest="pack_command", metavar="pack-command", required=True)
