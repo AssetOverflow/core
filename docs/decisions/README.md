@@ -55,6 +55,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0119.6](ADR-0119.6-depth-curve-harness.md) | GSM8K Math Depth-Curve Measurement Harness | Accepted (2026-05-23) |
 | [ADR-0119.7](ADR-0119.7-sealed-gsm8k-test.md) | Sealed GSM8K Test Set as gsm8k_math Holdout | Accepted (2026-05-23) |
 | [ADR-0119.8](ADR-0119.8-lane-gate.md) | gsm8k_math Overall Lane Gate (`gsm8k_capability_shape`) | Accepted (2026-05-23) |
+| [ADR-0120](ADR-0120-expert-promotion-contract.md) | First `expert` Promotion Contract (composes ADR-0114a 10/10) | Proposed (2026-05-23) |
 
 ---
 
@@ -105,6 +106,7 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - Sealed GSM8K Test Set (1,319 cases age-encrypted; one-way seal; first honest CORE-vs-real-GSM8K measurement: 0/1319 correct, **0 wrong** — ADR-0114a Obligation #4 holds against external corpus) — ADR-0119.7
 - GSM8K Math Adversarial Generation (38 cases × 12 families; **closes ADR-0114a Obligation #8**; misparse rate 0/38; 10 of 10 obligations now discharged on main) — ADR-0119.5
 - gsm8k_math Overall Lane Gate (Phase 5.8; new `gsm8k_capability_shape` in `LANE_SHAPE_REGISTRY`; composes wrong==0 + correct+refused==total + overall_pass; live dev 50/50 + public 150/150 pass) — ADR-0119.8
+- First `expert` Promotion Contract (composes all 10 ADR-0114a obligations + correct_rate ≥ 0.60 floor + depth-curve ε=0.05 + signed expert_claims; proposed; ADR-0121 will be the first worked promotion attempt; first attempt likely defers honestly on the correct_rate gate per the gate-as-process pattern) — ADR-0120
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 
