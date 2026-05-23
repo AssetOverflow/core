@@ -221,3 +221,60 @@ class TestSymbolicLogicShapeGate:
         assert verdict.passed is True
         assert verdict.reason == "all audit-passed predicates satisfied"
 
+
+class TestInferenceShapeAcceptsSynonyms:
+    def test_accepts_all_three_pass_rate_alone(self) -> None:
+        from core.capability.expert_demo import _check_inference_shape
+        ok, reason = _check_inference_shape(
+            "symbolic_logic",
+            {
+                "all_three_pass_rate": 1.0,
+                "replay_determinism": 1.0,
+                "overall_pass": True,
+            },
+        )
+        assert ok is True
+        assert reason == ""
+
+    def test_accepts_all_pass_rate_alone(self) -> None:
+        from core.capability.expert_demo import _check_inference_shape
+        ok, reason = _check_inference_shape(
+            "inference_closure",
+            {
+                "all_pass_rate": 1.0,
+                "replay_determinism": 1.0,
+                "overall_pass": True,
+            },
+        )
+        assert ok is True
+        assert reason == ""
+
+    def test_rejects_third_synonym(self) -> None:
+        from core.capability.expert_demo import _check_inference_shape
+        ok, reason = _check_inference_shape(
+            "some_lane",
+            {
+                "foo_bar_rate": 1.0,
+                "replay_determinism": 1.0,
+                "overall_pass": True,
+            },
+        )
+        assert ok is False
+        assert "missing required metric 'all_pass_rate'" in reason
+
+    def test_precedence_primary_key_wins(self) -> None:
+        from core.capability.expert_demo import _check_inference_shape
+        # Both keys are present: all_pass_rate is below threshold,
+        # all_three_pass_rate is at threshold. The primary must win (fail).
+        ok, reason = _check_inference_shape(
+            "symbolic_logic",
+            {
+                "all_pass_rate": 0.90,
+                "all_three_pass_rate": 1.0,
+                "replay_determinism": 1.0,
+                "overall_pass": True,
+            },
+        )
+        assert ok is False
+        assert "all_pass_rate=0.9 below threshold" in reason
+
