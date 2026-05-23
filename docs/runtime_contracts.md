@@ -451,3 +451,106 @@ silently grant `audit_passed=true`.
 - `evidence_revision` may be a labeled string (e.g.
   `adr-0110:reviewed:2026-05-22`) or a raw git sha. The load-bearing
   invariant is replay byte-equality, not git-sha format.
+
+---
+
+## GSM8K Math Capability Lane (Phase 5 substrate — ADR-0119 + sub-phases)
+
+Established by ADR-0119 through ADR-0119.8. The lane sits on the
+parser → solver → verifier → realizer pipeline (ADR-0115 through
+ADR-0118) and adds a scoring runner and a formal lane shape.
+
+### Lane shape: `gsm8k_capability_shape`
+
+Registered in `LANE_SHAPE_REGISTRY` as `LANE_SHAPE_REGISTRY["gsm8k_math"] =
+"gsm8k_capability_shape"` (ADR-0119.8; `core/capability/expert_demo.py`).
+
+The checker (`_check_gsm8k_capability_shape`) is distinct from the existing
+five shapes because the metric keys and composition rule differ.
+
+**Required metrics:**
+
+| Key | Type | Meaning |
+|---|---|---|
+| `cases_total` | int | Total cases scored; must be > 0 |
+| `correct` | int | Answer matches ground truth AND verifier passes |
+| `wrong` | int | Verifier passed but answer mismatched, OR realizer failed |
+| `refused` | int | ParseError or SolveError (typed refusal) |
+| `overall_pass` | bool | `wrong == 0 AND correct + refused == cases_total` |
+
+**Gate conditions (all must hold):**
+
+| Condition | Reason |
+|---|---|
+| `cases_total > 0` | Non-empty input |
+| `wrong == 0` | ADR-0114a Obligation #4: zero confabulation |
+| `correct + refused == cases_total` | Outcome accounting completeness |
+| `overall_pass` is true (when present) | Runner self-consistency |
+
+The gate passes an all-refused result (0 correct, 0 wrong, N refused)
+intentionally. Whether that qualifies for `expert` promotion is ADR-0120's
+job (it sets the minimum correct_rate); this shape layer verifies only
+runner self-consistency.
+
+**Current measurements on main (2026-05-23):**
+
+| Split | cases_total | correct | wrong | refused | gate |
+|---|---|---|---|---|---|
+| dev (CORE-original) | 50 | 50 | 0 | 0 | ✓ |
+| public (CORE-original) | 150 | 150 | 0 | 0 | ✓ |
+| holdout (real GSM8K test, sealed) | 1,319 | 0 | 0 | 1,319 | ✓ |
+| adversarial suite | 38 | 5 | 0 | 33 | ✓ |
+
+### Empty-expected_unit sentinel rule
+
+GSM8K answers are pure numbers with no unit. The runner (ADR-0119.3,
+extended in ADR-0119.7) implements:
+
+> An empty `expected_unit` means the case carries no unit-level
+> expectation; the runner skips the unit comparison and grades on
+> answer value alone.
+
+This is minimal extension to the outcome rules; the `wrong == 0`
+discipline is preserved.
+
+### Seal discipline (ADR-0119.1 + ADR-0119.7)
+
+The real GSM8K test set is age-encrypted at
+`evals/gsm8k_math/holdouts/v1/cases.jsonl.age` (420,486 bytes; 1,319
+cases). Three invariants govern seal discipline:
+
+1. **Plaintext never on disk.** `scripts/seal_gsm8k_test.py` holds the
+   plaintext in memory only during encryption; only ciphertext is written.
+2. **CORE_HOLDOUT_KEY required to decrypt.** The runner raises a typed
+   error when the env var is absent. Tests that require decryption skip
+   (do not fail) without the key. No CI workflow sets the key.
+3. **Development team operates blind.** The recipient identity lives
+   outside the repo at `~/.config/core/holdout_keys/repo_holdout.txt`
+   (per ADR-0119.1). A release event signed by a reviewer is required
+   to open the lane.
+
+Re-encryption and re-seal events go through their own ADR amendment.
+
+### Adversarial suite contract
+
+`evals/gsm8k_math/adversarial/generator.py` generates 38 cases across 12
+families designed to exploit weak grammar / solver coverage. The gate
+from ADR-0119.5 and ADR-0114a Obligation #8:
+
+> **Misparse rate must be zero on the adversarial suite.** A misparse
+> is defined as `outcome == "wrong"` on the adversarial runner output —
+> CORE ran to completion and emitted a wrong answer (confabulation).
+> Refused rate may be arbitrarily high; that is the safe failure mode.
+
+The `subtle_in_grammar` family (4 cases, all `correct`) proves the gate
+is not trivially satisfied by refusing everything.
+
+### Evidence location
+
+- Lane runner: `evals/gsm8k_math/runner.py`
+- Lane shape checker: `core/capability/expert_demo.py`
+- Adversarial: `evals/gsm8k_math/adversarial/`
+- Depth-curve harness: `evals/gsm8k_math/scoring/depth_curve.py`
+- Frontier baseline: `evals/gsm8k_math/baselines/`
+- Sealed holdout: `evals/gsm8k_math/holdouts/v1/cases.jsonl.age`
+- ADR chain: ADR-0119, ADR-0119.1 through ADR-0119.8

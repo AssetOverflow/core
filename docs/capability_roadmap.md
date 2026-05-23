@@ -386,6 +386,82 @@ The phase has no single exit criterion. Instead, each domain becomes its own sub
 
 **This phase has no estimated duration.** Each new domain promotion is a discrete unit of work; the contract is the durable artifact.
 
+Audit-passed domains as of 2026-05-22: `mathematics_logic`, `physics`, `systems_software`.
+
+---
+
+### Phase 7 — GSM8K-Math Expert Capability (ADR-0114 arc; substrate complete)
+
+**Status:** Substrate complete as of 2026-05-23. ADR-0120 (first `expert` promotion contract) is the next gate.
+**Roadmap ADRs:** ADR-0114, ADR-0114a, ADR-0115, ADR-0116, ADR-0117, ADR-0118, ADR-0118a, ADR-0119 + sub-phases, ADR-0120 (proposed)
+
+This phase was introduced by ADR-0114 as a 7-phase arc toward a first `expert` ledger
+tier claim. ADR-0114a defines 10 falsifiable anti-overfitting obligations any expert
+promotion must satisfy. ADR-0119 decomposes the GSM8K eval lane (Phases 1–4 outcome) into
+8 sub-phases (5.1 through 5.8), all of which have now landed.
+
+**What "substrate complete" means.** All machinery needed to score CORE against GSM8K
+is in place. The first honest measurement is on the books. ADR-0120 sets the numeric
+expert threshold and signs the first expert_claims entry.
+
+#### gsm8k_math substrate — what has landed
+
+| Sub-phase | ADR | Deliverable |
+|---|---|---|
+| 5.1 | ADR-0119.1 | `fabrication_control` holdout sealed; key-management pattern established |
+| 5.2 | ADR-0119.2 | 200 CORE-original cases (50 dev + 150 public); verify.py 200/200 |
+| 5.3 | ADR-0119.3 | `evals/gsm8k_math/runner.py`; correct/wrong/refused triple; wrong==0 gate |
+| 5.4 | ADR-0119.4 | Frontier-baseline comparison filed (Claude 3.5 Sonnet 96.4%, GPT-4 92.0%, Gemini 1.5 Pro 90.8%) |
+| 5.5 | ADR-0119.5 | Adversarial suite: 38 cases × 12 families; 0 wrong |
+| 5.6 | ADR-0119.6 | Depth-curve harness; flat at 1.0 across depths 1–8 on public |
+| 5.7 | ADR-0119.7 | Real GSM8K test set age-encrypted (1,319 cases); first honest measurement |
+| 5.8 | ADR-0119.8 | `gsm8k_capability_shape` registered in `LANE_SHAPE_REGISTRY` |
+
+#### First honest CORE-vs-real-GSM8K measurement
+
+| Split | Correct | Wrong | Refused |
+|---|---|---|---|
+| Real GSM8K test (sealed, 1,319 cases) | 0 | **0** | 1,319 |
+| CORE-original public (150 cases) | 150 | **0** | 0 |
+
+**0 wrong against an external benchmark** is the load-bearing claim. CORE's grammar
+covers zero GSM8K test problems today — that is the honest gap. The load-bearing
+differentiator (zero confabulation) survives the move from CORE-original to real
+external benchmark.
+
+#### ADR-0114a obligations: 10 of 10 discharged for gsm8k_math
+
+ADR-0114a defined 10 falsifiable proof obligations any `expert` promotion must
+satisfy. All 10 are now discharged on main for the gsm8k_math lane.
+
+| # | Obligation | Discharged by |
+|---|---|---|
+| 1 | Sealed-holdout discipline | ADR-0119.1 (fab_control) + ADR-0119.7 (GSM8K test) |
+| 2 | OOD surface variation ≥ 0.95 of dev | ADR-0118a (OOD surface generator) |
+| 3 | Every correct answer ships replay-equal trace | ADR-0117 (solution trace verifier) |
+| 4 | Typed refusal; wrong == 0 | ADR-0116 + ADR-0119.3; holds against real GSM8K (ADR-0119.7) |
+| 5 | Reasoning-isolation perturbation suite | ADR-0125 |
+| 6 | Compositional-depth curve published | ADR-0119.6 (harness); ε threshold to ADR-0120 |
+| 7 | Frontier-baseline comparison on identical items | ADR-0119.4 |
+| 8 | Adversarial generation; misparse rate zero | ADR-0119.5 |
+| 9 | Determinism across release boundaries | solver + verifier + realizer + runner (inherited) |
+| 10 | Operation provenance via pack | ADR-0116 + en_arithmetic_v1 pack |
+
+#### What ADR-0120 will compose
+
+ADR-0120 (first `expert` promotion contract) is the single remaining gate. It will:
+
+1. Set the numeric expert threshold (minimum correct_rate; candidate: ≥ 0.40 / ≥ 0.60 / ≥ 0.85 per ADR-0114)
+2. Set the depth-curve ε (per-step error tolerance for the flat-curve requirement)
+3. Require all 10 ADR-0114a obligations as hard gates
+4. Define the `expert_claims` schema (mirrors `audit_passed_claims` from ADR-0106)
+5. Sign the first expert_claims entry — or refuse honestly if the correct_rate gate is not met
+
+Per the gate-as-process pattern established by ADR-0107, the first promotion attempt
+(ADR-0121) will likely defer honestly on the correct_rate gate, since CORE's current
+grammar covers 0/1319 real GSM8K test problems. That is the expected and correct result;
+it makes the gap measurable and actionable.
+
 ---
 
 ## Part III — Cross-Cutting Considerations

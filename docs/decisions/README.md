@@ -109,6 +109,7 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - gsm8k_math Overall Lane Gate (Phase 5.8; new `gsm8k_capability_shape` in `LANE_SHAPE_REGISTRY`; composes wrong==0 + correct+refused==total + overall_pass; live dev 50/50 + public 150/150 pass) — ADR-0119.8
 - First `expert` Promotion Contract (composes all 10 ADR-0114a obligations + correct_rate ≥ 0.60 floor + depth-curve ε=0.05 + signed expert_claims; proposed; ADR-0121 the first worked attempt) — ADR-0120
 - First `expert` Promotion Attempt — `mathematics_logic` — DEFERRED (mirrors ADR-0107 → ADR-0110 pattern for audit-passed; all 10 obligations pass; correct_rate gate refuses honestly at 0/1319; parser-expansion arc is the named unlock; `wrong == 0` discipline holds against external benchmark) — ADR-0121
+- **Phase 5 complete (2026-05-22):** All ADR-0119 sub-phases (5.1..5.8) landed; ADR-0114a 10/10 obligations discharged for the gsm8k_math lane on main; first honest CORE-vs-real-GSM8K measurement published (0/1319 correct, 0 wrong, 1319 refused); ADR-0120 (first `expert` promotion contract) is the next gate.
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 

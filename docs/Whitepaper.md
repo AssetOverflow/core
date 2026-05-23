@@ -409,12 +409,64 @@ evidence bundle. CORE makes the commitment first-class.
 External readers can inspect the ledger
 (`core capability ledger` / `docs/decisions/README.md` table) to see
 which domains are *contract-passing* and which are *demonstrated*. As
-of acceptance: two domains demonstrated (`mathematics_logic`,
-`physics`); two ratified domains pending their own promotion ADRs.
+of 2026-05-23: three domains demonstrated (`mathematics_logic`,
+`physics`, `systems_software`); one ratified domain pending its
+own promotion ADR (`hebrew_greek_textual_reasoning`).
 
 Full evidence chain: `docs/decisions/README.md` (index + frontier),
 `docs/decisions/ADR-0091-domain-pack-contract-v1.md` through
 `ADR-0111-physics-expert-demo-promotion.md`.
+
+#### Phase 5 — Capability Substrate (ADR-0119 arc)
+
+The §XIII architecture above distinguishes *claim shapes* from *capability*.
+ADR-0114 (2026-05-22) opened a separate, explicitly capability-focused arc
+toward a first `expert` ledger tier. ADR-0114a defined the 10-point falsifiable
+proof framework any `expert` promotion must satisfy. As of 2026-05-23, all 10
+obligations are discharged on main for the `gsm8k_math` lane.
+
+**The 10 ADR-0114a obligations and their discharge status:**
+
+| # | Obligation | Discharged by |
+|---|---|---|
+| 1 | Sealed-holdout discipline | ADR-0119.1 + ADR-0119.7 |
+| 2 | OOD surface variation ≥ 0.95 of dev | ADR-0118a |
+| 3 | Every correct answer ships replay-equal trace | ADR-0117 |
+| 4 | Typed refusal; wrong == 0 | ADR-0116 + ADR-0119.3 + ADR-0119.7 |
+| 5 | Reasoning-isolation perturbation suite | ADR-0125 |
+| 6 | Compositional-depth curve | ADR-0119.6 |
+| 7 | Frontier-baseline comparison | ADR-0119.4 |
+| 8 | Adversarial generation; misparse rate zero | ADR-0119.5 |
+| 9 | Determinism across release boundaries | solver + verifier + realizer + runner |
+| 10 | Operation provenance via pack | ADR-0116 |
+
+**First honest measurement against real GSM8K (ADR-0119.7):**
+
+| Cases | Correct | Wrong | Refused |
+|---|---|---|---|
+| 1,319 | 0 | 0 | 1,319 |
+
+The parser grammar covers zero GSM8K test problems today. That is the
+truthful gap. **The load-bearing differentiator (zero confabulation)
+survives the move from CORE-original to real external benchmark.**
+CORE refuses what it cannot grammar-handle; it does not confabulate.
+ADR-0114a Obligation #4 holds against the external corpus.
+
+This is precisely the inverse of frontier LLM behavior: Claude 3.5
+Sonnet reports 96.4% on GSM8K with a nonzero wrong rate; CORE reports
+0% correct with 0% wrong. The honest claim is not "CORE matches
+frontier LLMs" but "CORE's zero-confabulation property survives the
+encounter with an external benchmark." Every future parser expansion
+lifts the correct_rate while the wrong_rate gate holds it at zero.
+
+**ADR-0120 (the first `expert` promotion contract) is the next
+composable artifact.** It will set the numeric expert threshold
+(minimum correct_rate) and ε (depth-curve flatness tolerance),
+require all 10 obligations as hard gates, and define the
+`expert_claims` schema. The first worked promotion attempt (ADR-0121)
+will likely defer honestly on the correct_rate gate — that is the
+expected and correct result, consistent with the gate-as-process
+pattern established by ADR-0107.
 
 ---
 

@@ -706,7 +706,7 @@ Canonicalization rules: sorted keys, compact separators,
 `ensure_ascii=False`. The same lane results must reproduce the same
 digest byte-for-byte; this is what makes the gate replay-deterministic.
 
-#### Lane-Shape Registry (ADR-0109)
+#### Lane-Shape Registry (ADR-0109 + ADR-0119.8)
 
 Threshold dispatch is per-lane-shape, not lane-uniform:
 
@@ -717,9 +717,60 @@ Threshold dispatch is per-lane-shape, not lane-uniform:
 | `inference_shape` | `all_pass_rate`, `replay_determinism`, `overall_pass` | `≥ 0.95 ∧ == 1.0 ∧ True` |
 | `refusal_shape` | `by_class[*].n`, `.refused`, `.fabricated` | `∀ bucket: refused == n ∧ fabricated == 0` |
 | `symbolic_logic_shape` | `accuracy` | `≥ 0.95` |
+| `gsm8k_capability_shape` | `cases_total`, `correct`, `wrong`, `refused`, `overall_pass` | see below |
 
 Lane id → shape resolution is by registry lookup, not metric
 introspection. Unknown lanes fail closed.
+
+#### `gsm8k_capability_shape` — Formal Specification (ADR-0119.8)
+
+Registered under `LANE_SHAPE_REGISTRY["gsm8k_math"] = "gsm8k_capability_shape"`.
+Distinct from the five ADR-0109 shapes because the metric keys and composition rule
+are unique to the capability-lane runner contract.
+
+**Required keys:** `cases_total`, `correct`, `wrong`, `refused`, `overall_pass`
+
+**Formal pass predicate:**
+
+```text
+gsm8k_capability_shape_pass(metrics) ≡
+    cases_total > 0
+    ∧ wrong == 0                             -- ADR-0114a Obligation #4
+    ∧ correct + refused == cases_total       -- outcome accounting completeness
+    ∧ (overall_pass ∉ metrics ∨ overall_pass == True)   -- runner self-consistency
+```
+
+**Formal refusal conditions (any one triggers refusal with named reason):**
+
+```text
+∃ k ∈ {cases_total, correct, wrong, refused} : k ∉ metrics
+    → "missing required metric <k>"
+
+cases_total ≤ 0
+    → "cases_total=N (must be > 0)"
+
+wrong ≠ 0
+    → "wrong=N (must be 0 — ADR-0114a Obligation #4)"
+
+correct + refused ≠ cases_total
+    → "outcome accounting incomplete"
+
+overall_pass ∈ metrics ∧ overall_pass == False
+    → "overall_pass is False despite wrong=0 and accounting balanced"
+```
+
+**Edge case:** an all-refused result (correct=0, wrong=0, refused=N) passes this gate.
+Whether that qualifies for `expert` promotion is ADR-0120's job (it sets the minimum
+`correct_rate`); this shape layer verifies runner self-consistency only.
+
+**Current measurements on main (2026-05-23):**
+
+```text
+dev (CORE-original):    cases_total=50,   correct=50,  wrong=0, refused=0   → PASS
+public (CORE-original): cases_total=150,  correct=150, wrong=0, refused=0   → PASS
+holdout (real GSM8K):   cases_total=1319, correct=0,   wrong=0, refused=1319 → PASS
+adversarial suite:      cases_total=38,   correct=5,   wrong=0, refused=33  → PASS
+```
 
 #### Fail-Closed Discipline
 
