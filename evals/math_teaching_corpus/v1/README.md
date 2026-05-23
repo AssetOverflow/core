@@ -1,8 +1,8 @@
-# Math Teaching Corpus Benchmark v1 (ADR-0131.2)
+# Math Teaching Corpus Benchmark v1.B (ADR-0131.2.B)
 
 The second of three benchmarks for the `mathematics_logic` expert promotion under ADR-0131. Tests whether the *teaching/replay loop itself* can carry math content end-to-end (propose → ratify → replay-equivalent) on a small math teaching corpus.
 
-## Scope (v1, intentionally narrow)
+## Scope (v1.B, load-bearing enrichment)
 
 - **Domain**: Mathematical logic (`axiom`, `theorem`, `lemma`, `proof`, `premise`, `conclusion`, `implication`, `equivalence`, `contradiction`, `negation`, `set`, `function`, `domain`, `range`, `identity`, `composition`).
 - **Language Pack**: `en_mathematics_logic_v1` (ratified and compiled).
@@ -28,26 +28,24 @@ Each chain starts as a candidate, is proposed to a transient proposal log, under
 
 ## Dataset
 
-`cases.jsonl` contains 30 hand-curated mathematical logic cases, mirroring the chains in `teaching/math_corpora/math_teaching_v1.jsonl`:
+`cases.jsonl` contains 40 hand-curated mathematical logic cases, split into three expected classes:
 
-| Intent | Connective | Subject Count | Object Count | Example |
-|---|---|---|---|---|
-| cause | requires | 12 | 12 | `theorem requires proof` |
-| cause | grounds | 9 | 9 | `proof grounds theorem` |
-| cause | reveals | 1 | 1 | `contradiction reveals negation` |
-| verification | requires | 3 | 3 | `theorem requires proof` |
-| verification | grounds | 5 | 5 | `proof grounds theorem` |
+| Class | Expected Verdict | Case Count | Description |
+|---|---|---|---|
+| `replay_equivalent` | `replay_equivalent` | 30 | Valid mathematical logic chains citing honest lemma refs. |
+| `not_equivalent` | `not_equivalent` | 5 | Chains rejected due to cycles, redundancy, or pack-residency violations. |
+| `refused` | `refused` | 5 | Chains refused by the eligibility check due to empty fields, undetermined polarity, or missing evidence. |
 
-Total: 30 cases. All expected to be `replay_equivalent`.
+Total: 40 cases.
 
-## Exit criterion (per ADR-0131 Benchmark 2)
+## Exit criterion (per ADR-0131.2.B)
 
 ```
 correct_rate == 1.0 (100.0%)
 wrong        == 0
 ```
 
-`wrong` is incremented if a case fails to propose, fails the replay-equivalence gate, fails ratification, or raises an unexpected error.
+`wrong` is incremented if any case actual outcome disagrees with the expected class, or if it raises an unexpected error.
 
 ## Running the lane
 
@@ -57,16 +55,16 @@ python -m evals.math_teaching_corpus.v1.runner
 # writes report.json with counts + per-case status
 ```
 
-## v1 result (baseline at landing)
+## v1.B result (load-bearing baseline)
 
 ```
-correct = 30 / 30   (100.0%)
-wrong   =  0 / 30   (wrong == 0 invariant satisfied)
-refused =  0 / 30   (no cases refused)
+correct = 40 / 40   (100.0%)
+wrong   =  0 / 40   (wrong == 0 invariant satisfied)
+refused =  0 / 40   (no unexpected refusals)
 exit:   PASSED
 ```
 
-## Future expansion (ADR-0131.2.B and beyond)
+## Future expansion
 
 - Multi-hop composed math teaching chains.
 - Arithmetic operation and units teaching chains (using `en_arithmetic_v1` and `en_units_v1`).
