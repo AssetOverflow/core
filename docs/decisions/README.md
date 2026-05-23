@@ -47,6 +47,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0123a](ADR-0123a-inference-shape-synonym.md) | `all_three_pass_rate` Synonym in `inference_shape` (ADR-0109 Amendment) | Accepted (2026-05-22) |
 | [ADR-0125](ADR-0125-reasoning-isolation-perturbation-suite.md) | Reasoning-Isolation Perturbation Suite | Accepted (2026-05-22) |
 | [ADR-0119](ADR-0119-gsm8k-eval-lane-roadmap.md) | GSM8K Eval Lane Roadmap (Phase 5; decomposes into 5.1..5.8) | Proposed (2026-05-22) |
+| [ADR-0119.1](ADR-0119.1-sealed-holdout-fabrication-control.md) | Seal `fabrication_control` Holdout (ADR-0105 Amendment) | Accepted (2026-05-23) |
 
 ---
 
@@ -89,6 +90,7 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - `all_three_pass_rate` Synonym in `inference_shape` (ADR-0109 Amendment) — ADR-0123a
 - Reasoning-Isolation Perturbation Suite (224 deterministic applicable semantic perturbations; discharges ADR-0114a obligation #5 for the GSM8K-style parser dev lane) — ADR-0125
 - GSM8K Eval Lane Roadmap (Phase 5; decomposes into 5.1..5.8; proposed) — ADR-0119
+- Seal `fabrication_control` Holdout (ADR-0105 Amendment) — ADR-0119.1
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 

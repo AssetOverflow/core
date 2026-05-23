@@ -19,6 +19,7 @@ holdout always report but never block.
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import hashlib
 import json
 import re
@@ -187,12 +188,36 @@ def _evaluate_thresholds(metrics: dict[str, float]) -> dict[str, Any]:
         )
     return {"violations": violations, "passed": not violations}
 
+@dataclass(slots=True)
+class LaneReport:
+    metrics: dict[str, Any]
+    case_details: list[dict[str, Any]]
 
-def _run_split(lane_dir: Path, split: str) -> dict[str, Any]:
-    cases_path = lane_dir / "cases" / f"{split}.jsonl"
-    cases = _load_cases(cases_path)
+
+def run_lane(
+    cases: list[dict[str, Any]],
+    *,
+    config: Any = None,
+) -> LaneReport:
     case_results = [_run_case(c) for c in cases]
     metrics = _compute_metrics(case_results)
+    return LaneReport(metrics=metrics, case_details=case_results)
+
+
+def _run_split(lane_dir: Path, split: str) -> dict[str, Any]:
+    if split == "holdout":
+        from evals.holdout_runner import _decrypt_holdout
+        from evals.framework import get_lane
+        lane = get_lane("fabrication_control")
+        cases = _decrypt_holdout(lane.holdout_cases_path_sealed(LANE_VERSION))
+    else:
+        cases_path = lane_dir / "cases" / f"{split}.jsonl"
+        cases = _load_cases(cases_path)
+
+    report = run_lane(cases)
+    case_results = report.case_details
+    metrics = report.metrics
+
     threshold_eval = _evaluate_thresholds(metrics)
     by_class: dict[str, dict[str, int]] = {}
     for r in case_results:

@@ -1,0 +1,9 @@
+# Repository Holdout Recipients
+#
+# This file lists the public key recipients for each eval lane's sealed holdout.
+# The corresponding private keys are stored outside the repository.
+#
+# Lanes:
+# - fabrication_control: age1zt3ud2skl4y8qt306dlux0d3g68tt2trsur64yuh7gv4dag5qg5su9jllz
+
+fabrication_control: age1zt3ud2skl4y8qt306dlux0d3g68tt2trsur64yuh7gv4dag5qg5su9jllz
