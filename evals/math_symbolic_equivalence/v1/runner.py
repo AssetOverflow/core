@@ -1,22 +1,9 @@
-"""ADR-0131.1 — Symbolic equivalence lane runner (v1).
+"""ADR-0131.1 — Symbolic equivalence lane runner (v1 hardened).
 
-Loads ``cases.jsonl``, runs each case through
-:func:`generate.math_symbolic_equivalence.check_equivalence`, classifies
-the outcome against the expected verdict, and writes a deterministic
-``report.json``.
-
-CLI: ``python -m evals.math_symbolic_equivalence.v1.runner``
-  exit code 0 if exit criterion passes, 1 otherwise.
-
-Exit criterion (per ADR-0131 Benchmark 1):
-  correct_rate >= 0.95
-  wrong         == 0
-
-A case is ``correct`` iff its expected verdict matches the engine's
-verdict (including expected=refused matched by REFUSED). It is
-``wrong`` iff expected=equivalent but engine=not_equivalent, or
-vice versa. It is ``refused`` iff engine=REFUSED on a case whose
-expected verdict was a definite answer (equivalent / not_equivalent).
+Loads ``cases.jsonl`` plus deterministic generated cases, runs each case
+through :func:`generate.math_symbolic_equivalence.check_equivalence`,
+classifies the outcome against the expected verdict, and writes a
+deterministic ``report.json``.
 """
 
 from __future__ import annotations
@@ -27,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from evals.math_symbolic_equivalence.v1.generated_cases import build_generated_cases
 from generate.math_symbolic_equivalence import (
     Verdict,
     check_equivalence,
@@ -72,13 +60,9 @@ def _score_one(case: dict[str, Any]) -> CaseOutcome:
         verdict_class = "correct"
         reason = ""
     elif actual == Verdict.REFUSED.value:
-        # Engine refused on a case that expected a definite answer.
-        # This is a refusal, NOT a wrong answer — preserves wrong == 0.
         verdict_class = "refused"
         reason = v.reason
     else:
-        # Engine produced a definite answer that disagrees with expected.
-        # This is wrong. The wrong==0 gate catches any such case.
         verdict_class = "wrong"
         reason = (
             f"engine={actual!r} expected={expected!r}; "
@@ -95,15 +79,33 @@ def _score_one(case: dict[str, Any]) -> CaseOutcome:
     )
 
 
-def _load_cases(path: Path = _CASES_PATH) -> list[dict[str, Any]]:
+def _load_curated_cases(path: Path = _CASES_PATH) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     with path.open("r", encoding="utf-8") as fh:
         for line in fh:
             line = line.strip()
             if not line:
                 continue
-            records.append(json.loads(line))
+            record = json.loads(line)
+            record["source"] = "curated"
+            records.append(record)
     return records
+
+
+def _load_generated_cases() -> list[dict[str, Any]]:
+    records = build_generated_cases()
+    for record in records:
+        record["source"] = "generated"
+    return records
+
+
+def _load_cases(path: Path = _CASES_PATH) -> list[dict[str, Any]]:
+    cases = _load_curated_cases(path) + _load_generated_cases()
+    ids = [str(c["case_id"]) for c in cases]
+    if len(ids) != len(set(ids)):
+        duplicates = sorted({case_id for case_id in ids if ids.count(case_id) > 1})
+        raise RuntimeError(f"duplicate symbolic-equivalence case_id(s): {duplicates}")
+    return cases
 
 
 def build_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
@@ -115,13 +117,18 @@ def build_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
     total = len(outcomes)
     correct_rate = counts["correct"] / total if total else 0.0
     passed = (correct_rate >= _CORRECT_RATE_MIN) and (counts["wrong"] <= _WRONG_MAX)
+    by_source = {"curated": 0, "generated": 0}
+    for c in cases:
+        by_source[str(c.get("source", "curated"))] += 1
 
     return {
-        "schema_version": 1,
-        "adr": "0131.1",
-        "benchmark": "symbolic_equivalence_v1",
+        "schema_version": 2,
+        "adr": "0131.1.B",
+        "benchmark": "symbolic_equivalence_v1_hardened",
         "cases_path": str(_CASES_PATH.relative_to(_HERE.parent.parent.parent)),
+        "generated_cases_module": "evals.math_symbolic_equivalence.v1.generated_cases",
         "sample_count": total,
+        "by_source": by_source,
         "counts": counts,
         "correct_rate": correct_rate,
         "exit_criterion": {
