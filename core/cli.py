@@ -622,6 +622,50 @@ def cmd_capability_pack_provenance(args: argparse.Namespace) -> int:
     return 0 if report.obligation_10_passed else 1
 
 
+def cmd_capability_adversarial(args: argparse.Namespace) -> int:
+    """ADR-0114a Obligation #8 — adversarial generation auditor. Runs
+    a committed adversarial case set through the candidate-graph
+    pipeline; gate is ``wrong == 0`` across all families AND
+    ``cases_total >= 30`` AND ``families_total >= 8``. Default cases
+    set ``evals/obligation_8_adversarial/v1/cases.jsonl``; writes
+    report to ``--out`` (default
+    ``evals/obligation_8_adversarial/<lane_id>.json``). Exit 0 iff
+    obligation passes."""
+    from pathlib import Path
+    from core.capability.adversarial import (
+        emit_adversarial_report,
+        evaluate_adversarial,
+    )
+
+    report = evaluate_adversarial()
+    out_path = Path(args.out) if args.out else (
+        Path(__file__).resolve().parent.parent
+        / "evals" / "obligation_8_adversarial"
+        / f"{report.lane_id}.json"
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    emit_adversarial_report(report, out_path)
+
+    if args.json:
+        print(json.dumps(report.as_dict(), indent=2, sort_keys=True))
+    else:
+        print(f"lane:                {report.lane_id}")
+        print(f"cases_total:         {report.cases_total}  (min {report.cases_total >= 30 and 'OK' or 'FAIL'})")
+        print(f"families_total:      {report.families_total}  ({'OK' if report.families_total >= 8 else 'FAIL'})")
+        print(f"cases_refused:       {report.cases_refused}")
+        print(f"cases_solved:        {report.cases_solved}")
+        print(f"cases_wrong:         {report.cases_wrong} (gate: must be 0)")
+        print(f"obligation_8_passed: {report.obligation_8_passed}")
+        print()
+        print(f"  {'family':<22} {'total':<7} {'refused':<8} {'solved':<8} {'wrong'}")
+        for f in report.families:
+            print(f"  {f.family:<22} {f.cases_total:<7} {f.cases_refused:<8} {f.cases_solved:<8} {f.cases_wrong}")
+        print(f"\nartifact: {out_path}")
+        if report.refusal_reason:
+            print(f"refusal_reason: {report.refusal_reason}")
+    return 0 if report.obligation_8_passed else 1
+
+
 def cmd_pack_list(args: argparse.Namespace) -> int:
     """List compiled language packs."""
     from language_packs import list_packs
@@ -2938,6 +2982,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="output path for the audit report (default: evals/obligation_10_pack_provenance/<lane_id>.json)",
     )
     capability_pack_provenance.set_defaults(func=cmd_capability_pack_provenance)
+    capability_adversarial = capability_sub.add_parser(
+        "adversarial",
+        help="ADR-0114a Obligation #8 — adversarial generation auditor (wrong==0 across families)",
+    )
+    capability_adversarial.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_adversarial.add_argument(
+        "--out",
+        default=None,
+        help="output path for the adversarial audit report (default: evals/obligation_8_adversarial/<lane_id>.json)",
+    )
+    capability_adversarial.set_defaults(func=cmd_capability_adversarial)
 
     pack = subparsers.add_parser("pack", help="inspect and verify language packs")
     pack_sub = pack.add_subparsers(dest="pack_command", metavar="pack-command", required=True)
