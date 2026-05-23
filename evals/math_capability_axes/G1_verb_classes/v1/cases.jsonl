@@ -1,0 +1,20 @@
+{"case_id": "g1-001", "problem": "Sam buys 5 apples. How many apples does Sam have?", "expected": "solved_correct", "expected_answer": 5.0, "expected_unit": "apples", "shape_category": "buys"}
+{"case_id": "g1-002", "problem": "Sam bought 10 candies. How many candies does Sam have?", "expected": "solved_correct", "expected_answer": 10.0, "expected_unit": "candies", "shape_category": "bought"}
+{"case_id": "g1-003", "problem": "Sam sells 3 books. Tom has 5 books. How many books does Tom have?", "expected": "solved_correct", "expected_answer": 5.0, "expected_unit": "books", "shape_category": "sells"}
+{"case_id": "g1-004", "problem": "Sam collected 8 marbles. How many marbles does Sam have?", "expected": "solved_correct", "expected_answer": 8.0, "expected_unit": "marbles", "shape_category": "collected"}
+{"case_id": "g1-005", "problem": "Sam saved 12 dollars. How many cents does Sam have?", "expected": "solved_correct", "expected_answer": 1200.0, "expected_unit": "cents", "shape_category": "saved"}
+{"case_id": "g1-006", "problem": "Sam saved up 15 stickers. How many stickers does Sam have?", "expected": "solved_correct", "expected_answer": 15.0, "expected_unit": "stickers", "shape_category": "saved_up"}
+{"case_id": "g1-007", "problem": "Sam started 20 pencils. How many pencils does Sam have?", "expected": "solved_correct", "expected_answer": 20.0, "expected_unit": "pencils", "shape_category": "started"}
+{"case_id": "g1-008", "problem": "Sam started with 6 toys. How many toys does Sam have?", "expected": "solved_correct", "expected_answer": 6.0, "expected_unit": "toys", "shape_category": "started_with"}
+{"case_id": "g1-009", "problem": "Sam had 9 dolls. How many dolls does Sam have?", "expected": "solved_correct", "expected_answer": 9.0, "expected_unit": "dolls", "shape_category": "had"}
+{"case_id": "g1-010", "problem": "Sam makes 4 cookies. How many cookies does Sam have?", "expected": "solved_correct", "expected_answer": 4.0, "expected_unit": "cookies", "shape_category": "makes"}
+{"case_id": "g1-011", "problem": "Sam bought 7 oranges. Sam eats 2 oranges. How many oranges does Sam have?", "expected": "solved_correct", "expected_answer": 5.0, "expected_unit": "oranges", "shape_category": "bought"}
+{"case_id": "g1-012", "problem": "Sam collected 10 shells. Sam loses 3 shells. How many shells does Sam have?", "expected": "solved_correct", "expected_answer": 7.0, "expected_unit": "shells", "shape_category": "collected"}
+{"case_id": "g1-013", "problem": "Sam saved up 20 dollars. Sam spends 5 dollars. How many cents does Sam have?", "expected": "solved_correct", "expected_answer": 1500.0, "expected_unit": "cents", "shape_category": "saved_up"}
+{"case_id": "g1-014", "problem": "Sam started with 8 stamps. Sam gets 2 stamps. How many stamps does Sam have?", "expected": "solved_correct", "expected_answer": 10.0, "expected_unit": "stamps", "shape_category": "started_with"}
+{"case_id": "g1-015", "problem": "Sam had 15 candies. Sam eats 5 candies. How many candies does Sam have?", "expected": "solved_correct", "expected_answer": 10.0, "expected_unit": "candies", "shape_category": "had"}
+{"case_id": "g1-016", "problem": "Sam makes 12 blocks. Sam donates 4 blocks. How many blocks does Sam have?", "expected": "solved_correct", "expected_answer": 8.0, "expected_unit": "blocks", "shape_category": "makes"}
+{"case_id": "g1-017", "problem": "Sam buys 5 apples. How many apples does Sam have?", "expected": "solved_wrong", "expected_answer": 10.0, "expected_unit": "apples", "shape_category": "buys"}
+{"case_id": "g1-018", "problem": "Tina makes $18.00 an hour. How many dollars does Tina have?", "expected": "refused", "expected_answer": null, "expected_unit": null, "shape_category": "refused_rate"}
+{"case_id": "g1-019", "problem": "Sam contemplates 5 apples. How many apples does Sam have?", "expected": "refused", "expected_answer": null, "expected_unit": null, "shape_category": "refused_verb"}
+{"case_id": "g1-020", "problem": "If Sam had 5 apples, how many would he have?", "expected": "refused", "expected_answer": null, "expected_unit": null, "shape_category": "refused_subjunctive"}

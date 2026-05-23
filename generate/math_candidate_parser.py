@@ -83,12 +83,21 @@ class CandidateInitial:
     def __post_init__(self) -> None:
         # ADR-0127 widens the anchor set to include 'there are/were/is/was'
         # for the implicit-subject initial-possession shape.
-        # ADR-0131.G.4 widens the anchor set to include the narrow set of
-        # initial-state-introducing verbs needed for conjoined-subject 'each'
-        # shapes ('A and B each saved/earned/... N <unit>'). See
-        # _CONJ_SUBJECT_VERBS for the closed set.
+        #
+        # ADR-0131.G.1: _INITIAL_HAS_RE itself only emits has/have/had/started
+        # — acquisition verbs (buys, bought, sells, collected, saved, makes)
+        # live exclusively in ADD_VERBS / SUBTRACT_VERBS so a sentence like
+        # "Sam buys 3 apples" parses as an add-operation only, avoiding
+        # branch-disagreement when a canonical "has" initial precedes it.
+        #
+        # ADR-0131.G.4 introduces a separate conjoined-subject-each extractor
+        # that legitimately emits CandidateInitial with a wider set of
+        # state-introducing verbs (saved/earned/got/received/bought/made/paid +
+        # inflections) for the closed shape "A and B each <verb> N <unit>".
+        # That extractor is the only path into these wider anchors. The
+        # whitelist below is the runtime safety net for both paths.
         if self.matched_anchor.lower() not in (
-            "has", "have", "had",
+            "has", "have", "had", "started",
             "are", "were", "is", "was",
             "save", "saved",
             "earn", "earned",
@@ -159,9 +168,20 @@ _TRANSFER_VERBS_PATTERN: Final[str] = _verbs_pattern(TRANSFER_VERBS)
 # Initial-possession extractor
 # ---------------------------------------------------------------------------
 
+# ADR-0131.G1 note: acquisition/action verbs (buys, bought, sells,
+# collected, saved, makes) were removed from the anchor alternation here.
+# They live exclusively in ADD_VERBS / SUBTRACT_VERBS so that sentences
+# like "Sam buys 3 apples" are parsed as add-operations only, avoiding
+# branch-disagreement when a canonical "has" initial precedes them.
+# The solver defaults-from-zero for operations, so single-statement
+# acquisition sentences ("Sam buys 5 apples. How many does Sam have?")
+# still resolve correctly as 0 + 5 = 5.
 _INITIAL_HAS_RE: Final[re.Pattern[str]] = re.compile(
     rf"^(?P<entity>{_ENTITY})\s+"
-    rf"(?P<anchor>has|have)\s+"
+    # ADR-0131.G.1: pure-possession anchors only (with optional particle
+    # for "had started with N", etc.). Acquisition verbs live in
+    # ADD_VERBS / SUBTRACT_VERBS — see CandidateInitial.__post_init__.
+    rf"(?P<anchor>has|have|had|started)(?:\s+(?:up|with))?\s+"
     rf"(?P<value>{_VALUE})"
     # ADR-0131.G.3: unit slot is optional. Money-symbol value literals
     # (``$40``) carry their unit implicitly (``cent``); a missing unit
@@ -554,10 +574,17 @@ def _op_pattern(verbs_pattern: str, *, requires_target: bool) -> re.Pattern[str]
         trailing_prep = (
             r"(?:\s+(?:on|from|at|in|onto|into|under|over|to|of|for|with)\s+.+)?"
         )
+    # Optional verb particle: handles "saved up N", "picked up N",
+    # "threw out N", etc.  The particle is grammatically real but
+    # arithmetically inert — it does not affect the operation kind or
+    # operand.  ADR-0131.G1: this clause replaces the former approach
+    # of listing particle-bearing verbs as initial-possession anchors.
+    verb_particle = r"(?:\s+(?:up|down|out|back|off|in|away))?"
     return re.compile(
         r"^"
         rf"(?P<subject>{_ENTITY})\s+"
         rf"(?P<verb>{verbs_pattern})"
+        rf"{verb_particle}"
         rf"\s+(?P<value>{_VALUE})"
         r"(?:\s+more)?"
         r"(?:\s+(?!to\b)(?!more\b)(?!on\b)(?!from\b)(?!at\b)(?!in\b)"
@@ -1040,13 +1067,10 @@ def _compare_multiplicative_candidates(sentence: str) -> list[CandidateOperation
         value_raw = m.group("value")
         if _is_indefinite_quantifier(value_raw):
             return out
-        try:
-            _rv = _resolve_value(value_raw)
-            factor = float(_rv.value) if _rv is not None else None
-        except (KeyError, TypeError):
+        rv = _resolve_value(value_raw)
+        if rv is None:
             return out
-        if factor is None:
-            return out
+        factor = float(rv.value)
         cand = _build_compare_multiplicative(
             actor_raw=m.group("actor"),
             factor=factor,
@@ -1101,11 +1125,8 @@ def _compare_nested_candidates(sentence: str) -> list[CandidateOperation]:
     # comparison. The additive offset N is dropped on this candidate.
     factor_value_raw = m.group("factor_value")
     if not _is_indefinite_quantifier(factor_value_raw):
-        try:
-            _rv2 = _resolve_value(factor_value_raw)
-            factor = float(_rv2.value) if _rv2 is not None else None
-        except (KeyError, TypeError):
-            factor = None
+        rv = _resolve_value(factor_value_raw)
+        factor = float(rv.value) if rv is not None else None
         if factor is not None:
             mult_cand = _build_compare_multiplicative(
                 actor_raw=actor_raw,
@@ -1328,12 +1349,12 @@ def _conj_subject_each_candidates(sentence: str) -> list[CandidateInitial]:
     entity_b = _normalize_entity(m.group("b"))
     if entity_a == entity_b:
         return []  # 'Aaron and Aaron each ...' is degenerate
-    _rv_conj = _resolve_value(value_raw)
-    if _rv_conj is None:
+    rv = _resolve_value(value_raw)
+    if rv is None:
         return []
-    value = _rv_conj.value
+    value = rv.value
     unit_raw = m.group("unit")
-    unit = _canonicalize_unit(unit_raw)
+    unit = rv.unit_override if rv.unit_override is not None else _canonicalize_unit(unit_raw)
     anchor = _canon_verb_to_anchor(m.group("verb"))
     out: list[CandidateInitial] = []
     for entity, entity_raw in ((entity_a, m.group("a")), (entity_b, m.group("b"))):
@@ -1383,12 +1404,13 @@ def _conj_object_candidates(sentence: str) -> list[CandidateInitial]:
         rv = _resolve_value(value_raw)
         if rv is None:
             return []
+        final_unit = rv.unit_override if rv.unit_override is not None else unit
         try:
             out.append(
                 CandidateInitial(
                     initial=InitialPossession(
                         entity=entity,
-                        quantity=Quantity(value=rv.value, unit=unit),
+                        quantity=Quantity(value=rv.value, unit=final_unit),
                     ),
                     source_span=sentence,
                     matched_anchor=anchor,
@@ -1429,11 +1451,11 @@ def _embedded_quantifier_candidates(sentence: str) -> list[CandidateInitial]:
         c2 = container2_raw.lower()
         if c2 not in (container, container.rstrip("s"), container + "s"):
             return []
-    _rv_n = _resolve_value(n_raw)
-    _rv_per = _resolve_value(m_raw)
-    if _rv_n is None or _rv_per is None:
+    rv_n = _resolve_value(n_raw)
+    rv_per = _resolve_value(m_raw)
+    if rv_n is None or rv_per is None:
         return []
-    total = _rv_n.value * _rv_per.value
+    total = rv_n.value * rv_per.value
     entity = _normalize_entity(m.group("entity"))
     unit_raw = m.group("unit")
     unit = _canonicalize_unit(unit_raw)
@@ -1512,13 +1534,13 @@ def _build_conj_embedded_sum(
     if u1 != u2:
         # Mixed-unit sum is meaningless; refuse.
         return []
-    _n1 = _resolve_value(n1_raw)
-    _m1 = _resolve_value(m1_raw)
-    _n2 = _resolve_value(n2_raw)
-    _m2 = _resolve_value(m2_raw)
-    if _n1 is None or _m1 is None or _n2 is None or _m2 is None:
+    rv_n1 = _resolve_value(n1_raw)
+    rv_m1 = _resolve_value(m1_raw)
+    rv_n2 = _resolve_value(n2_raw)
+    rv_m2 = _resolve_value(m2_raw)
+    if any(rv is None for rv in (rv_n1, rv_m1, rv_n2, rv_m2)):
         return []
-    total = _n1.value * _m1.value + _n2.value * _m2.value
+    total = (rv_n1.value * rv_m1.value) + (rv_n2.value * rv_m2.value)  # type: ignore[union-attr]
     entity = _normalize_entity(m.group("entity"))
     try:
         return [
