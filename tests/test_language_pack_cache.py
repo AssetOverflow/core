@@ -37,4 +37,4 @@ def test_load_pack_entries_returns_new_list_from_cached_tuple() -> None:
     entries_a.pop()
 
     assert len(entries_a) == len(entries_b) - 1
-    assert entries_b[-1].entry_id == "en-core-cog-085"
+    assert entries_b[-1].entry_id == "en-core-cog-091"

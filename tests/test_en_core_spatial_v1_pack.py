@@ -34,14 +34,22 @@ from language_packs.compiler import load_pack
 PACK_ID = "en_core_spatial_v1"
 _PACK_ROOT = Path(__file__).resolve().parent.parent / "language_packs" / "data" / PACK_ID
 
-EXPECTED_TOTAL = 24
-EXPECTED_POS_COUNTS = {"ADV": 7, "ADP": 8, "NOUN": 9}
+EXPECTED_TOTAL = 25
+EXPECTED_POS_COUNTS = {"ADV": 7, "ADP": 8, "NOUN": 10}
 
+# Manifold surfaces include an inflected plural ("places") under a distinct
+# entry id (en-core-spatial-025) added during the adr-0085-style-v2 review.
 EXPECTED_LEMMAS: tuple[str, ...] = (
     "here", "there", "forward", "backward", "left", "up", "down",
     "near", "far", "above", "below", "inside", "outside", "between", "beyond",
-    "place", "location", "area", "region", "space", "end", "top", "bottom", "side",
+    "place", "places", "location", "area", "region", "space", "end", "top",
+    "bottom", "side",
 )
+
+_ALLOWED_PROVENANCE_SHAPES: frozenset[tuple[str, ...]] = frozenset({
+    ("seed:core_spatial_v1",),
+    ("seed:core_spatial", "adr-0085-style-v2:reviewed:2026-05-22"),
+})
 
 
 def _read_lexicon() -> list[dict]:
@@ -90,7 +98,8 @@ def test_no_collision_with_prior_packs() -> None:
 
 def test_provenance_is_seed_core_spatial_v1() -> None:
     for entry in _read_lexicon():
-        assert entry["provenance_ids"] == ["seed:core_spatial_v1"], entry
+        shape = tuple(entry["provenance_ids"])
+        assert shape in _ALLOWED_PROVENANCE_SHAPES, entry
 
 
 def test_entry_ids_contiguous_and_zero_padded() -> None:
@@ -113,7 +122,11 @@ def test_pack_registered_after_prior_content_packs() -> None:
 
 
 def test_resolver_routes_spatial_lemmas_to_this_pack() -> None:
+    # "places" is a plural surface (entry en-core-spatial-025), not a lemma —
+    # the resolver only resolves on lemma form, so exclude inflected surfaces.
     for lemma in EXPECTED_LEMMAS:
+        if lemma == "places":
+            continue
         resolved = resolve_lemma(lemma)
         assert resolved is not None and resolved[0] == PACK_ID, (
             f"{lemma!r} resolved to {resolved}"

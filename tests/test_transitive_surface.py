@@ -242,6 +242,7 @@ def test_cognition_lane_metrics_unchanged_with_transitive_flag() -> None:
     expected_surface_contains assertion that passed flag-OFF must still
     pass flag-ON.  If a future change ever drops tokens in transitive
     mode, this test fails as the deliberate regression it is."""
+    import os
     from evals.framework import get_lane, run_lane
 
     lane = get_lane("cognition")
@@ -256,7 +257,15 @@ def test_cognition_lane_metrics_unchanged_with_transitive_flag() -> None:
         transitive_surface=True,
         transitive_max_depth=2,
     )
-    for split in ("public", "holdout"):
+    # holdout requires CORE_HOLDOUT_KEY or a sibling cases_plaintext.jsonl;
+    # skip it on contributor machines without the sealed key.
+    sealed = lane.holdout_cases_path_sealed()
+    holdout_available = (
+        os.environ.get("CORE_HOLDOUT_KEY") is not None
+        or (sealed.parent / "cases_plaintext.jsonl").exists()
+    )
+    splits = ("public", "holdout") if holdout_available else ("public",)
+    for split in splits:
         off = run_lane(lane, version="v1", split=split,
                        config=RuntimeConfig()).metrics
         on = run_lane(lane, version="v1", split=split,

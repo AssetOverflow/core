@@ -118,19 +118,21 @@ class TestLexiconResidencyEnforced:
 
 
 class TestMissingGlossesIsBackCompat:
-    """All currently-ratified packs ship no glosses.jsonl — the
-    resolver must treat that as the default and return None / empty,
-    never raise."""
+    """When a pack ships no glosses.jsonl the resolver must treat that
+    as the default and return None / empty, never raise.
+
+    en_minimal_v1 is the canonical no-glosses pack used here; most
+    content packs have since had glosses seeded under ADR-0085."""
 
     def test_pack_with_no_glosses_returns_empty(self) -> None:
-        # en_core_relations_v1 currently ships no glosses
-        glosses = _pack_glosses_for("en_core_relations_v1")
+        glosses = _pack_glosses_for("en_minimal_v1")
         assert glosses == {}
 
     def test_resolve_gloss_on_lemma_without_gloss_file_returns_none(self) -> None:
-        # ``parent`` is in en_core_relations_v1 lexicon; that pack
-        # ships no glosses.jsonl today.
-        assert resolve_gloss("parent") is None
+        # ``yes`` is in en_minimal_v1 lexicon; that pack ships no
+        # glosses.jsonl today. Restrict resolution to that pack so a
+        # gloss seeded for "yes" elsewhere can't shadow the test.
+        assert resolve_gloss("yes", ("en_minimal_v1",)) is None
 
 
 class TestClearResolverCacheClearsBoth:

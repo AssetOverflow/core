@@ -13,6 +13,7 @@ import pytest
 
 from teaching.store import PackMutationProposal
 from teaching.epistemic import EpistemicStatus
+from teaching.source import ProposalSource
 
 
 def _sample_proposal(**overrides: object) -> PackMutationProposal:
@@ -22,6 +23,9 @@ def _sample_proposal(**overrides: object) -> PackMutationProposal:
         "subject": "memory",
         "correction_text": "memory is the storage of recalled experience",
         "prior_surface": "i do not know what memory means",
+        "source": ProposalSource(
+            kind="operator", source_id="", emitted_at_revision="test"
+        ),
     }
     defaults.update(overrides)
     return PackMutationProposal(**defaults)  # type: ignore[arg-type]

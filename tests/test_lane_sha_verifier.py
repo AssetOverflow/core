@@ -89,6 +89,7 @@ class TestExpectedLaneCoverage:
             "fabrication_control_summary",  # ADR-0096
             "demo_composition",  # ADR-0098
             "public_demo",  # ADR-0099
+            "curriculum_loop_closure",
         }
     )
 

@@ -45,6 +45,9 @@ REGISTER_AWARE_COMPOSERS: frozenset[str] = frozenset(
         # called from chat/runtime.py directly, so the
         # runtime-threading lint passes trivially.
         "build_pack_surface_candidate",
+        "gloss_aware_cause_surface",
+        "pack_grounded_unknown_surface",
+        "teaching_grounded_surface_transitive",
     }
 )
 
