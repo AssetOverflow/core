@@ -18,11 +18,16 @@ from __future__ import annotations
 
 from .adapter import (
     INTRODUCED_BY,
-    PHASE_2_ADMISSIBILITY,
-    PHASE_2_UNIT_PROOF,
+    REFUSED_UNIT_PROOF,
     SYNTHETIC_SOURCE_ID,
     AdapterError,
     bind_math_problem_graph,
+)
+from .admissibility import (
+    ADMISSIBILITY_REASONS,
+    AdmissibilityError,
+    UnitProof,
+    check_admissibility,
 )
 from .allocation import allocate_symbols
 from .model import (
@@ -37,15 +42,29 @@ from .model import (
     SourceSpanLink,
     SymbolBinding,
 )
+from .units import (
+    BASE_DIMENSIONS,
+    DIMENSIONLESS,
+    UnitAlgebraError,
+    UnitVector,
+    parse_unit,
+    unit_inverse,
+    unit_product,
+    unit_quotient,
+    units_equal,
+)
 
 __all__ = (
+    "ADMISSIBILITY_REASONS",
     "ADMISSIBILITY_STATUSES",
+    "BASE_DIMENSIONS",
+    "DIMENSIONLESS",
     "INTRODUCED_BY",
-    "PHASE_2_ADMISSIBILITY",
-    "PHASE_2_UNIT_PROOF",
+    "REFUSED_UNIT_PROOF",
     "SEMANTIC_ROLES",
     "SYNTHETIC_SOURCE_ID",
     "AdapterError",
+    "AdmissibilityError",
     "BindingGraphError",
     "BoundConstraint",
     "BoundEquation",
@@ -54,6 +73,15 @@ __all__ = (
     "SemanticSymbolicBindingGraph",
     "SourceSpanLink",
     "SymbolBinding",
+    "UnitAlgebraError",
+    "UnitProof",
+    "UnitVector",
     "allocate_symbols",
     "bind_math_problem_graph",
+    "check_admissibility",
+    "parse_unit",
+    "unit_inverse",
+    "unit_product",
+    "unit_quotient",
+    "units_equal",
 )

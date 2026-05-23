@@ -1,13 +1,11 @@
-"""ADR-0133 — Adapter: ``MathProblemGraph`` → ``SemanticSymbolicBindingGraph``.
+"""ADR-0133 / ADR-0134 — Adapter: ``MathProblemGraph`` → ``SemanticSymbolicBindingGraph``.
 
-Phase 2 of the binding-graph layer (ADR-0132). This module is a pure,
-deterministic translation: it consumes a ratified
-:class:`generate.math_problem_graph.MathProblemGraph` (ADR-0115) and
-emits the corresponding
-:class:`generate.binding_graph.SemanticSymbolicBindingGraph`. No I/O, no
-parser calls, no solver calls, no algebra. The adapter is total on every
-well-formed ``MathProblemGraph`` and refuses (typed :class:`AdapterError`)
-otherwise.
+Phase 2 of the binding-graph layer (ADR-0133) introduced the pure
+translation. Phase 3 (ADR-0134) wires unit-aware admissibility: every
+emitted :class:`BoundEquation` now carries either
+``admissibility_status='admitted'`` + populated ``unit_proof``, or
+``admissibility_status='refused'`` + populated ``refusal_reason``. The
+adapter contract / input type / output type are unchanged.
 
 Mapping discipline (locked at top of module — see constants):
 
@@ -20,16 +18,21 @@ Mapping discipline (locked at top of module — see constants):
   - the ``Unknown`` → one synthesized ``SymbolBinding``
     (``semantic_role='unknown'``) + one ``BoundUnknown``.
 
-Phases 3+ deferred:
+Phases 4+ deferred:
 
-  - unit-aware equation admissibility (Phase 3, ADR-0134),
   - question-target binding refinement (Phase 4),
   - bounded-grammar / B3 integration (Phase 5).
 
-Until Phase 3 lands, every emitted ``BoundEquation`` carries the
-placeholder ``unit_proof=PHASE_2_UNIT_PROOF`` and
-``admissibility_status='pending'``. This is by design — dimensional
-analysis belongs in the next ADR.
+Phase 3 also synthesizes a small number of *literal* operand symbols so
+``check_admissibility`` can verify multiplicative-class equations from
+``BoundEquation`` + ``symbols`` alone (no solver, no operand parsing). The
+naming convention is locked here and consumed by
+:mod:`generate.binding_graph.admissibility`:
+
+  - ``divide`` operand → ``op<NNN>__divisor`` literal SymbolBinding;
+  - ``multiply`` operand → ``op<NNN>__multiplicand`` literal SymbolBinding;
+  - ``apply_rate`` operand → ``op<NNN>__rate`` SymbolBinding with
+    ``semantic_role='rate'`` and ``unit='<num>_per_<denom>'``.
 """
 
 from __future__ import annotations
@@ -45,6 +48,7 @@ from generate.math_problem_graph import (
     Rate,
 )
 
+from .admissibility import AdmissibilityError, check_admissibility
 from .model import (
     BindingGraphError,
     BoundEquation,
@@ -68,13 +72,11 @@ SYNTHETIC_SOURCE_ID: Final[str] = "math_problem_graph"
 #: emits. Replaying the adapter therefore yields byte-equal symbols.
 INTRODUCED_BY: Final[str] = "bind_math_problem_graph"
 
-#: Placeholder ``unit_proof`` for every Phase 2 ``BoundEquation``.
-#: Phase 3 (ADR-0134) replaces this with a real dimensional proof token.
-PHASE_2_UNIT_PROOF: Final[str] = "deferred_to_phase_3"
-
-#: Every Phase 2 ``BoundEquation`` is emitted ``pending`` — the equation
-#: is structurally valid but unit-admissibility has not yet been checked.
-PHASE_2_ADMISSIBILITY: Final[str] = "pending"
+#: Sentinel ``unit_proof`` stored on every refused equation. The matching
+#: ``refusal_reason`` carries the typed failure reason; this sentinel exists
+#: only because :attr:`BoundEquation.unit_proof` is non-optional in the
+#: Phase-1 data model (see ADR-0132).
+REFUSED_UNIT_PROOF: Final[str] = "unverified"
 
 _SLUG_NON_ALNUM = re.compile(r"[^a-z0-9]+")
 
@@ -312,15 +314,112 @@ def bind_math_problem_graph(
                 if ref_sid is not None:
                     deps.add(ref_sid)
 
+        # ---- Phase 3: synth literal operand symbols where needed ----------
+        # The verifier (admissibility.check_admissibility) re-derives the
+        # proof from dep symbols. multiply/divide/apply_rate need explicit
+        # operand-unit symbols because the operand quantity is literal in
+        # the source op (not a pre-existing t0 symbol). add/subtract/
+        # transfer/compare_additive already share their unit with an actor
+        # t0 dep. compare_multiplicative is dimensionless.
+        if op.kind in ("multiply", "divide") and isinstance(op.operand, Quantity):
+            # For multiply/divide the actor's existing t0 quantity acts as
+            # the dividend / first factor. Its unit need not match the
+            # operand's, so wire it here even when ``unit_hint`` doesn't
+            # yield a match above. Sorted by unit-key for determinism.
+            for (entity, _unit_key), sid in sorted(t0_index.items()):
+                if entity == op.actor:
+                    deps.add(sid)
+                    break
+            suffix = "__divisor" if op.kind == "divide" else "__multiplicand"
+            lit_sid = f"op_{idx:03d}{suffix}"
+            lit_span_text = f"op{idx:03d}|literal|{op.operand.unit}"
+            _add(
+                SymbolBinding(
+                    symbol_id=lit_sid,
+                    name=f"op{idx}.literal.{op.operand.unit}",
+                    semantic_role="quantity",
+                    source_span=_span(lit_span_text),
+                    introduced_by=INTRODUCED_BY,
+                    unit=op.operand.unit,
+                )
+            )
+            facts.append(
+                BoundFact(
+                    symbol_id=lit_sid,
+                    value=str(op.operand.value),
+                    source_span=_span(lit_span_text),
+                    unit=op.operand.unit,
+                )
+            )
+            deps.add(lit_sid)
+        elif op.kind == "apply_rate" and isinstance(op.operand, Rate):
+            rate_sid = f"op_{idx:03d}__rate"
+            composite_unit = (
+                f"{op.operand.numerator_unit}_per_{op.operand.denominator_unit}"
+            )
+            rate_span_text = f"op{idx:03d}|rate|{composite_unit}"
+            _add(
+                SymbolBinding(
+                    symbol_id=rate_sid,
+                    name=f"op{idx}.rate.{composite_unit}",
+                    semantic_role="rate",
+                    source_span=_span(rate_span_text),
+                    introduced_by=INTRODUCED_BY,
+                    unit=composite_unit,
+                )
+            )
+            facts.append(
+                BoundFact(
+                    symbol_id=rate_sid,
+                    value=str(op.operand.value),
+                    source_span=_span(rate_span_text),
+                    unit=composite_unit,
+                )
+            )
+            deps.add(rate_sid)
+
+        # ---- Phase 3: build the equation, then check admissibility --------
+        # ``check_admissibility`` operates on the equation + the symbol map
+        # we are *currently* building, so materialize the snapshot here.
+        symbols_snapshot: dict[str, SymbolBinding] = {
+            s.symbol_id: s for s in symbols
+        }
+
+        # The equation is constructed twice (pre-check shell with placeholder,
+        # then a final form) so we can hand a real ``BoundEquation`` to the
+        # verifier without leaking the placeholder into the binding graph.
+        proof_token = REFUSED_UNIT_PROOF
+        status = "refused"
+        refusal: str | None = None
+        try:
+            shell = BoundEquation(
+                lhs_symbol_id=result_sid,
+                rhs_canonical=_format_rhs(op),
+                dependencies=frozenset(deps),
+                operation_kind=op.kind,
+                unit_proof=REFUSED_UNIT_PROOF,
+                admissibility_status="refused",
+                source_span=_span(op_span_text),
+                refusal_reason="pre_check",
+            )
+            proof = check_admissibility(shell, symbols=symbols_snapshot)
+        except AdmissibilityError as exc:
+            refusal = exc.reason
+        else:
+            proof_token = proof.to_canonical_string()
+            status = "admitted"
+            refusal = None
+
         equations.append(
             BoundEquation(
                 lhs_symbol_id=result_sid,
                 rhs_canonical=_format_rhs(op),
                 dependencies=frozenset(deps),
-                operation_kind=op.kind,  # passthrough — shared closed vocab
-                unit_proof=PHASE_2_UNIT_PROOF,
-                admissibility_status=PHASE_2_ADMISSIBILITY,
+                operation_kind=op.kind,
+                unit_proof=proof_token,
+                admissibility_status=status,
                 source_span=_span(op_span_text),
+                refusal_reason=refusal,
             )
         )
 
