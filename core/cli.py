@@ -538,6 +538,50 @@ def cmd_capability_evidence_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_capability_perturbation(args: argparse.Namespace) -> int:
+    """ADR-0114a Obligation #5 — reasoning-isolation perturbation suite for B3.
+
+    Generates and scores invariance-preserving and invariance-breaking
+    perturbations over B3 (bounded grammar) expected-correct cases.
+    Writes the report to ``evals/obligation_5_perturbation/<lane_id>.json``.
+    Exit 0 iff both preserving_rate == 1.0 AND breaking_rate == 1.0.
+    """
+    from pathlib import Path as _Path
+    from core.capability.perturbation_b3 import (
+        validate_perturbation_suite,
+        emit_perturbation_report,
+    )
+
+    lane_id = args.lane_id
+    report = validate_perturbation_suite(lane_id=lane_id)
+
+    out_dir = _Path(__file__).resolve().parent.parent / "evals" / "obligation_5_perturbation"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"{lane_id}.json"
+    emit_perturbation_report(report, out_path)
+
+    if args.json:
+        print(json.dumps(report.as_dict(), indent=2, sort_keys=True))
+    else:
+        print(f"lane_id:             {report.lane_id}")
+        print(f"cases_total:         {report.cases_total}")
+        print(f"cases_expected_correct: {report.cases_expected_correct}")
+        print(
+            f"preserving: {report.preserving_correct}/{report.preserving_attempted} "
+            f"= {report.preserving_rate:.4f}"
+        )
+        print(
+            f"breaking:   {report.breaking_correct}/{report.breaking_attempted} "
+            f"= {report.breaking_rate:.4f}"
+        )
+        print(f"obligation_5_passed: {report.obligation_5_passed}")
+        print(f"report_digest:       {report.report_digest}")
+        print(f"artifact:            {out_path}")
+        if not report.obligation_5_passed:
+            print(f"refusal_reason: {report.refusal_reason}")
+    return 0 if report.obligation_5_passed else 1
+
+
 def cmd_capability_math_expert_gate(args: argparse.Namespace) -> int:
     """ADR-0131.4 — evaluate the composite math-expert promotion gate
     (Benchmark 1 + 2 + 3, ADR-0131's revision of ADR-0120's single-lane
@@ -2875,6 +2919,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     capability_evidence_plan.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     capability_evidence_plan.set_defaults(func=cmd_capability_evidence_plan)
+    capability_perturbation = capability_sub.add_parser(
+        "perturbation",
+        help="ADR-0114a Obligation #5 — reasoning-isolation perturbation suite for B3",
+    )
+    capability_perturbation.add_argument(
+        "--lane-id",
+        default="B3_bounded_grammar",
+        help="lane identifier (default: B3_bounded_grammar)",
+    )
+    capability_perturbation.add_argument(
+        "--json", action="store_true", help="emit machine-readable JSON"
+    )
+    capability_perturbation.set_defaults(func=cmd_capability_perturbation)
+
     capability_math_expert_gate = capability_sub.add_parser(
         "math-expert-gate",
         help="ADR-0131.4 evaluate the composite math-expert promotion gate (B1+B2+B3)",
