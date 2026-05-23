@@ -36,6 +36,7 @@ from generate.math_problem_graph import (
     MathProblemGraph,
     Operation,
     Quantity,
+    Rate,
     Unknown,
 )
 
@@ -52,6 +53,7 @@ _OPERATION_REQUIRED_LEMMAS: dict[str, str] = {
     "transfer": "transfer",
     "multiply": "multiply",
     "divide": "divide",
+    "apply_rate": "apply_rate",
 }
 
 
@@ -83,7 +85,7 @@ class SolutionStep:
     operation_kind: str
     pack_lemma_id: str
     actor: str
-    operand: Quantity
+    operand: Quantity | Rate
     target: str | None
     before_value: float
     after_value: float
@@ -224,6 +226,18 @@ def _apply(
     state: dict[tuple[str, str], float],
     pack_bindings: Mapping[str, str],
 ) -> SolutionStep:
+    # apply_rate has a Rate operand whose key shape (denominator_unit)
+    # differs from Quantity (unit); handle it on its own branch so the
+    # type discrimination is explicit, not punned through a duck-typed
+    # attribute lookup.
+    if op.kind == "apply_rate":
+        return _apply_rate(op, index, state, pack_bindings)
+
+    if not isinstance(op.operand, Quantity):
+        raise SolveError(
+            f"operation kind {op.kind!r} at step {index} requires a "
+            f"Quantity operand; got {type(op.operand).__name__}"
+        )
     key = (op.actor, op.operand.unit)
     before = state.get(key, 0.0)
     v = float(op.operand.value)
@@ -273,6 +287,58 @@ def _apply(
         after_value=after,
         target_before=target_before,
         target_after=target_after,
+    )
+
+
+def _apply_rate(
+    op: Operation,
+    index: int,
+    state: dict[tuple[str, str], float],
+    pack_bindings: Mapping[str, str],
+) -> SolutionStep:
+    """Apply a rate operation (ADR-0122).
+
+    Reads the actor's quantity in ``rate.denominator_unit``, multiplies
+    by ``rate.value``, and stores the result under
+    ``(actor, rate.numerator_unit)``. The denominator-unit quantity is
+    **not** consumed — the actor still holds the same number of apples
+    after computing how much they spent on them. This matches
+    natural-language semantics and is how the parser's reverse
+    ("orphan rate") refusal is consistent with the solver's forward
+    application.
+
+    Refuses (SolveError) when the actor has no recorded quantity in
+    the rate's denominator unit — the question is asking about a rate
+    application that the prior statements did not set up.
+    """
+    if not isinstance(op.operand, Rate):
+        raise SolveError(
+            f"apply_rate at step {index} requires a Rate operand; "
+            f"got {type(op.operand).__name__}"
+        )
+    rate = op.operand
+    denom_key = (op.actor, rate.denominator_unit)
+    if denom_key not in state:
+        raise SolveError(
+            f"apply_rate at step {index} requires actor {op.actor!r} "
+            f"to hold a quantity in {rate.denominator_unit!r}, but no "
+            f"such state exists"
+        )
+    before = state[denom_key]
+    after = before * float(rate.value)
+    numer_key = (op.actor, rate.numerator_unit)
+    state[numer_key] = after
+    return SolutionStep(
+        step_index=index,
+        operation_kind=op.kind,
+        pack_lemma_id=pack_bindings[op.kind],
+        actor=op.actor,
+        operand=rate,
+        target=None,
+        before_value=before,
+        after_value=after,
+        target_before=None,
+        target_after=None,
     )
 
 

@@ -39,6 +39,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
+from generate.math_problem_graph import Rate
 from generate.math_solver import SolutionStep, SolutionTrace
 
 
@@ -124,6 +125,8 @@ def _setup_sentence(entity: str, value: int | float, unit: str) -> str:
 
 
 def _step_sentence(step: SolutionStep) -> str:
+    if step.operation_kind == "apply_rate":
+        return _apply_rate_sentence(step)
     if step.operation_kind == "add":
         return (
             f"{step.actor} buys {_render_number(step.operand.value)} more "
@@ -173,6 +176,33 @@ def _step_sentence(step: SolutionStep) -> str:
     raise RealizerError(
         f"step {step.step_index} has unknown operation_kind "
         f"{step.operation_kind!r}"
+    )
+
+
+def _apply_rate_sentence(step: SolutionStep) -> str:
+    """Render an apply_rate step as show-your-work prose (ADR-0122).
+
+    The template intentionally contains both ``"<value> <numer> per
+    <denom-singular>"`` (the rate clause) and ``"<after> <numer>"``
+    (the computed total), which the test suite pins as a structural
+    invariant. The denominator phrase uses singular form (``per
+    apple``) regardless of count, matching natural English.
+    """
+    if not isinstance(step.operand, Rate):
+        raise RealizerError(
+            f"apply_rate step {step.step_index} requires a Rate "
+            f"operand; got {type(step.operand).__name__}"
+        )
+    rate = step.operand
+    rate_n = _render_number(rate.value)
+    before_n = _render_number(step.before_value)
+    after_n = _render_number(step.after_value)
+    denom_singular = _singular(rate.denominator_unit)
+    denom_surface = _unit_surface(rate.denominator_unit, step.before_value)
+    return (
+        f"At {rate_n} {rate.numerator_unit} per {denom_singular}, "
+        f"{step.actor} spends {after_n} {rate.numerator_unit} on "
+        f"{before_n} {denom_surface}."
     )
 
 
