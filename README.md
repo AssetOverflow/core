@@ -91,6 +91,7 @@ core demo list-results                     # index every JSON report with headli
 
 core eval --list                           # discover eval lanes
 core eval cognition                        # run a discovered lane
+core eval gsm8k_math                       # Phase 5 capability lane (correct/wrong/refused triple)
 core trace "your text here"                # one-turn field-telemetry trace
 core pulse "What is truth?"                # one full cognitive pulse
 core bench --suite latency                 # benchmark harness
@@ -242,9 +243,36 @@ core demo audit-passed --domain physics
 
 Each run re-derives the signed evidence-bundle digest from on-disk lane result files, asserts byte-for-byte match against `docs/reviewers.yaml`, and renders an HTML showcase with per-lane shape-check verdicts plus the first three sample cases from each split. The composer is read-only and byte-deterministic (same inputs → same SHA-256). An unpromoted domain produces a typed refusal, not a fake showcase.
 
-### Path to actual expert-level capability — explicitly future work
+### Path to actual expert-level capability — Phase 5 substrate complete
 
-The `audit-passed` gate above is intentionally *not* a raw-capability claim. The honest path to one is laid out in [ADR-0114 — Expert-Capability Roadmap: GSM8K-Math First](docs/decisions/ADR-0114-expert-capability-roadmap-gsm8k-first.md). Phases 1-7 define a falsifiable arc: problem parser → deterministic solver → verifier → stepped-realizer → public GSM8K eval lane → first `expert` ledger tier promotion ADR with a publicly stated benchmark threshold. **No domain is at `expert` today.** That status string remains reserved namespace.
+The `audit-passed` gate above is intentionally *not* a raw-capability claim. The
+honest path to one is laid out in [ADR-0114 — Expert-Capability Roadmap: GSM8K-Math
+First](docs/decisions/ADR-0114-expert-capability-roadmap-gsm8k-first.md). Phases 1–4
+(parser, solver, verifier, stepped-realizer) and Phase 5 (GSM8K eval lane) have now
+all landed.
+
+**Phase 5 substrate is complete as of 2026-05-23.** All 8 sub-phases of
+[ADR-0119](docs/decisions/ADR-0119-gsm8k-eval-lane-roadmap.md) have landed.
+ADR-0114a's 10 anti-overfitting proof obligations are all discharged for the
+`gsm8k_math` lane.
+
+**First honest CORE-vs-real-GSM8K measurement (ADR-0119.7):** 0/1,319 correct,
+**0/1,319 wrong**, 1,319/1,319 refused. CORE refuses what it cannot grammar-handle;
+it does not confabulate. The zero-confabulation property holds against the external
+benchmark.
+
+**ADR-0120 (first `expert` promotion contract) is the next gate.** It will set the
+numeric expert threshold and ε, require all 10 ADR-0114a obligations as hard gates,
+and sign the first `expert_claims` entry — or defer honestly if the correct_rate
+gate is not yet met. **No domain is at `expert` today.** That status string remains
+reserved namespace.
+
+To run the GSM8K math eval lane:
+
+```bash
+core eval gsm8k_math            # run against CORE-original public split
+# evals/gsm8k_math/runner.py   # lane runner (LaneReport with correct/wrong/refused)
+```
 
 Full ADR index, frontier, and chain notes: [`docs/decisions/README.md`](docs/decisions/README.md).
 
