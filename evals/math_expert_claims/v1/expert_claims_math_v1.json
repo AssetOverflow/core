@@ -1,0 +1,74 @@
+{
+  "adr": "0131.4",
+  "all_benchmarks_passed": true,
+  "benchmarks": [
+    {
+      "benchmark_id": "B1_public",
+      "cases_total": 185,
+      "correct": 185,
+      "correct_rate": 1.0,
+      "correct_rate_passes": true,
+      "passed": true,
+      "refusal_reason": "",
+      "report_path": "/Users/kaizenpro/Projects/core-adr-0131-4-promotion/evals/math_symbolic_equivalence/v1/report.json",
+      "wrong": 0,
+      "wrong_count_is_zero": true
+    },
+    {
+      "benchmark_id": "B1_sealed",
+      "cases_total": 14,
+      "correct": 14,
+      "correct_rate": 1.0,
+      "correct_rate_passes": true,
+      "passed": true,
+      "refusal_reason": "",
+      "report_path": "/Users/kaizenpro/Projects/core-adr-0131-4-promotion/evals/math_symbolic_equivalence/v1/sealed_report.json",
+      "wrong": 0,
+      "wrong_count_is_zero": true
+    },
+    {
+      "benchmark_id": "B2_teaching_corpus",
+      "cases_total": 40,
+      "correct": 40,
+      "correct_rate": 1.0,
+      "correct_rate_passes": true,
+      "passed": true,
+      "refusal_reason": "",
+      "report_path": "/Users/kaizenpro/Projects/core-adr-0131-4-promotion/evals/math_teaching_corpus/v1/report.json",
+      "wrong": 0,
+      "wrong_count_is_zero": true
+    },
+    {
+      "benchmark_id": "B3_bounded_grammar",
+      "cases_total": 50,
+      "correct": 50,
+      "correct_rate": 1.0,
+      "correct_rate_passes": true,
+      "passed": true,
+      "refusal_reason": "",
+      "report_path": "/Users/kaizenpro/Projects/core-adr-0131-4-promotion/evals/math_bounded_grammar/v1/report.json",
+      "wrong": 0,
+      "wrong_count_is_zero": true
+    }
+  ],
+  "claim_digest": "2bfc7f6c5b06a4c5befef3a9a2629a023518ae97490f6ddf092c1852c966c275",
+  "composite_gate_passed": true,
+  "domain": "mathematics_logic",
+  "honest_disclosure": {
+    "admission_rate": 0.0,
+    "admitted_solved": 0,
+    "admitted_wrong": 0,
+    "available": true,
+    "cases_total": 50,
+    "probe_path": "/Users/kaizenpro/Projects/core-adr-0131-4-promotion/evals/gsm8k_math/train_sample/v1/train_sample_coverage_report.json",
+    "refused": 50,
+    "safety_rail_intact": true,
+    "substrate": "candidate_graph"
+  },
+  "refusal_reason": "",
+  "schema_version": 1,
+  "thresholds": {
+    "correct_rate_min": 0.95,
+    "wrong_max": 0
+  }
+}

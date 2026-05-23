@@ -538,6 +538,49 @@ def cmd_capability_evidence_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_capability_math_expert_gate(args: argparse.Namespace) -> int:
+    """ADR-0131.4 — evaluate the composite math-expert promotion gate
+    (Benchmark 1 + 2 + 3, ADR-0131's revision of ADR-0120's single-lane
+    coverage check). Emits ``expert_claims_math_v1.json`` to ``--out``
+    (default: ``evals/math_expert_claims/v1/expert_claims_math_v1.json``).
+    Exit 0 iff every benchmark passes."""
+    from pathlib import Path
+    from core.capability.composite_math_gate import (
+        emit_expert_claims_artifact,
+        evaluate_composite_math_gate,
+    )
+
+    verdict = evaluate_composite_math_gate()
+    out_path = Path(args.out) if args.out else (
+        Path(__file__).resolve().parent.parent
+        / "evals" / "math_expert_claims" / "v1" / "expert_claims_math_v1.json"
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    emit_expert_claims_artifact(verdict, out_path)
+
+    if args.json:
+        print(json.dumps(verdict.as_dict(), indent=2, sort_keys=True))
+    else:
+        print(f"composite_gate_passed: {verdict.composite_gate_passed}")
+        print(f"claim_digest:          {verdict.claim_digest}")
+        print(f"artifact:              {out_path}")
+        for b in verdict.benchmarks:
+            print(
+                f"  {b.benchmark_id:>20}  passed={b.passed}  "
+                f"correct={b.correct}/{b.cases_total}  wrong={b.wrong}  "
+                f"rate={b.correct_rate:.4f}"
+            )
+        hd = verdict.honest_disclosure
+        print(
+            f"GSM8K honest disclosure: admission={hd.get('admitted_solved', 0)}/"
+            f"{hd.get('cases_total', 0)}, wrong={hd.get('admitted_wrong', 0)}, "
+            f"substrate={hd.get('substrate', '?')}"
+        )
+        if not verdict.composite_gate_passed:
+            print(f"refusal_reason: {verdict.refusal_reason}")
+    return 0 if verdict.composite_gate_passed else 1
+
+
 def cmd_pack_list(args: argparse.Namespace) -> int:
     """List compiled language packs."""
     from language_packs import list_packs
@@ -2832,6 +2875,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     capability_evidence_plan.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     capability_evidence_plan.set_defaults(func=cmd_capability_evidence_plan)
+    capability_math_expert_gate = capability_sub.add_parser(
+        "math-expert-gate",
+        help="ADR-0131.4 evaluate the composite math-expert promotion gate (B1+B2+B3)",
+    )
+    capability_math_expert_gate.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_math_expert_gate.add_argument(
+        "--out",
+        default=None,
+        help="output path for expert_claims artifact (default: evals/math_expert_claims/v1/expert_claims_math_v1.json)",
+    )
+    capability_math_expert_gate.set_defaults(func=cmd_capability_math_expert_gate)
 
     pack = subparsers.add_parser("pack", help="inspect and verify language packs")
     pack_sub = pack.add_subparsers(dest="pack_command", metavar="pack-command", required=True)
