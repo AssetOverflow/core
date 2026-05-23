@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-23T00:32:22.639158Z",
+  "core_measurement": {
+    "split": "public",
+    "cases_total": 150,
+    "correct": 150,
+    "wrong": 0,
+    "refused": 0,
+    "correct_rate": 1.0,
+    "wrong_rate": 0.0,
+    "refused_rate": 0.0,
+    "note": "scored against CORE-original public split (evals/gsm8k_math/public/v1/)"
+  },
+  "frontier_citations": [
+    {
+      "system": "Anthropic Claude 3.5 Sonnet",
+      "task": "GSM8K",
+      "reported_accuracy_pct": 96.4,
+      "source": "Anthropic, \"Claude 3.5 Sonnet Model Card Addendum\", June 2024",
+      "url": "https://www.anthropic.com/news/claude-3-5-sonnet",
+      "note": "0-shot Chain-of-Thought (CoT)"
+    },
+    {
+      "system": "OpenAI GPT-4",
+      "task": "GSM8K",
+      "reported_accuracy_pct": 92.0,
+      "source": "OpenAI, \"GPT-4 Technical Report\", arXiv:2303.08774, March 2023",
+      "url": "https://arxiv.org/abs/2303.08774",
+      "note": "5-shot"
+    },
+    {
+      "system": "Google Gemini 1.5 Pro",
+      "task": "GSM8K",
+      "reported_accuracy_pct": 90.8,
+      "source": "Google DeepMind, \"Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context\", arXiv:2403.05530, March 2024",
+      "url": "https://arxiv.org/abs/2403.05530",
+      "note": "0-shot (CoT)"
+    }
+  ],
+  "disclaimer": "Frontier scores cited from public reports on actual GSM8K test; CORE scored on its own CORE-original public split. These are not strictly comparable; CORE's wrong-count discipline (zero confabulation) is the qualitative differentiator regardless of relative accuracy."
+}
