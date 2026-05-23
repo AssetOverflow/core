@@ -921,8 +921,11 @@ def _build_compare_additive(
     reference_canon, reference_head = _resolve_reference_token(reference_raw)
     if reference_canon == actor:
         return None  # self-reference; constructor would refuse anyway
-    delta_value = _resolve_value(delta_value_raw)
-    unit = _canonicalize_unit(unit_raw)
+    rv = _resolve_value(delta_value_raw)
+    if rv is None:
+        return None
+    delta_value = rv.value
+    unit = rv.unit_override if rv.unit_override is not None else _canonicalize_unit(unit_raw)
     try:
         op = Operation(
             actor=actor,
@@ -1377,12 +1380,15 @@ def _conj_object_candidates(sentence: str) -> list[CandidateInitial]:
         (v1_raw, u1_raw, u1),
         (v2_raw, u2_raw, u2),
     ):
+        rv = _resolve_value(value_raw)
+        if rv is None:
+            return []
         try:
             out.append(
                 CandidateInitial(
                     initial=InitialPossession(
                         entity=entity,
-                        quantity=Quantity(value=_resolve_value(value_raw).value, unit=unit),  # type: ignore[union-attr]
+                        quantity=Quantity(value=rv.value, unit=unit),
                     ),
                     source_span=sentence,
                     matched_anchor=anchor,
