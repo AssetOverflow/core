@@ -51,6 +51,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0119.2](ADR-0119.2-gsm8k-eval-corpus-dev-public.md) | GSM8K Eval Corpus Dev/Public Splits | Accepted (2026-05-22) |
 | [ADR-0119.3](ADR-0119.3-lane-runner.md) | gsm8k_math Lane Runner (Phase 5.3) | Accepted (2026-05-22) |
 | [ADR-0119.4](ADR-0119.4-frontier-baseline-comparison.md) | GSM8K Math: Frontier-Baseline Comparison (ADR-0114a §Obligation #7) | Accepted (2026-05-22) |
+| [ADR-0119.5](ADR-0119.5-adversarial-generation.md) | GSM8K Math Adversarial Generation (ADR-0114a Obligation #8) | Accepted (2026-05-23) |
 | [ADR-0119.6](ADR-0119.6-depth-curve-harness.md) | GSM8K Math Depth-Curve Measurement Harness | Accepted (2026-05-23) |
 
 ---
@@ -99,6 +100,7 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - gsm8k_math Lane Runner (Phase 5.3; correct/wrong/refused triple; wrong==0 gate; current: 200/200 correct on dev+public) — ADR-0119.3
 - GSM8K Math: Frontier-Baseline Comparison (citations for Claude 3.5, GPT-4, Gemini 1.5; comparison_v1.json; discharges ADR-0114a §Obligation #7) — ADR-0119.4
 - GSM8K Math Depth-Curve Measurement Harness (discharges ADR-0114a Obligation #6 measurement-side) — ADR-0119.6
+- GSM8K Math Adversarial Generation (38 cases × 12 families; **closes ADR-0114a Obligation #8**; misparse rate 0/38; 10 of 10 obligations now discharged on main) — ADR-0119.5
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 
