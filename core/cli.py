@@ -129,6 +129,12 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_phase5_corpus.py",
         "tests/test_phase6_demo.py",
     ),
+    # ADR-0126 P6 — measurement harness for the GSM8K candidate-graph
+    # parser exit criterion.  ``wrong == 0`` is a hard gate (Obligation
+    # #4: refuse rather than confabulate).
+    "math": (
+        "tests/test_adr_0126_train_sample_runner.py",
+    ),
     "full": ("tests/",),
 }
 
