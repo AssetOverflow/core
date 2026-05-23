@@ -1,0 +1,26 @@
+{
+  "adr": "0131.1.B",
+  "benchmark": "symbolic_equivalence_v1_hardened",
+  "by_expected": {
+    "equivalent": 140,
+    "not_equivalent": 42,
+    "refused": 3
+  },
+  "by_source": {
+    "curated": 30,
+    "generated": 155
+  },
+  "case_count": 185,
+  "cases_sha256": "5b7b56d495fe7528a0a82e7d1131691bb438b093767ea36b0ac789be3f5e0876",
+  "curated_cases_path": "evals/math_symbolic_equivalence/v1/cases.jsonl",
+  "generated_cases_module": "evals.math_symbolic_equivalence.v1.generated_cases",
+  "generated_seed": 131101,
+  "replay_contract": {
+    "byte_equal_report_json": true,
+    "correct_rate_min": 0.95,
+    "deterministic_generation": true,
+    "wrong_max": 0
+  },
+  "report_sha256": "8d94522fadbac2e618ac59a3fe8158286faab641c7d39f6ed2ee3a064255f77b",
+  "schema_version": 1
+}

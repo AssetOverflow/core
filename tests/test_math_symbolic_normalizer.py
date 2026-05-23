@@ -167,9 +167,10 @@ class TestRefusals:
         with pytest.raises(SymbolicError, match="empty"):
             normalize("")
 
-    def test_undefined_variable(self) -> None:
-        with pytest.raises(SymbolicError, match="single variable"):
-            normalize("x + y")  # y is out of scope
+    def test_multivariable_now_admits(self) -> None:
+        # ADR-0131.1.B scope expansion: multivariable polynomials admit.
+        poly = normalize("x + y")
+        assert poly.to_canonical_string() == "x+y"
 
     def test_negative_exponent(self) -> None:
         with pytest.raises(SymbolicError, match="non-negative"):
@@ -187,9 +188,14 @@ class TestRefusals:
         with pytest.raises(SymbolicError):
             normalize("x +")
 
-    def test_unknown_operator_division(self) -> None:
+    def test_constant_denominator_now_admits(self) -> None:
+        # ADR-0131.1.B scope expansion: constant-denominator division admits.
+        poly = normalize("x / 2")
+        assert poly.to_canonical_string() == "1/2*x"
+
+    def test_symbolic_denominator_still_refused(self) -> None:
         with pytest.raises(SymbolicError):
-            normalize("x / 2")
+            normalize("x / y")
 
 
 # ---------------------------------------------------------------------------
@@ -197,21 +203,24 @@ class TestRefusals:
 # ---------------------------------------------------------------------------
 
 class TestPolynomialInvariants:
-    def test_trailing_zero_rejected(self) -> None:
-        with pytest.raises(SymbolicError, match="trailing zeros"):
-            Polynomial(coefficients=(1, 2, 0), variable="x")
+    def test_zero_coefficient_terms_collapse(self) -> None:
+        # Sparse multivariable repr canonicalizes by dropping zero-coef terms.
+        assert (
+            Polynomial(terms={(2,): 1, (1,): 2, (0,): 0}, variables=("x",)).to_canonical_string()
+            == "x^2+2*x"
+        )
 
     def test_float_rejected(self) -> None:
-        with pytest.raises(SymbolicError, match="int"):
-            Polynomial(coefficients=(1.5,), variable="x")  # type: ignore[arg-type]
+        with pytest.raises(SymbolicError, match="float"):
+            Polynomial(terms={(0,): 1.5}, variables=("x",))  # type: ignore[dict-item]
 
-    def test_zero_polynomial_is_empty_tuple(self) -> None:
-        # Zero polynomial canonical form has empty coefficients tuple.
-        assert Polynomial(coefficients=(), variable="x").to_canonical_string() == "0"
+    def test_zero_polynomial(self) -> None:
+        # Zero polynomial canonical form has empty terms dict.
+        assert Polynomial(terms={}, variables=("x",)).to_canonical_string() == "0"
 
     def test_equality(self) -> None:
-        a = Polynomial(coefficients=(1, 2, 3), variable="x")
-        b = Polynomial(coefficients=(1, 2, 3), variable="x")
+        a = Polynomial(terms={(2,): 3, (1,): 2, (0,): 1}, variables=("x",))
+        b = Polynomial(terms={(2,): 3, (1,): 2, (0,): 1}, variables=("x",))
         assert a == b
-        c = Polynomial(coefficients=(1, 2, 4), variable="x")
+        c = Polynomial(terms={(2,): 4, (1,): 2, (0,): 1}, variables=("x",))
         assert a != c

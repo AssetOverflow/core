@@ -55,24 +55,28 @@ class TestRefused:
     def test_empty_left(self) -> None:
         v = check_equivalence("", "x + 1")
         assert v.verdict == Verdict.REFUSED
-        assert "normalize(a) refused" in v.reason
+        assert "empty" in v.reason
 
-    def test_out_of_scope_variable_left(self) -> None:
+    def test_multivariable_now_admits(self) -> None:
+        # ADR-0131.1.B scope expansion: multivariable polynomials are admissible.
         v = check_equivalence("x + y", "x + 1")
-        assert v.verdict == Verdict.REFUSED
-        assert "single variable" in v.reason
+        assert v.verdict == Verdict.NOT_EQUIVALENT
 
-    def test_division_refused(self) -> None:
+    def test_constant_denominator_now_admits(self) -> None:
+        # ADR-0131.1.B scope expansion: constant-denominator division admits.
         v = check_equivalence("x/2", "x")
+        assert v.verdict == Verdict.NOT_EQUIVALENT
+
+    def test_symbolic_denominator_still_refused(self) -> None:
+        # Symbolic-denominator division stays out of scope.
+        v = check_equivalence("x/y", "x")
         assert v.verdict == Verdict.REFUSED
 
     def test_a_normalizes_b_refuses(self) -> None:
-        # a is fine, b uses y -> refusal with canonical_a populated
-        v = check_equivalence("x + 1", "y + 1")
+        # a is fine, b uses a transcendental -> refusal.
+        v = check_equivalence("x + 1", "sin(x)")
         assert v.verdict == Verdict.REFUSED
-        assert v.canonical_a == "x+1"
         assert v.canonical_b is None
-        assert "normalize(b) refused" in v.reason
 
     def test_refused_verdict_is_first_class(self) -> None:
         # Refusal preserves wrong == 0 — the verdict is REFUSED, never
