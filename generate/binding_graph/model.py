@@ -17,7 +17,7 @@ substrate.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Final
+from typing import Final, Literal, Union
 
 # ---------------------------------------------------------------------------
 # Public errors
@@ -55,6 +55,52 @@ SEMANTIC_ROLES: Final[frozenset[str]] = frozenset(
 ADMISSIBILITY_STATUSES: Final[frozenset[str]] = frozenset(
     {"admitted", "pending", "refused"}
 )
+
+# ADR-0135 — closed ``BoundUnknown.question_form`` vocabulary. Never coerce
+# silently to a default; refuse with ``QuestionTargetError`` on unmappable
+# graph shapes. Extending this set is a future ADR (not a one-liner).
+QUESTION_FORMS: Final[frozenset[str]] = frozenset(
+    {"count", "rate", "total", "difference", "ratio", "identity"}
+)
+
+# ADR-0135 — closed ``BoundUnknown.state_index`` literal labels. The
+# tagged-union ``StateIndex`` (below) is either one of these strings or
+# an :class:`Operation` instance carrying a typed operation index.
+STATE_INDEX_LABELS: Final[frozenset[str]] = frozenset({"initial", "terminal"})
+
+
+@dataclass(frozen=True, slots=True)
+class Operation:
+    """ADR-0135 — state-index variant pointing at a specific operation.
+
+    The ``operation_index`` is type-checked as ``int`` (not ``str``) so
+    typos like ``Operation("3")`` refuse at construction. Cross-collection
+    bounds (``operation_index < graph operation count``) are enforced by
+    :class:`SemanticSymbolicBindingGraph.__post_init__`, not here — at
+    standalone construction we only know the value must be non-negative.
+    """
+
+    operation_index: int
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.operation_index, int) or isinstance(
+            self.operation_index, bool
+        ):
+            raise BindingGraphError(
+                f"Operation.operation_index must be int; "
+                f"got {type(self.operation_index).__name__}"
+            )
+        if self.operation_index < 0:
+            raise BindingGraphError(
+                f"Operation.operation_index must be >= 0; "
+                f"got {self.operation_index}"
+            )
+
+
+# Tagged union for the state at which a :class:`BoundUnknown`'s symbol
+# is observed. ``"initial"`` / ``"terminal"`` collapse to the obvious
+# endpoints; ``Operation`` references a specific intermediate step.
+StateIndex = Union[Literal["initial", "terminal"], Operation]
 
 
 def _require_non_empty_str(value: object, field_name: str) -> None:
@@ -267,10 +313,20 @@ class BoundEquation:
 
 @dataclass(frozen=True, slots=True)
 class BoundUnknown:
-    """The target of the question, bound to a known symbol."""
+    """The target of the question, bound to a known symbol.
+
+    ADR-0135 widens the contract from "the symbol whose value the solver
+    determines" to "the symbol at a specific temporal/state index with a
+    specific question-form". The two new fields are *required* — no
+    defaults — so every construction site declares its intent.
+    """
 
     symbol_id: str
     question_span: SourceSpanLink
+    state_index: "StateIndex"
+    question_form: Literal[
+        "count", "rate", "total", "difference", "ratio", "identity"
+    ]
     expected_unit: str | None = None
 
     def __post_init__(self) -> None:
@@ -283,6 +339,18 @@ class BoundUnknown:
         if not isinstance(self.question_span, SourceSpanLink):
             raise BindingGraphError(
                 "BoundUnknown.question_span must be a SourceSpanLink"
+            )
+        if isinstance(self.state_index, Operation):
+            pass  # bounds re-checked by the graph; standalone is sign-only
+        elif self.state_index not in STATE_INDEX_LABELS:
+            raise BindingGraphError(
+                f"BoundUnknown.state_index must be 'initial', 'terminal', or "
+                f"an Operation instance; got {self.state_index!r}"
+            )
+        if self.question_form not in QUESTION_FORMS:
+            raise BindingGraphError(
+                f"BoundUnknown.question_form must be one of "
+                f"{sorted(QUESTION_FORMS)}; got {self.question_form!r}"
             )
         _require_optional_str(self.expected_unit, "BoundUnknown.expected_unit")
 
@@ -396,12 +464,20 @@ class SemanticSymbolicBindingGraph:
                         f"{dep!r} (lhs={eq.lhs_symbol_id!r})"
                     )
 
+        equation_count = len(self.equations)
         for unk in self.unknowns:
             if unk.symbol_id not in known_ids:
                 raise BindingGraphError(
                     f"BoundUnknown references unknown symbol_id "
                     f"{unk.symbol_id!r}"
                 )
+            if isinstance(unk.state_index, Operation):
+                if unk.state_index.operation_index >= equation_count:
+                    raise BindingGraphError(
+                        f"BoundUnknown.state_index.operation_index "
+                        f"{unk.state_index.operation_index} >= equation_count "
+                        f"{equation_count}"
+                    )
 
         for con in self.constraints:
             if con.symbol_id not in known_ids:
@@ -440,8 +516,13 @@ class SemanticSymbolicBindingGraph:
                 f"span={eq.source_span.to_canonical_string()}"
             )
         for unk in self.unknowns:
+            if isinstance(unk.state_index, Operation):
+                state_token = f"op({unk.state_index.operation_index})"
+            else:
+                state_token = unk.state_index
             lines.append(
                 f"U {unk.symbol_id} expected_unit={unk.expected_unit} "
+                f"state={state_token} form={unk.question_form} "
                 f"qspan={unk.question_span.to_canonical_string()}"
             )
         for con in self.constraints:

@@ -298,19 +298,33 @@ def test_bound_equation_is_frozen() -> None:
 
 def test_bound_unknown_construction() -> None:
     unk = BoundUnknown(
-        symbol_id="sym_y_000", question_span=_span(), expected_unit="dollars"
+        symbol_id="sym_y_000",
+        question_span=_span(),
+        state_index="terminal",
+        question_form="count",
+        expected_unit="dollars",
     )
     assert unk.expected_unit == "dollars"
 
 
 def test_bound_unknown_refuses_bad_id() -> None:
     with pytest.raises(BindingGraphError):
-        BoundUnknown(symbol_id="bad id", question_span=_span())
+        BoundUnknown(
+            symbol_id="bad id",
+            question_span=_span(),
+            state_index="terminal",
+            question_form="count",
+        )
 
 
 def test_bound_unknown_refuses_non_span_question() -> None:
     with pytest.raises(BindingGraphError):
-        BoundUnknown(symbol_id="sym_y_000", question_span="text")  # type: ignore[arg-type]
+        BoundUnknown(
+            symbol_id="sym_y_000",
+            question_span="text",  # type: ignore[arg-type]
+            state_index="terminal",
+            question_form="count",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -380,7 +394,12 @@ def test_graph_rejects_equation_with_unknown_dependency() -> None:
 
 
 def test_graph_rejects_unknown_referencing_missing_symbol() -> None:
-    unk = BoundUnknown(symbol_id="sym_ghost_000", question_span=_span())
+    unk = BoundUnknown(
+        symbol_id="sym_ghost_000",
+        question_span=_span(),
+        state_index="terminal",
+        question_form="count",
+    )
     with pytest.raises(BindingGraphError):
         SemanticSymbolicBindingGraph(symbols=(_sym(),), unknowns=(unk,))
 
@@ -402,7 +421,14 @@ def test_graph_full_round_trip_canonical_string_stable() -> None:
         BoundFact(symbol_id="sym_x_000", value="5", source_span=_span(), unit="apples"),
     )
     eqs = (_eq(),)
-    unks = (BoundUnknown(symbol_id="sym_y_000", question_span=_span()),)
+    unks = (
+        BoundUnknown(
+            symbol_id="sym_y_000",
+            question_span=_span(),
+            state_index="terminal",
+            question_form="count",
+        ),
+    )
     cons = (
         BoundConstraint(symbol_id="sym_x_000", predicate="x >= 0", source_span=_span()),
     )

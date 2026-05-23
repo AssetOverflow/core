@@ -53,11 +53,11 @@ from .model import (
     BindingGraphError,
     BoundEquation,
     BoundFact,
-    BoundUnknown,
     SemanticSymbolicBindingGraph,
     SourceSpanLink,
     SymbolBinding,
 )
+from .question_target import bound_unknown_from_math_problem_graph
 
 # ---------------------------------------------------------------------------
 # Constants — locked mapping discipline (read these before editing logic).
@@ -124,14 +124,6 @@ def _quantity_symbol_id(entity: str, unit: str, tick: int) -> str:
 
 def _op_result_symbol_id(idx: int) -> str:
     return f"op_{idx:03d}_result"
-
-
-def _unknown_symbol_id(entity: str | None, unit: str) -> str:
-    scope = _slug(entity) if entity is not None else "total"
-    if scope == "":
-        scope = "total"
-    unit_slug = _slug(unit) or "x"
-    return f"unknown_{scope}_{unit_slug}"
 
 
 def _span(text: str) -> SourceSpanLink:
@@ -424,14 +416,18 @@ def bind_math_problem_graph(
         )
 
     # ---- Unknown → synthesized unknown symbol + BoundUnknown --------------
+    # ADR-0135: ``bound_unknown_from_math_problem_graph`` now owns the
+    # refined ``BoundUnknown`` (symbol_id / question_span / state_index /
+    # question_form / expected_unit). The adapter only retains responsibility
+    # for the matching ``SymbolBinding`` (``semantic_role='unknown'``).
     unk = g.unknown
-    unk_sid = _unknown_symbol_id(unk.entity, unk.unit)
     unk_text = (
         f"{unk.entity}|{unk.unit}" if unk.entity is not None else f"total|{unk.unit}"
     )
+    bound_unknown = bound_unknown_from_math_problem_graph(g)
     _add(
         SymbolBinding(
-            symbol_id=unk_sid,
+            symbol_id=bound_unknown.symbol_id,
             name=unk_text,
             semantic_role="unknown",
             source_span=_span(unk_text),
@@ -440,13 +436,7 @@ def bind_math_problem_graph(
             unit=unk.unit,
         )
     )
-    unknowns = (
-        BoundUnknown(
-            symbol_id=unk_sid,
-            question_span=_span(unk_text),
-            expected_unit=unk.unit,
-        ),
-    )
+    unknowns = (bound_unknown,)
 
     try:
         return SemanticSymbolicBindingGraph(
