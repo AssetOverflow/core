@@ -1,0 +1,117 @@
+{
+  "adr": "0131.G.1",
+  "counts": {
+    "correct": 20,
+    "refused": 0,
+    "wrong": 0
+  },
+  "exit_criterion": {
+    "passed": true,
+    "wrong_max": 0
+  },
+  "per_case": [
+    {
+      "case_id": "g1-001",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-002",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-003",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-004",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-005",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-006",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-007",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-008",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-009",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-010",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-011",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-012",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-013",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-014",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-015",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-016",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-017",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-018",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-019",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "g1-020",
+      "reason": "",
+      "verdict": "correct"
+    }
+  ],
+  "sample_count": 20,
+  "sample_path": "evals/math_capability_axes/G1_verb_classes/v1/cases.jsonl",
+  "schema_version": 1
+}
