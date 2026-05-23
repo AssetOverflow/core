@@ -233,9 +233,18 @@ def _split_sentences(text: str) -> list[str]:
 # Initial-possession patterns
 # ---------------------------------------------------------------------------
 
-# "<Entity> has <N> <unit>." — entity must be a Title-Cased word.
+# "<Entity> has <N> <unit>." — entity is a Title-Cased word or a
+# "the <noun>" collective ("The boys have 5 cards"). ADR-0123a widens
+# the subject slot to match the comparison patterns; otherwise problems
+# that introduce "the X" entities via initial possession can never
+# reach the widened comparison patterns. Pronouns are NOT accepted
+# here — initial possession must concretely introduce an entity.
 _INITIAL_HAS_RE = re.compile(
-    r"^(?P<entity>[A-Z]\w+)\s+has\s+(?P<value>\d+)\s+(?P<unit>\w+)$"
+    r"^(?P<entity>[A-Z]\w+|[Tt]he\s+\w+)\s+"
+    r"(?:has|have)\s+"
+    r"(?P<value>\d+|one|two|three|four|five|six|seven|eight|nine|ten"
+    r"|eleven|twelve)\s+"
+    r"(?P<unit>\w+)$"
 )
 
 
@@ -286,8 +295,15 @@ def _try_initial(s: str, state: _ParserState) -> bool:
     m = _INITIAL_HAS_RE.match(s)
     if not m:
         return False
-    entity = m.group("entity")
-    value = int(m.group("value"))
+    # ADR-0123a — canonicalize "the X" entity (collapse whitespace,
+    # lowercase the article so "The boys" and "the boys" hash equal)
+    # and resolve word-form value through the shared helper.
+    entity_raw = m.group("entity")
+    entity = re.sub(r"\s+", " ", entity_raw.strip())
+    if entity.lower().startswith("the "):
+        entity = "the " + entity[4:]
+    value_raw = m.group("value")
+    value = int(value_raw) if value_raw.isdigit() else _WORD_NUMBERS[value_raw.lower()]
     unit = _canonical_unit(m.group("unit"))
     state.add_entity(entity)
     state.initial_state.append(
@@ -561,34 +577,155 @@ def _try_rate_declaration(s: str, state: _ParserState) -> bool:
 
 # ---------------------------------------------------------------------------
 # ADR-0123 — Comparison declaration patterns
+# ADR-0123a — Shape-gap expansions (Groups 1/3/4/6/8 from Gemini Task 5)
 # ---------------------------------------------------------------------------
+
+# ADR-0123a Group 8 — supported verbs for comparison (present + past +
+# acquire/spend lemmas). Includes plural-subject agreement ("have", "get",
+# "take", "buy"). Excludes "lost" / "won" because they semantically invert
+# direction ("Alice lost 3 more than Bob" ≠ "Alice has 3 more than Bob");
+# silently mapping them would violate wrong==0.
+_COMPARE_VERB = r"(?:has|have|had|gets|get|got|takes|take|took|buys|buy|bought)"
+
+# ADR-0123a Group 3 — word-form integers accepted as comparison multipliers
+# or additive values. Range 1..12 covers all sealed-set occurrences.
+_WORD_NUMBERS: dict[str, int] = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+}
+_NUMBER = (
+    r"(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)"
+)
+
+# ADR-0123a Group 1 — actor / reference slots accept:
+#   - Proper noun ("Alice")
+#   - Pronoun (resolved via state.last_singular_subject at emit time)
+#   - Definite-article collective ("the boys", "the twins")
+# Possessives ("Alice's collection") are deferred — they change the
+# attribute model, not just the regex.
+_ACTOR_SLOT = (
+    r"(?:[A-Z]\w+|[Hh]e|[Ss]he|[Tt]hey|[Ii]t|[Tt]he\s+\w+)"
+)
+_REF_SLOT = (
+    r"(?:[A-Z]\w+|him|her|them|it|[Tt]he\s+\w+|[Hh]is|[Hh]ers|[Tt]heirs)"
+)
+
+
+def _parse_compare_number(s: str) -> int:
+    """Parse an integer that may be written as a digit string or a word.
+
+    ADR-0123a Group 3. Returns the int value; raises ValueError on
+    anything not in _WORD_NUMBERS and not int-parseable (defensive
+    against regex drift).
+    """
+    if s.isdigit():
+        return int(s)
+    return _WORD_NUMBERS[s.lower()]
+
+
+def _resolve_compare_entity(
+    raw: str, state: _ParserState, *, sentence: str, role: str
+) -> str:
+    """Resolve a raw actor/reference token to a canonical entity name.
+
+    ADR-0123a Group 1. Proper nouns and "the X" collectives are used
+    verbatim (with whitespace collapsed). Pronouns resolve against
+    ``state.last_singular_subject``; a pronoun with no prior subject is
+    refused (ParseError) rather than silently dropped — otherwise the
+    parser would emit a comparison with an empty actor.
+    """
+    rl = raw.lower().strip()
+    pronouns_actor = {"he", "she", "they", "it"}
+    pronouns_ref = {"him", "her", "them", "it", "his", "hers", "theirs"}
+    if rl in pronouns_actor or rl in pronouns_ref:
+        if state.last_singular_subject is None:
+            raise ParseError(
+                f"ADR-0123 refuses comparison sentence {sentence!r}: "
+                f"{role} pronoun {raw!r} has no prior subject to resolve "
+                f"against (would emit a comparison with no anchored entity)"
+            )
+        return state.last_singular_subject
+    # Proper noun or "the X" — collapse whitespace; lowercase the
+    # leading article so "The boys" and "the boys" canonicalize to the
+    # same entity string (matches _try_initial's normalization).
+    canon = re.sub(r"\s+", " ", raw.strip())
+    if canon.lower().startswith("the "):
+        canon = "the " + canon[4:]
+    return canon
+
 
 # Group A (additive): "Alice has 3 more apples than Bob"
 # "less" treated as informal synonym of "fewer" — both map to direction='fewer'.
+# ADR-0123a: subject/verb/value/reference slots widened (Groups 1/3/8).
 _COMPARE_ADDITIVE_RE = re.compile(
-    r"^(?P<actor>[A-Z]\w+)\s+has\s+"
-    r"(?P<value>\d+)\s+"
+    rf"^(?P<actor>{_ACTOR_SLOT})\s+{_COMPARE_VERB}\s+"
+    rf"(?P<value>{_NUMBER})\s+"
     r"(?P<direction>more|fewer|less)\s+"
     r"(?P<unit>\w+)\s+than\s+"
-    r"(?P<reference>[A-Z]\w+)$"
+    rf"(?P<reference>{_REF_SLOT})$"
 )
 
 # Group B (multiplicative — twice): "Alice has twice as many apples as Bob"
+# ADR-0123a: subject/verb/reference slots widened (Groups 1/8); optional
+# unit (Group 4 ellipsis: "Alice took twice as many as Bob").
 _COMPARE_TWICE_RE = re.compile(
-    r"^(?P<actor>[A-Z]\w+)\s+has\s+twice\s+as\s+many\s+"
-    r"(?P<unit>\w+)\s+as\s+(?P<reference>[A-Z]\w+)$"
+    rf"^(?P<actor>{_ACTOR_SLOT})\s+{_COMPARE_VERB}\s+twice\s+as\s+many"
+    rf"(?:\s+(?P<unit>\w+))?\s+as\s+(?P<reference>{_REF_SLOT})$"
 )
 
 # Group B (multiplicative — N times): "Alice has 3 times as many apples as Bob"
+# ADR-0123a: subject/verb/value/reference slots widened (Groups 1/3/8);
+# optional unit (Group 4 ellipsis).
 _COMPARE_N_TIMES_RE = re.compile(
-    r"^(?P<actor>[A-Z]\w+)\s+has\s+(?P<value>\d+)\s+times\s+as\s+many\s+"
-    r"(?P<unit>\w+)\s+as\s+(?P<reference>[A-Z]\w+)$"
+    rf"^(?P<actor>{_ACTOR_SLOT})\s+{_COMPARE_VERB}\s+"
+    rf"(?P<value>{_NUMBER})\s+times\s+as\s+many"
+    rf"(?:\s+(?P<unit>\w+))?\s+as\s+(?P<reference>{_REF_SLOT})$"
 )
 
 # Group C (fractional — half): "Alice has half as many apples as Bob"
+# ADR-0123a: subject/verb/reference slots widened (Groups 1/8); optional
+# unit (Group 4 ellipsis).
 _COMPARE_HALF_RE = re.compile(
-    r"^(?P<actor>[A-Z]\w+)\s+has\s+half\s+as\s+many\s+"
-    r"(?P<unit>\w+)\s+as\s+(?P<reference>[A-Z]\w+)$"
+    rf"^(?P<actor>{_ACTOR_SLOT})\s+{_COMPARE_VERB}\s+half\s+as\s+many"
+    rf"(?:\s+(?P<unit>\w+))?\s+as\s+(?P<reference>{_REF_SLOT})$"
+)
+
+# ADR-0123a Group 4 — "as much" and "the number/amount of" variants.
+# These are multiplicative comparisons phrased over mass nouns or with
+# the alternate "the (number|amount) of <unit>" construction. Unit is
+# always optional (multiplicative semantics infer it from reference state).
+_COMPARE_TWICE_AS_MUCH_RE = re.compile(
+    rf"^(?P<actor>{_ACTOR_SLOT})\s+{_COMPARE_VERB}\s+twice\s+as\s+much"
+    rf"(?:\s+(?P<unit>\w+))?\s+as\s+(?P<reference>{_REF_SLOT})$"
+)
+_COMPARE_N_TIMES_AS_MUCH_RE = re.compile(
+    rf"^(?P<actor>{_ACTOR_SLOT})\s+{_COMPARE_VERB}\s+"
+    rf"(?P<value>{_NUMBER})\s+times\s+as\s+much"
+    rf"(?:\s+(?P<unit>\w+))?\s+as\s+(?P<reference>{_REF_SLOT})$"
+)
+_COMPARE_HALF_AS_MUCH_RE = re.compile(
+    rf"^(?P<actor>{_ACTOR_SLOT})\s+{_COMPARE_VERB}\s+half\s+as\s+much"
+    rf"(?:\s+(?P<unit>\w+))?\s+as\s+(?P<reference>{_REF_SLOT})$"
+)
+_COMPARE_TWICE_THE_RE = re.compile(
+    rf"^(?P<actor>{_ACTOR_SLOT})\s+{_COMPARE_VERB}\s+twice\s+the\s+"
+    r"(?:number|amount)\s+of\s+(?P<unit>\w+)\s+as\s+"
+    rf"(?P<reference>{_REF_SLOT})$"
+)
+_COMPARE_N_TIMES_THE_RE = re.compile(
+    rf"^(?P<actor>{_ACTOR_SLOT})\s+{_COMPARE_VERB}\s+"
+    rf"(?P<value>{_NUMBER})\s+times\s+the\s+(?:number|amount)\s+of\s+"
+    rf"(?P<unit>\w+)\s+as\s+(?P<reference>{_REF_SLOT})$"
 )
 
 # Forms the parser deliberately REFUSES (multi-construction / out of
@@ -645,14 +782,19 @@ def _try_comparison_declaration(s: str, state: _ParserState) -> bool:
     returns False (the sentence is not a comparison; dispatcher
     proceeds to ``_try_initial``).
     """
+    # ADR-0123a — additive (Group A): widened subject/verb/value slots.
     m = _COMPARE_ADDITIVE_RE.match(s)
     if m:
-        actor = m.group("actor")
-        value = int(m.group("value"))
+        actor = _resolve_compare_entity(
+            m.group("actor"), state, sentence=s, role="actor"
+        )
+        value = _parse_compare_number(m.group("value"))
         direction_raw = m.group("direction").lower()
         direction = "more" if direction_raw == "more" else "fewer"
         unit = _canonical_unit(m.group("unit"))
-        reference = m.group("reference")
+        reference = _resolve_compare_entity(
+            m.group("reference"), state, sentence=s, role="reference"
+        )
         return _emit_comparison(
             state,
             actor=actor,
@@ -665,51 +807,64 @@ def _try_comparison_declaration(s: str, state: _ParserState) -> bool:
             tracking_unit=unit,
         )
 
-    m = _COMPARE_TWICE_RE.match(s)
-    if m:
-        unit = _canonical_unit(m.group("unit"))
-        return _emit_comparison(
-            state,
-            actor=m.group("actor"),
-            reference=m.group("reference"),
-            kind="compare_multiplicative",
-            delta=None,
-            factor=2.0,
-            direction="times",
-            sentence=s,
-            tracking_unit=unit,
-        )
+    # ADR-0123a — multiplicative (Group B / Group 4 variants).
+    # Each branch resolves entities, parses the (possibly word-form)
+    # multiplier value, and emits with optional unit (None → solver
+    # infers from reference's unique-unit state).
+    for pattern, factor_kind in (
+        (_COMPARE_TWICE_RE, ("times", 2.0)),
+        (_COMPARE_TWICE_AS_MUCH_RE, ("times", 2.0)),
+        (_COMPARE_TWICE_THE_RE, ("times", 2.0)),
+        (_COMPARE_HALF_RE, ("fraction", 0.5)),
+        (_COMPARE_HALF_AS_MUCH_RE, ("fraction", 0.5)),
+    ):
+        m = pattern.match(s)
+        if m:
+            direction, factor = factor_kind
+            unit_raw = m.groupdict().get("unit")
+            tracking_unit = _canonical_unit(unit_raw) if unit_raw else ""
+            actor = _resolve_compare_entity(
+                m.group("actor"), state, sentence=s, role="actor"
+            )
+            reference = _resolve_compare_entity(
+                m.group("reference"), state, sentence=s, role="reference"
+            )
+            return _emit_comparison(
+                state,
+                actor=actor,
+                reference=reference,
+                kind="compare_multiplicative",
+                delta=None,
+                factor=factor,
+                direction=direction,
+                sentence=s,
+                tracking_unit=tracking_unit,
+            )
 
-    m = _COMPARE_N_TIMES_RE.match(s)
-    if m:
-        unit = _canonical_unit(m.group("unit"))
-        value = int(m.group("value"))
-        return _emit_comparison(
-            state,
-            actor=m.group("actor"),
-            reference=m.group("reference"),
-            kind="compare_multiplicative",
-            delta=None,
-            factor=float(value),
-            direction="times",
-            sentence=s,
-            tracking_unit=unit,
-        )
-
-    m = _COMPARE_HALF_RE.match(s)
-    if m:
-        unit = _canonical_unit(m.group("unit"))
-        return _emit_comparison(
-            state,
-            actor=m.group("actor"),
-            reference=m.group("reference"),
-            kind="compare_multiplicative",
-            delta=None,
-            factor=0.5,
-            direction="fraction",
-            sentence=s,
-            tracking_unit=unit,
-        )
+    for pattern in (_COMPARE_N_TIMES_RE, _COMPARE_N_TIMES_AS_MUCH_RE,
+                    _COMPARE_N_TIMES_THE_RE):
+        m = pattern.match(s)
+        if m:
+            unit_raw = m.groupdict().get("unit")
+            tracking_unit = _canonical_unit(unit_raw) if unit_raw else ""
+            value = _parse_compare_number(m.group("value"))
+            actor = _resolve_compare_entity(
+                m.group("actor"), state, sentence=s, role="actor"
+            )
+            reference = _resolve_compare_entity(
+                m.group("reference"), state, sentence=s, role="reference"
+            )
+            return _emit_comparison(
+                state,
+                actor=actor,
+                reference=reference,
+                kind="compare_multiplicative",
+                delta=None,
+                factor=float(value),
+                direction="times",
+                sentence=s,
+                tracking_unit=tracking_unit,
+            )
 
     for refuse_pattern, reason in _COMPARE_REFUSE_PATTERNS:
         if refuse_pattern.match(s):
@@ -766,8 +921,14 @@ def _emit_comparison(
 # Question patterns
 # ---------------------------------------------------------------------------
 
+# ADR-0123a widens entity slot to match initial-possession / comparison
+# subjects: proper noun OR "the X" collective. Auxiliary widened to
+# do/does for plural-collective subjects ("How many cards do the girls
+# have?"). Pronoun subjects in questions are not accepted — the question
+# must name the entity unambiguously.
 _Q_ENTITY_RE = re.compile(
-    r"^How\s+many\s+(?P<unit>\w+)\s+does\s+(?P<entity>[A-Z]\w+)"
+    r"^How\s+many\s+(?P<unit>\w+)\s+(?:does|do)\s+"
+    r"(?P<entity>[A-Z]\w+|[Tt]he\s+\w+)"
     r"\s+have(?:\s+(?:left|now|in\s+total|altogether)){0,2}$",
     flags=re.IGNORECASE,
 )
@@ -792,23 +953,31 @@ _Q_RATE_AGGREGATE_RE = re.compile(
 def _process_question(sentence: str, state: _ParserState) -> None:
     s = sentence.rstrip("?").strip()
 
+    # ADR-0123a: try the total-across question FIRST. With the widened
+    # entity regex accepting "do" as auxiliary, "do they have" would
+    # otherwise greedily capture "they" as an entity name — but "they"
+    # is reserved for total-across semantics. Order = specificity.
+    m = _Q_TOTAL_RE.match(s)
+    if m:
+        unit = _canonical_unit(m.group("unit"))
+        state.unknown = Unknown(entity=None, unit=unit)
+        return
+
     m = _Q_ENTITY_RE.match(s)
     if m:
         unit = _canonical_unit(m.group("unit"))
-        entity = m.group("entity")
-        # Preserve case of the entity as written; entity must already be
-        # introduced by the statements above.
+        entity_raw = m.group("entity")
+        # ADR-0123a — canonicalize "the X" the same way initial possession
+        # does (lowercase article, collapse whitespace) so the question
+        # resolves to the same entity name stored earlier.
+        entity = re.sub(r"\s+", " ", entity_raw.strip())
+        if entity.lower().startswith("the "):
+            entity = "the " + entity[4:]
         if entity not in state.entities:
             raise ParseError(
                 f"question references undefined entity {entity!r}: {sentence!r}"
             )
         state.unknown = Unknown(entity=entity, unit=unit)
-        return
-
-    m = _Q_TOTAL_RE.match(s)
-    if m:
-        unit = _canonical_unit(m.group("unit"))
-        state.unknown = Unknown(entity=None, unit=unit)
         return
 
     m = _Q_RATE_AGGREGATE_RE.match(s)
