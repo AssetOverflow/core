@@ -194,14 +194,26 @@ def _not_equivalent_cases(rng: random.Random, start_idx: int) -> Iterable[Genera
 
 
 def _refusal_cases(start_idx: int) -> Iterable[GeneratedCase]:
+    scope_expanded = [
+        ("x + y", "x + 1", "generated_multivariable_distinct"),
+        ("x / 2", "x", "generated_constant_denominator_distinct"),
+    ]
     templates = [
-        ("x + y", "x + 1", "generated_refusal_multivariable"),
-        ("x / 2", "x", "generated_refusal_division"),
         ("sin(x)", "x", "generated_refusal_function"),
         ("x^-1", "1", "generated_refusal_negative_exponent"),
         ("x +", "x", "generated_refusal_malformed"),
     ]
     idx = start_idx
+    for expr_a, expr_b, category in scope_expanded:
+        yield GeneratedCase(
+            case_id=f"sym-eq-gen-v1-{idx:04d}",
+            expression_a=expr_a,
+            expression_b=expr_b,
+            expected="not_equivalent",
+            category=category,
+            provenance=f"adr-0131.1b:generated:seed={SEED}:scope-expanded",
+        )
+        idx += 1
     for expr_a, expr_b, category in templates:
         yield GeneratedCase(
             case_id=f"sym-eq-gen-v1-{idx:04d}",

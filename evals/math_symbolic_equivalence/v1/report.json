@@ -1,10 +1,14 @@
 {
-  "adr": "0131.1",
-  "benchmark": "symbolic_equivalence_v1",
+  "adr": "0131.1.B",
+  "benchmark": "symbolic_equivalence_v1_hardened",
+  "by_source": {
+    "curated": 30,
+    "generated": 155
+  },
   "cases_path": "evals/math_symbolic_equivalence/v1/cases.jsonl",
   "correct_rate": 1.0,
   "counts": {
-    "correct": 30,
+    "correct": 185,
     "refused": 0,
     "wrong": 0
   },
@@ -13,6 +17,8 @@
     "passed": true,
     "wrong_max": 0
   },
+  "generated_cases_module": "evals.math_symbolic_equivalence.v1.generated_cases",
+  "generated_seed": 131101,
   "per_case": [
     {
       "actual": "equivalent",
@@ -239,22 +245,1263 @@
       "verdict_class": "correct"
     },
     {
-      "actual": "refused",
+      "actual": "not_equivalent",
       "case_id": "sym-eq-v1-0029",
-      "category": "out_of_scope_variable",
+      "category": "multivariable_distinct",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-v1-0030",
+      "category": "constant_denominator_distinct",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0001",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0002",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0003",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0004",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0005",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0006",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0007",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0008",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0009",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0010",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0011",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0012",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0013",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0014",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0015",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0016",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0017",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0018",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0019",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0020",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0021",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0022",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0023",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0024",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0025",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0026",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0027",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0028",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0029",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0030",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0031",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0032",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0033",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0034",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0035",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0036",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0037",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0038",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0039",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0040",
+      "category": "generated_square_of_linear",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0041",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0042",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0043",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0044",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0045",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0046",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0047",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0048",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0049",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0050",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0051",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0052",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0053",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0054",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0055",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0056",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0057",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0058",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0059",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0060",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0061",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0062",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0063",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0064",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0065",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0066",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0067",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0068",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0069",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0070",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0071",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0072",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0073",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0074",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0075",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0076",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0077",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0078",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0079",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0080",
+      "category": "generated_product_of_linears",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0081",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0082",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0083",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0084",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0085",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0086",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0087",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0088",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0089",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0090",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0091",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0092",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0093",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0094",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0095",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0096",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0097",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0098",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0099",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0100",
+      "category": "generated_metamorphic_add_zero",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0101",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0102",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0103",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0104",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0105",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0106",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0107",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0108",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0109",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0110",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0111",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0112",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0113",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0114",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0115",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0116",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0117",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0118",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0119",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "equivalent",
+      "case_id": "sym-eq-gen-v1-0120",
+      "category": "generated_metamorphic_mul_one",
+      "expected": "equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0121",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0122",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0123",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0124",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0125",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0126",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0127",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0128",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0129",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0130",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0131",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0132",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0133",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0134",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0135",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0136",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0137",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0138",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0139",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0140",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0141",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0142",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0143",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0144",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0145",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0146",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0147",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0148",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0149",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0150",
+      "category": "generated_near_miss_constant",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0151",
+      "category": "generated_multivariable_distinct",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "not_equivalent",
+      "case_id": "sym-eq-gen-v1-0152",
+      "category": "generated_constant_denominator_distinct",
+      "expected": "not_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "refused",
+      "case_id": "sym-eq-gen-v1-0153",
+      "category": "generated_refusal_function",
       "expected": "refused",
       "reason": "",
       "verdict_class": "correct"
     },
     {
       "actual": "refused",
-      "case_id": "sym-eq-v1-0030",
-      "category": "out_of_scope_division",
+      "case_id": "sym-eq-gen-v1-0154",
+      "category": "generated_refusal_negative_exponent",
+      "expected": "refused",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "refused",
+      "case_id": "sym-eq-gen-v1-0155",
+      "category": "generated_refusal_malformed",
       "expected": "refused",
       "reason": "",
       "verdict_class": "correct"
     }
   ],
-  "sample_count": 30,
-  "schema_version": 1
+  "report_sha256": "8d94522fadbac2e618ac59a3fe8158286faab641c7d39f6ed2ee3a064255f77b",
+  "sample_count": 185,
+  "schema_version": 2
 }
