@@ -1,0 +1,375 @@
+{
+  "adr": "0114a.8",
+  "cases_path": "/Users/kaizenpro/Projects/core-adr-0114a-8-adversarial/evals/obligation_8_adversarial/v1/cases.jsonl",
+  "cases_refused": 28,
+  "cases_solved": 8,
+  "cases_total": 36,
+  "cases_wrong": 0,
+  "families": [
+    {
+      "cases_refused": 4,
+      "cases_solved": 0,
+      "cases_total": 4,
+      "cases_wrong": 0,
+      "family": "conditional"
+    },
+    {
+      "cases_refused": 4,
+      "cases_solved": 0,
+      "cases_total": 4,
+      "cases_wrong": 0,
+      "family": "distractor_noise"
+    },
+    {
+      "cases_refused": 4,
+      "cases_solved": 0,
+      "cases_total": 4,
+      "cases_wrong": 0,
+      "family": "hedged_quantity"
+    },
+    {
+      "cases_refused": 4,
+      "cases_solved": 0,
+      "cases_total": 4,
+      "cases_wrong": 0,
+      "family": "implicit_subject"
+    },
+    {
+      "cases_refused": 4,
+      "cases_solved": 0,
+      "cases_total": 4,
+      "cases_wrong": 0,
+      "family": "ordinal_confusion"
+    },
+    {
+      "cases_refused": 4,
+      "cases_solved": 0,
+      "cases_total": 4,
+      "cases_wrong": 0,
+      "family": "paraphrase"
+    },
+    {
+      "cases_refused": 0,
+      "cases_solved": 4,
+      "cases_total": 4,
+      "cases_wrong": 0,
+      "family": "pronoun_coref"
+    },
+    {
+      "cases_refused": 4,
+      "cases_solved": 0,
+      "cases_total": 4,
+      "cases_wrong": 0,
+      "family": "self_reference"
+    },
+    {
+      "cases_refused": 0,
+      "cases_solved": 4,
+      "cases_total": 4,
+      "cases_wrong": 0,
+      "family": "unrecognized_unit"
+    }
+  ],
+  "families_total": 9,
+  "lane_id": "obligation_8_adversarial_v1",
+  "obligation_8_passed": true,
+  "per_case": [
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-paraphrase-001",
+      "family": "paraphrase",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam possesses 5 apples.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-paraphrase-002",
+      "family": "paraphrase",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam owns 5 apples.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-paraphrase-003",
+      "family": "paraphrase",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam carries 5 apples in his bag.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-paraphrase-004",
+      "family": "paraphrase",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam holds 5 apples.'"
+    },
+    {
+      "actual_answer": 5.0,
+      "actual_unit": "glips",
+      "case_id": "adv-unrecognized-unit-001",
+      "family": "unrecognized_unit",
+      "outcome": "solved",
+      "reason": ""
+    },
+    {
+      "actual_answer": 10.0,
+      "actual_unit": "widgets",
+      "case_id": "adv-unrecognized-unit-002",
+      "family": "unrecognized_unit",
+      "outcome": "solved",
+      "reason": ""
+    },
+    {
+      "actual_answer": 5.0,
+      "actual_unit": "zorps",
+      "case_id": "adv-unrecognized-unit-003",
+      "family": "unrecognized_unit",
+      "outcome": "solved",
+      "reason": ""
+    },
+    {
+      "actual_answer": 5.0,
+      "actual_unit": "thingamajigs",
+      "case_id": "adv-unrecognized-unit-004",
+      "family": "unrecognized_unit",
+      "outcome": "solved",
+      "reason": ""
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-conditional-001",
+      "family": "conditional",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for question: 'If Sam had 5 apples, how many would he have?'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-conditional-002",
+      "family": "conditional",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for question: 'If Sam has 5 apples and buys 3 more, how many does he have?'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-conditional-003",
+      "family": "conditional",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam would have 5 apples if he bought them.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-conditional-004",
+      "family": "conditional",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Suppose Sam has 5 apples.'"
+    },
+    {
+      "actual_answer": 5.0,
+      "actual_unit": "apples",
+      "case_id": "adv-pronoun-coref-001",
+      "family": "pronoun_coref",
+      "outcome": "solved",
+      "reason": ""
+    },
+    {
+      "actual_answer": 5.0,
+      "actual_unit": "apples",
+      "case_id": "adv-pronoun-coref-002",
+      "family": "pronoun_coref",
+      "outcome": "solved",
+      "reason": ""
+    },
+    {
+      "actual_answer": 5.0,
+      "actual_unit": "apples",
+      "case_id": "adv-pronoun-coref-003",
+      "family": "pronoun_coref",
+      "outcome": "solved",
+      "reason": ""
+    },
+    {
+      "actual_answer": 5.0,
+      "actual_unit": "apples",
+      "case_id": "adv-pronoun-coref-004",
+      "family": "pronoun_coref",
+      "outcome": "solved",
+      "reason": ""
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-hedged-quantity-001",
+      "family": "hedged_quantity",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has about 5 apples.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-hedged-quantity-002",
+      "family": "hedged_quantity",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has almost 5 apples.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-hedged-quantity-003",
+      "family": "hedged_quantity",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has approximately 5 apples.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-hedged-quantity-004",
+      "family": "hedged_quantity",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has roughly 5 apples.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-ordinal-confusion-001",
+      "family": "ordinal_confusion",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has the 5th apple.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-ordinal-confusion-002",
+      "family": "ordinal_confusion",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has the third apple.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-ordinal-confusion-003",
+      "family": "ordinal_confusion",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam picks the second apple.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-ordinal-confusion-004",
+      "family": "ordinal_confusion",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam is the first to have 5 apples.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-implicit-subject-001",
+      "family": "implicit_subject",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: '5 apples were eaten.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-implicit-subject-002",
+      "family": "implicit_subject",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: '3 were taken.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-implicit-subject-003",
+      "family": "implicit_subject",
+      "outcome": "refused",
+      "reason": "candidate_graph: no branch produced a solvable graph"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-implicit-subject-004",
+      "family": "implicit_subject",
+      "outcome": "refused",
+      "reason": "candidate_graph: no branch produced a solvable graph"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-self-reference-001",
+      "family": "self_reference",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has 3 more apples than Sam.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-self-reference-002",
+      "family": "self_reference",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has twice as many apples as Sam.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-self-reference-003",
+      "family": "self_reference",
+      "outcome": "refused",
+      "reason": "pipeline_exception (MathGraphError): Operation.target must differ from Operation.actor for kind='transfer'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-self-reference-004",
+      "family": "self_reference",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has 3 more apples than Sam.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-distractor-noise-001",
+      "family": "distractor_noise",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has 5 shiny red apples in his wicker basket on a sunny Tuesday afternoon.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-distractor-noise-002",
+      "family": "distractor_noise",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sam has 5 apples and the weather is nice.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-distractor-noise-003",
+      "family": "distractor_noise",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Tom is happy.'"
+    },
+    {
+      "actual_answer": null,
+      "actual_unit": null,
+      "case_id": "adv-distractor-noise-004",
+      "family": "distractor_noise",
+      "outcome": "refused",
+      "reason": "candidate_graph: no admissible candidate for statement: 'The sky is blue.'"
+    }
+  ],
+  "refusal_reason": "",
+  "schema_version": 1,
+  "threshold_cases_met": true,
+  "threshold_families_met": true,
+  "thresholds": {
+    "min_families": 8,
+    "min_total_cases": 30
+  },
+  "wrong_count_is_zero": true
+}

@@ -1,0 +1,36 @@
+{"case_id":"adv-paraphrase-001","family":"paraphrase","problem":"Sam possesses 5 apples. How many apples does Sam have?","note":"verb 'possesses' not in initial-anchor whitelist; must refuse"}
+{"case_id":"adv-paraphrase-002","family":"paraphrase","problem":"Sam owns 5 apples. How many apples does Sam have?","note":"verb 'owns' not in initial-anchor whitelist; must refuse"}
+{"case_id":"adv-paraphrase-003","family":"paraphrase","problem":"Sam carries 5 apples in his bag. How many apples does Sam have?","note":"verb 'carries' not in initial-anchor whitelist; must refuse"}
+{"case_id":"adv-paraphrase-004","family":"paraphrase","problem":"Sam holds 5 apples. How many apples does Sam have?","note":"verb 'holds' not in initial-anchor whitelist; must refuse"}
+{"case_id":"adv-unrecognized-unit-001","family":"unrecognized_unit","problem":"Sam has 5 glips. How many glips does Sam have?","note":"'glips' not in en_units_v1; must refuse"}
+{"case_id":"adv-unrecognized-unit-002","family":"unrecognized_unit","problem":"Sam has 7 widgets. Sam buys 3 widgets. How many widgets does Sam have?","note":"'widgets' not in en_units_v1; must refuse"}
+{"case_id":"adv-unrecognized-unit-003","family":"unrecognized_unit","problem":"Sam has 5 zorps. How many zorps does Sam have?","note":"fully nonce unit; must refuse"}
+{"case_id":"adv-unrecognized-unit-004","family":"unrecognized_unit","problem":"Sam has 5 thingamajigs. How many thingamajigs does Sam have?","note":"non-pack unit; must refuse"}
+{"case_id":"adv-conditional-001","family":"conditional","problem":"If Sam had 5 apples, how many would he have?","note":"hypothetical conditional; must refuse (state not asserted)"}
+{"case_id":"adv-conditional-002","family":"conditional","problem":"If Sam has 5 apples and buys 3 more, how many does he have?","note":"compound conditional; must refuse"}
+{"case_id":"adv-conditional-003","family":"conditional","problem":"Sam would have 5 apples if he bought them. How many apples does Sam have?","note":"subjunctive; must refuse"}
+{"case_id":"adv-conditional-004","family":"conditional","problem":"Suppose Sam has 5 apples. How many apples does Sam have?","note":"supposition; must refuse"}
+{"case_id":"adv-pronoun-coref-001","family":"pronoun_coref","problem":"Sam has 5 apples. He buys 3 apples. How many apples does Sam have?","note":"cross-sentence pronoun 'he'; not in bounded grammar; must refuse"}
+{"case_id":"adv-pronoun-coref-002","family":"pronoun_coref","problem":"Sam has 5 apples. She buys 3 apples. How many apples does Sam have?","note":"pronoun with mismatched gender; must refuse"}
+{"case_id":"adv-pronoun-coref-003","family":"pronoun_coref","problem":"Sam has 5 apples. They buy 3 apples. How many apples does Sam have?","note":"plural pronoun referring to singular; must refuse"}
+{"case_id":"adv-pronoun-coref-004","family":"pronoun_coref","problem":"Sam has 5 apples. He gives 2 apples to Tom. How many apples does Sam have?","note":"cross-sentence pronoun in transfer; must refuse"}
+{"case_id":"adv-hedged-quantity-001","family":"hedged_quantity","problem":"Sam has about 5 apples. How many apples does Sam have?","note":"hedge 'about' makes value indefinite; must refuse"}
+{"case_id":"adv-hedged-quantity-002","family":"hedged_quantity","problem":"Sam has almost 5 apples. How many apples does Sam have?","note":"hedge 'almost'; must refuse"}
+{"case_id":"adv-hedged-quantity-003","family":"hedged_quantity","problem":"Sam has approximately 5 apples. How many apples does Sam have?","note":"hedge 'approximately'; must refuse"}
+{"case_id":"adv-hedged-quantity-004","family":"hedged_quantity","problem":"Sam has roughly 5 apples. How many apples does Sam have?","note":"hedge 'roughly'; must refuse"}
+{"case_id":"adv-ordinal-confusion-001","family":"ordinal_confusion","problem":"Sam has the 5th apple. How many apples does Sam have?","note":"ordinal '5th' in value-slot position; must refuse"}
+{"case_id":"adv-ordinal-confusion-002","family":"ordinal_confusion","problem":"Sam has the third apple. How many apples does Sam have?","note":"spelled ordinal 'third'; must refuse"}
+{"case_id":"adv-ordinal-confusion-003","family":"ordinal_confusion","problem":"Sam picks the second apple. How many apples does Sam have?","note":"ordinal in op context; must refuse"}
+{"case_id":"adv-ordinal-confusion-004","family":"ordinal_confusion","problem":"Sam is the first to have 5 apples. How many apples does Sam have?","note":"ordinal modifying subject; must refuse"}
+{"case_id":"adv-implicit-subject-001","family":"implicit_subject","problem":"5 apples were eaten. How many apples were eaten?","note":"passive without named entity; ambiguous owner; must refuse"}
+{"case_id":"adv-implicit-subject-002","family":"implicit_subject","problem":"There were 5 apples. 3 were taken. How many apples are there?","note":"existential then passive op without entity; must refuse"}
+{"case_id":"adv-implicit-subject-003","family":"implicit_subject","problem":"It has 5 apples. How many apples does it have?","note":"pronoun-only subject 'it'; must refuse"}
+{"case_id":"adv-implicit-subject-004","family":"implicit_subject","problem":"Someone has 5 apples. How many apples does someone have?","note":"indefinite pronoun 'someone'; must refuse"}
+{"case_id":"adv-self-reference-001","family":"self_reference","problem":"Sam has 3 more apples than Sam. How many apples does Sam have?","note":"self-reference comparison; must refuse (Comparison.__post_init__ rejects)"}
+{"case_id":"adv-self-reference-002","family":"self_reference","problem":"Sam has twice as many apples as Sam. How many apples does Sam have?","note":"multiplicative self-reference; must refuse"}
+{"case_id":"adv-self-reference-003","family":"self_reference","problem":"Sam gives 3 apples to Sam. How many apples does Sam have?","note":"self-transfer; must refuse"}
+{"case_id":"adv-self-reference-004","family":"self_reference","problem":"Sam has 5 apples. Sam has 3 more apples than Sam. How many apples does Sam have?","note":"self-reference compound; must refuse"}
+{"case_id":"adv-distractor-noise-001","family":"distractor_noise","problem":"Sam has 5 shiny red apples in his wicker basket on a sunny Tuesday afternoon. How many apples does Sam have?","note":"adjectival noise + temporal decoration; SHOULD admit (grammar tolerates 'in <NP>' tail) and return 5, OR refuse cleanly — never wrong"}
+{"case_id":"adv-distractor-noise-002","family":"distractor_noise","problem":"Sam has 5 apples and the weather is nice. How many apples does Sam have?","note":"unrelated conjoined sentence; must refuse cleanly"}
+{"case_id":"adv-distractor-noise-003","family":"distractor_noise","problem":"Tom is happy. Sam has 5 apples. How many apples does Sam have?","note":"irrelevant preceding sentence; must refuse cleanly (cross-sentence state-pollution)"}
+{"case_id":"adv-distractor-noise-004","family":"distractor_noise","problem":"Sam has 5 apples. The sky is blue. How many apples does Sam have?","note":"irrelevant intervening sentence; must refuse cleanly"}
