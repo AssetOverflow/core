@@ -710,6 +710,50 @@ def cmd_capability_adversarial(args: argparse.Namespace) -> int:
     return 0 if report.obligation_8_passed else 1
 
 
+def cmd_capability_depth_curve(args: argparse.Namespace) -> int:
+    """ADR-0114a Obligation #6 — compositional-depth curve. Re-runs the
+    lane's expected-correct cases, buckets by ``len(trace.steps)``,
+    asserts ``accuracy(N) >= accuracy(depth_1) * (1 - eps)^(N-1)`` for
+    eps = 0.05. Defaults to B3 (bounded grammar). Emits report to
+    ``--out`` (default ``evals/obligation_6_depth_curve/<lane_id>.json``).
+    Exit 0 iff the assertion holds."""
+    from pathlib import Path
+    from core.capability.depth_curve import (
+        emit_depth_curve_report,
+        evaluate_depth_curve,
+    )
+
+    report = evaluate_depth_curve()
+    out_path = Path(args.out) if args.out else (
+        Path(__file__).resolve().parent.parent
+        / "evals" / "obligation_6_depth_curve"
+        / f"{report.lane_id}.json"
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    emit_depth_curve_report(report, out_path)
+
+    if args.json:
+        print(json.dumps(report.as_dict(), indent=2, sort_keys=True))
+    else:
+        print(f"lane:                          {report.lane_id}")
+        print(f"cases_total:                   {report.cases_total}")
+        print(f"cases_solved:                  {report.cases_solved}")
+        print(f"epsilon:                       {report.epsilon}")
+        print(f"mechanism_wired:               {report.obligation_6_mechanism_wired}")
+        print(f"assertion_holds:               {report.obligation_6_assertion_holds}")
+        print(f"coverage_sufficient:           {report.coverage_sufficient}")
+        print(f"populated_buckets:             {list(report.populated_buckets)}")
+        print()
+        print(f"  {'bucket':<12} {'total':<7} {'correct':<8} {'accuracy':<10} {'bound':<10} {'satisfied'}")
+        for b in report.buckets:
+            bound = f"{b.bound_required:.4f}" if b.bound_required is not None else "(anchor)"
+            print(f"  {b.bucket:<12} {b.cases_total:<7} {b.cases_correct:<8} {b.accuracy:<10.4f} {bound:<10} {b.bound_satisfied}")
+        print(f"\nartifact: {out_path}")
+        if report.refusal_reason:
+            print(f"refusal_reason: {report.refusal_reason}")
+    return 0 if report.obligation_6_assertion_holds else 1
+
+
 def cmd_pack_list(args: argparse.Namespace) -> int:
     """List compiled language packs."""
     from language_packs import list_packs
@@ -3051,6 +3095,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="output path for the adversarial audit report (default: evals/obligation_8_adversarial/<lane_id>.json)",
     )
     capability_adversarial.set_defaults(func=cmd_capability_adversarial)
+    capability_depth_curve = capability_sub.add_parser(
+        "depth-curve",
+        help="ADR-0114a Obligation #6 — compositional-depth vs accuracy curve",
+    )
+    capability_depth_curve.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    capability_depth_curve.add_argument(
+        "--out",
+        default=None,
+        help="output path for the depth-curve report (default: evals/obligation_6_depth_curve/<lane_id>.json)",
+    )
+    capability_depth_curve.set_defaults(func=cmd_capability_depth_curve)
 
     pack = subparsers.add_parser("pack", help="inspect and verify language packs")
     pack_sub = pack.add_subparsers(dest="pack_command", metavar="pack-command", required=True)
