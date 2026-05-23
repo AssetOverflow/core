@@ -1,4 +1,4 @@
-"""ADR-0132/0133 — Semantic-Symbolic Binding Graph.
+"""ADR-0132/0133/0134/0135 — Semantic-Symbolic Binding Graph.
 
 Phase 1 (ADR-0132): pure data layer (frozen dataclasses, deterministic
 allocator, refusal-first construction; no I/O, no parser, no algebra,
@@ -10,8 +10,13 @@ Phase 2 (ADR-0133): pure-function adapter
 :class:`generate.math_problem_graph.MathProblemGraph` (ADR-0115) into a
 :class:`SemanticSymbolicBindingGraph`. Still no runtime wiring.
 
-Phases 3-5 (unit-aware equation binding / question-target binding /
-bounded-grammar integration) are deferred to follow-up PRs.
+Phase 3 (ADR-0134): unit-aware admissibility on equations.
+
+Phase 4 (ADR-0135): question-target binding refinement —
+:class:`BoundUnknown` now carries ``state_index`` + ``question_form``
+fields resolved by :func:`bound_unknown_from_math_problem_graph`.
+
+Phase 5 (bounded-grammar / B3 integration) deferred.
 """
 
 from __future__ import annotations
@@ -32,15 +37,26 @@ from .admissibility import (
 from .allocation import allocate_symbols
 from .model import (
     ADMISSIBILITY_STATUSES,
+    QUESTION_FORMS,
     SEMANTIC_ROLES,
+    STATE_INDEX_LABELS,
     BindingGraphError,
     BoundConstraint,
     BoundEquation,
     BoundFact,
     BoundUnknown,
+    Operation,
     SemanticSymbolicBindingGraph,
     SourceSpanLink,
+    StateIndex,
     SymbolBinding,
+)
+from .question_target import (
+    QUESTION_TARGET_REASONS,
+    QuestionTargetError,
+    bound_unknown_from_math_problem_graph,
+    infer_question_form,
+    resolve_state_index,
 )
 from .units import (
     BASE_DIMENSIONS,
@@ -60,8 +76,11 @@ __all__ = (
     "BASE_DIMENSIONS",
     "DIMENSIONLESS",
     "INTRODUCED_BY",
+    "QUESTION_FORMS",
+    "QUESTION_TARGET_REASONS",
     "REFUSED_UNIT_PROOF",
     "SEMANTIC_ROLES",
+    "STATE_INDEX_LABELS",
     "SYNTHETIC_SOURCE_ID",
     "AdapterError",
     "AdmissibilityError",
@@ -70,16 +89,22 @@ __all__ = (
     "BoundEquation",
     "BoundFact",
     "BoundUnknown",
+    "Operation",
+    "QuestionTargetError",
     "SemanticSymbolicBindingGraph",
     "SourceSpanLink",
+    "StateIndex",
     "SymbolBinding",
     "UnitAlgebraError",
     "UnitProof",
     "UnitVector",
     "allocate_symbols",
     "bind_math_problem_graph",
+    "bound_unknown_from_math_problem_graph",
     "check_admissibility",
+    "infer_question_form",
     "parse_unit",
+    "resolve_state_index",
     "unit_inverse",
     "unit_product",
     "unit_quotient",
