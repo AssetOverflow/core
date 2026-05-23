@@ -29,6 +29,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
+from generate.math_candidate_graph import parse_and_solve
 from generate.math_parser import ParseError, parse_problem
 from generate.math_problem_graph import MathProblemGraph
 from generate.math_realizer import RealizerError, realize
@@ -160,6 +161,141 @@ def _score_one(case: dict[str, Any]) -> CaseOutcome:
     # records pure-number answers without a parsed unit). In that case
     # the runner skips the unit comparison and grades on answer value
     # alone. Cases that DO specify expected_unit get the strict check.
+    if expected_unit != "" and trace.answer_unit != expected_unit:
+        return CaseOutcome(
+            case_id=case_id,
+            outcome="wrong",
+            reason=(
+                f"unit mismatch: got {trace.answer_unit!r}, "
+                f"expected {expected_unit!r}"
+            ),
+            expected_answer=expected_answer,
+            expected_unit=expected_unit,
+            actual_answer=trace.answer_value,
+            actual_unit=trace.answer_unit,
+            trace_hash=trace_hash,
+            realized_prose=prose,
+        )
+    if trace.answer_value != expected_answer:
+        return CaseOutcome(
+            case_id=case_id,
+            outcome="wrong",
+            reason=(
+                f"answer mismatch: got {trace.answer_value!r}, "
+                f"expected {expected_answer!r}"
+            ),
+            expected_answer=expected_answer,
+            expected_unit=expected_unit,
+            actual_answer=trace.answer_value,
+            actual_unit=trace.answer_unit,
+            trace_hash=trace_hash,
+            realized_prose=prose,
+        )
+
+    return CaseOutcome(
+        case_id=case_id,
+        outcome="correct",
+        reason="",
+        expected_answer=expected_answer,
+        expected_unit=expected_unit,
+        actual_answer=trace.answer_value,
+        actual_unit=trace.answer_unit,
+        trace_hash=trace_hash,
+        realized_prose=prose,
+    )
+
+
+def _score_one_candidate_graph(case: dict[str, Any]) -> CaseOutcome:
+    """ADR-0126 P4 — score one case via the candidate-graph pipeline.
+
+    Mirrors :func:`_score_one` end-to-end (parser → solver → verifier →
+    realizer → expected-answer check) but the parse stage uses
+    :func:`generate.math_candidate_graph.parse_and_solve` instead of
+    the first-match-wins :func:`generate.math_parser.parse_problem`.
+
+    Preserves wrong == 0: any deviation in the new pipeline still
+    routes through the same verifier-replay + answer/unit equality
+    checks. Refusals are first-class — branches with no admissible
+    parse, branches that disagree on the answer, and branches that
+    exceed MAX_TOTAL_BRANCHES all classify as ``refused``.
+
+    Callers that want to evaluate the candidate-graph topology
+    (e.g. ``evals/gsm8k_math/train_sample/v1/runner.py`` from PR
+    #160) substitute this function for ``_score_one``; the
+    ``CaseOutcome`` shape is identical.
+    """
+    case_id = case["id"]
+    expected_answer = case["expected_answer"]
+    expected_unit = case["expected_unit"]
+
+    # Stage 1 — candidate-graph parse + internal solve + decision rule.
+    cg_result = parse_and_solve(case["problem"])
+    if not cg_result.is_admitted:
+        return CaseOutcome(
+            case_id=case_id,
+            outcome="refused",
+            reason=f"candidate_graph: {cg_result.refusal_reason}",
+            expected_answer=expected_answer,
+            expected_unit=expected_unit,
+            actual_answer=None,
+            actual_unit=None,
+            trace_hash=None,
+            realized_prose=None,
+        )
+    graph = cg_result.selected_graph
+    assert graph is not None  # is_admitted implies non-None graph
+
+    # Stage 2 — canonical solve for the full SolutionTrace (verifier
+    # needs the trace; parse_and_solve only kept the numeric answer).
+    try:
+        trace = solve(graph)
+    except SolveError as exc:
+        return CaseOutcome(
+            case_id=case_id,
+            outcome="refused",
+            reason=f"solver: {exc}",
+            expected_answer=expected_answer,
+            expected_unit=expected_unit,
+            actual_answer=None,
+            actual_unit=None,
+            trace_hash=None,
+            realized_prose=None,
+        )
+
+    # Stage 3 — verify (independent re-derivation, ADR-0117).
+    verdict = verify(graph, trace)
+    trace_hash = hashlib.sha256(trace.canonical_bytes()).hexdigest()
+    if not verdict.passed:
+        return CaseOutcome(
+            case_id=case_id,
+            outcome="wrong",
+            reason=f"verifier: {verdict.reason}",
+            expected_answer=expected_answer,
+            expected_unit=expected_unit,
+            actual_answer=trace.answer_value,
+            actual_unit=trace.answer_unit,
+            trace_hash=trace_hash,
+            realized_prose=None,
+        )
+
+    # Stage 4 — realize.
+    try:
+        realized = realize(graph.initial_state, trace)
+        prose = realized.as_prose()
+    except RealizerError as exc:
+        return CaseOutcome(
+            case_id=case_id,
+            outcome="wrong",
+            reason=f"realizer: {exc}",
+            expected_answer=expected_answer,
+            expected_unit=expected_unit,
+            actual_answer=trace.answer_value,
+            actual_unit=trace.answer_unit,
+            trace_hash=trace_hash,
+            realized_prose=None,
+        )
+
+    # Stage 5 — expected-answer comparison (same logic as _score_one).
     if expected_unit != "" and trace.answer_unit != expected_unit:
         return CaseOutcome(
             case_id=case_id,

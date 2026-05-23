@@ -42,6 +42,7 @@ from generate.math_problem_graph import (
     InitialPossession,
     Operation,
     Quantity,
+    Unknown,
 )
 from generate.math_roundtrip import (
     ADD_VERBS,
@@ -267,6 +268,92 @@ def _build_op_candidate(
         matched_actor_token=m.group("subject"),
         matched_target_token=target,
     )
+
+
+# ---------------------------------------------------------------------------
+# Question candidate
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True, slots=True)
+class CandidateUnknown:
+    """Question-candidate with source-span provenance.
+
+    Two question shapes in P3 scope:
+
+    - ``How many <unit> does <Entity> have [left|now|in total|altogether]?``
+      → ``Unknown(entity=<Entity>, unit=<unit>)``
+    - ``How many <unit> do they have [left|now|in total|altogether]?``
+      → ``Unknown(entity=None, unit=<unit>)`` (total-across)
+
+    The round-trip filter for questions checks the unit token and (when
+    present) the entity token both appear in the source span.
+    """
+
+    unknown: Unknown
+    source_span: str
+    matched_unit_token: str
+    matched_entity_token: str | None  # None for total-across questions
+
+
+_Q_ENTITY_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+(?P<unit>\w+)\s+(?:does|do)\s+"
+    rf"(?P<entity>{_ENTITY})"
+    r"\s+have(?:\s+(?:left|now|in\s+total|altogether)){0,2}\s*\??$",
+    flags=re.IGNORECASE,
+)
+
+_Q_TOTAL_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+(?P<unit>\w+)\s+do\s+they\s+have"
+    r"(?:\s+(?:in\s+total|altogether|left|now)){0,2}\s*\??$",
+    flags=re.IGNORECASE,
+)
+
+
+def extract_question_candidates(sentence: str) -> list[CandidateUnknown]:
+    """Return all admissible question candidates for ``sentence``.
+
+    Tries the total-across pattern FIRST (same specificity order as
+    legacy math_parser). The entity-pattern's widened regex would
+    otherwise capture "they" as an entity name.
+
+    Empty list if no shape matches.
+    """
+    s = sentence.strip()
+    out: list[CandidateUnknown] = []
+
+    m = _Q_TOTAL_RE.match(s)
+    if m is not None:
+        unit_raw = m.group("unit")
+        unit = unit_raw.lower()
+        if not unit.endswith("s"):
+            unit = unit + "s"
+        out.append(
+            CandidateUnknown(
+                unknown=Unknown(entity=None, unit=unit),
+                source_span=sentence,
+                matched_unit_token=unit_raw,
+                matched_entity_token=None,
+            )
+        )
+        return out  # specificity order: don't also try entity pattern
+
+    m = _Q_ENTITY_RE.match(s)
+    if m is not None:
+        unit_raw = m.group("unit")
+        unit = unit_raw.lower()
+        if not unit.endswith("s"):
+            unit = unit + "s"
+        entity = _normalize_entity(m.group("entity"))
+        out.append(
+            CandidateUnknown(
+                unknown=Unknown(entity=entity, unit=unit),
+                source_span=sentence,
+                matched_unit_token=unit_raw,
+                matched_entity_token=m.group("entity"),
+            )
+        )
+
+    return out
 
 
 def extract_operation_candidates(sentence: str) -> list[CandidateOperation]:
