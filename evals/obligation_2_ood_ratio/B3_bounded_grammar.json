@@ -1,0 +1,17 @@
+{
+  "adr": "0114a.2",
+  "lane_id": "B3_bounded_grammar",
+  "obligation_2_passed": true,
+  "obligation_2_ratio_satisfied": true,
+  "obligation_2_wrong_zero": true,
+  "ood_accuracy": 1.0,
+  "ood_cases_correct": 35,
+  "ood_cases_total": 35,
+  "ood_cases_wrong": 0,
+  "ood_ratio": 1.0,
+  "public_accuracy": 1.0,
+  "public_cases_correct": 50,
+  "public_cases_total": 50,
+  "refusal_reason": "",
+  "schema_version": 1
+}

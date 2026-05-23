@@ -1,0 +1,232 @@
+{
+  "adr": "0114a.2",
+  "exit_criterion": {
+    "ood_accuracy_min": 0.95,
+    "passed": true,
+    "wrong_max": 0
+  },
+  "metrics": {
+    "cases_total": 35,
+    "correct": 35,
+    "ood_accuracy": 1.0,
+    "overall_pass": true,
+    "refused": 0,
+    "wrong": 0,
+    "wrong_count_is_zero": true
+  },
+  "per_case": [
+    {
+      "case_id": "ood-001",
+      "public_sibling_case_id": "b3-001",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-002",
+      "public_sibling_case_id": "b3-002",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-003",
+      "public_sibling_case_id": "b3-003",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-004",
+      "public_sibling_case_id": "b3-004",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-005",
+      "public_sibling_case_id": "b3-005",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-006",
+      "public_sibling_case_id": "b3-006",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-007",
+      "public_sibling_case_id": "b3-007",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-008",
+      "public_sibling_case_id": "b3-008",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-009",
+      "public_sibling_case_id": "b3-009",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-010",
+      "public_sibling_case_id": "b3-010",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-011",
+      "public_sibling_case_id": "b3-011",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-012",
+      "public_sibling_case_id": "b3-012",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-013",
+      "public_sibling_case_id": "b3-013",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-014",
+      "public_sibling_case_id": "b3-014",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-015",
+      "public_sibling_case_id": "b3-015",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-016",
+      "public_sibling_case_id": "b3-016",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-017",
+      "public_sibling_case_id": "b3-017",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-018",
+      "public_sibling_case_id": "b3-018",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-019",
+      "public_sibling_case_id": "b3-019",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-020",
+      "public_sibling_case_id": "b3-020",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-021",
+      "public_sibling_case_id": "b3-021",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-022",
+      "public_sibling_case_id": "b3-022",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-023",
+      "public_sibling_case_id": "b3-023",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-024",
+      "public_sibling_case_id": "b3-024",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-025",
+      "public_sibling_case_id": "b3-025",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-026",
+      "public_sibling_case_id": "b3-026",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-027",
+      "public_sibling_case_id": "b3-027",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-028",
+      "public_sibling_case_id": "b3-028",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-029",
+      "public_sibling_case_id": "b3-029",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-030",
+      "public_sibling_case_id": "b3-030",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-031",
+      "public_sibling_case_id": "b3-031",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-032",
+      "public_sibling_case_id": "b3-032",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-033",
+      "public_sibling_case_id": "b3-033",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-034",
+      "public_sibling_case_id": "b3-034",
+      "reason": "",
+      "verdict": "correct"
+    },
+    {
+      "case_id": "ood-035",
+      "public_sibling_case_id": "b3-035",
+      "reason": "",
+      "verdict": "correct"
+    }
+  ],
+  "sample_count": 35,
+  "sample_path": "evals/obligation_2_ood_ratio/v1/cases.jsonl",
+  "schema_version": 1
+}
