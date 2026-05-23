@@ -218,7 +218,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0042",
-      "reason": "candidate_graph: no admissible candidate for statement: 'Ella has 4 bags with 20 apples in each bag and six bags with 25 apples in each bag.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'If Ella sells 200 apples, how many apples does Ella has left?'",
       "verdict": "refused"
     },
     {

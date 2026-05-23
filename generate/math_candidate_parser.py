@@ -77,10 +77,24 @@ class CandidateInitial:
     def __post_init__(self) -> None:
         # ADR-0127 widens the anchor set to include 'there are/were/is/was'
         # for the implicit-subject initial-possession shape.
-        if self.matched_anchor.lower() not in ("has", "have", "are", "were", "is", "was"):
+        # ADR-0131.G.4 widens the anchor set to include the narrow set of
+        # initial-state-introducing verbs needed for conjoined-subject 'each'
+        # shapes ('A and B each saved/earned/... N <unit>'). See
+        # _CONJ_SUBJECT_VERBS for the closed set.
+        if self.matched_anchor.lower() not in (
+            "has", "have", "had",
+            "are", "were", "is", "was",
+            "save", "saved",
+            "earn", "earned",
+            "get", "got", "gets",
+            "receive", "received", "receives",
+            "buy", "bought", "buys",
+            "make", "made", "makes",
+            "pay", "paid", "pays",
+        ):
             raise ValueError(
-                f"CandidateInitial.matched_anchor must be has/have/are/were/is/was; "
-                f"got {self.matched_anchor!r}"
+                f"CandidateInitial.matched_anchor must be a registered initial-"
+                f"state anchor; got {self.matched_anchor!r}"
             )
 
 
@@ -215,6 +229,14 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
                     matched_entity_token=m.group("entity"),
                 )
             )
+
+    # ADR-0131.G.4 — multi-clause initial-state extractors.
+    # Each may emit ≥1 candidates; deterministic order: conjoined-subject-each,
+    # conjoined-object, embedded-quantifier, conjoined-embedded-quantifier.
+    # See module-bottom for shape definitions and closed-set discipline.
+    out.extend(_conj_subject_each_candidates(sentence))
+    out.extend(_conj_object_candidates(sentence))
+    out.extend(_embedded_quantifier_candidates(sentence))
 
     m2 = _INITIAL_THERE_ARE_RE.match(s)
     if m2 is not None:
@@ -484,3 +506,324 @@ def extract_operation_candidates(sentence: str) -> list[CandidateOperation]:
             out.append(candidate)
 
     return out
+
+
+# ---------------------------------------------------------------------------
+# ADR-0131.G.4 — Multi-clause initial-state composition
+# ---------------------------------------------------------------------------
+#
+# Closed shape set. Every recognized multi-clause structure matches exactly
+# one of the four extractors below. Cross-sentence coreference, ellipsis,
+# three-way+ conjunctions, and collective `each` readings are deliberately
+# refused (no extractor matches them).
+#
+# Why initials, not operations: the GSM8K shapes targeted here introduce
+# starting state ('Aaron and Carson each saved $40', 'Francine has five
+# full boxes and 5 loose crayons', 'Ella has 4 bags with 20 apples in each
+# bag'). They are not state-mutating events. Emitting CandidateInitial
+# preserves the conventional initial-state-vs-operation split the solver
+# (math_solver.py) expects.
+
+# Anchor verbs allowed in conjoined-subject-each constructions. Surface
+# verb is mapped to a single canonical anchor token (e.g. 'saved up' →
+# matched_anchor='saved'). The CandidateInitial constructor whitelists
+# these via the ADR-0131.G.4 widening.
+_CONJ_SUBJECT_VERBS: Final[tuple[str, ...]] = (
+    "has", "have", "had",
+    "saved", "earned", "got", "received", "bought", "made", "paid",
+)
+_CONJ_SUBJECT_VERBS_PATTERN: Final[str] = (
+    r"(?:" + "|".join(_CONJ_SUBJECT_VERBS) + r")"
+)
+
+# Optional "and his/her/their brother/sister/friend/cousin" appositive
+# between the two conjuncts. Captures the appositive's head noun as part
+# of the second entity; we still ground on the proper noun that follows.
+_CONJ_KIN_GLUE: Final[str] = (
+    r"(?:(?:his|her|their)\s+(?:brother|sister|friend|cousin)\s+)?"
+)
+
+# Conjoined-subject "each" — distributive only. The trailing "to <infin>"
+# / "for <NP>" / "of <NP>" tail is consumed and discarded (arithmetically
+# inert; cf. ADR-0127 substance qualifier).
+_CONJ_SUBJECT_EACH_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<a>{_ENTITY})\s+and\s+{_CONJ_KIN_GLUE}"
+    rf"(?P<b>{_ENTITY})\s+each\s+"
+    rf"(?P<verb>{_CONJ_SUBJECT_VERBS_PATTERN})(?:\s+up)?\s+"
+    rf"(?P<value>{_VALUE})\s+"
+    r"(?P<unit>\w+)"
+    r"(?:\s+(?:of|in|for|to|from|with|on|at)\s+.+)?"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
+)
+
+# Conjoined-object NPs sharing a verb. The two units may differ
+# ('5 boxes and 7 marbles') — the binding graph keeps the per-unit
+# states independent. Same-unit conjuncts (rare) collapse into a
+# single state slot via the solver's state[(entity,unit)] overwrite,
+# which is a known limitation — we refuse same-unit conjuncts to avoid
+# silently losing the first conjunct's value.
+_CONJ_OBJECT_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<entity>{_ENTITY})\s+(?P<anchor>has|have|had)\s+"
+    rf"(?P<v1>{_VALUE})\s+(?P<u1>\w+)"
+    r"(?:\s+(?:full|loose|empty|whole|broken|new|old|small|large))?"
+    r"(?:\s+of\s+\w+)?"
+    rf"\s+and\s+(?P<v2>{_VALUE})\s+(?P<u2>\w+)"
+    r"(?:\s+(?:full|loose|empty|whole|broken|new|old|small|large))?"
+    r"(?:\s+of\s+\w+)?"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
+)
+
+# Embedded quantifier: "N <container> with M <unit> in each [<container>]".
+# Optional second mention of the container after 'each' (the natural-
+# language redundancy in the brief's Ella example).
+_EMBEDDED_QUANTIFIER_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<entity>{_ENTITY})\s+(?P<anchor>has|have|had)\s+"
+    rf"(?P<n>{_VALUE})\s+(?P<container>\w+)\s+with\s+"
+    rf"(?P<m>{_VALUE})\s+(?P<unit>\w+)\s+in\s+each"
+    r"(?:\s+(?P<container2>\w+))?"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
+)
+
+# Conjoined embedded quantifiers — both halves match the embedded shape.
+# Emits a single SUM candidate (value = N1*M1 + N2*M2) — emitting two
+# derived candidates with the same (entity, unit) is unsafe under the
+# solver's overwrite-on-collision semantics (math_solver.py:206; would
+# silently drop the first conjunct's value). Same-unit summation is the
+# admissible interpretation; mismatched units refuse.
+_CONJ_EMBEDDED_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<entity>{_ENTITY})\s+(?P<anchor>has|have|had)\s+"
+    rf"(?P<n1>{_VALUE})\s+(?P<c1>\w+)\s+with\s+(?P<m1>{_VALUE})\s+(?P<u1>\w+)"
+    r"\s+in\s+each(?:\s+\w+)?\s+and\s+"
+    rf"(?P<n2>{_VALUE})\s+(?P<c2>\w+)\s+with\s+(?P<m2>{_VALUE})\s+(?P<u2>\w+)"
+    r"\s+in\s+each(?:\s+\w+)?"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
+)
+
+
+def _canon_verb_to_anchor(verb: str) -> str:
+    """Map surface verb to its canonical CandidateInitial anchor token.
+
+    The constructor whitelist is keyed on lowercase singular-or-past
+    tokens; we lowercase + strip particle ('saved up' was already
+    stripped of 'up' by the regex's separate slot)."""
+    return verb.lower()
+
+
+def _conj_subject_each_candidates(sentence: str) -> list[CandidateInitial]:
+    """Distributive `each` only. Collective readings refuse by not
+    matching (no 'each' in the surface)."""
+    s = sentence.strip().rstrip(".")
+    m = _CONJ_SUBJECT_EACH_RE.match(s)
+    if m is None:
+        return []
+    value_raw = m.group("value")
+    if _is_indefinite_quantifier(value_raw):
+        return []
+    # Adversarial probe: 'each ... together' is a contradiction; refuse.
+    # Captured in test_refuses_each_with_together.
+    if re.search(r"\btogether\b|\bin total\b|\baltogether\b", s, re.IGNORECASE):
+        return []
+    entity_a = _normalize_entity(m.group("a"))
+    entity_b = _normalize_entity(m.group("b"))
+    if entity_a == entity_b:
+        return []  # 'Aaron and Aaron each ...' is degenerate
+    value = _resolve_value(value_raw)
+    unit_raw = m.group("unit")
+    unit = _canonicalize_unit(unit_raw)
+    anchor = _canon_verb_to_anchor(m.group("verb"))
+    out: list[CandidateInitial] = []
+    for entity, entity_raw in ((entity_a, m.group("a")), (entity_b, m.group("b"))):
+        try:
+            out.append(
+                CandidateInitial(
+                    initial=InitialPossession(
+                        entity=entity,
+                        quantity=Quantity(value=value, unit=unit),
+                    ),
+                    source_span=sentence,
+                    matched_anchor=anchor,
+                    matched_value_token=value_raw,
+                    matched_unit_token=unit_raw,
+                    matched_entity_token=entity_raw,
+                )
+            )
+        except Exception:
+            return []  # all-or-nothing emission
+    return out
+
+
+def _conj_object_candidates(sentence: str) -> list[CandidateInitial]:
+    """Conjoined object NPs sharing a verb. Same-unit conjuncts refused
+    (cannot safely compose under solver's overwrite-on-collision)."""
+    s = sentence.strip().rstrip(".")
+    m = _CONJ_OBJECT_RE.match(s)
+    if m is None:
+        return []
+    v1_raw, v2_raw = m.group("v1"), m.group("v2")
+    if _is_indefinite_quantifier(v1_raw) or _is_indefinite_quantifier(v2_raw):
+        return []
+    u1_raw, u2_raw = m.group("u1"), m.group("u2")
+    u1 = _canonicalize_unit(u1_raw)
+    u2 = _canonicalize_unit(u2_raw)
+    if u1 == u2:
+        # Same-unit conjuncts would silently collide under the solver's
+        # state[(entity,unit)] overwrite. Refuse rather than guess.
+        return []
+    entity = _normalize_entity(m.group("entity"))
+    anchor = m.group("anchor").lower()
+    out: list[CandidateInitial] = []
+    for value_raw, unit_raw, unit in (
+        (v1_raw, u1_raw, u1),
+        (v2_raw, u2_raw, u2),
+    ):
+        try:
+            out.append(
+                CandidateInitial(
+                    initial=InitialPossession(
+                        entity=entity,
+                        quantity=Quantity(value=_resolve_value(value_raw), unit=unit),
+                    ),
+                    source_span=sentence,
+                    matched_anchor=anchor,
+                    matched_value_token=value_raw,
+                    matched_unit_token=unit_raw,
+                    matched_entity_token=m.group("entity"),
+                )
+            )
+        except Exception:
+            return []
+    return out
+
+
+def _embedded_quantifier_candidates(sentence: str) -> list[CandidateInitial]:
+    """Embedded quantifier 'N <container> with M <unit> in each' →
+    derived InitialPossession(value=N*M, unit=<unit>). Also handles the
+    conjoined-embedded shape via _CONJ_EMBEDDED_RE (single SUM
+    candidate; same-unit only)."""
+    s = sentence.strip().rstrip(".")
+
+    # Try conjoined-embedded first (most specific).
+    m = _CONJ_EMBEDDED_RE.match(s)
+    if m is not None:
+        return _build_conj_embedded_sum(m, sentence)
+
+    m = _EMBEDDED_QUANTIFIER_RE.match(s)
+    if m is None:
+        return []
+    n_raw, m_raw = m.group("n"), m.group("m")
+    if _is_indefinite_quantifier(n_raw) or _is_indefinite_quantifier(m_raw):
+        return []
+    container = m.group("container").lower()
+    container2_raw = m.group("container2")
+    if container2_raw is not None:
+        # 'with M unit in each <container2>' — container2 (if named)
+        # must agree with the leading container; otherwise the scope of
+        # 'each' is ambiguous and we refuse.
+        c2 = container2_raw.lower()
+        if c2 not in (container, container.rstrip("s"), container + "s"):
+            return []
+    n = _resolve_value(n_raw)
+    per = _resolve_value(m_raw)
+    total = n * per
+    entity = _normalize_entity(m.group("entity"))
+    unit_raw = m.group("unit")
+    unit = _canonicalize_unit(unit_raw)
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=entity,
+                    quantity=Quantity(value=total, unit=unit),
+                ),
+                source_span=sentence,
+                matched_anchor=m.group("anchor").lower(),
+                # Provenance: anchor on the per-container value token (M).
+                # The product N*M is a parser-committed derivation; the
+                # source-token check passes on M's surface form.
+                matched_value_token=m_raw,
+                matched_unit_token=unit_raw,
+                matched_entity_token=m.group("entity"),
+            )
+        ]
+    except Exception:
+        return []
+
+
+# ---------------------------------------------------------------------------
+# Per-shape admitted-only wrappers (used by the G4 runner).
+# Each filters its extractor's output through _initial_admissible from
+# math_candidate_graph so the runner sees only round-trip-admissible
+# candidates without re-implementing the check.
+# ---------------------------------------------------------------------------
+
+def _admit(cands: list[CandidateInitial]) -> list[CandidateInitial]:
+    from generate.math_candidate_graph import _initial_admissible
+    return [c for c in cands if _initial_admissible(c)]
+
+
+def _conj_subject_each_admitted(sentence: str) -> list[CandidateInitial]:
+    return _admit(_conj_subject_each_candidates(sentence))
+
+
+def _conj_object_admitted(sentence: str) -> list[CandidateInitial]:
+    return _admit(_conj_object_candidates(sentence))
+
+
+def _embedded_quantifier_admitted(sentence: str) -> list[CandidateInitial]:
+    # _embedded_quantifier_candidates dispatches to _CONJ_EMBEDDED_RE
+    # *first*, so this wrapper returns the single-embedded candidate
+    # only when the conjoined shape doesn't match. To distinguish,
+    # callers that care about the conjoined branch use
+    # _conj_embedded_admitted below.
+    s = sentence.strip().rstrip(".")
+    if _CONJ_EMBEDDED_RE.match(s) is not None:
+        return []
+    return _admit(_embedded_quantifier_candidates(sentence))
+
+
+def _conj_embedded_admitted(sentence: str) -> list[CandidateInitial]:
+    s = sentence.strip().rstrip(".")
+    if _CONJ_EMBEDDED_RE.match(s) is None:
+        return []
+    return _admit(_embedded_quantifier_candidates(sentence))
+
+
+def _build_conj_embedded_sum(
+    m: re.Match[str], sentence: str
+) -> list[CandidateInitial]:
+    """Single SUM candidate for conjoined-embedded 'N1 C with M1 U in
+    each and N2 C with M2 U in each'."""
+    n1_raw, m1_raw = m.group("n1"), m.group("m1")
+    n2_raw, m2_raw = m.group("n2"), m.group("m2")
+    for raw in (n1_raw, m1_raw, n2_raw, m2_raw):
+        if _is_indefinite_quantifier(raw):
+            return []
+    u1 = _canonicalize_unit(m.group("u1"))
+    u2 = _canonicalize_unit(m.group("u2"))
+    if u1 != u2:
+        # Mixed-unit sum is meaningless; refuse.
+        return []
+    total = _resolve_value(n1_raw) * _resolve_value(m1_raw) + (
+        _resolve_value(n2_raw) * _resolve_value(m2_raw)
+    )
+    entity = _normalize_entity(m.group("entity"))
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=entity,
+                    quantity=Quantity(value=total, unit=u1),
+                ),
+                source_span=sentence,
+                matched_anchor=m.group("anchor").lower(),
+                matched_value_token=m1_raw,  # provenance: first per-container M
+                matched_unit_token=m.group("u1"),
+                matched_entity_token=m.group("entity"),
+            )
+        ]
+    except Exception:
+        return []

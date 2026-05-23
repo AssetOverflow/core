@@ -1,0 +1,262 @@
+{
+  "adr": "0131.G.4",
+  "axis": "multi_clause",
+  "cases_path": "evals/math_capability_axes/G4_multi_clause/v1/cases.jsonl",
+  "metrics": {
+    "cases_total": 32,
+    "pass_rate": 1.0,
+    "passed": 32,
+    "wrong": 0,
+    "wrong_count_is_zero": true,
+    "wrong_rate": 0.0
+  },
+  "per_case": [
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-each-001",
+      "category": "conj_subject_each",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-each-002",
+      "category": "conj_subject_each",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-each-003",
+      "category": "conj_subject_each",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-each-004",
+      "category": "conj_subject_each",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-each-005",
+      "category": "conj_subject_each",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-each-006",
+      "category": "conj_subject_each",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-obj-001",
+      "category": "conj_object",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-obj-002",
+      "category": "conj_object",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-obj-003",
+      "category": "conj_object",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-obj-004",
+      "category": "conj_object",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-obj-005",
+      "category": "conj_object",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 2,
+      "case_id": "G4-conj-obj-006",
+      "category": "conj_object",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-embed-001",
+      "category": "embedded_quantifier",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-embed-002",
+      "category": "embedded_quantifier",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-embed-003",
+      "category": "embedded_quantifier",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-embed-004",
+      "category": "embedded_quantifier",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-embed-005",
+      "category": "embedded_quantifier",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-embed-006",
+      "category": "embedded_quantifier",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-conj-embed-001",
+      "category": "conj_embedded",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-conj-embed-002",
+      "category": "conj_embedded",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-conj-embed-003",
+      "category": "conj_embedded",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-conj-embed-004",
+      "category": "conj_embedded",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-conj-embed-005",
+      "category": "conj_embedded",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "case_id": "G4-conj-embed-006",
+      "category": "conj_embedded",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "case_id": "G4-refuse-001",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "case_id": "G4-refuse-002",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "case_id": "G4-refuse-003",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "case_id": "G4-refuse-004",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "case_id": "G4-refuse-005",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "case_id": "G4-refuse-006",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "case_id": "G4-refuse-007",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "case_id": "G4-refuse-008",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    }
+  ],
+  "per_category": {
+    "conj_embedded": {
+      "pass": 6,
+      "wrong": 0
+    },
+    "conj_object": {
+      "pass": 6,
+      "wrong": 0
+    },
+    "conj_subject_each": {
+      "pass": 6,
+      "wrong": 0
+    },
+    "embedded_quantifier": {
+      "pass": 6,
+      "wrong": 0
+    },
+    "refusal": {
+      "pass": 8,
+      "wrong": 0
+    }
+  },
+  "schema_version": 1
+}
