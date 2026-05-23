@@ -49,6 +49,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0119](ADR-0119-gsm8k-eval-lane-roadmap.md) | GSM8K Eval Lane Roadmap (Phase 5; decomposes into 5.1..5.8) | Proposed (2026-05-22) |
 | [ADR-0119.1](ADR-0119.1-sealed-holdout-fabrication-control.md) | Seal `fabrication_control` Holdout (ADR-0105 Amendment) | Accepted (2026-05-23) |
 | [ADR-0119.2](ADR-0119.2-gsm8k-eval-corpus-dev-public.md) | GSM8K Eval Corpus Dev/Public Splits | Accepted (2026-05-22) |
+| [ADR-0119.6](ADR-0119.6-depth-curve-harness.md) | GSM8K Math Depth-Curve Measurement Harness | Accepted (2026-05-23) |
 
 ---
 
@@ -94,6 +95,7 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - GSM8K Eval Lane Roadmap (Phase 5; decomposes into 5.1..5.8; proposed) — ADR-0119
 - Seal `fabrication_control` Holdout (ADR-0105 Amendment) — ADR-0119.1
 - GSM8K Eval Corpus Dev/Public Splits (200 CORE-original cases; verify.py 200/200; sealed holdout placeholder reserved for ADR-0119.7) — ADR-0119.2
+- GSM8K Math Depth-Curve Measurement Harness (discharges ADR-0114a Obligation #6 measurement-side) — ADR-0119.6
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
 
