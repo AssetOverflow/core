@@ -1,0 +1,268 @@
+{
+  "adr": "0126",
+  "counts": {
+    "correct": 0,
+    "refused": 50,
+    "wrong": 0
+  },
+  "exit_criterion": {
+    "correct_min": 10,
+    "passed": false,
+    "wrong_max": 0
+  },
+  "per_case": [
+    {
+      "case_id": "gsm8k-train-sample-v1-0001",
+      "reason": "parser: could not parse statement clause: 'Tina makes $18.00 an hour' (in sentence: 'Tina makes $18.00 an hour.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0002",
+      "reason": "parser: could not parse statement clause: 'Jan buys 1000 feet of cable' (in sentence: 'Jan buys 1000 feet of cable.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0003",
+      "reason": "parser: could not parse statement clause: 'The student council sells scented erasers in the morning before school starts to help raise money for school dances' (in sentence: 'The student council sells scented erasers in the morning before school starts to help raise money for school dances.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0004",
+      "reason": "parser: could not parse statement clause: 'There are some kids in camp' (in sentence: 'There are some kids in camp.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0005",
+      "reason": "parser: could not parse statement clause: \"In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature\" (in sentence: \"In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature.\")",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0006",
+      "reason": "parser: could not parse statement clause: 'Mandy started reading books with only 8 pages when she was 6 years old' (in sentence: 'Mandy started reading books with only 8 pages when she was 6 years old.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0007",
+      "reason": "parser: could not parse statement clause: 'Francine has five full boxes of crayons and 5 loose crayons' (in sentence: 'Francine has five full boxes of crayons and 5 loose crayons, and her friend has 27 loose crayons.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0008",
+      "reason": "parser: could not parse statement clause: 'Marnie makes bead bracelets' (in sentence: 'Marnie makes bead bracelets.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0009",
+      "reason": "parser: could not parse statement clause: 'Jen has 10 more ducks than four times the number of chickens' (in sentence: 'Jen has 10 more ducks than four times the number of chickens.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0010",
+      "reason": "parser: could not parse statement clause: 'Yun had 20 paperclips initially, but then lost 12' (in sentence: 'Yun had 20 paperclips initially, but then lost 12.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0011",
+      "reason": "parser: could not parse statement clause: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup' (in sentence: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0012",
+      "reason": "parser: could not parse statement clause: 'Dennis collected 10 rocks' (in sentence: 'Dennis collected 10 rocks.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0013",
+      "reason": "parser: could not parse statement clause: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel' (in sentence: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0014",
+      "reason": "parser: could not parse statement clause: 'Bob can shuck 10 oysters in 5 minutes' (in sentence: 'Bob can shuck 10 oysters in 5 minutes.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0015",
+      "reason": "parser: could not parse statement clause: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride' (in sentence: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0016",
+      "reason": "parser: could not parse statement clause: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs\" (in sentence: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs.\")",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0017",
+      "reason": "parser: could not parse statement clause: 'Jason has a carriage house that he rents out' (in sentence: 'Jason has a carriage house that he rents out.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0018",
+      "reason": "parser: could not parse statement clause: 'Xavier plays football with his friends' (in sentence: 'Xavier plays football with his friends.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0019",
+      "reason": "parser: could not parse statement clause: 'John adopts a dog from a shelter' (in sentence: 'John adopts a dog from a shelter.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0020",
+      "reason": "parser: could not parse statement clause: 'Two puppies, two kittens' (in sentence: 'Two puppies, two kittens, and three parakeets were for sale at the pet shop.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0021",
+      "reason": "parser: could not parse statement clause: 'John is lifting weights' (in sentence: 'John is lifting weights.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0022",
+      "reason": "parser: could not parse statement clause: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish' (in sentence: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0023",
+      "reason": "parser: could not parse statement clause: 'Nicole collected 400 Pokemon cards' (in sentence: 'Nicole collected 400 Pokemon cards.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0024",
+      "reason": "parser: could not parse statement clause: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday' (in sentence: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday, and 50 on Thursday.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0025",
+      "reason": "parser: could not parse statement clause: 'Lilibeth and her friends go strawberry picking' (in sentence: 'Lilibeth and her friends go strawberry picking.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0026",
+      "reason": "parser: could not parse statement clause: 'Aaron and his brother Carson each saved up $40 to go to dinner' (in sentence: 'Aaron and his brother Carson each saved up $40 to go to dinner.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0027",
+      "reason": "parser: could not parse statement clause: 'Malcolm has 240 followers on Instagram and 500 followers on Facebook' (in sentence: 'Malcolm has 240 followers on Instagram and 500 followers on Facebook.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0028",
+      "reason": "parser: could not parse statement clause: 'Tom opens an amusement park' (in sentence: 'Tom opens an amusement park.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0029",
+      "reason": "parser: could not parse statement clause: 'Fabian bought a brand new computer mouse and keyboard to be able to work from home' (in sentence: 'Fabian bought a brand new computer mouse and keyboard to be able to work from home.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0030",
+      "reason": "parser: could not parse statement clause: 'Jake decides to go to the beach for a fun day' (in sentence: 'Jake decides to go to the beach for a fun day.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0031",
+      "reason": "parser: could not parse statement clause: 'Jeremie wants to go to an amusement park with 3 friends at the end of summer' (in sentence: 'Jeremie wants to go to an amusement park with 3 friends at the end of summer.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0032",
+      "reason": "parser: could not parse statement clause: 'John decides to take up illustration' (in sentence: 'John decides to take up illustration.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0033",
+      "reason": "parser: could not parse statement clause: 'Rachel is 12 years old' (in sentence: 'Rachel is 12 years old, and her grandfather is 7 times her age.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0034",
+      "reason": "parser: could not parse statement clause: 'Georgie is a varsity player on a football team' (in sentence: 'Georgie is a varsity player on a football team.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0035",
+      "reason": "parser: could not parse statement clause: 'She decided to split them among her friends' (in sentence: 'She decided to split them among her friends.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0036",
+      "reason": "parser: could not parse statement clause: 'Monica way studying for an exam' (in sentence: 'Monica way studying for an exam.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0037",
+      "reason": "parser: could not parse statement clause: 'Michael wants to lose 10 pounds by June' (in sentence: 'Michael wants to lose 10 pounds by June.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0038",
+      "reason": "parser: could not parse statement clause: 'In a building, there are a hundred ladies on the first-floor studying' (in sentence: 'In a building, there are a hundred ladies on the first-floor studying.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0039",
+      "reason": "parser: could not parse statement clause: 'At the family reunion, everyone ate too much food and gained weight' (in sentence: 'At the family reunion, everyone ate too much food and gained weight.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0040",
+      "reason": "parser: could not parse statement clause: 'Over several years, Daniel has adopted any stray animals he sees on the side of the road' (in sentence: 'Over several years, Daniel has adopted any stray animals he sees on the side of the road.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0041",
+      "reason": "parser: could not parse statement clause: 'Troy bakes 2 pans of brownies, cut into 16 pieces per pan' (in sentence: 'Troy bakes 2 pans of brownies, cut into 16 pieces per pan.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0042",
+      "reason": "parser: could not parse statement clause: 'Ella has 4 bags with 20 apples in each bag and six bags with 25 apples in each bag' (in sentence: 'Ella has 4 bags with 20 apples in each bag and six bags with 25 apples in each bag.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0043",
+      "reason": "parser: could not parse statement clause: 'Sandra wants to buy some sweets' (in sentence: 'Sandra wants to buy some sweets.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0044",
+      "reason": "parser: could not parse statement clause: 'John invests in a bank and gets 10% simple interest' (in sentence: 'John invests in a bank and gets 10% simple interest.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0045",
+      "reason": "parser: could not parse statement clause: 'Bart fills out surveys to earn money' (in sentence: 'Bart fills out surveys to earn money.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0046",
+      "reason": "parser: could not parse statement clause: 'A school has 100 students' (in sentence: 'A school has 100 students.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0047",
+      "reason": "parser: could not parse statement clause: 'John bakes 12 coconut macaroons, each weighing 5 ounces' (in sentence: 'John bakes 12 coconut macaroons, each weighing 5 ounces.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0048",
+      "reason": "parser: could not parse statement clause: 'Jed collects stamp cards' (in sentence: 'Jed collects stamp cards.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0049",
+      "reason": "parser: could not parse statement clause: 'Malcolm is trying to find the fastest walk to school and is currently comparing two routes' (in sentence: 'Malcolm is trying to find the fastest walk to school and is currently comparing two routes.')",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0050",
+      "reason": "parser: could not parse statement clause: 'Mark does a gig every other day for 2 weeks' (in sentence: 'Mark does a gig every other day for 2 weeks.')",
+      "verdict": "refused"
+    }
+  ],
+  "sample_count": 50,
+  "sample_path": "evals/gsm8k_math/train_sample/v1/cases.jsonl",
+  "schema_version": 1
+}
