@@ -1,0 +1,284 @@
+{"entry_id": "en-units-entry-001", "gloss": "The physical or economic dimension of count."}
+{"entry_id": "en-units-entry-002", "gloss": "The physical or economic dimension of length."}
+{"entry_id": "en-units-entry-003", "gloss": "The physical or economic dimension of time."}
+{"entry_id": "en-units-entry-004", "gloss": "The physical or economic dimension of mass."}
+{"entry_id": "en-units-entry-005", "gloss": "The physical or economic dimension of money."}
+{"entry_id": "en-units-entry-006", "gloss": "The physical or economic dimension of temperature."}
+{"entry_id": "en-units-entry-007", "gloss": "The physical or economic dimension of volume."}
+{"entry_id": "en-units-entry-008", "gloss": "The physical or economic dimension of area."}
+{"entry_id": "en-units-entry-009", "gloss": "The physical or economic dimension of speed."}
+{"entry_id": "en-units-entry-010", "gloss": "The physical or economic dimension of density."}
+{"entry_id": "en-units-entry-011", "gloss": "The physical or economic dimension of frequency."}
+{"entry_id": "en-units-entry-012", "gloss": "The physical or economic dimension of wage."}
+{"entry_id": "en-units-entry-013", "gloss": "The physical or economic dimension of unit_price."}
+{"entry_id": "en-units-entry-014", "gloss": "The unit of measurement item representing item."}
+{"entry_id": "en-units-entry-015", "gloss": "The unit of measurement items representing item."}
+{"entry_id": "en-units-entry-016", "gloss": "The unit of measurement child representing child."}
+{"entry_id": "en-units-entry-017", "gloss": "The unit of measurement children representing child."}
+{"entry_id": "en-units-entry-018", "gloss": "The unit of measurement person representing person."}
+{"entry_id": "en-units-entry-019", "gloss": "The unit of measurement people representing person."}
+{"entry_id": "en-units-entry-020", "gloss": "The unit of measurement mouse representing mouse."}
+{"entry_id": "en-units-entry-021", "gloss": "The unit of measurement mice representing mouse."}
+{"entry_id": "en-units-entry-022", "gloss": "The unit of measurement goose representing goose."}
+{"entry_id": "en-units-entry-023", "gloss": "The unit of measurement geese representing goose."}
+{"entry_id": "en-units-entry-024", "gloss": "The unit of measurement fish representing fish."}
+{"entry_id": "en-units-entry-025", "gloss": "The unit of measurement sheep representing sheep."}
+{"entry_id": "en-units-entry-026", "gloss": "The unit of measurement deer representing deer."}
+{"entry_id": "en-units-entry-027", "gloss": "The unit of measurement woman representing woman."}
+{"entry_id": "en-units-entry-028", "gloss": "The unit of measurement women representing woman."}
+{"entry_id": "en-units-entry-029", "gloss": "The unit of measurement man representing man."}
+{"entry_id": "en-units-entry-030", "gloss": "The unit of measurement men representing man."}
+{"entry_id": "en-units-entry-031", "gloss": "The unit of measurement leaf representing leaf."}
+{"entry_id": "en-units-entry-032", "gloss": "The unit of measurement leaves representing leaf."}
+{"entry_id": "en-units-entry-033", "gloss": "The unit of measurement knife representing knife."}
+{"entry_id": "en-units-entry-034", "gloss": "The unit of measurement knives representing knife."}
+{"entry_id": "en-units-entry-035", "gloss": "The unit of measurement life representing life."}
+{"entry_id": "en-units-entry-036", "gloss": "The unit of measurement lives representing life."}
+{"entry_id": "en-units-entry-037", "gloss": "The unit of measurement inch representing inch."}
+{"entry_id": "en-units-entry-038", "gloss": "The unit of measurement inches representing inch."}
+{"entry_id": "en-units-entry-039", "gloss": "The unit of measurement in representing inch."}
+{"entry_id": "en-units-entry-040", "gloss": "The unit of measurement foot representing foot."}
+{"entry_id": "en-units-entry-041", "gloss": "The unit of measurement feet representing foot."}
+{"entry_id": "en-units-entry-042", "gloss": "The unit of measurement ft representing foot."}
+{"entry_id": "en-units-entry-043", "gloss": "The unit of measurement yard representing yard."}
+{"entry_id": "en-units-entry-044", "gloss": "The unit of measurement yards representing yard."}
+{"entry_id": "en-units-entry-045", "gloss": "The unit of measurement yd representing yard."}
+{"entry_id": "en-units-entry-046", "gloss": "The unit of measurement mile representing mile."}
+{"entry_id": "en-units-entry-047", "gloss": "The unit of measurement miles representing mile."}
+{"entry_id": "en-units-entry-048", "gloss": "The unit of measurement mi representing mile."}
+{"entry_id": "en-units-entry-049", "gloss": "The unit of measurement millimeter representing millimeter."}
+{"entry_id": "en-units-entry-050", "gloss": "The unit of measurement millimeters representing millimeter."}
+{"entry_id": "en-units-entry-051", "gloss": "The unit of measurement mm representing millimeter."}
+{"entry_id": "en-units-entry-052", "gloss": "The unit of measurement centimeter representing centimeter."}
+{"entry_id": "en-units-entry-053", "gloss": "The unit of measurement centimeters representing centimeter."}
+{"entry_id": "en-units-entry-054", "gloss": "The unit of measurement cm representing centimeter."}
+{"entry_id": "en-units-entry-055", "gloss": "The unit of measurement meter representing meter."}
+{"entry_id": "en-units-entry-056", "gloss": "The unit of measurement meters representing meter."}
+{"entry_id": "en-units-entry-057", "gloss": "The unit of measurement m representing meter."}
+{"entry_id": "en-units-entry-058", "gloss": "The unit of measurement kilometer representing kilometer."}
+{"entry_id": "en-units-entry-059", "gloss": "The unit of measurement kilometers representing kilometer."}
+{"entry_id": "en-units-entry-060", "gloss": "The unit of measurement km representing kilometer."}
+{"entry_id": "en-units-entry-061", "gloss": "The unit of measurement second representing second."}
+{"entry_id": "en-units-entry-062", "gloss": "The unit of measurement seconds representing second."}
+{"entry_id": "en-units-entry-063", "gloss": "The unit of measurement sec representing second."}
+{"entry_id": "en-units-entry-064", "gloss": "The unit of measurement minute representing minute."}
+{"entry_id": "en-units-entry-065", "gloss": "The unit of measurement minutes representing minute."}
+{"entry_id": "en-units-entry-066", "gloss": "The unit of measurement min representing minute."}
+{"entry_id": "en-units-entry-067", "gloss": "The unit of measurement hour representing hour."}
+{"entry_id": "en-units-entry-068", "gloss": "The unit of measurement hours representing hour."}
+{"entry_id": "en-units-entry-069", "gloss": "The unit of measurement hr representing hour."}
+{"entry_id": "en-units-entry-070", "gloss": "The unit of measurement day representing day."}
+{"entry_id": "en-units-entry-071", "gloss": "The unit of measurement days representing day."}
+{"entry_id": "en-units-entry-072", "gloss": "The unit of measurement d representing day."}
+{"entry_id": "en-units-entry-073", "gloss": "The unit of measurement week representing week."}
+{"entry_id": "en-units-entry-074", "gloss": "The unit of measurement weeks representing week."}
+{"entry_id": "en-units-entry-075", "gloss": "The unit of measurement wk representing week."}
+{"entry_id": "en-units-entry-076", "gloss": "The unit of measurement month representing month."}
+{"entry_id": "en-units-entry-077", "gloss": "The unit of measurement months representing month."}
+{"entry_id": "en-units-entry-078", "gloss": "The unit of measurement mo representing month."}
+{"entry_id": "en-units-entry-079", "gloss": "The unit of measurement year representing year."}
+{"entry_id": "en-units-entry-080", "gloss": "The unit of measurement years representing year."}
+{"entry_id": "en-units-entry-081", "gloss": "The unit of measurement yr representing year."}
+{"entry_id": "en-units-entry-082", "gloss": "The unit of measurement decade representing decade."}
+{"entry_id": "en-units-entry-083", "gloss": "The unit of measurement decades representing decade."}
+{"entry_id": "en-units-entry-084", "gloss": "The unit of measurement dec representing decade."}
+{"entry_id": "en-units-entry-085", "gloss": "The unit of measurement century representing century."}
+{"entry_id": "en-units-entry-086", "gloss": "The unit of measurement centuries representing century."}
+{"entry_id": "en-units-entry-087", "gloss": "The unit of measurement millennium representing millennium."}
+{"entry_id": "en-units-entry-088", "gloss": "The unit of measurement millennia representing millennium."}
+{"entry_id": "en-units-entry-089", "gloss": "The unit of measurement mil representing millennium."}
+{"entry_id": "en-units-entry-090", "gloss": "The unit of measurement ounce representing ounce."}
+{"entry_id": "en-units-entry-091", "gloss": "The unit of measurement ounces representing ounce."}
+{"entry_id": "en-units-entry-092", "gloss": "The unit of measurement oz representing ounce."}
+{"entry_id": "en-units-entry-093", "gloss": "The unit of measurement pound representing pound."}
+{"entry_id": "en-units-entry-094", "gloss": "The unit of measurement pounds representing pound."}
+{"entry_id": "en-units-entry-095", "gloss": "The unit of measurement lb representing pound."}
+{"entry_id": "en-units-entry-096", "gloss": "The unit of measurement ton representing ton."}
+{"entry_id": "en-units-entry-097", "gloss": "The unit of measurement tons representing ton."}
+{"entry_id": "en-units-entry-098", "gloss": "The unit of measurement t representing ton."}
+{"entry_id": "en-units-entry-099", "gloss": "The unit of measurement gram representing gram."}
+{"entry_id": "en-units-entry-100", "gloss": "The unit of measurement grams representing gram."}
+{"entry_id": "en-units-entry-101", "gloss": "The unit of measurement g representing gram."}
+{"entry_id": "en-units-entry-102", "gloss": "The unit of measurement kilogram representing kilogram."}
+{"entry_id": "en-units-entry-103", "gloss": "The unit of measurement kilograms representing kilogram."}
+{"entry_id": "en-units-entry-104", "gloss": "The unit of measurement kg representing kilogram."}
+{"entry_id": "en-units-entry-105", "gloss": "The unit of measurement milligram representing milligram."}
+{"entry_id": "en-units-entry-106", "gloss": "The unit of measurement milligrams representing milligram."}
+{"entry_id": "en-units-entry-107", "gloss": "The unit of measurement mg representing milligram."}
+{"entry_id": "en-units-entry-108", "gloss": "The unit of measurement tonne representing tonne."}
+{"entry_id": "en-units-entry-109", "gloss": "The unit of measurement tonnes representing tonne."}
+{"entry_id": "en-units-entry-110", "gloss": "The unit of measurement T representing tonne."}
+{"entry_id": "en-units-entry-111", "gloss": "The unit of measurement teaspoon representing teaspoon."}
+{"entry_id": "en-units-entry-112", "gloss": "The unit of measurement teaspoons representing teaspoon."}
+{"entry_id": "en-units-entry-113", "gloss": "The unit of measurement tsp representing teaspoon."}
+{"entry_id": "en-units-entry-114", "gloss": "The unit of measurement tablespoon representing tablespoon."}
+{"entry_id": "en-units-entry-115", "gloss": "The unit of measurement tablespoons representing tablespoon."}
+{"entry_id": "en-units-entry-116", "gloss": "The unit of measurement tbsp representing tablespoon."}
+{"entry_id": "en-units-entry-117", "gloss": "The unit of measurement cup representing cup."}
+{"entry_id": "en-units-entry-118", "gloss": "The unit of measurement cups representing cup."}
+{"entry_id": "en-units-entry-119", "gloss": "The unit of measurement c representing cup."}
+{"entry_id": "en-units-entry-120", "gloss": "The unit of measurement pint representing pint."}
+{"entry_id": "en-units-entry-121", "gloss": "The unit of measurement pints representing pint."}
+{"entry_id": "en-units-entry-122", "gloss": "The unit of measurement pt representing pint."}
+{"entry_id": "en-units-entry-123", "gloss": "The unit of measurement quart representing quart."}
+{"entry_id": "en-units-entry-124", "gloss": "The unit of measurement quarts representing quart."}
+{"entry_id": "en-units-entry-125", "gloss": "The unit of measurement qt representing quart."}
+{"entry_id": "en-units-entry-126", "gloss": "The unit of measurement gallon representing gallon."}
+{"entry_id": "en-units-entry-127", "gloss": "The unit of measurement gallons representing gallon."}
+{"entry_id": "en-units-entry-128", "gloss": "The unit of measurement gal representing gallon."}
+{"entry_id": "en-units-entry-129", "gloss": "The unit of measurement milliliter representing milliliter."}
+{"entry_id": "en-units-entry-130", "gloss": "The unit of measurement milliliters representing milliliter."}
+{"entry_id": "en-units-entry-131", "gloss": "The unit of measurement mL representing milliliter."}
+{"entry_id": "en-units-entry-132", "gloss": "The unit of measurement liter representing liter."}
+{"entry_id": "en-units-entry-133", "gloss": "The unit of measurement liters representing liter."}
+{"entry_id": "en-units-entry-134", "gloss": "The unit of measurement L representing liter."}
+{"entry_id": "en-units-entry-135", "gloss": "The unit of measurement cent representing cent."}
+{"entry_id": "en-units-entry-136", "gloss": "The unit of measurement cents representing cent."}
+{"entry_id": "en-units-entry-137", "gloss": "The unit of measurement ¢ representing cent."}
+{"entry_id": "en-units-entry-138", "gloss": "The unit of measurement dollar representing dollar."}
+{"entry_id": "en-units-entry-139", "gloss": "The unit of measurement dollars representing dollar."}
+{"entry_id": "en-units-entry-140", "gloss": "The unit of measurement $ representing dollar."}
+{"entry_id": "en-units-entry-141", "gloss": "The unit of measurement euro representing euro."}
+{"entry_id": "en-units-entry-142", "gloss": "The unit of measurement euros representing euro."}
+{"entry_id": "en-units-entry-143", "gloss": "The unit of measurement € representing euro."}
+{"entry_id": "en-units-entry-144", "gloss": "The unit of measurement pound sterling representing pound_sterling."}
+{"entry_id": "en-units-entry-145", "gloss": "The unit of measurement pounds sterling representing pound_sterling."}
+{"entry_id": "en-units-entry-146", "gloss": "The unit of measurement £ representing pound_sterling."}
+{"entry_id": "en-units-entry-147", "gloss": "The unit of measurement yen representing yen."}
+{"entry_id": "en-units-entry-148", "gloss": "The unit of measurement ¥ representing yen."}
+{"entry_id": "en-units-entry-149", "gloss": "The unit of measurement peso representing peso."}
+{"entry_id": "en-units-entry-150", "gloss": "The unit of measurement pesos representing peso."}
+{"entry_id": "en-units-entry-151", "gloss": "The unit of measurement ₱ representing peso."}
+{"entry_id": "en-units-entry-152", "gloss": "The unit of measurement degree representing degree."}
+{"entry_id": "en-units-entry-153", "gloss": "The unit of measurement degrees representing degree."}
+{"entry_id": "en-units-entry-154", "gloss": "The unit of measurement ° representing degree."}
+{"entry_id": "en-units-entry-155", "gloss": "The unit of measurement Fahrenheit representing Fahrenheit."}
+{"entry_id": "en-units-entry-156", "gloss": "The unit of measurement °F representing Fahrenheit."}
+{"entry_id": "en-units-entry-157", "gloss": "The unit of measurement Celsius representing Celsius."}
+{"entry_id": "en-units-entry-158", "gloss": "The unit of measurement °C representing Celsius."}
+{"entry_id": "en-units-entry-159", "gloss": "The unit of measurement Kelvin representing Kelvin."}
+{"entry_id": "en-units-entry-160", "gloss": "The unit of measurement K representing Kelvin."}
+{"entry_id": "en-units-entry-161", "gloss": "The unit of measurement square inch representing square_inch."}
+{"entry_id": "en-units-entry-162", "gloss": "The unit of measurement square inches representing square_inch."}
+{"entry_id": "en-units-entry-163", "gloss": "The unit of measurement sq in representing square_inch."}
+{"entry_id": "en-units-entry-164", "gloss": "The unit of measurement square foot representing square_foot."}
+{"entry_id": "en-units-entry-165", "gloss": "The unit of measurement square feet representing square_foot."}
+{"entry_id": "en-units-entry-166", "gloss": "The unit of measurement sq ft representing square_foot."}
+{"entry_id": "en-units-entry-167", "gloss": "The unit of measurement square yard representing square_yard."}
+{"entry_id": "en-units-entry-168", "gloss": "The unit of measurement square yards representing square_yard."}
+{"entry_id": "en-units-entry-169", "gloss": "The unit of measurement sq yd representing square_yard."}
+{"entry_id": "en-units-entry-170", "gloss": "The unit of measurement square mile representing square_mile."}
+{"entry_id": "en-units-entry-171", "gloss": "The unit of measurement square miles representing square_mile."}
+{"entry_id": "en-units-entry-172", "gloss": "The unit of measurement sq mi representing square_mile."}
+{"entry_id": "en-units-entry-173", "gloss": "The unit of measurement square meter representing square_meter."}
+{"entry_id": "en-units-entry-174", "gloss": "The unit of measurement square meters representing square_meter."}
+{"entry_id": "en-units-entry-175", "gloss": "The unit of measurement sq m representing square_meter."}
+{"entry_id": "en-units-entry-176", "gloss": "The unit of measurement square kilometer representing square_kilometer."}
+{"entry_id": "en-units-entry-177", "gloss": "The unit of measurement square kilometers representing square_kilometer."}
+{"entry_id": "en-units-entry-178", "gloss": "The unit of measurement sq km representing square_kilometer."}
+{"entry_id": "en-units-entry-179", "gloss": "The unit of measurement acre representing acre."}
+{"entry_id": "en-units-entry-180", "gloss": "The unit of measurement acres representing acre."}
+{"entry_id": "en-units-entry-181", "gloss": "The unit of measurement ac representing acre."}
+{"entry_id": "en-units-entry-182", "gloss": "The unit of measurement hectare representing hectare."}
+{"entry_id": "en-units-entry-183", "gloss": "The unit of measurement hectares representing hectare."}
+{"entry_id": "en-units-entry-184", "gloss": "The unit of measurement ha representing hectare."}
+{"entry_id": "en-units-entry-185", "gloss": "The unit of measurement mile per hour representing mile_per_hour."}
+{"entry_id": "en-units-entry-186", "gloss": "The unit of measurement miles per hour representing mile_per_hour."}
+{"entry_id": "en-units-entry-187", "gloss": "The unit of measurement mph representing mile_per_hour."}
+{"entry_id": "en-units-entry-188", "gloss": "The unit of measurement kilometer per hour representing kilometer_per_hour."}
+{"entry_id": "en-units-entry-189", "gloss": "The unit of measurement kilometers per hour representing kilometer_per_hour."}
+{"entry_id": "en-units-entry-190", "gloss": "The unit of measurement kph representing kilometer_per_hour."}
+{"entry_id": "en-units-entry-191", "gloss": "The unit of measurement foot per second representing foot_per_second."}
+{"entry_id": "en-units-entry-192", "gloss": "The unit of measurement feet per second representing foot_per_second."}
+{"entry_id": "en-units-entry-193", "gloss": "The unit of measurement fps representing foot_per_second."}
+{"entry_id": "en-units-entry-194", "gloss": "The unit of measurement meter per second representing meter_per_second."}
+{"entry_id": "en-units-entry-195", "gloss": "The unit of measurement meters per second representing meter_per_second."}
+{"entry_id": "en-units-entry-196", "gloss": "The unit of measurement mps representing meter_per_second."}
+{"entry_id": "en-units-entry-197", "gloss": "The unit of measurement pound per cubic foot representing pound_per_cubic_foot."}
+{"entry_id": "en-units-entry-198", "gloss": "The unit of measurement pounds per cubic foot representing pound_per_cubic_foot."}
+{"entry_id": "en-units-entry-199", "gloss": "The unit of measurement lb/cu ft representing pound_per_cubic_foot."}
+{"entry_id": "en-units-entry-200", "gloss": "The unit of measurement gram per cubic centimeter representing gram_per_cubic_centimeter."}
+{"entry_id": "en-units-entry-201", "gloss": "The unit of measurement grams per cubic centimeter representing gram_per_cubic_centimeter."}
+{"entry_id": "en-units-entry-202", "gloss": "The unit of measurement g/cm³ representing gram_per_cubic_centimeter."}
+{"entry_id": "en-units-entry-203", "gloss": "The unit of measurement hertz representing hertz."}
+{"entry_id": "en-units-entry-204", "gloss": "The unit of measurement Hz representing hertz."}
+{"entry_id": "en-units-entry-205", "gloss": "The unit of measurement kilohertz representing kilohertz."}
+{"entry_id": "en-units-entry-206", "gloss": "The unit of measurement kHz representing kilohertz."}
+{"entry_id": "en-units-entry-207", "gloss": "The unit of measurement megahertz representing megahertz."}
+{"entry_id": "en-units-entry-208", "gloss": "The unit of measurement MHz representing megahertz."}
+{"entry_id": "en-units-entry-209", "gloss": "The unit of measurement dollar per hour representing dollar_per_hour."}
+{"entry_id": "en-units-entry-210", "gloss": "The unit of measurement dollars per hour representing dollar_per_hour."}
+{"entry_id": "en-units-entry-211", "gloss": "The unit of measurement $/hr representing dollar_per_hour."}
+{"entry_id": "en-units-entry-212", "gloss": "The unit of measurement cent per hour representing cent_per_hour."}
+{"entry_id": "en-units-entry-213", "gloss": "The unit of measurement cents per hour representing cent_per_hour."}
+{"entry_id": "en-units-entry-214", "gloss": "The unit of measurement ¢/hr representing cent_per_hour."}
+{"entry_id": "en-units-entry-215", "gloss": "The unit of measurement dollar per item representing dollar_per_item."}
+{"entry_id": "en-units-entry-216", "gloss": "The unit of measurement dollars per item representing dollar_per_item."}
+{"entry_id": "en-units-entry-217", "gloss": "The unit of measurement $/item representing dollar_per_item."}
+{"entry_id": "en-units-entry-218", "gloss": "The unit of measurement cent per item representing cent_per_item."}
+{"entry_id": "en-units-entry-219", "gloss": "The unit of measurement cents per item representing cent_per_item."}
+{"entry_id": "en-units-entry-220", "gloss": "The unit of measurement ¢/item representing cent_per_item."}
+{"entry_id": "en-units-entry-221", "gloss": "A container of type box."}
+{"entry_id": "en-units-entry-222", "gloss": "A container of type boxes."}
+{"entry_id": "en-units-entry-223", "gloss": "A container of type bag."}
+{"entry_id": "en-units-entry-224", "gloss": "A container of type bags."}
+{"entry_id": "en-units-entry-225", "gloss": "A container of type pack."}
+{"entry_id": "en-units-entry-226", "gloss": "A container of type packs."}
+{"entry_id": "en-units-entry-227", "gloss": "A container of type basket."}
+{"entry_id": "en-units-entry-228", "gloss": "A container of type baskets."}
+{"entry_id": "en-units-entry-229", "gloss": "A container of type batch."}
+{"entry_id": "en-units-entry-230", "gloss": "A container of type batches."}
+{"entry_id": "en-units-entry-231", "gloss": "A container of type dozen."}
+{"entry_id": "en-units-entry-232", "gloss": "A container of type dozens."}
+{"entry_id": "en-units-entry-233", "gloss": "A container of type group."}
+{"entry_id": "en-units-entry-234", "gloss": "A container of type groups."}
+{"entry_id": "en-units-entry-235", "gloss": "A container of type set."}
+{"entry_id": "en-units-entry-236", "gloss": "A container of type sets."}
+{"entry_id": "en-units-entry-237", "gloss": "A container of type case."}
+{"entry_id": "en-units-entry-238", "gloss": "A container of type cases."}
+{"entry_id": "en-units-entry-239", "gloss": "A container of type pair."}
+{"entry_id": "en-units-entry-240", "gloss": "A container of type pairs."}
+{"entry_id": "en-units-entry-241", "gloss": "A container of type pile."}
+{"entry_id": "en-units-entry-242", "gloss": "A container of type piles."}
+{"entry_id": "en-units-entry-243", "gloss": "A container of type stack."}
+{"entry_id": "en-units-entry-244", "gloss": "A container of type stacks."}
+{"entry_id": "en-units-entry-245", "gloss": "A container of type bunch."}
+{"entry_id": "en-units-entry-246", "gloss": "A container of type bunches."}
+{"entry_id": "en-units-entry-247", "gloss": "A container of type bundle."}
+{"entry_id": "en-units-entry-248", "gloss": "A container of type bundles."}
+{"entry_id": "en-units-entry-249", "gloss": "A container of type carton."}
+{"entry_id": "en-units-entry-250", "gloss": "A container of type cartons."}
+{"entry_id": "en-units-entry-251", "gloss": "A container of type crate."}
+{"entry_id": "en-units-entry-252", "gloss": "A container of type crates."}
+{"entry_id": "en-units-entry-253", "gloss": "A container of type jar."}
+{"entry_id": "en-units-entry-254", "gloss": "A container of type jars."}
+{"entry_id": "en-units-entry-255", "gloss": "A container of type can."}
+{"entry_id": "en-units-entry-256", "gloss": "A container of type cans."}
+{"entry_id": "en-units-entry-257", "gloss": "A container of type bottle."}
+{"entry_id": "en-units-entry-258", "gloss": "A container of type bottles."}
+{"entry_id": "en-units-entry-259", "gloss": "A container of type plate."}
+{"entry_id": "en-units-entry-260", "gloss": "A container of type plates."}
+{"entry_id": "en-units-entry-261", "gloss": "A container of type bowl."}
+{"entry_id": "en-units-entry-262", "gloss": "A container of type bowls."}
+{"entry_id": "en-units-entry-263", "gloss": "A container of type tray."}
+{"entry_id": "en-units-entry-264", "gloss": "A container of type trays."}
+{"entry_id": "en-units-entry-265", "gloss": "A container of type sack."}
+{"entry_id": "en-units-entry-266", "gloss": "A container of type sacks."}
+{"entry_id": "en-units-entry-267", "gloss": "A container of type container."}
+{"entry_id": "en-units-entry-268", "gloss": "A container of type containers."}
+{"entry_id": "en-units-entry-269", "gloss": "A container of type gross."}
+{"entry_id": "en-units-entry-270", "gloss": "The rate connector per."}
+{"entry_id": "en-units-entry-271", "gloss": "The rate connector an."}
+{"entry_id": "en-units-entry-272", "gloss": "The rate connector every."}
+{"entry_id": "en-units-entry-273", "gloss": "The rate connector each."}
+{"entry_id": "en-units-entry-274", "gloss": "The rate connector by."}
+{"entry_id": "en-units-entry-275", "gloss": "The symbol or affix %."}
+{"entry_id": "en-units-entry-276", "gloss": "The symbol or affix ½."}
+{"entry_id": "en-units-entry-277", "gloss": "The symbol or affix ¼."}
+{"entry_id": "en-units-entry-278", "gloss": "The symbol or affix ¾."}
+{"entry_id": "en-units-entry-279", "gloss": "The symbol or affix ⅓."}
+{"entry_id": "en-units-entry-280", "gloss": "The symbol or affix ⅔."}
+{"entry_id": "en-units-entry-281", "gloss": "The symbol or affix ⅛."}
+{"entry_id": "en-units-entry-282", "gloss": "The symbol or affix ⅜."}
+{"entry_id": "en-units-entry-283", "gloss": "The symbol or affix ⅝."}
+{"entry_id": "en-units-entry-284", "gloss": "The symbol or affix ⅞."}

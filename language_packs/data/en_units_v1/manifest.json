@@ -1,0 +1,17 @@
+{
+  "pack_id": "en_units_v1",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_units_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "06216713d356dd88c8a45e70575310d15af5f0b9e943e008f22ab4515cd268bd",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback",
+  "glosses_checksum": "4e08e6996eb7a7e38d254ba8a662a1d4fc21c04bdc3ac8666df1306f41fcbd65",
+  "conversions_checksum": "714a8e67fd1b1d1fa9de52676e61ac12c08b1d11e72decc1fe083bdc49c7da24",
+  "definitional_layer": false,
+  "provenance": "adr-0127:units_pack:2026-05-23"
+}
