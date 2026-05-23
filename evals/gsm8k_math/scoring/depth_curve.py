@@ -2,6 +2,16 @@
 
 Buckets the correct rate of a lane run by reasoning depth
 (number of operations in the ground-truth graph).
+
+Documented buckets per ADR-0119.6 contract:
+``depth_1``, ``depth_2-3``, ``depth_4-5``, ``depth_6-8``.
+
+Depth outside ``1..8`` raises :class:`DepthCurveError` rather than
+silently creating a new bucket — the schema is documented and any
+extension requires an explicit ADR amendment.
+
+Missing case_id in the lane report also raises rather than silently
+treating as ``refused`` — that would mask runner bugs.
 """
 
 from __future__ import annotations
@@ -12,10 +22,18 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# Ensure workspace root is in sys.path when running as script
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-
 from evals.gsm8k_math.runner import LaneReport, run_lane
+
+
+class DepthCurveError(ValueError):
+    """Raised when a case's depth or outcome cannot be classified.
+
+    Reasons:
+        - depth ≥ 9 (out of documented bucket range)
+        - depth == 0 (degenerate)
+        - case_id present in input list but missing from lane_report
+          (runner-output integrity violation)
+    """
 
 
 def compute_depth_curve(cases: list[dict[str, Any]], lane_report: LaneReport) -> dict[str, Any]:
@@ -54,11 +72,20 @@ def compute_depth_curve(cases: list[dict[str, Any]], lane_report: LaneReport) ->
     for case in cases:
         case_id = case["id"]
         depth = case_depths[case_id]
-        outcome = outcomes.get(case_id, "refused")
+
+        # Missing case_id in lane_report is a runner-integrity violation,
+        # not a silent refusal. Fail loud.
+        if case_id not in outcomes:
+            raise DepthCurveError(
+                f"case_id {case_id!r} present in input but missing from "
+                f"lane_report.case_details — runner-output integrity violation"
+            )
+        outcome = outcomes[case_id]
 
         is_correct = 1 if outcome == "correct" else 0
 
-        # Resolve bucket key
+        # Resolve bucket key. Depth outside documented range raises rather
+        # than silently extending the schema.
         if depth == 1:
             b_key = "depth_1"
         elif 2 <= depth <= 3:
@@ -68,16 +95,15 @@ def compute_depth_curve(cases: list[dict[str, Any]], lane_report: LaneReport) ->
         elif 6 <= depth <= 8:
             b_key = "depth_6-8"
         else:
-            b_key = f"depth_{depth}"
-
-        if b_key not in buckets:
-            buckets[b_key] = {"total": 0, "correct": 0, "rate": 0.0}
+            raise DepthCurveError(
+                f"case {case_id!r} has depth {depth}, outside documented "
+                f"range 1..8 (extending the bucket schema requires an ADR "
+                f"amendment to ADR-0119.6)"
+            )
 
         buckets[b_key]["total"] += 1
         buckets[b_key]["correct"] += is_correct
 
-        if depth not in raw_depths:
-            raw_depths[depth] = {"total": 0, "correct": 0}
         raw_depths[depth]["total"] += 1
         raw_depths[depth]["correct"] += is_correct
 
