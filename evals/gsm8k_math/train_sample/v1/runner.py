@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from evals.gsm8k_math.runner import _score_one
+from evals.gsm8k_math.runner import _score_one_candidate_graph
 
 _HERE = Path(__file__).resolve().parent
 _CASES_PATH = _HERE / "cases.jsonl"
@@ -71,7 +71,7 @@ def build_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
     per_case: list[dict[str, str]] = []
     counts = {"correct": 0, "wrong": 0, "refused": 0}
     for raw in cases:
-        outcome = _score_one(_adapt(raw))
+        outcome = _score_one_candidate_graph(_adapt(raw))
         counts[outcome.outcome] += 1
         per_case.append(
             {
