@@ -49,6 +49,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0119](ADR-0119-gsm8k-eval-lane-roadmap.md) | GSM8K Eval Lane Roadmap (Phase 5; decomposes into 5.1..5.8) | Proposed (2026-05-22) |
 | [ADR-0119.1](ADR-0119.1-sealed-holdout-fabrication-control.md) | Seal `fabrication_control` Holdout (ADR-0105 Amendment) | Accepted (2026-05-23) |
 | [ADR-0119.2](ADR-0119.2-gsm8k-eval-corpus-dev-public.md) | GSM8K Eval Corpus Dev/Public Splits | Accepted (2026-05-22) |
+| [ADR-0119.3](ADR-0119.3-lane-runner.md) | gsm8k_math Lane Runner (Phase 5.3) | Accepted (2026-05-22) |
 | [ADR-0119.6](ADR-0119.6-depth-curve-harness.md) | GSM8K Math Depth-Curve Measurement Harness | Accepted (2026-05-23) |
 
 ---
@@ -90,11 +91,11 @@ The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadma
 - `symbolic_logic` Lane-Shape Remap (ADR-0109 amendment) — ADR-0123
 - `systems_software` Audit-Passed Promotion (third successful) — ADR-0124
 - `all_three_pass_rate` Synonym in `inference_shape` (ADR-0109 Amendment) — ADR-0123a
-<<<<<<< HEAD
 - Reasoning-Isolation Perturbation Suite (224 deterministic applicable semantic perturbations; discharges ADR-0114a obligation #5 for the GSM8K-style parser dev lane) — ADR-0125
 - GSM8K Eval Lane Roadmap (Phase 5; decomposes into 5.1..5.8; proposed) — ADR-0119
 - Seal `fabrication_control` Holdout (ADR-0105 Amendment) — ADR-0119.1
 - GSM8K Eval Corpus Dev/Public Splits (200 CORE-original cases; verify.py 200/200; sealed holdout placeholder reserved for ADR-0119.7) — ADR-0119.2
+- gsm8k_math Lane Runner (Phase 5.3; correct/wrong/refused triple; wrong==0 gate; current: 200/200 correct on dev+public) — ADR-0119.3
 - GSM8K Math Depth-Curve Measurement Harness (discharges ADR-0114a Obligation #6 measurement-side) — ADR-0119.6
 
 ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
