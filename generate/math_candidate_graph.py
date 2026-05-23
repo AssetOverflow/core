@@ -154,13 +154,13 @@ def _initial_admissible(ic: CandidateInitial) -> bool:
 
     Same shape as roundtrip_admissible but for the initial-possession
     slot set (entity, anchor, value, unit)."""
-    from generate.math_roundtrip import _tokens, _value_grounds, _token_in
+    from generate.math_roundtrip import _tokens, _value_grounds, _token_in, _unit_grounds
     haystack = _tokens(ic.source_span)
     if not _token_in(ic.matched_anchor, haystack):
         return False
     if not _value_grounds(ic.matched_value_token, haystack):
         return False
-    if not _token_in(ic.matched_unit_token, haystack):
+    if not _unit_grounds(ic.matched_unit_token, ic.source_span, haystack):
         return False
     # Entity token: for multi-word entities ("the boys"), all words
     # must ground. Split + check each.
@@ -172,9 +172,9 @@ def _initial_admissible(ic: CandidateInitial) -> bool:
 
 def _question_admissible(qc: CandidateUnknown) -> bool:
     """Light structural ground-check for question candidates."""
-    from generate.math_roundtrip import _tokens, _token_in
+    from generate.math_roundtrip import _tokens, _token_in, _unit_grounds
     haystack = _tokens(qc.source_span)
-    if not _token_in(qc.matched_unit_token, haystack):
+    if not _unit_grounds(qc.matched_unit_token, qc.source_span, haystack):
         return False
     if qc.matched_entity_token is not None:
         for tok in qc.matched_entity_token.split():

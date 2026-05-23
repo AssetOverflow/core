@@ -92,14 +92,28 @@ class CandidateInitial:
 # math_parser._INITIAL_HAS_RE's ADR-0123a entity slot.
 _ENTITY: Final[str] = r"(?:[A-Z]\w+|[Tt]he\s+\w+)"
 
-# Numeric value: digit run OR word-form integer (one..twelve initially;
-# WORD_NUMBERS table is wider but we cap the regex at the common range
-# for syntactic parsing and let the filter handle ground-truth value
-# equivalence).
+# Numeric value alternation. Listed longest-form-first so the regex
+# engine doesn't truncate on a shorter prefix:
+#   - Money symbol literal: ``$N`` or ``$N.NN`` (1-2 decimal places).
+#     ADR-0131.G.3. ``$N.NNN`` (3+ decimals) deliberately not matched
+#     — refused as out-of-scope so wrong == 0 is preserved.
+#   - Slash fraction literal: ``N/M``. Denominator-zero refused at
+#     resolve time, not regex.
+#   - Hyphenated multi-word cardinal: ``twenty-five``, ``ninety-nine``.
+#     Resolved via :func:`language_packs.numerics_loader.parse_compound_cardinal`.
+#   - Digit run.
+#   - Single-word cardinal (legacy ``WORD_NUMBERS`` set).
+_MONEY_SYMBOL: Final[str] = r"\$\d+(?:\.\d{1,2})?"
+_SLASH_FRACTION: Final[str] = r"\d+/\d+"
+_HYPHENATED_CARDINAL: Final[str] = r"[A-Za-z]+-[A-Za-z]+"
 _WORD_NUM_OPTIONS: Final[str] = "|".join(
     re.escape(w) for w in sorted(WORD_NUMBERS.keys(), key=len, reverse=True)
 )
-_VALUE: Final[str] = rf"(?:\d+|{_WORD_NUM_OPTIONS})"
+_VALUE: Final[str] = (
+    rf"(?:{_MONEY_SYMBOL}|{_SLASH_FRACTION}|"
+    rf"{_HYPHENATED_CARDINAL}|"
+    rf"\d+|{_WORD_NUM_OPTIONS})"
+)
 
 # Verb alternation built from the permissive registry. Pre-compute one
 # pattern per kind so we can attribute matched verbs to candidates.
@@ -121,11 +135,17 @@ _TRANSFER_VERBS_PATTERN: Final[str] = _verbs_pattern(TRANSFER_VERBS)
 _INITIAL_HAS_RE: Final[re.Pattern[str]] = re.compile(
     rf"^(?P<entity>{_ENTITY})\s+"
     rf"(?P<anchor>has|have)\s+"
-    rf"(?P<value>{_VALUE})\s+"
-    r"(?P<unit>\w+)"
+    rf"(?P<value>{_VALUE})"
+    # ADR-0131.G.3: unit slot is optional. Money-symbol value literals
+    # (``$40``) carry their unit implicitly (``cent``); a missing unit
+    # slot is admissible IFF the value resolves with a unit override.
+    # Non-money values without a unit slot are refused at resolve time.
+    r"(?:\s+(?P<unit>\w+))?"
     # ADR-0127 substance qualifier: "Sam has 5 feet of rope" — the
     # 'of <NP>' tail is grammatically real but arithmetically inert.
-    r"(?:\s+of\s+.+)?"
+    # ADR-0131.G.3: 'in <NP>' is also discardable
+    # ("Bob has $40 in savings"; "Bob has $40 in his wallet").
+    r"(?:\s+(?:of|in|for|with)\s+.+)?"
     r"\s*\.?$"
 )
 
@@ -156,10 +176,79 @@ def _normalize_entity(raw: str) -> str:
     return e
 
 
-def _resolve_value(value_token: str) -> int:
-    if value_token.isdigit():
-        return int(value_token)
-    return WORD_NUMBERS[value_token.lower()]
+@dataclass(frozen=True, slots=True)
+class _ResolvedValue:
+    """Resolved value-slot reading.
+
+    ADR-0131.G.3 widens the value slot beyond integer + single-word
+    cardinal to include money literals (``$N`` / ``$N.NN``), slash
+    fractions (``N/M``), and hyphenated multi-word cardinals
+    (``twenty-five``). Money literals carry an implicit canonical unit
+    (``cent``); when set, ``unit_override`` replaces the unit slot the
+    regex captured (or fills it when the unit slot is absent).
+    """
+
+    value: int | float
+    unit_override: str | None
+
+
+# Money: canonical normalization to integer cents (en_units_v1
+# ``canonical_unit`` for the ``money`` dimension is ``cent``).
+_MONEY_UNIT: Final[str] = "cents"
+
+
+def _resolve_value(value_token: str) -> _ResolvedValue | None:
+    """Resolve a value-slot token into a numeric value + optional unit
+    override. Returns ``None`` on refusal (indefinite quantifier,
+    division-by-zero in slash fraction, unrecognized hyphenated form,
+    unparseable money).
+
+    Refusal at this layer is first-class: a ``None`` upstream means the
+    candidate is not emitted, which preserves ``wrong == 0`` per
+    ADR-0114a Obligation #4.
+    """
+    if not value_token:
+        return None
+    t = value_token.strip()
+    # Money symbol literal: $N or $N.NN.
+    if t.startswith("$"):
+        body = t[1:]
+        if re.fullmatch(r"\d+", body):
+            return _ResolvedValue(int(body) * 100, _MONEY_UNIT)
+        if re.fullmatch(r"\d+\.\d{1,2}", body):
+            # round() avoids float drift: $2.50 → 250, not 249 or 251.
+            return _ResolvedValue(int(round(float(body) * 100)), _MONEY_UNIT)
+        return None  # $N.NNN (3+ decimals) refused — out-of-scope.
+    # Slash fraction literal: N/M with M > 0.
+    if "/" in t:
+        m = re.fullmatch(r"(\d+)/(\d+)", t)
+        if m is None:
+            return None
+        num, den = int(m.group(1)), int(m.group(2))
+        if den == 0:
+            return None  # division-by-zero refused.
+        if num % den == 0:
+            return _ResolvedValue(num // den, None)
+        return _ResolvedValue(num / den, None)
+    # Digit run.
+    if t.isdigit():
+        return _ResolvedValue(int(t), None)
+    # Indefinite quantifier (ADR-0128.4) — refuse, never guess.
+    if _is_indefinite_quantifier(t):
+        return None
+    # Hyphenated multi-word cardinal: twenty-five, ninety-nine, etc.
+    if "-" in t:
+        from language_packs.numerics_loader import parse_compound_cardinal
+
+        parsed = parse_compound_cardinal(t)
+        if parsed is None:
+            return None  # Unrecognized hyphenated form refused.
+        return _ResolvedValue(parsed, None)
+    # Single-word cardinal (legacy WORD_NUMBERS table).
+    lower = t.lower()
+    if lower in WORD_NUMBERS:
+        return _ResolvedValue(WORD_NUMBERS[lower], None)
+    return None
 
 
 def _is_indefinite_quantifier(token: str) -> bool:
@@ -180,6 +269,25 @@ def _is_indefinite_quantifier(token: str) -> bool:
     return False
 
 
+def _money_unit_normalization(
+    value: int | float, unit: str | None
+) -> tuple[int | float, str | None]:
+    """ADR-0131.G.3 — normalize ``dollar``/``dollars`` surface unit to the
+    canonical money unit (``cent``).
+
+    ``en_units_v1`` pins ``cent`` as ``canonical_unit`` for the ``money``
+    dimension; ``dollar`` is convenience surface. A ``dollar`` value is
+    100 ``cent``. Done at the candidate-build site so every money-bearing
+    path normalizes uniformly (Quantity equality is exact — mixing
+    ``cent`` and ``dollar`` units would silently break arithmetic).
+    """
+    if unit is None:
+        return value, unit
+    if unit.lower() in ("dollar", "dollars"):
+        return value * 100, _MONEY_UNIT
+    return value, unit
+
+
 def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
     """Return all admissible initial-possession candidates for ``sentence``.
 
@@ -187,9 +295,14 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
       1. "<Entity> has <N> <unit> [of <substance>]" — canonical.
       2. "There are <N> <unit> [in <place>]" — implicit-subject shape.
 
-    ADR-0128.4: if the value slot resolves to an indefinite quantifier
-    (`some kids`, `many things`), no candidate is emitted (refusal
-    preserves wrong == 0).
+    Value-slot widenings (ADR-0131.G.3) apply to both shapes via
+    :func:`_resolve_value`: money literals (``$N`` / ``$N.NN``), slash
+    fractions (``N/M``), hyphenated multi-word cardinals (``twenty-five``).
+
+    Refusal-first: indefinite quantifiers, division-by-zero fractions,
+    unrecognized compound forms, and money literals with >2 decimals
+    all return ``None`` from :func:`_resolve_value` and emit no
+    candidate (preserves ``wrong == 0`` per ADR-0114a Obligation #4).
     """
     s = sentence.strip().rstrip(".")
     out: list[CandidateInitial] = []
@@ -197,32 +310,53 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
     m = _INITIAL_HAS_RE.match(s)
     if m is not None:
         value_raw = m.group("value")
-        if not _is_indefinite_quantifier(value_raw):
+        rv = _resolve_value(value_raw)
+        if rv is not None:
             entity = _normalize_entity(m.group("entity"))
-            value = _resolve_value(value_raw)
-            unit_raw = m.group("unit")
-            unit = _canonicalize_unit(unit_raw)
-            out.append(
-                CandidateInitial(
-                    initial=InitialPossession(
-                        entity=entity,
-                        quantity=Quantity(value=value, unit=unit),
-                    ),
-                    source_span=sentence,
-                    matched_anchor=m.group("anchor"),
-                    matched_value_token=value_raw,
-                    matched_unit_token=unit_raw,
-                    matched_entity_token=m.group("entity"),
+            unit_raw = m.group("unit")  # may be None when value is money symbol
+            # Unit precedence: explicit override from value (money symbol)
+            # wins over the regex's unit slot. The unit slot is required
+            # for non-money values; if both are absent the candidate
+            # cannot be constructed.
+            resolved_unit: str | None
+            if rv.unit_override is not None:
+                resolved_unit = rv.unit_override
+            elif unit_raw is not None:
+                resolved_unit = _canonicalize_unit(unit_raw)
+            else:
+                resolved_unit = None
+            if resolved_unit is not None:
+                value, final_unit = _money_unit_normalization(rv.value, resolved_unit)
+                assert final_unit is not None
+                out.append(
+                    CandidateInitial(
+                        initial=InitialPossession(
+                            entity=entity,
+                            quantity=Quantity(value=value, unit=final_unit),
+                        ),
+                        source_span=sentence,
+                        matched_anchor=m.group("anchor"),
+                        matched_value_token=value_raw,
+                        matched_unit_token=unit_raw if unit_raw is not None else final_unit,
+                        matched_entity_token=m.group("entity"),
+                    )
                 )
-            )
 
     m2 = _INITIAL_THERE_ARE_RE.match(s)
     if m2 is not None:
         value_raw = m2.group("value")
-        if not _is_indefinite_quantifier(value_raw):
+        rv = _resolve_value(value_raw)
+        if rv is not None:
             unit_raw = m2.group("unit")
-            unit = _canonicalize_unit(unit_raw)
-            value = _resolve_value(value_raw)
+            assert unit_raw is not None  # there-are regex always captures unit slot
+            if rv.unit_override is not None:
+                unit_str: str = rv.unit_override
+            else:
+                unit_str = _canonicalize_unit(unit_raw)
+            v_norm, u_norm = _money_unit_normalization(rv.value, unit_str)
+            assert u_norm is not None
+            value: int | float = v_norm
+            unit: str = u_norm
             place = m2.group("place")
             # When a 'in <place>' phrase is present, treat the place as
             # the implicit entity. Otherwise use the unit's plural as
@@ -336,15 +470,28 @@ def _build_op_candidate(
     m: re.Match[str], kind: str, source: str
 ) -> CandidateOperation | None:
     """Build a CandidateOperation from a regex match. Returns None if
-    the match lacks a required slot (e.g. unit token absent — P2 does
-    not emit unit-inherited candidates)."""
-    unit_raw = m.group("unit")
-    if unit_raw is None:
+    the value cannot be resolved or if no unit can be determined
+    (unit slot absent AND value carries no implicit unit override).
+    """
+    value_raw = m.group("value")
+    rv = _resolve_value(value_raw)
+    if rv is None:
         return None
-    unit = _canonicalize_unit(unit_raw)
+    unit_raw = m.group("unit")
+    # ADR-0131.G.3: a money-symbol value carries its unit implicitly
+    # (override 'cent'); for plain-numeric values, the unit slot must
+    # be present.
+    if rv.unit_override is not None:
+        unit: str = rv.unit_override
+    elif unit_raw is not None:
+        unit = _canonicalize_unit(unit_raw)
+    else:
+        return None  # P2 does not emit unit-inherited candidates.
     subject = _normalize_entity(m.group("subject"))
     verb = m.group("verb").lower()
-    value = _resolve_value(m.group("value"))
+    value, unit_normalized = _money_unit_normalization(rv.value, unit)
+    assert unit_normalized is not None
+    unit = unit_normalized
     target_raw = m.group("target") if "target" in m.groupdict() else None
     target = target_raw if target_raw is not None else None
 
@@ -366,7 +513,7 @@ def _build_op_candidate(
         source_span=source,
         matched_verb=verb,
         matched_value_token=m.group("value"),
-        matched_unit_token=unit_raw,
+        matched_unit_token=unit_raw if unit_raw is not None else unit,
         matched_actor_token=m.group("subject"),
         matched_target_token=target,
     )

@@ -272,6 +272,30 @@ def _token_in(needle: str, haystack_tokens: frozenset[str]) -> bool:
     return needle.lower() in haystack_tokens
 
 
+def _unit_grounds(
+    unit_token: str,
+    source_span: str,
+    haystack_tokens: frozenset[str],
+) -> bool:
+    """A unit token grounds if it appears as a word token in source.
+
+    ADR-0131.G.3 widening: when the canonical money unit ``cent`` is
+    claimed, the source's ``$`` symbol counts as grounding evidence —
+    the word-boundary tokenizer strips ``$`` so it must be inspected
+    on the raw source span rather than the token set. Similarly for
+    ``dollar``: an author may write either ``$N`` or ``N dollars``;
+    both ground a money unit.
+    """
+    if _token_in(unit_token, haystack_tokens):
+        return True
+    if unit_token.lower() in ("cent", "cents"):
+        if "$" in source_span:
+            return True
+        if "dollar" in haystack_tokens or "dollars" in haystack_tokens:
+            return True
+    return False
+
+
 def _value_grounds(value_token: str, haystack_tokens: frozenset[str]) -> bool:
     """A numeric value grounds if its surface token appears, OR if the token
     is a digit-string and any equivalent word-form appears, OR if it's a
@@ -282,7 +306,42 @@ def _value_grounds(value_token: str, haystack_tokens: frozenset[str]) -> bool:
     1-12 to the full pack cardinal range (0-1000+ plus compound rule). The
     hard-coded WORD_NUMBERS remains as a fast path and as a fallback if
     the pack is unavailable; the pack adds, never replaces.
+
+    ADR-0131.G.3 widens the literal-class grounding:
+      - Money symbol ``$N`` / ``$N.NN`` grounds when every digit run on
+        either side of the optional decimal appears as a token in the
+        source. The ``$`` itself is dropped by the word-boundary
+        tokenizer; what survives is exactly the digit form an author
+        would write.
+      - Slash fraction ``N/M`` grounds when both numerator and
+        denominator digit tokens appear.
+      - Hyphenated multi-word cardinal (``twenty-five``) grounds when
+        every component lemma is a token (the tokenizer splits on
+        hyphens), OR the compound's integer value's digit form appears.
     """
+    # ADR-0131.G.3 widenings (handled first; the trailing existing path
+    # would never recognize these surface shapes).
+    if value_token.startswith("$"):
+        body = value_token[1:]
+        parts = [p for p in body.split(".") if p]
+        return bool(parts) and all(p in haystack_tokens for p in parts)
+    if "/" in value_token:
+        m = re.fullmatch(r"(\d+)/(\d+)", value_token)
+        if m is not None:
+            return m.group(1) in haystack_tokens and m.group(2) in haystack_tokens
+    if "-" in value_token and not value_token[0].isdigit():
+        try:
+            from language_packs.numerics_loader import parse_compound_cardinal
+            parsed = parse_compound_cardinal(value_token)
+            if parsed is not None:
+                components = [c for c in value_token.lower().split("-") if c]
+                if all(c in haystack_tokens for c in components):
+                    return True
+                if str(parsed) in haystack_tokens:
+                    return True
+        except Exception:
+            pass
+
     if _token_in(value_token, haystack_tokens):
         return True
     lowered = value_token.lower()
@@ -366,7 +425,7 @@ def roundtrip_admissible(c: CandidateOperation) -> bool:
     #    for comparison operands without explicit unit phrasing
     #    ("Sam has twice as many as Tom").
     if c.matched_unit_token:
-        if not _token_in(c.matched_unit_token, haystack):
+        if not _unit_grounds(c.matched_unit_token, c.source_span, haystack):
             return False
     else:
         if not isinstance(c.op.operand, Comparison):
