@@ -1,0 +1,482 @@
+{
+  "adr": "0114a.10",
+  "cases_skipped_unsolved": 25,
+  "cases_total": 50,
+  "cases_validated": 25,
+  "cases_violated": 0,
+  "distinct_lemma_ids_in_pack": [
+    "en_arithmetic_v1:add",
+    "en_arithmetic_v1:apply_rate",
+    "en_arithmetic_v1:compare_additive",
+    "en_arithmetic_v1:compare_multiplicative",
+    "en_arithmetic_v1:divide",
+    "en_arithmetic_v1:multiply",
+    "en_arithmetic_v1:subtract",
+    "en_arithmetic_v1:transfer"
+  ],
+  "distinct_lemma_ids_observed": [
+    "en_arithmetic_v1:add",
+    "en_arithmetic_v1:compare_additive",
+    "en_arithmetic_v1:compare_multiplicative",
+    "en_arithmetic_v1:subtract",
+    "en_arithmetic_v1:transfer"
+  ],
+  "lane_id": "B3_bounded_grammar",
+  "obligation_10_passed": true,
+  "pack_id": "en_arithmetic_v1",
+  "per_case": [
+    {
+      "case_id": "b3-001",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:add"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-002",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:subtract"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-003",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:transfer"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-004",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-005",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-006",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-007",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:compare_additive"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-008",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:compare_additive"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-009",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:compare_multiplicative"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-010",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:compare_multiplicative"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-011",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:compare_multiplicative"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-012",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:subtract"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-013",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:subtract"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-014",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:add"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-015",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:add",
+        "en_arithmetic_v1:subtract"
+      ],
+      "reason": "",
+      "step_count": 2,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-016",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:add"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-017",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:add"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-018",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:add"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-019",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-020",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:add"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-021",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:subtract"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-022",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:subtract"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-023",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:subtract"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-024",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:subtract"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-025",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:subtract"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-026",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-027",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:transfer"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-028",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-029",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-030",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-031",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-032",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-033",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-034",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-035",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-036",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:add"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-037",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:subtract"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-038",
+      "outcome": "validated",
+      "pack_lemma_ids": [
+        "en_arithmetic_v1:transfer"
+      ],
+      "reason": "",
+      "step_count": 1,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-039",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-040",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "pipeline did not produce a trace",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-041",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "case expected to refuse",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-042",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "case expected to refuse",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-043",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "case expected to refuse",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-044",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "case expected to refuse",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-045",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "case expected to refuse",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-046",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "case expected to refuse",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-047",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "case expected to refuse",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-048",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "case expected to refuse",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-049",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "case expected to refuse",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    },
+    {
+      "case_id": "b3-050",
+      "outcome": "skipped_unsolved",
+      "pack_lemma_ids": [],
+      "reason": "case expected to refuse",
+      "step_count": 0,
+      "unresolved_lemma_ids": []
+    }
+  ],
+  "refusal_reason": "",
+  "schema_version": 1
+}
