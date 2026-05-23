@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
+
 import pytest
 
-from evals.gsm8k_math.runner import run_lane
-from evals.gsm8k_math.scoring.depth_curve import compute_depth_curve
+from evals.gsm8k_math.runner import LaneReport, run_lane
+from evals.gsm8k_math.scoring.depth_curve import (
+    DepthCurveError,
+    compute_depth_curve,
+)
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -128,3 +133,47 @@ def test_curve_flatness_ratio() -> None:
     # The test confirms that the harness CAN compute and report the ratio
     assert isinstance(ratio, float)
     assert ratio >= 0.0
+
+
+# -------------------------------------------------------------------
+# ADR-0119.6 follow-up: explicit-refusal tests
+# -------------------------------------------------------------------
+
+
+def test_depth_curve_refuses_case_missing_from_lane_report() -> None:
+    """Runner-output integrity: every input case_id must appear in lane_report."""
+    cases = _DEV_CASES[:3]
+    real_report = run_lane(cases)
+    # Drop one case from the report → harness must raise, not silently fallback
+    stripped = LaneReport()
+    stripped.metrics = real_report.metrics
+    stripped.case_details = real_report.case_details[1:]  # drop first
+    with pytest.raises(DepthCurveError, match="missing from lane_report"):
+        compute_depth_curve(cases, stripped)
+
+
+def test_depth_curve_refuses_depth_outside_documented_range() -> None:
+    """Depth >= 9 raises rather than silently extending the bucket schema."""
+    # Synthesize a case with depth 9
+    deep_case = {
+        "id": "synthetic-deep-01",
+        "problem": "synthetic",
+        "expected_answer": 0,
+        "expected_unit": "x",
+        "ground_truth_graph": {
+            "entities": ["X"],
+            "initial_state": [],
+            "operations": [
+                {"actor": "X", "kind": "add", "operand": {"unit": "x", "value": 1}}
+                for _ in range(9)
+            ],
+            "unknown": {"entity": "X", "unit": "x"},
+        },
+    }
+    report = LaneReport()
+    report.metrics = {"cases_total": 1, "correct": 0, "wrong": 0, "refused": 1,
+                      "correct_rate": 0.0, "wrong_rate": 0.0, "refused_rate": 1.0,
+                      "wrong_count_is_zero": True, "overall_pass": True}
+    report.case_details = [{"case_id": "synthetic-deep-01", "outcome": "refused"}]
+    with pytest.raises(DepthCurveError, match="outside documented range"):
+        compute_depth_curve([deep_case], report)
