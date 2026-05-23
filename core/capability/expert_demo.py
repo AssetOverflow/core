@@ -63,6 +63,10 @@ LANE_SHAPE_REGISTRY: dict[str, str] = {
     "koine_greek_fluency": "accuracy_shape",
     "inference_closure": "inference_shape",
     "fabrication_control": "refusal_shape",
+    # ADR-0119.8 — gsm8k_math capability lane. Distinct shape because
+    # the gate composes ``wrong == 0`` (Obligation #4) with
+    # ``correct + refused == total`` and ``overall_pass == True``.
+    "gsm8k_math": "gsm8k_capability_shape",
 }
 
 
@@ -160,11 +164,60 @@ def _check_refusal_shape(lane_id: str, metrics: Mapping[str, Any]) -> tuple[bool
     return True, ""
 
 
+def _check_gsm8k_capability_shape(
+    lane_id: str, metrics: Mapping[str, Any]
+) -> tuple[bool, str]:
+    """ADR-0119.8 — overall gsm8k_math lane gate.
+
+    The lane runner (ADR-0119.3) emits a per-split metrics block with:
+
+    - ``cases_total`` (int)
+    - ``correct`` (int)
+    - ``wrong`` (int)        — must be 0 per ADR-0114a Obligation #4
+    - ``refused`` (int)
+    - ``wrong_count_is_zero`` (bool)
+    - ``overall_pass`` (bool) — ``wrong == 0 AND correct + refused == total``
+
+    The checker validates all three load-bearing constraints. A missing
+    field, a nonzero wrong count, or an arithmetic discrepancy refuses
+    the lane.
+    """
+    for required in ("cases_total", "correct", "wrong", "refused"):
+        if required not in metrics:
+            return False, (
+                f"lane {lane_id!r} missing required metric {required!r}"
+            )
+    total = int(metrics["cases_total"] or 0)
+    correct = int(metrics["correct"] or 0)
+    wrong = int(metrics["wrong"] or 0)
+    refused = int(metrics["refused"] or 0)
+
+    if total <= 0:
+        return False, f"lane {lane_id!r} cases_total={total} (must be > 0)"
+    if wrong != 0:
+        return False, (
+            f"lane {lane_id!r} wrong={wrong} (must be 0 — ADR-0114a Obligation #4)"
+        )
+    if correct + refused != total:
+        return False, (
+            f"lane {lane_id!r} correct({correct}) + refused({refused}) "
+            f"!= cases_total({total}); outcome accounting incomplete"
+        )
+    overall_pass = metrics.get("overall_pass")
+    if overall_pass is not None and not bool(overall_pass):
+        return False, (
+            f"lane {lane_id!r} overall_pass is False despite "
+            f"wrong=0 and accounting balanced"
+        )
+    return True, ""
+
+
 SHAPE_CHECKERS: dict[str, Any] = {
     "cognition_shape": _check_cognition_shape,
     "accuracy_shape": _check_accuracy_shape,
     "inference_shape": _check_inference_shape,
     "refusal_shape": _check_refusal_shape,
+    "gsm8k_capability_shape": _check_gsm8k_capability_shape,
 }
 
 
