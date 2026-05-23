@@ -114,8 +114,9 @@ _ENTITY: Final[str] = r"(?:[A-Z]\w+|[Tt]he\s+\w+)"
 
 # Numeric value alternation. Listed longest-form-first so the regex
 # engine doesn't truncate on a shorter prefix:
-#   - Money symbol literal: ``$N`` or ``$N.NN`` (1-2 decimal places).
-#     ADR-0131.G.3. ``$N.NNN`` (3+ decimals) deliberately not matched
+#   - Money symbol literal: ``$N`` / ``$N.NN`` (1-2 decimal places) plus
+#     multi-currency symbols ``¢N`` ``€N`` ``£N`` ``¥N`` ``₱N``.
+#     ADR-0131.G.3.1. ``$N.NNN`` (3+ decimals) deliberately not matched
 #     — refused as out-of-scope so wrong == 0 is preserved.
 #   - Slash fraction literal: ``N/M``. Denominator-zero refused at
 #     resolve time, not regex.
@@ -123,7 +124,13 @@ _ENTITY: Final[str] = r"(?:[A-Z]\w+|[Tt]he\s+\w+)"
 #     Resolved via :func:`language_packs.numerics_loader.parse_compound_cardinal`.
 #   - Digit run.
 #   - Single-word cardinal (legacy ``WORD_NUMBERS`` set).
-_MONEY_SYMBOL: Final[str] = r"\$\d+(?:\.\d{1,2})?"
+
+# ADR-0131.G.3.1: multi-currency symbol group. ¢ and $ are the only
+# non-decimal currencies (sub-unit is the unit itself for ¢; $ converts
+# to cents). €, £, ₱ admit 1-2 decimal places; ¥ is integer-only.
+_MONEY_SYMBOL: Final[str] = (
+    r"(?:\$\d+(?:\.\d{1,2})?|¢\d+|€\d+(?:\.\d{1,2})?|£\d+(?:\.\d{1,2})?|¥\d+|₱\d+(?:\.\d{1,2})?)"
+)
 _SLASH_FRACTION: Final[str] = r"\d+/\d+"
 _HYPHENATED_CARDINAL: Final[str] = r"[A-Za-z]+-[A-Za-z]+"
 _WORD_NUM_OPTIONS: Final[str] = "|".join(
@@ -160,6 +167,10 @@ _INITIAL_HAS_RE: Final[re.Pattern[str]] = re.compile(
     # (``$40``) carry their unit implicitly (``cent``); a missing unit
     # slot is admissible IFF the value resolves with a unit override.
     # Non-money values without a unit slot are refused at resolve time.
+    # ADR-0131.G.3.1 axis 4: optional adjective between value and unit
+    # ("five full boxes" — adjective 'full' is consumed and discarded;
+    # the unit head noun 'boxes' becomes the unit slot).
+    r"(?:\s+(?:full|loose|empty|whole|broken|new|old|small|large|fresh|raw|flat))?"
     r"(?:\s+(?P<unit>\w+))?"
     # ADR-0127 substance qualifier: "Sam has 5 feet of rope" — the
     # 'of <NP>' tail is grammatically real but arithmetically inert.
@@ -182,6 +193,45 @@ _INITIAL_THERE_ARE_RE: Final[re.Pattern[str]] = re.compile(
     rf"(?P<value>{_VALUE})\s+"
     r"(?P<unit>\w+)"
     r"(?:\s+in\s+(?P<place>[A-Za-z]\w*(?:\s+\w+)?))?"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
+)
+
+# ADR-0131.G.3.1 — Axis 1: fraction-of-unit initial possession.
+# "Bob has 3/4 of a cup." — the fraction is the value; "of a/an <unit>"
+# carries the unit. The main _INITIAL_HAS_RE treats "of <NP>" as a
+# discardable substance qualifier and emits no candidate (unit slot absent
+# and no unit_override); this separate pattern extracts the unit from
+# the "of" phrase explicitly.
+_INITIAL_FRACTION_OF_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<entity>{_ENTITY})\s+"
+    rf"(?P<anchor>has|have)\s+"
+    rf"(?P<value>{_SLASH_FRACTION})\s+"
+    r"of\s+(?:a\s+|an\s+)?(?P<unit>\w+)"
+    r"(?:\s+of\s+.+)?"   # optional further substance qualifier
+    r"\s*\.?$"
+)
+
+# ADR-0131.G.3.1 — Axis 3: multi-token space-separated cardinal.
+# "Bob has one hundred apples." — parse_compound_cardinal already handles
+# the value; this pattern captures it before the unit-slot boundary.
+# Approach (a) chosen over (b) (_VALUE widening) because greedy cardinal-
+# word matching inside _VALUE would span the unit slot and require
+# look-ahead unwinding; a separate dedicated extractor is narrower and
+# leaves _VALUE unchanged for all other paths.
+# Build cardinal-word alternation from the WORD_NUMBERS table.
+_CARDINAL_WORD_OPTIONS: Final[str] = "|".join(
+    re.escape(w) for w in sorted(WORD_NUMBERS.keys(), key=len, reverse=True)
+)
+# At least two cardinal words (single-word is handled by _VALUE/_resolve_value).
+_MULTI_WORD_CARDINAL_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<entity>{_ENTITY})\s+"
+    rf"(?P<anchor>has|have)\s+"
+    rf"(?P<value>(?:{_CARDINAL_WORD_OPTIONS})(?:\s+(?:{_CARDINAL_WORD_OPTIONS}))+)"
+    # Optional adjective (axis 4 compound) between cardinal and unit.
+    r"(?:\s+(?:full|loose|empty|whole|broken|new|old|small|large|fresh|raw|flat))?"
+    r"\s+(?P<unit>\w+)"
+    r"(?:\s+(?:of|in|for|with)\s+.+)?"
     r"\s*\.?$",
     flags=re.IGNORECASE,
 )
@@ -216,6 +266,46 @@ class _ResolvedValue:
 # ``canonical_unit`` for the ``money`` dimension is ``cent``).
 _MONEY_UNIT: Final[str] = "cents"
 
+# ADR-0131.G.3.1: multi-currency symbol → (unit_surface, factor_to_unit).
+# ``factor_to_unit`` is the multiplier applied to the face value to
+# produce the canonical unit. For USD ($): face is dollars → *100 cents.
+# For ¢: face is already cents → *1. For all others the pack has no
+# sub-unit defined, so face == canonical (factor=1) and the unit is the
+# pack's plural surface form.
+_CURRENCY_SYMBOLS: Final[dict[str, tuple[str, float]]] = {
+    "$":  ("cents",           100.0),   # dollar → 100 cents
+    "¢":  ("cents",             1.0),   # cent already canonical
+    "€":  ("euros",             1.0),
+    "£":  ("pounds sterling",   1.0),
+    "¥":  ("yen",               1.0),
+    "₱":  ("pesos",             1.0),
+}
+
+
+def _resolve_currency(t: str) -> _ResolvedValue | None:
+    """Resolve a currency-symbol value token (``$N``, ``¢N``, ``€N.NN``, …).
+
+    Returns ``None`` when the format is out-of-scope (e.g. 3+ decimal places).
+    Yen (``¥``) is integer-only (no sub-unit in en_units_v1).
+    """
+    for sym, (unit_surface, factor) in _CURRENCY_SYMBOLS.items():
+        if not t.startswith(sym):
+            continue
+        body = t[len(sym):]
+        if re.fullmatch(r"\d+", body):
+            raw_val = int(body)
+            final = int(raw_val * factor) if factor == int(factor) else raw_val * factor
+            return _ResolvedValue(final, unit_surface)
+        # ¥ is integer-only.
+        if sym == "¥":
+            return None
+        if re.fullmatch(r"\d+\.\d{1,2}", body):
+            raw_val = float(body)
+            result = raw_val * factor
+            return _ResolvedValue(int(round(result)) if factor != 1.0 else raw_val, unit_surface)
+        return None  # 3+ decimals refused for all currency symbols
+    return None
+
 
 def _resolve_value(value_token: str) -> _ResolvedValue | None:
     """Resolve a value-slot token into a numeric value + optional unit
@@ -230,15 +320,9 @@ def _resolve_value(value_token: str) -> _ResolvedValue | None:
     if not value_token:
         return None
     t = value_token.strip()
-    # Money symbol literal: $N or $N.NN.
-    if t.startswith("$"):
-        body = t[1:]
-        if re.fullmatch(r"\d+", body):
-            return _ResolvedValue(int(body) * 100, _MONEY_UNIT)
-        if re.fullmatch(r"\d+\.\d{1,2}", body):
-            # round() avoids float drift: $2.50 → 250, not 249 or 251.
-            return _ResolvedValue(int(round(float(body) * 100)), _MONEY_UNIT)
-        return None  # $N.NNN (3+ decimals) refused — out-of-scope.
+    # Multi-currency symbols (ADR-0131.G.3.1): $, ¢, €, £, ¥, ₱.
+    if t and t[0] in _CURRENCY_SYMBOLS:
+        return _resolve_currency(t)
     # Slash fraction literal: N/M with M > 0.
     if "/" in t:
         m = re.fullmatch(r"(\d+)/(\d+)", t)
@@ -292,19 +376,28 @@ def _is_indefinite_quantifier(token: str) -> bool:
 def _money_unit_normalization(
     value: int | float, unit: str | None
 ) -> tuple[int | float, str | None]:
-    """ADR-0131.G.3 — normalize ``dollar``/``dollars`` surface unit to the
-    canonical money unit (``cent``).
+    """ADR-0131.G.3 — normalize money word-form surface units to pack canonical.
 
     ``en_units_v1`` pins ``cent`` as ``canonical_unit`` for the ``money``
-    dimension; ``dollar`` is convenience surface. A ``dollar`` value is
-    100 ``cent``. Done at the candidate-build site so every money-bearing
-    path normalizes uniformly (Quantity equality is exact — mixing
-    ``cent`` and ``dollar`` units would silently break arithmetic).
+    dimension. ``dollar``/``dollars`` → 100 cents each. Other currencies
+    (ADR-0131.G.3.1) are already in canonical form when they arrive via
+    ``_resolve_currency``; this helper normalizes the word-form paths.
     """
     if unit is None:
         return value, unit
-    if unit.lower() in ("dollar", "dollars"):
+    lower = unit.lower()
+    if lower in ("dollar", "dollars"):
         return value * 100, _MONEY_UNIT
+    # Euro/pound-sterling/yen/peso word forms: already canonical (factor=1).
+    # These enter via unit slot (word form) rather than symbol — pass through.
+    if lower in ("euro", "euros"):
+        return value, "euros"
+    if lower in ("pound sterling", "pounds sterling"):
+        return value, "pounds sterling"
+    if lower == "yen":
+        return value, "yen"
+    if lower in ("peso", "pesos"):
+        return value, "pesos"
     return value, unit
 
 
@@ -361,6 +454,14 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
                         matched_entity_token=m.group("entity"),
                     )
                 )
+
+    # ADR-0131.G.3.1 — Axis 1: fraction-of-unit shape.
+    # "Bob has 3/4 of a cup." — separate regex extracts unit from "of" phrase.
+    out.extend(_fraction_of_candidates(sentence))
+
+    # ADR-0131.G.3.1 — Axis 3: multi-token space-separated cardinals.
+    # "Bob has one hundred apples." — separate extractor; _VALUE is unchanged.
+    out.extend(_multi_word_cardinal_candidates(sentence))
 
     # ADR-0131.G.4 — multi-clause initial-state extractors.
     # Each may emit ≥1 candidates; deterministic order: conjoined-subject-each,
@@ -937,8 +1038,11 @@ def _compare_multiplicative_candidates(sentence: str) -> list[CandidateOperation
         if _is_indefinite_quantifier(value_raw):
             return out
         try:
-            factor = float(_resolve_value(value_raw))
-        except KeyError:
+            _rv = _resolve_value(value_raw)
+            factor = float(_rv.value) if _rv is not None else None
+        except (KeyError, TypeError):
+            return out
+        if factor is None:
             return out
         cand = _build_compare_multiplicative(
             actor_raw=m.group("actor"),
@@ -995,8 +1099,9 @@ def _compare_nested_candidates(sentence: str) -> list[CandidateOperation]:
     factor_value_raw = m.group("factor_value")
     if not _is_indefinite_quantifier(factor_value_raw):
         try:
-            factor = float(_resolve_value(factor_value_raw))
-        except KeyError:
+            _rv2 = _resolve_value(factor_value_raw)
+            factor = float(_rv2.value) if _rv2 is not None else None
+        except (KeyError, TypeError):
             factor = None
         if factor is not None:
             mult_cand = _build_compare_multiplicative(
@@ -1013,6 +1118,88 @@ def _compare_nested_candidates(sentence: str) -> list[CandidateOperation]:
                 out.append(mult_cand)
 
     return out
+
+
+# ---------------------------------------------------------------------------
+# ADR-0131.G.3.1 — Axis 1 + Axis 3 extractor functions
+# ---------------------------------------------------------------------------
+
+def _fraction_of_candidates(sentence: str) -> list[CandidateInitial]:
+    """Axis 1 (fractions): 'Bob has 3/4 of a cup.' → value=0.75, unit='cups'.
+
+    The main _INITIAL_HAS_RE treats 'of <NP>' as a discardable substance
+    qualifier and cannot fill the unit slot from it. This extractor uses
+    _INITIAL_FRACTION_OF_RE to explicitly capture the unit after 'of'.
+    """
+    s = sentence.strip().rstrip(".")
+    m = _INITIAL_FRACTION_OF_RE.match(s)
+    if m is None:
+        return []
+    value_raw = m.group("value")
+    rv = _resolve_value(value_raw)
+    if rv is None:
+        return []
+    unit_raw = m.group("unit")
+    unit = _canonicalize_unit(unit_raw)
+    entity = _normalize_entity(m.group("entity"))
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=entity,
+                    quantity=Quantity(value=rv.value, unit=unit),
+                ),
+                source_span=sentence,
+                matched_anchor=m.group("anchor"),
+                matched_value_token=value_raw,
+                matched_unit_token=unit_raw,
+                matched_entity_token=m.group("entity"),
+            )
+        ]
+    except Exception:
+        return []
+
+
+def _multi_word_cardinal_candidates(sentence: str) -> list[CandidateInitial]:
+    """Axis 3 (multi-word cardinals): 'Bob has one hundred apples.'
+
+    Approach (a): dedicated extractor leaving _VALUE unchanged. The value
+    group captures the full space-separated cardinal sequence; the unit
+    slot is the next word token after the cardinal sequence (and optional
+    adjective).
+    """
+    s = sentence.strip().rstrip(".")
+    m = _MULTI_WORD_CARDINAL_RE.match(s)
+    if m is None:
+        return []
+    value_raw = m.group("value")
+    from language_packs.numerics_loader import parse_compound_cardinal
+    parsed = parse_compound_cardinal(value_raw)
+    if parsed is None:
+        return []
+    unit_raw = m.group("unit")
+    value_n, unit_n = _money_unit_normalization(parsed, _canonicalize_unit(unit_raw))
+    if unit_n is None:
+        return []
+    entity = _normalize_entity(m.group("entity"))
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=entity,
+                    quantity=Quantity(value=value_n, unit=unit_n),
+                ),
+                source_span=sentence,
+                matched_anchor=m.group("anchor"),
+                # Provenance: use the first cardinal word as the value token
+                # for grounding (all cardinal words are in the source span).
+                matched_value_token=value_raw.split()[0],
+                matched_unit_token=unit_raw,
+                matched_entity_token=m.group("entity"),
+            )
+        ]
+    except Exception:
+        return []
 
 
 # ---------------------------------------------------------------------------
@@ -1138,7 +1325,10 @@ def _conj_subject_each_candidates(sentence: str) -> list[CandidateInitial]:
     entity_b = _normalize_entity(m.group("b"))
     if entity_a == entity_b:
         return []  # 'Aaron and Aaron each ...' is degenerate
-    value = _resolve_value(value_raw)
+    _rv_conj = _resolve_value(value_raw)
+    if _rv_conj is None:
+        return []
+    value = _rv_conj.value
     unit_raw = m.group("unit")
     unit = _canonicalize_unit(unit_raw)
     anchor = _canon_verb_to_anchor(m.group("verb"))
@@ -1192,7 +1382,7 @@ def _conj_object_candidates(sentence: str) -> list[CandidateInitial]:
                 CandidateInitial(
                     initial=InitialPossession(
                         entity=entity,
-                        quantity=Quantity(value=_resolve_value(value_raw), unit=unit),
+                        quantity=Quantity(value=_resolve_value(value_raw).value, unit=unit),  # type: ignore[union-attr]
                     ),
                     source_span=sentence,
                     matched_anchor=anchor,
@@ -1233,9 +1423,11 @@ def _embedded_quantifier_candidates(sentence: str) -> list[CandidateInitial]:
         c2 = container2_raw.lower()
         if c2 not in (container, container.rstrip("s"), container + "s"):
             return []
-    n = _resolve_value(n_raw)
-    per = _resolve_value(m_raw)
-    total = n * per
+    _rv_n = _resolve_value(n_raw)
+    _rv_per = _resolve_value(m_raw)
+    if _rv_n is None or _rv_per is None:
+        return []
+    total = _rv_n.value * _rv_per.value
     entity = _normalize_entity(m.group("entity"))
     unit_raw = m.group("unit")
     unit = _canonicalize_unit(unit_raw)
@@ -1314,9 +1506,13 @@ def _build_conj_embedded_sum(
     if u1 != u2:
         # Mixed-unit sum is meaningless; refuse.
         return []
-    total = _resolve_value(n1_raw) * _resolve_value(m1_raw) + (
-        _resolve_value(n2_raw) * _resolve_value(m2_raw)
-    )
+    _n1 = _resolve_value(n1_raw)
+    _m1 = _resolve_value(m1_raw)
+    _n2 = _resolve_value(n2_raw)
+    _m2 = _resolve_value(m2_raw)
+    if _n1 is None or _m1 is None or _n2 is None or _m2 is None:
+        return []
+    total = _n1.value * _m1.value + _n2.value * _m2.value
     entity = _normalize_entity(m.group("entity"))
     try:
         return [
