@@ -1,0 +1,16 @@
+{
+  "pack_id": "en_numerics_v1",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_numerics_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "a5bd05ae975491c941a3e4951d785937f3a3bb228da816152259462447b612fc",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback",
+  "glosses_checksum": "0a0abfc0401352080fd285090106219ea240b0d0762d19db3bd557b2c537d767",
+  "definitional_layer": false,
+  "provenance": "adr-0128:operator_seed:2026-05-23"
+}
