@@ -67,43 +67,95 @@ obligations.** **No new exit gates beyond ADR-0126's** (`correct ≥
 10/50, wrong == 0` on the train sample, this time with units pack
 in scope).
 
-### Pack content (`en_units_v1`)
+### Pack content (`en_units_v1`) — EXHAUSTIVE SCOPE
 
 Structure mirrors `en_arithmetic_v1`: `lexicon.jsonl` +
-`manifest.json` + `glosses.jsonl` + a self-sealing
-`.mastery_report.json` ratification artifact.
+`manifest.json` + `glosses.jsonl` + `conversions.jsonl` + a
+self-sealing `.mastery_report.json` ratification artifact.
 
 **Dimension classes** (entry_id prefix `en-units-dim-`):
 
-| Dimension | Notes |
-|-----------|-------|
-| `count` | Discrete countable nouns (apples, kids, boxes, books) |
-| `length` | feet, inches, miles, yards, meters, centimeters |
-| `time` | hours, minutes, days, weeks, months, years |
-| `mass` | pounds, ounces, kilograms, grams |
-| `money` | dollars, cents (anchored by `$` / `¢` symbols) |
-| `temperature` | degrees, Fahrenheit, Celsius |
-| `volume` | gallons, quarts, cups, liters |
+| Dimension | Canonical unit | Notes |
+|-----------|---------------|-------|
+| `count` | (dimensionless) | The no-unit dimension |
+| `length` | foot | imperial + metric families |
+| `time` | minute | seconds through millennia |
+| `mass` | pound | imperial + metric |
+| `money` | cent | with currency-symbol attachments |
+| `temperature` | °F | affine scales (F/C/K/R) |
+| `volume` | cup | cooking + liquid + dry |
+| `area` | sq ft | **derived** = length × length |
+| `speed` | mph | **derived** = length / time |
+| `density` | lb/cu ft | **derived** = mass / volume |
+| `frequency` | Hz | **derived** = 1 / time |
+| `wage` | $/hour | **derived** = money / time |
+| `unit_price` | $/item | **derived** = money / count |
 
-**Unit lemmas** (entry_id prefix `en-units-unit-`):
+Derived dimensions are encoded *compositionally* via a
+`dimension_algebra.jsonl` table. The parser recognizes
+"miles per hour" structurally as `length-unit + per +
+time-unit`; it does NOT need a `mph` primitive. Reduces unit
+combinatorics from O(unit²) to O(unit + connector).
 
-Each unit binds to exactly one dimension. Carries `singular`,
-`plural`, and `symbol` (where applicable: `$`, `°`). Initial pack
-targets ≤ 60 lemmas — bounded by GSM8K-frequent vocabulary, not
-NIST-complete coverage.
+**Unit lemmas** (entry_id prefix `en-units-unit-`) — exhaustive
+for grade-school math word problems (~150 entries):
 
-**Container nouns** (entry_id prefix `en-units-container-`):
+| Dimension | Lemmas |
+|-----------|--------|
+| length | inch/in, foot/ft, yard/yd, mile/mi, millimeter/mm, centimeter/cm, meter/m, kilometer/km |
+| time | second/sec/s, minute/min, hour/hr/h, day, week, month, year/yr, decade, century, millennium |
+| mass | ounce/oz, pound/lb, ton, gram/g, kilogram/kg, milligram/mg, metric_ton/tonne |
+| volume | teaspoon/tsp, tablespoon/tbsp, cup, pint/pt, quart/qt, gallon/gal, milliliter/mL, liter/L |
+| money | cent/¢, dollar/$, plus optional foreign: euro/€, pound_sterling/£, yen/¥, peso |
+| temperature | degree/°, Fahrenheit/°F, Celsius/°C, Kelvin/K |
+| area | sq_inch, sq_foot, sq_yard, sq_mile, sq_meter, sq_kilometer, acre, hectare |
+| count | (open class — head-noun grammar; pack does not enumerate, but provides count-dimension stamp for any unmatched noun in countable position) |
 
-Closed set: `box`, `bag`, `pack`, `basket`, `batch`, `dozen`,
-`group`, `set`, `case`, `pair`, `pile`, `stack`. Each declares
-its canonical syntax (`<count> <container> of <content>`) and an
-optional `default_size` (only `dozen=12`, `pair=2`, others null).
+Each unit carries `singular`, `plural`, `symbol`, `dimension`,
+`is_canonical_for_dimension` (bool). Plural forms include the
+irregulars: foot/feet, child/children (count), person/people
+(count), mouse/mice (count), goose/geese (count),
+fish/fish (count), sheep/sheep (count), deer/deer (count),
+woman/women (count), man/men (count), leaf/leaves,
+knife/knives, life/lives.
 
-**Rate connectors** (entry_id prefix `en-units-rate-`):
+**Multi-word units** (entry_id prefix `en-units-multiword-`):
 
-Closed set: `per`, `an`, `every`, `each`. Each declares the
-template `<money|count> <rate_connector> <time|count>` it
-participates in.
+Structural composition rules (not lexicon enumeration):
+
+- `square <length-unit>` → area (sq_ft, sq_meter, sq_mile, …)
+- `cubic <length-unit>` → volume_derived
+- `<length-unit> per <time-unit>` → speed
+- `<money-unit> per <count-noun-or-unit>` → unit_price or wage
+- `<mass-unit> per <volume-unit>` → density
+
+The pack ships the *patterns*, not every concrete combination —
+the parser composes them at recognition time.
+
+**Container nouns** (entry_id prefix `en-units-container-`) —
+closed set (~25):
+
+`box`, `bag`, `pack`, `basket`, `batch`, `dozen`, `group`,
+`set`, `case`, `pair`, `pile`, `stack`, `bunch`, `bundle`,
+`carton`, `crate`, `jar`, `can`, `bottle`, `cup` (when
+container, not volume-unit — context-disambiguated), `plate`,
+`bowl`, `tray`, `sack`, `container`, `gross` (=144).
+
+Each declares syntax `<count> <container> of <content>` and
+optional `default_size` (only `dozen=12`, `pair=2`, `gross=144`,
+others null).
+
+**Rate connectors** (entry_id prefix `en-units-rate-`) — closed
+set (~6):
+
+`per`, `an`, `every`, `each`, `by`, `in` (as in "every 3 days").
+Each declares the dimension-algebra template it participates in.
+
+**Symbol/affix table** (entry_id prefix `en-units-symbol-`):
+
+`$`, `¢`, `°`, `°F`, `°C`, `%`, `½`, `¼`, `¾`, `⅓`, `⅔`, `⅛`,
+`⅜`, `⅝`, `⅞`. Each maps to its lexical lemma. Cross-linked to
+`en_numerics_v1` (sibling pack, ADR-0128) for fraction symbols.
 
 **Substance qualifiers** (entry_id prefix `en-units-substance-`):
 
@@ -128,11 +180,17 @@ where `to_unit = ratio × from_unit`. The pack ratifies the
 {"edge_id":"en-units-conv-006","from":"hours","to":"days","ratio":0.04166666667,"dimension":"time"}
 ```
 
+**Temperature edges carry an affine `offset` field** because
+temperature conversion is not pure multiplication:
+`°F = 1.8 × °C + 32`. Schema: `{"from","to","ratio","offset",
+"dimension"}`. Multiplicative-only edges have `offset=0`.
+
 The graph is **the conversion table as data**, not as code. The
-solver consults it; the parser doesn't need to. Initial coverage
-target: complete edges for `length`, `time`, `money`, `mass`,
-`volume` between GSM8K-frequent unit pairs — bounded by NIST SI
-tables (closed set), not free expansion.
+solver consults it; the parser doesn't need to. Coverage target
+is EXHAUSTIVE within each dimension's lemma set (~80 edges
+total: every pair of in-pack units in the same dimension must be
+reachable). Bounded by NIST SI tables (closed set); ratification
+proves completeness — see invariants below.
 
 ### Why conversions matter
 
@@ -177,10 +235,22 @@ just lexicon well-formedness:
    `minutes` for time, `dollars` for money, etc.). All
    canonicalization routes through the canonical unit; this
    bounds the shortest-path computation to O(1) lookups.
+5. **Exhaustive coverage gate** — every dimension's lemma set
+   must produce a fully connected conversion subgraph. Adding
+   a unit lemma without conversion edges (or with edges that
+   don't connect to the canonical) is rejected at ratification.
+   This prevents the inventory from silently fragmenting.
+6. **NIST/ISO provenance** — every conversion ratio cites a
+   source via `provenance_id` (NIST SP 811 for SI, ISO 4217 for
+   currency, etc.). Unsourced ratios are rejected.
+7. **Dimension algebra closure** — every derived-dimension entry
+   (speed, density, wage, area) has both decomposed forms
+   present (e.g., for `speed`: at least one length-unit and one
+   time-unit are present in their respective dimensions).
 
 These invariants live in `tests/test_adr_0127_pack_ratification.py`
 and run at every pack-change PR — the conversion graph cannot
-ship broken.
+ship broken or incomplete.
 
 ### Parser integration
 
