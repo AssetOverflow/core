@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "issued_at": "2026-05-22",
+  "note": "Frontier scores cited from public reports are scored on the actual GSM8K test set, not on our CORE-original public split. This is an unavoidable apples-vs-oranges caveat because the public split consists of original, rule-based synthetic math word problems designed to exercise the CORE grammar and solver without data contamination.",
+  "baselines": [
+    {
+      "system": "Anthropic Claude 3.5 Sonnet",
+      "task": "GSM8K",
+      "reported_accuracy_pct": 96.4,
+      "source": "Anthropic, \"Claude 3.5 Sonnet Model Card Addendum\", June 2024",
+      "url": "https://www.anthropic.com/news/claude-3-5-sonnet",
+      "note": "0-shot Chain-of-Thought (CoT)"
+    },
+    {
+      "system": "OpenAI GPT-4",
+      "task": "GSM8K",
+      "reported_accuracy_pct": 92.0,
+      "source": "OpenAI, \"GPT-4 Technical Report\", arXiv:2303.08774, March 2023",
+      "url": "https://arxiv.org/abs/2303.08774",
+      "note": "5-shot"
+    },
+    {
+      "system": "Google Gemini 1.5 Pro",
+      "task": "GSM8K",
+      "reported_accuracy_pct": 90.8,
+      "source": "Google DeepMind, \"Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context\", arXiv:2403.05530, March 2024",
+      "url": "https://arxiv.org/abs/2403.05530",
+      "note": "0-shot (CoT)"
+    }
+  ],
+  "core_lane_note": "CORE is scored against evals/gsm8k_math (CORE-original) not the GSM8K test; the GSM8K test itself enters the lane via the sealed holdout under ADR-0119.7"
+}
