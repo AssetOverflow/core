@@ -20,7 +20,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Tina makes $18.00 an hour' (in sentence: 'Tina makes $18.00 an hour.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Tina makes $18.00 an hour.'",
       "trace_hash": null
     },
     {
@@ -31,7 +31,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Jan buys 1000 feet of cable' (in sentence: 'Jan buys 1000 feet of cable.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'She splits it up into 25-foot sections.'",
       "trace_hash": null
     },
     {
@@ -42,7 +42,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'The student council sells scented erasers in the morning before school starts to help raise money for school dances' (in sentence: 'The student council sells scented erasers in the morning before school starts to help raise money for school dances.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'The student council sells scented erasers in the morning before school starts to help raise money for school dances.'",
       "trace_hash": null
     },
     {
@@ -53,7 +53,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'There are some kids in camp' (in sentence: 'There are some kids in camp.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'There are some kids in camp.'",
       "trace_hash": null
     },
     {
@@ -64,7 +64,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: \"In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature\" (in sentence: \"In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature.\")",
+      "reason": "candidate_graph: no admissible candidate for statement: \"In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature.\"",
       "trace_hash": null
     },
     {
@@ -75,7 +75,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Mandy started reading books with only 8 pages when she was 6 years old' (in sentence: 'Mandy started reading books with only 8 pages when she was 6 years old.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Mandy started reading books with only 8 pages when she was 6 years old.'",
       "trace_hash": null
     },
     {
@@ -86,7 +86,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Francine has five full boxes of crayons and 5 loose crayons' (in sentence: 'Francine has five full boxes of crayons and 5 loose crayons, and her friend has 27 loose crayons.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Francine has five full boxes of crayons and 5 loose crayons, and her friend has 27 loose crayons.'",
       "trace_hash": null
     },
     {
@@ -97,7 +97,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Marnie makes bead bracelets' (in sentence: 'Marnie makes bead bracelets.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Marnie makes bead bracelets.'",
       "trace_hash": null
     },
     {
@@ -108,7 +108,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Jen has 10 more ducks than four times the number of chickens' (in sentence: 'Jen has 10 more ducks than four times the number of chickens.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Jen has 10 more ducks than four times the number of chickens.'",
       "trace_hash": null
     },
     {
@@ -119,7 +119,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Yun had 20 paperclips initially, but then lost 12' (in sentence: 'Yun had 20 paperclips initially, but then lost 12.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Yun had 20 paperclips initially, but then lost 12.'",
       "trace_hash": null
     },
     {
@@ -130,7 +130,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup' (in sentence: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup.'",
       "trace_hash": null
     },
     {
@@ -141,7 +141,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: unit 'rocks' not in en_units_v1 and not an allowed count noun",
+      "reason": "candidate_graph: no admissible candidate for statement: 'He put all of them in his aquarium but his fish ate half of them.'",
       "trace_hash": null
     },
     {
@@ -152,7 +152,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel' (in sentence: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel.'",
       "trace_hash": null
     },
     {
@@ -163,7 +163,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Bob can shuck 10 oysters in 5 minutes' (in sentence: 'Bob can shuck 10 oysters in 5 minutes.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Bob can shuck 10 oysters in 5 minutes.'",
       "trace_hash": null
     },
     {
@@ -174,7 +174,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride' (in sentence: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours.'",
       "trace_hash": null
     },
     {
@@ -185,7 +185,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs\" (in sentence: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs.\")",
+      "reason": "candidate_graph: no admissible candidate for statement: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs.\"",
       "trace_hash": null
     },
     {
@@ -196,7 +196,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Jason has a carriage house that he rents out' (in sentence: 'Jason has a carriage house that he rents out.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Jason has a carriage house that he rents out.'",
       "trace_hash": null
     },
     {
@@ -207,7 +207,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Xavier plays football with his friends' (in sentence: 'Xavier plays football with his friends.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Xavier plays football with his friends.'",
       "trace_hash": null
     },
     {
@@ -218,7 +218,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'John adopts a dog from a shelter' (in sentence: 'John adopts a dog from a shelter.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'John adopts a dog from a shelter.'",
       "trace_hash": null
     },
     {
@@ -229,7 +229,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Two puppies, two kittens' (in sentence: 'Two puppies, two kittens, and three parakeets were for sale at the pet shop.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Two puppies, two kittens, and three parakeets were for sale at the pet shop.'",
       "trace_hash": null
     },
     {
@@ -240,7 +240,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'John is lifting weights' (in sentence: 'John is lifting weights.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'John is lifting weights.'",
       "trace_hash": null
     },
     {
@@ -251,7 +251,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish' (in sentence: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish.'",
       "trace_hash": null
     },
     {
@@ -262,7 +262,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Nicole collected 400 Pokemon cards' (in sentence: 'Nicole collected 400 Pokemon cards.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Nicole collected 400 Pokemon cards.'",
       "trace_hash": null
     },
     {
@@ -273,7 +273,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday' (in sentence: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday, and 50 on Thursday.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday, and 50 on Thursday.'",
       "trace_hash": null
     },
     {
@@ -284,7 +284,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Lilibeth and her friends go strawberry picking' (in sentence: 'Lilibeth and her friends go strawberry picking.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Lilibeth and her friends go strawberry picking.'",
       "trace_hash": null
     },
     {
@@ -295,7 +295,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Aaron and his brother Carson each saved up $40 to go to dinner' (in sentence: 'Aaron and his brother Carson each saved up $40 to go to dinner.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner.'",
       "trace_hash": null
     },
     {
@@ -306,7 +306,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: unit 'followers' not in en_units_v1 and not an allowed count noun",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Malcolm has 240 followers on Instagram and 500 followers on Facebook.'",
       "trace_hash": null
     },
     {
@@ -317,7 +317,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Tom opens an amusement park' (in sentence: 'Tom opens an amusement park.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Tom opens an amusement park.'",
       "trace_hash": null
     },
     {
@@ -328,7 +328,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Fabian bought a brand new computer mouse and keyboard to be able to work from home' (in sentence: 'Fabian bought a brand new computer mouse and keyboard to be able to work from home.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Fabian bought a brand new computer mouse and keyboard to be able to work from home.'",
       "trace_hash": null
     },
     {
@@ -339,7 +339,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Jake decides to go to the beach for a fun day' (in sentence: 'Jake decides to go to the beach for a fun day.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Jake decides to go to the beach for a fun day.'",
       "trace_hash": null
     },
     {
@@ -350,7 +350,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Jeremie wants to go to an amusement park with 3 friends at the end of summer' (in sentence: 'Jeremie wants to go to an amusement park with 3 friends at the end of summer.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Jeremie wants to go to an amusement park with 3 friends at the end of summer.'",
       "trace_hash": null
     },
     {
@@ -361,7 +361,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'John decides to take up illustration' (in sentence: 'John decides to take up illustration.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'John decides to take up illustration.'",
       "trace_hash": null
     },
     {
@@ -372,7 +372,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Rachel is 12 years old' (in sentence: 'Rachel is 12 years old, and her grandfather is 7 times her age.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Rachel is 12 years old, and her grandfather is 7 times her age.'",
       "trace_hash": null
     },
     {
@@ -383,7 +383,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Georgie is a varsity player on a football team' (in sentence: 'Georgie is a varsity player on a football team.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Georgie is a varsity player on a football team.'",
       "trace_hash": null
     },
     {
@@ -394,7 +394,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'She decided to split them among her friends' (in sentence: 'She decided to split them among her friends.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'She decided to split them among her friends.'",
       "trace_hash": null
     },
     {
@@ -405,7 +405,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Monica way studying for an exam' (in sentence: 'Monica way studying for an exam.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Monica way studying for an exam.'",
       "trace_hash": null
     },
     {
@@ -416,7 +416,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Michael wants to lose 10 pounds by June' (in sentence: 'Michael wants to lose 10 pounds by June.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Michael wants to lose 10 pounds by June.'",
       "trace_hash": null
     },
     {
@@ -427,7 +427,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'In a building, there are a hundred ladies on the first-floor studying' (in sentence: 'In a building, there are a hundred ladies on the first-floor studying.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'In a building, there are a hundred ladies on the first-floor studying.'",
       "trace_hash": null
     },
     {
@@ -438,7 +438,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'At the family reunion, everyone ate too much food and gained weight' (in sentence: 'At the family reunion, everyone ate too much food and gained weight.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'At the family reunion, everyone ate too much food and gained weight.'",
       "trace_hash": null
     },
     {
@@ -449,7 +449,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Over several years, Daniel has adopted any stray animals he sees on the side of the road' (in sentence: 'Over several years, Daniel has adopted any stray animals he sees on the side of the road.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Over several years, Daniel has adopted any stray animals he sees on the side of the road.'",
       "trace_hash": null
     },
     {
@@ -460,7 +460,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Troy bakes 2 pans of brownies, cut into 16 pieces per pan' (in sentence: 'Troy bakes 2 pans of brownies, cut into 16 pieces per pan.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'The guests eat all of 1 pan, and 75% of the 2nd pan.'",
       "trace_hash": null
     },
     {
@@ -471,7 +471,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Ella has 4 bags with 20 apples in each bag and six bags with 25 apples in each bag' (in sentence: 'Ella has 4 bags with 20 apples in each bag and six bags with 25 apples in each bag.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Ella has 4 bags with 20 apples in each bag and six bags with 25 apples in each bag.'",
       "trace_hash": null
     },
     {
@@ -482,7 +482,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Sandra wants to buy some sweets' (in sentence: 'Sandra wants to buy some sweets.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sandra wants to buy some sweets.'",
       "trace_hash": null
     },
     {
@@ -493,7 +493,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'John invests in a bank and gets 10% simple interest' (in sentence: 'John invests in a bank and gets 10% simple interest.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'John invests in a bank and gets 10% simple interest.'",
       "trace_hash": null
     },
     {
@@ -504,7 +504,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Bart fills out surveys to earn money' (in sentence: 'Bart fills out surveys to earn money.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Bart fills out surveys to earn money.'",
       "trace_hash": null
     },
     {
@@ -515,7 +515,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'A school has 100 students' (in sentence: 'A school has 100 students.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'A school has 100 students.'",
       "trace_hash": null
     },
     {
@@ -526,7 +526,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'John bakes 12 coconut macaroons, each weighing 5 ounces' (in sentence: 'John bakes 12 coconut macaroons, each weighing 5 ounces.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'John bakes 12 coconut macaroons, each weighing 5 ounces.'",
       "trace_hash": null
     },
     {
@@ -537,7 +537,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Jed collects stamp cards' (in sentence: 'Jed collects stamp cards.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Jed collects stamp cards.'",
       "trace_hash": null
     },
     {
@@ -548,7 +548,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Malcolm is trying to find the fastest walk to school and is currently comparing two routes' (in sentence: 'Malcolm is trying to find the fastest walk to school and is currently comparing two routes.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Malcolm is trying to find the fastest walk to school and is currently comparing two routes.'",
       "trace_hash": null
     },
     {
@@ -559,7 +559,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "parser: could not parse statement clause: 'Mark does a gig every other day for 2 weeks' (in sentence: 'Mark does a gig every other day for 2 weeks.')",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Mark does a gig every other day for 2 weeks.'",
       "trace_hash": null
     }
   ],
@@ -567,205 +567,206 @@
   "refused_reasons_top": [
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: \"In one hour, Addison mountain's temperature will decrease to 3/4  of its temp"
+      "reason": "candidate_graph: no admissible candidate for statement: \"In one hour, Addison mountain's temperature will decrease to 3/"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encoun"
+      "reason": "candidate_graph: no admissible candidate for statement: \"On Rudolph's car trip across town, he traveled 2 more than 5 mi"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'A school has 100 students' (in sentence: 'A school has 100 students.')"
+      "reason": "candidate_graph: no admissible candidate for statement: 'A school has 100 students.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Aaron and his brother Carson each saved up $40 to go to dinner' (in sentence:"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner."
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup' (in s"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Alexa has a lemonade stand where she sells lemonade for $2 for "
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to h"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'At the family reunion, everyone ate too much food and gained weight' (in sent"
+      "reason": "candidate_graph: no admissible candidate for statement: 'At the family reunion, everyone ate too much food and gained we"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Bart fills out surveys to earn money' (in sentence: 'Bart fills out surveys t"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Bart fills out surveys to earn money.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Bob can shuck 10 oysters in 5 minutes' (in sentence: 'Bob can shuck 10 oyster"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Bob can shuck 10 oysters in 5 minutes.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Ella has 4 bags with 20 apples in each bag and six bags with 25 apples in eac"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Ella has 4 bags with 20 apples in each bag and six bags with 25"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Erica lives near a lake where most locals sell fish as their main source of i"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Erica lives near a lake where most locals sell fish as their ma"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Fabian bought a brand new computer mouse and keyboard to be able to work from"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Fabian bought a brand new computer mouse and keyboard to be abl"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Francine has five full boxes of crayons and 5 loose crayons' (in sentence: 'F"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Francine has five full boxes of crayons and 5 loose crayons, an"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Georgie is a varsity player on a football team' (in sentence: 'Georgie is a v"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Georgie is a varsity player on a football team.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'In a building, there are a hundred ladies on the first-floor studying' (in se"
+      "reason": "candidate_graph: no admissible candidate for statement: 'He put all of them in his aquarium but his fish ate half of the"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Jake decides to go to the beach for a fun day' (in sentence: 'Jake decides to"
+      "reason": "candidate_graph: no admissible candidate for statement: 'In a building, there are a hundred ladies on the first-floor st"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Jan buys 1000 feet of cable' (in sentence: 'Jan buys 1000 feet of cable.')"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Jake decides to go to the beach for a fun day.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Jason has a carriage house that he rents out' (in sentence: 'Jason has a carr"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Jason has a carriage house that he rents out.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Jed collects stamp cards' (in sentence: 'Jed collects stamp cards.')"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Jed collects stamp cards.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Jen has 10 more ducks than four times the number of chickens' (in sentence: '"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Jen has 10 more ducks than four times the number of chickens.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Jeremie wants to go to an amusement park with 3 friends at the end of summer'"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Jeremie wants to go to an amusement park with 3 friends at the "
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'John adopts a dog from a shelter' (in sentence: 'John adopts a dog from a she"
+      "reason": "candidate_graph: no admissible candidate for statement: 'John adopts a dog from a shelter.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'John bakes 12 coconut macaroons, each weighing 5 ounces' (in sentence: 'John "
+      "reason": "candidate_graph: no admissible candidate for statement: 'John bakes 12 coconut macaroons, each weighing 5 ounces.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'John decides to take up illustration' (in sentence: 'John decides to take up "
+      "reason": "candidate_graph: no admissible candidate for statement: 'John decides to take up illustration.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'John invests in a bank and gets 10% simple interest' (in sentence: 'John inve"
+      "reason": "candidate_graph: no admissible candidate for statement: 'John invests in a bank and gets 10% simple interest.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'John is lifting weights' (in sentence: 'John is lifting weights.')"
+      "reason": "candidate_graph: no admissible candidate for statement: 'John is lifting weights.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Lilibeth and her friends go strawberry picking' (in sentence: 'Lilibeth and h"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Lilibeth and her friends go strawberry picking.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Malcolm is trying to find the fastest walk to school and is currently compari"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Malcolm has 240 followers on Instagram and 500 followers on Fac"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Mandy started reading books with only 8 pages when she was 6 years old' (in s"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Malcolm is trying to find the fastest walk to school and is cur"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Mark does a gig every other day for 2 weeks' (in sentence: 'Mark does a gig e"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Mandy started reading books with only 8 pages when she was 6 ye"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Marnie makes bead bracelets' (in sentence: 'Marnie makes bead bracelets.')"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Mark does a gig every other day for 2 weeks.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Michael wants to lose 10 pounds by June' (in sentence: 'Michael wants to lose"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Marnie makes bead bracelets.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Monica way studying for an exam' (in sentence: 'Monica way studying for an ex"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Michael wants to lose 10 pounds by June.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Nicole collected 400 Pokemon cards' (in sentence: 'Nicole collected 400 Pokem"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Monica way studying for an exam.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Over several years, Daniel has adopted any stray animals he sees on the side "
+      "reason": "candidate_graph: no admissible candidate for statement: 'Nicole collected 400 Pokemon cards.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Rachel is 12 years old' (in sentence: 'Rachel is 12 years old, and her grandf"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Over several years, Daniel has adopted any stray animals he see"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Sandra wants to buy some sweets' (in sentence: 'Sandra wants to buy some swee"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Rachel is 12 years old, and her grandfather is 7 times her age."
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'She decided to split them among her friends' (in sentence: 'She decided to sp"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sandra wants to buy some sweets.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday' (in s"
+      "reason": "candidate_graph: no admissible candidate for statement: 'She decided to split them among her friends.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'The student council sells scented erasers in the morning before school starts"
+      "reason": "candidate_graph: no admissible candidate for statement: 'She splits it up into 25-foot sections.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'There are some kids in camp' (in sentence: 'There are some kids in camp.')"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on We"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Tina makes $18.00 an hour' (in sentence: 'Tina makes $18.00 an hour.')"
+      "reason": "candidate_graph: no admissible candidate for statement: 'The guests eat all of 1 pan, and 75% of the 2nd pan.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Tom opens an amusement park' (in sentence: 'Tom opens an amusement park.')"
+      "reason": "candidate_graph: no admissible candidate for statement: 'The student council sells scented erasers in the morning before"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, "
+      "reason": "candidate_graph: no admissible candidate for statement: 'There are some kids in camp.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Troy bakes 2 pans of brownies, cut into 16 pieces per pan' (in sentence: 'Tro"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Tina makes $18.00 an hour.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Two puppies, two kittens' (in sentence: 'Two puppies, two kittens, and three "
+      "reason": "candidate_graph: no admissible candidate for statement: 'Tom opens an amusement park.'"
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Xavier plays football with his friends' (in sentence: 'Xavier plays football "
+      "reason": "candidate_graph: no admissible candidate for statement: 'Traveling from Manhattan to the Bronx, Andrew rides the subway "
     },
     {
       "count": 1,
-      "reason": "parser: could not parse statement clause: 'Yun had 20 paperclips initially, but then lost 12' (in sentence: 'Yun had 20 "
+      "reason": "candidate_graph: no admissible candidate for statement: 'Two puppies, two kittens, and three parakeets were for sale at "
     },
     {
       "count": 1,
-      "reason": "parser: unit 'followers' not in en_units_v1 and not an allowed count noun"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Xavier plays football with his friends.'"
     },
     {
       "count": 1,
-      "reason": "parser: unit 'rocks' not in en_units_v1 and not an allowed count noun"
+      "reason": "candidate_graph: no admissible candidate for statement: 'Yun had 20 paperclips initially, but then lost 12.'"
     }
   ],
   "sample_path": "evals/gsm8k_math/train_sample/v1/cases.jsonl",
-  "schema_version": 1
+  "schema_version": 1,
+  "substrate": "candidate_graph"
 }

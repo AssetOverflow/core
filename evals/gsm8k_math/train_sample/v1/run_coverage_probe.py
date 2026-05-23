@@ -1,9 +1,8 @@
 """ADR-0131.G — GSM8K coverage probe.
 
-Wraps the existing :mod:`evals.gsm8k_math.runner` to score the
-real-GSM8K train sample (case_id / question / answer_numeric format)
-against the bounded grammar + binding graph pipeline. Emits a
-``train_sample_coverage_report.json`` that pins:
+Scores the real-GSM8K train sample (case_id / question /
+answer_numeric format) against the bounded grammar + binding graph
+pipeline. Emits a ``train_sample_coverage_report.json`` that pins:
 
   - ``admission_rate`` — fraction parsed + solved + verifier-passed
     (i.e. ``correct``)
@@ -17,6 +16,15 @@ The report is committed alongside this script so admission progress
 across iterations (G.1, G.2, ...) is a diff-able number, not a
 narrative claim.
 
+ADR-0131.G.0 — probe-substrate fix: the probe consults the
+**candidate-graph pipeline** (:func:`_score_one_candidate_graph`),
+not the legacy first-match-wins parser (:func:`_score_one`). Every
+ADR-0131.G.<n> iteration extends the candidate-graph parser layer;
+the probe must measure that layer for the iteration discipline to
+produce attributable admission deltas. The substrate swap is
+zero-delta on the current main baseline (both paths produce 0/50)
+but load-bearing for every subsequent iteration.
+
 The probe is deterministic: same case set → byte-equal report.
 """
 
@@ -27,7 +35,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from evals.gsm8k_math.runner import run_lane
+from evals.gsm8k_math.runner import _score_one_candidate_graph
 
 
 _HERE = Path(__file__).resolve().parent
@@ -70,6 +78,31 @@ def _summarize_refusal_reasons(case_details: list[dict[str, Any]]) -> list[dict[
     ]
 
 
+def _score_lane(adapted_cases: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Run every case through the candidate-graph pipeline and aggregate.
+
+    Mirrors :func:`evals.gsm8k_math.runner.run_lane` but uses
+    :func:`_score_one_candidate_graph` so the probe measures the
+    parser layer that every ADR-0131.G.<n> iteration extends.
+    """
+    outcomes = [_score_one_candidate_graph(c) for c in adapted_cases]
+    total = len(outcomes)
+    correct = sum(1 for o in outcomes if o.outcome == "correct")
+    wrong = sum(1 for o in outcomes if o.outcome == "wrong")
+    refused = sum(1 for o in outcomes if o.outcome == "refused")
+    metrics = {
+        "cases_total": total,
+        "correct": correct,
+        "wrong": wrong,
+        "refused": refused,
+        "correct_rate": (correct / total) if total else 0.0,
+        "wrong_rate": (wrong / total) if total else 0.0,
+        "refused_rate": (refused / total) if total else 0.0,
+        "wrong_count_is_zero": wrong == 0,
+    }
+    return metrics, [o.as_json() for o in outcomes]
+
+
 def build_report() -> dict[str, Any]:
     raw_cases = [
         json.loads(line)
@@ -77,13 +110,13 @@ def build_report() -> dict[str, Any]:
         if line.strip()
     ]
     adapted = [_adapt_case(c) for c in raw_cases]
-    lane_report = run_lane(adapted)
-    metrics = dict(lane_report.metrics)
+    metrics, case_details = _score_lane(adapted)
     total = metrics["cases_total"]
     return {
         "schema_version": 1,
         "adr": "0131.G",
         "probe": "gsm8k_train_sample_coverage",
+        "substrate": "candidate_graph",
         "sample_path": str(_CASES_PATH.relative_to(_HERE.parent.parent.parent.parent)),
         "metrics": {
             "cases_total": total,
@@ -96,8 +129,8 @@ def build_report() -> dict[str, Any]:
             "wrong_count_is_zero": metrics["wrong_count_is_zero"],
             "safety_rail_intact": metrics["wrong_count_is_zero"],
         },
-        "refused_reasons_top": _summarize_refusal_reasons(lane_report.case_details),
-        "per_case": lane_report.case_details,
+        "refused_reasons_top": _summarize_refusal_reasons(case_details),
+        "per_case": case_details,
     }
 
 
