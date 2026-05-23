@@ -30,6 +30,7 @@ import re
 from dataclasses import dataclass, field
 
 from generate.math_problem_graph import (
+    Comparison,
     InitialPossession,
     MathProblemGraph,
     Operation,
@@ -249,9 +250,17 @@ def _process_statement(sentence: str, state: _ParserState) -> None:
         s = _SENTENCE_OPENER_THEN_RE.sub("", s).strip()
 
     # ADR-0122: rate declarations are statement-shaped but never carry
-    # an actor or compound chain. Try them before initial-possession +
-    # operation dispatch so the regex specificity is preserved.
+    # an actor or compound chain. Try them before everything else so the
+    # regex specificity is preserved.
     if _try_rate_declaration(s, state):
+        return
+
+    # ADR-0123: comparison declarations ("X has 3 more apples than Y",
+    # "X has twice as many apples as Y") share the leading "<Entity>
+    # has <N>" shape with initial possessions; try them before
+    # _try_initial so the comparison sentence is not greedily consumed
+    # as an initial with unit='more'/'fewer'.
+    if _try_comparison_declaration(s, state):
         return
 
     if _try_initial(s, state):
@@ -548,6 +557,209 @@ def _try_rate_declaration(s: str, state: _ParserState) -> bool:
         )
         return True
     return False
+
+
+# ---------------------------------------------------------------------------
+# ADR-0123 — Comparison declaration patterns
+# ---------------------------------------------------------------------------
+
+# Group A (additive): "Alice has 3 more apples than Bob"
+# "less" treated as informal synonym of "fewer" — both map to direction='fewer'.
+_COMPARE_ADDITIVE_RE = re.compile(
+    r"^(?P<actor>[A-Z]\w+)\s+has\s+"
+    r"(?P<value>\d+)\s+"
+    r"(?P<direction>more|fewer|less)\s+"
+    r"(?P<unit>\w+)\s+than\s+"
+    r"(?P<reference>[A-Z]\w+)$"
+)
+
+# Group B (multiplicative — twice): "Alice has twice as many apples as Bob"
+_COMPARE_TWICE_RE = re.compile(
+    r"^(?P<actor>[A-Z]\w+)\s+has\s+twice\s+as\s+many\s+"
+    r"(?P<unit>\w+)\s+as\s+(?P<reference>[A-Z]\w+)$"
+)
+
+# Group B (multiplicative — N times): "Alice has 3 times as many apples as Bob"
+_COMPARE_N_TIMES_RE = re.compile(
+    r"^(?P<actor>[A-Z]\w+)\s+has\s+(?P<value>\d+)\s+times\s+as\s+many\s+"
+    r"(?P<unit>\w+)\s+as\s+(?P<reference>[A-Z]\w+)$"
+)
+
+# Group C (fractional — half): "Alice has half as many apples as Bob"
+_COMPARE_HALF_RE = re.compile(
+    r"^(?P<actor>[A-Z]\w+)\s+has\s+half\s+as\s+many\s+"
+    r"(?P<unit>\w+)\s+as\s+(?P<reference>[A-Z]\w+)$"
+)
+
+# Forms the parser deliberately REFUSES (multi-construction / out of
+# substrate scope). Better an honest typed ParseError than a misleading
+# fallthrough.
+_COMPARE_REFUSE_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (
+        re.compile(
+            r"^[A-Z]\w+\s+has\s+\d+\s+times\s+more\s+\w+\s+than\s+[A-Z]\w+$"
+        ),
+        "ambiguous 'N times more' (use 'N times as many' for unambiguous "
+        "multiplicative comparison; ADR-0123 refuses the ambiguous form)",
+    ),
+    (
+        re.compile(
+            r"^[A-Z]\w+\s+is\s+(?:\d+\s+times\s+)?as\s+old\s+as\s+[A-Z]\w+$",
+            flags=re.IGNORECASE,
+        ),
+        "age comparisons use a different actor-attribute model than "
+        "holdings; out of ADR-0123 substrate scope",
+    ),
+    (
+        re.compile(
+            r"^[A-Z]\w+\s+is\s+\d+\s+years\s+(?:older|younger)\s+than\s+[A-Z]\w+$",
+            flags=re.IGNORECASE,
+        ),
+        "age comparisons ('N years older/younger') are out of ADR-0123 "
+        "substrate scope",
+    ),
+    (
+        re.compile(
+            r"^[A-Z]\w+\s+has\s+.*\b(?:combined|together)\b.*$",
+            flags=re.IGNORECASE,
+        ),
+        "comparison combined with aggregation needs ADR-0126 to co-land; "
+        "ADR-0123 alone refuses",
+    ),
+    (
+        re.compile(
+            r"^[A-Z]\w+\s+has\s+\d+\s+(?:more|fewer|less)\s+than\s+"
+            r"(?:twice|\d+\s+times)\s+as\s+many\s+\w+\s+as\s+[A-Z]\w+$"
+        ),
+        "nested additive + multiplicative comparison needs both classes "
+        "to co-resolve; ADR-0123 substrate refuses the nested form",
+    ),
+)
+
+
+def _try_comparison_declaration(s: str, state: _ParserState) -> bool:
+    """Try to parse a comparison-declaration sentence (ADR-0123).
+
+    Order: happy-path patterns first (additive, then multiplicative by
+    specificity), then explicit refusal patterns. Falling through
+    returns False (the sentence is not a comparison; dispatcher
+    proceeds to ``_try_initial``).
+    """
+    m = _COMPARE_ADDITIVE_RE.match(s)
+    if m:
+        actor = m.group("actor")
+        value = int(m.group("value"))
+        direction_raw = m.group("direction").lower()
+        direction = "more" if direction_raw == "more" else "fewer"
+        unit = _canonical_unit(m.group("unit"))
+        reference = m.group("reference")
+        return _emit_comparison(
+            state,
+            actor=actor,
+            reference=reference,
+            kind="compare_additive",
+            delta=Quantity(value=value, unit=unit),
+            factor=None,
+            direction=direction,
+            sentence=s,
+            tracking_unit=unit,
+        )
+
+    m = _COMPARE_TWICE_RE.match(s)
+    if m:
+        unit = _canonical_unit(m.group("unit"))
+        return _emit_comparison(
+            state,
+            actor=m.group("actor"),
+            reference=m.group("reference"),
+            kind="compare_multiplicative",
+            delta=None,
+            factor=2.0,
+            direction="times",
+            sentence=s,
+            tracking_unit=unit,
+        )
+
+    m = _COMPARE_N_TIMES_RE.match(s)
+    if m:
+        unit = _canonical_unit(m.group("unit"))
+        value = int(m.group("value"))
+        return _emit_comparison(
+            state,
+            actor=m.group("actor"),
+            reference=m.group("reference"),
+            kind="compare_multiplicative",
+            delta=None,
+            factor=float(value),
+            direction="times",
+            sentence=s,
+            tracking_unit=unit,
+        )
+
+    m = _COMPARE_HALF_RE.match(s)
+    if m:
+        unit = _canonical_unit(m.group("unit"))
+        return _emit_comparison(
+            state,
+            actor=m.group("actor"),
+            reference=m.group("reference"),
+            kind="compare_multiplicative",
+            delta=None,
+            factor=0.5,
+            direction="fraction",
+            sentence=s,
+            tracking_unit=unit,
+        )
+
+    for refuse_pattern, reason in _COMPARE_REFUSE_PATTERNS:
+        if refuse_pattern.match(s):
+            raise ParseError(
+                f"ADR-0123 refuses comparison sentence {s!r}: {reason}"
+            )
+
+    return False
+
+
+def _emit_comparison(
+    state: _ParserState,
+    *,
+    actor: str,
+    reference: str,
+    kind: str,
+    delta: Quantity | None,
+    factor: float | None,
+    direction: str,
+    sentence: str,
+    tracking_unit: str,
+) -> bool:
+    """Append the Operation, register entities, update tracking state.
+
+    Returns True unconditionally — caller's short-circuit treats True
+    as "sentence consumed; stop dispatch". Refuses (ParseError) on
+    self-reference; other semantic refusals live in the solver.
+    """
+    if actor == reference:
+        raise ParseError(
+            f"ADR-0123 refuses self-referential comparison: actor and "
+            f"reference are both {actor!r} in sentence {sentence!r}"
+        )
+    state.add_entity(actor)
+    state.add_entity(reference)
+    state.operations.append(
+        Operation(
+            actor=actor,
+            kind=kind,
+            operand=Comparison(
+                reference_actor=reference,
+                delta=delta,
+                factor=factor,
+                direction=direction,  # type: ignore[arg-type]
+            ),
+        )
+    )
+    state.last_unit = tracking_unit
+    state.last_singular_subject = actor
+    return True
 
 
 # ---------------------------------------------------------------------------
