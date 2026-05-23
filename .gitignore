@@ -30,3 +30,9 @@ frontier_wave1.json
 # are committed; the renders are not.
 evals/audit_passed/
 evals/expert_demos/
+
+# ADR-0119.7 — GSM8K sealed-holdout discipline. Only the encrypted
+# .age file may be tracked; plaintext companions must never land in git.
+evals/gsm8k_math/holdouts/v1/cases.jsonl
+evals/gsm8k_math/holdouts/v1/cases_plaintext.jsonl
+evals/gsm8k_math/holdouts/v1/cases-train*

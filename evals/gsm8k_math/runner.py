@@ -154,8 +154,13 @@ def _score_one(case: dict[str, Any]) -> CaseOutcome:
             realized_prose=None,
         )
 
-    # Stage 5 — compare against expected
-    if trace.answer_unit != expected_unit:
+    # Stage 5 — compare against expected.
+    # An empty expected_unit ("") means the case carries no unit-level
+    # expectation (e.g. the sealed GSM8K test set under ADR-0119.7
+    # records pure-number answers without a parsed unit). In that case
+    # the runner skips the unit comparison and grades on answer value
+    # alone. Cases that DO specify expected_unit get the strict check.
+    if expected_unit != "" and trace.answer_unit != expected_unit:
         return CaseOutcome(
             case_id=case_id,
             outcome="wrong",
