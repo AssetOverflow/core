@@ -21,8 +21,7 @@ import pytest
 
 from generate.binding_graph import (
     INTRODUCED_BY,
-    PHASE_2_ADMISSIBILITY,
-    PHASE_2_UNIT_PROOF,
+    REFUSED_UNIT_PROOF,
     SYNTHETIC_SOURCE_ID,
     AdapterError,
     BoundEquation,
@@ -374,16 +373,34 @@ def test_output_dataclasses_are_frozen() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_equation_unit_proof_is_phase2_placeholder() -> None:
+def test_phase3_refused_equations_carry_typed_refusal() -> None:
+    # ADR-0134: 'apples' is not in en_units_v1 → typed refusal, never silent.
     bg = bind_math_problem_graph(_two_actor_add_graph())
-    assert bg.equations[0].unit_proof == PHASE_2_UNIT_PROOF
-    assert PHASE_2_UNIT_PROOF == "deferred_to_phase_3"
+    eq = bg.equations[0]
+    assert eq.admissibility_status == "refused"
+    assert eq.refusal_reason == "unknown_unit"
+    assert eq.unit_proof == REFUSED_UNIT_PROOF
 
 
-def test_equation_admissibility_is_pending() -> None:
-    bg = bind_math_problem_graph(_two_actor_add_graph())
-    assert bg.equations[0].admissibility_status == PHASE_2_ADMISSIBILITY
-    assert PHASE_2_ADMISSIBILITY == "pending"
+def test_phase3_admitted_equations_carry_populated_unit_proof() -> None:
+    # Build a fully-grounded analog in the closed unit vocabulary.
+    g = MathProblemGraph(
+        entities=("Sam", "Mary"),
+        initial_state=(
+            InitialPossession(entity="Sam", quantity=Quantity(value=3, unit="dollar")),
+            InitialPossession(entity="Mary", quantity=Quantity(value=4, unit="dollar")),
+        ),
+        operations=(
+            Operation(actor="Sam", kind="add", operand=Quantity(value=2, unit="dollar")),
+        ),
+        unknown=Unknown(entity=None, unit="dollar"),
+    )
+    bg = bind_math_problem_graph(g)
+    eq = bg.equations[0]
+    assert eq.admissibility_status == "admitted"
+    assert eq.refusal_reason is None
+    assert eq.unit_proof != REFUSED_UNIT_PROOF
+    assert eq.unit_proof.startswith("add:")
 
 
 def test_all_equation_dependencies_reference_known_symbols() -> None:
