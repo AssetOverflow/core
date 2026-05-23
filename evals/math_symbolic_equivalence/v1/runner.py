@@ -2,8 +2,8 @@
 
 Loads ``cases.jsonl`` plus deterministic generated cases, runs each case
 through :func:`generate.math_symbolic_equivalence.check_equivalence`,
-classifies the outcome against the expected verdict, and writes a
-deterministic ``report.json``.
+classifies the outcome against the expected verdict, and writes
+deterministic ``report.json`` and ``manifest.json`` artifacts.
 """
 
 from __future__ import annotations
@@ -14,7 +14,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from evals.math_symbolic_equivalence.v1.generated_cases import build_generated_cases
+from evals.math_symbolic_equivalence.v1.generated_cases import (
+    SEED as GENERATED_CASE_SEED,
+    build_generated_cases,
+)
+from evals.math_symbolic_equivalence.v1.replay import sha256_obj
 from generate.math_symbolic_equivalence import (
     Verdict,
     check_equivalence,
@@ -22,8 +26,10 @@ from generate.math_symbolic_equivalence import (
 
 
 _HERE = Path(__file__).resolve().parent
+_REPO_ROOT = _HERE.parent.parent.parent
 _CASES_PATH = _HERE / "cases.jsonl"
 _REPORT_PATH = _HERE / "report.json"
+_MANIFEST_PATH = _HERE / "manifest.json"
 
 # Per ADR-0131 Benchmark 1 exit criterion.
 _CORRECT_RATE_MIN = 0.95
@@ -108,6 +114,22 @@ def _load_cases(path: Path = _CASES_PATH) -> list[dict[str, Any]]:
     return cases
 
 
+def _source_counts(cases: list[dict[str, Any]]) -> dict[str, int]:
+    out = {"curated": 0, "generated": 0}
+    for c in cases:
+        source = str(c.get("source", "curated"))
+        out[source] = out.get(source, 0) + 1
+    return out
+
+
+def _expected_counts(cases: list[dict[str, Any]]) -> dict[str, int]:
+    out = {"equivalent": 0, "not_equivalent": 0, "refused": 0}
+    for c in cases:
+        expected = str(c["expected"])
+        out[expected] = out.get(expected, 0) + 1
+    return out
+
+
 def build_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
     outcomes = [_score_one(c) for c in cases]
     counts = {"correct": 0, "wrong": 0, "refused": 0}
@@ -117,18 +139,16 @@ def build_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
     total = len(outcomes)
     correct_rate = counts["correct"] / total if total else 0.0
     passed = (correct_rate >= _CORRECT_RATE_MIN) and (counts["wrong"] <= _WRONG_MAX)
-    by_source = {"curated": 0, "generated": 0}
-    for c in cases:
-        by_source[str(c.get("source", "curated"))] += 1
 
-    return {
+    report: dict[str, Any] = {
         "schema_version": 2,
         "adr": "0131.1.B",
         "benchmark": "symbolic_equivalence_v1_hardened",
-        "cases_path": str(_CASES_PATH.relative_to(_HERE.parent.parent.parent)),
+        "cases_path": str(_CASES_PATH.relative_to(_REPO_ROOT)),
         "generated_cases_module": "evals.math_symbolic_equivalence.v1.generated_cases",
+        "generated_seed": GENERATED_CASE_SEED,
         "sample_count": total,
-        "by_source": by_source,
+        "by_source": _source_counts(cases),
         "counts": counts,
         "correct_rate": correct_rate,
         "exit_criterion": {
@@ -138,19 +158,55 @@ def build_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
         },
         "per_case": [o.as_dict() for o in outcomes],
     }
+    report["report_sha256"] = sha256_obj(report)
+    return report
+
+
+def build_manifest(cases: list[dict[str, Any]], report: dict[str, Any]) -> dict[str, Any]:
+    report_without_digest = dict(report)
+    report_without_digest.pop("report_sha256", None)
+    return {
+        "schema_version": 1,
+        "adr": "0131.1.B",
+        "benchmark": "symbolic_equivalence_v1_hardened",
+        "curated_cases_path": str(_CASES_PATH.relative_to(_REPO_ROOT)),
+        "generated_cases_module": "evals.math_symbolic_equivalence.v1.generated_cases",
+        "generated_seed": GENERATED_CASE_SEED,
+        "case_count": len(cases),
+        "by_source": _source_counts(cases),
+        "by_expected": _expected_counts(cases),
+        "cases_sha256": sha256_obj(cases),
+        "report_sha256": sha256_obj(report_without_digest),
+        "replay_contract": {
+            "byte_equal_report_json": True,
+            "deterministic_generation": True,
+            "correct_rate_min": _CORRECT_RATE_MIN,
+            "wrong_max": _WRONG_MAX,
+        },
+    }
+
+
+def _write_json(obj: dict[str, Any], path: Path) -> None:
+    path.write_text(
+        json.dumps(obj, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def write_report(report: dict[str, Any], path: Path = _REPORT_PATH) -> None:
-    path.write_text(
-        json.dumps(report, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    _write_json(report, path)
+
+
+def write_manifest(manifest: dict[str, Any], path: Path = _MANIFEST_PATH) -> None:
+    _write_json(manifest, path)
 
 
 def main() -> int:
     cases = _load_cases()
     report = build_report(cases)
+    manifest = build_manifest(cases, report)
     write_report(report)
+    write_manifest(manifest)
     return 0 if report["exit_criterion"]["passed"] else 1
 
 
