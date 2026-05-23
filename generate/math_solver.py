@@ -33,6 +33,7 @@ from dataclasses import dataclass
 from typing import Any, Mapping
 
 from generate.math_problem_graph import (
+    Comparison,
     MathProblemGraph,
     Operation,
     Quantity,
@@ -54,6 +55,8 @@ _OPERATION_REQUIRED_LEMMAS: dict[str, str] = {
     "multiply": "multiply",
     "divide": "divide",
     "apply_rate": "apply_rate",
+    "compare_additive": "compare_additive",
+    "compare_multiplicative": "compare_multiplicative",
 }
 
 
@@ -85,7 +88,7 @@ class SolutionStep:
     operation_kind: str
     pack_lemma_id: str
     actor: str
-    operand: Quantity | Rate
+    operand: "Quantity | Rate | Comparison"
     target: str | None
     before_value: float
     after_value: float
@@ -226,12 +229,16 @@ def _apply(
     state: dict[tuple[str, str], float],
     pack_bindings: Mapping[str, str],
 ) -> SolutionStep:
-    # apply_rate has a Rate operand whose key shape (denominator_unit)
-    # differs from Quantity (unit); handle it on its own branch so the
-    # type discrimination is explicit, not punned through a duck-typed
-    # attribute lookup.
+    # Kind-discriminated early returns for operations carrying non-Quantity
+    # operands: apply_rate (ADR-0122) uses Rate; compare_* (ADR-0123) uses
+    # Comparison. Handle each on its own branch so the type discrimination
+    # is explicit, not punned through a duck-typed attribute lookup.
     if op.kind == "apply_rate":
         return _apply_rate(op, index, state, pack_bindings)
+    if op.kind == "compare_additive":
+        return _apply_compare_additive(op, index, state, pack_bindings)
+    if op.kind == "compare_multiplicative":
+        return _apply_compare_multiplicative(op, index, state, pack_bindings)
 
     if not isinstance(op.operand, Quantity):
         raise SolveError(
@@ -336,6 +343,141 @@ def _apply_rate(
         operand=rate,
         target=None,
         before_value=before,
+        after_value=after,
+        target_before=None,
+        target_after=None,
+    )
+
+
+def _apply_compare_additive(
+    op: Operation,
+    index: int,
+    state: dict[tuple[str, str], float],
+    pack_bindings: Mapping[str, str],
+) -> SolutionStep:
+    """Apply an additive comparison (ADR-0123).
+
+    "Alice has 3 more apples than Bob" → state[(Alice, apples)] =
+    state[(Bob, apples)] + 3. Refuses on: missing reference state in
+    delta.unit, overwrite of existing actor state, negative result.
+    """
+    if not isinstance(op.operand, Comparison):
+        raise SolveError(
+            f"compare_additive at step {index} requires a Comparison "
+            f"operand; got {type(op.operand).__name__}"
+        )
+    cmp = op.operand
+    if cmp.delta is None:
+        raise SolveError(
+            f"compare_additive at step {index} requires Comparison.delta; "
+            f"got None"
+        )
+    unit = cmp.delta.unit
+    ref_key = (cmp.reference_actor, unit)
+    if ref_key not in state:
+        raise SolveError(
+            f"compare_additive at step {index} requires reference actor "
+            f"{cmp.reference_actor!r} to hold a quantity in {unit!r}, "
+            f"but no such state exists"
+        )
+    actor_key = (op.actor, unit)
+    if actor_key in state:
+        raise SolveError(
+            f"compare_additive at step {index} would overwrite existing "
+            f"state for actor {op.actor!r} in {unit!r}; refuse rather "
+            f"than silently redeclare"
+        )
+    ref_value = state[ref_key]
+    delta_v = float(cmp.delta.value)
+    if cmp.direction == "more":
+        after = ref_value + delta_v
+    elif cmp.direction == "fewer":
+        after = ref_value - delta_v
+    else:
+        raise SolveError(
+            f"compare_additive at step {index} got unexpected direction "
+            f"{cmp.direction!r}; expected 'more' or 'fewer'"
+        )
+    if after < 0:
+        raise SolveError(
+            f"compare_additive at step {index} would yield negative "
+            f"quantity {after!r} for actor {op.actor!r} in {unit!r}; "
+            f"refuse rather than emit a nonsensical answer"
+        )
+    state[actor_key] = after
+    return SolutionStep(
+        step_index=index,
+        operation_kind=op.kind,
+        pack_lemma_id=pack_bindings[op.kind],
+        actor=op.actor,
+        operand=cmp,
+        target=None,
+        before_value=0.0,
+        after_value=after,
+        target_before=None,
+        target_after=None,
+    )
+
+
+def _apply_compare_multiplicative(
+    op: Operation,
+    index: int,
+    state: dict[tuple[str, str], float],
+    pack_bindings: Mapping[str, str],
+) -> SolutionStep:
+    """Apply a multiplicative comparison (ADR-0123).
+
+    "Alice has 2 times as many apples as Bob" → state[(Alice, apples)]
+    = state[(Bob, apples)] × 2. Unit comes from reference's state.
+    Refuses on: no reference state, ambiguous (multi-unit) reference,
+    overwrite of existing actor state.
+    """
+    if not isinstance(op.operand, Comparison):
+        raise SolveError(
+            f"compare_multiplicative at step {index} requires a "
+            f"Comparison operand; got {type(op.operand).__name__}"
+        )
+    cmp = op.operand
+    if cmp.factor is None:
+        raise SolveError(
+            f"compare_multiplicative at step {index} requires "
+            f"Comparison.factor; got None"
+        )
+    ref_units = [
+        unit for (entity, unit) in state if entity == cmp.reference_actor
+    ]
+    if not ref_units:
+        raise SolveError(
+            f"compare_multiplicative at step {index} requires reference "
+            f"actor {cmp.reference_actor!r} to hold some quantity, but "
+            f"no such state exists"
+        )
+    if len(set(ref_units)) > 1:
+        raise SolveError(
+            f"compare_multiplicative at step {index} is ambiguous: "
+            f"reference actor {cmp.reference_actor!r} holds quantities "
+            f"in multiple units {sorted(set(ref_units))!r}; refuse "
+            f"rather than guess which unit the comparison applies to"
+        )
+    unit = ref_units[0]
+    actor_key = (op.actor, unit)
+    if actor_key in state:
+        raise SolveError(
+            f"compare_multiplicative at step {index} would overwrite "
+            f"existing state for actor {op.actor!r} in {unit!r}; refuse "
+            f"rather than silently redeclare"
+        )
+    ref_value = state[(cmp.reference_actor, unit)]
+    after = ref_value * float(cmp.factor)
+    state[actor_key] = after
+    return SolutionStep(
+        step_index=index,
+        operation_kind=op.kind,
+        pack_lemma_id=pack_bindings[op.kind],
+        actor=op.actor,
+        operand=cmp,
+        target=None,
+        before_value=0.0,
         after_value=after,
         target_before=None,
         target_after=None,

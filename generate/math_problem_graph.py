@@ -19,13 +19,27 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Final, Mapping
+from typing import Any, Final, Literal, Mapping
 
 
 # Operation kinds correspond to math-pack lemma vocabulary (en_mathematics_logic_v1).
 # A future solver under ADR-0116 dispatches on this string.
 VALID_OPERATION_KINDS: Final[frozenset[str]] = frozenset(
-    {"add", "subtract", "transfer", "multiply", "divide", "apply_rate"}
+    {
+        "add",
+        "subtract",
+        "transfer",
+        "multiply",
+        "divide",
+        "apply_rate",
+        "compare_additive",
+        "compare_multiplicative",
+    }
+)
+
+
+VALID_COMPARISON_DIRECTIONS: Final[frozenset[str]] = frozenset(
+    {"more", "fewer", "times", "fraction"}
 )
 
 
@@ -110,6 +124,81 @@ class Rate:
 
 
 @dataclass(frozen=True, slots=True)
+class Comparison:
+    """A comparison between two actors' quantities (ADR-0123).
+
+    Two modes, discriminated by ``direction``:
+
+    - ``direction='more'`` / ``direction='fewer'``: additive — actor's
+      quantity is ``reference_actor``'s quantity ± ``delta`` (Quantity).
+      ``factor`` must be ``None``.
+    - ``direction='times'`` / ``direction='fraction'``: multiplicative —
+      actor's quantity is ``factor`` × ``reference_actor``'s quantity.
+      ``delta`` must be ``None``. ``factor`` must be strictly positive.
+
+    Self-reference is refused at the Operation boundary, not here.
+    """
+
+    reference_actor: str
+    delta: "Quantity | None"
+    factor: float | None
+    direction: Literal["more", "fewer", "times", "fraction"]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.reference_actor, str) or not self.reference_actor:
+            raise MathGraphError(
+                "Comparison.reference_actor must be a non-empty string"
+            )
+        if self.direction not in VALID_COMPARISON_DIRECTIONS:
+            raise MathGraphError(
+                f"Comparison.direction must be one of "
+                f"{sorted(VALID_COMPARISON_DIRECTIONS)}; got {self.direction!r}"
+            )
+        if self.direction in ("more", "fewer"):
+            if not isinstance(self.delta, Quantity):
+                raise MathGraphError(
+                    "Comparison.delta must be a Quantity when "
+                    f"direction={self.direction!r}; got "
+                    f"{type(self.delta).__name__}"
+                )
+            if self.factor is not None:
+                raise MathGraphError(
+                    "Comparison.factor must be None when "
+                    f"direction={self.direction!r}; got {self.factor!r}"
+                )
+        else:
+            if self.delta is not None:
+                raise MathGraphError(
+                    "Comparison.delta must be None when "
+                    f"direction={self.direction!r}; got {self.delta!r}"
+                )
+            if not isinstance(self.factor, (int, float)) or isinstance(
+                self.factor, bool
+            ):
+                raise MathGraphError(
+                    "Comparison.factor must be int or float when "
+                    f"direction={self.direction!r}; got "
+                    f"{type(self.factor).__name__}"
+                )
+            if self.factor <= 0:
+                raise MathGraphError(
+                    f"Comparison.factor must be strictly positive; "
+                    f"got {self.factor!r}"
+                )
+
+    def as_json(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "direction": self.direction,
+            "reference_actor": self.reference_actor,
+        }
+        if self.delta is not None:
+            d["delta"] = self.delta.as_json()
+        if self.factor is not None:
+            d["factor"] = self.factor
+        return d
+
+
+@dataclass(frozen=True, slots=True)
 class InitialPossession:
     """Some entity holds some quantity at the start of the problem."""
 
@@ -141,7 +230,7 @@ class Operation:
 
     actor: str
     kind: str
-    operand: Quantity | Rate
+    operand: "Quantity | Rate | Comparison"
     target: str | None = None
 
     def __post_init__(self) -> None:
@@ -157,6 +246,35 @@ class Operation:
                 raise MathGraphError(
                     "Operation.operand must be a Rate when kind='apply_rate'; "
                     f"got {type(self.operand).__name__}"
+                )
+        elif self.kind in ("compare_additive", "compare_multiplicative"):
+            if not isinstance(self.operand, Comparison):
+                raise MathGraphError(
+                    "Operation.operand must be a Comparison when "
+                    f"kind={self.kind!r}; got {type(self.operand).__name__}"
+                )
+            if self.kind == "compare_additive" and self.operand.direction not in (
+                "more",
+                "fewer",
+            ):
+                raise MathGraphError(
+                    "Operation.kind='compare_additive' requires "
+                    "Comparison.direction in {'more','fewer'}; got "
+                    f"{self.operand.direction!r}"
+                )
+            if self.kind == "compare_multiplicative" and self.operand.direction not in (
+                "times",
+                "fraction",
+            ):
+                raise MathGraphError(
+                    "Operation.kind='compare_multiplicative' requires "
+                    "Comparison.direction in {'times','fraction'}; got "
+                    f"{self.operand.direction!r}"
+                )
+            if self.operand.reference_actor == self.actor:
+                raise MathGraphError(
+                    "Operation.operand.reference_actor must differ from "
+                    f"Operation.actor; both are {self.actor!r}"
                 )
         else:
             if not isinstance(self.operand, Quantity):
@@ -262,6 +380,12 @@ class MathProblemGraph:
                 raise MathGraphError(
                     f"operation references unknown target {op.target!r}"
                 )
+            if isinstance(op.operand, Comparison):
+                if op.operand.reference_actor not in entity_set:
+                    raise MathGraphError(
+                        "operation Comparison references unknown "
+                        f"reference_actor {op.operand.reference_actor!r}"
+                    )
         if self.unknown.entity is not None and self.unknown.entity not in entity_set:
             raise MathGraphError(
                 f"unknown references unknown entity {self.unknown.entity!r}"
@@ -322,16 +446,23 @@ def graph_from_dict(d: Mapping[str, Any]) -> MathProblemGraph:
     )
 
 
-def _operand_from_dict(kind: str, operand: Mapping[str, Any]) -> Quantity | Rate:
+def _operand_from_dict(
+    kind: str, operand: Mapping[str, Any]
+) -> "Quantity | Rate | Comparison":
     """Reconstruct an Operation.operand from its canonical JSON form.
 
-    Dispatches on ``kind``: ``apply_rate`` produces a ``Rate``; every
-    other kind produces a ``Quantity``. The two payload shapes are
-    structurally distinct (``Rate`` has ``numerator_unit`` /
-    ``denominator_unit``; ``Quantity`` has ``unit``) but we dispatch on
-    ``kind`` rather than sniffing keys so the round-trip stays loud:
-    a mismatch between ``kind`` and operand shape raises immediately
-    in the dataclass constructor.
+    Dispatches on ``kind``:
+
+    - ``apply_rate`` → ``Rate`` (ADR-0122)
+    - ``compare_additive`` / ``compare_multiplicative`` → ``Comparison`` (ADR-0123)
+    - every other kind → ``Quantity``
+
+    Payload shapes are structurally distinct (``Rate`` has
+    ``numerator_unit``/``denominator_unit``; ``Comparison`` has
+    ``reference_actor``/``direction``; ``Quantity`` has ``unit``) but
+    we dispatch on ``kind`` rather than sniffing keys so a mismatch
+    between ``kind`` and operand shape raises loudly in the dataclass
+    constructor.
     """
     if not isinstance(operand, Mapping):
         raise MathGraphError(
@@ -342,5 +473,18 @@ def _operand_from_dict(kind: str, operand: Mapping[str, Any]) -> Quantity | Rate
             value=operand["value"],
             numerator_unit=operand["numerator_unit"],
             denominator_unit=operand["denominator_unit"],
+        )
+    if kind in ("compare_additive", "compare_multiplicative"):
+        delta_payload = operand.get("delta")
+        delta = (
+            Quantity(value=delta_payload["value"], unit=delta_payload["unit"])
+            if delta_payload is not None
+            else None
+        )
+        return Comparison(
+            reference_actor=operand["reference_actor"],
+            delta=delta,
+            factor=operand.get("factor"),
+            direction=operand["direction"],
         )
     return Quantity(value=operand["value"], unit=operand["unit"])

@@ -37,7 +37,13 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from generate.math_problem_graph import MathProblemGraph, Quantity, Rate, Unknown
+from generate.math_problem_graph import (
+    Comparison,
+    MathProblemGraph,
+    Quantity,
+    Rate,
+    Unknown,
+)
 from generate.math_solver import (
     REQUIRED_PACK_ID,
     SolutionStep,
@@ -232,12 +238,16 @@ def verify(graph: MathProblemGraph, trace: SolutionTrace) -> VerifierVerdict:
 
 
 def _verify_step(step: SolutionStep, state: dict[tuple[str, str], float]) -> None:
-    # apply_rate carries a Rate operand whose key shape differs from
-    # Quantity (denominator_unit instead of unit). Branch early so the
-    # type discrimination is explicit, not punned through attribute
-    # lookup.
+    # Kind-discriminated early returns for non-Quantity operands:
+    # apply_rate (ADR-0122) uses Rate; compare_* (ADR-0123) uses Comparison.
     if step.operation_kind == "apply_rate":
         _verify_apply_rate_step(step, state)
+        return
+    if step.operation_kind == "compare_additive":
+        _verify_compare_additive_step(step, state)
+        return
+    if step.operation_kind == "compare_multiplicative":
+        _verify_compare_multiplicative_step(step, state)
         return
 
     if not isinstance(step.operand, Quantity):
@@ -349,6 +359,138 @@ def _verify_apply_rate_step(
             f"a target; got {step.target!r}"
         )
     state[(step.actor, rate.numerator_unit)] = fresh_after
+
+
+def _verify_compare_additive_step(
+    step: SolutionStep, state: dict[tuple[str, str], float]
+) -> None:
+    """Verify a compare_additive step (ADR-0123).
+
+    Independent replay: re-derives actor's after_value from reference's
+    state in delta.unit; refuses if before_value != 0, target is set,
+    direction not in {more,fewer}, reference has no state in that unit,
+    or actor already holds state there.
+    """
+    if not isinstance(step.operand, Comparison):
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_additive requires "
+            f"Comparison operand; got {type(step.operand).__name__}"
+        )
+    cmp = step.operand
+    if cmp.delta is None:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_additive requires "
+            f"Comparison.delta; got None"
+        )
+    if cmp.direction not in ("more", "fewer"):
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_additive requires "
+            f"direction in {{'more','fewer'}}; got {cmp.direction!r}"
+        )
+    if step.target is not None:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_additive must not "
+            f"declare a target; got {step.target!r}"
+        )
+    if step.before_value != 0.0:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_additive declares "
+            f"before_value={step.before_value}, expected 0.0 "
+            f"(comparison sets fresh state)"
+        )
+    unit = cmp.delta.unit
+    ref_key = (cmp.reference_actor, unit)
+    if ref_key not in state:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_additive references "
+            f"({cmp.reference_actor!r}, {unit!r}) which is not in "
+            f"verifier state"
+        )
+    ref_value = state[ref_key]
+    delta_v = float(cmp.delta.value)
+    if cmp.direction == "more":
+        fresh_after = ref_value + delta_v
+    else:
+        fresh_after = ref_value - delta_v
+    if fresh_after != step.after_value:
+        raise VerificationError(
+            f"step {step.step_index} declares after_value="
+            f"{step.after_value}, verifier computed {fresh_after}"
+        )
+    actor_key = (step.actor, unit)
+    if actor_key in state:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_additive would "
+            f"overwrite existing state for ({step.actor!r}, {unit!r})"
+        )
+    state[actor_key] = fresh_after
+
+
+def _verify_compare_multiplicative_step(
+    step: SolutionStep, state: dict[tuple[str, str], float]
+) -> None:
+    """Verify a compare_multiplicative step (ADR-0123).
+
+    Independent replay: scales reference's unique-unit state by factor.
+    Refuses on before_value != 0, target set, direction not in
+    {times,fraction}, missing or ambiguous reference, or overwrite.
+    """
+    if not isinstance(step.operand, Comparison):
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_multiplicative requires "
+            f"Comparison operand; got {type(step.operand).__name__}"
+        )
+    cmp = step.operand
+    if cmp.factor is None:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_multiplicative requires "
+            f"Comparison.factor; got None"
+        )
+    if cmp.direction not in ("times", "fraction"):
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_multiplicative requires "
+            f"direction in {{'times','fraction'}}; got {cmp.direction!r}"
+        )
+    if step.target is not None:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_multiplicative must not "
+            f"declare a target; got {step.target!r}"
+        )
+    if step.before_value != 0.0:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_multiplicative declares "
+            f"before_value={step.before_value}, expected 0.0 "
+            f"(comparison sets fresh state)"
+        )
+    ref_units = [
+        unit for (entity, unit) in state if entity == cmp.reference_actor
+    ]
+    if not ref_units:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_multiplicative references "
+            f"actor {cmp.reference_actor!r} which holds no state"
+        )
+    if len(set(ref_units)) > 1:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_multiplicative is "
+            f"ambiguous: reference actor {cmp.reference_actor!r} holds "
+            f"state in multiple units {sorted(set(ref_units))!r}"
+        )
+    unit = ref_units[0]
+    ref_value = state[(cmp.reference_actor, unit)]
+    fresh_after = ref_value * float(cmp.factor)
+    if fresh_after != step.after_value:
+        raise VerificationError(
+            f"step {step.step_index} declares after_value="
+            f"{step.after_value}, verifier computed {fresh_after}"
+        )
+    actor_key = (step.actor, unit)
+    if actor_key in state:
+        raise VerificationError(
+            f"step {step.step_index} kind=compare_multiplicative would "
+            f"overwrite existing state for ({step.actor!r}, {unit!r})"
+        )
+    state[actor_key] = fresh_after
 
 
 def _resolve_answer(
