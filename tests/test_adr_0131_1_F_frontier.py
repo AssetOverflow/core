@@ -79,15 +79,20 @@ def test_citations_cover_three_major_vendors() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_provider_registry_has_three_vendors() -> None:
-    assert set(PROVIDERS) == {"anthropic", "openai", "google"}
+def test_provider_registry_has_three_cloud_vendors() -> None:
+    # Three cloud-frontier vendors required by the architecture-aligned
+    # gate; additional local providers (e.g. ollama) may be added but
+    # do not displace the cloud-frontier baseline.
+    assert {"anthropic", "openai", "google"}.issubset(set(PROVIDERS))
 
 
 @pytest.mark.parametrize("provider_id", sorted(PROVIDERS))
 def test_provider_env_key_documented(provider_id: str) -> None:
     spec = PROVIDERS[provider_id]
     assert spec.env_key.startswith("FRONTIER_"), spec.env_key
-    assert spec.env_key.endswith("_KEY"), spec.env_key
+    # Cloud providers use _KEY (API secret); local providers (e.g.
+    # ollama) use _URL (server endpoint, not a secret).
+    assert spec.env_key.endswith(("_KEY", "_URL")), spec.env_key
     assert spec.default_model, "default_model must be non-empty"
 
 

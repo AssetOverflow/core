@@ -108,6 +108,26 @@ def _score_provider(
         if refused_expected_total
         else None
     )
+    # Latency: aggregate when per-case latency_ms is present in the
+    # cache; missing for runs that pre-date the latency patch.
+    latencies = [
+        int(r["latency_ms"])
+        for r in responses
+        if isinstance(r.get("latency_ms"), (int, float))
+    ]
+    latency_summary: dict[str, Any] | None
+    if latencies:
+        ordered = sorted(latencies)
+        latency_summary = {
+            "count": len(ordered),
+            "mean_ms": int(sum(ordered) / len(ordered)),
+            "median_ms": ordered[len(ordered) // 2],
+            "min_ms": ordered[0],
+            "max_ms": ordered[-1],
+            "total_ms": sum(ordered),
+        }
+    else:
+        latency_summary = None
     return {
         "case_count": case_count,
         "responses_seen": case_count - len(missing),
@@ -116,6 +136,7 @@ def _score_provider(
         "accuracy": accuracy,
         "refusal_correctness": refusal_correctness,
         "refused_expected_total": refused_expected_total,
+        "latency_summary": latency_summary,
     }
 
 

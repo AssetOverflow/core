@@ -33,6 +33,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Final, Mapping
@@ -126,12 +127,18 @@ def _anthropic_invoke(prompt: str, api_key: str, model: str) -> str:
             "`pip install anthropic` to enable this provider"
         ) from exc
     client = anthropic.Anthropic(api_key=api_key)
-    message = client.messages.create(
-        model=model,
-        max_tokens=256,
-        temperature=0.0,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    # Claude Opus 4.x and later deprecate ``temperature``; omit it for
+    # those (the default is already deterministic-friendly). Earlier
+    # models still accept temperature=0.
+    kwargs: dict[str, object] = {
+        "model": model,
+        "max_tokens": 256,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    is_opus_4x_or_newer = model.startswith("claude-opus-4") or model.startswith("claude-sonnet-5")
+    if not is_opus_4x_or_newer:
+        kwargs["temperature"] = 0.0
+    message = client.messages.create(**kwargs)  # type: ignore[arg-type]
     # Concatenate all text blocks in the response.
     parts: list[str] = []
     for block in getattr(message, "content", ()):
@@ -150,14 +157,61 @@ def _openai_invoke(prompt: str, api_key: str, model: str) -> str:
             "`pip install openai` to enable this provider"
         ) from exc
     client = OpenAI(api_key=api_key)
-    response = client.chat.completions.create(
-        model=model,
-        max_tokens=256,
-        temperature=0.0,
-        messages=[{"role": "user", "content": prompt}],
+    # GPT-5 family + o-series reasoning models reject ``max_tokens``
+    # and ``temperature``; older models (gpt-4o, gpt-4.1) accept both.
+    # Try the modern shape first and fall back conservatively.
+    modern = (
+        model.startswith("gpt-5")
+        or model.startswith("o1")
+        or model.startswith("o3")
+        or model.startswith("o4")
     )
+    kwargs: dict[str, object] = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    if modern:
+        kwargs["max_completion_tokens"] = 1024
+    else:
+        kwargs["max_tokens"] = 256
+        kwargs["temperature"] = 0.0
+    response = client.chat.completions.create(**kwargs)  # type: ignore[arg-type]
     choice = response.choices[0]
     content = getattr(choice.message, "content", None) or ""
+    return content
+
+
+def _ollama_invoke(prompt: str, api_key: str, model: str) -> str:
+    """Local Ollama adapter — no API key required when hitting
+    ``http://localhost:11434``. The ``api_key`` argument is the
+    server URL override (falls back to localhost). Lazy-imports
+    ``urllib`` so no third-party dep is needed.
+    """
+    import urllib.error
+    import urllib.request
+
+    base_url = api_key or "http://localhost:11434"
+    payload = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False,
+        "options": {"temperature": 0.0, "num_predict": 1024},
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        f"{base_url}/api/chat",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=180) as resp:
+            body = resp.read().decode("utf-8")
+    except urllib.error.URLError as exc:
+        raise FrontierRunError(
+            f"ollama call failed: {exc}"
+        ) from exc
+    data = json.loads(body)
+    message = data.get("message") or {}
+    content = message.get("content") or data.get("response") or ""
     return content
 
 
@@ -199,6 +253,14 @@ PROVIDERS: Final[Mapping[str, ProviderSpec]] = {
         env_key="FRONTIER_GOOGLE_KEY",
         default_model="gemini-1.5-pro",
         invoke=_google_invoke,
+    ),
+    "ollama": ProviderSpec(
+        provider_id="ollama",
+        # Not a secret; populated only when the caller wants to point
+        # at a non-default Ollama server URL.
+        env_key="FRONTIER_OLLAMA_URL",
+        default_model="gpt-oss:20b",
+        invoke=_ollama_invoke,
     ),
 }
 
@@ -274,6 +336,7 @@ def run_frontier(
             results.append(cache[case_id])
             continue
         prompt = _prompt_for(case["expression_a"], case["expression_b"])
+        t0 = time.perf_counter()
         try:
             reply = invoke(prompt, api_key or "", resolved_model)
         except FrontierRunError:
@@ -283,6 +346,7 @@ def run_frontier(
                 f"provider {provider_id!r} model {resolved_model!r} "
                 f"failed on case {case_id!r}: {exc}"
             ) from exc
+        latency_ms = int((time.perf_counter() - t0) * 1000)
         verdict = parse_provider_verdict(reply)
         record = {
             "case_id": case_id,
@@ -290,6 +354,7 @@ def run_frontier(
             "model": resolved_model,
             "verdict": verdict,
             "raw_reply": reply,
+            "latency_ms": latency_ms,
         }
         _append_cache(provider_id, resolved_model, record)
         results.append(record)
