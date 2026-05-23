@@ -39,7 +39,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from generate.math_problem_graph import Rate
+from generate.math_problem_graph import Comparison, Rate
 from generate.math_solver import SolutionStep, SolutionTrace
 
 
@@ -104,9 +104,19 @@ def realize(graph_initial_state: tuple, trace: SolutionTrace) -> RealizedTrace:
         for p in graph_initial_state
     )
 
+    # ADR-0123: the multiplicative comparison helper needs the
+    # reference actor's unit, which is not stored on Comparison when
+    # factor is set. We derive it deterministically from initial
+    # state — the only entity-unit binding the realizer can reach
+    # without re-running the solver. This is sufficient because the
+    # substrate refuses multi-unit reference actors at solve time.
+    entity_units: dict[str, str] = {
+        p.entity: p.quantity.unit for p in graph_initial_state
+    }
+
     step_sentences: list[str] = []
     for step in trace.steps:
-        step_sentences.append(_step_sentence(step))
+        step_sentences.append(_step_sentence(step, entity_units))
 
     answer_sentence = _answer_sentence(
         trace.answer_entity, trace.answer_value, trace.answer_unit
@@ -124,9 +134,20 @@ def _setup_sentence(entity: str, value: int | float, unit: str) -> str:
     return f"{entity} has {_render_number(value)} {_unit_surface(unit, value)}."
 
 
-def _step_sentence(step: SolutionStep) -> str:
+def _step_sentence(
+    step: SolutionStep, entity_units: dict[str, str] | None = None
+) -> str:
     if step.operation_kind == "apply_rate":
         return _apply_rate_sentence(step)
+    if step.operation_kind == "compare_additive":
+        return _compare_additive_sentence(step)
+    if step.operation_kind == "compare_multiplicative":
+        if entity_units is None:
+            raise RealizerError(
+                f"compare_multiplicative step {step.step_index} requires "
+                f"entity_units to resolve reference actor unit; got None"
+            )
+        return _compare_multiplicative_sentence(step, entity_units)
     if step.operation_kind == "add":
         return (
             f"{step.actor} buys {_render_number(step.operand.value)} more "
@@ -203,6 +224,154 @@ def _apply_rate_sentence(step: SolutionStep) -> str:
         f"At {rate_n} {rate.numerator_unit} per {denom_singular}, "
         f"{step.actor} spends {after_n} {rate.numerator_unit} on "
         f"{before_n} {denom_surface}."
+    )
+
+
+def _compare_additive_sentence(step: SolutionStep) -> str:
+    """Render an additive comparison step as show-your-work prose (ADR-0123).
+
+    Reads ``step.operand`` (must be a :class:`Comparison` with
+    ``delta`` set) and emits a one-sentence rendering of the form:
+
+    - direction='more':  "<actor> has <delta> more <unit> than <ref>,
+                          giving <actor> a total of <after> <unit>."
+    - direction='fewer': "<actor> has <delta> fewer <unit> than <ref>,
+                          leaving <actor> with a total of <after> <unit>."
+
+    The two-clause shape — *comparison clause* + *resolved state* —
+    is pinned as a structural invariant by the ADR-0123 test suite.
+    ``delta.value`` and ``after_value`` pluralize independently via
+    :func:`_unit_surface` (so "1 more apple" vs "3 more apples"
+    behave correctly without the resolved state being forced into
+    the same plurality).
+
+    Raises :class:`RealizerError` on:
+    - operand not a :class:`Comparison` (substrate solver bug)
+    - missing ``delta`` (multiplicative shape leaked into this branch)
+    - direction not in ``{"more", "fewer"}``
+    - self-reference (actor == reference_actor)
+    """
+    if not isinstance(step.operand, Comparison):
+        raise RealizerError(
+            f"compare_additive step {step.step_index} requires a "
+            f"Comparison operand; got {type(step.operand).__name__}"
+        )
+    cmp = step.operand
+    if cmp.delta is None:
+        raise RealizerError(
+            f"compare_additive step {step.step_index} requires "
+            f"Comparison.delta; got None (multiplicative shape leaked)"
+        )
+    if cmp.direction not in ("more", "fewer"):
+        raise RealizerError(
+            f"compare_additive step {step.step_index} requires "
+            f"direction in {{'more','fewer'}}; got {cmp.direction!r}"
+        )
+    if step.actor == cmp.reference_actor:
+        raise RealizerError(
+            f"compare_additive step {step.step_index} refuses "
+            f"self-comparison: actor=={cmp.reference_actor!r}"
+        )
+    delta_n = _render_number(cmp.delta.value)
+    after_n = _render_number(step.after_value)
+    delta_surface = _unit_surface(cmp.delta.unit, cmp.delta.value)
+    after_surface = _unit_surface(cmp.delta.unit, step.after_value)
+    if cmp.direction == "more":
+        return (
+            f"{step.actor} has {delta_n} more {delta_surface} than "
+            f"{cmp.reference_actor}, giving {step.actor} a total of "
+            f"{after_n} {after_surface}."
+        )
+    # direction == "fewer"
+    return (
+        f"{step.actor} has {delta_n} fewer {delta_surface} than "
+        f"{cmp.reference_actor}, leaving {step.actor} with a total of "
+        f"{after_n} {after_surface}."
+    )
+
+
+def _compare_multiplicative_sentence(
+    step: SolutionStep, entity_units: dict[str, str]
+) -> str:
+    """Render a multiplicative comparison step as show-your-work prose.
+
+    Reads ``step.operand`` (must be a :class:`Comparison` with
+    ``factor`` set) and emits:
+
+    - direction='times':    "<actor> has <factor> times as many <unit>
+                             as <ref>, giving <actor> a total of <after>
+                             <unit>."
+    - direction='fraction', factor==0.5:
+                            "<actor> has half as many <unit> as <ref>,
+                             giving <actor> a total of <after> <unit>."
+    - direction='fraction', other factor:
+                            "<actor> has <factor> as many <unit> as
+                             <ref>, giving <actor> a total of <after>
+                             <unit>."
+
+    ``unit`` is resolved from ``entity_units[reference_actor]`` — the
+    substrate's solver derives it from the reference actor's
+    in-flight state, but the realizer only sees ``SolutionStep``
+    instances. Initial-state lookup is sufficient because the
+    substrate refuses multi-unit reference actors and refuses to
+    overwrite a comparison actor's existing state.
+
+    Raises :class:`RealizerError` on:
+    - operand not a :class:`Comparison`
+    - missing ``factor``
+    - direction not in ``{"times", "fraction"}``
+    - reference actor missing from ``entity_units``
+    - self-reference
+    """
+    if not isinstance(step.operand, Comparison):
+        raise RealizerError(
+            f"compare_multiplicative step {step.step_index} requires "
+            f"a Comparison operand; got {type(step.operand).__name__}"
+        )
+    cmp = step.operand
+    if cmp.factor is None:
+        raise RealizerError(
+            f"compare_multiplicative step {step.step_index} requires "
+            f"Comparison.factor; got None (additive shape leaked)"
+        )
+    if cmp.direction not in ("times", "fraction"):
+        raise RealizerError(
+            f"compare_multiplicative step {step.step_index} requires "
+            f"direction in {{'times','fraction'}}; got {cmp.direction!r}"
+        )
+    if step.actor == cmp.reference_actor:
+        raise RealizerError(
+            f"compare_multiplicative step {step.step_index} refuses "
+            f"self-comparison: actor=={cmp.reference_actor!r}"
+        )
+    if cmp.reference_actor not in entity_units:
+        raise RealizerError(
+            f"compare_multiplicative step {step.step_index} requires "
+            f"reference actor {cmp.reference_actor!r} to appear in "
+            f"initial state; available entities: "
+            f"{sorted(entity_units)!r}"
+        )
+    unit = entity_units[cmp.reference_actor]
+    after_n = _render_number(step.after_value)
+    after_surface = _unit_surface(unit, step.after_value)
+    if cmp.direction == "fraction" and cmp.factor == 0.5:
+        return (
+            f"{step.actor} has half as many {unit} as "
+            f"{cmp.reference_actor}, giving {step.actor} a total of "
+            f"{after_n} {after_surface}."
+        )
+    factor_n = _render_number(cmp.factor)
+    if cmp.direction == "fraction":
+        return (
+            f"{step.actor} has {factor_n} as many {unit} as "
+            f"{cmp.reference_actor}, giving {step.actor} a total of "
+            f"{after_n} {after_surface}."
+        )
+    # direction == "times"
+    return (
+        f"{step.actor} has {factor_n} times as many {unit} as "
+        f"{cmp.reference_actor}, giving {step.actor} a total of "
+        f"{after_n} {after_surface}."
     )
 
 
