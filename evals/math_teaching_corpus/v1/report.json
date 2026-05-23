@@ -1,0 +1,260 @@
+{
+  "adr": "0131.2",
+  "benchmark": "math_teaching_corpus_v1",
+  "cases_path": "evals/math_teaching_corpus/v1/cases.jsonl",
+  "correct_rate": 1.0,
+  "counts": {
+    "correct": 30,
+    "refused": 0,
+    "wrong": 0
+  },
+  "exit_criterion": {
+    "correct_rate_min": 1.0,
+    "passed": true,
+    "wrong_max": 0
+  },
+  "per_case": [
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0001",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0002",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0003",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0004",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0005",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0006",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0007",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0008",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0009",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0010",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0011",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0012",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0013",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0014",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0015",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0016",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0017",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0018",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0019",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0020",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0021",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0022",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0023",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0024",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0025",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0026",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0027",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0028",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0029",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    },
+    {
+      "actual": "replay_equivalent",
+      "case_id": "math-teach-v1-0030",
+      "category": "mathematical_logic",
+      "expected": "replay_equivalent",
+      "reason": "",
+      "verdict_class": "correct"
+    }
+  ],
+  "sample_count": 30,
+  "schema_version": 1
+}
