@@ -13,6 +13,15 @@ def test_absent_domain_contract_is_valid_noop() -> None:
     assert result.contract is None
 
 
+def test_missing_manifest_is_valid_absent_noop(tmp_path) -> None:
+    result = validate_domain_contract_pack("missing_pack", data_root=tmp_path)
+
+    assert result.present is False
+    assert result.valid is True
+    assert result.errors == ()
+    assert result.contract is None
+
+
 def test_valid_domain_contract_parses_optional_axioms_rules() -> None:
     result = parse_domain_contract(
         {
@@ -43,7 +52,7 @@ def test_valid_domain_contract_parses_optional_axioms_rules() -> None:
     assert result.contract.rules is None
 
 
-def test_domain_contract_rejects_unsafe_paths_and_unknown_domain() -> None:
+def test_domain_contract_rejects_unsafe_paths_and_marks_unknown_domain_scope_boundary() -> None:
     result = parse_domain_contract(
         {
             "domain_contract_version": 1,
@@ -56,7 +65,8 @@ def test_domain_contract_rejects_unsafe_paths_and_unknown_domain() -> None:
     )
 
     assert result.valid is False
-    assert "domain_id:unknown" in result.errors
+    assert "scope_boundary:domain_id:unknown" in result.errors
+    assert "domain_id:unknown" not in result.errors
     assert "axioms:unsafe_path" in result.errors
     assert "rules:unsafe_path" in result.errors
     assert "provenance:required" in result.errors

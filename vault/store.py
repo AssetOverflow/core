@@ -27,11 +27,16 @@ def _versor_key(F: np.ndarray) -> bytes:
 def _status_admits(entry_status: EpistemicStatus, min_status: EpistemicStatus) -> bool:
     """Return True iff `entry_status` is admissible at the `min_status` tier.
 
-    Today the only meaningful tier-filter is `min_status=COHERENT`, which
-    means "must be in ADMISSIBLE_AS_EVIDENCE."  CONTESTED, SPECULATIVE,
-    and FALSIFIED entries are excluded.  If the admissibility set grows
-    in the future (it should not, per ADR-0021), only this helper changes.
+    FALSIFIED entries are never admissible as evidence regardless of the
+    requested tier — they carry CONTRADICTED semantics and are retained only
+    for provenance and Stage-3 inversion (ADR-0021 §3).  SPECULATIVE entries
+    are separately excluded at the COHERENT tier (UNVERIFIED-POSSIBLE semantics
+    — not yet coherent, but distinct from actively falsified).  If the
+    admissibility set grows in the future (it should not, per ADR-0021), only
+    this helper changes.
     """
+    if entry_status is EpistemicStatus.FALSIFIED:
+        return False  # CONTRADICTED — never evidence regardless of requested tier
     if min_status is EpistemicStatus.COHERENT:
         return entry_status in ADMISSIBLE_AS_EVIDENCE
     return entry_status is min_status

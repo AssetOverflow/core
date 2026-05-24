@@ -20,6 +20,7 @@ _KNOWN_DOMAIN_IDS = {
     "hebrew_greek_textual_reasoning",
     "philosophy_theology",
 }
+_SCOPE_BOUNDARY_PREFIX = "scope_boundary"
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,7 +126,7 @@ def parse_domain_contract(manifest: dict[str, Any], *, pack_id: str) -> DomainCo
     else:
         domain_id_s = domain_id.strip()
         if domain_id_s not in _KNOWN_DOMAIN_IDS:
-            errors.append("domain_id:unknown")
+            errors.append(f"{_SCOPE_BOUNDARY_PREFIX}:domain_id:unknown")
 
     axioms = _optional_path(manifest.get("axioms"), field_name="axioms", errors=errors)
     rules = _optional_path(manifest.get("rules"), field_name="rules", errors=errors)
@@ -195,8 +196,7 @@ def validate_domain_contract_pack(pack_id: str, *, data_root: Path | None = None
         return DomainContractValidation(
             pack_id=pack_id,
             present=False,
-            valid=False,
-            errors=("manifest:not_found",),
+            valid=True,
         )
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
