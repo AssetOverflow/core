@@ -1,7 +1,7 @@
 # Scope: Substrate Liveness Audit
 
-**Status:** Draft v1 / scope-only (defines the audit; audit itself is a separate deliverable)
-**Date:** 2026-05-24
+**Status:** Draft v2 / scope-only (defines the audit; audit itself is a separate deliverable)
+**Date:** 2026-05-24 (v1: initial draft; v2: self-review fixes — anchor-risk in layering table, audit tractability promoted to first-class method step, end-to-end-test criterion reframed to suite lanes, ADR range mis-grouping fixed, durability acknowledgment added)
 **Author:** CORE agents
 **Anchor:** [thesis-decoding-not-generating](../../../.claude/projects/-Users-kaizenpro-Projects-core/memory/thesis-decoding-not-generating.md) (memory)
 **Discipline:** [feedback-adr-cross-reference-discipline](../../../.claude/projects/-Users-kaizenpro-Projects-core/memory/feedback-adr-cross-reference-discipline.md) (memory)
@@ -97,24 +97,36 @@ each border.
 The audit must commit to a layering before it can find gaps. First-pass
 layering, expected to refine:
 
-| Layer | Concerns | Representative ADRs / modules | Expected status |
-|---|---|---|---|
-| L0 — Algebra primitives | versor application, CGA inner product, null vector preservation, sandwich closure | `algebra/versor.py`, `algebra/backend/`; invariant `versor_condition < 1e-6` | **Closed (foundation)** |
-| L1 — Field substrate | injection gate, propagation, energy operator, normalization sites | `field/propagate.py`, `ingest/gate.py`, `core/physics/energy.py`; ADR-0006 | **Mostly closed** (energy operator wired) |
-| L2 — Vault | exact CGA recall, indexing, batching | `vault/store.py`; ADR-0054 | **Closed (content path);** promotion gate dormant |
-| L3 — Language packs | compiler, lexicons, identity, safety, ethics, anchor lens, register | `language_packs/`, `packs/`; ADR-0027..0047, ADR-0070..0073 | **Closed** for static packs; mutation/ratification path unverified |
-| L4 — Recognition | anti-unifier, multi-resolution decoding, epistemic carrier, dispatch trace | `recognition/`; ADR-0143, ADR-0144 | **Partial** (mechanism live; storage scope just landed; integration into live turn loop pending) |
-| L5 — Cognition pipeline | intent classification, ratification, articulation target, deterministic realizer | `core/cognition/`, `generate/intent.py`, `generate/realizer.py`; ADR-0048..0053 | **Live but session-bounded** |
-| L6 — Chat runtime | turn loop, surface composition, grounding dispatch, telemetry, verdicts | `chat/runtime.py`; ADR-0058..0099 | **Live but session-bounded;** dispatch trace just landed |
-| L7 — Teaching loop | correction extraction, review, proposal log, replay-equivalence | `teaching/`; ADR-0055..0064 | **Partial** (proposal storage exists; live-turn-loop integration unverified) |
-| L8 — Inter-session memory + contemplation | discovery, contemplation, multi-tier memory | `teaching/contemplation.py`, `teaching/store.py`; ADR-0055, ADR-0056 | **Spec-heavy; liveness unverified** |
-| L9 — Epistemic state + verdicts | safety, ethics, refusal materialisation, epistemic taxonomy | `chat/safety.py`, `chat/ethics.py`, `core/cognition/result.py`; ADR-0142, ADR-0144 | **Live; some debt remaining** |
-| L10 — Runtime model | process lifecycle, persistence across reboot, HITL queue | **No ADR yet** | **Open — prerequisite for forever-running** |
-| L11 — Forever-running engine | the destination | **No ADR yet** | **Open — capstone** |
+| Layer | Concerns | Where to look first |
+|---|---|---|
+| L0 — Algebra primitives | versor application, CGA inner product, null vector preservation, sandwich closure | `algebra/versor.py`, `algebra/backend/`; invariant `versor_condition < 1e-6` |
+| L1 — Field substrate | injection gate, propagation, energy operator, normalization sites | `field/propagate.py`, `ingest/gate.py`, `core/physics/energy.py`; ADR-0006 |
+| L2 — Vault | exact CGA recall, indexing, batching, promotion gate | `vault/store.py`, `core/physics/learning.py`; ADR-0014, ADR-0054 |
+| L3 — Language packs | compiler, lexicons, identity, safety, ethics, anchor lens, register | `language_packs/`, `packs/`; ADR-0027..0047, ADR-0070..0073 |
+| L4 — Recognition | anti-unifier, multi-resolution decoding, epistemic carrier, dispatch trace | `recognition/`; ADR-0143, ADR-0144 |
+| L5 — Cognition pipeline | intent classification, ratification, articulation target, deterministic realizer | `core/cognition/`, `generate/intent.py`, `generate/realizer.py`; ADR-0048..0053 |
+| L6 — Chat runtime + surface composition | turn loop, surface composition, grounding dispatch, telemetry, verdicts, register, anchor lens, cross-pack composition | `chat/runtime.py`; ADR-0058..0099 (audit must enumerate per-ADR — this range spans surface composition, correction telemetry, cross-pack resolution; not all are runtime-loop concerns) |
+| L7 — Teaching loop | correction extraction, review, proposal log, replay-equivalence | `teaching/correction.py`, `teaching/review.py`, `teaching/replay.py`, `teaching/store.py`; ADR-0057 |
+| L8 — Inter-session memory + contemplation | discovery, contemplation, multi-tier memory | `teaching/contemplation.py`; ADR-0055, ADR-0056 |
+| L9 — Epistemic state + verdicts | safety, ethics, refusal materialisation, epistemic taxonomy | `chat/safety.py`, `chat/ethics.py`, `core/cognition/result.py`; ADR-0142, ADR-0144 |
+| L10 — Runtime model | process lifecycle, persistence across reboot, HITL queue | **No ADR yet — not an audit target; prerequisite the audit will surface need for** |
+| L11 — Forever-running engine | the destination | **No ADR yet — not an audit target; capstone the audit informs** |
+
+**No "expected status" column intentionally.** v1 had one; it
+anchored. The auditor must verify each layer's closure status from
+first principles, not against a guess in this table. Predictions are
+the failure mode this scope was meant to prevent.
+
+**ADR range citations are starting points, not commitments.** "ADR-0058..0099" at L6 spans seven dozen ADRs covering surface composition, correction telemetry, cross-pack resolution, register, and anchor lens — not all of which are properly L6 concerns. The audit's first per-layer act is to enumerate the ADRs actually relevant to that layer, not trust the ranges here. v1 of this scope grouped ADR-0058-0064 under L7 (teaching loop) when they are actually L6 (surface composition); v2 corrects but the broader lesson stands.
 
 This layering is a hypothesis. The audit will validate or refine it.
 Anywhere the audit finds a concern that doesn't fit cleanly into a layer,
 that's evidence the layering itself is wrong and worth revising.
+
+**L10 and L11 are explicitly not audit targets.** They have no design
+to audit. They are flagged so the audit knows which gaps it is
+*expected* to surface need for; the audit reports those needs rather
+than attempts to fill them.
 
 ---
 
@@ -133,11 +145,14 @@ Concretely, a closed layer has:
 3. **Live caller** — at least one path from runtime entry (`core chat`,
    `core eval`, scheduled job, etc.) that exercises the module under
    normal operation.
-4. **End-to-end test** — a test that asserts the reach path actually
-   runs, not just that the module's unit tests pass.
+4. **Exercised by a documented suite lane** — a `core test --suite {…}`
+   or `core eval …` invocation actually walks the reach path. Tests
+   that exist in `tests/` but aren't reached by any documented suite
+   lane do not count.
 5. **Cross-layer consistency** — the layer's interface contracts match
    what neighboring layers expect (e.g., if L6 expects L7 to consume
-   a `TurnEvent`, the consumer exists and is reachable).
+   a `TurnEvent`, the consumer exists, is reachable, and reads the
+   fields the producer populates).
 
 A layer is **partial** when (1)–(2) hold but (3)–(5) are incomplete.
 
@@ -151,10 +166,40 @@ each of the five criteria.
 
 ## Audit method
 
-For each layer, in dependency order (L0 → L11):
+### Step 0 — Structure the audit as per-layer commits
+
+Before any layer is audited, commit to a structure that prevents the
+audit from becoming an abandoned monolith:
+
+- **Per-layer commits, not one big commit.** Each layer's audit
+  produces its own commit to the registry. Layer N's audit cannot
+  begin until layer N-1 has been audited and committed (foundation-
+  first discipline; see "Order matters" below).
+- **Per-layer briefs handoff to subagents.** The audit is *the
+  archetypal handoff candidate*: mechanical, well-scoped, dependency-
+  ordered, evidence-driven. Each layer's audit can be dispatched as a
+  standalone brief to Codex or Gemini per [[feedback-parallel-agent-worktrees]],
+  with the prior layer's registry entry as the only required input
+  context. The first layer's audit should be done by the operator or
+  primary agent to establish the registry shape and standard of
+  evidence; subsequent layers are handoff-ready.
+- **Progress tracking in the registry itself.** The registry's
+  table-of-contents shows audited vs. pending layers. Resume-after-
+  interruption is "look at the registry, start with the first pending
+  layer."
+- **Per-layer file optional.** If the registry grows unwieldy as one
+  file, split into per-layer files (`docs/audit/registry/L4-recognition.md`,
+  etc.) with the registry root as an index. Auditor's choice; flag
+  early if splitting.
+
+### Per-layer audit steps
+
+For each layer, in dependency order (L0 → L9; L10/L11 are not audit
+targets):
 
 1. **Enumerate ADRs.** From `docs/decisions/`, list every ADR whose
-   subject falls within the layer.
+   subject falls within the layer. Do not trust the ADR-range hints
+   in the layering table — re-enumerate per layer.
 2. **Map ADRs to modules.** For each ADR, identify the primary
    module(s) implementing it. Cite file paths.
 3. **Trace callers.** For each module, grep for imports and call sites
@@ -162,20 +207,31 @@ For each layer, in dependency order (L0 → L11):
    the runtime entrypoint (`core` CLI). If the trace dead-ends inside
    `core/physics/` or another self-contained package, the module is
    dormant.
-4. **Verify end-to-end test coverage.** For each live module, identify
-   the test(s) that exercise the *reach path*, not just the module's
-   unit behavior. Absence of such a test is a closure gap even if unit
-   tests are green.
-5. **Check cross-layer contracts.** For each interface the layer
-   exposes (dataclasses, function signatures, return types), verify
-   the consuming layer actually uses every field/method as the ADR
-   specified. Unused fields or method signatures suggest design drift.
+4. **Identify the exercising suite lane.** For each live module,
+   identify which CLI suite lane(s) actually exercise its reach
+   path: `core test --suite {smoke|cognition|teaching|packs|runtime|algebra|full}`
+   or `core eval cognition`. A module whose only test coverage is in
+   `tests/` files not reached by any suite lane is a closure gap
+   even if its unit tests are green. The criterion is "an operator
+   running a documented CLI lane exercises this code path."
+5. **Check cross-layer contracts (two passes).** First mechanical:
+   for each dataclass field, function parameter, or return type the
+   layer exposes, grep for at least one consumer in another layer
+   that reads it. Unread fields = mechanical closure gap. Second
+   judgment: where the field IS read, does the consuming layer use
+   it as the ADR specified? Semantic mismatches require auditor
+   judgment and are flagged for human review rather than verdicted
+   mechanically.
 6. **Verdict and evidence.** Per ADR, per module: closed / partial /
-   open, with citations for each criterion.
+   open, with citations for each criterion. Mechanical findings
+   carry full verdict authority; judgment-required findings are
+   flagged and verdict is deferred to operator review.
 
-The audit is **mechanical** — grep, trace, cite. It is not opinion. Two
-reviewers running the audit independently should produce the same
-verdicts.
+The audit is **mostly mechanical** — grep, trace, cite. Step 5's second
+pass requires judgment; everything else does not. Two careful
+reviewers running the audit should produce identical verdicts on the
+mechanical findings, and surface the same judgment-required findings
+even if they disagree on resolution.
 
 ### Order matters
 
@@ -281,15 +337,61 @@ layers above.
   silently stopped reading, both layers' unit tests pass but the
   system is degraded. Cross-layer contract check (step 5) is the
   audit's defense.
-- **Audit fatigue.** The audit is large. The risk is shortcuts — "this
-  layer looks fine, skipping the caller trace." Mitigate by structuring
-  the audit as per-layer commits, each with verifiable grep evidence,
-  so progress is concrete and shortcuts are visible.
+- **Audit fatigue.** Addressed in method Step 0: per-layer commits,
+  per-layer handoff to subagents, progress visible in the registry's
+  own table-of-contents. Shortcuts remain a risk; the per-layer
+  commit discipline makes them visible to PR review rather than
+  hidden in a monolith.
 - **Audit-of-audit infinite regress.** The audit method itself depends
   on grep + caller-trace evidence. If those tools mislead (e.g.,
   dynamic dispatch obscures a real caller), the audit may produce
   false-dormant verdicts. Mitigate by requiring two independent
   verifications for every "dormant" verdict before it's recorded.
+- **Discipline durability.** This scope was itself revised v1→v2 after
+  self-review found three iterations of the same failure mode the
+  scope is meant to prevent: asserting ADR-content without verifying
+  (ADR-0058-0064 mis-grouped as L7 teaching loop when they are
+  mostly L6 surface composition). See "Self-review acknowledgment"
+  below. The pattern's durability is itself evidence: a documented
+  discipline does not automatically prevent the documented mistake.
+  The audit must build in mechanical checks (per-layer enumeration,
+  grep evidence) rather than relying on auditor recall of the
+  discipline.
+
+---
+
+## Self-review acknowledgment (v2 addition)
+
+Self-review of v1 found that this scope — the document creating the
+cross-reference discipline, defining the audit AGAINST that discipline
+— still committed the documented mistake. The layering table at L7
+asserted "ADR-0055..0064" as teaching-loop ADRs; verification showed
+ADR-0058-0064 are predominantly L6 (surface composition, correction
+telemetry, cross-pack resolution), not L7.
+
+That is three consecutive iterations of the same failure mode in
+one session:
+
+1. Recognizer-storage scope v1 — asserted "existing thermodynamic
+   lattice" without verifying `VaultPromotionPolicy` was wired.
+2. Recognizer-storage scope v2's drop-off section — invented HITL
+   ratification machinery without cross-referencing ADR-0057.
+3. This scope's v1 — asserted ADR ranges per layer without
+   per-ADR enumeration.
+
+The pattern's durability is meaningful: a documented discipline does
+not automatically prevent the documented mistake. Memory entries get
+read but not internalized; cross-reference principles get cited but
+not applied; auditing requires mechanical structure not vigilance.
+The audit's Step 0 (per-layer commits, per-ADR enumeration, grep
+evidence, handoff-to-subagent discipline) is specifically structured
+so the auditor cannot complete the audit by sketch — the mechanical
+deliverables make the discipline impossible to skip without the gap
+being visible in the commit history.
+
+This is the kind of structural mitigation [[feedback-adr-cross-reference-discipline]]
+gestures at but does not yet require. The audit IS the more rigorous
+form of that discipline.
 
 ---
 
@@ -341,10 +443,15 @@ ADR enumeration per layer.
 CORE is a system of systems. Each subsystem's design has landed via
 ADR; many subsystems' wiring has not. The substrate liveness audit
 walks layer-by-layer from the foundation outward, finding which
-subsystems are closed (designed + wired + exercised + cross-layer-
-consistent), which are partial, and which are open. Output is a
-closure registry and a derived ratchet plan that sequences the
-remaining wiring work toward live-mode readiness.
+subsystems are closed (designed + wired + exercised by a documented
+suite lane + cross-layer-consistent), which are partial, and which
+are open. Output is a closure registry and a derived ratchet plan
+that sequences the remaining wiring work toward live-mode readiness.
+
+The audit is structured for per-layer handoff to subagents: each
+layer's audit is a self-contained brief, dependency-ordered,
+evidence-driven. The first layer's audit establishes the registry
+shape and standard of evidence; subsequent layers are handoff-ready.
 
 The scope's commitment is to **the audit's shape and discipline**, not
 to its findings. Findings belong to the audit. The next ADRs belong to
@@ -352,5 +459,7 @@ the ratchet.
 
 The audit's first act, on the first layer it touches, is to apply
 the same grep that should have been applied to ADR-0006/0014 before
-the recognizer-storage v1 draft. The discipline is the deliverable
-as much as the registry is.
+the recognizer-storage v1 draft — and that v1 of this scope still
+failed to apply to its own ADR ranges. The discipline is the
+deliverable as much as the registry is, and the per-layer commit
+discipline is what makes the discipline impossible to skip silently.
