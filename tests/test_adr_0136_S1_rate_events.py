@@ -20,10 +20,12 @@ from generate.math_candidate_parser import (
     _EARNINGS_RE,
     _EARNINGS_VERBS,
     _to_seconds,
+    classify_sentence,
     extract_capacity_candidates,
     extract_capacity_question_candidates,
     extract_earnings_candidates,
     extract_earnings_question_candidates,
+    has_numeric_token,
 )
 
 _REPO = Path(__file__).resolve().parent.parent
@@ -230,3 +232,58 @@ def test_gsm8k_post_s1_admission_honest() -> None:
             )
     assert len(admitted) >= 1, "gsm8k-0014 should admit"
     assert "gsm8k-train-sample-v1-0014" in admitted
+
+
+# ── ADR-0136.S.0 — Context-sentence classifier ───────────────────────
+
+
+class TestContextClassifier:
+    @pytest.mark.parametrize("sentence", [
+        "Jason has a carriage house that he rents out.",
+        "Xavier plays football with his friends.",
+        "Marnie makes bead bracelets.",
+        "John decides to take up illustration.",
+        "Sandra wants to buy some sweets.",
+    ])
+    def test_no_digit_sentences_classified_context(self, sentence: str) -> None:
+        assert not has_numeric_token(sentence)
+        assert classify_sentence(sentence) == "context"
+
+    @pytest.mark.parametrize("sentence", [
+        "Bob can shuck 10 oysters in 5 minutes.",
+        "During 15 minutes Xavier can score 2 goals on average.",
+        "Francine has five full boxes of crayons and 5 loose crayons.",
+        "Tina makes $18.00 an hour.",
+    ])
+    def test_numeric_sentences_classified_numeric_state(self, sentence: str) -> None:
+        assert has_numeric_token(sentence)
+        assert classify_sentence(sentence) == "numeric_state"
+
+    def test_gsm8k_0018_context_sentence_skipped_admits(self) -> None:
+        """Context gate removed: gsm8k-0018 admits with answer 16."""
+        q = (
+            "Xavier plays football with his friends. "
+            "During 15 minutes Xavier can score 2 goals on average. "
+            "How many goals on average is Xavier able to score, "
+            "when the match lasted for 2 hours?"
+        )
+        r = parse_and_solve(q)
+        assert r.answer == 16.0, f"expected 16.0 got {r.answer} ({r.refusal_reason})"
+
+    def test_inverted_capacity_pattern_matches(self) -> None:
+        """Shape A2: 'During M <time-unit> <Actor> can <verb> N <unit>'."""
+        cands = extract_capacity_candidates(
+            "During 15 minutes Xavier can score 2 goals on average."
+        )
+        assert len(cands) == 1
+        assert cands[0].count == 2.0
+        assert cands[0].per_count == 15.0
+        assert cands[0].per_unit == "minutes"
+
+    def test_all_context_sentences_refused_when_no_numeric_follows(self) -> None:
+        """A problem with only context sentences and no numeric state refuses."""
+        r = parse_and_solve(
+            "Jason has a carriage house. How many houses does Jason rent?"
+        )
+        assert r.answer is None
+        assert r.refusal_reason is not None

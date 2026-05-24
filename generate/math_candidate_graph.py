@@ -41,6 +41,7 @@ from typing import Final, Union
 from generate.math_candidate_parser import (
     CandidateInitial,
     CandidateUnknown,
+    classify_sentence,
     extract_capacity_candidates,
     extract_capacity_question_candidates,
     extract_earnings_candidates,
@@ -314,6 +315,15 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
 
     question_sentences = [s for s in sentences if s.rstrip().endswith("?")]
     statement_sentences = [s for s in sentences if not s.rstrip().endswith("?")]
+
+    # ADR-0136.S.0 — Strip context-filler sentences before any extraction.
+    # A sentence with no digit and no word-number cannot introduce parseable
+    # numeric state; skipping it is provably safe for wrong == 0.
+    numeric_statement_sentences = [
+        s for s in statement_sentences if classify_sentence(s) == "numeric_state"
+    ]
+    if numeric_statement_sentences or not statement_sentences:
+        statement_sentences = numeric_statement_sentences
 
     if len(question_sentences) != 1:
         return CandidateGraphResult(
