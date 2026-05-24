@@ -32,6 +32,10 @@ from chat.refusal import (
     inject_hedge,
     should_inject_hedge,
 )
+from core.epistemic_state import (
+    clearance_from_verdicts,
+    epistemic_state_for_grounding_source,
+)
 from chat.telemetry import (
     TurnEventSink,
     format_correction_event_jsonl,
@@ -350,6 +354,14 @@ class ChatResponse:
     # the truth path (ADR-0069 invariant C).  Empty string ⇒ identical
     # to ``surface`` (no decoration applied this turn).
     pre_decoration_surface: str = ""
+    # Phase 3 epistemic taxonomy — first-class state axes per turn.
+    # Values are lower_snake_case strings matching core.epistemic_state
+    # enum values so the field serializes stably without importing the
+    # enum here.  Defaults match TurnEvent defaults (undetermined /
+    # unassessable) so pre-Phase-3 callers that omit these fields are
+    # treated conservatively.
+    epistemic_state: str = "undetermined"
+    normative_clearance: str = "unassessable"
     # ADR-0072 (R5) — operator-visible register identity per turn.
     # Mirrors the TurnEvent fields so callers (CLI, demos, tests) can
     # read the register state from ChatResponse without re-parsing the
@@ -1385,6 +1397,8 @@ class ChatRuntime:
             refusal_emitted=refusal_emitted,
             hedge_injected=False,
         )
+        stub_epistemic_state = epistemic_state_for_grounding_source(grounding_source).value
+        stub_normative_clearance = clearance_from_verdicts(verdicts_bundle).value
         if tokens:
             stub_event = TurnEvent(
                 turn=max(self._context.turn - 1, 0),
@@ -1414,6 +1428,8 @@ class ChatRuntime:
                 composer_atom_set_hash=atom_equivalence_stub.composer_atom_set_hash,
                 graph_atom_set_hash=atom_equivalence_stub.graph_atom_set_hash,
                 composer_graph_atom_overlap_count=atom_equivalence_stub.overlap_count,
+                epistemic_state=stub_epistemic_state,
+                normative_clearance=stub_normative_clearance,
             )
             self.turn_log.append(stub_event)
             self._emit_turn_event(stub_event)
@@ -1469,6 +1485,8 @@ class ChatRuntime:
             composer_atom_set_hash=atom_equivalence_stub.composer_atom_set_hash,
             graph_atom_set_hash=atom_equivalence_stub.graph_atom_set_hash,
             composer_graph_atom_overlap_count=atom_equivalence_stub.overlap_count,
+            epistemic_state=stub_epistemic_state,
+            normative_clearance=stub_normative_clearance,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -1885,6 +1903,10 @@ class ChatRuntime:
             refusal_emitted=refusal_emitted,
             hedge_injected=hedge_injected,
         )
+        main_epistemic_state = epistemic_state_for_grounding_source(
+            warm_grounding_source or "vault"
+        ).value
+        main_normative_clearance = clearance_from_verdicts(verdicts_bundle).value
         turn_event = TurnEvent(
             turn=self._context.turn - 1,
             input_tokens=tuple(filtered),
@@ -1913,6 +1935,8 @@ class ChatRuntime:
             composer_atom_set_hash=atom_equivalence_main.composer_atom_set_hash,
             graph_atom_set_hash=atom_equivalence_main.graph_atom_set_hash,
             composer_graph_atom_overlap_count=atom_equivalence_main.overlap_count,
+            epistemic_state=main_epistemic_state,
+            normative_clearance=main_normative_clearance,
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
@@ -1958,6 +1982,8 @@ class ChatRuntime:
             graph_atom_set_hash=atom_equivalence_main.graph_atom_set_hash,
             composer_graph_atom_overlap_count=atom_equivalence_main.overlap_count,
             recalled_words=walk_tokens,
+            epistemic_state=main_epistemic_state,
+            normative_clearance=main_normative_clearance,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

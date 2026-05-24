@@ -40,7 +40,9 @@ def test_turn_event_telemetry_serializes_state_axes() -> None:
 
 def test_lookup_unit_tags_curated_and_composed_entries() -> None:
     curated = lookup_unit("dollar")
-    inferred = lookup_unit("dollars per hour")
+    # "euro per hour" is not a curated lexicon entry; it is dynamically
+    # composed from decoded primitives (euro × hour) by the per-unit rule.
+    inferred = lookup_unit("euro per hour")
 
     assert curated is not None
     assert curated.epistemic_state == EpistemicState.DECODED.value
