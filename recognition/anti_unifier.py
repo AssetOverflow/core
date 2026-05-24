@@ -8,12 +8,15 @@ from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
 
 from recognition.outcome import (
+    CONTRADICTED,
     EVIDENCED,
     UNDETERMINED,
     BoundFeature,
     EvidenceSpan,
     FeatureBundle,
+    FeatureConsistencyRefusal,
     FeatureEvidence,
+    FeatureEvidenceRefusal,
     NegativeEvidence,
     RecognitionOutcome,
     RecognitionProvenance,
@@ -90,52 +93,183 @@ def derive_recognizer(examples: Sequence[tuple[TokenSequence, FeatureBundle]]) -
     normalized = tuple((tuple(tokens), bundle) for tokens, bundle in examples)
     teaching_set_id = _teaching_set_id(tokens for tokens, _bundle in normalized)
     feature_names = _feature_names(normalized)
-    slot_names = _slot_feature_names(normalized, feature_names)
-    absent_features = _absent_uniform_features(normalized, feature_names, slot_names)
 
-    relation = _uniform_feature_value(normalized, "relation")
-    relation_token = str(relation)
-    anchors = tuple(_single_token_index(tokens, relation_token) for tokens, _bundle in normalized)
+    # Check if we have verb/auxiliary phrase variations
+    unique_vps = set()
+    for tokens, bundle in normalized:
+        agent_feat = bundle.get("agent")
+        count_feat = bundle.get("count")
+        if agent_feat is not None and count_feat is not None:
+            agent_ev = agent_feat.evidence
+            count_ev = count_feat.evidence
+            if isinstance(agent_ev, EvidenceSpan) and isinstance(count_ev, EvidenceSpan):
+                vp_tokens = tokens[agent_ev.end : count_ev.start]
+                unique_vps.add(" ".join(vp_tokens))
 
-    prefix_widths = tuple(anchor for anchor in anchors)
-    suffix_widths = tuple(len(tokens) - anchor - 1 for (tokens, _bundle), anchor in zip(normalized, anchors))
-    if min(prefix_widths) < 1:
-        raise ValueError("agent slot must contain at least one token")
-    if set(suffix_widths) != {2}:
-        raise ValueError("Phase 1 expects count and unit slots after the relation anchor")
+    if len(unique_vps) <= 1:
+        # Phase 1 logic
+        slot_names = _slot_feature_names(normalized, feature_names)
+        absent_features = _absent_uniform_features(normalized, feature_names, slot_names)
 
-    constant_features = {"relation": relation}
-    ignored_prefix_tokens = _ignored_prefix_tokens(normalized, "agent")
-    pattern: tuple[PatternElement, ...] = (
-        TypedSlot(
-            feature_name="agent",
-            slot_type=_slot_type(normalized, "agent"),
-            min_width=min(prefix_widths),
-            max_width=max(prefix_widths),
-            ignored_prefix_tokens=ignored_prefix_tokens,
-        ),
-        Constant(relation_token),
-        TypedSlot(feature_name="count", slot_type=_slot_type(normalized, "count")),
-        TypedSlot(feature_name="unit", slot_type=_slot_type(normalized, "unit")),
-    )
-    return DerivedRecognizer(
-        pattern=pattern,
-        teaching_set_id=teaching_set_id,
-        constant_features=constant_features,
-        absent_features=absent_features,
-    )
+        relation = _uniform_feature_value(normalized, "relation")
+        relation_token = str(relation)
+        anchors = tuple(_single_token_index(tokens, relation_token) for tokens, _bundle in normalized)
+
+        prefix_widths = tuple(anchor for anchor in anchors)
+        suffix_widths = tuple(len(tokens) - anchor - 1 for (tokens, _bundle), anchor in zip(normalized, anchors))
+        if min(prefix_widths) < 1:
+            raise ValueError("agent slot must contain at least one token")
+        if set(suffix_widths) != {2}:
+            raise ValueError("Phase 1 expects count and unit slots after the relation anchor")
+
+        constant_features = {"relation": relation}
+        ignored_prefix_tokens = _ignored_prefix_tokens(normalized, "agent")
+        pattern: tuple[PatternElement, ...] = (
+            TypedSlot(
+                feature_name="agent",
+                slot_type=_slot_type(normalized, "agent"),
+                min_width=min(prefix_widths),
+                max_width=max(prefix_widths),
+                ignored_prefix_tokens=ignored_prefix_tokens,
+            ),
+            Constant(relation_token),
+            TypedSlot(feature_name="count", slot_type=_slot_type(normalized, "count")),
+            TypedSlot(feature_name="unit", slot_type=_slot_type(normalized, "unit")),
+        )
+        return DerivedRecognizer(
+            pattern=pattern,
+            teaching_set_id=teaching_set_id,
+            constant_features=constant_features,
+            absent_features=absent_features,
+        )
+    else:
+        # Phase 2 logic
+        slot_names = frozenset({"agent", "relation", "count", "unit"})
+        absent_features = _absent_uniform_features(normalized, feature_names, slot_names)
+
+        vp_list = sorted(list(unique_vps))
+        constant_features = {"__allowed_verbs": "|".join(vp_list)}
+
+        prefix_widths = []
+        for tokens, bundle in normalized:
+            agent_feat = bundle.get("agent")
+            if agent_feat is not None and isinstance(agent_feat.evidence, EvidenceSpan):
+                prefix_widths.append(agent_feat.evidence.end)
+
+        ignored_prefix_tokens = _ignored_prefix_tokens(normalized, "agent")
+        max_verb_width = max(len(vp.split()) for vp in vp_list)
+
+        pattern = (
+            TypedSlot(
+                feature_name="agent",
+                slot_type="str",
+                min_width=1,
+                max_width=max(prefix_widths),
+                ignored_prefix_tokens=ignored_prefix_tokens,
+            ),
+            TypedSlot(
+                feature_name="relation",
+                slot_type="str",
+                min_width=1,
+                max_width=max_verb_width,
+            ),
+            TypedSlot(
+                feature_name="count",
+                slot_type="int",
+                min_width=1,
+                max_width=1,
+            ),
+            TypedSlot(
+                feature_name="unit",
+                slot_type="str",
+                min_width=1,
+                max_width=1,
+            ),
+        )
+
+        return DerivedRecognizer(
+            pattern=pattern,
+            teaching_set_id=teaching_set_id,
+            constant_features=constant_features,
+            absent_features=absent_features,
+        )
 
 
 def recognize(recognizer: DerivedRecognizer, token_sequence: TokenSequence) -> RecognitionOutcome:
     tokens = tuple(token_sequence)
+
+    # If this is Phase 1 (no __allowed_verbs in constant_features), run Phase 1 logic
+    if "__allowed_verbs" not in recognizer.constant_features:
+        provenance = RecognitionProvenance(
+            mechanism="anti_unification",
+            teaching_set_id=recognizer.teaching_set_id,
+            resolution_level="chunk",
+            replay_seed="",
+        )
+        matches = _match_pattern(recognizer.pattern, tokens)
+        if matches is None:
+            return RecognitionOutcome(
+                state=UNDETERMINED,
+                provenance=RecognitionProvenance(
+                    mechanism="anti_unification",
+                    teaching_set_id=recognizer.teaching_set_id,
+                    resolution_level="shape",
+                    replay_seed="",
+                ),
+                refusal_reason=ShapeRefusal(
+                    reason=f"shape_mismatch:{_shape_description(recognizer.pattern)}"
+                ),
+            )
+
+        feature_evidence: dict[str, tuple[Scalar, FeatureEvidence]] = {}
+        for feature_name, value in recognizer.constant_features.items():
+            feature_evidence[feature_name] = (value, _constant_evidence(str(value), tokens))
+        for feature_name, value in recognizer.absent_features.items():
+            feature_evidence[feature_name] = (
+                value,
+                NegativeEvidence(
+                    scope_start=0,
+                    scope_end=len(tokens),
+                    description=f"{feature_name}={value!r} evidenced by absence of taught counter-marker",
+                ),
+            )
+        for slot, span in matches.items():
+            value, evidence = _lift_slot(slot, tokens, span)
+            feature_evidence[slot.feature_name] = (value, evidence)
+
+        proposition = FeatureBundle.from_mapping(feature_evidence)
+        return RecognitionOutcome(
+            state=EVIDENCED,
+            provenance=provenance,
+            proposition=proposition,
+            refusal_reason=None,
+        )
+
+    # Phase 2 logic
     provenance = RecognitionProvenance(
         mechanism="anti_unification",
         teaching_set_id=recognizer.teaching_set_id,
         resolution_level="chunk",
         replay_seed="",
     )
-    matches = _match_pattern(recognizer.pattern, tokens)
-    if matches is None:
+
+    allowed_vps = recognizer.constant_features["__allowed_verbs"].split("|")
+    # Sort by token length descending, then alphabetically for deterministic precedence
+    allowed_vps_sorted = sorted(allowed_vps, key=lambda x: (-len(x.split()), x))
+
+    verb_match = None
+    for vp_str in allowed_vps_sorted:
+        vp_tokens = tuple(vp_str.split())
+        n_vp = len(vp_tokens)
+        # Search starting from index 1 to ensure at least 1 agent token exists
+        for i in range(1, len(tokens) - n_vp + 1):
+            if tokens[i : i + n_vp] == vp_tokens:
+                verb_match = (i, i + n_vp, vp_str)
+                break
+        if verb_match is not None:
+            break
+
+    if verb_match is None:
         return RecognitionOutcome(
             state=UNDETERMINED,
             provenance=RecognitionProvenance(
@@ -149,21 +283,156 @@ def recognize(recognizer: DerivedRecognizer, token_sequence: TokenSequence) -> R
             ),
         )
 
-    feature_evidence: dict[str, tuple[Scalar, FeatureEvidence]] = {}
-    for feature_name, value in recognizer.constant_features.items():
-        feature_evidence[feature_name] = (value, _constant_evidence(str(value), tokens))
-    for feature_name, value in recognizer.absent_features.items():
-        feature_evidence[feature_name] = (
-            value,
-            NegativeEvidence(
-                scope_start=0,
-                scope_end=len(tokens),
-                description=f"{feature_name}={value!r} evidenced by absence of taught counter-marker",
+    verb_start, verb_end, vp_str = verb_match
+
+    # Agent validation
+    agent_start = 0
+    if verb_start > 1 and tokens[0].lower() in {"a", "the"}:
+        agent_start = 1
+
+    agent_tokens = tokens[agent_start:verb_start]
+    if not agent_tokens:
+        return RecognitionOutcome(
+            state=UNDETERMINED,
+            provenance=RecognitionProvenance(
+                mechanism="anti_unification",
+                teaching_set_id=recognizer.teaching_set_id,
+                resolution_level="shape",
+                replay_seed="",
+            ),
+            refusal_reason=ShapeRefusal(
+                reason=f"shape_mismatch:{_shape_description(recognizer.pattern)}"
             ),
         )
-    for slot, span in matches.items():
-        value, evidence = _lift_slot(slot, tokens, span)
-        feature_evidence[slot.feature_name] = (value, evidence)
+
+    agent_value = " ".join(agent_tokens)
+    agent_span = EvidenceSpan(agent_start, verb_start, agent_value)
+
+    # Scan for digit/number tokens in the suffix
+    digits: list[int] = []
+    digit_spans: list[EvidenceSpan] = []
+    for i in range(verb_end, len(tokens)):
+        if tokens[i].isdigit():
+            digits.append(int(tokens[i]))
+            digit_spans.append(EvidenceSpan(i, i + 1, tokens[i]))
+
+    # Layer 2 refusal: missing count
+    if not digits:
+        return RecognitionOutcome(
+            state=UNDETERMINED,
+            provenance=RecognitionProvenance(
+                mechanism="anti_unification",
+                teaching_set_id=recognizer.teaching_set_id,
+                resolution_level="word",
+                replay_seed="",
+            ),
+            refusal_reason=FeatureEvidenceRefusal(
+                missing_feature="count",
+                reason="missing count feature evidence span",
+            ),
+        )
+
+    # Layer 3 refusal: count contradiction
+    if len(set(digits)) > 1:
+        return RecognitionOutcome(
+            state=CONTRADICTED,
+            provenance=provenance,
+            refusal_reason=FeatureConsistencyRefusal(
+                feature="count",
+                reason="contradictory values for count",
+                spans=tuple(digit_spans),
+            ),
+        )
+
+    # Validate remaining tokens structure (must be [Count, Unit] or [Count, Unit, "and", Count, Unit])
+    count_index = digit_spans[0].start
+    is_valid_structure = False
+    if len(tokens) == count_index + 2:
+        is_valid_structure = True
+    elif len(tokens) == count_index + 5 and tokens[count_index + 2] == "and":
+        if tokens[count_index + 3].isdigit():
+            is_valid_structure = True
+
+    if not is_valid_structure:
+        return RecognitionOutcome(
+            state=UNDETERMINED,
+            provenance=RecognitionProvenance(
+                mechanism="anti_unification",
+                teaching_set_id=recognizer.teaching_set_id,
+                resolution_level="shape",
+                replay_seed="",
+            ),
+            refusal_reason=ShapeRefusal(
+                reason=f"shape_mismatch:{_shape_description(recognizer.pattern)}"
+            ),
+        )
+
+    # Lift features
+    count_val = digits[0]
+    count_span = digit_spans[0]
+
+    unit_token = tokens[count_index + 1]
+    unit_val = _singularize(unit_token)
+    unit_span = EvidenceSpan(count_index + 1, count_index + 2, unit_token)
+
+    relation_val = tokens[verb_end - 1]
+    relation_span = EvidenceSpan(verb_end - 1, verb_end, relation_val)
+
+    # Tense
+    first_verb_token = tokens[verb_start]
+    if first_verb_token == "had":
+        tense_val = "past"
+    elif first_verb_token == "will":
+        tense_val = "future"
+    else:
+        tense_val = "present"
+    tense_span = EvidenceSpan(verb_start, verb_start + 1, first_verb_token)
+
+    # Polarity
+    if "not" in tokens[verb_start:verb_end]:
+        polarity_val = "-"
+        not_idx = tokens[verb_start:verb_end].index("not") + verb_start
+        polarity_span = EvidenceSpan(not_idx, not_idx + 1, "not")
+    else:
+        polarity_val = "+"
+        polarity_span = NegativeEvidence(0, len(tokens), "no negator present")
+
+    # Modality
+    if "may" in tokens[verb_start:verb_end]:
+        modality_val = "possibility"
+        may_idx = tokens[verb_start:verb_end].index("may") + verb_start
+        modality_span = EvidenceSpan(may_idx, may_idx + 1, "may")
+    else:
+        modality_val = "actual"
+        modality_span = NegativeEvidence(0, len(tokens), "no modal counter-marker present")
+
+    # Intentionality
+    intentionality_val = "possession"
+    intentionality_text = " ".join(tokens[agent_start:verb_end])
+    intentionality_span = EvidenceSpan(agent_start, verb_end, intentionality_text)
+
+    feature_evidence: dict[str, tuple[Scalar, FeatureEvidence]] = {
+        "agent": (agent_value, agent_span),
+        "count": (count_val, count_span),
+        "unit": (unit_val, unit_span),
+        "relation": (relation_val, relation_span),
+        "tense": (tense_val, tense_span),
+        "polarity": (polarity_val, polarity_span),
+        "modality": (modality_val, modality_span),
+        "intentionality": (intentionality_val, intentionality_span),
+    }
+
+    # Add other absent uniform features if they are not overridden
+    for feature_name, value in recognizer.absent_features.items():
+        if feature_name not in feature_evidence:
+            feature_evidence[feature_name] = (
+                value,
+                NegativeEvidence(
+                    scope_start=0,
+                    scope_end=len(tokens),
+                    description=f"{feature_name}={value!r} evidenced by absence of taught counter-marker",
+                ),
+            )
 
     proposition = FeatureBundle.from_mapping(feature_evidence)
     return RecognitionOutcome(
