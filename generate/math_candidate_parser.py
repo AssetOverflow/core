@@ -1572,6 +1572,38 @@ def _build_conj_embedded_sum(
 
 
 # ---------------------------------------------------------------------------
+# ADR-0136.S.0 — Context-sentence classifier
+# ---------------------------------------------------------------------------
+
+_WORD_NUMBER_RE: Final[re.Pattern[str]] = re.compile(
+    r"\b(?:" + "|".join(re.escape(w) for w in sorted(WORD_NUMBERS, key=len, reverse=True)) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def has_numeric_token(sentence: str) -> bool:
+    """Return True if *sentence* contains any digit or closed-set word-number.
+
+    A sentence with no numeric token cannot introduce quantified initial state,
+    so it is safe to classify as a context filler and skip it.
+    """
+    if re.search(r"\d", sentence):
+        return True
+    return bool(_WORD_NUMBER_RE.search(sentence))
+
+
+def classify_sentence(sentence: str) -> Literal["context", "numeric_state"]:
+    """Classify a statement sentence as skippable context or numeric-state-bearing.
+
+    Rule: if the sentence contains no digit and no word-number from the closed
+    set, it cannot introduce any parseable numeric state — classify as
+    ``"context"`` (safe to skip).  All other sentences are ``"numeric_state"``
+    and must either parse successfully or cause a refusal.
+    """
+    return "context" if not has_numeric_token(sentence) else "numeric_state"
+
+
+# ---------------------------------------------------------------------------
 # ADR-0136.S.1 — Rate/event statement extractors (capacity + earnings)
 # ---------------------------------------------------------------------------
 
@@ -1626,6 +1658,7 @@ class CandidateCapacity:
     source_span: str
 
 
+# Shape A1 (canonical): "<Actor> can <verb> N <unit> in M <time-unit>."
 _CAPACITY_RE: Final[re.Pattern[str]] = re.compile(
     rf"^(?P<actor>{_ENTITY})\s+can\s+"
     rf"(?P<verb>{_CAPACITY_VERB_PATTERN})\s+"
@@ -1633,16 +1666,27 @@ _CAPACITY_RE: Final[re.Pattern[str]] = re.compile(
     rf"(?P<unit>\w+)\s+in\s+"
     rf"(?P<per_count>\d+(?:\.\d+)?)\s+"
     rf"(?P<per_unit>{_TIME_UNIT_SET})"
+    r"(?:\s+on\s+average)?"
+    r"\s*\.?\s*$",
+    flags=re.IGNORECASE,
+)
+
+# Shape A2 (inverted): "During M <time-unit> <Actor> can <verb> N <unit> [on average]."
+_CAPACITY_INVERTED_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^[Dd]uring\s+"
+    rf"(?P<per_count>\d+(?:\.\d+)?)\s+"
+    rf"(?P<per_unit>{_TIME_UNIT_SET})\s+"
+    rf"(?P<actor>{_ENTITY})\s+can\s+"
+    rf"(?P<verb>{_CAPACITY_VERB_PATTERN})\s+"
+    rf"(?P<count>\d+(?:\.\d+)?)\s+"
+    rf"(?P<unit>\w+)"
+    r"(?:\s+on\s+average)?"
     r"\s*\.?\s*$",
     flags=re.IGNORECASE,
 )
 
 
-def extract_capacity_candidates(sentence: str) -> list[CandidateCapacity]:
-    s = sentence.strip()
-    m = _CAPACITY_RE.match(s)
-    if m is None:
-        return []
+def _capacity_from_match(m: re.Match[str], sentence: str) -> list[CandidateCapacity]:
     verb = m.group("verb").lower()
     if verb not in _CAPACITY_VERBS:
         return []
@@ -1662,6 +1706,17 @@ def extract_capacity_candidates(sentence: str) -> list[CandidateCapacity]:
     ]
 
 
+def extract_capacity_candidates(sentence: str) -> list[CandidateCapacity]:
+    s = sentence.strip()
+    m = _CAPACITY_RE.match(s)
+    if m is not None:
+        return _capacity_from_match(m, sentence)
+    m2 = _CAPACITY_INVERTED_RE.match(s)
+    if m2 is not None:
+        return _capacity_from_match(m2, sentence)
+    return []
+
+
 @dataclass(frozen=True, slots=True)
 class CandidateCapacityQuestion:
     actor: str | None
@@ -1673,6 +1728,7 @@ class CandidateCapacityQuestion:
 
 _PRONOUN_SET: Final[str] = r"(?:he|she|they|it)"
 
+# Q1 (canonical): "How many <unit> can <actor> <verb> in T <time-unit>?"
 _CAPACITY_Q_RE: Final[re.Pattern[str]] = re.compile(
     r"^How\s+many\s+(?P<unit>\w+)\s+can\s+"
     rf"(?P<actor>{_ENTITY}|{_PRONOUN_SET})\s+"
@@ -1683,14 +1739,23 @@ _CAPACITY_Q_RE: Final[re.Pattern[str]] = re.compile(
     flags=re.IGNORECASE,
 )
 
+# Q2 (able-form): "How many <unit> [on average] is <actor> able to <verb>,
+#                  when the [match/game/session] lasted for T <time-unit>?"
+_CAPACITY_Q2_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+(?P<unit>\w+)(?:\s+on\s+average)?\s+is\s+"
+    rf"(?P<actor>{_ENTITY}|{_PRONOUN_SET})\s+able\s+to\s+"
+    rf"(?P<verb>{_CAPACITY_VERB_PATTERN}),?\s+"
+    r"when\s+the\s+\w+\s+lasted\s+for\s+"
+    rf"(?P<per_count>\d+(?:\.\d+)?)\s+"
+    rf"(?P<per_unit>{_TIME_UNIT_SET})"
+    r"\s*\??\s*$",
+    flags=re.IGNORECASE,
+)
 
-def extract_capacity_question_candidates(
-    sentence: str,
+
+def _capacity_question_from_match(
+    m: re.Match[str], sentence: str
 ) -> list[CandidateCapacityQuestion]:
-    s = sentence.strip()
-    m = _CAPACITY_Q_RE.match(s)
-    if m is None:
-        return []
     verb = m.group("verb").lower()
     if verb not in _CAPACITY_VERBS:
         return []
@@ -1710,6 +1775,19 @@ def extract_capacity_question_candidates(
             source_span=sentence,
         )
     ]
+
+
+def extract_capacity_question_candidates(
+    sentence: str,
+) -> list[CandidateCapacityQuestion]:
+    s = sentence.strip()
+    m = _CAPACITY_Q_RE.match(s)
+    if m is not None:
+        return _capacity_question_from_match(m, sentence)
+    m2 = _CAPACITY_Q2_RE.match(s)
+    if m2 is not None:
+        return _capacity_question_from_match(m2, sentence)
+    return []
 
 
 # --- Shape B: earnings rate ---
