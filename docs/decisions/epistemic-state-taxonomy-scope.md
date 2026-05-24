@@ -3,7 +3,7 @@
 **Status:** Draft / scope-only (not a decision yet — prerequisite for one)
 **Date:** 2026-05-24
 **Author:** CORE agents
-**Audit:** Math-subsystem audit complete (2026-05-24) — 40 decision points, 4 gaps ratified. Vault audit complete (2026-05-24) — 0 new states, 1 implementation debt. Language-packs audit complete (2026-05-24) — 1 gap (INFERRED) ratified. Runtime-packs audit complete (2026-05-24) — 0 new epistemic states; normative clearance axis identified as separate companion axis
+**Audit:** Math-subsystem audit complete (2026-05-24) — 40 decision points, 4 gaps ratified. Vault audit complete (2026-05-24) — 0 new states, 1 implementation debt. Language-packs audit complete (2026-05-24) — 1 gap (INFERRED) ratified. Runtime-packs audit complete (2026-05-24) — 0 new epistemic states; normative clearance axis identified as separate companion axis. Teaching pipeline audit complete (2026-05-24) — 47 decision points, 0 new states, 4 minor implementation debts. Cognition pipeline audit complete (2026-05-24) — 42 decision points, 0 new states, 1 EPISTEMIC_STATE_NEEDED (refusal_reason placeholder, materialisation deferred). Chat runtime audit complete (2026-05-24) — 47 decision points, 0 new states, 6 provenance gaps (dispatcher does not carry decision rationale). **Framing 1 audit complete across all six subsystems.**
 **Anchor:** [thesis-decoding-not-generating](../../../.claude/projects/-Users-kaizenpro-Projects-core/memory/thesis-decoding-not-generating.md) (memory)
 **Related:** [teaching-derived-recognition-scope](./teaching-derived-recognition-scope.md)
 
@@ -280,14 +280,15 @@ This is *not a spike* — it's an audit. It produces no new code. But
 it surfaces whether the starter taxonomy is sufficient before any new
 work is committed.
 
-**Status: COMPLETE across four subsystems (2026-05-24).**
+**Status: COMPLETE across all six subsystems (2026-05-24).**
 
 - **Math** — 40 decision points across 9 files. 4 gaps ratified: EVIDENCED-INCOMPLETE, DECODED-UNARTICULATED, SCOPE_BOUNDARY, COMPUTATIONALLY_BOUNDED.
 - **Vault** — 33 decision points across `vault/store.py` + `vault/decompose.py`. 0 new states. 1 implementation debt: `_status_admits` collapses FALSIFIED (→ CONTRADICTED) and SPECULATIVE (→ UNVERIFIED-POSSIBLE) into a single "not admissible" bucket without distinguishing them. 1 deferred candidate: COMPOSED_RECOGNITION (decomposed recall above floor) — currently covered adequately by UNVERIFIED-POSSIBLE; revisit if provenance needs to distinguish composed vs. asserted recall.
 - **Language packs** — 25 decision points across 6 files. 1 gap ratified: INFERRED (rule-derived from DECODED primitives, composite not curated). 4 implementation bugs identified (see Phase 2).
 - **Runtime packs** — 28 decision points across 6 files. 0 new epistemic states. Structural finding: safety/ethics verdicts are a separate normative clearance axis, orthogonal to epistemic state. Normative axis ratified as companion (see section above).
-
-Remaining subsystems not yet audited: teaching pipeline, cognition pipeline (`core/cognition/`), chat runtime.
+- **Teaching pipeline** — 47 decision points across 12 files. 0 new states. All 47 mapped cleanly to the existing taxonomy. Key coverage: COMPUTATIONALLY_BOUNDED (contemplation recursion depth cap), AMBIGUOUS (mixed-polarity evidence reduction in `store.py`), SCOPE_BOUNDARY (decomposition exhaustion, evaluative domain gate). 4 minor implementation debts: source-field-absent proposals have no explicit epistemic characterisation; identity override gate does not distinguish which layer (syntactic vs. geometric) fired; contradiction detection thresholds are implicit magic values; watched-metrics tuple in `replay.py` lacks versioning.
+- **Cognition pipeline** — 42 decision points across 6 files. 0 new states. 1 EPISTEMIC_STATE_NEEDED case: `CognitiveTurnResult.refusal_reason` is a placeholder field whose materialisation site is deferred to ChatRuntime (ADR-0024 Phase 2 scope decision); until ChatRuntime populates it, the field is dead weight and the conditional fold in `trace.py` has no effect. 3 critical implementation debts: (1) cold-start PASSTHROUGH collapses three distinct conditions (no field_state, no vocab, no prompt_versor) into one indistinguishable outcome; (2) `_should_mark_speculative()` reflexive-probe heuristic can produce false positives on unrelated queries; (3) surface authority is resolved and discarded — the selected authority name is available only in `SurfaceResolution`, not in `CognitiveTurnResult`. States not covered by the pipeline's current code paths: COMPUTATIONALLY_BOUNDED (no search-budget exhaustion tracking), UNVERIFIED-NOVEL (new teaching proposals enter as SPECULATIVE, not UNVERIFIED-NOVEL).
+- **Chat runtime** — 47 decision points across 13 files. 0 new states. Taxonomy is sufficient for every decision point; the gaps are provenance gaps, not taxonomy gaps. 6 sites where an epistemic decision is made but the rationale is not carried: (1) pack-grounded surface dispatcher (`runtime.py:831–1012`) does not record which sources were attempted or why each fell through; (2) discourse planner engagement (`runtime.py:1047–1235`) does not surface which of its multi-gates failed on a miss; (3) teaching corpus collision resolution (`teaching_grounding.py:298–319`) applies first-match-wins without recording whether a collision occurred; (4) config-driven surface shape (transitive / composed / single) does not carry why one config is preferred; (5) unified ingest timing (`runtime.py:1492–1521`, ADR-0090) does not track whether both ingest paths reach the same gate decision; (6) generation call (`runtime.py:1644–1667`) has 15+ control parameters with no conflict-detection signal. The grounding-source selector is the runtime's primary epistemic articulation point; all six gaps cluster around it.
 
 **Framing 2 — Spike on a single subsystem.** Pick one subsystem
 (probably recognition, since the parallel scope is already underway)
@@ -331,13 +332,12 @@ all subsystems) is gated on:
 
 ## Risks the spike must surface
 
-- **The starter taxonomy may be too coarse.** Risk is now substantially
-  closed. Four audits complete; taxonomy grew from 9 to 14 epistemic
-  states (+ meta-state) and acquired a companion normative clearance
-  axis. Remaining audits (teaching pipeline, cognition pipeline, chat
-  runtime) may surface further gaps, but the core epistemic vocabulary
-  is stable. The normative axis finding was not anticipated in the
-  original risk — it is additive, not corrective.
+- **The starter taxonomy may be too coarse.** Risk is now closed. All
+  six audits complete; taxonomy grew from 9 to 14 epistemic states
+  (+ meta-state) and acquired a companion normative clearance axis.
+  Teaching, cognition, and chat runtime audits produced zero new states.
+  The remaining gaps are provenance and implementation debts, not
+  taxonomy gaps. The vocabulary is stable.
 
 - **Provenance overhead.** Every state assignment carries structured
   provenance. For propositions handled in tight loops (vault recall,
@@ -411,13 +411,20 @@ vault, packs, teaching, recognition, and verification — and whether
 provenance-on-every-assignment is feasible without overhead that breaks
 the engine's hot path.
 
-Four subsystem audits are now complete. The taxonomy is stable at 14
-epistemic states (PERCEIVED, EVIDENCED, EVIDENCED-INCOMPLETE, VERIFIED,
-DECODED, DECODED-UNARTICULATED, INFERRED, UNVERIFIED-POSSIBLE,
-UNVERIFIED-NOVEL, CONTRADICTED, AMBIGUOUS, UNDETERMINED, SCOPE_BOUNDARY,
-COMPUTATIONALLY_BOUNDED, plus the recursive EPISTEMIC_STATE_NEEDED) and
-a 4-value normative clearance axis (CLEARED, VIOLATED, UNASSESSABLE,
-SUPPRESSED) that is orthogonal to the epistemic axis.
+All six subsystem audits are now complete (math, vault, language packs,
+runtime packs, teaching pipeline, cognition pipeline, chat runtime).
+The taxonomy is stable at 14 epistemic states (PERCEIVED, EVIDENCED,
+EVIDENCED-INCOMPLETE, VERIFIED, DECODED, DECODED-UNARTICULATED,
+INFERRED, UNVERIFIED-POSSIBLE, UNVERIFIED-NOVEL, CONTRADICTED, AMBIGUOUS,
+UNDETERMINED, SCOPE_BOUNDARY, COMPUTATIONALLY_BOUNDED, plus the recursive
+EPISTEMIC_STATE_NEEDED) and a 4-value normative clearance axis (CLEARED,
+VIOLATED, UNASSESSABLE, SUPPRESSED) that is orthogonal to the epistemic
+axis. No new states were required by any of the final three audits.
+The remaining open work is implementation: carrying explicit epistemic
+state at the grounding-source dispatcher in the chat runtime, resolving
+the cold-start PASSTHROUGH ambiguity in the cognition pipeline, and
+populating the `normative_detail` field on `TurnEvent` when clearance
+is VIOLATED or SUPPRESSED.
 
 Known implementation issues to address before Phase 3 integration
 (tracked separately as Phase 2):
