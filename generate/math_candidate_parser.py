@@ -685,10 +685,14 @@ class CandidateUnknown:
 
     Two question shapes in P3 scope:
 
-    - ``How many <unit> does <Entity> have [left|now|in total|altogether]?``
+    - ``How many <unit> does <Entity> have [left|now|in total|altogether|combined|together]?``
       → ``Unknown(entity=<Entity>, unit=<unit>)``
-    - ``How many <unit> do they have [left|now|in total|altogether]?``
+    - ``How many <unit> do they have [left|now|in total|altogether|combined|together]?``
       → ``Unknown(entity=None, unit=<unit>)`` (total-across)
+
+    Closed aggregate-cue vocabulary: ``in total``, ``altogether``,
+    ``combined``, ``together``. All four map to ``entity=None`` on the
+    total-across form.
 
     The round-trip filter for questions checks the unit token and (when
     present) the entity token both appear in the source span.
@@ -703,13 +707,13 @@ class CandidateUnknown:
 _Q_ENTITY_RE: Final[re.Pattern[str]] = re.compile(
     r"^How\s+many\s+(?P<unit>\w+)\s+(?:does|do)\s+"
     rf"(?P<entity>{_ENTITY})"
-    r"\s+have(?:\s+(?:left|now|in\s+total|altogether)){0,2}\s*\??$",
+    r"\s+have(?:\s+(?:left|now|in\s+total|altogether|combined|together)){0,2}\s*\??$",
     flags=re.IGNORECASE,
 )
 
 _Q_TOTAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^How\s+many\s+(?P<unit>\w+)\s+do\s+they\s+have"
-    r"(?:\s+(?:in\s+total|altogether|left|now)){0,2}\s*\??$",
+    r"(?:\s+(?:in\s+total|altogether|combined|together|left|now)){0,2}\s*\??$",
     flags=re.IGNORECASE,
 )
 

@@ -1,0 +1,20 @@
+{"case_id": "G5-2ent-001", "category": "2entity_no_op", "cue": "altogether", "problem": "Sam has 5 apples. Tom has 3 apples. How many apples do they have altogether?", "expected_answer": 8.0}
+{"case_id": "G5-2ent-002", "category": "2entity_no_op", "cue": "in total", "problem": "Alice has 7 books. Bob has 4 books. How many books do they have in total?", "expected_answer": 11.0}
+{"case_id": "G5-2ent-003", "category": "2entity_no_op", "cue": "combined", "problem": "Maya has 6 coins. Leo has 9 coins. How many coins do they have combined?", "expected_answer": 15.0}
+{"case_id": "G5-2ent-004", "category": "2entity_no_op", "cue": "together", "problem": "Jade has 12 stickers. Finn has 8 stickers. How many stickers do they have together?", "expected_answer": 20.0}
+{"case_id": "G5-3ent-001", "category": "3entity_no_op", "cue": "altogether", "problem": "Sam has 5 apples. Tom has 3 apples. Amy has 2 apples. How many apples do they have altogether?", "expected_answer": 10.0}
+{"case_id": "G5-3ent-002", "category": "3entity_no_op", "cue": "in total", "problem": "Alice has 4 books. Bob has 6 books. Carol has 2 books. How many books do they have in total?", "expected_answer": 12.0}
+{"case_id": "G5-3ent-003", "category": "3entity_no_op", "cue": "combined", "problem": "Maya has 10 coins. Leo has 5 coins. Nina has 3 coins. How many coins do they have combined?", "expected_answer": 18.0}
+{"case_id": "G5-3ent-004", "category": "3entity_no_op", "cue": "together", "problem": "Jade has 7 stickers. Finn has 4 stickers. Rex has 9 stickers. How many stickers do they have together?", "expected_answer": 20.0}
+{"case_id": "G5-op-001", "category": "2entity_with_op", "cue": "altogether", "problem": "Sam has 5 apples. Sam buys 3 apples. Tom has 4 apples. How many apples do they have altogether?", "expected_answer": 12.0}
+{"case_id": "G5-op-002", "category": "2entity_with_op", "cue": "combined", "problem": "Alice has 10 books. Alice loses 2 books. Bob has 6 books. How many books do they have combined?", "expected_answer": 14.0}
+{"case_id": "G5-op-003", "category": "2entity_with_op", "cue": "in total", "problem": "Maya has 8 coins. Leo has 5 coins. Leo finds 3 coins. How many coins do they have in total?", "expected_answer": 16.0}
+{"case_id": "G5-op-004", "category": "2entity_with_op", "cue": "together", "problem": "Jade has 12 stickers. Jade gives away 4 stickers. Finn has 8 stickers. How many stickers do they have together?", "expected_answer": 16.0}
+{"case_id": "G5-degen-001", "category": "single_entity_total_cue", "cue": "in total", "problem": "Sam has 5 apples. How many apples do they have in total?", "expected_answer": 5.0}
+{"case_id": "G5-degen-002", "category": "single_entity_total_cue", "cue": "altogether", "problem": "Alice has 7 books. Alice buys 3 books. How many books do they have altogether?", "expected_answer": 10.0}
+{"case_id": "G5-degen-003", "category": "single_entity_total_cue", "cue": "combined", "problem": "Maya has 9 coins. Maya loses 2 coins. How many coins do they have combined?", "expected_answer": 7.0}
+{"case_id": "G5-degen-004", "category": "single_entity_total_cue", "cue": "together", "problem": "Finn has 6 stickers. How many stickers do they have together?", "expected_answer": 6.0}
+{"case_id": "G5-refuse-001", "category": "refusal_outside_closed_cue", "cue": "none", "problem": "Sam has 5 apples. Tom has 3 apples. How many apples does everyone have?", "expected_answer": null}
+{"case_id": "G5-refuse-002", "category": "refusal_outside_closed_cue", "cue": "none", "problem": "Alice has 4 coins. Bob has 6 coins. What is the total number of coins?", "expected_answer": null}
+{"case_id": "G5-refuse-003", "category": "refusal_outside_closed_cue", "cue": "none", "problem": "Maya has 10 books. Leo has 5 books. How many books do Sam and Leo have?", "expected_answer": null}
+{"case_id": "G5-refuse-004", "category": "refusal_outside_closed_cue", "cue": "none", "problem": "Jade has 8 stickers. Finn has 4 stickers. How many stickers are there?", "expected_answer": null}
