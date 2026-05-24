@@ -41,6 +41,7 @@ include = [
     "language_packs*",
     "morphology*",
     "persona*",
+    "recognition*",
     "sensorium*",
     "session*",
     "vault*",
