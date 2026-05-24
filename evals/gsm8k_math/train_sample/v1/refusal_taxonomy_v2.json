@@ -1,0 +1,424 @@
+{
+  "schema_version": 2,
+  "adr": "0136.S.2-post-rescan",
+  "description": "Updated refusal taxonomy reflecting post-S.1/S.2 parser. Supersedes v1 (ADR-0136.S.0).",
+  "summary": {
+    "total_cases": 50,
+    "admitted": 3,
+    "refused": 47,
+    "primary_barrier_counts": {
+      "compound_statement": 6,
+      "novel_initial_form": 5,
+      "novel_initial_verb": 4,
+      "admitted": 3,
+      "compound_comparative": 3,
+      "conditional_question": 3,
+      "context_filler": 3,
+      "fraction_operand": 3,
+      "distributive_multiply": 2,
+      "multi_entity_initial": 2,
+      "rate_price": 2,
+      "temporal_frequency": 2,
+      "capacity_rate": 1,
+      "complex_question": 1,
+      "compound_multi_event": 1,
+      "conditional_branch": 1,
+      "distributive_each_actor": 1,
+      "goal_statement": 1,
+      "multi_attribute_accumulation": 1,
+      "multi_day_accumulation": 1,
+      "partition_divide": 1,
+      "percentage_rate": 1,
+      "rate_earnings": 1,
+      "temporal_age_anchor": 1
+    }
+  },
+  "per_case": [
+    {
+      "case_id": "gsm8k-train-sample-v1-0001",
+      "primary_barrier": "rate_earnings",
+      "secondary_barriers": [
+        "conditional_branch",
+        "multi_statement"
+      ],
+      "note": "multi-stmt earnings; short-circuit needs single stmt+q"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0002",
+      "primary_barrier": "partition_divide",
+      "secondary_barriers": [
+        "fraction_operand",
+        "coreference_pronoun"
+      ],
+      "note": "splits into 25-foot sections = partition op"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0003",
+      "primary_barrier": "novel_initial_verb",
+      "secondary_barriers": [
+        "distributive_multiply",
+        "rate_price"
+      ],
+      "note": "context filler now parses; donated not in verb set"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0004",
+      "primary_barrier": "fraction_operand",
+      "secondary_barriers": [
+        "conditional_question"
+      ],
+      "note": "indef qty now parses; fraction ops (half, 1/4) block"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0005",
+      "primary_barrier": "fraction_operand",
+      "secondary_barriers": [],
+      "note": "3/4 fraction operand in temporal decrease"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0006",
+      "primary_barrier": "temporal_age_anchor",
+      "secondary_barriers": [
+        "multi_step_complex"
+      ],
+      "note": "age anchor: 8 pages when 6 years old"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0007",
+      "primary_barrier": "conditional_question",
+      "secondary_barriers": [
+        "multi_entity_initial"
+      ],
+      "note": "multi-entity stmt now parses; question has if-clause"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0008",
+      "primary_barrier": "conditional_question",
+      "secondary_barriers": [
+        "distributive_multiply"
+      ],
+      "note": "context filler now parses; question has if-clause"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0009",
+      "primary_barrier": "conditional_question",
+      "secondary_barriers": [
+        "compound_comparative"
+      ],
+      "note": "if-clause question: If Jen has 150 ducks"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0010",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [
+        "fraction_operand"
+      ],
+      "note": "two ops in one sentence: had X but lost Y"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0011",
+      "primary_barrier": "rate_price",
+      "secondary_barriers": [
+        "context_filler"
+      ],
+      "note": "$2 per cup in relative clause"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0012",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [
+        "fraction_operand",
+        "coreference_pronoun"
+      ],
+      "note": "ate half = compound + fraction"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0013",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [
+        "temporal_frequency"
+      ],
+      "note": "10 one-hour videos each day = nested quantities"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0014",
+      "primary_barrier": "admitted",
+      "secondary_barriers": [],
+      "note": "ADMITTED via S.1 capacity short-circuit"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0015",
+      "primary_barrier": "compound_multi_event",
+      "secondary_barriers": [
+        "compound_comparative"
+      ],
+      "note": "subway+train+bike multi-event in one sentence"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0016",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [
+        "rate_question"
+      ],
+      "note": "2 more than 5 miles AND 3 less than 17 signs"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0017",
+      "primary_barrier": "conditional_branch",
+      "secondary_barriers": [
+        "rate_price"
+      ],
+      "note": "context filler now parses; or-choice pricing blocks"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0018",
+      "primary_barrier": "admitted",
+      "secondary_barriers": [],
+      "note": "ADMITTED via S.2 capacity short-circuit"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0019",
+      "primary_barrier": "rate_price",
+      "secondary_barriers": [
+        "percentage_of",
+        "conditional_branch"
+      ],
+      "note": "context filler now parses; 3 appts at $400 each"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0020",
+      "primary_barrier": "multi_entity_initial",
+      "secondary_barriers": [
+        "rate_comparative"
+      ],
+      "note": "multi-entity initial: 2+2+3 animals in one stmt"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0021",
+      "primary_barrier": "distributive_multiply",
+      "secondary_barriers": [],
+      "note": "context filler now parses; 15lb x 10rep x 3set"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0022",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "rate_earnings",
+        "compound_comparative"
+      ],
+      "note": "context filler still blocks: earning in rel clause"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0023",
+      "primary_barrier": "novel_initial_verb",
+      "secondary_barriers": [
+        "fraction_operand",
+        "distributive_divide"
+      ],
+      "note": "collected not in verb set"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0024",
+      "primary_barrier": "multi_day_accumulation",
+      "secondary_barriers": [],
+      "note": "4 values across Mon-Thu in one sentence"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0025",
+      "primary_barrier": "distributive_multiply",
+      "secondary_barriers": [],
+      "note": "context filler now parses; 6 baskets x 50 each"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0026",
+      "primary_barrier": "distributive_each_actor",
+      "secondary_barriers": [
+        "fraction_operand"
+      ],
+      "note": "each actor: Aaron and Carson each saved $40"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0027",
+      "primary_barrier": "multi_attribute_accumulation",
+      "secondary_barriers": [
+        "multi_step_complex"
+      ],
+      "note": "240 Instagram + 500 Facebook in one stmt"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0028",
+      "primary_barrier": "novel_initial_form",
+      "secondary_barriers": [
+        "rate_price",
+        "temporal_frequency"
+      ],
+      "note": "context filler now parses; It cost $100k = novel form"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0029",
+      "primary_barrier": "compound_comparative",
+      "secondary_barriers": [
+        "rate_comparative"
+      ],
+      "note": "context filler now parses; 3x comparative blocks"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0030",
+      "primary_barrier": "novel_initial_form",
+      "secondary_barriers": [
+        "compound_comparative"
+      ],
+      "note": "context filler now parses; It is a 2-hour drive"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0031",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "implicit_group_count"
+      ],
+      "note": "intent sentence: wants to go = context filler"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0032",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [
+        "percentage_of"
+      ],
+      "note": "context filler now parses; draws AND colors"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0033",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [
+        "multi_step_complex"
+      ],
+      "note": "12 years old AND 7 times her age in one stmt"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0034",
+      "primary_barrier": "capacity_rate",
+      "secondary_barriers": [
+        "percentage_of",
+        "capacity_rate"
+      ],
+      "note": "context filler now parses; within vs in preposition"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0035",
+      "primary_barrier": "complex_question",
+      "secondary_barriers": [
+        "coreference_pronoun"
+      ],
+      "note": "pronoun now resolves; question too complex (modal)"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0036",
+      "primary_barrier": "compound_comparative",
+      "secondary_barriers": [
+        "compound_comparative"
+      ],
+      "note": "context filler now parses; 3x comparative blocks"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0037",
+      "primary_barrier": "goal_statement",
+      "secondary_barriers": [],
+      "note": "goal statement: wants to lose 10 pounds"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0038",
+      "primary_barrier": "novel_initial_form",
+      "secondary_barriers": [],
+      "note": "there are a hundred = existential + spelled number"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0039",
+      "primary_barrier": "novel_initial_verb",
+      "secondary_barriers": [
+        "multi_step_complex"
+      ],
+      "note": "context filler now parses; gained not in verb set"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0040",
+      "primary_barrier": "multi_entity_initial",
+      "secondary_barriers": [
+        "leg_count"
+      ],
+      "note": "context filler now parses; 2+5+7+3+1 multi-entity"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0041",
+      "primary_barrier": "fraction_operand",
+      "secondary_barriers": [
+        "percentage_of"
+      ],
+      "note": "all of 1 pan + 75% of 2nd = fraction operand"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0042",
+      "primary_barrier": "admitted",
+      "secondary_barriers": [],
+      "note": "ADMITTED via S.2 conditional-op question"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0043",
+      "primary_barrier": "compound_comparative",
+      "secondary_barriers": [
+        "rate_comparative"
+      ],
+      "note": "context filler now parses; twice as much comparative"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0044",
+      "primary_barrier": "percentage_rate",
+      "secondary_barriers": [],
+      "note": "10% simple interest = percentage rate"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0045",
+      "primary_barrier": "novel_initial_form",
+      "secondary_barriers": [
+        "rate_price"
+      ],
+      "note": "context filler now parses; Each survey has = novel"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0046",
+      "primary_barrier": "novel_initial_form",
+      "secondary_barriers": [
+        "percentage_of"
+      ],
+      "note": "A school has 100 = novel initial form (indef article)"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0047",
+      "primary_barrier": "novel_initial_verb",
+      "secondary_barriers": [
+        "embedded_per_unit"
+      ],
+      "note": "bakes not in verb set + embedded per-unit"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0048",
+      "primary_barrier": "temporal_frequency",
+      "secondary_barriers": [],
+      "note": "context filler now parses; every week frequency"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0049",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "compound_multi_event",
+        "rate_comparative"
+      ],
+      "note": "context filler: trying to find = intent"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0050",
+      "primary_barrier": "temporal_frequency",
+      "secondary_barriers": [],
+      "note": "every other day for 2 weeks = temporal frequency"
+    }
+  ]
+}
