@@ -254,6 +254,16 @@ def main(argv: list[str] | None = None) -> int:
         total = len(results)
         matched = sum(1 for r in results if r.matched)
         print(f"\nlanes: {matched}/{total} match pinned SHAs")
+        if matched < total:
+            print(
+                "\nremediation:\n"
+                "  if the drift is intentional (e.g. you touched core/cognition/result.py,\n"
+                "  chat/runtime.py, generate/realizer.py, capability registries, or other\n"
+                "  lane-affecting code), re-pin with:\n"
+                "      python scripts/verify_lane_shas.py --update\n"
+                "  then run `python scripts/generate_claims.py` and commit both changes.\n"
+                "  if the drift is unintentional, investigate the upstream change before re-pinning."
+            )
 
     return 0 if all(r.matched for r in results) else 1
 
