@@ -3,7 +3,7 @@
 **Status:** Draft / scope-only (not a decision yet — prerequisite for one)
 **Date:** 2026-05-24
 **Author:** CORE agents
-**Audit:** Math-subsystem epistemic audit complete (2026-05-24) — 40 decision points mapped; 4 gaps surfaced and ratified into starter taxonomy below
+**Audit:** Math-subsystem audit complete (2026-05-24) — 40 decision points, 4 gaps ratified. Vault audit complete (2026-05-24) — 0 new states, 1 implementation debt. Language-packs audit complete (2026-05-24) — 1 gap (INFERRED) ratified. Runtime-packs audit complete (2026-05-24) — 0 new epistemic states; normative clearance axis identified as separate companion axis
 **Anchor:** [thesis-decoding-not-generating](../../../.claude/projects/-Users-kaizenpro-Projects-core/memory/thesis-decoding-not-generating.md) (memory)
 **Related:** [teaching-derived-recognition-scope](./teaching-derived-recognition-scope.md)
 
@@ -61,9 +61,9 @@ the same discipline: deterministic, inspectable, extensible, refusal-first.
 
 ## Starter taxonomy
 
-These are candidate states. Names are provisional. The point isn't the
-names — it's that the engine needs a *richer-than-binary* vocabulary
-and that each state has explicit provenance.
+These states are now stable through three subsystem audits (math, vault,
+language\_packs, runtime packs). Names are ratified. EPISTEMIC\_STATE\_NEEDED
+remains available for future gaps found by further audits.
 
 | State | Meaning | Source of evidence | Transition cues |
 |---|---|---|---|
@@ -73,6 +73,7 @@ and that each state has explicit provenance.
 | **VERIFIED** | Cross-checked against ratified knowledge (pack / vault / teaching); consistent | Substrate cross-reference | → DECODED once replay-equality confirmed; stays VERIFIED otherwise |
 | **DECODED** | VERIFIED plus replay-equality from input (trace-hash invariant) | Replay machinery | → DECODED-UNARTICULATED if the surface realization path breaks after verification; transitions only on retraction (subsequent teaching invalidates) otherwise terminal |
 | **DECODED-UNARTICULATED** | The proposition is DECODED internally — trace is replay-equal and the verifier passed — but the surface realization path broke. The answer is correct; the explanation cannot be communicated. The runner must not classify this as `wrong` (which would conflate articulation failure with epistemic failure). | Verifier (replay-equal) + Realizer (failure) | → DECODED once the articulation path is repaired; stays distinct from DECODED until that repair is confirmed |
+| **INFERRED** | Derived from DECODED components by a ratified deterministic rule, but the composite was never itself curated or ratified as a lexical entry. Stronger than UNVERIFIED-POSSIBLE (derivation is deterministic and components are DECODED); weaker than DECODED (the composite has not been independently ratified). Grounded by the `language_packs` composition rules (`per`, `square`, `cubic` unit synthesis) — the rule is ratified; the output is not. | Rule application over DECODED primitives | → DECODED if the composed result is subsequently curated and ratified; → CONTRADICTED if rule application produces a result that conflicts with a ratified entry; stays INFERRED until ratification |
 | **UNVERIFIED-POSSIBLE** | Consistent with verified knowledge but not directly verified; usable provisionally | Default for non-contradicting novel propositions | → VERIFIED if cross-reference confirms; → CONTRADICTED if cross-reference rejects |
 | **UNVERIFIED-NOVEL** | Not contradicted; introduces structure the engine hasn't decoded yet; candidate for teaching expansion | Refusal that points at expansion need | → EVIDENCED once teaching corpus adds vocabulary; → CONTRADICTED if eventually disproven |
 | **CONTRADICTED** | Conflicts with verified knowledge; refuse unless this is a ratified correction | Verification failure | → EVIDENCED only via ratified correction through teaching loop |
@@ -90,6 +91,51 @@ encounters a case that doesn't fit any current state, it refuses with
 *"epistemic state needed: a state that captures ..."*, and the teaching
 loop either ratifies a new state or determines that an existing state
 already covers the case with different framing.
+
+---
+
+## Normative clearance axis (companion, orthogonal to epistemic state)
+
+The runtime-packs audit established that safety and ethics verdicts are
+**not epistemic states**. They are answers to a different question:
+
+- **Epistemic axis:** *What does the engine believe about the truth-value
+  of this proposition?*
+- **Normative axis:** *Has this turn's behavior complied with the active
+  constraints?*
+
+These axes are orthogonal. A VERIFIED proposition can violate a safety
+boundary. An UNDETERMINED proposition can pass every ethics predicate.
+The verdict does not change the epistemic state; the epistemic state does
+not determine the verdict.
+
+Every proposition reaching `ChatResponse` or `TurnEvent` carries **both**
+an epistemic state (from the 14-state taxonomy above) and a normative
+clearance state (from the four-value axis below).
+
+| Clearance state | Meaning | Source | Notes |
+|---|---|---|---|
+| **CLEARED** | All active normative constraints (safety + ethics) passed for this turn | Safety check + ethics check both `upheld=True` | Necessary but not sufficient for surfacing — epistemic state must also be above the threshold the operator has set |
+| **VIOLATED** | At least one normative constraint was breached; audit record written | Safety or ethics check returned `upheld=False` | If the violated commitment is in `refusal_commitments`, transitions to SUPPRESSED before the proposition reaches the surface |
+| **UNASSESSABLE** | Constraint exists but cannot be evaluated at runtime (`runtime_checkable=False`) | Check returned `upheld=True, runtime_checkable=False` | Engine defaults to non-violation conservatively; not equivalent to CLEARED (evidence is absent, not positive) |
+| **SUPPRESSED** | A refusal commitment fired; the proposition was replaced with a typed refusal before it could be assigned an epistemic state at the surface | `refusal_commitments` match + predicate `upheld=False` | The proposition may have any epistemic state internally; from the user's perspective it never surfaced. Distinct from VIOLATED (which surfaces with an audit tag) |
+
+**Integration point:** `ChatResponse` and `TurnEvent` each carry both axes:
+
+```
+proposition:          <feature_bundle | None>
+epistemic_state:      <one of the 14-state taxonomy>
+normative_clearance:  <CLEARED | VIOLATED | UNASSESSABLE | SUPPRESSED>
+provenance:           <structured record of source / spans / mechanism>
+refusal_reason:       <typed reason if epistemic state is refusal-class | None>
+normative_detail:     <violated boundary / commitment IDs if VIOLATED or SUPPRESSED | None>
+```
+
+**What this resolves:** Open question 5 (identity / safety / ethics
+interaction) is now answered. Safety and ethics verdicts live on the
+normative axis. Identity packs ground the epistemic axis (what counts
+as decoding). The two axes co-exist on every turn record without
+collapsing into each other.
 
 ---
 
@@ -141,6 +187,13 @@ What's missing is the unified vocabulary.
 | Age/nested-comparison refusal (math parser) | SCOPE_BOUNDARY | Regex matched; the proposition type is recognized but outside current decode capability |
 | Runner `RealizerError` on verified trace | DECODED-UNARTICULATED | Trace passed verifier; surface path broke — currently misclassified as `wrong` in the runner |
 | Candidate-graph branch cap exceeded | COMPUTATIONALLY_BOUNDED | Search budget exhausted before answers could be enumerated; not AMBIGUOUS, not UNDETERMINED |
+| `lookup_unit` composition rules (`per`, `square`, `cubic`) | INFERRED | Unit derived from DECODED primitives by ratified rule; composite was never itself curated |
+| Vault decomposed recall above `UNKNOWN_FLOOR` | UNVERIFIED-POSSIBLE | Recognized by geometric component composition; not exact direct recall |
+| `SafetyCheckResult(upheld=True, runtime_checkable=True)` | CLEARED (normative axis) | Safety constraint confirmed upheld this turn — normative axis, not epistemic |
+| `SafetyCheckResult(upheld=False, ...)` | VIOLATED (normative axis) | Safety boundary breached — normative finding; proposition's epistemic state is unchanged |
+| `SafetyCheckResult(upheld=True, runtime_checkable=False)` | UNASSESSABLE (normative axis) | Constraint not evaluable per-turn; engine defaults conservatively to non-violation |
+| `refusal_commitments` predicate fires | SUPPRESSED (normative axis) | Proposition replaced with typed refusal; never assigned epistemic state at surface |
+| `EthicsPack.hedge_commitments` | UNASSESSABLE → soft surface hedge | Normative obligation to mark uncertainty; adjacent to UNVERIFIED-POSSIBLE but on normative axis |
 
 The mapping shows the taxonomy isn't being invented from scratch — it's
 naming distinctions the engine already makes ad-hoc and unifying their
@@ -187,10 +240,12 @@ Concrete output shape proposed:
 
 ```
 RecognitionOutcome:
-  proposition:     <feature_bundle | None>
-  state:           <one of the starter taxonomy>
-  provenance:      <structured record of source / spans / mechanism>
-  refusal_reason:  <typed reason if state is refusal-class | None>
+  proposition:          <feature_bundle | None>
+  epistemic_state:      <one of the 14-state taxonomy>
+  normative_clearance:  <CLEARED | VIOLATED | UNASSESSABLE | SUPPRESSED>
+  provenance:           <structured record of source / spans / mechanism>
+  refusal_reason:       <typed reason if epistemic state is refusal-class | None>
+  normative_detail:     <violated boundary / commitment IDs | None>
 ```
 
 The recognition spike commits to producing only a subset of states:
@@ -225,13 +280,14 @@ This is *not a spike* — it's an audit. It produces no new code. But
 it surfaces whether the starter taxonomy is sufficient before any new
 work is committed.
 
-**Status: COMPLETE (math subsystem, 2026-05-24).** 40 decision points
-mapped across `math_parser`, `math_problem_graph`, `math_solver`,
-`math_verifier`, `math_realizer`, `math_candidate_parser`,
-`math_candidate_graph`, and `evals/gsm8k_math/{runner,verify}`. Four
-EPISTEMIC_STATE_NEEDED gaps were surfaced and ratified into the taxonomy.
-Remaining subsystems (vault, packs, teaching, cognition pipeline) are
-not yet audited.
+**Status: COMPLETE across four subsystems (2026-05-24).**
+
+- **Math** — 40 decision points across 9 files. 4 gaps ratified: EVIDENCED-INCOMPLETE, DECODED-UNARTICULATED, SCOPE_BOUNDARY, COMPUTATIONALLY_BOUNDED.
+- **Vault** — 33 decision points across `vault/store.py` + `vault/decompose.py`. 0 new states. 1 implementation debt: `_status_admits` collapses FALSIFIED (→ CONTRADICTED) and SPECULATIVE (→ UNVERIFIED-POSSIBLE) into a single "not admissible" bucket without distinguishing them. 1 deferred candidate: COMPOSED_RECOGNITION (decomposed recall above floor) — currently covered adequately by UNVERIFIED-POSSIBLE; revisit if provenance needs to distinguish composed vs. asserted recall.
+- **Language packs** — 25 decision points across 6 files. 1 gap ratified: INFERRED (rule-derived from DECODED primitives, composite not curated). 4 implementation bugs identified (see Phase 2).
+- **Runtime packs** — 28 decision points across 6 files. 0 new epistemic states. Structural finding: safety/ethics verdicts are a separate normative clearance axis, orthogonal to epistemic state. Normative axis ratified as companion (see section above).
+
+Remaining subsystems not yet audited: teaching pipeline, cognition pipeline (`core/cognition/`), chat runtime.
 
 **Framing 2 — Spike on a single subsystem.** Pick one subsystem
 (probably recognition, since the parallel scope is already underway)
@@ -275,12 +331,13 @@ all subsystems) is gated on:
 
 ## Risks the spike must surface
 
-- **The starter taxonomy may be too coarse.** Nine states was too small.
-  The math-subsystem audit (Framing 1, complete) surfaced four gaps and
-  ratified four new states: EVIDENCED-INCOMPLETE, DECODED-UNARTICULATED,
-  SCOPE_BOUNDARY, COMPUTATIONALLY_BOUNDED. Taxonomy is now 13 states
-  (9 original + 4 ratified + meta-state). Further subsystem audits
-  (vault, packs, teaching) may surface additional gaps.
+- **The starter taxonomy may be too coarse.** Risk is now substantially
+  closed. Four audits complete; taxonomy grew from 9 to 14 epistemic
+  states (+ meta-state) and acquired a companion normative clearance
+  axis. Remaining audits (teaching pipeline, cognition pipeline, chat
+  runtime) may surface further gaps, but the core epistemic vocabulary
+  is stable. The normative axis finding was not anticipated in the
+  original risk — it is additive, not corrective.
 
 - **Provenance overhead.** Every state assignment carries structured
   provenance. For propositions handled in tight loops (vault recall,
@@ -337,35 +394,43 @@ all subsystems) is gated on:
 4. **Lens-conditional states.** An anchor lens can change how a
    proposition decodes; can it change the *state* the proposition is
    in? (Probably yes; how is non-trivial.)
-5. **Identity / safety / ethics interaction.** Identity packs ground
-   "what is decoding." Safety/ethics produce refusal verdicts.
-   Where do those verdicts intersect with epistemic states? Probably
-   as a separate axis (truth-state × safety-state × ethics-state) but
-   the taxonomy needs to be explicit.
+5. **Identity / safety / ethics interaction.** ~~Open.~~ **Resolved.**
+   Identity packs ground the epistemic axis (what counts as decoding).
+   Safety and ethics verdicts live on the normative clearance axis
+   (orthogonal to epistemic state). The two axes co-exist on every
+   turn record. See the normative clearance axis section above.
 
 ---
 
 ## Summary
 
-The load-bearing question is whether a small extensible vocabulary of
-epistemic states (PERCEIVED, EVIDENCED, EVIDENCED-INCOMPLETE, VERIFIED,
-DECODED, DECODED-UNARTICULATED, UNVERIFIED-POSSIBLE, UNVERIFIED-NOVEL,
-CONTRADICTED, AMBIGUOUS, UNDETERMINED, SCOPE_BOUNDARY,
-COMPUTATIONALLY_BOUNDED, plus the recursive EPISTEMIC_STATE_NEEDED) is
+The load-bearing question was whether a small extensible vocabulary of
+epistemic states, plus a companion normative clearance axis, is
 sufficient to unify the implicit distinctions CORE already makes across
 vault, packs, teaching, recognition, and verification — and whether
 provenance-on-every-assignment is feasible without overhead that breaks
 the engine's hot path.
 
-The math-subsystem audit (Framing 1) is complete. It mapped 40 decision
-points across 9 files; 31 mapped cleanly at high confidence, 5 with
-medium confidence, and 4 required new states (ratified above). The
-taxonomy grew from 9 states to 13. The audit also surfaced one
-correctness issue in the runner: `RealizerError` on a verified trace is
-currently classified as `outcome="wrong"` but should be
-DECODED-UNARTICULATED — the math is correct, only the articulation path
-broke. This is a load-bearing misclassification that the next runner
-revision must address.
+Four subsystem audits are now complete. The taxonomy is stable at 14
+epistemic states (PERCEIVED, EVIDENCED, EVIDENCED-INCOMPLETE, VERIFIED,
+DECODED, DECODED-UNARTICULATED, INFERRED, UNVERIFIED-POSSIBLE,
+UNVERIFIED-NOVEL, CONTRADICTED, AMBIGUOUS, UNDETERMINED, SCOPE_BOUNDARY,
+COMPUTATIONALLY_BOUNDED, plus the recursive EPISTEMIC_STATE_NEEDED) and
+a 4-value normative clearance axis (CLEARED, VIOLATED, UNASSESSABLE,
+SUPPRESSED) that is orthogonal to the epistemic axis.
+
+Known implementation issues to address before Phase 3 integration
+(tracked separately as Phase 2):
+- `evidence.py`: `mean_pair_score([])` returns `0.0`, silently making
+  an unmeasured case FALSIFIED rather than UNDETERMINED
+- `evals/gsm8k_math/runner.py`: `RealizerError` on a verified trace is
+  classified as `outcome="wrong"` rather than DECODED-UNARTICULATED
+- `language_packs/domain_contract.py`: `present=False, valid=False` on
+  a missing manifest should be `present=False, valid=True` (UNDETERMINED,
+  not a negative judgment); `domain_id:unknown` should route to
+  SCOPE_BOUNDARY rather than collapsing with structural errors
+- `vault/store.py:_status_admits`: FALSIFIED and SPECULATIVE entries
+  should be explicitly distinguished as CONTRADICTED vs. UNVERIFIED-POSSIBLE
 
 The eventual ADR makes the taxonomy first-class and provenance
 mandatory across all subsystems. That ADR is gated on the audit
