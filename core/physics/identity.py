@@ -291,6 +291,13 @@ class TurnEvent:
     # Preserved verbatim through the TurnEvent telemetry stream for
     # downstream audit consumers.
     grounding_source: str = "none"
+    # Epistemic Phase 3 — first-class proposition state axes.  Strings
+    # intentionally mirror core.epistemic_state enum values without
+    # importing that module here, preserving identity.py's low-coupling
+    # role as a shared value-type module.
+    epistemic_state: str = "undetermined"
+    normative_clearance: str = "unassessable"
+    normative_detail: str = ""
     # ADR-0072 (R5) — operator-visible register identity per turn.
     # ``register_id`` is the loaded pack id (e.g. ``"convivial_v1"``),
     # or ``""`` for the in-memory UNREGISTERED sentinel.

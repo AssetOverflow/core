@@ -31,6 +31,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import IO, Protocol
 
+from core.epistemic_state import (
+    coerce_epistemic_state,
+    coerce_normative_clearance,
+)
+
 
 _UNKNOWN_DOMAIN_SURFACE = "I don't know — insufficient grounding for that yet."
 
@@ -61,6 +66,15 @@ def serialize_turn_event(
         "safety_pack_id": str(safety_pack_id),
         "ethics_pack_id": str(ethics_pack_id),
         "identity_pack_id": str(identity_pack_id),
+        "epistemic_state": coerce_epistemic_state(
+            getattr(event, "epistemic_state", None)
+        ).value,
+        "normative_clearance": coerce_normative_clearance(
+            getattr(event, "normative_clearance", None)
+        ).value,
+        "normative_detail": str(
+            getattr(event, "normative_detail", "") or ""
+        ),
         "refusal_emitted": bool(getattr(verdicts, "refusal_emitted", False)),
         "hedge_injected": bool(getattr(verdicts, "hedge_injected", False)),
         "versor_condition": float(getattr(event, "versor_condition", 0.0)),
