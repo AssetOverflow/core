@@ -17,11 +17,25 @@ from collections import deque
 import numpy as np
 from algebra.backend import vault_recall, vault_recall_batch
 from algebra.cga import null_project
+from core.epistemic_state import EpistemicState
 from teaching.epistemic import ADMISSIBLE_AS_EVIDENCE, EpistemicStatus
 
 
 def _versor_key(F: np.ndarray) -> bytes:
     return np.asarray(F, dtype=np.float32).tobytes()
+
+
+def epistemic_state_for_vault_status(entry_status: EpistemicStatus) -> EpistemicState:
+    """Map legacy vault review statuses onto the ratified state taxonomy."""
+    if entry_status is EpistemicStatus.COHERENT:
+        return EpistemicState.DECODED
+    if entry_status is EpistemicStatus.FALSIFIED:
+        return EpistemicState.CONTRADICTED
+    if entry_status is EpistemicStatus.SPECULATIVE:
+        return EpistemicState.UNVERIFIED_POSSIBLE
+    if entry_status is EpistemicStatus.CONTESTED:
+        return EpistemicState.AMBIGUOUS
+    return EpistemicState.EPISTEMIC_STATE_NEEDED
 
 
 def _status_admits(entry_status: EpistemicStatus, min_status: EpistemicStatus) -> bool:
@@ -31,7 +45,10 @@ def _status_admits(entry_status: EpistemicStatus, min_status: EpistemicStatus) -
     requested tier — they carry CONTRADICTED semantics and are retained only
     for provenance and Stage-3 inversion (ADR-0021 §3).  SPECULATIVE entries
     are separately excluded at the COHERENT tier (UNVERIFIED-POSSIBLE semantics
-    — not yet coherent, but distinct from actively falsified).  If the
+    — not yet coherent, but distinct from actively falsified).  The
+    exclusion reason for each status is externally inspectable via
+    ``epistemic_state_for_vault_status``: FALSIFIED→CONTRADICTED,
+    SPECULATIVE→UNVERIFIED_POSSIBLE, CONTESTED→AMBIGUOUS.  If the
     admissibility set grows in the future (it should not, per ADR-0021), only
     this helper changes.
     """
@@ -40,6 +57,17 @@ def _status_admits(entry_status: EpistemicStatus, min_status: EpistemicStatus) -
     if min_status is EpistemicStatus.COHERENT:
         return entry_status in ADMISSIBLE_AS_EVIDENCE
     return entry_status is min_status
+
+
+def _parse_entry_status(raw_status: object) -> EpistemicStatus:
+    if isinstance(raw_status, EpistemicStatus):
+        return raw_status
+    if isinstance(raw_status, str):
+        try:
+            return EpistemicStatus(raw_status)
+        except ValueError:
+            return EpistemicStatus.SPECULATIVE
+    return EpistemicStatus.SPECULATIVE
 
 
 class VaultStore:
@@ -79,6 +107,7 @@ class VaultStore:
         arr = np.asarray(F, dtype=np.float32).copy()
         stamped: dict = dict(metadata) if metadata else {}
         stamped["epistemic_status"] = epistemic_status.value
+        stamped["epistemic_state"] = epistemic_state_for_vault_status(epistemic_status).value
 
         will_evict = self._max_entries is not None and len(self._versors) >= self._max_entries
         self._versors.append(arr)
@@ -143,11 +172,9 @@ class VaultStore:
         if min_status is not None:
             filtered: list[tuple[int, float]] = []
             for i, score in ranked:
-                raw_status = self._metadata[i].get("epistemic_status", "speculative")
-                try:
-                    entry_status = EpistemicStatus(raw_status)
-                except ValueError:
-                    entry_status = EpistemicStatus.SPECULATIVE
+                entry_status = _parse_entry_status(
+                    self._metadata[i].get("epistemic_status", "speculative")
+                )
                 if _status_admits(entry_status, min_status):
                     filtered.append((i, score))
             ranked = filtered
@@ -158,6 +185,9 @@ class VaultStore:
                 "score": float(score),
                 "metadata": self._metadata[i],
                 "index": i,
+                "epistemic_state": epistemic_state_for_vault_status(
+                    _parse_entry_status(self._metadata[i].get("epistemic_status", "speculative"))
+                ).value,
             }
             for i, score in ranked[:top_k]
         ]
@@ -204,13 +234,9 @@ class VaultStore:
             if min_status is not None:
                 filtered: list[tuple[int, float]] = []
                 for i, score in ranked:
-                    raw_status = self._metadata[i].get(
-                        "epistemic_status", "speculative",
+                    entry_status = _parse_entry_status(
+                        self._metadata[i].get("epistemic_status", "speculative")
                     )
-                    try:
-                        entry_status = EpistemicStatus(raw_status)
-                    except ValueError:
-                        entry_status = EpistemicStatus.SPECULATIVE
                     if _status_admits(entry_status, min_status):
                         filtered.append((i, score))
                 ranked = filtered
@@ -221,6 +247,9 @@ class VaultStore:
                     "score": float(score),
                     "metadata": self._metadata[i],
                     "index": i,
+                    "epistemic_state": epistemic_state_for_vault_status(
+                        _parse_entry_status(self._metadata[i].get("epistemic_status", "speculative"))
+                    ).value,
                 }
                 for i, score in ranked[:top_k]
             ])
