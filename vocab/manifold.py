@@ -32,6 +32,7 @@ import numpy as np
 from algebra.backend import cga_inner
 from algebra.cl41 import geometric_product, reverse
 from algebra.versor import versor_unit_residual
+from core.epistemic_state import EpistemicState, coerce_epistemic_state
 from core.physics.energy import EnergyProfile
 from core.physics.valence import ValenceBundle
 from language_packs.schema import MorphologyEntry
@@ -72,6 +73,7 @@ class VocabManifold:
         self._language_by_word: dict[str, str] = {}
         self._energy_by_word: dict[str, EnergyProfile] = {}
         self._valence_by_word: dict[str, ValenceBundle] = {}
+        self._epistemic_state_by_word: dict[str, str] = {}
         self._transient_words: set[str] = set()
         self._unknown_token_log: list[dict[str, object]] = []
 
@@ -83,6 +85,7 @@ class VocabManifold:
         language: str | None = None,
         energy: EnergyProfile | None = None,
         valence: ValenceBundle | None = None,
+        epistemic_state: str | EpistemicState | None = None,
     ) -> None:
         """
         Register a word-versor pair.
@@ -97,6 +100,10 @@ class VocabManifold:
         algebra primitive. Do not call normalize_to_versor() directly;
         that function is reserved for the injection gate.
 
+        ``epistemic_state`` defaults to DECODED for compiled pack entries.
+        The compiler can override this when a lexical row's review status
+        maps to another ratified state.
+
         Raises:
             ValueError: if the full unit-versor residual is not satisfied.
         """
@@ -104,6 +111,10 @@ class VocabManifold:
         _assert_manifold_versor(word, v)
         self._words.append(word)
         self._versors.append(v)
+        self._epistemic_state_by_word[word] = coerce_epistemic_state(
+            epistemic_state,
+            default=EpistemicState.DECODED,
+        ).value
         resolved_language = language or (morphology.language if morphology is not None else None)
         if resolved_language:
             self._language_by_word[word] = resolved_language
@@ -128,7 +139,7 @@ class VocabManifold:
         if word in self._transient_words:
             self.update(word, versor)
             return
-        self.add(word, versor)
+        self.add(word, versor, epistemic_state=EpistemicState.UNVERIFIED_NOVEL)
         self._transient_words.add(word)
 
     def is_transient(self, word: str) -> bool:
@@ -220,6 +231,16 @@ class VocabManifold:
     def valence_for_word(self, word: str) -> ValenceBundle | None:
         """Return ADR-0007 valence bundle for a stored surface, when available."""
         return self._valence_by_word.get(word)
+
+    def epistemic_state_for_word(self, word: str) -> str:
+        """Return the ratified epistemic state for a stored surface.
+
+        Missing state metadata defaults to UNDETERMINED rather than
+        silently treating the entry as decoded.
+        """
+        if word not in self._words:
+            raise KeyError(f"Word '{word}' not in vocabulary.")
+        return self._epistemic_state_by_word.get(word, EpistemicState.UNDETERMINED.value)
 
     def language_for_word(self, word: str) -> str | None:
         """Return the language code for a stored surface, if known."""
