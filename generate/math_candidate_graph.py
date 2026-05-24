@@ -44,6 +44,7 @@ from generate.math_candidate_parser import (
     classify_sentence,
     extract_capacity_candidates,
     extract_capacity_question_candidates,
+    extract_conditional_op_question_candidates,
     extract_earnings_candidates,
     extract_earnings_question_candidates,
     extract_initial_candidates,
@@ -391,6 +392,36 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
                     answer=None, selected_graph=None,
                     refusal_reason="earnings actor mismatch",
                     branches_enumerated=0, branches_admissible=0,
+                )
+
+    # ADR-0136.S.2 — Conditional-op question short-circuit.
+    # Shape: "If <Entity> <verb> <N> <unit>, how many <unit2> does <Entity2>
+    # <aux> [left|...]?" — given exactly one matching initial-state
+    # candidate for (entity, unit) across all statement sentences, the
+    # answer is initial_value ± operand by verb polarity.  Refuses on any
+    # ambiguity (multiple matching ICs, no IC, negative answer); preserves
+    # wrong == 0.
+    cond_qs = extract_conditional_op_question_candidates(question_sentences[0])
+    if len(cond_qs) == 1:
+        cq = cond_qs[0]
+        all_ic: list[CandidateInitial] = []
+        for s in statement_sentences:
+            all_ic.extend(extract_initial_candidates(s))
+        matching = [
+            ic for ic in all_ic
+            if ic.initial.entity.lower() == cq.entity.lower()
+            and ic.initial.quantity.unit == cq.unit
+        ]
+        if len(matching) == 1:
+            val = matching[0].initial.quantity.value
+            answer = val - cq.operand if cq.op == "subtract" else val + cq.operand
+            if answer >= 0:
+                return CandidateGraphResult(
+                    answer=answer,
+                    selected_graph=None,
+                    refusal_reason=None,
+                    branches_enumerated=1,
+                    branches_admissible=1,
                 )
 
     # Per-sentence choice spaces (after round-trip filter + tiebreaker).
