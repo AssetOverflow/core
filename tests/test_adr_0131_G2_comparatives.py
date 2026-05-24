@@ -72,6 +72,8 @@ def test_additive_less_maps_to_fewer():
     ("times", "Alice has 4 times as many apples as Bob", "Alice", "Bob", 4.0, "times"),
     ("times", "Alice has thrice as many apples as Bob", "Alice", "Bob", 3.0, "thrice"),
     ("fraction", "Alice has half as many apples as Bob", "Alice", "Bob", 0.5, "half"),
+    ("fraction", "Alice has a quarter as many apples as Bob", "Alice", "Bob", 0.25, "quarter"),
+    ("fraction", "Alice has a third as many apples as Bob", "Alice", "Bob", 1.0 / 3.0, "third"),
 ])
 def test_multiplicative_direction_admits(direction, sentence, actor, reference, factor, anchor):
     cands = [c for c in _compare_multiplicative_candidates(sentence) if roundtrip_admissible(c)]
@@ -107,6 +109,9 @@ def test_nested_emits_both_flat_candidates():
     "In comparison with Bob, Alice has 3 more apples",
     "Alice has the same number of apples as Bob",
     "Alice has 3 times more apples than Bob",
+    # G2 extension: deferred / out-of-closed-set forms
+    "Alice has one-third as many apples as Bob",   # hyphenated — not in anchor alternation
+    "Alice has double as many apples as Bob",       # 'double as many' requires different grammar
 ])
 def test_refusal_cases_emit_no_admitted_comparative(sentence):
     cands = extract_operation_candidates(sentence)
@@ -131,6 +136,8 @@ def test_direction_literals_closed_set():
         "Alice has 4 times as many apples as Bob",
         "Alice has half as many apples as Bob",
         "Alice has thrice as many apples as Bob",
+        "Alice has a quarter as many apples as Bob",
+        "Alice has a third as many apples as Bob",
         "Jen has 10 more ducks than four times the number of chickens",
     ]
     for s in sentences:
@@ -151,9 +158,10 @@ def test_runner_wrong_count_is_zero():
 
 def test_runner_per_category_minima():
     """Brief §coverage: ≥4 per direction (more, fewer, times, fraction);
-    ≥3 nested; ≥4 refusal. We pin direction-level minima via per-case scan
-    rather than per-category (additive merges more+fewer into one bucket
-    in per_category but we want to verify each direction independently)."""
+    ≥3 nested; ≥5 refusal. Fraction direction now includes half×4 + quarter×2
+    + third×1 = 7 cases (was 4); refusal set extended to 7 (was 5) with
+    hyphenated and 'double as many' boundary probes. Minima pinned via
+    per-case scan so direction-level counts are verified independently."""
     report = build_report()
     direction_counts = {"more": 0, "fewer": 0, "times": 0, "fraction": 0}
     nested = 0
@@ -206,8 +214,13 @@ def test_committed_report_matches_runner_output():
 _COMPARATIVE_STATEMENT_PATTERNS = (
     # "<N> more <unit> than" / "fewer / less"
     re.compile(r"\b(?:more|fewer|less)\b[^.'\"]*\bthan\b", re.IGNORECASE),
-    # "twice|thrice|half|N times as many <unit> as"
-    re.compile(r"\b(?:twice|thrice|half|\d+\s+times)\s+as\s+many\b", re.IGNORECASE),
+    # "twice|thrice|half|quarter|third|N times as many <unit> as"
+    # Word-number forms ("four times") are included via \w+ to avoid a
+    # digit-only \d+ match that would miss GSM8K-style word numerals.
+    re.compile(
+        r"\b(?:twice|thrice|half|quarter|third|\w+\s+times)\s+as\s+many\b",
+        re.IGNORECASE,
+    ),
 )
 
 

@@ -3,9 +3,9 @@
   "axis": "comparatives",
   "cases_path": "evals/math_capability_axes/G2_comparatives/v1/cases.jsonl",
   "metrics": {
-    "cases_total": 24,
+    "cases_total": 29,
     "pass_rate": 1.0,
-    "passed": 24,
+    "passed": 29,
     "wrong": 0,
     "wrong_count_is_zero": true,
     "wrong_rate": 0.0
@@ -172,6 +172,36 @@
       "reason": ""
     },
     {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-frac-005",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-frac-006",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 1,
+      "admitted_kinds": [
+        "compare_multiplicative"
+      ],
+      "case_id": "G2-mul-frac-007",
+      "category": "multiplicative",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
       "admitted_count": 2,
       "admitted_kinds": [
         "compare_additive",
@@ -243,6 +273,22 @@
       "category": "refusal",
       "outcome": "pass",
       "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "admitted_kinds": [],
+      "case_id": "G2-refuse-006",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "admitted_count": 0,
+      "admitted_kinds": [],
+      "case_id": "G2-refuse-007",
+      "category": "refusal",
+      "outcome": "pass",
+      "reason": ""
     }
   ],
   "per_category": {
@@ -251,7 +297,7 @@
       "wrong": 0
     },
     "multiplicative": {
-      "pass": 8,
+      "pass": 11,
       "wrong": 0
     },
     "nested": {
@@ -259,7 +305,7 @@
       "wrong": 0
     },
     "refusal": {
-      "pass": 5,
+      "pass": 7,
       "wrong": 0
     }
   },
