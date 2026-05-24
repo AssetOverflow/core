@@ -872,13 +872,16 @@ _COMPARE_ADDITIVE_RE: Final[re.Pattern[str]] = re.compile(
     rf"(?P<reference>{_COMPARE_REF})\s*\.?$"
 )
 
-# Multiplicative: anchor-as-value form ("twice"/"thrice"/"half" carry the
-# factor implicitly). "as many <unit>" required; unit ellipsis ("twice as
-# many as Bob") is deferred to keep wrong==0 strict — without unit the
-# binding graph cannot disambiguate which dimension to compare.
+# Multiplicative: anchor-as-value form ("twice"/"thrice"/"half"/"quarter"/
+# "third" carry the factor implicitly). "as many <unit>" required; unit
+# ellipsis ("twice as many as Bob") is deferred to keep wrong==0 strict.
+# "quarter" / "third" admit an optional article ("a quarter", "a third") —
+# the article is not a named group; matched_verb is the anchor word itself,
+# which is a substring of the source and registered in
+# COMPARE_MULTIPLICATIVE_ANCHORS, so round-trip checks pass.
 _COMPARE_MULT_ANCHOR_RE: Final[re.Pattern[str]] = re.compile(
     rf"^(?P<actor>{_ENTITY})\s+{_comparison_anchor_verb()}\s+"
-    r"(?P<anchor>twice|thrice|half)\s+as\s+many\s+"
+    r"(?:a\s+)?(?P<anchor>twice|thrice|half|quarter|third)\s+as\s+many\s+"
     r"(?P<unit>\w+)\s+as\s+"
     rf"(?P<reference>{_COMPARE_REF})\s*\.?$"
 )
@@ -908,9 +911,13 @@ _COMPARE_NESTED_RE: Final[re.Pattern[str]] = re.compile(
 
 _ANCHOR_TO_FACTOR: Final[dict[str, tuple[float, str]]] = {
     # surface anchor → (factor, direction-literal)
+    # Registered in COMPARE_MULTIPLICATIVE_ANCHORS (math_roundtrip) and in the
+    # round-trip factor-divisor table ("half":2, "third":3, "quarter":4).
     "twice": (2.0, "times"),
     "thrice": (3.0, "times"),
     "half": (0.5, "fraction"),
+    "quarter": (0.25, "fraction"),
+    "third": (1.0 / 3.0, "fraction"),
 }
 
 
