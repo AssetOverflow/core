@@ -41,9 +41,15 @@ from typing import Final, Union
 from generate.math_candidate_parser import (
     CandidateInitial,
     CandidateUnknown,
+    extract_capacity_candidates,
+    extract_capacity_question_candidates,
+    extract_earnings_candidates,
+    extract_earnings_question_candidates,
     extract_initial_candidates,
     extract_operation_candidates,
     extract_question_candidates,
+    _TIME_UNITS_TO_SECONDS,
+    _to_seconds,
 )
 from generate.math_problem_graph import (
     MathGraphError,
@@ -318,6 +324,64 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
             ),
             branches_enumerated=0, branches_admissible=0,
         )
+
+    # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
+    # Capacity path: single statement with one CandidateCapacity + matching question.
+    if len(statement_sentences) == 1:
+        cap_cands = extract_capacity_candidates(statement_sentences[0])
+        cap_q_cands = extract_capacity_question_candidates(question_sentences[0])
+        if len(cap_cands) == 1 and len(cap_q_cands) == 1:
+            cap = cap_cands[0]
+            cap_q = cap_q_cands[0]
+            actor_ok = (
+                cap_q.actor is None
+                or cap.actor.lower() == cap_q.actor.lower()
+            )
+            if actor_ok:
+                rate_per_sec = cap.count / _to_seconds(cap.per_count, cap.per_unit)
+                answer = rate_per_sec * _to_seconds(cap_q.per_count, cap_q.per_unit)
+                if answer > 0:
+                    return CandidateGraphResult(
+                        answer=answer,
+                        selected_graph=None,
+                        refusal_reason=None,
+                        branches_enumerated=1,
+                        branches_admissible=1,
+                    )
+            else:
+                return CandidateGraphResult(
+                    answer=None, selected_graph=None,
+                    refusal_reason="capacity actor mismatch",
+                    branches_enumerated=0, branches_admissible=0,
+                )
+
+    # Earnings path: single rate statement + matching question.
+    if len(statement_sentences) == 1:
+        earn_cands = extract_earnings_candidates(statement_sentences[0])
+        earn_q_cands = extract_earnings_question_candidates(question_sentences[0])
+        if len(earn_cands) == 1 and len(earn_q_cands) == 1:
+            earn = earn_cands[0]
+            earn_q = earn_q_cands[0]
+            if earn.actor.lower() == earn_q.actor.lower():
+                if earn.per_unit in _TIME_UNITS_TO_SECONDS:
+                    rate_per_sec = earn.amount / _to_seconds(1, earn.per_unit)
+                    answer = rate_per_sec * _to_seconds(
+                        earn_q.time_count, earn_q.time_unit,
+                    )
+                    if answer > 0:
+                        return CandidateGraphResult(
+                            answer=answer,
+                            selected_graph=None,
+                            refusal_reason=None,
+                            branches_enumerated=1,
+                            branches_admissible=1,
+                        )
+            else:
+                return CandidateGraphResult(
+                    answer=None, selected_graph=None,
+                    refusal_reason="earnings actor mismatch",
+                    branches_enumerated=0, branches_admissible=0,
+                )
 
     # Per-sentence choice spaces (after round-trip filter + tiebreaker).
     per_sentence_choices: list[list[SentenceChoice]] = []

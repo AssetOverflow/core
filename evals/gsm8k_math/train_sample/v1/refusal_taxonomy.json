@@ -1,0 +1,469 @@
+{
+  "schema_version": 1,
+  "adr": "0136.S.0",
+  "description": "Deterministic refusal taxonomy over 50 GSM8K train-sample cases. Each case classified by primary blocking barrier and co-occurring secondary barriers.",
+  "summary": {
+    "total_cases": 50,
+    "primary_barrier_counts": {
+      "context_filler": 23,
+      "compound_statement": 5,
+      "novel_initial_form": 2,
+      "rate_earnings": 1,
+      "partition_divide": 1,
+      "indefinite_quantity": 1,
+      "temporal_age_anchor": 1,
+      "compound_comparative": 1,
+      "rate_price": 1,
+      "capacity_rate": 1,
+      "compound_multi_event": 1,
+      "multi_entity_initial": 1,
+      "multi_step_complex": 1,
+      "multi_day_accumulation": 1,
+      "distributive_each_actor": 1,
+      "multi_attribute_accumulation": 1,
+      "coreference_pronoun": 1,
+      "goal_statement": 1,
+      "fraction_operand": 1,
+      "distributive_multiply": 1,
+      "percentage_rate": 1,
+      "novel_initial_verb": 1,
+      "temporal_frequency": 1
+    },
+    "secondary_barrier_counts": {
+      "distributive_multiply": 5,
+      "percentage_of": 5,
+      "rate_price": 4,
+      "fraction_operand": 4,
+      "rate_comparative": 4,
+      "multi_step_complex": 3,
+      "conditional_question": 3,
+      "temporal_frequency": 3,
+      "compound_comparative": 3,
+      "coreference_pronoun": 2,
+      "context_filler": 2,
+      "conditional_branch": 2,
+      "capacity_rate": 2,
+      "rate_earnings": 2,
+      "conditional_branching": 1,
+      "implicit_quantity": 1,
+      "rate_count": 1,
+      "rate_question": 1,
+      "distributive_divide": 1,
+      "implicit_group_count": 1,
+      "rate_time": 1,
+      "multi_day_accumulation": 1,
+      "multi_entity_initial": 1,
+      "leg_count": 1,
+      "multi_item_purchase": 1,
+      "embedded_per_unit": 1,
+      "goal_question": 1,
+      "compound_multi_event": 1
+    },
+    "s1_admission_potential": {
+      "primary_rate_class": 4,
+      "secondary_rate_class_blocked_by_context": 8,
+      "notes": "Context filler is the dominant gate (23/50). S.1 rate parsing directly unblocks 4 primary cases; 8 more have rate as secondary but have additional barriers."
+    }
+  },
+  "per_case": [
+    {
+      "case_id": "gsm8k-train-sample-v1-0001",
+      "primary_barrier": "rate_earnings",
+      "secondary_barriers": [
+        "conditional_branching"
+      ],
+      "note": "makes $18/hr + overtime conditional"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0002",
+      "primary_barrier": "partition_divide",
+      "secondary_barriers": [
+        "coreference_pronoun"
+      ],
+      "note": "splits into 25-foot sections; She=Jan"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0003",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "distributive_multiply",
+        "rate_price"
+      ],
+      "note": "context sentence gates; 24/box, $0.75 each"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0004",
+      "primary_barrier": "indefinite_quantity",
+      "secondary_barriers": [
+        "fraction_operand"
+      ],
+      "note": "'some kids' \u2014 no initial count"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0005",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [
+        "fraction_operand"
+      ],
+      "note": "temporal + fraction + future in one sentence"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0006",
+      "primary_barrier": "temporal_age_anchor",
+      "secondary_barriers": [
+        "multi_step_complex"
+      ],
+      "note": "started at age 6; chained multipliers over age"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0007",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "implicit_quantity",
+        "conditional_question"
+      ],
+      "note": "intent sentence; box-size must be inferred"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0008",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "distributive_multiply"
+      ],
+      "note": "context gate; 5 bags\u00d750 + 2 bags\u00d7100"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0009",
+      "primary_barrier": "compound_comparative",
+      "secondary_barriers": [
+        "conditional_question"
+      ],
+      "note": "4\u00d7chickens + 10 ducks = nested comparative; if question"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0010",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [],
+      "note": "'had X initially, but then lost Y' \u2014 two ops one sentence"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0011",
+      "primary_barrier": "rate_price",
+      "secondary_barriers": [
+        "context_filler"
+      ],
+      "note": "$2 per cup in relative clause; needs inverse solve"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0012",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [
+        "fraction_operand",
+        "coreference_pronoun"
+      ],
+      "note": "'ate half' + He=Dennis"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0013",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "temporal_frequency",
+        "rate_count"
+      ],
+      "note": "context gate; 10 videos/day \u00d7 days"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0014",
+      "primary_barrier": "capacity_rate",
+      "secondary_barriers": [],
+      "note": "SIMPLEST: 'can shuck 10 in 5 min' \u2192 rate \u00d7 2hr"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0015",
+      "primary_barrier": "compound_multi_event",
+      "secondary_barriers": [
+        "compound_comparative"
+      ],
+      "note": "subway+train+bike in one sentence; twice as much time"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0016",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [
+        "rate_question"
+      ],
+      "note": "traveled X more than 5 miles AND encountered Y less than 17 signs"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0017",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "rate_price",
+        "conditional_branch"
+      ],
+      "note": "context gate; $50/day or $500/14days conditional"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0018",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "capacity_rate"
+      ],
+      "note": "context gate; 2 goals/15min \u00d7 2hr"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0019",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "percentage_of",
+        "conditional_branch"
+      ],
+      "note": "context gate; 80% insurance on subsequent visits"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0020",
+      "primary_barrier": "multi_entity_initial",
+      "secondary_barriers": [
+        "rate_comparative"
+      ],
+      "note": "2 puppies, 2 kittens, 3 parakeets in one sentence; chained price ratios"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0021",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "distributive_multiply"
+      ],
+      "note": "context gate; 15lbs \u00d7 10reps \u00d7 3sets"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0022",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "rate_earnings",
+        "compound_comparative"
+      ],
+      "note": "context gate; $20/kg + twice as many catch"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0023",
+      "primary_barrier": "multi_step_complex",
+      "secondary_barriers": [
+        "fraction_operand",
+        "distributive_divide"
+      ],
+      "note": "Nicole\u2192Cindy\u2192Rex\u2192siblings chained"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0024",
+      "primary_barrier": "multi_day_accumulation",
+      "secondary_barriers": [],
+      "note": "20+36+40+50 across Mon\u2013Thu in one sentence"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0025",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "distributive_multiply"
+      ],
+      "note": "context gate; 6 baskets\u00d750 + 3 friends same amount"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0026",
+      "primary_barrier": "distributive_each_actor",
+      "secondary_barriers": [],
+      "note": "'Aaron and Carson each saved $40' \u2014 two actors each"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0027",
+      "primary_barrier": "multi_attribute_accumulation",
+      "secondary_barriers": [],
+      "note": "240 Instagram + 500 Facebook in one sentence for one actor"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0028",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "rate_price",
+        "temporal_frequency"
+      ],
+      "note": "context gate; $100k + $1k/day cost + 150\u00d7$10/day revenue"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0029",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "rate_comparative"
+      ],
+      "note": "context gate; keyboard = 3\u00d7 mouse cost"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0030",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "rate_comparative"
+      ],
+      "note": "context gate; beach time = 2.5\u00d7 drive time"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0031",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "implicit_group_count"
+      ],
+      "note": "context + '3 friends' embedded in intent"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0032",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "rate_time",
+        "percentage_of"
+      ],
+      "note": "context gate; 2hr draw + 30% less to color"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0033",
+      "primary_barrier": "compound_statement",
+      "secondary_barriers": [
+        "multi_step_complex"
+      ],
+      "note": "'Rachel is 12, grandfather is 7\u00d7her' in one sentence + future age"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0034",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "capacity_rate",
+        "percentage_of"
+      ],
+      "note": "context gate; 40yds/5sec + 40% speed improvement"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0035",
+      "primary_barrier": "coreference_pronoun",
+      "secondary_barriers": [
+        "context_filler"
+      ],
+      "note": "'She decided to split them' \u2014 pronoun, no local antecedent"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0036",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "multi_day_accumulation",
+        "compound_comparative"
+      ],
+      "note": "context gate; multi-day study chain"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0037",
+      "primary_barrier": "goal_statement",
+      "secondary_barriers": [],
+      "note": "'wants to lose 10 pounds by June' \u2014 goal not initial state"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0038",
+      "primary_barrier": "novel_initial_form",
+      "secondary_barriers": [],
+      "note": "'there are a hundred ladies' \u2014 existential + location modifier"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0039",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "multi_step_complex"
+      ],
+      "note": "context gate; Orlando+Jose+Fernando chained"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0040",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "multi_entity_initial",
+        "leg_count"
+      ],
+      "note": "context gate; 5 species \u00d7 per-species leg count"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0041",
+      "primary_barrier": "fraction_operand",
+      "secondary_barriers": [
+        "percentage_of"
+      ],
+      "note": "all of 1 pan + 75% of 2nd pan"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0042",
+      "primary_barrier": "distributive_multiply",
+      "secondary_barriers": [
+        "conditional_question"
+      ],
+      "note": "4 bags\u00d720 + 6 bags\u00d725; conditional question"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0043",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "rate_price",
+        "multi_item_purchase"
+      ],
+      "note": "context gate; two item types at different prices"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0044",
+      "primary_barrier": "percentage_rate",
+      "secondary_barriers": [],
+      "note": "10% simple interest = principal \u00d7 rate \u00d7 time"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0045",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "rate_earnings",
+        "distributive_multiply"
+      ],
+      "note": "context gate; $0.2/question \u00d7 10q/survey \u00d7 surveys"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0046",
+      "primary_barrier": "novel_initial_form",
+      "secondary_barriers": [
+        "percentage_of"
+      ],
+      "note": "'A school has 100' \u2014 indefinite/lowercase entity + % ops"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0047",
+      "primary_barrier": "novel_initial_verb",
+      "secondary_barriers": [
+        "embedded_per_unit"
+      ],
+      "note": "'bakes 12 macaroons, each weighing 5oz'"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0048",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "temporal_frequency",
+        "goal_question"
+      ],
+      "note": "context gate; 6/wk - 2/2wks; solve for when=40"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0049",
+      "primary_barrier": "context_filler",
+      "secondary_barriers": [
+        "compound_multi_event",
+        "rate_comparative"
+      ],
+      "note": "context gate; two route comparison"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0050",
+      "primary_barrier": "temporal_frequency",
+      "secondary_barriers": [],
+      "note": "'every other day for 2 weeks' \u2014 frequency \u00d7 duration"
+    }
+  ]
+}
