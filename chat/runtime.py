@@ -405,6 +405,8 @@ class ChatResponse:
     # for every caller that constructs ChatResponse without this
     # field.
     recalled_words: tuple[str, ...] = ()
+    # ADR-0024 Phase 2 — stable refusal reason value
+    refusal_reason: str = ""
 
 
 class ChatRuntime:
@@ -1487,6 +1489,7 @@ class ChatRuntime:
             composer_graph_atom_overlap_count=atom_equivalence_stub.overlap_count,
             epistemic_state=stub_epistemic_state,
             normative_clearance=stub_normative_clearance,
+            refusal_reason=refusal_surface if refusal_emitted else "",
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -1984,6 +1987,7 @@ class ChatRuntime:
             recalled_words=walk_tokens,
             epistemic_state=main_epistemic_state,
             normative_clearance=main_normative_clearance,
+            refusal_reason=refusal_surface if refusal_emitted else "",
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

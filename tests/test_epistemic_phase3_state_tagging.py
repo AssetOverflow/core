@@ -107,3 +107,52 @@ def test_vault_recall_exposes_epistemic_state_metadata() -> None:
     assert len(hits) == 1
     assert hits[0]["epistemic_state"] == EpistemicState.CONTRADICTED.value
     assert hits[0]["metadata"]["epistemic_state"] == EpistemicState.CONTRADICTED.value
+
+
+def test_refusal_reason_materialized_in_cognitive_turn_result() -> None:
+    from chat.runtime import ChatRuntime
+    from core.config import RuntimeConfig
+    from core.cognition import CognitiveTurnPipeline
+    from chat.refusal import TYPED_REFUSAL_PREFIX
+    from packs.safety.check import SafetyCheckResult
+    from core.cognition.trace import trace_hash_from_result
+    import dataclasses
+
+    runtime = ChatRuntime(config=RuntimeConfig())
+    pipeline = CognitiveTurnPipeline(runtime)
+
+    # 1. Normal turn: refusal_reason must be empty
+    result_normal = pipeline.run("light logos", max_tokens=8)
+    assert result_normal.refusal_reason == ""
+    normal_hash = result_normal.trace_hash
+
+    # 2. Force safety violation to trigger refusal
+    boundary_id = "preserve_versor_closure"
+    def _failing(ctx) -> SafetyCheckResult:
+        return SafetyCheckResult(
+            boundary_id=boundary_id,
+            upheld=False,
+            reason="forced for test",
+            runtime_checkable=True,
+        )
+
+    runtime.safety_check.register(boundary_id, _failing)
+
+    # 3. Refusal turn: refusal_reason must be populated
+    result_refusal = pipeline.run("light logos", max_tokens=8)
+    refusal_reason = result_refusal.refusal_reason
+    assert refusal_reason != ""
+    assert refusal_reason.startswith(TYPED_REFUSAL_PREFIX)
+    assert boundary_id in refusal_reason
+
+    # 4. Check trace hash is different due to refusal_reason fold
+    refusal_hash = result_refusal.trace_hash
+    assert refusal_hash != normal_hash
+
+    # 5. Verify trace hashing conditional fold explicitly
+    # If we compute the trace hash from a modified result with empty refusal_reason,
+    # it must differ from the refusal_hash.
+    modified_result = dataclasses.replace(result_refusal, refusal_reason="")
+    recomputed_without_reason = trace_hash_from_result(modified_result)
+    assert recomputed_without_reason != refusal_hash
+
