@@ -10,6 +10,7 @@ import numpy as np
 
 from algebra.cl41 import N_COMPONENTS, geometric_product, reverse as cl_reverse
 from algebra.versor import unitize_versor
+from core.epistemic_state import EpistemicState
 from core.physics.energy import FieldEnergyOperator
 from core.physics.valence import lift_valence
 from language_packs.schema import (
@@ -19,6 +20,7 @@ from language_packs.schema import (
     MorphologyEntry,
     OOVPolicy,
 )
+from teaching.epistemic import EpistemicStatus, parse_status
 from vocab.manifold import VocabManifold
 
 if TYPE_CHECKING:
@@ -68,6 +70,26 @@ _PRIMARY_SEMANTIC_DOMAIN_WEIGHT: float = 0.55
 _LOGOS_PARTICIPATION_WEIGHT: float = 0.25
 _FEATURE_COMPONENTS: tuple[int, ...] = (6, 7, 9, 10, 12, 14)
 _ENERGY = FieldEnergyOperator()
+
+
+def _entry_epistemic_state(entry: LexicalEntry) -> EpistemicState:
+    """Map reviewed pack-row status to the ratified runtime state taxonomy.
+
+    A coherent lexical row has crossed the pack review/checksum boundary and
+    the compiler deterministically lifts it into a manifold coordinate, so it
+    becomes DECODED at the compiled-entry surface. Non-coherent review graph
+    positions remain queryable without being silently promoted.
+    """
+    status = parse_status(entry.epistemic_status)
+    if status is EpistemicStatus.COHERENT:
+        return EpistemicState.DECODED
+    if status is EpistemicStatus.FALSIFIED:
+        return EpistemicState.CONTRADICTED
+    if status is EpistemicStatus.CONTESTED:
+        return EpistemicState.AMBIGUOUS
+    if status is EpistemicStatus.SPECULATIVE:
+        return EpistemicState.UNVERIFIED_POSSIBLE
+    return EpistemicState.EPISTEMIC_STATE_NEEDED
 
 
 def _hash_to_blade(name: str, salt: str) -> int:
@@ -332,6 +354,7 @@ def compile_entries_to_manifold(entries: list[LexicalEntry], morphology_registry
             language=entry.language,
             energy=energy,
             valence=valence,
+            epistemic_state=_entry_epistemic_state(entry),
         )
         entry_id_to_surface[entry.entry_id] = entry.surface
 
@@ -380,6 +403,7 @@ def _clone_manifold(source: VocabManifold) -> VocabManifold:
             language=source.language_for_word(surface),
             energy=source.energy_for_word(surface),
             valence=source.valence_for_word(surface),
+            epistemic_state=source.epistemic_state_for_word(surface),
         )
     return clone
 
@@ -509,6 +533,7 @@ def _load_mounted_packs_cached(pack_ids: tuple[str, ...]) -> VocabManifold:
                 language=None if entry is None else entry.language,
                 energy=manifold.energy_for_word(surface),
                 valence=manifold.valence_for_word(surface),
+                epistemic_state=manifold.epistemic_state_for_word(surface),
             )
             if entry is not None and entry.semantic_domains:
                 primary_groups.setdefault(entry.semantic_domains[0].lower(), []).append(
