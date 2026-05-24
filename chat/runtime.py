@@ -35,6 +35,7 @@ from chat.refusal import (
 from core.epistemic_state import (
     clearance_from_verdicts,
     epistemic_state_for_grounding_source,
+    normative_detail_from_verdicts,
 )
 from chat.telemetry import (
     TurnEventSink,
@@ -362,6 +363,9 @@ class ChatResponse:
     # treated conservatively.
     epistemic_state: str = "undetermined"
     normative_clearance: str = "unassessable"
+    # Comma-separated violated boundary/commitment IDs when normative
+    # clearance is VIOLATED or SUPPRESSED; empty string otherwise.
+    normative_detail: str = ""
     # ADR-0072 (R5) — operator-visible register identity per turn.
     # Mirrors the TurnEvent fields so callers (CLI, demos, tests) can
     # read the register state from ChatResponse without re-parsing the
@@ -1401,6 +1405,7 @@ class ChatRuntime:
         )
         stub_epistemic_state = epistemic_state_for_grounding_source(grounding_source).value
         stub_normative_clearance = clearance_from_verdicts(verdicts_bundle).value
+        stub_normative_detail = normative_detail_from_verdicts(verdicts_bundle)
         if tokens:
             stub_event = TurnEvent(
                 turn=max(self._context.turn - 1, 0),
@@ -1432,6 +1437,7 @@ class ChatRuntime:
                 composer_graph_atom_overlap_count=atom_equivalence_stub.overlap_count,
                 epistemic_state=stub_epistemic_state,
                 normative_clearance=stub_normative_clearance,
+                normative_detail=stub_normative_detail,
             )
             self.turn_log.append(stub_event)
             self._emit_turn_event(stub_event)
@@ -1489,6 +1495,7 @@ class ChatRuntime:
             composer_graph_atom_overlap_count=atom_equivalence_stub.overlap_count,
             epistemic_state=stub_epistemic_state,
             normative_clearance=stub_normative_clearance,
+            normative_detail=stub_normative_detail,
             refusal_reason=refusal_surface if refusal_emitted else "",
         )
 
@@ -1910,6 +1917,7 @@ class ChatRuntime:
             warm_grounding_source or "vault"
         ).value
         main_normative_clearance = clearance_from_verdicts(verdicts_bundle).value
+        main_normative_detail = normative_detail_from_verdicts(verdicts_bundle)
         turn_event = TurnEvent(
             turn=self._context.turn - 1,
             input_tokens=tuple(filtered),
@@ -1940,6 +1948,7 @@ class ChatRuntime:
             composer_graph_atom_overlap_count=atom_equivalence_main.overlap_count,
             epistemic_state=main_epistemic_state,
             normative_clearance=main_normative_clearance,
+            normative_detail=main_normative_detail,
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
@@ -1987,6 +1996,7 @@ class ChatRuntime:
             recalled_words=walk_tokens,
             epistemic_state=main_epistemic_state,
             normative_clearance=main_normative_clearance,
+            normative_detail=main_normative_detail,
             refusal_reason=refusal_surface if refusal_emitted else "",
         )
 
