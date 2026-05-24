@@ -707,13 +707,13 @@ class CandidateUnknown:
 _Q_ENTITY_RE: Final[re.Pattern[str]] = re.compile(
     r"^How\s+many\s+(?P<unit>\w+)\s+(?:does|do)\s+"
     rf"(?P<entity>{_ENTITY})"
-    r"\s+have(?:\s+(?:left|now|in\s+total|altogether|combined|together)){0,2}\s*\??$",
+    r"\s+have(?:\s+(?:left|now|in\s+total|altogether|combined|together|in\s+all)){0,2}\s*\??$",
     flags=re.IGNORECASE,
 )
 
 _Q_TOTAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^How\s+many\s+(?P<unit>\w+)\s+do\s+they\s+have"
-    r"(?:\s+(?:in\s+total|altogether|combined|together|left|now)){0,2}\s*\??$",
+    r"(?:\s+(?:in\s+total|altogether|combined|together|in\s+all|left|now)){0,2}\s*\??$",
     flags=re.IGNORECASE,
 )
 
@@ -1894,6 +1894,113 @@ def extract_earnings_question_candidates(
             unit="dollar",
             time_count=time_count,
             time_unit=m.group("time_unit").lower(),
+            source_span=sentence,
+        )
+    ]
+
+
+# ---------------------------------------------------------------------------
+# ADR-0136.S.2 — Conditional-op question
+# ---------------------------------------------------------------------------
+#
+# Target shape (gsm8k-0042):
+#   "If <Entity> <verb> <N> <unit>, how many <unit2> does <Entity2> <verb2> left?"
+#
+# Routes through the parse_and_solve short-circuit: given a single matching
+# initial-state candidate for (entity, unit), the answer is
+# initial_value ± operand depending on verb polarity.  No graph built;
+# refuses on any ambiguity (unit mismatch, entity mismatch, multiple
+# matching ICs, negative answer).
+
+_COND_SUBTRACT_VERBS: Final[frozenset[str]] = frozenset({
+    "sell", "sells", "sold",
+    "give", "gives", "gave",
+    "eat", "eats", "ate",
+    "use", "uses", "used",
+    "lose", "loses", "lost",
+    "spend", "spends", "spent",
+    "donate", "donates", "donated",
+    "remove", "removes", "removed",
+    "take", "takes", "took",
+    "send", "sends", "sent",
+    "pay", "pays", "paid",
+    "drop", "drops", "dropped",
+    "throw", "throws", "threw",
+})
+
+_COND_ADD_VERBS: Final[frozenset[str]] = frozenset({
+    "buy", "buys", "bought",
+    "get", "gets", "got",
+    "receive", "receives", "received",
+    "find", "finds", "found",
+    "add", "adds", "added",
+    "collect", "collects", "collected",
+    "pick", "picks", "picked",
+    "earn", "earns", "earned",
+    "gain", "gains", "gained",
+})
+
+_COND_VERB_PATTERN: Final[str] = (
+    r"(?:" + "|".join(
+        re.escape(v)
+        for v in sorted(_COND_SUBTRACT_VERBS | _COND_ADD_VERBS, key=len, reverse=True)
+    ) + r")"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateConditionalOpQuestion:
+    entity: str
+    op: Literal["add", "subtract"]
+    operand: float
+    unit: str
+    source_span: str
+
+
+# "If <Entity> <verb> <N> <unit>, how many <unit2> does <Entity2> <aux>[ <qualifier>]?"
+_COND_OP_Q_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^If\s+(?P<entity>{_ENTITY})\s+"
+    rf"(?P<verb>{_COND_VERB_PATTERN})\s+"
+    r"(?P<n>\d+(?:\.\d+)?)\s+(?P<unit>\w+),\s+"
+    r"how\s+many\s+(?P<unit2>\w+)\s+does\s+"
+    rf"(?P<entity2>{_ENTITY})\s+(?:has|have|had)"
+    r"(?:\s+(?:left|now|remaining|away|in\s+total|altogether))?"
+    r"\s*\??\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def extract_conditional_op_question_candidates(
+    sentence: str,
+) -> list[CandidateConditionalOpQuestion]:
+    s = sentence.strip()
+    m = _COND_OP_Q_RE.match(s)
+    if m is None:
+        return []
+    verb = m.group("verb").lower()
+    if verb in _COND_SUBTRACT_VERBS:
+        op: Literal["add", "subtract"] = "subtract"
+    elif verb in _COND_ADD_VERBS:
+        op = "add"
+    else:
+        return []
+    unit = _canonicalize_unit(m.group("unit"))
+    unit2 = _canonicalize_unit(m.group("unit2"))
+    if unit != unit2:
+        return []
+    entity = _normalize_entity(m.group("entity"))
+    entity2 = _normalize_entity(m.group("entity2"))
+    if entity.lower() != entity2.lower():
+        return []
+    n = float(m.group("n"))
+    if n <= 0:
+        return []
+    return [
+        CandidateConditionalOpQuestion(
+            entity=entity,
+            op=op,
+            operand=n,
+            unit=unit,
             source_span=sentence,
         )
     ]
