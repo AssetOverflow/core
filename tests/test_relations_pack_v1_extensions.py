@@ -30,7 +30,7 @@ EXPECTED_ADDED_LEMMAS = frozenset({
     "cousin",
     "elder",
     "friend",
-    "kin_caretaker",
+    "guardian",
     "manager",
     "mentor",
     "neighbor",
