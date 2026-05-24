@@ -134,7 +134,7 @@ class TestRuntimeDispatch:
 _EXPECTED_COGNITION_METRICS = {
     "total": 13,
     "intent_accuracy": 1.0,
-    "term_capture_rate": 0.9167,
+    "term_capture_rate": 1.0,
     "surface_groundedness": 1.0,
     "versor_closure_rate": 1.0,
 }
