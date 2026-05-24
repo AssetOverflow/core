@@ -443,6 +443,7 @@ class CognitiveTurnPipeline:
             region_was_unconstrained=region_was_unconstrained,
             refusal_reason=refusal_reason,
             epistemic_graph=epistemic_graph,
+            dispatch_trace=getattr(response, "dispatch_trace", None),
             dropped_compound_clauses=dropped_compound_clauses,
             versor_condition=response.versor_condition,
             trace_hash=trace_hash,

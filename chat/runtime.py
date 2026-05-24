@@ -43,6 +43,7 @@ from chat.telemetry import (
     format_turn_event_jsonl,
 )
 from chat.verdicts import TurnVerdicts
+from chat.dispatch_trace import DispatchAttempt, DispatchTrace
 from teaching.discovery import (
     extract_discovery_candidates,
     format_candidate_jsonl,
@@ -411,6 +412,7 @@ class ChatResponse:
     recalled_words: tuple[str, ...] = ()
     # ADR-0024 Phase 2 — stable refusal reason value
     refusal_reason: str = ""
+    dispatch_trace: DispatchTrace | None = None
 
 
 class ChatRuntime:
@@ -835,7 +837,7 @@ class ChatRuntime:
         )
 
     def _maybe_pack_grounded_surface(
-        self, text: str, gate_source: str, *, allow_warm: bool = False
+        self, text: str, gate_source: str, *, allow_warm: bool = False, attempts: list[DispatchAttempt] | None = None
     ) -> tuple[str, str, tuple[str, ...]] | None:
         """Return ``(surface, grounding_source)`` or ``None``.
 
@@ -851,8 +853,14 @@ class ChatRuntime:
         when no teaching chain exists, preserving the discovery signal.
         """
         if not allow_warm and gate_source != "empty_vault":
+            if attempts is not None:
+                for src in ("pack", "teaching", "partial", "oov"):
+                    attempts.append(DispatchAttempt(source=src, outcome="skipped", reason="warm_path_disabled"))
             return None
         if self.config.output_language != "en":
+            if attempts is not None:
+                for src in ("pack", "teaching", "partial", "oov"):
+                    attempts.append(DispatchAttempt(source=src, outcome="skipped", reason="non_english_output"))
             return None
         from generate.intent import IntentTag
         from generate.intent_bridge import classify_intent_from_input
@@ -865,11 +873,25 @@ class ChatRuntime:
                     lemma_a, lemma_b, register=self.register_pack,
                 )
                 if surface is not None:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="pack", outcome="admitted", reason="pack_comparison_surface_found"))
                     return (surface, "pack", ())
+                else:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="no_pack_comparison_surface"))
                 from chat.partial_surface import partial_comparison_surface
                 partial = partial_comparison_surface(lemma_a, lemma_b)
                 if partial is not None:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="partial", outcome="admitted", reason="partial_comparison_surface_found"))
                     return (partial[0], "partial", ())
+                else:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="partial", outcome="fell_through", reason="no_partial_comparison_surface"))
+            else:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="missing_comparison_lemmas"))
+                    attempts.append(DispatchAttempt(source="partial", outcome="fell_through", reason="missing_comparison_lemmas"))
         if intent.tag is IntentTag.NARRATIVE:
             lemma = (intent.subject or "").strip()
             if lemma:
@@ -878,7 +900,15 @@ class ChatRuntime:
                     lemma, register=self.register_pack,
                 )
                 if surface is not None:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="teaching", outcome="admitted", reason="narrative_surface_found"))
                     return (surface, "teaching", ())
+                else:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="teaching", outcome="fell_through", reason="no_narrative_surface"))
+            else:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="teaching", outcome="fell_through", reason="missing_subject"))
         if intent.tag is IntentTag.EXAMPLE:
             lemma = (intent.subject or "").strip()
             if lemma:
@@ -887,7 +917,15 @@ class ChatRuntime:
                     lemma, register=self.register_pack,
                 )
                 if surface is not None:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="teaching", outcome="admitted", reason="example_surface_found"))
                     return (surface, "teaching", ())
+                else:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="teaching", outcome="fell_through", reason="no_example_surface"))
+            else:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="teaching", outcome="fell_through", reason="missing_subject"))
         if intent.tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
             lemma = (intent.subject or "").strip()
             if lemma:
@@ -903,7 +941,15 @@ class ChatRuntime:
                         negated=intent.negated,
                     )
                     if surface is not None:
+                        if attempts is not None:
+                            attempts.append(DispatchAttempt(source="pack", outcome="admitted", reason="pack_relation_confirmation_found"))
                         return (surface, "pack", ())
+                    else:
+                        if attempts is not None:
+                            attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="no_pack_relation_confirmation"))
+                elif intent.tag is IntentTag.VERIFICATION:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="pack", outcome="skipped", reason="missing_relation_or_secondary_subject"))
                 # ADR-0085 — gloss-aware CAUSE surface (opt-in).  Tried
                 # FIRST so a lemma with a ratified gloss gets an
                 # explanation-shaped answer drawn from the gloss text
@@ -922,7 +968,15 @@ class ChatRuntime:
                         anchor_lens=self.anchor_lens,
                     )
                     if surface is not None:
+                        if attempts is not None:
+                            attempts.append(DispatchAttempt(source="pack", outcome="admitted", reason="gloss_aware_cause_found"))
                         return (surface, "pack", ())
+                    else:
+                        if attempts is not None:
+                            attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="no_gloss_aware_cause"))
+                elif intent.tag is IntentTag.CAUSE:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="pack", outcome="skipped", reason="gloss_aware_cause_disabled"))
                 if self.config.transitive_surface:
                     # ADR-0083 — transitive supersedes composed.  At
                     # max_depth=1 this degrades byte-identically to the
@@ -934,22 +988,35 @@ class ChatRuntime:
                         register=self.register_pack,
                         max_depth=self.config.transitive_max_depth,
                     )
+                    reason_type = "transitive"
                 elif self.config.composed_surface:
                     surface = teaching_grounded_surface_composed(
                         lemma, intent.tag, register=self.register_pack,
                     )
+                    reason_type = "composed"
                 else:
                     surface = teaching_grounded_surface(
                         lemma, intent.tag, register=self.register_pack,
                     )
+                    reason_type = "standard"
                 if surface is not None:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="teaching", outcome="admitted", reason=f"teaching_{reason_type}_surface_found"))
                     return (surface, "teaching", ())
+                else:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="teaching", outcome="fell_through", reason=f"no_teaching_{reason_type}_surface"))
                 from chat.cross_pack_grounding import cross_pack_grounded_surface
                 surface = cross_pack_grounded_surface(
                     lemma, intent.tag, register=self.register_pack,
                 )
                 if surface is not None:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="teaching", outcome="admitted", reason="cross_pack_grounded_surface_found"))
                     return (surface, "teaching", ())
+                else:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="teaching", outcome="fell_through", reason="no_cross_pack_grounded_surface"))
                 # Deliberate non-fallback: when CAUSE / VERIFICATION
                 # has no teaching chain or cross-pack chain rooted on
                 # the subject, return None so the discovery layer logs
@@ -958,12 +1025,21 @@ class ChatRuntime:
                 # disclosure here would mask that signal and give the
                 # user a non-answer (a definition rather than a cause).
                 # See ``tests/test_discovery_candidates``.
+            else:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="missing_subject"))
+                    attempts.append(DispatchAttempt(source="teaching", outcome="fell_through", reason="missing_subject"))
         if intent.tag is IntentTag.CORRECTION:
             surface = pack_grounded_correction_surface(
                 text, register=self.register_pack,
             )
             if surface is not None:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="pack", outcome="admitted", reason="pack_correction_surface_found"))
                 return (surface, "pack", ())
+            else:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="no_pack_correction_surface"))
         if intent.tag is IntentTag.PROCEDURE:
             subject_text = (intent.subject or "").strip()
             if subject_text:
@@ -971,10 +1047,20 @@ class ChatRuntime:
                     subject_text, register=self.register_pack,
                 )
                 if surface is not None:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="pack", outcome="admitted", reason="pack_procedure_surface_found"))
                     return (surface, "pack", ())
+                else:
+                    if attempts is not None:
+                        attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="no_pack_procedure_surface"))
+            else:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="missing_subject"))
         if intent.tag in (IntentTag.DEFINITION, IntentTag.RECALL):
             lemma = (intent.subject or "").strip()
             if not lemma:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="missing_subject"))
                 return None
             surface = pack_grounded_surface(
                 lemma,
@@ -991,7 +1077,12 @@ class ChatRuntime:
                 from chat.pack_resolver import resolve_lemma
                 resolved = resolve_lemma(lemma)
                 domains = resolved[1] if resolved is not None else ()
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="pack", outcome="admitted", reason="pack_grounded_surface_found"))
                 return (surface, "pack", domains)
+            else:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="no_pack_grounded_surface"))
         if intent.tag is IntentTag.UNKNOWN:
             # ADR-0086 — UNKNOWN intent with pack-resident prompt
             # tokens.  The classifier could not assign a known dialogue
@@ -1008,13 +1099,39 @@ class ChatRuntime:
                 text, register=self.register_pack,
             )
             if surface is not None:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="pack", outcome="admitted", reason="pack_grounded_unknown_surface_found"))
                 return (surface, "pack", ())
+            else:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="no_pack_grounded_unknown_surface"))
+
+        # Check if any attempts have been recorded for pack/teaching/partial. If not, record them as skipped.
+        if attempts is not None:
+            has_pack = any(a.source == "pack" for a in attempts)
+            has_teaching = any(a.source == "teaching" for a in attempts)
+            has_partial = any(a.source == "partial" for a in attempts)
+            if not has_pack:
+                attempts.append(DispatchAttempt(source="pack", outcome="skipped", reason=f"intent_tag_{intent.tag.name.lower()}_not_targeted"))
+            if not has_teaching:
+                attempts.append(DispatchAttempt(source="teaching", outcome="skipped", reason=f"intent_tag_{intent.tag.name.lower()}_not_targeted"))
+            if not has_partial:
+                attempts.append(DispatchAttempt(source="partial", outcome="skipped", reason=f"intent_tag_{intent.tag.name.lower()}_not_targeted"))
+
         oov_lemma = (intent.subject or "").strip()
         if oov_lemma:
             from chat.oov_surface import oov_learning_invitation_surface
             oov_surface = oov_learning_invitation_surface(oov_lemma, intent.tag)
             if oov_surface is not None:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="oov", outcome="admitted", reason="oov_learning_invitation_surface_found"))
                 return (oov_surface, "oov", ())
+            else:
+                if attempts is not None:
+                    attempts.append(DispatchAttempt(source="oov", outcome="fell_through", reason="no_oov_learning_invitation_surface"))
+        else:
+            if attempts is not None:
+                attempts.append(DispatchAttempt(source="oov", outcome="skipped", reason="missing_subject"))
         return None
 
     def _graph_atom_context(
@@ -1252,6 +1369,7 @@ class ChatRuntime:
         graph_unconstrained: bool = True,
         discovery_intent_tag: Any = None,
         discovery_intent_subject: str | None = None,
+        dispatch_trace: DispatchTrace | None = None,
     ) -> ChatResponse:
         zero = np.zeros(field_state.F.shape, dtype=np.float32)
         prop = Proposition(
@@ -1497,6 +1615,7 @@ class ChatRuntime:
             normative_clearance=stub_normative_clearance,
             normative_detail=stub_normative_detail,
             refusal_reason=refusal_surface if refusal_emitted else "",
+            dispatch_trace=dispatch_trace,
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
@@ -1534,13 +1653,22 @@ class ChatRuntime:
                 committed = self._context.commit_ingest(filtered)
             assert committed is not None  # set above on both flag paths
             empty_result = GenerationResult(tokens=(), final_state=committed, vault_hits=0)
+            attempts: list[DispatchAttempt] = []
             pack_result = self._maybe_pack_grounded_surface(
-                text, gate_decision.source
+                text, gate_decision.source, attempts=attempts
             )
             if pack_result is None:
                 pack_surface = None
                 pack_source_tag = "none"
                 pack_semantic_domains: tuple[str, ...] = ()
+                final_attempts = []
+                final_attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="no_pack_resident_lemmas"))
+                final_attempts.append(DispatchAttempt(source="teaching", outcome="fell_through", reason="no_teaching_chains"))
+                final_attempts.append(DispatchAttempt(source="partial", outcome="fell_through", reason="no_partial_match"))
+                final_attempts.append(DispatchAttempt(source="oov", outcome="fell_through", reason="no_oov_learning_invitation"))
+                final_attempts.append(DispatchAttempt(source="universal_disclosure", outcome="admitted", reason="fallback_to_universal_disclosure"))
+                attempts = final_attempts
+                selected_source = "universal_disclosure"
             else:
                 pack_surface, pack_source_tag, pack_semantic_domains = pack_result
                 planned = self._maybe_apply_discourse_planner(
@@ -1554,6 +1682,8 @@ class ChatRuntime:
                     # ``append_semantic_domain_clause`` knob is a no-op
                     # over planner output.
                     pack_semantic_domains = ()
+                selected_source = pack_source_tag
+            dispatch_trace = DispatchTrace(attempts=tuple(attempts), selected=selected_source)
             self._context.finalize_turn(
                 empty_result,
                 tokens_in=tuple(filtered),
@@ -1599,6 +1729,7 @@ class ChatRuntime:
                 graph_unconstrained=stub_graph_unconstrained,
                 discovery_intent_tag=discovery_intent_tag,
                 discovery_intent_subject=discovery_intent_subject,
+                dispatch_trace=dispatch_trace,
             )
 
         if self.config.unified_ingest:
@@ -1767,13 +1898,18 @@ class ChatRuntime:
         warm_pack_subject: str | None = None
         warm_pack_intent_tag: Any = None
         warm_pack_semantic_domains: tuple[str, ...] = ()
+        attempts: list[DispatchAttempt] = []
+        selected_source = "vault"
         if refusal_emitted:
             response_surface = refusal_surface
             self._last_refusal_was_typed = True
+            for src in ("pack", "teaching", "partial", "oov", "universal_disclosure"):
+                attempts.append(DispatchAttempt(source=src, outcome="skipped", reason="refusal_emitted"))
+            selected_source = "none"
         else:
             response_surface = walk_surface
             warm_pack_result = self._maybe_pack_grounded_surface(
-                text, "warm", allow_warm=True
+                text, "warm", allow_warm=True, attempts=attempts
             )
             if warm_pack_result is None:
                 from generate.intent import IntentTag
@@ -1785,10 +1921,21 @@ class ChatRuntime:
                 # The warm path must match — fabricating a vault-grounded
                 # walk fragment ("Work infer.") would mask the very gap
                 # the discovery layer is meant to surface.
+                final_attempts = []
+                final_attempts.append(DispatchAttempt(source="pack", outcome="fell_through", reason="no_pack_resident_lemmas"))
+                final_attempts.append(DispatchAttempt(source="teaching", outcome="fell_through", reason="no_teaching_chains"))
+                final_attempts.append(DispatchAttempt(source="partial", outcome="fell_through", reason="no_partial_match"))
+                final_attempts.append(DispatchAttempt(source="oov", outcome="fell_through", reason="no_oov_learning_invitation"))
                 if _wintent.tag in (IntentTag.CAUSE, IntentTag.VERIFICATION):
                     response_surface = _UNKNOWN_DOMAIN_SURFACE
                     articulation = replace(articulation, surface=_UNKNOWN_DOMAIN_SURFACE)
                     warm_grounding_source = "none"
+                    final_attempts.append(DispatchAttempt(source="universal_disclosure", outcome="admitted", reason="cause_verification_warm_fallback"))
+                    selected_source = "universal_disclosure"
+                else:
+                    final_attempts.append(DispatchAttempt(source="universal_disclosure", outcome="skipped", reason="used_walk_surface"))
+                    selected_source = "vault"
+                attempts = final_attempts
             elif warm_pack_result is not None:
                 warm_pack_surface, warm_grounding_source, warm_pack_semantic_domains = warm_pack_result
                 if self.config.thread_anaphora and warm_grounding_source in {"pack", "teaching"}:
@@ -1830,11 +1977,13 @@ class ChatRuntime:
                     # ``append_semantic_domain_clause`` knob is a no-op
                     # over planner output.
                     warm_pack_semantic_domains = ()
+                selected_source = warm_grounding_source
             if should_inject_hedge(ethics_verdict, self.ethics_pack):
                 hedge_prefix = build_hedge_prefix(self.identity_manifold)
                 before = response_surface
                 response_surface = inject_hedge(response_surface, hedge_prefix)
                 hedge_injected = response_surface != before
+        dispatch_trace = DispatchTrace(attempts=tuple(attempts), selected=selected_source)
         # ADR-0075 (C1) — realizer slot-type guard (main path).  Runs
         # AFTER all composer / planner / hedge transformations and
         # BEFORE register decoration so a single seam covers every
@@ -1998,6 +2147,7 @@ class ChatRuntime:
             normative_clearance=main_normative_clearance,
             normative_detail=main_normative_detail,
             refusal_reason=refusal_surface if refusal_emitted else "",
+            dispatch_trace=dispatch_trace,
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:
