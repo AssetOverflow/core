@@ -205,6 +205,9 @@ def _score_one(case: dict[str, Any]) -> CaseOutcome:
     )
 
 
+# TODO(ADR-future): report.json metrics may not credit candidate-graph admissions
+# routed through this branch. Aggregation in calling code needs an audit before
+# the canonical run.honest_runner.json artifact can be trusted for cross-phase comparison.
 def _score_one_candidate_graph(case: dict[str, Any]) -> CaseOutcome:
     """ADR-0126 P4 — score one case via the candidate-graph pipeline.
 
