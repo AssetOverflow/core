@@ -9,7 +9,7 @@
 | Layer | Status | Verdict | Cleanup performed | Last audited |
 |---|---|---|---|---|
 | L0 — Algebra primitives | ✅ Audited | **CLOSED** | None — no dead code found | 2026-05-24 |
-| L1 — Field substrate | ⏳ Pending | — | — | — |
+| L1 — Field substrate | ✅ Audited | **PARTIAL** | None — no dead code found | 2026-05-24 |
 | L2 — Vault | ⏳ Pending | — | — | — |
 | L3 — Language packs | ⏳ Pending | — | — | — |
 | L4 — Recognition | ⏳ Pending | — | — | — |
@@ -187,5 +187,207 @@ exercise → cross-layer contract (mechanical + semantic) → closure
 scorecard → cleanup → notes for downstream. Subsequent layers should
 follow the same format so the registry is uniformly machine- and
 human-scannable.
+
+---
+
+## L1 — Field substrate
+
+**Audit date:** 2026-05-24
+**Auditor:** Codex
+**Verdict:** **PARTIAL**
+
+### Scope-hypothesis correction (per audit step 0)
+
+The scope's layering table cited ADR-0006 as the starting point. Reality:
+L1 also depends on ADR-0002 / ADR-0012 for injection-gate and single-
+normalization-site discipline, plus ADR-0024 / ADR-0025 as explicit
+negative-placement ADRs that keep admissibility out of `field/propagate.py`.
+`field/operators.py` is L1-shaped substrate code for `core pulse`, but it
+is not on the current `ChatRuntime` / `CognitiveTurnPipeline` path.
+
+### ADRs in scope for L1
+
+Triaged from the broader field / propagation / injection / normalization /
+energy keyword grep against `docs/decisions/`:
+
+| ADR | Title | Status | Belongs at L1? |
+|---|---|---|---|
+| ADR-0002 | Ingest Layer Architecture | Accepted | Yes — original injection-boundary design; superseded by ADR-0012 but still relevant historical design |
+| ADR-0006 | The Field Energy Operator (Hamiltonian Companion Field) | Implemented | Yes — defines `EnergyClass`, `EnergyProfile`, `FieldEnergyOperator`, `FieldState.energy`, and propagation recomputation |
+| ADR-0012 | `core_ingest` Governance Layer | Accepted | Yes — preserves `ingest/gate.py` as the single normalization site |
+| ADR-0024 | Inner-Loop Per-Rotor Admissibility | Accepted | Boundary-only for L1 — explicitly keeps admissibility upstream of `propagate_step()` and adds no normalization site |
+| ADR-0025 | Rotor / Frame Admissibility | Accepted | Boundary-only for L1 — explicitly rejects `field/propagate.py` as the admissibility home |
+
+Other ADRs surfaced by the grep but assigned to other layers (not audited
+at L1): ADR-0007 (valence layer; orthogonal companion to energy, but not
+part of this brief's L1 concern set), ADR-0013 (sensorium upstream of the
+gate), ADR-0014 / ADR-0054 (L2 vault / learning), ADR-0022 / ADR-0023 /
+ADR-0026 (L5 generation admissibility), ADR-0038 and later surface ADRs
+(L6/L7 surface and teaching concerns).
+
+### Modules in scope for L1
+
+| Module | Lines | Live-import sites (outside own package, outside `tests/`) | Test-import sites |
+|---|---|---|---|
+| `ingest/gate.py` | 351 | 4 | 6 |
+| `field/propagate.py` | 72 | 3 | 1 |
+| `field/state.py` | 122 | 18 actual imports (raw grep also found one prose false positive) | 11 |
+| `field/operators.py` | 289 | 3 (`core pulse` / benchmark path, not chat runtime) | 4 |
+| `core/physics/energy.py` | 119 | 8 | 1 |
+
+No module is imported by nothing outside its own package. No
+unambiguously dead module was found. `field/operators.py` is live through
+`scripts/run_pulse.py` and `benchmarks/run_benchmarks.py`, but not through
+the current chat/cognition turn loop.
+
+### Caller-trace evidence
+
+Sample of live callers (full greps used the required shape, e.g.
+`grep -rn "from field.propagate\|import field.propagate" --include="*.py" . | grep -v "^./field/" | grep -v "^./tests/"`):
+
+- `chat/runtime.py:89` and `session/context.py:20` — live turn ingest
+  calls `ingest.gate.inject()` (L6/session → L1).
+- `generate/stream.py:19,628` — generation walk applies `propagate_step()`
+  for each emitted token (L5 → L1).
+- `generate/stream.py:18`, `core/cognition/pipeline.py:21`,
+  `core/cognition/result.py:13`, `chat/runtime.py:80`, and
+  `session/context.py:15` — live `FieldState` consumers.
+- `language_packs/compiler.py:14,72` and `ingest/gate.py:33,292` —
+  `FieldEnergyOperator` computes pack/injection energy.
+- `vocab/manifold.py:36,74,227`, `generate/salience.py:44`, and
+  `packs/common/runtime_rules.py:113,120` — energy profile/class consumers.
+- `scripts/run_pulse.py:40-41` — `ManifoldState`,
+  `GraphDiffusionOperator`, and `ConstraintCorrectionOperator` are live
+  through the `core pulse` CLI path, not through `core chat`.
+
+The live chat/cognition trace is:
+
+`core chat` / `ChatRuntime` → `SessionContext.commit_ingest()` →
+`ingest.gate.inject()` → `FieldState` → `generate.stream.generate()` →
+`field.propagate.propagate_step()` → `GenerationResult.final_state` →
+`CognitiveTurnPipeline` trace/result.
+
+### Exercising suite lane
+
+Two documented suite lanes are relevant:
+
+| Suite lane | What it exercises | Verification |
+|---|---|---|
+| `core test --suite smoke` | Live chat/pipeline reach path plus architectural normalization doctrine (`tests/test_architectural_invariants.py`) | `python3 -m core.cli test --suite smoke -q` → **67 passed** |
+| `core test --suite algebra` | ADR-0006 energy operator and `propagate_step()` energy recomputation independent of L5 trace measurement (`tests/test_energy.py`) | `python3 -m core.cli test --suite algebra -q` → **82 passed, 50 skipped** |
+
+Additional evidence for the pulse-only field-operator path:
+`python3 -m core.cli test --suite pulse -q` → **24 passed**.
+
+### Cross-layer contract check
+
+**Pass 1 — mechanical (consumer-exists per exposed symbol):**
+
+| Exposed symbol | Consumer evidence |
+|---|---|
+| `inject` | `chat/runtime.py`, `session/context.py`, `core/cli.py`, `evals/lab/rotor_manifold_explorer.py` |
+| `propagate_step` | `generate/stream.py`; lab probes in `evals/lab/` |
+| `FieldState.F` | `generate/stream.py`, `session/context.py`, `chat/runtime.py`, `core/cognition/trace.py` via result path |
+| `FieldState.node` / `FieldState.step` | `generate/stream.py`, `generate/salience.py`, `session/context.py`, tests in smoke/cognition lanes |
+| `FieldState.holonomy` / `energy` / `valence` | carried by `session/context.py` and `generate/stream.py`; `energy` also consumed by `generate/salience.py` through vocab energy and by runtime surface helpers |
+| `EnergyClass` / `EnergyProfile.energy_class` | `ingest/gate.py`, `packs/common/runtime_rules.py`, `core_ingest/compiler.py`, `core/physics/learning.py` |
+| `EnergyClass.vault_candidate` | `core/physics/learning.py` (L2 follow-up; internal physics import, not a live L1 turn-loop consumer) |
+| `FieldEnergyOperator.compute` | `ingest/gate.py`, `language_packs/compiler.py`, `field/propagate.py` |
+| `aspect_weight` | Internal to `FieldEnergyOperator.compute`; direct tests only |
+| `FieldState.advance` | Tests only (`tests/test_energy.py`) |
+| `ManifoldState.with_fields` / `ManifoldState.advance` | Tests only (`tests/test_manifold_state.py`) |
+| `GraphDiffusionOperator` / `ConstraintCorrectionOperator` | `scripts/run_pulse.py`, `benchmarks/run_benchmarks.py`, pulse/proof tests |
+
+Mechanical gaps: `FieldState.advance`, `ManifoldState.with_fields`, and
+`ManifoldState.advance` have no non-test consumer. They are small helpers
+on public dataclasses, so they were not deleted as unambiguous dead code.
+
+**Pass 2 — semantic (judgment-required):**
+
+ADR-0012's single-normalization-site contract is mostly honored:
+
+- `ingest/gate.py` is the only production call site for
+  `normalize_to_versor()` in the L1 live path (`ingest/gate.py:237,342`).
+- `field/propagate.py` has no normalization, unitization, projection,
+  repair, monitor, or `versor_condition()` check. It calls only
+  `versor_apply()` and recomputes energy (`field/propagate.py:47-71`).
+- `tests/test_architectural_invariants.py` mechanically guards
+  `normalize_to_versor()` call sites and forbids `unitize_versor()` in
+  `field/`, `generate/`, and `vault/` except the existing
+  `generate/stream.py` final-state closure exception.
+
+ADR-0006 energy propagation is independently tested:
+
+- `tests/test_energy.py` covers all energy classes, aspect weights,
+  anchor-adjacent escalation, `requires_architect_review`, `FieldState`
+  energy storage, and `propagate_step()` recomputation.
+- This directly answers the L0 note: L1 propagation correctness is not
+  tested only through L5's downstream `versor_condition` trace/eval
+  measurement.
+
+Cross-layer consistency gaps:
+
+- **Gate threshold mismatch:** `ingest/gate.py` documents
+  `versor_condition(F) < 1e-6` at the gate contract (`ingest/gate.py:22-24`)
+  but raises only when `cond > 1e-5` (`ingest/gate.py:344-345`).
+  `tests/test_architectural_invariants.py` also pins the weaker
+  `< 1e-5` post-condition (`tests/test_architectural_invariants.py:339-367`).
+  This conflicts mechanically with the project/L0 hard invariant
+  `versor_condition(F) < 1e-6`.
+- **ADR-0006 threshold drift:** ADR-0006 specifies E2 begins at raw
+  `0.38`, while code classifies E2 at `raw >= 0.37`
+  (`core/physics/energy.py:104-105`). Tests exercise the code behavior,
+  not the exact ADR table boundary.
+
+**Semantic mismatches flagged for human review:**
+
+- `field/operators.py` contains a private `_unitize_f32()` and uses it in
+  graph diffusion / correction (`field/operators.py:69-118,190,272`).
+  This is not `field/propagate.py`, and it is reached through `core pulse`
+  rather than the live chat/cognition turn loop. It is nevertheless
+  field-substrate code that re-projects blended fields, so the operator
+  should decide whether it is an allowed construction boundary, a
+  pulse-only legacy path, or a normalization-site violation.
+- `session/context.py` performs final-turn hemisphere correction and
+  anchor pull with `unitize_versor()` (`session/context.py:207-246`).
+  This is outside L1 and was not verdicted here, but it is a forward
+  note for the L6 runtime auditor because it changes live session field
+  state after generation.
+
+### Closure criteria scorecard
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. Design artifact | ✅ | ADR-0002, ADR-0006, ADR-0012; ADR-0024/0025 for negative placement at the propagation seam |
+| 2. Code artifact | ✅ | `ingest/gate.py`, `field/propagate.py`, `field/state.py`, `core/physics/energy.py`; pulse-only `field/operators.py` |
+| 3. Live caller | ✅ | Chat runtime/session/generation callers for gate/state/propagate/energy; pulse callers for graph operators |
+| 4. Exercised by suite lane | ✅ | `smoke` walks live turn path; `algebra` independently tests ADR-0006 propagation; `pulse` covers graph operators |
+| 5. Cross-layer consistency | ⚠️ | Gate/test threshold is `< 1e-5` while project/L0 invariant is `< 1e-6`; ADR-0006 E2 boundary drifts by 0.01; several dataclass helpers are test-only |
+
+**Verdict:** **PARTIAL.**
+
+### Cleanup performed
+
+**None.** Audit found no module that was unambiguously dead, redundant,
+superseded, or orphaned. Test-only helper methods and pulse-only field
+operators are ambiguous rather than safe deletion candidates.
+
+### Findings / notes for downstream layers
+
+- **L2 (Vault) auditor:** ADR-0006 says vault recall re-activates a region
+  to E2 transiently and lets it cool. L1 verifies the energy operator exists
+  and is used at injection/propagation, but did not trace a live vault-recall
+  path that updates energy on recall. Audit this in L2.
+- **L5 (Cognition/generation) auditor:** `generate/stream.py` has an
+  explicit final-state `unitize_versor()` closure exception. L1 did not
+  verdict it because it belongs to generation, but it is adjacent to the
+  normalization-site discipline.
+- **L6 (Chat runtime) auditor:** `session/context.py` performs live
+  post-generation field orientation and anchor pull, including
+  `unitize_versor()`. Verify whether that runtime correction boundary is
+  documented and suite-protected.
+- **Future scope cleanup:** Decide whether `field/operators.py` is still a
+  first-class pulse substrate, a benchmark-only substrate, or legacy code.
+  It is live through `core pulse`, so this audit did not delete it.
 
 ---
