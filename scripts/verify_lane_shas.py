@@ -36,10 +36,10 @@ PINNED_SHAS: dict[str, str] = {
     "reviewer_registry": "681a2aab5aa4ffd58cd837ce5673c8b2a9545b570117aec3c02726a12f6876e6",
     "miner_loop_closure": "9f071733abe7dcacf759f928548ce738fb639af3fd6e4c621a651b306d7e77ce",
     "curriculum_loop_closure": "b46d56b2d209172cc3ffaf3776dc8dcfe55093f13587c5cb67372be6dfa23e8d",
-    "domain_contract_validation": "f9c06cdeea8fb36a0d3c320007618c3afc92d67702ef31bd36ebd9ae9ced473f",
+    "domain_contract_validation": "98ace04e3f02bbc5a8ad655bb6593c3f1ee64cb67014f1122fe6c3c85f48d22f",
     "fabrication_control_summary": "01e1b6b711141f2b4a14551d7df3ea482d8d6dd7b364a25c509f4f8d08cda8a8",
-    "demo_composition": "27d838241bf3ed9e15d0e918ec6d89a823494d7e17c2dab9777825af7188f20f",
-    "public_demo": "4be6f47509435a24984713acfcebd88e61f4e1278096fa5dc88a09e8af2f87ba",
+    "demo_composition": "403be13bd666389bdf1caa1b97382753e531ad72686c5237f64a5e23bc702ac4",
+    "public_demo": "acd51d0c17948030aa2843309a3729c6f825959e2e0cbbc477e07de8269268a4",
 }
 
 

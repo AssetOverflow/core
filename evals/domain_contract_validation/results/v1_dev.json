@@ -15,7 +15,7 @@
       "case_id": "p3_unknown_domain",
       "details": {
         "contract_errors": [
-          "domain_id:unknown"
+          "scope_boundary:domain_id:unknown"
         ]
       },
       "divergence": null,
