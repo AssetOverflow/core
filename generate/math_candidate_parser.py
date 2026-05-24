@@ -491,6 +491,9 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
     out.extend(_conj_object_candidates(sentence))
     out.extend(_embedded_quantifier_candidates(sentence))
 
+    # ADR-0136.S.3 — compound initial-mutation: "Entity had N unit, but then verb M"
+    out.extend(_init_mutation_candidates(sentence))
+
     m2 = _INITIAL_THERE_ARE_RE.match(s)
     if m2 is not None:
         value_raw = m2.group("value")
@@ -1569,6 +1572,87 @@ def _build_conj_embedded_sum(
         ]
     except Exception:
         return []
+
+
+# ---------------------------------------------------------------------------
+# ADR-0136.S.3 — Compound initial-mutation extractor
+# ---------------------------------------------------------------------------
+
+_INIT_MUT_SUBTRACT_VERBS: Final[frozenset[str]] = frozenset({
+    "lost", "gave", "gave away", "used", "spent", "ate", "dropped", "sold",
+})
+
+_INIT_MUT_ADD_VERBS: Final[frozenset[str]] = frozenset({
+    "gained", "got", "received", "found", "earned", "picked up", "bought",
+})
+
+_INIT_MUT_VERB_PATTERN: Final[str] = (
+    r"(?:" + "|".join(
+        re.escape(v)
+        for v in sorted(
+            _INIT_MUT_SUBTRACT_VERBS | _INIT_MUT_ADD_VERBS,
+            key=len, reverse=True,
+        )
+    ) + r")"
+)
+
+_INIT_MUTATION_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<entity>{_ENTITY})\s+(?:has|have|had)\s+"
+    rf"(?P<n>{_VALUE})\s+(?P<unit>\w+)"
+    r"(?:\s+initially)?"
+    r",?\s+but(?:\s+then)?\s+"
+    rf"(?P<verb>{_INIT_MUT_VERB_PATTERN})\s+"
+    rf"(?P<m>{_VALUE})"
+    r"\s*\.?\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def _init_mutation_candidates(sentence: str) -> list[CandidateInitial]:
+    s = sentence.strip().rstrip(".")
+    m = _INIT_MUTATION_RE.match(s)
+    if m is None:
+        return []
+    n_raw = m.group("n")
+    m_raw = m.group("m")
+    if _is_indefinite_quantifier(n_raw) or _is_indefinite_quantifier(m_raw):
+        return []
+    rv_n = _resolve_value(n_raw)
+    rv_m = _resolve_value(m_raw)
+    if rv_n is None or rv_m is None:
+        return []
+    verb = m.group("verb").lower()
+    if verb in _INIT_MUT_SUBTRACT_VERBS:
+        derived = rv_n.value - rv_m.value
+    elif verb in _INIT_MUT_ADD_VERBS:
+        derived = rv_n.value + rv_m.value
+    else:
+        return []
+    if derived < 0:
+        return []
+    unit_raw = m.group("unit")
+    unit = rv_n.unit_override if rv_n.unit_override is not None else _canonicalize_unit(unit_raw)
+    entity = _normalize_entity(m.group("entity"))
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=entity,
+                    quantity=Quantity(value=derived, unit=unit),
+                ),
+                source_span=sentence,
+                matched_anchor="had",
+                matched_value_token=n_raw,
+                matched_unit_token=unit_raw,
+                matched_entity_token=m.group("entity"),
+            )
+        ]
+    except Exception:
+        return []
+
+
+def _init_mutation_admitted(sentence: str) -> list[CandidateInitial]:
+    return _admit(_init_mutation_candidates(sentence))
 
 
 # ---------------------------------------------------------------------------
