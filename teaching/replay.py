@@ -26,16 +26,20 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from chat import teaching_grounding as _tg
+from teaching.metric_set import MetricSet
 from teaching.proposals import ReplayEvidence
 
 
 # Metrics watched for regression.  Any metric whose candidate value
 # is strictly less than the baseline value counts as a regression.
-_WATCHED_METRICS: tuple[str, ...] = (
-    "intent_accuracy",
-    "surface_groundedness",
-    "term_capture_rate",
-    "versor_closure_rate",
+_WATCHED_METRICS = MetricSet(
+    version=1,
+    metrics=(
+        "intent_accuracy",
+        "surface_groundedness",
+        "term_capture_rate",
+        "versor_closure_rate",
+    ),
 )
 
 
@@ -83,7 +87,7 @@ def _run_cognition_public() -> dict[str, float]:
     lane = get_lane("cognition")
     result = run_lane(lane, version="v1", split="public")
     out: dict[str, float] = {}
-    for k in _WATCHED_METRICS:
+    for k in _WATCHED_METRICS.metrics:
         v = result.metrics.get(k)
         if isinstance(v, (int, float)):
             out[k] = float(v)
@@ -143,7 +147,7 @@ def run_replay_equivalence(chain: dict[str, Any]) -> ReplayEvidence:
             candidate = _run_cognition_public()
 
     regressed: list[str] = []
-    for metric in _WATCHED_METRICS:
+    for metric in _WATCHED_METRICS.metrics:
         b = baseline.get(metric)
         c = candidate.get(metric)
         if b is None or c is None:

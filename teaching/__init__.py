@@ -14,6 +14,7 @@ approval before they touch the vocabulary manifold.
 
 from teaching.correction import CorrectionCandidate, extract_correction
 from teaching.epistemic import ADMISSIBLE_AS_EVIDENCE, EpistemicStatus, parse_status
+from teaching.metric_set import MetricSet
 from teaching.review import ReviewedTeachingExample, ReviewOutcome, review_correction
 from teaching.store import TeachingStore, PackMutationProposal
 
@@ -21,6 +22,7 @@ __all__ = [
     "ADMISSIBLE_AS_EVIDENCE",
     "CorrectionCandidate",
     "EpistemicStatus",
+    "MetricSet",
     "PackMutationProposal",
     "ReviewedTeachingExample",
     "ReviewOutcome",
