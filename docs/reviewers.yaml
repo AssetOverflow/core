@@ -51,3 +51,14 @@ audit_passed_claims:
     evidence_revision: "adr-0124:reviewed:2026-05-22"
     signed_by: shay-j
     claim_digest: "17e24436b6875b89f6d1a5c2992557413c7ef456250f549d463159f54438c407"
+math_expert_claims:
+    - domain_id: mathematics_logic
+      evidence_lanes:
+        - math_symbolic_equivalence/v1 (public)
+        - math_symbolic_equivalence/v1 (sealed)
+        - math_teaching_corpus/v1
+        - math_bounded_grammar/v1
+      evidence_revision: "adr-0120-math:reviewed:2026-05-23"
+      signed_by: shay-j
+      claim_digest: "94149794e8c19896851e062cf1f921cfa9ba04770b674bc3b4c33023f7c7331b"
+      
