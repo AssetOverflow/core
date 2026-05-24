@@ -564,3 +564,23 @@ and on the epistemic-state audit succeeding.
 This document does not propose a decision. It defines the question.
 Per [[feedback-scope-time-is-cheap]]: scope time is cheap. If a fourth
 buried assumption is hiding here, surface it before the spike commits.
+
+---
+
+## Amendment (2026-05-24) — Connection to existing thermodynamic substrate
+
+The "Storage layer question (deferred)" section above lists three
+candidates (pack / vault / substrate) without acknowledging the existing
+thermodynamic substrate already implemented under **ADR-0006** (field
+energy operator) and **ADR-0014** (vault promotion policy). That omission
+biases the candidate set: all three options are framed as new
+infrastructure, when in fact the project already operates a thawed ↔
+crystallized lattice with exponential cooling decay, coherence-residual
+gated promotion, and transient re-thaw on recall.
+
+The storage question is taken up properly in [recognizer-storage-scope](
+./recognizer-storage-scope.md), which reframes it as: *how does a derived
+recognizer participate in the existing field-energy / vault-promotion
+lattice, and what extension is needed to support HITL-gated drop-off?*
+The three-candidate framing in this document is preserved for history;
+the recognizer-storage scope supersedes it.
