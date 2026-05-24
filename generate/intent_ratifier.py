@@ -44,7 +44,18 @@ from generate.intent import DialogueIntent, IntentTag
 class RatificationOutcome(Enum):
     RATIFIED = "ratified"
     DEMOTED = "demoted"
+    # Generic PASSTHROUGH — emitted by ratify_intent() when no vocab-grounded
+    # anchor exists or when the seed is already UNKNOWN.  Preserved for callers
+    # that use RatificationOutcome.PASSTHROUGH directly (e.g. existing tests).
     PASSTHROUGH = "passthrough"
+    # Specific PASSTHROUGH sub-values — emitted by _ratify_intent() in
+    # CognitiveTurnPipeline to distinguish the three cold-start conditions
+    # (ADR-0144 / ADR-0142 §Implementation debts, debt 1).  All four PASSTHROUGH
+    # variants are normalised to "passthrough" before being folded into
+    # trace_hash so pre-ADR-0144 hashes remain byte-identical.
+    PASSTHROUGH_NO_FIELD = "passthrough_no_field"
+    PASSTHROUGH_NO_VOCAB = "passthrough_no_vocab"
+    PASSTHROUGH_NO_VERSOR = "passthrough_no_versor"
 
 
 @dataclass(frozen=True, slots=True)

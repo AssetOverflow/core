@@ -29,7 +29,15 @@ from generate.intent_ratifier import (
     RatifiedIntent,
     ratify_intent,
 )
-from generate.graph_planner import graph_from_intent, ground_graph, plan_articulation
+from generate.graph_planner import (
+    PropositionGraph,
+    graph_from_intent,
+    ground_graph,
+    plan_articulation,
+)
+from recognition.anti_unifier import DerivedRecognizer, recognize
+from recognition.carrier import EpistemicGraph, EpistemicNode
+from recognition.connector import epistemic_node_to_graph_node
 from generate.realizer import realize_semantic
 from generate.intent import IntentTag
 from generate.operators import (
@@ -88,6 +96,16 @@ _SUBJECT_STOPWORDS: frozenset[str] = frozenset({
 # promotion removes it explicitly.
 _MAX_SPECULATIVE_SUBJECTS = 64
 
+# All PASSTHROUGH variants normalised to "passthrough" for trace_hash so
+# pre-ADR-0144 hashes remain byte-identical after _ratify_intent gains
+# specific sub-values (ADR-0144 / ADR-0142 §Implementation debts, debt 1).
+_PASSTHROUGH_OUTCOMES: frozenset[str] = frozenset({
+    "passthrough",
+    "passthrough_no_field",
+    "passthrough_no_vocab",
+    "passthrough_no_versor",
+})
+
 
 class CognitiveTurnPipeline:
     """Thin pipeline wrapper over ChatRuntime.
@@ -96,10 +114,16 @@ class CognitiveTurnPipeline:
     a place to plug in.  No new intelligence is added here.
     """
 
-    def __init__(self, runtime, teaching_store: TeachingStore | None = None) -> None:  # runtime: ChatRuntime (no import cycle)
+    def __init__(
+        self,
+        runtime,
+        teaching_store: TeachingStore | None = None,
+        recognizer: DerivedRecognizer | None = None,
+    ) -> None:  # runtime: ChatRuntime (no import cycle)
         self.runtime = runtime
         self._last_node_id: str | None = None
         self.teaching_store = teaching_store or TeachingStore()
+        self._recognizer = recognizer
         self._prior_surface: str | None = None
         self._turn_number: int = 0
         # ADR-0021 §Articulation: subjects of prior SPECULATIVE teaching
@@ -124,6 +148,25 @@ class CognitiveTurnPipeline:
 
     def run(self, text: str, max_tokens: int | None = None) -> CognitiveTurnResult:
         """Execute one full cognitive turn and return a complete result record."""
+
+        # 0. TOKENIZE — once at the top; reused by recognition step and trace.
+        raw_tokens: tuple[str, ...] = tuple(self.runtime.tokenize(text))
+
+        # 0b. RECOGNIZE — if a DerivedRecognizer is attached (ADR-0144).
+        # Admitted → wrap in EpistemicGraph for observability and optional
+        # connector-grounded articulation.  Refused or absent → None.
+        epistemic_graph: EpistemicGraph | None = None
+        if self._recognizer is not None:
+            _rec_outcome = recognize(self._recognizer, raw_tokens)
+            if _rec_outcome.admitted:
+                _ep_node = EpistemicNode(
+                    node_id=f"{self._recognizer.teaching_set_id}:{self._turn_number}",
+                    recognition_outcome=_rec_outcome,
+                )
+                epistemic_graph = EpistemicGraph(
+                    nodes=(_ep_node,),
+                    recognizer_id=self._recognizer.teaching_set_id,
+                )
 
         # 1. LISTEN — capture pre-turn field state
         field_state_before: FieldState | None = self._capture_field_state()
@@ -154,6 +197,18 @@ class CognitiveTurnPipeline:
         prior_node_id = self._last_node_id
         graph = graph_from_intent(intent, prior_node_id=prior_node_id)
         target = plan_articulation(graph)
+
+        # 1b.ii RECOGNITION-GROUNDED GRAPH (ADR-0144, opt-in).
+        # When recognition admitted and the operator has opted in, replace the
+        # intent-derived graph and articulation target with ones derived from
+        # the admitted EpistemicNode via the connector.  Default False preserves
+        # byte-identity for every existing surface and trace_hash.
+        if self.runtime.config.recognition_grounded_graph and epistemic_graph is not None:
+            _derived_gn = epistemic_node_to_graph_node(
+                epistemic_graph.nodes[0], source_intent=intent.tag
+            )
+            graph = PropositionGraph().add_node(_derived_gn)
+            target = plan_articulation(graph)
 
         # 1c. REALIZE — semantic realization from graph + intent.
         # Pre-fix (and default today) the realizer fires on the
@@ -243,8 +298,7 @@ class CognitiveTurnPipeline:
         # 9. Reconstruct input-layer tokens from the turn log
         #    (turn_log is appended inside chat(); last entry matches this turn)
         #    When the unknown-domain gate fires, chat() returns a stub without
-        #    appending to turn_log — fall back to the tokenizer.
-        raw_tokens = tuple(self.runtime.tokenize(text))
+        #    appending to turn_log — fall back to raw_tokens (set at step 0).
         if self.runtime.turn_log:
             last_turn = self.runtime.turn_log[-1]
             filtered_tokens = last_turn.input_tokens
@@ -325,7 +379,17 @@ class CognitiveTurnPipeline:
         admissibility_trace = response.admissibility_trace
         region_was_unconstrained = response.region_was_unconstrained
         admissibility_trace_hash = hash_admissibility_trace(admissibility_trace)
-        ratification_outcome = ratified.outcome.value
+        # Normalise all PASSTHROUGH sub-values to "passthrough" so the value
+        # stored in CognitiveTurnResult matches what goes into trace_hash
+        # (trace_hash_from_result invariant) and pre-ADR-0144 hashes remain
+        # byte-identical (ADR-0144 / ADR-0142 §Implementation debts, debt 1).
+        _ratification_outcome_raw = ratified.outcome.value
+        ratification_outcome = (
+            "passthrough"
+            if _ratification_outcome_raw in _PASSTHROUGH_OUTCOMES
+            else _ratification_outcome_raw
+        )
+        _trace_ratification_outcome = ratification_outcome
         # ADR-0024 Phase 2 — refusal_reason flows from a future
         # materialisation site on ChatResponse.  Empty string on every
         # non-refused turn; folding into trace_hash is gated on
@@ -347,7 +411,7 @@ class CognitiveTurnPipeline:
             teaching_epistemic_status=epistemic_status,
             operator_invocation=operator_invocation,
             admissibility_trace_hash=admissibility_trace_hash,
-            ratification_outcome=ratification_outcome,
+            ratification_outcome=_trace_ratification_outcome,
             region_was_unconstrained=region_was_unconstrained,
             refusal_reason=refusal_reason,
         )
@@ -378,6 +442,7 @@ class CognitiveTurnPipeline:
             ratification_outcome=ratification_outcome,
             region_was_unconstrained=region_was_unconstrained,
             refusal_reason=refusal_reason,
+            epistemic_graph=epistemic_graph,
             dropped_compound_clauses=dropped_compound_clauses,
             versor_condition=response.versor_condition,
             trace_hash=trace_hash,
@@ -390,14 +455,14 @@ class CognitiveTurnPipeline:
     def _ratify_intent(self, intent, field_state):
         """Field-ratify a seeded intent (ADR-0022 §TBD-1).
 
-        When no field state or no vocab is available (cold start),
-        ratification short-circuits to PASSTHROUGH and the seed
-        survives — the existing cold-start behavior is preserved.
+        Emits specific PASSTHROUGH sub-values (ADR-0144 / ADR-0142 debt 1)
+        so the trace can distinguish which cold-start condition fired.
+        All sub-values normalise to "passthrough" for trace_hash.
         """
         if field_state is None:
             return RatifiedIntent(
                 intent=intent,
-                outcome=RatificationOutcome.PASSTHROUGH,
+                outcome=RatificationOutcome.PASSTHROUGH_NO_FIELD,
                 score=0.0,
                 threshold=0.0,
                 seed_tag=intent.tag,
@@ -413,7 +478,7 @@ class CognitiveTurnPipeline:
         if vocab is None:
             return RatifiedIntent(
                 intent=intent,
-                outcome=RatificationOutcome.PASSTHROUGH,
+                outcome=RatificationOutcome.PASSTHROUGH_NO_VOCAB,
                 score=0.0,
                 threshold=0.0,
                 seed_tag=intent.tag,
@@ -422,7 +487,7 @@ class CognitiveTurnPipeline:
         if prompt_versor is None:
             return RatifiedIntent(
                 intent=intent,
-                outcome=RatificationOutcome.PASSTHROUGH,
+                outcome=RatificationOutcome.PASSTHROUGH_NO_VERSOR,
                 score=0.0,
                 threshold=0.0,
                 seed_tag=intent.tag,

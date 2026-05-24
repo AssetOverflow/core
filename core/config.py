@@ -242,6 +242,13 @@ class RuntimeConfig:
     # live workload.
     unified_ingest: bool = False
 
+    # ADR-0144 — recognition-grounded articulation graph.  When True and a
+    # DerivedRecognizer is attached to CognitiveTurnPipeline, the articulation
+    # graph is derived from the admitted EpistemicNode via the connector rather
+    # than from intent classification.  Default False preserves byte-identity
+    # for every existing surface and trace_hash.
+    recognition_grounded_graph: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"

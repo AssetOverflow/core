@@ -17,6 +17,7 @@ from generate.graph_planner import ArticulationTarget, PropositionGraph
 from generate.intent import DialogueIntent
 from generate.proposition import Proposition
 from core.physics.identity import IdentityScore
+from recognition.carrier import EpistemicGraph
 from teaching.correction import CorrectionCandidate
 from teaching.review import ReviewedTeachingExample
 from teaching.store import PackMutationProposal
@@ -99,6 +100,13 @@ class CognitiveTurnResult:
     # decision — this field exists so the trace contract is already
     # in place when a future ADR wires the materialisation path.
     refusal_reason: str = ""
+
+    # --- recognition / epistemic carrier (ADR-0144) ---
+    # None when no DerivedRecognizer is attached, when recognition refused,
+    # or on the very first turn before any recognizer is configured.
+    # Non-None only when recognition admitted (state == EVIDENCED).
+    # NOT folded into trace_hash in Phase 1 (observability only).
+    epistemic_graph: EpistemicGraph | None = None
 
     # --- compound intent observability (ADR-0089 Phase C1) ---
     # Finding 4 (audit 2026-05-20).  ``classify_compound_intent`` returns
