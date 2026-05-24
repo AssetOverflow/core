@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | L0 — Algebra primitives | ✅ Audited | **CLOSED** | None — no dead code found | 2026-05-24 |
 | L1 — Field substrate | ✅ Audited | **PARTIAL** | None — no dead code found | 2026-05-24 |
-| L2 — Vault | ⏳ Pending | — | — | — |
+| L2 — Vault | ✅ Audited | **PARTIAL** | None — flagged learning as wiring debt | 2026-05-24 |
 | L3 — Language packs | ⏳ Pending | — | — | — |
 | L4 — Recognition | ⏳ Pending | — | — | — |
 | L5 — Cognition pipeline | ⏳ Pending | — | — | — |
@@ -353,6 +353,24 @@ Cross-layer consistency gaps:
   This is outside L1 and was not verdicted here, but it is a forward
   note for the L6 runtime auditor because it changes live session field
   state after generation.
+| `VaultStore.store` | `session/context.py:149, 289, 300` |
+| `VaultStore.recall` | `session/context.py:347`, `chat/runtime.py:1643`, `generate/stream.py:169`, `vault/decompose.py:124, 179` |
+| `VaultStore.recall_batch` | None (exposed for batched querying, e.g. for offline evaluation or future batching) |
+| `VaultStore.reproject` | `session/context.py:125` |
+| `FieldDecomposer`, `default_decomposer` | `chat/runtime.py:94, 1649` |
+| `UnknownDomainGate`, `default_gate` | `chat/runtime.py:94, 1645` |
+| `VaultPromotionPolicy` | None (dormant) |
+
+No exposed L2 symbol other than the batched API (`recall_batch`) and the dormant `VaultPromotionPolicy` lacks consumption. Note that `recall_batch` is fully tested and verified in `tests/test_vault_recall_indexing_batch.py` but not called in the main production path (which uses single-query `recall` at runtime).
+
+**Pass 2 — semantic:**
+
+We verified three load-bearing invariants:
+1. **Exact-CGA-recall**: Checked `vault/store.py` and `algebra/backend.py`'s `vault_recall` and `vault_recall_batch`. There are no ANN, HNSW, cosine similarity, or other approximations on the recall path. It strictly uses vectorised exact scans via diagonal CGA inner-product metric, satisfying CLAUDE.md and ADR-0019/0054.
+2. **Promotion-path liveness**: Confirmed that `VaultPromotionPolicy` (`core/physics/learning.py`) has 0 live/test callers. Flagged clearly as wiring debt. Verdict is **PARTIAL**.
+3. **Re-thaw path**: Traced `vault.recall` callers to check if recall transiently raises the energy profile of a region to E2 (per ADR-0006 §"Integration Points"). Checked `vault/store.py` and its callers (`session/context.py`, `chat/runtime.py`). Verified that recall does **not** update or re-raise the energy class/profile of recalled entries. Flagged as `specified-not-verified-live`.
+
+### Semantic mismatches flagged for human review
 
 ### Closure criteria scorecard
 
@@ -389,5 +407,113 @@ operators are ambiguous rather than safe deletion candidates.
 - **Future scope cleanup:** Decide whether `field/operators.py` is still a
   first-class pulse substrate, a benchmark-only substrate, or legacy code.
   It is live through `core pulse`, so this audit did not delete it.
+
+---
+
+## L2 — Vault
+
+**Audit date:** 2026-05-24
+**Auditor:** primary agent (Gemini)
+**Verdict:** **PARTIAL**
+
+### Scope-hypothesis correction (per audit step 0)
+
+None. The scope's layering table correctly maps Layer L2 concerns (exact CGA recall, indexing, batching, promotion gate) to `vault/store.py` and `core/physics/learning.py`.
+
+### ADRs in scope for L2
+
+Triaged from Keyword grep (vault / recall / crystallization / promotion / settled / coherence-residual) against `docs/decisions/`:
+
+| ADR | Title | Status | Belongs at L2? |
+|---|---|---|---|
+| ADR-0014 | `train/` Learning Loop | Accepted (Stub) | Yes — specifies learning constraints and the Supervised Seeding Epoch (which owns `VaultPromotionPolicy`) |
+| ADR-0019 | Exact Vault Recall Acceleration | Accepted | Yes — defines Stages 1-3 of vectorised scan, norm-bucketing, and layered store |
+| ADR-0054 | Vault Recall: Matrix-Cache Indexing + Batched API; Holdout Split Wired | Accepted | Yes — defines `VaultStore` matrix cache, batched recall API, and `--split holdout` |
+
+Other ADRs/Scope files surfaced and assigned to adjacent layers:
+- ADR-0006: Implemented. Belongs at L1, but specifies L2 integration points (vault recall transiently raising region to E2).
+- ADR-0045: Accepted. Belongs at L6/Evals, but provides needle-in-a-haystack verification of exact recall.
+- ADR-0055: Accepted. Belongs at L8, but catalogs Tier 1 (VaultStore) as session memory.
+
+### Modules in scope for L2
+
+| Module | Lines | Live-import sites (outside `vault/`, outside `tests/`) | Test-import sites |
+|---|---|---|---|
+| `vault/__init__.py` | 10 | (re-export shim) | — |
+| `vault/store.py` | 301 | 1 (`session/context.py`) | 7 |
+| `vault/decompose.py` | 224 | 1 (`chat/runtime.py`) | 1 |
+| `core/physics/learning.py` | 33 | 0 (re-exported in `core/physics/__init__.py` but not imported downstream) | 0 |
+
+`core/physics/learning.py` (`VaultPromotionPolicy` / `PromotionDecision`) is confirmed dormant with 0 live callers outside its own package and 0 test callers. Per the L2-specific cleanup instruction, it is retained as future-wiring debt instead of being deleted.
+
+### Caller-trace evidence
+
+Sample of live callers (grep: `grep -rn "from vault\|import vault" --include="*.py" | grep -v "^vault/" | grep -v "tests/"`):
+
+- `session/context.py:25` — imports `VaultStore` for ephemeral session-level storage, storing input/output states and performing exact recall.
+- `chat/runtime.py:94` — imports `default_decomposer` and `default_gate` to perform check gates before planning.
+- `generate/stream.py:169` — invokes `vault.recall` during generation walk telemetry.
+- `vault/decompose.py:124, 179` — invokes `vault.recall` during fallback grade-split decomposition and domain gate checks.
+
+Every live caller traces back to the runtime entry through `core chat`, `core trace`, `core eval`, or the session/dialogue pipeline.
+
+### Exercising suite lane
+
+- `core test --suite algebra` — Exercises `tests/test_vault_recall.py`, `tests/test_vault_recall_vectorised.py`, and `tests/test_vault_recall_rust_parity.py`.
+- `core test --suite full` — Exercises `tests/test_vault_store.py` and `tests/test_vault_recall_indexing_batch.py`.
+
+**Verification:**
+- `python3 -m core.cli test --suite algebra -q` → **82 passed, 50 skipped**
+- `python3 -m pytest tests/test_vault_*.py -q` → **42 passed, 4 skipped**
+
+### Cross-layer contract check
+
+**Pass 1 — mechanical (consumer-exists per exposed symbol):**
+
+| Exposed symbol | Consumer evidence |
+|---|---|
+| `VaultStore` | `session/context.py:25` |
+| `VaultStore.store` | `session/context.py:149, 289, 300` |
+| `VaultStore.recall` | `session/context.py:347`, `chat/runtime.py:1643`, `generate/stream.py:169`, `vault/decompose.py:124, 179` |
+| `VaultStore.recall_batch` | None (exposed for batched querying, e.g. for offline evaluation or future batching) |
+| `VaultStore.reproject` | `session/context.py:125` |
+| `FieldDecomposer`, `default_decomposer` | `chat/runtime.py:94, 1649` |
+| `UnknownDomainGate`, `default_gate` | `chat/runtime.py:94, 1645` |
+| `VaultPromotionPolicy` | None (dormant) |
+
+No exposed L2 symbol other than the batched API (`recall_batch`) and the dormant `VaultPromotionPolicy` lacks consumption. Note that `recall_batch` is fully tested and verified in `tests/test_vault_recall_indexing_batch.py` but not called in the main production path (which uses single-query `recall` at runtime).
+
+**Pass 2 — semantic:**
+
+We verified three load-bearing invariants:
+1. **Exact-CGA-recall**: Checked `vault/store.py` and `algebra/backend.py`'s `vault_recall` and `vault_recall_batch`. There are no ANN, HNSW, cosine similarity, or other approximations on the recall path. It strictly uses vectorised exact scans via diagonal CGA inner-product metric, satisfying CLAUDE.md and ADR-0019/0054.
+2. **Promotion-path liveness**: Confirmed that `VaultPromotionPolicy` (`core/physics/learning.py`) has 0 live/test callers. Flagged clearly as wiring debt. Verdict is **PARTIAL**.
+3. **Re-thaw path**: Traced `vault.recall` callers to check if recall transiently raises the energy profile of a region to E2 (per ADR-0006 §"Integration Points"). Checked `vault/store.py` and its callers (`session/context.py`, `chat/runtime.py`). Verified that recall does **not** update or re-raise the energy class/profile of recalled entries. Flagged as `specified-not-verified-live`.
+
+### Semantic mismatches flagged for human review
+
+- **Re-thaw path integration**: The spec in ADR-0006 for vault recall to "transiently raise region to E2, then let it cool again" is not currently implemented. The system operates on exact recall returning data structures without modifying their companion field energy values or re-injecting them into the propagating field state. Flagged for review on whether this integration is needed or if the design has moved on.
+- **Batched recall usage**: `VaultStore.recall_batch` is implemented and verified but has no caller in the main runtime path. Review if it should be wired to support batch processing of turn sequences.
+
+### Closure criteria scorecard
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. Design artifact | ✅ | ADR-0014, ADR-0019, ADR-0054 |
+| 2. Code artifact | ✅ | `vault/store.py`, `vault/decompose.py`, `core/physics/learning.py` |
+| 3. Live caller | ⚠️ PARTIAL | `session/context.py` and `chat/runtime.py` consume store/decompose; but `core/physics/learning.py` has no live caller |
+| 4. Exercised by suite lane | ✅ | `algebra` suite lane exercises recall; `full` lane exercises store/indexing |
+| 5. Cross-layer consistency | ⚠️ PARTIAL | Exchanged symbols match expectations, but `VaultPromotionPolicy` is dormant and the re-thaw path is not wired |
+
+**Verdict:** **PARTIAL** (due to dormant promotion policy and unwired re-thaw path).
+
+### Cleanup performed
+
+**None.** Checked `vault/` files (`store.py`, `decompose.py`). Both modules have live callers and tests. `core/physics/learning.py` is dormant but retained as future-wiring debt per L2-specific cleanup rules.
+
+### Findings / notes for downstream layers
+
+- **L3 (Language packs) auditor**: Lexicons and identity packs specify aspect-class weights (e.g. yiqtol, qatal) which feed into field energy calculation (ADR-0006). Since the L2 vault recall does not currently implement the re-thaw path (raising energy back to E2), downstream language readback rules receive vaulted E0 crystalline concepts rather than transiently warmed E2 concepts. The L3 audit should look at whether language readback rules actually handle E0 vs E2 correctly at the surface.
+- **L8 (Inter-session memory + contemplation) auditor**: ADR-0055 details Tier 1 session vault (`vault/store.py`) and its relation to Tier 3/4 memory. Contemplation and memory discovery will need to query the session vault. Ensure that the lack of re-thaw path and the dormant `VaultPromotionPolicy` do not block Tier 1 to Tier 3/4 promotion/crystallization logic when those layers are audited.
 
 ---
