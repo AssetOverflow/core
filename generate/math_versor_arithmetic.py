@@ -37,13 +37,14 @@ from __future__ import annotations
 
 import numpy as np
 
-from algebra.cga import embed_point
+from algebra.cga import cga_inner
 from algebra.cl41 import N_COMPONENTS, geometric_product
 
 __all__ = [
     "embed_quantity",
     "translator",
     "subtract",
+    "multiply",
     "decode_quantity",
     "N_INF",
 ]
@@ -82,9 +83,16 @@ def embed_quantity(value: float, unit: str) -> np.ndarray:
     """
     if not isinstance(unit, str) or not unit:
         raise ValueError(f"embed_quantity: unit must be a non-empty string, got {unit!r}")
-    point_float32 = embed_point(np.array([value, 0.0, 0.0], dtype=np.float32))
-    # Upcast to float64 for the runtime field-state path.
-    return point_float32.astype(np.float64)
+    # Embed directly in float64 to avoid float32 quantization error for
+    # values like 0.01 that have no exact float32 representation.
+    # Formula: X = v*e1 + n_o + 0.5*v²*n_inf, n_o = 0.5*(e5-e4), n_inf = e4+e5.
+    v = float(value)
+    v_sq = v * v
+    result = np.zeros(N_COMPONENTS, dtype=np.float64)
+    result[1] = v                       # e1 component
+    result[4] = 0.5 * (v_sq - 1.0)     # e4: n_o contribution -0.5, n_inf contribution +0.5*v²
+    result[5] = 0.5 * (v_sq + 1.0)     # e5: n_o contribution +0.5, n_inf contribution +0.5*v²
+    return result
 
 
 def translator(addend: float) -> np.ndarray:
@@ -133,29 +141,81 @@ def subtract(addend: float) -> np.ndarray:
     return translator(-float(addend))
 
 
+def multiply(scale: float) -> np.ndarray:
+    """Construct the CGA dilator versor for multiplicative scaling along e1.
+
+    Restricted to scale > 0 strictly.  Calls with scale <= 0 raise
+    ValueError.  Negative scales (require composition with reflection)
+    and multiplication by zero (degenerate) are deferred to follow-on ADRs.
+
+    Construction: D_s = cosh(α/2) + sinh(α/2) * (n_o ∧ n_inf)
+    where s = exp(α), α = ln(s).
+
+    Measured in this CGA implementation (blade indices 0-indexed):
+      N = n_o ∧ n_inf has a single non-zero component at index 15
+      (blade (3,4) = e4∧e5) with value -1.0.
+      N² = +1 (pure scalar, verified empirically and analytically).
+
+    Because N² = +1 the exponential exp(α/2 · N) = cosh(α/2) + sinh(α/2)·N
+    is exact in float64 — no series truncation error.
+
+    The sandwich D_s · X · ~D_s applied to a null CGA point P(a) yields
+    a null point projectively equal to P(a·s) with n_inf normalization
+    factor 1/s.  decode_quantity normalizes by n_inf to recover a·s.
+
+    Args:
+        scale: Positive real multiplier.  Must satisfy scale > 0.
+
+    Returns:
+        32-component float64 unit versor satisfying
+        ``versor_condition(D) < 1e-6``.
+
+    Raises:
+        ValueError: If scale <= 0.
+    """
+    scale = float(scale)
+    if scale <= 0.0:
+        raise ValueError(
+            f"multiply: scale must be strictly positive, got {scale!r}. "
+            f"Negative scales and zero are deferred to follow-on ADRs."
+        )
+    alpha = np.log(scale)
+    half = alpha / 2.0
+    D = np.zeros(N_COMPONENTS, dtype=np.float64)
+    D[0] = np.cosh(half)
+    # N = n_o ∧ n_inf has component -1 at index 15 (blade (3,4), measured).
+    # D_s = cosh(α/2)·1 + sinh(α/2)·N → D[15] = sinh · (-1) = -sinh.
+    D[15] = -np.sinh(half)
+    return D
+
+
 def decode_quantity(F: np.ndarray, unit: str) -> tuple[float, str]:
     """Decode a multivector back to a (value, unit) scalar quantity.
 
-    For a CGA point on the e1 axis, the e1 component directly carries
-    the Euclidean coordinate (and thus the encoded scalar value). The
-    unit string is passed through from the caller — this function does
-    not infer or change the unit.
-
-    The decoder reads only the e1 component (index 1). It does not
-    cross-check the e4/e5 components for consistency with the null
-    property; that check is the test layer's job (assertion family 1
-    and 3 in the ADR).
+    CGA points are projective: D_s * P * ~D_s produces a point
+    proportional to P(s·x) with scale factor 1/s.  Normalizing by the
+    n_inf inner product recovers the true Euclidean coordinate regardless
+    of projective scale.  For translator outputs (n_inf·X = -1) the
+    normalization is 1 and the result is identical to the previous
+    direct e1 read.
 
     Args:
         F: 32-component multivector to decode.
         unit: Unit string to attach to the returned scalar.
 
     Returns:
-        Tuple of ``(value, unit)`` where ``value`` is the e1 coordinate.
+        Tuple of ``(value, unit)`` where ``value`` is the normalized
+        e1 coordinate.
     """
     if not isinstance(unit, str) or not unit:
         raise ValueError(f"decode_quantity: unit must be a non-empty string, got {unit!r}")
     arr = np.asarray(F, dtype=np.float64)
     if arr.shape != (N_COMPONENTS,):
         raise ValueError(f"decode_quantity: expected shape ({N_COMPONENTS},), got {arr.shape}")
-    return float(arr[1]), unit
+    # Normalize e1 by the n_inf inner product.  For normalized conformal
+    # points (n_inf·X = -1) this divides by 1; for dilated points with
+    # scale s it divides by 1/s, recovering value * s.
+    n_inf_inner = float(cga_inner(N_INF, arr))
+    if abs(n_inf_inner) < 1e-15:
+        raise ValueError("decode_quantity: degenerate point (n_inf inner product is zero)")
+    return float(arr[1]) / (-n_inf_inner), unit
