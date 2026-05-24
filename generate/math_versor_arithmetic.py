@@ -43,6 +43,7 @@ from algebra.cl41 import N_COMPONENTS, geometric_product
 __all__ = [
     "embed_quantity",
     "translator",
+    "subtract",
     "decode_quantity",
     "N_INF",
 ]
@@ -122,6 +123,14 @@ def translator(addend: float) -> np.ndarray:
     T[0] = 1.0  # scalar part
     T -= 0.5 * bivector
     return T
+
+
+def subtract(addend: float) -> np.ndarray:
+    """Construct the CGA translator versor for subtractive shift along e1.
+
+    Delegates to ``translator(-addend)``. No new algebra.
+    """
+    return translator(-float(addend))
 
 
 def decode_quantity(F: np.ndarray, unit: str) -> tuple[float, str]:
