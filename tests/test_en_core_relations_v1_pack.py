@@ -1,4 +1,4 @@
-"""Contract tests for the ``en_core_relations_v1`` kinship starter pack.
+"""Contract tests for the ``en_core_relations_v1`` relations starter pack.
 
 Following the teaching-order doctrine
 ([`docs/teaching_order.md`](../docs/teaching_order.md) §5),
@@ -8,7 +8,7 @@ domain whose triples exercise every formation gate end-to-end.
 As of ADR-0063 (cross-pack surface resolver), this pack IS in the
 default ``RuntimeConfig.input_packs``.  Pack-grounded surface
 composers in :mod:`chat.pack_grounding` consult
-:mod:`chat.pack_resolver` so kinship lemmas ground on the live path
+:mod:`chat.pack_resolver` so relations lemmas ground on the live path
 without a separate composer module.
 
 These tests pin:
@@ -16,10 +16,9 @@ These tests pin:
   - The pack loads via ``load_pack("en_core_relations_v1")`` without
     a checksum mismatch (manifest.checksum matches the bytes on
     disk per CLAUDE.md's pack-discipline).
-  - The 8 kinship lemmas are all present.
-  - Each lemma carries the expected canonical semantic_domains
-    (deterministic taxonomy under ``kinship.*``, ``lineage.*``,
-    ``biology.*``, ``social.*``).
+  - The original 8 kinship lemmas are all still present.
+  - Each original lemma carries the expected canonical primary
+    semantic domain.
   - No accidental cross-pack lemma collision with
     ``en_core_cognition_v1`` (orthogonal domains; deliberate
     separation per teaching_order.md).
@@ -32,7 +31,7 @@ from language_packs.compiler import load_pack, load_pack_entries
 
 PACK_ID = "en_core_relations_v1"
 
-EXPECTED_LEMMAS: tuple[str, ...] = (
+BASELINE_LEMMAS: tuple[str, ...] = (
     "parent",
     "child",
     "sibling",
@@ -42,6 +41,25 @@ EXPECTED_LEMMAS: tuple[str, ...] = (
     "spouse",
     "offspring",
 )
+
+EXPECTED_ADDED_LEMMAS: tuple[str, ...] = (
+    "advisor",
+    "apprentice",
+    "caregiver",
+    "colleague",
+    "cousin",
+    "elder",
+    "friend",
+    "guardian",
+    "manager",
+    "mentor",
+    "neighbor",
+    "relative",
+    "supervisor",
+    "teammate",
+)
+
+EXPECTED_LEMMAS: tuple[str, ...] = BASELINE_LEMMAS + EXPECTED_ADDED_LEMMAS
 
 # Note: `person` is intentionally NOT in this pack — it lives in
 # `en_core_cognition_v1` and the orthogonality test below pins
@@ -76,9 +94,22 @@ def test_all_expected_lemmas_present() -> None:
     assert surfaces == set(EXPECTED_LEMMAS)
 
 
-def test_each_lemma_carries_expected_primary_domain() -> None:
+def test_baseline_lemmas_still_present() -> None:
+    _, manifold = load_pack(PACK_ID)
+    surfaces = {manifold.get_word_at(i) for i in range(len(manifold))}
+    assert set(BASELINE_LEMMAS) <= surfaces
+
+
+def test_added_lemmas_present() -> None:
+    _, manifold = load_pack(PACK_ID)
+    surfaces = {manifold.get_word_at(i) for i in range(len(manifold))}
+    assert set(EXPECTED_ADDED_LEMMAS) <= surfaces
+
+
+def test_each_baseline_lemma_carries_expected_primary_domain() -> None:
     """The first ``semantic_domains`` entry is the load-bearing
-    primary domain — drives mounted-pack resonance grouping."""
+    primary domain — drives mounted-pack resonance grouping.  Baseline
+    primary domains are frozen; changing them requires an ADR."""
     entries = load_pack_entries(PACK_ID)
     by_lemma = {e.lemma: e for e in entries}
     for lemma, expected_primary in EXPECTED_PRIMARY_DOMAINS.items():
