@@ -1,0 +1,20 @@
+{"case_id": "S1-cap-same-001", "category": "capacity_same_unit", "problem": "Bob can shuck 10 oysters in 5 minutes.  How many oysters can he shuck in 2 hours?", "expected_answer": 240.0}
+{"case_id": "S1-cap-same-002", "category": "capacity_same_unit", "problem": "Alice can pick 12 apples in 3 minutes.  How many apples can Alice pick in 9 minutes?", "expected_answer": 36.0}
+{"case_id": "S1-cap-same-003", "category": "capacity_same_unit", "problem": "Tom can type 80 words in 2 minutes.  How many words can Tom type in 10 minutes?", "expected_answer": 400.0}
+{"case_id": "S1-cap-same-004", "category": "capacity_same_unit", "problem": "Maya can paint 6 walls in 3 hours.  How many walls can Maya paint in 9 hours?", "expected_answer": 18.0}
+{"case_id": "S1-cap-cross-001", "category": "capacity_cross_unit", "problem": "Sam can pack 15 boxes in 5 minutes.  How many boxes can Sam pack in 2 hours?", "expected_answer": 360.0}
+{"case_id": "S1-cap-cross-002", "category": "capacity_cross_unit", "problem": "Jade can read 20 pages in 10 minutes.  How many pages can Jade read in 3 hours?", "expected_answer": 360.0}
+{"case_id": "S1-cap-cross-003", "category": "capacity_cross_unit", "problem": "Leo can score 4 goals in 60 seconds.  How many goals can Leo score in 5 minutes?", "expected_answer": 20.0}
+{"case_id": "S1-cap-cross-004", "category": "capacity_cross_unit", "problem": "Finn can write 3 essays in 1 hour.  How many essays can Finn write in 4 hours?", "expected_answer": 12.0}
+{"case_id": "S1-cap-pronoun-001", "category": "capacity_pronoun", "problem": "Bob can shuck 10 oysters in 5 minutes.  How many oysters can he shuck in 30 minutes?", "expected_answer": 60.0}
+{"case_id": "S1-cap-pronoun-002", "category": "capacity_pronoun", "problem": "Alice can complete 8 tasks in 2 hours.  How many tasks can she complete in 6 hours?", "expected_answer": 24.0}
+{"case_id": "S1-cap-pronoun-003", "category": "capacity_pronoun", "problem": "Sam can produce 20 widgets in 4 minutes.  How many widgets can he produce in 12 minutes?", "expected_answer": 60.0}
+{"case_id": "S1-cap-pronoun-004", "category": "capacity_pronoun", "problem": "Maya can answer 15 questions in 5 minutes.  How many questions can she answer in 20 minutes?", "expected_answer": 60.0}
+{"case_id": "S1-earn-same-001", "category": "earnings_same_unit", "problem": "Tina makes $18.00 an hour.  How much money does Tina make in 5 hours?", "expected_answer": 90.0}
+{"case_id": "S1-earn-same-002", "category": "earnings_same_unit", "problem": "Bob earns $25.00 per hour.  How much money does Bob earn in 8 hours?", "expected_answer": 200.0}
+{"case_id": "S1-earn-same-003", "category": "earnings_same_unit", "problem": "Alice receives $12.50 per hour.  How much money does Alice receive in 4 hours?", "expected_answer": 50.0}
+{"case_id": "S1-earn-same-004", "category": "earnings_same_unit", "problem": "Sam charges $30.00 per hour.  How much money does Sam charge in 3 hours?", "expected_answer": 90.0}
+{"case_id": "S1-refuse-verb-001", "category": "refusal_verb_miss", "problem": "Bob can juggle 10 balls in 5 minutes.  How many balls can Bob juggle in 30 minutes?", "expected_answer": null}
+{"case_id": "S1-refuse-verb-002", "category": "refusal_verb_miss", "problem": "Alice can knit 3 scarves in 2 hours.  How many scarves can Alice knit in 6 hours?", "expected_answer": null}
+{"case_id": "S1-refuse-verb-003", "category": "refusal_verb_miss", "problem": "Tom can solve 5 puzzles in 10 minutes.  How many puzzles can Tom solve in 30 minutes?", "expected_answer": null}
+{"case_id": "S1-refuse-verb-004", "category": "refusal_verb_miss", "problem": "Maya can bake 4 cakes in 1 hour.  How many cakes can Maya bake in 3 hours?", "expected_answer": null}

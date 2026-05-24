@@ -1,0 +1,198 @@
+{
+  "adr": "0136.S.1",
+  "axis": "rate_events",
+  "cases_path": "evals/math_capability_axes/S1_rate_events/v1/cases.jsonl",
+  "metrics": {
+    "cases_total": 20,
+    "pass_rate": 1.0,
+    "passed": 20,
+    "wrong": 0,
+    "wrong_count_is_zero": true,
+    "wrong_rate": 0.0
+  },
+  "per_case": [
+    {
+      "answer": 240.0,
+      "case_id": "S1-cap-same-001",
+      "category": "capacity_same_unit",
+      "expected_answer": 240.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 36.0,
+      "case_id": "S1-cap-same-002",
+      "category": "capacity_same_unit",
+      "expected_answer": 36.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 400.0,
+      "case_id": "S1-cap-same-003",
+      "category": "capacity_same_unit",
+      "expected_answer": 400.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 18.0,
+      "case_id": "S1-cap-same-004",
+      "category": "capacity_same_unit",
+      "expected_answer": 18.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 360.0,
+      "case_id": "S1-cap-cross-001",
+      "category": "capacity_cross_unit",
+      "expected_answer": 360.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 360.0,
+      "case_id": "S1-cap-cross-002",
+      "category": "capacity_cross_unit",
+      "expected_answer": 360.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 20.0,
+      "case_id": "S1-cap-cross-003",
+      "category": "capacity_cross_unit",
+      "expected_answer": 20.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 12.0,
+      "case_id": "S1-cap-cross-004",
+      "category": "capacity_cross_unit",
+      "expected_answer": 12.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 60.0,
+      "case_id": "S1-cap-pronoun-001",
+      "category": "capacity_pronoun",
+      "expected_answer": 60.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 24.0,
+      "case_id": "S1-cap-pronoun-002",
+      "category": "capacity_pronoun",
+      "expected_answer": 24.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 60.0,
+      "case_id": "S1-cap-pronoun-003",
+      "category": "capacity_pronoun",
+      "expected_answer": 60.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 60.0,
+      "case_id": "S1-cap-pronoun-004",
+      "category": "capacity_pronoun",
+      "expected_answer": 60.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 90.0,
+      "case_id": "S1-earn-same-001",
+      "category": "earnings_same_unit",
+      "expected_answer": 90.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 200.0,
+      "case_id": "S1-earn-same-002",
+      "category": "earnings_same_unit",
+      "expected_answer": 200.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 50.0,
+      "case_id": "S1-earn-same-003",
+      "category": "earnings_same_unit",
+      "expected_answer": 50.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 90.0,
+      "case_id": "S1-earn-same-004",
+      "category": "earnings_same_unit",
+      "expected_answer": 90.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": null,
+      "case_id": "S1-refuse-verb-001",
+      "category": "refusal_verb_miss",
+      "expected_answer": null,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": null,
+      "case_id": "S1-refuse-verb-002",
+      "category": "refusal_verb_miss",
+      "expected_answer": null,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": null,
+      "case_id": "S1-refuse-verb-003",
+      "category": "refusal_verb_miss",
+      "expected_answer": null,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": null,
+      "case_id": "S1-refuse-verb-004",
+      "category": "refusal_verb_miss",
+      "expected_answer": null,
+      "outcome": "pass",
+      "reason": ""
+    }
+  ],
+  "per_category": {
+    "capacity_cross_unit": {
+      "pass": 4,
+      "wrong": 0
+    },
+    "capacity_pronoun": {
+      "pass": 4,
+      "wrong": 0
+    },
+    "capacity_same_unit": {
+      "pass": 4,
+      "wrong": 0
+    },
+    "earnings_same_unit": {
+      "pass": 4,
+      "wrong": 0
+    },
+    "refusal_verb_miss": {
+      "pass": 4,
+      "wrong": 0
+    }
+  },
+  "schema_version": 1
+}

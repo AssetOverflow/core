@@ -1569,3 +1569,253 @@ def _build_conj_embedded_sum(
         ]
     except Exception:
         return []
+
+
+# ---------------------------------------------------------------------------
+# ADR-0136.S.1 — Rate/event statement extractors (capacity + earnings)
+# ---------------------------------------------------------------------------
+
+_TIME_UNITS_TO_SECONDS: Final[dict[str, float]] = {
+    "second": 1.0, "seconds": 1.0,
+    "minute": 60.0, "minutes": 60.0,
+    "hour": 3600.0, "hours": 3600.0,
+    "day": 86400.0, "days": 86400.0,
+}
+
+_TIME_UNIT_SET: Final[str] = (
+    r"(?:seconds?|minutes?|hours?|days?)"
+)
+
+
+def _to_seconds(count: float, unit: str) -> float:
+    return count * _TIME_UNITS_TO_SECONDS[unit.lower()]
+
+
+# --- Shape A: capacity-rate ---
+
+_CAPACITY_VERBS: Final[frozenset[str]] = frozenset({
+    "shuck", "shucks",
+    "pick", "picks",
+    "pack", "packs",
+    "make", "makes",
+    "produce", "produces",
+    "type", "types",
+    "read", "reads",
+    "write", "writes",
+    "paint", "paints",
+    "run", "runs",
+    "score", "scores",
+    "answer", "answers",
+    "complete", "completes",
+})
+
+_CAPACITY_VERB_PATTERN: Final[str] = (
+    r"(?:" + "|".join(
+        re.escape(v) for v in sorted(_CAPACITY_VERBS, key=len, reverse=True)
+    ) + r")"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateCapacity:
+    actor: str
+    count: float
+    unit: str
+    per_count: float
+    per_unit: str
+    source_span: str
+
+
+_CAPACITY_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<actor>{_ENTITY})\s+can\s+"
+    rf"(?P<verb>{_CAPACITY_VERB_PATTERN})\s+"
+    rf"(?P<count>\d+(?:\.\d+)?)\s+"
+    rf"(?P<unit>\w+)\s+in\s+"
+    rf"(?P<per_count>\d+(?:\.\d+)?)\s+"
+    rf"(?P<per_unit>{_TIME_UNIT_SET})"
+    r"\s*\.?\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def extract_capacity_candidates(sentence: str) -> list[CandidateCapacity]:
+    s = sentence.strip()
+    m = _CAPACITY_RE.match(s)
+    if m is None:
+        return []
+    verb = m.group("verb").lower()
+    if verb not in _CAPACITY_VERBS:
+        return []
+    count = float(m.group("count"))
+    per_count = float(m.group("per_count"))
+    if per_count <= 0 or count <= 0:
+        return []
+    return [
+        CandidateCapacity(
+            actor=m.group("actor"),
+            count=count,
+            unit=_canonicalize_unit(m.group("unit")),
+            per_count=per_count,
+            per_unit=m.group("per_unit").lower(),
+            source_span=sentence,
+        )
+    ]
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateCapacityQuestion:
+    actor: str | None
+    unit: str
+    per_count: float
+    per_unit: str
+    source_span: str
+
+
+_PRONOUN_SET: Final[str] = r"(?:he|she|they|it)"
+
+_CAPACITY_Q_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+(?P<unit>\w+)\s+can\s+"
+    rf"(?P<actor>{_ENTITY}|{_PRONOUN_SET})\s+"
+    rf"(?P<verb>{_CAPACITY_VERB_PATTERN})\s+in\s+"
+    rf"(?P<per_count>\d+(?:\.\d+)?)\s+"
+    rf"(?P<per_unit>{_TIME_UNIT_SET})"
+    r"\s*\??\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def extract_capacity_question_candidates(
+    sentence: str,
+) -> list[CandidateCapacityQuestion]:
+    s = sentence.strip()
+    m = _CAPACITY_Q_RE.match(s)
+    if m is None:
+        return []
+    verb = m.group("verb").lower()
+    if verb not in _CAPACITY_VERBS:
+        return []
+    actor_raw = m.group("actor")
+    actor: str | None = None if actor_raw.lower() in (
+        "he", "she", "they", "it",
+    ) else actor_raw
+    per_count = float(m.group("per_count"))
+    if per_count <= 0:
+        return []
+    return [
+        CandidateCapacityQuestion(
+            actor=actor,
+            unit=_canonicalize_unit(m.group("unit")),
+            per_count=per_count,
+            per_unit=m.group("per_unit").lower(),
+            source_span=sentence,
+        )
+    ]
+
+
+# --- Shape B: earnings rate ---
+
+_EARNINGS_VERBS: Final[frozenset[str]] = frozenset({
+    "make", "makes",
+    "earn", "earns",
+    "receive", "receives",
+    "get", "gets",
+    "charge", "charges",
+})
+
+_EARNINGS_VERB_PATTERN: Final[str] = (
+    r"(?:" + "|".join(
+        re.escape(v) for v in sorted(_EARNINGS_VERBS, key=len, reverse=True)
+    ) + r")"
+)
+
+_CURRENCY_AMOUNT: Final[str] = r"\$\d+(?:\.\d{1,2})?"
+
+_PER_TOKEN: Final[str] = (
+    rf"(?:per|an?|for\s+each|every)\s+(?P<per_unit>{_TIME_UNIT_SET}|\w+)"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateEarningsRate:
+    actor: str
+    amount: float
+    unit: str
+    per_unit: str
+    source_span: str
+
+
+_EARNINGS_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<actor>{_ENTITY})\s+"
+    rf"(?P<verb>{_EARNINGS_VERB_PATTERN})\s+"
+    rf"(?P<amount>{_CURRENCY_AMOUNT})\s+"
+    rf"{_PER_TOKEN}"
+    r"\s*\.?\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def extract_earnings_candidates(sentence: str) -> list[CandidateEarningsRate]:
+    s = sentence.strip()
+    m = _EARNINGS_RE.match(s)
+    if m is None:
+        return []
+    verb = m.group("verb").lower()
+    if verb not in _EARNINGS_VERBS:
+        return []
+    amount_raw = m.group("amount")
+    amount = float(amount_raw.replace("$", ""))
+    if amount <= 0:
+        return []
+    per_unit = m.group("per_unit").lower()
+    return [
+        CandidateEarningsRate(
+            actor=m.group("actor"),
+            amount=amount,
+            unit="dollar",
+            per_unit=per_unit,
+            source_span=sentence,
+        )
+    ]
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateEarningsQuestion:
+    actor: str
+    unit: str
+    time_count: float
+    time_unit: str
+    source_span: str
+
+
+_EARNINGS_Q_VERBS: Final[str] = r"(?:make|earn|get|receive|charge)"
+
+_EARNINGS_Q_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+much\s+(?:money|dollars?)\s+does\s+"
+    rf"(?P<actor>{_ENTITY})\s+"
+    rf"{_EARNINGS_Q_VERBS}\s+in\s+"
+    rf"(?P<time_count>\d+(?:\.\d+)?)\s+"
+    rf"(?P<time_unit>{_TIME_UNIT_SET})"
+    r"\s*\??\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def extract_earnings_question_candidates(
+    sentence: str,
+) -> list[CandidateEarningsQuestion]:
+    s = sentence.strip()
+    m = _EARNINGS_Q_RE.match(s)
+    if m is None:
+        return []
+    time_count = float(m.group("time_count"))
+    if time_count <= 0:
+        return []
+    return [
+        CandidateEarningsQuestion(
+            actor=m.group("actor"),
+            unit="dollar",
+            time_count=time_count,
+            time_unit=m.group("time_unit").lower(),
+            source_span=sentence,
+        )
+    ]
