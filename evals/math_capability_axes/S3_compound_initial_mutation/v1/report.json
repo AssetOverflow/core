@@ -1,0 +1,234 @@
+{
+  "adr": "0136.S.3",
+  "axis": "compound_initial_mutation",
+  "cases_path": "evals/math_capability_axes/S3_compound_initial_mutation/v1/cases.jsonl",
+  "metrics": {
+    "cases_total": 24,
+    "pass_rate": 1.0,
+    "passed": 24,
+    "wrong": 0,
+    "wrong_count_is_zero": true,
+    "wrong_rate": 0.0
+  },
+  "per_case": [
+    {
+      "answer": 12.0,
+      "case_id": "S3-sub-canon-001",
+      "category": "subtract_canonical",
+      "expected_answer": 12.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 35.0,
+      "case_id": "S3-sub-canon-002",
+      "category": "subtract_canonical",
+      "expected_answer": 35.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 63.0,
+      "case_id": "S3-sub-canon-003",
+      "category": "subtract_canonical",
+      "expected_answer": 63.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 8.0,
+      "case_id": "S3-sub-canon-004",
+      "category": "subtract_canonical",
+      "expected_answer": 8.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 18.0,
+      "case_id": "S3-sub-syn-001",
+      "category": "subtract_synonym",
+      "expected_answer": 18.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 16.0,
+      "case_id": "S3-sub-syn-002",
+      "category": "subtract_synonym",
+      "expected_answer": 16.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 22.0,
+      "case_id": "S3-sub-syn-003",
+      "category": "subtract_synonym",
+      "expected_answer": 22.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 12.0,
+      "case_id": "S3-sub-syn-004",
+      "category": "subtract_synonym",
+      "expected_answer": 12.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 35.0,
+      "case_id": "S3-sub-syn-005",
+      "category": "subtract_synonym",
+      "expected_answer": 35.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 35.0,
+      "case_id": "S3-sub-syn-006",
+      "category": "subtract_synonym",
+      "expected_answer": 35.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 15.0,
+      "case_id": "S3-add-canon-001",
+      "category": "add_canonical",
+      "expected_answer": 15.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 42.0,
+      "case_id": "S3-add-canon-002",
+      "category": "add_canonical",
+      "expected_answer": 42.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 30.0,
+      "case_id": "S3-add-canon-003",
+      "category": "add_canonical",
+      "expected_answer": 30.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 75.0,
+      "case_id": "S3-add-canon-004",
+      "category": "add_canonical",
+      "expected_answer": 75.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 20.0,
+      "case_id": "S3-add-syn-001",
+      "category": "add_synonym",
+      "expected_answer": 20.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 55.0,
+      "case_id": "S3-add-syn-002",
+      "category": "add_synonym",
+      "expected_answer": 55.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 25.0,
+      "case_id": "S3-add-syn-003",
+      "category": "add_synonym",
+      "expected_answer": 25.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 45.0,
+      "case_id": "S3-add-syn-004",
+      "category": "add_synonym",
+      "expected_answer": 45.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": null,
+      "case_id": "S3-ref-negative-001",
+      "category": "refusal_negative_result",
+      "expected_answer": null,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": null,
+      "case_id": "S3-ref-negative-002",
+      "category": "refusal_negative_result",
+      "expected_answer": null,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": null,
+      "case_id": "S3-ref-verb-miss-001",
+      "category": "refusal_verb_miss",
+      "expected_answer": null,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": null,
+      "case_id": "S3-ref-verb-miss-002",
+      "category": "refusal_verb_miss",
+      "expected_answer": null,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 47.0,
+      "case_id": "S3-sub-syn-007",
+      "category": "subtract_synonym",
+      "expected_answer": 47.0,
+      "outcome": "pass",
+      "reason": ""
+    },
+    {
+      "answer": 16.0,
+      "case_id": "S3-add-syn-005",
+      "category": "add_synonym",
+      "expected_answer": 16.0,
+      "outcome": "pass",
+      "reason": ""
+    }
+  ],
+  "per_category": {
+    "add_canonical": {
+      "pass": 4,
+      "wrong": 0
+    },
+    "add_synonym": {
+      "pass": 5,
+      "wrong": 0
+    },
+    "refusal_negative_result": {
+      "pass": 2,
+      "wrong": 0
+    },
+    "refusal_verb_miss": {
+      "pass": 2,
+      "wrong": 0
+    },
+    "subtract_canonical": {
+      "pass": 4,
+      "wrong": 0
+    },
+    "subtract_synonym": {
+      "pass": 7,
+      "wrong": 0
+    }
+  },
+  "schema_version": 1
+}

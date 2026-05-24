@@ -1,0 +1,24 @@
+{"case_id": "S3-sub-canon-001", "category": "subtract_canonical", "problem": "Tom had 20 marbles, but then lost 8. How many marbles does Tom have?", "expected_answer": 12.0}
+{"case_id": "S3-sub-canon-002", "category": "subtract_canonical", "problem": "Sara had 50 stickers initially, but lost 15. How many stickers does Sara have?", "expected_answer": 35.0}
+{"case_id": "S3-sub-canon-003", "category": "subtract_canonical", "problem": "Mike had 100 coins, but then lost 37. How many coins does Mike have?", "expected_answer": 63.0}
+{"case_id": "S3-sub-canon-004", "category": "subtract_canonical", "problem": "Yun had 20 paperclips initially, but then lost 12. How many paperclips does Yun have?", "expected_answer": 8.0}
+{"case_id": "S3-sub-syn-001", "category": "subtract_synonym", "problem": "Alice had 30 apples, but then gave 12. How many apples does Alice have?", "expected_answer": 18.0}
+{"case_id": "S3-sub-syn-002", "category": "subtract_synonym", "problem": "Bob had 25 pencils initially, but then used 9. How many pencils does Bob have?", "expected_answer": 16.0}
+{"case_id": "S3-sub-syn-003", "category": "subtract_synonym", "problem": "Carol had 40 cookies, but then spent 18. How many cookies does Carol have?", "expected_answer": 22.0}
+{"case_id": "S3-sub-syn-004", "category": "subtract_synonym", "problem": "Dave had 15 balls, but then ate 3. How many balls does Dave have?", "expected_answer": 12.0}
+{"case_id": "S3-sub-syn-005", "category": "subtract_synonym", "problem": "Eve had 60 stamps initially, but then sold 25. How many stamps does Eve have?", "expected_answer": 35.0}
+{"case_id": "S3-sub-syn-006", "category": "subtract_synonym", "problem": "Frank had 45 cards, but then dropped 10. How many cards does Frank have?", "expected_answer": 35.0}
+{"case_id": "S3-add-canon-001", "category": "add_canonical", "problem": "Gina had 10 books, but then gained 5. How many books does Gina have?", "expected_answer": 15.0}
+{"case_id": "S3-add-canon-002", "category": "add_canonical", "problem": "Hank had 30 tokens initially, but then gained 12. How many tokens does Hank have?", "expected_answer": 42.0}
+{"case_id": "S3-add-canon-003", "category": "add_canonical", "problem": "Iris had 22 gems, but gained 8. How many gems does Iris have?", "expected_answer": 30.0}
+{"case_id": "S3-add-canon-004", "category": "add_canonical", "problem": "Jake had 55 points initially, but then gained 20. How many points does Jake have?", "expected_answer": 75.0}
+{"case_id": "S3-add-syn-001", "category": "add_synonym", "problem": "Kim had 14 shells, but then got 6. How many shells does Kim have?", "expected_answer": 20.0}
+{"case_id": "S3-add-syn-002", "category": "add_synonym", "problem": "Leo had 40 tickets initially, but then received 15. How many tickets does Leo have?", "expected_answer": 55.0}
+{"case_id": "S3-add-syn-003", "category": "add_synonym", "problem": "Mia had 18 rings, but then found 7. How many rings does Mia have?", "expected_answer": 25.0}
+{"case_id": "S3-add-syn-004", "category": "add_synonym", "problem": "Ned had 35 coins, but then earned 10. How many coins does Ned have?", "expected_answer": 45.0}
+{"case_id": "S3-ref-negative-001", "category": "refusal_negative_result", "problem": "Pat had 10 toys, but then lost 20. How many toys does Pat have?", "expected_answer": null}
+{"case_id": "S3-ref-negative-002", "category": "refusal_negative_result", "problem": "Quinn had 5 pens initially, but then gave 15. How many pens does Quinn have?", "expected_answer": null}
+{"case_id": "S3-ref-verb-miss-001", "category": "refusal_verb_miss", "problem": "Rob had 10 balls, but then juggled 5. How many balls does Rob have?", "expected_answer": null}
+{"case_id": "S3-ref-verb-miss-002", "category": "refusal_verb_miss", "problem": "Sam had 20 cards, but then shuffled 8. How many cards does Sam have?", "expected_answer": null}
+{"case_id": "S3-sub-syn-007", "category": "subtract_synonym", "problem": "Tina had 80 beads initially, but gave away 33. How many beads does Tina have?", "expected_answer": 47.0}
+{"case_id": "S3-add-syn-005", "category": "add_synonym", "problem": "Uma had 12 dolls, but then bought 4. How many dolls does Uma have?", "expected_answer": 16.0}
