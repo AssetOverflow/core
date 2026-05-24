@@ -1,7 +1,7 @@
 # Scope: Derived Recognizer Storage
 
-**Status:** Draft v1 / scope-only (not a decision yet — prerequisite for one)
-**Date:** 2026-05-24
+**Status:** Draft v2 / scope-only (not a decision yet — prerequisite for one)
+**Date:** 2026-05-24 (v1: initial draft; v2: substrate-liveness audit + HITL machinery cross-reference + forever-running prerequisite reframe + substrate-destination sketch + LOW corrections)
 **Author:** CORE agents
 **Anchor:** [thesis-decoding-not-generating](../../../.claude/projects/-Users-kaizenpro-Projects-core/memory/thesis-decoding-not-generating.md) (memory)
 **Companions:** [teaching-derived-recognition-scope](./teaching-derived-recognition-scope.md), [epistemic-state-taxonomy-scope](./epistemic-state-taxonomy-scope.md)
@@ -33,34 +33,55 @@ follows.
 
 ## What the existing substrate already provides
 
-The thermodynamic / crystallization dynamics the project committed to are
-not a deferred idea. They are implemented and load-bearing:
+The thermodynamic / crystallization dynamics the project committed to
+exist as designed-and-partially-implemented architecture. The honest
+status follows.
 
-| Concern | Mechanism | Location |
-|---|---|---|
-| Region excitation | Injection pressure raises `EnergyClass` | `core/physics/energy.py` |
-| Cooling | `exp(-age/12)` decay over turn count | `core/physics/energy.py` |
-| Crystallization | E0/E1 = `vault_candidate`; promotion gated by coherence residual ≤ 0.05 | `core/physics/learning.py` (`VaultPromotionPolicy`) |
-| Re-activation | Vault recall transiently raises region to E2, then cools again | ADR-0006 §"Integration Points" |
+### Substrate liveness audit
 
-The model treats field regions (content) thermodynamically: hot/active
-material lives in the field; settled-and-cooled material is promoted to
-vault as the *crystallized form*; vault recall re-thaws transiently.
+| Concern | Mechanism | Status | Verification |
+|---|---|---|---|
+| Region excitation | Injection pressure raises `EnergyClass` | **Live** | `FieldEnergyOperator` called by `ingest/gate.py:292`, `field/propagate.py:26`, `language_packs/compiler.py:72` |
+| Cooling | `recency = clamp(activation_count,0,8)/8 * exp(-age/12)` contribution | **Live** | `core/physics/energy.py:94`, exercised via callers above |
+| Crystallization gate | E0/E1 = `vault_candidate`; promotion requires `coherence_residual ≤ residual_threshold` (default 0.05) | **Dormant** | `VaultPromotionPolicy` defined in `core/physics/learning.py`, but `core.physics.learning` is imported by **no module outside `core/physics/`** as of 2026-05-24 |
+| Re-activation on recall | Vault recall transiently raises region to E2, then cools | **Specified, not verified live** | Documented in ADR-0006 §"Integration Points"; no code path traced from vault recall back to energy re-injection |
 
-What the substrate does **not** yet specify:
+This is a meaningful correction to v1, which described the entire lattice
+as live. The honest read: the **energy half** of the substrate is wired
+and load-bearing; the **promotion / crystallization half** is spec-in-code
+that nothing calls. Vault content today exists in the vault because
+something else put it there, not because the promotion gate evaluated it.
+
+### What this means for the recognizer-storage ADR
+
+The ADR that follows this scope must deliver **both**:
+
+1. **Wire the dormant promotion path** so it actually decides what
+   crystallizes (this is a load-bearing change in its own right, not a
+   recognizer-specific concern), AND
+2. **Extend the promotion path for recognizers as content type**
+   (recognizer-specific measurements per the section below).
+
+Treating (1) as "already in place" is the v1 overclaim this revision
+corrects. The recognizer-storage ADR may legitimately decide to scope (1)
+into a sibling ADR — but it cannot assume (1) is already done.
+
+### What the substrate does not yet specify (independent of liveness)
 
 - **Recognizers as content type.** ADR-0006/0014 were written for field
   regions excited by injection pressure. A derived recognizer is a typed
-  pattern, not a field region. The mapping is open.
-- **Drop-off / deprecation.** Promotion to vault is one-directional. The
-  substrate has no policy for *removing* crystallized content that has
-  been at E0 long enough to be deemed deprecated.
+  pattern, not a field region. The mapping is open whether or not the
+  promotion path is wired.
+- **Drop-off / deprecation.** Promotion (when implemented) is
+  one-directional. The substrate has no policy for *removing* crystallized
+  content that has been at E0 long enough to be deemed deprecated.
 
-These two gaps are the load-bearing unknowns this scope frames.
+These two gaps plus the wiring debt are the load-bearing unknowns this
+scope frames.
 
 ---
 
-## The runtime principle this scope assumes
+## Prerequisite: forever-running runtime
 
 **Forever-running engine, with reboot as a recovery event, not a
 control-flow boundary.** Modern computers reboot occasionally; that does
@@ -69,7 +90,21 @@ as architectural primitives. The engine's capability state is meant to
 accumulate over its lifetime and survive reboot without being rebuilt from
 scratch.
 
-Operational consequences for storage:
+**Honest status of this prerequisite in the current codebase.**
+CORE today is session-bounded: `core chat` is a CLI invocation; each call
+builds a fresh `ChatRuntime` instance (`chat/runtime.py`); packs and
+teaching corpora are loaded fresh per invocation; vault is on-disk and
+persists across invocations but is reloaded each time. There is no
+long-lived process. The forever-running runtime is **the destination
+architecture**, not a current property — and it is its own scope, not
+something the recognizer-storage ADR can or should land alone.
+
+Naming it as a prerequisite (not an assumption) means: the
+recognizer-storage ADR is gated on the runtime-model scope existing and
+committing to forever-running. If that scope lands later or commits
+differently, this scope's framing has to be revisited.
+
+**Operational consequences for storage** (assuming the prerequisite holds):
 
 - Anything cheap to rebuild from primitives MAY be in-memory only; reboot
   cost is bounded.
@@ -105,6 +140,17 @@ participate, the recognizer-specific analogs of each must be defined.
 
 **Natural map:** a `recognize()` call that returns an admission outcome
 raises the recognizer's energy class; refusals do not.
+
+**Framing note — temporal direction.** Field-region excitation in
+ADR-0006 is driven by *inputs the region receives* (injection pressure).
+The "admission raises energy" framing above treats *outputs the
+recognizer produces* as the excitation signal — opposite temporal
+direction. The spike should validate this is the right map: if
+recognizer-as-input-consumer ("the recognizer was applied to this
+input") is the better analog of "the region received injection," then
+attempted-application is the natural metric, not admission. Both
+candidates below; the framing direction is itself one of the open
+questions.
 
 **Open question:** does *attempted* application (regardless of outcome)
 count as excitation, or only admission? Attempted-counts model favors
@@ -155,23 +201,69 @@ The existing substrate promotes to vault but does not deprecate out of it.
 A forever-running learning system needs drop-off, or it accumulates
 unbounded crystallized state.
 
-**Proposed shape** (not committed):
+### Cross-reference to existing HITL machinery
+
+The project already has a HITL ratification path for teaching artifacts:
+
+- **ADR-0057** (teaching-chain proposal + review + replay-equivalence
+  gate) establishes the shape: engine proposes → automated gate
+  (replay-equivalence) → operator review → ratified-or-rejected →
+  append-only proposal log.
+- **`teaching/store.py`** implements `PackMutationProposal` and
+  `TeachingStore` for the proposal-and-storage half.
+- **`teaching/review.py`** implements `ReviewOutcome` (`ACCEPTED` /
+  `REJECTED_IDENTITY` / `REJECTED_EMPTY`) and `review_correction()` for
+  the review half.
+- **ADR-0055 / ADR-0056** (inter-session memory + contemplation) supply
+  the proposal-generation half from the discovery side.
+
+Drop-off should **reuse this machinery wherever the shape fits**, not
+invent a parallel review path. The shape that fits:
+
+- **Proposal generation:** new — recency-driven (engine notices a
+  crystallized recognizer that hasn't been excited for N turns), not
+  correction-driven. A `DeprecationCandidate` analogous to
+  `PackMutationProposal` but flowing in the deletion direction.
+- **Automated gate:** new — *not* replay-equivalence (deletion is not a
+  surface change in the same way). Candidate gates: "zero admissions on
+  any held-out corpus we still have," "no recognizer-composition
+  references from active recognizers." The drop-off ADR specifies.
+- **Operator review:** **reuse** — extend `ReviewOutcome` enum with
+  `ACCEPTED_FOR_DELETION` (or a parallel `DeprecationReviewOutcome` enum
+  if mixing creates ambiguity), reuse `review_*` plumbing where the
+  signatures match.
+- **Append-only log:** **reuse** — the same append-only discipline
+  ADR-0057 establishes for proposals applies to deprecation decisions.
+
+The drop-off ADR's load-bearing originality is the *trigger* (recency)
+and the *gate* (not replay-equivalence). The *review-and-log* half is a
+small extension to existing machinery, not a parallel path.
+
+### Proposed shape (not committed)
 
 1. Crystallized recognizers carry a recency telemetry field (last
    excitation timestamp + cumulative excitation count).
 2. A `DeprecationPolicy` analog of `VaultPromotionPolicy` evaluates
    crystallized entries against a deprecation threshold (e.g., zero
    excitations for N turns AND zero admissions for M turns).
-3. Deprecation candidates surface to a HITL review queue; deletion only
-   occurs after HITL ratification.
+3. Deprecation candidates surface as `DeprecationCandidate` proposals
+   into the existing teaching-review machinery (extended where needed).
 4. Once HITL ratifies deletion, the entry is removed from the persistence
-   layer.
+   layer and the decision is recorded in the append-only log.
 
 **Non-negotiable:** HITL is the narrow entrypoint, never bypassed. The
 engine MAY propose deletion. The engine MAY NOT delete autonomously.
 
-This extension is sized for its own ADR (parallel to ADR-0014). The
-storage scope names it but does not specify it.
+**HITL latency as load-bearing constraint.** In a forever-running engine
+the operator is not always available. The drop-off ADR must specify what
+happens when deprecation candidates accumulate faster than HITL can
+review them: a queue cap, a rate limit on proposal generation, an
+operator alert, or a no-op (let the queue grow). This is more than
+backpressure plumbing — it is a real constraint on whether the system
+can self-regulate memory growth without an operator in the loop.
+
+This extension is sized for its own ADR (parallel to ADR-0014, building
+on ADR-0057). The storage scope names it but does not specify it.
 
 ---
 
@@ -195,6 +287,44 @@ storage scope names it but does not specify it.
   only. The hot/cold distinction is a *storage* property, not a *match*
   property; both hot and cold paths return byte-identical structural
   matches.
+
+---
+
+## Substrate-resident destination — sketch (illustrative, not committed)
+
+The scope names substrate-residency (Mechanism C-class) as the
+destination once text-embedding scope lands. To keep that destination
+honest rather than an IOU, a one-paragraph sketch of what it could
+plausibly look like:
+
+A substrate-resident recognizer is a structural feature of Engine A
+itself — not a stored pattern that the engine *consults*, but an
+algebraic operator the engine *is*. Two non-exclusive candidates worth
+spike-testing once text-embedding exists:
+
+- **Recognizer as versor.** Anti-unification produces a versor `V_R`
+  whose sandwich application `V_R · F · reverse(V_R)` on a field state
+  `F` derived from text returns a state whose grade/null-cone
+  characteristics indicate admission. Refusal is failure of versor
+  closure on the input region. Lookup is geometric application, not
+  table search.
+- **Recognizer as null-cone region.** The recognizer defines a region
+  in the null cone; admission is exact intersection of the input
+  region with the recognizer region (per ADR-0006's exact-CGA
+  discipline, no approximate hull). Hot vs. cold becomes a property of
+  *which regions are currently materialized* in the runtime manifold
+  versus serialized to vault for re-thaw.
+
+Both shapes preserve byte-identical replay, both admit exact match (no
+approximate predicates), both compose via existing CGA primitives. The
+sketch is illustrative; the actual ADR for substrate-residency will live
+downstream of text-embedding scope and will revise this gesture against
+whatever embedding semantics actually land.
+
+The point of including the sketch in *this* scope is to prevent
+"substrate-resident" from becoming a forever-deferred destination with
+no shape. Naming a shape — even tentatively — keeps the destination
+honest.
 
 ---
 
@@ -237,9 +367,13 @@ The recognizer-storage layer must preserve:
   candidate definitions survives spike measurement, recognizers cannot
   cleanly join the existing promotion lattice and need a parallel one.
   Surface honestly; do not paper over.
-- **Cold-path latency.** Reading a crystallized recognizer from disk on
-  re-thaw may be slow enough to matter under load. Measure before
-  optimizing.
+- **Cold-path latency (general vault concern, not recognizer-specific).**
+  Reading a crystallized artifact from disk on re-thaw inherits whatever
+  performance characteristics current exact-CGA vault recall already
+  has. Recognizers do not introduce a new latency class — they inherit
+  the existing one. Surface here only because if vault recall is slow
+  enough to matter for *content*, it will matter equally for
+  *recognizers*. Measure once; the measurement applies to both.
 - **HITL queue backpressure.** If recognizers crystallize faster than
   HITL can ratify deprecation, the registry grows unbounded. The drop-off
   ADR must specify a backpressure policy (queue cap? rate limit?
@@ -273,13 +407,21 @@ The recognizer-storage layer must preserve:
 
 ## Summary
 
-The recognizer-storage question dissolves once ADR-0006 and ADR-0014 are
-in view. Recognizers are a new content type in the existing thermodynamic
-lattice, subject to the existing excitation / cooling / coherence-settling
-/ promotion / re-thaw dynamics. Three recognizer-specific measurements
-need definition (excitation counting, coherence residual, promotion
-criteria). One genuinely new extension — HITL-gated drop-off — sits in a
-sibling ADR. Substrate-resident form remains the named destination.
+The recognizer-storage question reframes once ADR-0006 and ADR-0014 are
+in view. Recognizers are a new content type that should participate in
+the existing thermodynamic lattice — but with the honest caveat that
+only the *energy half* of that lattice is live today; the
+*promotion-to-vault gate* is spec-in-code that nothing currently calls.
 
-The scope's commitment is to **the question reframed against the existing
-substrate**. Answers belong to the spike and the ADR that follows.
+The recognizer-storage ADR therefore has to deliver three things, not
+one: wire the dormant promotion path, define the three recognizer-
+specific measurements (excitation counting, coherence residual,
+promotion criteria), and name the HITL-gated drop-off extension as a
+sibling ADR that reuses ADR-0057's review machinery rather than
+inventing a parallel one. Substrate-residency (sketched, not committed)
+is the destination once text-embedding scope lands. Forever-running
+runtime is a *prerequisite* (its own scope), not a current property.
+
+The scope's commitment is to **the question reframed against the
+existing substrate, with the substrate's actual liveness honestly
+audited**. Answers belong to the spike and the ADR that follows.
