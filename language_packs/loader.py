@@ -4,6 +4,8 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from core.epistemic_state import EpistemicState
+
 # Dataclass definitions as required by the contract
 @dataclass(frozen=True, slots=True)
 class UnitEntry:
@@ -14,6 +16,7 @@ class UnitEntry:
     dimension: str
     is_canonical_for_dimension: bool
     provenance_ids: list[str]
+    epistemic_state: str = EpistemicState.DECODED.value
 
 @dataclass(frozen=True, slots=True)
 class ContainerEntry:
@@ -112,7 +115,8 @@ def _ensure_loaded() -> None:
             symbol=entry.get("symbol"),
             dimension=entry["dimension"],
             is_canonical_for_dimension=is_canon,
-            provenance_ids=list(entry.get("provenance_ids", []))
+            provenance_ids=list(entry.get("provenance_ids", [])),
+            epistemic_state=EpistemicState.DECODED.value,
         )
         _UNITS_MAP[surface] = ue
         _UNITS_MAP[lemma] = ue
@@ -138,10 +142,38 @@ def _ensure_loaded() -> None:
     _LOADED = True
 
 
+def _inferred_unit_entry(
+    *,
+    surface: str,
+    singular: str,
+    plural: str,
+    symbol: str | None,
+    dimension: str,
+    is_canonical_for_dimension: bool,
+    provenance_ids: list[str],
+) -> UnitEntry:
+    return UnitEntry(
+        surface=surface,
+        singular=singular,
+        plural=plural,
+        symbol=symbol,
+        dimension=dimension,
+        is_canonical_for_dimension=is_canonical_for_dimension,
+        provenance_ids=provenance_ids,
+        epistemic_state=EpistemicState.INFERRED.value,
+    )
+
+
 # Public API functions
 
 def lookup_unit(token: str) -> UnitEntry | None:
-    """Look up unit by singular, plural, symbol surface, or dynamic composition."""
+    """Look up unit by singular, plural, symbol surface, or dynamic composition.
+
+    Curated lexicon hits are tagged ``DECODED``.  Dynamically composed
+    units (``per``, ``square``, ``cubic``) are tagged ``INFERRED``:
+    derived from decoded primitives by ratified deterministic rules, but
+    not themselves curated lexical entries.
+    """
     _ensure_loaded()
     token_clean = token.strip().lower()
 
@@ -165,7 +197,7 @@ def lookup_unit(token: str) -> UnitEntry | None:
                         singular = f"{left_unit.singular} per {right_unit.singular}"
                         plural = f"{left_unit.plural} per {right_unit.singular}"
                         is_canon = (left_unit.singular == "dollar" and right_unit.singular == "hour")
-                        return UnitEntry(
+                        return _inferred_unit_entry(
                             surface=token,
                             singular=singular,
                             plural=plural,
@@ -179,7 +211,7 @@ def lookup_unit(token: str) -> UnitEntry | None:
                         singular = f"{left_unit.singular} per {r_sing}"
                         plural = f"{left_unit.plural} per {r_sing}"
                         is_canon = (left_unit.singular == "dollar" and r_sing == "item")
-                        return UnitEntry(
+                        return _inferred_unit_entry(
                             surface=token,
                             singular=singular,
                             plural=plural,
@@ -194,7 +226,7 @@ def lookup_unit(token: str) -> UnitEntry | None:
                     singular = f"{left_unit.singular} per {right_unit.singular}"
                     plural = f"{left_unit.plural} per {right_unit.singular}"
                     is_canon = (left_unit.singular == "mile" and right_unit.singular == "hour")
-                    return UnitEntry(
+                    return _inferred_unit_entry(
                         surface=token,
                         singular=singular,
                         plural=plural,
@@ -209,7 +241,7 @@ def lookup_unit(token: str) -> UnitEntry | None:
                     singular = f"{left_unit.singular} per {right_unit.singular}"
                     plural = f"{left_unit.plural} per {right_unit.singular}"
                     is_canon = (left_unit.singular == "pound" and right_unit.surface == "cubic foot")
-                    return UnitEntry(
+                    return _inferred_unit_entry(
                         surface=token,
                         singular=singular,
                         plural=plural,
@@ -227,7 +259,7 @@ def lookup_unit(token: str) -> UnitEntry | None:
             singular = f"square {sub_unit.singular}"
             plural = f"square {sub_unit.plural}"
             is_canon = (sub_unit.singular == "foot")
-            return UnitEntry(
+            return _inferred_unit_entry(
                 surface=token,
                 singular=singular,
                 plural=plural,
@@ -244,7 +276,7 @@ def lookup_unit(token: str) -> UnitEntry | None:
         if sub_unit and sub_unit.dimension == "length":
             singular = f"cubic {sub_unit.singular}"
             plural = f"cubic {sub_unit.plural}"
-            return UnitEntry(
+            return _inferred_unit_entry(
                 surface=token,
                 singular=singular,
                 plural=plural,
