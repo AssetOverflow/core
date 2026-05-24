@@ -21,6 +21,7 @@ from recognition.carrier import EpistemicGraph
 from teaching.correction import CorrectionCandidate
 from teaching.review import ReviewedTeachingExample
 from teaching.store import PackMutationProposal
+from chat.dispatch_trace import DispatchTrace
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,6 +108,11 @@ class CognitiveTurnResult:
     # Non-None only when recognition admitted (state == EVIDENCED).
     # NOT folded into trace_hash in Phase 1 (observability only).
     epistemic_graph: EpistemicGraph | None = None
+
+    # --- grounding dispatcher trace (ADR-0142) ---
+    # None when no dispatch trace is collected or on pre-dispatch-trace turns.
+    # NOT folded into trace_hash (observability only).
+    dispatch_trace: DispatchTrace | None = None
 
     # --- compound intent observability (ADR-0089 Phase C1) ---
     # Finding 4 (audit 2026-05-20).  ``classify_compound_intent`` returns
