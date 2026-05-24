@@ -1,7 +1,8 @@
 """ADR-0119.3 — GSM8K math eval lane runner.
 
 Composes the Phases 1-4 pipeline (parser → solver → verifier → realizer)
-into a per-case scoring decision: ``correct`` / ``wrong`` / ``refused``.
+into a per-case scoring decision: ``correct`` / ``wrong`` / ``refused`` /
+``decoded_unarticulated``.
 
 Outcome categorization (ADR-0114a Obligation #4 — the load-bearing
 "refusal is first-class; misparse rate zero" discipline):
@@ -11,12 +12,15 @@ Outcome categorization (ADR-0114a Obligation #4 — the load-bearing
 | ``parse_problem(text)`` raised ``ParseError`` | refused | typed parser error |
 | ``solve(graph)`` raised ``SolveError`` | refused | typed solver error |
 | ``verify(graph, trace)`` returned ``passed=False`` | wrong | verifier reason |
+| ``realize(graph.initial_state, trace)`` raised ``RealizerError`` after verifier pass | decoded_unarticulated | typed realizer error |
 | Everything succeeds AND ``trace.answer_value == expected_answer`` AND ``trace.answer_unit == expected_unit`` | correct | empty |
 | Everything succeeds BUT answer or unit differs | wrong | "answer/unit mismatch" |
 
 **`wrong == 0` is the gate** — ADR-0114a Obligation #4 requires CORE
 to refuse rather than confabulate. A nonzero ``wrong`` count
-invalidates the lane regardless of ``correct`` rate.
+invalidates the lane regardless of ``correct`` rate. A verified trace
+whose surface realization fails is not a wrong answer; it is counted as
+``decoded_unarticulated``.
 
 The runner is pure / deterministic: same case set → same
 :class:`LaneReport.canonical_bytes()`.
@@ -36,13 +40,15 @@ from generate.math_realizer import RealizerError, realize
 from generate.math_solver import SolveError, solve
 from generate.math_verifier import verify
 
+DECODED_UNARTICULATED_OUTCOME = "decoded_unarticulated"
+
 
 @dataclass(frozen=True, slots=True)
 class CaseOutcome:
     """Per-case scoring decision with full audit trail."""
 
     case_id: str
-    outcome: str  # "correct" | "wrong" | "refused"
+    outcome: str  # "correct" | "wrong" | "refused" | "decoded_unarticulated"
     reason: str
     expected_answer: float
     expected_unit: str
@@ -80,6 +86,29 @@ class LaneReport:
         """Deterministic JSON for hashing/byte-equality comparison."""
         payload = {"metrics": self.metrics, "case_details": self.case_details}
         return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def _decoded_unarticulated_outcome(
+    *,
+    case_id: str,
+    reason: str,
+    expected_answer: float,
+    expected_unit: str,
+    actual_answer: float,
+    actual_unit: str,
+    trace_hash: str,
+) -> CaseOutcome:
+    return CaseOutcome(
+        case_id=case_id,
+        outcome=DECODED_UNARTICULATED_OUTCOME,
+        reason=reason,
+        expected_answer=expected_answer,
+        expected_unit=expected_unit,
+        actual_answer=actual_answer,
+        actual_unit=actual_unit,
+        trace_hash=trace_hash,
+        realized_prose=None,
+    )
 
 
 def _score_one(case: dict[str, Any]) -> CaseOutcome:
@@ -137,22 +166,20 @@ def _score_one(case: dict[str, Any]) -> CaseOutcome:
             realized_prose=None,
         )
 
-    # Stage 4 — realize (failures here are treated as wrong, not refused,
-    # because the trace already verified)
+    # Stage 4 — realize. A failure here happens after replay verification,
+    # so the answer remains DECODED; only the articulation surface failed.
     try:
         realized = realize(graph.initial_state, trace)
         prose = realized.as_prose()
     except RealizerError as exc:
-        return CaseOutcome(
+        return _decoded_unarticulated_outcome(
             case_id=case_id,
-            outcome="wrong",
             reason=f"realizer: {exc}",
             expected_answer=expected_answer,
             expected_unit=expected_unit,
             actual_answer=trace.answer_value,
             actual_unit=trace.answer_unit,
             trace_hash=trace_hash,
-            realized_prose=None,
         )
 
     # Stage 5 — compare against expected.
@@ -281,21 +308,20 @@ def _score_one_candidate_graph(case: dict[str, Any]) -> CaseOutcome:
             realized_prose=None,
         )
 
-    # Stage 4 — realize.
+    # Stage 4 — realize. A failure here happens after replay verification,
+    # so the answer remains DECODED; only the articulation surface failed.
     try:
         realized = realize(graph.initial_state, trace)
         prose = realized.as_prose()
     except RealizerError as exc:
-        return CaseOutcome(
+        return _decoded_unarticulated_outcome(
             case_id=case_id,
-            outcome="wrong",
             reason=f"realizer: {exc}",
             expected_answer=expected_answer,
             expected_unit=expected_unit,
             actual_answer=trace.answer_value,
             actual_unit=trace.answer_unit,
             trace_hash=trace_hash,
-            realized_prose=None,
         )
 
     # Stage 5 — expected-answer comparison (same logic as _score_one).
@@ -355,15 +381,17 @@ def run_lane(
     two calls with the same input list.
 
     Aggregate metrics:
-        cases_total       int
-        correct           int
-        wrong             int       (gate: must == 0)
-        refused           int
-        correct_rate      float    = correct / total
-        wrong_rate        float    = wrong / total
-        refused_rate      float    = refused / total
-        wrong_count_is_zero bool   = wrong == 0
-        overall_pass      bool     = wrong == 0 AND correct + refused == total
+        cases_total             int
+        correct                 int
+        wrong                   int     (gate: must == 0)
+        refused                 int
+        decoded_unarticulated   int
+        correct_rate            float   = correct / total
+        wrong_rate              float   = wrong / total
+        refused_rate            float   = refused / total
+        decoded_unarticulated_rate float = decoded_unarticulated / total
+        wrong_count_is_zero     bool    = wrong == 0
+        overall_pass            bool    = wrong == 0 AND correct + refused + decoded_unarticulated == total
     """
     outcomes = [_score_one(c) for c in cases]
 
@@ -371,18 +399,27 @@ def run_lane(
     correct = sum(1 for o in outcomes if o.outcome == "correct")
     wrong = sum(1 for o in outcomes if o.outcome == "wrong")
     refused = sum(1 for o in outcomes if o.outcome == "refused")
+    decoded_unarticulated = sum(
+        1 for o in outcomes if o.outcome == DECODED_UNARTICULATED_OUTCOME
+    )
 
     wrong_count_is_zero = wrong == 0
-    overall_pass = wrong_count_is_zero and (correct + refused == total)
+    overall_pass = wrong_count_is_zero and (
+        correct + refused + decoded_unarticulated == total
+    )
 
     metrics = {
         "cases_total": total,
         "correct": correct,
         "wrong": wrong,
         "refused": refused,
+        "decoded_unarticulated": decoded_unarticulated,
         "correct_rate": (correct / total) if total else 0.0,
         "wrong_rate": (wrong / total) if total else 0.0,
         "refused_rate": (refused / total) if total else 0.0,
+        "decoded_unarticulated_rate": (
+            decoded_unarticulated / total
+        ) if total else 0.0,
         "wrong_count_is_zero": wrong_count_is_zero,
         "overall_pass": overall_pass,
     }
