@@ -51,23 +51,14 @@ audit_passed_claims:
     evidence_revision: "adr-0124:reviewed:2026-05-22"
     signed_by: shay-j
     claim_digest: "17e24436b6875b89f6d1a5c2992557413c7ef456250f549d463159f54438c407"
-
-# Reviewer-signed math-expert promotion claims (ADR-0120 / ADR-0131 /
-# wired by the ADR-0120 math-expert wire-up PR).
-#
-# Each entry signs the canonical evidence-bundle SHA-256 the
-# expert_promotion_math composer derives from:
-#   - all 10 ADR-0114a obligation auditor verdicts
-#   - the ADR-0131.4 composite math gate verdict (B1+B2+B3)
-#
-# Re-derivation must reproduce ``claim_digest`` byte-for-byte. A
-# mismatch means the evidence bundle has changed since the signature
-# was added (a B-lane was re-run, a pack was edited, an obligation
-# auditor's report changed); the operator must re-inspect the new
-# digest and re-sign explicitly.
-#
-# A populated entry here is what flips
-# ``MathExpertPromotionVerdict.promote_admitted`` to True. Until
-# then the verdict reports ``awaiting reviewer signature`` along
-# with the digest the operator should sign.
-math_expert_claims: []
+math_expert_claims:
+    - domain_id: mathematics_logic
+      evidence_lanes:
+        - math_symbolic_equivalence/v1 (public)
+        - math_symbolic_equivalence/v1 (sealed)
+        - math_teaching_corpus/v1
+        - math_bounded_grammar/v1
+      evidence_revision: "adr-0120-math:reviewed:2026-05-23"
+      signed_by: shay-j
+      claim_digest: "94149794e8c19896851e062cf1f921cfa9ba04770b674bc3b4c33023f7c7331b"
+      

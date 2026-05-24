@@ -34,7 +34,17 @@ from language_packs.domain_contract import validate_domain_contract_pack
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _CHAINS_PER_OPERATOR_DOMAIN = 8
 _TARGET_INTENT_SHAPES = ("cause", "verification", "comparison", "procedure", "correction")
-_EXPERT_DOMAIN_STATUSES = ("blocked", "seeded", "grounded", "reasoning-capable", "audit-passed")
+_EXPERT_DOMAIN_STATUSES = (
+    "blocked", "seeded", "grounded", "reasoning-capable", "audit-passed", "expert",
+)
+
+# ADR-0120 reserves the ``expert`` tier; the predicate computation
+# is per-domain because each domain ratifies its own composer
+# (ADR-0131.4 → ADR-0120-math for ``mathematics_logic``). Adding a
+# new expert-tier domain means wiring its own composer entry here.
+_EXPERT_COMPOSERS: dict[str, str] = {
+    "mathematics_logic": "core.capability.expert_promotion_math",
+}
 _DOMAIN_FOUNDATION_GAPS: dict[str, tuple[str, ...]] = {
     "hebrew_greek_textual_reasoning": (
         "gap:grc_he_glosses_absent",
@@ -449,7 +459,41 @@ def ledger_report() -> dict[str, Any]:
         )
         audit_passed = verdict.passed
         audit_passed_reason = verdict.reason
-        if audit_passed:
+        # ADR-0120 expert tier: per-domain composer (mathematics_logic
+        # via ADR-0120-math). Only evaluated when audit-passed already
+        # holds — expert is a strict super-tier of audit-passed.
+        expert = False
+        expert_reason = "audit-passed predicate must hold first"
+        if audit_passed and domain in _EXPERT_COMPOSERS:
+            try:
+                from importlib import import_module
+                module = import_module(_EXPERT_COMPOSERS[domain])
+                evaluator = getattr(module, "evaluate_math_expert_promotion", None)
+                if evaluator is not None:
+                    expert_verdict = evaluator()
+                    expert = bool(getattr(expert_verdict, "promote_admitted", False))
+                    expert_reason = (
+                        "ADR-0120-math composer admitted"
+                        if expert
+                        else getattr(expert_verdict, "refusal_reason", "composer refused")
+                    )
+                else:
+                    expert_reason = (
+                        f"composer module {_EXPERT_COMPOSERS[domain]!r} "
+                        f"missing evaluate_math_expert_promotion()"
+                    )
+            except Exception as exc:  # noqa: BLE001 — fail closed
+                expert_reason = (
+                    f"composer raised {type(exc).__name__}: {exc}"
+                )
+        elif audit_passed:
+            expert_reason = (
+                f"no expert composer wired for domain {domain!r}"
+            )
+
+        if expert:
+            status = "expert"
+        elif audit_passed:
             status = "audit-passed"
         elif reasoning_capable:
             status = "reasoning-capable"
@@ -491,8 +535,10 @@ def ledger_report() -> dict[str, Any]:
                     "grounded": grounded,
                     "reasoning_capable": reasoning_capable,
                     "audit_passed": audit_passed,
+                    "expert": expert,
                 },
                 "audit_passed_reason": audit_passed_reason,
+                "expert_reason": expert_reason,
                 "known_gaps": domain_gaps,
                 "open_gaps": open_gaps,
                 "blocked_lift": blocked_lift,

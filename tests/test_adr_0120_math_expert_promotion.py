@@ -159,11 +159,11 @@ def test_obligation_9_refuses_when_a_lane_is_invalid_json(tmp_path: Path) -> Non
 
 
 def test_composer_runs_on_current_main_with_all_obligations_passing() -> None:
-    """The load-bearing snapshot. As of this PR every obligation
-    auditor reports pass + the composite gate reports pass, so
-    technical_pass is True. The reviewer signature is intentionally
-    absent — promote_admitted is False with refusal pointing the
-    operator at the digest to sign.
+    """The load-bearing snapshot. Updated by the ledger-flip PR after
+    the reviewer added the signed entry to ``docs/reviewers.yaml`` —
+    every obligation auditor passes, the composite gate passes,
+    technical_pass is True, the reviewer signature is present and
+    matches the computed digest, so promote_admitted is True.
     """
     v = evaluate_math_expert_promotion()
     assert v.all_obligations_passed is True, (
@@ -172,10 +172,11 @@ def test_composer_runs_on_current_main_with_all_obligations_passing() -> None:
     )
     assert v.composite_gate_passed is True
     assert v.technical_pass is True
-    assert v.reviewer_signature is None
-    assert v.reviewer_signature_matches is False
-    assert v.promote_admitted is False
-    assert "awaiting reviewer signature" in v.refusal_reason
+    assert v.reviewer_signature is not None
+    assert v.reviewer_signature.get("signed_by") == "shay-j"
+    assert v.reviewer_signature_matches is True
+    assert v.promote_admitted is True
+    assert v.refusal_reason == ""
     assert v.claim_digest  # non-empty
     assert len(v.claim_digest) == 64  # SHA-256 hex
 
