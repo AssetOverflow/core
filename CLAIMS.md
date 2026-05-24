@@ -21,7 +21,7 @@ status predicate evaluates to `reasoning-capable` with no open gaps.
 | Domain | Status | ADR | Packs | Open gaps |
 | --- | --- | --- | --- | --- |
 | `philosophy_theology` | reasoning-capable | ADR-0085 | 2 | 0 |
-| `mathematics_logic` | audit-passed | ADR-0097 | 1 | 0 |
+| `mathematics_logic` | expert | ADR-0097 | 1 | 0 |
 | `physics` | audit-passed | ADR-0100 | 1 | 0 |
 | `systems_software` | audit-passed | ADR-0101 | 1 | 0 |
 | `hebrew_greek_textual_reasoning` | reasoning-capable | ADR-0102 | 4 | 0 |
@@ -35,11 +35,11 @@ is a CI failure (`.github/workflows/lane-shas.yml`).
 | ADR | Lane | Purpose | Report path | Pinned SHA-256 |
 | --- | --- | --- | --- | --- |
 | ADR-0092 | `reviewer_registry` | Reviewer registry schema validates + bootstrap entry self-seals | `evals/reviewer_registry/results/v1_dev.json` | `681a2aab5aa4ffd58cd837ce5673c8b2a9545b570117aec3c02726a12f6876e6` |
-| ADR-0093 | `domain_contract_validation` | All ratified packs satisfy the 9 ADR-0091 contract predicates | `evals/domain_contract_validation/results/v1_dev.json` | `f9c06cdeea8fb36a0d3c320007618c3afc92d67702ef31bd36ebd9ae9ced473f` |
+| ADR-0093 | `domain_contract_validation` | All ratified packs satisfy the 9 ADR-0091 contract predicates | `evals/domain_contract_validation/results/v1_dev.json` | `98ace04e3f02bbc5a8ad655bb6593c3f1ee64cb67014f1122fe6c3c85f48d22f` |
 | ADR-0095 | `miner_loop_closure` | Miner-sourced proposals route through single reviewed teaching path | `evals/miner_loop_closure/results/v1_dev.json` | `9f071733abe7dcacf759f928548ce738fb639af3fd6e4c621a651b306d7e77ce` |
 | ADR-0096 | `fabrication_control_summary` | Phantom endpoints / cross-pack non-bridges / sibling collapses refuse | `evals/fabrication_control/results/v1_summary.json` | `01e1b6b711141f2b4a14551d7df3ea482d8d6dd7b364a25c509f4f8d08cda8a8` |
-| ADR-0098 | `demo_composition` | Demos compose from shipped modules; no parallel mechanism | `evals/demo_composition/results/v1_dev.json` | `27d838241bf3ed9e15d0e918ec6d89a823494d7e17c2dab9777825af7188f20f` |
-| ADR-0099 | `public_demo` | Public showcase runs deterministically under 30s; all claims supported | `evals/public_demo/results/v1_dev.json` | `4be6f47509435a24984713acfcebd88e61f4e1278096fa5dc88a09e8af2f87ba` |
+| ADR-0098 | `demo_composition` | Demos compose from shipped modules; no parallel mechanism | `evals/demo_composition/results/v1_dev.json` | `403be13bd666389bdf1caa1b97382753e531ad72686c5237f64a5e23bc702ac4` |
+| ADR-0099 | `public_demo` | Public showcase runs deterministically under 30s; all claims supported | `evals/public_demo/results/v1_dev.json` | `acd51d0c17948030aa2843309a3729c6f825959e2e0cbbc477e07de8269268a4` |
 | ADR-0104 | `curriculum_loop_closure` | Curriculum-sourced proposals route through single reviewed teaching path | `evals/curriculum_loop_closure/results/v1_dev.json` | `b46d56b2d209172cc3ffaf3776dc8dcfe55093f13587c5cb67372be6dfa23e8d` |
 
 ## Verification

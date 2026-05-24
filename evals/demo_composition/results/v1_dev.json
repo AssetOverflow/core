@@ -12,7 +12,7 @@
       "details": {
         "all_claims_supported_a": true,
         "all_claims_supported_b": true,
-        "sha256": "77bf07049871715787769478483f14e3aa5c222ecc4870856ebf51fb645ce74c"
+        "sha256": "47704bdfe7de8327d4434ae97874e4a1be528e35c58181a56e90902123269c3b"
       },
       "divergence": null,
       "passed": true
@@ -30,7 +30,7 @@
       "details": {
         "all_claims_supported_a": true,
         "all_claims_supported_b": true,
-        "sha256": "5cad2fe2014eb76dc71757796b0d13e1bdb062d07a5007f81a7e42ddeab98d7d"
+        "sha256": "deb3af8fab8f3ff9cf7468efd7a403b60c825a67b76a5c07ab95147f79bd2e9a"
       },
       "divergence": null,
       "passed": true
