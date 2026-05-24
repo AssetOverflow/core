@@ -342,7 +342,7 @@ def inject(tokens: list, vocab) -> FieldState:
     F = normalize_to_versor(H)
 
     cond = versor_condition(F)
-    if cond > 1e-5:
+    if cond > 1e-6:
         raise RuntimeError(
             f"Injection produced non-versor field: condition={cond:.2e}. "
             "Check holonomy_encode() and normalize_to_versor()."

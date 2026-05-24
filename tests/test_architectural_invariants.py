@@ -17,7 +17,7 @@ Claim index
 INV-01  Versor closure under sandwich product (algebraic closure)
 INV-02  normalize_to_versor is called at the gate only (never in construction paths)
 INV-02b unitize_versor is never called inside propagation, generation, or vault recall
-INV-03  versor_condition < 1e-5 after injection (gate post-condition)
+INV-03  versor_condition < 1e-6 after injection (gate post-condition)
 INV-04  versor_apply is algebraically closed (no normalization needed)
 INV-05  Holonomy encoding is deterministic (same input → same output)
 INV-06  Null-cone membership is preserved under versor_apply
@@ -335,13 +335,13 @@ class TestINV02bUnitizeNotInPropagation:
 
 
 # ===========================================================================
-# INV-03  Gate post-condition: versor_condition < 1e-5 after injection
+# INV-03  Gate post-condition: versor_condition < 1e-6 after injection
 # ===========================================================================
 
 class TestINV03GatePostCondition:
     """
     Claim: Every FieldState produced by ingest/gate.py satisfies
-    versor_condition(F) < 1e-5.
+    versor_condition(F) < 1e-6.
     """
 
     def test_single_token_injection(self):
@@ -353,7 +353,7 @@ class TestINV03GatePostCondition:
                 return v
 
         state = inject(["logos"], _Vocab())
-        assert versor_condition(state.F) < 1e-5
+        assert versor_condition(state.F) < 1e-6
 
     def test_multi_token_injection(self):
         class _Vocab:
@@ -365,7 +365,7 @@ class TestINV03GatePostCondition:
                 return v
 
         state = inject(["in", "the", "beginning"], _Vocab())
-        assert versor_condition(state.F) < 1e-5
+        assert versor_condition(state.F) < 1e-6
 
 
 # ===========================================================================
