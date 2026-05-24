@@ -1,0 +1,20 @@
+{"case_id": "S4-indef-canon-001", "category": "indefinite_article_canonical", "problem": "A school has 100 students. How many students do they have?", "expected_answer": 100.0}
+{"case_id": "S4-indef-canon-002", "category": "indefinite_article_canonical", "problem": "A factory has 50 workers. How many workers do they have?", "expected_answer": 50.0}
+{"case_id": "S4-indef-canon-003", "category": "indefinite_article_canonical", "problem": "A library has 200 books. How many books do they have?", "expected_answer": 200.0}
+{"case_id": "S4-indef-canon-004", "category": "indefinite_article_canonical", "problem": "A farm has 30 cows. How many cows do they have?", "expected_answer": 30.0}
+{"case_id": "S4-indef-subst-001", "category": "indefinite_article_substance", "problem": "A bin has 40 cans of soda. How many cans do they have?", "expected_answer": 40.0}
+{"case_id": "S4-indef-subst-002", "category": "indefinite_article_substance", "problem": "A shop has 25 bags of coffee. How many bags do they have?", "expected_answer": 25.0}
+{"case_id": "S4-indef-subst-003", "category": "indefinite_article_substance", "problem": "A store has 60 bottles of water. How many bottles do they have?", "expected_answer": 60.0}
+{"case_id": "S4-prep-canon-001", "category": "prep_prefix_canonical", "problem": "In a building, there are 100 ladies. How many ladies do they have in total?", "expected_answer": 100.0}
+{"case_id": "S4-prep-canon-002", "category": "prep_prefix_canonical", "problem": "In a gym, there are 30 students. How many students do they have in total?", "expected_answer": 30.0}
+{"case_id": "S4-prep-canon-003", "category": "prep_prefix_canonical", "problem": "In a warehouse, there are 200 boxes. How many boxes do they have in total?", "expected_answer": 200.0}
+{"case_id": "S4-prep-canon-004", "category": "prep_prefix_canonical", "problem": "In a room, there are 15 chairs. How many chairs do they have in total?", "expected_answer": 15.0}
+{"case_id": "S4-prep-ordinal-001", "category": "prep_prefix_ordinal_participial", "problem": "In a building, there are a hundred ladies on the first-floor studying. How many ladies do they have in total?", "expected_answer": 100.0}
+{"case_id": "S4-prep-ordinal-002", "category": "prep_prefix_ordinal_participial", "problem": "In a library, there are 50 books on the second-floor shelving. How many books do they have in total?", "expected_answer": 50.0}
+{"case_id": "S4-prep-ordinal-003", "category": "prep_prefix_ordinal_participial", "problem": "In a warehouse, there are 200 boxes on the first-floor stacking. How many boxes do they have in total?", "expected_answer": 200.0}
+{"case_id": "S4-ref-missing-unit-001", "category": "refusal_missing_unit", "problem": "A school has 100. How many students do they have?", "expected_answer": null}
+{"case_id": "S4-ref-missing-unit-002", "category": "refusal_missing_unit", "problem": "In a building, there are 50. How many ladies do they have?", "expected_answer": null}
+{"case_id": "S4-ref-indef-quant-001", "category": "refusal_indefinite_quantity", "problem": "A school has some students. How many students do they have?", "expected_answer": null}
+{"case_id": "S4-ref-indef-quant-002", "category": "refusal_indefinite_quantity", "problem": "In a building, there are several ladies. How many ladies do they have?", "expected_answer": null}
+{"case_id": "S4-reg-definite-001", "category": "refusal_definite_article_regression", "problem": "The school has 100 students. How many students do they have?", "expected_answer": 100.0}
+{"case_id": "S4-reg-definite-002", "category": "refusal_definite_article_regression", "problem": "The factory has 50 workers. How many workers do they have?", "expected_answer": 50.0}

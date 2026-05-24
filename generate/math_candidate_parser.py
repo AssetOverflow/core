@@ -217,6 +217,43 @@ _INITIAL_THERE_ARE_RE: Final[re.Pattern[str]] = re.compile(
     flags=re.IGNORECASE,
 )
 
+# ADR-0136.S.4 — Shape A: indefinite-article subject.
+# "A school has 100 students." / "A box has 12 apples of various colors."
+# Sibling to _INITIAL_HAS_RE; uses _ENTITY_INDEF (not _ENTITY) so the
+# widening is localised — _ENTITY itself is unchanged for all other paths.
+# Restricted to [Aa]\s+ (not "An") to avoid colliding with money-amount
+# or other shapes that may follow "an" as a numeral article.
+# Anchor: 'has' only (singular third-person; "A school have" is not
+# grammatical English).
+_INITIAL_HAS_INDEF_RE: Final[re.Pattern[str]] = re.compile(
+    r"^[Aa]\s+(?P<noun>\w+)\s+"
+    r"(?P<anchor>has)\s+"
+    rf"(?P<value>{_VALUE})"
+    r"(?:\s+(?:full|loose|empty|whole|broken|new|old|small|large|fresh|raw|flat))?"
+    r"(?:\s+(?P<unit>\w+))?"
+    r"(?:\s+(?:of|in|for|with)\s+.+)?"
+    r"\s*\.?$"
+)
+
+# ADR-0136.S.4 — Shape B: prepositional-prefix existential.
+# "In a building, there are a hundred ladies on the first-floor studying."
+# Sibling to _INITIAL_THERE_ARE_RE; prefix is "In a <place>" (not bare
+# "There are"). The optional article "a" before the value handles the
+# "a hundred" construction (article consumed, not captured). The
+# ordinal-floor qualifier and participial phrase are both optional and
+# discarded.
+_INITIAL_THERE_ARE_PREFIX_RE: Final[re.Pattern[str]] = re.compile(
+    r"^In\s+[Aa]\s+(?P<place>\w+),?\s+"
+    r"there\s+(?P<anchor>are|were|is|was)\s+"
+    r"(?:a\s+)?"
+    rf"(?P<value>{_VALUE})\s+"
+    r"(?P<unit>\w+)"
+    r"(?:\s+on\s+the\s+\w+(?:-floor)?)?"
+    r"(?:\s+\w+ing)?"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
+)
+
 # ADR-0131.G.3.1 — Axis 1: fraction-of-unit initial possession.
 # "Bob has 3/4 of a cup." — the fraction is the value; "of a/an <unit>"
 # carries the unit. The main _INITIAL_HAS_RE treats "of <NP>" as a
@@ -494,6 +531,9 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
     # ADR-0136.S.3 — compound initial-mutation: "Entity had N unit, but then verb M"
     out.extend(_init_mutation_candidates(sentence))
 
+    # ADR-0136.S.4 — Shape A: "A <noun> has N <unit>" indefinite-article subject.
+    out.extend(_init_has_indef_candidates(sentence))
+
     m2 = _INITIAL_THERE_ARE_RE.match(s)
     if m2 is not None:
         value_raw = m2.group("value")
@@ -533,6 +573,9 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
                     matched_entity_token=entity_token,
                 )
             )
+
+    # ADR-0136.S.4 — Shape B: "In a <place>, there are N <unit>" prefix existential.
+    out.extend(_init_there_are_prefix_candidates(sentence))
 
     return out
 
@@ -1653,6 +1696,105 @@ def _init_mutation_candidates(sentence: str) -> list[CandidateInitial]:
 
 def _init_mutation_admitted(sentence: str) -> list[CandidateInitial]:
     return _admit(_init_mutation_candidates(sentence))
+
+
+# ---------------------------------------------------------------------------
+# ADR-0136.S.4 — Novel initial-form extractors (Shape A + Shape B)
+# ---------------------------------------------------------------------------
+
+def _init_has_indef_candidates(sentence: str) -> list[CandidateInitial]:
+    """Shape A — indefinite-article subject: 'A school has 100 students.'
+
+    Sibling to the _INITIAL_HAS_RE block in extract_initial_candidates.
+    Entity is the bare noun (lowercased); the article 'A/a' is consumed
+    and discarded. Same value/unit resolution and money normalization as
+    the definite-subject path.
+    """
+    s = sentence.strip().rstrip(".")
+    m = _INITIAL_HAS_INDEF_RE.match(s)
+    if m is None:
+        return []
+    value_raw = m.group("value")
+    rv = _resolve_value(value_raw)
+    if rv is None:
+        return []
+    noun = m.group("noun").lower()
+    unit_raw = m.group("unit")
+    if rv.unit_override is not None:
+        resolved_unit: str = rv.unit_override
+    elif unit_raw is not None:
+        resolved_unit = _canonicalize_unit(unit_raw)
+    else:
+        return []
+    value, final_unit = _money_unit_normalization(rv.value, resolved_unit)
+    assert final_unit is not None
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=noun,
+                    quantity=Quantity(value=value, unit=final_unit),
+                ),
+                source_span=sentence,
+                matched_anchor=m.group("anchor"),
+                matched_value_token=value_raw,
+                matched_unit_token=unit_raw if unit_raw is not None else final_unit,
+                matched_entity_token=noun,
+            )
+        ]
+    except Exception:
+        return []
+
+
+def _init_there_are_prefix_candidates(sentence: str) -> list[CandidateInitial]:
+    """Shape B — prepositional-prefix existential: 'In a building, there are 100 ladies.'
+
+    Sibling to the _INITIAL_THERE_ARE_RE block in extract_initial_candidates.
+    Entity is the bare place noun (lowercased). The optional 'a <value>'
+    article (as in 'a hundred'), ordinal-floor qualifier, and participial
+    phrase are consumed without being captured. Same value/unit resolution
+    and money normalization as the standard there-are path.
+    """
+    s = sentence.strip().rstrip(".")
+    m = _INITIAL_THERE_ARE_PREFIX_RE.match(s)
+    if m is None:
+        return []
+    value_raw = m.group("value")
+    rv = _resolve_value(value_raw)
+    if rv is None:
+        return []
+    unit_raw = m.group("unit")
+    if rv.unit_override is not None:
+        unit_str: str = rv.unit_override
+    else:
+        unit_str = _canonicalize_unit(unit_raw)
+    v_norm, u_norm = _money_unit_normalization(rv.value, unit_str)
+    assert u_norm is not None
+    place = m.group("place").lower()
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=place,
+                    quantity=Quantity(value=v_norm, unit=u_norm),
+                ),
+                source_span=sentence,
+                matched_anchor=m.group("anchor"),
+                matched_value_token=value_raw,
+                matched_unit_token=unit_raw,
+                matched_entity_token=place,
+            )
+        ]
+    except Exception:
+        return []
+
+
+def _init_has_indef_admitted(sentence: str) -> list[CandidateInitial]:
+    return _admit(_init_has_indef_candidates(sentence))
+
+
+def _init_there_are_prefix_admitted(sentence: str) -> list[CandidateInitial]:
+    return _admit(_init_there_are_prefix_candidates(sentence))
 
 
 # ---------------------------------------------------------------------------
