@@ -94,6 +94,32 @@ def clearance_from_verdicts(verdicts: Any = None, *, safety_verdict: Any = None,
     return NormativeClearance.CLEARED
 
 
+def normative_detail_from_verdicts(verdicts: Any = None, *, safety_verdict: Any = None, ethics_verdict: Any = None) -> str:
+    """Return a sorted, comma-separated string of violated boundary/commitment IDs.
+
+    Non-empty only when normative clearance is VIOLATED or SUPPRESSED —
+    i.e. when at least one runtime-checkable boundary or commitment failed.
+    Returns "" when CLEARED or UNASSESSABLE so callers can test truthiness.
+    Uses the same duck-typing pattern as ``clearance_from_verdicts``.
+    """
+    if verdicts is not None:
+        safety_verdict = safety_verdict if safety_verdict is not None else getattr(verdicts, "safety_verdict", None)
+        ethics_verdict = ethics_verdict if ethics_verdict is not None else getattr(verdicts, "ethics_verdict", None)
+
+    ids: list[str] = []
+    for r in getattr(safety_verdict, "results", []):
+        if getattr(r, "runtime_checkable", False) and not getattr(r, "upheld", True):
+            bid = getattr(r, "boundary_id", None)
+            if bid:
+                ids.append(str(bid))
+    for r in getattr(ethics_verdict, "results", []):
+        if getattr(r, "runtime_checkable", False) and not getattr(r, "upheld", True):
+            cid = getattr(r, "commitment_id", None)
+            if cid:
+                ids.append(str(cid))
+    return ",".join(sorted(ids))
+
+
 def epistemic_state_for_grounding_source(source: str | None) -> EpistemicState:
     """Default runtime mapping for existing grounding-source labels."""
     normalized = (source or "none").strip().lower()
@@ -115,4 +141,5 @@ __all__ = [
     "coerce_epistemic_state",
     "coerce_normative_clearance",
     "epistemic_state_for_grounding_source",
+    "normative_detail_from_verdicts",
 ]
