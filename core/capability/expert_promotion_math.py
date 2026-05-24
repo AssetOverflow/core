@@ -48,6 +48,23 @@ from core.capability.perturbation_b3 import validate_perturbation_suite
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
+
+def _rel(path: Path) -> str:
+    """Return ``path`` as a POSIX string repo-root-relative.
+
+    The claim digest commits to evidence-pointer strings; making them
+    repo-relative keeps the digest stable across operator filesystems
+    (different worktree locations would otherwise produce different
+    digests for identical evidence). Falls back to the absolute POSIX
+    string if ``path`` is outside the repo root.
+    """
+    p = Path(path).resolve()
+    try:
+        return p.relative_to(_REPO_ROOT).as_posix()
+    except ValueError:
+        return p.as_posix()
+
+
 DEFAULT_REVIEWERS_YAML: Path = _REPO_ROOT / "docs" / "reviewers.yaml"
 
 # Evidence-bundle paths the digest commits to (in canonical order).
@@ -132,7 +149,7 @@ def _evaluate_obligation_1(b1_sealed_path: Path = DEFAULT_B1_SEALED) -> Obligati
     if not b1_sealed_path.exists():
         return ObligationVerdict(
             obligation_id="1", title="sealed holdout discipline",
-            passed=False, evidence_pointer=str(b1_sealed_path),
+            passed=False, evidence_pointer=_rel(b1_sealed_path),
             refusal_reason="sealed report missing",
         )
     report = json.loads(b1_sealed_path.read_text(encoding="utf-8"))
@@ -143,7 +160,7 @@ def _evaluate_obligation_1(b1_sealed_path: Path = DEFAULT_B1_SEALED) -> Obligati
     return ObligationVerdict(
         obligation_id="1", title="sealed holdout discipline",
         passed=passed,
-        evidence_pointer=str(b1_sealed_path),
+        evidence_pointer=_rel(b1_sealed_path),
         refusal_reason=(
             "" if passed
             else f"sealed report: wrong={wrong}, exit_passed={exit_crit.get('passed')}"
@@ -156,7 +173,7 @@ def _evaluate_obligation_2() -> ObligationVerdict:
     return ObligationVerdict(
         obligation_id="2", title="OOD surface variation ratio ≥ 0.95",
         passed=bool(r.obligation_2_passed),
-        evidence_pointer=str(_REPO_ROOT / "evals" / "obligation_2_ood_ratio"),
+        evidence_pointer=_rel(_REPO_ROOT / "evals" / "obligation_2_ood_ratio"),
         refusal_reason="" if r.obligation_2_passed else r.refusal_reason,
     )
 
@@ -169,7 +186,7 @@ def _evaluate_obligation_3(b_reports: tuple[Path, ...]) -> ObligationVerdict:
         if not path.exists():
             return ObligationVerdict(
                 obligation_id="3", title="replay-equal trace",
-                passed=False, evidence_pointer=str(path),
+                passed=False, evidence_pointer=_rel(path),
                 refusal_reason=f"B-lane report missing: {path}",
             )
         report = json.loads(path.read_text(encoding="utf-8"))
@@ -181,12 +198,12 @@ def _evaluate_obligation_3(b_reports: tuple[Path, ...]) -> ObligationVerdict:
     if missing:
         return ObligationVerdict(
             obligation_id="3", title="replay-equal trace",
-            passed=False, evidence_pointer=str(b_reports[0].parent),
+            passed=False, evidence_pointer=_rel(b_reports[0].parent),
             refusal_reason=f"{len(missing)} correct case(s) missing trace_hash; first: {missing[0]}",
         )
     return ObligationVerdict(
         obligation_id="3", title="replay-equal trace",
-        passed=True, evidence_pointer=str(b_reports[0].parent),
+        passed=True, evidence_pointer=_rel(b_reports[0].parent),
     )
 
 
@@ -196,7 +213,7 @@ def _evaluate_obligation_4(b_reports: tuple[Path, ...]) -> ObligationVerdict:
         if not path.exists():
             return ObligationVerdict(
                 obligation_id="4", title="typed refusal + wrong == 0",
-                passed=False, evidence_pointer=str(path),
+                passed=False, evidence_pointer=_rel(path),
                 refusal_reason=f"B-lane report missing: {path}",
             )
         report = json.loads(path.read_text(encoding="utf-8"))
@@ -209,12 +226,12 @@ def _evaluate_obligation_4(b_reports: tuple[Path, ...]) -> ObligationVerdict:
         if wrong is None or int(wrong) > 0:
             return ObligationVerdict(
                 obligation_id="4", title="typed refusal + wrong == 0",
-                passed=False, evidence_pointer=str(path),
+                passed=False, evidence_pointer=_rel(path),
                 refusal_reason=f"{path.name}: wrong={wrong}",
             )
     return ObligationVerdict(
         obligation_id="4", title="typed refusal + wrong == 0",
-        passed=True, evidence_pointer=str(b_reports[0].parent),
+        passed=True, evidence_pointer=_rel(b_reports[0].parent),
     )
 
 
@@ -231,7 +248,7 @@ def _evaluate_obligation_5() -> ObligationVerdict:
     return ObligationVerdict(
         obligation_id="5", title="reasoning-isolation perturbation suite",
         passed=bool(passed),
-        evidence_pointer=str(_REPO_ROOT / "evals" / "obligation_5_perturbation"),
+        evidence_pointer=_rel(_REPO_ROOT / "evals" / "obligation_5_perturbation"),
         refusal_reason="" if passed else getattr(r, "refusal_reason", "obligation_5 evaluator returned non-pass"),
     )
 
@@ -243,7 +260,7 @@ def _evaluate_obligation_6() -> ObligationVerdict:
     return ObligationVerdict(
         obligation_id="6", title="compositional-depth curve",
         passed=passed,
-        evidence_pointer=str(_REPO_ROOT / "evals" / "obligation_6_depth_curve"),
+        evidence_pointer=_rel(_REPO_ROOT / "evals" / "obligation_6_depth_curve"),
         refusal_reason="" if passed else r.refusal_reason,
     )
 
@@ -255,7 +272,7 @@ def _evaluate_obligation_7(frontier_dir: Path = DEFAULT_FRONTIER_DIR) -> Obligat
     if not frontier_dir.exists():
         return ObligationVerdict(
             obligation_id="7", title="frontier-baseline comparison",
-            passed=False, evidence_pointer=str(frontier_dir),
+            passed=False, evidence_pointer=_rel(frontier_dir),
             refusal_reason="frontier directory missing",
         )
     artifacts = sorted(
@@ -265,12 +282,12 @@ def _evaluate_obligation_7(frontier_dir: Path = DEFAULT_FRONTIER_DIR) -> Obligat
     if not artifacts:
         return ObligationVerdict(
             obligation_id="7", title="frontier-baseline comparison",
-            passed=False, evidence_pointer=str(frontier_dir),
+            passed=False, evidence_pointer=_rel(frontier_dir),
             refusal_reason="no frontier comparison artifacts found",
         )
     return ObligationVerdict(
         obligation_id="7", title="frontier-baseline comparison",
-        passed=True, evidence_pointer=str(frontier_dir),
+        passed=True, evidence_pointer=_rel(frontier_dir),
     )
 
 
@@ -279,7 +296,7 @@ def _evaluate_obligation_8() -> ObligationVerdict:
     return ObligationVerdict(
         obligation_id="8", title="adversarial generation; misparse zero",
         passed=bool(r.obligation_8_passed),
-        evidence_pointer=str(_REPO_ROOT / "evals" / "obligation_8_adversarial"),
+        evidence_pointer=_rel(_REPO_ROOT / "evals" / "obligation_8_adversarial"),
         refusal_reason="" if r.obligation_8_passed else r.refusal_reason,
     )
 
@@ -294,7 +311,7 @@ def _evaluate_obligation_9(b_reports: tuple[Path, ...]) -> ObligationVerdict:
         if not path.exists():
             return ObligationVerdict(
                 obligation_id="9", title="determinism",
-                passed=False, evidence_pointer=str(path),
+                passed=False, evidence_pointer=_rel(path),
                 refusal_reason=f"B-lane report missing: {path}",
             )
         try:
@@ -302,12 +319,12 @@ def _evaluate_obligation_9(b_reports: tuple[Path, ...]) -> ObligationVerdict:
         except json.JSONDecodeError as exc:
             return ObligationVerdict(
                 obligation_id="9", title="determinism",
-                passed=False, evidence_pointer=str(path),
+                passed=False, evidence_pointer=_rel(path),
                 refusal_reason=f"{path.name}: invalid JSON ({exc})",
             )
     return ObligationVerdict(
         obligation_id="9", title="determinism",
-        passed=True, evidence_pointer=str(b_reports[0].parent),
+        passed=True, evidence_pointer=_rel(b_reports[0].parent),
     )
 
 
@@ -316,7 +333,7 @@ def _evaluate_obligation_10() -> ObligationVerdict:
     return ObligationVerdict(
         obligation_id="10", title="operation provenance via pack",
         passed=bool(r.obligation_10_passed),
-        evidence_pointer=str(_REPO_ROOT / "evals" / "obligation_10_pack_provenance"),
+        evidence_pointer=_rel(_REPO_ROOT / "evals" / "obligation_10_pack_provenance"),
         refusal_reason="" if r.obligation_10_passed else r.refusal_reason,
     )
 

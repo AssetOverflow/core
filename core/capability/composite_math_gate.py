@@ -56,6 +56,23 @@ WRONG_MAX: int = 0
 # core/capability/composite_math_gate.py -> ../../.
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
+
+def _rel(path: Path) -> str:
+    """Repo-root-relative POSIX string of ``path``.
+
+    The composite-gate claim_digest commits to ``report_path`` /
+    ``probe_path`` strings; making them repo-relative keeps the digest
+    stable across operator filesystems (different worktree locations
+    would otherwise produce different digests for identical evidence).
+    Falls back to the absolute POSIX string if ``path`` is outside the
+    repo root.
+    """
+    p = Path(path).resolve()
+    try:
+        return p.relative_to(_REPO_ROOT).as_posix()
+    except ValueError:
+        return p.as_posix()
+
 # Default benchmark report paths. The evaluator accepts override
 # paths so tests can point at fixture data without touching main's
 # committed artifacts.
@@ -199,7 +216,7 @@ def _evaluate_one(benchmark_id: str, path: Path) -> BenchmarkVerdict:
     except CompositeMathGateError as exc:
         return BenchmarkVerdict(
             benchmark_id=benchmark_id,
-            report_path=str(path),
+            report_path=_rel(path),
             correct=0,
             wrong=0,
             cases_total=0,
@@ -213,7 +230,7 @@ def _evaluate_one(benchmark_id: str, path: Path) -> BenchmarkVerdict:
     wrong_zero = wrong <= WRONG_MAX
     return BenchmarkVerdict(
         benchmark_id=benchmark_id,
-        report_path=str(path),
+        report_path=_rel(path),
         correct=correct,
         wrong=wrong,
         cases_total=total,
@@ -235,7 +252,7 @@ def _gsm8k_honest_disclosure(path: Path) -> dict[str, Any]:
     """
     if not path.exists():
         return {
-            "probe_path": str(path),
+            "probe_path": _rel(path),
             "available": False,
             "note": "probe report missing; honest disclosure unavailable",
         }
@@ -243,13 +260,13 @@ def _gsm8k_honest_disclosure(path: Path) -> dict[str, Any]:
         report = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         return {
-            "probe_path": str(path),
+            "probe_path": _rel(path),
             "available": False,
             "note": f"probe report unparseable: {exc}",
         }
     metrics = report.get("metrics", {})
     return {
-        "probe_path": str(path),
+        "probe_path": _rel(path),
         "available": True,
         "admitted_solved": metrics.get("admitted_solved", 0),
         "admitted_wrong": metrics.get("admitted_wrong", 0),

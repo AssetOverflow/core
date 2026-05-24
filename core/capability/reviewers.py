@@ -18,7 +18,7 @@ import yaml
 
 
 ALLOWED_TOP_LEVEL_KEYS: frozenset[str] = frozenset(
-    {"schema_version", "reviewers", "audit_passed_claims"}
+    {"schema_version", "reviewers", "audit_passed_claims", "math_expert_claims"}
 )
 ALLOWED_REVIEWER_KEYS: frozenset[str] = frozenset(
     {"reviewer_id", "display_name", "role", "domains", "review_scope", "provenance"}
