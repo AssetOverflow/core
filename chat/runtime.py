@@ -107,6 +107,28 @@ _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 _ANCHOR_LENS_ANNOTATION_RE = re.compile(r"\[lens\(([^):]+)\):([^\]]+)\]")
 
 
+def _auto_propose_from_candidates(candidates: list[DiscoveryCandidate]) -> None:
+    from teaching.proposals import (
+        ProposalError,
+        ProposalLog,
+        _current_revision,
+        propose_from_candidate,
+    )
+    from teaching.source import ProposalSource
+
+    log = ProposalLog()
+    for candidate in candidates:
+        source = ProposalSource(
+            kind="contemplation",
+            source_id=candidate.candidate_id,
+            emitted_at_revision=_current_revision(),
+        )
+        try:
+            propose_from_candidate(candidate, log=log, source=source)
+        except ProposalError:
+            pass
+
+
 def _extract_anchor_lens_mode_label(surface: str, lens_id: str) -> str:
     """Return the engaged mode_label if *surface* carries a
     ``[lens(<lens_id>):<mode>]`` annotation for the given ``lens_id``.
@@ -652,6 +674,8 @@ class ChatRuntime:
         self._pending_candidates = store.load_discovery_candidates()
         manifest = store.load_manifest() or {}
         self._turn_count = int(manifest.get("turn_count", 0))
+        if self.config.auto_proposal_enabled and self._pending_candidates:
+            _auto_propose_from_candidates(self._pending_candidates)
 
     def checkpoint_engine_state(self) -> None:
         store = self._engine_state_store

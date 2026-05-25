@@ -449,6 +449,7 @@ def propose_from_candidate(
     log: ProposalLog,
     run_replay: Any = None,
     allow_evaluative: bool = False,
+    source: ProposalSource | None = None,
 ) -> TeachingChainProposal:
     """End-to-end: build proposal, run replay-equivalence gate,
     auto-reject on regression, otherwise leave pending.
@@ -461,7 +462,11 @@ def propose_from_candidate(
     Idempotent on (candidate_id, chain): re-proposing returns the
     existing proposal record if any.
     """
-    proposal = build_proposal(candidate, allow_evaluative=allow_evaluative)
+    proposal = build_proposal(
+        candidate,
+        allow_evaluative=allow_evaluative,
+        source=source,
+    )
     existing = log.find(proposal.proposal_id)
     if existing is not None:
         return proposal
