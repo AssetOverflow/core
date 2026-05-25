@@ -156,6 +156,9 @@ class CognitiveTurnPipeline:
         # Admitted → wrap in EpistemicGraph for observability and optional
         # connector-grounded articulation.  Refused or absent → None.
         epistemic_graph: EpistemicGraph | None = None
+        # W-011 — recognition refusal_reason, materialized below into
+        # CognitiveTurnResult.refusal_reason when non-empty.
+        _recognition_refusal_reason: str = ""
         if self._recognizer is not None:
             _rec_outcome = recognize(self._recognizer, raw_tokens)
             if _rec_outcome.admitted:
@@ -167,6 +170,9 @@ class CognitiveTurnPipeline:
                     nodes=(_ep_node,),
                     recognizer_id=self._recognizer.teaching_set_id,
                 )
+            elif _rec_outcome.refusal_reason is not None:
+                from generate.exhaustion import RefusalReason as _ExhaustionRefusalReason
+                _recognition_refusal_reason = _ExhaustionRefusalReason.RECOGNITION_REFUSED.value
 
         # 1. LISTEN — capture pre-turn field state
         field_state_before: FieldState | None = self._capture_field_state()
@@ -390,12 +396,10 @@ class CognitiveTurnPipeline:
             else _ratification_outcome_raw
         )
         _trace_ratification_outcome = ratification_outcome
-        # ADR-0024 Phase 2 — refusal_reason flows from a future
-        # materialisation site on ChatResponse.  Empty string on every
-        # non-refused turn; folding into trace_hash is gated on
-        # non-emptiness so non-refused turns keep byte-identical hashes
-        # relative to pre-Phase-2 (CLAUDE.md determinism invariant).
-        refusal_reason = getattr(response, "refusal_reason", "") or ""
+        # ADR-0024 Phase 2 + W-011 — refusal_reason precedence:
+        # recognition wins (earlier-fail boundary) over generation.
+        _generation_refusal_reason = getattr(response, "refusal_reason", "") or ""
+        refusal_reason = _recognition_refusal_reason or _generation_refusal_reason
         trace_hash = compute_trace_hash(
             input_text=text,
             filtered_tokens=filtered_tokens,

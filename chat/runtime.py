@@ -1782,30 +1782,47 @@ class ChatRuntime:
                 )
             )
 
-        result = generate(
-            field_state,
-            self._context.vocab,
-            self._context.persona,
-            max_tokens=self.config.max_tokens if max_tokens is None else max_tokens,
-            record_trajectory=True,
-            vault=self._context.vault,
-            recall_top_k=3 if self.config.allow_cross_language_recall else 0,
-            output_lang=self.config.output_language,
-            allow_cross_language_generation=self.config.allow_cross_language_generation,
-            use_salience=self.config.use_salience,
-            salience_top_k=self.config.salience_top_k,
-            inhibition_threshold=self.config.inhibition_threshold,
-            region=forward_region,
-            inner_loop_admissibility=self.config.inner_loop_admissibility,
-            admissibility_threshold=self.config.admissibility_threshold,
-            admissibility_mode=self.config.admissibility_mode,
-            admissibility_margin=self.config.admissibility_margin,
-            stop_tokens=(
-                frozenset(self.config.stop_tokens)
-                if self.config.stop_tokens is not None
-                else None
-            ),
-        )
+        # W-012 — catch InnerLoopExhaustion so the caller receives a
+        # typed refusal ChatResponse instead of an unhandled exception.
+        from generate.exhaustion import InnerLoopExhaustion as _ILE
+        try:
+            result = generate(
+                field_state,
+                self._context.vocab,
+                self._context.persona,
+                max_tokens=self.config.max_tokens if max_tokens is None else max_tokens,
+                record_trajectory=True,
+                vault=self._context.vault,
+                recall_top_k=3 if self.config.allow_cross_language_recall else 0,
+                output_lang=self.config.output_language,
+                allow_cross_language_generation=self.config.allow_cross_language_generation,
+                use_salience=self.config.use_salience,
+                salience_top_k=self.config.salience_top_k,
+                inhibition_threshold=self.config.inhibition_threshold,
+                region=forward_region,
+                inner_loop_admissibility=self.config.inner_loop_admissibility,
+                admissibility_threshold=self.config.admissibility_threshold,
+                admissibility_mode=self.config.admissibility_mode,
+                admissibility_margin=self.config.admissibility_margin,
+                stop_tokens=(
+                    frozenset(self.config.stop_tokens)
+                    if self.config.stop_tokens is not None
+                    else None
+                ),
+            )
+        except _ILE as _exhaustion_exc:
+            self._context.finalize_turn(
+                GenerationResult(tokens=(), final_state=field_state, vault_hits=0),
+                tokens_in=tuple(filtered),
+                input_versor=field_state.F,
+                dialogue_role="assert",
+                metadata={"exhaustion": True, "refusal_reason": _exhaustion_exc.reason.value},
+            )
+            stub = self._stub_response(
+                field_state,
+                tokens=tuple(filtered),
+            )
+            return replace(stub, refusal_reason=_exhaustion_exc.reason.value)
 
         # --- Articulation fidelity: replace bare S-P-O join with intent-aware surface ---
         # Phase 2: pass proposition so the bridge grounds <pending> obj slots

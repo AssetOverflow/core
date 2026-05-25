@@ -67,6 +67,12 @@ class RefusalReason(Enum):
     # trace can tell destination-blade refusal from rotor-frame
     # refusal without re-parsing the message.
     ROTOR_REJECTION = "rotor_rejection"
+    # W-011 — recognition-side refusals.  The DerivedRecognizer
+    # refused the input (shape mismatch, missing feature evidence,
+    # or feature contradiction).  Folded into CognitiveTurnResult
+    # .refusal_reason so the pipeline boundary does not discard the
+    # typed recognition refusal.
+    RECOGNITION_REFUSED = "recognition_refused"
 
 
 class InnerLoopExhaustion(ValueError):
