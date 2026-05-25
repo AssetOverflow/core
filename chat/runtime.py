@@ -45,10 +45,13 @@ from chat.telemetry import (
 from chat.verdicts import TurnVerdicts
 from chat.dispatch_trace import DispatchAttempt, DispatchTrace
 from teaching.discovery import (
+    DiscoveryCandidate,
     extract_discovery_candidates,
     format_candidate_jsonl,
 )
 from teaching.discovery_sink import DiscoveryCandidateSink
+from engine_state import EngineStateStore
+from recognition.registry import RecognizerRegistry
 from core.config import DEFAULT_CONFIG, DEFAULT_IDENTITY_PACK, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField
 from core.physics.energy import EnergyClass, EnergyProfile
@@ -466,6 +469,8 @@ class ChatRuntime:
         *,
         frame_pack: str | None = None,
         config: RuntimeConfig = DEFAULT_CONFIG,
+        no_load_state: bool = False,
+        engine_state_path: Any | None = None,
     ) -> None:
         if pack_id is not None or frame_pack is not None:
             pack_ids = (pack_id,) if isinstance(pack_id, str) else tuple(pack_id or config.input_packs)
@@ -615,6 +620,38 @@ class ChatRuntime:
         # W-013 — last classified intent, updated each turn for /explain REPL use.
         self._last_intent: Any | None = None
         self._last_input_text: str = ""
+        self._engine_state_store: EngineStateStore | None = (
+            None if no_load_state else EngineStateStore(engine_state_path)
+        )
+        self._recognizer_registry: RecognizerRegistry = RecognizerRegistry()
+        self._turn_count: int = 0
+        self._pending_candidates: list[DiscoveryCandidate] = []
+        if self._engine_state_store is not None and self._engine_state_store.exists():
+            self._load_engine_state()
+
+    def _load_engine_state(self) -> None:
+        store = self._engine_state_store
+        if store is None:
+            return
+        self._recognizer_registry = RecognizerRegistry.from_recognizers(
+            store.load_recognizers()
+        )
+        self._pending_candidates = store.load_discovery_candidates()
+        manifest = store.load_manifest() or {}
+        self._turn_count = int(manifest.get("turn_count", 0))
+
+    def checkpoint_engine_state(self) -> None:
+        store = self._engine_state_store
+        if store is None:
+            return
+        store.save_recognizers(self._recognizer_registry.all())
+        store.save_discovery_candidates(self._pending_candidates)
+        store.save_manifest(self._turn_count)
+
+    def _checkpointed_response(self, response: ChatResponse) -> ChatResponse:
+        self._turn_count += 1
+        self.checkpoint_engine_state()
+        return response
 
     @property
     def session(self) -> SessionContext:
@@ -797,9 +834,6 @@ class ChatRuntime:
         intent_subject: str | None,
         grounding_source: str | None,
     ) -> None:
-        sink = self._discovery_sink
-        if sink is None:
-            return
         candidates = extract_discovery_candidates(
             turn_event,
             intent_tag,
@@ -816,6 +850,10 @@ class ChatRuntime:
             candidates = tuple(
                 contemplate(c, vault_probe=vault_probe) for c in candidates
             )
+        self._pending_candidates.extend(candidates)
+        sink = self._discovery_sink
+        if sink is None:
+            return
         for candidate in candidates:
             sink.emit(format_candidate_jsonl(candidate))
 
@@ -1793,17 +1831,19 @@ class ChatRuntime:
                     text,
                     stub_articulation,
                 )
-            return self._stub_response(
-                committed,
-                tokens=tuple(filtered),
-                pack_grounded_surface=pack_surface,
-                grounded_source_tag=pack_source_tag,
-                pack_semantic_domains=pack_semantic_domains,
-                graph_atoms=stub_graph_atoms,
-                graph_unconstrained=stub_graph_unconstrained,
-                discovery_intent_tag=discovery_intent_tag,
-                discovery_intent_subject=discovery_intent_subject,
-                dispatch_trace=dispatch_trace,
+            return self._checkpointed_response(
+                self._stub_response(
+                    committed,
+                    tokens=tuple(filtered),
+                    pack_grounded_surface=pack_surface,
+                    grounded_source_tag=pack_source_tag,
+                    pack_semantic_domains=pack_semantic_domains,
+                    graph_atoms=stub_graph_atoms,
+                    graph_unconstrained=stub_graph_unconstrained,
+                    discovery_intent_tag=discovery_intent_tag,
+                    discovery_intent_subject=discovery_intent_subject,
+                    dispatch_trace=dispatch_trace,
+                )
             )
 
         if self.config.unified_ingest:
@@ -1896,7 +1936,9 @@ class ChatRuntime:
                 field_state,
                 tokens=tuple(filtered),
             )
-            return replace(stub, refusal_reason=_exhaustion_exc.reason.value)
+            return self._checkpointed_response(
+                replace(stub, refusal_reason=_exhaustion_exc.reason.value)
+            )
 
         # --- Articulation fidelity: replace bare S-P-O join with intent-aware surface ---
         # Phase 2: pass proposition so the bridge grounds <pending> obj slots
@@ -2215,47 +2257,49 @@ class ChatRuntime:
             grounding_source=main_grounding_source,
             surface=response_surface,
         )
-        return ChatResponse(
-            surface=response_surface,
-            proposition=proposition,
-            articulation=articulation,
-            articulation_surface=articulation.surface,
-            dialogue_role=dialogue_role,
-            versor_condition=versor_condition(result.final_state.F),
-            output_language=self.config.output_language,
-            frame_pack=self.config.frame_pack,
-            walk_surface=walk_surface,
-            salience_top_k=result.salience_top_k,
-            candidates_used=result.candidates_used,
-            vault_hits=vault_hits,
-            identity_score=identity_score,
-            character_profile=self.character_profile,
-            flagged=flagged,
-            recall_energy_class=recall_energy_class_main,
-            admissibility_trace=result.admissibility_trace,
-            region_was_unconstrained=result.region_was_unconstrained,
-            safety_verdict=safety_verdict,
-            ethics_verdict=ethics_verdict,
-            verdicts=verdicts_bundle,
-            grounding_source=main_grounding_source,
-            pre_decoration_surface=pre_decoration_surface_main,
-            register_id=register_id_main,
-            register_variant_id=decoration_main.variant_id,
-            anchor_lens_id=anchor_lens_id_main,
-            anchor_lens_mode_label=anchor_lens_mode_label_main,
-            realizer_guard_status=realizer_guard_status_main,
-            realizer_guard_rule=realizer_guard_rule_main,
-            register_canonical_surface=register_canonical_surface_main,
-            composer_graph_atom_status=atom_equivalence_main.status,
-            composer_atom_set_hash=atom_equivalence_main.composer_atom_set_hash,
-            graph_atom_set_hash=atom_equivalence_main.graph_atom_set_hash,
-            composer_graph_atom_overlap_count=atom_equivalence_main.overlap_count,
-            recalled_words=walk_tokens,
-            epistemic_state=main_epistemic_state,
-            normative_clearance=main_normative_clearance,
-            normative_detail=main_normative_detail,
-            refusal_reason=refusal_surface if refusal_emitted else "",
-            dispatch_trace=dispatch_trace,
+        return self._checkpointed_response(
+            ChatResponse(
+                surface=response_surface,
+                proposition=proposition,
+                articulation=articulation,
+                articulation_surface=articulation.surface,
+                dialogue_role=dialogue_role,
+                versor_condition=versor_condition(result.final_state.F),
+                output_language=self.config.output_language,
+                frame_pack=self.config.frame_pack,
+                walk_surface=walk_surface,
+                salience_top_k=result.salience_top_k,
+                candidates_used=result.candidates_used,
+                vault_hits=vault_hits,
+                identity_score=identity_score,
+                character_profile=self.character_profile,
+                flagged=flagged,
+                recall_energy_class=recall_energy_class_main,
+                admissibility_trace=result.admissibility_trace,
+                region_was_unconstrained=result.region_was_unconstrained,
+                safety_verdict=safety_verdict,
+                ethics_verdict=ethics_verdict,
+                verdicts=verdicts_bundle,
+                grounding_source=main_grounding_source,
+                pre_decoration_surface=pre_decoration_surface_main,
+                register_id=register_id_main,
+                register_variant_id=decoration_main.variant_id,
+                anchor_lens_id=anchor_lens_id_main,
+                anchor_lens_mode_label=anchor_lens_mode_label_main,
+                realizer_guard_status=realizer_guard_status_main,
+                realizer_guard_rule=realizer_guard_rule_main,
+                register_canonical_surface=register_canonical_surface_main,
+                composer_graph_atom_status=atom_equivalence_main.status,
+                composer_atom_set_hash=atom_equivalence_main.composer_atom_set_hash,
+                graph_atom_set_hash=atom_equivalence_main.graph_atom_set_hash,
+                composer_graph_atom_overlap_count=atom_equivalence_main.overlap_count,
+                recalled_words=walk_tokens,
+                epistemic_state=main_epistemic_state,
+                normative_clearance=main_normative_clearance,
+                normative_detail=main_normative_detail,
+                refusal_reason=refusal_surface if refusal_emitted else "",
+                dispatch_trace=dispatch_trace,
+            )
         )
 
     def _unknown_domain_response(self, field_state: FieldState, filtered: list[str]) -> ChatResponse:

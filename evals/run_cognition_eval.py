@@ -73,12 +73,12 @@ def _build_case_runner(
 ) -> Callable[[dict], CaseResult]:
     """Warm worker-local caches once, then return a per-case scorer."""
     if config is None:
-        ChatRuntime()
+        ChatRuntime(no_load_state=True)
     else:
-        ChatRuntime(config=config)
+        ChatRuntime(config=config, no_load_state=True)
 
     def _run(case: dict) -> CaseResult:
-        runtime = ChatRuntime(config=config) if config else ChatRuntime()
+        runtime = ChatRuntime(config=config, no_load_state=True) if config else ChatRuntime(no_load_state=True)
         pipeline = CognitiveTurnPipeline(runtime)
         return _run_case(case, pipeline)
 
