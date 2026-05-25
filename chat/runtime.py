@@ -139,6 +139,40 @@ _TERMINALS = frozenset({".", "?", ";", "!"})
 _UNKNOWN_DOMAIN_SURFACE = "I don't know — insufficient grounding for that yet."
 
 
+def _build_vault_probe(vault, vocab):
+    """Return a vault probe for discovery contemplation (W-016).
+
+    Queries the session vault at EpistemicStatus.COHERENT using the
+    subject lemma's versor as the lookup key.  The probe is a pure
+    read; it never writes to the vault or changes runtime state.
+
+    Trust boundary: vault entries from SPECULATIVE/CONTESTED/FALSIFIED
+    tiers are excluded by passing min_status=COHERENT to vault.recall.
+    The probe returns only ``vault_coherent`` EvidencePointers per
+    _VaultProbe contract (teaching/contemplation.py).
+    """
+    from teaching.discovery import EvidencePointer
+    from teaching.epistemic import EpistemicStatus
+
+    def _probe(subject: str, obj: str) -> tuple[EvidencePointer, ...]:
+        try:
+            query = vocab.get_versor(subject)
+        except KeyError:
+            return ()
+        hits = vault.recall(query, top_k=3, min_status=EpistemicStatus.COHERENT)
+        return tuple(
+            EvidencePointer(
+                source="vault_coherent",
+                ref=str(hit["index"]),
+                polarity="affirms",
+                epistemic_status="coherent",
+            )
+            for hit in hits
+        )
+
+    return _probe
+
+
 def _energy_scalar(energy_obj) -> float:
     if energy_obj is None:
         return 1.0
@@ -745,7 +779,14 @@ class ChatRuntime:
         )
         if self._contemplate_discoveries and candidates:
             from teaching.contemplation import contemplate
-            candidates = tuple(contemplate(c) for c in candidates)
+            vault_probe = (
+                _build_vault_probe(self._context.vault, self._context.vocab)
+                if self.config.vault_probe_discoveries
+                else None
+            )
+            candidates = tuple(
+                contemplate(c, vault_probe=vault_probe) for c in candidates
+            )
         for candidate in candidates:
             sink.emit(format_candidate_jsonl(candidate))
 
