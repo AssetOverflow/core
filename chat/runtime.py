@@ -51,7 +51,7 @@ from teaching.discovery import (
 from teaching.discovery_sink import DiscoveryCandidateSink
 from core.config import DEFAULT_CONFIG, DEFAULT_IDENTITY_PACK, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField
-from core.physics.energy import EnergyProfile
+from core.physics.energy import EnergyClass, EnergyProfile
 from core.physics.exertion import CycleCost, ExertionMeter
 from core.physics.identity import (
     CharacterProfile,
@@ -182,6 +182,15 @@ def _energy_scalar(energy_obj) -> float:
         return float(energy_obj)
     except (TypeError, ValueError):
         return 1.0
+
+
+def _recall_energy_class_from_hits(hits: Sequence[dict]) -> str | None:
+    if not hits:
+        return None
+    profile = hits[0].get("energy_profile")
+    energy_class = getattr(profile, "energy_class", None)
+    value = getattr(energy_class, "value", None)
+    return value if isinstance(value, str) else None
 
 
 def _is_question_input(raw_text: str, tokens: Sequence[str]) -> bool:
@@ -357,6 +366,7 @@ class ChatResponse:
     identity_score: IdentityScore | None
     character_profile: CharacterProfile
     flagged: bool
+    recall_energy_class: str | None = None
     # ADR-0023 §2 — per-transition admissibility evidence and region
     # provenance flag.  An empty tuple is the contract for "no
     # admissibility was checked this turn" (cold start, refusal, stub).
@@ -1703,6 +1713,7 @@ class ChatRuntime:
             gate_query = probe_state.F
 
         direct_hits = self._context.vault.recall(gate_query, top_k=3)
+        direct_recall_energy_class = _recall_energy_class_from_hits(direct_hits)
         direct_best = max((h["score"] for h in direct_hits), default=0.0)
         gate_decision = default_gate.check(
             direct_best,
@@ -2083,6 +2094,22 @@ class ChatRuntime:
             walk_surface = response_surface
             response_surface = _GUARD_DISCLOSURE_SURFACE
             warm_grounding_source = "none"
+        main_grounding_source = warm_grounding_source or "vault"
+        recall_energy_class_main = (
+            direct_recall_energy_class
+            if main_grounding_source == "vault"
+            else None
+        )
+        if recall_energy_class_main:
+            from generate.realizer import energy_modulated_surface
+
+            try:
+                ec = EnergyClass(recall_energy_class_main)
+            except ValueError:
+                pass
+            else:
+                response_surface = energy_modulated_surface(response_surface, ec)
+                articulation = replace(articulation, surface=response_surface)
         # ADR-0077 (R6) — register layering separation (main path).  See
         # the stub-path equivalent for full semantics: the canonical
         # surface is captured pre-substantive so the cognition pipeline
@@ -2091,7 +2118,7 @@ class ChatRuntime:
         # transforms are skipped on ungrounded turns so the bounded
         # disclosure stays sacrosanct under terse's drop_articles.
         register_canonical_surface_main = response_surface
-        if (warm_grounding_source or "vault") == "none":
+        if main_grounding_source == "none":
             substantive_surface_main = response_surface
         else:
             substantive_surface_main = apply_substantive_register(
@@ -2130,7 +2157,7 @@ class ChatRuntime:
             pre_decoration_surface_main, anchor_lens_id_main,
         )
         atom_equivalence_main = self._composer_graph_atom_equivalence(
-            grounding_source=warm_grounding_source or "vault",
+            grounding_source=main_grounding_source,
             composer_atoms=warm_pack_semantic_domains,
             graph_atoms=graph_atoms_main,
             graph_unconstrained=graph_unconstrained_main,
@@ -2143,7 +2170,7 @@ class ChatRuntime:
             hedge_injected=hedge_injected,
         )
         main_epistemic_state = epistemic_state_for_grounding_source(
-            warm_grounding_source or "vault"
+            main_grounding_source
         ).value
         main_normative_clearance = clearance_from_verdicts(verdicts_bundle).value
         main_normative_detail = normative_detail_from_verdicts(verdicts_bundle)
@@ -2163,7 +2190,7 @@ class ChatRuntime:
             safety_verdict=safety_verdict,
             ethics_verdict=ethics_verdict,
             verdicts=verdicts_bundle,
-            grounding_source=warm_grounding_source or "vault",
+            grounding_source=main_grounding_source,
             register_id=register_id_main,
             register_variant_id=decoration_main.variant_id,
             anchor_lens_id=anchor_lens_id_main,
@@ -2185,7 +2212,7 @@ class ChatRuntime:
             turn_event=turn_event,
             intent_tag=warm_pack_intent_tag,
             intent_subject=warm_pack_subject or articulation.subject,
-            grounding_source=warm_grounding_source or "vault",
+            grounding_source=main_grounding_source,
             surface=response_surface,
         )
         return ChatResponse(
@@ -2204,12 +2231,13 @@ class ChatRuntime:
             identity_score=identity_score,
             character_profile=self.character_profile,
             flagged=flagged,
+            recall_energy_class=recall_energy_class_main,
             admissibility_trace=result.admissibility_trace,
             region_was_unconstrained=result.region_was_unconstrained,
             safety_verdict=safety_verdict,
             ethics_verdict=ethics_verdict,
             verdicts=verdicts_bundle,
-            grounding_source=warm_grounding_source or "vault",
+            grounding_source=main_grounding_source,
             pre_decoration_surface=pre_decoration_surface_main,
             register_id=register_id_main,
             register_variant_id=decoration_main.variant_id,

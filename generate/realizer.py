@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from core.physics.energy import EnergyClass
 from generate.graph_planner import (
     ArticulationStep,
     ArticulationTarget,
@@ -24,6 +25,23 @@ from generate.graph_planner import (
 from generate.intent import IntentTag
 from generate.semantic_templates import render_semantic
 from generate.templates import render_step
+
+
+_ENERGY_SURFACE_PREFIX: dict[EnergyClass, str] = {
+    EnergyClass.E0: "From memory: ",
+    EnergyClass.E1: "I seem to recall: ",
+    EnergyClass.E2: "I recall: ",
+    EnergyClass.E3: "",
+    EnergyClass.E4: "",
+}
+
+
+def energy_modulated_surface(base_surface: str, energy_class: EnergyClass) -> str:
+    """Prepend energy-class framing per ADR-0006 §Integration Points."""
+    prefix = _ENERGY_SURFACE_PREFIX.get(energy_class, "")
+    if not prefix or not base_surface:
+        return base_surface
+    return prefix + base_surface
 
 
 @dataclass(frozen=True, slots=True)
@@ -268,5 +286,4 @@ def realize_target(
 
     joined = _join_as_paragraph(fragments)
     return RealizedPlan(fragments=tuple(fragments), surface=joined)
-
 
