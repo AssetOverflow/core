@@ -249,6 +249,16 @@ class RuntimeConfig:
     # for every existing surface and trace_hash.
     recognition_grounded_graph: bool = False
 
+    # W-016 — wire session vault (T1) into discovery contemplation.
+    # When True, ChatRuntime builds a vault probe from the live session
+    # vault and passes it to contemplate() in _emit_discovery_candidates.
+    # The probe queries the vault at EpistemicStatus.COHERENT so only
+    # reviewed-coherent session entries contribute evidence; SPECULATIVE /
+    # CONTESTED / FALSIFIED entries are filtered by the vault layer per
+    # ADR-0021 §3.  Default False preserves all pre-W-016 discovery
+    # output byte-identically (null-drop invariant on discovery lanes).
+    vault_probe_discoveries: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"
