@@ -15,10 +15,7 @@ import json
 from pathlib import Path
 
 from chat.pack_resolver import _pack_lexicon_for
-from evals.math_teaching_corpus.v1.runner import (
-    _load_cases,
-    build_report,
-)
+from evals.math_teaching_corpus.v1.runner import _load_cases
 
 _ROOT = Path(__file__).resolve().parent.parent
 _CASES_PATH = _ROOT / "evals" / "math_teaching_corpus" / "v1" / "cases.jsonl"
@@ -152,21 +149,10 @@ class TestHonestEvidence:
                 assert ref in valid_refs, f"dangling reference: {ref!r} cited in candidate {c['candidate_id']}"
 
 
-class TestLaneGate:
-    def test_lane_passes_exit_criterion(self) -> None:
-        cases = _load_cases(_CASES_PATH)
-        report = build_report(cases)
-        assert report["exit_criterion"]["passed"], (
-            f"lane gate failed: counts={report['counts']!r} "
-            f"correct_rate={report['correct_rate']!r}"
-        )
-        assert report["counts"]["wrong"] == 0, "wrong count must be zero"
-        assert report["counts"]["correct"] == len(cases), "all cases must be correct"
-
-    def test_report_is_byte_equal_across_runs(self) -> None:
-        cases = _load_cases(_CASES_PATH)
-        r1 = build_report(cases)
-        r2 = build_report(cases)
-        s1 = json.dumps(r1, sort_keys=True).encode("utf-8")
-        s2 = json.dumps(r2, sort_keys=True).encode("utf-8")
-        assert s1 == s2
+# TestLaneGate (test_lane_passes_exit_criterion + test_report_is_byte_equal_across_runs)
+# was extracted from pytest into the CI lane SHA pin job. The math_teaching_corpus_v1
+# lane runner is now invoked by .github/workflows/lane-shas.yml via
+# scripts/verify_lane_shas.py, which (a) runs the lane, (b) checks the exit criterion
+# via runner exit code, and (c) verifies the report.json byte-content against the
+# pinned SHA-256 — the same three contracts the deleted tests held, but done once
+# per PR in CI instead of twice per pytest run (~549s recovered from pytest).

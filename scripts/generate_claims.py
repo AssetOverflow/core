@@ -66,6 +66,10 @@ _LANE_ADR: dict[str, tuple[str, str]] = {
         "ADR-0099",
         "Public showcase runs deterministically under 30s; all claims supported",
     ),
+    "math_teaching_corpus_v1": (
+        "ADR-0131",
+        "Math teaching corpus replays deterministically; all chains pass exit criterion (correct_rate=1.0, wrong=0)",
+    ),
 }
 
 

@@ -40,6 +40,7 @@ PINNED_SHAS: dict[str, str] = {
     "fabrication_control_summary": "01e1b6b711141f2b4a14551d7df3ea482d8d6dd7b364a25c509f4f8d08cda8a8",
     "demo_composition": "3a3d09f3a87462737e615c2dd3481b9e13e5ff8fadee0043c37873494ded556d",
     "public_demo": "888ddd0d12635d709f91898cf06601062168694d870f776d2b0b7710e5d68cbd",
+    "math_teaching_corpus_v1": "eaf160d145da29f9050ede8d58bf111b0f651dd40aeae9201857d0b97e014dd4",
 }
 
 
@@ -98,6 +99,12 @@ LANE_SPECS: tuple[LaneSpec, ...] = (
         runner_module="evals/public_demo/runner.py",
         report_relative="evals/public_demo/results/v1_dev.json",
     ),
+    LaneSpec(
+        lane_id="math_teaching_corpus_v1",
+        runner_module="evals/math_teaching_corpus/v1/runner.py",
+        report_relative="evals/math_teaching_corpus/v1/report.json",
+        accepts_report_flag=False,
+    ),
 )
 
 
@@ -115,7 +122,7 @@ def _invoke_runner(spec: LaneSpec, *, target_path: Path | None = None) -> Path:
         env=env,
         capture_output=True,
         text=True,
-        timeout=300,
+        timeout=900,
     )
     if result.returncode != 0:
         raise RuntimeError(

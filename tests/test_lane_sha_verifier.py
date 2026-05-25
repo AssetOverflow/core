@@ -90,6 +90,7 @@ class TestExpectedLaneCoverage:
             "demo_composition",  # ADR-0098
             "public_demo",  # ADR-0099
             "curriculum_loop_closure",
+            "math_teaching_corpus_v1",  # ADR-0131
         }
     )
 
