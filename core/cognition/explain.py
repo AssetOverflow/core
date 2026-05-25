@@ -23,6 +23,7 @@ from generate.intent import IntentTag
 
 if TYPE_CHECKING:
     from core.cognition.result import CognitiveTurnResult
+    from generate.intent import DialogueIntent
 
 
 # Reverse map of generate.intent._RELATION_NORMALIZE — picks one surface
@@ -116,6 +117,42 @@ def explain(result: "CognitiveTurnResult") -> str:
         correction_text = ""
         if result.teaching_candidate is not None:
             correction_text = result.teaching_candidate.correction_text
+        return _explain_correction(subject, correction_text)
+    if tag is IntentTag.VERIFICATION:
+        return _explain_verification(subject)
+    if tag is IntentTag.RECALL:
+        return _explain_recall(subject)
+    return ""
+
+
+def explain_from_intent(
+    intent: "DialogueIntent | None",
+    correction_text: str = "",
+) -> str:
+    """Lightweight variant for callers that have only a classified intent.
+
+    Identical dispatch to :func:`explain`; skips the full
+    ``CognitiveTurnResult`` round-trip.  ``correction_text`` is only
+    meaningful when the intent tag is ``CORRECTION``; callers may pass
+    the original user text as a reasonable approximation.
+    """
+    if intent is None:
+        return ""
+
+    tag = intent.tag
+    subject = intent.subject or ""
+
+    if tag is IntentTag.DEFINITION:
+        return _explain_definition(subject)
+    if tag is IntentTag.TRANSITIVE_QUERY:
+        return _explain_transitive_query(subject, intent.relation)
+    if tag is IntentTag.CAUSE:
+        return _explain_cause(subject)
+    if tag is IntentTag.PROCEDURE:
+        return _explain_procedure(subject)
+    if tag is IntentTag.COMPARISON:
+        return _explain_comparison(subject, intent.secondary_subject)
+    if tag is IntentTag.CORRECTION:
         return _explain_correction(subject, correction_text)
     if tag is IntentTag.VERIFICATION:
         return _explain_verification(subject)

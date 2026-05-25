@@ -243,6 +243,13 @@ def cmd_chat(args: argparse.Namespace) -> int:
             break
         if not text:
             continue
+        if text == "/explain":
+            explanation = runtime.explain_last_turn()
+            if explanation:
+                print(f"[explain] {explanation}")
+            else:
+                print("[explain] no prior turn to explain", file=sys.stderr)
+            continue
         try:
             response = runtime.chat(text)
         except (KeyError, ValueError) as exc:
