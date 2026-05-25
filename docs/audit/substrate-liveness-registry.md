@@ -16,7 +16,7 @@
 | L5 — Cognition pipeline | ✅ Audited | **PARTIAL** | `generate/render.py` deleted; `explain.py` / `provenance.py` flagged as wiring debt | 2026-05-24 |
 | L6 — Chat runtime + surface composition | ✅ Audited | **PARTIAL** | None — no unambiguous dead chat code found | 2026-05-24 |
 | L7 — Teaching loop | ✅ Audited | **PARTIAL** | None — no unambiguously dead modules found | 2026-05-24 |
-| L8 — Inter-session memory + contemplation | ⏳ Pending | — | — | — |
+| L8 — Inter-session memory + contemplation | ✅ Audited | **PARTIAL** | None — no unambiguously dead memory/contemplation modules found | 2026-05-24 |
 | L9 — Epistemic state + verdicts | ⏳ Pending | — | — | — |
 
 L10 / L11 are not audit targets (no design to audit; flagged in scope as
@@ -1411,3 +1411,161 @@ Subsequent engine invocations parse the new active corpus via `chat.teaching_gro
 
 ---
 
+## L8 — Inter-session memory + contemplation
+
+**Audit date:** 2026-05-24
+**Auditor:** primary agent (Codex)
+**Verdict:** **PARTIAL**
+
+### Scope-hypothesis correction (per audit step 0)
+
+The scope's layering table cited Layer L8 concerns as: discovery, contemplation, and multi-tier memory. Reality: L8 spans four distinct surfaces that are only partially joined: live turn-loop discovery/OOV emission, opt-in inline DiscoveryCandidate contemplation, operator-run ADR-0080 report contemplation, and the four-tier memory promotion model. L7 already audited the proposal review, replay-equivalence, and corpus-mutation machinery; this L8 pass treats that path only as the downstream promotion target.
+
+### ADRs in scope for L8
+
+| ADR | Title | Status | Belongs at L8? |
+|---|---|---|---|
+| ADR-0039 | Audit Completeness — `TurnVerdicts` Bundle, Stub-Path `TurnEvent`, `hedge_injected` Signal | Accepted | Yes — makes Tier 2 turn-event evidence complete enough to mine |
+| ADR-0040 | Telemetry Sink | Accepted | Yes — durable JSONL sink for the Tier 2 audit trail |
+| ADR-0041 | CLI Verdicts and Fan-out | Accepted | Yes — operator-readable / fan-out telemetry plumbing for Tier 2 |
+| ADR-0055 | Inter-Session Memory Discovery & Promotion | Phase A + B Accepted; C-E Proposed | Yes — primary four-tier memory and discovery-promotion design |
+| ADR-0056 | Contemplation Loop C1 | Accepted | Yes — DiscoveryCandidate enrichment / question decomposition |
+| ADR-0057 | Teaching-Chain Proposal + Review + Replay-Equivalence | Accepted | Boundary only — downstream L7 promotion gate consumed by L8 |
+| ADR-0064 | Cross-Pack Teaching Corpora Registry | Accepted | Yes — discovery gate and teaching read path widened beyond one corpus |
+| ADR-0065 | OOV Gradient + Relations v2 | Accepted | Yes — OOV gap signal feeding pack-vocabulary promotion |
+| ADR-0067 | Cross-pack teaching chains | Accepted | Yes — cross-pack memory read path and supersession semantics |
+| ADR-0080 | Contemplation Loop | Accepted | Yes — read-only, SPECULATIVE-only self-contemplation over explicit evidence files |
+| ADR-0094 | Proposal Source Provenance | Accepted | Yes — source schema for operator / miner / curriculum / contemplation provenance |
+| ADR-0095 | Miner-Sourced Teaching Proposals | Accepted | Yes — miner findings can become reviewed proposals without source authority |
+| ADR-0104 | Curriculum-Sourced Teaching Proposals | Accepted | Yes — curriculum findings can become reviewed proposals without source authority |
+
+### Modules in scope for L8
+
+| Module | Lines | Live-import sites (outside `teaching/`, outside `tests/`) | Test-import sites | Status |
+|---|---|---|---|---|
+| `teaching/contemplation.py` | 505 | 1 (`chat/runtime.py`) | 1 | Live, but opt-in and no live vault probe |
+| `teaching/discovery.py` | 326 | 1 (`chat/runtime.py`) | 2 | Live |
+| `teaching/discovery_sink.py` | 105 | 1 (`core/contemplation/__main__.py`) | 3 | Live |
+| `teaching/oov_sink.py` | 160 | 1 (`chat/runtime.py`) | 1 | Live |
+| `teaching/oov_gaps.py` | 170 | 1 (`core/cli.py`) | 1 | Live |
+| `teaching/oov_promotion.py` | 119 | 1 (`core/cli.py`) | 1 | Live |
+| `teaching/from_miner.py` | 370 | 0 | 1 | Partially live (test-only proposal conversion) |
+| `teaching/from_curriculum.py` | 275 | 0 | 1 | Partially live (test-only proposal conversion) |
+| `teaching/gaps.py` | 206 | 1 (`core/cli.py`) | 1 | Live |
+| `teaching/audit.py` | 313 | 2 (`core/cli.py`, `teaching/supersede.py`) | 1 | Live |
+| `teaching/supersede.py` | 196 | 1 (`core/cli.py`) | 1 | Live |
+| `teaching/cross_pack_supersede.py` | 206 | 1 (`core/cli.py`) | 1 | Live |
+| `core/contemplation/__main__.py` | 94 | 1 (`core/cli.py`) | 0 | Live operator CLI |
+| `core/contemplation/runner.py` | 193 | 1 (`core/contemplation/__main__.py`) | 2 | Live operator runner |
+| `core/contemplation/schema.py` | 231 | 5 (`core/contemplation/*`, `teaching/from_miner.py`) | 4 | Live |
+| `core/contemplation/snapshot.py` | 77 | 1 (`core/contemplation/runner.py`) | 1 | Live |
+| `core/contemplation/plan_preflight.py` | 246 | 1 (`chat/runtime.py`) | 2 | Live, opt-in |
+| `core/contemplation/plan_metrics.py` | 247 | 1 (`chat/runtime.py`) | 2 | Live, opt-in |
+| `core/contemplation/miners/frontier_compare.py` | 75 | 1 (`core/contemplation/runner.py`) | 1 | Live operator miner |
+| `core/contemplation/miners/contradiction_detection.py` | 111 | 1 (`core/contemplation/runner.py`) | 1 | Live operator miner |
+| `core/contemplation/miners/articulation_quality.py` | 352 | 0 | 2 | Partially live (runtime emits observations; miner is test-only/offline API today) |
+| `vault/store.py` | 300 | 4 (`session/context.py`, `chat/runtime.py`, `generate/stream.py`, `vault/decompose.py`) | 7 | Live Tier 1 store/read substrate |
+| `core/cognition/explain.py` | 124 | 0 | 1 | Dormant |
+
+### Caller-trace evidence
+
+Live discovery and OOV emission are attached to the turn loop but require explicit sinks:
+`ChatRuntime.chat()` stub/cold path → `TurnEvent` → `_emit_discovery_candidates` → `extract_discovery_candidates` → optional `teaching.contemplation.contemplate` when `attach_contemplation(enabled=True)` was called → attached `DiscoveryCandidateSink.emit`.
+For OOV turns, the same block calls `_emit_oov_candidate` → `OOVCandidate` → attached `OOVCandidateSink.emit`. `OOVMonthlyFileSink` is a live consumer from `chat/runtime.py:700` when an operator attaches it.
+
+ADR-0080 report contemplation is operator/batch, not live-turn autonomous:
+`core contemplation <reports...>` → `core.contemplation.__main__.main` → `contemplate_frontier_reports` / `contemplate_contradiction_reports` → optional `DiscoveryMonthlyFileSink`. The runner reads explicit report paths and may emit findings to the same monthly discovery sink, but it does not crawl live runtime state and does not promote findings.
+
+Plan contemplation is live only under opt-in runtime configuration:
+`RuntimeConfig(discourse_contemplation=True)` → `ChatRuntime._maybe_apply_discourse_planner` → `contemplate_plan` + `compute_plan_metrics` → read-only `last_plan_findings` / `last_plan_metrics`. With both `discourse_contemplation=True` and `attach_articulation_sink(sink)`, the runtime emits `ArticulationObservation` JSONL for the offline articulation-quality miner.
+
+Four-tier memory currently flows as:
+Tier 1 session vault is written and read during a session through `SessionContext` / `VaultStore`.
+Tier 2 turn audit exists in memory (`turn_log`) and optionally JSONL telemetry.
+Tier 3 reviewed teaching corpus is loaded by `chat.teaching_grounding` / cross-pack loaders and appended only by L7's reviewed proposal paths.
+Tier 4 ratified packs are read by pack resolvers and pack grounding. Pack mutation remains proposal-only.
+
+### Exercising suite lane
+
+- Direct L8/L7 shared tests:
+  ```bash
+  python3 -m core.cli test --suite teaching -q
+  ```
+  **Verification:** 17 passed.
+- Cross-layer regressions:
+  ```bash
+  python3 -m core.cli test --suite smoke -q
+  ```
+  **Verification:** 67 passed.
+- Lane SHAs match:
+  ```bash
+  python3 scripts/verify_lane_shas.py
+  ```
+  **Verification:** 7/7 match pinned SHAs.
+
+### Cross-layer contract check
+
+**Pass 1 — mechanical (consumer-exists per exposed symbol):**
+
+| Exposed symbol / field | Consumer evidence |
+|---|---|
+| `VaultStore.store` / `VaultStore.recall` / `VaultStore.recall_batch` | `SessionContext`, `ChatRuntime`, `generate/stream.py`, `vault/decompose.py`, direct tests |
+| `TurnEvent` / `format_turn_event_jsonl` | `ChatRuntime._emit_turn_event`, telemetry sinks, telemetry tests |
+| `extract_discovery_candidates` / `DiscoveryCandidate` | `ChatRuntime._emit_discovery_candidates`, `teaching.proposals`, direct tests |
+| `DiscoveryMonthlyFileSink` | `core/contemplation/__main__.py`, direct discovery/contemplation tests |
+| `OOVCandidate` / `OOVMonthlyFileSink` | `ChatRuntime._emit_oov_candidate`, OOV pipeline tests |
+| `teaching.contemplation.contemplate` | `ChatRuntime._emit_discovery_candidates` when `attach_contemplation(enabled=True)`, direct tests |
+| `contemplate_frontier_reports` / `contemplate_contradiction_reports` | `core contemplation` CLI, contemplation-loop tests |
+| `contemplate_plan` / `compute_plan_metrics` | `ChatRuntime._maybe_apply_discourse_planner` when `discourse_contemplation=True`, runtime tests |
+| `mine_articulation_observations` | Direct tests; runtime produces its input stream via `attach_articulation_sink` |
+| `supersede_cross_pack_chain` | `core teaching supersede --cross-pack`, cross-pack supersede tests |
+| `ProposalSource` | `teaching.proposals`, `teaching.store.PackMutationProposal`, `teaching/from_miner.py`, `teaching/from_curriculum.py`, source tests |
+| `core.cognition.explain.explain` | Direct tests only; no runtime / teaching / contemplation consumer |
+
+**Pass 2 — semantic (five L8 invariants checked):**
+
+1. **Four-tier model liveness (ADR-0055).** **PARTIAL.** T1 session vault storage and readback are live (`VaultStore.store` / `recall`). T2 turn-event audit is live in `turn_log` and optionally JSONL telemetry. T3 reviewed teaching corpus is live as a read path and can be appended only through L7's reviewed proposal flow. T4 ratified packs are live as pack-grounding / resolver substrate, with mutation still proposal-only. The missing ADR-0055 link remains: no automated T1/T2 → T3 promotion exists. Discovery candidates are emitted from `TurnEvent` evidence, but not from direct vault scans, and contemplation receives no live vault probe by default.
+2. **Contemplation loop liveness.** **PARTIAL.** `teaching.contemplation.contemplate` can run inline during live turns, but only after an operator attaches a discovery sink and separately enables contemplation. ADR-0080 `core/contemplation` is CLI/batch-only over explicit report files. Plan contemplation is live-turn-integrated only behind `RuntimeConfig.discourse_contemplation=True`; default runtime leaves it off.
+3. **Discovery candidate sink wiring.** Verified. `ChatRuntime.attach_discovery_sink` wires live-turn `DiscoveryCandidate` JSONL emission. `DiscoveryMonthlyFileSink` itself is consumed by the `core contemplation` CLI; live runtime accepts any sink satisfying the same protocol. `OOVMonthlyFileSink` is live-compatible through `ChatRuntime.attach_oov_sink`, with `_emit_oov_candidate` importing `teaching.oov_sink` at `chat/runtime.py:700`.
+4. **Cross-pack supersession.** Verified. `teaching/cross_pack_supersede.py` is CLI-live through `core teaching supersede --cross-pack`; it appends a replacement entry and verifies reload. Runtime load drops any cross-pack chain whose `chain_id` appears as another entry's `superseded_by`, so older chains are retired at load time while disk history remains append-only.
+5. **Proposal source provenance (ADR-0094).** Mechanically verified, semantically partial. `ProposalSource` is required on created proposals; `ProposalLog.current_state()` rejects missing or malformed `source`; `teaching/proposals/proposals.jsonl` has 11/11 created proposals with valid `source`. Miner and curriculum builders stamp `kind="miner"` / `kind="curriculum"` respectively. However, source kind currently does not grant authority or change review semantics; it is enforced provenance and audit routing, not differentiated downstream behavior.
+
+### Four-tier model liveness map
+
+| Tier | Storage live? | Promotion to it live? | Read path live? | L8 verdict |
+|---|---|---|---|---|
+| T1 — session vault | ✅ `VaultStore` via `SessionContext` | ✅ live session ingest/finalization writes session entries | ✅ exact CGA recall in runtime/generation/decomposition | Live |
+| T2 — turn-event audit trail | ✅ `turn_log`; optional telemetry JSONL sink | ✅ every chat turn appends a `TurnEvent`; stub path participates | ✅ telemetry readers/tests and discovery extraction over current turn | Live, sink opt-in |
+| T3 — reviewed teaching corpus | ✅ JSONL corpora under `teaching/*_chains*` | ⚠️ reviewed append via L7 is live; automated T1/T2 discovery promotion remains absent | ✅ teaching/cross-pack grounding loaders | PARTIAL |
+| T4 — ratified packs | ✅ `packs/*`, `language_packs/data/*` | ⚠️ pack mutation is proposal-only; ratification is outside L8 live turn loop | ✅ pack resolver / grounding / contemplation pack probes | PARTIAL by design |
+
+### Semantic mismatches flagged for human review
+
+- **No live T1 vault probe in DiscoveryCandidate contemplation.** `teaching.contemplation` has an injectable `vault_probe`, and tests prove coherent vault evidence can contribute, but `ChatRuntime._emit_discovery_candidates` calls `contemplate(c)` with no probe. Inline contemplation therefore operates on pack + reviewed corpus only.
+- **ADR-0055 automated T1/T2 → T3 promotion is still absent.** Discovery candidates and contemplated findings are evidence streams; promotion still requires L7's synchronous operator proposal/review flow.
+- **ADR-0080 contemplation is not an autonomous runtime loop.** It is an operator command over explicit report files. Live plan contemplation exists, but is opt-in and observation-only.
+- **`core/cognition/explain.py` remains dormant.** L8 does not consume `explain()` for teaching/contemplation summaries of decoded turns.
+- **`from_miner.py` and `from_curriculum.py` remain test-live only.** They correctly build source-stamped proposals, but no CLI/runtime command currently invokes them.
+
+### Closure criteria scorecard
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. Design artifact | ✅ | ADR-0039, ADR-0040, ADR-0041, ADR-0055, ADR-0056, ADR-0057, ADR-0064, ADR-0065, ADR-0067, ADR-0080, ADR-0094, ADR-0095, ADR-0104 |
+| 2. Code artifact | ✅ | `vault/`, `chat/runtime.py`, `teaching/discovery*`, `teaching/oov*`, `teaching/contemplation.py`, `core/contemplation/` |
+| 3. Live caller | ⚠️ PARTIAL | Discovery/OOV and opt-in plan contemplation are live; ADR-0080 is operator CLI; miner/curriculum proposal builders are test-only |
+| 4. Exercised by suite lane | ✅ | `teaching` suite lane passes; `smoke` lane passes; `verify_lane_shas.py` is 7/7 |
+| 5. Cross-layer consistency | ⚠️ PARTIAL | T1/T2 evidence exists and T3/T4 reads exist; automated T1/T2 → T3/T4 promotion is not wired |
+
+### Cleanup performed
+
+**None.** No L8 module was unambiguously dead across both L7 and L8 perspectives. `from_miner.py` and `from_curriculum.py` remain test-live and structurally important for source-stamped proposal construction. `core/cognition/explain.py` is dormant but still directly tested and is the natural future hook for turn explanation.
+
+### Findings / notes for downstream layers
+
+- **L9 (Epistemic state + verdicts) auditor:** L8 intentionally did not touch safety/ethics/verdict files. Discovery candidate emission computes `boundary_clean` from refusal/hedge state and carries `source_turn_trace`; verify whether L9 verdict surfaces should become explicit discovery/contemplation evidence, or remain audit-only.
+- **L9 (Epistemic state + verdicts) auditor:** Proposal source kind is provenance, not authority. Verify that any future epistemic policy does not treat `miner` or `curriculum` sources as more coherent than `operator` without review.
+- **L10 (Runtime model) auditor:** W-009 remains the memory-queue constraint. The promotion path is synchronous/operator-driven; no async queue or background promotion loop exists.
+- **Future L8 work:** If ADR-0055 Phase D is implemented, wire a live coherent-only vault probe into `teaching.contemplation.contemplate` and prove that SPECULATIVE / CONTESTED / FALSIFIED vault entries cannot promote.
+
+---
