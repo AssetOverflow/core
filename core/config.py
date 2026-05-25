@@ -273,6 +273,9 @@ class RuntimeConfig:
     # Activates ADR-0056 Phase C1. Null-drop when False.
     auto_contemplate: bool = False
 
+    # ADR-0151 — generate TeachingChainProposals from enriched candidates on load.
+    auto_proposal_enabled: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"
