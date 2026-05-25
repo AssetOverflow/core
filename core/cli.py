@@ -1230,6 +1230,130 @@ def cmd_teaching_propose(args: argparse.Namespace) -> int:
     return 0 if rec["state"] in ("pending", "accepted") else 1
 
 
+def _load_findings_jsonl(path: str) -> list:
+    """Load ContemplationFinding objects from a JSONL file (W-019)."""
+    from core.contemplation.schema import (
+        ContemplationEvidenceRef, ContemplationFinding, FindingKind,
+    )
+    from teaching.epistemic import EpistemicStatus
+
+    findings = []
+    for raw in _read_jsonl_file(Path(path)):
+        evidence_refs = tuple(
+            ContemplationEvidenceRef(
+                source_type=e["source_type"],
+                source_id=e["source_id"],
+                pointer=e["pointer"],
+                summary=e.get("summary", ""),
+            )
+            for e in raw.get("evidence_refs", [])
+        )
+        findings.append(ContemplationFinding(
+            kind=FindingKind(raw["kind"]),
+            subject=raw["subject"],
+            predicate=raw["predicate"],
+            object=raw.get("object"),
+            evidence_refs=evidence_refs,
+            proposed_action=raw["proposed_action"],
+            substrate_hash=raw.get("substrate_hash", ""),
+            epistemic_status=EpistemicStatus(
+                raw.get("epistemic_status", EpistemicStatus.SPECULATIVE.value)
+            ),
+            finding_id=raw.get("finding_id", ""),
+        ))
+    return findings
+
+
+def _read_jsonl_file(path: Path) -> list:
+    """Read a JSONL file and return a list of parsed dicts."""
+    lines = []
+    with path.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if line:
+                lines.append(json.loads(line))
+    return lines
+
+
+def cmd_teaching_propose_miner(args: argparse.Namespace) -> int:
+    """W-019: build PackMutationProposals from miner ContemplationFinding JSONL."""
+    from teaching.from_miner import MinerProposalError, from_findings
+
+    findings = _load_findings_jsonl(args.findings)
+    if not findings:
+        _die(f"no findings in {args.findings}", code=1)
+
+    revision = args.revision or _current_git_revision()
+    try:
+        batch = from_findings(
+            findings,
+            miner_id=args.miner_id,
+            emitted_at_revision=revision,
+        )
+    except MinerProposalError as exc:
+        _die(f"batch construction failed: {exc}", code=1)
+
+    out_path = Path(args.out) if args.out else None
+    _write_miner_curriculum_batch(batch.proposals, batch.rejections, out_path)
+    return 0 if batch.proposals else 1
+
+
+def cmd_teaching_propose_curriculum(args: argparse.Namespace) -> int:
+    """W-019: build PackMutationProposals from curriculum ContemplationFinding JSONL."""
+    from teaching.from_curriculum import CurriculumProposalError, from_findings
+
+    findings = _load_findings_jsonl(args.findings)
+    if not findings:
+        _die(f"no findings in {args.findings}", code=1)
+
+    revision = args.revision or _current_git_revision()
+    try:
+        batch = from_findings(
+            findings,
+            curriculum_id=args.curriculum_id,
+            emitted_at_revision=revision,
+        )
+    except CurriculumProposalError as exc:
+        _die(f"batch construction failed: {exc}", code=1)
+
+    out_path = Path(args.out) if args.out else None
+    _write_miner_curriculum_batch(batch.proposals, batch.rejections, out_path)
+    return 0 if batch.proposals else 1
+
+
+def _current_git_revision() -> str:
+    """Return the current git HEAD SHA (first 12 chars) or 'unknown'."""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short=12", "HEAD"],
+            capture_output=True, text=True, timeout=5,
+        )
+        return result.stdout.strip() or "unknown"
+    except Exception:  # noqa: BLE001
+        return "unknown"
+
+
+def _write_miner_curriculum_batch(
+    proposals: tuple,
+    rejections: tuple,
+    out_path: Path | None,
+) -> None:
+    """Write PackMutationProposal batch to JSONL and print summary."""
+    lines = [json.dumps(p.as_dict(), sort_keys=True, ensure_ascii=False) for p in proposals]
+    if out_path is not None:
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+        print(f"wrote {len(proposals)} proposal(s) → {out_path}")
+    else:
+        for line in lines:
+            print(line)
+    print(f"proposals : {len(proposals)}", file=sys.stderr)
+    print(f"rejections: {len(rejections)}", file=sys.stderr)
+    for rej in rejections:
+        print(f"  rejected {rej.get('finding_id', '?')}: {rej.get('reason', '?')}", file=sys.stderr)
+
+
 def cmd_teaching_proposals(args: argparse.Namespace) -> int:
     from teaching.proposals import ProposalLog
 
@@ -3382,6 +3506,51 @@ def build_parser() -> argparse.ArgumentParser:
         help="proposal log path (default: teaching/proposals/proposals.jsonl)",
     )
     teaching_propose.set_defaults(func=cmd_teaching_propose)
+
+    # W-019 — miner and curriculum proposal construction paths (ADR-0095/0104)
+    teaching_propose_miner = teaching_sub.add_parser(
+        "propose-miner",
+        help="build PackMutationProposals from miner ContemplationFinding JSONL (ADR-0095)",
+    )
+    teaching_propose_miner.add_argument(
+        "--findings", required=True,
+        help="path to JSONL file of ContemplationFinding records (kind=pack_mutation_candidate)",
+    )
+    teaching_propose_miner.add_argument(
+        "--miner-id", required=True,
+        help="miner identifier stamped on proposals (e.g. 'articulation_quality_v1')",
+    )
+    teaching_propose_miner.add_argument(
+        "--revision", default=None,
+        help="emitted_at_revision string (defaults to current git HEAD SHA)",
+    )
+    teaching_propose_miner.add_argument(
+        "--out", default=None,
+        help="output JSONL path for proposals (default: stdout)",
+    )
+    teaching_propose_miner.set_defaults(func=cmd_teaching_propose_miner)
+
+    teaching_propose_curriculum = teaching_sub.add_parser(
+        "propose-curriculum",
+        help="build PackMutationProposals from curriculum ContemplationFinding JSONL (ADR-0104)",
+    )
+    teaching_propose_curriculum.add_argument(
+        "--findings", required=True,
+        help="path to JSONL file of ContemplationFinding records (kind=pack_mutation_candidate)",
+    )
+    teaching_propose_curriculum.add_argument(
+        "--curriculum-id", required=True,
+        help="curriculum identifier stamped on proposals (e.g. 'gsm8k_curriculum_v1')",
+    )
+    teaching_propose_curriculum.add_argument(
+        "--revision", default=None,
+        help="emitted_at_revision string (defaults to current git HEAD SHA)",
+    )
+    teaching_propose_curriculum.add_argument(
+        "--out", default=None,
+        help="output JSONL path for proposals (default: stdout)",
+    )
+    teaching_propose_curriculum.set_defaults(func=cmd_teaching_propose_curriculum)
 
     teaching_proposals = teaching_sub.add_parser(
         "proposals",
