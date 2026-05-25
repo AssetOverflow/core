@@ -125,7 +125,11 @@ home (ADR-XXXX or new).
 - **Recommended:** decision belongs to operator review. If (b), it's a
   cleanup PR, not a wiring ADR. If (a), it's a new ADR explaining why
   pack-readback regains primacy.
-- **Status:** ⏳ OPEN — operator decision required before sequencing.
+- **Resolution:** path (b) chosen. `readback_from_intent` and its `SurfaceRealization`
+  return type deleted from `packs/common/runtime_rules.py` (zero callers confirmed;
+  `generate/realizer.py` is the live surface path). No per-language readback files
+  ever existed. Cleanup-as-you-find applied per [[feedback-cleanup-as-you-find]].
+- **Status:** ✅ CLOSED — phase 2 operator-decisions PR.
 
 ### W-007 — `DerivedRecognizer` integration into live turn loop
 
@@ -204,7 +208,11 @@ home (ADR-XXXX or new).
   be the right level (anti-unification doesn't *need* pack vocabulary
   — it derives its own structure); pack consumption may be premature
   generalization.
-- **Status:** ⏳ OPEN — operator decision required.
+- **Resolution:** path (a) chosen. Token-level anti-unification is intentional —
+  the recognizer derives its own structure from taught examples without importing
+  pack vocabulary, which aligns with the thesis (decodes, not generates). Documented
+  in ADR-0143 amendment note. No code change.
+- **Status:** ✅ CLOSED — operator decision: intentional by design.
 
 ### W-011 — Typed recognition refusals dropped at pipeline boundary (FIXED)
 
@@ -263,7 +271,11 @@ home (ADR-XXXX or new).
     [[feedback-cleanup-as-you-find]] — the audit's "unambiguously
     dead" bar is not met here because the module is well-formed and
     test-covered, just unwired. Operator call.
-- **Status:** ⏳ OPEN — operator decision required.
+- **Resolution:** path (a) already landed before this audit entry was written.
+  `ChatRuntime.explain_last_turn()` at `chat/runtime.py:643` backs the `/explain`
+  REPL command wired in `core/cli.py:246`. `tests/test_explain_repl.py` pins
+  the contract. Ratchet was stale.
+- **Status:** ✅ CLOSED — already wired; ratchet stale entry corrected.
 
 ### W-014 — `core/cognition/provenance.py` partially live (evals-only)
 
@@ -277,9 +289,11 @@ home (ADR-XXXX or new).
     surfacing.
   - **(b)** Relocate to `evals/` and accept as offline-only.
   - **(c)** Leave as-is and document explicitly as evals-only.
-- **Status:** ⏳ OPEN — lighter than W-013 because there IS a live
-  consumer (evals); the question is whether it should be promoted to
-  runtime use.
+- **Resolution:** path (c) chosen. The module's own docstring already declares
+  *"Deployment scope (W-014): this module is evals-only infrastructure."*  It
+  has a live consumer (`evals/provenance/runner.py`). Promoting to live runtime
+  is deferred; the evals path is sufficient for audit work. No code change.
+- **Status:** ✅ CLOSED — accepted as evals-only per module's own docstring.
 
 ### W-015 — `session/context.py` post-generation unitize undocumented (FIXED)
 
@@ -425,7 +439,11 @@ emphasize the rebase-onto-current-main step before PR creation.
   - **(c)** Leave as test-live library and document explicitly.
 - **Recommended:** (a) first as the smallest reachability fix; (b)
   follows naturally if W-017 materializes.
-- **Status:** ⏳ OPEN — operator decision required.
+- **Resolution:** path (a) already landed before this audit entry was written.
+  `cmd_teaching_propose_miner` and `cmd_teaching_propose_curriculum` are both
+  registered in `core/cli.py` (lines 3511–3553) as `core teaching propose
+  --from-miner` and `core teaching propose --from-curriculum`. Ratchet was stale.
+- **Status:** ✅ CLOSED — already wired; ratchet stale entry corrected.
 
 ---
 
