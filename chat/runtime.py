@@ -51,6 +51,8 @@ from teaching.discovery import (
 )
 from teaching.discovery_sink import DiscoveryCandidateSink
 from engine_state import EngineStateStore
+from recognition.anti_unifier import derive_recognizer
+from recognition.outcome import FeatureBundle
 from recognition.registry import RecognizerRegistry
 from core.config import DEFAULT_CONFIG, DEFAULT_IDENTITY_PACK, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField
@@ -627,6 +629,9 @@ class ChatRuntime:
         self._recognizer_registry: RecognizerRegistry = RecognizerRegistry()
         self._turn_count: int = 0
         self._pending_candidates: list[DiscoveryCandidate] = []
+        self._pending_recognizer_examples: list[
+            tuple[tuple[str, ...], FeatureBundle]
+        ] = []
         if self._engine_state_store is not None and self._engine_state_store.exists():
             self._load_engine_state()
 
@@ -645,9 +650,28 @@ class ChatRuntime:
         store = self._engine_state_store
         if store is None:
             return
+        if (
+            self.config.recognition_grounded_graph
+            and self._pending_recognizer_examples
+        ):
+            recognizer = derive_recognizer(tuple(self._pending_recognizer_examples))
+            self._recognizer_registry.register(recognizer)
+            self._pending_recognizer_examples.clear()
         store.save_recognizers(self._recognizer_registry.all())
         store.save_discovery_candidates(self._pending_candidates)
         store.save_manifest(self._turn_count)
+
+    def record_recognition_example(
+        self,
+        tokens: tuple[str, ...],
+        bundle: FeatureBundle,
+    ) -> None:
+        self._pending_recognizer_examples.append((tuple(tokens), bundle))
+
+    def first_admitted_recognizer(self):
+        if not self.config.recognition_grounded_graph:
+            return None
+        return self._recognizer_registry.first_admitted()
 
     def _checkpointed_response(self, response: ChatResponse) -> ChatResponse:
         self._turn_count += 1

@@ -123,7 +123,12 @@ class CognitiveTurnPipeline:
         self.runtime = runtime
         self._last_node_id: str | None = None
         self.teaching_store = teaching_store or TeachingStore()
-        self._recognizer = recognizer
+        if recognizer is not None:
+            self._recognizer = recognizer
+        elif hasattr(runtime, "first_admitted_recognizer"):
+            self._recognizer = runtime.first_admitted_recognizer()
+        else:
+            self._recognizer = None
         self._prior_surface: str | None = None
         self._turn_number: int = 0
         # ADR-0021 §Articulation: subjects of prior SPECULATIVE teaching

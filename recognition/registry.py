@@ -23,6 +23,12 @@ class RecognizerRegistry:
     def all(self) -> list[DerivedRecognizer]:
         return list(self._registry.values())
 
+    def first_admitted(self) -> DerivedRecognizer | None:
+        """Return the first registered recognizer, or None if registry is empty."""
+        if not self._registry:
+            return None
+        return next(iter(self._registry.values()))
+
     def __len__(self) -> int:
         return len(self._registry)
 
