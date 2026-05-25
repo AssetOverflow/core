@@ -41,6 +41,7 @@ is a CI failure (`.github/workflows/lane-shas.yml`).
 | ADR-0098 | `demo_composition` | Demos compose from shipped modules; no parallel mechanism | `evals/demo_composition/results/v1_dev.json` | `3a3d09f3a87462737e615c2dd3481b9e13e5ff8fadee0043c37873494ded556d` |
 | ADR-0099 | `public_demo` | Public showcase runs deterministically under 30s; all claims supported | `evals/public_demo/results/v1_dev.json` | `888ddd0d12635d709f91898cf06601062168694d870f776d2b0b7710e5d68cbd` |
 | ADR-0104 | `curriculum_loop_closure` | Curriculum-sourced proposals route through single reviewed teaching path | `evals/curriculum_loop_closure/results/v1_dev.json` | `b46d56b2d209172cc3ffaf3776dc8dcfe55093f13587c5cb67372be6dfa23e8d` |
+| ADR-0131 | `math_teaching_corpus_v1` | Math teaching corpus replays deterministically; all chains pass exit criterion (correct_rate=1.0, wrong=0) | `evals/math_teaching_corpus/v1/report.json` | `eaf160d145da29f9050ede8d58bf111b0f651dd40aeae9201857d0b97e014dd4` |
 
 ## Verification
 
