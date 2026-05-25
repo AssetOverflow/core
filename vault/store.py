@@ -13,6 +13,7 @@ O(N) np.array_equal scans.
 from __future__ import annotations
 
 from collections import deque
+from typing import TYPE_CHECKING
 
 import numpy as np
 from algebra.backend import vault_recall, vault_recall_batch
@@ -20,6 +21,9 @@ from algebra.cga import null_project
 from core.epistemic_state import EpistemicState
 from core.physics.energy import EnergyClass, EnergyProfile
 from teaching.epistemic import ADMISSIBLE_AS_EVIDENCE, EpistemicStatus
+
+if TYPE_CHECKING:
+    from core.physics.learning import VaultPromotionPolicy
 
 
 # ADR-0006 §"Integration Points":

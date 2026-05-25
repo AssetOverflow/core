@@ -241,7 +241,7 @@ class SessionContext:
         input_F = (
             np.asarray(input_versor, dtype=np.float32).copy()
             if input_versor is not None
-            else (self._last_input_versor.copy() if self._last_input_versor is not None else self.state.F.copy())
+            else (self._last_input_versor.copy() if self._last_input_versor is not None else self.state.F.copy())  # type: ignore[union-attr]
         )
         turn_tokens = tuple(tokens_in if tokens_in is not None else self._last_input_tokens)
         backward_edges = self.referents.consumed_turns()
