@@ -434,6 +434,7 @@ class CognitiveTurnPipeline:
             dialogue_role=response.dialogue_role,
             identity_score=response.identity_score,
             vault_hits=response.vault_hits,
+            recall_energy_class=response.recall_energy_class,
             intent=intent,
             proposition_graph=graph,
             articulation_target=target,

@@ -54,6 +54,7 @@ class CognitiveTurnResult:
 
     # --- vault / memory ---
     vault_hits: int
+    recall_energy_class: str | None = None
 
     # --- intent / graph telemetry ---
     intent: DialogueIntent | None = None
