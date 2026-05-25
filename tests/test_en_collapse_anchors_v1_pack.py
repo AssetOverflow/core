@@ -69,6 +69,6 @@ def test_collapse_anchor_baseline_surface_advertises_anchor_nature():
     response = rt.chat("What is love?")
     assert response.grounding_source == "pack"
     assert "en_collapse_anchors_v1" in response.surface
-    assert "collapse_anchor.love" in response.surface
+    # Pack-grounded suffix format no longer inlines domain atoms in the surface.
     # And no lens annotation when no lens is selected.
     assert "[lens(" not in response.surface

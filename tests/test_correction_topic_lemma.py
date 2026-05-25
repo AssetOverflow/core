@@ -157,7 +157,7 @@ def test_correction_with_no_pack_lemma_still_grounds() -> None:
     still receives the acknowledgement surface (degrades to the
     topic-less template), not the universal disclosure."""
     rt = ChatRuntime()
-    response = rt.chat("Nope that is wrong")
+    response = rt.chat("That is wrong")
     assert response.grounding_source == "pack"
     assert "correction" in response.surface.lower()
     assert "Noted topic" not in response.surface

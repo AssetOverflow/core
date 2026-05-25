@@ -27,24 +27,6 @@ import pytest
 
 
 QUARANTINE: frozenset[str] = frozenset({
-    # Cluster B — Surface decoration drift (assertions predate the
-    # "pack-grounded (<pack_id>)" suffix on grounded surfaces).
-    "tests/test_articulation.py::test_chat_surface_is_walk_surface",
-    "tests/test_correction_topic_lemma.py::test_correction_with_no_pack_lemma_still_grounds",
-    "tests/test_cross_pack_chains.py::test_runtime_narrative_aggregates_cross_pack_chains",
-    "tests/test_cross_pack_chains.py::test_runtime_example_aggregates_cross_pack_reverse_chains",
-    "tests/test_cross_pack_grounding.py::test_pack_grounded_surface_resolves_kinship_lemmas[parent]",
-    "tests/test_cross_pack_grounding.py::test_pack_grounded_surface_resolves_kinship_lemmas[child]",
-    "tests/test_cross_pack_grounding.py::test_pack_grounded_surface_resolves_kinship_lemmas[sibling]",
-    "tests/test_cross_pack_grounding.py::test_pack_grounded_surface_resolves_kinship_lemmas[family]",
-    "tests/test_cross_pack_grounding.py::test_pack_grounded_surface_resolves_kinship_lemmas[ancestor]",
-    "tests/test_cross_pack_grounding.py::test_pack_grounded_surface_resolves_kinship_lemmas[descendant]",
-    "tests/test_cross_pack_grounding.py::test_pack_grounded_surface_resolves_kinship_lemmas[spouse]",
-    "tests/test_cross_pack_grounding.py::test_pack_grounded_surface_resolves_kinship_lemmas[offspring]",
-    "tests/test_cross_pack_grounding.py::test_runtime_definition_on_kinship_lemma_engages_pack_path",
-    "tests/test_cross_pack_grounding.py::test_runtime_recall_on_kinship_lemma_engages_pack_path",
-    "tests/test_en_collapse_anchors_v1_pack.py::test_collapse_anchor_baseline_surface_advertises_anchor_nature",
-
     # Cluster C — Lane / runner metric drift (thresholds or report
     # shape evolved without updating assertions).
     "tests/test_adr_0122_rate_per_unit.py::TestOODInvarianceHolds::test_ood_ratio_unchanged_under_rate_grammar",
