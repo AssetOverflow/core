@@ -11,7 +11,7 @@
 | L0 — Algebra primitives | ✅ Audited | **CLOSED** | None — no dead code found | 2026-05-24 |
 | L1 — Field substrate | ✅ Audited | **PARTIAL** | None — no dead code found | 2026-05-24 |
 | L2 — Vault | ✅ Audited | **PARTIAL** | None — flagged learning as wiring debt | 2026-05-24 |
-| L3 — Language packs | ⏳ Pending | — | — | — |
+| L3 — Language packs | ✅ Audited | **PARTIAL** | None — flagged readback as wiring debt | 2026-05-24 |
 | L4 — Recognition | ⏳ Pending | — | — | — |
 | L5 — Cognition pipeline | ⏳ Pending | — | — | — |
 | L6 — Chat runtime + surface composition | ⏳ Pending | — | — | — |
@@ -353,24 +353,6 @@ Cross-layer consistency gaps:
   This is outside L1 and was not verdicted here, but it is a forward
   note for the L6 runtime auditor because it changes live session field
   state after generation.
-| `VaultStore.store` | `session/context.py:149, 289, 300` |
-| `VaultStore.recall` | `session/context.py:347`, `chat/runtime.py:1643`, `generate/stream.py:169`, `vault/decompose.py:124, 179` |
-| `VaultStore.recall_batch` | None (exposed for batched querying, e.g. for offline evaluation or future batching) |
-| `VaultStore.reproject` | `session/context.py:125` |
-| `FieldDecomposer`, `default_decomposer` | `chat/runtime.py:94, 1649` |
-| `UnknownDomainGate`, `default_gate` | `chat/runtime.py:94, 1645` |
-| `VaultPromotionPolicy` | None (dormant) |
-
-No exposed L2 symbol other than the batched API (`recall_batch`) and the dormant `VaultPromotionPolicy` lacks consumption. Note that `recall_batch` is fully tested and verified in `tests/test_vault_recall_indexing_batch.py` but not called in the main production path (which uses single-query `recall` at runtime).
-
-**Pass 2 — semantic:**
-
-We verified three load-bearing invariants:
-1. **Exact-CGA-recall**: Checked `vault/store.py` and `algebra/backend.py`'s `vault_recall` and `vault_recall_batch`. There are no ANN, HNSW, cosine similarity, or other approximations on the recall path. It strictly uses vectorised exact scans via diagonal CGA inner-product metric, satisfying CLAUDE.md and ADR-0019/0054.
-2. **Promotion-path liveness**: Confirmed that `VaultPromotionPolicy` (`core/physics/learning.py`) has 0 live/test callers. Flagged clearly as wiring debt. Verdict is **PARTIAL**.
-3. **Re-thaw path**: Traced `vault.recall` callers to check if recall transiently raises the energy profile of a region to E2 (per ADR-0006 §"Integration Points"). Checked `vault/store.py` and its callers (`session/context.py`, `chat/runtime.py`). Verified that recall does **not** update or re-raise the energy class/profile of recalled entries. Flagged as `specified-not-verified-live`.
-
-### Semantic mismatches flagged for human review
 
 ### Closure criteria scorecard
 
@@ -515,5 +497,165 @@ We verified three load-bearing invariants:
 
 - **L3 (Language packs) auditor**: Lexicons and identity packs specify aspect-class weights (e.g. yiqtol, qatal) which feed into field energy calculation (ADR-0006). Since the L2 vault recall does not currently implement the re-thaw path (raising energy back to E2), downstream language readback rules receive vaulted E0 crystalline concepts rather than transiently warmed E2 concepts. The L3 audit should look at whether language readback rules actually handle E0 vs E2 correctly at the surface.
 - **L8 (Inter-session memory + contemplation) auditor**: ADR-0055 details Tier 1 session vault (`vault/store.py`) and its relation to Tier 3/4 memory. Contemplation and memory discovery will need to query the session vault. Ensure that the lack of re-thaw path and the dormant `VaultPromotionPolicy` do not block Tier 1 to Tier 3/4 promotion/crystallization logic when those layers are audited.
+
+---
+
+## L3 — Language packs
+
+**Audit date:** 2026-05-24
+**Auditor:** primary agent (Gemini)
+**Verdict:** **PARTIAL**
+
+### Scope-hypothesis correction (per audit step 0)
+
+The scope's layering table cited `packs/` directories and ADRs ADR-0027..0047, ADR-0070..0073. Reality: L3 primary concerns also extend to ADR-0005 (language pack contract), ADR-0015 (linguistic manifolds & holonomy resonance), ADR-0091 / ADR-0093 (domain pack contract & implementation), ADR-0102 / ADR-0103 (Hebrew/Greek textual reasoning and fluency), and proposed-only/substrate-only ADR-0084 (definitional layer) and ADR-0087 (rhetorical style axis).
+
+### ADRs in scope for L3
+
+Triaged from Keyword grep against `docs/decisions/`:
+
+| ADR | Title | Status | Belongs at L3? |
+|---|---|---|---|
+| ADR-0005 | Language Pack Contract | Accepted | Yes — defines `language_packs/` format, schemas, and loader contract |
+| ADR-0015 | Language Packs as Compiled Linguistic Manifolds | Accepted | Yes — compiled linguistic manifolds and holonomy resonance |
+| ADR-0027 | Identity Packs — Load-Bearing, Swappable, Ratified | Accepted | Yes — defines swappable, ratified identity packs |
+| ADR-0028 | Identity Surface Wiring | Accepted | Boundary-only — L3 compiles/loads identity packs; realizer/composition is L6 |
+| ADR-0029 | Safety Packs — Always-Loaded, Never-Replaceable Boundaries | Accepted | Yes — always-loaded safety boundaries |
+| ADR-0030 | Depth-Language Hedge Wiring | Accepted | Boundary-only — L3 compiles safety/hedging lemmas; realizer is L6 |
+| ADR-0033 | Ethics Packs — Swappable Domain Commitments | Accepted | Yes — swappable ethics domain commitments |
+| ADR-0043 | Phase-2 pack measurements: claims -> numbers | Accepted | Yes — compiles claims to numbers/weights |
+| ADR-0044 | Medical / clinical ethics pack | Accepted | Yes — worked-example domain pack |
+| ADR-0051 | Trust-Boundary Hardening Pass | Accepted | Yes — defines `PackMutationProposal` validation and compiler trust rules |
+| ADR-0068 | Register pack class | Accepted | Yes — specifies RegisterPack class and cataloging |
+| ADR-0070 | Second ratified register pack: `terse_v1` | Accepted | Yes — register pack definition |
+| ADR-0073 | Anchor lens: substrate-driven substantive variation | Accepted | Yes — anchor lens pack layout and structure |
+| ADR-0073a | Anchor lens content phase | Accepted | Yes — anchor lens content |
+| ADR-0073b | Anchor lens class + loader | Accepted | Yes — loader class for anchor lens |
+| ADR-0073c | First non-trivial lenses + composer wiring | Accepted | Boundary-only — L3 compiles anchor lenses; composer is L6 |
+| ADR-0073d | Anchor-lens telemetry, CLI, and tour demo | Accepted | Boundary-only — CLI/telemetry is L6 |
+| ADR-0084 | Definitional Layer for Lexicon Packs | Proposed | Yes — optional definitional block for glosses and primitives |
+| ADR-0087 | Rhetorical Style as Selection Axis | Proposed | Yes — rhetorical style pack loader and catalog |
+| ADR-0091 | Domain Pack Contract v1 | Accepted | Yes — domain pack schema |
+| ADR-0093 | Domain Pack Contract v1 Implementation | Accepted | Yes — compiler validation for domain packs |
+| ADR-0102 | Hebrew-Greek Textual-Reasoning Reasoning-Capable Ratification | Accepted | Yes — multi-pack ratification for Greek/Hebrew |
+| ADR-0103 | Fluency Lane Attachment for ADR-0102 | Accepted | Boundary-only — L3 compiles Greek/Hebrew fluency lanes; runner/gate is L6 |
+
+### Modules in scope for L3
+
+| Module | Lines | Live-import sites (outside own package, outside `tests/`) | Test-import sites | Status |
+|---|---|---|---|---|
+| `language_packs` | 74 | 31 | 53 | Live |
+| `language_packs.__main__` | 157 | 0 | 0 | Live (CLI entrypoint) |
+| `language_packs.compiler` | 620 | 7 | 31 | Live |
+| `language_packs.definitions` | 312 | 0 | 4 | Dormant (ADR-0084 proposed) |
+| `language_packs.domain_contract` | 217 | 3 | 1 | Live |
+| `language_packs.en_seeder` | 276 | 1 | 0 | Live (Scripts/run_pulse) |
+| `language_packs.evidence` | 64 | 0 | 1 | Dormant (ADR-0015 test only) |
+| `language_packs.loader` | 387 | 5 | 3 | Live |
+| `language_packs.numerics_loader` | 459 | 3 | 3 | Live |
+| `language_packs.schema` | 202 | 6 | 4 | Live |
+| `packs.anchor_lens` | 25 | 3 | 4 | Live |
+| `packs.anchor_lens.loader` | 422 | 3 | 2 | Live |
+| `packs.common.runtime_rules` | 122 | 8 | 0 | Live |
+| `packs.common.validator` | 133 | 4 | 0 | Live |
+| `packs.el.lift_rules` | 14 | 0 | 0 | Live (Dynamic) |
+| `packs.el.readback_rules` | 9 | 0 | 0 | Live (Dynamic) |
+| `packs.el.validators` | 19 | 0 | 0 | Live (Dynamic) |
+| `packs.en.lift_rules` | 14 | 0 | 0 | Live (Dynamic) |
+| `packs.en.readback_rules` | 9 | 0 | 0 | Live (Dynamic) |
+| `packs.en.validators` | 19 | 0 | 0 | Live (Dynamic) |
+| `packs.ethics` | 38 | 3 | 13 | Live |
+| `packs.ethics.check` | 408 | 2 | 8 | Live |
+| `packs.ethics.loader` | 409 | 1 | 5 | Live |
+| `packs.grc.lift_rules` | 14 | 0 | 0 | Live (Dynamic) |
+| `packs.grc.readback_rules` | 9 | 0 | 0 | Live (Dynamic) |
+| `packs.grc.validators` | 19 | 0 | 0 | Live (Dynamic) |
+| `packs.he.lift_rules` | 14 | 0 | 0 | Live (Dynamic) |
+| `packs.he.readback_rules` | 9 | 0 | 0 | Live (Dynamic) |
+| `packs.he.validators` | 19 | 0 | 0 | Live (Dynamic) |
+| `packs.identity` | 14 | 3 | 4 | Live |
+| `packs.identity.loader` | 494 | 3 | 4 | Live |
+| `packs.primitives` | 33 | 0 | 3 | Dormant (ADR-0084 proposed) |
+| `packs.primitives.loader` | 285 | 0 | 2 | Dormant (ADR-0084 proposed) |
+| `packs.register` | 24 | 11 | 7 | Live |
+| `packs.register.loader` | 608 | 11 | 7 | Live |
+| `packs.rhetorical_style` | 36 | 0 | 3 | Dormant (ADR-0087 proposed) |
+| `packs.rhetorical_style.loader` | 425 | 0 | 2 | Dormant (ADR-0087 proposed) |
+| `packs.safety` | 39 | 3 | 13 | Live |
+| `packs.safety.check` | 332 | 2 | 9 | Live |
+| `packs.safety.loader` | 259 | 1 | 4 | Live |
+
+*Note: Individual language-pack rule files (`packs/<lang>/lift_rules.py`, `readback_rules.py`, `validators.py`) are loaded dynamically by `packs/common/validator.py` and `core/cli.py` via `importlib.util` (registered under local dynamic paths), hence having 0 static Python import sites.*
+
+### Caller-trace evidence
+
+Exposed symbols of the layer are cleanly resolved through static imports across multiple layers:
+- `language_packs.compiler.load_pack` is called by `chat/runtime.py` to mount the live vocabulary.
+- `language_packs.compiler.load_mounted_packs` is used in `tests/test_oov_grounding_cache.py` and `tests/test_dialogue.py`.
+- `language_packs.loader.lookup_unit` is consumed by the math parsers `generate/math_parser.py:120` and `generate/math_candidate_parser.py:660`.
+- `language_packs.loader.lookup_cardinal` / `parse_compound_cardinal` are consumed in `generate/math_roundtrip.py:377,400`.
+- `packs.common.validator.validate_pack_dir` is called by every pack-specific validation entrypoint (`packs/<lang>/validators.py`).
+
+### Exercising suite lane
+
+- `core test --suite packs` — Exercises pack loading, compilation, and ratification checks:
+  ```bash
+  python3 -m core.cli test --suite packs -q
+  ```
+  **Verification:** 13 passed, 0 skipped.
+- `core test --suite smoke` — Exercises the end-to-end turn loop pipeline mounting default packs:
+  ```bash
+  python3 -m core.cli test --suite smoke -q
+  ```
+  **Verification:** 67 passed, 0 skipped.
+- `verify_lane_shas.py` — Exercises all 7 pinned lanes:
+  ```bash
+  python3 scripts/verify_lane_shas.py
+  ```
+  **Verification:** lanes: 7/7 match pinned SHAs.
+
+### Cross-layer contract check
+
+**Pass 1 — mechanical (consumer-exists per exposed symbol):**
+
+| Exposed symbol | Consumer evidence |
+|---|---|
+| `compile_entries_to_manifold` | `tests/test_epistemic_phase3_state_tagging.py:84`, `tests/test_holonomy_resonance.py:93` |
+| `load_pack` | `chat/runtime.py`, `scripts/run_pulse.py:78`, `tests/test_proof_properties.py:24` |
+| `load_mounted_packs` | `chat/runtime.py`, `tests/test_dialogue.py:11`, `tests/test_oov_grounding_cache.py:10` |
+| `lookup_unit` | `generate/math_parser.py:121`, `generate/math_candidate_parser.py:661` |
+| `lookup_cardinal` | `generate/math_roundtrip.py:377,402` |
+| `validate_pack_dir` | `packs/he/validators.py:7`, `packs/grc/validators.py:7`, `packs/el/validators.py:7`, `packs/en/validators.py:7` |
+
+**Pass 2 — semantic (three load-bearing invariants checked):**
+1. **Pack manifest checksums match bytes on disk:** Verified in `language_packs/compiler.py` and `language_packs/__main__.py` that manifest checksums are computed using `hashlib.sha256(Path(...).read_bytes()).hexdigest()`. This ensures byte-level disk hashing instead of serialization of Python strings, fully respecting CLAUDE.md guidelines.
+2. **Pack mutation is proposal-only:** Grep scans confirm that no production runtime code path in `language_packs/` or `packs/` writes to or mutates on-disk ratified packs. Changes are strictly proposed via `PackMutationProposal` / `TeachingChainProposal` and applied via offline reviewed CLI commands (e.g. `core teaching review --accept`).
+3. **E0 vs E2 readback handling:** Checked `readback_from_intent` in `packs/common/runtime_rules.py`. While it receives `field_state.energy` and places its value into the `SurfaceRealization` metadata dataclass, it silently treats E0 identically to active E1/E2/E3 regions, returning the raw requested surface without modulating tense, framing, or hedging. This is a semantic inconsistency with ADR-0006/0007.
+
+### Semantic mismatches flagged for human review
+
+- **Dormant Readback rules:** The local `readback` logic (`packs/<lang>/readback_rules.py`) is completely unwired and has 0 callers outside validation checks (`packs/common/validator.py`). Surface generation is performed by `generate/realizer.py` instead of the local pack readback functions.
+- **E0/E2 Readback modulation mismatch:** Readback rules do not implement the energy-based tense or hedging modulations specified in ADR-0006/0007. E0 (recalled vault crystal) is formatted the same as E2/E3 (warmed/active field regions) at the pack level.
+
+### Closure criteria scorecard
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. Design artifact | ✅ | ADR-0005, ADR-0015, ADR-0027, ADR-0029, ADR-0033, ADR-0051, ADR-0068, ADR-0070, ADR-0073, ADR-0091, ADR-0093, ADR-0102 |
+| 2. Code artifact | ✅ | `language_packs/` (compiler, loader, schema), `packs/` (common rules, check loaders, register loader) |
+| 3. Live caller | ⚠️ PARTIAL | Live turn loop mounts packs and resolves vocabulary, but local pack readback rules are dormant and unwired |
+| 4. Exercised by suite lane | ✅ | `packs` exercises compilation/ratification; `smoke` exercises turn pipeline e2e |
+| 5. Cross-layer consistency | ⚠️ PARTIAL | Local readback rules silently treat E0/E2/E3 identically, conflicting with ADR-0006/0007 modulation rules |
+
+**Verdict:** **PARTIAL** (due to dormant readback rules and unwired E0 vs E2 surface modulation).
+
+### Cleanup performed
+
+**None.** Audit found no unambiguously dead code. All dormant modules are either CLI entrypoints, proposed-only substrates (ADR-0084 definitions, ADR-0087 rhetorical styles), or dynamically loaded pack boundary scripts (lift, readback, validators).
+
+### Findings / notes for downstream layers
+
+- **L4 (Recognition) auditor:** L3 domain/lexicon schemas provide the foundational vocabulary. Ensure recognition anti-unification uses the compiled domain namespaces from the VocabManifold.
+- **L5 (Cognition pipeline) / L6 (Chat runtime) auditor:** Note that the local readback rules within packs are dormant. Downstream surface generation utilizes `generate/realizer.py`. If future work activates local pack-driven readback or requires energy-modulated surface forms, the readback rules must be wired in and updated to differentiate E0 (vault recall) vs E2 (transiently warmed) states.
 
 ---
