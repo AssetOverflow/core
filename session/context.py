@@ -268,6 +268,12 @@ class SessionContext:
         payload = {"turn": self.turn, "role": "assistant"}
         if metadata:
             payload.update(metadata)
+        # ADR-0148 — persist energy profile so VaultPromotionPolicy can decide
+        # promotion eligibility on future turns (after the entry has cooled).
+        if oriented_state.energy is not None:
+            payload["energy_raw"] = float(oriented_state.energy.raw)
+            payload["energy_class"] = oriented_state.energy.energy_class.value
+            payload["coherence_residual"] = float(oriented_state.energy.coherence_residual)
         self.vault.store(
             oriented_state.F,
             payload,

@@ -56,6 +56,7 @@ from core.config import DEFAULT_CONFIG, DEFAULT_IDENTITY_PACK, RuntimeConfig
 from core.physics.drive import DriveGradientMap, GradientField
 from core.physics.energy import EnergyClass, EnergyProfile
 from core.physics.exertion import CycleCost, ExertionMeter
+from core.physics.learning import VaultPromotionPolicy
 from core.physics.identity import (
     CharacterProfile,
     IdentityCheck,
@@ -1806,6 +1807,9 @@ class ChatRuntime:
                     "grounding_source": pack_source_tag if pack_surface else "none",
                 },
             )
+            # ADR-0148 — post-finalize promotion scan (flag-gated, null-drop when False).
+            if self.config.vault_promotion_enabled:
+                self._context.vault.promote_eligible_entries(VaultPromotionPolicy())
             discovery_intent_tag = None
             discovery_intent_subject: str | None = None
             stub_graph_atoms: tuple[str, ...] = ()
@@ -1988,6 +1992,9 @@ class ChatRuntime:
             tokens_in=tuple(filtered),
             dialogue_role=str(dialogue_role),
         )
+        # ADR-0148 — post-finalize promotion scan (flag-gated, null-drop when False).
+        if self.config.vault_promotion_enabled:
+            self._context.vault.promote_eligible_entries(VaultPromotionPolicy())
         current_valence = _energy_scalar(getattr(result.final_state, "valence", None))
         surface_ctx = self._build_surface_context(identity_score, current_valence)
         self._last_valence = current_valence

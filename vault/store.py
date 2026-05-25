@@ -290,6 +290,56 @@ class VaultStore:
             ])
         return results
 
+    def promote_eligible_entries(self, policy: "VaultPromotionPolicy") -> int:
+        """Scan SPECULATIVE entries; promote to COHERENT where policy decides.
+
+        For each SPECULATIVE entry that carries stored energy metadata, reconstructs
+        an EnergyProfile and calls policy.decide().  Entries that pass are updated
+        to COHERENT in-place (metadata only — versors are unchanged, so
+        _matrix_cache is not invalidated).
+
+        Returns the count of promotions made in this call.
+        ADR-0148.
+        """
+        from core.physics.energy import EnergyClass as _EnergyClass, EnergyProfile as _EnergyProfile
+
+        promoted = 0
+        for meta in self._metadata:
+            raw_status = meta.get("epistemic_status", "speculative")
+            try:
+                entry_status = (
+                    raw_status
+                    if isinstance(raw_status, EpistemicStatus)
+                    else EpistemicStatus(raw_status)
+                )
+            except ValueError:
+                entry_status = EpistemicStatus.SPECULATIVE
+            if entry_status is not EpistemicStatus.SPECULATIVE:
+                continue
+            # Reconstruct EnergyProfile from stored metadata fields.
+            # If energy metadata is absent, pass None so the policy returns
+            # "missing_energy_profile" rather than guessing.
+            energy: _EnergyProfile | None = None
+            if (
+                "energy_raw" in meta
+                and "energy_class" in meta
+                and "coherence_residual" in meta
+            ):
+                try:
+                    ec = _EnergyClass(meta["energy_class"])
+                    energy = _EnergyProfile(
+                        raw=float(meta["energy_raw"]),
+                        energy_class=ec,
+                        coherence_residual=float(meta["coherence_residual"]),
+                    )
+                except (ValueError, TypeError):
+                    energy = None
+            decision = policy.decide(energy)
+            if decision.promote:
+                meta["epistemic_status"] = EpistemicStatus.COHERENT.value
+                promoted += 1
+        return promoted
+
     def reproject(self) -> None:
         """
         Re-project all stored versors onto the null cone.
