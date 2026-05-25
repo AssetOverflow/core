@@ -42,7 +42,7 @@
 {"id":"cause_why_truth_042","prompt":"Why is truth important?","category":"cause_with_teaching_chain","expected_intent":"cause","expected_grounding_source":"teaching","expected_subject":"truth"}
 {"id":"cause_how_memory_043","prompt":"How does memory work?","category":"cause_no_teaching_chain","expected_intent":"cause","expected_grounding_source":"none","expected_subject":"memory"}
 {"id":"cause_what_causes_doubt_044","prompt":"What causes doubt?","category":"cause_no_teaching_chain","expected_intent":"cause","expected_grounding_source":"none","expected_subject":"doubt"}
-{"id":"explain_truth_045","prompt":"Explain truth.","category":"expository_definition","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"truth"}
-{"id":"paragraph_memory_046","prompt":"Write a paragraph about memory.","category":"expository_definition","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"memory"}
-{"id":"compound_truth_matter_047","prompt":"What is truth, and why does it matter?","category":"compound_definition_cause","expected_intent":"definition","expected_grounding_source":"oov","expected_subject":"truth"}
-{"id":"walkthrough_recall_048","prompt":"Walk me through recall.","category":"walkthrough_definition","expected_intent":"definition","expected_grounding_source":"pack","expected_subject":"recall"}
+{"id":"explain_truth_045","prompt":"Explain truth.","category":"expository_definition","expected_intent":"definition","expected_grounding_source":"teaching","expected_subject":"truth"}
+{"id":"paragraph_memory_046","prompt":"Write a paragraph about memory.","category":"expository_definition","expected_intent":"definition","expected_grounding_source":"teaching","expected_subject":"memory"}
+{"id":"compound_truth_matter_047","prompt":"What is truth, and why does it matter?","category":"compound_definition_cause","expected_intent":"definition","expected_grounding_source":"teaching","expected_subject":"truth"}
+{"id":"walkthrough_recall_048","prompt":"Walk me through recall.","category":"walkthrough_definition","expected_intent":"definition","expected_grounding_source":"teaching","expected_subject":"recall"}

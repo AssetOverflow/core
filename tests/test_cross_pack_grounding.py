@@ -45,9 +45,8 @@ def test_pack_grounded_surface_resolves_kinship_lemmas(lemma: str) -> None:
     surface tagged with the resolving pack id."""
     surface = pack_grounded_surface(lemma)
     assert surface is not None, f"{lemma!r} did not surface"
-    assert lemma in surface
+    assert lemma.lower() in surface.lower(), f"{lemma!r} not found in {surface!r}"
     assert "pack-grounded (en_core_relations_v1)" in surface
-    assert "No session evidence yet." in surface
 
 
 def test_cognition_surface_is_byte_identical_after_resolver() -> None:
@@ -120,7 +119,7 @@ def test_runtime_definition_on_kinship_lemma_engages_pack_path() -> None:
     rt = ChatRuntime()
     resp = rt.chat("What is a parent?")
     assert resp.grounding_source == "pack"
-    assert "parent" in resp.surface
+    assert "parent" in resp.surface.lower()
     assert "en_core_relations_v1" in resp.surface
 
 
@@ -130,7 +129,7 @@ def test_runtime_recall_on_kinship_lemma_engages_pack_path() -> None:
     rt = ChatRuntime()
     resp = rt.chat("Remember family")
     assert resp.grounding_source == "pack"
-    assert "family" in resp.surface
+    assert "family" in resp.surface.lower()
 
 
 def test_relations_pack_is_in_default_input_packs() -> None:

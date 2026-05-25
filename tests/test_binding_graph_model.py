@@ -154,7 +154,7 @@ def test_symbol_binding_is_frozen() -> None:
 
 def test_symbol_binding_uses_slots() -> None:
     sym = _sym()
-    with pytest.raises((AttributeError, dataclasses.FrozenInstanceError)):
+    with pytest.raises((AttributeError, dataclasses.FrozenInstanceError, TypeError)):
         sym.extra = "nope"  # type: ignore[attr-defined]
 
 

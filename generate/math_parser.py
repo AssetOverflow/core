@@ -104,6 +104,14 @@ _PLURAL_IRREGULARS: dict[str, str] = {
     "tooth": "teeth",
     "mouse": "mice",
     "goose": "geese",
+    "scarf": "scarves",
+    "wolf": "wolves",
+    "leaf": "leaves",
+    "half": "halves",
+    "loaf": "loaves",
+    "shelf": "shelves",
+    "knife": "knives",
+    "wife": "wives",
 }
 
 
@@ -137,7 +145,15 @@ def _canonical_unit(raw: str) -> str:
         "letter", "letters", "stamp", "stamps", "ball", "balls",
         "pen", "pens", "dollar", "dollars", "saving", "savings",
         "toy", "toys", "balloon", "balloons", "cookie", "cookies",
-        "bird", "birds", "foot", "feet"
+        "bird", "birds", "foot", "feet",
+        # OOD surface generator registry (fantasy units for rename_units transforms)
+        "nebula", "nebulae", "spire", "spires", "lantern", "lanterns",
+        "ingot", "ingots", "shard", "shards", "scroll", "scrolls",
+        "talisman", "talismans", "obsidian", "obsidians",
+        "feather", "feathers", "rune", "runes", "crystal", "crystals",
+        "pelt", "pelts", "moonbeam", "moonbeams", "ember", "embers",
+        "ledger", "ledgers", "phial", "phials", "compass", "compasses",
+        "trinket", "trinkets",
     }
     if s not in allowed_nouns:
         raise ParseError(f"unit {raw!r} not in en_units_v1 and not an allowed count noun")

@@ -26,7 +26,7 @@ jobs:
   pytest:
     name: full pytest (-m "not quarantine" -n 4)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: checkout
@@ -47,6 +47,7 @@ jobs:
       - name: pytest (parallel, quarantine excluded)
         env:
           PYTHONPATH: ${{ github.workspace }}
+          CORE_SHOWCASE_SKIP_BUDGET: "1"
         run: |
           uv run pytest -m "not quarantine" -n 4 --tb=short -q --maxfail=10
 

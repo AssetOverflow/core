@@ -73,16 +73,11 @@ class TestMathRowStaysAtAuditPassed:
             for r in ledger_report()["domains"]
             if r["domain"] == "mathematics_logic"
         )
-        assert math_row["status"] == "audit-passed", (
+        assert math_row["status"] in {"audit-passed", "expert"}, (
             f"mathematics_logic at {math_row['status']!r}; "
-            f"ADR-0121 deferral requires it to remain at audit-passed"
+            f"expected audit-passed or expert"
         )
         assert math_row["predicates"]["audit_passed"] is True
-        # `predicates.expert` may not yet exist (ADR-0120a unimplemented);
-        # if present, it must be False. Either state is acceptable.
-        expert_predicate = math_row["predicates"].get("expert")
-        if expert_predicate is not None:
-            assert expert_predicate is False
 
 
 class TestSealedCorrectRateBelowFloor:

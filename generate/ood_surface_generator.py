@@ -315,7 +315,18 @@ def _surface_unit(unit: str, value: int | float) -> str:
     return unit
 
 
+_IRREGULAR_SINGULAR: dict[str, str] = {
+    "scarves": "scarf", "wolves": "wolf", "leaves": "leaf", "halves": "half",
+    "loaves": "loaf", "thieves": "thief", "shelves": "shelf", "knives": "knife",
+    "lives": "life", "wives": "wife", "children": "child", "men": "man",
+    "women": "woman", "feet": "foot", "teeth": "tooth", "mice": "mouse",
+    "geese": "goose",
+}
+
+
 def _singular(unit: str) -> str:
+    if unit in _IRREGULAR_SINGULAR:
+        return _IRREGULAR_SINGULAR[unit]
     if unit.endswith("ies"):
         return unit[:-3] + "y"
     if unit.endswith("es") and unit[-3:-2] in {"s", "x", "z"}:

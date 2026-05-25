@@ -39,13 +39,27 @@ RELATIONS_PACK_ID = "en_core_relations_v1"
 
 
 EXPECTED_CHAIN_IDS: frozenset[str] = frozenset({
-    "cause_parent_precedes_child",
-    "cause_child_follows_parent",
+    "cause_advisor_precedes_apprentice",
     "cause_ancestor_precedes_descendant",
+    "cause_caregiver_supports_child",
+    "cause_child_follows_parent",
+    "cause_colleague_supports_teammate",
+    "cause_cousin_belongs_to_family",
     "cause_descendant_follows_ancestor",
+    "cause_elder_precedes_descendant",
     "cause_family_grounds_parent",
+    "cause_manager_precedes_supervisor",
+    "cause_mentor_precedes_apprentice",
+    "cause_parent_precedes_child",
+    "verification_apprentice_requires_advisor",
     "verification_child_requires_parent",
     "verification_descendant_requires_ancestor",
+    "verification_friend_requires_trust",
+    "verification_guardian_requires_child",
+    "verification_neighbor_requires_family",
+    "verification_relative_requires_family",
+    "verification_supervisor_requires_manager",
+    "verification_teammate_requires_colleague",
 })
 
 
