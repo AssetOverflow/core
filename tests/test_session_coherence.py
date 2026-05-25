@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from algebra.backend import cga_inner
-from algebra.versor import unitize_versor
+from algebra.versor import unitize_versor, versor_condition
 from session.context import SessionContext
 from vocab.manifold import VocabManifold
 
@@ -106,3 +106,35 @@ def test_repeated_prompt_accumulates_field_and_stays_prompt_coherent() -> None:
         prompt_score = cga_inner(result.final_state.F, initial.F)
         random_score = cga_inner(result.final_state.F, random_unrelated)
         assert prompt_score > random_score
+
+
+def test_anchor_pull_output_satisfies_versor_condition() -> None:
+    """_anchor_pull must not break the versor condition (W-015 fix contract).
+
+    The previous _slerp_toward implementation interpolated on S^31 rather than
+    the Spin sub-manifold, producing versor_condition values up to 38.58.
+    The rotor-geodesic replacement must satisfy vc < 1e-6 by construction.
+    """
+    from field.state import FieldState
+
+    vocab = _vocab()
+    session = SessionContext(vocab=vocab)
+    session.ingest(["logos"])
+
+    # Build a drifted field well separated from the anchor.
+    drifted = _random_rotor(seed=42)
+    drifted_state = FieldState(
+        F=drifted,
+        node=session.state.node,
+        step=session.state.step,
+        holonomy=session.state.holonomy,
+        energy=session.state.energy,
+        valence=session.state.valence,
+    )
+
+    pulled = session._anchor_pull(drifted_state)
+    vc = versor_condition(pulled.F)
+    assert vc < 1e-6, (
+        f"_anchor_pull output violated versor_condition: {vc:.3e} >= 1e-6. "
+        "The rotor-geodesic path must stay on the Spin sub-manifold by construction."
+    )

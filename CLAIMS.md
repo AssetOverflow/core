@@ -38,8 +38,8 @@ is a CI failure (`.github/workflows/lane-shas.yml`).
 | ADR-0093 | `domain_contract_validation` | All ratified packs satisfy the 9 ADR-0091 contract predicates | `evals/domain_contract_validation/results/v1_dev.json` | `98ace04e3f02bbc5a8ad655bb6593c3f1ee64cb67014f1122fe6c3c85f48d22f` |
 | ADR-0095 | `miner_loop_closure` | Miner-sourced proposals route through single reviewed teaching path | `evals/miner_loop_closure/results/v1_dev.json` | `9f071733abe7dcacf759f928548ce738fb639af3fd6e4c621a651b306d7e77ce` |
 | ADR-0096 | `fabrication_control_summary` | Phantom endpoints / cross-pack non-bridges / sibling collapses refuse | `evals/fabrication_control/results/v1_summary.json` | `01e1b6b711141f2b4a14551d7df3ea482d8d6dd7b364a25c509f4f8d08cda8a8` |
-| ADR-0098 | `demo_composition` | Demos compose from shipped modules; no parallel mechanism | `evals/demo_composition/results/v1_dev.json` | `403be13bd666389bdf1caa1b97382753e531ad72686c5237f64a5e23bc702ac4` |
-| ADR-0099 | `public_demo` | Public showcase runs deterministically under 30s; all claims supported | `evals/public_demo/results/v1_dev.json` | `acd51d0c17948030aa2843309a3729c6f825959e2e0cbbc477e07de8269268a4` |
+| ADR-0098 | `demo_composition` | Demos compose from shipped modules; no parallel mechanism | `evals/demo_composition/results/v1_dev.json` | `3a3d09f3a87462737e615c2dd3481b9e13e5ff8fadee0043c37873494ded556d` |
+| ADR-0099 | `public_demo` | Public showcase runs deterministically under 30s; all claims supported | `evals/public_demo/results/v1_dev.json` | `888ddd0d12635d709f91898cf06601062168694d870f776d2b0b7710e5d68cbd` |
 | ADR-0104 | `curriculum_loop_closure` | Curriculum-sourced proposals route through single reviewed teaching path | `evals/curriculum_loop_closure/results/v1_dev.json` | `b46d56b2d209172cc3ffaf3776dc8dcfe55093f13587c5cb67372be6dfa23e8d` |
 
 ## Verification
