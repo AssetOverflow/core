@@ -177,6 +177,13 @@ def _build_vault_probe(vault, vocab):
     return _probe
 
 
+def _vault_probe_for_context(context: SessionContext | None) -> Any | None:
+    """Return a _VaultProbe callable or None for the given session context."""
+    if context is None:
+        return None
+    return _build_vault_probe(context.vault, context.vocab)
+
+
 def _energy_scalar(energy_obj) -> float:
     if energy_obj is None:
         return 1.0
@@ -646,7 +653,15 @@ class ChatRuntime:
         if store is None:
             return
         store.save_recognizers(self._recognizer_registry.all())
-        store.save_discovery_candidates(self._pending_candidates)
+        candidates_to_save = self._pending_candidates
+        if self.config.auto_contemplate and candidates_to_save:
+            from teaching.contemplation import contemplate
+            vault_probe = _vault_probe_for_context(self._context) if self._context else None
+            candidates_to_save = [
+                contemplate(c, vault_probe=vault_probe)
+                for c in candidates_to_save
+            ]
+        store.save_discovery_candidates(candidates_to_save)
         store.save_manifest(self._turn_count)
 
     def _checkpointed_response(self, response: ChatResponse) -> ChatResponse:

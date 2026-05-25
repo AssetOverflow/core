@@ -269,6 +269,10 @@ class RuntimeConfig:
     # Unlocks W-007 (DerivedRecognizer derivation from promoted COHERENT entries).
     vault_promotion_enabled: bool = False
 
+    # ADR-0150 — run contemplation on pending discovery candidates at checkpoint.
+    # Activates ADR-0056 Phase C1. Null-drop when False.
+    auto_contemplate: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"
