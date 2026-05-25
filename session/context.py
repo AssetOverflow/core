@@ -241,7 +241,7 @@ class SessionContext:
         input_F = (
             np.asarray(input_versor, dtype=np.float32).copy()
             if input_versor is not None
-            else (self._last_input_versor.copy() if self._last_input_versor is not None else self.state.F.copy())
+            else (self._last_input_versor.copy() if self._last_input_versor is not None else self.state.F.copy())  # type: ignore[union-attr]
         )
         turn_tokens = tuple(tokens_in if tokens_in is not None else self._last_input_tokens)
         backward_edges = self.referents.consumed_turns()
@@ -268,6 +268,12 @@ class SessionContext:
         payload = {"turn": self.turn, "role": "assistant"}
         if metadata:
             payload.update(metadata)
+        # ADR-0148 — persist energy profile so VaultPromotionPolicy can decide
+        # promotion eligibility on future turns (after the entry has cooled).
+        if oriented_state.energy is not None:
+            payload["energy_raw"] = float(oriented_state.energy.raw)
+            payload["energy_class"] = oriented_state.energy.energy_class.value
+            payload["coherence_residual"] = float(oriented_state.energy.coherence_residual)
         self.vault.store(
             oriented_state.F,
             payload,

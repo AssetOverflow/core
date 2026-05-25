@@ -242,6 +242,7 @@ class RuntimeConfig:
     # live workload.
     unified_ingest: bool = False
 
+
     # ADR-0144 — recognition-grounded articulation graph.  When True and a
     # DerivedRecognizer is attached to CognitiveTurnPipeline, the articulation
     # graph is derived from the admitted EpistemicNode via the connector rather
@@ -258,6 +259,15 @@ class RuntimeConfig:
     # ADR-0021 §3.  Default False preserves all pre-W-016 discovery
     # output byte-identically (null-drop invariant on discovery lanes).
     vault_probe_discoveries: bool = False
+    # ADR-0148 — wire VaultPromotionPolicy into turn boundary.
+    # When True, ChatRuntime calls vault.promote_eligible_entries() after each
+    # finalize_turn(), scanning SPECULATIVE entries for crystallization to
+    # COHERENT based on their energy profile (EnergyClass E0/E1, coherence_residual
+    # ≤ 0.05).  Fresh entries written in the current turn are E2+ and will not
+    # promote yet — the policy fires on entries that have cooled across turns.
+    # Default False: zero behavior change when disabled (null-drop invariant).
+    # Unlocks W-007 (DerivedRecognizer derivation from promoted COHERENT entries).
+    vault_promotion_enabled: bool = False
 
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
