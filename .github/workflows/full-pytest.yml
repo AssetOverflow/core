@@ -1,18 +1,19 @@
 name: full-pytest
 
-# Runs the full pytest suite, excluding tests marked @pytest.mark.quarantine
-# via the conftest.py QUARANTINE registry. The intent is a ratchet: once a
-# test is removed from the registry it must keep passing on this gate.
+# Post-merge validation — runs the full pytest suite on every push to main.
+# PRs are gated by the faster smoke workflow (smoke.yml); this catches
+# anything outside the smoke suite within minutes of merge.
 #
-# Quarantined tests are pre-existing failures that pre-date the substrate-
-# liveness audit (bisect-confirmed against c1a1b7a). See:
+# Quarantined tests are excluded via the conftest.py QUARANTINE registry.
+# The intent is a ratchet: once a test is removed from the registry it
+# must keep passing on this gate.
+#
+# See:
 #   conftest.py — the QUARANTINE registry (one entry per quarantined test)
 #   docs/test-debt-quarantine.md — cluster diagnoses + removal policy
 
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
 
 permissions:
@@ -24,7 +25,7 @@ concurrency:
 
 jobs:
   pytest:
-    name: full pytest (-m "not quarantine" -n 4)
+    name: full pytest (-m "not quarantine" -n 2)
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -49,7 +50,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
           CORE_SHOWCASE_SKIP_BUDGET: "1"
         run: |
-          uv run pytest -m "not quarantine" -n 4 --tb=short -q --maxfail=10
+          uv run pytest -m "not quarantine" -n 2 --tb=short -q --maxfail=10
 
       - name: report quarantine size (informational)
         if: always()

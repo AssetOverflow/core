@@ -1,0 +1,52 @@
+name: smoke
+
+# Fast PR gate — runs the smoke suite (~2-3 min) on every PR push.
+# Covers: chat runtime, pipeline, architectural invariants.
+#
+# Full pytest runs post-merge to main (see full-pytest.yml).
+# Regressions caught here block the PR; anything outside the smoke
+# suite is caught on main within minutes of merge.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: smoke (-m "not quarantine")
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: '3.11'
+          enable-cache: true
+
+      - name: install dependencies
+        run: |
+          uv pip install -e ".[dev]" pyyaml
+
+      - name: pytest smoke suite
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          uv run pytest -m "not quarantine" --tb=short -q \
+            tests/test_chat_runtime.py \
+            tests/test_achat.py \
+            tests/test_runtime_config.py \
+            tests/test_cognitive_turn_pipeline.py \
+            tests/test_architectural_invariants.py

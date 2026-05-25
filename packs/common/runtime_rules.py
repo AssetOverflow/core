@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -18,15 +17,6 @@ from core_ingest.types import (
     ReviewLevel,
     SourceSpan,
 )
-
-
-@dataclass(frozen=True, slots=True)
-class SurfaceRealization:
-    surface: str
-    language: str
-    field_target: str | None = None
-    energy_class: str | None = None
-    valence: dict[str, object] | None = None
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -99,24 +89,3 @@ def lift_from_pack(pack_dir: Path, analysis: object, *, language: str) -> list[C
     return [packet]
 
 
-def readback_from_intent(field_state: object, intent: object, *, language: str) -> SurfaceRealization:
-    payload = analysis_payload(intent or {"surface": ""})
-    surface = payload.get("surface")
-    if surface is None and "tokens" in payload:
-        surface = " ".join(str(token) for token in payload["tokens"])
-    if surface is None and "lemma" in payload:
-        surface = str(payload["lemma"])
-    if surface is None and "script_form" in payload:
-        surface = str(payload["script_form"])
-    if surface is None:
-        energy = getattr(field_state, "energy", None)
-        surface = energy.energy_class.value if energy is not None else ""
-    energy = getattr(field_state, "energy", None)
-    valence = getattr(field_state, "valence", None)
-    return SurfaceRealization(
-        surface=str(surface),
-        language=language,
-        field_target=payload.get("field_target"),
-        energy_class=None if energy is None else energy.energy_class.value,
-        valence=None if valence is None else valence.to_payload(),
-    )
