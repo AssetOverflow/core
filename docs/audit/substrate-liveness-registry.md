@@ -12,7 +12,7 @@
 | L1 — Field substrate | ✅ Audited | **PARTIAL** | None — no dead code found | 2026-05-24 |
 | L2 — Vault | ✅ Audited | **PARTIAL** | None — flagged learning as wiring debt | 2026-05-24 |
 | L3 — Language packs | ✅ Audited | **PARTIAL** | None — flagged readback as wiring debt | 2026-05-24 |
-| L4 — Recognition | ⏳ Pending | — | — | — |
+| L4 — Recognition | ✅ Audited | **PARTIAL** | None — flagged connector/storage/integration as wiring debt | 2026-05-24 |
 | L5 — Cognition pipeline | ⏳ Pending | — | — | — |
 | L6 — Chat runtime + surface composition | ⏳ Pending | — | — | — |
 | L7 — Teaching loop | ⏳ Pending | — | — | — |
@@ -657,5 +657,230 @@ Exposed symbols of the layer are cleanly resolved through static imports across 
 
 - **L4 (Recognition) auditor:** L3 domain/lexicon schemas provide the foundational vocabulary. Ensure recognition anti-unification uses the compiled domain namespaces from the VocabManifold.
 - **L5 (Cognition pipeline) / L6 (Chat runtime) auditor:** Note that the local readback rules within packs are dormant. Downstream surface generation utilizes `generate/realizer.py`. If future work activates local pack-driven readback or requires energy-modulated surface forms, the readback rules must be wired in and updated to differentiate E0 (vault recall) vs E2 (transiently warmed) states.
+
+---
+
+## L4 — Recognition
+
+**Audit date:** 2026-05-24
+**Auditor:** Codex
+**Verdict:** **PARTIAL**
+
+### Scope-hypothesis correction (per audit step 0)
+
+The scope's layering table cited ADR-0143 and ADR-0144 as starting
+points. Reality: L4 also has a boundary dependency on ADR-0142, because
+the recognition outcome and carrier emit the ADR-0142 epistemic-state
+vocabulary. Dispatch trace has no standalone ADR; it is an ADR-0142
+implementation-debt closure that landed in `chat/dispatch_trace.py` and
+`chat/runtime.py`.
+
+### ADRs in scope for L4
+
+Triaged from recognition / anti-unification / epistemic / proposition
+graph / feature-bundle / dispatch-trace keyword grep against
+`docs/decisions/`:
+
+| ADR | Title | Status | Belongs at L4? |
+|---|---|---|---|
+| ADR-0142 | Epistemic State Taxonomy — First-Class Vocabulary | Accepted | Boundary-only — defines states that recognition may emit and names dispatch trace as provenance debt |
+| ADR-0143 | Teaching-Derived Structural Recognition via Multi-Resolution Anti-Unification | Accepted | Yes — defines `RecognitionOutcome`, `DerivedRecognizer`, `derive_recognizer()`, `recognize()`, refusal layers, and byte-identity guarantees |
+| ADR-0144 | PropositionGraph — Epistemic Carrier and Recognition Integration Gate | Accepted | Yes — defines `EpistemicGraph`, connector, pipeline recognizer parameter, and opt-in recognition-grounded graph |
+
+Related scope docs in this layer, not ADRs: `teaching-derived-recognition-scope.md`,
+`proposition-graph-scope.md`, `recognizer-storage-scope.md`, and
+`epistemic-state-taxonomy-scope.md`.
+
+Other ADRs surfaced by the grep but assigned to other layers: ADR-0021
+(general epistemic grade policy / teaching safety), ADR-0115 / ADR-0126 /
+ADR-0132..0136 (math candidate/proposition graph corridor), ADR-0127 /
+ADR-0128 (pack-typed units/numerics recognition for math parser), and
+ADR-0131.G.3 / ADR-0131.G.3.1 (literal-recognition axes). These are not
+the teaching-derived L4 recognition mechanism audited here.
+
+### Modules in scope for L4
+
+| Module | Lines | Live-import sites (outside own package, outside `tests/`) | Test-import sites | Status |
+|---|---:|---:|---:|---|
+| `recognition.__init__` | 11 | 0 | 0 | Re-export shim; no external direct consumers |
+| `recognition.anti_unifier` | 628 | 1 (`core/cognition/pipeline.py`) | 3 | Mechanism coded; live only when a recognizer is explicitly supplied |
+| `recognition.outcome` | 367 | 0 outside `recognition/`; 3 package-internal live consumers | 3 | Contract coded; live through `anti_unifier` / `carrier` / `connector` |
+| `recognition.carrier` | 128 | 2 (`core/cognition/pipeline.py`, `core/cognition/result.py`) | 1 | Carrier coded; live result field exists |
+| `recognition.connector` | 66 | 1 (`core/cognition/pipeline.py`) | 1 | Connector coded; live only under opt-in flag and supplied recognizer |
+| `chat.dispatch_trace` | 13 | 1 outside `chat/` (`core/cognition/result.py`), plus `chat/runtime.py` live consumer | 1 | Live in `ChatRuntime` and surfaced through `CognitiveTurnResult` |
+
+No unambiguously dead code was found. `recognition/connector.py` is
+exactly the connector-style module the recognizer-storage scope warns
+about: it is coded and imported by the pipeline, but its meaningful path
+requires a supplied `DerivedRecognizer` and `recognition_grounded_graph=True`.
+Flagged, not deleted.
+
+### Caller-trace evidence
+
+- `core/cognition/pipeline.py:38-40` imports `DerivedRecognizer`,
+  `recognize`, `EpistemicGraph`, `EpistemicNode`, and
+  `epistemic_node_to_graph_node`.
+- `core/cognition/pipeline.py:117-127` accepts
+  `recognizer: DerivedRecognizer | None = None` and stores it on
+  `self._recognizer`.
+- `core/cognition/pipeline.py:152-169` tokenizes once and calls
+  `recognize(self._recognizer, raw_tokens)` only when a recognizer was
+  attached. Admitted outcomes become a per-turn `EpistemicGraph`.
+- `core/cognition/pipeline.py:201-211` invokes the connector only when
+  `self.runtime.config.recognition_grounded_graph` is true and an
+  `epistemic_graph` exists.
+- `core/cognition/result.py:105-115` exposes `epistemic_graph` and
+  `dispatch_trace` on `CognitiveTurnResult`.
+- `core/config.py:245-250` defines `recognition_grounded_graph: bool = False`.
+- `chat/runtime.py:46,840-1134,1656-1686,1901-1986` builds dispatch
+  attempts and selected-source traces; `chat/runtime.py:415` exposes
+  the trace on `ChatResponse`.
+- All non-test `CognitiveTurnPipeline(...)` constructions found in
+  `scripts/`, `benchmarks/`, and `evals/` omit the `recognizer` argument.
+  `core chat` constructs `ChatRuntime`, not a `CognitiveTurnPipeline`
+  with a recognizer.
+
+The recognizer branch is therefore present in the cognitive spine but has
+no normal runtime constructor that supplies a derived recognizer. The
+mechanism is coded; integration into normal operation is absent.
+
+### Exercising suite lane
+
+- `core test --suite smoke` exercises the default cognitive pipeline and
+  verifies pre-existing behavior with `recognizer=None`.
+  ```bash
+  python3 -m core.cli test --suite smoke -q
+  ```
+  **Verification:** 67 passed.
+- Direct L4 tests exercise the recognition mechanism, carrier, connector,
+  and dispatch trace:
+  ```bash
+  python3 -m pytest tests/test_epistemic_carrier.py tests/test_recognition_phase1.py tests/test_recognition_phase2.py tests/test_dispatch_trace.py -q
+  ```
+  **Verification:** 28 passed.
+- `scripts/verify_lane_shas.py` still matches all pinned evidence lanes:
+  ```bash
+  python3 scripts/verify_lane_shas.py
+  ```
+  **Verification:** lanes: 7/7 match pinned SHAs.
+
+**Lane gap:** the direct L4 tests are not named in any curated
+`core test --suite {smoke|cognition|teaching|packs|runtime|algebra}`
+alias except the broad `full` alias. `smoke` covers the default
+`recognizer=None` path, but no documented curated lane exercises
+`CognitiveTurnPipeline(..., recognizer=...)`.
+
+### Cross-layer contract check
+
+**Pass 1 — mechanical (consumer-exists per exposed symbol):**
+
+| Exposed symbol / field | Consumer evidence |
+|---|---|
+| `derive_recognizer()` | Direct tests only (`tests/test_recognition_phase1.py`, `tests/test_recognition_phase2.py`, `tests/test_epistemic_carrier.py`); no live constructor derives a recognizer |
+| `DerivedRecognizer` | Type-consumed by `core/cognition/pipeline.py:121`; no non-test caller passes an instance |
+| `recognize()` | `core/cognition/pipeline.py:160`, but only when `_recognizer is not None`; direct tests call it heavily |
+| `RecognitionOutcome` / `FeatureBundle` / typed refusals | Consumed by `recognition.anti_unifier`, `recognition.carrier`, `recognition.connector`, and direct tests |
+| `EpistemicGraph` | Produced by `core/cognition/pipeline.py:166-169`, stored on `CognitiveTurnResult.epistemic_graph`; no downstream live consumer reads it yet |
+| `EpistemicNode.with_transition()` | Direct tests only; no verifier/vault transition caller yet (ADR-0144 explicitly defers verifier/vault transitions) |
+| `epistemic_node_to_graph_node()` | `core/cognition/pipeline.py:207-210` under opt-in flag; direct connector tests |
+| `RuntimeConfig.recognition_grounded_graph` | Read by `core/cognition/pipeline.py:206`; default false |
+| `DispatchTrace` / `DispatchAttempt` | Built in `chat/runtime.py`, surfaced on `ChatResponse.dispatch_trace` and `CognitiveTurnResult.dispatch_trace`, asserted by `tests/test_dispatch_trace.py` |
+
+**Mechanical closure gaps:**
+
+- No non-test caller derives, stores, loads, or passes a
+  `DerivedRecognizer` into `CognitiveTurnPipeline`.
+- The ADR-0144 refusal path is incomplete in the pipeline: refused
+  recognition produces no carrier, but `_rec_outcome.refusal_reason` is
+  not copied into `CognitiveTurnResult.refusal_reason`; that field is
+  populated from `ChatResponse.refusal_reason` instead.
+- `EpistemicGraph` is exposed on the turn result but has no live
+  downstream consumer beyond tests.
+
+**Pass 2 — semantic (three L4 invariants checked):**
+
+1. **Recognizer integration into live turn loop:** Confirmed partial.
+   The pipeline accepts a recognizer and can call it, but every normal
+   constructor found in scripts, benchmarks, evals, and tests outside
+   L4-specific direct fixtures omits `recognizer=...`. No main/runtime
+   path constructs or persists one. L4 is therefore at most **PARTIAL**.
+2. **Anti-unifier determinism:** Mostly satisfied by construction and
+   tests. `DerivedRecognizer.to_json()` sorts keys with compact JSON;
+   `FeatureBundle.from_mapping()` sorts features; allowed verb phrases
+   are sorted before serialization and matching; ignored prefix tokens
+   are sorted. `teaching_set_id` is SHA-256 of
+   `json.dumps(sorted(token_sequences), ensure_ascii=False,
+   separators=(",", ":"))`, so example order does not affect the id.
+   Caveat: the hash covers token sequences only, not the full feature
+   bundles. Same tokens with different taught feature values would share
+   a `teaching_set_id`; this is a semantic identity mismatch against the
+   phrase "same teaching examples" if "example" includes labels/bundles.
+3. **Vocabulary source:** Recognition does **not** consume L3's compiled
+   `VocabManifold`, domain namespaces, or pack-resident lexicon. Grep
+   across `recognition/` found no `VocabManifold`, `language_packs`,
+   `load_pack`, `compiled`, `lexicon`, or `vocab` references except a
+   prose comment in `outcome.py`. `derive_recognizer()` operates on raw
+   token sequences plus taught `FeatureBundle` evidence.
+
+### Semantic mismatches flagged for human review
+
+- **Teaching-set hash scope:** ADR-0143 says `teaching_set_id` is a hash
+  of the teaching set. The implementation hashes only sorted token
+  sequences, not the feature bundles. If two reviewed teaching sets share
+  tokens but differ in feature labels, values, or evidence, they collide
+  at the recognizer identity layer even though the derived recognizer may
+  differ.
+- **L3 vocabulary bypass:** Per L3's forward note, L4 does not use the
+  compiled vocabulary/domain namespaces from `VocabManifold`. This may be
+  acceptable for the token-level spike, but it means L4 recognition is
+  not yet grounded in L3's pack-resident domain schema.
+- **Recognition refusal observability:** ADR-0144 describes typed
+  recognition refusal materialization on the turn result. The current
+  pipeline discards `_rec_outcome.refusal_reason` on refused recognition
+  and leaves `CognitiveTurnResult.refusal_reason` to the generation/chat
+  path.
+
+### Closure criteria scorecard
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. Design artifact | ✅ | ADR-0142 boundary vocabulary, ADR-0143, ADR-0144 |
+| 2. Code artifact | ✅ | `recognition/{anti_unifier,outcome,carrier,connector}.py`, `chat/dispatch_trace.py`, pipeline/result/config fields |
+| 3. Live caller | ⚠️ PARTIAL | Pipeline imports and conditionally calls recognizer, but no normal runtime constructor supplies one; dispatch trace is live |
+| 4. Exercised by suite lane | ⚠️ PARTIAL | `smoke` exercises default no-recognizer path; direct L4 tests pass but are not in a curated lane except `full` |
+| 5. Cross-layer consistency | ⚠️ PARTIAL | Carrier/result fields exist; recognizer storage/loading absent; refusal reason not propagated; L3 vocabulary not consumed |
+
+**Verdict:** **PARTIAL** (mechanism and carrier are coded; dispatch trace
+is live; derived recognizer storage/construction and normal turn-loop
+integration are absent).
+
+### Cleanup performed
+
+**None.** No unambiguously dead, redundant, superseded, or orphaned code
+was found. Connector-style modules are flagged as wiring debt rather than
+deleted because the recognizer-storage scope explicitly leaves these
+awaiting integration/storage ADRs.
+
+### Findings / notes for downstream layers
+
+- **L5 (Cognition pipeline) auditor:** The pipeline has a recognition
+  branch, but it is cold unless a caller supplies `DerivedRecognizer`.
+  Verify whether L5's current verdict should treat this as an optional
+  observability branch or an unclosed live cognitive step. Also check the
+  recognition-refusal drop: `_rec_outcome.refusal_reason` is not folded
+  into the turn result.
+- **L6 (Chat runtime) auditor:** Dispatch trace is live in `ChatRuntime`
+  and surfaced through `ChatResponse` / `CognitiveTurnResult`, but it is
+  observability only and not folded into trace hash. Confirm whether L6
+  contracts require trace-hash participation or only operator-visible
+  provenance.
+- **L7 (Teaching loop) auditor:** Recognition refusals are intended to be
+  teaching signals, but the live pipeline currently discards typed
+  recognizer refusals. If teaching-derived recognition is to feed review,
+  L7 needs a concrete consumer or the L4/L7 boundary remains open.
+- **Recognizer-storage ADR:** This audit confirms the storage scope's
+  core finding: `DerivedRecognizer` is serializable and accepted by the
+  pipeline, but nothing in main constructs, persists, loads, shares, or
+  reactivates one across sessions.
 
 ---
