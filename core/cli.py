@@ -223,7 +223,10 @@ def cmd_chat(args: argparse.Namespace) -> int:
         _print_runtime_import_hint(exc)
 
     try:
-        runtime = ChatRuntime(config=_runtime_config_from_args(args))
+        runtime = ChatRuntime(
+            config=_runtime_config_from_args(args),
+            no_load_state=bool(getattr(args, "no_load_state", False)),
+        )
     except Exception as exc:  # noqa: BLE001 — surface pack-load errors
         from packs.anchor_lens.loader import AnchorLensError
         from packs.register.loader import RegisterPackError
@@ -3185,6 +3188,12 @@ def build_parser() -> argparse.ArgumentParser:
             "after each turn, print the TurnVerdicts bundle summary to "
             "stderr (ADR-0041 operator-facing audit readout)"
         ),
+    )
+    chat.add_argument(
+        "--no-load-state",
+        action="store_true",
+        default=False,
+        help="start with a clean engine state, ignoring any existing engine_state/ checkpoint",
     )
     chat.add_argument(
         "--register",

@@ -95,6 +95,15 @@ class EvidencePointer:
             "epistemic_status": self.epistemic_status,
         }
 
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "EvidencePointer":
+        return cls(
+            source=payload["source"],
+            ref=payload["ref"],
+            polarity=payload["polarity"],
+            epistemic_status=payload["epistemic_status"],
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class SubQuestion:
@@ -119,6 +128,18 @@ class SubQuestion:
             "outcome": self.outcome,
             "evidence": [e.as_dict() for e in self.evidence],
         }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "SubQuestion":
+        return cls(
+            sub_id=payload["sub_id"],
+            proposed_subject=payload["proposed_subject"],
+            proposed_intent=payload["proposed_intent"],
+            outcome=payload["outcome"],
+            evidence=tuple(
+                EvidencePointer.from_dict(e) for e in payload.get("evidence", [])
+            ),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,6 +198,28 @@ class DiscoveryCandidate:
             out["contemplation_depth"] = self.contemplation_depth
             out["recursion_overflow"] = self.recursion_overflow
         return out
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "DiscoveryCandidate":
+        return cls(
+            candidate_id=payload["candidate_id"],
+            proposed_chain=payload["proposed_chain"],
+            trigger=payload["trigger"],
+            source_turn_trace=payload["source_turn_trace"],
+            pack_consistent=payload["pack_consistent"],
+            boundary_clean=payload["boundary_clean"],
+            review_state=payload.get("review_state", "unreviewed"),
+            polarity=payload.get("polarity", "undetermined"),
+            claim_domain=payload.get("claim_domain", "factual"),
+            evidence=tuple(
+                EvidencePointer.from_dict(e) for e in payload.get("evidence", [])
+            ),
+            sub_questions=tuple(
+                SubQuestion.from_dict(s) for s in payload.get("sub_questions", [])
+            ),
+            contemplation_depth=payload.get("contemplation_depth", 0),
+            recursion_overflow=payload.get("recursion_overflow", False),
+        )
 
 
 _TEACHING_INTENT_NAME: dict[IntentTag, str] = {
