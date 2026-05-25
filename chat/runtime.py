@@ -602,6 +602,9 @@ class ChatRuntime:
         # append-only, fail-fast on sink errors, deterministic JSONL.
         self._articulation_sink: Any | None = None
         self._articulation_turn_counter: int = 0
+        # W-013 — last classified intent, updated each turn for /explain REPL use.
+        self._last_intent: Any | None = None
+        self._last_input_text: str = ""
 
     @property
     def session(self) -> SessionContext:
@@ -636,6 +639,22 @@ class ChatRuntime:
         never tries to act on alone.
         """
         return self._last_plan_metrics
+
+    def explain_last_turn(self) -> str:
+        """Return a canonical natural-language restatement of the last turn (W-013).
+
+        Feeds the last classified intent through ``core.cognition.explain``'s
+        dispatch table and returns the resulting canonical prompt string.
+        This is the ``/explain`` REPL command's backing method.
+
+        Returns an empty string when no turn has been processed yet or when
+        the intent could not be classified (UNKNOWN tag).
+        """
+        from core.cognition.explain import explain_from_intent
+        return explain_from_intent(
+            self._last_intent,
+            correction_text=self._last_input_text,
+        )
 
     def attach_telemetry_sink(
         self,
@@ -906,6 +925,7 @@ class ChatRuntime:
         from generate.intent import IntentTag
         from generate.intent_bridge import classify_intent_from_input
         intent = classify_intent_from_input(text)
+        self._last_intent = intent  # W-013: expose for /explain
         if intent.tag is IntentTag.COMPARISON:
             lemma_a = (intent.subject or "").strip().rstrip(".,?!;:")
             lemma_b = (intent.secondary_subject or "").strip().rstrip(".,?!;:")
@@ -1660,6 +1680,7 @@ class ChatRuntime:
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
+        self._last_input_text = text  # W-013: store for explain_last_turn()
         tokens = self._tokenize(text)
         filtered = self._apply_oov_policy(tokens)
         if not filtered:
@@ -1746,6 +1767,7 @@ class ChatRuntime:
             ):
                 from generate.intent_bridge import classify_intent_from_input
                 _intent = classify_intent_from_input(text)
+                self._last_intent = _intent  # W-013
                 discovery_intent_tag = _intent.tag
                 discovery_intent_subject = _intent.subject
                 stub_articulation = ArticulationPlan(
