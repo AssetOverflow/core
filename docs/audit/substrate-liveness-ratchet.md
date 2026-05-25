@@ -1,4 +1,4 @@
-# Substrate Liveness Ratchet — v1 (partial; informed by L0-L3 + L10 scope)
+# Substrate Liveness Ratchet — v2 (partial; informed by L0-L5 + L10 scope)
 
 **Scope:** [substrate-liveness-audit-scope](../decisions/substrate-liveness-audit-scope.md) (v2)
 **Companion:** [substrate-liveness-registry](./substrate-liveness-registry.md)
@@ -180,6 +180,104 @@ home (ADR-XXXX or new).
   half is a small extension to existing machinery."*
 - **Status:** ⏳ OPEN — chained: W-008 → W-009.
 
+### W-010 — L4 recognition bypasses L3 vocabulary
+
+- **Surfaced by:** L4 audit (PR #243), confirming L3 audit's forward
+  question (PR #241).
+- **Gap:** `derive_recognizer()` and `recognize()` operate on raw token
+  sequences and taught `FeatureBundle` evidence without consuming L3's
+  compiled `VocabManifold`, domain namespaces, or pack-resident
+  lexicon. Grep across `recognition/` confirms no `VocabManifold` /
+  `language_packs` / `load_pack` / `compiled` / `lexicon` / `vocab`
+  references except a prose comment in `outcome.py`.
+- **Dependency:** operator decision — is the token-level spike
+  intentional (raw tokens are the right substrate for anti-unification)
+  or transitional (recognition will eventually plug into L3 vocabulary
+  for richer typed slots)?
+- **Resolution paths:**
+  - **(a)** Document as intentional in ADR-0143 amendment. No code
+    change. Recognition stays token-level by design.
+  - **(b)** Wire `VocabManifold` consumption into `derive_recognizer()`
+    via new ADR. Larger change; would let recognition reference
+    pack-resident domain types in feature slots.
+- **Recommended:** operator decision. Per the thesis, token-level may
+  be the right level (anti-unification doesn't *need* pack vocabulary
+  — it derives its own structure); pack consumption may be premature
+  generalization.
+- **Status:** ⏳ OPEN — operator decision required.
+
+### W-011 — Typed recognition refusals dropped at pipeline boundary
+
+- **Surfaced by:** L4 audit (PR #243).
+- **Gap:** `CognitiveTurnPipeline` calls `recognize()` and, on
+  admission, wraps the outcome in an `EpistemicGraph` carrier. On
+  refusal, `_rec_outcome.refusal_reason` is **discarded** —
+  `CognitiveTurnResult.refusal_reason` is populated from
+  `ChatResponse.refusal_reason` (the generation path), not from the
+  typed recognition refusal. The teaching loop is supposed to consume
+  typed recognizer refusals as learning signals (per ADR-0143's
+  refusal-first design); today the signals are dropped.
+- **Dependency:** light — requires extending the pipeline's recognition
+  branch to fold `_rec_outcome.refusal_reason` into the turn result.
+- **Proposed home:** small ADR amendment to ADR-0144 or new tiny ADR
+  *"propagate recognition refusal_reason into CognitiveTurnResult"*.
+  Mechanical change; should not require L10 or storage decisions.
+- **Status:** ⏳ OPEN — independent, can land soon.
+
+### W-012 — `InnerLoopExhaustion` not caught in `ChatRuntime.chat()`
+
+- **Surfaced by:** L5 audit (PR #244).
+- **Gap:** Inner-loop refusal exceptions (`InnerLoopExhaustion`,
+  ADR-0024) are raised during generation but **never caught in the
+  main `ChatRuntime.chat()` execution**. The plumbing to materialize
+  `RefusalReason` taxonomy into `ChatResponse.refusal_reason` exists
+  (W-011-adjacent), but the live run propagates as unhandled exception
+  instead of materialized refusal.
+- **Cross-reference:** ADR-0142 implementation debt #3 lists this as
+  the blocker for full epistemic refusal tracking.
+- **Dependency:** light — requires `try/except InnerLoopExhaustion` in
+  `ChatRuntime.chat()` with refusal materialization.
+- **Proposed home:** small ADR or fix-PR directly. Likely titled
+  *"catch InnerLoopExhaustion and materialize refusal_reason in
+  ChatRuntime"*.
+- **Status:** ⏳ OPEN — independent, can land soon. Sibling to W-011
+  (both about refusal materialization at different boundaries).
+
+### W-013 — `core/cognition/explain.py` dormant
+
+- **Surfaced by:** L5 audit (PR #244).
+- **Gap:** `core/cognition/explain.py` (124 lines) has 0 live
+  production callers outside its test file. It is re-exported in
+  `core/cognition/__init__.py` but unused.
+- **Dependency:** operator decision — wire to live REPL / CLI
+  proposal commands, or accept that it's offline-only audit tooling
+  and either delete or relocate to `evals/` / `scripts/`.
+- **Resolution paths:**
+  - **(a)** Wire into `core chat` for "explain this turn" interactive
+    command. Live integration.
+  - **(b)** Move to `evals/` if intended as offline audit tool.
+  - **(c)** Delete if neither (a) nor (b) is desired per
+    [[feedback-cleanup-as-you-find]] — the audit's "unambiguously
+    dead" bar is not met here because the module is well-formed and
+    test-covered, just unwired. Operator call.
+- **Status:** ⏳ OPEN — operator decision required.
+
+### W-014 — `core/cognition/provenance.py` partially live (evals-only)
+
+- **Surfaced by:** L5 audit (PR #244).
+- **Gap:** `core/cognition/provenance.py` (101 lines) is consumed only
+  by `evals/provenance/runner.py` and tests. No live runtime caller.
+- **Dependency:** independent. Same operator decision as W-013 (wire,
+  relocate, or accept as evals-only).
+- **Resolution paths:**
+  - **(a)** Wire into live turn result for per-turn provenance
+    surfacing.
+  - **(b)** Relocate to `evals/` and accept as offline-only.
+  - **(c)** Leave as-is and document explicitly as evals-only.
+- **Status:** ⏳ OPEN — lighter than W-013 because there IS a live
+  consumer (evals); the question is whether it should be promoted to
+  runtime use.
+
 ---
 
 ## Dependency graph (Mermaid-style, ASCII)
@@ -191,6 +289,13 @@ W-002 ✅ ──── (independent, FIXED)
 W-004 ⏳ ──── (independent) ────→ W-005 ⏳
                                        ↑
 W-006 ⏳ ──── (operator decision) ─────┘ (may merge / supersede)
+
+W-011 ⏳ ──── (independent, mechanical)
+W-012 ⏳ ──── (independent, mechanical)  — sibling of W-011
+
+W-010 ⏳ ──── (operator decision: intentional or wire L3 vocab)
+W-013 ⏳ ──── (operator decision: wire, relocate, or delete)
+W-014 ⏳ ──── (operator decision: lighter than W-013)
 
 W-008 (L10 ADR) ⏳
    ├──→ W-003 (VaultPromotionPolicy wiring) ⏳
@@ -204,36 +309,56 @@ W-008 (L10 ADR) ⏳
 
 ## Suggested next ADRs (sequence)
 
-In dependency order, given current findings:
+In dependency order, given current findings. **Quick wins first
+(mechanical, independent, small diffs), then operator decisions, then
+the bigger L10 unit.**
 
-1. **W-004 — Wire vault-recall energy re-thaw per ADR-0006.** Smallest,
-   most independent. Closes one of the load-bearing inconsistencies.
-   No runtime-model dependency.
+### Quick wins — independent, mechanical, small diffs
 
-2. **W-006 — Operator decision on pack readback (wire or delete).**
-   Either direction is small. Should happen before deeper L3 work.
+1. **W-011 — Propagate recognition `refusal_reason` into
+   `CognitiveTurnResult`.** ~Small pipeline change. Closes a load-
+   bearing audit-trail gap in recognition.
+2. **W-012 — Catch `InnerLoopExhaustion` in `ChatRuntime.chat()`.**
+   Sibling of W-011 — both about refusal materialization. Closes
+   ADR-0142 implementation debt #3.
+3. **W-004 — Wire vault-recall energy re-thaw per ADR-0006.** No
+   runtime-model dependency. Closes the field/vault re-injection gap.
 
-3. **W-008 — Runtime model ADR (or ADR cluster).** Largest unit. Gates
-   W-003, W-007, W-009 and informs every layer above L3. Scope
-   already exists (#236); spike + ADR is the next phase.
+### Operator-decision items — small either way, just need a call
 
-4. **W-005 — Energy-modulated surface readback.** Becomes
-   user-observable once W-004 is in place.
+4. **W-006 — Pack readback: wire or delete.** Per
+   [[feedback-cleanup-as-you-find]], operator decides; the audit is
+   waiting on the answer.
+5. **W-013 / W-014 — `explain.py` / `provenance.py`: wire, relocate,
+   or delete.** Same shape as W-006.
+6. **W-010 — L4 recognition vocabulary: token-level intentional, or
+   wire L3 vocab.** Operator decision; affects whether recognition
+   pulls in pack-resident domain types.
 
-5. **W-003 — `VaultPromotionPolicy` wiring.** Small ADR once W-008
+### Then user-observable second-order changes
+
+7. **W-005 — Energy-modulated surface readback.** Becomes user-
+   observable once W-004 is in place. Closes E0/E2 readback rot.
+
+### Bigger units (gated on or co-evolving with L10)
+
+8. **W-008 — Runtime model ADR (or cluster).** Largest unit. Gates
+   W-003, W-007, W-009. Scope landed (#236); spike + ADR next.
+9. **W-003 — `VaultPromotionPolicy` wiring.** Small ADR once W-008
    commits to process shape.
-
-6. **Recognizer-storage ADR** — answers the open question in
-   `recognizer-storage-scope.md` against W-008's process shape and
-   W-003's wired promotion.
-
-7. **W-007 — `DerivedRecognizer` integration into turn loop.** Small
-   once the storage ADR commits.
-
-8. **W-009 — HITL async queue.** Concurrent with or after W-008
-   depending on ADR cluster shape.
+10. **Recognizer-storage ADR** — answers `recognizer-storage-scope.md`
+    against W-008's process shape and W-003's wired promotion.
+11. **W-007 — `DerivedRecognizer` integration into turn loop.** Small
+    once the storage ADR commits.
+12. **W-009 — HITL async queue.** Concurrent with or after W-008.
 
 This order is a suggestion. The operator decides; the ratchet records.
+
+**Why quick wins first changed in v2:** v1 led with W-004 (a vault
+fix). The L4/L5 audits surfaced W-011 and W-012, which are even
+smaller and close load-bearing audit-trail gaps. Pulling them forward
+gets early measurable progress with no architectural risk, and
+demonstrates the audit-to-fix loop actually closes.
 
 ---
 
@@ -243,8 +368,8 @@ This order is a suggestion. The operator decides; the ratchet records.
   [[project-engine-identity-candidate]]. Trigger to un-shelve: L10
   runtime-model ADR commits to cross-reboot identity verification as
   a sub-question 3 requirement.
-- **L4-L9 wiring debt.** Audit findings pending. Ratchet will be
-  revised as L4-L9 entries land in the registry.
+- **L6-L9 wiring debt.** L0-L5 audited (5 of 9 layers); L6-L9 pending.
+  Ratchet will be revised as remaining entries land.
 - **Drop-off sibling ADR for recognizers.** Named in recognizer-
   storage-scope v2; depends on W-008 + recognizer-storage ADR + W-009.
   Not added to the ratchet as a standalone entry yet because it's a
