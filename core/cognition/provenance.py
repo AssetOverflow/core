@@ -14,6 +14,14 @@ failure.
 
 The Provenance object is derived from a ``CognitiveTurnResult``; it does not
 mutate the result and never invents sources.
+
+**Deployment scope (W-014):** this module is *evals-only infrastructure*.  It
+is consumed by ``evals/provenance/runner.py`` for offline audit analysis and
+by tests.  There is no live runtime caller — provenance introspection is an
+offline operation, not a per-turn runtime emission.  Promotion to runtime use
+(e.g., attaching a ``Provenance`` object to ``ChatResponse``) requires a new
+ADR if that capability is ever desired.  Confirmed by operator review
+2026-05-25 (W-014 closure).
 """
 
 from __future__ import annotations

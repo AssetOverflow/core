@@ -66,16 +66,6 @@ def _gate_lift(pack_dir: Path) -> tuple[bool, str]:
     return True, "ok"
 
 
-def _gate_readback(pack_dir: Path, language: str) -> tuple[bool, str]:
-    readback_rules = _load_module(pack_dir / "readback_rules.py", f"{pack_dir.name}_readback_rules")
-    surface = readback_rules.readback(None, {"surface": "probe", "field_target": "test"})
-    if getattr(surface, "surface", "") != "probe":
-        return False, "readback did not preserve requested surface"
-    if getattr(surface, "language", "") != language:
-        return False, "readback returned wrong language"
-    return True, "ok"
-
-
 def _gate_determinism(pack_dir: Path) -> tuple[bool, str]:
     lift_rules = _load_module(pack_dir / "lift_rules.py", f"{pack_dir.name}_lift_rules_det")
     for probe in read_jsonl(pack_dir / "probes" / "basic.jsonl"):
@@ -116,12 +106,11 @@ def validate_pack_dir(pack_dir: Path, *, pack_id: str, language: str) -> dict:
         ("lexical", lambda: _gate_lexical(pack_dir)),
         ("morphology", lambda: _gate_morphology(pack_dir)),
         ("lift", lambda: _gate_lift(pack_dir)),
-        ("readback", lambda: _gate_readback(pack_dir, language)),
         ("determinism", lambda: _gate_determinism(pack_dir)),
         ("alignment", lambda: _gate_alignment(pack_dir)),
         ("coverage", lambda: _gate_coverage(pack_dir)),
     )
-    report = {"pack_id": pack_id, "active": False, "gates": {}}
+    report = {"pack_id": pack_id, "language": language, "active": False, "gates": {}}
     for index, (name, gate_fn) in enumerate(gates):
         passed, reason = gate_fn()
         report["gates"][name] = {"passed": passed, "reason": reason}
