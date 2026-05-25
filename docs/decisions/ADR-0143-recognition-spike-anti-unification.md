@@ -139,6 +139,20 @@ Full test cases in scope doc.
   then, the recognizer is a standalone module.
 - **Parsing framework.** Token-sequence anti-unification is the starting point;
   syntactic parse trees are a fallback if token-level fails.
+
+## Vocabulary isolation is intentional (W-010)
+
+`derive_recognizer()` and `recognize()` operate on raw token sequences and
+taught `FeatureBundle` evidence without consuming `VocabManifold`, pack
+lexicons, or domain namespaces.  This is a deliberate design choice, not a
+gap.  Anti-unification derives its own structural vocabulary from the teaching
+set; importing pack-resident vocabulary would create a dependency on L3 that
+adds no information at the anti-unification level — the feature bundle carries
+the semantically relevant structure.  If a future scope requires
+pack-vocabulary-typed slots (e.g. "subject must be a `logos.*` domain atom"),
+that is a new ADR, not a retrofit of this one.
+
+Confirmed intentional by operator review 2026-05-25 (W-010 closure).
 - **Counter-evidence vocabulary.** `"Alleged"`, `"claimed"`, `"(this is a lie)"`
   are refused at Layer 2/3 on first encounter. Teaching-loop consumption of
   those refusals as correction candidates is its own future scope.
