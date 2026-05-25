@@ -56,13 +56,14 @@ class TestOutcomeCategorizationIsExhaustive:
         correct = report.metrics["correct"]
         wrong = report.metrics["wrong"]
         refused = report.metrics["refused"]
-        assert correct + wrong + refused == total
+        decoded = report.metrics["decoded_unarticulated"]
+        assert correct + wrong + refused + decoded == total
         assert total == len(_GPD_CASES)
 
     def test_each_case_detail_has_recognized_outcome(self) -> None:
         report = run_lane(_GPD_CASES)
         for detail in report.case_details:
-            assert detail["outcome"] in {"correct", "wrong", "refused"}
+            assert detail["outcome"] in {"correct", "wrong", "refused", "decoded_unarticulated"}
 
 
 class TestZeroWrongOnKnownGoodCases:
@@ -171,9 +172,11 @@ class TestLaneReportShape:
             "correct",
             "wrong",
             "refused",
+            "decoded_unarticulated",
             "correct_rate",
             "wrong_rate",
             "refused_rate",
+            "decoded_unarticulated_rate",
             "wrong_count_is_zero",
             "overall_pass",
         }

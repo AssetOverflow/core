@@ -273,7 +273,47 @@ def _score_one_candidate_graph(case: dict[str, Any]) -> CaseOutcome:
             realized_prose=None,
         )
     graph = cg_result.selected_graph
-    assert graph is not None  # is_admitted implies non-None graph
+    if graph is None:
+        # Fast-path solvers (capacity, earnings) produce an answer directly
+        # without building a MathProblemGraph.  Score on value only.
+        numeric_answer = cg_result.answer
+        assert numeric_answer is not None
+        if expected_unit != "" and expected_unit is not None:
+            return CaseOutcome(
+                case_id=case_id,
+                outcome="wrong",
+                reason="fast-path: no unit annotation to compare",
+                expected_answer=expected_answer,
+                expected_unit=expected_unit,
+                actual_answer=numeric_answer,
+                actual_unit=None,
+                trace_hash=None,
+                realized_prose=None,
+            )
+        tol = 1e-6 if isinstance(numeric_answer, float) else 0
+        if abs(numeric_answer - expected_answer) <= tol:
+            return CaseOutcome(
+                case_id=case_id,
+                outcome="correct",
+                reason="fast-path",
+                expected_answer=expected_answer,
+                expected_unit=expected_unit,
+                actual_answer=numeric_answer,
+                actual_unit=None,
+                trace_hash=None,
+                realized_prose=None,
+            )
+        return CaseOutcome(
+            case_id=case_id,
+            outcome="wrong",
+            reason=f"fast-path: got {numeric_answer}, expected {expected_answer}",
+            expected_answer=expected_answer,
+            expected_unit=expected_unit,
+            actual_answer=numeric_answer,
+            actual_unit=None,
+            trace_hash=None,
+            realized_prose=None,
+        )
 
     # Stage 2 — canonical solve for the full SolutionTrace (verifier
     # needs the trace; parse_and_solve only kept the numeric answer).

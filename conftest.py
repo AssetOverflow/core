@@ -26,38 +26,7 @@ from __future__ import annotations
 import pytest
 
 
-QUARANTINE: frozenset[str] = frozenset({
-    # Cluster C — Lane / runner metric drift (thresholds or report
-    # shape evolved without updating assertions).
-    "tests/test_adr_0122_rate_per_unit.py::TestOODInvarianceHolds::test_ood_ratio_unchanged_under_rate_grammar",
-    "tests/test_adr_0122_rate_per_unit.py::TestPerturbationInvariancesHold::test_invariance_gates_unchanged_under_rate_grammar",
-    "tests/test_adr_0126_train_sample_runner.py::test_runner_writes_report_to_disk",
-    "tests/test_adr_0126_train_sample_runner.py::test_report_has_documented_shape",
-    "tests/test_adr_0126_train_sample_runner.py::test_sample_count_and_case_id_pattern",
-    "tests/test_adr_0126_train_sample_runner.py::test_wrong_count_is_zero_baseline",
-    "tests/test_adr_0131_G3_numerics.py::test_gsm8k_probe_safety_rail_unchanged",
-    "tests/test_adr_0131_G_gsm8k_coverage_probe.py::test_admitted_wrong_is_zero",
-    "tests/test_adr_0131_G_gsm8k_coverage_probe.py::test_every_refused_case_has_typed_reason",
-    "tests/test_adr_0131_G_gsm8k_coverage_probe.py::test_per_case_outcomes_are_in_closed_vocabulary",
-    "tests/test_adr_0131_G_gsm8k_coverage_probe.py::test_report_is_deterministic_across_runs",
-    "tests/test_adr_0131_G_gsm8k_coverage_probe.py::test_committed_report_matches_current_run",
-    "tests/test_adr_0131_G_gsm8k_coverage_probe.py::test_report_schema_required_fields",
-    "tests/test_adr_0131_G_gsm8k_coverage_probe.py::test_refused_reasons_top_is_sorted_by_count_desc",
-    "tests/test_cold_start_grounding_lane.py::TestPassThresholds::test_public_v1_passes_thresholds",
-    "tests/test_cold_start_grounding_lane.py::TestPassThresholds::test_distributions_match_expected",
-    "tests/test_composed_surface.py::test_cognition_lane_metrics_unchanged_with_composed_flag",
-    "tests/test_compound_walkthrough_eval_lanes.py::test_chat_spine_holdout_splits_are_runnable",
-    "tests/test_en_core_action_v1_pack.py::test_pack_loads_with_matching_checksum",
-    "tests/test_en_core_action_v1_pack.py::test_all_entries_are_verbs",
-    "tests/test_en_core_action_v1_pack.py::test_all_expected_lemmas_present",
-    "tests/test_en_core_action_v1_pack.py::test_provenance_is_seed_core_action_v1",
-    "tests/test_gsm8k_math_runner.py::TestLaneReportShape::test_metrics_keys_match_documented_schema",
-    "tests/test_ood_surface_generator.py::test_live_parser_and_solver_match_each_variant_expected_answer",
-    "tests/test_ood_surface_generator.py::test_ood_public_ratio_meets_gate_across_dev_set",
-    "tests/test_perturbation_suite.py::test_aggregate_dev_rates_are_perfect_for_applicable_perturbations",
-    "tests/test_relations_chains_v1.py::test_all_seed_chains_load_cleanly",
-
-})
+QUARANTINE: frozenset[str] = frozenset()
 
 
 def pytest_collection_modifyitems(config, items):

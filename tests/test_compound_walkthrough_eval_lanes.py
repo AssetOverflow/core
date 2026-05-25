@@ -2,7 +2,24 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
+import pytest
+
 from evals.framework import get_lane, run_lane
+
+_HOLDOUT_LANES = (
+    "multi_sentence_response",
+    "cold_start_grounding",
+    "conversational_thread_coherence",
+    "warmed_session_consistency",
+)
+_REPO_ROOT = Path(__file__).parents[1]
+_HOLDOUT_AVAILABLE = os.environ.get("CORE_HOLDOUT_KEY") is not None or any(
+    (_REPO_ROOT / "evals" / lane / "holdouts" / "v1" / "cases_plaintext.jsonl").exists()
+    for lane in _HOLDOUT_LANES
+)
 
 
 def test_compound_intent_decomposition_public_passes() -> None:
@@ -20,6 +37,7 @@ def test_walkthrough_chain_public_passes() -> None:
     assert result.metrics["bounded_rate"] == 1.0
 
 
+@pytest.mark.skipif(not _HOLDOUT_AVAILABLE, reason="CORE_HOLDOUT_KEY not set")
 def test_chat_spine_holdout_splits_are_runnable() -> None:
     for lane_name in (
         "multi_sentence_response",

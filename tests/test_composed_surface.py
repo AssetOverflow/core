@@ -23,7 +23,11 @@ This test file pins:
 
 from __future__ import annotations
 
+import os
 from dataclasses import replace
+from pathlib import Path
+
+import pytest
 
 from core.config import RuntimeConfig
 from chat.runtime import ChatRuntime
@@ -32,6 +36,14 @@ from chat.teaching_grounding import (
     teaching_grounded_surface_composed,
 )
 from generate.intent import IntentTag
+
+_HOLDOUT_AVAILABLE = (
+    os.environ.get("CORE_HOLDOUT_KEY") is not None
+    or any(
+        (Path(__file__).parents[1] / "evals" / lane / "holdouts" / "v1" / "cases_plaintext.jsonl").exists()
+        for lane in ("cold_start_grounding", "cognition")
+    )
+)
 
 
 # ---------------------------------------------------------------------------
@@ -147,6 +159,7 @@ def test_runtime_flag_is_observable_on_frozen_config() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(not _HOLDOUT_AVAILABLE, reason="CORE_HOLDOUT_KEY not set")
 def test_cognition_lane_metrics_unchanged_with_composed_flag() -> None:
     """Composed mode emits a strictly longer surface with one
     additional follow-up clause; every expected_term that passed
