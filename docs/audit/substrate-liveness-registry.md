@@ -17,7 +17,7 @@
 | L6 — Chat runtime + surface composition | ✅ Audited | **PARTIAL** | None — no unambiguous dead chat code found | 2026-05-24 |
 | L7 — Teaching loop | ✅ Audited | **PARTIAL** | None — no unambiguously dead modules found | 2026-05-24 |
 | L8 — Inter-session memory + contemplation | ✅ Audited | **PARTIAL** | None — no unambiguously dead memory/contemplation modules found | 2026-05-24 |
-| L9 — Epistemic state + verdicts | ⏳ Pending | — | — | — |
+| L9 — Epistemic state + verdicts | ✅ Audited | **PARTIAL** | None — no redundant/legacy modules found | 2026-05-24 |
 
 L10 / L11 are not audit targets (no design to audit; flagged in scope as
 gaps the audit will surface need for).
@@ -1569,3 +1569,139 @@ Tier 4 ratified packs are read by pack resolvers and pack grounding. Pack mutati
 - **Future L8 work:** If ADR-0055 Phase D is implemented, wire a live coherent-only vault probe into `teaching.contemplation.contemplate` and prove that SPECULATIVE / CONTESTED / FALSIFIED vault entries cannot promote.
 
 ---
+
+## L9 — Epistemic state + verdicts
+
+**Audit date:** 2026-05-24
+**Auditor:** primary agent (Gemini)
+**Verdict:** **PARTIAL**
+
+### Scope-hypothesis correction (per audit step 0)
+
+The scope cited files like `chat/safety.py` and `chat/ethics.py` as starting points. Reality: safety check (`SafetyCheck`) and ethics check (`EthicsCheck`) reside in `packs/safety/check.py` and `packs/ethics/check.py` respectively, while the runtime orchestrator `chat/runtime.py` invokes them and constructs the `TurnVerdicts` bundle defined in `chat/verdicts.py`.
+
+### ADRs in scope for L9
+
+Triaged from decisions and ADRs:
+
+| ADR | Title | Status | Belongs at L9? |
+|---|---|---|---|
+| ADR-0029 | Safety Packs — Always-Loaded, Never-Replaceable Boundaries | Accepted | Yes |
+| ADR-0032 | Safety Check Surface | Accepted | Yes |
+| ADR-0033 | Ethics Packs — Swappable Domain Commitments | Accepted | Yes |
+| ADR-0034 | Ethics Check Surface | Accepted | Yes |
+| ADR-0035 | Turn-Loop Verdict Surfacing | Accepted | Yes |
+| ADR-0036 | Safety-Only Typed Refusal Policy | Accepted | Yes |
+| ADR-0037 | Per-Predicate Ethics Refusal Opt-In | Accepted | Yes |
+| ADR-0038 | Hedge Injection as Runtime Affordance | Accepted | Yes |
+| ADR-0039 | Audit Completeness / `TurnVerdicts` Bundle | Accepted | Yes |
+| ADR-0040 | Structured-Logging Sink | Accepted | Yes |
+| ADR-0041 | CLI Verdicts and Fan-Out | Accepted | Yes |
+| ADR-0044 | Medical / clinical ethics pack | Accepted | Yes |
+| ADR-0142 | Epistemic State Taxonomy | Accepted | Yes |
+
+### Modules in scope for L9
+
+| Module | Lines | Live-import sites (outside own package, outside `tests/`) | Test-import sites | Status |
+|---|---|---|---|---|
+| `packs/safety/check.py` | 333 | 2 (`chat/runtime.py`, `core/cognition/result.py`) | 9 | Live |
+| `packs/safety/loader.py` | 260 | 1 (`chat/runtime.py`) | 4 | Live |
+| `packs/ethics/check.py` | 409 | 2 (`chat/runtime.py`, `core/cognition/result.py`) | 8 | Live |
+| `packs/ethics/loader.py` | 410 | 1 (`chat/runtime.py`) | 5 | Live |
+| `chat/verdicts.py` | 50 | 1 (`chat/runtime.py`) | 3 | Live |
+| `chat/refusal.py` | 178 | 2 (`chat/runtime.py`, `core/cognition/pipeline.py`) | 4 | Live |
+| `chat/dispatch_trace.py` | 13 | 2 (`chat/runtime.py`, `core/cognition/result.py`) | 1 | Live |
+| `core/epistemic_state.py` | 146 | 5 | 7 | Live |
+
+### Caller-trace evidence
+
+Exposed symbols of the layer are cleanly resolved through static imports across multiple layers:
+- `packs.safety.check.SafetyCheck` and `packs.ethics.check.EthicsCheck` are instantiated in `chat/runtime.py:536-537` and executed on every turn.
+- `chat.refusal.build_refusal_surface` and `chat.refusal.should_inject_hedge` are invoked on both the stub and main paths of `chat/runtime.py:1413,1892` to compute remediation surfaces.
+- `chat.verdicts.TurnVerdicts` is constructed per turn (`chat/runtime.py:1517,2058`) and attached to `ChatResponse` and `TurnEvent`.
+- `core.epistemic_state` enums and helper mappings (`EpistemicState`, `NormativeClearance`, `clearance_from_verdicts`, `epistemic_state_for_grounding_source`) are invoked by `chat/runtime.py` and `core/cognition/pipeline.py` to tag results and events.
+- Telemetry events are structured and written in `chat/telemetry.py:46` by serializing `TurnEvent.verdicts` and mapping state enums deterministic-by-default.
+
+### Exercising suite lane
+
+- `core test --suite packs` — Exercises loaders, validators, checks, self-seal report verifications:
+  ```bash
+  python3 -m core.cli test --suite packs -q
+  ```
+  **Verification:** 13 passed, 0 skipped.
+- `core test --suite smoke` — Exercises end-to-end turn loop composition, stub-path TurnEvent logging, and hedge injection:
+  ```bash
+  python3 -m core.cli test --suite smoke -q
+  ```
+  **Verification:** 67 passed, 0 skipped.
+- `core test --suite cognition` — Exercises pipeline orchestration, trace-hash conditional folding, and state-tagging:
+  ```bash
+  python3 -m core.cli test --suite cognition -q
+  ```
+  **Verification:** 120 passed, 1 skipped.
+- `verify_lane_shas.py` — Exercises all 7 pinned lanes:
+  ```bash
+  python3 scripts/verify_lane_shas.py
+  ```
+  **Verification:** 7/7 match pinned SHAs.
+
+### Cross-layer contract check
+
+**Pass 1 — mechanical (consumer-exists per exposed symbol):**
+
+| Exposed symbol | Consumer evidence |
+|---|---|
+| `TurnVerdicts` | `ChatResponse`, `TurnEvent`, `chat/telemetry.py` (serialized in `serialize_turn_event`), `core/epistemic_state.py` (`clearance_from_verdicts`), and tests |
+| `build_refusal_surface` | `chat/runtime.py:1413,1892`, and tests |
+| `should_inject_hedge` / `build_hedge_prefix` / `inject_hedge` | `chat/runtime.py:1981-1985`, and tests |
+| `EpistemicState` / `NormativeClearance` | `ChatResponse`, `TurnEvent`, `core/cognition/pipeline.py`, `chat/telemetry.py`, and tests |
+| `clearance_from_verdicts` / `normative_detail_from_verdicts` | `chat/runtime.py:1525,2068`, and tests |
+| `epistemic_state_for_grounding_source` | `chat/runtime.py:1524,2065`, and tests |
+| `SafetyCheck` / `EthicsCheck` | `chat/runtime.py:536-537`, and tests |
+| `load_safety_pack` / `load_ethics_pack` | `chat/runtime.py:541-542`, and tests |
+
+**Pass 2 — semantic (six L9-specific invariants checked):**
+
+1. **Safety verdicts fail-closed (ADR-0029, ADR-0036).** Verified. Safety violations replace the response surface with a typed refusal completely. Downstream composer attempts are skipped with `"refusal_emitted"`.
+2. **Ethics refusals opt-in (ADR-0037).** Verified. Failed commitments only trigger refusal if specified in `EthicsPack.refusal_commitments`. Other failed commitments remain audit-only.
+3. **Epistemic state taxonomy completeness (ADR-0142).** Verified. `TurnEvent` and `CognitiveTurnResult` carry the `epistemic_state` and `normative_clearance` enums. No silent defaults: ungrounded/unknown runs resolve to `undetermined` or `epistemic_state_needed`.
+4. **Refusal_reason materialization matrix.** Mapping confirmed: safety and opt-in ethics violations propagate to both `ChatResponse.refusal_reason` and `CognitiveTurnResult.refusal_reason`. However, recognition refusals (W-011) and Inner-loop admissibility exhaustions (W-012) fail to propagate to refusal reason.
+5. **Audit completeness (ADR-0039).** Verified. `TurnVerdicts` aggregates safety/ethics verdicts and remediation flags (`refusal_emitted`, `hedge_injected`) correctly.
+6. **Telemetry sink redaction (ADR-0040).** Verified. `chat/telemetry.py` JsonlFileSink redact-by-default stance is honored: when `include_content=False` (default), surface text, input/walk surfaces, and canonical surfaces are omitted.
+
+### Semantic mismatches flagged for human review
+
+- **W-011 and W-012 open debt:** These remain active. Recognition refusals are dropped at the pipeline boundary (W-011); `InnerLoopExhaustion` exceptions during walk generation are uncaught and propagate as raw exceptions instead of populating `refusal_reason` (W-012).
+- **`dispatch_trace` is observability-only:** Confirmed. It is not folded into the trace hash, which is the correct design intent to preserve replay stability.
+
+### Closure criteria scorecard
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. Design artifact | ✅ | ADR-0029, ADR-0032..0041, ADR-0044, ADR-0142 |
+| 2. Code artifact | ✅ | `packs/safety/check.py`, `packs/safety/loader.py`, `packs/ethics/check.py`, `packs/ethics/loader.py`, `chat/verdicts.py`, `chat/refusal.py`, `chat/dispatch_trace.py`, `core/epistemic_state.py` |
+| 3. Live caller | ⚠️ PARTIAL | Safety, ethics, and verdict-surface checks live; recognition refusal (W-011) and InnerLoopExhaustion refusal (W-012) propagation remain open |
+| 4. Exercised by suite lane | ✅ | `packs`, `smoke`, and `cognition` lanes pass; `verify_lane_shas.py` is 7/7 |
+| 5. Cross-layer consistency | ⚠️ PARTIAL | Invariants are consistent, but wiring debt (W-011 and W-012) prevents complete epistemic refusal tracking |
+
+**Verdict:** **PARTIAL** (due to active W-011 and W-012 wiring debts).
+
+### Cleanup performed
+
+**None.** Inspected `packs/safety/`, `packs/ethics/`, `chat/refusal.py`, `chat/verdicts.py`, and `core/epistemic_state.py`. No redundant, legacy, or dead modules found.
+
+### Forward notes to the operator (Final audit layer 9/9 complete)
+
+As Layer L9 is the final audit layer of the substrate, all 9/9 layers of the CORE engine have been verified. The forward notes address the operator directly on what the ratchet needs to resolve:
+
+1. **Wiring Debt Resolution (CLOSED-eligible pathways):**
+   - **W-011 (Recognition Refusal):** Wire `_rec_outcome.refusal_reason` to the turn result instead of dropping it at the pipeline boundary.
+   - **W-012 (Inner-Loop Exhaustion):** Catch `InnerLoopExhaustion` in `ChatRuntime.chat()` and populate `ChatResponse.refusal_reason` with the machine-readable refusal code so it is folded into the trace hash and results objects.
+   - **L2 / L3 Readback Modulation:** Implement energy-based tense and hedging modulations specified in ADR-0006/0007 (currently E0 recalled vault crystal is formatted the same as E2/E3 warmed field regions).
+2. **Audit Method Feedback (v3 suggestions):**
+   - **Replay Equality Boundaries:** Future audit scopes should explicitly define which provenance fields (such as `dispatch_trace`) must participate in replay equality checks versus remaining purely observability-focused.
+   - **Static vs. Runtime Invariants**: Highlight that static check-only boundaries (e.g., `no_hot_path_repair` or `no_manipulation`) represent a different class of constraints that require static analysis or compile-time checks rather than dynamic runtime checking.
+
+---
+
+
