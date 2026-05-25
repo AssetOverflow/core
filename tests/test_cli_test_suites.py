@@ -78,6 +78,7 @@ def test_core_test_suite_accepts_pytest_flags_without_separator(monkeypatch) -> 
         "-m",
         "pytest",
         "tests/test_core_semantic_seed_pack.py",
+        "tests/test_adr_0127_pack_ratification.py",
         "-q",
     )
 

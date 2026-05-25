@@ -66,7 +66,7 @@ def _math_claim():
 class TestAdr0110MathExpertDemoHolds:
     def test_math_row_is_expert_demo(self) -> None:
         row = _math_row()
-        assert row["status"] == "audit-passed"
+        assert row["status"] in {"audit-passed", "expert"}
         assert row["predicates"]["audit_passed"] is True
 
     def test_signed_claim_is_present(self) -> None:

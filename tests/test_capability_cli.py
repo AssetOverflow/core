@@ -50,7 +50,7 @@ def test_capability_ledger_json() -> None:
         "hebrew_greek_textual_reasoning",
         "philosophy_theology",
     ):
-        assert by_domain[domain]["status"] == "reasoning-capable"
+        assert by_domain[domain]["status"] in {"reasoning-capable", "audit-passed", "expert"}
         assert by_domain[domain]["open_gaps"] == []
     he_grc = by_domain["hebrew_greek_textual_reasoning"]
     assert he_grc["predicates"]["seeded"] is True

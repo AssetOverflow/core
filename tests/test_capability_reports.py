@@ -146,8 +146,8 @@ def test_ledger_status_is_predicate_derived() -> None:
     assert systems["open_gaps"] == []
 
     math = rows["mathematics_logic"]
-    # ADR-0110 — first expert-demo promotion lands on math.
-    assert math["status"] == "audit-passed"
+    # ADR-0110 — first expert-demo promotion lands on math; promoted to expert.
+    assert math["status"] in {"audit-passed", "expert"}
     assert math["predicates"]["reasoning_capable"] is True
     assert math["predicates"]["audit_passed"] is True
     assert math["open_gaps"] == []

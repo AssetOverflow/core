@@ -270,12 +270,16 @@ def bench_determinism(runs: int = 20) -> tuple[list[DeterminismCase], bool]:
 def bench_footprint(
     turns: int = 200,
     sample_every: int = 25,
+    warmup_turns: int = 0,
 ) -> tuple[list[FootprintSample], int, int, int, float]:
-    """Drive a single ChatRuntime through ``turns`` cold-start prompts
-    and sample RSS every ``sample_every`` turns.
+    """Drive a single ChatRuntime through ``turns`` prompts and sample
+    RSS every ``sample_every`` turns.
 
     Uses a single runtime so the bench measures cache/vault growth,
-    not per-process startup overhead.
+    not per-process startup overhead.  Pass ``warmup_turns`` to drive
+    the runtime through lazy initialisation before the measurement
+    window opens (useful for short test runs where cold-start allocation
+    would otherwise dominate the per-turn delta).
     """
     import psutil
     from chat.runtime import ChatRuntime
@@ -283,12 +287,15 @@ def bench_footprint(
     proc = psutil.Process()
     rt = ChatRuntime()
 
+    prompts = [p for _, p in INTENT_PROBE_PROMPTS]
+    n = len(prompts)
+    for w in range(warmup_turns):
+        rt.chat(prompts[w % n])
+
     samples: list[FootprintSample] = []
     start = proc.memory_info().rss
     samples.append(FootprintSample(turn=0, rss_bytes=start))
     peak = start
-    prompts = [p for _, p in INTENT_PROBE_PROMPTS]
-    n = len(prompts)
     for t in range(1, turns + 1):
         rt.chat(prompts[t % n])
         if t % sample_every == 0 or t == turns:
