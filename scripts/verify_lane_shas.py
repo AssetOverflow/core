@@ -122,7 +122,7 @@ def _invoke_runner(spec: LaneSpec, *, target_path: Path | None = None) -> Path:
         env=env,
         capture_output=True,
         text=True,
-        timeout=300,
+        timeout=900,
     )
     if result.returncode != 0:
         raise RuntimeError(
