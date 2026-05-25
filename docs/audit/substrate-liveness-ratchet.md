@@ -1,4 +1,4 @@
-# Substrate Liveness Ratchet — v3 (partial; informed by L0-L7 + L10 scope)
+# Substrate Liveness Ratchet — v4 (audit complete; informed by L0-L9 + L10 scope)
 
 **Scope:** [substrate-liveness-audit-scope](../decisions/substrate-liveness-audit-scope.md) (v2)
 **Companion:** [substrate-liveness-registry](./substrate-liveness-registry.md)
@@ -72,24 +72,24 @@ home (ADR-XXXX or new).
   if the lattice's promotion gate isn't running).
 - **Status:** ⏳ OPEN — audit-dependency on L10.
 
-### W-004 — Vault re-thaw path specified-not-verified-live
+### W-004 — Vault re-thaw path specified-not-verified-live (FIXED)
 
 - **Surfaced by:** L2 audit (PR #238); L1 audit (PR #237) forward-noted
   the same concern.
 - **Gap:** ADR-0006 §"Integration Points" specifies "Vault recall
   transiently raises region to E2, then lets it cool again." L2 audit
-  traced `vault.recall` callers and found that recall does NOT update
-  or re-raise the energy class/profile of recalled entries. The
-  re-thaw is design-only; nothing in code does it.
-- **Dependency:** L1 (energy operator, live) — already in place. The
-  wiring is at L2's recall path, not at L1.
-- **Cross-layer consequence:** L3 audit (PR #241) confirmed that
-  downstream language readback receives recalled-as-E0 regions and
-  silently treats them as if E2 — a load-bearing inconsistency
-  (W-005).
-- **Proposed home:** new ADR — *"wire vault-recall energy re-thaw per
-  ADR-0006 integration spec"*. Small focused ADR; doesn't require L10.
-- **Status:** ⏳ OPEN — can land independently of L10.
+  traced `vault.recall` callers and found that recall did NOT update
+  or re-raise the energy class/profile of recalled entries.
+- **Resolution:** PR #251. `vault/store.py` now stamps each
+  `recall()` / `recall_batch()` result with a module-level
+  `_VAULT_RECALL_RETHAW_ENERGY` singleton (raw=0.50, E2 mid-band).
+  Cool-down remains downstream propagation's responsibility. 6 new
+  tests in `tests/test_vault_recall_rethaw.py` pin the contract; lane
+  SHAs preserved (byte-identity intact).
+- **Unlocks:** W-005 — E0/E2 distinction now exists at the runtime
+  data shape, so energy-modulated surface readback becomes
+  meaningful.
+- **Status:** ✅ CLOSED.
 
 ### W-005 — E0/E2 readback modulation absent
 
@@ -278,7 +278,27 @@ home (ADR-XXXX or new).
   consumer (evals); the question is whether it should be promoted to
   runtime use.
 
-### W-015 — `session/context.py` post-generation unitize undocumented
+### W-015 — `session/context.py` post-generation unitize undocumented (INVESTIGATED → fix in flight)
+
+**Investigation closed (PR #252).** Sonnet's investigation produced
+verdict **(c) — upstream construction violation**, with mechanical
+evidence: bimodal distribution across 4,138 samples (either
+`vc < 1e-6` for near-identity slerp, or `vc >> 1e-3` with median 0.19
+and max 38.58; nothing in `[1e-6, 1e-5)`). The `unitize_versor` at
+`session/context.py:236` was repairing off-manifold state produced
+by `_slerp_toward` (lines 38-64). Slerp interpolates on **S³¹**
+(the 32D unit sphere) but the versor manifold (Spin group embedded
+in Cl(4,1)) is a **proper subset** of S³¹ — the geodesic doesn't
+stay on it.
+
+**Recommended fix (in flight via Sonnet):** replace `_slerp_toward`
+with proper rotor geodesic interpolation via the Lie group
+exponential map — same approach `rotor_power` already uses at
+`generate/stream.py:220`. That stays on the versor manifold by
+construction; `unitize_versor` in `_anchor_pull` becomes unnecessary
+and can be removed.
+
+**Original ratchet entry (preserved for history):**
 
 - **Surfaced by:** L6 audit (PR #246), answering L1 audit's forward
   note (PR #237).
@@ -309,6 +329,81 @@ home (ADR-XXXX or new).
 - **Status:** ⏳ OPEN — discipline question; small ADR or small
   refactor depending on investigation outcome.
 
+### W-016 — Contemplation operates without vault probe
+
+- **Surfaced by:** L8 audit (PR #250).
+- **Gap:** `teaching.contemplation.contemplate` accepts an
+  `injectable vault_probe` parameter, and tests prove coherent vault
+  evidence can contribute to discovery candidate enrichment. But
+  `ChatRuntime._emit_discovery_candidates` calls `contemplate(c)`
+  with **no probe**. Inline contemplation therefore operates on pack
+  + reviewed corpus only, ignoring the session vault — exactly the
+  Tier 1 evidence the four-tier model intends contemplation to
+  consume.
+- **Dependency:** light — wire a vault probe at the
+  `ChatRuntime._emit_discovery_candidates` call site.
+- **Proposed home:** small fix-PR. May benefit from a brief ADR note
+  documenting the probe contract.
+- **Status:** ⏳ OPEN — independent, can land soon.
+
+### W-017 — Automated T1/T2 → T3 promotion absent
+
+- **Surfaced by:** L8 audit (PR #250); ADR-0055's own "what is
+  missing" section names this gap explicitly.
+- **Gap:** The four-tier memory model (ADR-0055) specifies discovery
+  evidence from T1 (session vault) and T2 (turn-event audit) should
+  feed into proposed promotions to T3 (reviewed teaching corpus).
+  Today, discovery candidates ARE emitted (W-016 caveat aside) and
+  ARE written to disk via `DiscoveryMonthlyFileSink`, but no
+  automated path turns them into proposals. Promotion to T3 still
+  requires L7's synchronous operator `core teaching propose` command.
+- **Dependency:** chained — depends on W-009 (HITL async queue) to
+  give automated promotion a place to deposit candidates without
+  blocking the engine, AND on W-016 (vault probe wired so candidates
+  carry T1 evidence).
+- **Proposed home:** new ADR — *"automated T1/T2 → T3 promotion
+  pipeline"*. Sized after W-009 and W-016 commit.
+- **Status:** ⏳ OPEN — chained: W-009 + W-016 → W-017.
+
+### W-018 — ADR-0080 contemplation not autonomous
+
+- **Surfaced by:** L8 audit (PR #250).
+- **Gap:** ADR-0080 contemplation runs as a CLI operator command
+  (`core contemplation`) over explicit report files, not as an
+  autonomous runtime loop. Live plan contemplation exists in
+  `ChatRuntime` but is opt-in via
+  `RuntimeConfig.discourse_contemplation=True` (default off).
+  "Autonomous" contemplation that runs without operator invocation
+  doesn't exist.
+- **Dependency:** chained — autonomous contemplation needs a runtime
+  shape to live in (W-008 — L10 runtime model), and an event source
+  (likely tied to W-017 promotion triggers).
+- **Proposed home:** ADR amendment to ADR-0080 or new ADR — *"runtime-
+  resident autonomous contemplation"*. Sized after W-008 commits.
+- **Status:** ⏳ OPEN — chained: W-008 → W-018.
+
+### W-019 — `from_miner.py` / `from_curriculum.py` test-live only
+
+- **Surfaced by:** L8 audit (PR #250).
+- **Gap:** `teaching/from_miner.py` (370 lines) and
+  `teaching/from_curriculum.py` (275 lines) correctly build
+  source-stamped proposals per ADR-0094 / ADR-0095 / ADR-0104, but
+  no CLI command or live runtime path invokes them. Test-live
+  only — the miner and curriculum candidate-conversion paths exist
+  but produce nothing in production.
+- **Dependency:** operator decision — wire to a CLI command (small),
+  invoke from a runtime path (medium, depends on W-008 / W-017), or
+  document as offline-only library code for evals.
+- **Resolution paths:**
+  - **(a)** Wire CLI: `core teaching propose --from-miner <dir>` and
+    `--from-curriculum <dir>`. Small, no architectural commitment.
+  - **(b)** Wire into W-017's automated promotion pipeline when that
+    lands.
+  - **(c)** Leave as test-live library and document explicitly.
+- **Recommended:** (a) first as the smallest reachability fix; (b)
+  follows naturally if W-017 materializes.
+- **Status:** ⏳ OPEN — operator decision required.
+
 ---
 
 ## Dependency graph (Mermaid-style, ASCII)
@@ -316,25 +411,31 @@ home (ADR-XXXX or new).
 ```
 W-001 ✅ ──── (independent, FIXED)
 W-002 ✅ ──── (independent, FIXED)
-
-W-004 ⏳ ──── (independent) ────→ W-005 ⏳
-                                       ↑
-W-006 ⏳ ──── (operator decision) ─────┘ (may merge / supersede)
+W-004 ✅ ──── (independent, FIXED — PR #251)  ────→ W-005 ⏳ (now unlocked)
+                                                          ↑
+W-006 ⏳ ──── (operator decision) ────────────────────────┘ (may merge / supersede)
 
 W-011 ⏳ ──── (independent, mechanical)
-W-012 ⏳ ──── (independent, mechanical)  — sibling of W-011
+W-012 ⏳ ──── (independent, mechanical) — sibling of W-011
 
 W-010 ⏳ ──── (operator decision: intentional or wire L3 vocab)
 W-013 ⏳ ──── (operator decision: wire, relocate, or delete)
 W-014 ⏳ ──── (operator decision: lighter than W-013)
-W-015 ⏳ ──── (discipline question: investigate root cause first)
+W-015 ⏳ ──── INVESTIGATED (verdict c, PR #252); fix in flight via Sonnet
+W-016 ⏳ ──── (independent, mechanical: wire vault probe)
+W-019 ⏳ ──── (operator decision: CLI, runtime, or library-only)
 
 W-008 (L10 ADR) ⏳
    ├──→ W-003 (VaultPromotionPolicy wiring) ⏳
    │       └──→ recognizer-storage ADR
    │              └──→ W-007 (recognizer integration) ⏳
-   └──→ W-009 (HITL async queue) ⏳
-            └──→ drop-off sibling ADR
+   ├──→ W-009 (HITL async queue) ⏳
+   │       ├──→ drop-off sibling ADR
+   │       └──→ W-017 (automated T1/T2→T3 promotion) ⏳
+   │              ↑
+   │              ├── W-016 (vault probe)
+   │              └── W-019 (miner/curriculum wiring) — if path (b) chosen
+   └──→ W-018 (autonomous contemplation) ⏳
 ```
 
 ---
@@ -347,53 +448,60 @@ the bigger L10 unit.**
 
 ### Quick wins — independent, mechanical, small diffs
 
-1. **W-011 — Propagate recognition `refusal_reason` into
-   `CognitiveTurnResult`.** ~Small pipeline change. Closes a load-
-   bearing audit-trail gap in recognition.
-2. **W-012 — Catch `InnerLoopExhaustion` in `ChatRuntime.chat()`.**
+1. **W-015 fix — Replace `_slerp_toward` with rotor geodesic** (in
+   flight via Sonnet). Removes the `_anchor_pull` unitize, closes a
+   real construction violation. Smallest meaningful fix.
+2. **W-011 — Propagate recognition `refusal_reason` into
+   `CognitiveTurnResult`.** Small pipeline change. Closes recognition
+   audit-trail gap.
+3. **W-012 — Catch `InnerLoopExhaustion` in `ChatRuntime.chat()`.**
    Sibling of W-011 — both about refusal materialization. Closes
    ADR-0142 implementation debt #3.
-3. **W-004 — Wire vault-recall energy re-thaw per ADR-0006.** No
-   runtime-model dependency. Closes the field/vault re-injection gap.
+4. **W-016 — Wire vault probe into
+   `ChatRuntime._emit_discovery_candidates`.** New from L8. Light
+   wire-up.
 
 ### Operator-decision items — small either way, just need a call
 
-4. **W-006 — Pack readback: wire or delete.** Per
-   [[feedback-cleanup-as-you-find]], operator decides; the audit is
-   waiting on the answer.
-5. **W-013 / W-014 — `explain.py` / `provenance.py`: wire, relocate,
+5. **W-006 — Pack readback: wire or delete.** Per
+   [[feedback-cleanup-as-you-find]], operator decides.
+6. **W-013 / W-014 — `explain.py` / `provenance.py`: wire, relocate,
    or delete.** Same shape as W-006.
-6. **W-010 — L4 recognition vocabulary: token-level intentional, or
-   wire L3 vocab.** Operator decision; affects whether recognition
-   pulls in pack-resident domain types.
-7. **W-015 — `session/context.py` unitize: ADR-sanction, remove, or
-   fix-upstream.** Investigate root cause first; resolution shape
-   depends on what's found.
+7. **W-010 — L4 recognition vocabulary: token-level intentional, or
+   wire L3 vocab.** Affects whether recognition pulls in
+   pack-resident domain types.
+8. **W-019 — `from_miner.py` / `from_curriculum.py`: CLI, runtime,
+   or library-only.** Smallest fix is CLI wiring (path a).
 
-### Then user-observable second-order changes
+### Then user-observable second-order changes (W-004 now unlocks W-005)
 
-7. **W-005 — Energy-modulated surface readback.** Becomes user-
-   observable once W-004 is in place. Closes E0/E2 readback rot.
+9. **W-005 — Energy-modulated surface readback.** Now meaningful
+   since W-004 closed (vault recall declares E2). Closes E0/E2
+   readback rot.
 
 ### Bigger units (gated on or co-evolving with L10)
 
-8. **W-008 — Runtime model ADR (or cluster).** Largest unit. Gates
-   W-003, W-007, W-009. Scope landed (#236); spike + ADR next.
-9. **W-003 — `VaultPromotionPolicy` wiring.** Small ADR once W-008
-   commits to process shape.
-10. **Recognizer-storage ADR** — answers `recognizer-storage-scope.md`
+10. **W-008 — Runtime model ADR (or cluster).** Largest unit. Gates
+    W-003, W-007, W-009, W-017, W-018. Scope landed (#236); spike +
+    ADR next.
+11. **W-003 — `VaultPromotionPolicy` wiring.** Small ADR once W-008
+    commits to process shape.
+12. **Recognizer-storage ADR** — answers `recognizer-storage-scope.md`
     against W-008's process shape and W-003's wired promotion.
-11. **W-007 — `DerivedRecognizer` integration into turn loop.** Small
+13. **W-007 — `DerivedRecognizer` integration into turn loop.** Small
     once the storage ADR commits.
-12. **W-009 — HITL async queue.** Concurrent with or after W-008.
+14. **W-009 — HITL async queue.** Concurrent with or after W-008.
+15. **W-017 — Automated T1/T2 → T3 promotion.** After W-009 + W-016.
+16. **W-018 — Autonomous contemplation.** After W-008.
 
 This order is a suggestion. The operator decides; the ratchet records.
 
-**Why quick wins first changed in v2:** v1 led with W-004 (a vault
-fix). The L4/L5 audits surfaced W-011 and W-012, which are even
-smaller and close load-bearing audit-trail gaps. Pulling them forward
-gets early measurable progress with no architectural risk, and
-demonstrates the audit-to-fix loop actually closes.
+**Why the v4 reorder:** v3 led with W-004 (vault re-thaw); that
+shipped (PR #251), so v4 leads with W-015 fix (in flight) as the next
+smallest meaningful closure. The L8 audit added W-016 to the quick-
+wins lane and W-017/W-018 to the L10-gated cluster, reflecting that
+automated memory promotion and autonomous contemplation both depend
+on the runtime model decision.
 
 ---
 
@@ -403,8 +511,11 @@ demonstrates the audit-to-fix loop actually closes.
   [[project-engine-identity-candidate]]. Trigger to un-shelve: L10
   runtime-model ADR commits to cross-reboot identity verification as
   a sub-question 3 requirement.
-- **L8-L9 wiring debt.** L0-L7 audited (7 of 9 layers); L8-L9 pending.
-  Ratchet will be revised as remaining entries land.
+- **Audit complete.** All 9/9 layers audited. L8 added W-016/W-017/
+  W-018/W-019; L9 confirmed W-011 and W-012 from the verdict-surface
+  side without adding new entries (the refusal-reason matrix is a
+  consolidation of prior findings, not new debt). Future ratchet
+  revisions are wiring-progress driven, not audit-driven.
 - **Drop-off sibling ADR for recognizers.** Named in recognizer-
   storage-scope v2; depends on W-008 + recognizer-storage ADR + W-009.
   Not added to the ratchet as a standalone entry yet because it's a
