@@ -14,7 +14,7 @@
 | L3 — Language packs | ✅ Audited | **PARTIAL** | None — flagged readback as wiring debt | 2026-05-24 |
 | L4 — Recognition | ✅ Audited | **PARTIAL** | None — flagged connector/storage/integration as wiring debt | 2026-05-24 |
 | L5 — Cognition pipeline | ✅ Audited | **PARTIAL** | `generate/render.py` deleted; `explain.py` / `provenance.py` flagged as wiring debt | 2026-05-24 |
-| L6 — Chat runtime + surface composition | ⏳ Pending | — | — | — |
+| L6 — Chat runtime + surface composition | ✅ Audited | **PARTIAL** | None — no unambiguous dead chat code found | 2026-05-24 |
 | L7 — Teaching loop | ⏳ Pending | — | — | — |
 | L8 — Inter-session memory + contemplation | ⏳ Pending | — | — | — |
 | L9 — Epistemic state + verdicts | ⏳ Pending | — | — | — |
@@ -1009,3 +1009,264 @@ The live chat/cognition trace is:
 - **L9 (Epistemic state) auditor:** ADR-0142 implementation debt #3 (wiring refusal reason) is the primary blocker for full epistemic refusal tracking. Fix this boundary in L6/L9.
 
 ---
+
+## L6 — Chat runtime + surface composition
+
+**Audit date:** 2026-05-24
+**Auditor:** Codex
+**Verdict:** **PARTIAL**
+
+### Scope-hypothesis correction (per audit step 0)
+
+The scope's L6 range `ADR-0058..0099` is directionally right but too
+wide. Reality: the live L6 surface is centered on `chat/runtime.py` and
+the `chat/` composer/telemetry helpers, with several boundary ADRs
+already audited at L5 (`generate/realizer.py`, `core/cognition/*`) or
+belonging downstream to L7/L8/L9. The L1 forward note on
+`session/context.py` is confirmed relevant to L6 because
+`ChatRuntime.chat()` finalizes every turn through `SessionContext`.
+
+### ADRs in scope for L6
+
+Triaged from chat runtime / surface / grounding dispatch / telemetry /
+verdict / register / anchor-lens / cross-pack keyword grep against
+`docs/decisions/` and `docs/adr/`:
+
+| ADR | Title | Status | Belongs at L6? |
+|---|---|---|---|
+| ADR-0035 | Turn-Loop Verdict Surfacing | Accepted | Yes — SafetyCheck/EthicsCheck invocation in `ChatRuntime` |
+| ADR-0036 | Safety-Only Typed Refusal Policy | Accepted | Yes — fail-closed runtime surface replacement |
+| ADR-0037 | Per-Predicate Ethics Refusal Opt-In | Accepted | Yes — ethics refusal trigger policy |
+| ADR-0038 | Hedge Injection as Runtime Affordance | Accepted | Yes — runtime surface transformation |
+| ADR-0039 | Audit Completeness / `TurnVerdicts` Bundle | Accepted | Yes — response/event verdict bundle and stub-path events |
+| ADR-0040 | Structured-Logging Sink | Accepted | Yes — `TurnEventSink` fan-out target |
+| ADR-0041 | CLI Verdicts and Fan-Out | Accepted | Yes — `core chat --show-verdicts` and sink surface |
+| ADR-0048 | Pack-Grounded Surface for Cold-Start DEFINITION / RECALL | Accepted | Boundary-shared L5/L6 — implemented by chat pack composer |
+| ADR-0050 | Pack-Grounded Surface for Cold-Start COMPARISON | Accepted | Boundary-shared L5/L6 |
+| ADR-0052 | Teaching-Grounded Surface for Cold-Start CAUSE / VERIFICATION | Accepted | Boundary-shared L6/L7 reader side |
+| ADR-0058 | `forward_graph_constraint`: Engaged but Inert | Accepted | Boundary-only — L5 constraint, L6 carries telemetry/use |
+| ADR-0059 | Correction-Pass Telemetry Emission | Accepted | Boundary-only — L6 emits, L7 owns correction semantics |
+| ADR-0060 | CORRECTION Acknowledgement Carries Topic Lemma | Accepted | Boundary-only — L6 surface path, L7 correction loop |
+| ADR-0061 | PROCEDURE Intent Routes to Pack-Grounded Surface | Accepted | Yes |
+| ADR-0062 | Composed Teaching-Grounded Surface | Accepted | Yes — composed reader/composer path |
+| ADR-0063 | Cross-pack Surface Resolver | Accepted | Yes — reader-side cross-pack composition |
+| ADR-0064 | Cross-pack Teaching Chains | Accepted | Yes — reader-side corpus resolution |
+| ADR-0065 | OOV Gradient + Relations v2 | Accepted | Yes — OOV invitation surface and discovery signal |
+| ADR-0066 | Turn-Level Composition | Accepted | Yes — anaphora, narrative/example composers, thread context |
+| ADR-0067 | Cross-pack Teaching Chains | Accepted | Yes — cross-pack fall-through and narrative/example aggregation |
+| ADR-0068 | Register Pack Class | Accepted | Boundary-shared L3/L6 — L6 loads and applies pack |
+| ADR-0069 | Realizer Register Parameter | Accepted | Yes — trace-invariant register threading |
+| ADR-0070 | `terse_v1` Register Pack | Accepted | Boundary-shared L3/L6 |
+| ADR-0071 | Seeded Surface Variation | Accepted | Yes — post-composition decoration |
+| ADR-0072 | Register Telemetry + Operator Surface | Accepted | Yes |
+| ADR-0073 | Anchor Lens Substrate | Accepted | Boundary-shared L3/L6 |
+| ADR-0073b | Anchor Lens Class + Loader | Accepted | Boundary-shared L3/L6 |
+| ADR-0073c | Anchor Lens Composer Wiring | Accepted | Yes |
+| ADR-0073d | Anchor-Lens Telemetry, CLI, Tour | Accepted | Yes |
+| ADR-0075 | Realizer Slot-Type Guard | Accepted | Yes — final surface guard in runtime |
+| ADR-0076 | Confirmation-Tag Normalization | Accepted | Yes — surface normalization contract |
+| ADR-0077 | Substantive Register Knobs | Ratified | Yes — substantive post-composer transform |
+| ADR-0078 | Composer/Graph Atom Equivalence Telemetry | Ratified | Yes — observability in `TurnEvent` / `ChatResponse` |
+| ADR-0083 | Transitive Chain Surface | Accepted | Yes — multi-hop teaching reader surface |
+| ADR-0087 | Rhetorical Style Axis | Proposed | Boundary-only — design signal; no required runtime closure yet |
+| ADR-0088 | Realizer-Grounded Authority | Proposed | Boundary-only — L5/L6 surface authority handoff |
+| ADR-0089 | Compound-Intent Pipeline Dispatch | Proposed | Boundary-only — C1 telemetry live, C2 not required yet |
+| ADR-0090 | Unified Ingest + Batched Recall | Proposed | Yes — flag-gated L6 turn-loop path |
+| ADR-0096 | Fabrication-Control Eval Lane | Accepted | Boundary-only — verifies L6/L9 honesty surface |
+| ADR-0098 | Demo Composition Contract | Accepted | Boundary-only — demo composition, not core turn-loop closure |
+| ADR-0099 | Public Showcase Demo | Accepted | Boundary-only — demo surface, not core turn-loop closure |
+| ADR-0144 | PropositionGraph Epistemic Carrier & Gate | Accepted | Boundary-only — L4/L5 carrier; L6 dispatch trace remains observability-only |
+
+### Modules in scope for L6
+
+| Module | Lines | Live-import sites (outside module, outside `tests/`) | Test-import sites | Status |
+|---|---|---|---|---|
+| `chat/runtime.py` | 2217 | 68 | 82 | Live |
+| `chat/pack_grounding.py` | 1094 | 5 | 17 | Live |
+| `chat/teaching_grounding.py` | 638 | 15 | 13 | Live reader-side surface path; L7 owns mutation/review semantics |
+| `chat/cross_pack_grounding.py` | 287 | 6 | 3 | Live reader-side cross-pack path |
+| `chat/pack_resolver.py` | 245 | 16 | 19 | Live |
+| `chat/pack_surface_candidate.py` | 82 | 1 | 0 | Live through `pack_grounding.py` |
+| `chat/register_substantive.py` | 244 | 1 | 1 | Live |
+| `chat/register_variation.py` | 184 | 2 | 1 | Live |
+| `chat/example_surface.py` | 131 | 1 | 2 | Live |
+| `chat/narrative_surface.py` | 184 | 1 | 2 | Live |
+| `chat/partial_surface.py` | 115 | 1 | 1 | Live |
+| `chat/oov_surface.py` | 137 | 1 | 1 | Live |
+| `chat/anaphora.py` | 94 | 1 | 1 | Live |
+| `chat/thread_context.py` | 181 | 2 | 2 | Live |
+| `chat/articulation_telemetry.py` | 198 | 2 | 2 | Live |
+| `chat/telemetry.py` | 411 | 4 | 7 | Live |
+| `chat/refusal.py` | 177 | 2 | 4 | Live |
+| `chat/atom_equivalence.py` | 80 | 1 | 1 | Live |
+| `chat/dispatch_trace.py` | 13 | 2 | 1 | Live observability |
+| `chat/verdicts.py` | 49 | 1 | 3 | Live |
+| `chat/__main__.py` | 39 | 0 | 0 | CLI module entrypoint (`python -m chat`) |
+| `session/context.py` | 347 | 1 (`chat/runtime.py`) | 5 | Live L6 session-finalization boundary |
+
+No unambiguously dead L6 module was found. `chat/__init__.py` is a
+3-line re-export shim and is not counted as a liveness concern.
+
+### Caller-trace evidence
+
+The live L6 trace is:
+`core chat` / `core trace` → `ChatRuntime.chat()` → `SessionContext`
+probe/commit/finalize → `_maybe_pack_grounded_surface()` dispatch →
+pack/teaching/cross-pack/partial/OOV composers → refusal/hedge/guard →
+substantive register → seeded register decoration → anchor-lens
+telemetry extraction → `TurnEvent` / `ChatResponse` / telemetry sinks →
+`CognitiveTurnPipeline.run()` consumes the response surface and
+observability fields.
+
+Representative live callers:
+
+- `core/cli.py:218-256` — REPL creates `ChatRuntime`, prints
+  `ChatResponse.surface`, optionally prints verdict summary.
+- `core/cli.py:424-435` — trace command runs one chat turn and reports
+  surface, walk, articulation, and field telemetry.
+- `core/cognition/pipeline.py` — wraps `ChatRuntime.chat()` and carries
+  `dispatch_trace`, register surfaces, refusal fields, and trace hash
+  material into `CognitiveTurnResult`.
+- `evals/*` and `benchmarks/*` — use `ChatRuntime` for audit tours,
+  demo composition, register diagnostics, cost, and replay comparisons.
+- `chat/runtime.py:848-1135` — dispatches pack, teaching, cross-pack,
+  partial, and OOV surface candidates.
+- `chat/runtime.py:1371-1619` and `1621-2151` — stub and main paths
+  both build verdicts, enforce safety refusal surface replacement,
+  run register/anchor-lens/guard seams, append `TurnEvent`, and return
+  `ChatResponse`.
+
+### Exercising suite lane
+
+- `core test --suite smoke -q` — **67 passed**.
+- `core test --suite cognition -q` — **120 passed, 1 skipped**.
+- `core test --suite runtime -q` — **19 passed**.
+- `scripts/verify_lane_shas.py` — **7/7 lanes match pinned SHAs**.
+
+The runtime suite exists in `core/cli.py` and covers
+`tests/test_chat_runtime.py`, `tests/test_achat.py`, and
+`tests/test_runtime_config.py`. L6-specific tests also appear in the
+smoke/cognition lanes: dispatch trace, turn-loop verdicts, register,
+anchor lens, surface composition, cross-pack grounding, partial/OOV
+surface, and telemetry fan-out.
+
+### Cross-layer contract check
+
+**Pass 1 — mechanical (consumer-exists per exposed symbol):**
+
+| Exposed symbol / field | Consumer evidence |
+|---|---|
+| `ChatRuntime.chat()` | `core/cli.py`, `core/cognition/pipeline.py`, evals, benchmarks, tests |
+| `ChatResponse.surface` | CLI print path, `CognitiveTurnPipeline`, tests/evals |
+| `ChatResponse.walk_surface` | `core/cli.py` trace payload, `CognitiveTurnPipeline`, telemetry tests |
+| `ChatResponse.articulation_surface` | `core/cli.py`, `CognitiveTurnPipeline`, trace hash construction |
+| `ChatResponse.grounding_source` | `CognitiveTurnPipeline`, discovery/OOV candidate emission, tests |
+| `safety_verdict` / `ethics_verdict` / `verdicts` | CLI verdict summary, telemetry formatter, turn-loop verdict tests |
+| `pre_decoration_surface` / `register_canonical_surface` | `CognitiveTurnPipeline` trace-hash preservation; register invariant tests |
+| `register_id` / `register_variant_id` | telemetry formatter, register CLI/tour/tests |
+| `anchor_lens_id` / `anchor_lens_mode_label` | telemetry formatter, anchor-lens CLI/tour/tests |
+| `realizer_guard_status` / `realizer_guard_rule` | telemetry formatter, guard runtime seam tests |
+| `composer_graph_atom_*` | telemetry formatter, atom-equivalence tests |
+| `recalled_words` | `CognitiveTurnPipeline` realizer-grounded-authority seam |
+| `refusal_reason` | `CognitiveTurnPipeline` / `compute_trace_hash` when non-empty |
+| `dispatch_trace` | `core/cognition/result.py`, `CognitiveTurnPipeline`, `tests/test_dispatch_trace.py` |
+| `SessionContext.finalize_turn()` | `ChatRuntime.chat()`, `SessionContext.respond()`, session tests |
+
+No L6 response/event field with a documented downstream consumer was
+found missing from the live `ChatResponse` construction paths.
+
+**Pass 2 — semantic (L6-specific invariants checked):**
+
+1. **`session/context.py` post-generation unitize discipline.**
+   Confirmed `SessionContext.finalize_turn()` applies hemisphere
+   correction plus `_anchor_pull()`, and `_anchor_pull()` calls
+   `unitize_versor()` after slerp. This is suite-protected by
+   `tests/test_session_coherence.py`, and the static invariant only
+   forbids `unitize_versor()` in propagation/generation/vault. However,
+   no ADR was found that designates session finalization as an allowed
+   closure/construction boundary. This is a documented-code/tested
+   behavior but an ADR discipline gap.
+2. **`InnerLoopExhaustion` propagation.** L5's W-012 finding survives.
+   `ChatRuntime.chat()` calls `generate(...)` directly with no
+   `except InnerLoopExhaustion` / `except ValueError` materialization.
+   Reproduction with `chat.runtime.generate` patched to raise
+   `InnerLoopExhaustion(reason=INNER_LOOP_EXHAUSTION, region_label="audit-l6")`
+   produced `PROPAGATED inner_loop_exhaustion audit-l6 -1`, not a
+   `ChatResponse.refusal_reason`.
+3. **`dispatch_trace` trace-hash policy.** Confirmed
+   `DispatchTrace` is carried on `ChatResponse` and
+   `CognitiveTurnResult` but is not included in
+   `compute_trace_hash()` / `trace_hash_from_result()`. This matches
+   the code contract in `core/cognition/result.py`: dispatch trace is
+   observability-only. Manual branch scan of `_maybe_pack_grounded_surface()`
+   found every early admit/fall-through path appends a
+   `DispatchAttempt`; final fallbacks add explicit pack/teaching/
+   partial/OOV/universal-disclosure attempts. `tests/test_dispatch_trace.py`
+   pins pack, universal-disclosure, determinism, and pipeline carriage.
+4. **Cross-pack composition discipline.** Reader-side L6 paths
+   (`chat/cross_pack_grounding.py`, narrative/example aggregation,
+   runtime fall-through) read JSONL corpora and compose surfaces. The
+   grep found no runtime pack/corpus mutation in these L6 reader paths;
+   mutation remains proposal/review-owned downstream. `chat/telemetry.py`
+   and candidate sinks are append-only telemetry, not pack state.
+5. **Verdict-surface fail-closed.** Confirmed both stub and main paths
+   call `build_refusal_surface(...)`; when it returns a surface,
+   `response_surface` is replaced, `_last_refusal_was_typed=True`, and
+   downstream dispatch attempts are skipped with `reason="refusal_emitted"`.
+   This satisfies ADR-0036/0037 fail-closed runtime replacement for
+   safety violations and opted-in ethics violations.
+
+### Semantic mismatches flagged for human review
+
+- **W-012 / `InnerLoopExhaustion` materialization gap.** The typed
+  refusal taxonomy exists and trace-hash folding exists, but live
+  `ChatRuntime.chat()` does not catch generator refusal exceptions and
+  therefore cannot populate `ChatResponse.refusal_reason` for that path.
+- **Session finalization closure boundary is not ADR-backed.**
+  `session/context.py` performs post-generation anchor pull with
+  `unitize_versor()`. The code has comments and tests, and it is not in
+  the three forbidden hot-path modules, but the allowed-boundary list
+  in project instructions does not name session finalization and no
+  ADR documenting that exception was found.
+- **`dispatch_trace` is observability-only by implementation.** This
+  appears consistent with the current carrier/observability comments,
+  but if operators expect dispatch provenance to participate in replay
+  equality, an ADR amendment is needed before changing trace-hash
+  payloads.
+
+### Closure criteria scorecard
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. Design artifact | ✅ | ADR-0035..0041, ADR-0048/0050/0052, ADR-0061..0078, ADR-0083, ADR-0090 |
+| 2. Code artifact | ✅ | `chat/` modules plus `session/context.py` finalization boundary |
+| 3. Live caller | ⚠️ PARTIAL | Main runtime and composer paths live; generator refusal path propagates instead of producing `ChatResponse` |
+| 4. Exercised by suite lane | ✅ | smoke/cognition/runtime lanes pass; L6-specific tests present in documented lanes |
+| 5. Cross-layer consistency | ⚠️ PARTIAL | Surfaces/verdicts/register/anchor/cross-pack mostly consistent; `InnerLoopExhaustion` and session closure-boundary ADR gap remain |
+
+**Verdict:** **PARTIAL** (`InnerLoopExhaustion` refusal materialization
+is unwired in `ChatRuntime.chat()`, and the session-finalization
+`unitize_versor()` boundary is tested but not ADR-documented).
+
+### Cleanup performed
+
+**None.** Cleanup-as-found found no unambiguously dead L6 code.
+Several modules are small single-consumer helpers, but each has a live
+runtime/composer caller or a module-entry role. Wiring debt was flagged
+rather than deleted.
+
+### Findings / notes for downstream layers
+
+- **L7 (Teaching loop) auditor:** L6 reads teaching/cross-pack corpora
+  and emits discovery/OOV candidates, but no L6 reader path mutates
+  pack state. Verify L7 remains the only reviewed mutation/replay path,
+  especially for correction acknowledgement and proposal promotion.
+- **L8 (Inter-session memory + contemplation) auditor:** L6 emits
+  append-only telemetry and discovery/articulation observations. Verify
+  contemplation consumes those streams deterministically and does not
+  treat L6 reader surfaces as durable learning without review.
+- **L9 (Epistemic state + verdicts) auditor:** W-012 blocks full
+  refusal-state closure: `InnerLoopExhaustion` reasons do not reach
+  `ChatResponse.refusal_reason` or trace hashes live. Also verify
+  whether `dispatch_trace` must remain observability-only under
+  ADR-0144/epistemic carrier policy.
