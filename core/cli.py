@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -2343,7 +2343,8 @@ table.  This is the "show me everything" entry point.
   5. long-context-comparison — exact NIAH vs transformer baselines (ADR-0045)
   6. anti-regression         — three-gate defense (ADR-0057)
   7. learning-loop           — cold turn → grounded surface (ADR-0055..0057)
-  8. articulation            — discourse-planner spine (multi-sentence)
+  8. learning-arc            — engine-authored proposal via contemplation (ADR-0150..0151)
+  9. articulation            — discourse-planner spine (multi-sentence)
 
 Each demo retains its own preamble + report.  The final summary surfaces
 one boolean per demo and an overall ``all_demos_passed`` flag.
@@ -2658,6 +2659,14 @@ def cmd_demo(args: argparse.Namespace) -> int:
             print(json.dumps(report, indent=2, sort_keys=True))
         return 0
 
+    if target == "learning-arc":
+        from evals.learning_arc.run_demo import run_demo as run_arc_demo
+
+        report = run_arc_demo(emit_json=args.json)
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        return 0
+
     if target == "articulation":
         from evals.articulation.run_demo import run_demo as run_articulation_demo
 
@@ -2862,7 +2871,7 @@ def _run_demo_all(emit_json: bool) -> int:
     passed["anti_regression"] = bool(ar_report.get("all_gates_held", False))
 
     # 7. learning-loop
-    _section("7/8  learning-loop — cold turn → grounded surface")
+    _section("7/9  learning-loop — cold turn → grounded surface")
     from evals.learning_loop.run_demo import run_demo as run_loop
     if not emit_json:
         _print_preamble(_LEARNING_LOOP_PREAMBLE)
@@ -2871,8 +2880,16 @@ def _run_demo_all(emit_json: bool) -> int:
     consolidated["learning_loop"] = ll_report
     passed["learning_loop"] = bool(ll_report.get("learning_loop_closed", False))
 
-    # 8. articulation
-    _section("8/8  articulation — discourse-planner spine")
+    # 8. learning-arc
+    _section("8/9  learning-arc — engine-authored proposal via contemplation")
+    from evals.learning_arc.run_demo import run_demo as run_arc
+    with _maybe_suppress():
+        arc_report = run_arc(emit_json=emit_json)
+    consolidated["learning_arc"] = arc_report
+    passed["learning_arc"] = bool(arc_report.get("learning_arc_closed", False))
+
+    # 9. articulation
+    _section("9/9  articulation — discourse-planner spine")
     from evals.articulation.run_demo import run_demo as run_art
     if not emit_json:
         _print_preamble(_ARTICULATION_PREAMBLE)
@@ -3717,6 +3734,7 @@ def build_parser() -> argparse.ArgumentParser:
             "long-context-comparison",
             "anti-regression",
             "learning-loop",
+            "learning-arc",
             "articulation",
             "conversation",
             "showcase",
@@ -3750,6 +3768,9 @@ def build_parser() -> argparse.ArgumentParser:
             "harmful chains (eligibility / replay-equivalence / operator).  "
             "learning-loop: ADR-0055..0057 — full cold-turn → discovery → "
             "propose → accept → same-prompt-now-grounded walkthrough.  "
+            "learning-arc: ADR-0150..0151 — two-session arc: checkpoint "
+            "contemplation enriches candidate, engine derives connective + "
+            "object from corpus decomposition, operator only ratifies.  "
             "articulation: discourse-planner spine — EXPLAIN / COMPOUND / "
             "WALKTHROUGH multi-sentence articulation + determinism gate.  "
             "conversation: layperson-facing chat transcript with live "
