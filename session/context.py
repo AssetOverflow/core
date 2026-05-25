@@ -11,7 +11,8 @@ from __future__ import annotations
 import numpy as np
 
 from algebra.backend import cga_inner, versor_apply
-from algebra.versor import unitize_versor, versor_condition as _versor_condition
+from algebra.rotor import rotor_power, word_transition_rotor
+from algebra.versor import versor_condition as _versor_condition
 from field.state import FieldState
 from generate.dialogue import DialogueTurn
 from generate.proposition import Proposition
@@ -33,35 +34,6 @@ _BLADE_EMA_ALPHA: float = 0.15
 # session anchor field. 0.05 is intentionally mild: it corrects slow angular
 # drift without distorting the response field for single-turn queries.
 _ANCHOR_PULL_ALPHA: float = 0.05
-
-
-def _slerp_toward(
-    F: np.ndarray,
-    target: np.ndarray,
-    alpha: float,
-) -> np.ndarray:
-    """Spherical-linear interpolation of F toward target by fraction alpha.
-
-    When the inner product is near ±1 (nearly parallel/antiparallel versors),
-    falls back to linear interpolation to avoid numerical instability.
-    """
-    f_norm = float(np.linalg.norm(F))
-    t_norm = float(np.linalg.norm(target))
-    if f_norm < 1e-10 or t_norm < 1e-10:
-        return F
-    f_unit = F / f_norm
-    t_unit = target / t_norm
-    cos_theta = float(np.clip(np.dot(f_unit.ravel(), t_unit.ravel()), -1.0, 1.0))
-    theta = float(np.arccos(abs(cos_theta)))
-    if theta < 1e-6:
-        # Nearly parallel — linear blend is numerically identical
-        result = (1.0 - alpha) * F + alpha * target
-    else:
-        sin_theta = float(np.sin(theta))
-        w_f = float(np.sin((1.0 - alpha) * theta)) / sin_theta
-        w_t = float(np.sin(alpha * theta)) / sin_theta
-        result = w_f * F + w_t * target
-    return np.asarray(result, dtype=F.dtype)
 
 
 class SessionContext:
@@ -221,19 +193,29 @@ class SessionContext:
         )
 
     def _anchor_pull(self, field_state: FieldState) -> FieldState:
-        """Drift fix 3: mild slerp toward the session anchor field.
+        """Drift fix 3: mild rotor-geodesic pull toward the session anchor field.
 
         Applied after hemisphere correction. Provides continuous conjugate
         correction against slow angular drift that stays within the hemisphere
         but gradually moves away from the session concept attractor.
+
+        Computes the transition rotor R = anchor * reverse(F), scales it to
+        R^α via rotor_power (stays on the versor manifold by construction), and
+        applies it via versor_apply.  This replaces the previous _slerp_toward
+        approach, which interpolated on S^31 rather than on the Spin sub-manifold
+        and required a post-hoc unitize_versor to repair the manifold violation.
 
         α=0.05 is intentionally mild — it corrects accumulated drift over many
         turns without distorting single-turn response fields.
         """
         if self._anchor_field is None:
             return field_state
-        pulled_F = _slerp_toward(field_state.F, self._anchor_field, _ANCHOR_PULL_ALPHA)
-        pulled_F = unitize_versor(pulled_F)
+        try:
+            R = word_transition_rotor(field_state.F, self._anchor_field)
+        except ValueError:
+            return field_state
+        R_step = rotor_power(R, _ANCHOR_PULL_ALPHA)
+        pulled_F = versor_apply(R_step, field_state.F)
         return FieldState(
             F=pulled_F,
             node=field_state.node,
