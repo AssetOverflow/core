@@ -18,7 +18,35 @@ import numpy as np
 from algebra.backend import vault_recall, vault_recall_batch
 from algebra.cga import null_project
 from core.epistemic_state import EpistemicState
+from core.physics.energy import EnergyClass, EnergyProfile
 from teaching.epistemic import ADMISSIBLE_AS_EVIDENCE, EpistemicStatus
+
+
+# ADR-0006 §"Integration Points":
+#   "Vault recall re-activates the region to E2 transiently, then lets it
+#    cool again."
+#
+# The vault stores crystallized entries (E0 by ADR-0006's "the vault encodes
+# the crystallized form"). On recall, each returned entry is stamped with an
+# EnergyProfile declaring the transient E2 re-activation. The cool-down is
+# the responsibility of downstream field propagation — once the recalled
+# region is no longer being injected into the active field state, the
+# FieldEnergyOperator's recency decay naturally takes it back down.
+#
+# raw=0.50 places the profile mid-E2 band (E2 threshold = 0.37, E3 threshold
+# = 0.62). The other fields are conservative defaults; consumers that want
+# field-specific energy can recompute via FieldEnergyOperator after
+# re-injection.
+_VAULT_RECALL_RETHAW_ENERGY = EnergyProfile(
+    raw=0.50,
+    energy_class=EnergyClass.E2,
+    convergence_density=0,
+    activation_count=1,
+    last_activation_cycle=0,
+    coherence_residual=0.0,
+    aspect_weight=0.0,
+    anchor_adjacent=False,
+)
 
 
 def _versor_key(F: np.ndarray) -> bytes:
@@ -188,6 +216,11 @@ class VaultStore:
                 "epistemic_state": epistemic_state_for_vault_status(
                     _parse_entry_status(self._metadata[i].get("epistemic_status", "speculative"))
                 ).value,
+                # ADR-0006 §"Integration Points": vault recall re-activates the
+                # region to E2 transiently. The profile here declares the
+                # re-activation; cool-down is downstream field propagation's
+                # responsibility once the entry is no longer injected.
+                "energy_profile": _VAULT_RECALL_RETHAW_ENERGY,
             }
             for i, score in ranked[:top_k]
         ]
@@ -250,6 +283,8 @@ class VaultStore:
                     "epistemic_state": epistemic_state_for_vault_status(
                         _parse_entry_status(self._metadata[i].get("epistemic_status", "speculative"))
                     ).value,
+                    # ADR-0006: see recall() for re-thaw semantics.
+                    "energy_profile": _VAULT_RECALL_RETHAW_ENERGY,
                 }
                 for i, score in ranked[:top_k]
             ])
