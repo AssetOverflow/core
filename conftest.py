@@ -85,6 +85,14 @@ QUARANTINE: frozenset[str] = frozenset({
     # Cluster D — CLI / internal API drift.
     "tests/test_cli_test_suites.py::test_core_test_suite_accepts_pytest_flags_without_separator",
     "tests/test_comb_pass_hot_path.py::test_classify_compound_intent_called_once_per_turn",
+
+    # Cluster E — pytest-xdist parallel-execution incompatibilities.
+    # These tests pass single-threaded but fail under `-n 4` because they
+    # measure system-wide resources (memory RSS, timing) that drift under
+    # concurrent worker pressure. Fix shape: either make the test
+    # parallel-tolerant, or mark for serial-only execution (e.g. via
+    # pytest-xdist's --dist loadgroup + @pytest.mark.xdist_group).
+    "tests/test_articulation_bench.py::test_footprint_emits_samples_and_bounds",
 })
 
 

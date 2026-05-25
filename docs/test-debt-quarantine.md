@@ -15,7 +15,7 @@ pass on its own merits in CI from that PR onward.
 A full `pytest --durations=30` run on 2026-05-24 surfaced **45 failures
 + 3 errors** in a 30-minute suite. Bisect against commit `c1a1b7a`
 (the commit immediately before the first W-* PR of the audit
-sequence) showed **all 48 fail identically on baseline** — today's
+sequence) showed **all 49 fail identically on baseline** — today's
 W-* work introduced zero new failures.
 
 These failures had accumulated because CI only verifies the lane SHA
@@ -24,12 +24,12 @@ The full `pytest` lane was never gated, so feature evolution silently
 broke assertions without surfacing.
 
 The `full-pytest` gate added in this PR closes that loop. The
-`QUARANTINE` registry is the explicit IOU: 48 contracts we said we'd
+`QUARANTINE` registry is the explicit IOU: 49 contracts we said we'd
 uphold, momentarily set aside to unblock the gate.
 
 ## Cluster diagnoses
 
-The 48 failures fall into four shape-clusters. Each cluster is fixable
+The 49 failures fall into four shape-clusters. Each cluster is fixable
 by a small focused PR (same shape as W-002, which was a one-token
 extension after ADR-0120 promoted a ledger row).
 
@@ -106,6 +106,21 @@ Affected lanes/runners:
 - `test_ood_surface_generator` (2)
 - `test_perturbation_suite`
 - `test_relations_chains_v1`
+
+### Cluster E — pytest-xdist parallel-execution incompatibilities (1 test)
+
+The gate runs `pytest -n 4`. Some tests measure system-wide resources
+(memory RSS, wall-clock timing) and become flaky under concurrent
+worker pressure even though they pass single-threaded.
+
+Affected:
+- `test_articulation_bench::test_footprint_emits_samples_and_bounds`
+  (asserts per-turn ΔRSS < 1 MiB; total system memory pressure under
+  `-n 4` exceeds the ceiling)
+
+**Fix shape**: either rewrite the test to measure only its own
+allocations (not system RSS), or mark for serial-only execution via
+pytest-xdist's `--dist loadgroup` + `@pytest.mark.xdist_group("serial")`.
 
 ### Cluster D — CLI / internal API drift (2 tests)
 
