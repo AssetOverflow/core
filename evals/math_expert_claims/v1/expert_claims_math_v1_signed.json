@@ -1,7 +1,7 @@
 {
   "adr": "0120-math",
   "all_obligations_passed": true,
-  "claim_digest": "94149794e8c19896851e062cf1f921cfa9ba04770b674bc3b4c33023f7c7331b",
+  "claim_digest": "4c46f530351ce96fbdacf29d242b8d99d40e0c5a92d12b10c4862315147ebfa4",
   "composite_gate_passed": true,
   "composite_gate_refusal": "",
   "domain": "mathematics_logic",
@@ -80,7 +80,7 @@
   "promote_admitted": true,
   "refusal_reason": "",
   "reviewer_signature": {
-    "claim_digest": "94149794e8c19896851e062cf1f921cfa9ba04770b674bc3b4c33023f7c7331b",
+    "claim_digest": "4c46f530351ce96fbdacf29d242b8d99d40e0c5a92d12b10c4862315147ebfa4",
     "domain_id": "mathematics_logic",
     "evidence_lanes": [
       "math_symbolic_equivalence/v1 (public)",
