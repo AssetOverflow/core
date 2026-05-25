@@ -15,7 +15,7 @@
 | L4 — Recognition | ✅ Audited | **PARTIAL** | None — flagged connector/storage/integration as wiring debt | 2026-05-24 |
 | L5 — Cognition pipeline | ✅ Audited | **PARTIAL** | `generate/render.py` deleted; `explain.py` / `provenance.py` flagged as wiring debt | 2026-05-24 |
 | L6 — Chat runtime + surface composition | ✅ Audited | **PARTIAL** | None — no unambiguous dead chat code found | 2026-05-24 |
-| L7 — Teaching loop | ⏳ Pending | — | — | — |
+| L7 — Teaching loop | ✅ Audited | **PARTIAL** | None — no unambiguously dead modules found | 2026-05-24 |
 | L8 — Inter-session memory + contemplation | ⏳ Pending | — | — | — |
 | L9 — Epistemic state + verdicts | ⏳ Pending | — | — | — |
 
@@ -1270,3 +1270,144 @@ rather than deleted.
   `ChatResponse.refusal_reason` or trace hashes live. Also verify
   whether `dispatch_trace` must remain observability-only under
   ADR-0144/epistemic carrier policy.
+
+## L7 — Teaching loop
+
+**Audit date:** 2026-05-24
+**Auditor:** primary agent (Gemini)
+**Verdict:** **PARTIAL**
+
+### Scope-hypothesis correction (per audit step 0)
+
+The scope's layering table cited Layer L7 concerns as: correction extraction, review, proposal log, replay-equivalence, teaching corpus, pointing to `teaching/correction.py`, `teaching/review.py`, `teaching/store.py`, `teaching/replay.py`. Reality: L7 also encompasses the full offline/curriculum promotion pipeline, discovery candidate sinks, gap detection, OOV queue compilation, supersession history, and relational triple parsing.
+
+### ADRs in scope for L7
+
+| ADR | Title | Status | Belongs at L7? |
+|---|---|---|---|
+| ADR-0014 | `train/` Learning Loop | Accepted | Yes — specifications for memory tier promotion |
+| ADR-0021 | Epistemic status taxonomy | Accepted | Yes — defines `EpistemicStatus` values (COHERENT / SPECULATIVE / CONTESTED / FALSIFIED) |
+| ADR-0052 | Teaching-Grounded Surface for Cold-Start CAUSE / VERIFICATION | Accepted | Yes — active teaching corpus loader and resolver |
+| ADR-0055 | Inter-Session Memory Discovery & Promotion | Accepted | Yes — four-tier memory and proposal-only corpus mutation path |
+| ADR-0057 | Teaching-Chain Proposal + Review + Replay-Equivalence | Accepted | Yes — primary L7 design document (replay-equivalence and proposal state machine) |
+| ADR-0059 | Correction-Pass Telemetry | Accepted | Yes — telemetry specs for correction turn |
+| ADR-0060 | CORRECTION Acknowledgement Carries the Corrected-Topic Lemma | Accepted | Yes — topic-extraction policy for correction acknowledgement |
+| ADR-0064 | Cross-Pack Teaching Corpora Registry | Accepted | Yes — multi-corpus registry and single-pack boundaries |
+| ADR-0067 | Cross-pack teaching chains (Plan Phase 4) | Accepted | Yes — multi-pack teaching chain layout and loader |
+| ADR-0094 | Proposal Source Provenance | Accepted | Yes — proposal source schema (operator / miner / curriculum) |
+| ADR-0095 | Miner-Sourced Teaching Proposals | Accepted | Yes — miner candidate promotion logic |
+| ADR-0104 | Curriculum-Sourced Teaching Proposals | Accepted | Yes — curriculum candidate promotion logic |
+| ADR-0129 | Spaced-Correction Replay | Deferred | Yes — deferred spaced-replay strategy |
+| ADR-0131.2 | Teaching Corpus Eval | Accepted | Yes — math teaching corpus evaluation runner |
+
+### Modules in scope for L7
+
+| Module | Lines | Live-import sites (outside `teaching/`, outside `tests/`) | Test-import sites | Status |
+|---|---|---|---|---|
+| `teaching/__init__.py` | 33 | 0 | 2 | Live (Re-export shim) |
+| `teaching/audit.py` | 313 | 2 (`core/cli.py`, `teaching/supersede.py`) | 1 | Live |
+| `teaching/contemplation.py` | 505 | 1 (`core/cli.py` / `core/contemplation/__main__.py`) | 1 | Live |
+| `teaching/correction.py` | 64 | 4 (`core/cognition/pipeline.py`, `core/cognition/result.py`, `formation/promote.py`, `chat/pack_grounding.py`) | 3 | Live |
+| `teaching/cross_pack_supersede.py` | 206 | 1 (`core/cli.py`) | 1 | Live |
+| `teaching/discovery.py` | 326 | 2 (`teaching/proposals.py`, `core/cli.py`) | 2 | Live |
+| `teaching/discovery_sink.py` | 105 | 1 (`core/contemplation/__main__.py`) | 3 | Live |
+| `teaching/epistemic.py` | 56 | 6 (`core/cognition/pipeline.py`, `generate/proposition.py`, `vault/store.py`, `session/context.py`, `language_packs/compiler.py`, `formation/promote.py`) | 6 | Live |
+| `teaching/from_curriculum.py` | 275 | 0 | 1 | Partially live (test-only logic) |
+| `teaching/from_miner.py` | 370 | 0 | 1 | Partially live (test-only logic) |
+| `teaching/gaps.py` | 206 | 1 (`core/cli.py`) | 1 | Live |
+| `teaching/metric_set.py` | 14 | 1 (`teaching/replay.py`) | 0 | Live |
+| `teaching/migrate_proposals_source_field.py` | 123 | 0 | 0 | Live (One-shot migration CLI) |
+| `teaching/oov_gaps.py` | 170 | 1 (`core/cli.py`) | 1 | Live |
+| `teaching/oov_promotion.py` | 119 | 1 (`core/cli.py`) | 1 | Live |
+| `teaching/oov_sink.py` | 160 | 1 (`chat/runtime.py`) | 1 | Live |
+| `teaching/promotion.py` | 132 | 1 (`core/cli.py`) | 1 | Live |
+| `teaching/proposals.py` | 565 | 1 (`core/cli.py`) | 2 | Live |
+| `teaching/provenance.py` | 88 | 3 (`teaching/proposals.py`, `teaching/audit.py`, `teaching/supersede.py`) | 1 | Live |
+| `teaching/relation_parse.py` | 128 | 3 (`teaching/store.py`, `formation/forge.py`, `formation/smelter.py`) | 2 | Live |
+| `teaching/replay.py` | 173 | 1 (`teaching/proposals.py`) | 1 | Live |
+| `teaching/review.py` | 307 | 2 (`core/cognition/pipeline.py`, `formation/promote.py`) | 3 | Live |
+| `teaching/source.py` | 137 | 1 (`teaching/proposals.py`) | 1 | Live |
+| `teaching/store.py` | 301 | 1 (`core/cognition/pipeline.py`) | 2 | Live |
+| `teaching/supersede.py` | 196 | 1 (`core/cli.py`) | 1 | Live |
+
+### Caller-trace evidence
+
+The live turn-by-turn chat runtime captures corrections:
+`ChatRuntime.chat()` → `CognitiveTurnPipeline.run()` → `_run_teaching` → `extract_correction` → `review_correction` → `TeachingStore.add`. This builds a memory-resident `PackMutationProposal` with `SPECULATIVE` or `CONTESTED` status on the fly.
+
+The offline / curriculum loop writes and processes proposals:
+`TurnEvent` / `CognitiveTurnResult` → `extract_discovery_candidates` → written to disk via `DiscoveryMonthlyFileSink`.
+`core teaching propose` (CLI command) → `propose_from_candidate` → runs `run_replay_equivalence` → appends to `proposals.jsonl` on disk.
+`core teaching review <proposal_id> --accept` (CLI command) → `accept_proposal` → `append_chain_to_corpus` → appends the chain with operator provenance to `teaching/cognition_chains/cognition_chains_v1.jsonl`.
+Subsequent engine invocations parse the new active corpus via `chat.teaching_grounding._all_chains_index()`, grounding relevant `CAUSE` / `VERIFICATION` prompts.
+
+### Exercising suite lane
+
+- Direct L7 tests:
+  ```bash
+  python3 -m core.cli test --suite teaching -q
+  ```
+  **Verification:** 17 passed.
+- Cross-layer regressions:
+  ```bash
+  python3 -m core.cli test --suite smoke -q
+  ```
+  **Verification:** 67 passed.
+- Lane SHAs match:
+  ```bash
+  python3 scripts/verify_lane_shas.py
+  ```
+  **Verification:** 7/7 match pinned SHAs.
+
+### Cross-layer contract check
+
+**Pass 1 — mechanical (consumer-exists per exposed symbol):**
+
+| Exposed symbol / field | Consumer evidence |
+|---|---|
+| `extract_correction` / `CorrectionCandidate` | `core/cognition/pipeline.py:50,568`, `core/cognition/result.py:21`, `chat/pack_grounding.py` |
+| `review_correction` / `ReviewedTeachingExample` | `core/cognition/pipeline.py:52,578` |
+| `TeachingStore` | `core/cognition/pipeline.py:53,120` |
+| `EpistemicStatus` / `ADMISSIBLE_AS_EVIDENCE` | `core/cognition/pipeline.py:51`, `vault/store.py:21`, `session/context.py:24`, `generate/proposition.py:23` |
+| `parse_triple` | `teaching/store.py:179`, `formation/forge.py:54`, `formation/smelter.py:37` |
+| `run_replay_equivalence` | `teaching/proposals.py:472`, `evals/math_teaching_corpus/v1/runner.py:155`, direct tests |
+| `propose_from_candidate` | `core/cli.py:1208`, `benchmarks/teaching_loop.py:161`, evals and tests |
+| `accept_proposal` / `reject_proposal` / `withdraw_proposal` | `core/cli.py:1263,1271,1274`, direct tests |
+| `DiscoveryMonthlyFileSink` | `core/contemplation/__main__.py:75`, `tests/test_discovery_candidates.py` |
+| `OOVMonthlyFileSink` | `chat/runtime.py:700`, `tests/test_oov_pipeline.py` |
+
+**Pass 2 — semantic (six L7 invariants checked):**
+
+1. **Replay-equivalence gate liveness.** Verified. The replay-equivalence gate (`run_replay_equivalence`) is called in the operator-driven CLI flow (`core teaching propose` which calls `propose_from_candidate`), and accepted proposals are verified in `accept_proposal`. It is not run during live turn execution because running the full cognition split twice is slow. This matches the design of ADR-0057.
+2. **Append-only proposal log.** Verified. `teaching/proposals.py:``ProposalLog` writes using `"a"` mode and never rewrites or truncates `proposals.jsonl`. Replaying the log from the top reconstructs the review-state view. The active corpus `cognition_chains_v1.jsonl` is also written using append-only `"a"` mode, with old entries retired using the `superseded_by` tag at load time.
+3. **Pack-mutation proposal-only discipline.** Verified. No code in `teaching/` directly writes or mutates packs on disk. The queue generators (`oov_promotion.py`, `promotion.py`) suggest mutations for packs but leave the application to the operator.
+4. **Teaching corpus content invariant.** Verified. `chat/teaching_grounding.py` loads single-pack and cross-pack teaching chains and filters them against their respective declared packs. Any chain referencing missing lemmas is silently dropped.
+5. **HITL ratification synchronousness.** Confirmed. Replay-equivalence and proposal review are synchronous CLI workflows run by the operator between session iterations. The asynchronous queue is documented as future work (W-009).
+6. **Recognition-refusal consumer.** Confirmed. There is no consumer of recognition-refusal signals within `teaching/` today (this matches the W-011 gap).
+
+### Semantic mismatches flagged for human review
+
+- **Dormant `explain()` wiring.** `core/cognition/explain.py` is dormant. It is not consumed by the teaching review loop or proposal commands. Natural-language turn explanations for reviewed corrections remain unwired.
+- **Unconsumed recognition refusals.** Recognition-refusal signals are discarded by the pipeline and do not feed the correction/review loop.
+
+### Closure criteria scorecard
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| 1. Design artifact | ✅ | ADR-0014, ADR-0021, ADR-0052, ADR-0055, ADR-0057, ADR-0059, ADR-0060, ADR-0064, ADR-0067, ADR-0094, ADR-0095, ADR-0104, ADR-0129, ADR-0131.2 |
+| 2. Code artifact | ✅ | `teaching/` python modules and CLI commands |
+| 3. Live caller | ⚠️ PARTIAL | In-memory correction capture, review, and proposal tracking are live; recognition-refusal and explain() integrations are dormant |
+| 4. Exercised by suite lane | ✅ | `teaching` suite lane passes; `smoke` lane passes; `verify_lane_shas.py` is 7/7 |
+| 5. Cross-layer consistency | ⚠️ PARTIAL | Core schema and invariants consistent; lack of recognition-refusal consumer leaves L4/L7 boundary open |
+
+### Cleanup performed
+
+**None.** No modules were found to be unambiguously dead, redundant, or orphaned. Curriculum/miner proposal builders are test-live and key to curriculum/miner integration; one-shot migration script is kept on disk for documentation.
+
+### Findings / notes for downstream layers
+
+- **L8 (Inter-session memory + contemplation) / L10 (Runtime model) auditor:** W-009 is the primary gap for memory queueing: the async queue is not implemented, and the current teaching loop is synchronous. Document this as a constraint when building inter-session memory promotion.
+- **L9 (Epistemic state) / L4 (Recognition) auditor:** W-011 is open. Integrate recognition-refusal signals as teaching candidates or review signals in the next layer's audit.
+
+---
+
