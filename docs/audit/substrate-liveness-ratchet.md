@@ -1,4 +1,4 @@
-# Substrate Liveness Ratchet — v2 (partial; informed by L0-L5 + L10 scope)
+# Substrate Liveness Ratchet — v3 (partial; informed by L0-L7 + L10 scope)
 
 **Scope:** [substrate-liveness-audit-scope](../decisions/substrate-liveness-audit-scope.md) (v2)
 **Companion:** [substrate-liveness-registry](./substrate-liveness-registry.md)
@@ -278,6 +278,37 @@ home (ADR-XXXX or new).
   consumer (evals); the question is whether it should be promoted to
   runtime use.
 
+### W-015 — `session/context.py` post-generation unitize undocumented
+
+- **Surfaced by:** L6 audit (PR #246), answering L1 audit's forward
+  note (PR #237).
+- **Gap:** `session/context.py:207-246` performs final-turn hemisphere
+  correction and anchor pull with `unitize_versor()`. The site is
+  test-covered, but no ADR documents it as an allowed normalization
+  boundary. Per CLAUDE.md normalization rules, the only sanctioned
+  unitize sites are `ingest/gate.py`, `language_packs/compiler.py`,
+  and `algebra/versor.py`. The `session/context.py` site does not
+  appear in that list — it is either an undocumented allowed boundary
+  or a discipline violation.
+- **Dependency:** none — purely a documentation/discipline question.
+- **Resolution paths:**
+  - **(a)** Write a small ADR amendment or new ADR sanctioning
+    `session/context.py:207-246` as an allowed normalization boundary
+    (the "final-turn anchor pull" boundary), with rationale.
+  - **(b)** If the site is NOT a sanctioned boundary, refactor to
+    remove the unitize call and surface any resulting closure
+    failures rather than silently repairing them. Per CLAUDE.md:
+    *"Do not add drift repair... whose only purpose is to repair
+    another function."*
+  - **(c)** Investigate whether the unitize is masking an upstream
+    construction violation. If so, fix upstream and remove the
+    site.
+- **Recommended:** start with (c) — investigate root cause. (a) is the
+  fallback if the unitize turns out to be a legitimate boundary.
+  (b) is the fallback if it's pure drift repair.
+- **Status:** ⏳ OPEN — discipline question; small ADR or small
+  refactor depending on investigation outcome.
+
 ---
 
 ## Dependency graph (Mermaid-style, ASCII)
@@ -296,6 +327,7 @@ W-012 ⏳ ──── (independent, mechanical)  — sibling of W-011
 W-010 ⏳ ──── (operator decision: intentional or wire L3 vocab)
 W-013 ⏳ ──── (operator decision: wire, relocate, or delete)
 W-014 ⏳ ──── (operator decision: lighter than W-013)
+W-015 ⏳ ──── (discipline question: investigate root cause first)
 
 W-008 (L10 ADR) ⏳
    ├──→ W-003 (VaultPromotionPolicy wiring) ⏳
@@ -334,6 +366,9 @@ the bigger L10 unit.**
 6. **W-010 — L4 recognition vocabulary: token-level intentional, or
    wire L3 vocab.** Operator decision; affects whether recognition
    pulls in pack-resident domain types.
+7. **W-015 — `session/context.py` unitize: ADR-sanction, remove, or
+   fix-upstream.** Investigate root cause first; resolution shape
+   depends on what's found.
 
 ### Then user-observable second-order changes
 
@@ -368,7 +403,7 @@ demonstrates the audit-to-fix loop actually closes.
   [[project-engine-identity-candidate]]. Trigger to un-shelve: L10
   runtime-model ADR commits to cross-reboot identity verification as
   a sub-question 3 requirement.
-- **L6-L9 wiring debt.** L0-L5 audited (5 of 9 layers); L6-L9 pending.
+- **L8-L9 wiring debt.** L0-L7 audited (7 of 9 layers); L8-L9 pending.
   Ratchet will be revised as remaining entries land.
 - **Drop-off sibling ADR for recognizers.** Named in recognizer-
   storage-scope v2; depends on W-008 + recognizer-storage ADR + W-009.
