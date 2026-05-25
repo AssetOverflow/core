@@ -13,6 +13,7 @@ Layout:
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from pathlib import Path
 from typing import Sequence
@@ -21,7 +22,11 @@ from recognition.anti_unifier import DerivedRecognizer
 from teaching.discovery import DiscoveryCandidate
 
 _SCHEMA_VERSION = 1
-_DEFAULT_DIR = Path(__file__).parents[1] / "engine_state"
+_DEFAULT_DIR = (
+    Path(os.environ["CORE_ENGINE_STATE_DIR"])
+    if os.environ.get("CORE_ENGINE_STATE_DIR")
+    else Path(__file__).parents[1] / "engine_state"
+)
 
 
 def _git_revision() -> str:
@@ -101,7 +106,10 @@ class EngineStateStore:
         p = self.path / "manifest.json"
         if not p.exists():
             return None
-        return json.loads(p.read_text(encoding="utf-8"))
+        content = p.read_text(encoding="utf-8").strip()
+        if not content:
+            return None
+        return json.loads(content)
 
     def exists(self) -> bool:
         return (self.path / "manifest.json").exists()
