@@ -1,0 +1,64 @@
+name: full-pytest
+
+# Runs the full pytest suite, excluding tests marked @pytest.mark.quarantine
+# via the conftest.py QUARANTINE registry. The intent is a ratchet: once a
+# test is removed from the registry it must keep passing on this gate.
+#
+# Quarantined tests are pre-existing failures that pre-date the substrate-
+# liveness audit (bisect-confirmed against c1a1b7a). See:
+#   conftest.py — the QUARANTINE registry (one entry per quarantined test)
+#   docs/test-debt-quarantine.md — cluster diagnoses + removal policy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: full-pytest-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    name: full pytest (-m "not quarantine" -n 4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" pyyaml
+
+      - name: pytest (parallel, quarantine excluded)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          pytest -m "not quarantine" -n 4 --tb=short -q --maxfail=10
+
+      - name: report quarantine size (informational)
+        if: always()
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python3 -c "
+          import sys
+          sys.path.insert(0, '.')
+          from conftest import QUARANTINE
+          print(f'::notice title=Quarantine size::{len(QUARANTINE)} tests currently quarantined. Goal: shrink this number.')
+          "

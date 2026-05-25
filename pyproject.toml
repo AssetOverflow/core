@@ -51,3 +51,6 @@ include = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "quarantine: pre-existing failure tracked in conftest.py QUARANTINE registry; excluded from full-pytest CI gate. See docs/test-debt-quarantine.md.",
+]
