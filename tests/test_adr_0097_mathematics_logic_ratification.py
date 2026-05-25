@@ -58,11 +58,11 @@ class TestLedgerStatus:
     def test_status_meets_reasoning_capable_at_minimum(self) -> None:
         """ADR-0097 ratified math at reasoning-capable. ADR-0110 later
         promoted it to audit-passed (renamed from expert-demo by
-        ADR-0113). The load-bearing invariant for ADR-0097 is that
-        reasoning_capable holds; the status string moves with later
-        promotions."""
+        ADR-0113). ADR-0120 promoted it again to expert. The load-bearing
+        invariant for ADR-0097 is that reasoning_capable holds; the
+        status string moves with later promotions."""
         row = _ledger_row(DOMAIN_ID)
-        assert row["status"] in ("reasoning-capable", "audit-passed")
+        assert row["status"] in ("reasoning-capable", "audit-passed", "expert")
         assert row["predicates"]["reasoning_capable"] is True
 
     def test_reasoning_capable_predicate_holds(self) -> None:
