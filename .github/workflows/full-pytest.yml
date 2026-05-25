@@ -42,7 +42,8 @@ jobs:
 
       - name: install dependencies
         run: |
-          uv pip install --system -e ".[dev]" pyyaml
+          uv venv .venv
+          uv pip install -e ".[dev]" pyyaml
 
       - name: pytest (parallel, quarantine excluded)
         env:
