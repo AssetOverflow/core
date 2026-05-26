@@ -166,12 +166,51 @@ def _filtered_statement_choices(sentence: str) -> list[SentenceChoice]:
 
 def _filtered_question_choices(sentence: str) -> list[CandidateUnknown]:
     """Return all admissible question candidates after the question-
-    specific structural check."""
+    specific structural check.
+
+    ADR-0163.D.3 — conditional-prefix recovery.  When the existing
+    parser returns no candidates AND the question begins with an
+    "If X, ..." conditional prefix, strip the prefix and re-try.
+    This admits the ``nested_question_target`` shape that the bare
+    regex misses (11 of 38 GSM8K train_sample post-Phase-D question
+    refusals share this shape).  Skip-only safety: if the stripped
+    question still produces no admissible candidate, refuse as before.
+    """
     out: list[CandidateUnknown] = []
     for qc in extract_question_candidates(sentence):
         if _question_admissible(qc):
             out.append(qc)
+    if not out:
+        stripped = _strip_conditional_prefix(sentence)
+        if stripped is not None and stripped != sentence:
+            for qc in extract_question_candidates(stripped):
+                if _question_admissible(qc):
+                    out.append(qc)
     return out[:MAX_CANDIDATES_PER_SENTENCE]
+
+
+_CONDITIONAL_PREFIX_RE: re.Pattern[str] = re.compile(
+    r"^\s*[Ii]f\s+.+?,\s+(?=[A-Za-z])",
+)
+
+
+def _strip_conditional_prefix(sentence: str) -> str | None:
+    """ADR-0163.D.3 — remove an ``If X, `` conditional prefix.
+
+    Returns the suffix with its first letter upper-cased when the
+    pattern matches; returns ``None`` if no conditional prefix is
+    present.  The transformation is deterministic and pure.
+    """
+    m = _CONDITIONAL_PREFIX_RE.match(sentence)
+    if m is None:
+        return None
+    suffix = sentence[m.end():]
+    if not suffix:
+        return None
+    # Existing question regexes expect a leading "How" (case-insensitive
+    # in pattern); upper-case the first character to mirror the
+    # canonical surface form so the deterministic match holds.
+    return suffix[0].upper() + suffix[1:]
 
 
 def _initial_admissible(ic: CandidateInitial) -> bool:
