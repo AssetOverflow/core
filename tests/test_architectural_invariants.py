@@ -222,6 +222,11 @@ class TestINV02GateOnlyNormalization:
             os.path.join("ingest",  "gate.py"),
             os.path.join("tests",   "test_architectural_invariants.py"),
             os.path.join("tests",   "test_versor_closure.py"),
+            # test_issue_300_versor_margin.py: regression test for the
+            # gate-boundary margin bug; calls normalize_to_versor()
+            # explicitly to verify the function's own closure contract.
+            # Same justification as test_versor_closure.py.
+            os.path.join("tests",   "test_issue_300_versor_margin.py"),
             # evals/lab/ is research-only, never imported by runtime.
             # Lab probes need construction-time normalization to build
             # experimental rotors / embeddings; this does not weaken
