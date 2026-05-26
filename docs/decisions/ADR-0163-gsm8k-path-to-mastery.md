@@ -207,6 +207,26 @@ Deliverables:
   their shape category, exemplar coverage, replay evidence, and the
   ratification CLI command.
 - Operator accepts, rejects, or withdraws.
+- Engineering wiring (landed alongside the operator surface, ADR-0163.D PR):
+  - `generate/recognizer_registry.py` — pure projection of
+    accepted `exemplar_corpus` proposals from the proposal log into
+    a sorted-tuple of :class:`RatifiedRecognizer` records.
+    In-process cache keyed on the log's (mtime, sha256).
+  - `generate/recognizer_match.py` — per-category rules-only
+    matchers (no LLM, no embedding) honoring the Phase C
+    synthesizer's narrowness rule: out-of-corpus surface forms
+    return None.  ``parsed_anchors`` carry extracted tokens from
+    the statement.
+  - `generate/math_candidate_graph.py` — narrowest-edit guard at
+    the per-statement choice loop: before the existing "no
+    admissible candidate for statement" refusal, consult the
+    ratified registry.  Recognized statements are skipped from
+    ``per_sentence_choices`` (contribute zero math state),
+    preserving wrong=0 by construction.  Empty registry is a
+    no-op.
+  - Downstream consumption of ``parsed_anchors`` (turning
+    recognized rate/temporal surfaces into solver state) is
+    Phase E follow-up.
 
 #### Phase E — Re-baseline GSM8K train sample
 

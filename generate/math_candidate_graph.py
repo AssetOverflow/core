@@ -64,6 +64,23 @@ from generate.math_solver import SolveError, solve
 MAX_TOTAL_BRANCHES: Final[int] = 64
 """Hard cap on Cartesian-product branch enumeration; exceeding refuses."""
 
+
+def _load_ratified_registry_or_empty() -> tuple:
+    """Return the ratified recognizer registry, or () on any failure.
+
+    ADR-0163 §Phase D — the candidate-graph consults this registry
+    before refusing on an empty per-statement choice list.  Failures
+    (e.g. malformed log) MUST NOT regress wrong=0; in that case the
+    registry is treated as empty and the existing refusal path runs
+    unchanged.  The registry projection itself is in-process cached
+    by ``generate.recognizer_registry``.
+    """
+    try:
+        from generate.recognizer_registry import load_ratified_registry
+        return load_ratified_registry()
+    except Exception:  # pragma: no cover — defensive: empty registry on any I/O error
+        return ()
+
 MAX_CANDIDATES_PER_SENTENCE: Final[int] = 4
 """Hard cap on per-sentence candidate emission; exceeding refuses."""
 
@@ -425,10 +442,26 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
                 )
 
     # Per-sentence choice spaces (after round-trip filter + tiebreaker).
+    #
+    # ADR-0163 §Phase D — ratified-recognizer admission guard.
+    # Before refusing on an empty choice list, consult the ratified
+    # RecognizerSpec registry.  When the registry recognizes the
+    # statement, drop it from per_sentence_choices entirely instead of
+    # refusing: a recognized statement contributes ZERO math state so
+    # the Cartesian product remains identical to "this statement was
+    # never there," preserving wrong=0 by construction.  Downstream
+    # consumption of parsed_anchors (turning recognized rate/temporal
+    # surfaces into solver state) is Phase E follow-up work.
+    _ratified_registry = _load_ratified_registry_or_empty()
     per_sentence_choices: list[list[SentenceChoice]] = []
     for s in statement_sentences:
         choices = _filtered_statement_choices(s)
         if not choices:
+            if _ratified_registry:
+                from generate.recognizer_match import match as _recognizer_match
+                if _recognizer_match(s, _ratified_registry) is not None:
+                    # Recognized — skip the sentence, do not refuse.
+                    continue
             return CandidateGraphResult(
                 answer=None, selected_graph=None,
                 refusal_reason=f"no admissible candidate for statement: {s!r}",
