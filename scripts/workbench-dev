@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export CORE_WORKBENCH_HOST="${CORE_WORKBENCH_HOST:-127.0.0.1}"
+export CORE_WORKBENCH_PORT="${CORE_WORKBENCH_PORT:-8765}"
+
+exec uv run core-workbench
