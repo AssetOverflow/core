@@ -164,7 +164,9 @@ def _filtered_statement_choices(sentence: str) -> list[SentenceChoice]:
     return out[:MAX_CANDIDATES_PER_SENTENCE]
 
 
-def _filtered_question_choices(sentence: str) -> list[CandidateUnknown]:
+def _filtered_question_choices(
+    sentence: str, problem_text: str | None = None
+) -> list[CandidateUnknown]:
     """Return all admissible question candidates after the question-
     specific structural check.
 
@@ -175,15 +177,19 @@ def _filtered_question_choices(sentence: str) -> list[CandidateUnknown]:
     regex misses (11 of 38 GSM8K train_sample post-Phase-D question
     refusals share this shape).  Skip-only safety: if the stripped
     question still produces no admissible candidate, refuse as before.
+
+    ADR-0163.D.4 — ``problem_text`` is the full problem text used by
+    the new question-grammar extensions for pronoun-entity resolution
+    (Pattern C).  When None, pronoun-entity branches refuse.
     """
     out: list[CandidateUnknown] = []
-    for qc in extract_question_candidates(sentence):
+    for qc in extract_question_candidates(sentence, problem_text):
         if _question_admissible(qc):
             out.append(qc)
     if not out:
         stripped = _strip_conditional_prefix(sentence)
         if stripped is not None and stripped != sentence:
-            for qc in extract_question_candidates(stripped):
+            for qc in extract_question_candidates(stripped, problem_text):
                 if _question_admissible(qc):
                     out.append(qc)
     return out[:MAX_CANDIDATES_PER_SENTENCE]
@@ -508,7 +514,7 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
             )
         per_sentence_choices.append(_collapse_per_sentence_ties(choices))
 
-    question_choices = _filtered_question_choices(question_sentences[0])
+    question_choices = _filtered_question_choices(question_sentences[0], text)
     if not question_choices:
         return CandidateGraphResult(
             answer=None, selected_graph=None,
