@@ -20,7 +20,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Tina makes $18.00 an hour.'",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "trace_hash": null
     },
     {
@@ -31,7 +31,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'She splits it up into 25-foot sections.'",
+      "reason": "candidate_graph: no admissible candidate for statement: 'She gives 1/4 of that to a friend.'",
       "trace_hash": null
     },
     {
@@ -42,7 +42,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'The local bookstore donated 48 boxes of erasers.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'If the student council sells the erasers for $0.75 each, how much money will they make?'",
       "trace_hash": null
     },
     {
@@ -75,7 +75,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Mandy started reading books with only 8 pages when she was 6 years old.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How many pages do the books she reads now have?'",
       "trace_hash": null
     },
     {
@@ -130,7 +130,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup.'",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "trace_hash": null
     },
     {
@@ -141,7 +141,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He put all of them in his aquarium but his fish ate half of them.'",
+      "reason": "candidate_graph: no admissible candidate for question: \"How many of Dennis's rocks are left?\"",
       "trace_hash": null
     },
     {
@@ -152,7 +152,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel.'",
+      "reason": "candidate_graph: no admissible candidate for question: \"What's the total number of video hours she has uploaded at the end of the month?\"",
       "trace_hash": null
     },
     {
@@ -174,7 +174,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours.'",
+      "reason": "candidate_graph: no admissible candidate for question: \"What's the total time he takes to reach the Bronx from Manhattan?\"",
       "trace_hash": null
     },
     {
@@ -185,7 +185,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs.\"",
+      "reason": "candidate_graph: no admissible candidate for question: 'How many stop signs per mile did Rudolph encounter on his trip across town?'",
       "trace_hash": null
     },
     {
@@ -196,7 +196,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He\u2019s charging $50.00 per day or $500.00 for 14 days.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How much will it cost him?'",
       "trace_hash": null
     },
     {
@@ -218,7 +218,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'The dog ends up having health problems and this requires 3 vet appointments,  which cost $400 each.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How much did he pay in total?'",
       "trace_hash": null
     },
     {
@@ -229,7 +229,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Two puppies, two kittens, and three parakeets were for sale at the pet shop.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'If the cost of one parakeet was $10, what would it cost to purchase all of the pets for sale at the pet shop, in dollars?'",
       "trace_hash": null
     },
     {
@@ -240,7 +240,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He bench presses 15 pounds for 10 reps and does 3 sets.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How much total weight does he move?'",
       "trace_hash": null
     },
     {
@@ -251,7 +251,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'If Erica trawled 80 kg of fish in the past four months, not including today, how much money will she have earned in the past four months including today (assuming she sells all her fish)?'",
       "trace_hash": null
     },
     {
@@ -262,7 +262,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Nicole collected 400 Pokemon cards.'",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "trace_hash": null
     },
     {
@@ -273,7 +273,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday, and 50 on Thursday.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How many jumping jacks did Brooke do?'",
       "trace_hash": null
     },
     {
@@ -284,7 +284,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Lilibeth fills 6 baskets where each basket holds 50 strawberries.'",
+      "reason": "candidate_graph: no admissible candidate for question: \"If three of Lilibeth's friends pick the same amount as her, how many strawberries do Lilibeth and her friends pick in all?\"",
       "trace_hash": null
     },
     {
@@ -295,7 +295,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner.'",
+      "reason": "candidate_graph: no admissible candidate for statement: 'The bill is 3/4 of their total money.'",
       "trace_hash": null
     },
     {
@@ -306,7 +306,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Malcolm has 240 followers on Instagram and 500 followers on Facebook.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How many followers does Malcolm have on all his social media?'",
       "trace_hash": null
     },
     {
@@ -317,7 +317,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'It cost $100,000 to open initially.'",
+      "reason": "candidate_graph: no admissible candidate for statement: 'He sells 150  tickets a day for $10 each.'",
       "trace_hash": null
     },
     {
@@ -328,7 +328,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'The cost of the keyboard was three times greater than the cost of the mouse.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'If the mouse cost $16, how much did Fabian spent on his new accessories?'",
       "trace_hash": null
     },
     {
@@ -350,7 +350,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Jeremie wants to go to an amusement park with 3 friends at the end of summer.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How much will it cost Jeremie and her 3 friends to go to the amusement park and buy each of them a set of snacks?'",
       "trace_hash": null
     },
     {
@@ -361,7 +361,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He draws and colors 10 pictures.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How long does he spend on all the pictures?'",
       "trace_hash": null
     },
     {
@@ -372,7 +372,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Rachel is 12 years old, and her grandfather is 7 times her age.'",
+      "reason": "candidate_graph: no admissible candidate for question: \"How old will Rachel's father be when she is 25 years old?\"",
       "trace_hash": null
     },
     {
@@ -383,7 +383,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He can run 40 yards within 5 seconds.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'If he can improve his speed by forty percent, how many yards will he be able to run within 10 seconds?'",
       "trace_hash": null
     },
     {
@@ -405,7 +405,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'She studied for 2 hours on Wednesday and three times as long on Thursday.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How much time did she spend studying in total during the five days?'",
       "trace_hash": null
     },
     {
@@ -416,7 +416,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Michael wants to lose 10 pounds by June.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How much weight does he have to lose in May to meet his goal?'",
       "trace_hash": null
     },
     {
@@ -427,7 +427,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'There are three times that many girls at a party being held on the second floor of the building.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How many ladies are on the two floors in total?'",
       "trace_hash": null
     },
     {
@@ -438,7 +438,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Orlando gained 5 pounds.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How much weight, in pounds, did the three family members gain at their reunion?'",
       "trace_hash": null
     },
     {
@@ -449,7 +449,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He now has 2 horses, 5 dogs, 7 cats, 3 turtles, and 1 goat.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'In total, how many legs do his animals have?'",
       "trace_hash": null
     },
     {
@@ -460,7 +460,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'The guests eat all of 1 pan, and 75% of the 2nd pan.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'If all but 4 of the guests eat the brownies ala mode (with 2 scoops of vanilla ice cream), how many tubs of ice cream did the guests eat?'",
       "trace_hash": null
     },
     {
@@ -482,7 +482,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Her mother gave her an additional $4, and her father twice as much as her mother.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How much money will she be left with after the purchase?'",
       "trace_hash": null
     },
     {
@@ -493,7 +493,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'John invests in a bank and gets 10% simple interest.'",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "trace_hash": null
     },
     {
@@ -504,7 +504,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Each survey has 10 questions.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How much money did he earn during these two days?'",
       "trace_hash": null
     },
     {
@@ -515,7 +515,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Half of the students are girls, the other half are boys.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'How many students own dogs?'",
       "trace_hash": null
     },
     {
@@ -526,7 +526,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'John bakes 12 coconut macaroons, each weighing 5 ounces.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'What is the total weight, in ounces, of the remaining coconut macaroons?'",
       "trace_hash": null
     },
     {
@@ -548,7 +548,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Malcolm is trying to find the fastest walk to school and is currently comparing two routes.'",
+      "reason": "candidate_graph: no admissible candidate for question: 'In minutes, how much longer was the second route compared with the first?'",
       "trace_hash": null
     },
     {
@@ -566,6 +566,46 @@
   "probe": "gsm8k_train_sample_coverage",
   "refused_reasons_top": [
     {
+      "count": 4,
+      "reason": "candidate_graph: no branch produced a solvable graph"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: \"How many of Dennis's rocks are left?\""
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: \"How old will Rachel's father be when she is 25 years old?\""
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: \"If three of Lilibeth's friends pick the same amount as her, how "
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: \"What's the total number of video hours she has uploaded at the e"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: \"What's the total time he takes to reach the Bronx from Manhattan"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How long does he spend on all the pictures?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How many followers does Malcolm have on all his social media?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How many jumping jacks did Brooke do?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How many ladies are on the two floors in total?'"
+    },
+    {
       "count": 1,
       "reason": "candidate_graph: no admissible candidate for question: 'How many more apples would Martha need to give away to be left w"
     },
@@ -575,7 +615,59 @@
     },
     {
       "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How many pages do the books she reads now have?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How many stop signs per mile did Rudolph encounter on his trip a"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How many students own dogs?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How much did he pay in total?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How much money did he earn during these two days?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How much money will she be left with after the purchase?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How much time did she spend studying in total during the five da"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How much total weight does he move?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How much weight does he have to lose in May to meet his goal?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How much weight, in pounds, did the three family members gain at"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How much will it cost Jeremie and her 3 friends to go to the amu"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'How much will it cost him?'"
+    },
+    {
+      "count": 1,
       "reason": "candidate_graph: no admissible candidate for question: 'If 50 beads are used to make one bracelet, how many bracelets wi"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'If Erica trawled 80 kg of fish in the past four months, not incl"
     },
     {
       "count": 1,
@@ -583,31 +675,39 @@
     },
     {
       "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'If all but 4 of the guests eat the brownies ala mode (with 2 sco"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'If he can improve his speed by forty percent, how many yards wil"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'If the cost of one parakeet was $10, what would it cost to purch"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'If the mouse cost $16, how much did Fabian spent on his new acce"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'If the student council sells the erasers for $0.75 each, how muc"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'In minutes, how much longer was the second route compared with t"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'In total, how many legs do his animals have?'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no admissible candidate for question: 'What is the total weight, in ounces, of the remaining coconut ma"
+    },
+    {
+      "count": 1,
       "reason": "candidate_graph: no admissible candidate for statement: \"In one hour, Addison mountain's temperature will decrease to 3/"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: \"On Rudolph's car trip across town, he traveled 2 more than 5 mi"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner."
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Alexa has a lemonade stand where she sells lemonade for $2 for "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Each survey has 10 questions.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Erica lives near a lake where most locals sell fish as their ma"
     },
     {
       "count": 1,
@@ -619,71 +719,11 @@
     },
     {
       "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Half of the students are girls, the other half are boys.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He bench presses 15 pounds for 10 reps and does 3 sets.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He can run 40 yards within 5 seconds.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He draws and colors 10 pictures.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He now has 2 horses, 5 dogs, 7 cats, 3 turtles, and 1 goat.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He put all of them in his aquarium but his fish ate half of the"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Her mother gave her an additional $4, and her father twice as m"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'He\u2019s charging $50.00 per day or $500.00 for 14 days.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'It cost $100,000 to open initially.'"
+      "reason": "candidate_graph: no admissible candidate for statement: 'He sells 150  tickets a day for $10 each.'"
     },
     {
       "count": 1,
       "reason": "candidate_graph: no admissible candidate for statement: 'It is a 2-hour drive each way.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Jeremie wants to go to an amusement park with 3 friends at the "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'John bakes 12 coconut macaroons, each weighing 5 ounces.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'John invests in a bank and gets 10% simple interest.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Lilibeth fills 6 baskets where each basket holds 50 strawberrie"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Malcolm has 240 followers on Instagram and 500 followers on Fac"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Malcolm is trying to find the fastest walk to school and is cur"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Mandy started reading books with only 8 pages when she was 6 ye"
     },
     {
       "count": 1,
@@ -695,63 +735,11 @@
     },
     {
       "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Michael wants to lose 10 pounds by June.'"
+      "reason": "candidate_graph: no admissible candidate for statement: 'She gives 1/4 of that to a friend.'"
     },
     {
       "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Nicole collected 400 Pokemon cards.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Orlando gained 5 pounds.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Rachel is 12 years old, and her grandfather is 7 times her age."
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'She splits it up into 25-foot sections.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'She studied for 2 hours on Wednesday and three times as long on"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on We"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'The cost of the keyboard was three times greater than the cost "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'The dog ends up having health problems and this requires 3 vet "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'The guests eat all of 1 pan, and 75% of the 2nd pan.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'The local bookstore donated 48 boxes of erasers.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'There are three times that many girls at a party being held on "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Tina makes $18.00 an hour.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Traveling from Manhattan to the Bronx, Andrew rides the subway "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Two puppies, two kittens, and three parakeets were for sale at "
+      "reason": "candidate_graph: no admissible candidate for statement: 'The bill is 3/4 of their total money.'"
     }
   ],
   "sample_path": "evals/gsm8k_math/train_sample/v1/cases.jsonl",

@@ -748,6 +748,9 @@ class CandidateUnknown:
     source_span: str
     matched_unit_token: str
     matched_entity_token: str | None  # None for total-across questions
+    # ADR-0163.D.4 — Pattern B comparative marker ("how many more X").
+    # Default False keeps existing constructions byte-identical.
+    comparative_marker: bool = False
 
 
 _Q_ENTITY_RE: Final[re.Pattern[str]] = re.compile(
@@ -764,12 +767,20 @@ _Q_TOTAL_RE: Final[re.Pattern[str]] = re.compile(
 )
 
 
-def extract_question_candidates(sentence: str) -> list[CandidateUnknown]:
+def extract_question_candidates(
+    sentence: str, problem_text: str | None = None
+) -> list[CandidateUnknown]:
     """Return all admissible question candidates for ``sentence``.
 
     Tries the total-across pattern FIRST (same specificity order as
     legacy math_parser). The entity-pattern's widened regex would
     otherwise capture "they" as an entity name.
+
+    ADR-0163.D.4 — ``problem_text`` is the full problem text used by
+    pronoun-entity resolution (Pattern C).  When None, pronoun-entity
+    branches refuse rather than guess.  This keeps the function pure
+    and deterministic: same (sentence, problem_text) → byte-identical
+    output.
 
     Empty list if no shape matches.
     """
@@ -803,6 +814,20 @@ def extract_question_candidates(sentence: str) -> list[CandidateUnknown]:
                 matched_entity_token=m.group("entity"),
             )
         )
+        return out
+
+    # ADR-0163.D.4 — Pattern A: mass-noun question
+    out.extend(_pattern_a_mass_noun_candidates(sentence, problem_text))
+    if out:
+        return out
+
+    # ADR-0163.D.4 — Pattern B: comparative quantifier ("how many more")
+    out.extend(_pattern_b_comparative_candidates(sentence, problem_text))
+    if out:
+        return out
+
+    # ADR-0163.D.4 — Pattern C: pronoun-entity in non-"have" verb position
+    out.extend(_pattern_c_pronoun_verb_candidates(sentence, problem_text))
 
     return out
 
@@ -2228,5 +2253,314 @@ def extract_conditional_op_question_candidates(
             operand=n,
             unit=unit,
             source_span=sentence,
+        )
+    ]
+
+
+# ---------------------------------------------------------------------------
+# ADR-0163.D.4 — Question-grammar extensions
+# ---------------------------------------------------------------------------
+#
+# Three new question shapes extracted from the GSM8K train_sample
+# post-Phase-D refusal taxonomy.  Each is structurally narrow and is
+# protected by three independent wrong=0 safety nets:
+#
+#   1. Regex narrowness — required mass-noun whitelist / comparative
+#      "more" anchor / pronoun-or-named-entity slot + closed action-verb
+#      set.  Open-ended question shapes do not match.
+#   2. Pronoun resolver refuse-on-ambiguity — if a problem text has two
+#      distinct female (or male) names, "she"/"he" cannot resolve to a
+#      single entity and the extraction emits no candidate.
+#   3. Downstream multi-branch decision rule (math_candidate_graph) —
+#      when multiple admissible parses produce different answers, the
+#      case refuses rather than picks one.
+#
+# The _MASS_NOUNS whitelist is HARD: extending it requires a separate
+# ADR.  The pronoun gender name lists are SMALL and DOCUMENTED, sourced
+# from GSM8K train_sample observation.
+
+# Pattern A — mass-noun question shape.
+# Narrow whitelist of high-signal mass nouns observed in GSM8K
+# train_sample.  Extending this set is a separate ADR; this prevents
+# incremental drift into "anything that looks like a mass noun."
+_MASS_NOUNS: Final[frozenset[str]] = frozenset({
+    "money", "profit", "interest", "income",
+    "savings", "cost", "amount", "total",
+})
+
+_MASS_NOUN_PATTERN: Final[str] = (
+    r"(?:" + "|".join(sorted(_MASS_NOUNS, key=len, reverse=True)) + r")"
+)
+
+# Subject pronouns for Pattern C resolution.
+_Q_SUBJECT_PRONOUN: Final[str] = r"(?:she|he|they|it)"
+
+# Entity slot widened to also admit a subject pronoun (resolved
+# downstream via _resolve_pronoun_entity).
+_Q_ENTITY_OR_PRONOUN: Final[str] = rf"(?:{_ENTITY}|{_Q_SUBJECT_PRONOUN})"
+
+# Pattern A verb set: what the entity DOES with the mass noun.
+_PATTERN_A_VERBS: Final[str] = (
+    r"(?:make|makes|made|earn|earns|earned|save|saved|saves|"
+    r"spend|spends|spent|cost|costs|need|needs|have|has|had|"
+    r"gain|gains|gained|pay|paid|pays)"
+)
+
+# Pattern B verb set: comparative-need style verbs.
+_PATTERN_B_VERBS: Final[str] = (
+    r"(?:need|needs|needed|require|requires|required|"
+    r"have|has|had|gain|gains|gained)"
+)
+
+# Pattern C verb set: action verbs admitted in non-"have" pronoun
+# position.  Closed whitelist of high-signal action verbs observed in
+# GSM8K train_sample.  Conservative — extending this requires evidence
+# from refused cases.
+_PATTERN_C_VERBS: Final[str] = (
+    r"(?:need|needs|sell|sells|make|makes|pick|picks|"
+    r"buy|buys|use|uses|want|wants)"
+)
+
+
+# Optional "of <NP>" qualifier between unit and aux.  Bounded NP:
+# bare noun, "<adj> <noun>", or two-word compound.  The qualifier
+# itself does not flow into the candidate; the unit token alone is
+# the canonical unit (matching the math_parser convention for
+# "cups of lemonade" / "boxes of crayons").
+_Q_OF_NP_TAIL: Final[str] = r"(?:\s+of\s+\w+(?:\s+\w+)?)?"
+
+
+_Q_MASS_NOUN_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+much\s+"
+    rf"(?P<unit>{_MASS_NOUN_PATTERN})"
+    rf"{_Q_OF_NP_TAIL}\s+"
+    r"(?:will|did|does|do|would)\s+"
+    rf"(?P<entity>{_Q_ENTITY_OR_PRONOUN})\s+"
+    rf"(?:have\s+earned\s+|be\s+able\s+to\s+)?{_PATTERN_A_VERBS}"
+    r"(?:\s+.*?)?\??\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+_Q_COMPARATIVE_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+more\s+"
+    r"(?P<unit>\w+)"
+    rf"{_Q_OF_NP_TAIL}\s+"
+    r"(?:does|do|would|will|did)\s+"
+    rf"(?P<entity>{_Q_ENTITY_OR_PRONOUN})\s+"
+    rf"{_PATTERN_B_VERBS}"
+    r"(?:\s+.*?)?\??\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+# Pattern C — pronoun entity in non-"have" verb position.
+# The verb slot is a NARROW closed set of action verbs; an optional
+# "to <VERB>" infinitive tail consumes constructions like "need to sell".
+_Q_PRONOUN_VERB_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+(?P<unit>\w+)"
+    rf"{_Q_OF_NP_TAIL}\s+"
+    r"(?:does|do|will|did|would)\s+"
+    rf"(?P<entity>{_Q_ENTITY_OR_PRONOUN})\s+"
+    rf"{_PATTERN_C_VERBS}"
+    r"(?:\s+to\s+\w+)?"
+    r"(?:\s+.*?)?\??\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+# Pronoun → name lookup lists.  Closed-set whitelists sourced from
+# GSM8K train_sample observation.  Adding a name requires evidence
+# from a refused case.  Lower-cased; names are matched case-insensitively
+# against problem-text mentions.
+_FEMALE_NAMES: Final[frozenset[str]] = frozenset({
+    "alexa", "alice", "amy", "ann", "anna", "barbara", "betty",
+    "carol", "carolyn", "christine", "cindy", "claire", "cynthia",
+    "deborah", "diana", "donna", "dorothy", "elizabeth", "ella",
+    "emily", "emma", "erica", "francine", "helen", "jane", "janet",
+    "jen", "jennifer", "jessica", "joyce", "judith", "julie", "karen",
+    "kate", "kathleen", "kelly", "laura", "linda", "lisa", "lilibeth",
+    "lori", "mandy", "marie", "martha", "marnie", "mary", "melissa",
+    "nancy", "nicole", "pamela", "patricia", "rachel", "rebecca",
+    "ruth", "sandra", "sarah", "sharon", "shirley", "stephanie",
+    "susan", "tina", "virginia",
+})
+
+_MALE_NAMES: Final[frozenset[str]] = frozenset({
+    "aaron", "adam", "alan", "albert", "andrew", "anthony", "arthur",
+    "benjamin", "bob", "brian", "bruce", "carl", "carson", "charles",
+    "christopher", "daniel", "david", "dennis", "donald", "douglas",
+    "edward", "eric", "ethan", "eugene", "fabian", "frank", "gary",
+    "george", "gerald", "gregory", "harold", "harry", "henry", "jack",
+    "james", "jason", "jeffrey", "jeremy", "jerry", "jesse", "john",
+    "jonathan", "joseph", "joshua", "keith", "kenneth", "kevin",
+    "larry", "lawrence", "mark", "matthew", "michael", "nathan",
+    "nicholas", "patrick", "paul", "peter", "philip", "ralph",
+    "raymond", "richard", "robert", "roger", "ronald", "ryan",
+    "samuel", "scott", "sean", "stephen", "steven", "thomas",
+    "timothy", "tom", "walter", "wayne", "william",
+})
+
+
+# Title-cased proper-noun mention extractor.  Matches any sequence
+# starting with an upper-case letter followed by lower-case letters,
+# avoiding all-caps tokens (acronyms) which are unlikely to be names.
+_PROPER_NOUN_MENTION_RE: Final[re.Pattern[str]] = re.compile(
+    r"\b([A-Z][a-z]+)\b"
+)
+
+
+def _resolve_pronoun_entity(
+    pronoun: str, problem_text: str | None
+) -> str | None:
+    """Resolve a subject pronoun to a single unambiguous named entity.
+
+    Pure, deterministic, no global state.  Returns the canonical
+    Title-cased entity name when a SINGLE unambiguous match exists;
+    returns ``None`` on ambiguity, no-match, or empty problem_text.
+
+    Heuristic limits:
+    - ``she``/``her`` match female names from :data:`_FEMALE_NAMES`.
+    - ``he``/``his``/``him`` match male names from :data:`_MALE_NAMES`.
+    - ``they`` is plural; refuses (no single-entity resolution).
+    - ``it`` is neuter; refuses (not safely resolvable from name lists).
+    - If the problem text contains >1 distinct female (or male) name,
+      "she" (or "he") cannot resolve unambiguously → refuse.
+
+    Refuse-on-ambiguity preserves wrong=0: better to refuse a question
+    than admit one with the wrong entity.
+    """
+    if not problem_text:
+        return None
+    p = pronoun.lower()
+    if p in ("they", "it"):
+        return None  # Plural/neuter — outside scope.
+    if p in ("she", "her"):
+        whitelist = _FEMALE_NAMES
+    elif p in ("he", "his", "him"):
+        whitelist = _MALE_NAMES
+    else:
+        return None
+    distinct: list[str] = []
+    for m in _PROPER_NOUN_MENTION_RE.finditer(problem_text):
+        name = m.group(1)
+        if name.lower() not in whitelist:
+            continue
+        if name not in distinct:
+            distinct.append(name)
+    if len(distinct) != 1:
+        # Zero matches → no candidate; >1 distinct → ambiguous → refuse.
+        return None
+    return distinct[0]
+
+
+def _resolve_question_entity(
+    raw_entity: str, problem_text: str | None
+) -> tuple[str, str] | None:
+    """Return ``(canonical_entity, matched_entity_token)`` or None.
+
+    Wraps :func:`_resolve_pronoun_entity` for pronoun slots; passes
+    proper-noun entities through unchanged.  ``None`` means the
+    candidate should not be emitted (pronoun unresolvable).
+
+    For a resolved pronoun the ``matched_entity_token`` is the LITERAL
+    surface pronoun ("she", "he", ...).  The downstream question-
+    admissibility check requires the token to appear in the source-
+    span (the question sentence); the resolved canonical name does not.
+    """
+    lower = raw_entity.strip().lower()
+    if lower in ("she", "her", "he", "his", "him", "they", "it"):
+        resolved = _resolve_pronoun_entity(lower, problem_text)
+        if resolved is None:
+            return None
+        return _normalize_entity(resolved), raw_entity
+    return _normalize_entity(raw_entity), raw_entity
+
+
+def _pattern_a_mass_noun_candidates(
+    sentence: str, problem_text: str | None
+) -> list[CandidateUnknown]:
+    """Pattern A — "How much MASS_NOUN does ENTITY VERB ..." question."""
+    s = sentence.strip()
+    m = _Q_MASS_NOUN_RE.match(s)
+    if m is None:
+        return []
+    unit_raw = m.group("unit")
+    # Mass nouns are pre-whitelisted; preserve literal token for
+    # downstream grounding (no hidden normalization).
+    unit = unit_raw.lower()
+    raw_entity = m.group("entity")
+    resolved = _resolve_question_entity(raw_entity, problem_text)
+    if resolved is None:
+        return []
+    entity, entity_token = resolved
+    return [
+        CandidateUnknown(
+            unknown=Unknown(entity=entity, unit=unit),
+            source_span=sentence,
+            matched_unit_token=unit_raw,
+            matched_entity_token=entity_token,
+        )
+    ]
+
+
+def _pattern_b_comparative_candidates(
+    sentence: str, problem_text: str | None
+) -> list[CandidateUnknown]:
+    """Pattern B — "How many more UNIT does ENTITY VERB ..." question.
+
+    wrong=0 GATE: comparative quantification ("how many MORE X are
+    needed beyond current state") is structurally distinct from the
+    plain ``How many X does ENTITY have?`` shape the existing solver
+    resolves.  If the parser emits a CandidateUnknown for Pattern B,
+    the downstream solver computes the entity's current total — which
+    is the WRONG answer for a comparative question (off by the missing
+    delta).  Until the solver gains comparative semantics (D.5
+    follow-up), this extractor recognises the shape but emits NO
+    candidate, forcing a clean refusal.  The regex + marker field +
+    detection helper are retained for D.5 wiring.
+    """
+    s = sentence.strip()
+    if _Q_COMPARATIVE_RE.match(s) is None:
+        return []
+    # Detection-only: see docstring.  D.5 will add solver semantics.
+    return []
+
+
+def _pattern_b_detects(sentence: str) -> bool:
+    """ADR-0163.D.4 — pure-grammar Pattern B detector for tests.
+
+    Returns True iff the comparative-quantifier shape matches.  Has
+    no side effects on candidate emission.
+    """
+    return _Q_COMPARATIVE_RE.match(sentence.strip()) is not None
+
+
+def _pattern_c_pronoun_verb_candidates(
+    sentence: str, problem_text: str | None
+) -> list[CandidateUnknown]:
+    """Pattern C — "How many UNIT does PRONOUN VERB [to VERB2] ..." question.
+
+    Admits the entity slot to either a proper-noun ENTITY or a subject
+    pronoun resolved via :func:`_resolve_pronoun_entity`.  Narrow verb
+    whitelist (:data:`_PATTERN_C_VERBS`) bounds the question shape.
+    """
+    s = sentence.strip()
+    m = _Q_PRONOUN_VERB_RE.match(s)
+    if m is None:
+        return []
+    unit_raw = m.group("unit")
+    unit = _canonicalize_unit(unit_raw)
+    raw_entity = m.group("entity")
+    resolved = _resolve_question_entity(raw_entity, problem_text)
+    if resolved is None:
+        return []
+    entity, entity_token = resolved
+    return [
+        CandidateUnknown(
+            unknown=Unknown(entity=entity, unit=unit),
+            source_span=sentence,
+            matched_unit_token=unit_raw,
+            matched_entity_token=entity_token,
         )
     ]

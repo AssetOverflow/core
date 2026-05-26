@@ -270,7 +270,7 @@
       "class": "refuse_money_precision",
       "expected_answer": 0,
       "expected_outcome": "refused",
-      "reason": "candidate_graph: no admissible candidate for statement: 'Bob has $40.000 in savings.'",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "trace_hash": null,
       "verdict": "refused"
     },
@@ -282,7 +282,7 @@
       "class": "refuse_money_precision",
       "expected_answer": 0,
       "expected_outcome": "refused",
-      "reason": "candidate_graph: no admissible candidate for statement: 'Sarah has $1.2345 in change.'",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "trace_hash": null,
       "verdict": "refused"
     },
@@ -306,7 +306,7 @@
       "class": "refuse_unknown_compound",
       "expected_answer": 0,
       "expected_outcome": "refused",
-      "reason": "candidate_graph: no admissible candidate for statement: 'Bob has five-and-a-half apples.'",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "trace_hash": null,
       "verdict": "refused"
     },
@@ -318,7 +318,7 @@
       "class": "refuse_unknown_compound",
       "expected_answer": 0,
       "expected_outcome": "refused",
-      "reason": "candidate_graph: no admissible candidate for statement: 'Bob has gobbledy-gook apples.'",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "trace_hash": null,
       "verdict": "refused"
     },
@@ -330,7 +330,7 @@
       "class": "refuse_percentage",
       "expected_answer": 0,
       "expected_outcome": "refused",
-      "reason": "candidate_graph: no admissible candidate for statement: 'Bob has 50% apples.'",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "trace_hash": null,
       "verdict": "refused"
     }
