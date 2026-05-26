@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ENV_FILE="${ROOT_DIR}/workbench/.env"
+
+if [[ ! -f "${ENV_FILE}" ]]; then
+  echo "[workbench] Missing ${ENV_FILE}"
+  echo "[workbench] Copy workbench/.env.example -> workbench/.env and configure secrets."
+  exit 1
+fi
+
+set -a
+source "${ENV_FILE}"
+set +a
+
+required_vars=(
+  CORE_WORKBENCH_ADMIN_EMAIL
+  CORE_WORKBENCH_ADMIN_PASSWORD_HASH
+  CORE_WORKBENCH_SESSION_SECRET
+)
+
+for var in "${required_vars[@]}"; do
+  if [[ -z "${!var:-}" ]]; then
+    echo "[workbench] Missing required env: ${var}"
+    exit 1
+  fi
+done
+
+HOST="${CORE_WORKBENCH_HOST:-127.0.0.1}"
+PORT="${CORE_WORKBENCH_PORT:-8765}"
+UI_HOST="${CORE_WORKBENCH_UI_HOST:-127.0.0.1}"
+UI_PORT="${CORE_WORKBENCH_UI_PORT:-5173}"
+
+cleanup() {
+  jobs -p | xargs -r kill >/dev/null 2>&1 || true
+}
+
+trap cleanup EXIT INT TERM
+
+echo "[workbench] starting API on http://${HOST}:${PORT}"
+(
+  cd "${ROOT_DIR}"
+  uv run core-workbench
+) &
+
+API_PID=$!
+
+echo "[workbench] starting UI on http://${UI_HOST}:${UI_PORT}"
+(
+  cd "${ROOT_DIR}/workbench/ui"
+  bun install >/dev/null
+  bun run dev
+) &
+
+UI_PID=$!
+
+echo "[workbench] API pid=${API_PID}"
+echo "[workbench] UI pid=${UI_PID}"
+echo "[workbench] press Ctrl+C to stop"
+
+wait
