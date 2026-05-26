@@ -1,0 +1,39 @@
+{
+  "EpistemicState": [
+    "perceived",
+    "evidenced",
+    "evidenced_incomplete",
+    "verified",
+    "decoded",
+    "decoded_unarticulated",
+    "inferred",
+    "unverified_possible",
+    "unverified_novel",
+    "contradicted",
+    "ambiguous",
+    "undetermined",
+    "scope_boundary",
+    "computationally_bounded",
+    "epistemic_state_needed"
+  ],
+  "GroundingSource": [
+    "pack",
+    "teaching",
+    "vault",
+    "partial",
+    "oov",
+    "none"
+  ],
+  "NormativeClearance": [
+    "cleared",
+    "violated",
+    "unassessable",
+    "suppressed"
+  ],
+  "ReviewState": [
+    "pending",
+    "accepted",
+    "rejected",
+    "withdrawn"
+  ]
+}
