@@ -16,6 +16,7 @@ import {
   me,
   replayArtifact,
 } from './api'
+import { ObservatoryIntro } from './observatory/ObservatoryIntro'
 
 type Section = 'Chat' | 'Replay' | 'Proposals' | 'Evals' | 'Artifacts' | 'Runtime'
 
@@ -176,9 +177,11 @@ function App(): JSX.Element {
   if (!authenticated) {
     return (
       <div className="login-shell">
+        <ObservatoryIntro />
         <div className="login-card">
+          <div className="eyebrow">Deterministic Cognition Observatory</div>
           <h1>CORE Workbench</h1>
-          <p className="subtle">Deterministic cognition observability and replay workstation.</p>
+          <p className="subtle">Replay-native cognition instrumentation environment.</p>
           <form onSubmit={submit}>
             <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" /></label>
             <label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" /></label>
