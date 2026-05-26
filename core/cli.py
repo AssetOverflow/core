@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout\n  core eval contemplation_quality\n  core eval contemplation_quality --json --save\n  core workbench api\n  core workbench api --port 9000\n  core workbench api --host 0.0.0.0 --allow-nonlocal-bind"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue list\n  core teaching queue list --state all --json\n  core teaching queue show <proposal_id>\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout\n  core eval contemplation_quality\n  core eval contemplation_quality --json --save\n  core workbench api\n  core workbench api --port 9000\n  core workbench api --host 0.0.0.0 --allow-nonlocal-bind"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -1090,70 +1090,141 @@ def cmd_teaching_oov_queue(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_teaching_queue(args: argparse.Namespace) -> int:
-    """Phase 1.2 — show the auto-promoted gap queue.
+def cmd_teaching_queue_list(args: argparse.Namespace) -> int:
+    """List queue items in the human-in-the-loop review queue."""
+    from teaching.proposals import DEFAULT_PROPOSAL_LOG_PATH, ProposalLog
+    from teaching.queue import derive_queue
 
-    Reads the discovery sink (same path as ``core teaching gaps``),
-    aggregates by cell, and emits cells whose boundary-clean
-    emission count meets ``--threshold``.
+    log_path = Path(args.log_path) if args.log_path else DEFAULT_PROPOSAL_LOG_PATH
+    runs_dir = Path(args.contemplation_runs_dir) if args.contemplation_runs_dir else None
 
-    Boundary-tainted emissions (refusal/hedge fired during the
-    contributing turn) are excluded by default; ``--include-tainted``
-    counts every emission toward the threshold.  Operators reach for
-    that flag deliberately, not by accident.
-    """
-    from teaching.gaps import _DEFAULT_ROOT, aggregate_gaps
-    from teaching.promotion import promote_gaps
+    log = ProposalLog(log_path)
+    if not log.path.exists():
+        return 0
 
-    root = Path(args.root) if args.root else _DEFAULT_ROOT
-    try:
-        gaps = aggregate_gaps(
-            root=root,
-            since=args.since,
-            sample_limit=5,
-        )
-    except ValueError as exc:
-        _die(str(exc), code=2)
+    items = derive_queue(log, contemplation_runs_dir=runs_dir)
 
-    if args.threshold < 1:
-        _die(f"--threshold must be >= 1 (got {args.threshold})", code=2)
-
-    promoted = promote_gaps(
-        gaps,
-        threshold=args.threshold,
-        include_tainted=args.include_tainted,
-    )
+    if args.state and args.state != "all":
+        items = tuple(item for item in items if item.state == args.state)
 
     if args.json:
-        payload = {
-            "root": str(root),
-            "since": args.since,
-            "threshold": args.threshold,
-            "include_tainted": args.include_tainted,
-            "total_promoted": len(promoted),
-            "queue": [p.as_dict() for p in promoted],
-        }
+        import dataclasses
+        payload = [dataclasses.asdict(item) for item in items]
         print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
-        return 0 if promoted else 1
+        return 0
 
-    if not promoted:
-        print(f"No cells met threshold {args.threshold}.")
-        return 1
+    if not items:
+        return 0
 
-    print(
-        f"{'rank':>4}  {'queue_id':<48}{'count':>6}  {'clean':>6}  months"
-    )
-    print("-" * 96)
-    for i, p in enumerate(promoted, 1):
-        months = ",".join(p.months_seen) if p.months_seen else "—"
-        print(
-            f"{i:>4}  {p.queue_id[:48]:<48}{p.count:>6}  {p.boundary_clean_count:>6}  {months}"
-        )
+    header = ("proposal_id", "source_kind", "state", "age", "replay")
+    rows = []
+    for item in items:
+        if item.replay_evidence is None:
+            replay_status = "?"
+        elif item.replay_evidence.get("replay_equivalent") is True:
+            replay_status = "ok"
+        elif item.replay_evidence.get("replay_equivalent") is False:
+            replay_status = "regressed"
+        else:
+            replay_status = "?"
+
+        rows.append((
+            item.proposal_id[:12],
+            item.source_kind,
+            item.state,
+            str(item.age_proposals),
+            replay_status,
+        ))
+
+    col_widths = [len(h) for h in header]
+    for row in rows:
+        for idx, val in enumerate(row):
+            col_widths[idx] = max(col_widths[idx], len(val))
+
+    header_str = "  ".join(f"{h:<{col_widths[idx]}}" for idx, h in enumerate(header))
+    print(header_str)
+    print("  ".join("-" * w for w in col_widths))
+    for row in rows:
+        row_str = "  ".join(f"{val:<{col_widths[idx]}}" for idx, val in enumerate(row))
+        print(row_str)
+
+    return 0
+
+
+def cmd_teaching_queue_show(args: argparse.Namespace) -> int:
+    """Show details of a specific queue item in the human-in-the-loop review queue."""
+    from teaching.proposals import DEFAULT_PROPOSAL_LOG_PATH, ProposalLog
+    from teaching.queue import derive_queue
+
+    log_path = Path(args.log_path) if args.log_path else DEFAULT_PROPOSAL_LOG_PATH
+    runs_dir = Path(args.contemplation_runs_dir) if args.contemplation_runs_dir else None
+
+    log = ProposalLog(log_path)
+    if not log.path.exists():
+        _die(f"no proposal log at {log.path}", code=1)
+
+    items = derive_queue(log, contemplation_runs_dir=runs_dir)
+
+    # 1. Search for exact match
+    exact_matches = [item for item in items if item.proposal_id == args.proposal_id]
+    if len(exact_matches) == 1:
+        item = exact_matches[0]
+    else:
+        # 2. Search for prefix match
+        prefix_matches = [item for item in items if item.proposal_id.startswith(args.proposal_id)]
+        if len(prefix_matches) == 1:
+            item = prefix_matches[0]
+        elif len(prefix_matches) == 0:
+            _die(f"proposal_id prefix {args.proposal_id!r} matches zero queue items", code=1)
+        else:
+            _die(f"proposal_id prefix {args.proposal_id!r} is ambiguous (matches multiple items)", code=1)
+
+    if args.json:
+        import dataclasses
+        print(json.dumps(dataclasses.asdict(item), ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+
+    print(f"Proposal ID: {item.proposal_id}")
+    print(f"Source Kind: {item.source_kind}")
+    print(f"Source ID  : {item.source_id or '—'}")
+    print(f"State      : {item.state}")
+    print(f"Age        : {item.age_proposals}")
+
+    if item.replay_evidence is None:
+        replay_status = "?"
+    elif item.replay_evidence.get("replay_equivalent") is True:
+        replay_status = "ok"
+    elif item.replay_evidence.get("replay_equivalent") is False:
+        replay_status = "regressed"
+    else:
+        replay_status = "?"
+    print(f"Replay     : {replay_status}")
+    print(f"Report Path: {item.contemplation_report_path or '—'}")
     print()
-    print(
-        "Author chains with: core teaching propose <candidate-jsonl> "
-        "(or hand-author + supersede)."
-    )
+    print("Proposed Chain:")
+    chain = item.proposed_chain or {}
+    print(f"  subject   : {chain.get('subject', '—')}")
+    print(f"  intent    : {chain.get('intent', '—')}")
+    print(f"  connective: {chain.get('connective', '—')}")
+    print(f"  object    : {chain.get('object', '—')}")
+    print()
+    print("Review History:")
+    if item.review_history:
+        for ev in item.review_history:
+            note = ev.get('note', '')
+            to_state = ev.get('to', '')
+            review_date = ev.get('review_date', '')
+            actor = ev.get('actor', '')
+            print(f"  - [{review_date or '—'}] transitioned to {to_state} by {actor or '—'}")
+            if note:
+                print(f"    Note: {note}")
+    else:
+        print("  (no review history)")
+    print()
+    print("ADR References:")
+    print("  - Queue contract: docs/decisions/ADR-0161-hitl-async-queue.md")
+    print("  - Proposal/review state machine: docs/decisions/ADR-0057-teaching-chain-proposal-review.md")
+
     return 0
 
 
@@ -3487,28 +3558,56 @@ def build_parser() -> argparse.ArgumentParser:
 
     teaching_queue = teaching_sub.add_parser(
         "queue",
-        help="show auto-promoted high-priority gaps (cells crossing --threshold)",
+        help="inspect the asynchronous human-in-the-loop review queue (ADR-0161)",
     )
-    teaching_queue.add_argument(
-        "--root", default=None,
-        help="discovery-sink root (default: teaching/discovery_log)",
+    teaching_queue_sub = teaching_queue.add_subparsers(
+        dest="queue_command", metavar="queue-command", required=True,
     )
-    teaching_queue.add_argument(
-        "--since", default=None,
-        help="lower-bound month token YYYY-MM",
+
+    teaching_queue_list = teaching_queue_sub.add_parser(
+        "list",
+        help="list queue items",
     )
-    teaching_queue.add_argument(
-        "--threshold", type=int, default=3,
-        help="minimum (boundary-clean) emissions to promote a cell (default: 3)",
+    teaching_queue_list.add_argument(
+        "--state", default="pending",
+        choices=("pending", "accepted", "rejected", "withdrawn", "all"),
+        help="filter by state (default: pending)",
     )
-    teaching_queue.add_argument(
-        "--include-tainted", action="store_true",
-        help="count refusal/hedge-tainted emissions toward the threshold",
+    teaching_queue_list.add_argument(
+        "--json", action="store_true",
+        help="output machine-readable JSON",
     )
-    teaching_queue.add_argument(
-        "--json", action="store_true", help="machine-readable output",
+    teaching_queue_list.add_argument(
+        "--log-path", default=None,
+        help="path to the proposal log file",
     )
-    teaching_queue.set_defaults(func=cmd_teaching_queue)
+    teaching_queue_list.add_argument(
+        "--contemplation-runs-dir", default=None,
+        help="path to contemplation runs directory",
+    )
+    teaching_queue_list.set_defaults(func=cmd_teaching_queue_list)
+
+    teaching_queue_show = teaching_queue_sub.add_parser(
+        "show",
+        help="show details of a queue item",
+    )
+    teaching_queue_show.add_argument(
+        "proposal_id",
+        help="proposal ID or prefix",
+    )
+    teaching_queue_show.add_argument(
+        "--json", action="store_true",
+        help="output machine-readable JSON",
+    )
+    teaching_queue_show.add_argument(
+        "--log-path", default=None,
+        help="path to the proposal log file",
+    )
+    teaching_queue_show.add_argument(
+        "--contemplation-runs-dir", default=None,
+        help="path to contemplation runs directory",
+    )
+    teaching_queue_show.set_defaults(func=cmd_teaching_queue_show)
 
     teaching_gaps = teaching_sub.add_parser(
         "gaps",
