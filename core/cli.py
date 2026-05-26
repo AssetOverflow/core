@@ -1364,6 +1364,21 @@ def cmd_teaching_propose(args: argparse.Namespace) -> int:
         )
     except ProposalError as exc:
         _die(f"ineligible: {exc}", code=1)
+
+    from teaching.proposals import RefusedAtCapacity
+    if isinstance(proposal, RefusedAtCapacity):
+        try:
+            rel_path = proposal.report_path.relative_to(_REPO_ROOT)
+        except ValueError:
+            try:
+                rel_path = proposal.report_path.relative_to(Path.cwd())
+            except ValueError:
+                rel_path = proposal.report_path
+        print(f"queue_full: pending={proposal.pending_count}, cap={proposal.cap}")
+        print("candidates_skipped: 1")
+        print(f"report_written: {rel_path}")
+        return 1
+
     rec = log.find(proposal.proposal_id)
     print(f"proposal_id    : {proposal.proposal_id}")
     print(f"state          : {rec['state']}")
@@ -1453,6 +1468,21 @@ def cmd_teaching_propose_from_exemplars(args: argparse.Namespace) -> int:
                 f"ineligible candidate for {corpus.shape_category.value}: {exc}",
                 code=1,
             )
+
+        from teaching.proposals import RefusedAtCapacity
+        if isinstance(proposal, RefusedAtCapacity):
+            try:
+                rel_path = proposal.report_path.relative_to(_REPO_ROOT)
+            except ValueError:
+                try:
+                    rel_path = proposal.report_path.relative_to(Path.cwd())
+                except ValueError:
+                    rel_path = proposal.report_path
+            print(f"queue_full: pending={proposal.pending_count}, cap={proposal.cap}")
+            print("candidates_skipped: 1")
+            print(f"report_written: {rel_path}")
+            return 1
+
         rec = log.find(proposal.proposal_id)
         result = {
             "shape_category": corpus.shape_category.value,
