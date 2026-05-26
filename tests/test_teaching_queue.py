@@ -58,13 +58,15 @@ def run_cli(args: list[str]) -> tuple[int, str, str]:
 def test_derive_queue_purity(tmp_path: Path):
     log_path = tmp_path / "proposals.jsonl"
     log = ProposalLog(log_path)
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
 
     c1 = make_candidate("cand1", "light")
     p1 = build_proposal(c1)
     log.record_created(p1)
 
-    res1 = derive_queue(log)
-    res2 = derive_queue(log)
+    res1 = derive_queue(log, contemplation_runs_dir=runs_dir)
+    res2 = derive_queue(log, contemplation_runs_dir=runs_dir)
 
     assert res1 == res2
 
@@ -72,12 +74,15 @@ def test_derive_queue_purity(tmp_path: Path):
 def test_derive_queue_determinism(tmp_path: Path):
     log_path = tmp_path / "proposals.jsonl"
     log = ProposalLog(log_path)
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+
     c1 = make_candidate("cand1", "light")
     p1 = build_proposal(c1)
     log.record_created(p1)
 
-    res1 = derive_queue(log)
-    res2 = derive_queue(log)
+    res1 = derive_queue(log, contemplation_runs_dir=runs_dir)
+    res2 = derive_queue(log, contemplation_runs_dir=runs_dir)
     assert res1 == res2
 
 
@@ -89,22 +94,24 @@ def test_derive_queue_determinism(tmp_path: Path):
 def test_state_derivation(tmp_path: Path):
     log_path = tmp_path / "proposals.jsonl"
     log = ProposalLog(log_path)
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
 
     c1 = make_candidate("cand1", "light")
     p1 = build_proposal(c1)
     log.record_created(p1)
 
-    items = derive_queue(log)
+    items = derive_queue(log, contemplation_runs_dir=runs_dir)
     assert len(items) == 1
     assert items[0].state == "pending"
 
     log.record_transition(p1.proposal_id, "accepted", "review accepted")
-    items = derive_queue(log)
+    items = derive_queue(log, contemplation_runs_dir=runs_dir)
     assert len(items) == 1
     assert items[0].state == "accepted"
 
     log.record_transition(p1.proposal_id, "withdrawn", "review withdrawn")
-    items = derive_queue(log)
+    items = derive_queue(log, contemplation_runs_dir=runs_dir)
     assert len(items) == 1
     assert items[0].state == "withdrawn"
 
@@ -117,6 +124,8 @@ def test_state_derivation(tmp_path: Path):
 def test_age_proposals(tmp_path: Path):
     log_path = tmp_path / "proposals.jsonl"
     log = ProposalLog(log_path)
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
 
     c1 = make_candidate("cand1", "light")
     p1 = build_proposal(c1)
@@ -129,7 +138,7 @@ def test_age_proposals(tmp_path: Path):
     log.record_created(p2)
     log.record_created(p3)
 
-    items = derive_queue(log)
+    items = derive_queue(log, contemplation_runs_dir=runs_dir)
     assert len(items) == 3
     assert items[0].proposal_id == p1.proposal_id
     assert items[1].proposal_id == p2.proposal_id
@@ -140,7 +149,7 @@ def test_age_proposals(tmp_path: Path):
     assert items[2].age_proposals == 0
 
     log.record_transition(p1.proposal_id, "accepted", "accepting first")
-    items = derive_queue(log)
+    items = derive_queue(log, contemplation_runs_dir=runs_dir)
     assert items[0].age_proposals == 0
     assert items[1].age_proposals == 1
     assert items[2].age_proposals == 0
@@ -208,6 +217,8 @@ def test_contemplation_report_path(tmp_path: Path):
 def test_review_history(tmp_path: Path):
     log_path = tmp_path / "proposals.jsonl"
     log = ProposalLog(log_path)
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
 
     c1 = make_candidate("cand1", "light")
     p1 = build_proposal(c1)
@@ -217,7 +228,7 @@ def test_review_history(tmp_path: Path):
     log.record_transition(p1.proposal_id, "pending", "re-evaluated")
     log.record_transition(p1.proposal_id, "accepted", "approved")
 
-    items = derive_queue(log)
+    items = derive_queue(log, contemplation_runs_dir=runs_dir)
     assert len(items) == 1
     item = items[0]
 
@@ -238,6 +249,8 @@ def test_review_history(tmp_path: Path):
 def test_find_queue_item(tmp_path: Path):
     log_path = tmp_path / "proposals.jsonl"
     log = ProposalLog(log_path)
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
 
     c1 = make_candidate("cand1", "light")
     p1 = build_proposal(c1)
@@ -247,20 +260,93 @@ def test_find_queue_item(tmp_path: Path):
     log.record_created(p1)
     log.record_created(p2)
 
-    res = find_queue_item(log, p1.proposal_id)
+    res = find_queue_item(log, p1.proposal_id, runs_dir)
     assert res is not None
     assert res.proposal_id == p1.proposal_id
 
     prefix = p2.proposal_id[:12]
-    res_prefix = find_queue_item(log, prefix)
+    res_prefix = find_queue_item(log, prefix, runs_dir)
     assert res_prefix is not None
     assert res_prefix.proposal_id == p2.proposal_id
 
-    assert find_queue_item(log, "non_existent_id") is None
+    assert find_queue_item(log, "non_existent_id", runs_dir) is None
 
     common_prefix = p1.proposal_id[0]
     if p2.proposal_id.startswith(common_prefix):
-        assert find_queue_item(log, common_prefix) is None
+        assert find_queue_item(log, common_prefix, runs_dir) is None
+
+
+# ---------------------------------------------------------------------------
+# R2: contemplation_report_path caching
+# ---------------------------------------------------------------------------
+
+
+def test_contemplation_mapping_caching(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    log_path = tmp_path / "proposals.jsonl"
+    log = ProposalLog(log_path)
+
+    c1 = make_candidate("cand1", "light")
+    p1 = build_proposal(c1)
+    log.record_created(p1)
+
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+
+    run_file = runs_dir / "run1.json"
+    run_file.write_text(json.dumps({"proposal_id": p1.proposal_id}))
+
+    glob_called_count = 0
+    orig_glob = Path.glob
+
+    def mock_glob(self, pattern):
+        nonlocal glob_called_count
+        if str(self) == str(runs_dir.resolve()) or str(self) == str(runs_dir):
+            glob_called_count += 1
+        return orig_glob(self, pattern)
+
+    monkeypatch.setattr(Path, "glob", mock_glob)
+
+    # First call walks the directory
+    res1 = derive_queue(log, contemplation_runs_dir=runs_dir)
+    assert len(res1) == 1
+    assert glob_called_count == 1
+
+    # Second call hits cache (mtime is unchanged)
+    res2 = derive_queue(log, contemplation_runs_dir=runs_dir)
+    assert len(res2) == 1
+    assert glob_called_count == 1
+
+    # Change the runs directory modification time (simulated via touch/new file)
+    run_file2 = runs_dir / "run2.json"
+    run_file2.write_text(json.dumps({"proposal_id": "dummy"}))
+
+    # Third call re-evaluates
+    res3 = derive_queue(log, contemplation_runs_dir=runs_dir)
+    assert len(res3) == 1
+    assert glob_called_count == 2
+
+
+# ---------------------------------------------------------------------------
+# R4: empty string source_id normalization
+# ---------------------------------------------------------------------------
+
+
+def test_source_id_empty_string_normalization(tmp_path: Path):
+    log_path = tmp_path / "proposals.jsonl"
+    log = ProposalLog(log_path)
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+
+    # build_proposal returns proposal with source.source_id = "" by default
+    c1 = make_candidate("cand1", "light")
+    p1 = build_proposal(c1)
+    assert p1.source.source_id == ""
+
+    log.record_created(p1)
+
+    items = derive_queue(log, contemplation_runs_dir=runs_dir)
+    assert len(items) == 1
+    assert items[0].source_id is None
 
 
 # ---------------------------------------------------------------------------
@@ -283,7 +369,7 @@ def test_cli_list_command(tmp_path: Path):
     runs_dir.mkdir()
 
     code, stdout, stderr = run_cli([
-        "teaching", "queue", "list",
+        "teaching", "hitl-queue", "list",
         "--log-path", str(log_path),
         "--contemplation-runs-dir", str(runs_dir)
     ])
@@ -297,7 +383,7 @@ def test_cli_list_command(tmp_path: Path):
     assert "ok" in stdout
 
     code_j, stdout_j, stderr_j = run_cli([
-        "teaching", "queue", "list",
+        "teaching", "hitl-queue", "list",
         "--log-path", str(log_path),
         "--contemplation-runs-dir", str(runs_dir),
         "--json"
@@ -329,7 +415,7 @@ def test_cli_show_command(tmp_path: Path):
     runs_dir.mkdir()
 
     code, stdout, stderr = run_cli([
-        "teaching", "queue", "show", p1.proposal_id,
+        "teaching", "hitl-queue", "show", p1.proposal_id,
         "--log-path", str(log_path),
         "--contemplation-runs-dir", str(runs_dir)
     ])
@@ -339,7 +425,7 @@ def test_cli_show_command(tmp_path: Path):
 
     prefix = p2.proposal_id[:12]
     code_p, stdout_p, stderr_p = run_cli([
-        "teaching", "queue", "show", prefix,
+        "teaching", "hitl-queue", "show", prefix,
         "--log-path", str(log_path),
         "--contemplation-runs-dir", str(runs_dir)
     ])
@@ -347,7 +433,7 @@ def test_cli_show_command(tmp_path: Path):
     assert f"Proposal ID: {p2.proposal_id}" in stdout_p
 
     code_m, stdout_m, stderr_m = run_cli([
-        "teaching", "queue", "show", "nonexistent_id",
+        "teaching", "hitl-queue", "show", "nonexistent_id",
         "--log-path", str(log_path),
         "--contemplation-runs-dir", str(runs_dir)
     ])
@@ -363,13 +449,54 @@ def test_cli_show_command(tmp_path: Path):
             break
     if common_prefix:
         code_a, stdout_a, stderr_a = run_cli([
-            "teaching", "queue", "show", common_prefix,
+            "teaching", "hitl-queue", "show", common_prefix,
             "--log-path", str(log_path),
             "--contemplation-runs-dir", str(runs_dir)
         ])
         assert code_a != 0
         assert "error:" in stderr_a
         assert "ambiguous" in stderr_a
+
+
+# ---------------------------------------------------------------------------
+# Blocker: legacy queue --threshold 3 CLI command validation
+# ---------------------------------------------------------------------------
+
+
+def test_cli_legacy_queue_command(tmp_path: Path):
+    gaps_dir = tmp_path / "gaps"
+    sink = gaps_dir / "2026" / "2026-05.jsonl"
+    sink.parent.mkdir(parents=True, exist_ok=True)
+
+    for i in range(3):
+        entry = {
+            "candidate_id": f"cand-{i}",
+            "proposed_chain": {
+                "subject": "knowledge",
+                "intent": "cause",
+                "connective": None,
+                "object": None,
+            },
+            "trigger": "would_have_grounded",
+            "source_turn_trace": f"trace-{i}",
+            "pack_consistent": True,
+            "boundary_clean": True,
+            "review_state": "unreviewed",
+        }
+        with sink.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry) + "\n")
+
+    code, stdout, stderr = run_cli([
+        "teaching", "queue",
+        "--root", str(gaps_dir),
+        "--threshold", "3",
+    ])
+    assert code == 0
+    assert "rank" in stdout
+    assert "queue_id" in stdout
+    assert "count" in stdout
+    assert "clean" in stdout
+    assert "gap:cause:knowledge@3" in stdout
 
 
 # ---------------------------------------------------------------------------
@@ -400,8 +527,8 @@ def test_read_only_invariant():
     for d in dirs:
         before_snapshots[d] = snapshot_dir(d)
 
-    run_cli(["teaching", "queue", "list"])
-    run_cli(["teaching", "queue", "show", "nonexistent"])
+    run_cli(["teaching", "hitl-queue", "list"])
+    run_cli(["teaching", "hitl-queue", "show", "nonexistent"])
 
     for d in dirs:
         after_snapshot = snapshot_dir(d)

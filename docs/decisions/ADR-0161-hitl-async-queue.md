@@ -166,10 +166,10 @@ non-zero exit and emits no transition event.  The proposal stays
 
 Two new CLI commands expose the queue projection:
 
-- `core teaching queue list [--state pending|accepted|rejected|withdrawn|all]`
+- `core teaching hitl-queue list [--state pending|accepted|rejected|withdrawn|all]`
   — prints `proposal_id`, source kind, age (in proposals, not
   wall-clock — see §4), replay status, and current state.
-- `core teaching queue show <proposal_id>` — prints the full derived
+- `core teaching hitl-queue show <proposal_id>` — prints the full derived
   record including `review_history` and the contemplation-report
   reference if one exists.
 
@@ -352,11 +352,11 @@ this one.
 Five small PRs, each a self-contained step, none of which mutate
 existing recorded queue history:
 
-### Step 1 — `core teaching queue` read commands
+### Step 1 — `core teaching hitl-queue` read commands
 
 - New module `teaching/queue.py` exposing a pure `derive_queue(log)`
   function that returns the projection in §1.
-- New CLI subcommand `core teaching queue list|show` wired in
+- New CLI subcommand `core teaching hitl-queue list|show` wired in
   `core/cli.py`.
 - Tests: pure derivation over fixture proposals.jsonl; states match
   ADR-0057's alphabet; replay-equivalence in derivation.
@@ -433,7 +433,7 @@ This ADR is ratifiable when:
    surfaces.
 4. The workflow's actor guard fails closed in a CI test that fakes a
    non-allowlisted `github.actor`.
-5. `core teaching queue list` and `... show` succeed against the
+5. `core teaching hitl-queue list` and `... show` succeed against the
    current `teaching/proposals/proposals.jsonl` on `main` without
    mutating any file (snapshot assertion).
 

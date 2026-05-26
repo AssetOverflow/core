@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -23,19 +24,55 @@ class QueueItem:
     age_proposals: int
 
 
+@lru_cache(maxsize=1)
+def _load_contemplation_mapping(runs_dir: Path, runs_dir_mtime: float) -> dict[str, str]:
+    """Cache the mapping of proposal_id to JSON file path under runs_dir.
+
+    Keyed on runs_dir and its modification time (mtime) for invalidation.
+    """
+    mapping: dict[str, str] = {}
+    if runs_dir.exists() and runs_dir.is_dir():
+        for path in runs_dir.glob("*.json"):
+            if not path.is_file():
+                continue
+            try:
+                with path.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+
+            if not isinstance(data, dict):
+                continue
+
+            pids: set[str] = set()
+            top_pid = data.get("proposal_id")
+            if isinstance(top_pid, str):
+                pids.add(top_pid)
+
+            scenes = data.get("scenes")
+            if isinstance(scenes, list):
+                for scene in scenes:
+                    if isinstance(scene, dict):
+                        detail = scene.get("detail")
+                        if isinstance(detail, dict):
+                            scene_pid = detail.get("proposal_id")
+                            if isinstance(scene_pid, str):
+                                pids.add(scene_pid)
+
+            for pid in pids:
+                mapping[pid] = str(path.resolve())
+    return mapping
+
+
 def derive_queue(
     log: ProposalLog,
-    *,
-    contemplation_runs_dir: Path | None = None,
+    contemplation_runs_dir: Path,
 ) -> tuple[QueueItem, ...]:
     """Derive a read-only queue projection from the ProposalLog.
 
     Order: FIFO by first-pending-event order in the log.
     """
-    if contemplation_runs_dir is None:
-        contemplation_runs_dir = Path(__file__).resolve().parent.parent / "contemplation" / "runs"
-
-    events = log._events()
+    events = log.events()
     proposals_data: dict[str, dict[str, Any]] = {}
     created_order: list[str] = []
 
@@ -75,38 +112,13 @@ def derive_queue(
                 # Append transition event to review_history
                 proposals_data[pid]["review_history"].append(dict(ev))
 
-    # Build the contemplation report path mapping
-    contemplation_mapping: dict[str, str] = {}
-    if contemplation_runs_dir.exists() and contemplation_runs_dir.is_dir():
-        for path in contemplation_runs_dir.glob("*.json"):
-            if not path.is_file():
-                continue
-            try:
-                with path.open("r", encoding="utf-8") as f:
-                    data = json.load(f)
-            except Exception:
-                continue
+    # Retrieve cached mapping using runs_dir mtime
+    try:
+        mtime = contemplation_runs_dir.stat().st_mtime
+    except OSError:
+        mtime = 0.0
 
-            if not isinstance(data, dict):
-                continue
-
-            pids: set[str] = set()
-            top_pid = data.get("proposal_id")
-            if isinstance(top_pid, str):
-                pids.add(top_pid)
-
-            scenes = data.get("scenes")
-            if isinstance(scenes, list):
-                for scene in scenes:
-                    if isinstance(scene, dict):
-                        detail = scene.get("detail")
-                        if isinstance(detail, dict):
-                            scene_pid = detail.get("proposal_id")
-                            if isinstance(scene_pid, str):
-                                pids.add(scene_pid)
-
-            for pid in pids:
-                contemplation_mapping[pid] = str(path.resolve())
+    contemplation_mapping = _load_contemplation_mapping(contemplation_runs_dir, mtime)
 
     # Build the final tuple of QueueItem
     items: list[QueueItem] = []
@@ -115,6 +127,7 @@ def derive_queue(
         state = data["state"]
 
         if state == "pending":
+            # Per ADR-0161 §4, age is subsequent proposals appended regardless of state.
             age_proposals = len(created_order) - 1 - i
         else:
             age_proposals = 0
@@ -135,9 +148,13 @@ def derive_queue(
     return tuple(items)
 
 
-def find_queue_item(log: ProposalLog, proposal_id: str) -> QueueItem | None:
+def find_queue_item(
+    log: ProposalLog,
+    proposal_id: str,
+    contemplation_runs_dir: Path,
+) -> QueueItem | None:
     """Find a specific queue item by exact ID or unique prefix."""
-    items = derive_queue(log)
+    items = derive_queue(log, contemplation_runs_dir)
     for item in items:
         if item.proposal_id == proposal_id:
             return item
