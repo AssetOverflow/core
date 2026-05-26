@@ -15,11 +15,59 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Sequence
 
 from recognition.anti_unifier import DerivedRecognizer
 from teaching.discovery import DiscoveryCandidate
+
+
+def _atomic_write_text(target: Path, content: str, *, encoding: str = "utf-8") -> None:
+    """ADR-0156 (W-022) — atomic checkpoint write.
+
+    Write ``content`` to a temp file in the same directory as ``target``,
+    fsync it, then ``os.replace`` it into place.  Same-directory rename is
+    atomic on POSIX (and on Windows since Python 3.3 via ``os.replace``).
+    A SIGINT/SIGKILL between ``write`` and ``replace`` leaves the prior
+    target file fully intact; an interrupted write leaves an orphan
+    temp file that is cleaned up on the next ``save_*`` call.
+
+    ADR-0146 §"File Operations and Invariants" specified this behavior;
+    pre-W-022 the writers used ``Path.write_text`` directly, which
+    truncated the target before writing and corrupted the checkpoint
+    on mid-write process termination.
+    """
+    target.parent.mkdir(parents=True, exist_ok=True)
+    # NamedTemporaryFile with delete=False so we can rename out of its handle.
+    # ``dir=target.parent`` keeps the rename on the same filesystem (atomic).
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding=encoding,
+        dir=str(target.parent),
+        prefix=f".{target.name}.",
+        suffix=".tmp",
+        delete=False,
+    ) as fh:
+        tmp_path = Path(fh.name)
+        try:
+            fh.write(content)
+            fh.flush()
+            os.fsync(fh.fileno())
+        except BaseException:
+            try:
+                tmp_path.unlink()
+            except FileNotFoundError:
+                pass
+            raise
+    try:
+        os.replace(tmp_path, target)
+    except BaseException:
+        try:
+            tmp_path.unlink()
+        except FileNotFoundError:
+            pass
+        raise
 
 _SCHEMA_VERSION = 1
 _DEFAULT_DIR = (
@@ -49,11 +97,10 @@ class EngineStateStore:
         self.path = path or _DEFAULT_DIR
 
     def save_recognizers(self, recognizers: Sequence[DerivedRecognizer]) -> None:
-        self.path.mkdir(parents=True, exist_ok=True)
         lines = [r.to_json() for r in recognizers]
-        (self.path / "recognizers.jsonl").write_text(
+        _atomic_write_text(
+            self.path / "recognizers.jsonl",
             "\n".join(lines) + ("\n" if lines else ""),
-            encoding="utf-8",
         )
 
     def load_recognizers(self) -> list[DerivedRecognizer]:
@@ -70,14 +117,13 @@ class EngineStateStore:
         self,
         candidates: Sequence[DiscoveryCandidate],
     ) -> None:
-        self.path.mkdir(parents=True, exist_ok=True)
         lines = [
             json.dumps(c.as_dict(), sort_keys=True, separators=(",", ":"))
             for c in candidates
         ]
-        (self.path / "discovery_candidates.jsonl").write_text(
+        _atomic_write_text(
+            self.path / "discovery_candidates.jsonl",
             "\n".join(lines) + ("\n" if lines else ""),
-            encoding="utf-8",
         )
 
     def load_discovery_candidates(self) -> list[DiscoveryCandidate]:
@@ -91,15 +137,14 @@ class EngineStateStore:
         ]
 
     def save_manifest(self, turn_count: int) -> None:
-        self.path.mkdir(parents=True, exist_ok=True)
         manifest = {
             "schema_version": _SCHEMA_VERSION,
             "turn_count": turn_count,
             "written_at_revision": _git_revision(),
         }
-        (self.path / "manifest.json").write_text(
+        _atomic_write_text(
+            self.path / "manifest.json",
             json.dumps(manifest, sort_keys=True, indent=2),
-            encoding="utf-8",
         )
 
     def load_manifest(self) -> dict | None:
