@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useIsMutating } from "@tanstack/react-query";
 import { useRuntimeStatus } from "../api/queries";
 
 export function StatusFooter() {
   const { data, isError } = useRuntimeStatus();
+  const chatTurnsPending = useIsMutating({ mutationKey: ["chat-turn"] }) > 0;
   const [revisionExpanded, setRevisionExpanded] = useState(false);
 
   if (isError) {
@@ -19,11 +21,12 @@ export function StatusFooter() {
   if (!data) return null;
 
   const { mutation_mode, git_revision, checkpoint_revision, revision_warning } = data;
+  const visibleMutationMode = chatTurnsPending ? "runtime_turn" : mutation_mode;
 
   const shortSha = (sha: string) => sha.slice(0, 8);
 
   const mutationModeEl =
-    mutation_mode === "read_only" ? (
+    visibleMutationMode === "read_only" ? (
       <span
         data-testid="mutation-mode"
         className="rounded border border-[var(--color-border-subtle)] px-2 py-0.5 text-[var(--color-text-secondary)]"

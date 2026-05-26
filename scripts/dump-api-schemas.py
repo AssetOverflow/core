@@ -4,7 +4,8 @@ Dump workbench/schemas.py dataclass field shapes to a JSON snapshot.
 Usage (from repo root):
     uv run python scripts/dump-api-schemas.py
 
-Output: workbench-ui/api-schema-snapshot.json
+Output:
+    uv run python scripts/dump-api-schemas.py > workbench-ui/api-schema-snapshot.json
 
 The snapshot is used by workbench-ui/src/types/api.test.ts to detect
 TypeScript ↔ Python schema drift.
@@ -18,7 +19,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
 SCHEMAS_PATH = REPO_ROOT / "workbench" / "schemas.py"
-SNAPSHOT_PATH = REPO_ROOT / "workbench-ui" / "api-schema-snapshot.json"
 
 
 def annotation_to_str(node: ast.expr) -> str:
@@ -72,10 +72,8 @@ def main() -> None:
 
     snapshot = {"dataclasses": {name: {"fields": fields} for name, fields in dataclasses.items()}}
 
-    SNAPSHOT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    SNAPSHOT_PATH.write_text(json.dumps(snapshot, indent=2) + "\n", encoding="utf-8")
-    print(f"Snapshot written to {SNAPSHOT_PATH}")
-    print(f"Dataclasses found: {', '.join(dataclasses.keys())}")
+    print(json.dumps(snapshot, indent=2))
+    print(f"Dataclasses found: {', '.join(dataclasses.keys())}", file=sys.stderr)
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ import os
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from workbench.api import WorkbenchApi
+from workbench.api import MAX_CHAT_BODY_BYTES, WorkbenchApi
 
 
 class WorkbenchRequestHandler(BaseHTTPRequestHandler):
@@ -19,6 +19,11 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802 - stdlib handler API
         self._handle()
+
+    def do_OPTIONS(self) -> None:  # noqa: N802 - stdlib handler API
+        self.send_response(204)
+        self._send_common_headers(0)
+        self.end_headers()
 
     def log_message(self, format: str, *args: object) -> None:
         if os.environ.get("CORE_WORKBENCH_QUIET") == "1":
@@ -33,14 +38,27 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
             length = max(0, int(self.headers.get("Content-Length") or "0"))
         except ValueError:
             length = 0
-        body = self.rfile.read(length) if length else b""
+        if (
+            self.command == "POST"
+            and self.path.split("?", 1)[0].rstrip("/") == "/chat/turn"
+            and length > MAX_CHAT_BODY_BYTES
+        ):
+            body = b"x" * (MAX_CHAT_BODY_BYTES + 1)
+        else:
+            body = self.rfile.read(length) if length else b""
         response = self.api.handle(self.command, self.path, body)
         payload = json.dumps(response.payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
         self.send_response(response.status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(payload)))
+        self._send_common_headers(len(payload))
         self.end_headers()
         self.wfile.write(payload)
+
+    def _send_common_headers(self, content_length: int) -> None:
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(content_length))
+        self.send_header("Access-Control-Allow-Origin", "http://127.0.0.1:5173")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
 
 def serve(*, host: str = "127.0.0.1", port: int = 8765) -> None:

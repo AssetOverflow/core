@@ -16,6 +16,32 @@ ErrorCode = Literal[
     "runtime_unavailable",
 ]
 
+MutationMode = Literal["read_only", "runtime_turn"]
+GroundingSource = Literal["pack", "teaching", "vault", "partial", "oov", "none"]
+EpistemicStateValue = Literal[
+    "perceived",
+    "evidenced",
+    "evidenced_incomplete",
+    "verified",
+    "decoded",
+    "decoded_unarticulated",
+    "inferred",
+    "unverified_possible",
+    "unverified_novel",
+    "contradicted",
+    "ambiguous",
+    "undetermined",
+    "scope_boundary",
+    "computationally_bounded",
+    "epistemic_state_needed",
+]
+NormativeClearanceValue = Literal[
+    "cleared",
+    "violated",
+    "unassessable",
+    "suppressed",
+]
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -52,7 +78,41 @@ class RuntimeStatus:
     checkpoint_revision: str
     revision_warning: bool
     active_session_id: str | None
-    mutation_mode: Literal["read_only", "runtime_turn"] = "read_only"
+    mutation_mode: MutationMode = "read_only"
+
+
+@dataclass(frozen=True, slots=True)
+class TurnVerdict:
+    outcome: Literal["cleared", "violated", "unassessable"]
+    runtime_detail: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProposalRef:
+    candidate_id: str
+    source_kind: str
+
+
+@dataclass(frozen=True, slots=True)
+class ChatTurnResult:
+    prompt: str
+    surface: str
+    articulation_surface: str | None
+    walk_surface: str | None
+    grounding_source: GroundingSource
+    epistemic_state: EpistemicStateValue
+    normative_clearance: NormativeClearanceValue
+    normative_detail: str
+    trace_hash: str | None
+    refusal_emitted: bool
+    hedge_injected: bool
+    mutation_mode: MutationMode
+    identity_verdict: TurnVerdict | None
+    safety_verdict: TurnVerdict | None
+    ethics_verdict: TurnVerdict | None
+    proposal_candidates: list[ProposalRef]
+    turn_cost_ms: int
+    checkpoint_emitted: bool
 
 
 @dataclass(frozen=True, slots=True)

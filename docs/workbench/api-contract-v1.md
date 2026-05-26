@@ -74,10 +74,12 @@ Exception mapping:
 
 ## W-026 execution model
 
-The W-026 API is a single-operator local service.  It does not implement CORS
-preflight; browser clients must run on the same origin until W-027 defines the
-frontend serving model.  Eval execution is serialized per server instance so
-two `/evals/run` requests cannot race over shared runtime checkpoint files.
+The Workbench API is a single-operator local service.  It emits a narrow local
+development CORS response for the Vite workbench origin
+`http://127.0.0.1:5173`; this supports W-028's documented split-server manual
+integration workflow without making the API a remote service. Eval execution is
+serialized per server instance so two `/evals/run` requests cannot race over
+shared runtime checkpoint files.
 
 ### Side effects on `engine_state/`
 
@@ -147,7 +149,11 @@ Response:
 
 Purpose:
 
-Execute a normal runtime turn.
+Execute a normal runtime turn and return the full UI evidence envelope.
+
+This is the only Workbench POST route that touches the live chat runtime. Turns
+are serialized per server instance by a module-level lock, matching ADR-0160's
+single-operator-local v1 doctrine.
 
 Request:
 
@@ -157,18 +163,55 @@ Request:
 }
 ```
 
+Validation:
+
+- `prompt` is required and must be a string.
+- `prompt.strip()` must be non-empty.
+- `prompt` must not exceed 4096 characters.
+- request `Content-Length` must not exceed 64 KiB.
+
+Invalid prompt shape returns `400 bad_request`. Oversize request bodies return
+`413 read_error`.
+
 Response:
 
 ```json
 {
   "ok": true,
+  "generated_at": "2026-05-26T00:00:00Z",
   "data": {
-    "turn_id": "turn-001",
+    "prompt": "What does alpha cause?",
     "surface": "alpha causes beta",
+    "articulation_surface": "alpha causes beta",
+    "walk_surface": "alpha -> beta",
     "grounding_source": "teaching",
+    "epistemic_state": "decoded",
+    "normative_clearance": "cleared",
+    "normative_detail": "",
     "trace_hash": "sha256:...",
-    "proposal_state": null,
-    "replay_available": true
+    "refusal_emitted": false,
+    "hedge_injected": false,
+    "mutation_mode": "runtime_turn",
+    "identity_verdict": {
+      "outcome": "cleared",
+      "runtime_detail": ""
+    },
+    "safety_verdict": {
+      "outcome": "cleared",
+      "runtime_detail": ""
+    },
+    "ethics_verdict": {
+      "outcome": "cleared",
+      "runtime_detail": ""
+    },
+    "proposal_candidates": [
+      {
+        "candidate_id": "abc123",
+        "source_kind": "discovery"
+      }
+    ],
+    "turn_cost_ms": 17,
+    "checkpoint_emitted": true
   }
 }
 ```
@@ -177,6 +220,18 @@ Important:
 
 This endpoint must use the existing runtime path.  It must not introduce a
 parallel persistence layer.
+
+Mutation boundary:
+
+- A chat turn may write `engine_state/` through the normal runtime checkpoint
+  path governed by ADR-0146 and ADR-0150. `checkpoint_emitted` reports whether
+  that occurred.
+- A chat turn must not mutate `teaching/`, `packs/`, or `language_packs/data/`.
+- A chat turn must not auto-accept proposals.
+- `proposal_candidates` contains candidate identifiers only; it does not expose
+  proposal acceptance/rejection affordances or candidate surfaces.
+- `surface`, `articulation_surface`, and `walk_surface` remain distinct. The
+  user-facing response is `surface`; `walk_surface` is telemetry/evidence.
 
 ---
 

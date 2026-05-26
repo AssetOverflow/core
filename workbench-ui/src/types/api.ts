@@ -11,6 +11,25 @@ export type ErrorCode =
 
 export type Backend = "numpy" | "mlx" | "rust" | "unknown";
 export type MutationMode = "read_only" | "runtime_turn";
+export type GroundingSource = "pack" | "teaching" | "vault" | "partial" | "oov" | "none";
+export type EpistemicState =
+  | "perceived"
+  | "evidenced"
+  | "evidenced_incomplete"
+  | "verified"
+  | "decoded"
+  | "decoded_unarticulated"
+  | "inferred"
+  | "unverified_possible"
+  | "unverified_novel"
+  | "contradicted"
+  | "ambiguous"
+  | "undetermined"
+  | "scope_boundary"
+  | "computationally_bounded"
+  | "epistemic_state_needed";
+export type NormativeClearance = "cleared" | "violated" | "unassessable" | "suppressed";
+export type TurnVerdictOutcome = "cleared" | "violated" | "unassessable";
 
 export interface RuntimeStatus {
   backend: Backend;
@@ -20,6 +39,37 @@ export interface RuntimeStatus {
   revision_warning: boolean;
   active_session_id: string | null;
   mutation_mode: MutationMode;
+}
+
+export interface TurnVerdict {
+  outcome: TurnVerdictOutcome;
+  runtime_detail: string;
+}
+
+export interface ProposalRef {
+  candidate_id: string;
+  source_kind: string;
+}
+
+export interface ChatTurnResult {
+  prompt: string;
+  surface: string;
+  articulation_surface: string | null;
+  walk_surface: string | null;
+  grounding_source: GroundingSource;
+  epistemic_state: EpistemicState;
+  normative_clearance: NormativeClearance;
+  normative_detail: string;
+  trace_hash: string | null;
+  refusal_emitted: boolean;
+  hedge_injected: boolean;
+  mutation_mode: MutationMode;
+  identity_verdict: TurnVerdict | null;
+  safety_verdict: TurnVerdict | null;
+  ethics_verdict: TurnVerdict | null;
+  proposal_candidates: ProposalRef[];
+  turn_cost_ms: number;
+  checkpoint_emitted: boolean;
 }
 
 export type ArtifactKind =

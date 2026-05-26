@@ -3,7 +3,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "../api/queries";
 import { Shell } from "./Shell";
 import { PreviewPage } from "../preview/PreviewPage";
-import { ChatRoutePlaceholder } from "../routes/ChatRoutePlaceholder";
+import { ChatRoute } from "../routes/ChatRoute";
 import { TraceRoutePlaceholder } from "../routes/TraceRoutePlaceholder";
 import { ReplayRoutePlaceholder } from "../routes/ReplayRoutePlaceholder";
 import { ProposalsRoutePlaceholder } from "../routes/ProposalsRoutePlaceholder";
@@ -21,7 +21,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Shell />}>
             <Route index element={<Navigate to="/chat" replace />} />
-            <Route path="chat" element={<ChatRoutePlaceholder />} />
+            <Route path="chat" element={<ChatRoute />} />
             <Route path="trace" element={<TraceRoutePlaceholder />} />
             <Route path="replay" element={<ReplayRoutePlaceholder />} />
             <Route path="proposals" element={<ProposalsRoutePlaceholder />} />
