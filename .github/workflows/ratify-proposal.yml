@@ -1,0 +1,129 @@
+name: ratify-proposal
+
+# ADR-0155 / ADR-0057 — operator ratification gate for engine-authored proposals.
+#
+# Triggered manually via GitHub Actions UI (or GitHub mobile app):
+#   Actions → ratify-proposal → Run workflow
+#
+# Inputs
+#   proposal_id   SHA-256 hex from the contemplation run JSON
+#                 (scenes[2].detail.proposal_id)
+#   review_date   YYYY-MM-DD; defaults to today (UTC)
+#   operator_note optional free-text note written to the proposal log
+#
+# What it does
+#   1. Runs `core teaching review <proposal_id> --accept --review-date <date>`
+#   2. Commits the updated corpus + proposal log directly to main
+#   3. Posts a job summary with the accepted chain_id
+#
+# Trust boundary
+#   Only `accept_proposal` is invoked — the same codepath as local CLI.
+#   Pre-conditions enforced by ProposalLog: proposal must exist, be pending,
+#   and carry replay_equivalent=True.  No other files are written.
+#
+# Soft kill switch
+#   Disabled unless repo variable CONTEMPLATION_ENABLED=true (shared with
+#   the contemplation workflow; one knob disables the whole learning arc).
+
+on:
+  workflow_dispatch:
+    inputs:
+      proposal_id:
+        description: 'proposal_id from the contemplation run JSON (scenes[2].detail.proposal_id)'
+        required: true
+        type: string
+      review_date:
+        description: 'Review date (YYYY-MM-DD) — leave blank to use today UTC'
+        required: false
+        type: string
+        default: ''
+      operator_note:
+        description: 'Optional note recorded in the proposal log'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ratify-proposal
+  cancel-in-progress: false
+
+jobs:
+  ratify:
+    name: accept proposal ${{ inputs.proposal_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ vars.CONTEMPLATION_ENABLED == 'true' }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: '3.11'
+          enable-cache: true
+
+      - name: install dependencies
+        run: uv pip install -e ".[dev]"
+
+      - name: resolve review date
+        id: date
+        run: |
+          if [ -n "${{ inputs.review_date }}" ]; then
+            echo "date=${{ inputs.review_date }}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "date=$(date -u +%Y-%m-%d)" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: accept proposal
+        id: accept
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          NOTE_FLAG=""
+          if [ -n "${{ inputs.operator_note }}" ]; then
+            NOTE_FLAG="--note ${{ inputs.operator_note }}"
+          fi
+          OUTPUT=$(uv run core teaching review "${{ inputs.proposal_id }}" \
+            --accept \
+            --review-date "${{ steps.date.outputs.date }}" \
+            ${NOTE_FLAG})
+          echo "${OUTPUT}"
+          # Extract chain_id from "accepted; appended chain_id = <id>"
+          CHAIN_ID=$(echo "${OUTPUT}" | sed 's/accepted; appended chain_id = //')
+          echo "chain_id=${CHAIN_ID}" >> "${GITHUB_OUTPUT}"
+
+      - name: commit ratification
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add \
+            teaching/cognition_chains/cognition_chains_v1.jsonl \
+            teaching/proposals/proposals.jsonl
+          git commit -m "ratify(teaching): accept proposal ${{ inputs.proposal_id }}
+
+chain_id: ${{ steps.accept.outputs.chain_id }}
+review_date: ${{ steps.date.outputs.date }}
+operator: ${{ github.actor }}
+ADR-0057 / ADR-0155"
+          git push origin main
+
+      - name: job summary
+        run: |
+          echo "## Proposal ratified" >> "${GITHUB_STEP_SUMMARY}"
+          echo "" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| Field | Value |" >> "${GITHUB_STEP_SUMMARY}"
+          echo "|---|---|" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| proposal_id | \`${{ inputs.proposal_id }}\` |" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| chain_id | \`${{ steps.accept.outputs.chain_id }}\` |" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| review_date | ${{ steps.date.outputs.date }} |" >> "${GITHUB_STEP_SUMMARY}"
+          echo "| operator | ${{ github.actor }} |" >> "${GITHUB_STEP_SUMMARY}"
+          echo "" >> "${GITHUB_STEP_SUMMARY}"
+          echo "Chain appended to \`teaching/cognition_chains/cognition_chains_v1.jsonl\`." >> "${GITHUB_STEP_SUMMARY}"
