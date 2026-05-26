@@ -139,6 +139,8 @@ class TestExhaustiveMatchPattern:
                 return f"c:{src.source_id}"
             case "contemplation":
                 return f"q:{src.source_id}"
+            case "exemplar_corpus":
+                return f"e:{src.source_id}"
             case _:  # pragma: no cover - exhaustiveness
                 assert_never(src.kind)
 
@@ -161,9 +163,20 @@ class TestExhaustiveMatchPattern:
         )
         assert self._describe(src) == "q:frontier_compare"
 
-    def test_kinds_sealed_at_four(self) -> None:
+    def test_covers_exemplar_corpus(self) -> None:
+        src = ProposalSource(
+            kind="exemplar_corpus",
+            source_id="rate_with_currency_v1_digest",
+            emitted_at_revision="x",
+        )
+        assert self._describe(src) == "e:rate_with_currency_v1_digest"
+
+    def test_kinds_sealed_at_five(self) -> None:
+        # ADR-0163.C widened the sealed set with "exemplar_corpus" so
+        # Phase C admissibility proposals carry typed provenance distinct
+        # from autonomous contemplation.
         assert ALLOWED_KINDS == frozenset(
-            {"operator", "miner", "curriculum", "contemplation"}
+            {"operator", "miner", "curriculum", "contemplation", "exemplar_corpus"}
         )
 
 

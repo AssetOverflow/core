@@ -22,6 +22,8 @@ Consumers must branch on :attr:`ProposalSource.kind` using exhaustive
             ...
         case "contemplation":
             ...
+        case "exemplar_corpus":
+            ...
         case _:  # pragma: no cover - exhaustiveness
             assert_never(proposal.source.kind)
 """
@@ -32,7 +34,9 @@ from dataclasses import dataclass
 from typing import Any, Literal, Mapping, get_args
 
 
-ProposalKind = Literal["operator", "miner", "curriculum", "contemplation"]
+ProposalKind = Literal[
+    "operator", "miner", "curriculum", "contemplation", "exemplar_corpus"
+]
 ALLOWED_KINDS: frozenset[str] = frozenset(get_args(ProposalKind))
 
 
