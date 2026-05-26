@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout\n  core eval contemplation_quality\n  core eval contemplation_quality --json --save"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -1759,18 +1759,26 @@ def cmd_eval(args: argparse.Namespace) -> int:
                 print(f"{key:15s}: {value:.1%}")
             else:
                 print(f"{key:15s}: {value}")
-        failures = [c for c in result.case_details if not c.get("intent_correct") or not c.get("versor_closure")]
-        if failures:
-            print(f"\nfailures ({len(failures)}):")
-            for c in failures:
-                issues = []
-                if not c.get("intent_correct"):
-                    issues.append("intent")
-                if not c.get("versor_closure"):
-                    vc = c.get("versor_condition", 0)
-                    issues.append(f"versor={vc:.2e}")
-                cid = c.get("case_id") or c.get("id") or "<unknown>"
-                print(f"  {cid}: {', '.join(issues)}")
+        if lane_name == "cognition":
+            # The cognition lane case_details carry `intent_correct` and
+            # `versor_closure` booleans; other lanes do not, so the
+            # cognition-specific failure printer is gated on lane identity to
+            # avoid spurious "failures" output for lanes that pass cleanly.
+            failures = [
+                c for c in result.case_details
+                if not c.get("intent_correct") or not c.get("versor_closure")
+            ]
+            if failures:
+                print(f"\nfailures ({len(failures)}):")
+                for c in failures:
+                    issues = []
+                    if not c.get("intent_correct"):
+                        issues.append("intent")
+                    if not c.get("versor_closure"):
+                        vc = c.get("versor_condition", 0)
+                        issues.append(f"versor={vc:.2e}")
+                    cid = c.get("case_id") or c.get("id") or "<unknown>"
+                    print(f"  {cid}: {', '.join(issues)}")
 
     if args.save:
         result_path = write_result(lane, result)
