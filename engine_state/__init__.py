@@ -16,6 +16,7 @@ import json
 import os
 import subprocess
 import tempfile
+import warnings
 from pathlib import Path
 from typing import Sequence
 
@@ -154,7 +155,21 @@ class EngineStateStore:
         content = p.read_text(encoding="utf-8").strip()
         if not content:
             return None
-        return json.loads(content)
+        manifest = json.loads(content)
+        # W-023 / ADR-0157 — revision-mismatch warning per ADR-0146 §Risks line 127.
+        # Never refuse to load; reboot is recovery, not control flow.
+        stored_rev = manifest.get("written_at_revision", "unknown")
+        current_rev = _git_revision()
+        if stored_rev not in ("unknown", "") and current_rev not in ("unknown", "") and stored_rev != current_rev:
+            warnings.warn(
+                f"engine_state checkpoint was written at revision {stored_rev!r} "
+                f"but the current revision is {current_rev!r}. "
+                "State may be stale after a code change. "
+                "Clear engine_state/ if you observe unexpected behaviour.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        return manifest
 
     def exists(self) -> bool:
         return (self.path / "manifest.json").exists()
