@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import json
 import os
+import stat
 import subprocess
 import tempfile
 import warnings
+from functools import lru_cache
 from pathlib import Path
 from typing import Sequence
 
@@ -28,46 +30,45 @@ def _atomic_write_text(target: Path, content: str, *, encoding: str = "utf-8") -
     """ADR-0156 (W-022) — atomic checkpoint write.
 
     Write ``content`` to a temp file in the same directory as ``target``,
-    fsync it, then ``os.replace`` it into place.  Same-directory rename is
+    fsync it, then ``os.replace`` it into place. Same-directory rename is
     atomic on POSIX (and on Windows since Python 3.3 via ``os.replace``).
     A SIGINT/SIGKILL between ``write`` and ``replace`` leaves the prior
-    target file fully intact; an interrupted write leaves an orphan
-    temp file that is cleaned up on the next ``save_*`` call.
+    target file fully intact.
 
-    ADR-0146 §"File Operations and Invariants" specified this behavior;
-    pre-W-022 the writers used ``Path.write_text`` directly, which
-    truncated the target before writing and corrupted the checkpoint
-    on mid-write process termination.
+    Existing file mode bits are preserved when replacing a prior checkpoint
+    file so engine-state readers do not silently lose access after a save.
     """
     target.parent.mkdir(parents=True, exist_ok=True)
-    # NamedTemporaryFile with delete=False so we can rename out of its handle.
-    # ``dir=target.parent`` keeps the rename on the same filesystem (atomic).
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        encoding=encoding,
-        dir=str(target.parent),
-        prefix=f".{target.name}.",
-        suffix=".tmp",
-        delete=False,
-    ) as fh:
-        tmp_path = Path(fh.name)
-        try:
+
+    existing_mode: int | None = None
+    if target.exists():
+        existing_mode = stat.S_IMODE(target.stat().st_mode)
+
+    tmp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding=encoding,
+            dir=str(target.parent),
+            prefix=f".{target.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as fh:
+            tmp_path = Path(fh.name)
             fh.write(content)
             fh.flush()
             os.fsync(fh.fileno())
-        except BaseException:
+
+        if existing_mode is not None and tmp_path is not None:
+            os.chmod(tmp_path, existing_mode)
+
+        os.replace(tmp_path, target)
+    except BaseException:
+        if tmp_path is not None:
             try:
                 tmp_path.unlink()
             except FileNotFoundError:
                 pass
-            raise
-    try:
-        os.replace(tmp_path, target)
-    except BaseException:
-        try:
-            tmp_path.unlink()
-        except FileNotFoundError:
-            pass
         raise
 
 _SCHEMA_VERSION = 1
@@ -78,7 +79,14 @@ _DEFAULT_DIR = (
 )
 
 
-def _git_revision() -> str:
+@lru_cache(maxsize=1)
+def get_git_revision() -> str:
+    """Return the current short git revision once per process.
+
+    Public helper for runtime audit surfaces that need the same revision
+    value used by engine-state manifests and revision-mismatch warnings.
+    Cached to avoid duplicate subprocess calls during startup.
+    """
     try:
         return (
             subprocess.run(
@@ -91,6 +99,11 @@ def _git_revision() -> str:
         )
     except Exception:
         return "unknown"
+
+
+def _git_revision() -> str:
+    """Backward-compatible private alias; use get_git_revision() in new code."""
+    return get_git_revision()
 
 
 class EngineStateStore:
@@ -141,7 +154,7 @@ class EngineStateStore:
         manifest = {
             "schema_version": _SCHEMA_VERSION,
             "turn_count": turn_count,
-            "written_at_revision": _git_revision(),
+            "written_at_revision": get_git_revision(),
         }
         _atomic_write_text(
             self.path / "manifest.json",
@@ -159,7 +172,7 @@ class EngineStateStore:
         # W-023 / ADR-0157 — revision-mismatch warning per ADR-0146 §Risks line 127.
         # Never refuse to load; reboot is recovery, not control flow.
         stored_rev = manifest.get("written_at_revision", "unknown")
-        current_rev = _git_revision()
+        current_rev = get_git_revision()
         if stored_rev not in ("unknown", "") and current_rev not in ("unknown", "") and stored_rev != current_rev:
             warnings.warn(
                 f"engine_state checkpoint was written at revision {stored_rev!r} "
@@ -175,4 +188,4 @@ class EngineStateStore:
         return (self.path / "manifest.json").exists()
 
 
-__all__ = ["EngineStateStore"]
+__all__ = ["EngineStateStore", "get_git_revision"]
