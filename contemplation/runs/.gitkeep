@@ -1,0 +1,2 @@
+# CI-authored contemplation reports land here via ADR-0155.
+# Operator review of each PR is the ratification gate.
