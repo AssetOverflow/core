@@ -97,7 +97,12 @@ def _digest(payload: dict[str, Any]) -> str:
 
 
 def _scene(report: dict[str, Any], scene_name: str) -> dict[str, Any]:
-    for scene in report.get("scenes", []):
+    if not isinstance(report, dict):
+        return {}
+    scenes = report.get("scenes")
+    if not isinstance(scenes, list):
+        return {}
+    for scene in scenes:
         if isinstance(scene, dict) and scene.get("scene") == scene_name:
             detail = scene.get("detail", {})
             return detail if isinstance(detail, dict) else {}
@@ -127,9 +132,14 @@ def evaluate_report(report: dict[str, Any]) -> ContemplationQualityReport:
     testing stored CI contemplation reports without touching runtime state.
     """
 
+    if not isinstance(report, dict):
+        raise TypeError("report must be a dictionary")
+
+    scenes = report.get("scenes")
+    scenes_list = scenes if isinstance(scenes, list) else []
     scene_names = tuple(
         scene.get("scene")
-        for scene in report.get("scenes", [])
+        for scene in scenes_list
         if isinstance(scene, dict)
     )
     s1 = _scene(report, "S1_cold_session")
@@ -276,9 +286,12 @@ def run_lane(
     """
 
     del config, workers
-    if len(cases) != 1:
+    if not isinstance(cases, list) or len(cases) != 1:
         raise ValueError("contemplation-quality expects exactly one invocation case")
-    source = cases[0].get("source")
+    case = cases[0]
+    if not isinstance(case, dict):
+        raise TypeError("contemplation-quality case must be a dictionary")
+    source = case.get("source")
     if source != "learning_arc_demo":
         raise ValueError(f"unsupported contemplation-quality source: {source!r}")
 
@@ -295,7 +308,7 @@ def run_lane(
         },
         case_details=[
             {
-                "case_id": cases[0].get("case_id", "learning_arc_demo"),
+                "case_id": case.get("case_id", "learning_arc_demo"),
                 "source": report.source,
                 "passed": report.passed,
                 "source_digest": report.source_digest,
