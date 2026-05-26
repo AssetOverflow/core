@@ -23,6 +23,8 @@ from workbench.schemas import (
     ProposalSummary,
     ReplayComparison,
     RuntimeStatus,
+    TraceAdmissibility,
+    TraceDetail,
 )
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -286,4 +288,26 @@ def replay_artifact(artifact_id: str) -> ReplayComparison:
         replay_hash=detail.digest,
         equivalent=True,
         divergences=[],
+    )
+
+
+def read_trace(turn_id: str) -> TraceDetail:
+    """Return a read-only trace detail scaffold.
+
+    W-028 establishes the canonical API shape before live runtime turn storage is
+    wired. The placeholder is explicit and non-mutating; unknown turn ids still
+    resolve to a structurally valid empty trace surface for frontend development.
+    """
+    return TraceDetail(
+        turn_id=turn_id,
+        surface="",
+        articulation_surface=None,
+        walk_surface=None,
+        trace_hash=None,
+        replay_digest=None,
+        grounding_source=None,
+        proposal_refs=[],
+        candidate_refs=[],
+        admissibility=TraceAdmissibility(rejected_attempts=None, exhausted=None),
+        raw={"status": "trace storage not yet wired"},
     )
