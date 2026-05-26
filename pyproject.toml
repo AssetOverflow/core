@@ -5,6 +5,7 @@ description = "Versor Engine: cognitive field system on Cl(4,1) Conformal Geomet
 requires-python = ">=3.11"
 
 dependencies = [
+    "fastapi>=0.115",
     "hypothesis>=6.152.7",
     "numpy>=1.26",
     "pytest>=9.0.3",
@@ -15,6 +16,7 @@ dependencies = [
     "pyyaml>=6.0",
     "ruff>=0.15.12",
     "datasets>=4.8.5",
+    "uvicorn>=0.32",
 ]
 
 [project.optional-dependencies]
@@ -26,6 +28,7 @@ dev = [
 
 [project.scripts]
 core = "core.cli:main"
+core-workbench = "workbench.server:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -46,6 +49,7 @@ include = [
     "session*",
     "vault*",
     "vocab*",
+    "workbench*",
 ]
 
 [tool.pytest.ini_options]
