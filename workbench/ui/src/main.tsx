@@ -1,19 +1,126 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './styles.css'
+import {
+  ArtifactRef,
+  EvalLaneSummary,
+  ProposalSummary,
+  ReplayComparison,
+  RuntimeStatus,
+  getRuntimeStatus,
+  listArtifacts,
+  listEvalLanes,
+  listProposals,
+  login,
+  logout,
+  me,
+  replayArtifact,
+} from './api'
 
-const API_BASE = 'http://127.0.0.1:8765'
+type Section = 'Chat' | 'Replay' | 'Proposals' | 'Evals' | 'Artifacts' | 'Runtime'
 
-async function login(email: string, password: string): Promise<boolean> {
-  const response = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, password }),
-  })
-  return response.ok
+function RuntimePanel({ runtime }: { runtime: RuntimeStatus | null }): JSX.Element {
+  if (!runtime) {
+    return <div className="panel-card">Loading runtime status...</div>
+  }
+
+  return (
+    <div className="panel-card stack-gap">
+      <h2>Runtime Status</h2>
+      <div className="kv-grid">
+        <div>Backend</div><div>{runtime.backend}</div>
+        <div>Git Revision</div><div>{runtime.git_revision}</div>
+        <div>Checkpoint Revision</div><div>{runtime.checkpoint_revision}</div>
+        <div>Engine State</div><div>{runtime.engine_state_present ? 'Present' : 'Missing'}</div>
+        <div>Mutation Mode</div><div>{runtime.mutation_mode}</div>
+      </div>
+    </div>
+  )
+}
+
+function ProposalPanel({ proposals }: { proposals: ProposalSummary[] }): JSX.Element {
+  return (
+    <div className="panel-card stack-gap">
+      <h2>Proposal Queue</h2>
+      <table className="data-table">
+        <thead><tr><th>ID</th><th>State</th><th>Source</th><th>Replay</th></tr></thead>
+        <tbody>
+          {proposals.map((proposal) => (
+            <tr key={proposal.proposal_id}>
+              <td>{proposal.proposal_id}</td>
+              <td>{proposal.state}</td>
+              <td>{proposal.source_kind}</td>
+              <td>{proposal.replay_equivalent === true ? 'Equivalent' : 'Unknown'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function EvalPanel({ lanes }: { lanes: EvalLaneSummary[] }): JSX.Element {
+  return (
+    <div className="panel-card stack-gap">
+      <h2>Eval Lanes</h2>
+      <table className="data-table">
+        <thead><tr><th>Lane</th><th>Versions</th><th>Read Only</th></tr></thead>
+        <tbody>
+          {lanes.map((lane) => (
+            <tr key={lane.lane}>
+              <td>{lane.lane}</td>
+              <td>{lane.versions.join(', ')}</td>
+              <td>{lane.read_only ? 'Yes' : 'No'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function ArtifactPanel({ artifacts }: { artifacts: ArtifactRef[] }): JSX.Element {
+  return (
+    <div className="panel-card stack-gap">
+      <h2>Artifacts</h2>
+      <table className="data-table">
+        <thead><tr><th>Kind</th><th>Path</th></tr></thead>
+        <tbody>
+          {artifacts.map((artifact) => (
+            <tr key={artifact.artifact_id}>
+              <td>{artifact.kind}</td>
+              <td>{artifact.path}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function ReplayPanel({ replay }: { replay: ReplayComparison | null }): JSX.Element {
+  return (
+    <div className="panel-card stack-gap">
+      <h2>Replay Theater</h2>
+      {replay ? (
+        <div className="kv-grid">
+          <div>Artifact</div><div>{replay.artifact_id}</div>
+          <div>Equivalent</div><div>{replay.equivalent ? 'Yes' : 'No'}</div>
+          <div>Original Hash</div><div>{replay.original_hash}</div>
+          <div>Replay Hash</div><div>{replay.replay_hash}</div>
+        </div>
+      ) : <div>No replay selected.</div>}
+    </div>
+  )
+}
+
+function ChatPanel(): JSX.Element {
+  return (
+    <div className="panel-card stack-gap">
+      <h2>Chat Surface</h2>
+      <p>Chat + trace drawer integration will attach to the runtime turn pipeline in the next phase.</p>
+    </div>
+  )
 }
 
 function App(): JSX.Element {
@@ -21,17 +128,49 @@ function App(): JSX.Element {
   const [password, setPassword] = React.useState('')
   const [authenticated, setAuthenticated] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [runtime, setRuntime] = React.useState<RuntimeStatus | null>(null)
+  const [proposals, setProposals] = React.useState<ProposalSummary[]>([])
+  const [lanes, setLanes] = React.useState<EvalLaneSummary[]>([])
+  const [artifacts, setArtifacts] = React.useState<ArtifactRef[]>([])
+  const [replay, setReplay] = React.useState<ReplayComparison | null>(null)
+  const [section, setSection] = React.useState<Section>('Runtime')
+
+  React.useEffect(() => {
+    me().then(() => setAuthenticated(true)).catch(() => undefined)
+  }, [])
+
+  React.useEffect(() => {
+    if (!authenticated) return
+
+    void getRuntimeStatus().then(setRuntime)
+    void listProposals().then(setProposals)
+    void listEvalLanes().then(setLanes)
+    void listArtifacts().then(async (items) => {
+      setArtifacts(items)
+      if (items.length > 0) {
+        try {
+          setReplay(await replayArtifact(items[0].artifact_id))
+        } catch {
+        }
+      }
+    })
+  }, [authenticated])
 
   async function submit(event: React.FormEvent): Promise<void> {
     event.preventDefault()
     setError(null)
-    const ok = await login(email, password)
-    if (!ok) {
+    try {
+      await login(email, password)
+      setAuthenticated(true)
+    } catch (err) {
       setAuthenticated(false)
-      setError('Authentication failed.')
-      return
+      setError(err instanceof Error ? err.message : 'Authentication failed.')
     }
-    setAuthenticated(true)
+  }
+
+  async function handleLogout(): Promise<void> {
+    await logout()
+    setAuthenticated(false)
   }
 
   if (!authenticated) {
@@ -39,28 +178,10 @@ function App(): JSX.Element {
       <div className="login-shell">
         <div className="login-card">
           <h1>CORE Workbench</h1>
-          <p className="subtle">
-            Deterministic cognition observability and replay workstation.
-          </p>
+          <p className="subtle">Deterministic cognition observability and replay workstation.</p>
           <form onSubmit={submit}>
-            <label>
-              Email
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="username"
-              />
-            </label>
-            <label>
-              Password
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-            </label>
+            <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" /></label>
+            <label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" /></label>
             {error ? <div className="error">{error}</div> : null}
             <button type="submit">Enter Workbench</button>
           </form>
@@ -73,27 +194,26 @@ function App(): JSX.Element {
     <div className="app-shell">
       <header className="topbar">
         <div className="brand">CORE Workbench</div>
-        <div className="runtime-pill">READ ONLY</div>
+        <div className="topbar-right">
+          <div className="runtime-pill">READ ONLY</div>
+          <button className="ghost-button" onClick={() => void handleLogout()}>Logout</button>
+        </div>
       </header>
 
       <div className="body-shell">
         <nav className="sidebar">
-          <button>Chat</button>
-          <button>Replay</button>
-          <button>Proposals</button>
-          <button>Evals</button>
-          <button>Artifacts</button>
-          <button>Runtime</button>
+          {(['Chat', 'Replay', 'Proposals', 'Evals', 'Artifacts', 'Runtime'] as Section[]).map((item) => (
+            <button key={item} onClick={() => setSection(item)}>{item}</button>
+          ))}
         </nav>
 
         <main className="main-panel">
-          <div className="panel-card">
-            <h2>Workbench Initialized</h2>
-            <p>
-              The operator shell is active. Replay, proposal, eval, and runtime
-              surfaces will be connected incrementally.
-            </p>
-          </div>
+          {section === 'Runtime' ? <RuntimePanel runtime={runtime} /> : null}
+          {section === 'Proposals' ? <ProposalPanel proposals={proposals} /> : null}
+          {section === 'Evals' ? <EvalPanel lanes={lanes} /> : null}
+          {section === 'Artifacts' ? <ArtifactPanel artifacts={artifacts} /> : null}
+          {section === 'Replay' ? <ReplayPanel replay={replay} /> : null}
+          {section === 'Chat' ? <ChatPanel /> : null}
         </main>
       </div>
     </div>
