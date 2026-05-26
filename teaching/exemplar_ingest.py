@@ -47,6 +47,8 @@ _VALID_WINDOW_UNITS: frozenset[str] = frozenset({
 _VALID_WINDOW_QUANTIFIERS: frozenset[str] = frozenset({"each", "every", "per"})
 _VALID_CURRENCY_SYMBOLS: frozenset[str] = frozenset({"$", "£", "€", "¥"})
 _VALID_AMOUNT_KINDS: frozenset[str] = frozenset({"integer", "decimal", "word"})
+# Round-2 categories.
+_VALID_COUNT_KINDS: frozenset[str] = frozenset({"integer", "word"})
 
 
 # The categories Phase C ingests in round 1.  Adding a category here
@@ -55,6 +57,10 @@ _SUPPORTED_CATEGORIES: frozenset[ShapeCategory] = frozenset({
     ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY,
     ShapeCategory.TEMPORAL_AGGREGATION,
     ShapeCategory.RATE_WITH_CURRENCY,
+    # ADR-0163.B.2 round-2 categories.
+    ShapeCategory.DISCRETE_COUNT_STATEMENT,
+    ShapeCategory.MULTIPLICATIVE_AGGREGATION,
+    ShapeCategory.CURRENCY_AMOUNT,
 })
 
 
@@ -208,10 +214,98 @@ def _validate_rate_with_currency(ctx: str, graph: Mapping[str, Any]) -> None:
         raise ExemplarIngestError(f"{ctx} outcome must be 'admissible'")
 
 
+def _validate_discrete_count_statement(ctx: str, graph: Mapping[str, Any]) -> None:
+    anchors = graph["quantity_anchors"]
+    if not isinstance(anchors, list) or not anchors:
+        raise ExemplarIngestError(f"{ctx} discrete_count_statement needs ≥1 anchor")
+    for a in anchors:
+        if not isinstance(a, Mapping):
+            raise ExemplarIngestError(f"{ctx} anchor must be a mapping")
+        _require_keys(ctx, a, frozenset({
+            "kind", "subject_role", "count_token", "count_kind", "counted_noun",
+        }))
+        if a["kind"] != "discrete_count":
+            raise ExemplarIngestError(f"{ctx} anchor kind must be 'discrete_count'")
+        if a["count_kind"] not in _VALID_COUNT_KINDS:
+            raise ExemplarIngestError(
+                f"{ctx} count_kind {a['count_kind']!r} not in "
+                f"{sorted(_VALID_COUNT_KINDS)}"
+            )
+        for fld in ("subject_role", "count_token", "counted_noun"):
+            if not isinstance(a[fld], str) or not a[fld]:
+                raise ExemplarIngestError(f"{ctx} {fld} must be non-empty str")
+    if graph["graph_intent"] != "count":
+        raise ExemplarIngestError(f"{ctx} graph_intent must be 'count'")
+    if graph["outcome"] != "admissible":
+        raise ExemplarIngestError(f"{ctx} outcome must be 'admissible'")
+
+
+def _validate_multiplicative_aggregation(ctx: str, graph: Mapping[str, Any]) -> None:
+    anchors = graph["quantity_anchors"]
+    if not isinstance(anchors, list) or not anchors:
+        raise ExemplarIngestError(f"{ctx} multiplicative_aggregation needs ≥1 anchor")
+    for a in anchors:
+        if not isinstance(a, Mapping):
+            raise ExemplarIngestError(f"{ctx} anchor must be a mapping")
+        _require_keys(ctx, a, frozenset({
+            "kind", "outer_count", "outer_unit", "inner_count", "inner_unit",
+            "subject_role",
+        }))
+        if a["kind"] != "multiplicative_aggregate":
+            raise ExemplarIngestError(
+                f"{ctx} anchor kind must be 'multiplicative_aggregate'"
+            )
+        for fld in (
+            "outer_count", "outer_unit", "inner_count", "inner_unit", "subject_role",
+        ):
+            if not isinstance(a[fld], str) or not a[fld]:
+                raise ExemplarIngestError(f"{ctx} {fld} must be non-empty str")
+    if graph["graph_intent"] != "aggregate":
+        raise ExemplarIngestError(f"{ctx} graph_intent must be 'aggregate'")
+    if graph["outcome"] != "admissible":
+        raise ExemplarIngestError(f"{ctx} outcome must be 'admissible'")
+
+
+def _validate_currency_amount(ctx: str, graph: Mapping[str, Any]) -> None:
+    anchors = graph["quantity_anchors"]
+    if not isinstance(anchors, list) or not anchors:
+        raise ExemplarIngestError(f"{ctx} currency_amount needs ≥1 anchor")
+    for a in anchors:
+        if not isinstance(a, Mapping):
+            raise ExemplarIngestError(f"{ctx} anchor must be a mapping")
+        _require_keys(ctx, a, frozenset({
+            "kind", "currency_symbol", "amount", "amount_kind", "subject_role",
+        }))
+        if a["kind"] != "currency_amount":
+            raise ExemplarIngestError(
+                f"{ctx} anchor kind must be 'currency_amount'"
+            )
+        if a["currency_symbol"] not in _VALID_CURRENCY_SYMBOLS:
+            raise ExemplarIngestError(
+                f"{ctx} currency_symbol {a['currency_symbol']!r} not in "
+                f"{sorted(_VALID_CURRENCY_SYMBOLS)}"
+            )
+        if a["amount_kind"] not in _VALID_AMOUNT_KINDS:
+            raise ExemplarIngestError(
+                f"{ctx} amount_kind {a['amount_kind']!r} not in "
+                f"{sorted(_VALID_AMOUNT_KINDS)}"
+            )
+        for fld in ("amount", "subject_role"):
+            if not isinstance(a[fld], str) or not a[fld]:
+                raise ExemplarIngestError(f"{ctx} {fld} must be non-empty str")
+    if graph["graph_intent"] != "amount":
+        raise ExemplarIngestError(f"{ctx} graph_intent must be 'amount'")
+    if graph["outcome"] != "admissible":
+        raise ExemplarIngestError(f"{ctx} outcome must be 'admissible'")
+
+
 _CATEGORY_VALIDATORS = {
     ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY: _validate_descriptive_setup,
     ShapeCategory.TEMPORAL_AGGREGATION: _validate_temporal_aggregation,
     ShapeCategory.RATE_WITH_CURRENCY: _validate_rate_with_currency,
+    ShapeCategory.DISCRETE_COUNT_STATEMENT: _validate_discrete_count_statement,
+    ShapeCategory.MULTIPLICATIVE_AGGREGATION: _validate_multiplicative_aggregation,
+    ShapeCategory.CURRENCY_AMOUNT: _validate_currency_amount,
 }
 
 
@@ -312,11 +406,15 @@ def load_exemplar_corpus(path: Path) -> ExemplarCorpus:
                 f"{path} mixes categories: {category.value!r} and "
                 f"{ex.shape_category.value!r} both present"
             )
-    expected_stem = f"{category.value}_v1"
-    if path.stem != expected_stem:
+    # File stem must be ``<category>_v<N>`` where N is a positive
+    # integer.  Round-2 widenings (e.g. ``temporal_aggregation_v2``)
+    # are honored under this rule.
+    stem_prefix = f"{category.value}_v"
+    if not path.stem.startswith(stem_prefix) or not path.stem[len(stem_prefix):].isdigit():
         raise ExemplarIngestError(
             f"{path} stem {path.stem!r} does not match category "
-            f"{category.value!r}; expected stem {expected_stem!r}"
+            f"{category.value!r}; expected stem '{stem_prefix}<N>' with "
+            f"N a positive integer"
         )
 
     # Deterministic order on the in-memory list mirrors the canonical

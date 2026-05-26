@@ -262,28 +262,32 @@ def test_cache_invalidates_on_log_change(tmp_path: Path) -> None:
     assert len(reg_b) == 2
 
 
-def test_live_proposal_log_has_phase_c_pending_proposals() -> None:
+def test_live_proposal_log_has_phase_c_proposals() -> None:
     """Audit-level check: the live log carries the three Phase C
-    pending proposals.  If this fails the operator has not run
-    ``core teaching propose-from-exemplars --all`` since Phase B,
-    and Phase D's downstream tests will be unable to build the
-    synthetic fixture (ADR-0161 §5)."""
+    proposals.  Post-#304 (operator ratification round 1) they are
+    all ``accepted`` and the registry returns three entries.  If a
+    future ratification round withdraws any of them, this test will
+    surface the change."""
     from tests._phase_d_fixture import PHASE_C_PROPOSAL_IDS
 
     log = ProposalLog()
     state = log.current_state()
     missing = [pid for pid in PHASE_C_PROPOSAL_IDS if pid not in state]
     assert not missing, (
-        f"live proposal log is missing Phase C pendings {missing}; "
+        f"live proposal log is missing Phase C proposals {missing}; "
         "run `core teaching propose-from-exemplars --all` first"
     )
-    # And they are ALL pending — no agent-side ratification (ADR-0161 §5).
-    for pid in PHASE_C_PROPOSAL_IDS:
-        assert state[pid]["state"] == "pending", (
-            f"proposal {pid} state={state[pid]['state']!r}; "
-            "ADR-0161 §5 forbids agent-side ratification"
-        )
-    # Live registry stays empty until the operator ratifies.
-    assert load_ratified_registry(log) == ()
+    # Post-#304 they are accepted.  ADR-0161 §5 — only the operator
+    # ratifies; this test pins the operator's round-1 ratification.
+    accepted_count = sum(
+        1 for pid in PHASE_C_PROPOSAL_IDS
+        if state[pid]["state"] == "accepted"
+    )
+    assert accepted_count == len(PHASE_C_PROPOSAL_IDS), (
+        f"expected {len(PHASE_C_PROPOSAL_IDS)} accepted Phase C proposals, "
+        f"got {accepted_count}: {[(pid[:12], state[pid]['state']) for pid in PHASE_C_PROPOSAL_IDS]}"
+    )
+    # Registry exposes the ratified set.
+    assert len(load_ratified_registry(log)) == len(PHASE_C_PROPOSAL_IDS)
 
 

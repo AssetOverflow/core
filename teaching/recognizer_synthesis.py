@@ -256,10 +256,148 @@ def _synthesize_rate_with_currency(
     return canonical_pattern, coverage
 
 
+def _synthesize_discrete_count_statement(
+    corpus: ExemplarCorpus,
+) -> tuple[Mapping[str, Any], Mapping[str, int]]:
+    """ADR-0163.B.2 — discrete-count seeds.
+
+    Each anchor carries (count_token, count_kind, counted_noun).  The
+    synthesizer records ``observed_count_kinds`` as a narrowness gate
+    (integer/word); ``observed_counted_nouns`` is coverage-only — gating
+    on every noun in the seed corpus would over-narrow the matcher
+    across the GSM8K nominal vocabulary.
+    """
+    exemplars = corpus.exemplars
+    count_kinds: list[str] = []
+    counted_nouns: list[str] = []
+    anchor_counts: list[int] = []
+    coverage_count_kind: dict[str, int] = {}
+    coverage_counted_noun: dict[str, int] = {}
+    for ex in exemplars:
+        anchors = ex.expected_graph["quantity_anchors"]
+        anchor_counts.append(len(anchors))
+        for a in anchors:
+            ck = a["count_kind"]
+            noun = a["counted_noun"]
+            count_kinds.append(ck)
+            counted_nouns.append(noun)
+            coverage_count_kind[ck] = coverage_count_kind.get(ck, 0) + 1
+            coverage_counted_noun[noun] = coverage_counted_noun.get(noun, 0) + 1
+    canonical_pattern: dict[str, Any] = {
+        "shape_category": ShapeCategory.DISCRETE_COUNT_STATEMENT.value,
+        "graph_intent": "count",
+        "outcome": "admissible",
+        "anchor_kind": "discrete_count",
+        "observed_count_kinds": _sorted_unique(count_kinds),
+        "observed_counted_nouns": _sorted_unique(counted_nouns),
+        "anchor_count_min": min(anchor_counts),
+        "anchor_count_max": max(anchor_counts),
+        "unresolved_notes": _collect_author_notes(exemplars),
+    }
+    coverage: dict[str, int] = {"anchors_discrete_count": sum(anchor_counts)}
+    for k, n in sorted(coverage_count_kind.items()):
+        coverage[f"count_kind:{k}"] = n
+    for noun, n in sorted(coverage_counted_noun.items()):
+        coverage[f"counted_noun:{noun}"] = n
+    return canonical_pattern, coverage
+
+
+def _synthesize_multiplicative_aggregation(
+    corpus: ExemplarCorpus,
+) -> tuple[Mapping[str, Any], Mapping[str, int]]:
+    """ADR-0163.B.2 — multiplicative-aggregate seeds (``M outer × N inner``).
+
+    Multi-anchor cases (joined aggregations like Ella's apples) widen
+    ``anchor_count_max`` naturally.
+    """
+    exemplars = corpus.exemplars
+    outer_units: list[str] = []
+    inner_units: list[str] = []
+    anchor_counts: list[int] = []
+    coverage_outer: dict[str, int] = {}
+    coverage_inner: dict[str, int] = {}
+    for ex in exemplars:
+        anchors = ex.expected_graph["quantity_anchors"]
+        anchor_counts.append(len(anchors))
+        for a in anchors:
+            ou = a["outer_unit"]
+            iu = a["inner_unit"]
+            outer_units.append(ou)
+            inner_units.append(iu)
+            coverage_outer[ou] = coverage_outer.get(ou, 0) + 1
+            coverage_inner[iu] = coverage_inner.get(iu, 0) + 1
+    canonical_pattern: dict[str, Any] = {
+        "shape_category": ShapeCategory.MULTIPLICATIVE_AGGREGATION.value,
+        "graph_intent": "aggregate",
+        "outcome": "admissible",
+        "anchor_kind": "multiplicative_aggregate",
+        "observed_outer_units": _sorted_unique(outer_units),
+        "observed_inner_units": _sorted_unique(inner_units),
+        "anchor_count_min": min(anchor_counts),
+        "anchor_count_max": max(anchor_counts),
+        "unresolved_notes": _collect_author_notes(exemplars),
+    }
+    coverage: dict[str, int] = {
+        "anchors_multiplicative_aggregate": sum(anchor_counts),
+    }
+    for u, n in sorted(coverage_outer.items()):
+        coverage[f"outer_unit:{u}"] = n
+    for u, n in sorted(coverage_inner.items()):
+        coverage[f"inner_unit:{u}"] = n
+    return canonical_pattern, coverage
+
+
+def _synthesize_currency_amount(
+    corpus: ExemplarCorpus,
+) -> tuple[Mapping[str, Any], Mapping[str, int]]:
+    """ADR-0163.B.2 — currency-amount seeds.
+
+    Distinct from ``rate_with_currency``: NO per-unit framing.  The
+    synthesizer records observed currency symbols + amount kinds as
+    narrowness gates.
+    """
+    exemplars = corpus.exemplars
+    currency_symbols: list[str] = []
+    amount_kinds: list[str] = []
+    anchor_counts: list[int] = []
+    coverage_currency: dict[str, int] = {}
+    coverage_amount_kind: dict[str, int] = {}
+    for ex in exemplars:
+        anchors = ex.expected_graph["quantity_anchors"]
+        anchor_counts.append(len(anchors))
+        for a in anchors:
+            cs = a["currency_symbol"]
+            ak = a["amount_kind"]
+            currency_symbols.append(cs)
+            amount_kinds.append(ak)
+            coverage_currency[cs] = coverage_currency.get(cs, 0) + 1
+            coverage_amount_kind[ak] = coverage_amount_kind.get(ak, 0) + 1
+    canonical_pattern: dict[str, Any] = {
+        "shape_category": ShapeCategory.CURRENCY_AMOUNT.value,
+        "graph_intent": "amount",
+        "outcome": "admissible",
+        "anchor_kind": "currency_amount",
+        "observed_currency_symbols": _sorted_unique(currency_symbols),
+        "observed_amount_kinds": _sorted_unique(amount_kinds),
+        "anchor_count_min": min(anchor_counts),
+        "anchor_count_max": max(anchor_counts),
+        "unresolved_notes": _collect_author_notes(exemplars),
+    }
+    coverage: dict[str, int] = {"anchors_currency_amount": sum(anchor_counts)}
+    for sym, n in sorted(coverage_currency.items()):
+        coverage[f"currency_symbol:{sym}"] = n
+    for k, n in sorted(coverage_amount_kind.items()):
+        coverage[f"amount_kind:{k}"] = n
+    return canonical_pattern, coverage
+
+
 _SYNTHESIZERS = {
     ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY: _synthesize_descriptive_setup_no_quantity,
     ShapeCategory.TEMPORAL_AGGREGATION: _synthesize_temporal_aggregation,
     ShapeCategory.RATE_WITH_CURRENCY: _synthesize_rate_with_currency,
+    ShapeCategory.DISCRETE_COUNT_STATEMENT: _synthesize_discrete_count_statement,
+    ShapeCategory.MULTIPLICATIVE_AGGREGATION: _synthesize_multiplicative_aggregation,
+    ShapeCategory.CURRENCY_AMOUNT: _synthesize_currency_amount,
 }
 
 
