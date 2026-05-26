@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching hitl-queue list\n  core teaching hitl-queue list --state all --json\n  core teaching hitl-queue show <proposal_id>\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout\n  core eval contemplation_quality\n  core eval contemplation_quality --json --save\n  core workbench api\n  core workbench api --port 9000\n  core workbench api --host 0.0.0.0 --allow-nonlocal-bind"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching hitl-queue list\n  core teaching hitl-queue list --state all --json\n  core teaching hitl-queue show <proposal_id>\n  core teaching propose <candidate-jsonl-path>\n  core teaching propose-from-exemplars teaching/admissibility_exemplars/rate_with_currency_v1.jsonl\n  core teaching propose-from-exemplars --all\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout\n  core eval contemplation_quality\n  core eval contemplation_quality --json --save\n  core workbench api\n  core workbench api --port 9000\n  core workbench api --host 0.0.0.0 --allow-nonlocal-bind"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -1375,6 +1375,120 @@ def cmd_teaching_propose(args: argparse.Namespace) -> int:
     if rec.get("operator_note"):
         print(f"note           : {rec['operator_note']}")
     return 0 if rec["state"] in ("pending", "accepted") else 1
+
+
+def cmd_teaching_propose_from_exemplars(args: argparse.Namespace) -> int:
+    """ADR-0163 Phase C — propose recognizers from admissibility exemplar corpora.
+
+    Loads one or more Phase B exemplar JSONLs, runs the contemplation
+    synthesis to produce a :class:`DiscoveryCandidate` per corpus, and
+    routes each candidate through :func:`teaching.proposals.propose_from_candidate`
+    with the admissibility replay gate substituted for the cognition-only
+    replay-equivalence gate.  Proposals land as ``pending``; operator
+    ratifies via ``core teaching review`` (existing path).
+    """
+    from datetime import datetime, timezone
+
+    from teaching.contemplation import contemplate_exemplar_corpus
+    from teaching.exemplar_ingest import (
+        ExemplarIngestError,
+        list_corpora,
+        load_exemplar_corpus,
+    )
+    from teaching.proposals import (
+        DEFAULT_PROPOSAL_LOG_PATH,
+        ProposalError,
+        ProposalLog,
+        propose_from_candidate,
+    )
+    from teaching.replay import run_admissibility_replay_gate
+    from teaching.source import ProposalSource
+
+    review_date = args.review_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    log_path = Path(args.log) if args.log else DEFAULT_PROPOSAL_LOG_PATH
+    log = ProposalLog(log_path)
+
+    # Resolve corpora: --all loads every JSONL; otherwise the single path.
+    try:
+        if args.all:
+            root = Path(args.exemplar_path) if args.exemplar_path else None
+            corpora = list_corpora(root)
+        else:
+            if not args.exemplar_path:
+                _die(
+                    "exemplar_path is required unless --all is passed",
+                    code=2,
+                )
+            corpora = (load_exemplar_corpus(Path(args.exemplar_path)),)
+    except ExemplarIngestError as exc:
+        _die(f"exemplar ingest failed: {exc}", code=1)
+
+    # Resolve current git revision once for the ProposalSource stamp.
+    from teaching.proposals import _current_revision
+    revision = _current_revision()
+
+    results: list[dict[str, Any]] = []
+    for corpus in corpora:
+        candidate = contemplate_exemplar_corpus(corpus)
+        source = ProposalSource(
+            kind="exemplar_corpus",
+            source_id=corpus.corpus_digest,
+            emitted_at_revision=revision,
+        )
+        # Bind active_corpus_path=None so the gate reads the live corpus.
+        def _gate(chain: dict[str, Any]) -> Any:
+            return run_admissibility_replay_gate(
+                candidate.proposed_chain.get("recognizer_spec"),
+            )
+        try:
+            proposal = propose_from_candidate(
+                candidate,
+                log=log,
+                run_replay=_gate,
+                source=source,
+            )
+        except ProposalError as exc:
+            _die(
+                f"ineligible candidate for {corpus.shape_category.value}: {exc}",
+                code=1,
+            )
+        rec = log.find(proposal.proposal_id)
+        result = {
+            "shape_category": corpus.shape_category.value,
+            "corpus_path": str(corpus.path),
+            "corpus_digest": corpus.corpus_digest,
+            "proposal_id": proposal.proposal_id,
+            "review_date": review_date,
+            "state": rec["state"] if rec else "unknown",
+        }
+        replay = (rec or {}).get("replay_evidence") or {}
+        if replay:
+            result["replay_equivalent"] = bool(replay.get("replay_equivalent"))
+            result["regressed_metrics"] = list(replay.get("regressed_metrics") or ())
+            result["wrong_count_delta"] = int(replay.get("wrong_count_delta", 0))
+        results.append(result)
+
+    if args.json:
+        print(json.dumps({"proposals": results}, indent=2, sort_keys=True))
+    else:
+        for r in results:
+            print(f"shape_category   : {r['shape_category']}")
+            print(f"corpus_path      : {r['corpus_path']}")
+            print(f"corpus_digest    : {r['corpus_digest'][:16]}...")
+            print(f"proposal_id      : {r['proposal_id']}")
+            print(f"state            : {r['state']}")
+            if "replay_equivalent" in r:
+                print(f"replay_equivalent: {r['replay_equivalent']}")
+                if r.get("regressed_metrics"):
+                    print(f"regressed_metrics: {', '.join(r['regressed_metrics'])}")
+                print(f"wrong_count_delta: {r['wrong_count_delta']}")
+            print(f"review_date      : {r['review_date']}")
+            print("--")
+    # Exit nonzero if any proposal auto-rejected.
+    if any(r["state"] != "pending" for r in results):
+        return 1
+    return 0
 
 
 def _load_findings_jsonl(path: str) -> list:
@@ -3821,6 +3935,50 @@ def build_parser() -> argparse.ArgumentParser:
         help="proposal log path (default: teaching/proposals/proposals.jsonl)",
     )
     teaching_propose.set_defaults(func=cmd_teaching_propose)
+
+    # ADR-0163 Phase C — propose recognizers from admissibility exemplar corpora.
+    teaching_propose_from_exemplars = teaching_sub.add_parser(
+        "propose-from-exemplars",
+        help=(
+            "synthesize a DerivedRecognizer proposal from a Phase B "
+            "admissibility exemplar corpus (ADR-0163.C)"
+        ),
+    )
+    teaching_propose_from_exemplars.add_argument(
+        "exemplar_path",
+        nargs="?",
+        default=None,
+        help=(
+            "path to a single exemplar JSONL "
+            "(omit when passing --all; a directory may be passed with --all)"
+        ),
+    )
+    teaching_propose_from_exemplars.add_argument(
+        "--all",
+        action="store_true",
+        help=(
+            "ingest every *_v1.jsonl under teaching/admissibility_exemplars/ "
+            "(or the directory passed as exemplar_path)"
+        ),
+    )
+    teaching_propose_from_exemplars.add_argument(
+        "--review-date",
+        default=None,
+        help="ISO date stamped on the proposal record (default: today UTC)",
+    )
+    teaching_propose_from_exemplars.add_argument(
+        "--log",
+        default=None,
+        help="proposal log path (default: teaching/proposals/proposals.jsonl)",
+    )
+    teaching_propose_from_exemplars.add_argument(
+        "--json",
+        action="store_true",
+        help="machine-readable output",
+    )
+    teaching_propose_from_exemplars.set_defaults(
+        func=cmd_teaching_propose_from_exemplars,
+    )
 
     # W-019 — miner and curriculum proposal construction paths (ADR-0095/0104)
     teaching_propose_miner = teaching_sub.add_parser(

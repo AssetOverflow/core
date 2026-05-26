@@ -32,6 +32,7 @@ same Phase B sink as JSONL lines.
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import replace
 from typing import Any, Callable, Literal
 
@@ -500,6 +501,110 @@ def contemplate(
     )
 
 
+# ---------------------------------------------------------------------------
+# ADR-0163 Phase C — exemplar-corpus contemplation
+# ---------------------------------------------------------------------------
+
+
+def _exemplar_candidate_id(corpus_digest: str, spec_digest: str) -> str:
+    """Deterministic candidate id for an exemplar-derived contemplation.
+
+    Hash over the corpus digest + the spec digest: identical corpora
+    yield identical specs yield identical candidate ids.  Re-running the
+    contemplation pipeline against an unchanged corpus is a no-op for
+    the proposal log (idempotency via ProposalLog.find).
+    """
+    blob = json.dumps(
+        {"corpus_digest": corpus_digest, "spec_digest": spec_digest},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def contemplate_exemplar_corpus(corpus: Any) -> DiscoveryCandidate:
+    """Return a :class:`DiscoveryCandidate` distilled from *corpus*.
+
+    Ingests a single :class:`~teaching.exemplar_ingest.ExemplarCorpus`,
+    synthesizes its :class:`~teaching.recognizer_synthesis.RecognizerSpec`,
+    and serializes both into a complete-shape ``DiscoveryCandidate`` that
+    the existing proposal pipeline can consume.
+
+    Trust boundary
+    - Pure: no filesystem writes, no global state, no LLM, no
+      stochastic sampling.
+    - The returned candidate carries ``polarity="affirms"`` — exemplars
+      are reviewed-evidence-floor material under ADR-0163 §Phase B —
+      and one ``EvidencePointer`` per ingested exemplar, sourced from
+      the exemplar corpus itself.  ``ref`` strings carry the verbatim
+      ``case_id`` (when present) or ``exemplar:<exemplar_id>`` so the
+      proposal log records every seed cited.
+    - Encodes the recognizer-shaped chain as a synthetic
+      ``(shape_category, "admissibility", "recognizes", spec_digest)``
+      tuple so ``proposed_chain`` satisfies the four-field completeness
+      gate enforced by ``check_eligibility``.  The full
+      :class:`RecognizerSpec` rides along as a ``recognizer_spec``
+      sub-mapping on ``proposed_chain``.
+    """
+    # Deferred imports keep this module's import cost cheap for
+    # callers that never trigger Phase C ingest.
+    from teaching.exemplar_ingest import ExemplarCorpus
+    from teaching.recognizer_synthesis import (
+        RecognizerSpec,
+        synthesize_recognizer,
+    )
+
+    if not isinstance(corpus, ExemplarCorpus):
+        raise TypeError(
+            f"contemplate_exemplar_corpus expects ExemplarCorpus; got "
+            f"{type(corpus).__name__}"
+        )
+
+    spec: RecognizerSpec = synthesize_recognizer(corpus)
+    spec_digest = spec.spec_digest()
+
+    proposed_chain: dict[str, Any] = {
+        "subject": spec.shape_category.value,
+        "intent": "admissibility",
+        "connective": "recognizes",
+        "object": spec_digest,
+        "recognizer_spec": spec.as_dict(),
+    }
+
+    evidence: tuple[EvidencePointer, ...] = tuple(
+        EvidencePointer(
+            source="corpus",
+            ref=(
+                f"exemplar:{ex.case_id}"
+                if ex.case_id
+                else f"exemplar:{ex.exemplar_id}"
+            ),
+            polarity="affirms",
+            epistemic_status="coherent",
+        )
+        for ex in corpus.exemplars
+    )
+
+    candidate_id = _exemplar_candidate_id(corpus.corpus_digest, spec_digest)
+
+    return DiscoveryCandidate(
+        candidate_id=candidate_id,
+        proposed_chain=proposed_chain,
+        trigger="would_have_grounded",
+        source_turn_trace=f"exemplar_corpus:{corpus.corpus_digest}",
+        pack_consistent=True,
+        boundary_clean=True,
+        review_state="unreviewed",
+        polarity="affirms",
+        claim_domain="factual",
+        evidence=evidence,
+        sub_questions=(),
+        contemplation_depth=0,
+        recursion_overflow=False,
+    )
+
+
 __all__ = [
     "contemplate",
+    "contemplate_exemplar_corpus",
 ]
