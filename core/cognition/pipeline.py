@@ -175,6 +175,25 @@ class CognitiveTurnPipeline:
                     nodes=(_ep_node,),
                     recognizer_id=self._recognizer.teaching_set_id,
                 )
+                # ADR-0154 (W-020b) — producer-side wiring for the
+                # DerivedRecognizer registry.  When a recognizer admits a
+                # turn, capture (tokens, bundle) so the registry can
+                # derive tighter recognizers via anti-unification at the
+                # next checkpoint.  Pre-ADR-0154 the producer hook had
+                # no production caller (only tests invoked
+                # ``record_recognition_example``), so the registry
+                # could never grow from live traffic regardless of
+                # whether ``recognition_grounded_graph`` was enabled.
+                # The producer fires unconditionally; the consumer
+                # (``checkpoint_engine_state``'s derive_recognizer
+                # call) stays opt-in behind the same flag.
+                if (
+                    _rec_outcome.proposition is not None
+                    and hasattr(self.runtime, "record_recognition_example")
+                ):
+                    self.runtime.record_recognition_example(
+                        raw_tokens, _rec_outcome.proposition
+                    )
             elif _rec_outcome.refusal_reason is not None:
                 from generate.exhaustion import RefusalReason as _ExhaustionRefusalReason
                 _recognition_refusal_reason = _ExhaustionRefusalReason.RECOGNITION_REFUSED.value
