@@ -378,15 +378,45 @@ existing recorded queue history:
 
 ### Step 3 — Submission-time invariants
 
-- `propose_from_candidate` rejects duplicate `proposal_id` with reason
-  `duplicate` (already enforced; this step adds the explicit recorded
-  reason).
-- `propose_from_candidate` rejects `dependent_on_pending` proposals.
-  Heuristic: chain whose `subject` or `object` lemma is a substring
-  of any pending proposal's `proposed_chain` is considered dependent;
-  the conservative check fails loud and the proposal is re-emitted
-  after the dependency lands.
-- Tests for both rejection paths.
+**Landed in `feat(ADR-0161.3): submission-time invariants — duplicate +
+dependent_on_pending auto-reject`.**
+
+Two pre-gate checks added to `propose_from_candidate` in
+`teaching/proposals.py`, firing in this order (after the Step 2 cap check):
+
+1. **Duplicate check** — computes the deterministic `proposal_id` and scans
+   `derive_queue()` for any existing item with the same id.  If found,
+   returns `RefusedAsDuplicate(proposal_id, existing_state)`.  Covers all
+   states (pending, accepted, rejected, withdrawn).
+
+2. **Dependent_on_pending check** — walks all pending queue items; if any
+   pending item's `proposed_chain.subject` or `.object` lemma matches the
+   candidate's subject or object (case-insensitive exact-match), returns
+   `RefusedAsDependent(candidate_id, dependent_on, overlapping_lemmas)`.
+   Conservative: over-reject rather than admit-with-hidden-dependency.
+
+Neither refusal writes to `proposals.jsonl`.  The append-only invariant holds.
+
+New frozen dataclasses exported from `teaching/proposals.py`:
+
+```python
+@dataclass(frozen=True, slots=True)
+class RefusedAsDuplicate:
+    proposal_id: str
+    existing_state: str
+    reason: str = "duplicate"
+
+@dataclass(frozen=True, slots=True)
+class RefusedAsDependent:
+    candidate_id: str
+    dependent_on: tuple[str, ...]
+    overlapping_lemmas: tuple[str, ...]
+    reason: str = "dependent_on_pending"
+```
+
+CLI surfaces both in `cmd_teaching_propose` and
+`cmd_teaching_propose_from_exemplars` with exit code 1.  Tests in
+`tests/test_hitl_queue_submission_invariants.py`.
 
 ### Step 4 — Extend ratification workflow to reject/withdraw
 

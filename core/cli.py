@@ -1352,7 +1352,8 @@ def _load_candidate_jsonl(path: str) -> Any:
 def cmd_teaching_propose(args: argparse.Namespace) -> int:
     """ADR-0057 Phase C2 — build a proposal from an enriched candidate JSONL."""
     from teaching.proposals import (
-        ProposalError, ProposalLog, propose_from_candidate,
+        ProposalError, ProposalLog, RefusedAsDependent, RefusedAsDuplicate,
+        RefusedAtCapacity, propose_from_candidate,
     )
 
     candidate = _load_candidate_jsonl(args.candidate_path)
@@ -1365,7 +1366,6 @@ def cmd_teaching_propose(args: argparse.Namespace) -> int:
     except ProposalError as exc:
         _die(f"ineligible: {exc}", code=1)
 
-    from teaching.proposals import RefusedAtCapacity
     if isinstance(proposal, RefusedAtCapacity):
         try:
             rel_path = proposal.report_path.relative_to(_REPO_ROOT)
@@ -1377,6 +1377,15 @@ def cmd_teaching_propose(args: argparse.Namespace) -> int:
         print(f"queue_full: pending={proposal.pending_count}, cap={proposal.cap}")
         print("candidates_skipped: 1")
         print(f"report_written: {rel_path}")
+        return 1
+
+    if isinstance(proposal, RefusedAsDuplicate):
+        print(f"duplicate: proposal_id={proposal.proposal_id} existing_state={proposal.existing_state}")
+        return 1
+
+    if isinstance(proposal, RefusedAsDependent):
+        print(f"dependent_on_pending: dependent_on={list(proposal.dependent_on)}")
+        print(f"overlapping_lemmas={list(proposal.overlapping_lemmas)}")
         return 1
 
     rec = log.find(proposal.proposal_id)
@@ -1469,7 +1478,7 @@ def cmd_teaching_propose_from_exemplars(args: argparse.Namespace) -> int:
                 code=1,
             )
 
-        from teaching.proposals import RefusedAtCapacity
+        from teaching.proposals import RefusedAsDependent, RefusedAsDuplicate, RefusedAtCapacity
         if isinstance(proposal, RefusedAtCapacity):
             try:
                 rel_path = proposal.report_path.relative_to(_REPO_ROOT)
@@ -1481,6 +1490,15 @@ def cmd_teaching_propose_from_exemplars(args: argparse.Namespace) -> int:
             print(f"queue_full: pending={proposal.pending_count}, cap={proposal.cap}")
             print("candidates_skipped: 1")
             print(f"report_written: {rel_path}")
+            return 1
+
+        if isinstance(proposal, RefusedAsDuplicate):
+            print(f"duplicate: proposal_id={proposal.proposal_id} existing_state={proposal.existing_state}")
+            return 1
+
+        if isinstance(proposal, RefusedAsDependent):
+            print(f"dependent_on_pending: dependent_on={list(proposal.dependent_on)}")
+            print(f"overlapping_lemmas={list(proposal.overlapping_lemmas)}")
             return 1
 
         rec = log.find(proposal.proposal_id)

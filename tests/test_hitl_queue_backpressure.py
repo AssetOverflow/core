@@ -16,6 +16,7 @@ from teaching.proposals import (
     ProposalLog,
     RefusedAtCapacity,
     ReplayEvidence,
+    TeachingChainProposal,
     build_proposal,
     propose_from_candidate,
 )
@@ -71,24 +72,25 @@ def test_capacity_boundaries(tmp_path: Path):
     runs_dir = tmp_path / "runs"
     runs_dir.mkdir()
 
-    # Pre-populate log with 2 pending proposals
+    # Pre-populate log with 2 pending proposals; unique objects to avoid
+    # the dependent_on_pending check introduced in Step 3.
     for i in range(2):
-        c = make_candidate(f"cand_{i}", f"subject_{i}")
+        c = make_candidate(f"cand_{i}", f"subject_{i}", obj=f"object_{i}")
         proposal = build_proposal(c)
         log.record_created(proposal)
 
     # cap = 3. Current pending is 2 (which is cap - 1)
     # The 3rd candidate should land successfully
-    c3 = make_candidate("cand_2", "subject_2")
+    c3 = make_candidate("cand_2", "subject_2", obj="object_2")
     res3 = propose_from_candidate(
         c3, log=log, run_replay=_fake_replay_equivalent, cap=3
     )
-    assert not isinstance(res3, RefusedAtCapacity)
+    assert isinstance(res3, TeachingChainProposal)
     assert log.find(res3.proposal_id)["state"] == "pending"
 
     # Current pending is now 3 (which is at cap).
     # The 4th candidate should be refused
-    c4 = make_candidate("cand_3", "subject_3")
+    c4 = make_candidate("cand_3", "subject_3", obj="object_3")
     res4 = propose_from_candidate(
         c4, log=log, run_replay=_fake_replay_equivalent, cap=3
     )
@@ -159,61 +161,66 @@ def test_explicit_cap_kwarg_overrides_env_var(tmp_path: Path):
     log_path = tmp_path / "proposals.jsonl"
     log = ProposalLog(log_path)
 
+    # Unique objects to avoid the dependent_on_pending check (Step 3).
     for i in range(2):
-        c = make_candidate(f"cand_{i}", f"subject_{i}")
+        c = make_candidate(f"cand_{i}", f"subject_{i}", obj=f"object_{i}")
         proposal = build_proposal(c)
         log.record_created(proposal)
 
-    c3 = make_candidate("cand_2", "subject_2")
+    c3 = make_candidate("cand_2", "subject_2", obj="object_2")
     # env var is 2, but kwarg is 5. Should successfully propose
     with patch.dict(os.environ, {"CORE_HITL_PENDING_CAP": "2"}):
         res = propose_from_candidate(
             c3, log=log, run_replay=_fake_replay_equivalent, cap=5
         )
-        assert not isinstance(res, RefusedAtCapacity)
+        assert isinstance(res, TeachingChainProposal)
         assert log.find(res.proposal_id)["state"] == "pending"
 
 
 def test_repropose_same_candidate_post_clearance(tmp_path: Path):
+    """Step 3 behavior: at-capacity duplicate → capacity refusal; under-cap duplicate
+    (even if accepted) → RefusedAsDuplicate.  Unique objects used throughout to
+    avoid the dependent_on_pending check introduced in Step 3."""
     log_path = tmp_path / "proposals.jsonl"
     log = ProposalLog(log_path)
 
     # 1. Propose candidate when space is available (cap = 2, current pending = 0)
-    c1 = make_candidate("cand_1", "subject_1")
+    c1 = make_candidate("cand_1", "subject_1", obj="object_1")
     res1 = propose_from_candidate(
         c1, log=log, run_replay=_fake_replay_equivalent, cap=2
     )
-    assert not isinstance(res1, RefusedAtCapacity)
+    assert isinstance(res1, TeachingChainProposal)
     proposal_id_original = res1.proposal_id
 
-    # 2. Add another pending to hit cap
-    c2 = make_candidate("cand_2", "subject_2")
-    propose_from_candidate(
+    # 2. Add another pending to hit cap (unique object avoids dependency check)
+    c2 = make_candidate("cand_2", "subject_2", obj="object_2")
+    res2 = propose_from_candidate(
         c2, log=log, run_replay=_fake_replay_equivalent, cap=2
     )
+    assert isinstance(res2, TeachingChainProposal)
 
     # Now pending count is 2, cap is 2.
-    # 3. Re-proposing candidate 1 should return the existing proposal record (idempotency)
-    # even though we are technically at capacity, because it is already in the log.
+    # 3. Re-proposing candidate 1 at capacity: capacity check fires first (Step 3
+    # order: cap → duplicate → dependency).  Returns RefusedAtCapacity.
+    from teaching.proposals import RefusedAtCapacity as _RefusedAtCapacity
     res1_again = propose_from_candidate(
         c1, log=log, run_replay=_fake_replay_equivalent, cap=2
     )
-    assert not isinstance(res1_again, RefusedAtCapacity)
-    assert res1_again.proposal_id == proposal_id_original
+    assert isinstance(res1_again, _RefusedAtCapacity)
 
     # 4. Transition candidate 1 to accepted (clearance)
     log.record_transition(proposal_id_original, "accepted", "ratified")
 
     # Now pending count is 1 (candidate 2 is still pending, candidate 1 is accepted).
-    # Since pending (1) < cap (2), we can propose a new candidate or re-propose candidate 1
-    # as a fresh proposal. Wait, re-proposing same candidate post-clearance:
-    # Under ADR-0151, proposal_id is content-deterministic.
-    # It lands as a fresh proposal with the SAME proposal_id.
+    # Step 3: re-proposing the same content (same proposal_id) returns RefusedAsDuplicate
+    # regardless of the existing state.  The duplicate check fires before the replay gate.
+    from teaching.proposals import RefusedAsDuplicate as _RefusedAsDuplicate
     res1_post_clear = propose_from_candidate(
         c1, log=log, run_replay=_fake_replay_equivalent, cap=2
     )
-    assert not isinstance(res1_post_clear, RefusedAtCapacity)
+    assert isinstance(res1_post_clear, _RefusedAsDuplicate)
     assert res1_post_clear.proposal_id == proposal_id_original
+    assert res1_post_clear.existing_state == "accepted"
 
 
 def test_queue_full_report_byte_stability(tmp_path: Path):
