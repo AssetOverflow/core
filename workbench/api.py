@@ -19,6 +19,7 @@ from workbench.readers import (
     list_proposals,
     read_artifact,
     read_proposal,
+    read_trace,
     replay_artifact,
     run_safe_eval_lane,
     runtime_status,
@@ -174,6 +175,10 @@ def create_app() -> FastAPI:
                 status_code=400,
             )
         return JSONResponse(ok(comparison))
+
+    @app.get("/trace/{turn_id}")
+    def trace(turn_id: str, _email: str = Depends(_auth_required)) -> JSONResponse:
+        return JSONResponse(ok(read_trace(turn_id)))
 
     return app
 
