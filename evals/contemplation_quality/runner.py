@@ -1,8 +1,8 @@
 """ADR-0159 / W-025 — read-only contemplation quality evaluation.
 
 The lane scores the structured report emitted by ``core demo learning-arc
---json``.  It intentionally does not create proposals, accept proposals,
-mutate corpora, mutate packs, or write engine_state.  Replay-equivalence is
+--json``. It intentionally does not create proposals, accept proposals,
+mutate corpora, mutate packs, or write engine_state. Replay-equivalence is
 measured as a quality signal only; it is never treated as permission to ratify.
 """
 
@@ -75,6 +75,14 @@ class ContemplationQualityReport:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class LaneReport:
+    """Adapter shape expected by evals.framework.run_lane."""
+
+    metrics: dict[str, Any]
+    case_details: list[dict[str, Any]]
+
+
 def _canonical_json(payload: dict[str, Any]) -> str:
     return json.dumps(
         payload,
@@ -115,7 +123,7 @@ def _metric(
 def evaluate_report(report: dict[str, Any]) -> ContemplationQualityReport:
     """Score a ``core demo learning-arc --json`` report.
 
-    This function is pure over the provided dictionary.  It is suitable for
+    This function is pure over the provided dictionary. It is suitable for
     testing stored CI contemplation reports without touching runtime state.
     """
 
@@ -247,15 +255,61 @@ def run_eval() -> ContemplationQualityReport:
     """Run the source demo and score its output.
 
     ``run_demo(emit_json=True)`` uses tempdirs/transient corpus paths per
-    ADR-0152.  This eval adds no write path of its own.
+    ADR-0152. This eval adds no write path of its own.
     """
 
     return evaluate_report(run_learning_arc_demo(emit_json=True))
 
 
+def run_lane(
+    cases: list[dict[str, Any]],
+    *,
+    config: Any = None,
+    workers: int | None = None,
+) -> LaneReport:
+    """Generic eval-framework entry point.
+
+    The case set is a versioned invocation contract, not external data. The
+    current lane supports exactly one source: ``core demo learning-arc --json``.
+    ``workers`` is accepted for framework compatibility and ignored to preserve
+    the synchronous/no-concurrency doctrine from ADR-0056.
+    """
+
+    del config, workers
+    if len(cases) != 1:
+        raise ValueError("contemplation-quality expects exactly one invocation case")
+    source = cases[0].get("source")
+    if source != "learning_arc_demo":
+        raise ValueError(f"unsupported contemplation-quality source: {source!r}")
+
+    report = run_eval()
+    payload = report.as_dict()
+    return LaneReport(
+        metrics={
+            "total": len(report.metrics),
+            "passed": sum(1 for metric in report.metrics if metric.passed),
+            "failed": sum(1 for metric in report.metrics if not metric.passed),
+            "pass_rate": payload["score"]["rate"],
+            "all_passed": report.passed,
+            "source_digest": report.source_digest,
+        },
+        case_details=[
+            {
+                "case_id": cases[0].get("case_id", "learning_arc_demo"),
+                "source": report.source,
+                "passed": report.passed,
+                "source_digest": report.source_digest,
+                "metrics": [metric.as_dict() for metric in report.metrics],
+            }
+        ],
+    )
+
+
 __all__ = [
     "ContemplationQualityReport",
+    "LaneReport",
     "QualityMetric",
     "evaluate_report",
     "run_eval",
+    "run_lane",
 ]
