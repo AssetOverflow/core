@@ -4,6 +4,17 @@
 **Author intent:** carry the strategic plan + active-PR snapshot across the
 session boundary so morning-self picks up cleanly.
 
+> **2026-05-26 amendment** — Phases 1–5 substantially complete.  Math
+> architecture corridor closed end-to-end (Phase A → B → C → D + operator
+> ratification, ADR-0163); first measurable GSM8K lift produced
+> (`correct: 0 → 3, wrong: 0 unchanged`).  Workbench surface operational
+> end-to-end (W-026 API + W-027 shell + W-028 chat surface).  HITL queue
+> read-only CLI shipped (ADR-0161 Step 1).  See
+> [SESSION-2026-05-26-corridor-closure.md](sessions/SESSION-2026-05-26-corridor-closure.md)
+> for the day's full ledger (15 merges + 1 issue).  Sections below remain
+> as the historical 2026-05-24 plan; **next-moves are in the session
+> recap, not here**.
+
 ---
 
 ## Three guiding rules

@@ -905,3 +905,73 @@ ADR-0119.5, ADR-0119.6, ADR-0119.7, ADR-0119.8.
 | Tool use (typed deterministic operators) | **Resolved 2026-05-16 — ADR-0018** (typed deterministic operators, no external IO) | Before Phase 3 ✓ |
 | Code generation (first-class target) | Open | Before Phase 5 |
 | Embodiment (sensorium gates) | Open | Phase 5 |
+
+---
+
+## 2026-05-26 — Math Architecture Corridor Closure + Workbench Operational
+
+**Status:** Math corridor end-to-end demonstrated ✓ — first non-zero GSM8K lift produced; Workbench operational end-to-end ✓.
+**Session log:** [SESSION-2026-05-26-corridor-closure.md](sessions/SESSION-2026-05-26-corridor-closure.md)
+
+### First measurable lift on GSM8K train_sample (50 cases)
+
+```
+correct: 3  (up from 0 — first non-zero correct count ever)
+refused: 47 (down from 50)
+wrong:   0  (unchanged — invariant holds)
+```
+
+Three cases lifted: `gsm8k-train-sample-v1-0014` (Bob's oysters, ans=240), `0018` (Xavier's football, ans=16), `0042` (Ella's apples, ans=30).  Capability-axis floor (G1..G5 + S1) preserved at wrong=0 post-ratification.
+
+### Math architecture (ADR-0163) — corridor closed end-to-end
+
+| Phase | PR | Deliverable |
+|---|---|---|
+| A | #297 | `evals/refusal_taxonomy/` — 9-category shape taxonomy, 72% of 50 refused statements categorized |
+| B | #298 | `teaching/admissibility_exemplars/` — 60 hand-authored seeds across 3 categories |
+| C | #301 | `teaching/recognizer_synthesis.py` + admissibility replay gate; deterministic, narrowness-preserving, rules-only synthesis |
+| D | #302 | `generate/recognizer_registry.py` + `generate/recognizer_match.py` + one-line skip-only guard in `math_candidate_graph.py:455-470`; wrong=0 safe by construction |
+| Ratify | #304 | Operator accepted all three Phase C recognizers via `core teaching review --accept` |
+
+The thesis ("decodes, not generates") is now demonstrated as actionable: operator-authored exemplars → engine-derived recognizers → operator ratification → measurable admissibility lift, with no algebra changes, no pack mutations, no hidden normalization.
+
+### Workbench (ADR-0160 / 0162) — operational end-to-end
+
+```bash
+uv run core workbench api         # http://127.0.0.1:8765
+cd workbench-ui && pnpm dev       # http://127.0.0.1:5173
+```
+
+| Branch | PR | Deliverable |
+|---|---|---|
+| W-026 | #292 | read-only HTTP API: 7 GET endpoints + 1 whitelisted POST, path-traversal protection, MAX_ARTIFACT_BYTES guard, single-operator concurrency lock |
+| ADR-0162 | #293 | design system doctrine: semantic tokens, dark theme, motion rules, `StableJsonViewer` six invariants, empty/error/loading contract |
+| Branch 1 | #295 | substrate scaffold: tokens, `StableJsonViewer`, enum-bound badges (4 enums, build-time AST coverage check), `/preview` page |
+| W-027 | #299 | five-region shell, ten empty routes, live `StatusFooter`, `CommandPalette`, `ApiErrorBoundary`, schema-drift sentinel |
+| W-028 | #303 | first route with real content: `/chat` with PromptComposer + ResponseCard + EvidenceStrip + TraceDrawer (three layers); `POST /chat/turn` with `threading.Lock` + body/prompt caps |
+
+### HITL queue (ADR-0161) — read-only CLI shipped
+
+| Step | PR | Deliverable |
+|---|---|---|
+| Scope | #291 | ADR-0161 ratified; queue is derived view over proposal log + contemplation runs; pending cap 256; only repo owner ratifies |
+| Step 1 | #296 | `core teaching hitl-queue list\|show` read-only projection; pure function over proposal log |
+
+### Total session output
+
+- **15 PRs merged** (#288, #290–#299, #301–#304)
+- **1 issue filed** (#300 — `ingest/gate.py` versor_condition margin)
+- **4 new ADRs** ratified (#0160, #0161, #0162, #0163)
+- **3 recognizers** ratified into the math admission surface
+- **First non-zero GSM8K correct count** in project history
+
+### What stays open
+
+- **Phase E** (re-baseline harness) — briefed, not dispatched
+- **Phase B round 2** (3 more shape categories from the uncategorized 14)
+- **W-029/030/031** (proposal queue / eval center / replay theater)
+- **ADR-0161 Steps 2–5** (backpressure / submission invariants / workflow extension / contemplation PR body)
+- **Issue #300** fix
+
+The substrate is now complete enough to run subsequent rounds end-to-end automatically: Phase B round 2 → Phase C synthesis → operator ratification → measurable lift, with the corridor's wrong=0 invariant enforced by the existing replay gate at each step.
+

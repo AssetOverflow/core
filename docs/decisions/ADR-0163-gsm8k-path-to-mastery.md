@@ -346,6 +346,69 @@ proposals; the operator ratifies; Phase E re-baseline confirms `correct
 
 ---
 
+## Round 1 — what actually shipped (2026-05-26 amendment)
+
+The corridor closed end-to-end in a single session, faster than the
+implementation plan above projected.  Five PRs landed in order:
+
+| Phase | PR | Title |
+|---|---|---|
+| A | #297 | refusal taxonomy lane — 9 shape categories, 72% of 50-case sample categorized |
+| B | #298 | exemplar corpora — descriptive_setup_no_quantity / temporal_aggregation / rate_with_currency (20 each) |
+| C | #301 | recognizer synthesis + admissibility replay gate; three pending proposals in live log |
+| D | #302 | candidate-graph wiring via single-edit skip-only `continue` |
+| D-ratify | #304 | operator accepted all three Phase C recognizers |
+
+### First measured lift on GSM8K train_sample
+
+```
+correct: 3   (up from 0 — first non-zero correct count ever)
+refused: 47  (down from 50)
+wrong:   0   (unchanged — the invariant holds)
+
+exit_criterion: { correct_min: 10, wrong_max: 0, passed: false }
+```
+
+Lifted cases:
+
+- `gsm8k-train-sample-v1-0014` — "Bob can shuck 10 oysters in 5 minutes.
+  How many oysters can he shuck in 2 hours?" → 240
+- `gsm8k-train-sample-v1-0018` — "Xavier plays football.  During 15
+  minutes Xavier can score 2 goals on average..." → 16
+- `gsm8k-train-sample-v1-0042` — "Ella has 4 bags with 20 apples in each
+  bag and six bags with 25 apples in each bag.  If Ella sells 200
+  apples, how many apples does she have left?" → 30
+
+**Capability-axis floor preserved** — G1..G5 + S1 all report `wrong = 0`
+post-ratification, byte-identical to the pre-Phase-D baseline.
+
+### Unexpected positive observation
+
+None of the three lifts are pure `descriptive_setup_no_quantity` cases —
+they all involve temporal or aggregation framings.  Phase D's skip-only
+wiring is doing more useful work than the projection suggested: when a
+previously-refusing statement is skipped, the *question* + *remaining
+statements* together carry enough math for the existing solver to
+produce the right answer.  **A Phase B round 2 (more shape categories
+from the uncategorized 14) may be a more direct path to clearing Round
+1 exit (`correct ≥ 10`) than the originally-planned Phase D.2
+(parsed_anchors solver plumbing).**  Worth measuring before scoping
+Phase D.2.
+
+### Phase E status
+
+The Phase E re-baseline harness (versioned baselines under
+`evals/gsm8k_math/train_sample/v1/baselines/`, workflow_dispatch +
+nightly schedule, `LiftReport` schema, append-only history) was briefed
+but not dispatched in this session.  The re-baseline above was produced
+by running `evals.gsm8k_math.train_sample.v1.runner` against
+`origin/main` post-#304.  Phase E will automate this.
+
+See [SESSION-2026-05-26-corridor-closure.md](../sessions/SESSION-2026-05-26-corridor-closure.md)
+for the full session ledger.
+
+---
+
 ## Acceptance criteria
 
 This ADR is ratifiable when:
