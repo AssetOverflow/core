@@ -129,6 +129,21 @@ class RefusedAtCapacity:
     report_path: Path
 
 
+@dataclass(frozen=True, slots=True)
+class RefusedAsDuplicate:
+    proposal_id: str
+    existing_state: str
+    reason: str = "duplicate"
+
+
+@dataclass(frozen=True, slots=True)
+class RefusedAsDependent:
+    candidate_id: str
+    dependent_on: tuple[str, ...]
+    overlapping_lemmas: tuple[str, ...]
+    reason: str = "dependent_on_pending"
+
+
 class ProposalError(ValueError):
     """Raised when a candidate fails an eligibility gate or when a
     review action is attempted in a state that does not allow it."""
@@ -467,7 +482,7 @@ def propose_from_candidate(
     allow_evaluative: bool = False,
     source: ProposalSource | None = None,
     cap: int | None = None,
-) -> TeachingChainProposal | RefusedAtCapacity:
+) -> TeachingChainProposal | RefusedAtCapacity | RefusedAsDuplicate | RefusedAsDependent:
     """End-to-end: build proposal, run replay-equivalence gate,
     auto-reject on regression, otherwise leave pending.
 
@@ -476,17 +491,18 @@ def propose_from_candidate(
     keeps tests fast — they can pass a fake that returns a stub
     ``ReplayEvidence`` without booting the cognition lane.
 
-    Idempotent on (candidate_id, chain): re-proposing returns the
-    existing proposal record if any.
+    Submission-time checks fire in this order (ADR-0161 §3):
+      1. Capacity (Step 2) — queue_full if pending_count >= cap
+      2. Duplicate — RefusedAsDuplicate if proposal_id already in log
+      3. Dependent_on_pending — RefusedAsDependent if any pending item
+         shares a subject or object lemma with this candidate
+    Then the replay gate runs.  No log entry is written on refusal.
     """
     proposal = build_proposal(
         candidate,
         allow_evaluative=allow_evaluative,
         source=source,
     )
-    existing = log.find(proposal.proposal_id)
-    if existing is not None:
-        return proposal
 
     if log.path == DEFAULT_PROPOSAL_LOG_PATH:
         contemplation_runs_dir = DEFAULT_CONTEMPLATION_RUNS_DIR
@@ -550,6 +566,42 @@ def propose_from_candidate(
             cap=resolved_cap,
             report_path=report_path,
         )
+
+    # Step 3a: duplicate check — proposal_id already exists in the log
+    for item in queue_items:
+        if item.proposal_id == proposal.proposal_id:
+            return RefusedAsDuplicate(
+                proposal_id=proposal.proposal_id,
+                existing_state=item.state,
+            )
+
+    # Step 3b: dependent_on_pending check — conservative lemma-overlap
+    # Case-insensitive exact-match; over-reject rather than admit-with-dependency.
+    candidate_subject = (proposal.proposed_chain.get("subject") or "").strip().lower()
+    candidate_object = (proposal.proposed_chain.get("object") or "").strip().lower()
+    candidate_lemmas = {lem for lem in (candidate_subject, candidate_object) if lem}
+
+    blocking_ids: list[str] = []
+    blocking_lemmas: set[str] = set()
+    for item in queue_items:
+        if item.state != "pending":
+            continue
+        chain = item.proposed_chain or {}
+        item_subject = (chain.get("subject") or "").strip().lower()
+        item_object = (chain.get("object") or "").strip().lower()
+        item_lemmas = {lem for lem in (item_subject, item_object) if lem}
+        overlap = candidate_lemmas & item_lemmas
+        if overlap:
+            blocking_ids.append(item.proposal_id)
+            blocking_lemmas.update(overlap)
+
+    if blocking_ids:
+        return RefusedAsDependent(
+            candidate_id=candidate.candidate_id,
+            dependent_on=tuple(blocking_ids),
+            overlapping_lemmas=tuple(sorted(blocking_lemmas)),
+        )
+
     log.record_created(proposal)
 
     if run_replay is None:
@@ -638,6 +690,8 @@ __all__ = [
     "DEFAULT_PROPOSAL_LOG_PATH",
     "ProposalError",
     "ProposalLog",
+    "RefusedAsDependent",
+    "RefusedAsDuplicate",
     "RefusedAtCapacity",
     "ReplayEvidence",
     "ReviewState",
