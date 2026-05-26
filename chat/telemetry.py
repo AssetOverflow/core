@@ -256,6 +256,75 @@ def format_correction_event_jsonl(correction_result, **kwargs) -> str:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
 
+# ---------- ADR-0158 — reboot-event serializer ----------
+
+
+def serialize_reboot_event(
+    *,
+    restored_turn_count: int,
+    stored_revision: str,
+    current_revision: str,
+    recognizers_count: int,
+    candidates_count: int,
+    timestamp: str | None = None,
+) -> dict[str, object]:
+    """Produce a JSON-safe audit dict for an engine-state reboot recovery.
+
+    Written to the telemetry JSONL when ``ChatRuntime`` loads an existing
+    checkpoint at startup (L10 scope §Sub-question 3).  Lets future audit
+    reconstruct when this engine instance lost and regained its lifetime.
+
+    ``revision_matched`` is True iff both revisions are known and equal,
+    indicating the checkpoint was written by the same code that is running.
+    False means the operator should verify the loaded state is still valid
+    (the W-023 ``RuntimeWarning`` will already have fired).
+
+    Trust boundary: no surface text or tokens; metadata only.
+    """
+    revision_matched = bool(
+        stored_revision not in ("unknown", "")
+        and current_revision not in ("unknown", "")
+        and stored_revision == current_revision
+    )
+    out: dict[str, object] = {
+        "type": "reboot",
+        "restored_turn_count": int(restored_turn_count),
+        "stored_revision": str(stored_revision),
+        "current_revision": str(current_revision),
+        "revision_matched": revision_matched,
+        "recognizers_count": int(recognizers_count),
+        "candidates_count": int(candidates_count),
+    }
+    if timestamp is not None:
+        out["timestamp"] = str(timestamp)
+    return out
+
+
+def format_reboot_event_jsonl(
+    *,
+    restored_turn_count: int,
+    stored_revision: str,
+    current_revision: str,
+    recognizers_count: int,
+    candidates_count: int,
+    timestamp: str | None = None,
+) -> str:
+    """Serialize a reboot event as one deterministic JSONL line.
+
+    ``"type": "reboot"`` discriminates this line from turn and correction
+    events at consume time without changing the sink contract.
+    """
+    payload = serialize_reboot_event(
+        restored_turn_count=restored_turn_count,
+        stored_revision=stored_revision,
+        current_revision=current_revision,
+        recognizers_count=recognizers_count,
+        candidates_count=candidates_count,
+        timestamp=timestamp,
+    )
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+
+
 # ---------- sink protocol ----------
 
 
@@ -404,8 +473,10 @@ __all__ = [
     "JsonlFileSink",
     "TurnEventSink",
     "format_correction_event_jsonl",
+    "format_reboot_event_jsonl",
     "format_turn_event_jsonl",
     "format_verdict_summary",
     "serialize_correction_event",
+    "serialize_reboot_event",
     "serialize_turn_event",
 ]

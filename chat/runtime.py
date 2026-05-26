@@ -40,6 +40,7 @@ from core.epistemic_state import (
 from chat.telemetry import (
     TurnEventSink,
     format_correction_event_jsonl,
+    format_reboot_event_jsonl,
     format_turn_event_jsonl,
 )
 from chat.verdicts import TurnVerdicts
@@ -661,6 +662,10 @@ class ChatRuntime:
         self._pending_recognizer_examples: list[
             tuple[tuple[str, ...], FeatureBundle]
         ] = []
+        # W-024 / ADR-0158 — reboot event JSONL line buffered here when a
+        # checkpoint is loaded, flushed to the sink on attach_telemetry_sink.
+        # None means no reboot was detected this session.
+        self._pending_reboot_payload: str | None = None
         if self._engine_state_store is not None and self._engine_state_store.exists():
             self._load_engine_state()
 
@@ -668,12 +673,20 @@ class ChatRuntime:
         store = self._engine_state_store
         if store is None:
             return
-        self._recognizer_registry = RecognizerRegistry.from_recognizers(
-            store.load_recognizers()
-        )
+        recognizers = store.load_recognizers()
+        self._recognizer_registry = RecognizerRegistry.from_recognizers(recognizers)
         self._pending_candidates = store.load_discovery_candidates()
         manifest = store.load_manifest() or {}
         self._turn_count = int(manifest.get("turn_count", 0))
+        # W-024 / ADR-0158 — buffer reboot event for emission when sink attaches.
+        from engine_state import _git_revision
+        self._pending_reboot_payload = format_reboot_event_jsonl(
+            restored_turn_count=self._turn_count,
+            stored_revision=str(manifest.get("written_at_revision", "unknown")),
+            current_revision=_git_revision(),
+            recognizers_count=len(recognizers),
+            candidates_count=len(self._pending_candidates),
+        )
         if self.config.auto_proposal_enabled and self._pending_candidates:
             _auto_propose_from_candidates(self._pending_candidates)
 
@@ -813,6 +826,10 @@ class ChatRuntime:
         """ADR-0040 — attach a structured-logging sink."""
         self._telemetry_sink = sink
         self._telemetry_include_content = bool(include_content)
+        # W-024 / ADR-0158 — flush buffered reboot event now that sink is live.
+        if sink is not None and self._pending_reboot_payload is not None:
+            sink.emit(self._pending_reboot_payload)
+            self._pending_reboot_payload = None
 
     def attach_articulation_sink(self, sink: Any | None) -> None:
         """Phase 5 — attach a sink for per-turn articulation observations.
