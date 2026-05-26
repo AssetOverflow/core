@@ -1795,6 +1795,18 @@ def cmd_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_workbench(args: argparse.Namespace) -> int:
+    """Run CORE Workbench local operator surfaces."""
+    if args.workbench_command == "api":
+        from workbench.server import main as workbench_api_main
+
+        argv = ["--host", args.host, "--port", str(args.port)]
+        if args.allow_nonlocal_bind:
+            argv.append("--allow-nonlocal-bind")
+        return workbench_api_main(argv)
+    _die("workbench requires a subcommand")
+
+
 def cmd_pulse(args: argparse.Namespace) -> int:
     """Run a cognitive pulse and display recalled words + realized surface."""
     from scripts.run_pulse import run_pulse
@@ -3679,6 +3691,28 @@ def build_parser() -> argparse.ArgumentParser:
     rust_build.set_defaults(func=cmd_rust_build)
     rust_test = rust_sub.add_parser("test", help="run cargo test --release for core-rs")
     rust_test.set_defaults(func=cmd_rust_test)
+
+    workbench = subparsers.add_parser(
+        "workbench",
+        help="run CORE Workbench local operator surfaces",
+    )
+    workbench_sub = workbench.add_subparsers(
+        dest="workbench_command",
+        metavar="workbench-command",
+        required=True,
+    )
+    workbench_api = workbench_sub.add_parser(
+        "api",
+        help="start the W-026 read-only local Workbench API",
+    )
+    workbench_api.add_argument("--host", default="127.0.0.1")
+    workbench_api.add_argument("--port", type=int, default=8765)
+    workbench_api.add_argument(
+        "--allow-nonlocal-bind",
+        action="store_true",
+        help="allow binding to a host other than 127.0.0.1 or localhost",
+    )
+    workbench_api.set_defaults(func=cmd_workbench)
 
     pulse = subparsers.add_parser(
         "pulse",

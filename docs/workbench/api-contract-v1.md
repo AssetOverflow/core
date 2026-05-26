@@ -23,7 +23,8 @@ without widening the mutation surface.
 
 ## Response envelope
 
-All responses SHOULD follow:
+All responses MUST include `generated_at` as an ISO-8601 UTC timestamp.
+Successful responses:
 
 ```json
 {
@@ -38,12 +39,25 @@ Errors:
 ```json
 {
   "ok": false,
+  "generated_at": "2026-05-26T00:00:00Z",
   "error": {
     "code": "not_found",
     "message": "artifact not found"
   }
 }
 ```
+
+W-026 error codes:
+
+- `bad_request`
+- `not_found`
+- `unsupported`
+- `read_error`
+- `eval_failed`
+- `runtime_unavailable`
+
+`unauthorized` is reserved for a later auth ADR.  W-026 remains unauthenticated
+and local-only by default.
 
 ---
 
@@ -139,6 +153,12 @@ Purpose:
 
 Inspect trace evidence for a turn.
 
+W-026 status:
+
+Trace storage is not implemented in W-026. Unknown turn ids MUST return
+`404 not_found`. The API must never return a synthetic empty trace as a
+successful response.
+
 Response:
 
 ```json
@@ -170,6 +190,13 @@ Purpose:
 
 Return replay comparison information.
 
+Important:
+
+The API must not claim `"equivalent": true` unless a real replay/compare path
+has run. Comparing an artifact digest to itself is not replay evidence. Until
+the replay theater is wired, this route should return `unsupported` or a
+non-equivalent comparison with explicit divergence evidence.
+
 Response:
 
 ```json
@@ -178,9 +205,16 @@ Response:
   "data": {
     "artifact_id": "artifact-001",
     "original_hash": "sha256:...",
-    "replay_hash": "sha256:...",
-    "equivalent": true,
-    "divergences": []
+    "replay_hash": null,
+    "equivalent": false,
+    "divergences": [
+      {
+        "path": "$",
+        "original": "artifact digest",
+        "replay": null,
+        "severity": "info"
+      }
+    ]
   }
 }
 ```
@@ -194,6 +228,12 @@ Response:
 Purpose:
 
 List proposal metadata.
+
+Implementation rule:
+
+Proposal reads MUST derive their current view by replaying
+`teaching.proposals.ProposalLog.current_state()`. The append-only JSONL file is
+an event log, not a table of proposal records.
 
 Response:
 

@@ -136,6 +136,24 @@ mutation capability.
 
 ---
 
+# Current Status
+
+The planning package is merged on `main` via `404e694`
+(`docs(workbench): CORE Workbench v1 planning architecture (ADR-0160)`).
+
+The prototype branch `feat/w026-workbench-readonly-api` is superseded and must
+not be used as the implementation base.  It mixed W-026 with frontend and trace
+work, added auth and web-framework dependencies before the local read-only
+boundary was proven, and included placeholder replay/trace behavior that could
+be mistaken for evidence.
+
+The next accepted implementation starts clean from `main` with W-026 only:
+dataclass schemas, repo-root-constrained readers, a standard-library local HTTP
+API, and route/read-model tests.  W-027 and later phases build on that boundary
+after it is accepted.
+
+---
+
 # Initial Work Queue
 
 | Work Item | Goal |

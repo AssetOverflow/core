@@ -8,7 +8,7 @@ boundaries while making the system legible to operators, engineers, and auditors
 
 | Work item | Title | Scope | Mutation allowed? |
 |---|---|---|---|
-| W-026 | Read-only API contract | endpoint schemas + local server surface | No |
+| W-026 | Read-only API contract | endpoint schemas + stdlib local server surface only | No |
 | W-027 | Frontend shell | navigation, layout, design tokens, empty states | No |
 | W-028 | Chat + trace drawer | basic chat, turn metadata, trace drawer | Runtime turn only |
 | W-029 | Proposal queue | proposal-log read model, detail view, CLI-copy affordance | No |
@@ -39,6 +39,7 @@ Deliverables:
 - `workbench/api.py`
 - `workbench/schemas.py`
 - `workbench/readers.py`
+- `workbench/server.py`
 - route tests with temp fixtures
 - CLI command: `core workbench api --host 127.0.0.1 --port 8765`
 
@@ -47,11 +48,22 @@ Initial endpoints:
 - `GET /health`
 - `GET /runtime/status`
 - `GET /artifacts`
+- `GET /artifacts/{artifact_id}`
 - `GET /proposals`
+- `GET /proposals/{proposal_id}`
 - `GET /evals`
 - `GET /evals/{lane}`
+- `POST /evals/run`
 
-Strict rule: no proposal accept/reject endpoints.
+Strict rules:
+
+- W-026 is API-only. No frontend, auth, visual intro, trace drawer, chat UI,
+  live chat endpoint, or replay theater.
+- Use the Python standard-library HTTP server for W-026. Defer FastAPI or any
+  other web framework unless a later ADR admits the dependency.
+- No proposal accept/reject endpoints.
+- No synthetic trace/replay evidence. Routes for later phases must return
+  `unsupported` or `not_found` until a real evidence path exists.
 
 ### Phase 2 — Frontend shell
 
@@ -153,12 +165,14 @@ Deliverables:
 
 ## API design constraints
 
-- All schemas must be explicit dataclasses or pydantic models.
+- All schemas must be explicit dataclasses in W-026.
 - No raw arbitrary filesystem reads from user-provided paths.
 - Artifact readers must be rooted under known repo directories.
 - Every response should contain enough metadata to audit source path, digest,
   and timestamp when available.
 - Mutation endpoints are forbidden in v1.
+- Proposal reads must derive state from `ProposalLog.current_state()`, not by
+  treating append-only JSONL events as proposal rows.
 
 ## Frontend constraints
 
@@ -194,12 +208,24 @@ The v1 workbench is accepted when an operator can:
 
 ## Explicit deferrals
 
-- auth
 - multi-user collaboration
 - cloud deployment
 - mobile UI
+- auth, unless a separate ADR admits it after the local read-only boundary is
+  proven
 - proposal accept/reject buttons
 - workflow dispatch
 - packaged desktop app
 - public marketing site
 - arbitrary plugin/tool execution
+
+## Prototype branch rejection criteria
+
+Do not continue from a prototype branch that:
+
+- mixes W-026 with W-027/W-028 frontend or trace/chat work
+- adds auth before the local read-only API boundary is accepted
+- adds FastAPI, uvicorn, pydantic, or another web framework without ADR review
+- claims replay equivalence by comparing an artifact digest to itself
+- returns placeholder trace data as a successful trace response
+- parses proposal log events as if they were proposal records
