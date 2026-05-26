@@ -1,0 +1,103 @@
+name: contemplation
+
+# ADR-0155 — CI-driven contemplation runner.
+#
+# Runs `core demo learning-arc --json` on a schedule, writes the
+# report to contemplation/runs/, and opens a PR against main for
+# operator review.  Never commits to main directly.  Soft-killed
+# by repo variable CONTEMPLATION_ENABLED (set to "true" to enable).
+
+on:
+  schedule:
+    # 09:00 UTC = 01:00 PST.  Nightly.  Adjust cadence per ADR-0155
+    # budget table; do not exceed 3000 Linux minutes/month on Pro.
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: contemplation
+  cancel-in-progress: false
+
+jobs:
+  contemplate:
+    name: engine-authored proposal cycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Soft kill switch — set repo var CONTEMPLATION_ENABLED=true to enable.
+    # Empty / unset = workflow exits without consuming meaningful minutes.
+    if: ${{ vars.CONTEMPLATION_ENABLED == 'true' }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: '3.11'
+          enable-cache: true
+
+      - name: install dependencies
+        run: uv pip install -e ".[dev]" pyyaml
+
+      - name: run contemplation cycle
+        id: run
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          mkdir -p contemplation/runs
+          STAMP=$(date -u +%Y-%m-%dT%H%M%SZ)
+          OUTPUT="contemplation/runs/${STAMP}.json"
+          uv run core demo learning-arc --json > "${OUTPUT}"
+          echo "output=${OUTPUT}" >> "${GITHUB_OUTPUT}"
+          echo "stamp=${STAMP}" >> "${GITHUB_OUTPUT}"
+          echo "## Contemplation report ${STAMP}" >> "${GITHUB_STEP_SUMMARY}"
+          # Operator-facing summary — top-level keys only, full report in PR.
+          uv run python -c "
+          import json, sys
+          r = json.load(open('${OUTPUT}'))
+          for k, v in r.items():
+              print(f'- **{k}**: {type(v).__name__}')
+          " >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: open PR for operator review
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: |
+            chore(contemplation): CI run ${{ steps.run.outputs.stamp }}
+
+            Engine-authored contemplation cycle.  Operator review
+            required before any corpus mutation.  ADR-0155.
+          branch: contemplation/${{ steps.run.outputs.stamp }}
+          base: main
+          title: 'contemplation: CI run ${{ steps.run.outputs.stamp }}'
+          body: |
+            Automated contemplation cycle per ADR-0155.
+
+            **Report:** `${{ steps.run.outputs.output }}`
+
+            **Trust boundary:** this PR proposes only the report
+            file under `contemplation/runs/`.  No corpus, pack, or
+            engine_state mutation.  Operator review is the
+            ratification gate.
+
+            Merge to accept (becomes part of the audit trail).
+            Close to reject.
+
+            Determinism check: this report's `proposal_id` and
+            `trace_hash` fields must byte-match a local
+            `core demo learning-arc --json` at the same commit SHA.
+            If they diverge, the workflow runner-class invariant
+            has broken — investigate before merging.
+          labels: |
+            contemplation
+            ci-authored
+          add-paths: |
+            contemplation/runs/
