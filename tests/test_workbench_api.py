@@ -202,12 +202,9 @@ def test_unknown_trace_returns_404_not_placeholder_success() -> None:
     assert response.payload["error"]["code"] == "not_found"
 
 
-def test_chat_and_replay_are_explicitly_unsupported_in_w026() -> None:
-    chat = _request("POST", "/chat/turn", {"prompt": "What is truth?"})
+def test_replay_is_explicitly_unsupported_in_w026() -> None:
     replay = _request("GET", "/replay/evals/cognition/results/example.json")
 
-    assert chat.status == 501
-    assert chat.payload["error"]["code"] == "unsupported"
     assert replay.status == 501
     assert replay.payload["error"]["code"] == "unsupported"
 
@@ -257,6 +254,7 @@ def test_full_w026_route_table_preserves_teaching_and_pack_bytes() -> None:
                 "/evals/run",
                 {"lane": "contemplation_quality", "version": "v1", "split": "public"},
             ),
+            ("POST", "/chat/turn", {"prompt": "What is truth?"}),
         ]
         responses = [_request(method, path, body) for method, path, body in calls]
     finally:

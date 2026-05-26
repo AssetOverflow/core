@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Shell } from "./Shell";
-import { ChatRoutePlaceholder } from "../routes/ChatRoutePlaceholder";
+import { ChatRoute } from "../routes/ChatRoute";
 import { ProposalsRoutePlaceholder } from "../routes/ProposalsRoutePlaceholder";
 import type { RuntimeStatus } from "../types/api";
 
@@ -39,7 +39,7 @@ function renderShell(initialPath = "/chat") {
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/" element={<Shell />}>
-            <Route path="chat" element={<ChatRoutePlaceholder />} />
+            <Route path="chat" element={<ChatRoute />} />
             <Route path="proposals" element={<ProposalsRoutePlaceholder />} />
           </Route>
         </Routes>
@@ -93,8 +93,7 @@ describe("Shell", () => {
 
   it("clicking a nav item changes route (main shows new content)", () => {
     renderShell("/chat");
-    // Initially on /chat route — EmptyState for Chat is present
-    expect(screen.getByText("Chat — no data loaded yet.")).toBeInTheDocument();
+    expect(screen.getByText("Ask CORE a question.")).toBeInTheDocument();
 
     // Click Proposals nav link
     const proposalsLink = screen.getByRole("link", { name: "Proposals" });

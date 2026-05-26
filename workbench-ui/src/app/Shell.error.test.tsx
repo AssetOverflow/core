@@ -4,7 +4,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Shell } from "./Shell";
-import { ChatRoutePlaceholder } from "../routes/ChatRoutePlaceholder";
+import { ChatRoute } from "../routes/ChatRoute";
 import { WorkbenchApiError } from "../api/client";
 
 // Mock the API queries module
@@ -29,7 +29,7 @@ function renderShell() {
       <MemoryRouter initialEntries={["/chat"]}>
         <Routes>
           <Route path="/" element={<Shell />}>
-            <Route path="chat" element={<ChatRoutePlaceholder />} />
+            <Route path="chat" element={<ChatRoute />} />
           </Route>
         </Routes>
       </MemoryRouter>

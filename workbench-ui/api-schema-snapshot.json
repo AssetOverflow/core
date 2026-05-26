@@ -8,7 +8,41 @@
         "checkpoint_revision": "str",
         "revision_warning": "bool",
         "active_session_id": "str | None",
-        "mutation_mode": "Literal['read_only', 'runtime_turn']"
+        "mutation_mode": "MutationMode"
+      }
+    },
+    "TurnVerdict": {
+      "fields": {
+        "outcome": "Literal['cleared', 'violated', 'unassessable']",
+        "runtime_detail": "str"
+      }
+    },
+    "ProposalRef": {
+      "fields": {
+        "candidate_id": "str",
+        "source_kind": "str"
+      }
+    },
+    "ChatTurnResult": {
+      "fields": {
+        "prompt": "str",
+        "surface": "str",
+        "articulation_surface": "str | None",
+        "walk_surface": "str | None",
+        "grounding_source": "GroundingSource",
+        "epistemic_state": "EpistemicStateValue",
+        "normative_clearance": "NormativeClearanceValue",
+        "normative_detail": "str",
+        "trace_hash": "str | None",
+        "refusal_emitted": "bool",
+        "hedge_injected": "bool",
+        "mutation_mode": "MutationMode",
+        "identity_verdict": "TurnVerdict | None",
+        "safety_verdict": "TurnVerdict | None",
+        "ethics_verdict": "TurnVerdict | None",
+        "proposal_candidates": "list[ProposalRef]",
+        "turn_cost_ms": "int",
+        "checkpoint_emitted": "bool"
       }
     },
     "ArtifactRef": {
