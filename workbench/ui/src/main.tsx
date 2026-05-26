@@ -16,15 +16,13 @@ import {
   me,
   replayArtifact,
 } from './api'
+import { ChatSurface } from './chat/ChatSurface'
 import { ObservatoryIntro } from './observatory/ObservatoryIntro'
 
 type Section = 'Chat' | 'Replay' | 'Proposals' | 'Evals' | 'Artifacts' | 'Runtime'
 
 function RuntimePanel({ runtime }: { runtime: RuntimeStatus | null }): JSX.Element {
-  if (!runtime) {
-    return <div className="panel-card">Loading runtime status...</div>
-  }
-
+  if (!runtime) return <div className="panel-card">Loading runtime status...</div>
   return (
     <div className="panel-card stack-gap">
       <h2>Runtime Status</h2>
@@ -45,16 +43,7 @@ function ProposalPanel({ proposals }: { proposals: ProposalSummary[] }): JSX.Ele
       <h2>Proposal Queue</h2>
       <table className="data-table">
         <thead><tr><th>ID</th><th>State</th><th>Source</th><th>Replay</th></tr></thead>
-        <tbody>
-          {proposals.map((proposal) => (
-            <tr key={proposal.proposal_id}>
-              <td>{proposal.proposal_id}</td>
-              <td>{proposal.state}</td>
-              <td>{proposal.source_kind}</td>
-              <td>{proposal.replay_equivalent === true ? 'Equivalent' : 'Unknown'}</td>
-            </tr>
-          ))}
-        </tbody>
+        <tbody>{proposals.map((p) => <tr key={p.proposal_id}><td>{p.proposal_id}</td><td>{p.state}</td><td>{p.source_kind}</td><td>{p.replay_equivalent === true ? 'Equivalent' : 'Unknown'}</td></tr>)}</tbody>
       </table>
     </div>
   )
@@ -66,15 +55,7 @@ function EvalPanel({ lanes }: { lanes: EvalLaneSummary[] }): JSX.Element {
       <h2>Eval Lanes</h2>
       <table className="data-table">
         <thead><tr><th>Lane</th><th>Versions</th><th>Read Only</th></tr></thead>
-        <tbody>
-          {lanes.map((lane) => (
-            <tr key={lane.lane}>
-              <td>{lane.lane}</td>
-              <td>{lane.versions.join(', ')}</td>
-              <td>{lane.read_only ? 'Yes' : 'No'}</td>
-            </tr>
-          ))}
-        </tbody>
+        <tbody>{lanes.map((lane) => <tr key={lane.lane}><td>{lane.lane}</td><td>{lane.versions.join(', ')}</td><td>{lane.read_only ? 'Yes' : 'No'}</td></tr>)}</tbody>
       </table>
     </div>
   )
@@ -86,14 +67,7 @@ function ArtifactPanel({ artifacts }: { artifacts: ArtifactRef[] }): JSX.Element
       <h2>Artifacts</h2>
       <table className="data-table">
         <thead><tr><th>Kind</th><th>Path</th></tr></thead>
-        <tbody>
-          {artifacts.map((artifact) => (
-            <tr key={artifact.artifact_id}>
-              <td>{artifact.kind}</td>
-              <td>{artifact.path}</td>
-            </tr>
-          ))}
-        </tbody>
+        <tbody>{artifacts.map((a) => <tr key={a.artifact_id}><td>{a.kind}</td><td>{a.path}</td></tr>)}</tbody>
       </table>
     </div>
   )
@@ -103,23 +77,7 @@ function ReplayPanel({ replay }: { replay: ReplayComparison | null }): JSX.Eleme
   return (
     <div className="panel-card stack-gap">
       <h2>Replay Theater</h2>
-      {replay ? (
-        <div className="kv-grid">
-          <div>Artifact</div><div>{replay.artifact_id}</div>
-          <div>Equivalent</div><div>{replay.equivalent ? 'Yes' : 'No'}</div>
-          <div>Original Hash</div><div>{replay.original_hash}</div>
-          <div>Replay Hash</div><div>{replay.replay_hash}</div>
-        </div>
-      ) : <div>No replay selected.</div>}
-    </div>
-  )
-}
-
-function ChatPanel(): JSX.Element {
-  return (
-    <div className="panel-card stack-gap">
-      <h2>Chat Surface</h2>
-      <p>Chat + trace drawer integration will attach to the runtime turn pipeline in the next phase.</p>
+      {replay ? <div className="kv-grid"><div>Artifact</div><div>{replay.artifact_id}</div><div>Equivalent</div><div>{replay.equivalent ? 'Yes' : 'No'}</div><div>Original Hash</div><div>{replay.original_hash}</div><div>Replay Hash</div><div>{replay.replay_hash}</div></div> : <div>No replay selected.</div>}
     </div>
   )
 }
@@ -136,23 +94,17 @@ function App(): JSX.Element {
   const [replay, setReplay] = React.useState<ReplayComparison | null>(null)
   const [section, setSection] = React.useState<Section>('Runtime')
 
-  React.useEffect(() => {
-    me().then(() => setAuthenticated(true)).catch(() => undefined)
-  }, [])
+  React.useEffect(() => { me().then(() => setAuthenticated(true)).catch(() => undefined) }, [])
 
   React.useEffect(() => {
     if (!authenticated) return
-
     void getRuntimeStatus().then(setRuntime)
     void listProposals().then(setProposals)
     void listEvalLanes().then(setLanes)
     void listArtifacts().then(async (items) => {
       setArtifacts(items)
       if (items.length > 0) {
-        try {
-          setReplay(await replayArtifact(items[0].artifact_id))
-        } catch {
-        }
+        try { setReplay(await replayArtifact(items[0].artifact_id)) } catch {}
       }
     })
   }, [authenticated])
@@ -160,19 +112,13 @@ function App(): JSX.Element {
   async function submit(event: React.FormEvent): Promise<void> {
     event.preventDefault()
     setError(null)
-    try {
-      await login(email, password)
-      setAuthenticated(true)
-    } catch (err) {
+    try { await login(email, password); setAuthenticated(true) } catch (err) {
       setAuthenticated(false)
       setError(err instanceof Error ? err.message : 'Authentication failed.')
     }
   }
 
-  async function handleLogout(): Promise<void> {
-    await logout()
-    setAuthenticated(false)
-  }
+  async function handleLogout(): Promise<void> { await logout(); setAuthenticated(false) }
 
   if (!authenticated) {
     return (
@@ -195,36 +141,20 @@ function App(): JSX.Element {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">CORE Workbench</div>
-        <div className="topbar-right">
-          <div className="runtime-pill">READ ONLY</div>
-          <button className="ghost-button" onClick={() => void handleLogout()}>Logout</button>
-        </div>
-      </header>
-
+      <header className="topbar"><div className="brand">CORE Workbench</div><div className="topbar-right"><div className="runtime-pill">READ ONLY</div><button className="ghost-button" onClick={() => void handleLogout()}>Logout</button></div></header>
       <div className="body-shell">
-        <nav className="sidebar">
-          {(['Chat', 'Replay', 'Proposals', 'Evals', 'Artifacts', 'Runtime'] as Section[]).map((item) => (
-            <button key={item} onClick={() => setSection(item)}>{item}</button>
-          ))}
-        </nav>
-
+        <nav className="sidebar">{(['Chat', 'Replay', 'Proposals', 'Evals', 'Artifacts', 'Runtime'] as Section[]).map((item) => <button key={item} onClick={() => setSection(item)}>{item}</button>)}</nav>
         <main className="main-panel">
           {section === 'Runtime' ? <RuntimePanel runtime={runtime} /> : null}
           {section === 'Proposals' ? <ProposalPanel proposals={proposals} /> : null}
           {section === 'Evals' ? <EvalPanel lanes={lanes} /> : null}
           {section === 'Artifacts' ? <ArtifactPanel artifacts={artifacts} /> : null}
           {section === 'Replay' ? <ReplayPanel replay={replay} /> : null}
-          {section === 'Chat' ? <ChatPanel /> : null}
+          {section === 'Chat' ? <ChatSurface /> : null}
         </main>
       </div>
     </div>
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<React.StrictMode><App /></React.StrictMode>)
