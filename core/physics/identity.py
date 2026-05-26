@@ -298,6 +298,15 @@ class TurnEvent:
     epistemic_state: str = "undetermined"
     normative_clearance: str = "unassessable"
     normative_detail: str = ""
+    # ADR-0153 (W-020a) — canonical SHA-256 trace hash for this turn,
+    # back-stamped by ``CognitiveTurnPipeline.process`` after
+    # ``compute_trace_hash`` runs.  Empty string on construction;
+    # populated via dataclass.replace in ``runtime.finalize_turn_trace_hash``.
+    # Discovery candidates and OOV candidates emitted during the same
+    # turn read this field to populate their ``source_turn_trace``
+    # provenance, replacing the prior empty-string default that left
+    # the audit trail unable to identify the originating turn.
+    trace_hash: str = ""
     # ADR-0072 (R5) — operator-visible register identity per turn.
     # ``register_id`` is the loaded pack id (e.g. ``"convivial_v1"``),
     # or ``""`` for the in-memory UNREGISTERED sentinel.

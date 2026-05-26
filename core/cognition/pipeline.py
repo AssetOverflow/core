@@ -425,6 +425,14 @@ class CognitiveTurnPipeline:
             refusal_reason=refusal_reason,
         )
 
+        # ADR-0153 (W-020a) — back-stamp the canonical trace_hash onto
+        # the runtime's most-recent TurnEvent and any DiscoveryCandidate
+        # emitted during this turn.  The runtime cannot compute
+        # trace_hash itself (the pipeline owns ``compute_trace_hash``),
+        # so candidates were previously persisted with empty
+        # ``source_turn_trace``.  See runtime.finalize_turn_trace_hash.
+        self.runtime.finalize_turn_trace_hash(trace_hash)
+
         return CognitiveTurnResult(
             input_text=text,
             input_tokens=raw_tokens,

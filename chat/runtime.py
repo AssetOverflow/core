@@ -707,6 +707,43 @@ class ChatRuntime:
     ) -> None:
         self._pending_recognizer_examples.append((tuple(tokens), bundle))
 
+    def finalize_turn_trace_hash(self, trace_hash: str) -> None:
+        """ADR-0153 (W-020a) — back-stamp the canonical trace_hash.
+
+        Called by ``CognitiveTurnPipeline.process`` after
+        ``compute_trace_hash`` produces the turn's canonical
+        SHA-256.  Stamps the trace_hash onto the most recent
+        TurnEvent and any DiscoveryCandidate emitted during this
+        turn (i.e., the unstamped tail of ``_pending_candidates``),
+        then re-persists the candidates checkpoint so the on-disk
+        audit trail names the originating turn instead of the
+        prior empty-string default.
+
+        No-op when ``trace_hash`` is empty (pre-pipeline call sites,
+        refusal stub path).  Idempotent: stamping a tail whose
+        ``source_turn_trace`` is already non-empty halts the back-walk.
+        """
+        if not trace_hash:
+            return
+        from dataclasses import replace
+        if self.turn_log:
+            last_event = self.turn_log[-1]
+            if not last_event.trace_hash:
+                self.turn_log[-1] = replace(last_event, trace_hash=trace_hash)
+        stamped = False
+        for idx in range(len(self._pending_candidates) - 1, -1, -1):
+            cand = self._pending_candidates[idx]
+            if cand.source_turn_trace:
+                break
+            self._pending_candidates[idx] = replace(
+                cand, source_turn_trace=trace_hash
+            )
+            stamped = True
+        if stamped and self._engine_state_store is not None:
+            self._engine_state_store.save_discovery_candidates(
+                self._pending_candidates
+            )
+
     def first_admitted_recognizer(self):
         if not self.config.recognition_grounded_graph:
             return None
