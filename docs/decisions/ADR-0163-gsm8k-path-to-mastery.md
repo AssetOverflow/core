@@ -407,6 +407,69 @@ by running `evals.gsm8k_math.train_sample.v1.runner` against
 See [SESSION-2026-05-26-corridor-closure.md](../sessions/SESSION-2026-05-26-corridor-closure.md)
 for the full session ledger.
 
+## Phase D.2 amendment — discrete_count_statement injection v1
+
+Phase D.2 v1 plumbs `parsed_anchors` from one round-2 recognizer
+(`discrete_count_statement`) into the candidate-graph as
+`CandidateInitial`.  The wiring is the first PR where a recognizer's
+matcher output becomes solver input; wrong=0 moves from "skip-only by
+construction" to **five layered safety nets** that all must hold:
+
+1. **Matcher narrowness** — `_try_extract_discrete_count_anchor` refuses
+   on ambiguity: requires a single proper-noun subject, a closed
+   possession-verb whitelist (`has`/`have`/`had`), exactly one numeric
+   token, `count_kind ∈ observed_count_kinds`, `counted_noun ∈
+   observed_counted_nouns`, no clause-split connectives.
+2. **Extraction correctness** — the recognizer's match returns
+   `parsed_anchors=()` (detection-only fallback) when the narrowness
+   rules fail; the per-category injector returns `()` on any
+   construction failure.
+3. **Injection correctness** — the built `CandidateInitial` is gated by
+   `_initial_admissible` upstream of the Cartesian product; failures
+   under-admit (return `()`) rather than over-admit.
+4. **Replay gate** — propose-time `run_admissibility_replay_gate`
+   auto-rejects extraction changes that lift GSM8K wrong count.
+5. **Multi-branch decision rule** — when an injected candidate
+   disagrees with another branch's answer, the candidate-graph
+   refuses.
+
+**Re-baseline (GSM8K train_sample v1, post-D.2 v1):**
+`correct=3, refused=47, wrong=0` — **identical to the pre-D.2 baseline**.
+The framework lands and is operational, but no GSM8K train_sample case
+has a discrete_count statement that simultaneously (a) the existing
+parser misses, (b) carries a counted_noun in the spec's observed lemma
+set, (c) carries exactly one numeric token, and (d) carries no
+clause-split connectives.  Empirical lift in v1 = 0 cases; the bottleneck
+is **other recognizer categories** (rate_with_currency, temporal_aggregation,
+multiplicative_aggregation, currency_amount) whose injectors return `()`
+(skip-only fallback) until follow-up PRs D.2.2..D.2.5 plumb them.
+
+**Operator caveat — matcher behavior, not canonical_pattern.**
+Round-1's ratified `discrete_count_statement` spec is unchanged.  The
+matcher's behavior on the spec's `canonical_pattern` has been extended
+from detection-only to populated `parsed_anchors`.  Re-ratification is
+not required for this extension; if policy requires re-ratification
+when matcher behavior changes, the registry digest provides byte-stable
+provenance.
+
+**G1..G5 + S1 wrong=0 invariant:** 222 passed / 2 pre-existing
+report-comparison failures / 3 skipped — byte-identical to pre-D.2.
+
+**Solver code: unchanged.**  The injector returns the same
+`CandidateInitial` type the existing parser produces; the solver runs
+unchanged.
+
+**Follow-up PRs (D.2.x):**
+
+- D.2.2 — `rate_with_currency` parsed_anchors → solver state
+- D.2.3 — `temporal_aggregation` parsed_anchors → solver state
+- D.2.4 — `multiplicative_aggregation` parsed_anchors → solver state
+- D.2.5 — `currency_amount` parsed_anchors → solver state
+
+Each ships in its own PR after the operator reviews D.2 v1's framework
+and empirical lift; the dispatch table in
+`generate/recognizer_anchor_inject.py` is the single registration site.
+
 ---
 
 ## Acceptance criteria
