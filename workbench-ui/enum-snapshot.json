@@ -16,6 +16,14 @@
     "computationally_bounded",
     "epistemic_state_needed"
   ],
+  "GroundingSource": [
+    "pack",
+    "teaching",
+    "vault",
+    "partial",
+    "oov",
+    "none"
+  ],
   "NormativeClearance": [
     "cleared",
     "violated",

@@ -52,6 +52,7 @@ def literal_values(path: Path, name: str) -> list[str]:
 
 snapshot = {
     "EpistemicState": enum_values(ROOT / "core" / "epistemic_state.py", "EpistemicState"),
+    "GroundingSource": literal_values(ROOT / "core" / "epistemic_state.py", "GroundingSource"),
     "NormativeClearance": enum_values(ROOT / "core" / "epistemic_state.py", "NormativeClearance"),
     "ReviewState": literal_values(ROOT / "teaching" / "proposals.py", "ReviewState"),
 }

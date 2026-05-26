@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import snapshot from "../../../../enum-snapshot.json";
 import {
   epistemicStateMeta,
+  groundingSourceMeta,
   normativeClearanceMeta,
   reviewStateMeta,
 } from "./mappings";
@@ -33,5 +34,13 @@ describe("build-time enum coverage", () => {
 
   it("tracks every ratified ReviewState value exactly once", () => {
     expectExactCoverage("ReviewState", snapshot.ReviewState, Object.keys(reviewStateMeta));
+  });
+
+  it("tracks every ratified GroundingSource value exactly once", () => {
+    expectExactCoverage(
+      "GroundingSource",
+      snapshot.GroundingSource,
+      Object.keys(groundingSourceMeta),
+    );
   });
 });

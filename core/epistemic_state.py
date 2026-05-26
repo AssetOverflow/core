@@ -9,7 +9,17 @@ serialize stably into JSONL, metadata dictionaries, and test fixtures.
 from __future__ import annotations
 
 from enum import Enum, unique
-from typing import Any
+from typing import Any, Literal
+
+
+GroundingSource = Literal["pack", "teaching", "vault", "partial", "oov", "none"]
+"""Ratified grounding-source labels.
+
+Single source of truth for the values ``epistemic_state_for_grounding_source``
+maps, the cold-start-grounding lane validates, and the Workbench UI badges
+bind to (ADR-0162 §3d).  Adding a value here without adding a corresponding
+badge fails the build-time enum coverage test under ``workbench-ui/``.
+"""
 
 
 @unique
@@ -136,6 +146,7 @@ def epistemic_state_for_grounding_source(source: str | None) -> EpistemicState:
 
 __all__ = [
     "EpistemicState",
+    "GroundingSource",
     "NormativeClearance",
     "clearance_from_verdicts",
     "coerce_epistemic_state",

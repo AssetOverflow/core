@@ -1,8 +1,14 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { StableJsonViewer } from "./StableJsonViewer";
 import { diffLeaves, leaves, parseJsonSource } from "./jsonModel";
+
+async function sha256Hex(source: string): Promise<string> {
+  const bytes = new TextEncoder().encode(source);
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 describe("StableJsonViewer invariants", () => {
   it("renders object keys in deterministic lexicographic order", () => {
@@ -56,5 +62,27 @@ describe("StableJsonViewer invariants", () => {
     expect(screen.getByText(/larger than 16 MiB/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Open in external viewer/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Copy path/ })).toBeInTheDocument();
+  });
+
+  it("renders a sha256 digest badge over the source bytes and copies the full digest on click", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const source = '{"a":1}';
+    const expectedDigest = await sha256Hex(source);
+
+    render(<StableJsonViewer source={source} />);
+
+    const digestButton = await screen.findByRole("button", { name: /sha256:/ });
+    // The badge displays the truncated prefix.
+    await waitFor(() => {
+      expect(digestButton.textContent).toBe(`sha256:${expectedDigest.slice(0, 12)}`);
+    });
+    // Clicking the badge copies the FULL digest, not the truncated prefix.
+    await user.click(digestButton);
+    expect(writeText).toHaveBeenCalledWith(expectedDigest);
   });
 });
