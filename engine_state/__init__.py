@@ -18,6 +18,7 @@ import stat
 import subprocess
 import tempfile
 import warnings
+from functools import lru_cache
 from pathlib import Path
 from typing import Sequence
 
@@ -78,7 +79,14 @@ _DEFAULT_DIR = (
 )
 
 
-def _git_revision() -> str:
+@lru_cache(maxsize=1)
+def get_git_revision() -> str:
+    """Return the current short git revision once per process.
+
+    Public helper for runtime audit surfaces that need the same revision
+    value used by engine-state manifests and revision-mismatch warnings.
+    Cached to avoid duplicate subprocess calls during startup.
+    """
     try:
         return (
             subprocess.run(
@@ -91,6 +99,11 @@ def _git_revision() -> str:
         )
     except Exception:
         return "unknown"
+
+
+def _git_revision() -> str:
+    """Backward-compatible private alias; use get_git_revision() in new code."""
+    return get_git_revision()
 
 
 class EngineStateStore:
@@ -141,7 +154,7 @@ class EngineStateStore:
         manifest = {
             "schema_version": _SCHEMA_VERSION,
             "turn_count": turn_count,
-            "written_at_revision": _git_revision(),
+            "written_at_revision": get_git_revision(),
         }
         _atomic_write_text(
             self.path / "manifest.json",
@@ -159,7 +172,7 @@ class EngineStateStore:
         # W-023 / ADR-0157 — revision-mismatch warning per ADR-0146 §Risks line 127.
         # Never refuse to load; reboot is recovery, not control flow.
         stored_rev = manifest.get("written_at_revision", "unknown")
-        current_rev = _git_revision()
+        current_rev = get_git_revision()
         if stored_rev not in ("unknown", "") and current_rev not in ("unknown", "") and stored_rev != current_rev:
             warnings.warn(
                 f"engine_state checkpoint was written at revision {stored_rev!r} "
@@ -175,4 +188,4 @@ class EngineStateStore:
         return (self.path / "manifest.json").exists()
 
 
-__all__ = ["EngineStateStore"]
+__all__ = ["EngineStateStore", "get_git_revision"]
