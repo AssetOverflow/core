@@ -122,6 +122,101 @@ day-of-week enumeration).
 "outcome": "admissible"
 ```
 
+### `discrete_count_statement` (Round 2)
+
+```json
+"quantity_anchors": [
+  {
+    "kind": "discrete_count",
+    "subject_role": "<who/what has the count>",
+    "count_token": "<numeric token, as string>",
+    "count_kind": "<integer|word>",
+    "counted_noun": "<what is being counted>"
+  },
+  ...
+]
+"graph_intent": "count"
+"outcome": "admissible"
+```
+
+Multiple anchors when a statement enumerates several count-noun pairs.
+
+**Discriminator vs the currency rules**: discrete-count statements carry
+no currency symbol — Phase A's dispatch resolves the rare overlap with
+`rate_with_currency` and `currency_amount` by placing the currency rules
+first.  Near-miss example *not* in this corpus: `"He earns $5 per
+apple"` — currency-bearing, with per-unit framing, so it belongs in
+`rate_with_currency`, not here.
+
+### `multiplicative_aggregation` (Round 2)
+
+```json
+"quantity_anchors": [
+  {
+    "kind": "multiplicative_aggregate",
+    "outer_count": "<token>",
+    "outer_unit": "<container/group noun>",
+    "inner_count": "<token>",
+    "inner_unit": "<inner-thing noun or weight unit>",
+    "subject_role": "<who/what is doing the aggregation>"
+  },
+  ...
+]
+"graph_intent": "aggregate"
+"outcome": "admissible"
+```
+
+Multiple anchors per statement when a joined aggregation enumerates
+several container-of pairs (e.g., "4 bags with 20 apples and 6 bags
+with 25 apples").
+
+**Discriminator vs `temporal_aggregation`**: multiplicative is spatial
+or per-container ("baskets ... strawberries"); temporal is
+per-time-window ("per day", "every week").  Where both could apply the
+temporal framing wins via dispatch order.  Near-miss example *not* in
+this corpus: `"10 oysters per 5 minutes"` — per-time, so it belongs
+to `temporal_aggregation`.
+
+### `currency_amount` (Round 2)
+
+```json
+"quantity_anchors": [
+  {
+    "kind": "currency_amount",
+    "currency_symbol": "<$|£|€|¥>",
+    "amount": "<numeric token>",
+    "amount_kind": "<integer|decimal|word>",
+    "subject_role": "<what costs / is paid / is saved>"
+  },
+  ...
+]
+"graph_intent": "amount"
+"outcome": "admissible"
+```
+
+**The load-bearing discriminator**: `rate_with_currency` carries a
+per-unit framing ("per X", "for one X", "/X", "an hour"); this
+category does NOT.  Phase A dispatch resolves this by running
+`rate_with_currency` first.  Near-miss example *not* in this corpus:
+`"Tina makes $18.00 an hour"` — currency + per-time, so it belongs in
+`rate_with_currency`.
+
+### `temporal_aggregation` v2 — widening
+
+The v2 corpus uses the SAME schema as v1 (`event_count_per_window`); no
+schema extension lands in this round.  v2 widens the surface forms
+seeded for the Phase C recognizer: v1 covered `{each, every, per}`
+window quantifiers and trailing-clause time framings, v2 adds the
+`for`-window and `within`-window quantifier variants plus the
+leading-clause `Every <unit>,` position.
+
+The v2 corpus becomes a SEPARATE Phase C proposal (its own
+`recognizer_spec`, distinct `exemplar_digest`, distinct
+`proposal_id`).  The operator decides whether to ratify v2 alongside
+v1 (both specs admit via first-match-wins over the registry) OR to
+ratify v2 + withdraw v1 (clean replacement).  This is a meta-decision
+deferred to the Phase C/D review path.
+
 ## Sourcing rules
 
 For each category, the corpus MUST satisfy:
