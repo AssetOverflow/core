@@ -218,3 +218,39 @@ The correct operator reaction to the workbench should be:
 not:
 
 > “Cool chatbot.”
+
+---
+
+# W-027 Frontend Shell Runbook
+
+Start the full local workbench (API + frontend):
+
+```bash
+# Terminal 1 — API
+uv run core workbench api               # http://127.0.0.1:8765
+
+# Terminal 2 — Frontend
+cd workbench-ui
+pnpm install
+pnpm dev                                # http://127.0.0.1:5173
+```
+
+Use a custom API URL:
+
+```bash
+VITE_WORKBENCH_API_URL=http://127.0.0.1:9000 pnpm dev
+```
+
+View the Branch 1 design baseline:
+
+```bash
+cd workbench-ui
+pnpm preview   # Navigate to /preview
+```
+
+Detect TypeScript ↔ Python schema drift:
+
+```bash
+uv run python scripts/dump-api-schemas.py
+cd workbench-ui && pnpm test
+```
