@@ -34,6 +34,15 @@ _ROUND_1 = (
     ("rate_with_currency_v1.jsonl", ShapeCategory.RATE_WITH_CURRENCY),
 )
 
+# ADR-0163.B.2 — round-2 corpora present on main.
+_ROUND_2 = (
+    ("discrete_count_statement_v1.jsonl", ShapeCategory.DISCRETE_COUNT_STATEMENT),
+    ("multiplicative_aggregation_v1.jsonl", ShapeCategory.MULTIPLICATIVE_AGGREGATION),
+    ("currency_amount_v1.jsonl", ShapeCategory.CURRENCY_AMOUNT),
+    ("temporal_aggregation_v2.jsonl", ShapeCategory.TEMPORAL_AGGREGATION),
+)
+_ALL_CORPORA = _ROUND_1 + _ROUND_2
+
 
 @pytest.mark.parametrize(("filename", "category"), _ROUND_1)
 def test_loads_phase_b_corpus_without_loss(filename: str, category: ShapeCategory) -> None:
@@ -64,7 +73,10 @@ def test_corpus_digest_is_byte_stable(filename: str, _category: ShapeCategory) -
 def test_list_corpora_loads_every_round_1_file() -> None:
     corpora = list_corpora(_EXEMPLARS_ROOT)
     cats = {c.shape_category for c in corpora}
-    assert cats == {cat for _, cat in _ROUND_1}
+    # After ADR-0163.B.2, round-2 categories also load.  The discriminator
+    # the test pins is "every committed corpus loads"; round 1 is a subset.
+    expected = {cat for _, cat in _ALL_CORPORA}
+    assert cats == expected
     # Stable iteration order.
     again = list_corpora(_EXEMPLARS_ROOT)
     assert [c.corpus_digest for c in corpora] == [c.corpus_digest for c in again]

@@ -148,7 +148,7 @@ class RecognizerMatch:
     recognizer: RatifiedRecognizer
     category: ShapeCategory
     outcome: Literal["admissible", "inadmissible_by_design"]
-    graph_intent: Literal["setup", "aggregate", "rate"]
+    graph_intent: Literal["setup", "aggregate", "rate", "count", "amount"]
     parsed_anchors: tuple[Mapping[str, Any], ...]
 
 
@@ -342,10 +342,140 @@ def _match_rate_with_currency(
     return (tuple(anchors), "rate")
 
 
+# ---------------------------------------------------------------------------
+# ADR-0163.B.2 round-2 matchers.  Detection-only (return empty
+# parsed_anchors) — consistent with Phase D's skip-only wiring.  Real
+# value extraction lands when Phase D.2 plumbs parsed_anchors into the
+# solver.  Narrowness is enforced via shape predicates (no currency on a
+# discrete-count match; no "per X" on a currency_amount match; etc.).
+# ---------------------------------------------------------------------------
+
+_PER_UNIT_TOKENS: Final[tuple[str, ...]] = (
+    " per ", "/", " an hour", " a hour", " a day", " a week", " a month",
+    " a year", " for one ", " for each ", " for every ",
+)
+
+_TEMPORAL_QUANTIFIER_TOKENS: Final[tuple[str, ...]] = (
+    " per ", " each ", " every ", " daily", " weekly", " monthly",
+    " yearly", " hourly",
+)
+
+_MULTIPLICATIVE_CONNECTIVES: Final[tuple[str, ...]] = (
+    " with ", " each ", " in each ", " per each ",
+)
+
+
+def _has_per_unit_framing(padded_lower: str) -> bool:
+    return any(tok in padded_lower for tok in _PER_UNIT_TOKENS)
+
+
+def _has_temporal_quantifier(padded_lower: str) -> bool:
+    return any(tok in padded_lower for tok in _TEMPORAL_QUANTIFIER_TOKENS)
+
+
+def _has_currency_symbol(statement: str) -> bool:
+    return any(c in statement for c in "$£€¥")
+
+
+def _match_discrete_count_statement(
+    statement: str, spec: Mapping[str, Any]
+) -> tuple[tuple[Mapping[str, Any], ...], Literal["count"]] | None:
+    """Detection-only match for "X has N Y" shape.
+
+    Conditions:
+      - statement carries ≥1 quantity marker (digit or number word)
+      - statement does NOT carry a currency symbol (else currency_amount)
+      - statement does NOT carry per-unit framing (else rate_with_currency)
+      - statement does NOT carry temporal-quantifier framing
+        (else temporal_aggregation)
+      - spec's anchor_kind is "discrete_count"
+
+    Returns ``(empty parsed_anchors, "count")`` on a hit; real value
+    extraction is Phase D.2 follow-up.
+    """
+    if spec.get("anchor_kind") != "discrete_count":
+        return None
+    padded = _padded_lower(statement)
+    if not _has_any_quantity_marker(statement, padded):
+        return None
+    if _has_currency_symbol(statement):
+        return None
+    if _has_per_unit_framing(padded):
+        return None
+    if _has_temporal_quantifier(padded):
+        return None
+    return (tuple(), "count")
+
+
+def _match_multiplicative_aggregation(
+    statement: str, spec: Mapping[str, Any]
+) -> tuple[tuple[Mapping[str, Any], ...], Literal["aggregate"]] | None:
+    """Detection-only match for "M outer × N inner" shape.
+
+    Conditions:
+      - spec's anchor_kind is "multiplicative_aggregate"
+      - statement carries a multiplicative connective
+        ("with", "each holds", "in each", etc.)
+      - statement carries ≥2 quantity markers (the outer + inner counts)
+      - statement does NOT carry currency-per-unit framing
+
+    Returns ``(empty parsed_anchors, "aggregate")`` on a hit.
+    """
+    if spec.get("anchor_kind") != "multiplicative_aggregate":
+        return None
+    padded = _padded_lower(statement)
+    if not any(c in padded for c in _MULTIPLICATIVE_CONNECTIVES):
+        return None
+    # Count distinct quantity markers (digits + number words).  At least
+    # two needed to admit a multiplicative shape.
+    digit_hits = len(_DIGIT_RE.findall(statement))
+    word_hits = sum(
+        1 for token in padded.split()
+        if token.strip(".,;:!?\"'()[]{}").lower() in _NUMBER_WORDS
+    )
+    if (digit_hits + word_hits) < 2:
+        return None
+    if _has_currency_symbol(statement) and _has_per_unit_framing(padded):
+        return None
+    return (tuple(), "aggregate")
+
+
+def _match_currency_amount(
+    statement: str, spec: Mapping[str, Any]
+) -> tuple[tuple[Mapping[str, Any], ...], Literal["amount"]] | None:
+    """Detection-only match for "X costs $Y" (NO per-unit framing).
+
+    Discriminator vs rate_with_currency: this matcher REQUIRES a
+    currency symbol AND requires that no per-unit framing is present.
+
+    Narrowness: the currency symbol observed in the statement MUST
+    appear in the spec's ``observed_currency_symbols`` set.
+
+    Returns ``(empty parsed_anchors, "amount")`` on a hit.
+    """
+    if spec.get("anchor_kind") != "currency_amount":
+        return None
+    observed_symbols = set(spec.get("observed_currency_symbols") or ())
+    if not observed_symbols:
+        return None
+    # Find at least one currency symbol present in the statement that is
+    # also observed by the spec.
+    found_observed = any(sym in statement for sym in observed_symbols)
+    if not found_observed:
+        return None
+    padded = _padded_lower(statement)
+    if _has_per_unit_framing(padded):
+        return None
+    return (tuple(), "amount")
+
+
 _MATCHERS: Final[dict[ShapeCategory, Any]] = {
     ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY: _match_descriptive_setup_no_quantity,
     ShapeCategory.TEMPORAL_AGGREGATION: _match_temporal_aggregation,
     ShapeCategory.RATE_WITH_CURRENCY: _match_rate_with_currency,
+    ShapeCategory.DISCRETE_COUNT_STATEMENT: _match_discrete_count_statement,
+    ShapeCategory.MULTIPLICATIVE_AGGREGATION: _match_multiplicative_aggregation,
+    ShapeCategory.CURRENCY_AMOUNT: _match_currency_amount,
 }
 
 
