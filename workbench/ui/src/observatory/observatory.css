@@ -1,0 +1,84 @@
+@keyframes observatoryPulse {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.985);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.015);
+  }
+
+  100% {
+    opacity: 0.35;
+    transform: scale(0.985);
+  }
+}
+
+.observatory-intro {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.observatory-depth {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, rgba(41, 68, 112, 0.16), transparent 58%),
+    linear-gradient(180deg, rgba(11, 14, 20, 0.96), rgba(6, 8, 12, 1));
+}
+
+.observatory-graph {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.88;
+}
+
+.observatory-edge {
+  stroke-width: 1;
+  opacity: 0.48;
+}
+
+.observatory-edge-surface {
+  stroke: rgba(166, 205, 255, 0.55);
+}
+
+.observatory-edge-replay {
+  stroke: rgba(116, 154, 255, 0.35);
+}
+
+.observatory-node {
+  animation: observatoryPulse 5.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.observatory-node circle:last-child {
+  fill: rgba(225, 236, 255, 0.96);
+}
+
+.observatory-node-emergent {
+  opacity: 0.45;
+}
+
+.observatory-node-aligning {
+  opacity: 0.72;
+}
+
+.observatory-node-synchronized,
+.observatory-node-stabilized {
+  opacity: 1;
+}
+
+.observatory-phase {
+  position: absolute;
+  bottom: 28px;
+  left: 32px;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(178, 198, 230, 0.5);
+}
