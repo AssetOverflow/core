@@ -393,7 +393,7 @@ def _scene4_accept_against_transient(
     ), transient
 
 
-def _scene5_grounded_session(transient: Path) -> SceneResult:
+def _scene5_grounded_session(transient: Path, engine_state_dir: Path) -> SceneResult:
     _print_header(
         "S5.  Session 2 — same prompt, now teaching-grounded",
         "With corpus swapped to the transient, the same prompt returns "
@@ -414,7 +414,11 @@ def _scene5_grounded_session(transient: Path) -> SceneResult:
         _tg._CORPUS_PATH = transient  # type: ignore[assignment]
         _tg.TEACHING_CORPORA = swapped_specs  # type: ignore[misc]
         _tg.clear_teaching_caches()
-        rt2 = ChatRuntime()
+        # Keep engine_state writes scoped to the demo's tempdir; the repo's
+        # engine_state/ must remain byte-identical per ADR-0159 read-only
+        # invariant.  ADR-0146/0150 already govern the runtime checkpoint
+        # path itself.
+        rt2 = ChatRuntime(engine_state_path=engine_state_dir)
         response = rt2.chat(_DEMO_PROMPT)
     finally:
         _tg._CORPUS_PATH = real_path  # type: ignore[assignment]
@@ -495,7 +499,7 @@ def run_demo(*, emit_json: bool = False) -> dict[str, Any]:
             s2, candidate_payload = _scene2_checkpoint_enrichment(engine_state_dir)
             s3, proposal = _scene3_engine_authored_proposal(log_path, candidate_payload)
             s4, transient = _scene4_accept_against_transient(log_path, proposal.proposal_id)
-            s5 = _scene5_grounded_session(transient)
+            s5 = _scene5_grounded_session(transient, engine_state_dir)
 
     active_bytes_after = _active_bytes()
 
