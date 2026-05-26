@@ -133,3 +133,24 @@ class ReplayComparison:
     replay_hash: str | None
     equivalent: bool
     divergences: list[ReplayDivergence] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class TraceAdmissibility:
+    rejected_attempts: int | None = None
+    exhausted: bool | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class TraceDetail:
+    turn_id: str
+    surface: str
+    articulation_surface: str | None
+    walk_surface: str | None
+    trace_hash: str | None
+    replay_digest: str | None
+    grounding_source: str | None
+    proposal_refs: list[str] = field(default_factory=list)
+    candidate_refs: list[str] = field(default_factory=list)
+    admissibility: TraceAdmissibility = field(default_factory=TraceAdmissibility)
+    raw: Any | None = None
