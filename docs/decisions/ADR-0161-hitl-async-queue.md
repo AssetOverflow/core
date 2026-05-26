@@ -364,9 +364,10 @@ existing recorded queue history:
 
 ### Step 2 — Backpressure (pending-count cap)
 
-- `propose_from_candidate` consults pending count via
-  `teaching/queue.derive_queue` and emits a `queue_full` report
-  instead of a new proposal when the cap is reached.
+- `propose_from_candidate` in `teaching/proposals.py` consults pending count via
+  `teaching.queue.derive_queue` and writes a `queue_full` report at
+  `contemplation/runs/<timestamp>_queue_full.json` instead of a new proposal
+  when the cap is reached, returning `RefusedAtCapacity`.
 - `contemplation/runs/<timestamp>.json` schema extended with
   `report_kind ∈ {"learning_arc", "queue_full"}` (default
   `"learning_arc"` for back-compat).

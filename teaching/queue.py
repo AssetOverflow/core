@@ -45,19 +45,29 @@ def _load_contemplation_mapping(runs_dir: Path, runs_dir_mtime: float) -> dict[s
                 continue
 
             pids: set[str] = set()
-            top_pid = data.get("proposal_id")
-            if isinstance(top_pid, str):
-                pids.add(top_pid)
+            report_kind = data.get("report_kind", "learning_arc")
+            if report_kind == "learning_arc":
+                top_pid = data.get("proposal_id")
+                if isinstance(top_pid, str):
+                    pids.add(top_pid)
 
-            scenes = data.get("scenes")
-            if isinstance(scenes, list):
-                for scene in scenes:
-                    if isinstance(scene, dict):
-                        detail = scene.get("detail")
-                        if isinstance(detail, dict):
-                            scene_pid = detail.get("proposal_id")
-                            if isinstance(scene_pid, str):
-                                pids.add(scene_pid)
+                scenes = data.get("scenes")
+                if isinstance(scenes, list):
+                    for scene in scenes:
+                        if isinstance(scene, dict):
+                            detail = scene.get("detail")
+                            if isinstance(detail, dict):
+                                scene_pid = detail.get("proposal_id")
+                                if isinstance(scene_pid, str):
+                                    pids.add(scene_pid)
+            elif report_kind == "queue_full":
+                candidates_skipped = data.get("candidates_skipped", [])
+                if isinstance(candidates_skipped, list):
+                    for cand in candidates_skipped:
+                        if isinstance(cand, dict):
+                            cand_id = cand.get("candidate_id")
+                            if isinstance(cand_id, str):
+                                pids.add(cand_id)
 
             for pid in pids:
                 mapping[pid] = str(path.resolve())

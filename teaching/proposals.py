@@ -45,6 +45,10 @@ if TYPE_CHECKING:
 DEFAULT_PROPOSAL_LOG_PATH: Path = (
     Path(__file__).resolve().parent / "proposals" / "proposals.jsonl"
 )
+DEFAULT_PENDING_CAP: int = 256
+DEFAULT_CONTEMPLATION_RUNS_DIR: Path = (
+    Path(__file__).resolve().parent.parent / "contemplation" / "runs"
+)
 
 
 ReviewState = Literal["pending", "accepted", "rejected", "withdrawn"]
@@ -114,6 +118,15 @@ class TeachingChainProposal:
             ),
             "provenance": (asdict(self.provenance) if self.provenance else None),
         }
+
+
+@dataclass(frozen=True, slots=True)
+class RefusedAtCapacity:
+    candidate_id: str
+    shape_category: str
+    pending_count: int
+    cap: int
+    report_path: Path
 
 
 class ProposalError(ValueError):
@@ -453,7 +466,8 @@ def propose_from_candidate(
     run_replay: Any = None,
     allow_evaluative: bool = False,
     source: ProposalSource | None = None,
-) -> TeachingChainProposal:
+    cap: int | None = None,
+) -> TeachingChainProposal | RefusedAtCapacity:
     """End-to-end: build proposal, run replay-equivalence gate,
     auto-reject on regression, otherwise leave pending.
 
@@ -473,6 +487,69 @@ def propose_from_candidate(
     existing = log.find(proposal.proposal_id)
     if existing is not None:
         return proposal
+
+    if log.path == DEFAULT_PROPOSAL_LOG_PATH:
+        contemplation_runs_dir = DEFAULT_CONTEMPLATION_RUNS_DIR
+    else:
+        if (log.path.parent / "runs").exists():
+            contemplation_runs_dir = log.path.parent / "runs"
+        elif (log.path.parent / "contemplation" / "runs").exists():
+            contemplation_runs_dir = log.path.parent / "contemplation" / "runs"
+        else:
+            contemplation_runs_dir = log.path.parent / "runs"
+
+    from teaching.queue import derive_queue
+    queue_items = derive_queue(log, contemplation_runs_dir)
+    pending_count = sum(1 for item in queue_items if item.state == "pending")
+
+    resolved_cap = cap
+    if resolved_cap is None:
+        import os
+        env_val = os.environ.get("CORE_HITL_PENDING_CAP")
+        if env_val is not None:
+            try:
+                resolved_cap = int(env_val)
+            except ValueError:
+                resolved_cap = DEFAULT_PENDING_CAP
+        else:
+            resolved_cap = DEFAULT_PENDING_CAP
+
+    if pending_count >= resolved_cap:
+        shape_category = (
+            candidate.proposed_chain.get("recognizer_spec", {}).get("shape_category")
+            if candidate.proposed_chain
+            else None
+        ) or candidate.claim_domain
+        
+        from datetime import datetime, timezone
+        stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
+        report_path = contemplation_runs_dir / f"{stamp}_queue_full.json"
+        
+        report_data = {
+            "report_kind": "queue_full",
+            "emitted_at_revision": _current_revision(),
+            "pending_count": pending_count,
+            "cap": resolved_cap,
+            "candidates_skipped": [
+                {
+                    "candidate_id": candidate.candidate_id,
+                    "shape_category": shape_category,
+                    "reason": "queue_full"
+                }
+            ]
+        }
+        contemplation_runs_dir.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(
+            json.dumps(report_data, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8"
+        )
+        return RefusedAtCapacity(
+            candidate_id=candidate.candidate_id,
+            shape_category=shape_category,
+            pending_count=pending_count,
+            cap=resolved_cap,
+            report_path=report_path,
+        )
     log.record_created(proposal)
 
     if run_replay is None:
@@ -557,9 +634,11 @@ def withdraw_proposal(
 
 
 __all__ = [
+    "DEFAULT_PENDING_CAP",
     "DEFAULT_PROPOSAL_LOG_PATH",
     "ProposalError",
     "ProposalLog",
+    "RefusedAtCapacity",
     "ReplayEvidence",
     "ReviewState",
     "TeachingChainProposal",
