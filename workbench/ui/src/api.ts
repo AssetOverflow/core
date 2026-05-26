@@ -46,6 +46,23 @@ export type ReplayComparison = {
   divergences: Array<{ path: string; original: unknown; replay: unknown; severity: 'info' | 'warning' | 'failure' }>
 }
 
+export type TraceDetail = {
+  turn_id: string
+  surface: string
+  articulation_surface: string | null
+  walk_surface: string | null
+  trace_hash: string | null
+  replay_digest: string | null
+  grounding_source: string | null
+  proposal_refs: string[]
+  candidate_refs: string[]
+  admissibility: {
+    rejected_attempts: number | null
+    exhausted: boolean | null
+  }
+  raw: unknown | null
+}
+
 async function parseResponse<T>(response: Response): Promise<T> {
   const payload = (await response.json()) as WorkbenchResponse<T>
   if (!payload.ok) {
@@ -102,4 +119,9 @@ export async function listArtifacts(): Promise<ArtifactRef[]> {
 export async function replayArtifact(artifactId: string): Promise<ReplayComparison> {
   const response = await fetch(`${API_BASE}/replay/${encodeURIComponent(artifactId)}`, { credentials: 'include' })
   return parseResponse<ReplayComparison>(response)
+}
+
+export async function readTrace(turnId: string): Promise<TraceDetail> {
+  const response = await fetch(`${API_BASE}/trace/${encodeURIComponent(turnId)}`, { credentials: 'include' })
+  return parseResponse<TraceDetail>(response)
 }
