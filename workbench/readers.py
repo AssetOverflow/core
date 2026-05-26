@@ -5,12 +5,13 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import threading
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, get_args
 
 from engine_state import EngineStateStore, get_git_revision
 from evals.framework import discover_lanes, get_lane, run_lane
-from teaching.proposals import DEFAULT_PROPOSAL_LOG_PATH, ProposalLog
+from teaching.proposals import DEFAULT_PROPOSAL_LOG_PATH, ProposalLog, ReviewState
 from workbench.schemas import (
     ArtifactDetail,
     ArtifactRef,
@@ -23,6 +24,10 @@ from workbench.schemas import (
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SAFE_EVAL_LANES = frozenset({"contemplation_quality"})
+MAX_ARTIFACT_BYTES = 16 * 1024 * 1024
+READ_CHUNK_BYTES = 64 * 1024
+_EVAL_RUN_LOCK = threading.Lock()
+_REVIEW_STATES = frozenset(get_args(ReviewState))
 ALLOWED_ARTIFACT_ROOTS = (
     REPO_ROOT / "engine_state",
     REPO_ROOT / "teaching" / "proposals",
@@ -31,8 +36,20 @@ ALLOWED_ARTIFACT_ROOTS = (
 )
 
 
+class ArtifactTooLargeError(OSError):
+    """Raised when an artifact is too large for direct Workbench reads."""
+
+
 def _sha256_bytes(content: bytes) -> str:
     return "sha256:" + hashlib.sha256(content).hexdigest()
+
+
+def _sha256_file(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(READ_CHUNK_BYTES), b""):
+            hasher.update(chunk)
+    return "sha256:" + hasher.hexdigest()
 
 
 def _relative(path: Path) -> str:
@@ -114,7 +131,7 @@ def list_artifacts(*, limit: int = 100) -> list[ArtifactRef]:
             if not _is_allowed(path):
                 continue
             try:
-                content = path.read_bytes()
+                digest = _sha256_file(path)
             except OSError:
                 continue
             rel = _relative(path)
@@ -123,7 +140,7 @@ def list_artifacts(*, limit: int = 100) -> list[ArtifactRef]:
                     artifact_id=rel,
                     kind=_artifact_kind(path),  # type: ignore[arg-type]
                     path=rel,
-                    digest=_sha256_bytes(content),
+                    digest=digest,
                     created_at=None,
                 )
             )
@@ -134,6 +151,10 @@ def read_artifact(artifact_id: str) -> ArtifactDetail:
     path = _resolve_artifact(artifact_id)
     if not path.exists() or not path.is_file():
         raise FileNotFoundError(artifact_id)
+    if path.stat().st_size > MAX_ARTIFACT_BYTES:
+        raise ArtifactTooLargeError(
+            f"artifact exceeds {MAX_ARTIFACT_BYTES} byte read limit: {artifact_id}"
+        )
     raw = path.read_bytes()
     text = raw.decode("utf-8")
     content_type = "text"
@@ -162,7 +183,7 @@ def read_artifact(artifact_id: str) -> ArtifactDetail:
 
 def _state_value(value: Any) -> str:
     text = str(value or "unknown")
-    return text if text in {"pending", "accepted", "rejected", "withdrawn"} else "unknown"
+    return text if text in _REVIEW_STATES else "unknown"
 
 
 def _source_kind(source: Any) -> str:
@@ -258,7 +279,10 @@ def run_safe_eval_lane(
     if split == "holdout":
         raise ValueError("holdout execution is disabled in Workbench v1")
     lane = get_lane(lane_name)
-    result = run_lane(lane, version=version, split=split, workers=1)
+    if version not in lane.versions:
+        raise ValueError(f"unsupported eval version for {lane_name}: {version}")
+    with _EVAL_RUN_LOCK:
+        result = run_lane(lane, version=version, split=split, workers=1)
     passed_raw = result.metrics.get("passed") if isinstance(result.metrics, dict) else None
     passed = bool(passed_raw) if isinstance(passed_raw, bool) else None
     return EvalRunResult(

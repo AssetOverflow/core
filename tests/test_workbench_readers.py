@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from workbench.readers import list_proposals, read_artifact, read_proposal
+from workbench.readers import list_artifacts, list_proposals, read_artifact, read_proposal
 
 
 @pytest.mark.parametrize(
@@ -32,6 +32,18 @@ def test_read_known_allowed_artifact_when_present() -> None:
     assert detail.path == "evals/contemplation_quality/contract.md"
     assert detail.digest and detail.digest.startswith("sha256:")
     assert detail.content_type == "text"
+
+
+def test_list_artifacts_hashes_without_reading_whole_files(monkeypatch) -> None:
+    def fail_read_bytes(self: Path) -> bytes:
+        raise AssertionError(f"list_artifacts should not call read_bytes: {self}")
+
+    monkeypatch.setattr(Path, "read_bytes", fail_read_bytes)
+
+    items = list_artifacts(limit=3)
+
+    assert len(items) <= 3
+    assert all(item.digest and item.digest.startswith("sha256:") for item in items)
 
 
 def test_proposals_use_append_only_event_log_current_state(tmp_path: Path) -> None:

@@ -154,6 +154,48 @@ after it is accepted.
 
 ---
 
+# W-026 Local Runbook
+
+Start the read-only local API:
+
+```bash
+core workbench api
+```
+
+Verify liveness:
+
+```bash
+curl http://127.0.0.1:8765/health
+```
+
+Inspect each W-026 endpoint family:
+
+```bash
+curl http://127.0.0.1:8765/runtime/status
+curl http://127.0.0.1:8765/artifacts
+curl http://127.0.0.1:8765/artifacts/evals/contemplation_quality/contract.md
+curl http://127.0.0.1:8765/proposals
+curl http://127.0.0.1:8765/evals
+curl http://127.0.0.1:8765/evals/contemplation_quality
+curl -X POST http://127.0.0.1:8765/evals/run \
+  -H 'Content-Type: application/json' \
+  -d '{"lane":"contemplation_quality","version":"v1","split":"public"}'
+```
+
+Bind to a different local port:
+
+```bash
+core workbench api --port 9000
+```
+
+Non-local binds require an explicit operator flag:
+
+```bash
+core workbench api --host 0.0.0.0 --allow-nonlocal-bind
+```
+
+---
+
 # Initial Work Queue
 
 | Work Item | Goal |

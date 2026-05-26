@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import NoReturn
 
 from workbench.api import WorkbenchApi
 
@@ -20,10 +21,18 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
         self._handle()
 
     def log_message(self, format: str, *args: object) -> None:
-        return
+        if os.environ.get("CORE_WORKBENCH_QUIET") == "1":
+            return
+        sys.stderr.write(
+            "%s - - [%s] %s\n"
+            % (self.address_string(), self.log_date_time_string(), format % args)
+        )
 
     def _handle(self) -> None:
-        length = int(self.headers.get("Content-Length") or "0")
+        try:
+            length = max(0, int(self.headers.get("Content-Length") or "0"))
+        except ValueError:
+            length = 0
         body = self.rfile.read(length) if length else b""
         response = self.api.handle(self.command, self.path, body)
         payload = json.dumps(response.payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -34,7 +43,7 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
 
-def serve(*, host: str = "127.0.0.1", port: int = 8765) -> NoReturn:
+def serve(*, host: str = "127.0.0.1", port: int = 8765) -> None:
     server = ThreadingHTTPServer((host, port), WorkbenchRequestHandler)
     print(f"CORE Workbench API listening on http://{host}:{port}")
     try:

@@ -8,6 +8,7 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 from workbench import readers
+from workbench.readers import ArtifactTooLargeError
 from workbench.schemas import error, ok
 
 
@@ -31,8 +32,12 @@ class WorkbenchApi:
         except FileNotFoundError as exc:
             missing = str(exc) or "resource"
             return ApiResponse(404, error("not_found", f"not found: {missing}"))
+        except ArtifactTooLargeError as exc:
+            return ApiResponse(413, error("read_error", str(exc)))
         except OSError as exc:
             return ApiResponse(500, error("read_error", str(exc)))
+        except Exception as exc:  # noqa: BLE001 - API contract requires JSON errors.
+            return ApiResponse(500, error("runtime_unavailable", f"internal error: {exc}"))
 
     def _dispatch(
         self,

@@ -24,6 +24,8 @@ without widening the mutation surface.
 ## Response envelope
 
 All responses MUST include `generated_at` as an ISO-8601 UTC timestamp.
+`generated_at` is wall-clock UTC and not part of replay state. Clients hashing
+or caching responses must exclude this field.
 Successful responses:
 
 ```json
@@ -58,6 +60,39 @@ W-026 error codes:
 
 `unauthorized` is reserved for a later auth ADR.  W-026 remains unauthenticated
 and local-only by default.
+
+Exception mapping:
+
+| Condition | HTTP status | Error code |
+|---|---:|---|
+| malformed request, invalid path, unsafe traversal | 400 | `bad_request` |
+| well-formed missing artifact/proposal/lane/trace | 404 | `not_found` |
+| artifact exceeds the W-026 read size limit | 413 | `read_error` |
+| deferred W-027+ route | 501 | `unsupported` |
+| filesystem read failure | 500 | `read_error` |
+| unexpected runtime failure | 500 | `runtime_unavailable` |
+
+## W-026 execution model
+
+The W-026 API is a single-operator local service.  It does not implement CORS
+preflight; browser clients must run on the same origin until W-027 defines the
+frontend serving model.  Eval execution is serialized per server instance so
+two `/evals/run` requests cannot race over shared runtime checkpoint files.
+
+### Side effects on `engine_state/`
+
+W-026 is read-only with respect to teaching corpora and pack data. Two routes
+touch runtime checkpoint surfaces governed by existing ADRs:
+
+- `GET /runtime/status` instantiates `EngineStateStore` and reads
+  `engine_state/manifest.json` via `load_manifest`.
+- `POST /evals/run` with `lane="contemplation_quality"` transitively invokes
+  the ADR-0159 replay baseline. That path can create normal `ChatRuntime`
+  checkpoints under `engine_state/`, governed by ADR-0146 and ADR-0150.
+
+These checkpoint writes are runtime artifacts, not teaching/corpus/pack
+mutation. They are intentionally excluded from the W-026 read-only snapshot
+invariant.
 
 ---
 
