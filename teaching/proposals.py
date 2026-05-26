@@ -311,19 +311,22 @@ class ProposalLog:
 
     # -- read side ----------------------------------------------------
 
-    def _events(self) -> list[dict[str, Any]]:
+    def events(self) -> list[dict[str, Any]]:
         if not self.path.exists():
             return []
-        events: list[dict[str, Any]] = []
+        events_list: list[dict[str, Any]] = []
         for line in self.path.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if not line:
                 continue
             try:
-                events.append(json.loads(line))
+                events_list.append(json.loads(line))
             except json.JSONDecodeError:
                 continue
-        return events
+        return events_list
+
+    def _events(self) -> list[dict[str, Any]]:
+        return self.events()
 
     def current_state(self) -> dict[str, dict[str, Any]]:
         """Replay the log → ``{proposal_id: {state, proposal, replay,
