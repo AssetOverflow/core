@@ -1524,6 +1524,78 @@ def cmd_teaching_supersede(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_teaching_refusal_taxonomy(args: argparse.Namespace) -> int:
+    """ADR-0163 Phase A — categorise refused statements by shape.
+
+    Read-only.  Reads a JSONL of refused cases (defaults to the v1
+    refusal_taxonomy case set) and emits a histogram of shape categories.
+    Per ADR-0163, the categorizer is rules-only: no LLM call, no
+    embedding, no learned model.  --save writes the report to
+    ``evals/refusal_taxonomy/v1/report.json``.
+    """
+    import json
+    from pathlib import Path
+
+    from evals.framework import load_cases
+    from evals.refusal_taxonomy.runner import run_lane
+    from scripts.build_refusal_taxonomy_cases import build_cases
+
+    input_path = Path(args.input) if args.input else (
+        _REPO_ROOT / "evals" / "refusal_taxonomy" / "public" / "v1" / "cases.jsonl"
+    )
+    if not input_path.exists():
+        print(f"input not found: {input_path}", file=sys.stderr)
+        return 2
+
+    # Accept either a cases JSONL (one record per line) or a GSM8K-style
+    # eval report.json with a top-level ``per_case`` list of refusals.
+    if input_path.suffix == ".jsonl":
+        cases = load_cases(input_path)
+    else:
+        cases = build_cases(input_path)
+    report = run_lane(cases)
+    metrics = report.metrics
+
+    if args.json:
+        payload = {
+            "lane": "refusal_taxonomy",
+            "input": str(input_path),
+            "metrics": metrics,
+            "cases": report.case_details,
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(f"input              : {input_path}")
+        print(f"total              : {metrics['total']}")
+        print(f"categorized_rate   : {metrics['categorized_rate']:.3f}")
+        print(f"uncategorized      : {metrics['uncategorized']}")
+        print(f"case_digest        : {metrics['case_digest']}")
+        print("histogram:")
+        for category, count in sorted(
+            metrics["by_category"].items(), key=lambda kv: (-kv[1], kv[0]),
+        ):
+            print(f"  {count:3d}  {category}")
+
+    if args.save:
+        out = _REPO_ROOT / "evals" / "refusal_taxonomy" / "v1" / "report.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "lane": "refusal_taxonomy",
+            "version": "v1",
+            "split": "public",
+            "source_cases": str(input_path),
+            "metrics": metrics,
+            "cases": report.case_details,
+        }
+        out.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+            + "\n"
+        )
+        print(f"saved              : {out}", file=sys.stderr)
+
+    return 0
+
+
 def cmd_pack_validate(args: argparse.Namespace) -> int:
     """Run executable source-pack validation gates."""
     pack_id = _safe_pack_id(args.pack_id)
@@ -3667,6 +3739,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="explicit new chain_id (default: <intent>_<subject>_<connective>_<object>)",
     )
     teaching_supersede.set_defaults(func=cmd_teaching_supersede)
+
+    teaching_refusal_taxonomy = teaching_sub.add_parser(
+        "refusal-taxonomy",
+        help="ADR-0163 Phase A — categorise refused statements by shape",
+    )
+    teaching_refusal_taxonomy.add_argument(
+        "--input", default=None,
+        help="path to refused-cases JSONL (default: evals/refusal_taxonomy/public/v1/cases.jsonl)",
+    )
+    teaching_refusal_taxonomy.add_argument(
+        "--json", action="store_true",
+        help="emit machine-readable JSON",
+    )
+    teaching_refusal_taxonomy.add_argument(
+        "--save", action="store_true",
+        help="write report to evals/refusal_taxonomy/v1/report.json",
+    )
+    teaching_refusal_taxonomy.set_defaults(func=cmd_teaching_refusal_taxonomy)
 
     teaching_supersessions = teaching_sub.add_parser(
         "supersessions",

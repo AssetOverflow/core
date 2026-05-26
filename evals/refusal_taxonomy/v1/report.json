@@ -1,0 +1,326 @@
+{
+  "cases": [
+    {
+      "case_id": "gsm8k-train-sample-v1-0001",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Tina makes $18.00 an hour.'",
+      "shape_category": "rate_with_currency",
+      "statement": "Tina makes $18.00 an hour."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0002",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'She splits it up into 25-foot sections.'",
+      "shape_category": "unit_partition",
+      "statement": "She splits it up into 25-foot sections."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0003",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'The student council sells scented erasers in the morning before school starts to help raise money for school dances.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "The student council sells scented erasers in the morning before school starts to help raise money for school dances."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0004",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'There are some kids in camp.'",
+      "shape_category": "indefinite_quantity",
+      "statement": "There are some kids in camp."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0005",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: \"In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature.\"",
+      "shape_category": "fractional_rate_of_change",
+      "statement": "In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0006",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Mandy started reading books with only 8 pages when she was 6 years old.'",
+      "shape_category": "uncategorized",
+      "statement": "Mandy started reading books with only 8 pages when she was 6 years old."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0007",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Francine has five full boxes of crayons and 5 loose crayons, and her friend has 27 loose crayons.'",
+      "shape_category": "uncategorized",
+      "statement": "Francine has five full boxes of crayons and 5 loose crayons, and her friend has 27 loose crayons."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0008",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Marnie makes bead bracelets.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Marnie makes bead bracelets."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0009",
+      "refusal_reason": "candidate_graph: no admissible candidate for question: 'If Jen has 150 ducks, how many total birds does she have?'",
+      "shape_category": "nested_question_target",
+      "statement": "If Jen has 150 ducks, how many total birds does she have?"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0010",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Yun had 20 paperclips initially, but then lost 12.'",
+      "shape_category": "uncategorized",
+      "statement": "Yun had 20 paperclips initially, but then lost 12."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0011",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup.'",
+      "shape_category": "rate_with_currency",
+      "statement": "Alexa has a lemonade stand where she sells lemonade for $2 for one cup."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0012",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'He put all of them in his aquarium but his fish ate half of them.'",
+      "shape_category": "fractional_rate_of_change",
+      "statement": "He put all of them in his aquarium but his fish ate half of them."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0013",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel.'",
+      "shape_category": "temporal_aggregation",
+      "statement": "Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0014",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Bob can shuck 10 oysters in 5 minutes.'",
+      "shape_category": "temporal_aggregation",
+      "statement": "Bob can shuck 10 oysters in 5 minutes."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0015",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours.'",
+      "shape_category": "comparative_with_unit",
+      "statement": "Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0016",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs.\"",
+      "shape_category": "comparative_with_unit",
+      "statement": "On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0017",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Jason has a carriage house that he rents out.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Jason has a carriage house that he rents out."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0018",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Xavier plays football with his friends.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Xavier plays football with his friends."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0019",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'John adopts a dog from a shelter.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "John adopts a dog from a shelter."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0020",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Two puppies, two kittens, and three parakeets were for sale at the pet shop.'",
+      "shape_category": "uncategorized",
+      "statement": "Two puppies, two kittens, and three parakeets were for sale at the pet shop."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0021",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'John is lifting weights.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "John is lifting weights."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0022",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish.'",
+      "shape_category": "rate_with_currency",
+      "statement": "Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0023",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Nicole collected 400 Pokemon cards.'",
+      "shape_category": "uncategorized",
+      "statement": "Nicole collected 400 Pokemon cards."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0024",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday, and 50 on Thursday.'",
+      "shape_category": "temporal_aggregation",
+      "statement": "Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday, and 50 on Thursday."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0025",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Lilibeth and her friends go strawberry picking.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Lilibeth and her friends go strawberry picking."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0026",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner.'",
+      "shape_category": "uncategorized",
+      "statement": "Aaron and his brother Carson each saved up $40 to go to dinner."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0027",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Malcolm has 240 followers on Instagram and 500 followers on Facebook.'",
+      "shape_category": "uncategorized",
+      "statement": "Malcolm has 240 followers on Instagram and 500 followers on Facebook."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0028",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Tom opens an amusement park.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Tom opens an amusement park."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0029",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Fabian bought a brand new computer mouse and keyboard to be able to work from home.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Fabian bought a brand new computer mouse and keyboard to be able to work from home."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0030",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Jake decides to go to the beach for a fun day.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Jake decides to go to the beach for a fun day."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0031",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Jeremie wants to go to an amusement park with 3 friends at the end of summer.'",
+      "shape_category": "uncategorized",
+      "statement": "Jeremie wants to go to an amusement park with 3 friends at the end of summer."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0032",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'John decides to take up illustration.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "John decides to take up illustration."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0033",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Rachel is 12 years old, and her grandfather is 7 times her age.'",
+      "shape_category": "comparative_with_unit",
+      "statement": "Rachel is 12 years old, and her grandfather is 7 times her age."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0034",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Georgie is a varsity player on a football team.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Georgie is a varsity player on a football team."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0035",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'She decided to split them among her friends.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "She decided to split them among her friends."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0036",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Monica way studying for an exam.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Monica way studying for an exam."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0037",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Michael wants to lose 10 pounds by June.'",
+      "shape_category": "uncategorized",
+      "statement": "Michael wants to lose 10 pounds by June."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0038",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'In a building, there are a hundred ladies on the first-floor studying.'",
+      "shape_category": "uncategorized",
+      "statement": "In a building, there are a hundred ladies on the first-floor studying."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0039",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'At the family reunion, everyone ate too much food and gained weight.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "At the family reunion, everyone ate too much food and gained weight."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0040",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Over several years, Daniel has adopted any stray animals he sees on the side of the road.'",
+      "shape_category": "indefinite_quantity",
+      "statement": "Over several years, Daniel has adopted any stray animals he sees on the side of the road."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0041",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'The guests eat all of 1 pan, and 75% of the 2nd pan.'",
+      "shape_category": "fractional_rate_of_change",
+      "statement": "The guests eat all of 1 pan, and 75% of the 2nd pan."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0042",
+      "refusal_reason": "candidate_graph: no admissible candidate for question: 'If Ella sells 200 apples, how many apples does Ella has left?'",
+      "shape_category": "nested_question_target",
+      "statement": "If Ella sells 200 apples, how many apples does Ella has left?"
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0043",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Sandra wants to buy some sweets.'",
+      "shape_category": "indefinite_quantity",
+      "statement": "Sandra wants to buy some sweets."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0044",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'John invests in a bank and gets 10% simple interest.'",
+      "shape_category": "uncategorized",
+      "statement": "John invests in a bank and gets 10% simple interest."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0045",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Bart fills out surveys to earn money.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Bart fills out surveys to earn money."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0046",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'A school has 100 students.'",
+      "shape_category": "uncategorized",
+      "statement": "A school has 100 students."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0047",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'John bakes 12 coconut macaroons, each weighing 5 ounces.'",
+      "shape_category": "uncategorized",
+      "statement": "John bakes 12 coconut macaroons, each weighing 5 ounces."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0048",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Jed collects stamp cards.'",
+      "shape_category": "descriptive_setup_no_quantity",
+      "statement": "Jed collects stamp cards."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0049",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Malcolm is trying to find the fastest walk to school and is currently comparing two routes.'",
+      "shape_category": "uncategorized",
+      "statement": "Malcolm is trying to find the fastest walk to school and is currently comparing two routes."
+    },
+    {
+      "case_id": "gsm8k-train-sample-v1-0050",
+      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Mark does a gig every other day for 2 weeks.'",
+      "shape_category": "temporal_aggregation",
+      "statement": "Mark does a gig every other day for 2 weeks."
+    }
+  ],
+  "lane": "refusal_taxonomy",
+  "metrics": {
+    "by_category": {
+      "comparative_with_unit": 3,
+      "conditional_quantity": 0,
+      "descriptive_setup_no_quantity": 17,
+      "fractional_rate_of_change": 3,
+      "indefinite_quantity": 3,
+      "nested_question_target": 2,
+      "rate_with_currency": 3,
+      "temporal_aggregation": 4,
+      "uncategorized": 14,
+      "unit_partition": 1
+    },
+    "case_digest": "d030f826cb0f4088771d90c52c8be2ff75054ab27c7d47eae8dbfe1225b2eea1",
+    "categorized_rate": 0.72,
+    "total": 50,
+    "uncategorized": 14
+  },
+  "source_cases": "/Users/kaizenpro/Projects/core-adr-0163-A-taxonomy/evals/refusal_taxonomy/public/v1/cases.jsonl",
+  "split": "public",
+  "version": "v1"
+}
