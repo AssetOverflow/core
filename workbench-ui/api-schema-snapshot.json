@@ -1,0 +1,86 @@
+{
+  "dataclasses": {
+    "RuntimeStatus": {
+      "fields": {
+        "backend": "Literal['numpy', 'mlx', 'rust', 'unknown']",
+        "git_revision": "str",
+        "engine_state_present": "bool",
+        "checkpoint_revision": "str",
+        "revision_warning": "bool",
+        "active_session_id": "str | None",
+        "mutation_mode": "Literal['read_only', 'runtime_turn']"
+      }
+    },
+    "ArtifactRef": {
+      "fields": {
+        "artifact_id": "str",
+        "kind": "Literal['trace', 'eval_result', 'proposal', 'contemplation_report', 'telemetry', 'engine_state_manifest', 'unknown']",
+        "path": "str",
+        "digest": "str | None",
+        "created_at": "str | None"
+      }
+    },
+    "ArtifactDetail": {
+      "fields": {
+        "content_type": "Literal['json', 'jsonl', 'text', 'unknown']",
+        "content": "Any"
+      }
+    },
+    "ProposalSummary": {
+      "fields": {
+        "proposal_id": "str",
+        "state": "Literal['pending', 'accepted', 'rejected', 'withdrawn', 'unknown']",
+        "source_kind": "str",
+        "replay_equivalent": "bool | None",
+        "created_at": "str | None",
+        "downstream_effect": "Literal['unknown', 'none', 'observed']"
+      }
+    },
+    "ProposalDetail": {
+      "fields": {
+        "proposed_chain": "Any",
+        "replay_evidence": "Any",
+        "source": "Any",
+        "evidence": "list[Any]",
+        "artifact_refs": "list[ArtifactRef]",
+        "suggested_cli": "str | None"
+      }
+    },
+    "EvalLaneSummary": {
+      "fields": {
+        "lane": "str",
+        "versions": "list[str]",
+        "read_only": "bool",
+        "description": "str | None"
+      }
+    },
+    "EvalRunResult": {
+      "fields": {
+        "lane": "str",
+        "version": "str",
+        "split": "str",
+        "passed": "bool | None",
+        "metrics": "dict[str, Any]",
+        "cases": "list[Any]",
+        "source_digest": "str | None"
+      }
+    },
+    "ReplayDivergence": {
+      "fields": {
+        "path": "str",
+        "original": "Any",
+        "replay": "Any",
+        "severity": "Literal['info', 'warning', 'failure']"
+      }
+    },
+    "ReplayComparison": {
+      "fields": {
+        "artifact_id": "str",
+        "original_hash": "str | None",
+        "replay_hash": "str | None",
+        "equivalent": "bool",
+        "divergences": "list[ReplayDivergence]"
+      }
+    }
+  }
+}
