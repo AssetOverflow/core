@@ -82,13 +82,36 @@ def unitize_versor(v: np.ndarray) -> np.ndarray:
 
 
 def normalize_to_versor(v: np.ndarray) -> np.ndarray:
+    """Encode v as a closed versor for the ingest-gate boundary.
+
+    Issue #300: certain ordinary English token combinations
+    (declarative-with-quantity + transfer + "How many" question)
+    produced a residue that ``unitize_versor`` resolved without raising
+    but whose ``versor_condition`` cleared the `bad_residue` heuristic
+    while still landing just above the gate's 1e-6 threshold
+    (observed: 1.02e-06 -- 2.12e-06).  The gate's downstream check
+    then crashed.
+
+    Mirror the strict-closure pattern in ``_runtime_closed`` /
+    ``_close_applied_versor``: if unitization succeeded but the
+    result still fails the public ``versor_condition <
+    _RUNTIME_CLOSURE_TOLERANCE`` contract, project through the
+    deterministic construction map instead of returning the drifted
+    candidate.  Threshold stays at 1e-6 (CLAUDE.md non-negotiable);
+    the construction-boundary is where the drift is repaired, not
+    the gate.
+    """
     dtype = _array_dtype(v)
     try:
-        return unitize_versor(v)
+        candidate = unitize_versor(v)
     except ValueError as exc:
         if "bad_residue" not in str(exc):
             raise
         return _seed_to_rotor(v, dtype)
+
+    if versor_condition(candidate) >= _RUNTIME_CLOSURE_TOLERANCE:
+        return _seed_to_rotor(v, dtype)
+    return candidate
 
 
 def construction_seed_versor(v: np.ndarray) -> np.ndarray:
