@@ -33,13 +33,13 @@
     {
       "case_id": "gsm8k-train-sample-v1-0006",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Mandy started reading books with only 8 pages when she was 6 years old.'",
-      "shape_category": "uncategorized",
+      "shape_category": "discrete_count_statement",
       "statement": "Mandy started reading books with only 8 pages when she was 6 years old."
     },
     {
       "case_id": "gsm8k-train-sample-v1-0007",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Francine has five full boxes of crayons and 5 loose crayons, and her friend has 27 loose crayons.'",
-      "shape_category": "uncategorized",
+      "shape_category": "multiplicative_aggregation",
       "statement": "Francine has five full boxes of crayons and 5 loose crayons, and her friend has 27 loose crayons."
     },
     {
@@ -57,7 +57,7 @@
     {
       "case_id": "gsm8k-train-sample-v1-0010",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Yun had 20 paperclips initially, but then lost 12.'",
-      "shape_category": "uncategorized",
+      "shape_category": "discrete_count_statement",
       "statement": "Yun had 20 paperclips initially, but then lost 12."
     },
     {
@@ -117,7 +117,7 @@
     {
       "case_id": "gsm8k-train-sample-v1-0020",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Two puppies, two kittens, and three parakeets were for sale at the pet shop.'",
-      "shape_category": "uncategorized",
+      "shape_category": "discrete_count_statement",
       "statement": "Two puppies, two kittens, and three parakeets were for sale at the pet shop."
     },
     {
@@ -135,7 +135,7 @@
     {
       "case_id": "gsm8k-train-sample-v1-0023",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Nicole collected 400 Pokemon cards.'",
-      "shape_category": "uncategorized",
+      "shape_category": "discrete_count_statement",
       "statement": "Nicole collected 400 Pokemon cards."
     },
     {
@@ -153,13 +153,13 @@
     {
       "case_id": "gsm8k-train-sample-v1-0026",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner.'",
-      "shape_category": "uncategorized",
+      "shape_category": "currency_amount",
       "statement": "Aaron and his brother Carson each saved up $40 to go to dinner."
     },
     {
       "case_id": "gsm8k-train-sample-v1-0027",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Malcolm has 240 followers on Instagram and 500 followers on Facebook.'",
-      "shape_category": "uncategorized",
+      "shape_category": "discrete_count_statement",
       "statement": "Malcolm has 240 followers on Instagram and 500 followers on Facebook."
     },
     {
@@ -183,7 +183,7 @@
     {
       "case_id": "gsm8k-train-sample-v1-0031",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Jeremie wants to go to an amusement park with 3 friends at the end of summer.'",
-      "shape_category": "uncategorized",
+      "shape_category": "discrete_count_statement",
       "statement": "Jeremie wants to go to an amusement park with 3 friends at the end of summer."
     },
     {
@@ -219,13 +219,13 @@
     {
       "case_id": "gsm8k-train-sample-v1-0037",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Michael wants to lose 10 pounds by June.'",
-      "shape_category": "uncategorized",
+      "shape_category": "discrete_count_statement",
       "statement": "Michael wants to lose 10 pounds by June."
     },
     {
       "case_id": "gsm8k-train-sample-v1-0038",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'In a building, there are a hundred ladies on the first-floor studying.'",
-      "shape_category": "uncategorized",
+      "shape_category": "discrete_count_statement",
       "statement": "In a building, there are a hundred ladies on the first-floor studying."
     },
     {
@@ -273,13 +273,13 @@
     {
       "case_id": "gsm8k-train-sample-v1-0046",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'A school has 100 students.'",
-      "shape_category": "uncategorized",
+      "shape_category": "discrete_count_statement",
       "statement": "A school has 100 students."
     },
     {
       "case_id": "gsm8k-train-sample-v1-0047",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'John bakes 12 coconut macaroons, each weighing 5 ounces.'",
-      "shape_category": "uncategorized",
+      "shape_category": "multiplicative_aggregation",
       "statement": "John bakes 12 coconut macaroons, each weighing 5 ounces."
     },
     {
@@ -291,7 +291,7 @@
     {
       "case_id": "gsm8k-train-sample-v1-0049",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Malcolm is trying to find the fastest walk to school and is currently comparing two routes.'",
-      "shape_category": "uncategorized",
+      "shape_category": "discrete_count_statement",
       "statement": "Malcolm is trying to find the fastest walk to school and is currently comparing two routes."
     },
     {
@@ -306,21 +306,24 @@
     "by_category": {
       "comparative_with_unit": 3,
       "conditional_quantity": 0,
+      "currency_amount": 1,
       "descriptive_setup_no_quantity": 17,
+      "discrete_count_statement": 10,
       "fractional_rate_of_change": 3,
       "indefinite_quantity": 3,
+      "multiplicative_aggregation": 2,
       "nested_question_target": 2,
       "rate_with_currency": 3,
       "temporal_aggregation": 4,
-      "uncategorized": 14,
+      "uncategorized": 1,
       "unit_partition": 1
     },
-    "case_digest": "d030f826cb0f4088771d90c52c8be2ff75054ab27c7d47eae8dbfe1225b2eea1",
-    "categorized_rate": 0.72,
+    "case_digest": "7be4897842ff6530a84506c095c44db91f15d13a13c622d17b8f52daa5d16970",
+    "categorized_rate": 0.98,
     "total": 50,
-    "uncategorized": 14
+    "uncategorized": 1
   },
-  "source_cases": "/Users/kaizenpro/Projects/core-adr-0163-A-taxonomy/evals/refusal_taxonomy/public/v1/cases.jsonl",
+  "source_cases": "evals/refusal_taxonomy/public/v1/cases.jsonl",
   "split": "public",
   "version": "v1"
 }

@@ -20,19 +20,16 @@ preservation over normalization, distinguishing over similar.
 
 ## Round 1 — categories and counts
 
-The Phase A histogram (`evals/refusal_taxonomy/v1/report.json`) selected
-these three categories:
+The original Phase A histogram (pre-round-2-extension) selected these three
+categories:
 
-| Rank | Category | Phase A count | Exemplars (this round) |
+| Rank | Category | Phase A count | Exemplars |
 |---|---|---|---|
 | 1 | `descriptive_setup_no_quantity` | 17 | 20 |
 | 2 | `temporal_aggregation` | 4 | 20 |
 | 3 | `rate_with_currency` | 3 | 20 |
 
-Total: **60 hand-authored exemplars** across three files in
-`teaching/admissibility_exemplars/`.
-
-Per-category breakdown of sourcing:
+Round 1 sourcing breakdown:
 
 | Category | Train-sample citations | Novel (operator-authored) | Edge cases |
 |---|---|---|---|
@@ -40,13 +37,54 @@ Per-category breakdown of sourcing:
 | `temporal_aggregation` | 4 | 13 | 3 |
 | `rate_with_currency` | 3 | 14 | 3 |
 
-(Edge cases overlap with novel; counts above split them out.)
+## Round 2 — categories and counts
+
+Round 2 was driven by categorizing the post-#304 GSM8K `train_sample`
+still-refused 47 set: 23 had been UNCATEGORIZED under the round-1
+categorizer; the categorization sweep surfaced three coherent
+sub-shapes, plus five ratified-but-unmatched temporal cases that called
+for a v2 widening.
+
+| Rank | Category | Phase A round-2 count (public 50) | Exemplars |
+|---|---|---|---|
+| — | `discrete_count_statement` (new) | 10 | 20 |
+| — | `multiplicative_aggregation` (new) | 2 | 20 |
+| — | `currency_amount` (new) | 1 | 20 |
+| — | `temporal_aggregation` v2 (widening) | — | 10 |
+
+The "Phase A round-2 count" column is the number of the public 50-case
+sample now categorized into the new category by the extended Phase A
+categorizer; it is the empirical signal the categorization actually
+worked.  Pre-round-2 the public sample carried 14 UNCATEGORIZED cases;
+post-round-2 only 1 remains (case 0044, "10% simple interest" with no
+change verb — an honest residual outside the three sub-shapes).
+
+Round 2 sourcing breakdown:
+
+| Category | Train-sample citations | Novel (operator-authored) | Edge cases |
+|---|---|---|---|
+| `discrete_count_statement` | 6 | 11 | 3 |
+| `multiplicative_aggregation` | 3 | 13 | 4 |
+| `currency_amount` | 3 | 14 | 3 |
+| `temporal_aggregation` v2 | 4 | 5 | 1 |
 
 ## Files
+
+Round 1:
 
 - [`teaching/admissibility_exemplars/descriptive_setup_no_quantity_v1.jsonl`](../teaching/admissibility_exemplars/descriptive_setup_no_quantity_v1.jsonl)
 - [`teaching/admissibility_exemplars/temporal_aggregation_v1.jsonl`](../teaching/admissibility_exemplars/temporal_aggregation_v1.jsonl)
 - [`teaching/admissibility_exemplars/rate_with_currency_v1.jsonl`](../teaching/admissibility_exemplars/rate_with_currency_v1.jsonl)
+
+Round 2:
+
+- [`teaching/admissibility_exemplars/discrete_count_statement_v1.jsonl`](../teaching/admissibility_exemplars/discrete_count_statement_v1.jsonl)
+- [`teaching/admissibility_exemplars/multiplicative_aggregation_v1.jsonl`](../teaching/admissibility_exemplars/multiplicative_aggregation_v1.jsonl)
+- [`teaching/admissibility_exemplars/currency_amount_v1.jsonl`](../teaching/admissibility_exemplars/currency_amount_v1.jsonl)
+- [`teaching/admissibility_exemplars/temporal_aggregation_v2.jsonl`](../teaching/admissibility_exemplars/temporal_aggregation_v2.jsonl)
+
+Contract:
+
 - [`teaching/admissibility_exemplars/contract.md`](../teaching/admissibility_exemplars/contract.md)
 
 ## Cross-references

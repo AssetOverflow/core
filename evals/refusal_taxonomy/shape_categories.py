@@ -18,6 +18,15 @@ Doctrine (non-negotiable):
 
 Adding a new category requires ≥ 3 refused statements as evidence, cited
 inline.  ADR-0163 §Risks enforces this.
+
+Phase B round 2 extension
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Three new categories surfaced from categorizing the post-#304 GSM8K
+train_sample's still-refused 47 set: ``CURRENCY_AMOUNT``,
+``MULTIPLICATIVE_AGGREGATION``, and ``DISCRETE_COUNT_STATEMENT``.  Each is
+inserted into the dispatch order *after* the existing more-specific
+categories so that statements matching both (e.g. currency + per-unit
+rate framing) still resolve to the more-specific existing category.
 """
 
 from __future__ import annotations
@@ -29,9 +38,10 @@ from enum import Enum
 class ShapeCategory(str, Enum):
     """Disjoint shape categories surfaced from the GSM8K train-sample report.
 
-    The nine non-``UNCATEGORIZED`` values are the baseline set named in
-    ADR-0163 §Phase A.  Every value listed here has a rule below; if no
-    rule fires, ``UNCATEGORIZED`` is returned.
+    The non-``UNCATEGORIZED`` values are the baseline set named in
+    ADR-0163 §Phase A plus the round-2 extensions; every value listed
+    here has a rule below, and if no rule fires ``UNCATEGORIZED`` is
+    returned.
     """
 
     RATE_WITH_CURRENCY = "rate_with_currency"
@@ -43,6 +53,9 @@ class ShapeCategory(str, Enum):
     NESTED_QUESTION_TARGET = "nested_question_target"
     TEMPORAL_AGGREGATION = "temporal_aggregation"
     CONDITIONAL_QUANTITY = "conditional_quantity"
+    CURRENCY_AMOUNT = "currency_amount"
+    MULTIPLICATIVE_AGGREGATION = "multiplicative_aggregation"
+    DISCRETE_COUNT_STATEMENT = "discrete_count_statement"
     UNCATEGORIZED = "uncategorized"
 
 
@@ -65,6 +78,15 @@ _NUMBER_WORDS: frozenset[str] = frozenset({
     "fourth", "fourths", "fifth", "fifths", "sixth", "sixths",
     "dozen", "dozens",
 })
+
+# Subset of NUMBER_WORDS that are *integer* count words — used by the
+# discrete-count and multiplicative rules so a bare fraction word
+# ("half", "third") does not misroute to "discrete count of half things".
+_COUNT_NUMBER_WORDS: frozenset[str] = _NUMBER_WORDS - {
+    "half", "halves", "third", "thirds", "quarter", "quarters",
+    "fourth", "fourths", "fifth", "fifths", "sixth", "sixths",
+}
+_COUNT_NUMBER_WORDS_RE_SRC = "|".join(sorted(_COUNT_NUMBER_WORDS))
 
 # Indefinite quantifiers — "amount unspecified" signals.
 _INDEFINITE_TOKENS: tuple[str, ...] = (
@@ -147,6 +169,52 @@ _NESTED_QUESTION_RE = re.compile(
 _CONDITIONAL_RE = re.compile(
     r"^\s*if\b.+?\b(?:would|will|could|then|gets?|has|have)\b",
     re.IGNORECASE | re.DOTALL,
+)
+
+# --- Round-2 extension primitives ------------------------------------------
+
+# Container nouns whose presence with a count + ("of"|"with"|...) signals
+# multiplicative aggregation ("N <container> of <thing>" or
+# "N <container> with N <thing>").  Kept tight so a bare "house" or
+# "room" doesn't promote unrelated counts.
+_CONTAINER_NOUNS: tuple[str, ...] = (
+    "bag", "bags", "basket", "baskets", "box", "boxes",
+    "case", "cases", "crate", "crates", "carton", "cartons",
+    "package", "packages", "bundle", "bundles", "set", "sets",
+    "pack", "packs", "tray", "trays", "jar", "jars",
+    "bottle", "bottles", "bin", "bins", "shelf", "shelves",
+    "pallet", "pallets", "container", "containers",
+)
+_CONTAINER_NOUNS_RE_SRC = "|".join(_CONTAINER_NOUNS)
+
+# "<integer-or-word> <container_noun> (with|of|holding|containing|having)"
+# Allow up to two adjective words between the count and the container noun
+# ("five full boxes of crayons" → "five full boxes of").
+_MULTIPLICATIVE_CONTAINER_RE = re.compile(
+    r"\b(?:\d+(?:,\d{3})*|" + _COUNT_NUMBER_WORDS_RE_SRC + r")\s+"
+    r"(?:\w+\s+){0,2}"
+    r"(?:" + _CONTAINER_NOUNS_RE_SRC + r")\s+"
+    r"(?:of|with|holding|containing|having)\b",
+    re.IGNORECASE,
+)
+# "each ... <integer-or-word>" within a ~4-word window.  Catches
+# "each weighing 5 ounces", "each basket holds 50", "each contain six".
+_MULTIPLICATIVE_EACH_RE = re.compile(
+    r"\beach\s+(?:\w+\s+){0,4}(?:\d+|" + _COUNT_NUMBER_WORDS_RE_SRC + r")\b",
+    re.IGNORECASE,
+)
+
+# Discrete-count noun pair: a digit (optionally comma-grouped) immediately
+# followed by a counted noun, OR an integer number-word immediately
+# followed by a counted noun.  The "immediately" matters: "10% simple"
+# is *not* a digit+noun pair because "%" intervenes, so it stays
+# UNCATEGORIZED (an honest residual).
+_DISCRETE_COUNT_DIGIT_NOUN_RE = re.compile(
+    r"\b\d+(?:,\d{3})*\s+[A-Za-z][A-Za-z\-]*\b"
+)
+_DISCRETE_COUNT_WORD_NOUN_RE = re.compile(
+    r"\b(?:" + _COUNT_NUMBER_WORDS_RE_SRC + r")\s+[A-Za-z][A-Za-z\-]*\b",
+    re.IGNORECASE,
 )
 
 
@@ -257,6 +325,33 @@ def _is_rate_with_currency(padded_lower: str) -> bool:
     return _has_any_substring(padded_lower, _RATE_PER_UNIT_TOKENS)
 
 
+def _is_currency_amount(padded_lower: str) -> bool:
+    """Currency symbol without a per-unit framing — a bare amount.
+
+    Dispatched AFTER ``_is_rate_with_currency`` so any "$N per X"
+    statement is already claimed; what reaches this predicate is a
+    currency mention without rate framing.
+
+    Examples (≥ 3 cites, drawn from the post-#304 still-refused 47
+    GSM8K train_sample set):
+    - case 0019 "The dog ends up having health problems and this
+      requires 3 vet appointments, which cost $400 each."
+    - case 0026 "Aaron and his brother Carson each saved up $40
+      to go to dinner."
+    - case 0028 "It cost $100,000 to open initially."
+
+    Alternative considered: only fire when a currency-bearing token is
+    paired with a verb of payment ("cost", "paid", "owes").
+    Rejected — the bare currency presence is the load-bearing signal,
+    and the rate-with-currency rule already claims any per-unit form
+    above this dispatch slot, so widening the verb whitelist would
+    only add false negatives (e.g., "the donation jar collected
+    $87.50 at the festival" should still admit).
+    """
+
+    return bool(_CURRENCY_RE.search(padded_lower))
+
+
 def _is_comparative_with_unit(padded_lower: str) -> bool:
     """Comparative quantity phrases.
 
@@ -333,6 +428,66 @@ def _is_indefinite_quantity(padded_lower: str) -> bool:
     return _has_any_substring(padded_lower, _INDEFINITE_TOKENS)
 
 
+def _is_multiplicative_aggregation(padded_lower: str) -> bool:
+    """N outer-units each carrying M inner-units — spatial / per-container.
+
+    Two surface forms compose: (a) ``N <container> of/with/holding/...
+    <something>`` and (b) ``each <verb> <count>`` within a short window.
+    Either form is sufficient.
+
+    Examples (≥ 3 cites, drawn from the post-#304 still-refused 47):
+    - case 0025 "Lilibeth fills 6 baskets where each basket holds 50
+      strawberries."
+    - case 0045 "Each survey has 10 questions."
+    - case 0047 "John bakes 12 coconut macaroons, each weighing 5 ounces."
+
+    Discriminator vs ``TEMPORAL_AGGREGATION``: multiplicative is
+    spatial/per-container ("baskets ... strawberries"); temporal is
+    per-time-window ("per day", "every week").  Dispatch order places
+    temporal first so an "each day" framing wins where both apply.
+    Discriminator vs ``DISCRETE_COUNT_STATEMENT``: multiplicative carries
+    an inner aggregate dimension (the count-of-counted-things), while
+    discrete-count carries one count-noun pair; the inner aggregate is
+    the more-specific reading.
+    """
+
+    if _MULTIPLICATIVE_EACH_RE.search(padded_lower):
+        return True
+    if _MULTIPLICATIVE_CONTAINER_RE.search(padded_lower):
+        return True
+    return False
+
+
+def _is_discrete_count_statement(padded_lower: str) -> bool:
+    """A subject paired with one or more bare count-noun anchors.
+
+    The canonical surface is ``<subject> <verb> <count> <counted-noun>``;
+    "Nicole collected 400 Pokemon cards" and "A school has 100 students"
+    are central instances.  Lists of count-noun pairs ("2 horses, 5 dogs")
+    are admitted by the same predicate because each pair matches.
+
+    Examples (≥ 3 cites, drawn from the post-#304 still-refused 47):
+    - case 0023 "Nicole collected 400 Pokemon cards."
+    - case 0027 "Malcolm has 240 followers on Instagram and 500
+      followers on Facebook."
+    - case 0046 "A school has 100 students."
+
+    Discriminator vs ``RATE_WITH_CURRENCY`` and ``CURRENCY_AMOUNT``:
+    discrete-count statements carry no currency symbol; the currency
+    rules above this dispatch slot already claim those.  Discriminator
+    vs ``MULTIPLICATIVE_AGGREGATION``: discrete-count has no
+    inner-aggregate dimension; multiplicative above this slot already
+    claims "each ... N" and "N <container> of N" forms.  Anything left
+    is a bare count-noun pair.
+    """
+
+    if _DISCRETE_COUNT_DIGIT_NOUN_RE.search(padded_lower):
+        return True
+    if _DISCRETE_COUNT_WORD_NOUN_RE.search(padded_lower):
+        return True
+    return False
+
+
 def _is_descriptive_setup_no_quantity(statement: str, padded_lower: str) -> bool:
     """Pure context with no extractable measurement.
 
@@ -368,6 +523,8 @@ def categorize(statement: str) -> ShapeCategory:
         return ShapeCategory.UNIT_PARTITION
     if _is_rate_with_currency(padded_lower):
         return ShapeCategory.RATE_WITH_CURRENCY
+    if _is_currency_amount(padded_lower):
+        return ShapeCategory.CURRENCY_AMOUNT
     if _is_comparative_with_unit(padded_lower):
         return ShapeCategory.COMPARATIVE_WITH_UNIT
     if _is_fractional_rate_of_change(padded_lower):
@@ -378,6 +535,10 @@ def categorize(statement: str) -> ShapeCategory:
         return ShapeCategory.TEMPORAL_AGGREGATION
     if _is_conditional_quantity(statement):
         return ShapeCategory.CONDITIONAL_QUANTITY
+    if _is_multiplicative_aggregation(padded_lower):
+        return ShapeCategory.MULTIPLICATIVE_AGGREGATION
+    if _is_discrete_count_statement(padded_lower):
+        return ShapeCategory.DISCRETE_COUNT_STATEMENT
     if _is_descriptive_setup_no_quantity(statement, padded_lower):
         return ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY
     return ShapeCategory.UNCATEGORIZED
@@ -389,11 +550,14 @@ SHAPE_CATEGORY_ORDER: tuple[ShapeCategory, ...] = (
     ShapeCategory.NESTED_QUESTION_TARGET,
     ShapeCategory.UNIT_PARTITION,
     ShapeCategory.RATE_WITH_CURRENCY,
+    ShapeCategory.CURRENCY_AMOUNT,
     ShapeCategory.COMPARATIVE_WITH_UNIT,
     ShapeCategory.FRACTIONAL_RATE_OF_CHANGE,
     ShapeCategory.INDEFINITE_QUANTITY,
     ShapeCategory.TEMPORAL_AGGREGATION,
     ShapeCategory.CONDITIONAL_QUANTITY,
+    ShapeCategory.MULTIPLICATIVE_AGGREGATION,
+    ShapeCategory.DISCRETE_COUNT_STATEMENT,
     ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY,
     ShapeCategory.UNCATEGORIZED,
 )

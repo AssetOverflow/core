@@ -72,7 +72,11 @@ def test_lane_run_via_framework():
     lane = get_lane("refusal_taxonomy")
     result = run_lane(lane, version="v1", split="public")
     assert result.metrics["total"] == 50
-    assert result.metrics["categorized_rate"] == pytest.approx(0.72)
+    # Phase B round 2 extended the categorizer with three new shape
+    # categories; the post-extension histogram leaves only the residual
+    # uncategorized tail.  The exact rate is asserted against the
+    # committed report by ``test_committed_report_matches_categorizer``.
+    assert result.metrics["categorized_rate"] >= 0.95
 
 
 # ---------------------------------------------------------------------------
@@ -106,8 +110,14 @@ def test_every_category_value_reachable_by_a_rule():
             "If she had two more, she would have plenty.",
         ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY:
             "Marnie makes bead bracelets.",
-        ShapeCategory.UNCATEGORIZED:
+        ShapeCategory.CURRENCY_AMOUNT:
+            "It cost $100,000 to open initially.",
+        ShapeCategory.MULTIPLICATIVE_AGGREGATION:
+            "Each survey has 10 questions.",
+        ShapeCategory.DISCRETE_COUNT_STATEMENT:
             "Nicole collected 400 Pokemon cards.",
+        ShapeCategory.UNCATEGORIZED:
+            "John invests in a bank and gets 10% simple interest.",
     }
     for category, probe in probes.items():
         assert categorize(probe) is category, (
