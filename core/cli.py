@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout\n  core eval contemplation_quality\n  core eval contemplation_quality --json --save"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching propose <candidate-jsonl-path>\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout\n  core eval contemplation_quality\n  core eval contemplation_quality --json --save\n  core workbench api\n  core workbench api --port 9000\n  core workbench api --host 0.0.0.0 --allow-nonlocal-bind"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -1793,6 +1793,18 @@ def cmd_eval(args: argparse.Namespace) -> int:
         print(f"\nreport written: {report_path}", file=sys.stderr)
 
     return 0
+
+
+def cmd_workbench(args: argparse.Namespace) -> int:
+    """Run CORE Workbench local operator surfaces."""
+    if args.workbench_command == "api":
+        from workbench.server import main as workbench_api_main
+
+        argv = ["--host", args.host, "--port", str(args.port)]
+        if args.allow_nonlocal_bind:
+            argv.append("--allow-nonlocal-bind")
+        return workbench_api_main(argv)
+    _die("workbench requires a subcommand")
 
 
 def cmd_pulse(args: argparse.Namespace) -> int:
@@ -3679,6 +3691,28 @@ def build_parser() -> argparse.ArgumentParser:
     rust_build.set_defaults(func=cmd_rust_build)
     rust_test = rust_sub.add_parser("test", help="run cargo test --release for core-rs")
     rust_test.set_defaults(func=cmd_rust_test)
+
+    workbench = subparsers.add_parser(
+        "workbench",
+        help="run CORE Workbench local operator surfaces",
+    )
+    workbench_sub = workbench.add_subparsers(
+        dest="workbench_command",
+        metavar="workbench-command",
+        required=True,
+    )
+    workbench_api = workbench_sub.add_parser(
+        "api",
+        help="start the W-026 read-only local Workbench API",
+    )
+    workbench_api.add_argument("--host", default="127.0.0.1")
+    workbench_api.add_argument("--port", type=int, default=8765)
+    workbench_api.add_argument(
+        "--allow-nonlocal-bind",
+        action="store_true",
+        help="allow binding to a host other than 127.0.0.1 or localhost",
+    )
+    workbench_api.set_defaults(func=cmd_workbench)
 
     pulse = subparsers.add_parser(
         "pulse",

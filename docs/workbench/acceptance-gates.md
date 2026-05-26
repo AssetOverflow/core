@@ -23,18 +23,34 @@ The planning branch is acceptable when it includes:
 Required:
 
 - local-only API defaults to `127.0.0.1`
+- non-local bind requires an explicit operator flag
 - typed response schemas
 - route tests
 - path traversal tests for artifact readers
+- proposal event-log read-model tests using `ProposalLog.current_state()`
+- unknown trace ids return `404`, not placeholder success payloads
 - no proposal accept/reject route
 - no corpus mutation route
 - no pack mutation route
 - no workflow dispatch route
 - no hidden background worker
+- no frontend commits
+- no auth surface
+- no FastAPI/uvicorn/pydantic dependency
+
+Blockers:
+
+- fake replay equality by comparing an artifact digest to itself
+- placeholder trace-as-success responses
+- parsing proposal events as proposal records
+- non-local bind without explicit operator opt-in
+- auth added before the local read-only boundary is accepted
+- frontend, visual intro, trace drawer, or chat UI included in W-026
 
 Acceptance command candidates:
 
 ```bash
+uv run python -m pytest tests/test_workbench_schemas.py -q
 uv run python -m pytest tests/test_workbench_api.py -q
 uv run python -m pytest tests/test_workbench_readers.py -q
 ```

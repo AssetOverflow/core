@@ -46,6 +46,7 @@ include = [
     "session*",
     "vault*",
     "vocab*",
+    "workbench*",
 ]
 
 [tool.pytest.ini_options]

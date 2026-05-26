@@ -136,6 +136,66 @@ mutation capability.
 
 ---
 
+# Current Status
+
+The planning package is merged on `main` via `404e694`
+(`docs(workbench): CORE Workbench v1 planning architecture (ADR-0160)`).
+
+The prototype branch `feat/w026-workbench-readonly-api` is superseded and must
+not be used as the implementation base.  It mixed W-026 with frontend and trace
+work, added auth and web-framework dependencies before the local read-only
+boundary was proven, and included placeholder replay/trace behavior that could
+be mistaken for evidence.
+
+The next accepted implementation starts clean from `main` with W-026 only:
+dataclass schemas, repo-root-constrained readers, a standard-library local HTTP
+API, and route/read-model tests.  W-027 and later phases build on that boundary
+after it is accepted.
+
+---
+
+# W-026 Local Runbook
+
+Start the read-only local API:
+
+```bash
+core workbench api
+```
+
+Verify liveness:
+
+```bash
+curl http://127.0.0.1:8765/health
+```
+
+Inspect each W-026 endpoint family:
+
+```bash
+curl http://127.0.0.1:8765/runtime/status
+curl http://127.0.0.1:8765/artifacts
+curl http://127.0.0.1:8765/artifacts/evals/contemplation_quality/contract.md
+curl http://127.0.0.1:8765/proposals
+curl http://127.0.0.1:8765/evals
+curl http://127.0.0.1:8765/evals/contemplation_quality
+curl -X POST http://127.0.0.1:8765/evals/run \
+  -H 'Content-Type: application/json' \
+  -d '{"lane":"contemplation_quality","version":"v1","split":"public"}'
+```
+
+Bind to a different local port:
+
+```bash
+core workbench api --port 9000
+```
+
+Non-local binds require an explicit operator flag:
+
+```bash
+core workbench api --host 0.0.0.0 --allow-nonlocal-bind
+```
+
+---
+
 # Initial Work Queue
 
 | Work Item | Goal |
