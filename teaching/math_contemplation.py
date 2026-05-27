@@ -1,13 +1,22 @@
-"""ADR-0167 W2-A / W2-B — Audit-to-evidence adapter + lexical claim signature.
+"""ADR-0167 W2-A / W2-B + ADR-0172 W2 — Audit-corpus decomposition.
 
-W2-A deliverable: :func:`audit_to_evidence` and
+ADR-0167 W2-A deliverable: :func:`audit_to_evidence` and
 :func:`audit_problem_to_evidence` convert :class:`AuditRow` sequences into
 typed :class:`MathReaderRefusalEvidence` teaching-corridor records.
 
-W2-B deliverable: For ``sub_type == "lexical"`` evidence, ``claim_signature``
-is computed via :func:`lexical_claim_signature` and the ``evidence_hash`` is
-recomputed to incorporate the signature.  All other sub_types leave
-``claim_signature == ""``.
+ADR-0167 W2-B deliverable: For ``sub_type == "lexical"`` evidence,
+``claim_signature`` is computed via :func:`lexical_claim_signature` and the
+``evidence_hash`` is recomputed to incorporate the signature.  All other
+sub_types leave ``claim_signature == ""``.
+
+ADR-0172 W2 deliverable: :func:`decompose_audit` reads
+``audit_brief_11.json``, groups refusal rows by
+``(refusal_reason, missing_operator)``, and emits one
+:class:`MathReaderRefusalShapeProposal` per group of ≥2 rows.  Each
+proposal carries a 4-step :class:`ReasoningTrace`
+(observation → grouping → hypothesis → conclusion).  Pure read-only:
+the audit file is not mutated, no proposal is written to disk, and no
+teaching-store hook fires.
 
 Pure module.  No filesystem writes, no network calls, no global mutation.
 Deterministic: same inputs → byte-identical output across all reruns.
@@ -15,14 +24,27 @@ Deterministic: same inputs → byte-identical output across all reruns.
 
 from __future__ import annotations
 
+import hashlib
+import json
+from pathlib import Path
 from typing import Iterable
 
+from evals.refusal_taxonomy.shape_categories import ShapeCategory
 from generate.comprehension.audit import AuditRow, audit_problem
 from teaching.math_claim_signature import lexical_claim_signature
+from teaching.math_contemplation_proposal import (
+    MathReaderRefusalShapeProposal,
+    build_proposal,
+)
 from teaching.math_evidence import (
     MathReaderRefusalEvidence,
     SUB_TYPE_FOR_OPERATOR,
     from_audit_row,
+)
+from teaching.math_reasoning_trace import (
+    ReasoningStep,
+    ReasoningTrace,
+    build_trace,
 )
 
 
@@ -98,7 +120,267 @@ def audit_problem_to_evidence(
     return audit_to_evidence(rows)
 
 
+# ---------------------------------------------------------------------------
+# ADR-0172 W2 — Audit-corpus decomposer
+# ---------------------------------------------------------------------------
+
+
+_CHANGE_KIND_BY_REFUSAL_REASON: dict[str, str] = {
+    "lexicon_entry": "vocabulary_addition",
+    "narrowness_violation": "matcher_extension",
+    "frame_unrecognized": "frame_reclassification",
+}
+
+
+def _audit_row_from_case(case: dict) -> AuditRow:
+    """Reconstruct an :class:`AuditRow` from one ``per_case`` JSON entry.
+
+    Defensive about missing fields: the audit JSON only carries the
+    columns it had to populate.  Empty/missing fields default to the
+    natural zero for their declared type.
+    """
+
+    return AuditRow(
+        case_id=str(case["case_id"]),
+        sentence_index=int(case.get("sentence_index", 0)),
+        token_index=int(case.get("token_index", 0)),
+        token_text=str(case.get("token_text", "")),
+        recognized_terms=tuple(case.get("recognized_terms", ())),
+        skipped_frame=case.get("skipped_frame"),
+        missing_operator=case.get("missing_operator"),
+        refusal_reason=str(case.get("refusal_reason", "")),
+        refusal_detail=str(case.get("refusal_detail", "")),
+    )
+
+
+def _change_kind_for_group(refusal_reason: str) -> str:
+    """Heuristic per ADR-0172 §"Six open questions" #1."""
+
+    return _CHANGE_KIND_BY_REFUSAL_REASON.get(
+        refusal_reason, "injector_sub_shape"
+    )
+
+
+def _modal_anchor_payload(
+    *,
+    refusal_reason: str,
+    missing_operator: str,
+    evidence: tuple[MathReaderRefusalEvidence, ...],
+) -> dict:
+    """Build a deterministic, JSON-safe placeholder payload for the group."""
+
+    return {
+        "evidence_count": len(evidence),
+        "group_key": {
+            "missing_operator": missing_operator,
+            "refusal_reason": refusal_reason,
+        },
+        "modal_sub_type": evidence[0].sub_type,
+    }
+
+
+def _build_reasoning_trace(
+    *,
+    refusal_reason: str,
+    missing_operator: str,
+    evidence: tuple[MathReaderRefusalEvidence, ...],
+    change_kind: str,
+) -> ReasoningTrace:
+    """Construct the 4-step contemplation trace for one group."""
+
+    case_ids = tuple(ev.case_id for ev in evidence)
+    group_payload = {
+        "missing_operator": missing_operator,
+        "refusal_reason": refusal_reason,
+    }
+    observation = ReasoningStep(
+        step_index=0,
+        step_kind="observation",
+        input_pointers=case_ids,
+        claim=(
+            f"{len(evidence)} refusal rows share "
+            f"(refusal_reason={refusal_reason!r}, "
+            f"missing_operator={missing_operator!r})"
+        ),
+        justification=(
+            "Decomposer iterated audit_brief_11.json per_case rows and "
+            "found a group whose shared key meets the ≥2-evidence floor."
+        ),
+        output_payload={
+            "case_ids": list(case_ids),
+            "evidence_count": len(evidence),
+        },
+    )
+    grouping = ReasoningStep(
+        step_index=1,
+        step_kind="grouping",
+        input_pointers=case_ids,
+        claim=(
+            "Group key encodes the shared (refusal_reason, missing_operator) "
+            "tuple under which these rows refused."
+        ),
+        justification=(
+            "Per ADR-0172 §'Six open questions' #1, the naive grouping is "
+            "exact equality on the refusal_reason × missing_operator pair."
+        ),
+        output_payload=group_payload,
+    )
+    hypothesis = ReasoningStep(
+        step_index=2,
+        step_kind="hypothesis",
+        input_pointers=case_ids,
+        claim=(
+            f"The structural change kind for this group is {change_kind!r}."
+        ),
+        justification=(
+            "Dispatched via the refusal_reason heuristic: lexicon_entry → "
+            "vocabulary_addition; narrowness_violation → matcher_extension; "
+            "frame_unrecognized → frame_reclassification; else → "
+            "injector_sub_shape."
+        ),
+        output_payload={"proposed_change_kind": change_kind},
+    )
+    conclusion = ReasoningStep(
+        step_index=3,
+        step_kind="conclusion",
+        input_pointers=case_ids,
+        claim=(
+            f"Propose a {change_kind!r} structural change covering "
+            f"{len(evidence)} evidence rows."
+        ),
+        justification=(
+            "Evidence-only proposal; the wrong=0 surface ratification "
+            "handler decides whether to apply, not this decomposer."
+        ),
+        output_payload={
+            "proposed_change_kind": change_kind,
+            "evidence_count": len(evidence),
+        },
+    )
+    return build_trace(
+        (observation, grouping, hypothesis, conclusion)
+    )
+
+
+def _build_proposal_for_group(
+    *,
+    refusal_reason: str,
+    missing_operator: str,
+    evidence: tuple[MathReaderRefusalEvidence, ...],
+) -> MathReaderRefusalShapeProposal:
+    """Assemble one :class:`MathReaderRefusalShapeProposal` for a group."""
+
+    change_kind = _change_kind_for_group(refusal_reason)
+    payload = _modal_anchor_payload(
+        refusal_reason=refusal_reason,
+        missing_operator=missing_operator,
+        evidence=evidence,
+    )
+    trace = _build_reasoning_trace(
+        refusal_reason=refusal_reason,
+        missing_operator=missing_operator,
+        evidence=evidence,
+        change_kind=change_kind,
+    )
+    replay_seed = json.dumps(
+        {
+            "evidence_hashes": sorted(ev.evidence_hash for ev in evidence),
+            "missing_operator": missing_operator,
+            "refusal_reason": refusal_reason,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    replay_equivalence_hash = hashlib.sha256(replay_seed).hexdigest()
+    structural_commonality = (
+        f"{len(evidence)} refusals share "
+        f"refusal_reason={refusal_reason!r} ∧ "
+        f"missing_operator={missing_operator!r}"
+    )
+    wrong_zero_assertion = (
+        "Proposal is evidence-only; ratification handler is the wrong=0 "
+        "surface, not this proposal."
+    )
+    return build_proposal(
+        shape_category=ShapeCategory.UNCATEGORIZED,
+        structural_commonality=structural_commonality,
+        evidence_pointers=evidence,
+        proposed_change_kind=change_kind,
+        proposed_change_payload=payload,
+        wrong_zero_assertion=wrong_zero_assertion,
+        replay_equivalence_hash=replay_equivalence_hash,
+        reasoning_trace=trace,
+    )
+
+
+def decompose_audit(
+    audit_path: Path,
+) -> tuple[MathReaderRefusalShapeProposal, ...]:
+    """Decompose an audit brief into refusal-shape proposals.
+
+    Read ``audit_path`` (expected schema: ``audit_brief_11.json``), group
+    ``per_case`` refusal rows by ``(refusal_reason, missing_operator)``,
+    and emit one :class:`MathReaderRefusalShapeProposal` per group with
+    ≥2 evidence rows.  Each proposal carries a 4-step
+    :class:`ReasoningTrace` (observation → grouping → hypothesis →
+    conclusion).
+
+    Determinism contract
+    --------------------
+    - Group iteration order is sorted by ``(refusal_reason,
+      missing_operator)``.
+    - Evidence per group is sorted by ``case_id``.
+    - Output tuple is sorted by ``proposal_id``.
+    - The same input file produces a byte-identical proposal stream
+      across every rerun.
+
+    Trust boundary
+    --------------
+    Pure read-only.  ``audit_path`` is read once; no file is written.
+    Decomposer is teaching-layer code only — does not import from
+    ``chat``/``field``/``generate.stream``/``algebra``.
+    """
+
+    raw = audit_path.read_text(encoding="utf-8")
+    data = json.loads(raw)
+    per_case = data.get("per_case", []) or []
+
+    rows: list[AuditRow] = []
+    for case in per_case:
+        if not isinstance(case, dict):
+            continue
+        if not case.get("case_id"):
+            continue
+        rows.append(_audit_row_from_case(case))
+
+    evidence_records = audit_to_evidence(rows)
+
+    groups: dict[tuple[str, str], list[MathReaderRefusalEvidence]] = {}
+    for ev in evidence_records:
+        if ev.missing_operator is None:
+            continue
+        key = (ev.refusal_reason, ev.missing_operator)
+        groups.setdefault(key, []).append(ev)
+
+    proposals: list[MathReaderRefusalShapeProposal] = []
+    for key in sorted(groups.keys()):
+        refusal_reason, missing_operator = key
+        group_evs = tuple(sorted(groups[key], key=lambda e: e.case_id))
+        if len(group_evs) < 2:
+            continue
+        proposals.append(
+            _build_proposal_for_group(
+                refusal_reason=refusal_reason,
+                missing_operator=missing_operator,
+                evidence=group_evs,
+            )
+        )
+
+    return tuple(sorted(proposals, key=lambda p: p.proposal_id))
+
+
 __all__ = [
     "audit_to_evidence",
     "audit_problem_to_evidence",
+    "decompose_audit",
 ]
