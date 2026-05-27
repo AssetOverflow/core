@@ -160,6 +160,7 @@ class DiscoveryCandidate:
     pack_consistent: bool
     boundary_clean: bool
     review_state: Literal["unreviewed"] = "unreviewed"
+    domain: Literal["cognition", "math"] = "cognition"
     # Phase C1 fields.  Defaults preserve byte-equality with Phase B
     # ``as_dict`` output when the candidate has not been contemplated.
     polarity: Literal["affirms", "falsifies", "undetermined"] = "undetermined"
@@ -179,6 +180,8 @@ class DiscoveryCandidate:
             "boundary_clean": self.boundary_clean,
             "review_state": self.review_state,
         }
+        if self.domain != "cognition":
+            out["domain"] = self.domain
         # Phase C1 fields are emitted only when contemplation has
         # produced non-default content.  This keeps a freshly-emitted
         # Phase B candidate's JSONL line byte-identical to the pre-C1
@@ -209,6 +212,7 @@ class DiscoveryCandidate:
             pack_consistent=payload["pack_consistent"],
             boundary_clean=payload["boundary_clean"],
             review_state=payload.get("review_state", "unreviewed"),
+            domain=payload.get("domain", "cognition"),
             polarity=payload.get("polarity", "undetermined"),
             claim_domain=payload.get("claim_domain", "factual"),
             evidence=tuple(
