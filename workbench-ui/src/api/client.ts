@@ -7,6 +7,9 @@ import type {
   ArtifactRef,
   ArtifactDetail,
   ReplayComparison,
+  ProposalDetail,
+  ProposalState,
+  ProposalSummary,
 } from "../types/api";
 
 export class WorkbenchApiError extends Error {
@@ -79,4 +82,24 @@ export async function fetchArtifactDetail(artifactId: string): Promise<ArtifactD
 
 export async function fetchReplayComparison(artifactId: string): Promise<ReplayComparison> {
   return apiFetch<ReplayComparison>(`/replay/${artifactId}`);
+}
+
+export type ProposalStateFilter = ProposalState | "all";
+
+interface ItemsEnvelope<T> {
+  items: T[];
+}
+
+export async function fetchProposals(
+  filter: ProposalStateFilter = "all",
+): Promise<ProposalSummary[]> {
+  const envelope = await apiFetch<ItemsEnvelope<ProposalSummary>>("/proposals");
+  if (filter === "all") {
+    return envelope.items;
+  }
+  return envelope.items.filter((proposal) => proposal.state === filter);
+}
+
+export async function fetchProposalDetail(proposalId: string): Promise<ProposalDetail> {
+  return apiFetch<ProposalDetail>(`/proposals/${encodeURIComponent(proposalId)}`);
 }

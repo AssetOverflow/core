@@ -4,9 +4,9 @@ import { queryClient } from "../api/queries";
 import { Shell } from "./Shell";
 import { PreviewPage } from "../preview/PreviewPage";
 import { ChatRoute } from "../routes/ChatRoute";
+import { ProposalsRoute } from "./proposals/ProposalsRoute";
 import { TraceRoutePlaceholder } from "../routes/TraceRoutePlaceholder";
 import { ReplayRoute } from "./replay/ReplayRoute";
-import { ProposalsRoutePlaceholder } from "../routes/ProposalsRoutePlaceholder";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { RunsRoutePlaceholder } from "../routes/RunsRoutePlaceholder";
 import { PacksRoutePlaceholder } from "../routes/PacksRoutePlaceholder";
@@ -24,7 +24,7 @@ export function App() {
             <Route path="chat" element={<ChatRoute />} />
             <Route path="trace" element={<TraceRoutePlaceholder />} />
             <Route path="replay" element={<ReplayRoute />} />
-            <Route path="proposals" element={<ProposalsRoutePlaceholder />} />
+            <Route path="proposals" element={<ProposalsRoute />} />
             <Route path="evals" element={<EvalsRoute />} />
             <Route path="runs" element={<RunsRoutePlaceholder />} />
             <Route path="packs" element={<PacksRoutePlaceholder />} />

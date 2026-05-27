@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apiFetch, WorkbenchApiError } from "./client";
+import { apiFetch, fetchProposalDetail, fetchProposals, WorkbenchApiError } from "./client";
+import { proposalDetail, proposalSummaries } from "./__fixtures__/proposals";
 
 describe("apiFetch", () => {
   afterEach(() => {
@@ -66,5 +67,38 @@ describe("apiFetch", () => {
     vi.useRealTimers();
     // fetchPromise will never resolve but that's expected
     fetchPromise.catch(() => {});
+  });
+});
+
+describe("proposal fetchers", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("unwraps the /proposals items envelope and applies a state filter locally", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: vi.fn().mockResolvedValue({
+          ok: true,
+          generated_at: "now",
+          data: { items: proposalSummaries },
+        }),
+      }),
+    );
+
+    await expect(fetchProposals("accepted")).resolves.toEqual([proposalSummaries[1]]);
+  });
+
+  it("fetches proposal detail without mutating the proposal log", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ ok: true, generated_at: "now", data: proposalDetail }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchProposalDetail("proposal/detail id")).resolves.toEqual(proposalDetail);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://127.0.0.1:8765/proposals/proposal%2Fdetail%20id");
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.method).toBeUndefined();
   });
 });
