@@ -276,6 +276,17 @@ class RuntimeConfig:
     # ADR-0151 — generate TeachingChainProposals from enriched candidates on load.
     auto_proposal_enabled: bool = False
 
+    # ADR-0164 Phase 1 — incremental comprehension reader for question sentences.
+    # When True, the candidate-graph path uses the comprehension reader
+    # (generate/comprehension/lifecycle.py) to parse question sentences BEFORE
+    # consulting the regex question patterns (Pattern A/B/C in
+    # generate/math_candidate_parser.py).  On reader refusal, falls through to
+    # the existing regex parser — the reader is purely additive at Phase 1.
+    # Default False: flag-OFF behaviour is byte-identical to today.
+    # Phase 3 (per ADR-0164 §Phasing) removes the regex question parser entirely;
+    # that work is deferred — this PR is the Phase 1 stopgap.
+    comprehension_reader_questions: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"

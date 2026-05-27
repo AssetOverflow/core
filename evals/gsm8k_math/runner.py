@@ -31,9 +31,12 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from generate.math_candidate_graph import parse_and_solve
+
+if TYPE_CHECKING:
+    from core.config import RuntimeConfig
 from generate.math_parser import ParseError, parse_problem
 from generate.math_problem_graph import MathProblemGraph
 from generate.math_realizer import RealizerError, realize
@@ -235,7 +238,10 @@ def _score_one(case: dict[str, Any]) -> CaseOutcome:
 # TODO(ADR-future): report.json metrics may not credit candidate-graph admissions
 # routed through this branch. Aggregation in calling code needs an audit before
 # the canonical run.honest_runner.json artifact can be trusted for cross-phase comparison.
-def _score_one_candidate_graph(case: dict[str, Any]) -> CaseOutcome:
+def _score_one_candidate_graph(
+    case: dict[str, Any],
+    config: "RuntimeConfig | None" = None,
+) -> CaseOutcome:
     """ADR-0126 P4 — score one case via the candidate-graph pipeline.
 
     Mirrors :func:`_score_one` end-to-end (parser → solver → verifier →
@@ -253,13 +259,20 @@ def _score_one_candidate_graph(case: dict[str, Any]) -> CaseOutcome:
     (e.g. ``evals/gsm8k_math/train_sample/v1/runner.py`` from PR
     #160) substitute this function for ``_score_one``; the
     ``CaseOutcome`` shape is identical.
+
+    Args:
+        case: Case record with keys ``id``, ``problem``, ``expected_answer``,
+            ``expected_unit``.
+        config: Optional :class:`core.config.RuntimeConfig`.  Passed through
+            to :func:`generate.math_candidate_graph.parse_and_solve`.  When
+            None, flag-OFF (default) behaviour is preserved.
     """
     case_id = case["id"]
     expected_answer = case["expected_answer"]
     expected_unit = case["expected_unit"]
 
     # Stage 1 — candidate-graph parse + internal solve + decision rule.
-    cg_result = parse_and_solve(case["problem"])
+    cg_result = parse_and_solve(case["problem"], config=config)
     if not cg_result.is_admitted:
         return CaseOutcome(
             case_id=case_id,
