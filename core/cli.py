@@ -23,7 +23,7 @@ _CORE_RS_DIR = _REPO_ROOT / "core-rs"
 _CORE_RS_MANIFEST = _CORE_RS_DIR / "Cargo.toml"
 
 DESCRIPTION = "CORE versor engine command suite."
-EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching hitl-queue list\n  core teaching hitl-queue list --state all --json\n  core teaching hitl-queue show <proposal_id>\n  core teaching propose <candidate-jsonl-path>\n  core teaching propose-from-exemplars teaching/admissibility_exemplars/rate_with_currency_v1.jsonl\n  core teaching propose-from-exemplars --all\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout\n  core eval contemplation_quality\n  core eval contemplation_quality --json --save\n  core workbench api\n  core workbench api --port 9000\n  core workbench api --host 0.0.0.0 --allow-nonlocal-bind"
+EPILOG = "Examples:\n  core chat\n  core pulse \"What is truth?\"\n  core pulse --no-glove --json \"Compare knowledge and wisdom\"\n  core bench\n  core bench --suite all\n  core bench --suite all --json --report bench_all.json\n  core bench --suite determinism --runs 50\n  core bench --suite speedup --json\n  core trace \"word beginning truth\"\n  core trace --output-language grc --frame-pack grc --json \"logos\"\n  core rust status\n  core rust build\n  core oov covenant\n  core pack list\n  core pack verify en_minimal_v1\n  core teaching audit\n  core teaching audit --json\n  core teaching gaps --top 10\n  core teaching queue --threshold 3\n  core teaching hitl-queue list\n  core teaching hitl-queue list --state all --json\n  core teaching hitl-queue show <proposal_id>\n  core teaching propose <candidate-jsonl-path>\n  core teaching propose-from-exemplars teaching/admissibility_exemplars/rate_with_currency_v1.jsonl\n  core teaching propose-from-exemplars --all\n  core teaching proposals --state pending\n  core teaching review <proposal_id> --accept --review-date 2026-05-18\n  core teaching supersede cause_light_reveals_truth --subject light --intent cause --connective grounds --object truth --review-date 2026-05-18\n  core teaching supersessions\n  core teaching supersessions --json\n  core test --suite fast -q\n  core test --suite pulse -q\n  core test --suite proof -q\n  core test --suite cognition -q\n  core test -- tests/test_alignment_graph.py -q\n  core demo audit-tour\n  core demo register-tour\n  core demo anchor-lens-tour\n  core demo orthogonality-tour\n  core demo pack-measurements\n  core demo long-context-comparison\n  core demo anti-regression\n  core demo learning-loop\n  core demo learning-arc\n  core demo articulation\n  core demo conversation\n  core demo conversation --no-stream\n  core demo all\n  core demo adr-0024-chain\n  core eval --list\n  core eval cognition\n  core eval cognition --json --save\n  core eval cognition --split dev --version v1\n  core eval cognition --split holdout\n  core eval contemplation_quality\n  core eval contemplation_quality --json --save\n  core eval math-contemplation\n  core eval math-contemplation --audit evals/gsm8k_math/train_sample/v1/audit_brief_11.json\n  core eval math-contemplation --output teaching/math_proposals/proposals.jsonl\n  core workbench api\n  core workbench api --port 9000\n  core workbench api --host 0.0.0.0 --allow-nonlocal-bind"
 
 _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "fast": (
@@ -2071,6 +2071,9 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 def cmd_eval(args: argparse.Namespace) -> int:
     """Run an eval lane by name, or list available lanes."""
+    if getattr(args, "lane", None) == "math-contemplation":
+        return cmd_eval_math_contemplation(args)
+
     from evals._parallel import normalize_workers
     from evals.framework import (
         discover_lanes,
@@ -2171,6 +2174,120 @@ def cmd_eval(args: argparse.Namespace) -> int:
             json.dumps(result.as_dict(), ensure_ascii=False, indent=2, sort_keys=True)
         )
         print(f"\nreport written: {report_path}", file=sys.stderr)
+
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# ADR-0172 W3 — math-contemplation CLI lane
+# ---------------------------------------------------------------------------
+
+_MATH_PROPOSALS_DIR = _REPO_ROOT / "teaching" / "math_proposals"
+_DEFAULT_AUDIT_PATH = (
+    _REPO_ROOT
+    / "evals"
+    / "gsm8k_math"
+    / "train_sample"
+    / "v1"
+    / "audit_brief_11.json"
+)
+_DEFAULT_OUTPUT_PATH = _MATH_PROPOSALS_DIR / "proposals.jsonl"
+
+
+def _validate_output_path(raw: str | None) -> Path:
+    """Reject output paths that escape teaching/math_proposals/.
+
+    Mirrors :func:`language_packs.compiler._validate_pack_id` trust-boundary
+    discipline: path-traversal and absolute paths are rejected before any
+    filesystem access.
+
+    Exit code 2 on rejection (parse/path-rejection class).
+    """
+    if raw is None:
+        return _DEFAULT_OUTPUT_PATH
+
+    candidate = Path(raw)
+
+    if candidate.is_absolute():
+        _die(
+            f"--output must be a relative path inside teaching/math_proposals/; "
+            f"got absolute path: {raw!r}",
+            code=2,
+        )
+
+    resolved = (_REPO_ROOT / candidate).resolve()
+    allowed_root = _MATH_PROPOSALS_DIR.resolve()
+
+    try:
+        resolved.relative_to(allowed_root)
+    except ValueError:
+        _die(
+            f"--output must resolve inside teaching/math_proposals/; "
+            f"got: {raw!r}",
+            code=2,
+        )
+
+    return resolved
+
+
+def cmd_eval_math_contemplation(args: argparse.Namespace) -> int:
+    """ADR-0172 W3 — decompose an audit brief into refusal-shape proposals.
+
+    Reads ``--audit`` (default: ``evals/gsm8k_math/train_sample/v1/audit_brief_11.json``),
+    runs :func:`teaching.math_contemplation.decompose_audit`, and writes one
+    ``canonical_bytes()`` JSON line per proposal to ``--output``
+    (default: ``teaching/math_proposals/proposals.jsonl``).
+
+    Idempotency: re-running on the same audit overwrites byte-identical bytes.
+    Output is sorted by ``proposal_id`` (matches the decomposer sort contract).
+
+    Exit codes:
+      0  success
+      1  audit file not found
+      2  parse error or path-traversal rejection
+
+    Forbidden by design: no proposal is auto-applied, no file outside
+    ``teaching/math_proposals/`` is written, the audit file is not mutated.
+    """
+    from teaching.math_contemplation import decompose_audit
+    from teaching.math_contemplation_proposal import canonical_bytes
+
+    audit_raw = getattr(args, "audit", None)
+    output_raw = getattr(args, "output", None)
+
+    audit_path = Path(audit_raw) if audit_raw else _DEFAULT_AUDIT_PATH
+    if not audit_path.is_absolute():
+        audit_path = (_REPO_ROOT / audit_path).resolve()
+
+    if not audit_path.exists():
+        _die(f"audit file not found: {audit_path}", code=1)
+
+    output_path = _validate_output_path(output_raw)
+
+    try:
+        proposals = decompose_audit(audit_path)
+    except json.JSONDecodeError as exc:
+        _die(f"parse error in audit file {audit_path}: {exc}", code=2)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    lines = [canonical_bytes(p) + b"\n" for p in proposals]
+    output_path.write_bytes(b"".join(lines))
+
+    if not getattr(args, "json", False):
+        print(f"proposals      : {len(proposals)}")
+        print(f"output         : {output_path}")
+    else:
+        print(
+            json.dumps(
+                {
+                    "proposals": len(proposals),
+                    "output": str(output_path),
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+        )
 
     return 0
 
@@ -4386,6 +4503,25 @@ def build_parser() -> argparse.ArgumentParser:
     eval_cmd.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     eval_cmd.add_argument("--save", action="store_true", help="write result to lane results/ directory")
     eval_cmd.add_argument("--report", metavar="PATH", help="write JSON report to file")
+    eval_cmd.add_argument(
+        "--audit",
+        metavar="PATH",
+        default=None,
+        help=(
+            "math-contemplation lane: path to audit JSON "
+            "(default: evals/gsm8k_math/train_sample/v1/audit_brief_11.json)"
+        ),
+    )
+    eval_cmd.add_argument(
+        "--output",
+        metavar="PATH",
+        default=None,
+        help=(
+            "math-contemplation lane: output JSONL path "
+            "(default: teaching/math_proposals/proposals.jsonl); "
+            "must resolve inside teaching/math_proposals/"
+        ),
+    )
     eval_cmd.set_defaults(func=cmd_eval)
 
     from formation.cli import register as _register_formation
