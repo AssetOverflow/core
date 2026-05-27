@@ -147,3 +147,60 @@ with open('evals/gsm8k_math/train_sample/v1/cases.jsonl') as f:
 ```
 
 The artifact `audit_brief_11.json` is pinned by `tests/test_brief_11b_audit_artifact.py`.
+
+## Post-W2 baseline (ADR-0167 LexicalClaim-first)
+
+Measured by running the comprehension audit over the 50 cases on the W3-A
+branch (`feat/adr-0167-w3a-e2e-determinism`, base = `origin/main` after W1-A,
+W2-A, W2-B, W2-C, and W2-D merged).  No pack mutation occurred during the
+measurement — counts reflect the same real `en_core_math_v1` pack the test
+suite runs against.
+
+| dimension | count |
+| --- | --- |
+| admitted | 0 |
+| refused | 50 |
+
+Refusal reasons:
+
+| reason | count |
+| --- | --- |
+| incomplete_operation | 20 |
+| unexpected_category | 17 |
+| unknown_word | 5 |
+| unattached_quantity | 4 |
+| unresolved_pronoun | 3 |
+| no_question_target | 1 |
+
+Missing operators (first refusal per case):
+
+| missing_operator | count |
+| --- | --- |
+| quantity_extraction | 11 |
+| pre_frame_filler_sentence | 9 |
+| multi_quantity_composition | 8 |
+| fraction_percentage_literal | 4 |
+| unit_binding | 4 |
+| lexicon_entry | 3 |
+| pronoun_resolution | 3 |
+| descriptive_frame_question | 2 |
+| multi_subject_sentence | 2 |
+| compound_numeric_literal | 1 |
+| compound_time_literal | 1 |
+| question_frame_slot | 1 |
+| question_target_slot | 1 |
+
+Adapter, signature, ratification, and e2e tests all green; cognition
+regression untouched.
+
+Case 0050 hazard verification: refused at sentence_index 0 (verified by both
+`tests/test_math_lexical_ratification.py::test_hazard_case_0050_remains_refused`
+and `tests/test_math_evidence_e2e.py::test_lexical_ratification_advances_unknown_word_row`
+step 8).
+
+Regression net: any future PR that touches the math reader → evidence wire
+must keep `tests/test_math_evidence_e2e.py` green.  It covers the full path
+from `AuditRow` → `MathReaderRefusalEvidence` → `claim_signature` →
+`apply_lexical_claim` → re-audit, plus a cross-process determinism check and
+the cognition-domain partition guard from W2-C.
+
