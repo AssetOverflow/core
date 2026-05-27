@@ -36,3 +36,7 @@ evals/expert_demos/
 evals/gsm8k_math/holdouts/v1/cases.jsonl
 evals/gsm8k_math/holdouts/v1/cases_plaintext.jsonl
 evals/gsm8k_math/holdouts/v1/cases-train*
+
+# ADR-0172 W3 — math-contemplation proposals are generated on demand; the
+# directory skeleton (.gitkeep) is committed, the generated JSONL is not.
+teaching/math_proposals/proposals.jsonl
