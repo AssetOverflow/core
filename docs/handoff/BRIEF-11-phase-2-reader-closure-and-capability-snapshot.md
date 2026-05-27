@@ -261,3 +261,40 @@ Suggested table:
 Brief 11 is done when the repo has a reproducible, reviewed capability snapshot after Phase 2 reader closure and a precise backlog of remaining missing operators.
 
 It is not done merely because a document exists. This document is the operator handoff; the engineering sequence above is the work.
+
+---
+
+## Status update — 2026-05-27 EOD
+
+The Brief 11 sequence landed across the day. Completion path:
+
+| Sub-brief | Status | PR(s) | Notes |
+|---|---|---|---|
+| 11A — reader closure audit infrastructure | ✅ Merged | #343 | `generate/comprehension/audit.py` + 18 audit tests |
+| 11B-step-1 — per-case audit artifact + extended taxonomy | ✅ Merged | #345 | 3 new missing-operator labels close the None-operator gap |
+| 11B-step-2 — verb-vocabulary analysis (docs-only) | ✅ Merged | #347 | All "unknown verbs" found to be lexicon-present; pre_frame_filler is structural |
+| 11B-step-2 — lexicon-entry closure | ✅ Merged | #348 | 12 drain_token lemmas + 1 alias; `unknown_word` row 11→5; wrong=0 preserved |
+| 11C — capability snapshot rerun | ✅ Absorbed | (in W3-A) | Folded into ADR-0167 W3-A's Deliverable 2 (post-W2 baseline section in `audit_brief_11.md`) |
+| 11D — next-capability proposal | ✅ Merged | #346 | Candidate A (continued GSM8K closure) recommended |
+| 11D — Candidate E (audit-as-evidence) | ✅ Merged | #349 | ADR-0167 scoping ADR + parallel work plan |
+
+The bottleneck table after 11B-step-2 lexicon closure (current post-Brief-11
+baseline; W3-A will produce the post-ADR-0167-LexicalClaim baseline):
+
+| refusal_reason | count | Δ vs 11B-step-1 |
+|---|---:|---:|
+| incomplete_operation | 20 | +2 |
+| unexpected_category | 17 | +3 |
+| unknown_word | 5 | **−6** |
+| unattached_quantity | 4 | +1 |
+| unresolved_pronoun | 3 | 0 |
+| no_question_target | 1 | 0 |
+
+`wrong == 0` held throughout. Case `gsm8k-train-sample-v1-0050` remains
+refused at sentence_index=0 (pinned by multiple test suites).
+
+**Next:** ADR-0167 W3-A closes the LexicalClaim slice with an e2e test
+that walks the full loop (refusal → evidence → ratification → row-moves),
+plus a cognition-corridor regression pass. After W3-A, Brief 11 closes
+and the engine can ratify math-domain lexical claims from its own
+refusal evidence through the existing HITL teaching corridor.
