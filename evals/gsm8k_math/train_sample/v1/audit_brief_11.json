@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "brief": "Brief 11B-step-2 \u2014 lexicon closure",
+  "brief": "Brief 11B-step-2 + B1 \u2014 lexicon closure wave 3",
   "adr_chain": [
     "0164",
     "0164.3",
@@ -14,23 +14,23 @@
     "admitted": 0,
     "refused": 50,
     "refusal_reasons": {
-      "unknown_word": 5,
+      "unknown_word": 3,
       "unexpected_category": 17,
       "unattached_quantity": 4,
-      "incomplete_operation": 20,
+      "incomplete_operation": 21,
       "no_question_target": 1,
-      "unresolved_pronoun": 3
+      "unresolved_pronoun": 4
     },
     "missing_operators": {
-      "lexicon_entry": 3,
+      "lexicon_entry": 1,
       "pre_frame_filler_sentence": 9,
       "descriptive_frame_question": 2,
       "fraction_percentage_literal": 4,
       "unit_binding": 4,
       "multi_quantity_composition": 8,
-      "quantity_extraction": 11,
+      "quantity_extraction": 12,
       "question_target_slot": 1,
-      "pronoun_resolution": 3,
+      "pronoun_resolution": 4,
       "compound_time_literal": 1,
       "multi_subject_sentence": 2,
       "question_frame_slot": 1,
@@ -40,7 +40,7 @@
   "invariants": {
     "wrong_count": 0,
     "reader_runtime_changes_in_this_pr": false,
-    "pack_changes": "12 drain_token lemmas + 2 aliases added to en_core_math_v1"
+    "pack_changes": "+2 drain_token lemmas (path, journey, sees-alias-of-see) added to en_core_math_v1"
   },
   "per_case": [
     {
@@ -1000,12 +1000,12 @@
     {
       "case_id": "gsm8k-train-sample-v1-0040",
       "outcome": "refused",
-      "refusal_reason": "unknown_word",
-      "missing_operator": "lexicon_entry",
-      "refusal_detail": "no primitive or lexicon match for 'sees'",
+      "refusal_reason": "incomplete_operation",
+      "missing_operator": "quantity_extraction",
+      "refusal_detail": "initial_state_frame closed with no quantity",
       "sentence_index": 0,
-      "token_index": 11,
-      "token_text": "sees",
+      "token_index": 18,
+      "token_text": "",
       "recognized_terms": [
         "Over",
         "several",
@@ -1017,7 +1017,15 @@
         "any",
         "stray",
         "animals",
-        "he"
+        "he",
+        "sees",
+        "on",
+        "the",
+        "side",
+        "of",
+        "the",
+        "road",
+        "."
       ],
       "skipped_frame": "initial_state_frame"
     },
@@ -1199,12 +1207,12 @@
     {
       "case_id": "gsm8k-train-sample-v1-0049",
       "outcome": "refused",
-      "refusal_reason": "unknown_word",
-      "missing_operator": "lexicon_entry",
-      "refusal_detail": "no primitive or lexicon match for 'path'",
+      "refusal_reason": "unresolved_pronoun",
+      "missing_operator": "pronoun_resolution",
+      "refusal_detail": "pronoun 'it' in operation_frame has no compatible entity",
       "sentence_index": 1,
-      "token_index": 21,
-      "token_text": "path",
+      "token_index": 33,
+      "token_text": "it",
       "recognized_terms": [
         "In",
         "the",
@@ -1226,9 +1234,21 @@
         "of",
         "time",
         "along",
-        "a"
+        "a",
+        "path",
+        ",",
+        "then",
+        "finishes",
+        "the",
+        "journey",
+        "in",
+        "a",
+        "third",
+        "of",
+        "the",
+        "time"
       ],
-      "skipped_frame": null
+      "skipped_frame": "operation_frame"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0050",
