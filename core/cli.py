@@ -79,6 +79,9 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_consumption_case_0050_hazard_pin.py",
         "tests/test_consumption_empty_registry_no_op.py",
         "tests/test_consumption_partition.py",
+        "tests/test_matcher_extension_currency_per_unit.py",
+        "tests/test_matcher_extension_case_0050_hazard_pin.py",
+        "tests/test_matcher_extension_end_to_end_admission.py",
     ),
     "algebra": (
         "tests/test_versor_closure.py",
