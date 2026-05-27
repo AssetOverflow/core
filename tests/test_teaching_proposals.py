@@ -44,7 +44,7 @@ CORPUS_BYTES_BEFORE = _CORPUS_PATH.read_bytes() if _CORPUS_PATH.exists() else b"
 
 def _enriched(*, polarity="affirms", claim_domain="factual",
               connective="reveals", obj="truth", subject="light",
-              evidence=None, boundary_clean=True):
+              evidence=None, boundary_clean=True, domain="cognition"):
     if evidence is None:
         evidence = (
             EvidencePointer(
@@ -62,6 +62,7 @@ def _enriched(*, polarity="affirms", claim_domain="factual",
         source_turn_trace="trace_1",
         pack_consistent=True,
         boundary_clean=boundary_clean,
+        domain=domain,
         polarity=polarity,
         claim_domain=claim_domain,
         evidence=evidence,
@@ -188,6 +189,63 @@ def test_propose_from_candidate_auto_rejects_on_regression(tmp_path: Path):
     assert rec["state"] == "rejected"
     assert "auto_rollback_regression" in rec["operator_note"]
     assert "surface_groundedness" in rec["operator_note"]
+
+
+def test_propose_selects_replay_gate_by_candidate_domain(monkeypatch, tmp_path: Path):
+    calls: list[str] = []
+
+    def fake_cognition_gate(chain):
+        calls.append("cognition")
+        return _fake_replay_equivalent(chain)
+
+    def fake_math_gate(chain):
+        calls.append("math")
+        return _fake_replay_equivalent(chain)
+
+    monkeypatch.setattr(
+        "teaching.replay.run_replay_equivalence",
+        fake_cognition_gate,
+    )
+    monkeypatch.setattr(
+        "teaching.replay.run_admissibility_replay_gate",
+        fake_math_gate,
+    )
+
+    log_cognition = ProposalLog(tmp_path / "cognition" / "proposals.jsonl")
+    propose_from_candidate(_enriched(domain="cognition"), log=log_cognition)
+
+    log_math = ProposalLog(tmp_path / "math" / "proposals.jsonl")
+    propose_from_candidate(
+        _enriched(domain="math", subject="sees", connective="recognizes", obj="drain"),
+        log=log_math,
+    )
+
+    assert calls == ["cognition", "math"]
+
+
+def test_explicit_replay_override_wins_over_domain(monkeypatch, tmp_path: Path):
+    calls: list[str] = []
+
+    def forbidden_math_gate(chain):
+        raise AssertionError("domain-selected math gate should not run")
+
+    def override_gate(chain):
+        calls.append("override")
+        return _fake_replay_equivalent(chain)
+
+    monkeypatch.setattr(
+        "teaching.replay.run_admissibility_replay_gate",
+        forbidden_math_gate,
+    )
+
+    log = ProposalLog(tmp_path / "proposals.jsonl")
+    propose_from_candidate(
+        _enriched(domain="math", subject="sees", connective="recognizes", obj="drain"),
+        log=log,
+        run_replay=override_gate,
+    )
+
+    assert calls == ["override"]
 
 
 def test_propose_is_idempotent(tmp_path: Path):
