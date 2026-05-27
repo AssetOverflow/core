@@ -82,11 +82,105 @@ def inject_from_match(
     so per-category injectors can emit operations as well as initials.
     The v1 ``discrete_count_statement`` injector continues to emit only
     ``CandidateInitial`` — the widening is type-level only in this PR.
+
+    CW-2 (ADR-0169 consumption) — when the per-category injector
+    returns empty AND the matcher published a ``composition_shape`` key
+    in ``parsed_anchors``, the composition registry is consulted: an
+    ``affirms`` entry under :data:`SAFE_COMPOSITION_CATEGORIES` admits
+    the composition; a ``falsifies`` entry continues to refuse;
+    absence continues to refuse. The composition path is read-only
+    over the reviewed math pack — it cannot weaken any existing
+    admission gate. See :mod:`generate.comprehension.composition_registry`.
     """
     injector = _INJECTORS.get(match.category)
-    if injector is None:
+    if injector is not None:
+        emitted = injector(match, sentence)
+        if emitted:
+            return emitted
+    return _consult_composition_registry(match, sentence)
+
+
+# ---------------------------------------------------------------------------
+# CW-2 — composition registry consultation (ADR-0169 consumption)
+# ---------------------------------------------------------------------------
+
+
+def _consult_composition_registry(
+    match: RecognizerMatch,
+    sentence: str,
+) -> tuple[InjectorEmission, ...]:
+    """Composition-registry consultation fallback for ``inject_from_match``.
+
+    Contract (the contract a matcher extension must honor to enable
+    composition admission via this path):
+
+    - ``match.parsed_anchors`` carries at least one anchor mapping with a
+      key ``"composition_shape"`` whose value is the surface pattern
+      string used by ratified composition registry entries (e.g.
+      ``"bound(count) × bound(unit_cost)"``).
+    - The same anchor carries a pre-composed payload the registry only
+      gates: either ``"composed_initial"`` (a fully-constructed
+      :class:`CandidateInitial`) or ``"composed_operation"`` (a
+      :class:`CandidateOperation`). This module does NOT perform
+      arithmetic — the matcher / matcher-extension owns the math; the
+      registry owns the admissibility decision.
+
+    Semantics:
+
+    - registry empty OR no entry for shape → return ``()`` (refusal-preferring)
+    - entry exists, polarity ``"affirms"`` → admit the pre-composed payload
+    - entry exists, polarity ``"falsifies"`` → return ``()`` (suppressed)
+
+    This is a registry-driven *gate*, not a registry-driven arithmetic
+    primitive. Per ADR-0169 §"Mutation boundary" the registry never
+    rewrites solver / arithmetic semantics; it ratifies whether a
+    given structural shape may admit.
+
+    No matcher currently publishes ``composition_shape`` — at land time
+    this path is dormant infrastructure. The case-0019 truth-test will
+    fire only after a matcher extension binds quantity-shape composition
+    anchors (out of scope for this PR; see follow-up brief).
+    """
+    if not match.parsed_anchors:
         return ()
-    return injector(match, sentence)
+
+    # Lazy import — composition_registry import chain pulls
+    # SAFE_COMPOSITION_CATEGORIES from teaching/, and the load path may
+    # not be needed on every recognizer call. Module-level loader cache
+    # keeps the repeat-call cost at one dict hit after the first load.
+    from generate.comprehension.composition_registry import (
+        is_affirmed,
+        is_falsified,
+        load_composition_registry,
+    )
+
+    registry = load_composition_registry()
+    if registry.is_empty():
+        return ()
+
+    out: list[InjectorEmission] = []
+    for anchor in match.parsed_anchors:
+        shape = anchor.get("composition_shape") if isinstance(anchor, Mapping) else None
+        if not isinstance(shape, str):
+            continue
+        if is_falsified(registry, shape):
+            # Falsifying entry — suppress any admission that would have
+            # fired from this anchor; refusal-preferring discipline.
+            return ()
+        if not is_affirmed(registry, shape):
+            continue
+        composed_initial = anchor.get("composed_initial")
+        composed_operation = anchor.get("composed_operation")
+        if isinstance(composed_initial, CandidateInitial):
+            out.append(composed_initial)
+        elif isinstance(composed_operation, CandidateOperation):
+            out.append(composed_operation)
+        else:
+            # The registry affirms the shape but no pre-composed payload
+            # is attached — under-admit. The matcher owns producing the
+            # payload; we never invent arithmetic here.
+            return ()
+    return tuple(out)
 
 
 # ---------------------------------------------------------------------------
