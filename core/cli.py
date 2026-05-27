@@ -73,6 +73,12 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
     "packs": (
         "tests/test_core_semantic_seed_pack.py",
         "tests/test_adr_0127_pack_ratification.py",
+        "tests/test_frame_registry_load.py",
+        "tests/test_composition_registry_load.py",
+        "tests/test_composition_consult_in_injector.py",
+        "tests/test_consumption_case_0050_hazard_pin.py",
+        "tests/test_consumption_empty_registry_no_op.py",
+        "tests/test_consumption_partition.py",
     ),
     "algebra": (
         "tests/test_versor_closure.py",

@@ -462,6 +462,29 @@ def _load_pack_cached(pack_id: str) -> tuple[LanguagePackManifest, VocabManifold
                 f"{actual} != {expected_glosses_checksum}"
             )
 
+    # ADR-0168 + ADR-0169 consumption — frame_checksum / composition_checksum.
+    # Same backward-compatible pattern as glosses_checksum: missing field +
+    # missing compiled file is the empty-registry no-op path. Declared
+    # checksum with no compiled file is a discipline violation.
+    for kind, manifest_key in (
+        ("frames", "frame_checksum"),
+        ("compositions", "composition_checksum"),
+    ):
+        expected = manifest_payload.get(manifest_key)
+        compiled_path = pack_dir / f"{kind}.jsonl"
+        if expected is not None:
+            if not compiled_path.exists():
+                raise ValueError(
+                    f"Manifest for {pack_id} declares {manifest_key} but "
+                    f"{kind}.jsonl is missing at {compiled_path}"
+                )
+            actual = hashlib.sha256(compiled_path.read_bytes()).hexdigest()
+            if actual != expected:
+                raise ValueError(
+                    f"{kind.capitalize()} checksum mismatch for {pack_id}: "
+                    f"{actual} != {expected}"
+                )
+
     entries = load_pack_entries(pack_id)
     morphology_registry = None
     if any(entry.morphology_id for entry in entries):
