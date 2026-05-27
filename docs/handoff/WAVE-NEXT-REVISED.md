@@ -1,7 +1,8 @@
 # Wave-Next Revised — DCS Sub-Shapes + Schema-Gap Backlog
 
 **Date:** 2026-05-27
-**Supersedes:** `docs/handoff/WAVE-NEXT-INJECTORS.md` (kept for history)
+**Supersedes:** the original Wave-Next injector briefs (removed in
+cleanup PR; the four A-findings and pivot rationale are captured here)
 **Why revised:** The A1–A4 dispatch surfaced findings that invalidate three
 of the four briefs' lift assumptions. This doc replaces them with the
 actually-tractable next steps.
@@ -173,15 +174,12 @@ No timelines. Order is by leverage, not calendar.
 ## What this document does NOT do
 
 - It does not dispatch any agents (per `feedback-no-self-dispatch-of-subagents`)
-- It does not retire `WAVE-NEXT-INJECTORS.md` (kept for history; future
-  readers should consult this document for current state)
 - It does not modify any runtime code
 - It does not add new eval lanes (ADR-0166)
 - It does not propose any non-deterministic mechanism
 
 ## Cross-references
 
-- `docs/handoff/WAVE-NEXT-INJECTORS.md` — original (now-superseded) brief
 - `docs/handoff/discrete_count_statement-injector-spec.md` — the DCS sub-shape spec
 - `docs/handoff/ADR-0167-FOLLOWUPS.md` — parent follow-up queue
 - `docs/decisions/ADR-0168-frameclaim-ratification.md` — FrameClaim scoping

@@ -246,12 +246,11 @@ version below.
 - **A4 temporal_aggregation** — schema gap: needs `apply_rate`
   primitive that doesn't exist in the algebra
 
-The actually-tractable next wave is **DCS sub-shape expansion** — one
-focused PR per sub-shape against the existing v1 injector from #315.
-See `WAVE-NEXT-REVISED.md` for the sub-shape sequence.
-
-The original `docs/handoff/WAVE-NEXT-INJECTORS.md` is retained for
-history but superseded.
+The actually-tractable next wave is **ADR-0170 injector contract
+widening** + per-category injector follow-up PRs. See
+`WAVE-NEXT-REVISED.md` and `ADR-0170-injector-contract-widening.md`
+for the full plan; `DCS-S1-FINDING.md` for the investigation that
+surfaced the contract gap.
 
 ---
 
