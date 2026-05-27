@@ -7,7 +7,9 @@ export type ErrorCode =
   | "unsupported"
   | "read_error"
   | "eval_failed"
-  | "runtime_unavailable";
+  | "runtime_unavailable"
+  | "client_refused_unsafe_lane"
+  | "client_refused_sealed_holdout";
 
 export type Backend = "numpy" | "mlx" | "rust" | "unknown";
 export type MutationMode = "read_only" | "runtime_turn";
@@ -128,6 +130,12 @@ export interface EvalLaneSummary {
   versions: string[];
   read_only: boolean;
   description: string | null;
+}
+
+export interface EvalRunRequest {
+  lane: string;
+  version?: string;
+  split?: "dev" | "public" | "holdout";
 }
 
 export interface EvalRunResult {
