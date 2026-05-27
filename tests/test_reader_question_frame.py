@@ -129,12 +129,12 @@ class TestGSM8KQuestions:
         assert isinstance(end, ProblemReadingState), end
         target = end.unknown_target_slot
         assert target is not None
-        assert target.entity == "malcolm"
+        assert target.entity == "Malcolm"
         assert target.unit_class == "count"
         assert target.kind == "discrete_quantity"
         # Proper-noun entity entered the registry.
         names = [e.canonical_name for e in end.entity_registry]
-        assert "malcolm" in names
+        assert "Malcolm" in names
 
     def test_0036_how_much_time_studying(self) -> None:
         ps = _empty_problem(registry=(EntityRef("monica", "female", 0),))
@@ -187,8 +187,12 @@ class TestRefusals:
         """A statement-frame opener at position 0 is Phase-2 scope."""
         ps = _empty_problem(registry=(EntityRef("francine", "female", 0),))
         s = begin_sentence(ps, 0)
-        # "francine" is a proper_noun_entity_female — would open a
-        # statement frame. Phase 1 refuses.
+        # "francine" is a known word in the gender-enrichment lexicon.
+        # Under sentence-initial lookup-first dispatch, gender categories
+        # do not admit — they are enrichment, not admission. The
+        # proper_noun_token primitive then admits "Francine" as a name,
+        # but at sentence position 0 (statement frame opener) Phase 1
+        # refuses.
         r = apply_word(s, ps, "Francine")
         assert isinstance(r, ReaderRefusal)
         assert r.reason == "unexpected_category"
@@ -287,6 +291,82 @@ class TestLifecycleInvariants:
         end = end_sentence(state, ps)
         assert isinstance(end, ProblemReadingState)
         assert end.sentence_index == 1
+
+
+class TestInitialDispatchAndUnknownGender:
+    """ADR-0164.1 amendment (Brief 8.2): sentence-initial lookup-first +
+    universal proper_noun_token primitive + unknown-gender pronoun
+    resolution via single-salient fallback (ADR-0164.2)."""
+
+    def test_sentence_initial_common_words_lookup_first(self) -> None:
+        """Sentence-initial 'The'/'She'/'How' resolve via lexicon, not
+        the proper_noun_token primitive. 'The' drains; 'She' refuses
+        (pronoun outside question_frame); 'How' opens question_frame."""
+        ps = _empty_problem()
+        state = begin_sentence(ps, 0)
+        out = apply_word(state, ps, "The")
+        assert isinstance(out, SentenceReadingState)
+        assert out.lookback[-1].category == "drain_token"
+
+        state = begin_sentence(ps, 0)
+        out = apply_word(state, ps, "She")
+        assert isinstance(out, ReaderRefusal)
+        assert out.reason == "unexpected_category"
+
+        state = begin_sentence(ps, 0)
+        out = apply_word(state, ps, "How")
+        assert isinstance(out, SentenceReadingState)
+        assert out.frame == "question_frame"
+
+    def test_sentence_initial_marnie_is_not_gated_by_gender_list(self) -> None:
+        """'Marnie' is not in proper_noun_gender_female (after Brief 8.2
+        rename dropped marnie from the female list). Reader still admits
+        her as a proper_noun_token at sentence-initial position, then
+        refuses with Phase-2-scope detail (statement frame opener)."""
+        ps = _empty_problem()
+        out = apply_word(begin_sentence(ps, 0), ps, "Marnie")
+        assert isinstance(out, ReaderRefusal)
+        assert out.reason == "unexpected_category"
+        assert "Phase-2" in out.detail
+
+    def test_sentence_initial_novel_name_uses_primitive_and_unknown_gender(self) -> None:
+        """A name not in either gender list (e.g. 'Zelda') still admits
+        via the universal proper_noun_token primitive."""
+        ps = _empty_problem()
+        state = begin_sentence(ps, 0)
+        out = apply_word(state, ps, "Zelda")
+        assert isinstance(out, ReaderRefusal)
+        assert out.reason == "unexpected_category"
+        assert "Phase-2" in out.detail
+
+    def test_pronoun_single_unknown_entity_resolves(self) -> None:
+        """ADR-0164.2 single-salient fallback: one gender-unknown entity
+        resolves the pronoun cleanly."""
+        ps = _empty_problem(registry=(EntityRef("Zelda", "unknown", 0),))
+        state = _read_sentence(
+            ["How", "much", "money", "will", "she", "earn", "?"], ps
+        )
+        assert isinstance(state, SentenceReadingState), state
+        assert state.question_target is not None
+        assert state.question_target.entity == "Zelda"
+
+    def test_pronoun_two_unknown_entities_refuses_ambiguous(self) -> None:
+        """ADR-0164.2: two gender-unknown entities + no recency
+        disambiguation → ambiguous_pronoun_referent."""
+        ps = _empty_problem(
+            registry=(
+                EntityRef("Zelda", "unknown", 0),
+                EntityRef("Marnie", "unknown", 1),
+            )
+        )
+        state = begin_sentence(ps, 0)
+        assert isinstance(state, SentenceReadingState)
+        for token in ["How", "much", "money", "will"]:
+            state = apply_word(state, ps, token)
+            assert isinstance(state, SentenceReadingState)
+        out = apply_word(state, ps, "she")
+        assert isinstance(out, ReaderRefusal)
+        assert out.reason == "ambiguous_pronoun_referent"
 
 
 if __name__ == "__main__":
