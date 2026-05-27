@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "brief": "Wave 4 / Brief 10 \u2014 Phase 2 statement-frame reader (post Brief 8.2 rebase)",
+  "sample_path": "evals/gsm8k_math/train_sample/v1/cases.jsonl",
+  "flag_off": {
+    "correct": 3,
+    "wrong": 0,
+    "refused": 47
+  },
+  "flag_on": {
+    "correct": 3,
+    "wrong": 0,
+    "refused": 47
+  },
+  "delta": {
+    "correct": 0,
+    "wrong": 0,
+    "refused": 0
+  }
+}

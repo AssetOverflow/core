@@ -183,20 +183,20 @@ class TestRefusals:
         assert r.reason == "unknown_word"
         assert r.token_text == "@@@"
 
-    def test_unexpected_category_non_question_opener(self) -> None:
-        """A statement-frame opener at position 0 is Phase-2 scope."""
+    def test_statement_frame_opener_accepted(self) -> None:
+        """Phase 2 (ADR-0164.4): proper noun at position 0 opens a statement
+        pre-frame. After Brief 8.2's gender-enrichment refactor, the lookup
+        skips proper_noun_gender_* categories and the proper_noun_token
+        primitive admits "Francine" — Phase 2 then routes it to the
+        statement-frame pre-frame entity slot instead of refusing.
+        """
         ps = _empty_problem(registry=(EntityRef("francine", "female", 0),))
         s = begin_sentence(ps, 0)
-        # "francine" is a known word in the gender-enrichment lexicon.
-        # Under sentence-initial lookup-first dispatch, gender categories
-        # do not admit — they are enrichment, not admission. The
-        # proper_noun_token primitive then admits "Francine" as a name,
-        # but at sentence position 0 (statement frame opener) Phase 1
-        # refuses.
         r = apply_word(s, ps, "Francine")
-        assert isinstance(r, ReaderRefusal)
-        assert r.reason == "unexpected_category"
-        assert "Phase-2" in r.detail
+        assert isinstance(r, SentenceReadingState)
+        assert r.frame is None  # frame determined on next verb
+        assert r.pending_entity_ref is not None
+        assert r.pending_entity_ref.canonical_name == "francine"
 
     def test_unresolved_pronoun_empty_registry(self) -> None:
         """A pronoun with no compatible entity refuses cleanly."""
@@ -311,7 +311,9 @@ class TestInitialDispatchAndUnknownGender:
         state = begin_sentence(ps, 0)
         out = apply_word(state, ps, "She")
         assert isinstance(out, ReaderRefusal)
-        assert out.reason == "unexpected_category"
+        # Phase 2: pronoun at position 0 attempts resolution; empty
+        # registry → unresolved_pronoun per ADR-0164.2.
+        assert out.reason == "unresolved_pronoun"
 
         state = begin_sentence(ps, 0)
         out = apply_word(state, ps, "How")
@@ -320,24 +322,29 @@ class TestInitialDispatchAndUnknownGender:
 
     def test_sentence_initial_marnie_is_not_gated_by_gender_list(self) -> None:
         """'Marnie' is not in proper_noun_gender_female (after Brief 8.2
-        rename dropped marnie from the female list). Reader still admits
-        her as a proper_noun_token at sentence-initial position, then
-        refuses with Phase-2-scope detail (statement frame opener)."""
+        rename dropped marnie from the female list). Reader admits her
+        as a proper_noun_token at sentence-initial position. Under
+        Phase 2, this opens a statement pre-frame (not a refusal).
+        EntityRef carries gender="unknown" because the name is outside
+        the curated gender lists.
+        """
         ps = _empty_problem()
         out = apply_word(begin_sentence(ps, 0), ps, "Marnie")
-        assert isinstance(out, ReaderRefusal)
-        assert out.reason == "unexpected_category"
-        assert "Phase-2" in out.detail
+        assert isinstance(out, SentenceReadingState)
+        assert out.pending_entity_ref is not None
+        assert out.pending_entity_ref.gender == "unknown"
 
     def test_sentence_initial_novel_name_uses_primitive_and_unknown_gender(self) -> None:
         """A name not in either gender list (e.g. 'Zelda') still admits
-        via the universal proper_noun_token primitive."""
+        via the universal proper_noun_token primitive. Under Phase 2,
+        this opens a statement pre-frame with gender='unknown'."""
         ps = _empty_problem()
         state = begin_sentence(ps, 0)
         out = apply_word(state, ps, "Zelda")
-        assert isinstance(out, ReaderRefusal)
-        assert out.reason == "unexpected_category"
-        assert "Phase-2" in out.detail
+        assert isinstance(out, SentenceReadingState)
+        assert out.pending_entity_ref is not None
+        assert out.pending_entity_ref.canonical_name == "zelda"
+        assert out.pending_entity_ref.gender == "unknown"
 
     def test_pronoun_single_unknown_entity_resolves(self) -> None:
         """ADR-0164.2 single-salient fallback: one gender-unknown entity

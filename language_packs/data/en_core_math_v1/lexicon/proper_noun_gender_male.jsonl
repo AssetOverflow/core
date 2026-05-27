@@ -75,3 +75,17 @@
 {"lemma": "wayne", "category": "proper_noun_gender_male", "aliases": ["Wayne"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
 {"lemma": "william", "category": "proper_noun_gender_male", "aliases": ["William"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
 {"lemma": "malcolm", "category": "proper_noun_gender_male", "aliases": ["Malcolm"], "provenance": "phase_1_reader_supplemental_2026-05-26"}
+{"lemma": "bart", "category": "proper_noun_gender_male", "aliases": ["Bart"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "fernando", "category": "proper_noun_gender_male", "aliases": ["Fernando"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "georgie", "category": "proper_noun_gender_male", "aliases": ["Georgie"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "jake", "category": "proper_noun_gender_male", "aliases": ["Jake"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "jed", "category": "proper_noun_gender_male", "aliases": ["Jed"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "jeremie", "category": "proper_noun_gender_male", "aliases": ["Jeremie"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "jose", "category": "proper_noun_gender_male", "aliases": ["Jose"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "orlando", "category": "proper_noun_gender_male", "aliases": ["Orlando"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "rex", "category": "proper_noun_gender_male", "aliases": ["Rex"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "rudolph", "category": "proper_noun_gender_male", "aliases": ["Rudolph"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "steve", "category": "proper_noun_gender_male", "aliases": ["Steve"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "troy", "category": "proper_noun_gender_male", "aliases": ["Troy"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "xavier", "category": "proper_noun_gender_male", "aliases": ["Xavier"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "yun", "category": "proper_noun_gender_male", "aliases": ["Yun"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}

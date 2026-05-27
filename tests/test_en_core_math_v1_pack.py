@@ -27,7 +27,15 @@ _LEXICON_DIR = _PACK_DIR / "lexicon"
 PROVENANCE_TAG = "ported_from_math_candidate_parser_2026-05-26"
 # Phase-1 reader integration added supplemental entries under this tag.
 _SUPPLEMENTAL_PROVENANCE_TAG = "phase_1_reader_supplemental_2026-05-26"
-VALID_PROVENANCE_TAGS = {PROVENANCE_TAG, _SUPPLEMENTAL_PROVENANCE_TAG}
+# Phase-2 statement-frame reader integration adds GSM8K coverage entries.
+_PHASE_2_PROVENANCE_TAG = "phase_2_reader_gsm8k_2026-05-26"
+_PHASE_2_DOLLAR_TAG = "phase_2_reader_2026-05-26"
+VALID_PROVENANCE_TAGS = {
+    PROVENANCE_TAG,
+    _SUPPLEMENTAL_PROVENANCE_TAG,
+    _PHASE_2_PROVENANCE_TAG,
+    _PHASE_2_DOLLAR_TAG,
+}
 
 # Expected lemma counts sourced directly from the ported whitelist constants.
 # Change only when the source constant changes AND an ADR ratifies the delta.
@@ -39,16 +47,24 @@ VALID_PROVENANCE_TAGS = {PROVENANCE_TAG, _SUPPLEMENTAL_PROVENANCE_TAG}
 # Brief 8.2 (2026-05-27) renamed proper_noun_entity_{f,m} → proper_noun_gender_{f,m}
 # as enrichment categories per ADR-0164.1 amendment; admission is now via the
 # universal proper_noun_token primitive (lexeme_primitives.py).
+# ADR-0164 Phase-2 reader integration (Brief 10) ratified additional deltas:
+#   accumulation_verb  +2  (adopt, invest)
+#   currency_unit_noun +2  (dollar, cent)
+#   proper_noun_gender_female +5  (allison, brooke, jan, marion, sidney)
+#   proper_noun_gender_male  +14  (bart, fernando, georgie, jake, jed, jeremie,
+#                                  jose, orlando, rex, rudolph, steve, troy,
+#                                  xavier, yun)
+#   capacity_verb      +6  (fill, lift, play, work, finish, drive)
 EXPECTED_CATEGORY_COUNTS: dict[str, int] = {
-    "accumulation_verb":         19,
+    "accumulation_verb":         21,
     "depletion_verb":            15,
     "transfer_verb":             7,
-    "currency_unit_noun":        7,
+    "currency_unit_noun":        9,
     "entity_pronoun":            4,
-    "proper_noun_gender_female": 62,
-    "proper_noun_gender_male":   77,
+    "proper_noun_gender_female": 67,
+    "proper_noun_gender_male":   91,
     "possession_verb":           1,
-    "capacity_verb":             13,
+    "capacity_verb":             19,
     "question_open":             2,
     "residual_modifier":         3,
 }

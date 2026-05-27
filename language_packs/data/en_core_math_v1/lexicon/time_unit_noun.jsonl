@@ -1,5 +1,8 @@
-{"lemma": "time", "category": "time_unit_noun", "aliases": [], "provenance": "phase_1_reader_supplemental_2026-05-26"}
-{"lemma": "hour", "category": "time_unit_noun", "aliases": ["hours"], "provenance": "phase_1_reader_supplemental_2026-05-26"}
 {"lemma": "day", "category": "time_unit_noun", "aliases": ["days"], "provenance": "phase_1_reader_supplemental_2026-05-26"}
+{"lemma": "hour", "category": "time_unit_noun", "aliases": ["hours"], "provenance": "phase_1_reader_supplemental_2026-05-26"}
 {"lemma": "minute", "category": "time_unit_noun", "aliases": ["minutes"], "provenance": "phase_1_reader_supplemental_2026-05-26"}
+{"lemma": "month", "category": "time_unit_noun", "aliases": ["months"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "second", "category": "time_unit_noun", "aliases": ["seconds"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "time", "category": "time_unit_noun", "aliases": [], "provenance": "phase_1_reader_supplemental_2026-05-26"}
 {"lemma": "week", "category": "time_unit_noun", "aliases": ["weeks"], "provenance": "phase_1_reader_supplemental_2026-05-26"}
+{"lemma": "year", "category": "time_unit_noun", "aliases": ["years"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
