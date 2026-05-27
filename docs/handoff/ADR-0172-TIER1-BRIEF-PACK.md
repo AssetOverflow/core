@@ -150,7 +150,7 @@ class MathReaderRefusalShapeProposal:
     domain: Literal["math"]
     shape_category: ShapeCategory              # from evals.refusal_taxonomy.shape_categories
     structural_commonality: str
-    evidence_pointers: tuple[MathReaderRefusalEvidence, ...]  # ≥2; from teaching/audit_evidence.py
+    evidence_pointers: tuple[MathReaderRefusalEvidence, ...]  # ≥2; from teaching/math_evidence.py
     proposed_change_kind: Literal[
         "matcher_extension",
         "injector_sub_shape",
@@ -193,7 +193,7 @@ def build_proposal(...) -> MathReaderRefusalShapeProposal:
 ### Cross-references the operator must read first
 
 - `teaching/proposals.py` — the cognition `TeachingChainProposal` (template)
-- `teaching/audit_evidence.py` — `MathReaderRefusalEvidence` shape (ADR-0167)
+- `teaching/math_evidence.py` — `MathReaderRefusalEvidence` shape (ADR-0167)
 - `evals/refusal_taxonomy/shape_categories.py` — `ShapeCategory` enum
 
 ### Forbidden
@@ -266,7 +266,7 @@ def decompose_audit(audit_path: Path) -> tuple[MathReaderRefusalShapeProposal, .
 1. Parse `audit_path` (expect `evals/gsm8k_math/train_sample/v1/audit_brief_11.json`).
 2. Group rows by `(refusal_reason, missing_operator)` tuple.
 3. For each group with `≥2` rows:
-   a. Build evidence list: `MathReaderRefusalEvidence` for each row (use `teaching/audit_evidence.py` helpers).
+   a. Build evidence list: `MathReaderRefusalEvidence` for each row (use `teaching/math_evidence.py` helpers).
    b. Build `ReasoningTrace` with 4 steps:
       - step 0: `observation` — "N refusal rows share (refusal_reason, missing_operator)"
       - step 1: `grouping` — encode group key as payload
