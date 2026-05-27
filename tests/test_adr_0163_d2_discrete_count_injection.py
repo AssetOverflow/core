@@ -73,12 +73,16 @@ def _ratified_registry():
 class TestExtractionCorrectness:
     def test_basic_integer_count(self) -> None:
         a = _try_extract("Sam has 5 apples.")
+        # Post-W2 (ADR-0170): anchor carries anchor_kind discriminator
+        # and verb_token for the injector's dispatch + admissibility.
         assert a == {
             "kind": "discrete_count",
             "subject_role": "Sam",
             "count_token": "5",
             "count_kind": "integer",
             "counted_noun": "apples",
+            "anchor_kind": "possession",
+            "verb_token": "has",
         }
 
     def test_past_tense_had(self) -> None:
@@ -162,11 +166,40 @@ class TestExtractionRefusal:
         # 'widgets' is not in the spec's observed_counted_nouns.
         assert _try_extract("Sam has 5 widgets.") is None
 
-    def test_non_possession_verb_refused(self) -> None:
-        # 'wants', 'collected', 'bought' — operation verbs, not state.
+    def test_non_possession_non_acquisition_verb_refused(self) -> None:
+        # Post-W2 (ADR-0170): possession verbs (has/have/had) AND
+        # acquisition verbs (collected/received/bought/got) extract
+        # successfully — the latter dispatched to CandidateOperation(add)
+        # in the injector. Verbs outside both sets still refuse.
         assert _try_extract("Michael wants 10 pounds.") is None
-        assert _try_extract("Nicole collected 400 paperclips.") is None
-        assert _try_extract("Sam bought 5 apples.") is None
+        # 'gained' is deliberately EXCLUDED from _ACQUISITION_VERBS
+        # (delta-of-attribute hazard); must still refuse.
+        assert _try_extract("Orlando gained 5 pounds.") is None
+        # 'donated' is a SUBTRACT verb (actor gives away); deferred
+        # until a separate W2.1 PR adds depletion-verb handling.
+        assert _try_extract("Alice donated 3 books.") is None
+
+    def test_acquisition_verbs_extract_with_anchor_kind(self) -> None:
+        # Post-W2 (ADR-0170): acquisition verbs extract with
+        # anchor_kind='acquisition'. The injector then emits
+        # CandidateOperation(add) rather than CandidateInitial.
+        result = _try_extract("Nicole collected 400 paperclips.")
+        assert result is not None
+        assert result["anchor_kind"] == "acquisition"
+        assert result["verb_token"] == "collected"
+
+        result_buy = _try_extract("Sam bought 5 apples.")
+        assert result_buy is not None
+        assert result_buy["anchor_kind"] == "acquisition"
+        assert result_buy["verb_token"] == "bought"
+
+    def test_possession_verbs_extract_with_possession_kind(self) -> None:
+        # Pre-W2 behavior preserved: possession verbs extract with
+        # anchor_kind='possession'; injector emits CandidateInitial.
+        result = _try_extract("Sam has 5 apples.")
+        assert result is not None
+        assert result["anchor_kind"] == "possession"
+        assert result["verb_token"] == "has"
 
     def test_owns_outside_v1_whitelist(self) -> None:
         # v1 restricts to has/have/had to align with CandidateInitial's
