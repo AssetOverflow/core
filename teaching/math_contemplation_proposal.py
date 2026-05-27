@@ -26,13 +26,12 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from evals.refusal_taxonomy.shape_categories import ShapeCategory
+from generate.comprehension.audit import AuditRow
 from teaching.math_evidence import MathReaderRefusalEvidence
-
-if TYPE_CHECKING:
-    from teaching.math_reasoning_trace import ReasoningTrace
+from teaching.math_reasoning_trace import ReasoningStep, ReasoningTrace, build_trace
 
 
 # ---------------------------------------------------------------------------
@@ -296,10 +295,180 @@ def build_proposal(
     )
 
 
+# ---------------------------------------------------------------------------
+# Self-contained JSONL persistence serializer (ADR-0172 tightening follow-up #1)
+# ---------------------------------------------------------------------------
+#
+# canonical_bytes() above is the content-hash function: it reduces
+# evidence_pointers to evidence_hashes and reasoning_trace to its trace_id.
+# That's the right shape for the proposal_id derivation but NOT for
+# round-tripping through disk — a reader cannot reconstruct the full
+# proposal from canonical bytes without re-running the decomposer.
+#
+# to_jsonl_record() / from_jsonl_record() are a SEPARATE persistence
+# serializer that emits a self-contained record (proposal_id, full
+# evidence_pointers, full reasoning_trace.steps) so the workbench can
+# read proposals.jsonl without re-running decompose_audit().
+#
+# Determinism contract preserved: sort_keys=True, compact separators,
+# no floats (rejected by reasoning_trace validators).
+
+
+def _audit_row_to_dict(row: AuditRow) -> dict[str, Any]:
+    return {
+        "case_id": row.case_id,
+        "sentence_index": row.sentence_index,
+        "token_index": row.token_index,
+        "token_text": row.token_text,
+        "recognized_terms": list(row.recognized_terms),
+        "skipped_frame": row.skipped_frame,
+        "missing_operator": row.missing_operator,
+        "refusal_reason": row.refusal_reason,
+        "refusal_detail": row.refusal_detail,
+    }
+
+
+def _audit_row_from_dict(data: dict[str, Any]) -> AuditRow:
+    return AuditRow(
+        case_id=str(data["case_id"]),
+        sentence_index=int(data["sentence_index"]),
+        token_index=int(data["token_index"]),
+        token_text=str(data["token_text"]),
+        recognized_terms=tuple(data.get("recognized_terms") or ()),
+        skipped_frame=data.get("skipped_frame"),
+        missing_operator=data.get("missing_operator"),
+        refusal_reason=str(data.get("refusal_reason", "")),
+        refusal_detail=str(data.get("refusal_detail", "")),
+    )
+
+
+def _evidence_to_dict(ev: MathReaderRefusalEvidence) -> dict[str, Any]:
+    return {
+        "case_id": ev.case_id,
+        "sentence_index": ev.sentence_index,
+        "token_index": ev.token_index,
+        "refusal_reason": ev.refusal_reason,
+        "missing_operator": ev.missing_operator,
+        "claim_signature": ev.claim_signature,
+        "evidence_hash": ev.evidence_hash,
+        "sub_type": ev.sub_type,
+        "audit_row": _audit_row_to_dict(ev.audit_row),
+    }
+
+
+def _evidence_from_dict(data: dict[str, Any]) -> MathReaderRefusalEvidence:
+    return MathReaderRefusalEvidence(
+        case_id=str(data["case_id"]),
+        sentence_index=int(data["sentence_index"]),
+        token_index=int(data["token_index"]),
+        refusal_reason=str(data["refusal_reason"]),
+        missing_operator=data.get("missing_operator"),
+        claim_signature=str(data.get("claim_signature", "")),
+        evidence_hash=str(data["evidence_hash"]),
+        audit_row=_audit_row_from_dict(data["audit_row"]),
+        sub_type=data["sub_type"],
+    )
+
+
+def _step_to_dict(step: ReasoningStep) -> dict[str, Any]:
+    return {
+        "step_index": step.step_index,
+        "step_kind": step.step_kind,
+        "input_pointers": list(step.input_pointers),
+        "claim": step.claim,
+        "justification": step.justification,
+        "output_payload": step.output_payload,
+    }
+
+
+def _step_from_dict(data: dict[str, Any]) -> ReasoningStep:
+    return ReasoningStep(
+        step_index=int(data["step_index"]),
+        step_kind=data["step_kind"],
+        input_pointers=tuple(str(p) for p in data.get("input_pointers", ())),
+        claim=str(data.get("claim", "")),
+        justification=str(data.get("justification", "")),
+        output_payload=data.get("output_payload"),
+    )
+
+
+def to_jsonl_record(proposal: MathReaderRefusalShapeProposal) -> dict[str, Any]:
+    """Return a self-contained dict representation suitable for JSONL persistence.
+
+    Unlike :func:`canonical_bytes`, this record includes:
+    - ``proposal_id`` (so consumers don't need to recompute it)
+    - full ``evidence_pointers`` (nested dicts — not just hashes)
+    - full ``reasoning_trace.steps`` (inline — not just trace_id)
+
+    The output is JSON-serializable.  Encoding to bytes via
+    ``json.dumps(record, sort_keys=True, separators=(",", ":"),
+    ensure_ascii=False)`` produces deterministic byte-identical output
+    across reruns.
+    """
+    trace = proposal.reasoning_trace
+    return {
+        "proposal_id": proposal.proposal_id,
+        "domain": proposal.domain,
+        "shape_category": proposal.shape_category.value,
+        "structural_commonality": proposal.structural_commonality,
+        "evidence_pointers": [
+            _evidence_to_dict(ev) for ev in proposal.evidence_pointers
+        ],
+        "proposed_change_kind": proposal.proposed_change_kind,
+        "proposed_change_payload": proposal.proposed_change_payload,
+        "wrong_zero_assertion": proposal.wrong_zero_assertion,
+        "replay_equivalence_hash": proposal.replay_equivalence_hash,
+        "reasoning_trace": {
+            "trace_id": trace.trace_id,
+            "steps": [_step_to_dict(s) for s in trace.steps],
+        },
+    }
+
+
+def from_jsonl_record(record: dict[str, Any]) -> MathReaderRefusalShapeProposal:
+    """Reconstruct a proposal from a :func:`to_jsonl_record` dict.
+
+    Goes through :func:`build_proposal` so all invariants are re-validated
+    (evidence floor, change_kind allowlist, wrong_zero min-length, trace_id
+    presence, JSON-serializable payload).  The reconstructed ``proposal_id``
+    must match the persisted one — mismatch indicates tampering or schema
+    drift and raises :class:`ValueError`.
+    """
+    evidence_records = tuple(
+        _evidence_from_dict(d) for d in record.get("evidence_pointers", ())
+    )
+    steps = tuple(_step_from_dict(d) for d in record["reasoning_trace"]["steps"])
+    trace = build_trace(steps)
+
+    shape_category = ShapeCategory(record["shape_category"])
+
+    proposal = build_proposal(
+        domain=record.get("domain", "math"),
+        shape_category=shape_category,
+        structural_commonality=str(record["structural_commonality"]),
+        evidence_pointers=evidence_records,
+        proposed_change_kind=str(record["proposed_change_kind"]),
+        proposed_change_payload=record.get("proposed_change_payload"),
+        wrong_zero_assertion=str(record["wrong_zero_assertion"]),
+        replay_equivalence_hash=str(record["replay_equivalence_hash"]),
+        reasoning_trace=trace,
+    )
+
+    persisted_id = str(record.get("proposal_id", ""))
+    if persisted_id and persisted_id != proposal.proposal_id:
+        raise ValueError(
+            "proposal_id mismatch on JSONL round-trip: persisted "
+            f"{persisted_id!r} != recomputed {proposal.proposal_id!r}"
+        )
+    return proposal
+
+
 __all__ = [
     "ChangeKind",
     "MathReaderRefusalShapeProposal",
     "build_proposal",
     "canonical_bytes",
     "compute_proposal_id",
+    "from_jsonl_record",
+    "to_jsonl_record",
 ]

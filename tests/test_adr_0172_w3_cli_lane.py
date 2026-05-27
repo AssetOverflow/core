@@ -104,21 +104,59 @@ def test_cli_lane_writes_jsonl_with_real_audit(tmp_path: Path) -> None:
 
 
 def test_cli_lane_output_sorted_by_proposal_id(tmp_path: Path) -> None:
-    # canonical_bytes() omits proposal_id by design; verify by comparing the
-    # written bytes to the decomposer output (which is itself sorted by proposal_id).
-    from teaching.math_contemplation import decompose_audit
-    from teaching.math_contemplation_proposal import canonical_bytes
+    """Output lines are sorted by proposal_id (matches decomposer sort contract)."""
+    with _patch_proposals_dir(tmp_path) as output:
+        args = _Args(audit=str(REAL_AUDIT_PATH))
+        cmd_eval_math_contemplation(args)
 
-    proposals = decompose_audit(REAL_AUDIT_PATH)
-    expected = b"".join(canonical_bytes(p) + b"\n" for p in proposals)
+    lines = output.read_bytes().splitlines()
+    ids = [json.loads(ln)["proposal_id"] for ln in lines]
+    assert ids == sorted(ids), "output lines must be sorted by proposal_id"
+
+
+def test_cli_lane_jsonl_records_are_self_contained(tmp_path: Path) -> None:
+    """ADR-0172 tightening follow-up #1: each line is a self-contained record.
+
+    Per to_jsonl_record(), each line must carry proposal_id, full
+    evidence_pointers (as nested dicts), and full reasoning_trace.steps —
+    so the workbench can load without re-running decompose_audit().
+    """
+    with _patch_proposals_dir(tmp_path) as output:
+        args = _Args(audit=str(REAL_AUDIT_PATH))
+        cmd_eval_math_contemplation(args)
+
+    lines = output.read_bytes().splitlines()
+    assert lines
+    for ln in lines:
+        record = json.loads(ln)
+        # Self-containment invariants:
+        assert "proposal_id" in record and record["proposal_id"]
+        assert record["domain"] == "math"
+        # evidence_pointers are nested dicts, not hash strings
+        assert isinstance(record["evidence_pointers"], list)
+        assert all(isinstance(ev, dict) for ev in record["evidence_pointers"])
+        assert all("evidence_hash" in ev for ev in record["evidence_pointers"])
+        assert all("audit_row" in ev for ev in record["evidence_pointers"])
+        # reasoning_trace carries full steps inline
+        assert isinstance(record["reasoning_trace"], dict)
+        assert "trace_id" in record["reasoning_trace"]
+        assert len(record["reasoning_trace"]["steps"]) == 4
+
+
+def test_cli_lane_records_round_trip_via_from_jsonl_record(tmp_path: Path) -> None:
+    """Each line round-trips through from_jsonl_record() back to a proposal."""
+    from teaching.math_contemplation_proposal import from_jsonl_record
 
     with _patch_proposals_dir(tmp_path) as output:
         args = _Args(audit=str(REAL_AUDIT_PATH))
         cmd_eval_math_contemplation(args)
 
-    assert output.read_bytes() == expected, (
-        "output bytes must match decomposer output in proposal_id order"
-    )
+    for ln in output.read_bytes().splitlines():
+        record = json.loads(ln)
+        proposal = from_jsonl_record(record)
+        # proposal_id must round-trip identically (validates evidence_hashes
+        # and trace_id are stable through serialization)
+        assert proposal.proposal_id == record["proposal_id"]
 
 
 def test_cli_lane_idempotent(tmp_path: Path) -> None:

@@ -249,3 +249,122 @@ def test_proposal_id_sensitive_to_shape_category() -> None:
     p1 = _build(shape_category=ShapeCategory.RATE_WITH_CURRENCY)
     p2 = _build(shape_category=ShapeCategory.CURRENCY_AMOUNT)
     assert p1.proposal_id != p2.proposal_id
+
+
+# ---------------------------------------------------------------------------
+# ADR-0172 tightening follow-up #1 — self-contained JSONL round-trip
+# ---------------------------------------------------------------------------
+
+
+def _build_with_real_trace(**overrides: Any) -> MathReaderRefusalShapeProposal:
+    """Build a proposal using a real ReasoningTrace (round-trip requires it)."""
+    from teaching.math_reasoning_trace import ReasoningStep, build_trace
+
+    steps = tuple(
+        ReasoningStep(
+            step_index=i,
+            step_kind=kind,
+            input_pointers=("ev-001", "ev-002"),
+            claim=f"step {i} claim",
+            justification=f"step {i} justification",
+            output_payload={"i": i},
+        )
+        for i, kind in enumerate(
+            ("observation", "grouping", "hypothesis", "conclusion")
+        )
+    )
+    trace = build_trace(steps)
+    kwargs: dict[str, Any] = dict(
+        shape_category=ShapeCategory.RATE_WITH_CURRENCY,
+        structural_commonality="subject earns currency per time-unit",
+        evidence_pointers=_two_evidences(),
+        proposed_change_kind="injector_sub_shape",
+        proposed_change_payload={"narrow_form": "$<amount> per <unit>"},
+        wrong_zero_assertion=_VALID_ASSERTION,
+        replay_equivalence_hash="b" * 64,
+        reasoning_trace=trace,
+    )
+    kwargs.update(overrides)
+    return build_proposal(**kwargs)
+
+
+def test_to_jsonl_record_self_contained() -> None:
+    """to_jsonl_record emits proposal_id, full evidence_pointers, full trace steps."""
+    from teaching.math_contemplation_proposal import to_jsonl_record
+
+    proposal = _build_with_real_trace()
+    record = to_jsonl_record(proposal)
+
+    # proposal_id is present (canonical_bytes omits it; this is the difference)
+    assert record["proposal_id"] == proposal.proposal_id
+
+    # evidence_pointers are nested dicts (not just hashes)
+    assert isinstance(record["evidence_pointers"], list)
+    assert len(record["evidence_pointers"]) == 2
+    assert isinstance(record["evidence_pointers"][0], dict)
+    assert "evidence_hash" in record["evidence_pointers"][0]
+    assert "audit_row" in record["evidence_pointers"][0]
+
+    # reasoning_trace carries full steps inline (not just trace_id)
+    assert isinstance(record["reasoning_trace"], dict)
+    assert record["reasoning_trace"]["trace_id"] == proposal.reasoning_trace.trace_id
+    assert len(record["reasoning_trace"]["steps"]) == 4
+
+
+def test_jsonl_record_round_trip() -> None:
+    """to_jsonl_record → from_jsonl_record returns an equivalent proposal."""
+    from teaching.math_contemplation_proposal import from_jsonl_record, to_jsonl_record
+
+    proposal = _build_with_real_trace()
+    record = to_jsonl_record(proposal)
+    restored = from_jsonl_record(record)
+
+    assert restored.proposal_id == proposal.proposal_id
+    assert restored.domain == proposal.domain
+    assert restored.proposed_change_kind == proposal.proposed_change_kind
+    assert restored.shape_category == proposal.shape_category
+    assert restored.replay_equivalence_hash == proposal.replay_equivalence_hash
+    assert restored.reasoning_trace.trace_id == proposal.reasoning_trace.trace_id
+    assert len(restored.evidence_pointers) == len(proposal.evidence_pointers)
+
+
+def test_jsonl_record_byte_stability() -> None:
+    """Same proposal → byte-identical JSON line across reruns (sort_keys=True)."""
+    from teaching.math_contemplation_proposal import to_jsonl_record
+
+    p1 = _build_with_real_trace()
+    p2 = _build_with_real_trace()
+    line1 = json.dumps(
+        to_jsonl_record(p1), sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
+    line2 = json.dumps(
+        to_jsonl_record(p2), sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
+    assert line1 == line2
+
+
+def test_jsonl_record_proposal_id_mismatch_rejected() -> None:
+    """A tampered proposal_id in the persisted record raises ValueError."""
+    from teaching.math_contemplation_proposal import from_jsonl_record, to_jsonl_record
+
+    proposal = _build_with_real_trace()
+    record = to_jsonl_record(proposal)
+    record["proposal_id"] = "0" * 64  # tamper
+
+    with pytest.raises(ValueError, match="proposal_id mismatch"):
+        from_jsonl_record(record)
+
+
+def test_canonical_bytes_unchanged_by_tightening() -> None:
+    """canonical_bytes (the content-hash function) still omits proposal_id.
+
+    Tightening follow-up #1 added to_jsonl_record as a SEPARATE serializer;
+    canonical_bytes itself must remain stable so trace_id and proposal_id
+    derivations don't shift.
+    """
+    proposal = _build_with_real_trace()
+    raw = canonical_bytes(proposal)
+    decoded = json.loads(raw.decode("utf-8"))
+    assert "proposal_id" not in decoded
+    # evidence_pointers in canonical_bytes are still hash strings, not dicts
+    assert all(isinstance(p, str) for p in decoded["evidence_pointers"])

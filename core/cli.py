@@ -2250,7 +2250,7 @@ def cmd_eval_math_contemplation(args: argparse.Namespace) -> int:
     ``teaching/math_proposals/`` is written, the audit file is not mutated.
     """
     from teaching.math_contemplation import decompose_audit
-    from teaching.math_contemplation_proposal import canonical_bytes
+    from teaching.math_contemplation_proposal import to_jsonl_record
 
     audit_raw = getattr(args, "audit", None)
     output_raw = getattr(args, "output", None)
@@ -2271,7 +2271,20 @@ def cmd_eval_math_contemplation(args: argparse.Namespace) -> int:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    lines = [canonical_bytes(p) + b"\n" for p in proposals]
+    # Self-contained JSONL (ADR-0172 tightening follow-up #1): each line
+    # carries proposal_id, full evidence_pointers, and full
+    # reasoning_trace.steps so consumers can load without re-running the
+    # decomposer.
+    lines: list[bytes] = []
+    for proposal in proposals:
+        record = to_jsonl_record(proposal)
+        encoded = json.dumps(
+            record,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        lines.append(encoded + b"\n")
     output_path.write_bytes(b"".join(lines))
 
     if not getattr(args, "json", False):

@@ -311,3 +311,123 @@ def test_decompose_audit_missing_file_raises(tmp_path: Path) -> None:
     """A non-existent audit path raises (no silent empty-tuple swallow)."""
     with pytest.raises(FileNotFoundError):
         decompose_audit(tmp_path / "nope.json")
+
+
+# ---------------------------------------------------------------------------
+# ADR-0172 tightening follow-up #2 — pair-based dispatch table
+# ---------------------------------------------------------------------------
+
+
+def test_decompose_audit_pair_dispatch_unexpected_category_matcher(
+    tmp_path: Path,
+) -> None:
+    """(unexpected_category, pre_frame_filler_sentence) → matcher_extension."""
+    audit = _write_audit(
+        tmp_path,
+        [
+            _case(
+                case_id="pf-001",
+                refusal_reason="unexpected_category",
+                missing_operator="pre_frame_filler_sentence",
+            ),
+            _case(
+                case_id="pf-002",
+                refusal_reason="unexpected_category",
+                missing_operator="pre_frame_filler_sentence",
+            ),
+        ],
+    )
+    proposals = decompose_audit(audit)
+    assert len(proposals) == 1
+    assert proposals[0].proposed_change_kind == "matcher_extension"
+
+
+def test_decompose_audit_pair_dispatch_unexpected_category_frame_reclass(
+    tmp_path: Path,
+) -> None:
+    """(unexpected_category, multi_subject_sentence) → frame_reclassification."""
+    audit = _write_audit(
+        tmp_path,
+        [
+            _case(
+                case_id="ms-001",
+                refusal_reason="unexpected_category",
+                missing_operator="multi_subject_sentence",
+            ),
+            _case(
+                case_id="ms-002",
+                refusal_reason="unexpected_category",
+                missing_operator="multi_subject_sentence",
+            ),
+        ],
+    )
+    proposals = decompose_audit(audit)
+    assert len(proposals) == 1
+    assert proposals[0].proposed_change_kind == "frame_reclassification"
+
+
+def test_decompose_audit_pair_dispatch_pronoun(tmp_path: Path) -> None:
+    """(unresolved_pronoun, pronoun_resolution) → matcher_extension."""
+    audit = _write_audit(
+        tmp_path,
+        [
+            _case(
+                case_id="pr-001",
+                refusal_reason="unresolved_pronoun",
+                missing_operator="pronoun_resolution",
+            ),
+            _case(
+                case_id="pr-002",
+                refusal_reason="unresolved_pronoun",
+                missing_operator="pronoun_resolution",
+            ),
+        ],
+    )
+    proposals = decompose_audit(audit)
+    assert len(proposals) == 1
+    assert proposals[0].proposed_change_kind == "matcher_extension"
+
+
+def test_decompose_audit_real_audit_change_kind_distribution() -> None:
+    """Against the real audit_brief_11.json, dispatch yields the expected mix.
+
+    Per ADR-0172 tightening follow-up #2, the widened heuristic must produce
+    at least 3 matcher_extension and at least 2 frame_reclassification
+    proposals on the train-sample audit.
+    """
+    proposals = decompose_audit(REAL_AUDIT_PATH)
+    kinds = [p.proposed_change_kind for p in proposals]
+    matcher = sum(1 for k in kinds if k == "matcher_extension")
+    frame = sum(1 for k in kinds if k == "frame_reclassification")
+    assert matcher >= 3, f"expected ≥3 matcher_extension, got {matcher}: {kinds}"
+    assert frame >= 2, f"expected ≥2 frame_reclassification, got {frame}: {kinds}"
+
+
+# ---------------------------------------------------------------------------
+# ADR-0172 tightening follow-up #3 — shape_category structural gap
+# ---------------------------------------------------------------------------
+
+
+def test_decompose_audit_shape_category_is_uncategorized(tmp_path: Path) -> None:
+    """Until shape_category is added to MathReaderRefusalEvidence, all proposals
+    emit ShapeCategory.UNCATEGORIZED — do NOT invent values."""
+    from evals.refusal_taxonomy.shape_categories import ShapeCategory
+
+    audit = _write_audit(
+        tmp_path,
+        [
+            _case(
+                case_id="sc-001",
+                refusal_reason="unexpected_category",
+                missing_operator="pre_frame_filler_sentence",
+            ),
+            _case(
+                case_id="sc-002",
+                refusal_reason="unexpected_category",
+                missing_operator="pre_frame_filler_sentence",
+            ),
+        ],
+    )
+    proposals = decompose_audit(audit)
+    assert proposals
+    assert all(p.shape_category == ShapeCategory.UNCATEGORIZED for p in proposals)
