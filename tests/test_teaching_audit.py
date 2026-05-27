@@ -103,8 +103,23 @@ def test_audit_real_corpus_runs_clean() -> None:
     assert report.corpus_id == "cognition_chains_v1"
     # Every dropped line must carry a typed reason so an operator can
     # audit why it was retired without re-deriving the supersession.
+    # Allowed reason prefixes (extend deliberately when a new drop class
+    # is introduced — do not silently broaden):
+    #
+    # - ``superseded_by:<chain_id>`` — ratified curriculum supersession
+    # - ``unsupported_intent:<intent>`` — chain authored with an intent
+    #   the cognition corpus does not yet support (e.g. admissibility
+    #   chains from ADR-0163.D.2 discovery promotion); the chain remains
+    #   on disk for replay/audit but is not loaded into the active
+    #   corpus.
+    allowed_prefixes = ("superseded_by:", "unsupported_intent:")
     for dropped in report.dropped:
-        assert dropped.reason.startswith("superseded_by:")
+        assert dropped.reason.startswith(allowed_prefixes), (
+            f"unrecognised drop reason {dropped.reason!r} for chain "
+            f"{dropped.chain_id!r}; either add a new prefix to the "
+            f"allowlist with a written rationale, or fix the drop site "
+            f"to use an existing one."
+        )
 
 
 def test_audit_loaded_entries_have_typed_provenance() -> None:
