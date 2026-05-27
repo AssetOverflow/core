@@ -735,11 +735,33 @@ def parse_and_solve(
                                 _collapse_per_sentence_ties(admitted)
                             )
                             continue
-                    # Recognized but no injection — skip the sentence, do
-                    # not refuse.  Identical to the round-2 skip-only
-                    # wiring; preserves wrong=0 because zero math state
-                    # is contributed.
-                    continue
+                    # Recognized but no injection — REFUSE.
+                    #
+                    # The earlier "skip-only" reasoning ("zero math state
+                    # contributed → wrong=0 preserved by construction") is
+                    # wrong in the same way the case 0050 hazard was wrong:
+                    # silently dropping a recognized math statement is
+                    # equivalent to admitting an incomplete graph at the
+                    # problem level — the solver answers from whatever
+                    # remains, which is not the right answer to the input
+                    # problem.  ADR-0167 / Brief 11 §"correct-count greed"
+                    # established this principle on the reader path; this
+                    # commit extends it to the recognizer path.
+                    #
+                    # If the recognizer matches but the injector cannot
+                    # produce typed solver state, the right answer is
+                    # "I don't know" — i.e. refuse.  When an injector is
+                    # added that handles this shape, this branch becomes
+                    # dead and can be retired.
+                    return CandidateGraphResult(
+                        answer=None, selected_graph=None,
+                        refusal_reason=(
+                            "recognizer matched but produced no injection "
+                            f"for statement: {s!r} "
+                            f"(category={recognizer_match.category.value})"
+                        ),
+                        branches_enumerated=0, branches_admissible=0,
+                    )
             return CandidateGraphResult(
                 answer=None, selected_graph=None,
                 refusal_reason=f"no admissible candidate for statement: {s!r}",

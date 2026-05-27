@@ -184,13 +184,22 @@ class TestRefusals:
         assert "question" in (result.refusal_reason or "").lower()
 
     def test_unparseable_statement(self) -> None:
-        # Verb not in any permissive table.
+        # Verb not in any permissive table.  Either the regex parser refuses
+        # directly ("no admissible candidate") or a ratified recognizer
+        # matches but cannot inject typed solver state ("recognizer matched
+        # but produced no injection") — both paths preserve wrong=0 by
+        # refusing.  See the fix that retired the recognizer skip-only
+        # fallback (silent-drop was a wrong>0 hazard analogous to case 0050).
         result = parse_and_solve(
             "Sam has 5 apples. Sam contemplates 3 apples. "
             "How many apples does Sam have?"
         )
         assert not result.is_admitted
-        assert "no admissible candidate" in (result.refusal_reason or "")
+        reason = result.refusal_reason or ""
+        assert (
+            "no admissible candidate" in reason
+            or "recognizer matched but produced no injection" in reason
+        ), f"unexpected refusal reason: {reason!r}"
 
     def test_question_references_unknown_entity(self) -> None:
         result = parse_and_solve(

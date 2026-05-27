@@ -89,6 +89,13 @@ def test_existing_cognition_tests_untouched():
     allowed = {
         "test_candidate_domain_partition.py",  # W2-C
         "test_math_evidence_e2e.py",  # W3-A
+        # Fix PR — wrong=0 hazard regression (recognizer skip-only fallback).
+        # Modifies test_math_candidate_graph.py and test_teaching_audit.py;
+        # adds test_recognizer_skip_wrong_zero.py.  See ADR-0167-FOLLOWUPS §2
+        # for the architectural fix that would retire this allowlist.
+        "test_math_candidate_graph.py",
+        "test_teaching_audit.py",
+        "test_recognizer_skip_wrong_zero.py",
     }
     for line in lines:
         path = line.split()[-1]
