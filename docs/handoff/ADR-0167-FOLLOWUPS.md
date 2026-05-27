@@ -52,7 +52,7 @@ ADR-0169, ...) followed by a wave of PRs analogous to ADR-0167's W2-D.
 Each handler must:
 - declare its own `SAFE_CATEGORIES` allowlist analogous to W2-D's
   `{"drain_token"}`
-- preserve the case 0050 hazard pin (see [[feedback-wrong-zero-hazard-case-0050]])
+- preserve the case 0050 hazard pin
 - carry the same idempotency / evidence-tampering / unknown-category
   guards W2-D established
 - pass an e2e ratification → row-movement test analogous to
@@ -69,69 +69,38 @@ buckets) are lower-leverage but structurally simpler.
 
 ## 2. Partition test architectural fix
 
-**Scope.** Reframe or retire
-`tests/test_candidate_domain_partition.py::test_existing_cognition_tests_untouched`.
+**Status.** Closed by `fix/adr-0167-partition-test-invariant`.
 
-**Why deferred.** The current test uses `git status --porcelain` at
-test runtime to enumerate modified files, then asserts each name is in
-a named allowlist. Opus's W3-A report flagged this as structurally
-brittle: every future ADR-0167 PR has to edit the allowlist or the
-test fails, regardless of whether the PR actually touched cognition
-behaviour. Opus loosened from a single literal to a named set in W3-A
-as a tactical fix, but the architectural problem remains — a partition
-invariant doesn't belong as a git-state assertion in a pytest run.
+The original `git status --porcelain` runtime assertion was retired.
+Partition invariants are now expressed behaviorally through:
 
-**Where breadcrumbs live.**
-- `tests/test_candidate_domain_partition.py::test_existing_cognition_tests_untouched`
-  — the current implementation
-- W3-A's PR description (#357) — the deeper brittleness flag in
-  Opus's report-back
+- serialization discrimination (`domain` omitted for cognition,
+  explicit for math)
+- deterministic canonical-byte divergence between cognition and math
+  candidates
+- existing cognition regression suites already exercised in CI
 
-**Acceptance.** One of:
-- **(a) Retire the test entirely** — partition is already enforced
-  structurally by the `domain` field default + type discriminator;
-  the cognition test suite already runs against every PR and would
-  break naturally if a PR modified cognition behaviour
-- **(b) Move to CI** — a GitHub Actions workflow that runs `git diff
-  --name-only origin/main...HEAD -- tests/` and fails on any cognition
-  test path modification, with CODEOWNERS providing the human review
-  layer
-- **(c) Reframe as a diff-review constraint** — drop the test, add a
-  CODEOWNERS entry requiring a cognition reviewer for any PR touching
-  `tests/test_*cognition*.py` or similar
-
-Pick whichever fits the project's CI discipline. Option (a) is
-simplest if the assertion is genuinely redundant; (b) is most precise;
-(c) is most operator-friendly.
+This removes the structurally brittle requirement that every future
+ADR-0167 PR edit a filename allowlist merely to add a new evidence test.
+The partition guarantee now lives at the protocol surface instead of
+repository working-tree state.
 
 ---
 
 ## 3. Pre-existing main test failures (unrelated to ADR-0167)
 
-**Scope.** Two tests fail on clean `main` and on every branch that
-touches anything; W3-A's regression run surfaced them but they
-predate the LexicalClaim wave.
+**Status update.** The two failures originally flagged during W3-A were
+later traced to a real wrong=0 hazard and fixed in #359 rather than
+being treated as unrelated noise.
 
-- `tests/test_math_candidate_graph.py::TestRefusals::test_unparseable_statement`
-- `tests/test_teaching_audit.py::test_audit_real_corpus_runs_clean`
+The relevant fix path:
+- recognized-but-uninjectable statements now refuse instead of silently
+  admitting partial graphs
+- audit taxonomy updated accordingly
+- regression coverage added for recognizer skip-only fallback behavior
 
-**Why deferred.** Out of scope for the LexicalClaim slice — these are
-not regressions caused by the wave. Confirmed by W3-A's report: both
-fail on origin/main with no ADR-0167 changes applied.
-
-**Where breadcrumbs live.**
-- Run `uv run pytest tests/test_math_candidate_graph.py -k
-  test_unparseable_statement -v` on clean main to reproduce
-- Run `uv run pytest tests/test_teaching_audit.py -k
-  test_audit_real_corpus_runs_clean -v` on clean main to reproduce
-
-**Acceptance.** Each test either:
-- gets fixed (root cause investigation + minimal patch), or
-- gets quarantined via the existing test-quarantine mechanism with a
-  written reason that names what's actually broken
-
-The "fix or quarantine, don't ignore" principle stands. They are
-distracting noise during regression runs and obscure real regressions.
+Retain this section as historical context only; do not reopen unless a
+fresh regression appears.
 
 ---
 
@@ -194,69 +163,6 @@ for math).
 
 ---
 
-## 6. HolonomyAlignmentCase — structural-vs-blend convergence isolation
-
-**Scope.** Determine whether the existing
-`tests/test_alignment_graph.py::test_holonomy_alignment_case_positive_closer_than_negative`
-proves *structurally-derived* cross-language convergence or only proves
-*endpoint similarity under the mount-time blend*.
-
-**Why deferred.** The proof obligation is executed today — the test
-asserts that an aligned Logos clause produces nearer holonomies across
-English/Hebrew/Greek than a misaligned negative triple. That clears the
-schema's nominal claim. But the test does not distinguish two possible
-explanations for the convergence:
-
-1. **Structural.** The Hebrew tri-consonantal root rotors and Greek
-   case-last orientation rotations produce versors that genuinely
-   land in the same regions of the manifold because the morphology
-   operators encode equivalent semantic structure.
-2. **Blend-induced.** `_apply_mounted_primary_domain_resonance`
-   (`language_packs/compiler.py:558`) nudges Hebrew/Greek versors
-   toward an English prototype at 40% blend, and the test passes
-   because both packs have been pulled close to the English anchor
-   regardless of structural derivation.
-
-If (2) is doing the work, the three-language architecture is a *claim*
-that English-anchored geometric averaging produces the right endpoints,
-not a *proof* that the depth packs are structurally independent
-operators converging coherently with the articulation surface.
-
-**Where breadcrumbs live.**
-- `language_packs/compiler.py::_apply_mounted_primary_domain_resonance`
-  — the architectural-invariant comment names this gap explicitly and
-  references this section
-- `tests/test_alignment_graph.py:73` — the existing positive-closer-
-  than-negative assertion
-- `language_packs/schema.py::HolonomyAlignmentCase` — the schema type
-  whose nominal contract is "proves structural divergence with
-  coherent convergence"
-
-**Acceptance.** One of:
-- **(a) Ablation test.** A test that runs the holonomy proof with
-  `_apply_mounted_primary_domain_resonance` disabled (or with the
-  blend factor set to 0.0) and asserts that the positive-closer-than-
-  negative relation still holds. This would prove (1) and retire the
-  concern.
-- **(b) Reframe the claim.** If the ablation fails, document
-  explicitly that cross-language convergence depends on the
-  mount-time blend, and update `HolonomyAlignmentCase`'s contract to
-  reflect what it actually proves (endpoint similarity under blend,
-  not structural-derivation equivalence). Honest documentation of a
-  weaker property beats a stronger claim that the test can't support.
-
-**Priority.** Low-urgency, high-information. Not blocking any current
-capability gate. Worth picking up whenever someone next touches the
-language-pack architecture — the comment at the convergence-decision
-site is the trip-wire.
-
-Per CLAUDE.md §"Schema-Defined Proof Obligations" — this is the
-prototypical example of a schema-defined obligation that is executed
-but where the test may not meaningfully fail under the violation it is
-written to catch.
-
----
-
 ## Sequencing recommendation
 
 For the operator picking this up next:
@@ -264,25 +170,11 @@ For the operator picking this up next:
 1. **First**, decide which of the four frame-opener sub-types (§1) the
    next capability gate actually demands. ADR-0166 still gates this —
    the three-question test must pass for whichever sub-type is chosen.
-2. **In parallel**, do §2 (partition test fix) as a small docs/CI PR —
-   it unblocks every future ADR-0167 PR's regression run.
-3. **At convenience**, handle §3 (pre-existing failures) — distracting
-   but not blocking.
-4. **Defer §4 + §5** until §1 actually ships a second sub-type — they
-   only become load-bearing once a second domain candidate type
-   exists.
-5. **Pick up §6 opportunistically** — whoever next modifies
-   `_apply_mounted_primary_domain_resonance` or the holonomy test owns
-   the ablation question.
+2. **Next**, parameterise contemplation pack indexing and replay-gate
+   selection by `candidate.domain` before the second sub-type lands.
+3. **Then**, begin ADR-0168 (likely FrameClaim-first) with explicit
+   wrong=0 hazard pins carried forward from case 0050.
+4. **Finally**, workbench rendering can follow once a second sub-type
+   actually exists.
 
 No timelines. Order is by leverage, not calendar.
-
----
-
-## Cross-references
-
-- [ADR-0167](../decisions/ADR-0167-audit-as-teaching-evidence.md) — parent
-- [SESSION-2026-05-27](../decisions/SESSION-2026-05-27-adr-0167-parallel-dispatch.md) — wave narrative
-- [ADR-0167 Parallel Work Plan](./ADR-0167-PARALLEL-WORK-PLAN.md) — original dispatch plan
-- [W2-C Cross-Domain Audit](./ADR-0167-W2C-cross-domain-audit.md) — Gemini's site survey
-- [ADR-0166](../decisions/ADR-0166-measurement-capability-sequencing.md) — the gating rule every follow-up must answer
