@@ -1,0 +1,222 @@
+# ADR-0167 — Follow-ups Queue
+
+**Date opened:** 2026-05-27 (end of Wave 3)
+**Parent:** [ADR-0167](../decisions/ADR-0167-audit-as-teaching-evidence.md)
+**Companion:** [SESSION-2026-05-27](../decisions/SESSION-2026-05-27-adr-0167-parallel-dispatch.md)
+
+The LexicalClaim slice landed clean (W1-A → W2-A/B/C/D → W3-A merged
+2026-05-27). This file captures the named follow-ups that surfaced
+during the wave and were deliberately deferred so the slice could
+converge. The next operator picking up ADR-0167 work should walk this
+queue top-down and decide which item the project's current capability
+gate actually needs.
+
+Each item: scope, why deferred, where the breadcrumbs live, and the
+acceptance criterion that would close it.
+
+---
+
+## 1. Frame-opener sub-types (FrameClaim / CompositionClaim / ReferenceClaim / SlotClaim)
+
+**Scope.** Four additional ratification handlers, one per remaining
+sub-type in `SUB_TYPE_FOR_OPERATOR`:
+
+| Sub-type | Maps from | Ratification primitive |
+|---|---|---|
+| `FrameClaim` | `pre_frame_filler_sentence`, `multi_subject_sentence` | Verb-category reclassification |
+| `CompositionClaim` | `multi_quantity_composition`, `quantity_extraction` | Frame-split rule |
+| `ReferenceClaim` | `pronoun_resolution` | Anaphora-resolution entry |
+| `SlotClaim` | `question_frame_slot`, `unit_binding`, `question_target_slot`, `descriptive_frame_question` | Slot-completion table entry |
+
+**Why deferred.** ADR-0167 §"Proposed sub-type set" explicitly chose
+LexicalClaim-first because it is the lowest-risk surface (drain_token
+additions cannot create wrong admissions without also passing graph
+completeness). The other four touch frame-opener decisions, anaphora,
+or slot bindings — each is a new admission path multiplying the
+`wrong=0` surface area, and each needs its own scoping ADR with the
+six open questions from ADR-0167 §"Open questions" answered for that
+sub-type's mechanics.
+
+**Where breadcrumbs live.**
+- `teaching/math_evidence.py::SUB_TYPE_FOR_OPERATOR` — already maps
+  the operator labels; no schema change needed
+- `teaching/math_lexical_ratification.py` — the template for what a
+  sub-type handler looks like (preconditions, receipt, idempotency,
+  hazard pins)
+- `tests/test_math_lexical_ratification.py::test_rejects_non_lexical_sub_type`
+  — pins that non-lexical claims currently raise `WrongClaimSubType`;
+  each new handler retires its corresponding rejection
+
+**Acceptance.** Each new sub-type ships as an ADR (likely ADR-0168,
+ADR-0169, ...) followed by a wave of PRs analogous to ADR-0167's W2-D.
+Each handler must:
+- declare its own `SAFE_CATEGORIES` allowlist analogous to W2-D's
+  `{"drain_token"}`
+- preserve the case 0050 hazard pin (see [[feedback-wrong-zero-hazard-case-0050]])
+- carry the same idempotency / evidence-tampering / unknown-category
+  guards W2-D established
+- pass an e2e ratification → row-movement test analogous to
+  `test_lexical_ratification_advances_unknown_word_row`
+
+**Priority hint.** FrameClaim is the highest-leverage next sub-type
+(9 cases in the current taxonomy under `pre_frame_filler_sentence`),
+but also the riskiest — frame-opener miscategorisation is exactly the
+case 0050 hazard. CompositionClaim (8+11 cases) is the next-highest
+count, also high-risk. ReferenceClaim (3 cases) and SlotClaim (smaller
+buckets) are lower-leverage but structurally simpler.
+
+---
+
+## 2. Partition test architectural fix
+
+**Scope.** Reframe or retire
+`tests/test_candidate_domain_partition.py::test_existing_cognition_tests_untouched`.
+
+**Why deferred.** The current test uses `git status --porcelain` at
+test runtime to enumerate modified files, then asserts each name is in
+a named allowlist. Opus's W3-A report flagged this as structurally
+brittle: every future ADR-0167 PR has to edit the allowlist or the
+test fails, regardless of whether the PR actually touched cognition
+behaviour. Opus loosened from a single literal to a named set in W3-A
+as a tactical fix, but the architectural problem remains — a partition
+invariant doesn't belong as a git-state assertion in a pytest run.
+
+**Where breadcrumbs live.**
+- `tests/test_candidate_domain_partition.py::test_existing_cognition_tests_untouched`
+  — the current implementation
+- W3-A's PR description (#357) — the deeper brittleness flag in
+  Opus's report-back
+
+**Acceptance.** One of:
+- **(a) Retire the test entirely** — partition is already enforced
+  structurally by the `domain` field default + type discriminator;
+  the cognition test suite already runs against every PR and would
+  break naturally if a PR modified cognition behaviour
+- **(b) Move to CI** — a GitHub Actions workflow that runs `git diff
+  --name-only origin/main...HEAD -- tests/` and fails on any cognition
+  test path modification, with CODEOWNERS providing the human review
+  layer
+- **(c) Reframe as a diff-review constraint** — drop the test, add a
+  CODEOWNERS entry requiring a cognition reviewer for any PR touching
+  `tests/test_*cognition*.py` or similar
+
+Pick whichever fits the project's CI discipline. Option (a) is
+simplest if the assertion is genuinely redundant; (b) is most precise;
+(c) is most operator-friendly.
+
+---
+
+## 3. Pre-existing main test failures (unrelated to ADR-0167)
+
+**Scope.** Two tests fail on clean `main` and on every branch that
+touches anything; W3-A's regression run surfaced them but they
+predate the LexicalClaim wave.
+
+- `tests/test_math_candidate_graph.py::TestRefusals::test_unparseable_statement`
+- `tests/test_teaching_audit.py::test_audit_real_corpus_runs_clean`
+
+**Why deferred.** Out of scope for the LexicalClaim slice — these are
+not regressions caused by the wave. Confirmed by W3-A's report: both
+fail on origin/main with no ADR-0167 changes applied.
+
+**Where breadcrumbs live.**
+- Run `uv run pytest tests/test_math_candidate_graph.py -k
+  test_unparseable_statement -v` on clean main to reproduce
+- Run `uv run pytest tests/test_teaching_audit.py -k
+  test_audit_real_corpus_runs_clean -v` on clean main to reproduce
+
+**Acceptance.** Each test either:
+- gets fixed (root cause investigation + minimal patch), or
+- gets quarantined via the existing test-quarantine mechanism with a
+  written reason that names what's actually broken
+
+The "fix or quarantine, don't ignore" principle stands. They are
+distracting noise during regression runs and obscure real regressions.
+
+---
+
+## 4. Workbench v1 — math candidate rendering
+
+**Scope.** Make the read-only operator UI (ADR-0160/0162) render
+`MathReaderRefusalEvidence` candidates alongside cognition
+`DiscoveryCandidate` records.
+
+**Why deferred.** ADR-0167 §"Open questions Q4" explicitly out-of-scope.
+The LexicalClaim slice ships the ratification handler but no UI to
+trigger ratification through — today, an operator would call
+`apply_lexical_claim()` from a Python REPL.
+
+**Where breadcrumbs live.**
+- ADR-0160 (Core Workbench v1)
+- ADR-0162 (Workbench Design System)
+- W-029 (proposal queue) — closest existing surface
+- W-031 (replay theater) — replay primitive that math evidence
+  records inherit through ADR-0057
+
+**Acceptance.** A workbench panel that lists pending
+`MathReaderRefusalEvidence` candidates with sub-type, claim signature,
+recognized terms, refusal context, and a ratify-action that calls
+`apply_lexical_claim()` (or its sub-type-specific successor) with an
+operator-supplied reviewer tag and category.
+
+---
+
+## 5. Cross-domain partition risks (from Gemini's W2-C audit)
+
+Two specific code paths Gemini flagged in
+`docs/handoff/ADR-0167-W2C-cross-domain-audit.md` as needing partition
+discrimination:
+
+### 5a. Contemplation pack indexing
+
+**Scope.** `teaching/contemplation.py::contemplate()` uses hardcoded
+cognition pack and corpus indexes (`_pack_index` and `_corpus_index`).
+Future math-domain candidates would silently get cognition-domain
+lookups.
+
+**Acceptance.** Pack and corpus indexes parameterised by
+`candidate.domain` — cognition candidates look up cognition packs,
+math candidates look up math packs (currently `en_core_math_v1`).
+Tests must exercise both paths.
+
+### 5b. Replay gate default
+
+**Scope.** `teaching/proposals.py` defaults its replay gate to
+cognition's. Proposing math/admissibility candidates requires passing
+`run_admissibility_replay_gate` explicitly to prevent false rejections.
+
+**Acceptance.** Either the replay gate is selected by
+`proposal.domain`, or the cognition default is made explicit and math
+proposals are required to declare their gate. Decision goes in
+ADR-0168 (or wherever the first non-lexical sub-type ADR lands —
+that handler will be the first real exerciser of the proposals path
+for math).
+
+---
+
+## Sequencing recommendation
+
+For the operator picking this up next:
+
+1. **First**, decide which of the four frame-opener sub-types (§1) the
+   next capability gate actually demands. ADR-0166 still gates this —
+   the three-question test must pass for whichever sub-type is chosen.
+2. **In parallel**, do §2 (partition test fix) as a small docs/CI PR —
+   it unblocks every future ADR-0167 PR's regression run.
+3. **At convenience**, handle §3 (pre-existing failures) — distracting
+   but not blocking.
+4. **Defer §4 + §5** until §1 actually ships a second sub-type — they
+   only become load-bearing once a second domain candidate type
+   exists.
+
+No timelines. Order is by leverage, not calendar.
+
+---
+
+## Cross-references
+
+- [ADR-0167](../decisions/ADR-0167-audit-as-teaching-evidence.md) — parent
+- [SESSION-2026-05-27](../decisions/SESSION-2026-05-27-adr-0167-parallel-dispatch.md) — wave narrative
+- [ADR-0167 Parallel Work Plan](./ADR-0167-PARALLEL-WORK-PLAN.md) — original dispatch plan
+- [W2-C Cross-Domain Audit](./ADR-0167-W2C-cross-domain-audit.md) — Gemini's site survey
+- [ADR-0166](../decisions/ADR-0166-measurement-capability-sequencing.md) — the gating rule every follow-up must answer
