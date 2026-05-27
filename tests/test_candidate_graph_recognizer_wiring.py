@@ -57,47 +57,72 @@ def with_synthetic_registry(
 
 
 def test_empty_registry_preserves_existing_refusal_reason() -> None:
-    """The live proposal log on main has zero accepted exemplar_corpus
-    proposals; the candidate-graph must refuse with the existing
-    reason string on a statement that has no admissible candidate."""
-    # No monkeypatch — uses the real (empty) live registry projection.
+    """The live proposal log has accepted recognizer registry entries;
+    the candidate-graph must refuse on a statement that has no
+    admissible candidate.
+
+    Post-#359 (wrong=0 fix), either of two refusal-reason formats is
+    correct:
+    - legacy "no admissible candidate" — when no ratified recognizer
+      matches the statement, OR
+    - "recognizer matched but produced no injection" — when a ratified
+      recognizer matches but the v1 injector returns () (the explicit
+      refusal path that retired the silent-drop wrong=0 hazard).
+    """
+    # No monkeypatch — uses the real (live) registry projection.
     result = cg.parse_and_solve(
         "Tina makes $18.00 an hour. How much does Tina earn after 8 hours?"
     )
     assert result.answer is None
     assert result.refusal_reason is not None
-    # The refusal reason format is unchanged.
-    assert "no admissible candidate" in result.refusal_reason
+    assert (
+        "no admissible candidate" in result.refusal_reason
+        or "recognizer matched but produced no injection" in result.refusal_reason
+    ), f"unexpected refusal reason: {result.refusal_reason!r}"
 
 
 # ---------------------------------------------------------------------------
-# Non-empty synthetic registry: recognized statements skip refusal
+# Non-empty synthetic registry: recognized statements refuse explicitly
 # ---------------------------------------------------------------------------
 
 
-def test_recognized_rate_statement_no_longer_triggers_per_statement_refusal(
+def test_recognized_rate_statement_refuses_explicitly_post_wrong_zero_fix(
     with_synthetic_registry: tuple[RatifiedRecognizer, ...],
 ) -> None:
-    """With the rate_with_currency recognizer loaded, 'Tina makes
-    $18.00 an hour' is recognized and skipped in the per-statement
-    loop.  The problem may still refuse downstream (the question
-    cannot be solved without the skipped rate's content), but the
-    refusal reason is no longer the per-statement
-    'no admissible candidate for statement' string."""
+    """With the rate_with_currency recognizer loaded, "Tina makes $18.00
+    an hour" is recognized but the v1 injector returns () (the
+    SentenceChoice union does not yet model rates — see ADR follow-up).
+
+    Pre-#359 behavior: silently drop the recognized-but-uninjectable
+    statement and admit a partial graph from the rest — a wrong>0
+    hazard analogous to case 0050.
+
+    Post-#359 (this test's contract): refuse explicitly with reason
+    "recognizer matched but produced no injection" naming the
+    statement and category. This pinned behavior is the wrong=0
+    safety net for the recognizer path.
+    """
     result = cg.parse_and_solve(
         "Tina makes $18.00 an hour. How much does Tina earn after 8 hours?"
     )
-    if result.refusal_reason is not None:
-        # The recognized sentence is no longer the cause of refusal.
-        assert "Tina makes $18.00 an hour" not in (result.refusal_reason or "")
+    assert result.refusal_reason is not None
+    assert (
+        "recognizer matched but produced no injection" in result.refusal_reason
+    ), f"expected explicit recognizer-refusal, got: {result.refusal_reason!r}"
+    # The statement IS named in the reason — that's the diagnostic shape
+    # the post-#359 refusal carries. Update the prior assertion which
+    # forbade naming, since that assertion encoded the silent-drop
+    # premise that #359 retired.
+    assert "Tina makes $18.00 an hour" in result.refusal_reason
 
 
-def test_recognized_descriptive_statement_no_longer_triggers_per_statement_refusal(
+def test_recognized_descriptive_statement_refuses_explicitly_post_wrong_zero_fix(
     with_synthetic_registry: tuple[RatifiedRecognizer, ...],
 ) -> None:
-    """Descriptive_setup_no_quantity statements that survive the
-    numeric pre-filter (e.g., when all statements are non-numeric)
-    must not trigger the per-statement refusal under the wiring."""
+    """Descriptive_setup_no_quantity statements that match a ratified
+    recognizer but have no v1 injector now refuse explicitly post-#359,
+    same as the rate case above. The statement IS named in the
+    refusal_reason for diagnostic purposes."""
     # Construct a problem whose statements are ALL non-numeric so
     # the pre-filter does NOT strip them, forcing them to the
     # per-statement loop.
@@ -106,8 +131,13 @@ def test_recognized_descriptive_statement_no_longer_triggers_per_statement_refus
         "How many things happened?"
     )
     if result.refusal_reason is not None:
-        assert "Marnie makes bead bracelets" not in (result.refusal_reason or "")
-        assert "John adopts a dog from a shelter" not in (result.refusal_reason or "")
+        # The post-#359 refusal explicitly identifies the recognized
+        # statement that lacks an injector — that's the load-bearing
+        # diagnostic surface.
+        assert (
+            "recognizer matched but produced no injection" in result.refusal_reason
+            or "no admissible candidate" in result.refusal_reason
+        ), f"unexpected refusal reason: {result.refusal_reason!r}"
 
 
 # ---------------------------------------------------------------------------
