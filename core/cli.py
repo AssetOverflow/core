@@ -67,6 +67,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_epistemic_invariants.py",
         "tests/test_adr_0172_w2_decomposer.py",
         "tests/test_adr_0172_w5_inference_proposal.py",
+        "tests/test_math_frame_ratification.py",
     ),
     "packs": (
         "tests/test_core_semantic_seed_pack.py",

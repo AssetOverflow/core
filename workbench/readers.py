@@ -54,6 +54,7 @@ _DEFAULT_MATH_AUDIT_PATH = (
 # Handlers not listed here are not yet implemented.
 _HANDLER_DISPATCH: dict[str, str] = {
     "vocabulary_addition": "LexicalClaim",
+    "frame_reclassification": "FrameClaim",
 }
 
 
@@ -396,6 +397,13 @@ def read_math_proposal(
             f"from teaching.math_lexical_ratification import apply_lexical_claim\n"
             f"# apply_lexical_claim(claim=<evidence>, category='drain_token', reviewer='<you>')"
         )
+    elif handler_name == "FrameClaim":
+        suggested_cli = (
+            f"# ratify via Python REPL (ADR-0168):\n"
+            f"from teaching.math_frame_ratification import apply_frame_claim\n"
+            f"# apply_frame_claim(claim=<evidence>, frame_category='increment_frame', "
+            f"polarity='affirms', reviewer='<you>')"
+        )
 
     return MathProposalDetail(
         proposal_id=proposal_id,
@@ -451,6 +459,12 @@ def ratify_math_proposal(
         suggested_cli = (
             f"from teaching.math_lexical_ratification import apply_lexical_claim\n"
             f"# apply_lexical_claim(claim=<evidence>, category='drain_token', reviewer='<you>')"
+        )
+    elif handler_name == "FrameClaim":
+        suggested_cli = (
+            f"from teaching.math_frame_ratification import apply_frame_claim\n"
+            f"# apply_frame_claim(claim=<evidence>, frame_category='increment_frame', "
+            f"polarity='affirms', reviewer='<you>')"
         )
 
     return MathRatifyResult(
