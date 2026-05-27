@@ -1,9 +1,30 @@
 # ADR-0136 — Statement-Layer Corridor: Graduated GSM8K Admission via Parser Extension
 
-**Status:** Active
+**Status:** Active — *Regex sentence-template prescription superseded by [ADR-0164](./ADR-0164-incremental-comprehension-reader.md) (2026-05-26). Empirical taxonomies preserved.*
 **Date:** 2026-05-23
 **Author:** CORE agents + reviewers
 **Parent:** [ADR-0131.G](./ADR-0131.G-gsm8k-coverage-probe.md)
+**Superseded in part by:** [ADR-0164 — Incremental Comprehension Reader](./ADR-0164-incremental-comprehension-reader.md), [ADR-0165 — Regex Scope Rule](./ADR-0165-regex-scope-rule.md)
+
+---
+
+## Amendment 2026-05-26 — Regex prescription superseded
+
+This corridor's *production mechanism* — adding regex sentence-template
+patterns to `generate/math_candidate_parser.py` per S-stage sub-ADR — is
+superseded by ADR-0164's incremental comprehension reader. The closed-set
+vocabulary collected by each S-stage (verb lists, mass-noun lists, name
+lists, unit-noun lists) is **preserved** as seed input to the new
+operational lexicon (ADR-0164 §Decision §1). The empirical refusal
+taxonomies (`refusal_taxonomy_v*.json`) are **preserved** as input
+evidence for category and primitive development. The regex patterns
+themselves are scheduled for removal during ADR-0164 Phase 3.
+
+Per [ADR-0165 — Regex Scope Rule](./ADR-0165-regex-scope-rule.md), regex
+remains permitted at the lexeme-primitive level (currency literal,
+fraction literal, etc.) and forbidden at the sentence-structure level.
+
+---
 **Depends on:**
 [ADR-0115](./ADR-0115-math-problem-parser-and-graph.md),
 [ADR-0116](./ADR-0116-deterministic-solver.md),

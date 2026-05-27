@@ -1,11 +1,49 @@
 # ADR-0163 — Path to GSM8K mastery: candidate-graph admissibility via the contemplation/HITL corridor
 
-**Status:** Proposed
+**Status:** Proposed — *Phases B–E prescription superseded by [ADR-0164](./ADR-0164-incremental-comprehension-reader.md) (2026-05-26)*
 **Date:** 2026-05-26
 **Author:** Shay
 **Anchor:** [[thesis-decoding-not-generating]]
 **Parent:** [ADR-0114a — Capability Obligations](./ADR-0114a-capability-obligations.md), [ADR-0119 — GSM8K eval lane](./)
 **Companions:** [ADR-0149 — Recognizer pipeline](./), [ADR-0151 — Auto-proposal pipeline](./ADR-0151-auto-proposal-pipeline.md), [ADR-0152 — Learning-arc proof corridor](./ADR-0152-learning-arc-demo.md), [ADR-0155 — CI contemplation runner](./ADR-0155-ci-contemplation-runner.md), [ADR-0161 — HITL async queue](./ADR-0161-hitl-async-queue.md), [ADR-0132/0133/0134/0135 — Binding graph](./)
+**Superseded in part by:** [ADR-0164 — Incremental Comprehension Reader](./ADR-0164-incremental-comprehension-reader.md), [ADR-0165 — Regex Scope Rule](./ADR-0165-regex-scope-rule.md)
+
+---
+
+## Amendment 2026-05-26 — Prescription superseded by ADR-0164
+
+After observing the post-D.2 train-sample baseline (`correct=3 refused=47
+wrong=0`, with 34/47 refusals at the question gate), this ADR's *diagnosis*
+is reaffirmed and its *prescription* is partially superseded.
+
+**Preserved (load-bearing):**
+
+- The diagnosis that the front-end (`math_candidate_parser.py`,
+  `math_candidate_graph.py`) is the bottleneck, not the binding graph or
+  the solver.
+- The `wrong = 0` invariant doctrine.
+- The contemplation → proposal → review HITL corridor as the
+  population mechanism for new recognition capability (now applied to
+  lexicon entries and lexeme primitives instead of regex recognizers).
+- Phase A — the refusal taxonomy work. Its outputs
+  (`refusal_taxonomy_v*.json`) remain valid input evidence.
+- Phase F — the scope expansion to public / holdout / full GSM8K.
+
+**Superseded by ADR-0164:**
+
+- Phases B–E *prescription* — specifically, the production of regex-based
+  `DerivedRecognizer` records that land in
+  `generate/recognizer_match.py`. ADR-0164 replaces this with an
+  incremental compositional reader that consumes lexicon entries and
+  lexeme primitives. The corridor is unchanged; what flows through it
+  changes.
+- Constraint #2 of this ADR ("No hand-rolled recognizers in `generate/`")
+  is *tightened* by ADR-0165: regex sentence-templates are forbidden
+  regardless of who writes them. Regex remains permitted at the
+  lexeme-primitive level only.
+
+See [ADR-0164 §What's deprecated, what's preserved](./ADR-0164-incremental-comprehension-reader.md)
+for the full transition plan and acceptance gates.
 
 ---
 

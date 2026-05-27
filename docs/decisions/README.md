@@ -205,6 +205,45 @@ The contract has been demonstrated end-to-end: refused once honestly (ADR-0107),
 
 ---
 
+### Comprehension-reader pivot — ADR-0164 and ADR-0165 (2026-05-26)
+
+The GSM8K admissibility front-end is replaced. The regex sentence-template
+parsing layer in `generate/math_candidate_parser.py` and
+`generate/recognizer_match.py` is recognized as overfitting by
+construction — it enumerates memorized surface shapes while pretending to
+encode a closed grammar that English does not have.
+
+- **[ADR-0164](ADR-0164-incremental-comprehension-reader.md)** —
+  Incremental Comprehension Reader. Word-by-word state accumulation over a
+  closed set of semantic categories. The reader is a deterministic
+  shift-reduce parser over *categories*, not over tokens. Output type is
+  identical to the regex parser's output, so the binding-graph
+  admissibility (ADR-0132/0133/0134/0135) downstream is unchanged.
+  Operational lexicon lives in `language_packs/data/en_core_math_v1/`
+  alongside the existing packs.
+
+- **[ADR-0165](ADR-0165-regex-scope-rule.md)** — Regex Scope Rule.
+  Structural invariant: regex is permitted only at the lexeme level
+  (currency literal, fraction literal, percentage literal, time-amount,
+  closed-set unit-noun), never at the sentence-structure level. The
+  primitive set is a closed registry grown through the same contemplation
+  → proposal → HITL review corridor that grows vocabulary.
+
+These ADRs preserve every load-bearing piece of the prior work: the
+binding graph (ADR-0132–0135), the solver / verifier / realizer
+substrate (ADR-0116–0118), the capability-axis lanes G1–G5 and S1, the
+HITL corridor (ADR-0150 / 0152 / 0155 / 0161), the `wrong = 0` doctrine
+and the replay-equivalence gate (ADR-0057, ADR-0114a). The
+contemplation → proposal → review corridor architecture is reaffirmed
+and its scope is generalized: it now ratifies lexicon entries,
+categories, and lexeme primitives — not regex recognizers.
+
+ADR-0163's *diagnosis* (the front-end is the bottleneck) is reaffirmed;
+its *prescription* (Phases B–E recognizer production) is partially
+superseded. ADR-0136 and its S-family have the same disposition.
+
+---
+
 ## Session Logs
 
 Session logs record the decisions and rationale from individual working sessions. They are not ADRs — they are the narrative record that informed the ADRs.
@@ -215,3 +254,4 @@ Session logs record the decisions and rationale from individual working sessions
 | 2026-05-12 (addendum) | [SESSION-2026-05-12-b.md](SESSION-2026-05-12-b.md) |
 | 2026-05-12 (language packs) | [SESSION-2026-05-12-language-packs-addendum.md](SESSION-2026-05-12-language-packs-addendum.md) |
 | 2026-05-13 | [SESSION-2026-05-13.md](SESSION-2026-05-13.md) |
+| 2026-05-26 (comprehension reader) | [SESSION-2026-05-26-comprehension-reader.md](SESSION-2026-05-26-comprehension-reader.md) |
