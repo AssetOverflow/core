@@ -1,4 +1,4 @@
-{"lemma": "she", "category": "entity_pronoun", "aliases": ["her"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "she", "category": "entity_pronoun", "aliases": ["her", "hers"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
 {"lemma": "he", "category": "entity_pronoun", "aliases": ["him", "his"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
 {"lemma": "they", "category": "entity_pronoun", "aliases": ["them", "their"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
 {"lemma": "it", "category": "entity_pronoun", "aliases": ["its"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
