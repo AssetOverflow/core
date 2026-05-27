@@ -207,6 +207,35 @@ Manifest checksums must hash the bytes actually written to disk:
 checksum = hashlib.sha256(Path(lexicon_path).read_bytes()).hexdigest()
 ```
 
+## Documentation Discipline
+
+ADRs, session docs, audit artifacts, and handoff briefs stay as Markdown
+(GitHub-flavored).  Plain-text artifacts are diffable, greppable, and
+readable by every agent in the dispatch pipeline.
+
+Within Markdown, two GitHub-rendered features are sanctioned and otherwise
+sparingly used:
+
+- Mermaid fenced blocks (` ```mermaid `) when a state machine, sequence,
+  or dependency graph genuinely communicates more than prose.  Inline,
+  not in a sidecar file.
+- `<details>` / `<summary>` collapsibles to fold long proofs, large
+  tables, or generated logs without losing single-file context.
+
+Out of scope:
+
+- Standalone HTML artifacts with embedded CSS / inline SVG / sidebar
+  navigation.  The "open in browser" model breaks `git diff`, breaks
+  determinism (CSS regen ordering, SVG element ordering), and breaks
+  cross-agent legibility.
+- Dashboards, status pages, or visualizers as a substitute for a
+  pinned data artifact.  If a visualization is load-bearing, the
+  underlying data must live in a deterministic JSON/JSONL/Markdown
+  artifact first; any rendering is a read-only view of that artifact.
+
+Diagrams go inside the doc that needs them.  Specs do not become
+single-file applications.
+
 ## Validation Through CLI
 
 Use CLI lanes instead of ad hoc pytest fragments:
