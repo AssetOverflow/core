@@ -11,6 +11,9 @@ import {
   fetchArtifacts,
   fetchArtifactDetail,
   fetchReplayComparison,
+  fetchProposalDetail,
+  fetchProposals,
+  type ProposalStateFilter,
 } from "./client";
 import type { WorkbenchApiError } from "./client";
 import type {
@@ -78,18 +81,22 @@ export function useReplayComparison(artifactId: string) {
   });
 }
 
-export function useProposals() {
+export function useProposals(filter: ProposalStateFilter = "all") {
   return useQuery<ProposalSummary[]>({
-    queryKey: ["api", "proposals"],
-    queryFn: () => apiFetch<ProposalSummary[]>("/proposals"),
+    queryKey: ["api", "proposals", filter],
+    queryFn: () => fetchProposals(filter),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 }
 
-export function useProposal(id: string) {
+export function useProposalDetail(proposalId: string) {
   return useQuery<ProposalDetail>({
-    queryKey: ["api", "proposal", id],
-    queryFn: () => apiFetch<ProposalDetail>(`/proposals/${id}`),
-    enabled: !!id,
+    queryKey: ["api", "proposal", proposalId],
+    queryFn: () => fetchProposalDetail(proposalId),
+    enabled: !!proposalId,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 }
 

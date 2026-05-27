@@ -1,10 +1,10 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Shell } from "./Shell";
 import { ChatRoute } from "../routes/ChatRoute";
-import { ProposalsRoutePlaceholder } from "../routes/ProposalsRoutePlaceholder";
+import { ProposalsRoute } from "./proposals/ProposalsRoute";
 import type { RuntimeStatus } from "../types/api";
 
 // Mock the API queries module
@@ -40,7 +40,7 @@ function renderShell(initialPath = "/chat") {
         <Routes>
           <Route path="/" element={<Shell />}>
             <Route path="chat" element={<ChatRoute />} />
-            <Route path="proposals" element={<ProposalsRoutePlaceholder />} />
+            <Route path="proposals" element={<ProposalsRoute />} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -49,6 +49,10 @@ function renderShell(initialPath = "/chat") {
 }
 
 describe("Shell", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(useRuntimeStatus).mockReturnValue({
@@ -92,6 +96,7 @@ describe("Shell", () => {
   });
 
   it("clicking a nav item changes route (main shows new content)", () => {
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
     renderShell("/chat");
     expect(screen.getByText("Ask CORE a question.")).toBeInTheDocument();
 
@@ -99,7 +104,7 @@ describe("Shell", () => {
     const proposalsLink = screen.getByRole("link", { name: "Proposals" });
     fireEvent.click(proposalsLink);
 
-    expect(screen.getByText("Proposals — no data loaded yet.")).toBeInTheDocument();
+    expect(screen.getByText("Loading proposal queue...")).toBeInTheDocument();
   });
 
   it("StatusFooter shows mutation_mode Read Only label for read_only", () => {
