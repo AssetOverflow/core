@@ -129,7 +129,10 @@ def test_decompose_audit_change_kind_dispatch(tmp_path: Path) -> None:
         ("lexicon_entry", "lexicon_entry", "vocabulary_addition"),
         ("narrowness_violation", "multi_quantity_composition", "matcher_extension"),
         ("frame_unrecognized", "pre_frame_filler_sentence", "frame_reclassification"),
-        ("incomplete_operation", "quantity_extraction", "injector_sub_shape"),
+        # ADR-0169 CC-3: (incomplete_operation, quantity_extraction) routes
+        # to composition_reclassification via the pair table (formerly
+        # fell through to injector_sub_shape).
+        ("incomplete_operation", "quantity_extraction", "composition_reclassification"),
     ]
     per_case: list[dict] = []
     for refusal_reason, missing_operator, _kind in branches:
@@ -342,10 +345,18 @@ def test_decompose_audit_pair_dispatch_unexpected_category_matcher(
     assert proposals[0].proposed_change_kind == "matcher_extension"
 
 
-def test_decompose_audit_pair_dispatch_unexpected_category_frame_reclass(
+def test_decompose_audit_pair_dispatch_multi_subject_sentence_injector(
     tmp_path: Path,
 ) -> None:
-    """(unexpected_category, multi_subject_sentence) → frame_reclassification."""
+    """(unexpected_category, multi_subject_sentence) → injector_sub_shape (ADR-0169 CC-3).
+
+    Demoted from frame_reclassification at the 2026-05-27 end-to-end demo:
+    the FrameClaim SAFE_FRAME_CATEGORIES allowlist (increment_frame,
+    decrement_frame, transfer_frame, remainder_frame) does not cover
+    multi_subject_sentence shapes — those need ReferenceClaim /
+    CompositionClaim, not FrameClaim.  Until those handlers ship, this
+    pair falls through to injector_sub_shape.
+    """
     audit = _write_audit(
         tmp_path,
         [
@@ -363,7 +374,82 @@ def test_decompose_audit_pair_dispatch_unexpected_category_frame_reclass(
     )
     proposals = decompose_audit(audit)
     assert len(proposals) == 1
-    assert proposals[0].proposed_change_kind == "frame_reclassification"
+    assert proposals[0].proposed_change_kind == "injector_sub_shape"
+
+
+def test_decompose_audit_pair_dispatch_descriptive_frame_question_injector(
+    tmp_path: Path,
+) -> None:
+    """(unexpected_category, descriptive_frame_question) → injector_sub_shape (ADR-0169 CC-3).
+
+    Demoted from frame_reclassification: needs SlotClaim, not FrameClaim.
+    """
+    audit = _write_audit(
+        tmp_path,
+        [
+            _case(
+                case_id="dfq-001",
+                refusal_reason="unexpected_category",
+                missing_operator="descriptive_frame_question",
+            ),
+            _case(
+                case_id="dfq-002",
+                refusal_reason="unexpected_category",
+                missing_operator="descriptive_frame_question",
+            ),
+        ],
+    )
+    proposals = decompose_audit(audit)
+    assert len(proposals) == 1
+    assert proposals[0].proposed_change_kind == "injector_sub_shape"
+
+
+def test_quantity_extraction_routes_to_composition_reclassification(
+    tmp_path: Path,
+) -> None:
+    """(incomplete_operation, quantity_extraction) → composition_reclassification (ADR-0169 CC-3)."""
+    audit = _write_audit(
+        tmp_path,
+        [
+            _case(
+                case_id="qe-001",
+                refusal_reason="incomplete_operation",
+                missing_operator="quantity_extraction",
+            ),
+            _case(
+                case_id="qe-002",
+                refusal_reason="incomplete_operation",
+                missing_operator="quantity_extraction",
+            ),
+        ],
+    )
+    proposals = decompose_audit(audit)
+    assert len(proposals) == 1
+    assert proposals[0].proposed_change_kind == "composition_reclassification"
+
+
+def test_multi_quantity_composition_routes_to_composition_reclassification(
+    tmp_path: Path,
+) -> None:
+    """(incomplete_operation, multi_quantity_composition) → composition_reclassification (ADR-0169 CC-3)."""
+    audit = _write_audit(
+        tmp_path,
+        [
+            _case(
+                case_id="mqc-001",
+                refusal_reason="incomplete_operation",
+                missing_operator="multi_quantity_composition",
+            ),
+            _case(
+                case_id="mqc-002",
+                refusal_reason="incomplete_operation",
+                missing_operator="multi_quantity_composition",
+            ),
+        ],
+    )
+    proposals = decompose_audit(audit)
+    assert len(proposals) == 1
+    assert proposals[0].proposed_change_kind == "composition_reclassification"
 
 
 def test_decompose_audit_pair_dispatch_pronoun(tmp_path: Path) -> None:
@@ -391,16 +477,30 @@ def test_decompose_audit_pair_dispatch_pronoun(tmp_path: Path) -> None:
 def test_decompose_audit_real_audit_change_kind_distribution() -> None:
     """Against the real audit_brief_11.json, dispatch yields the expected mix.
 
-    Per ADR-0172 tightening follow-up #2, the widened heuristic must produce
-    at least 3 matcher_extension and at least 2 frame_reclassification
-    proposals on the train-sample audit.
+    Per ADR-0169 CC-3, the tightened heuristic must produce on the
+    train-sample audit:
+      - 3 matcher_extension proposals (pre_frame_filler, fraction_percentage,
+        unresolved_pronoun)
+      - 2 composition_reclassification proposals (quantity_extraction,
+        multi_quantity_composition) — 20 of 47 cases
+      - 3 injector_sub_shape proposals (multi_subject_sentence and
+        descriptive_frame_question demoted per CC-3, plus
+        unattached_quantity/unit_binding catch-all)
+      - 0 frame_reclassification proposals (the two prior routes were
+        demoted; audit_brief_11.json has no frame_unrecognized rows)
     """
     proposals = decompose_audit(REAL_AUDIT_PATH)
     kinds = [p.proposed_change_kind for p in proposals]
     matcher = sum(1 for k in kinds if k == "matcher_extension")
+    composition = sum(1 for k in kinds if k == "composition_reclassification")
     frame = sum(1 for k in kinds if k == "frame_reclassification")
-    assert matcher >= 3, f"expected ≥3 matcher_extension, got {matcher}: {kinds}"
-    assert frame >= 2, f"expected ≥2 frame_reclassification, got {frame}: {kinds}"
+    injector = sum(1 for k in kinds if k == "injector_sub_shape")
+    assert matcher == 3, f"expected 3 matcher_extension, got {matcher}: {kinds}"
+    assert composition == 2, (
+        f"expected 2 composition_reclassification, got {composition}: {kinds}"
+    )
+    assert frame == 0, f"expected 0 frame_reclassification, got {frame}: {kinds}"
+    assert injector == 3, f"expected 3 injector_sub_shape, got {injector}: {kinds}"
 
 
 # ---------------------------------------------------------------------------

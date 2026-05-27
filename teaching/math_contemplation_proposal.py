@@ -43,6 +43,7 @@ ChangeKind = Literal[
     "injector_sub_shape",
     "vocabulary_addition",
     "frame_reclassification",
+    "composition_reclassification",
 ]
 
 _VALID_CHANGE_KINDS: frozenset[str] = frozenset({
@@ -50,6 +51,7 @@ _VALID_CHANGE_KINDS: frozenset[str] = frozenset({
     "injector_sub_shape",
     "vocabulary_addition",
     "frame_reclassification",
+    "composition_reclassification",
 })
 
 _WRONG_ZERO_MIN_LEN: int = 40

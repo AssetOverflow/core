@@ -134,10 +134,23 @@ def audit_problem_to_evidence(
 # docs/handoff/ADR-0167-FOLLOWUPS.md §1.
 _CHANGE_KIND_BY_PAIR: dict[tuple[str, str], str] = {
     ("unexpected_category", "pre_frame_filler_sentence"): "matcher_extension",
-    ("unexpected_category", "multi_subject_sentence"): "frame_reclassification",
     ("unexpected_category", "fraction_percentage_literal"): "matcher_extension",
-    ("unexpected_category", "descriptive_frame_question"): "frame_reclassification",
     ("unresolved_pronoun", "pronoun_resolution"): "matcher_extension",
+    # ADR-0169 CC-3: route CompositionClaim audit groups (20 of 47 cases —
+    # `quantity_extraction` = 12 + `multi_quantity_composition` = 8) to the
+    # new CompositionClaim handler.  Previously these fell through to
+    # `injector_sub_shape` because no pair entry existed.
+    ("incomplete_operation", "quantity_extraction"): "composition_reclassification",
+    ("incomplete_operation", "multi_quantity_composition"): "composition_reclassification",
+    # ADR-0169 CC-3 demotion: the prior two `frame_reclassification` routes
+    # for (unexpected_category, multi_subject_sentence) and
+    # (unexpected_category, descriptive_frame_question) were proven at the
+    # 2026-05-27 end-to-end demo to be handler mismatches — those refusals
+    # need ReferenceClaim/CompositionClaim and SlotClaim respectively, not
+    # FrameClaim (whose SAFE_FRAME_CATEGORIES allowlist is quantity/ownership
+    # frames).  Until SlotClaim and ReferenceClaim handlers ship, they fall
+    # through to `injector_sub_shape` (the catch-all) so the workbench stops
+    # emitting handler-mismatched FrameClaim proposals.
 }
 
 # Single-key fallback retained for completeness — covers reader refusals
@@ -263,9 +276,15 @@ def _build_reasoning_trace(
             "Dispatched via the (refusal_reason, missing_operator) pair table: "
             "(unexpected_category, pre_frame_filler_sentence|"
             "fraction_percentage_literal) → matcher_extension; "
+            "(unresolved_pronoun, pronoun_resolution) → matcher_extension; "
+            "(incomplete_operation, quantity_extraction|"
+            "multi_quantity_composition) → composition_reclassification "
+            "(ADR-0169 CC-3). "
             "(unexpected_category, multi_subject_sentence|"
-            "descriptive_frame_question) → frame_reclassification; "
-            "(unresolved_pronoun, pronoun_resolution) → matcher_extension. "
+            "descriptive_frame_question) demoted from frame_reclassification "
+            "to injector_sub_shape (ADR-0169 CC-3): the FrameClaim "
+            "SAFE_FRAME_CATEGORIES allowlist does not cover those shapes; "
+            "they await ReferenceClaim/SlotClaim handlers. "
             "Refusal-reason fallback: lexicon_entry → vocabulary_addition; "
             "narrowness_violation → matcher_extension; "
             "frame_unrecognized → frame_reclassification; "
