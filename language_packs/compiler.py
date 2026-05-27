@@ -559,6 +559,25 @@ def _apply_mounted_primary_domain_resonance(
     mounted: VocabManifold,
     primary_groups: dict[str, list[tuple[str, str]]],
 ) -> None:
+    # ARCHITECTURAL INVARIANT — single convergence-decision site.
+    #
+    # This function is the one place in the codebase where DEPTH_ROOT and
+    # DEPTH_RELATION packs (Hebrew, Greek) have their structurally-derived
+    # versors blended toward an English prototype at mount time.  Any
+    # modification — to the 0.40 blend factor, the prototype-selection
+    # rule, or the grouping logic — must consider whether the
+    # ``HolonomyAlignmentCase`` proof in
+    # ``tests/test_alignment_graph.py::test_holonomy_alignment_case_positive_closer_than_negative``
+    # still demonstrates cross-pack structural divergence rather than
+    # blend-induced convergence.  The existing test asserts aligned
+    # endpoints are closer than misaligned endpoints; it does not yet
+    # isolate structural derivation (Hebrew/Greek morphology operators)
+    # from this function's nudge.  See ``docs/handoff/ADR-0167-FOLLOWUPS.md``
+    # §6 for the open isolation question.
+    #
+    # Per CLAUDE.md §"Schema-Defined Proof Obligations": if you weaken
+    # this site, verify the holonomy test would still fail under the
+    # weaker condition you allowed.
     for surfaces in primary_groups.values():
         languages = {language for language, _ in surfaces}
         if len(languages) < 2:

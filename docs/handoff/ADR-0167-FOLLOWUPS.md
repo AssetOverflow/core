@@ -194,6 +194,69 @@ for math).
 
 ---
 
+## 6. HolonomyAlignmentCase — structural-vs-blend convergence isolation
+
+**Scope.** Determine whether the existing
+`tests/test_alignment_graph.py::test_holonomy_alignment_case_positive_closer_than_negative`
+proves *structurally-derived* cross-language convergence or only proves
+*endpoint similarity under the mount-time blend*.
+
+**Why deferred.** The proof obligation is executed today — the test
+asserts that an aligned Logos clause produces nearer holonomies across
+English/Hebrew/Greek than a misaligned negative triple. That clears the
+schema's nominal claim. But the test does not distinguish two possible
+explanations for the convergence:
+
+1. **Structural.** The Hebrew tri-consonantal root rotors and Greek
+   case-last orientation rotations produce versors that genuinely
+   land in the same regions of the manifold because the morphology
+   operators encode equivalent semantic structure.
+2. **Blend-induced.** `_apply_mounted_primary_domain_resonance`
+   (`language_packs/compiler.py:558`) nudges Hebrew/Greek versors
+   toward an English prototype at 40% blend, and the test passes
+   because both packs have been pulled close to the English anchor
+   regardless of structural derivation.
+
+If (2) is doing the work, the three-language architecture is a *claim*
+that English-anchored geometric averaging produces the right endpoints,
+not a *proof* that the depth packs are structurally independent
+operators converging coherently with the articulation surface.
+
+**Where breadcrumbs live.**
+- `language_packs/compiler.py::_apply_mounted_primary_domain_resonance`
+  — the architectural-invariant comment names this gap explicitly and
+  references this section
+- `tests/test_alignment_graph.py:73` — the existing positive-closer-
+  than-negative assertion
+- `language_packs/schema.py::HolonomyAlignmentCase` — the schema type
+  whose nominal contract is "proves structural divergence with
+  coherent convergence"
+
+**Acceptance.** One of:
+- **(a) Ablation test.** A test that runs the holonomy proof with
+  `_apply_mounted_primary_domain_resonance` disabled (or with the
+  blend factor set to 0.0) and asserts that the positive-closer-than-
+  negative relation still holds. This would prove (1) and retire the
+  concern.
+- **(b) Reframe the claim.** If the ablation fails, document
+  explicitly that cross-language convergence depends on the
+  mount-time blend, and update `HolonomyAlignmentCase`'s contract to
+  reflect what it actually proves (endpoint similarity under blend,
+  not structural-derivation equivalence). Honest documentation of a
+  weaker property beats a stronger claim that the test can't support.
+
+**Priority.** Low-urgency, high-information. Not blocking any current
+capability gate. Worth picking up whenever someone next touches the
+language-pack architecture — the comment at the convergence-decision
+site is the trip-wire.
+
+Per CLAUDE.md §"Schema-Defined Proof Obligations" — this is the
+prototypical example of a schema-defined obligation that is executed
+but where the test may not meaningfully fail under the violation it is
+written to catch.
+
+---
+
 ## Sequencing recommendation
 
 For the operator picking this up next:
@@ -208,6 +271,9 @@ For the operator picking this up next:
 4. **Defer §4 + §5** until §1 actually ships a second sub-type — they
    only become load-bearing once a second domain candidate type
    exists.
+5. **Pick up §6 opportunistically** — whoever next modifies
+   `_apply_mounted_primary_domain_resonance` or the holonomy test owns
+   the ablation question.
 
 No timelines. Order is by leverage, not calendar.
 

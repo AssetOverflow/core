@@ -236,6 +236,32 @@ Out of scope:
 Diagrams go inside the doc that needs them.  Specs do not become
 single-file applications.
 
+## Schema-Defined Proof Obligations
+
+When a schema, type, or struct exists for the sole purpose of naming a
+structural property the architecture claims to hold
+(``HolonomyAlignmentCase``, ``RoundTripFilter``, the various ``Result``
+discriminants), the obligation is real only when an executing test can
+**meaningfully fail** under the violations it is written to catch.
+
+A test that passes under conditions that bypass the obligation it
+nominally proves is decoration, not proof.  Before treating a schema
+type as a verified property:
+
+1. Identify the violations the schema is written to catch.
+2. Confirm an existing test would fail if exactly one of those
+   violations were silently introduced (e.g. by mutating a weight,
+   skipping a step, swapping a fallback).
+3. If no such test exists, the obligation is asserted but not proven —
+   record the gap in a follow-up doc rather than treating the schema
+   as load-bearing.
+
+This rule generalises the wrong=0 invariant.  ``wrong == 0`` holds
+because the admissibility gate, the round-trip filter, and the
+multi-branch disagreement check are all wired to fail loudly when
+violated.  The same discipline applies to every other "this design
+guarantees X" claim in the codebase.
+
 ## Validation Through CLI
 
 Use CLI lanes instead of ad hoc pytest fragments:
