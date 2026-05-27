@@ -28,7 +28,7 @@ either an entry in this table (mechanical) or a sub-ADR (semantic).
 from __future__ import annotations
 
 from functools import cache
-from typing import Callable, Final
+from typing import Callable, Final, Literal
 
 from generate.comprehension.lexeme_primitives import LexemeMatch, scan
 from generate.comprehension.lexicon import Lexicon, LexiconEntry, load_lexicon, lookup
@@ -250,7 +250,7 @@ def apply_word(
     sentence_idx = problem_state.sentence_index
 
     # Step 1 + 2 — primitive scan, then lexicon lookup.
-    category, _surface = _classify(word)
+    category, _surface = _classify(word, token_index=position)
 
     # Step 3 + 4 — expectation + update emit.
     # Once the frame is closed, every token drains: classified ones keep
@@ -413,8 +413,21 @@ def end_sentence(
 # ---------------------------------------------------------------------------
 
 
-def _classify(word: str) -> tuple[str | None, str]:
-    """Return (category, surface). Category is None on miss."""
+def _classify(word: str, *, token_index: int) -> tuple[str | None, str]:
+    """Return (category, surface). Category is None on miss.
+
+    Dispatch order (ADR-0164.1 §sentence-initial lookup-first):
+
+    - token_index == 0 (sentence-initial): lookup-first, skipping
+      proper_noun_gender_* entries (those are enrichment, not
+      admission). On miss, primitive scan catches the universal
+      proper_noun_token primitive. This inverts the question from
+      "is this a name?" to "is this a known common word?"
+    - token_index > 0: primitive scan first; when primitive emits
+      UNIT_CATEGORY_TOKEN, fall through to lexicon so operational
+      categories (currency_unit_noun, etc.) override the generic
+      mass-noun emission. Otherwise return primitive, else lexicon.
+    """
     # (d) Punctuation terminators — reader-internal; not in primitive registry
     # or lexicon. Formerly in _interface_stubs._PRIMITIVE_PATTERNS;
     # Phase-1 reader-internal dispatch.
@@ -424,21 +437,60 @@ def _classify(word: str) -> tuple[str | None, str]:
         return "statement_terminator", word
     if word == ",":
         return "punctuation_comma", word
-    # Step 1 — lexicon lookup. Runs before primitive scan so that
-    # mass-noun-token primitives (UNIT_CATEGORY_TOKEN) do not shadow
-    # operational-lexicon categories such as currency_unit_noun.
-    # Per ADR-0164.1 §mass-noun-token boundary note: lexicon takes
-    # precedence in Phase 1.
+
     lex = _get_lexicon()
-    entry: LexiconEntry | None = lookup(lex, word)
+
+    if token_index == 0:
+        # Sentence-initial: lookup-first, gender enrichment categories
+        # do not admit (treated as not-found so the primitive's
+        # proper_noun_token can match instead).
+        entry: LexiconEntry | None = lookup(lex, word)
+        if entry is not None and entry.category not in {
+            "proper_noun_gender_female",
+            "proper_noun_gender_male",
+        }:
+            return entry.category, entry.lemma
+        primitive: LexemeMatch | None = scan(word)
+        if primitive is not None:
+            return primitive.emit_category, primitive.source_text
+        return None, word
+
+    # Mid-sentence: primitive-first, with UNIT_CATEGORY_TOKEN ceding
+    # to the operational lexicon if it has a more specific category.
+    primitive = scan(word)
+    if primitive is not None:
+        if primitive.emit_category == "UNIT_CATEGORY_TOKEN":
+            entry = lookup(lex, word)
+            if entry is not None:
+                return entry.category, entry.lemma
+        return primitive.emit_category, primitive.source_text
+    entry = lookup(lex, word)
     if entry is not None:
         return entry.category, entry.lemma
-    # Step 2 — primitive scan for tokens absent from the lexicon
-    # (bare numerics, currency amounts, fractions, etc.).
-    primitive: LexemeMatch | None = scan(word)
-    if primitive is not None:
-        return primitive.emit_category, primitive.source_text
     return None, word
+
+
+def gender_of_proper_noun(
+    surface: str,
+    lexicon: Lexicon,
+) -> Literal["female", "male", "neuter", "unknown"]:
+    """Pure enrichment lookup. Unknown names still admit.
+
+    Per ADR-0164.2 §EntityRegistry: gender is a ratifiable annotation
+    on EntityRef, NOT an admission criterion. Names outside the
+    gender-coded lexicon lists return "unknown" and admit cleanly.
+    Pronoun resolution (ADR-0164.2 §Refusal rules) handles unknown
+    gender via single-salient fallback or refuses with
+    ambiguous_pronoun_referent.
+    """
+    entry = lookup(lexicon, surface.lower())
+    if entry is None:
+        return "unknown"
+    if entry.category == "proper_noun_gender_female":
+        return "female"
+    if entry.category == "proper_noun_gender_male":
+        return "male"
+    return "unknown"
 
 
 # ---------------------------------------------------------------------------
@@ -639,12 +691,8 @@ def _rule_proper_noun(
             token_index=sentence_state.token_index,
             token_text=word,
         )
-    canonical = word.lower()
-    gender = (
-        "female"
-        if category == "proper_noun_entity_female"
-        else "male"
-    )
+    canonical = word
+    gender = gender_of_proper_noun(word, _get_lexicon())
     pending = EntityRef(
         canonical_name=canonical,
         gender=gender,
@@ -762,8 +810,7 @@ _QUESTION_FRAME_RULES: Final[dict[str, _Handler]] = {
     # Pivots
     "modal_aux": _rule_modal_aux,
     "entity_pronoun": _rule_entity_pronoun,
-    "proper_noun_entity_female": _rule_proper_noun,
-    "proper_noun_entity_male": _rule_proper_noun,
+    "proper_noun_token": _rule_proper_noun,
     # Residual marker
     "residual_modifier": _rule_residual_modifier,
     # Frame closers

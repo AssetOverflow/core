@@ -1,6 +1,6 @@
 """ADR-0164.1 — Lexeme primitive registry.
 
-Eight seed primitives for the incremental comprehension reader's step-1
+Nine seed primitives for the incremental comprehension reader's step-1
 lexical scan (ADR-0164 §Decision §3, ADR-0165 §Legitimate uses).
 
 Public API:
@@ -144,6 +144,18 @@ def _make_registry() -> tuple[LexemePrimitive, ...]:
             extracts=("value",),
             priority=100,
             provenance="ADR-0164.1",
+        ),
+        # ADR-0165 code-review test:
+        # 1) Matches one capitalized token shape (name-like orthographic material).
+        # 2) The class is closed by token-local capitalization/punctuation rules.
+        # 3) Novel sentence phrasings still admit because matching is token-local.
+        LexemePrimitive(
+            name="proper_noun_token",
+            pattern=re.compile(r"^[A-Z][A-Za-z'’\-]*[a-z][A-Za-z'’\-]*$"),
+            emits="proper_noun_token",
+            extracts=("surface",),
+            priority=90,
+            provenance="adr_0164_1_amendment_brief_8_2",
         ),
     ]
     return tuple(sorted(entries, key=lambda p: (p.priority, p.name)))

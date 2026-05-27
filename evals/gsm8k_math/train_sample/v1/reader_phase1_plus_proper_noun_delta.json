@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "brief": "Wave 1.1 / Brief 8.2 universal proper_noun_token primitive",
+  "sample_path": "evals/gsm8k_math/train_sample/v1/cases.jsonl",
+  "pre_primitive_baseline": {
+    "source": "ADR-0164-incremental-comprehension-reader.md",
+    "counts": {"correct": 3, "refused": 47, "wrong": 0}
+  },
+  "post_primitive_measurement": {
+    "source": "evals/gsm8k_math/train_sample/v1/report.json",
+    "counts": {"correct": 3, "refused": 47, "wrong": 0}
+  },
+  "delta": {
+    "correct": 0,
+    "refused": 0,
+    "wrong": 0
+  },
+  "notes": [
+    "No regression on wrong=0.",
+    "No net admission increase observed in this candidate-graph train-sample harness run."
+  ]
+}

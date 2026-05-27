@@ -34,16 +34,19 @@ VALID_PROVENANCE_TAGS = {PROVENANCE_TAG, _SUPPLEMENTAL_PROVENANCE_TAG}
 # ADR-0164 Phase-1 reader integration ratified the deltas below (2026-05-26):
 #   accumulation_verb  +2  (need, want)
 #   currency_unit_noun -1  (total → aggregate_modifier)
-#   proper_noun_entity_female +1  (monica)
-#   proper_noun_entity_male   +1  (malcolm)
+#   proper_noun_gender_female +1  (monica)
+#   proper_noun_gender_male   +1  (malcolm)
+# Brief 8.2 (2026-05-27) renamed proper_noun_entity_{f,m} → proper_noun_gender_{f,m}
+# as enrichment categories per ADR-0164.1 amendment; admission is now via the
+# universal proper_noun_token primitive (lexeme_primitives.py).
 EXPECTED_CATEGORY_COUNTS: dict[str, int] = {
     "accumulation_verb":         19,
     "depletion_verb":            15,
     "transfer_verb":             7,
     "currency_unit_noun":        7,
     "entity_pronoun":            4,
-    "proper_noun_entity_female": 63,
-    "proper_noun_entity_male":   77,
+    "proper_noun_gender_female": 62,
+    "proper_noun_gender_male":   77,
     "possession_verb":           1,
     "capacity_verb":             13,
     "question_open":             2,
@@ -53,7 +56,7 @@ EXPECTED_CATEGORY_COUNTS: dict[str, int] = {
 # Compiled lexicon.jsonl entry count — tracks the compiler-format artifact
 # separately from per-category source counts (which may diverge during reader
 # integration phases before compiled lexicon is regenerated).
-EXPECTED_COMPILED_TOTAL = 208
+EXPECTED_COMPILED_TOTAL = 207
 
 
 def _read_category(cat: str) -> list[dict]:
@@ -180,8 +183,8 @@ def test_capacity_verb_disjoint_from_accumulation() -> None:
 
 def test_female_male_names_disjoint() -> None:
     """Female and male name lists must not share any lemma."""
-    female = {r["lemma"] for r in _read_category("proper_noun_entity_female")}
-    male = {r["lemma"] for r in _read_category("proper_noun_entity_male")}
+    female = {r["lemma"] for r in _read_category("proper_noun_gender_female")}
+    male = {r["lemma"] for r in _read_category("proper_noun_gender_male")}
     overlap = female & male
     assert not overlap, (
         f"Names in both female and male lists: {sorted(overlap)}"

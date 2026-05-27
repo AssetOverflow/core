@@ -19,8 +19,8 @@ from generate.comprehension.lexeme_primitives import (
 # ---------------------------------------------------------------------------
 
 class TestRegistryConstruction:
-    def test_has_eight_primitives(self) -> None:
-        assert len(PRIMITIVE_REGISTRY) == 8
+    def test_has_nine_primitives(self) -> None:
+        assert len(PRIMITIVE_REGISTRY) == 9
 
     def test_sorted_by_priority_ascending(self) -> None:
         priorities = [p.priority for p in PRIMITIVE_REGISTRY]
@@ -48,10 +48,12 @@ class TestRegistryConstruction:
 
     def test_all_names_kebab_case(self) -> None:
         for p in PRIMITIVE_REGISTRY:
+            if p.name == "proper_noun_token":
+                continue  # ADR-0164.1 amendment uses snake_case key
             assert "_" not in p.name, f"{p.name}: use hyphens, not underscores"
 
     def test_emits_valid_enum(self) -> None:
-        valid = {"QUANTITY", "ORDINAL", "UNIT_CATEGORY_TOKEN"}
+        valid = {"QUANTITY", "ORDINAL", "UNIT_CATEGORY_TOKEN", "proper_noun_token"}
         for p in PRIMITIVE_REGISTRY:
             assert p.emits in valid, f"{p.name}: unknown emits={p.emits!r}"
 
@@ -202,8 +204,34 @@ class TestOverlapPrecedence:
 # ---------------------------------------------------------------------------
 
 class TestRefusal:
-    def test_proper_noun_entity(self) -> None:
-        assert scan("Tina") is None
+    def test_proper_noun_token_tina(self) -> None:
+        m = scan("Tina")
+        assert m is not None
+        assert m.primitive_name == "proper_noun_token"
+
+    @pytest.mark.parametrize("token", ["Bob", "Marnie", "McDonald", "O'Brien", "Mary-Anne"])
+    def test_proper_noun_token_variants(self, token: str) -> None:
+        m = scan(token)
+        assert m is not None
+        assert m.primitive_name == "proper_noun_token"
+
+    @pytest.mark.parametrize("token", ["tina", "TINA", "123", "$5.00"])
+    def test_proper_noun_token_refusals(self, token: str) -> None:
+        m = scan(token)
+        if token == "$5.00":
+            assert m is not None
+            assert m.primitive_name != "proper_noun_token"
+            return
+        if token == "123":
+            assert m is not None
+            assert m.primitive_name != "proper_noun_token"
+            return
+        assert m is None
+
+    def test_numeric_still_wins_overlap_domain(self) -> None:
+        m = scan("123")
+        assert m is not None
+        assert m.primitive_name == "numeric-literal"
 
     def test_empty_string(self) -> None:
         assert scan("") is None

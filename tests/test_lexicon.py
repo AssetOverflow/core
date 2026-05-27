@@ -29,8 +29,8 @@ REQUIRED_CATEGORIES = {
     "depletion_verb",
     "entity_pronoun",
     "possession_verb",
-    "proper_noun_entity_female",
-    "proper_noun_entity_male",
+    "proper_noun_gender_female",
+    "proper_noun_gender_male",
     "question_open",
     "residual_modifier",
     "transfer_verb",
@@ -150,7 +150,7 @@ class TestLookups:
         lex = load_lexicon()
         entry = lookup(lex, "tina")
         assert entry is not None
-        assert entry.category == "proper_noun_entity_female"
+        assert entry.category == "proper_noun_gender_female"
 
     def test_alias_resolves_to_lemma_entry(self) -> None:
         lex = load_lexicon()
