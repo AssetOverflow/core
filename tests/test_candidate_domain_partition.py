@@ -83,10 +83,15 @@ def test_existing_cognition_tests_untouched():
         check=True,
     )
     lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    # Allowlist of new/modified test files contributed by ADR-0167 PRs.
+    # Future ADR-0167 PRs append their own file here so this regression net
+    # stays meaningful as the wave progresses.
+    allowed = {
+        "test_candidate_domain_partition.py",  # W2-C
+        "test_math_evidence_e2e.py",  # W3-A
+    }
     for line in lines:
         path = line.split()[-1]
-        # We only expect test_candidate_domain_partition.py as new/modified file.
-        # Note: test_math_evidence_schema.py was added by W1-A and merged, so
-        # depending on if we are checking against HEAD, we should verify it is untouched by us.
-        # git status --porcelain shows changes compared to HEAD.
-        assert Path(path).name == "test_candidate_domain_partition.py"
+        assert Path(path).name in allowed, (
+            f"unexpected new/modified test file: {path}"
+        )
