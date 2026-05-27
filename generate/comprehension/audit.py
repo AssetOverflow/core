@@ -192,6 +192,28 @@ _OPERATOR_INFERENCE_RULES: list[tuple[str, re.Pattern[str], str]] = [
         re.compile(r"."),
         "graph_construction",
     ),
+    # Brief 11B: pre-frame statement_terminator — sentence ended without
+    # opening any frame. May be context filler or a verb the reader cannot
+    # admit yet. Distinct from multi_subject because no second entity.
+    (
+        "unexpected_category",
+        re.compile(r"'statement_terminator'.*pre-frame", re.IGNORECASE),
+        "pre_frame_filler_sentence",
+    ),
+    # Brief 11B: pre-frame "?" reached in a descriptive_frame — question
+    # target slot was missed before the terminator arrived.
+    (
+        "unexpected_category",
+        re.compile(r"'question_terminator'.*descriptive_frame", re.IGNORECASE),
+        "descriptive_frame_question",
+    ),
+    # Brief 11B: question_frame opened but a required slot (e.g. unit_class)
+    # never arrived. Labelled separately from generic incomplete_operation.
+    (
+        "incomplete_operation",
+        re.compile(r"question_frame missing required slot", re.IGNORECASE),
+        "question_frame_slot",
+    ),
 ]
 
 
