@@ -76,7 +76,7 @@ Two new modules and the proposal→handler wiring:
    Modeled exactly on `teaching/math_lexical_ratification.py` (the W2-D
    template). Mutates ONLY:
    - reviewed frame-category registries (e.g. a frame_opener JSON file under
-     `packs/en_core_math_v1/frames/`)
+     `language_packs/data/en_core_math_v1/frames/`)
    - reviewed verb→frame mappings (same dir)
    - proposal-layer artifacts
 
@@ -85,7 +85,7 @@ Two new modules and the proposal→handler wiring:
    - solver / parser / decomposer / runtime
    - graph verifier semantics
 
-3. **Workbench dispatch wire** — `workbench/api.py` currently 501s
+3. **Workbench dispatch wire** — `workbench/readers.py` currently 501s
    `frame_reclassification`. Wire it through to
    `teaching.math_frame_ratification.ratify_frame_claim()`. The 501 path
    stays for `matcher_extension` and `injector_sub_shape` (no handlers yet).
@@ -172,8 +172,8 @@ Modeled on `tests/test_math_lexical_ratification.py`:
 - `teaching/math_frame_proposal.py` (new file, ≤300 lines)
 - `teaching/math_frame_ratification.py` (new file, ≤400 lines —
   W2-D-shaped)
-- `workbench/api.py` — wire `frame_reclassification` dispatch
-- `packs/en_core_math_v1/frames/.gitkeep` if the dir doesn't exist (the
+- `workbench/readers.py` — wire `frame_reclassification` dispatch
+- `language_packs/data/en_core_math_v1/frames/.gitkeep` if the dir doesn't exist (the
   ratification handler mutates files under here)
 - `tests/test_math_frame_ratification.py` (new file, 14 tests above)
 - `core/cli.py` — add the test file to the `teaching` suite tuple
@@ -200,7 +200,7 @@ Modeled on `tests/test_math_lexical_ratification.py`:
 - `teaching/math_lexical_ratification.py` (the W2-D template — every
   pattern in F1 should mirror this)
 - `tests/test_math_lexical_ratification.py` (the test pattern)
-- `workbench/api.py` — find the `frame_reclassification` 501 dispatch site
+- `workbench/readers.py` — find the `frame_reclassification` 501 dispatch site
 - `docs/handoff/ADR-0167-FOLLOWUPS.md §1` — the dispatch table this PR
   retires for `FrameClaim`
 
