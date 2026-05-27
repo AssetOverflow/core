@@ -17,6 +17,10 @@ from workbench.schemas import (
     ArtifactRef,
     EvalLaneSummary,
     EvalRunResult,
+    MathProposalDetail,
+    MathProposalSummary,
+    MathRatifyResult,
+    MathReasoningStep,
     ProposalDetail,
     ProposalSummary,
     RuntimeStatus,
@@ -31,9 +35,26 @@ _REVIEW_STATES = frozenset(get_args(ReviewState))
 ALLOWED_ARTIFACT_ROOTS = (
     REPO_ROOT / "engine_state",
     REPO_ROOT / "teaching" / "proposals",
+    REPO_ROOT / "teaching" / "math_proposals",
     REPO_ROOT / "evals",
     REPO_ROOT / "contemplation" / "runs",
 )
+
+MATH_PROPOSALS_JSONL = REPO_ROOT / "teaching" / "math_proposals" / "proposals.jsonl"
+_DEFAULT_MATH_AUDIT_PATH = (
+    REPO_ROOT
+    / "evals"
+    / "gsm8k_math"
+    / "train_sample"
+    / "v1"
+    / "audit_brief_11.json"
+)
+
+# Dispatch table: proposed_change_kind → handler name.
+# Handlers not listed here are not yet implemented.
+_HANDLER_DISPATCH: dict[str, str] = {
+    "vocabulary_addition": "LexicalClaim",
+}
 
 
 class ArtifactTooLargeError(OSError):
@@ -265,6 +286,175 @@ def read_eval_lane(lane_name: str) -> EvalLaneSummary:
         versions=list(lane.versions),
         read_only=lane.name in SAFE_EVAL_LANES,
         description=None,
+    )
+
+
+def _load_math_proposals_raw(jsonl_path: Path) -> list[dict[str, Any]]:
+    """Parse proposals.jsonl; derive proposal_id = sha256(canonical_line_bytes)."""
+    if not jsonl_path.exists():
+        return []
+    results: list[dict[str, Any]] = []
+    for raw_line in jsonl_path.read_bytes().splitlines():
+        stripped = raw_line.strip()
+        if not stripped:
+            continue
+        proposal_id = hashlib.sha256(stripped).hexdigest()
+        data: dict[str, Any] = json.loads(stripped)
+        data["proposal_id"] = proposal_id
+        results.append(data)
+    return results
+
+
+def _math_proposal_summary(record: dict[str, Any]) -> MathProposalSummary:
+    payload = record.get("proposed_change_payload") or {}
+    evidence_count = int(payload.get("evidence_count", 0)) if isinstance(payload, dict) else 0
+    return MathProposalSummary(
+        proposal_id=str(record.get("proposal_id", "")),
+        domain="math",
+        shape_category=str(record.get("shape_category", "")),
+        proposed_change_kind=str(record.get("proposed_change_kind", "")),
+        structural_commonality=str(record.get("structural_commonality", "")),
+        evidence_count=evidence_count,
+        replay_equivalence_hash=str(record.get("replay_equivalence_hash", "")),
+    )
+
+
+def list_math_proposals(*, jsonl_path: Path | None = None) -> list[MathProposalSummary]:
+    path = jsonl_path or MATH_PROPOSALS_JSONL
+    records = _load_math_proposals_raw(path)
+    return [_math_proposal_summary(r) for r in records]
+
+
+def _math_trace_steps_from_proposal(proposal: Any) -> list[MathReasoningStep]:
+    """Extract 4 ReasoningStep objects from a MathReaderRefusalShapeProposal."""
+    trace = getattr(proposal, "reasoning_trace", None)
+    if trace is None:
+        return []
+    steps_raw = getattr(trace, "steps", ())
+    steps: list[MathReasoningStep] = []
+    for step in steps_raw:
+        steps.append(
+            MathReasoningStep(
+                step_index=int(getattr(step, "step_index", 0)),
+                step_kind=str(getattr(step, "step_kind", "")),
+                claim=str(getattr(step, "claim", "")),
+                justification=str(getattr(step, "justification", "")),
+                input_pointers=list(getattr(step, "input_pointers", ())),
+                output_payload=getattr(step, "output_payload", {}),
+            )
+        )
+    return steps
+
+
+def read_math_proposal(
+    proposal_id: str,
+    *,
+    jsonl_path: Path | None = None,
+    audit_path: Path | None = None,
+) -> MathProposalDetail:
+    """Return full proposal detail including 4-step reasoning trace.
+
+    Re-runs :func:`teaching.math_contemplation.decompose_audit` to recover
+    the full :class:`MathReaderRefusalShapeProposal` (canonical bytes only
+    carry the trace_id, not the full steps).  Deterministic: same audit →
+    same proposals.
+    """
+    from teaching.math_contemplation import decompose_audit
+
+    # Verify the proposal_id exists in the JSONL first (fast path).
+    path = jsonl_path or MATH_PROPOSALS_JSONL
+    records = _load_math_proposals_raw(path)
+    record = next((r for r in records if r.get("proposal_id") == proposal_id), None)
+    if record is None:
+        raise FileNotFoundError(proposal_id)
+
+    # Re-run decomposer to get the full proposal with trace steps.
+    apath = audit_path or _DEFAULT_MATH_AUDIT_PATH
+    full_proposals = decompose_audit(apath)
+    full = next((p for p in full_proposals if p.proposal_id == proposal_id), None)
+    if full is None:
+        raise FileNotFoundError(f"{proposal_id} (not found in decomposer output)")
+
+    change_kind = str(record.get("proposed_change_kind", ""))
+    handler_name = _HANDLER_DISPATCH.get(change_kind)
+
+    trace_id = str(record.get("reasoning_trace_id", ""))
+    trace_steps = _math_trace_steps_from_proposal(full)
+
+    evidence_pointers = record.get("evidence_pointers", [])
+    evidence_hashes = list(evidence_pointers) if isinstance(evidence_pointers, list) else []
+
+    suggested_cli: str | None = None
+    if handler_name == "LexicalClaim":
+        suggested_cli = (
+            f"# ratify via Python REPL:\n"
+            f"from teaching.math_lexical_ratification import apply_lexical_claim\n"
+            f"# apply_lexical_claim(claim=<evidence>, category='drain_token', reviewer='<you>')"
+        )
+
+    return MathProposalDetail(
+        proposal_id=proposal_id,
+        domain="math",
+        shape_category=str(record.get("shape_category", "")),
+        proposed_change_kind=change_kind,
+        structural_commonality=str(record.get("structural_commonality", "")),
+        evidence_count=len(evidence_hashes),
+        replay_equivalence_hash=str(record.get("replay_equivalence_hash", "")),
+        wrong_zero_assertion=str(record.get("wrong_zero_assertion", "")),
+        proposed_change_payload=record.get("proposed_change_payload"),
+        reasoning_trace_id=trace_id,
+        reasoning_trace_steps=trace_steps,
+        evidence_hashes=evidence_hashes,
+        handler_name=handler_name,
+        suggested_ratify_cli=suggested_cli,
+    )
+
+
+def ratify_math_proposal(
+    proposal_id: str,
+    *,
+    jsonl_path: Path | None = None,
+) -> MathRatifyResult:
+    """Dispatch ratification by change_kind; fail loudly for unimplemented handlers.
+
+    ADR-0160 "Proposal before mutation" doctrine: this function validates
+    routing and returns the handler name + suggested CLI without applying
+    the change.  Mutation requires an explicit operator action outside the
+    workbench (e.g. calling apply_lexical_claim() directly).
+
+    Raises FileNotFoundError if proposal_id not found.
+    Raises NotImplementedError with a clear message for unhandled change_kinds.
+    """
+    path = jsonl_path or MATH_PROPOSALS_JSONL
+    records = _load_math_proposals_raw(path)
+    record = next((r for r in records if r.get("proposal_id") == proposal_id), None)
+    if record is None:
+        raise FileNotFoundError(proposal_id)
+
+    change_kind = str(record.get("proposed_change_kind", ""))
+    handler_name = _HANDLER_DISPATCH.get(change_kind)
+
+    if handler_name is None:
+        raise NotImplementedError(
+            f"handler not yet implemented for change_kind={change_kind!r}; "
+            f"see docs/handoff/ADR-0167-FOLLOWUPS.md §1 for the scoping ADR required "
+            f"before this change_kind can be ratified"
+        )
+
+    suggested_cli: str | None = None
+    if handler_name == "LexicalClaim":
+        suggested_cli = (
+            f"from teaching.math_lexical_ratification import apply_lexical_claim\n"
+            f"# apply_lexical_claim(claim=<evidence>, category='drain_token', reviewer='<you>')"
+        )
+
+    return MathRatifyResult(
+        proposal_id=proposal_id,
+        change_kind=change_kind,
+        handler_name=handler_name,
+        routing_status="routed",
+        message=f"routed to {handler_name} handler",
+        suggested_cli=suggested_cli,
     )
 
 

@@ -18,7 +18,7 @@ from core.epistemic_state import (
 )
 from workbench import readers
 from workbench.readers import ArtifactTooLargeError
-from workbench.schemas import ChatTurnResult, ProposalRef, TurnVerdict, error, ok
+from workbench.schemas import ChatTurnResult, MathRatifyResult, ProposalRef, TurnVerdict, error, ok
 
 
 MAX_CHAT_BODY_BYTES = 64 * 1024
@@ -75,6 +75,14 @@ class WorkbenchApi:
         if method == "GET" and path.startswith("/proposals/"):
             proposal_id = unquote(path.removeprefix("/proposals/"))
             return ApiResponse(200, ok(readers.read_proposal(proposal_id)))
+        if method == "GET" and path == "/math-proposals":
+            return ApiResponse(200, ok({"items": readers.list_math_proposals()}))
+        if method == "POST" and path.endswith("/ratify") and path.startswith("/math-proposals/"):
+            proposal_id = unquote(path.removeprefix("/math-proposals/").removesuffix("/ratify"))
+            return self._math_ratify(proposal_id)
+        if method == "GET" and path.startswith("/math-proposals/"):
+            proposal_id = unquote(path.removeprefix("/math-proposals/"))
+            return ApiResponse(200, ok(readers.read_math_proposal(proposal_id)))
         if method == "GET" and path == "/evals":
             return ApiResponse(200, ok({"lanes": readers.list_eval_lanes()}))
         if method == "GET" and path.startswith("/evals/"):
@@ -102,6 +110,14 @@ class WorkbenchApi:
         if method == "GET" and path.startswith("/replay/"):
             return ApiResponse(501, error("unsupported", "route is deferred beyond W-026"))
         return ApiResponse(404, error("not_found", f"route not found: {method} {path}"))
+
+    def _math_ratify(self, proposal_id: str) -> ApiResponse:
+        """Route ratification by change_kind; 501 for unimplemented handlers."""
+        try:
+            result: MathRatifyResult = readers.ratify_math_proposal(proposal_id)
+        except NotImplementedError as exc:
+            return ApiResponse(501, error("unsupported", str(exc)))
+        return ApiResponse(200, ok(result))
 
     def _chat_turn(self, body: bytes) -> ApiResponse:
         """Execute one live runtime turn.
