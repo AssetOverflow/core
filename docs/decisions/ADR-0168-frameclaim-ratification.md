@@ -4,7 +4,7 @@
 **Date:** 2026-05-27
 **Author:** Shay
 **Parent:** [ADR-0167](./ADR-0167-audit-as-teaching-evidence.md)
-**Related:** ADR-0164 (reader), ADR-0166 (measurement-capability sequencing), ADR-0056/0057 (contemplation + replay), ADR-0167 FOLLOWUPS §1/§5
+**Related:** ADR-0114a, ADR-0164, ADR-0165, ADR-0166, ADR-0056/0057, ADR-0167 FOLLOWUPS §1/§5
 
 ---
 
@@ -53,6 +53,48 @@ into:
 > incorrect graph admission
 
 which directly threatens the `wrong == 0` invariant.
+
+---
+
+## Prior ADR compatibility audit
+
+This ADR is not final until it remains compatible with prior ADR doctrine.
+The following audit was performed before opening implementation work.
+
+| Prior ADR | Load-bearing rule | ADR-0168 compatibility result |
+|---|---|---|
+| ADR-0056 | Contemplation is cognitive only; no corpus mutation; reviewed evidence boundaries matter | Compatible. ADR-0168 remains evidence/proposal-only and does not mutate during contemplation. |
+| ADR-0057 | Replay-equivalence is a precondition, not permission; operator accept is required; proposal logs are append-only | Compatible with constraint. FrameClaim implementation must use a math-specific proposal/ratification adapter or subtype that preserves the same replay/review discipline without weakening ADR-0057's corpus-evidence eligibility gate. |
+| ADR-0114a | Zero wrong, typed refusal, adversarial misparse=0, determinism, operation provenance | Compatible. ADR-0168 inherits these obligations and elevates case 0050 and recognized-but-uninjectable hazards as mandatory pins. |
+| ADR-0164 | Incremental reader over semantic categories; no hidden best guess; new categories/rules require ADR | Compatible. FrameClaim ratifies reviewed category membership only; no dynamic category synthesis or runtime guessing. |
+| ADR-0165 | Regex only at lexeme level; never grammar templates | Compatible. ADR-0168 introduces no regex and no sentence-template path. |
+| ADR-0166 | Capability before measurement; no new eval lanes ahead of operators | Compatible. ADR-0168 is doctrine/capability scoping only and explicitly forbids new eval lanes in the implementation PR. |
+| ADR-0167 | Audit rows become teaching evidence; LexicalClaim first; harder sub-types require their own ADR | Compatible. ADR-0168 is exactly the next sub-type ADR and keeps audit rows evidence-only. |
+
+### Resolved tension: ADR-0057 evidence floor
+
+ADR-0057's ordinary `TeachingChainProposal` eligibility requires at least
+one `source="corpus"` evidence pointer. Math-domain FrameClaims originate
+from audit/refusal artifacts, not from the cognition teaching corpus.
+
+ADR-0168 therefore does **not** weaken ADR-0057.
+
+A future implementation must choose one of two compatible paths:
+
+1. Define a math-specific proposal/ratification type whose evidence floor is
+   `MathReaderRefusalEvidence` plus replay-admissibility evidence, while
+   preserving ADR-0057's append-only/replay/operator-review discipline; or
+2. Define a reviewed math corpus artifact that can supply the required
+   corpus-style evidence pointer without borrowing cognition corpus evidence.
+
+What is forbidden:
+
+- treating audit evidence as cognition corpus evidence
+- bypassing the reviewed-evidence floor
+- auto-accepting because replay passed
+- mutating runtime frame behavior outside the proposal/review boundary
+
+This section is the compatibility trip-wire for any implementation PR.
 
 ---
 
