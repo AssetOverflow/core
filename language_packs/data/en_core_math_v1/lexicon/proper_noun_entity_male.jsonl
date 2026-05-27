@@ -74,3 +74,4 @@
 {"lemma": "walter", "category": "proper_noun_entity_male", "aliases": ["Walter"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
 {"lemma": "wayne", "category": "proper_noun_entity_male", "aliases": ["Wayne"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
 {"lemma": "william", "category": "proper_noun_entity_male", "aliases": ["William"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "malcolm", "category": "proper_noun_entity_male", "aliases": ["Malcolm"], "provenance": "phase_1_reader_supplemental_2026-05-26"}

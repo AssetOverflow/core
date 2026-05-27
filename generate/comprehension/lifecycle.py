@@ -30,14 +30,8 @@ from __future__ import annotations
 from functools import cache
 from typing import Callable, Final
 
-from generate.comprehension._interface_stubs import (
-    Lexicon,
-    LexemeMatch,
-    LexiconEntry,
-    load_lexicon,
-    lookup,
-    scan_primitive,
-)
+from generate.comprehension.lexeme_primitives import LexemeMatch, scan
+from generate.comprehension.lexicon import Lexicon, LexiconEntry, load_lexicon, lookup
 from generate.comprehension.state import (
     _LOOKBACK_MAX,
     AppliedCategory,
@@ -421,15 +415,29 @@ def end_sentence(
 
 def _classify(word: str) -> tuple[str | None, str]:
     """Return (category, surface). Category is None on miss."""
-    # 1. Primitive scan first (orthographic shapes are unambiguous).
-    primitive: LexemeMatch | None = scan_primitive(word)
-    if primitive is not None:
-        return primitive.emit_category, primitive.surface
-    # 2. Lexicon lookup.
+    # (d) Punctuation terminators — reader-internal; not in primitive registry
+    # or lexicon. Formerly in _interface_stubs._PRIMITIVE_PATTERNS;
+    # Phase-1 reader-internal dispatch.
+    if word == "?":
+        return "question_terminator", word
+    if word in (".", "!"):
+        return "statement_terminator", word
+    if word == ",":
+        return "punctuation_comma", word
+    # Step 1 — lexicon lookup. Runs before primitive scan so that
+    # mass-noun-token primitives (UNIT_CATEGORY_TOKEN) do not shadow
+    # operational-lexicon categories such as currency_unit_noun.
+    # Per ADR-0164.1 §mass-noun-token boundary note: lexicon takes
+    # precedence in Phase 1.
     lex = _get_lexicon()
     entry: LexiconEntry | None = lookup(lex, word)
     if entry is not None:
-        return entry.category, entry.surface
+        return entry.category, entry.lemma
+    # Step 2 — primitive scan for tokens absent from the lexicon
+    # (bare numerics, currency amounts, fractions, etc.).
+    primitive: LexemeMatch | None = scan(word)
+    if primitive is not None:
+        return primitive.emit_category, primitive.source_text
     return None, word
 
 
