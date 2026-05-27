@@ -3,6 +3,8 @@ import {
   GroundingSource,
   NormativeClearance,
   ReviewState,
+  ReplayDivergenceSeverity,
+  ReplayStatus,
   type BadgeMeta,
 } from "./types";
 
@@ -46,3 +48,16 @@ export const groundingSourceMeta = {
   [GroundingSource.OOV]: { label: "OOV", colorToken: "--color-grounding-oov", meaning: "Out-of-vocabulary grounding was encountered.", adr: "ADR-0160 / ADR-0162", evidence: "grounding_source is oov." },
   [GroundingSource.NONE]: { label: "None", colorToken: "--color-grounding-none", meaning: "No grounding source was present.", adr: "ADR-0160 / ADR-0162", evidence: "grounding_source is none." },
 } satisfies BadgeMeta<GroundingSource>;
+
+export const replayDivergenceSeverityMeta = {
+  [ReplayDivergenceSeverity.INFO]: { label: "info", colorToken: "--color-grounding-vault", meaning: "Informational divergence, non-critical deviation.", adr: "ADR-0160 / ADR-0162", evidence: "divergence severity is info." },
+  [ReplayDivergenceSeverity.WARNING]: { label: "warning", colorToken: "--color-review-pending", meaning: "Warning divergence, requires attention.", adr: "ADR-0160 / ADR-0162", evidence: "divergence severity is warning." },
+  [ReplayDivergenceSeverity.FAILURE]: { label: "failure", colorToken: "--color-review-rejected", meaning: "Failure divergence, critical replay violation.", adr: "ADR-0160 / ADR-0162", evidence: "divergence severity is failure." },
+} satisfies BadgeMeta<ReplayDivergenceSeverity>;
+
+export const replayStatusMeta = {
+  [ReplayStatus.EQUIVALENT]: { label: "equivalent", colorToken: "--color-review-accepted", meaning: "Replay evidence intact — no divergences.", adr: "ADR-0160 / ADR-0162", evidence: "equivalent is true and replay_hash is present." },
+  [ReplayStatus.NOT_YET_REPLAYED]: { label: "not_yet_replayed", colorToken: "--color-review-pending", meaning: "No replay has been attempted for this artifact yet.", adr: "ADR-0160 / ADR-0162", evidence: "equivalent is false and replay_hash is null." },
+  [ReplayStatus.DIVERGED]: { label: "diverged", colorToken: "--color-review-rejected", meaning: "Replay completed but generated different state/output.", adr: "ADR-0160 / ADR-0162", evidence: "equivalent is false and replay_hash is present." },
+  [ReplayStatus.EVIDENCE_UNAVAILABLE]: { label: "evidence_unavailable", colorToken: "--color-review-withdrawn", meaning: "Replay evidence is not available on the backend for this kind.", adr: "ADR-0160 / ADR-0162", evidence: "API returned unsupported error code." },
+} satisfies BadgeMeta<ReplayStatus>;

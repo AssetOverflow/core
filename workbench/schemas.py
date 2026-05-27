@@ -177,12 +177,16 @@ class EvalRunResult:
     source_digest: str | None = None
 
 
+ReplayDivergenceSeverity = Literal["info", "warning", "failure"]
+ReplayStatus = Literal["equivalent", "not_yet_replayed", "diverged", "evidence_unavailable"]
+
+
 @dataclass(frozen=True, slots=True)
 class ReplayDivergence:
     path: str
     original: Any
     replay: Any
-    severity: Literal["info", "warning", "failure"]
+    severity: ReplayDivergenceSeverity
 
 
 @dataclass(frozen=True, slots=True)

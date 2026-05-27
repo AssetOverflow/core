@@ -1,4 +1,13 @@
-import type { ApiResponse, ErrorCode, EvalLaneSummary, EvalRunRequest, EvalRunResult } from "../types/api";
+import type {
+  ApiResponse,
+  ErrorCode,
+  EvalLaneSummary,
+  EvalRunRequest,
+  EvalRunResult,
+  ArtifactRef,
+  ArtifactDetail,
+  ReplayComparison,
+} from "../types/api";
 
 export class WorkbenchApiError extends Error {
   constructor(
@@ -59,3 +68,15 @@ export async function runEvalLane(req: EvalRunRequest): Promise<EvalRunResult> {
   });
 }
 
+export async function fetchArtifacts(): Promise<ArtifactRef[]> {
+  const data = await apiFetch<{ items: ArtifactRef[] }>("/artifacts");
+  return data.items;
+}
+
+export async function fetchArtifactDetail(artifactId: string): Promise<ArtifactDetail> {
+  return apiFetch<ArtifactDetail>(`/artifacts/${artifactId}`);
+}
+
+export async function fetchReplayComparison(artifactId: string): Promise<ReplayComparison> {
+  return apiFetch<ReplayComparison>(`/replay/${artifactId}`);
+}
