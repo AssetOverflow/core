@@ -380,9 +380,9 @@ def _has_currency_symbol(statement: str) -> bool:
 def _match_discrete_count_statement(
     statement: str, spec: Mapping[str, Any]
 ) -> tuple[tuple[Mapping[str, Any], ...], Literal["count"]] | None:
-    """Detection-only match for "X has N Y" shape.
+    """ADR-0163.D.2 — extraction match for "X has N Y" shape.
 
-    Conditions:
+    Detection conditions (same as round-2 detection-only matcher):
       - statement carries ≥1 quantity marker (digit or number word)
       - statement does NOT carry a currency symbol (else currency_amount)
       - statement does NOT carry per-unit framing (else rate_with_currency)
@@ -390,8 +390,35 @@ def _match_discrete_count_statement(
         (else temporal_aggregation)
       - spec's anchor_kind is "discrete_count"
 
-    Returns ``(empty parsed_anchors, "count")`` on a hit; real value
-    extraction is Phase D.2 follow-up.
+    Extraction (D.2 v1) populates a SINGLE anchor when ALL of the
+    following narrowness rules hold; otherwise returns
+    ``(empty parsed_anchors, "count")`` (detection-only fallback, same
+    skip-only safety as round 2).  Narrowness layers (refusal-preferring,
+    wrong=0 doctrine):
+
+      1. Statement matches the canonical possession form
+         ``<ProperNoun> <poss-verb> <count> <counted_noun>...``.
+         Subject must be a single capitalized proper noun (no
+         conjunctions, no leading pronoun).  Possession verb must come
+         from the v1 closed whitelist (has/have/had); broader verbs
+         (owns/holds/contains) defer to a coordinated CandidateInitial
+         change in a follow-up PR.
+      2. Statement carries exactly ONE numeric token (digit or word
+         numeral) — a second count indicates multi-anchor content the
+         v1 schema cannot honor; refuse extraction.
+      3. Statement contains no clause-splitting connectives (``but``,
+         ``then``, ``however``, ``before``, ``after``, ``and``,
+         ``or``) — these indicate trailing operations or enumerations
+         that would invalidate a single InitialPossession.
+      4. count_kind ∈ spec.observed_count_kinds.
+      5. counted_noun ∈ spec.observed_counted_nouns (case-insensitive,
+         matched against the closed lemma list from Phase B/C).
+
+    The matcher returns ``(populated parsed_anchors, "count")`` on
+    extraction success, ``(tuple(), "count")`` on detection-only
+    fallback (skip-only safe), or ``None`` on detection failure.
+    Phase D.2's per-category injector consumes the populated anchors;
+    the empty-tuple fallback continues the round-2 skip-only behavior.
     """
     if spec.get("anchor_kind") != "discrete_count":
         return None
@@ -404,7 +431,184 @@ def _match_discrete_count_statement(
         return None
     if _has_temporal_quantifier(padded):
         return None
+
+    anchor = _try_extract_discrete_count_anchor(statement, padded, spec)
+    if anchor is not None:
+        return ((anchor,), "count")
     return (tuple(), "count")
+
+
+# ---------------------------------------------------------------------------
+# ADR-0163.D.2 — discrete_count_statement value extraction (v1).
+# ---------------------------------------------------------------------------
+
+# Closed possession-verb whitelist.  These verbs assert a static
+# possession state (no goal, no acquisition event, no transfer).  Verbs
+# like 'collected', 'wants', 'lost', 'bought', etc. are deliberately
+# omitted — they encode operations, not initial state, and admitting
+# them as InitialPossession would over-extract.
+#
+# v1 intentionally restricts the surface to has/have/had so the
+# extracted matched_anchor token is always accepted by the downstream
+# CandidateInitial post-init whitelist.  Widening to owns/holds/contains
+# requires a coordinated CandidateInitial change and lands in a follow-up
+# PR after the framework's empirical lift is operator-reviewed.
+_POSSESSION_VERBS: Final[frozenset[str]] = frozenset({
+    "has", "have", "had",
+})
+
+# Pronoun subjects refused at extraction (ambiguous referent).  The
+# extractor requires a concrete proper-noun subject the source span can
+# ground.
+_REFUSED_SUBJECT_TOKENS: Final[frozenset[str]] = frozenset({
+    "he", "she", "they", "it", "we", "you", "i",
+    "him", "her", "them", "us",
+})
+
+# Clause-splitting / enumeration markers.  Their presence indicates a
+# second clause that may carry operations or additional anchors, so
+# v1 refuses extraction (skip-only fallback preserves wrong=0).
+_CLAUSE_SPLIT_TOKENS: Final[tuple[str, ...]] = (
+    " but ", " then ", " however ", " before ", " after ",
+    " and ", " or ", " while ", " until ", " unless ",
+    ", and ", ", but ", ", or ", ", then ",
+)
+
+# Hyphenated compound cardinal: 'twenty-five', 'ninety-nine'.  These
+# are word-form counts.  The narrowness rule below classifies any
+# non-digit token in the count slot as count_kind='word'.
+_HYPHEN_CARDINAL_RE: Final[re.Pattern[str]] = re.compile(r"^[a-z]+-[a-z]+$")
+
+
+def _extract_discrete_count_re_for(counted_nouns: list[str]) -> re.Pattern[str]:
+    """Build the extraction regex for a closed counted-noun set.
+
+    The counted-noun alternation is constructed from the spec's
+    ``observed_counted_nouns``; multi-word nouns (e.g., ``Pokemon cards``)
+    are honored verbatim.  Longest-first to prevent the alternation
+    swallowing a prefix.
+    """
+    # Sort longest-first so 'Pokemon cards' wins over 'cards'.
+    options = sorted({n for n in counted_nouns if n}, key=len, reverse=True)
+    noun_alt = "|".join(re.escape(n) for n in options)
+    return re.compile(
+        r"^\s*"
+        r"(?P<subject>(?-i:[A-Z][a-z]+))"     # case-sensitive proper noun
+        r"\s+(?P<verb>[A-Za-z]+)"             # any word; verified against whitelist
+        r"\s+(?P<count>\d+|[A-Za-z\-]+)"      # integer or word/hyphenated cardinal
+        r"\s+(?P<noun>" + noun_alt + r")"
+        r"(?:\b.*)?$",                        # optional trailing content
+        flags=re.IGNORECASE,
+    )
+
+
+_DIGIT_RUN_RE: Final[re.Pattern[str]] = re.compile(r"\d+(?:\.\d+)?")
+
+
+def _count_quantity_tokens(statement: str, padded_lower: str) -> int:
+    """Total numeric tokens (digit runs + number words) in *statement*.
+
+    Used for the "exactly one count" narrowness rule.  Hyphenated
+    cardinals count as one token; a multi-digit integer (``400``) counts
+    as one token, not as multiple single-digit hits.
+    """
+    digit_hits = len(_DIGIT_RUN_RE.findall(statement))
+    word_hits = 0
+    for raw in padded_lower.split():
+        tok = raw.strip(".,;:!?\"'()[]{}").lower()
+        if tok in _NUMBER_WORDS:
+            word_hits += 1
+        elif _HYPHEN_CARDINAL_RE.match(tok):
+            # Hyphenated cardinal only counts when at least one half is
+            # a known number word.
+            left, _, right = tok.partition("-")
+            if left in _NUMBER_WORDS or right in _NUMBER_WORDS:
+                word_hits += 1
+    return digit_hits + word_hits
+
+
+def _try_extract_discrete_count_anchor(
+    statement: str,
+    padded_lower: str,
+    spec: Mapping[str, Any],
+) -> Mapping[str, Any] | None:
+    """Refusal-preferring single-anchor extraction (D.2 v1).
+
+    Returns ``None`` when any narrowness layer fails — the caller then
+    falls back to skip-only detection.  The returned anchor is the
+    discrete_count_statement schema dict: ``kind``, ``subject_role``,
+    ``count_token``, ``count_kind``, ``counted_noun``.
+    """
+    raw_kinds = spec.get("observed_count_kinds") or ()
+    raw_nouns = spec.get("observed_counted_nouns") or ()
+    observed_kinds: list[str] = [str(k) for k in raw_kinds]
+    observed_nouns: list[str] = [str(n) for n in raw_nouns]
+    if not observed_kinds or not observed_nouns:
+        return None
+
+    # Narrowness #3 — clause-split / enumeration markers.
+    for token in _CLAUSE_SPLIT_TOKENS:
+        if token in padded_lower:
+            return None
+
+    # Narrowness #2 — exactly one numeric token.
+    if _count_quantity_tokens(statement, padded_lower) != 1:
+        return None
+
+    # Narrowness #1 + #5 — shape + counted-noun lemma.
+    extract_re = _extract_discrete_count_re_for(observed_nouns)
+    m = extract_re.match(statement.strip())
+    if m is None:
+        return None
+
+    subject = m.group("subject")
+    if subject.lower() in _REFUSED_SUBJECT_TOKENS:
+        return None
+
+    verb = m.group("verb").lower()
+    if verb not in _POSSESSION_VERBS:
+        return None
+
+    count_token = m.group("count")
+    if count_token.isdigit():
+        count_kind = "integer"
+    else:
+        # Word-form cardinal — must be a known number word (single or
+        # hyphenated compound).  Anything else is unrecognized and the
+        # extractor refuses.
+        lc = count_token.lower()
+        if lc in _NUMBER_WORDS:
+            count_kind = "word"
+        elif _HYPHEN_CARDINAL_RE.match(lc):
+            left, _, right = lc.partition("-")
+            if left in _NUMBER_WORDS or right in _NUMBER_WORDS:
+                count_kind = "word"
+            else:
+                return None
+        else:
+            return None
+
+    # Narrowness #4 — count_kind in observed set.
+    if count_kind not in observed_kinds:
+        return None
+
+    counted_noun = m.group("noun")
+    # Canonicalize counted_noun to the spec's observed casing where
+    # available; fall back to literal surface.
+    canon = counted_noun
+    counted_noun_lc = counted_noun.lower()
+    for observed_n in observed_nouns:
+        if observed_n.lower() == counted_noun_lc:
+            canon = observed_n
+            break
+
+    return {
+        "kind": "discrete_count",
+        "subject_role": subject,
+        "count_token": count_token,
+        "count_kind": count_kind,
+        "counted_noun": canon,
+    }
 
 
 def _match_multiplicative_aggregation(

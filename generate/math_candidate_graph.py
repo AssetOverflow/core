@@ -504,8 +504,39 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
         if not choices:
             if _ratified_registry:
                 from generate.recognizer_match import match as _recognizer_match
-                if _recognizer_match(s, _ratified_registry) is not None:
-                    # Recognized — skip the sentence, do not refuse.
+                recognizer_match = _recognizer_match(s, _ratified_registry)
+                if recognizer_match is not None:
+                    # ADR-0163.D.2 — per-category anchor injection.
+                    # The matcher may carry populated parsed_anchors that
+                    # an injector turns into typed solver primitives
+                    # (CandidateInitial / CandidateOperation).  When the
+                    # injector returns a non-empty tuple, the recognized
+                    # statement contributes math state to the Cartesian
+                    # product the same way the existing parser's output
+                    # does — and every constructed candidate has already
+                    # passed _initial_admissible upstream of this call.
+                    # When the injector returns () (skip-only fallback —
+                    # the round-2 default and the only path for v1
+                    # categories without an injector), the statement is
+                    # dropped from per_sentence_choices, preserving the
+                    # wrong=0 safety net by construction.
+                    from generate.recognizer_anchor_inject import (
+                        inject_from_match,
+                    )
+                    injected = inject_from_match(recognizer_match, s)
+                    if injected:
+                        admitted: list[SentenceChoice] = [
+                            c for c in injected if _initial_admissible(c)
+                        ]
+                        if len(admitted) == len(injected) and admitted:
+                            per_sentence_choices.append(
+                                _collapse_per_sentence_ties(admitted)
+                            )
+                            continue
+                    # Recognized but no injection — skip the sentence, do
+                    # not refuse.  Identical to the round-2 skip-only
+                    # wiring; preserves wrong=0 because zero math state
+                    # is contributed.
                     continue
             return CandidateGraphResult(
                 answer=None, selected_graph=None,
