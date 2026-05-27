@@ -7,7 +7,7 @@ import { ChatRoute } from "../routes/ChatRoute";
 import { TraceRoutePlaceholder } from "../routes/TraceRoutePlaceholder";
 import { ReplayRoutePlaceholder } from "../routes/ReplayRoutePlaceholder";
 import { ProposalsRoutePlaceholder } from "../routes/ProposalsRoutePlaceholder";
-import { EvalsRoutePlaceholder } from "../routes/EvalsRoutePlaceholder";
+import { EvalsRoute } from "./evals/EvalsRoute";
 import { RunsRoutePlaceholder } from "../routes/RunsRoutePlaceholder";
 import { PacksRoutePlaceholder } from "../routes/PacksRoutePlaceholder";
 import { VaultRoutePlaceholder } from "../routes/VaultRoutePlaceholder";
@@ -25,7 +25,7 @@ export function App() {
             <Route path="trace" element={<TraceRoutePlaceholder />} />
             <Route path="replay" element={<ReplayRoutePlaceholder />} />
             <Route path="proposals" element={<ProposalsRoutePlaceholder />} />
-            <Route path="evals" element={<EvalsRoutePlaceholder />} />
+            <Route path="evals" element={<EvalsRoute />} />
             <Route path="runs" element={<RunsRoutePlaceholder />} />
             <Route path="packs" element={<PacksRoutePlaceholder />} />
             <Route path="vault" element={<VaultRoutePlaceholder />} />

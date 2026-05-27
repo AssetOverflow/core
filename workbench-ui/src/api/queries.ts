@@ -4,7 +4,7 @@ import {
   useMutation,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { apiFetch } from "./client";
+import { apiFetch, fetchEvalLanes, runEvalLane } from "./client";
 import type { WorkbenchApiError } from "./client";
 import type {
   RuntimeStatus,
@@ -15,6 +15,7 @@ import type {
   EvalLaneSummary,
   EvalRunResult,
   ChatTurnResult,
+  EvalRunRequest,
 } from "../types/api";
 
 export { QueryClientProvider };
@@ -70,7 +71,9 @@ export function useProposal(id: string) {
 export function useEvalLanes() {
   return useQuery<EvalLaneSummary[]>({
     queryKey: ["api", "evals"],
-    queryFn: () => apiFetch<EvalLaneSummary[]>("/evals"),
+    queryFn: fetchEvalLanes,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -79,6 +82,13 @@ export function useEvalLane(name: string) {
     queryKey: ["api", "eval", name],
     queryFn: () => apiFetch<EvalRunResult>(`/evals/${name}`),
     enabled: !!name,
+  });
+}
+
+export function useEvalRun() {
+  return useMutation<EvalRunResult, WorkbenchApiError, EvalRunRequest>({
+    mutationKey: ["eval-run"],
+    mutationFn: runEvalLane,
   });
 }
 
@@ -93,3 +103,4 @@ export function useChatTurn() {
       }),
   });
 }
+
