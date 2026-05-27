@@ -1,0 +1,57 @@
+CORE Non-Commercial License
+Version 1.0, 2026
+
+Copyright (c) 2026 Shay Jilani / AssetOverflow
+
+Permission is hereby granted, free of charge, to any person or organization
+obtaining a copy of this software and associated documentation files (the
+"Software"), to use, copy, modify, merge, publish, and distribute the Software,
+subject to the following conditions:
+
+1. NON-COMMERCIAL USE ONLY
+
+   This license permits use solely for non-commercial purposes, including but
+   not limited to: personal projects, academic research, educational use,
+   non-profit work, and open-source contributions. Any use that directly or
+   indirectly generates revenue, is embedded in a commercial product or service,
+   or is deployed in a production environment operated for commercial gain
+   requires a separate Commercial License. See COMMERCIAL_LICENSE.md.
+
+2. ATTRIBUTION
+
+   All copies, modifications, or distributions of the Software, in whole or in
+   part, must retain this copyright notice, this list of conditions, and the
+   following attribution in any documentation, publications, or derivative works:
+
+       Based on CORE (Continuous Orthogonal Resonance Engine)
+       by Shay Jilani / AssetOverflow — https://github.com/assetoverflow/core
+
+3. SHARE-ALIKE
+
+   Any modified version of the Software distributed under this license must be
+   released under these same terms. You may not impose additional restrictions
+   on recipients' exercise of the rights granted herein.
+
+4. NO SUBLICENSING
+
+   You may not sublicense the Software. Any party wishing to use the Software
+   under terms other than those stated here must obtain a license directly from
+   the copyright holder.
+
+5. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
+   FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+   IN THE SOFTWARE.
+
+6. TERMINATION
+
+   This license is automatically terminated if you violate any of its terms.
+   Upon termination, you must destroy all copies of the Software in your
+   possession.
+
+For commercial licensing inquiries: shayj292@gmail.com
