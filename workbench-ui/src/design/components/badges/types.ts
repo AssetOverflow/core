@@ -39,6 +39,19 @@ export enum GroundingSource {
   NONE = "none",
 }
 
+export enum ReplayDivergenceSeverity {
+  INFO = "info",
+  WARNING = "warning",
+  FAILURE = "failure",
+}
+
+export enum ReplayStatus {
+  EQUIVALENT = "equivalent",
+  NOT_YET_REPLAYED = "not_yet_replayed",
+  DIVERGED = "diverged",
+  EVIDENCE_UNAVAILABLE = "evidence_unavailable",
+}
+
 export type BadgeMeta<T extends string> = Record<
   T,
   {

@@ -4,7 +4,14 @@ import {
   useMutation,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { apiFetch, fetchEvalLanes, runEvalLane } from "./client";
+import {
+  apiFetch,
+  fetchEvalLanes,
+  runEvalLane,
+  fetchArtifacts,
+  fetchArtifactDetail,
+  fetchReplayComparison,
+} from "./client";
 import type { WorkbenchApiError } from "./client";
 import type {
   RuntimeStatus,
@@ -16,6 +23,7 @@ import type {
   EvalRunResult,
   ChatTurnResult,
   EvalRunRequest,
+  ReplayComparison,
 } from "../types/api";
 
 export { QueryClientProvider };
@@ -37,19 +45,36 @@ export function useRuntimeStatus() {
   });
 }
 
-export function useArtifacts(limit?: number) {
-  const params = limit !== undefined ? `?limit=${limit}` : "";
-  return useQuery<ArtifactRef[]>({
-    queryKey: ["api", "artifacts", limit],
-    queryFn: () => apiFetch<ArtifactRef[]>(`/artifacts${params}`),
+export function useArtifacts() {
+  return useQuery<ArtifactRef[], WorkbenchApiError>({
+    queryKey: ["api", "artifacts"],
+    queryFn: () => fetchArtifacts(),
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
   });
 }
 
 export function useArtifact(id: string) {
-  return useQuery<ArtifactDetail>({
+  return useQuery<ArtifactDetail, WorkbenchApiError>({
     queryKey: ["api", "artifact", id],
-    queryFn: () => apiFetch<ArtifactDetail>(`/artifacts/${id}`),
+    queryFn: () => fetchArtifactDetail(id),
     enabled: !!id,
+  });
+}
+
+export function useArtifactDetail(artifactId: string) {
+  return useQuery<ArtifactDetail, WorkbenchApiError>({
+    queryKey: ["api", "artifact", artifactId],
+    queryFn: () => fetchArtifactDetail(artifactId),
+    enabled: !!artifactId,
+  });
+}
+
+export function useReplayComparison(artifactId: string) {
+  return useQuery<ReplayComparison, WorkbenchApiError>({
+    queryKey: ["api", "replay", artifactId],
+    queryFn: () => fetchReplayComparison(artifactId),
+    enabled: !!artifactId,
   });
 }
 

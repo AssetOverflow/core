@@ -3,11 +3,27 @@ import {
   groundingSourceMeta,
   normativeClearanceMeta,
   reviewStateMeta,
+  replayDivergenceSeverityMeta,
+  replayStatusMeta,
 } from "./mappings";
 import { InfoBadge } from "./Badge";
-import { EpistemicState, GroundingSource, NormativeClearance, ReviewState } from "./types";
+import {
+  EpistemicState,
+  GroundingSource,
+  NormativeClearance,
+  ReviewState,
+  ReplayDivergenceSeverity,
+  ReplayStatus,
+} from "./types";
 
-export { EpistemicState, GroundingSource, NormativeClearance, ReviewState };
+export {
+  EpistemicState,
+  GroundingSource,
+  NormativeClearance,
+  ReviewState,
+  ReplayDivergenceSeverity,
+  ReplayStatus,
+};
 
 export function EpistemicStateBadge({ value }: { value: EpistemicState }) {
   return <InfoBadge {...epistemicStateMeta[value]} />;
@@ -23,6 +39,14 @@ export function ReviewStateBadge({ value }: { value: ReviewState }) {
 
 export function GroundingSourceBadge({ value }: { value: GroundingSource }) {
   return <InfoBadge {...groundingSourceMeta[value]} />;
+}
+
+export function ReplayDivergenceSeverityBadge({ value }: { value: ReplayDivergenceSeverity }) {
+  return <InfoBadge {...replayDivergenceSeverityMeta[value]} />;
+}
+
+export function ReplayStatusBadge({ value }: { value: ReplayStatus }) {
+  return <InfoBadge {...replayStatusMeta[value]} />;
 }
 
 export function TraceHashBadge({
