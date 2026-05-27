@@ -19,14 +19,14 @@ grounded this turn?") and returns an *enriched* candidate with:
     contemplation never silently truncates.
 
 The loop is a pure function of the candidate, the reviewed teaching
-corpus, the ratified cognition pack, and an optional vault probe
-hook.  No clock-time, no LLM, no stochastic sampling, no concurrency
-— ADR-0056 Call 4 (sync, not async).
+corpus, the ratified domain pack, and an optional vault probe hook. No
+clock-time, no LLM, no stochastic sampling, no concurrency — ADR-0056
+Call 4 (sync, not async).
 
-Trust boundary: this module reads ``_pack_index()`` and
-``_corpus_index()`` only.  It NEVER writes to the corpus, the pack,
-or runtime state.  Output enriched candidates flow back through the
-same Phase B sink as JSONL lines.
+Trust boundary: this module reads domain-selected pack/corpus indices
+only. It NEVER writes to the corpus, the pack, or runtime state. Output
+enriched candidates flow back through the same Phase B sink as JSONL
+lines.
 """
 
 from __future__ import annotations
@@ -34,7 +34,8 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import replace
-from typing import Any, Callable, Literal
+from pathlib import Path
+from typing import Any, Callable, Literal, Mapping
 
 from chat.pack_grounding import _pack_index
 from chat.teaching_grounding import _corpus_index
@@ -68,6 +69,55 @@ loop.  ``None`` means "no vault probe in this contemplation pass."
 """
 
 _DEFAULT_MAX_DEPTH: int = 8
+_MATH_PACK_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "language_packs"
+    / "data"
+    / "en_core_math_v1"
+)
+
+
+# ---------------------------------------------------------------------------
+# Domain index resolution
+# ---------------------------------------------------------------------------
+
+
+def _pack_index_for_domain(domain: str) -> dict[str, tuple[str, ...]]:
+    """Return the read-only pack index for *domain*.
+
+    Cognition preserves the legacy ``chat.pack_grounding._pack_index``
+    semantics. Math reads ``en_core_math_v1`` through the operational
+    lexicon loader and exposes category membership as shape-level pack
+    evidence. Unknown domains fail closed.
+    """
+    if domain == "cognition":
+        return _pack_index()
+    if domain == "math":
+        from generate.comprehension.lexicon import load_lexicon
+
+        lexicon = load_lexicon(_MATH_PACK_PATH)
+        return {
+            surface: (entry.category,)
+            for surface, entry in lexicon.by_surface.items()
+        }
+    return {}
+
+
+def _corpus_index_for_domain(domain: str) -> Mapping[Any, Any]:
+    """Return the reviewed corpus index for *domain*.
+
+    The cognition domain keeps the ADR-0056 reviewed teaching corpus.
+    Math currently has no reviewed TeachingChain-style corpus for
+    contemplation; returning an empty mapping is deliberate fail-closed
+    behavior that prevents math candidates from borrowing cognition
+    evidence. ADR-0167 FOLLOWUPS §5a can tighten this once a math corpus
+    exists.
+    """
+    if domain == "cognition":
+        return _corpus_index()
+    if domain == "math":
+        return {}
+    return {}
 
 
 # ---------------------------------------------------------------------------
@@ -97,9 +147,14 @@ def _sub_id(parent_candidate_id: str, index: int, payload: dict[str, Any]) -> st
 
 
 def _probe_corpus_direct(
-    subject: str, intent: str, connective: str | None, obj: str | None
+    subject: str,
+    intent: str,
+    connective: str | None,
+    obj: str | None,
+    *,
+    domain: str = "cognition",
 ) -> tuple[EvidencePointer, ...]:
-    """Look in the active reviewed corpus for affirming/falsifying chains.
+    """Look in the domain-selected reviewed corpus for direct evidence.
 
     - Exact match on ``(subject, intent, connective, object)`` is
       affirming evidence (the proposed chain already exists).
@@ -110,7 +165,7 @@ def _probe_corpus_direct(
       reviewed memory).
     """
     out: list[EvidencePointer] = []
-    corpus = _corpus_index()
+    corpus = _corpus_index_for_domain(domain)
     chain = corpus.get((subject, intent))
     if chain is None:
         return ()
@@ -144,7 +199,9 @@ def _probe_corpus_direct(
     return tuple(out)
 
 
-def _probe_pack(subject: str, obj: str | None) -> tuple[EvidencePointer, ...]:
+def _probe_pack(
+    subject: str, obj: str | None, *, domain: str = "cognition"
+) -> tuple[EvidencePointer, ...]:
     """Pack lemma residency is shape-level affirming evidence.
 
     A pack-resident subject means the subject is grounded; if both
@@ -153,7 +210,7 @@ def _probe_pack(subject: str, obj: str | None) -> tuple[EvidencePointer, ...]:
     falsify (pack ``semantic_domains`` don't express negation —
     Call 2 of ADR-0056).
     """
-    pack = _pack_index()
+    pack = _pack_index_for_domain(domain)
     out: list[EvidencePointer] = []
     if subject in pack:
         out.append(EvidencePointer(
@@ -194,10 +251,8 @@ def _decompose(
     """Return decomposed sub-question payloads.
 
     For a Phase B partial chain ``(subject, intent, None, None)``,
-    enumerate every reviewed object the corpus has used with the
-    same ``intent`` and treat each as a candidate match for
-    ``subject``.  This is the deterministic, pack-grounded analogue
-    of "what could this relation be about?"
+    enumerate every reviewed object the domain corpus has used with the
+    same ``intent`` and treat each as a candidate match for ``subject``.
 
     Returns an empty tuple when no decomposition is possible — the
     parent records the gap (Call 1 of ADR-0056) and stops.
@@ -209,7 +264,7 @@ def _decompose(
     if obj is not None:
         # Already has a concrete object — no further decomposition.
         return ()
-    corpus = _corpus_index()
+    corpus = _corpus_index_for_domain(candidate.domain)
     # Deterministic order: sort by object lemma.
     seen_objects: list[tuple[str, str]] = []
     for key, chain in corpus.items():
@@ -352,7 +407,7 @@ def _materialise_sub_candidate(
 
 
 def _probe(
-    chain: dict[str, Any], vault_probe: _VaultProbe | None
+    chain: dict[str, Any], vault_probe: _VaultProbe | None, *, domain: str = "cognition"
 ) -> tuple[EvidencePointer, ...]:
     """Canonical probe order: vault → pack → corpus.
 
@@ -368,8 +423,8 @@ def _probe(
 
     out: list[EvidencePointer] = []
     out.extend(_probe_vault(subject, obj, vault_probe))
-    out.extend(_probe_pack(subject, obj))
-    out.extend(_probe_corpus_direct(subject, intent, connective, obj))
+    out.extend(_probe_pack(subject, obj, domain=domain))
+    out.extend(_probe_corpus_direct(subject, intent, connective, obj, domain=domain))
     return tuple(out)
 
 
@@ -421,7 +476,7 @@ def contemplate(
         )
 
     # Direct probe on the parent chain.
-    direct_evidence = _probe(candidate.proposed_chain, vault_probe)
+    direct_evidence = _probe(candidate.proposed_chain, vault_probe, domain=candidate.domain)
 
     # Decompose into sub-questions.
     sub_payloads = _decompose(candidate)
@@ -510,7 +565,7 @@ def _exemplar_candidate_id(corpus_digest: str, spec_digest: str) -> str:
     """Deterministic candidate id for an exemplar-derived contemplation.
 
     Hash over the corpus digest + the spec digest: identical corpora
-    yield identical specs yield identical candidate ids.  Re-running the
+    yield identical specs yield identical candidate ids. Re-running the
     contemplation pipeline against an unchanged corpus is a no-op for
     the proposal log (idempotency via ProposalLog.find).
     """
@@ -594,6 +649,7 @@ def contemplate_exemplar_corpus(corpus: Any) -> DiscoveryCandidate:
         source_turn_trace=f"exemplar_corpus:{corpus.corpus_digest}",
         pack_consistent=True,
         boundary_clean=True,
+        domain="math",
         review_state="unreviewed",
         polarity="affirms",
         claim_domain="factual",

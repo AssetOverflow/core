@@ -23,7 +23,7 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 from teaching.provenance import Provenance
 from teaching.source import ProposalSource
@@ -52,6 +52,7 @@ DEFAULT_CONTEMPLATION_RUNS_DIR: Path = (
 
 
 ReviewState = Literal["pending", "accepted", "rejected", "withdrawn"]
+ReplayGate = Callable[[dict[str, Any]], Any]
 
 
 @dataclass(frozen=True, slots=True)
@@ -310,7 +311,7 @@ class ProposalLog:
     def record_created(self, proposal: TeachingChainProposal) -> None:
         self._append({"event": "created", "proposal": proposal.as_dict()})
 
-    def record_replay(self, proposal_id: str, evidence: ReplayEvidence) -> None:
+    def record_replay(self, proposal_id: str, evidence: Any) -> None:
         self._append({
             "event": "replay",
             "proposal_id": proposal_id,
@@ -474,6 +475,23 @@ def append_chain_to_corpus(
 # ---------------------------------------------------------------------------
 
 
+def _replay_gate_for_domain(domain: str) -> ReplayGate:
+    """Return the replay gate for a candidate domain.
+
+    Cognition candidates keep the ADR-0057 cognition replay-equivalence
+    gate. Math candidates use the ADR-0163 admissibility gate so wrong=0
+    capability axes and GSM8K train-sample evidence are checked by
+    default instead of depending on each caller to pass an override.
+    """
+    if domain == "cognition":
+        from teaching.replay import run_replay_equivalence
+        return run_replay_equivalence
+    if domain == "math":
+        from teaching.replay import run_admissibility_replay_gate
+        return run_admissibility_replay_gate
+    raise ProposalError(f"unsupported proposal domain: {domain!r}")
+
+
 def propose_from_candidate(
     candidate: DiscoveryCandidate,
     *,
@@ -486,10 +504,10 @@ def propose_from_candidate(
     """End-to-end: build proposal, run replay-equivalence gate,
     auto-reject on regression, otherwise leave pending.
 
-    ``run_replay`` is the replay function (``teaching.replay.
-    run_replay_equivalence`` by default); accepting it as a kwarg
-    keeps tests fast — they can pass a fake that returns a stub
-    ``ReplayEvidence`` without booting the cognition lane.
+    ``run_replay`` overrides the domain-selected replay function for
+    tests or specialised callers. When omitted, the gate is selected
+    from ``candidate.domain``: cognition → ``run_replay_equivalence``;
+    math → ``run_admissibility_replay_gate``.
 
     Submission-time checks fire in this order (ADR-0161 §3):
       1. Capacity (Step 2) — queue_full if pending_count >= cap
@@ -536,11 +554,11 @@ def propose_from_candidate(
             if candidate.proposed_chain
             else None
         ) or candidate.claim_domain
-        
+
         from datetime import datetime, timezone
         stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
         report_path = contemplation_runs_dir / f"{stamp}_queue_full.json"
-        
+
         report_data = {
             "report_kind": "queue_full",
             "emitted_at_revision": _current_revision(),
@@ -604,9 +622,8 @@ def propose_from_candidate(
 
     log.record_created(proposal)
 
-    if run_replay is None:
-        from teaching.replay import run_replay_equivalence as run_replay
-    evidence = run_replay(proposal.proposed_chain)
+    replay = run_replay if run_replay is not None else _replay_gate_for_domain(candidate.domain)
+    evidence = replay(proposal.proposed_chain)
     log.record_replay(proposal.proposal_id, evidence)
 
     if not evidence.replay_equivalent:
@@ -662,12 +679,12 @@ def accept_proposal(
 def reject_proposal(
     proposal_id: str, *, log: ProposalLog, operator_note: str = ""
 ) -> None:
-    record = log.find(proposal_id)
-    if record is None:
+    rec = log.find(proposal_id)
+    if rec is None:
         raise ProposalError(f"proposal not found: {proposal_id}")
-    if record["state"] != "pending":
+    if rec["state"] != "pending":
         raise ProposalError(
-            f"proposal {proposal_id} is {record['state']!r}, not pending"
+            f"proposal {proposal_id} is {rec['state']!r}, not pending"
         )
     log.record_transition(proposal_id, "rejected", operator_note)
 
@@ -675,26 +692,23 @@ def reject_proposal(
 def withdraw_proposal(
     proposal_id: str, *, log: ProposalLog, operator_note: str = ""
 ) -> None:
-    record = log.find(proposal_id)
-    if record is None:
+    rec = log.find(proposal_id)
+    if rec is None:
         raise ProposalError(f"proposal not found: {proposal_id}")
-    if record["state"] != "pending":
+    if rec["state"] != "pending":
         raise ProposalError(
-            f"proposal {proposal_id} is {record['state']!r}, not pending"
+            f"proposal {proposal_id} is {rec['state']!r}, not pending"
         )
     log.record_transition(proposal_id, "withdrawn", operator_note)
 
 
 __all__ = [
-    "DEFAULT_PENDING_CAP",
-    "DEFAULT_PROPOSAL_LOG_PATH",
     "ProposalError",
     "ProposalLog",
-    "RefusedAsDependent",
+    "RefusedAsCapacity",
     "RefusedAsDuplicate",
-    "RefusedAtCapacity",
+    "RefusedAsDependent",
     "ReplayEvidence",
-    "ReviewState",
     "TeachingChainProposal",
     "accept_proposal",
     "append_chain_to_corpus",
