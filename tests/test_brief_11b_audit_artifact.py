@@ -173,11 +173,15 @@ def test_recognized_terms_only_present_on_post_pre_frame_refusals(artifact):
 def test_refusal_reason_distribution_is_stable(artifact):
     """Pin the headline refusal counts so any reader runtime change must
     explicitly update this test alongside the artifact."""
+    # Counts updated by Brief 11B-step-2 lexicon closure (12 drain_token
+    # additions). The unknown_word row strictly decreased; previously-hidden
+    # bottlenecks at downstream frames became visible (real new work, not
+    # regression). See `audit_brief_11.md` for the before/after table.
     expected = {
-        "incomplete_operation": 18,
-        "unexpected_category": 14,
-        "unknown_word": 11,
-        "unattached_quantity": 3,
+        "incomplete_operation": 20,
+        "unexpected_category": 17,
+        "unknown_word": 5,
+        "unattached_quantity": 4,
         "unresolved_pronoun": 3,
         "no_question_target": 1,
     }
