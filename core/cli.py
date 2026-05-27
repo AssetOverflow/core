@@ -1338,6 +1338,7 @@ def _load_candidate_jsonl(path: str) -> Any:
             pack_consistent=bool(payload.get("pack_consistent", True)),
             boundary_clean=bool(payload.get("boundary_clean", True)),
             review_state=payload.get("review_state", "unreviewed"),
+            domain=payload.get("domain", "cognition"),
             polarity=payload.get("polarity", "undetermined"),
             claim_domain=payload.get("claim_domain", "factual"),
             evidence=evidence,
