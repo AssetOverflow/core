@@ -52,6 +52,107 @@ identify the structural commonality across N refusals, scope the
 matcher/injector extension, file a focused PR. That works but it's
 operator-as-decomposer, not engine-as-decomposer.
 
+## Foundational substrate — reasoning articulation
+
+Before Tier 1 ships any proposal, the engine must be able to
+**articulate its own reasoning** in a structured, persistent,
+replayable form.  Articulation isn't surface output (the realizer
+already does that); it's the chain of inferences that took the engine
+from refusal corpus to hypothesis to proposal.
+
+The project thesis names articulation as the fifth step in the anchor
+sequence — *listen → comprehend → recall → think → **articulate** →
+learn from reviewed correction → replay deterministically*.  Today
+CORE articulates surface (templated sentences via the realizer).  It
+does not yet articulate **reasoning**.
+
+Without reasoning-articulation, the three loops cannot work:
+
+- **Loop 1 (self-test)** has nothing to record about what it tested,
+  what intermediate claims it made, or why
+- **Loop 2 (HITL)** reviews a black-box conclusion ("propose X")
+  rather than the chain of inferences that produced X
+- **Loop 3 (feedback)** has no specific reasoning step the operator
+  can target with a rejection rationale; "rejected because step 3
+  was unsound" requires reasoning step 3 to exist as a record
+
+### `ReasoningTrace` schema
+
+Every proposal the decomposer emits carries a `ReasoningTrace` —
+a typed, content-addressable record of the inference steps that
+formed it.
+
+```text
+ReasoningTrace:
+  trace_id: str  # content hash of the step sequence
+  steps: tuple[ReasoningStep, ...]
+
+ReasoningStep:
+  step_index: int
+  step_kind: Literal[
+    "observation",    # raw evidence pulled from the corpus
+    "grouping",       # structural clustering of observations
+    "abstraction",    # equivalence-class claim
+    "hypothesis",     # candidate canonicalization / rule
+    "test_design",    # what would falsify the hypothesis
+    "test_application",  # bridge applied to held-out / known-good
+    "test_result",    # scored outcome
+    "conclusion",     # the proposal that emerges
+  ]
+  input_pointers: tuple[str, ...]  # IDs of prior steps / evidence rows
+  claim: str  # human-readable assertion at this step
+  justification: str  # why the engine made this claim
+  output_payload: object  # type-discriminated by step_kind
+```
+
+Each step is content-addressable.  The trace is byte-identical across
+replays of the same corpus + verdict history.  Proposals carry the
+trace verbatim; operator reviews the trace, not the conclusion alone.
+
+### Why this is a substrate, not a Loop 4
+
+Loops 1/2/3 each *consume* the reasoning trace:
+
+- Loop 1 emits a hypothesis step + test-design step + test-result
+  steps as part of self-checking
+- Loop 2 (HITL review) displays the trace as the artifact under review
+- Loop 3 (feedback) attaches operator verdicts to specific step
+  indices, so "rejected because step 3 was unsound" becomes
+  machine-readable
+
+Without the trace substrate, none of the loops have anything to
+operate on.  The trace is the *what gets articulated*; the loops are
+*what happens with the articulation*.
+
+### Articulation requirements for Tier 1 and Tier 2
+
+**Tier 1 (extensional)** emits traces with `observation → grouping →
+hypothesis → conclusion` steps.  No tests are run; the proposal is a
+named rule, justified by structural commonality.
+
+**Tier 2 (intensional + test-and-learn)** emits traces that include
+`test_design → test_application → test_result` steps for both arms.
+The trace is the *full record* of what was tested, against what
+subset, with what outcome, before the conclusion was reached.
+
+### Replay-equivalence under articulation
+
+The reasoning trace is part of the proposal's deterministic-replay
+contract (ADR-0057).  Same corpus + same verdict index + same
+decomposer code → byte-identical reasoning traces.  This means:
+
+- An old proposal can be re-derived from scratch and the trace must
+  match byte-for-byte
+- Operator verdicts pinned to specific step indices remain valid
+  across replays because the step indices themselves are stable
+- A future decomposer change that breaks trace-byte-identity is
+  detected by the existing replay-equivalence gate
+
+The articulation substrate inherits CORE's existing determinism
+discipline — it does not introduce new non-determinism surface.
+
+---
+
 ## Decision — two tiers
 
 Specify a math-domain corpus-decomposition mechanism that operates at
@@ -194,6 +295,98 @@ that produces a wrong admission in either arm is **rejected internally**
 before reaching HITL.  The operator only ever sees proposals whose
 *both* arms confirm.  Wrong>0 hazards cannot leak through Tier 2; nor
 can replay-equivalence violations of prior ratified work.
+
+### Tier 2 feedback-incorporation loop (Loop 3)
+
+The two-arm self-test (Loop 1) plus HITL ratification (Loop 2) is not
+the full thesis loop.  The project's anchor sequence — *listen →
+comprehend → recall → think → articulate → **learn from reviewed
+correction** → replay deterministically* — names a third loop:
+**learn from the operator's verdict itself**.
+
+The engine must index every operator decision on a proposal and
+incorporate it into future decomposition.  The verdict carries
+provenance:
+
+```text
+ProposalVerdict:
+  proposal_id: str
+  proposal_shape_signature: str  # structural feature hash
+  decision: Literal["ratify", "reject", "refine"]
+  reviewer: str
+  decided_at: str  # ISO timestamp
+  reason: str | None  # optional free-text rationale
+  refinement_payload: object | None  # when decision == "refine"
+```
+
+When the decomposer surfaces a new candidate proposal, it consults the
+verdict index:
+
+- **Approved shape signatures** — reinforce: similar future shapes
+  surface with higher confidence
+- **Rejected shape signatures** — de-prioritize or suppress: future
+  shapes structurally similar to a known-rejection do not re-surface
+  unless the structural-similarity threshold is breached (configured
+  per category)
+- **Refined shape signatures** — capture the gap between proposed and
+  accepted; future decomposition tightens toward the refined form
+
+Concrete example.  The decomposer proposes:
+
+> "Extend possession verbs to include {collected, donated, gained}"
+
+The operator ratifies `{collected, donated}` and rejects `gained`
+with reason: *"gained is a delta-of-attribute (weight, age), not an
+acquisition-result; admitting it as initial possession risks wrong>0
+on questions that ask total state."*
+
+Loop 3 indexes this as:
+
+```text
+approved_shape: ACQUISITION_RESULT_VERB
+  members: {collected, donated}
+  signature: structural hash of (verb_class="acquisition", produces="possession")
+
+rejected_shape: DELTA_OF_ATTRIBUTE_VERB
+  members: {gained}
+  signature: structural hash of (verb_class="delta", produces="state_change_not_possession")
+  rejection_reason: encoded as structural feature
+```
+
+Next time the corpus contains `acquired` (acquisition-result shape),
+the decomposer surfaces it with higher confidence.  If the corpus
+contains `lost` (delta-of-attribute shape), the decomposer flags it
+as structurally similar to a known-rejection and either de-prioritizes
+or suppresses.
+
+This is not gradient descent.  It is **structured feedback memory**:
+deterministic, replayable, auditable.  Operator verdicts have full
+provenance; the index is content-addressable; the decomposer's
+consultation of the index is itself recorded in the proposal's
+provenance trail.
+
+#### Why Loop 3 is load-bearing for the thesis
+
+Without Loop 3, every session starts from zero on proposal-shape
+quality.  Operators repeatedly reject the same shapes because the
+engine never learns the rejection structure.  Over time, operator
+review becomes mechanical: the same kinds of bad proposals keep
+arriving.  That violates the "learn from reviewed correction" anchor.
+
+With Loop 3, the engine's proposal quality *compounds*.  Each ratified
+proposal teaches it what good shapes look like for this corpus; each
+rejection teaches it what shapes the operator considers wrong-class.
+Operator effort over time shifts from "reject the same five things
+again" toward "review novel shapes the engine hasn't seen before."
+That is the thesis loop running.
+
+#### Tier 2 wave update — Loop 3 deliverables
+
+The wave outline below adds dedicated PRs for Loop 3 mechanics
+(verdict schema, structural-feature indexing, decomposer
+consultation).  These ship as part of Tier 2, after Loop 1 and Loop 2
+are operational — the verdict signal needs proposals to exist before
+it has anything to index.
 
 ### Why both tiers, not just Tier 2
 
@@ -349,11 +542,19 @@ decomposer could pay off.
 
 ## Implementation outline (subsequent PRs, not this one)
 
+**Substrate wave (ships first — required by Tiers 1 & 2 + Loop 3)**
+
+- **W0** — `ReasoningTrace` + `ReasoningStep` schemas in
+  `teaching/math_reasoning_trace.py`, canonical-bytes serialization,
+  content-addressable trace IDs, deterministic step-sequence ordering
+- **W0.1** — Trace replay-equivalence test: same corpus + same
+  verdict history → byte-identical trace
+
 **Tier 1 wave**
 
 - **W1** — Schema: `teaching/math_contemplation_proposal.py` with
-  `MathReaderRefusalShapeProposal` dataclass + canonical-bytes
-  serialization
+  `MathReaderRefusalShapeProposal` dataclass (carries `ReasoningTrace`)
+  + canonical-bytes serialization
 - **W2** — Decomposer: `decompose_audit(audit_path) ->
   tuple[MathReaderRefusalShapeProposal, ...]` with naive grouping by
   `(refusal_reason, missing_operator)` and min-2 evidence threshold
@@ -366,19 +567,33 @@ decomposer could pay off.
 **Tier 2 wave (sequenced after Tier 1)**
 
 - **W5** — Schema: `MathReaderInferenceProposal` dataclass with
-  evidence + held-out-test-result fields
+  evidence + both-arm test-result fields
 - **W6** — Structural-equivalence-class recognizer: clusters refusal
   cases by parsed-anchor shape, surfaces candidate canonicalization
   bridges
-- **W7** — Test-and-learn loop: held-out subset selection,
-  bridged-extraction application, admissibility gate run,
-  outcome-scoring (positive / negative / neutral)
+- **W7** — Two-arm test-and-learn loop: held-out subset (Arm 1) +
+  known-good preservation (Arm 2); both must PASS or be neutral
 - **W8** — HITL integration: proposals reach the workbench *only* if
-  the held-out test preserves wrong=0; negative-evidence proposals
-  are auto-rejected internally
+  both arms confirm; otherwise auto-rejected internally
 - **W9** — Inferential-bridge application path: how a ratified bridge
   materializes in the reader/injector (likely a canonicalization
   pre-pass before extraction)
+
+**Loop 3 wave (feedback-incorporation; sequenced after Tier 2 W8)**
+
+- **W10** — `ProposalVerdict` schema + persistent index in
+  `teaching/math_proposal_verdicts/index.jsonl`
+- **W11** — Structural-feature hash for proposal shapes; verdict
+  indexer hooks the existing ratification flow so every
+  approve/reject/refine writes to the index
+- **W12** — Decomposer consultation: pre-emission check against the
+  verdict index; rejected-shape similarity threshold (configurable
+  per category)
+- **W13** — Operator-facing rationale capture: when a verdict is
+  "reject" or "refine", the operator's stated reason is encoded as
+  a structural feature attached to the rejection signature
+- **W14** — Replay-equivalence test for Loop 3: same audit corpus +
+  same verdict history → byte-identical future proposal stream
 
 Each impl PR is small, focused, regression-tested. Cognition's parallel
 machinery is the template for Tier 1; Tier 2 is genuinely novel and
