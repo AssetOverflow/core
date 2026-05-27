@@ -226,6 +226,35 @@ written to catch.
 
 ---
 
+## 7. Wave-Next findings + schema-gap backlog
+
+The Wave-Next injector dispatch (A1–A4) surfaced four findings that
+materially change the next-capability sequencing. **See
+`docs/handoff/WAVE-NEXT-REVISED.md`** for the full pivot — short
+version below.
+
+- **A1 currency_amount** — sandbox-blocked write; real lift potential
+  (`charges`/`earns` verbs not in `_INITIAL_HAS_RE`); reimplementation
+  queued
+- **A2 rate_with_currency** — schema gap (PR #369 merged): `Rate` not
+  in `SentenceChoice` union. Concrete 4-step extension plan in
+  `WAVE-NEXT-REVISED.md` §Schema-Gap 1
+- **A3 multiplicative_aggregation** — emission shape correction needed
+  (`CandidateInitial(product)`, not `Operation(multiply)`). Zero current
+  GSM8K cases match the canonical narrow form anyway; folds into the
+  CompositionClaim ADR
+- **A4 temporal_aggregation** — schema gap: needs `apply_rate`
+  primitive that doesn't exist in the algebra
+
+The actually-tractable next wave is **DCS sub-shape expansion** — one
+focused PR per sub-shape against the existing v1 injector from #315.
+See `WAVE-NEXT-REVISED.md` for the sub-shape sequence.
+
+The original `docs/handoff/WAVE-NEXT-INJECTORS.md` is retained for
+history but superseded.
+
+---
+
 ## Sequencing recommendation
 
 For the operator picking this up next:
