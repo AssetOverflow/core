@@ -125,6 +125,23 @@ def audit_problem_to_evidence(
 # ---------------------------------------------------------------------------
 
 
+# Widened dispatch (ADR-0172 tightening follow-up #2): the original
+# single-key heuristic (refusal_reason only) collapsed every audit_brief_11
+# group to injector_sub_shape because the reader's actual refusal_reasons
+# (unexpected_category, unresolved_pronoun, …) never matched the legacy
+# keys.  The (refusal_reason × missing_operator) pair carries the
+# information needed to route to the queued handlers from
+# docs/handoff/ADR-0167-FOLLOWUPS.md §1.
+_CHANGE_KIND_BY_PAIR: dict[tuple[str, str], str] = {
+    ("unexpected_category", "pre_frame_filler_sentence"): "matcher_extension",
+    ("unexpected_category", "multi_subject_sentence"): "frame_reclassification",
+    ("unexpected_category", "fraction_percentage_literal"): "matcher_extension",
+    ("unexpected_category", "descriptive_frame_question"): "frame_reclassification",
+    ("unresolved_pronoun", "pronoun_resolution"): "matcher_extension",
+}
+
+# Single-key fallback retained for completeness — covers reader refusals
+# that share a refusal_reason regardless of missing_operator.
 _CHANGE_KIND_BY_REFUSAL_REASON: dict[str, str] = {
     "lexicon_entry": "vocabulary_addition",
     "narrowness_violation": "matcher_extension",
@@ -153,9 +170,19 @@ def _audit_row_from_case(case: dict) -> AuditRow:
     )
 
 
-def _change_kind_for_group(refusal_reason: str) -> str:
-    """Heuristic per ADR-0172 §"Six open questions" #1."""
+def _change_kind_for_group(refusal_reason: str, missing_operator: str) -> str:
+    """Dispatch on (refusal_reason, missing_operator) pair, then refusal_reason.
 
+    Per ADR-0172 tightening follow-up #2: the pair-based table covers the
+    GSM8K train-sample audit groups that route to queued handlers
+    (matcher_extension, frame_reclassification).  The single-key fallback
+    preserves the original ADR-0172 §"Six open questions" #1 mapping for
+    reader refusals that share a refusal_reason regardless of operator.
+    """
+
+    paired = _CHANGE_KIND_BY_PAIR.get((refusal_reason, missing_operator))
+    if paired is not None:
+        return paired
     return _CHANGE_KIND_BY_REFUSAL_REASON.get(
         refusal_reason, "injector_sub_shape"
     )
@@ -233,10 +260,16 @@ def _build_reasoning_trace(
             f"The structural change kind for this group is {change_kind!r}."
         ),
         justification=(
-            "Dispatched via the refusal_reason heuristic: lexicon_entry → "
-            "vocabulary_addition; narrowness_violation → matcher_extension; "
-            "frame_unrecognized → frame_reclassification; else → "
-            "injector_sub_shape."
+            "Dispatched via the (refusal_reason, missing_operator) pair table: "
+            "(unexpected_category, pre_frame_filler_sentence|"
+            "fraction_percentage_literal) → matcher_extension; "
+            "(unexpected_category, multi_subject_sentence|"
+            "descriptive_frame_question) → frame_reclassification; "
+            "(unresolved_pronoun, pronoun_resolution) → matcher_extension. "
+            "Refusal-reason fallback: lexicon_entry → vocabulary_addition; "
+            "narrowness_violation → matcher_extension; "
+            "frame_unrecognized → frame_reclassification; "
+            "default → injector_sub_shape."
         ),
         output_payload={"proposed_change_kind": change_kind},
     )
@@ -270,7 +303,7 @@ def _build_proposal_for_group(
 ) -> MathReaderRefusalShapeProposal:
     """Assemble one :class:`MathReaderRefusalShapeProposal` for a group."""
 
-    change_kind = _change_kind_for_group(refusal_reason)
+    change_kind = _change_kind_for_group(refusal_reason, missing_operator)
     payload = _modal_anchor_payload(
         refusal_reason=refusal_reason,
         missing_operator=missing_operator,
@@ -301,6 +334,12 @@ def _build_proposal_for_group(
         "Proposal is evidence-only; ratification handler is the wrong=0 "
         "surface, not this proposal."
     )
+    # Structural gap (ADR-0172 tightening follow-up #3): the evidence record
+    # carries `sub_type` but not `shape_category`, so the proposal cannot
+    # derive shape_category from the evidence today.  All groups emit
+    # UNCATEGORIZED until a future wave adds shape_category to
+    # MathReaderRefusalEvidence (or the reader's ShapeCategory inference is
+    # plumbed through the audit row).  Do NOT invent a shape_category here.
     return build_proposal(
         shape_category=ShapeCategory.UNCATEGORIZED,
         structural_commonality=structural_commonality,

@@ -290,7 +290,13 @@ def read_eval_lane(lane_name: str) -> EvalLaneSummary:
 
 
 def _load_math_proposals_raw(jsonl_path: Path) -> list[dict[str, Any]]:
-    """Parse proposals.jsonl; derive proposal_id = sha256(canonical_line_bytes)."""
+    """Parse proposals.jsonl into self-contained record dicts.
+
+    ADR-0172 tightening follow-up #1: each line is a self-contained record
+    written by :func:`teaching.math_contemplation_proposal.to_jsonl_record`
+    that carries its own ``proposal_id``, full ``evidence_pointers``, and
+    full ``reasoning_trace.steps``.  No decomposer re-run required.
+    """
     if not jsonl_path.exists():
         return []
     results: list[dict[str, Any]] = []
@@ -298,16 +304,14 @@ def _load_math_proposals_raw(jsonl_path: Path) -> list[dict[str, Any]]:
         stripped = raw_line.strip()
         if not stripped:
             continue
-        proposal_id = hashlib.sha256(stripped).hexdigest()
         data: dict[str, Any] = json.loads(stripped)
-        data["proposal_id"] = proposal_id
         results.append(data)
     return results
 
 
 def _math_proposal_summary(record: dict[str, Any]) -> MathProposalSummary:
-    payload = record.get("proposed_change_payload") or {}
-    evidence_count = int(payload.get("evidence_count", 0)) if isinstance(payload, dict) else 0
+    evidence_pointers = record.get("evidence_pointers", [])
+    evidence_count = len(evidence_pointers) if isinstance(evidence_pointers, list) else 0
     return MathProposalSummary(
         proposal_id=str(record.get("proposal_id", "")),
         domain="math",
@@ -325,22 +329,24 @@ def list_math_proposals(*, jsonl_path: Path | None = None) -> list[MathProposalS
     return [_math_proposal_summary(r) for r in records]
 
 
-def _math_trace_steps_from_proposal(proposal: Any) -> list[MathReasoningStep]:
-    """Extract 4 ReasoningStep objects from a MathReaderRefusalShapeProposal."""
-    trace = getattr(proposal, "reasoning_trace", None)
-    if trace is None:
+def _math_trace_steps_from_record(record: dict[str, Any]) -> list[MathReasoningStep]:
+    """Extract 4 reasoning steps from a self-contained JSONL record."""
+    trace = record.get("reasoning_trace") or {}
+    if not isinstance(trace, dict):
         return []
-    steps_raw = getattr(trace, "steps", ())
+    steps_raw = trace.get("steps", []) or []
     steps: list[MathReasoningStep] = []
     for step in steps_raw:
+        if not isinstance(step, dict):
+            continue
         steps.append(
             MathReasoningStep(
-                step_index=int(getattr(step, "step_index", 0)),
-                step_kind=str(getattr(step, "step_kind", "")),
-                claim=str(getattr(step, "claim", "")),
-                justification=str(getattr(step, "justification", "")),
-                input_pointers=list(getattr(step, "input_pointers", ())),
-                output_payload=getattr(step, "output_payload", {}),
+                step_index=int(step.get("step_index", 0)),
+                step_kind=str(step.get("step_kind", "")),
+                claim=str(step.get("claim", "")),
+                justification=str(step.get("justification", "")),
+                input_pointers=list(step.get("input_pointers", [])),
+                output_payload=step.get("output_payload"),
             )
         )
     return steps
@@ -350,39 +356,38 @@ def read_math_proposal(
     proposal_id: str,
     *,
     jsonl_path: Path | None = None,
-    audit_path: Path | None = None,
+    audit_path: Path | None = None,  # retained for backward-compat; unused
 ) -> MathProposalDetail:
-    """Return full proposal detail including 4-step reasoning trace.
+    """Return full proposal detail loaded entirely from the JSONL record.
 
-    Re-runs :func:`teaching.math_contemplation.decompose_audit` to recover
-    the full :class:`MathReaderRefusalShapeProposal` (canonical bytes only
-    carry the trace_id, not the full steps).  Deterministic: same audit →
-    same proposals.
+    ADR-0172 tightening follow-up #1: no longer re-runs decompose_audit().
+    The self-contained JSONL line carries the full reasoning_trace.steps
+    and evidence_pointers; the workbench is decoupled from the decomposer.
+
+    The ``audit_path`` keyword is preserved for call-site backward
+    compatibility but is unused.
     """
-    from teaching.math_contemplation import decompose_audit
+    del audit_path  # decoupled — kept for backward-compat callers
 
-    # Verify the proposal_id exists in the JSONL first (fast path).
     path = jsonl_path or MATH_PROPOSALS_JSONL
     records = _load_math_proposals_raw(path)
     record = next((r for r in records if r.get("proposal_id") == proposal_id), None)
     if record is None:
         raise FileNotFoundError(proposal_id)
 
-    # Re-run decomposer to get the full proposal with trace steps.
-    apath = audit_path or _DEFAULT_MATH_AUDIT_PATH
-    full_proposals = decompose_audit(apath)
-    full = next((p for p in full_proposals if p.proposal_id == proposal_id), None)
-    if full is None:
-        raise FileNotFoundError(f"{proposal_id} (not found in decomposer output)")
-
     change_kind = str(record.get("proposed_change_kind", ""))
     handler_name = _HANDLER_DISPATCH.get(change_kind)
 
-    trace_id = str(record.get("reasoning_trace_id", ""))
-    trace_steps = _math_trace_steps_from_proposal(full)
+    trace_obj = record.get("reasoning_trace") or {}
+    trace_id = str(trace_obj.get("trace_id", "")) if isinstance(trace_obj, dict) else ""
+    trace_steps = _math_trace_steps_from_record(record)
 
-    evidence_pointers = record.get("evidence_pointers", [])
-    evidence_hashes = list(evidence_pointers) if isinstance(evidence_pointers, list) else []
+    evidence_pointers_raw = record.get("evidence_pointers", []) or []
+    evidence_hashes = [
+        str(ev.get("evidence_hash", ""))
+        for ev in evidence_pointers_raw
+        if isinstance(ev, dict)
+    ]
 
     suggested_cli: str | None = None
     if handler_name == "LexicalClaim":
