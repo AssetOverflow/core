@@ -295,8 +295,20 @@ def _match_rate_with_currency(
     Narrowness: every extracted anchor's ``currency_symbol`` and
     ``per_unit`` MUST be in the spec's observed sets.  A statement
     carrying an unseen currency or per-unit value returns ``None``.
+
+    ME-1 (ADR-0169 composition consumption) — when
+    ``spec["anchor_kind"] == "currency_per_unit_composition"`` this
+    matcher dispatches to :func:`_try_extract_currency_per_unit_composition_anchor`
+    which publishes ``composition_shape`` + a pre-composed
+    :class:`CandidateInitial` in ``parsed_anchors`` so the consumption
+    path in :func:`generate.recognizer_anchor_inject.inject_from_match`
+    can admit the statement under an operator-ratified
+    ``multiplicative_composition`` entry.
     """
-    if spec.get("anchor_kind") != "currency_per_unit_rate":
+    anchor_kind = spec.get("anchor_kind")
+    if anchor_kind == "currency_per_unit_composition":
+        return _try_extract_currency_per_unit_composition_anchor(statement, spec)
+    if anchor_kind != "currency_per_unit_rate":
         return None
     observed_symbols = set(spec.get("observed_currency_symbols") or ())
     observed_per_units = set(spec.get("observed_per_units") or ())
@@ -340,6 +352,176 @@ def _match_rate_with_currency(
     if not (cmin <= len(anchors) <= cmax):
         return None
     return (tuple(anchors), "rate")
+
+
+# ---------------------------------------------------------------------------
+# ME-1 — currency-per-unit COMPOSITION extension (ADR-0169 consumption).
+#
+# Lights up the dormant consumption path shipped by CW-2: when a
+# statement carries a count-of-items + per-item cost shape with a
+# same-sentence proper-noun subject, this helper publishes a
+# pre-composed CandidateInitial in ``parsed_anchors`` along with the
+# ``composition_shape`` key the composition_registry gates on.
+#
+# Subject-binding discipline: Option A from
+# docs/handoff/MATCHER-EXTENSION-DISPATCH-PACK.md — refuse the
+# composition emission when no same-sentence proper-noun subject is
+# present. Option B (placeholder subject) is forbidden by the brief;
+# Option C (cross-sentence lookup) ships in ME-2.
+# ---------------------------------------------------------------------------
+
+_CURRENCY_SYMBOL_TO_UNIT: Final[dict[str, str]] = {
+    "$": "dollars",
+    "£": "pounds",
+    "€": "euros",
+    "¥": "yen",
+}
+
+_PER_ITEM_TOKENS: Final[frozenset[str]] = frozenset({"each", "apiece"})
+
+_COMPOSITION_VERBS: Final[frozenset[str]] = frozenset({"buys", "bought"})
+
+_COMPOSITION_SHAPE_MULTIPLICATIVE: Final[str] = "bound(count) × bound(unit_cost)"
+
+
+# Shape: `<Subject> <buy-verb> <count> <noun-phrase>(?: at| for) <$amount>(?: each|apiece)`
+# Example: "Maria bought 3 vet appointments at $400 each."
+_COMPOSITION_SUBJECT_BUY_RE: Final[re.Pattern[str]] = re.compile(
+    r"""(?x)
+    ^\s*
+    (?P<subject>[A-Z][a-zA-Z]+)            # same-sentence proper-noun subject
+    \s+
+    (?P<verb>buys|bought)
+    \s+
+    (?P<count>\d+(?:\.\d+)?)               # outer count token (integer/decimal)
+    \s+
+    (?P<noun>[a-z][a-z\s]+?)               # counted noun phrase (lowercase words)
+    \s+
+    (?:at|for)\s+
+    (?P<symbol>[\$£€¥])
+    (?P<amount>\d+(?:\.\d+)?)              # unit cost
+    \s+
+    (?P<per_unit>each|apiece)
+    \b
+    """,
+)
+
+
+def _try_extract_currency_per_unit_composition_anchor(
+    statement: str, spec: Mapping[str, Any]
+) -> tuple[tuple[Mapping[str, Any], ...], Literal["rate"]] | None:
+    """Extract a pre-composed CandidateInitial anchor or refuse.
+
+    Narrowness layers (all must hold; any failure returns ``None``):
+
+    1. ``spec["anchor_kind"] == "currency_per_unit_composition"`` (caller-checked)
+    2. ``spec["observed_currency_symbols"]`` and
+       ``spec["observed_per_units"]`` are non-empty (the same narrowness
+       as the rate matcher; protects against unseen currency / per-unit)
+    3. Exactly one match of :data:`_COMPOSITION_SUBJECT_BUY_RE` in the
+       statement (multi-match refuses to avoid ambiguity)
+    4. Currency symbol in ``observed_currency_symbols``
+    5. Per-unit token in ``observed_per_units``
+    6. Outer count is a positive integer or float (``> 0``)
+    7. Unit cost is a positive integer or float (``> 0``)
+    8. The composed value (``count × unit_cost``) is finite and positive
+    9. The subject is not in the existing refused-subject set
+       (mirrors ``_REFUSED_SUBJECT_TOKENS`` for parity with the
+       discrete-count extractor)
+
+    On success the anchor carries:
+
+    - ``composition_shape``: the canonical pattern string ratified
+      operators bind under ``multiplicative_composition``
+    - ``composed_initial``: a fully-constructed CandidateInitial
+    - audit fields: ``currency_symbol``, ``amount``, ``per_unit``,
+      ``outer_count``, ``subject``, ``verb``
+    """
+    observed_symbols = set(spec.get("observed_currency_symbols") or ())
+    observed_per_units = set(spec.get("observed_per_units") or ())
+    if not observed_symbols or not observed_per_units:
+        return None
+
+    matches = list(_COMPOSITION_SUBJECT_BUY_RE.finditer(statement))
+    if len(matches) != 1:
+        # Refusal-preferring: zero matches (no shape) or multi-match
+        # (ambiguity) both refuse the composition emission.
+        return None
+
+    m = matches[0]
+    subject = m.group("subject")
+    if subject.lower() in _REFUSED_SUBJECT_TOKENS:
+        return None
+    verb = m.group("verb").lower()
+    if verb not in _COMPOSITION_VERBS:
+        return None
+
+    symbol = m.group("symbol")
+    if symbol not in observed_symbols:
+        return None
+
+    per_unit_lc = m.group("per_unit").lower()
+    if per_unit_lc not in observed_per_units:
+        return None
+    if per_unit_lc not in _PER_ITEM_TOKENS:
+        # Defense in depth: only per-item quantifiers compose
+        # multiplicatively in the v1 scope. ``per hour`` is rate, not
+        # composition.
+        return None
+
+    count_token = m.group("count")
+    amount_token = m.group("amount")
+    try:
+        outer_count: float = float(count_token)
+        unit_cost: float = float(amount_token)
+    except ValueError:
+        return None
+    if outer_count <= 0 or unit_cost <= 0:
+        return None
+
+    composed_value_f = outer_count * unit_cost
+    if composed_value_f != composed_value_f:  # NaN guard
+        return None
+    composed_value: int | float
+    if composed_value_f.is_integer() and "." not in count_token and "." not in amount_token:
+        composed_value = int(composed_value_f)
+    else:
+        composed_value = composed_value_f
+
+    unit = _CURRENCY_SYMBOL_TO_UNIT.get(symbol)
+    if unit is None:
+        return None  # Defense in depth — observed set should already filter
+
+    # Lazy import: CandidateInitial / InitialPossession / Quantity live
+    # in modules that don't depend on recognizer_match — import here to
+    # avoid coupling at module load time.
+    from generate.math_candidate_parser import CandidateInitial
+    from generate.math_problem_graph import InitialPossession, Quantity
+
+    composed_initial = CandidateInitial(
+        initial=InitialPossession(
+            entity=subject,
+            quantity=Quantity(value=composed_value, unit=unit),
+        ),
+        source_span=m.group(0),
+        matched_anchor=verb,
+        matched_value_token=str(composed_value),
+        matched_unit_token=unit,
+        matched_entity_token=subject,
+    )
+
+    anchor: Mapping[str, Any] = {
+        "kind": "currency_per_unit_composition",
+        "composition_shape": _COMPOSITION_SHAPE_MULTIPLICATIVE,
+        "composed_initial": composed_initial,
+        "currency_symbol": symbol,
+        "amount": amount_token,
+        "per_unit": per_unit_lc,
+        "outer_count": count_token,
+        "subject": subject,
+        "verb": verb,
+    }
+    return ((anchor,), "rate")
 
 
 # ---------------------------------------------------------------------------
