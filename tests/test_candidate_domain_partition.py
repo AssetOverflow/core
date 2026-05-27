@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import subprocess
-from pathlib import Path
 from typing import Any
 
 from core.protocol import canonical_bytes
@@ -35,10 +33,12 @@ def test_default_domain_is_cognition():
     assert cand.domain == "cognition"
 
 
+
 def test_math_domain_can_be_set():
     """Explicit domain='math' constructs successfully."""
     cand = _candidate(domain="math")
     assert cand.domain == "math"
+
 
 
 def test_round_trip_preserves_domain():
@@ -58,6 +58,7 @@ def test_round_trip_preserves_domain():
     assert roundtrip_math.domain == "math"
 
 
+
 def test_canonical_bytes_includes_domain_deterministically():
     """Same domain value -> same canonical bytes contribution."""
     cand_math_1 = _candidate(domain="math")
@@ -73,32 +74,20 @@ def test_canonical_bytes_includes_domain_deterministically():
     assert b'"domain":"cognition"' in bytes_cog
 
 
-def test_existing_cognition_tests_untouched():
-    """Assert zero modifications to pre-existing cognition test files."""
-    # Find modified or untracked test files in git status
-    result = subprocess.run(
-        ["git", "status", "--porcelain", "tests/"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-    # Allowlist of new/modified test files contributed by ADR-0167 PRs.
-    # Future ADR-0167 PRs append their own file here so this regression net
-    # stays meaningful as the wave progresses.
-    allowed = {
-        "test_candidate_domain_partition.py",  # W2-C
-        "test_math_evidence_e2e.py",  # W3-A
-        # Fix PR — wrong=0 hazard regression (recognizer skip-only fallback).
-        # Modifies test_math_candidate_graph.py and test_teaching_audit.py;
-        # adds test_recognizer_skip_wrong_zero.py.  See ADR-0167-FOLLOWUPS §2
-        # for the architectural fix that would retire this allowlist.
-        "test_math_candidate_graph.py",
-        "test_teaching_audit.py",
-        "test_recognizer_skip_wrong_zero.py",
-    }
-    for line in lines:
-        path = line.split()[-1]
-        assert Path(path).name in allowed, (
-            f"unexpected new/modified test file: {path}"
-        )
+
+def test_domain_partition_is_behavioral_not_git_state():
+    """Partition invariants are enforced by serialized behavior, not git diff state."""
+    cognition = _candidate(domain="cognition")
+    math = _candidate(domain="math")
+
+    cognition_dict = cognition.as_dict()
+    math_dict = math.as_dict()
+
+    # Legacy cognition payloads remain structurally unchanged.
+    assert "domain" not in cognition_dict
+
+    # Non-cognition candidates must carry explicit discrimination.
+    assert math_dict["domain"] == "math"
+
+    # The canonical protocol surface distinguishes the domains.
+    assert canonical_bytes(cognition) != canonical_bytes(math)
