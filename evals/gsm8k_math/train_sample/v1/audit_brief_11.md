@@ -204,3 +204,95 @@ from `AuditRow` → `MathReaderRefusalEvidence` → `claim_signature` →
 `apply_lexical_claim` → re-audit, plus a cross-process determinism check and
 the cognition-domain partition guard from W2-C.
 
+## Wave-Next A2 — `rate_with_currency` injector — schema-refusal delta
+
+Branch: `feat/injector-rate-with-currency`.  Brief: Wave-Next A2 (see
+`docs/handoff/WAVE-NEXT-INJECTORS.md`).
+
+### Schema decision
+
+**Does `Quantity` structurally model a per-unit rate? No — but a separate
+`Rate` type (ADR-0122) does.**  The schema-refusal hinges not on the
+absence of `Rate` but on its absence from the per-sentence injector
+contract:
+
+- `Quantity` is a scalar + single unit pair; it carries no
+  numerator/denominator distinction (verified in
+  `tests/test_injector_rate_with_currency.py::TestSchemaEvidence`).
+- `Rate(value, numerator_unit, denominator_unit)` exists at
+  `generate/math_problem_graph.py:78` and is the operand of
+  `Operation(kind='apply_rate')`.
+- The per-sentence dispatch contract is
+  `SentenceChoice = Union[CandidateInitial, CandidateOperation]`
+  (`generate/math_candidate_graph.py:152`).  There is no
+  `CandidateRate` variant for the injector to deposit.
+- A rate-declaration sentence alone ("Tina makes $18.00 an hour.")
+  carries no denominator quantity, so it cannot be coerced into a
+  complete `apply_rate` `CandidateOperation` either.
+
+### What this PR delivers
+
+- `generate/recognizer_anchor_inject.py` — new
+  `inject_rate_with_currency(match, sentence) -> ()` function plus
+  dispatch-table entry for `ShapeCategory.RATE_WITH_CURRENCY`.  The
+  injector returns `()` for every input shape and documents the
+  schema gap inline.
+- `tests/test_injector_rate_with_currency.py` — 16 tests across six
+  pin classes: schema evidence, schema refusal, dispatch wired, case
+  0050 hazard pin, determinism, and wrong=0 invariant.
+
+### Eval delta
+
+| dimension | before A2 | after A2 |
+|---|---:|---:|
+| correct  | 3  | 3  |
+| wrong    | 0  | 0  |
+| refused  | 47 | 47 |
+
+Lift count: **0** (expected — the schema decision is "Rate is not in
+`SentenceChoice`," so v1 cannot emit state).  The PR's deliverable is
+documenting the gap; the case-by-case picture is unchanged.
+
+### Case 0050 hazard verification
+
+Sentence 0 of case `gsm8k-train-sample-v1-0050` is
+"Mark does a gig every other day for 2 weeks." — it carries no
+currency symbol, so the `rate_with_currency` recognizer never matches
+it.  Even if A2 v1 emitted state (it doesn't), this case is not
+reachable through the A2 path.  Pinned by
+`tests/test_injector_rate_with_currency.py::TestCase0050HazardPin`
+(sentence-zero currency-absence check + end-to-end refusal check).
+
+### Follow-up note — "rate-type schema needs extension"
+
+For a future PR to lift any of the rate-shaped refusals via the
+recognizer-injector path, the `SentenceChoice` union must be widened.
+Concretely:
+
+1. Add a `CandidateRate` dataclass to
+   `generate/math_candidate_parser.py` (sibling of `CandidateInitial`
+   and `CandidateOperation`) carrying a `Rate` operand keyed by
+   actor, with source-span provenance fields analogous to the
+   existing two `Candidate*` types.
+2. Extend `SentenceChoice = Union[CandidateInitial,
+   CandidateOperation]` to include `CandidateRate`.  Update
+   `_slot_count`, `_collapse_per_sentence_ties`, `_initial_admissible`
+   (or add a sibling `_rate_admissible`), and the per-sentence
+   admission gate in
+   `generate.math_candidate_graph.parse_and_solve`.
+3. Teach `parse_and_solve` to compose an accepted `CandidateRate`
+   with a downstream `apply_rate`/multiply-shaped question.  The
+   existing `extract_earnings_candidates` short-circuit path is the
+   closest precedent and should be unified with the new
+   `CandidateRate` flow rather than left as a sibling.
+4. Only after (1)–(3) ship can `inject_rate_with_currency` emit
+   `CandidateRate` and start lifting rate-shaped refusals.  The
+   matcher (`generate/recognizer_match.py:_match_rate_with_currency`)
+   already extracts the necessary `(currency_symbol, amount,
+   per_unit)` triple; an entity-extraction extension is the only
+   additional matcher work required.
+
+This sequencing keeps the wrong=0 doctrine intact: no widening of
+admissible solver state until the schema extension is reviewed and
+the round-trip filter is updated.
+
