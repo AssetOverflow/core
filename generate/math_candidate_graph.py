@@ -727,9 +727,24 @@ def parse_and_solve(
                     )
                     injected = inject_from_match(recognizer_match, s)
                     if injected:
-                        admitted: list[SentenceChoice] = [
-                            c for c in injected if _initial_admissible(c)
-                        ]
+                        # ADR-0170 — dispatch admissibility on the
+                        # concrete candidate type. CandidateInitial uses
+                        # the existing _initial_admissible gate;
+                        # CandidateOperation uses the parser's
+                        # roundtrip_admissible gate (same predicate
+                        # operations from the regex path already pass
+                        # through). No new admission semantics — each
+                        # type is gated by the predicate it was always
+                        # gated by; the dispatch just unifies the
+                        # injector path with the parser path.
+                        admitted: list[SentenceChoice] = []
+                        for c in injected:
+                            if isinstance(c, CandidateInitial):
+                                if _initial_admissible(c):
+                                    admitted.append(c)
+                            elif isinstance(c, CandidateOperation):
+                                if roundtrip_admissible(c):
+                                    admitted.append(c)
                         if len(admitted) == len(injected) and admitted:
                             per_sentence_choices.append(
                                 _collapse_per_sentence_ties(admitted)

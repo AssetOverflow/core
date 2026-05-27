@@ -42,12 +42,22 @@ section) is preserved across this module:
 
 from __future__ import annotations
 
-from typing import Mapping
+from typing import Mapping, Union
 
 from evals.refusal_taxonomy.shape_categories import ShapeCategory
-from generate.math_candidate_parser import CandidateInitial
+from generate.math_candidate_parser import CandidateInitial, CandidateOperation
 from generate.math_problem_graph import InitialPossession, MathGraphError, Quantity
 from generate.recognizer_match import RecognizerMatch
+
+# ADR-0170 — the widened injector emission type. Per-category injectors
+# may emit a tuple of ``CandidateInitial`` (existing) or
+# ``CandidateOperation`` (new, ADR-0170). The downstream
+# ``per_sentence_choices`` aggregator dispatches admissibility on the
+# concrete type (``_initial_admissible`` vs ``roundtrip_admissible``).
+# No new admission paths are introduced by the widening itself; new
+# emission shapes ship in subsequent per-injector PRs (ADR-0170 §"impl
+# outline" W2/W3/W4/W5).
+InjectorEmission = Union[CandidateInitial, CandidateOperation]
 
 
 # ---------------------------------------------------------------------------
@@ -58,12 +68,15 @@ from generate.recognizer_match import RecognizerMatch
 def inject_from_match(
     match: RecognizerMatch,
     sentence: str,
-) -> tuple[CandidateInitial, ...]:
+) -> tuple[InjectorEmission, ...]:
     """Dispatch a recognizer match to its per-category injector.
 
     Returns an empty tuple when the category has no v1 injector or when
-    the v1 injector refused.  Skip-only behavior (the round-2 default)
-    is the empty-tuple result.
+    the v1 injector refused. Per ADR-0170, the return type is now
+    ``tuple[InjectorEmission, ...]`` (``CandidateInitial | CandidateOperation``)
+    so per-category injectors can emit operations as well as initials.
+    The v1 ``discrete_count_statement`` injector continues to emit only
+    ``CandidateInitial`` — the widening is type-level only in this PR.
     """
     injector = _INJECTORS.get(match.category)
     if injector is None:
@@ -260,6 +273,7 @@ _INJECTORS: Mapping[ShapeCategory, "type"] = {
 
 
 __all__ = [
+    "InjectorEmission",
     "inject_from_match",
     "inject_discrete_count_statement",
 ]
