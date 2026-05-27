@@ -58,6 +58,12 @@ _UNIT_CLASS_CATEGORIES: Final[dict[str, str]] = {
     "time_unit_noun": "time",
 }
 
+_PRONOUN_SURFACE_FORMS: Final[frozenset[str]] = frozenset({
+    "she", "he", "they", "it", "her", "him", "his", "hers",
+})
+
+_CURRENCY_CANONICAL_UNIT: Final[str] = "dollars"
+
 
 def _infer_gender(entity_name: str) -> str:
     """Return 'female', 'male', or 'unknown' for a proper-noun entity.
@@ -141,7 +147,7 @@ def build_problem_state_from_candidates(
             )
         elif isinstance(choice, _CO):
             actor = choice.op.actor
-            if actor not in seen_names:
+            if actor not in seen_names and actor.lower() not in _PRONOUN_SURFACE_FORMS:
                 gender = _infer_gender(actor)
                 entity_registry.append(
                     EntityRef(
@@ -153,15 +159,16 @@ def build_problem_state_from_candidates(
                 seen_names.add(actor)
             if choice.op.target is not None and choice.op.target not in seen_names:
                 tgt = choice.op.target
-                gender_t = _infer_gender(tgt)
-                entity_registry.append(
-                    EntityRef(
-                        canonical_name=tgt,
-                        gender=gender_t,
-                        first_mention_position=len(seen_names),
+                if tgt.lower() not in _PRONOUN_SURFACE_FORMS:
+                    gender_t = _infer_gender(tgt)
+                    entity_registry.append(
+                        EntityRef(
+                            canonical_name=tgt,
+                            gender=gender_t,
+                            first_mention_position=len(seen_names),
+                        )
                     )
-                )
-                seen_names.add(tgt)
+                    seen_names.add(tgt)
             # Operand — may be Quantity or Comparison; only carry scalar Quantity
             from generate.math_problem_graph import Quantity
             operand_ref: QuantityRef | None = None
@@ -200,6 +207,7 @@ def build_problem_state_from_candidates(
 
 _TOKEN_SPLIT_RE: Final[re.Pattern[str]] = re.compile(r"\s+")
 _PUNCT_STRIP_RE: Final[re.Pattern[str]] = re.compile(r"^[\"'()\[\]{}<>]+|[\"'()\[\]{}<>]+$")
+_POSSESSIVE_RE: Final[re.Pattern[str]] = re.compile(r"'s$|'s$")
 
 
 def _tokenise_sentence(sentence: str) -> list[str]:
@@ -221,6 +229,7 @@ def _tokenise_sentence(sentence: str) -> list[str]:
             body = raw
             tail = None
         body = _PUNCT_STRIP_RE.sub("", body)
+        body = _POSSESSIVE_RE.sub("", body)
         if body:
             tokens.append(body)
         if tail:
@@ -255,6 +264,8 @@ def _extract_unit_from_question(question_sentence: str, unit_class: str) -> str 
     for tok in _tokenise_sentence(question_sentence):
         cat, _surface = _classify(tok)
         if cat in target_categories:
+            if unit_class == "currency":
+                return _CURRENCY_CANONICAL_UNIT
             return _canonicalize_unit(tok)
     return None
 
@@ -339,11 +350,17 @@ def project_to_candidate_unknown(
     from generate.math_problem_graph import Unknown
 
     entity: str | None = slot.entity
-    # Validate entity against the registry when set.
+    # Validate entity against the registry when set (case-insensitive).
+    # The reader produces lowercase; the regex parser produces Title Case.
     if entity is not None:
-        known = {e.canonical_name for e in problem_state.entity_registry}
-        if entity not in known:
+        known_by_lower = {
+            e.canonical_name.lower(): e.canonical_name
+            for e in problem_state.entity_registry
+        }
+        canonical = known_by_lower.get(entity.lower())
+        if canonical is None:
             return None
+        entity = canonical
 
     matched_unit_token = canonical_unit
     matched_entity_token = entity

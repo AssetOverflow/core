@@ -333,12 +333,24 @@ def _try_reader_for_question(
     # Flatten per_sentence_choices to a single list for state construction.
     # Take the first choice per sentence (deterministic: tiebreaker already ran).
     flat: list[SentenceChoice] = [choices[0] for choices in per_sentence_choices if choices]
+
+    # Conservative guard: when statements were recognized-skipped (graph
+    # may be incomplete), refuse — the solver could produce a wrong answer
+    # from partial state.  Preserves wrong=0 by construction.
+    if len(per_sentence_choices) < statement_sentence_count:
+        return None
+
     try:
         problem_state = build_problem_state_from_candidates(flat, statement_sentence_count)
     except Exception:
         return None  # construction failure → fall through
 
-    result = invoke_reader_for_question(question_sentence, problem_state)
+    effective_question = question_sentence
+    stripped = _strip_conditional_prefix(question_sentence)
+    if stripped is not None:
+        effective_question = stripped
+
+    result = invoke_reader_for_question(effective_question, problem_state)
     if isinstance(result, tuple):
         slot, canonical_unit = result
         trace_out.append(make_admit_trace_event(slot, canonical_unit))

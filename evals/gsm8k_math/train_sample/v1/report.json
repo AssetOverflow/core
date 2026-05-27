@@ -53,7 +53,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0009",
-      "reason": "candidate_graph: no admissible candidate for question: 'If Jen has 150 ducks, how many total birds does she have?'",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "verdict": "refused"
     },
     {
