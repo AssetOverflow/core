@@ -72,24 +72,19 @@ def test_inject_from_match_return_type_is_widened():
 # ---------------------------------------------------------------------------
 
 
-def test_discrete_count_injector_still_emits_only_candidate_initial():
-    """W1 is type-level only. The existing
-    ``inject_discrete_count_statement`` returns ``CandidateInitial`` —
-    not ``CandidateOperation`` — at runtime. This is the byte-identical
-    behavior guarantee for the W1 PR.
+def test_discrete_count_injector_return_type_post_w2():
+    """W1 was type-level only; W2 (ADR-0170 implementation) extends the
+    DCS injector to emit ``CandidateOperation(add)`` for acquisition
+    verbs alongside ``CandidateInitial`` for possession verbs.
 
-    Mechanically: pre-W1 the function returned
-    ``tuple[CandidateInitial, ...]``. Post-W1 it still does. Subsequent
-    PRs (W2 DCS-S1 acquisition, W3 currency, W4 multiplicative) widen
-    the per-injector emission shapes; W1 ships only the dispatcher
-    contract."""
+    The function's return type is now the widened
+    ``tuple[InjectorEmission, ...]``. The pin verifies the contract is
+    consistent with the dispatcher's widened type — runtime emission
+    is verified separately by the W2 acquisition-verb tests."""
     import inspect
     sig = inspect.signature(inject_discrete_count_statement)
-    # With ``from __future__ import annotations`` the return annotation
-    # is stored as a string. The W1 pin is that the existing DCS
-    # injector's *narrower* return type is unchanged — only the
-    # dispatcher (``inject_from_match``) widens.
-    assert sig.return_annotation == "tuple[CandidateInitial, ...]"
+    # Post-W2 the DCS injector itself emits the widened union type.
+    assert sig.return_annotation == "tuple[InjectorEmission, ...]"
 
 
 # ---------------------------------------------------------------------------

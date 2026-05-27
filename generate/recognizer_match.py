@@ -457,6 +457,32 @@ _POSSESSION_VERBS: Final[frozenset[str]] = frozenset({
     "has", "have", "had",
 })
 
+# ADR-0170 W2 — acquisition verbs: surface verbs that grammatically place
+# the actor as the *gainer* of the operand quantity, NOT as having the
+# operand as an initial state.  Per ADR-0131.G.1 these verbs route to
+# CandidateOperation(add), not CandidateInitial — emitting them as
+# initials would create branch disagreement with the regex parser's
+# ADD_VERBS path.
+#
+# Each member is also a member of generate.math_roundtrip.ADD_VERBS so
+# the downstream CandidateOperation post-init whitelist accepts the
+# matched_verb token.
+#
+# DELIBERATELY EXCLUDED:
+# - "gained / gains / gain": delta-of-attribute (weight, age) — admitting
+#   as add-operation risks wrong>0 on questions that ask total state
+# - "donated / donates / donate": SUBTRACT verb (actor gives away)
+# - "saved / saves / save": ambiguous (saved time vs saved up money)
+#
+# Widening this set is operator-reviewable per the wrong=0 hazard
+# documented in feedback-wrong-zero-hazard-case-0050.
+_ACQUISITION_VERBS: Final[frozenset[str]] = frozenset({
+    "collected", "collects", "collect",
+    "received", "receives", "receive",
+    "bought", "buys", "buy",
+    "got", "gets", "get",
+})
+
 # Pronoun subjects refused at extraction (ambiguous referent).  The
 # extractor requires a concrete proper-noun subject the source span can
 # ground.
@@ -566,7 +592,11 @@ def _try_extract_discrete_count_anchor(
         return None
 
     verb = m.group("verb").lower()
-    if verb not in _POSSESSION_VERBS:
+    if verb in _POSSESSION_VERBS:
+        anchor_kind = "possession"
+    elif verb in _ACQUISITION_VERBS:
+        anchor_kind = "acquisition"
+    else:
         return None
 
     count_token = m.group("count")
@@ -608,6 +638,11 @@ def _try_extract_discrete_count_anchor(
         "count_token": count_token,
         "count_kind": count_kind,
         "counted_noun": canon,
+        # ADR-0170 W2 — anchor_kind discriminates the downstream
+        # injector path: "possession" → CandidateInitial (existing);
+        # "acquisition" → CandidateOperation(add) (new).
+        "anchor_kind": anchor_kind,
+        "verb_token": verb,
     }
 
 

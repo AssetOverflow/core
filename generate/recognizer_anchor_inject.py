@@ -46,7 +46,12 @@ from typing import Mapping, Union
 
 from evals.refusal_taxonomy.shape_categories import ShapeCategory
 from generate.math_candidate_parser import CandidateInitial, CandidateOperation
-from generate.math_problem_graph import InitialPossession, MathGraphError, Quantity
+from generate.math_problem_graph import (
+    InitialPossession,
+    MathGraphError,
+    Operation,
+    Quantity,
+)
 from generate.recognizer_match import RecognizerMatch
 
 # ADR-0170 — the widened injector emission type. Per-category injectors
@@ -92,26 +97,49 @@ def inject_from_match(
 def inject_discrete_count_statement(
     match: RecognizerMatch,
     sentence: str,
-) -> tuple[CandidateInitial, ...]:
-    """Build CandidateInitial(s) from ``discrete_count`` parsed anchors.
+) -> tuple[InjectorEmission, ...]:
+    """Build CandidateInitial OR CandidateOperation from ``discrete_count``
+    parsed anchors, dispatched on the matcher's ``anchor_kind``.
 
-    v1 narrowness: the matcher emits at most one anchor (further anchors
-    refuse extraction).  When the anchor is absent (detection-only
-    fallback), the injector returns ``()`` and the candidate-graph
-    continues with the round-2 skip-only behavior.
+    Per ADR-0170 W2 — the matcher records ``anchor_kind`` as either
+    ``"possession"`` (verbs ``has/have/had``) or ``"acquisition"``
+    (verbs in ``_ACQUISITION_VERBS``).
+
+    - ``possession`` → ``CandidateInitial`` (existing behavior; the
+      sentence asserts an initial state)
+    - ``acquisition`` → ``CandidateOperation(kind='add')`` (new in W2;
+      the sentence asserts an add-operation, preserving
+      ADR-0131.G.1's branch-disagreement discipline — the regex
+      parser's ADD_VERBS path emits the same kind of operation for
+      single-word units, so the injector path complements it on
+      multi-word units without conflicting)
+
+    v1 narrowness: at most one anchor per match; absent or
+    unconstructable anchors return ``()``.
     """
     if not match.parsed_anchors:
         return ()
 
-    out: list[CandidateInitial] = []
+    out: list[InjectorEmission] = []
     for anchor in match.parsed_anchors:
-        cand = _build_initial_from_discrete_count(anchor, sentence)
+        anchor_kind = anchor.get("anchor_kind", "possession")
+        if anchor_kind == "possession":
+            cand: InjectorEmission | None = _build_initial_from_discrete_count(
+                anchor, sentence
+            )
+        elif anchor_kind == "acquisition":
+            cand = _build_operation_from_discrete_count_acquisition(
+                anchor, sentence
+            )
+        else:
+            # Unknown anchor_kind — under-admit. Future widenings (e.g.
+            # "depletion" verbs as CandidateOperation(subtract)) extend
+            # this branch.
+            return ()
         if cand is None:
-            # Under-admit on any failure to construct.  The other
-            # already-built candidates for this sentence remain
-            # admissible only if they all pass; partial admission would
-            # mean the downstream Cartesian product enumerates a graph
-            # missing state — under-admit instead.
+            # Under-admit on any failure to construct.  Partial
+            # admission would mean the downstream Cartesian product
+            # enumerates a graph missing state.
             return ()
         out.append(cand)
     return tuple(out)
@@ -192,6 +220,104 @@ def _build_initial_from_discrete_count(
         )
     except ValueError:
         return None
+
+
+def _build_operation_from_discrete_count_acquisition(
+    anchor: Mapping[str, object],
+    sentence: str,
+) -> CandidateOperation | None:
+    """Construct one CandidateOperation(kind='add') from a discrete_count
+    anchor whose ``anchor_kind == "acquisition"``.
+
+    Per ADR-0170 W2 — acquisition verbs (``collected``, ``received``,
+    ``bought``, ``got``) are routed to operations, not initials, in
+    accordance with ADR-0131.G.1's branch-disagreement discipline. The
+    solver's defaults-from-zero rule resolves single-statement
+    acquisitions correctly (``0 + N = N``).
+
+    Refuses (returns ``None``) when any field cannot be coerced, when
+    the literal verb token cannot be located in the surface, or when
+    the constructed ``CandidateOperation`` would violate its post-init
+    invariants. The result is admissibility-checked upstream by
+    ``roundtrip_admissible``.
+
+    Anchor schema (same as possession, with ``anchor_kind`` discriminator):
+        {
+          "kind": "discrete_count",
+          "anchor_kind": "acquisition",
+          "subject_role": <str>,
+          "count_token": <str>,
+          "count_kind": <"integer"|"word">,
+          "counted_noun": <str>,
+          "verb_token": <str>,  # e.g. "collected"
+        }
+    """
+    subject_role = anchor.get("subject_role")
+    count_token = anchor.get("count_token")
+    count_kind = anchor.get("count_kind")
+    counted_noun = anchor.get("counted_noun")
+    verb_token = anchor.get("verb_token")
+
+    if (
+        not isinstance(subject_role, str) or not subject_role
+        or not isinstance(count_token, str) or not count_token
+        or not isinstance(count_kind, str)
+        or not isinstance(counted_noun, str) or not counted_noun
+        or not isinstance(verb_token, str) or not verb_token
+    ):
+        return None
+
+    value = _resolve_count_value(count_token, count_kind)
+    if value is None:
+        return None
+
+    # Locate the literal verb surface in the sentence so the
+    # round-trip ground check in ``roundtrip_admissible`` succeeds.
+    # The matcher already confirmed ``verb_token`` is in
+    # ``_ACQUISITION_VERBS`` (which is itself a subset of
+    # ``ADD_VERBS``), so the downstream CandidateOperation post-init
+    # whitelist accepts the matched_verb token.
+    located_verb = _locate_token(sentence, verb_token)
+    if located_verb is None:
+        return None
+
+    try:
+        operand = Quantity(value=value, unit=counted_noun)
+        op = Operation(
+            actor=subject_role,
+            kind="add",
+            operand=operand,
+        )
+    except MathGraphError:
+        return None
+
+    try:
+        return CandidateOperation(
+            op=op,
+            source_span=sentence,
+            matched_verb=located_verb,
+            matched_value_token=count_token,
+            matched_unit_token=counted_noun,
+            matched_actor_token=subject_role,
+        )
+    except ValueError:
+        return None
+
+
+def _locate_token(sentence: str, target_lc: str) -> str | None:
+    """Return the literal-surface form of ``target_lc`` (lowercased) in
+    ``sentence`` whitespace-tokenized, or ``None`` if absent.
+
+    Used by the acquisition-verb path to extract the matched verb
+    surface for ``CandidateOperation.matched_verb``. Falls back to
+    ``None`` only when the matcher's recorded ``verb_token`` somehow
+    diverges from the sentence surface — the under-admit path.
+    """
+    for raw in sentence.split():
+        tok = raw.strip(".,;:!?\"'()[]{}").lower()
+        if tok == target_lc:
+            return tok
+    return None
 
 
 def _resolve_count_value(count_token: str, count_kind: str) -> int | None:
