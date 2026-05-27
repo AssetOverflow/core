@@ -60,3 +60,8 @@
 {"lemma": "tina", "category": "proper_noun_gender_female", "aliases": ["Tina"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
 {"lemma": "virginia", "category": "proper_noun_gender_female", "aliases": ["Virginia"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
 {"lemma": "monica", "category": "proper_noun_gender_female", "aliases": ["Monica"], "provenance": "phase_1_reader_supplemental_2026-05-26"}
+{"lemma": "allison", "category": "proper_noun_gender_female", "aliases": ["Allison"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "brooke", "category": "proper_noun_gender_female", "aliases": ["Brooke"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "jan", "category": "proper_noun_gender_female", "aliases": ["Jan"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "marion", "category": "proper_noun_gender_female", "aliases": ["Marion"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "sidney", "category": "proper_noun_gender_female", "aliases": ["Sidney"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}

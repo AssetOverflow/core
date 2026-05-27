@@ -244,6 +244,7 @@ class QuestionTargetSlot:
     entity: str | None
     unit_class: str | None
     position: int
+    unit: str | None = None
 
     def __post_init__(self) -> None:
         if self.kind not in VALID_QUESTION_KINDS:
@@ -254,14 +255,18 @@ class QuestionTargetSlot:
         _require_optional_str(self.entity, "QuestionTargetSlot.entity")
         _require_optional_str(self.unit_class, "QuestionTargetSlot.unit_class")
         _require_non_negative_int(self.position, "QuestionTargetSlot.position")
+        _require_optional_str(self.unit, "QuestionTargetSlot.unit")
 
     def as_canonical(self) -> dict[str, Any]:
-        return {
+        d: dict[str, Any] = {
             "entity": self.entity,
             "kind": self.kind,
             "position": self.position,
             "unit_class": self.unit_class,
         }
+        if self.unit is not None:
+            d["unit"] = self.unit
+        return d
 
 
 @dataclass(frozen=True, slots=True)

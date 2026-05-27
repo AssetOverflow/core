@@ -413,6 +413,109 @@ def _build_graph(
 
 
 # ---------------------------------------------------------------------------
+# Comprehension reader integration (ADR-0164 Phase 2)
+# ---------------------------------------------------------------------------
+
+
+def _tokenize_sentence(sentence: str) -> list[str]:
+    """Split a sentence string into tokens for the reader.
+
+    Handles punctuation attachment: "." and "?" are emitted as separate
+    tokens if attached to a word (e.g. "dollars." → ["dollars", "."]).
+    Commas are split off too.
+    """
+    import re as _re
+    raw = _re.split(r"\s+", sentence.strip())
+    out: list[str] = []
+    for tok in raw:
+        if not tok:
+            continue
+        # Detach trailing punctuation.
+        if len(tok) > 1 and tok[-1] in (".", "?", "!"):
+            out.append(tok[:-1])
+            out.append(tok[-1])
+        elif len(tok) > 1 and tok[-1] == ",":
+            out.append(tok[:-1])
+            out.append(",")
+        else:
+            out.append(tok)
+    return [t for t in out if t]
+
+
+def _try_comprehension_reader(text: str) -> CandidateGraphResult | None:
+    """Attempt to parse and solve *text* via the incremental reader.
+
+    Returns a :class:`CandidateGraphResult` on success or reader refusal,
+    or ``None`` if the reader itself errors unexpectedly (caller falls
+    through to regex path).
+
+    All-or-nothing: if the reader refuses on ANY sentence, returns None
+    so the existing regex path can try. This guarantees wrong == 0 —
+    the reader either produces a verified graph or steps aside.
+    """
+    try:
+        from generate.comprehension.lifecycle import (
+            apply_word,
+            begin_sentence,
+            end_sentence,
+            finalize,
+        )
+        from generate.comprehension.state import (
+            EntityRef,
+            ProblemReadingState,
+            ReaderRefusal,
+        )
+        from generate.math_solver import SolveError, solve
+    except Exception:
+        return None
+
+    sentences = _split_sentences(text)
+    if not sentences:
+        return None
+
+    ps = ProblemReadingState(
+        entity_registry=(),
+        accumulated_initial_state=(),
+        accumulated_operations=(),
+        unknown_target_slot=None,
+        pronoun_resolution_history=(),
+        sentence_index=0,
+        source_text_offset=0,
+    )
+
+    for sentence in sentences:
+        tokens = _tokenize_sentence(sentence)
+        ss = begin_sentence(ps, ps.source_text_offset)
+        for tok in tokens:
+            result = apply_word(ss, ps, tok)
+            if isinstance(result, ReaderRefusal):
+                return None  # fall through to regex
+            ss = result
+        end = end_sentence(ss, ps)
+        if isinstance(end, ReaderRefusal):
+            return None  # fall through to regex
+        ps = end
+
+    graph_or_refusal = finalize(ps)
+    if isinstance(graph_or_refusal, ReaderRefusal):
+        return None  # fall through to regex
+
+    graph = graph_or_refusal
+    try:
+        answer = solve(graph)
+    except (SolveError, Exception):
+        return None  # fall through to regex
+
+    return CandidateGraphResult(
+        answer=answer,
+        selected_graph=graph,
+        refusal_reason=None,
+        branches_enumerated=1,
+        branches_admissible=1,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
 
@@ -455,6 +558,17 @@ def parse_and_solve(
             refusal_reason="empty or non-string problem",
             branches_enumerated=0, branches_admissible=0,
         )
+
+    # ADR-0164 Phase 2 — comprehension reader path (flag-gated, off by default).
+    # All-or-nothing: reader either solves the whole problem or falls through.
+    # Reuses the same RuntimeConfig.comprehension_reader_questions flag that
+    # Phase 1 introduced (#331). Whole-problem reader takes priority over the
+    # Phase 1 question-only hybrid path because finalize() emits a complete
+    # MathProblemGraph that the existing solver consumes unchanged.
+    if config is not None and config.comprehension_reader_questions:
+        reader_result = _try_comprehension_reader(text)
+        if reader_result is not None:
+            return reader_result
 
     sentences = _split_sentences(text)
     if not sentences:
