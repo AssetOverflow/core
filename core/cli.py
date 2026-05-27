@@ -86,6 +86,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_me2_case_0019_admits.py",
         "tests/test_me3_additive_composition.py",
         "tests/test_me4_subtractive_composition.py",
+        "tests/test_me5_all_categories_integration.py",
     ),
     "algebra": (
         "tests/test_versor_closure.py",
