@@ -1,0 +1,26 @@
+{
+  "pack_id": "en_core_math_v1",
+  "language": "en",
+  "role": "domain_seed",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_core_math_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "4e492514cdd293d1868054fb3c1bb8111e82c27a4c5c5ab0c1371ada1bed6536",
+  "version": "1.0.0",
+  "gate_engaged": false,
+  "oov_policy": "tagged_fallback",
+  "definitional_layer": false,
+  "provenance": "adr-0164:seed:ported_from_math_candidate_parser_2026-05-26",
+  "deferred": [
+    "give_away: multi-word phrase from _INIT_MUT_SUBTRACT_VERBS; needs phrase-level lexicon support",
+    "pick_up: multi-word phrase from _INIT_MUT_ADD_VERBS; needs phrase-level lexicon support",
+    "aggregate_modifier category (in_all, altogether, combined): multi-word forms; not in single-token source whitelist",
+    "question_continuous_qty (much, long, far, old): not attested as isolated constants in math_candidate_parser.py; requires reader Phase 2 ratification",
+    "question_discrete_qty (many): not a standalone constant; deferred until reader integration",
+    "question_comparative (more, less, longer, fewer): from ADR-0164 table but not extracted as closed set in parser source",
+    "distributive_modifier (each, per): from ADR-0164 table; not in parser source as closed set",
+    "count_unit_noun: dynamic open class (apples, books, kids); not a fixed whitelist; deferred by design",
+    "time_unit_noun: available in _TIME_UNIT_SET but not in brief's required categories; deferred to Phase 3"
+  ]
+}

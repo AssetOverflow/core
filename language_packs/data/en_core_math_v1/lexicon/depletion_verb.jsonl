@@ -1,0 +1,15 @@
+{"lemma": "eat", "category": "depletion_verb", "aliases": ["eats", "ate"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "lose", "category": "depletion_verb", "aliases": ["loses", "lost"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "sell", "category": "depletion_verb", "aliases": ["sells", "sold"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "donate", "category": "depletion_verb", "aliases": ["donates", "donated"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "use", "category": "depletion_verb", "aliases": ["uses", "used"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "spend", "category": "depletion_verb", "aliases": ["spends", "spent"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "drop", "category": "depletion_verb", "aliases": ["drops", "dropped"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "remove", "category": "depletion_verb", "aliases": ["removes", "removed"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "break", "category": "depletion_verb", "aliases": ["breaks", "broke"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "destroy", "category": "depletion_verb", "aliases": ["destroys", "destroyed"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "throw", "category": "depletion_verb", "aliases": ["throws", "threw"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "discard", "category": "depletion_verb", "aliases": ["discards", "discarded"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "consume", "category": "depletion_verb", "aliases": ["consumes", "consumed"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "take", "category": "depletion_verb", "aliases": ["takes", "took"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "pay", "category": "depletion_verb", "aliases": ["pays", "paid"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
