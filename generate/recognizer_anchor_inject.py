@@ -230,75 +230,36 @@ def _locate_possession_verb(sentence: str) -> str | None:
 # registers its injector.  No global state, no side effects.
 # ---------------------------------------------------------------------------
 
-def inject_rate_with_currency(
-    match: RecognizerMatch,
-    sentence: str,
-) -> tuple[CandidateInitial, ...]:
-    """Inject a ``rate_with_currency`` recognizer match.
-
-    Schema decision (Wave-Next A2): the :class:`Rate` type in
-    :mod:`generate.math_problem_graph` (ADR-0122) DOES structurally
-    model a per-unit rate via ``(value, numerator_unit,
-    denominator_unit)``.  However, ``Rate`` is the operand of an
-    ``Operation(kind='apply_rate')`` — it is not, and cannot be
-    coerced into, a :class:`CandidateInitial` or a standalone
-    :class:`CandidateOperation` that the per-sentence choice
-    dispatcher consumes:
-
-    - :class:`InitialPossession` requires a :class:`Quantity` (scalar
-      + unit) and an entity.  A rate carries two units; the
-      rate-declaration sentence alone ("Tina makes $18.00 an hour.")
-      does not establish how many hours Tina worked, so the
-      denominator quantity is unknown.
-    - ``Operation(kind='apply_rate')`` requires the denominator
-      quantity (the "how many X" the rate multiplies) to be present
-      in the same sentence; an isolated rate-declaration sentence
-      does not carry it.
-    - ``SentenceChoice = Union[CandidateInitial, CandidateOperation]``
-      (see :mod:`generate.math_candidate_graph`) — there is no
-      ``CandidateRate`` variant for the injector to deposit.
-
-    The existing
-    :func:`generate.math_candidate_parser.extract_earnings_candidates`
-    handles rate-declaration sentences via a separate short-circuit
-    path keyed on a sibling :class:`CandidateEarningsRate` type that
-    is NOT part of ``SentenceChoice``.  It is consumed by a special
-    earnings short-circuit in
-    :func:`generate.math_candidate_graph.parse_and_solve` BEFORE the
-    per-sentence-choices Cartesian product runs.
-
-    Conclusion: the recognizer-injector contract (return a tuple of
-    :class:`CandidateInitial`) cannot meaningfully express a per-unit
-    rate without a wider ``SentenceChoice`` union.  v1 therefore
-    RETURNS ``()`` (refusal-preferring, wrong=0 doctrine) and
-    documents the gap.  This is the explicit-refusal A2 outcome.
-
-    Follow-up (separate PR): extend ``SentenceChoice`` with a
-    ``CandidateRate`` variant carrying a :class:`Rate` operand keyed
-    by actor, and teach
-    :func:`generate.math_candidate_graph.parse_and_solve` to compose
-    a ``CandidateRate`` with a downstream apply_rate/multiply-shaped
-    question.  Only at that point can a recognizer-injector emit
-    useful state for ``rate_with_currency``.
-    """
-    return ()
-
-
 _INJECTORS: Mapping[ShapeCategory, "type"] = {
     ShapeCategory.DISCRETE_COUNT_STATEMENT: inject_discrete_count_statement,  # type: ignore[dict-item]
-    ShapeCategory.RATE_WITH_CURRENCY: inject_rate_with_currency,  # type: ignore[dict-item]
-    # The four other recognizer categories route to the empty-tuple
-    # fallback (skip-only) until their D.2.x injector lands:
+    # All other recognizer categories route to the empty-tuple fallback
+    # in ``inject_from_match`` — `_INJECTORS.get(category)` returns
+    # ``None`` and the dispatcher returns ``()``, which the
+    # candidate-graph then treats as "recognizer matched but produced
+    # no injection" → explicit refusal (the wrong=0 fix from #359).
     #
-    # ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY  — by design (no quantity)
-    # ShapeCategory.TEMPORAL_AGGREGATION           — D.2.3 follow-up
-    # ShapeCategory.MULTIPLICATIVE_AGGREGATION     — D.2.4 follow-up
-    # ShapeCategory.CURRENCY_AMOUNT                — D.2.5 follow-up
+    # Categories deferred to follow-up PRs:
+    #
+    # ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY — by design (no quantity)
+    # ShapeCategory.RATE_WITH_CURRENCY           — needs CandidateRate
+    #                                              (SentenceChoice union
+    #                                              extension; ADR-0171)
+    # ShapeCategory.TEMPORAL_AGGREGATION         — needs apply_rate primitive
+    #                                              in the algebra
+    # ShapeCategory.MULTIPLICATIVE_AGGREGATION   — emits
+    #                                              CandidateInitial(product)
+    #                                              after ADR-0170 widens
+    #                                              return type
+    # ShapeCategory.CURRENCY_AMOUNT              — A1 currency_amount;
+    #                                              CandidateInitial-shaped,
+    #                                              ships after ADR-0170
+    #
+    # See docs/decisions/ADR-0170-injector-contract-widening.md for the
+    # contract widening that unblocks DCS-S1 / A1 / A3.
 }
 
 
 __all__ = [
     "inject_from_match",
     "inject_discrete_count_statement",
-    "inject_rate_with_currency",
 ]
