@@ -1,6 +1,6 @@
 # CORE Commercial License
 
-**Copyright (c) 2026 Shay Jilani / AssetOverflow**
+**Copyright (c) 2026 Josh Shay / ACB Content**
 
 ## When You Need a Commercial License
 
@@ -35,7 +35,7 @@ assigned to or funded by a for-profit entity.
 
 All commercial licensing inquiries:
 
-**Shay Jilani / AssetOverflow**
+**Josh Shay / ACB Content**
 shayj292@gmail.com
 
 Include a brief description of the intended use. All inquiries are responded

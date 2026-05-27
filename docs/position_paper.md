@@ -1,6 +1,6 @@
 # Decoding, Not Generating: A Geometric Architecture for Aligned Cognition
 
-**Shay Jilani** · AssetOverflow · CORE Engine
+**Josh Shay** · ACB Content / CORE
 
 ---
 
