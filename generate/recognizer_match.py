@@ -525,6 +525,162 @@ def _try_extract_currency_per_unit_composition_anchor(
 
 
 # ---------------------------------------------------------------------------
+# ME-2 — cross-sentence subject binding (admits case 0019).
+#
+# Case 0019: "John adopts a dog from a shelter. The dog ends up having
+# health problems and this requires 3 vet appointments, which cost
+# $400 each."
+#
+# The composition sentence has no same-sentence proper-noun subject —
+# "John" lives in sentence 0. ME-1 (Option A) refuses; ME-2 admits
+# when the caller supplies a ``prior_subject`` resolved from the
+# upstream sentence trace.
+#
+# Discipline:
+# - The cross-sentence regex requires NO subject prefix; instead it
+#   keys on a discourse-anaphoric introduction like "which cost $X each"
+#   or "and this requires N noun" + "$X each" in the same sentence.
+# - Caller is responsible for providing a confidence-pinned prior
+#   subject (most-recent proper-noun subject from prior sentences).
+# - The matcher refuses if prior_subject is None / empty / refused.
+# ---------------------------------------------------------------------------
+
+# Shape: `... which cost(s)? $<amount> each` plus a preceding count token.
+# Constructed so the count + noun are pulled from the same statement, but
+# the subject is supplied externally.
+_CROSS_SENTENCE_COMPOSITION_RE: Final[re.Pattern[str]] = re.compile(
+    r"""(?ix)
+    \b
+    (?:requires|require|needs|need|costs|cost)
+    \s+
+    (?P<count>\d+(?:\.\d+)?)               # outer count token
+    \s+
+    (?P<noun>[a-z][a-z\s]+?)               # counted noun phrase
+    ,?\s+
+    (?:which\s+)?
+    (?:cost|costs|costing)
+    \s+
+    (?P<symbol>[\$£€¥])
+    (?P<amount>\d+(?:\.\d+)?)
+    \s+
+    (?P<per_unit>each|apiece)
+    \b
+    """,
+)
+
+
+def try_extract_cross_sentence_composition_anchor(
+    statement: str,
+    spec: Mapping[str, Any],
+    prior_subject: str | None,
+) -> tuple[tuple[Mapping[str, Any], ...], Literal["rate"]] | None:
+    """Cross-sentence composition extraction.
+
+    Like :func:`_try_extract_currency_per_unit_composition_anchor` but
+    sources the subject from ``prior_subject`` instead of a
+    same-sentence head proper-noun.
+
+    Refuses when:
+
+    - ``prior_subject`` is None / empty / in :data:`_REFUSED_SUBJECT_TOKENS`
+    - the cross-sentence regex matches zero or multiple times
+    - currency / per-unit / count narrowness fail (mirrors ME-1)
+
+    The same composition_shape + composed_initial payload as ME-1 is
+    published. The consumer (composition_registry) gates admission.
+    """
+    if spec.get("anchor_kind") != "currency_per_unit_composition":
+        return None
+    if not prior_subject or not isinstance(prior_subject, str):
+        return None
+    if prior_subject.lower() in _REFUSED_SUBJECT_TOKENS:
+        return None
+
+    observed_symbols = set(spec.get("observed_currency_symbols") or ())
+    observed_per_units = set(spec.get("observed_per_units") or ())
+    if not observed_symbols or not observed_per_units:
+        return None
+
+    matches = list(_CROSS_SENTENCE_COMPOSITION_RE.finditer(statement))
+    if len(matches) != 1:
+        return None
+
+    m = matches[0]
+    symbol = m.group("symbol")
+    if symbol not in observed_symbols:
+        return None
+    per_unit_lc = m.group("per_unit").lower()
+    if per_unit_lc not in observed_per_units:
+        return None
+    if per_unit_lc not in _PER_ITEM_TOKENS:
+        return None
+
+    count_token = m.group("count")
+    amount_token = m.group("amount")
+    try:
+        outer_count: float = float(count_token)
+        unit_cost: float = float(amount_token)
+    except ValueError:
+        return None
+    if outer_count <= 0 or unit_cost <= 0:
+        return None
+
+    composed_value_f = outer_count * unit_cost
+    if composed_value_f != composed_value_f:  # NaN guard
+        return None
+    composed_value: int | float
+    if (
+        composed_value_f.is_integer()
+        and "." not in count_token
+        and "." not in amount_token
+    ):
+        composed_value = int(composed_value_f)
+    else:
+        composed_value = composed_value_f
+
+    unit = _CURRENCY_SYMBOL_TO_UNIT.get(symbol)
+    if unit is None:
+        return None
+
+    from generate.math_candidate_parser import CandidateInitial
+    from generate.math_problem_graph import InitialPossession, Quantity
+
+    # Validate prior_subject can satisfy CandidateInitial.entity.
+    entity = prior_subject.strip()
+    if not entity:
+        return None
+
+    composed_initial = CandidateInitial(
+        initial=InitialPossession(
+            entity=entity,
+            quantity=Quantity(value=composed_value, unit=unit),
+        ),
+        source_span=m.group(0),
+        matched_anchor="bought",  # canonical buy-anchor for the whitelist
+        matched_value_token=str(composed_value),
+        matched_unit_token=unit,
+        matched_entity_token=entity,
+    )
+
+    anchor: Mapping[str, Any] = {
+        "kind": "currency_per_unit_composition_cross_sentence",
+        "composition_shape": _COMPOSITION_SHAPE_MULTIPLICATIVE,
+        "composed_initial": composed_initial,
+        "currency_symbol": symbol,
+        "amount": amount_token,
+        "per_unit": per_unit_lc,
+        "outer_count": count_token,
+        "subject": entity,
+        "subject_source": "prior_sentence",
+    }
+    return ((anchor,), "rate")
+
+
+# Refused subjects mirrors the constant defined later in this module
+# (used by both the same-sentence and cross-sentence extractors).
+
+
+# ---------------------------------------------------------------------------
 # ADR-0163.B.2 round-2 matchers.  Detection-only (return empty
 # parsed_anchors) — consistent with Phase D's skip-only wiring.  Real
 # value extraction lands when Phase D.2 plumbs parsed_anchors into the
@@ -908,13 +1064,29 @@ _MATCHERS: Final[dict[ShapeCategory, Any]] = {
 def match(
     statement: str,
     registry: tuple[RatifiedRecognizer, ...],
+    *,
+    prior_subject: str | None = None,
 ) -> RecognizerMatch | None:
     """First-match-wins over *registry*.
 
-    Pure: same ``(statement, registry)`` → same result, byte-identical.
-    Order is registry order (the projection step in
+    Pure: same ``(statement, registry, prior_subject)`` → same result,
+    byte-identical. Order is registry order (the projection step in
     :mod:`generate.recognizer_registry` sorts by ``(review_date,
     proposal_id)``).
+
+    ME-2 (cross-sentence subject binding) — when the per-category
+    matcher returns ``None`` for a ``RATE_WITH_CURRENCY`` recognizer
+    AND ``prior_subject`` is supplied, this dispatcher additionally
+    tries
+    :func:`try_extract_cross_sentence_composition_anchor`. Admitting
+    the case 0019 sentence shape requires both:
+
+    - a ratified recognizer carrying
+      ``anchor_kind = "currency_per_unit_composition"``
+    - a non-empty ``prior_subject`` resolved from upstream sentences
+
+    Refusal-preferring discipline is preserved: ``prior_subject=None``
+    + same-sentence Option A regex miss → returns ``None``.
     """
     if not isinstance(statement, str) or not statement.strip():
         return None
@@ -924,6 +1096,25 @@ def match(
             continue
         result = matcher(statement, recognizer.canonical_pattern)
         if result is None:
+            if (
+                recognizer.shape_category is ShapeCategory.RATE_WITH_CURRENCY
+                and recognizer.canonical_pattern.get("anchor_kind")
+                == "currency_per_unit_composition"
+                and prior_subject is not None
+            ):
+                cross_result = try_extract_cross_sentence_composition_anchor(
+                    statement, recognizer.canonical_pattern, prior_subject
+                )
+                if cross_result is None:
+                    continue
+                parsed_anchors, graph_intent = cross_result
+                return RecognizerMatch(
+                    recognizer=recognizer,
+                    category=recognizer.shape_category,
+                    outcome="admissible",
+                    graph_intent=graph_intent,
+                    parsed_anchors=parsed_anchors,
+                )
             continue
         parsed_anchors, graph_intent = result
         outcome: Literal["admissible", "inadmissible_by_design"] = (
@@ -941,7 +1132,69 @@ def match(
     return None
 
 
+# ---------------------------------------------------------------------------
+# Cross-sentence subject resolution helper (ME-2).
+# ---------------------------------------------------------------------------
+
+_PROPER_NOUN_SUBJECT_RE: Final[re.Pattern[str]] = re.compile(
+    r"^\s*([A-Z][a-zA-Z]+)\b"
+)
+
+
+_COMMON_DETERMINERS_AT_HEAD: Final[frozenset[str]] = frozenset(
+    {
+        # Articles + demonstratives
+        "the", "a", "an", "this", "that", "these", "those",
+        # Possessives
+        "his", "her", "their", "its", "my", "your", "our",
+        # Sentence-initial connectors / prepositions that get capitalized
+        "after", "before", "when", "while", "if", "then", "so", "but",
+        "and", "or", "during", "since", "until", "though", "although",
+        "however", "moreover", "additionally", "first", "next", "later",
+        "finally", "now", "soon", "today", "tomorrow", "yesterday",
+        "every", "all", "some", "many", "each", "another", "other",
+        "in", "on", "at", "by", "for", "from", "with", "without",
+        "how", "why", "what", "where", "who", "when",
+    }
+)
+
+
+def extract_proper_noun_subject(statement: str) -> str | None:
+    """Return the head proper-noun subject of *statement*, or None.
+
+    Used by callers (e.g. ``generate.math_candidate_graph``) to track a
+    running ``prior_subject`` across sentences for cross-sentence
+    composition binding (ME-2).
+
+    Heuristic narrowness:
+
+    - The head token must match ``[A-Z][a-zA-Z]+``.
+    - The lowercased head must NOT be in :data:`_REFUSED_SUBJECT_TOKENS`
+      (existing pronoun set) or
+      :data:`_COMMON_DETERMINERS_AT_HEAD` (articles + demonstratives +
+      possessives that get capitalized at sentence start but are not
+      proper nouns).
+
+    Refuses on any ambiguity. The caller is expected to update the
+    running ``prior_subject`` only when this returns a non-None value.
+    """
+    if not isinstance(statement, str):
+        return None
+    m = _PROPER_NOUN_SUBJECT_RE.match(statement)
+    if m is None:
+        return None
+    cand = m.group(1)
+    lc = cand.lower()
+    if lc in _REFUSED_SUBJECT_TOKENS:
+        return None
+    if lc in _COMMON_DETERMINERS_AT_HEAD:
+        return None
+    return cand
+
+
 __all__ = [
     "RecognizerMatch",
     "match",
+    "extract_proper_noun_subject",
+    "try_extract_cross_sentence_composition_anchor",
 ]

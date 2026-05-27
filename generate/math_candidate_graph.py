@@ -701,12 +701,24 @@ def parse_and_solve(
     # surfaces into solver state) is Phase E follow-up work.
     _ratified_registry = _load_ratified_registry_or_empty()
     per_sentence_choices: list[list[SentenceChoice]] = []
+    # ME-2 — track a running proper-noun subject across sentences so the
+    # recognizer matcher can resolve cross-sentence composition shapes
+    # (e.g. case 0019: "John adopts a dog... 3 vet appointments at
+    # $400 each"). Update AFTER each statement is processed (the current
+    # statement's subject is not yet trusted when matching that same
+    # statement; only prior sentences contribute).
+    _prior_subject: str | None = None
     for s in statement_sentences:
         choices = _filtered_statement_choices(s)
         if not choices:
             if _ratified_registry:
-                from generate.recognizer_match import match as _recognizer_match
-                recognizer_match = _recognizer_match(s, _ratified_registry)
+                from generate.recognizer_match import (
+                    extract_proper_noun_subject as _extract_subj,
+                    match as _recognizer_match,
+                )
+                recognizer_match = _recognizer_match(
+                    s, _ratified_registry, prior_subject=_prior_subject
+                )
                 if recognizer_match is not None:
                     # ADR-0163.D.2 — per-category anchor injection.
                     # The matcher may carry populated parsed_anchors that
@@ -783,6 +795,16 @@ def parse_and_solve(
                 branches_enumerated=0, branches_admissible=0,
             )
         per_sentence_choices.append(_collapse_per_sentence_ties(choices))
+        # ME-2 — update prior_subject AFTER this sentence is processed.
+        # The current sentence's head proper-noun is now eligible to be
+        # the cross-sentence subject for the next sentence's composition
+        # match.
+        from generate.recognizer_match import (
+            extract_proper_noun_subject as _extract_subj_for_update,
+        )
+        _head = _extract_subj_for_update(s)
+        if _head is not None:
+            _prior_subject = _head
 
     # ADR-0164 Phase 1 — comprehension reader hybrid dispatch.
     # When comprehension_reader_questions is True, try the reader FIRST.
