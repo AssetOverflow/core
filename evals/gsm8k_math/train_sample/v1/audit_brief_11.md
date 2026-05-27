@@ -1,9 +1,8 @@
 # Brief 11B — Reader Closure Audit (GSM8K train-sample v1)
 
 This document is the human-readable companion to
-`audit_brief_11.json`. It captures the per-case Phase 2 reader audit over the
-50-case sealed train sample, with the missing-operator inference extended in
-this PR (see `generate/comprehension/audit.py`).
+`audit_brief_11.json`. Last updated by **Brief 11B-step-2 lexicon closure**:
+12 new `drain_token` lemmas + 1 alias added to `en_core_math_v1`.
 
 ## Per-case counts
 
@@ -13,19 +12,26 @@ this PR (see `generate/comprehension/audit.py`).
 | refused    | 50    |
 | **wrong**  | **0** |
 
-`wrong == 0` is preserved by construction: this PR does **not** modify the
-reader runtime; only the audit inference layer and a new artifact are added.
+`wrong == 0` is preserved by construction: the additions are all
+`drain_token` (non-frame-opening). The hazard canary case
+`gsm8k-train-sample-v1-0050` remains refused at sentence_index 0 — pinned by
+`tests/test_brief_11b_step2_lexicon.py::test_hazard_case_0050_remains_refused_pre_frame`.
 
 ## Refusal taxonomy
 
-| refusal_reason         | count |
-|------------------------|------:|
-| incomplete_operation   | 18    |
-| unexpected_category    | 14    |
-| unknown_word           | 11    |
-| unattached_quantity    | 3     |
-| unresolved_pronoun     | 3     |
-| no_question_target     | 1     |
+| refusal_reason         | count | Δ vs 11B-step-1 |
+|------------------------|------:|----------------:|
+| incomplete_operation   | 20    | +2              |
+| unexpected_category    | 17    | +3              |
+| unknown_word           | 5     | **−6**          |
+| unattached_quantity    | 4     | +1              |
+| unresolved_pronoun     | 3     | 0               |
+| no_question_target     | 1     | 0               |
+
+The 6-case drop in `unknown_word` is the load-bearing lift. Increases in
+other rows reflect *previously-hidden* downstream bottlenecks becoming
+visible (Brief 11 §Gate 1: "refusal taxonomy may shrink while correct
+stays flat — real new work becoming visible, not regression").
 
 ## Missing-operator taxonomy (load-bearing)
 

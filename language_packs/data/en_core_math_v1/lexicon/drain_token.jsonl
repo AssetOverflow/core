@@ -8,12 +8,14 @@
 {"lemma": "age", "category": "drain_token", "aliases": ["ages", "aged"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "ago", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
 {"lemma": "all", "category": "drain_token", "aliases": [], "provenance": "phase_1_reader_supplemental_2026-05-26"}
+{"lemma": "along", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "already", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
 {"lemma": "also", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
 {"lemma": "altogether", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "among", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "amusement", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "and", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
+{"lemma": "animals", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "another", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "any", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "aquarium", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
@@ -59,6 +61,7 @@
 {"lemma": "dance", "category": "drain_token", "aliases": ["dances"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "daughter", "category": "drain_token", "aliases": ["daughters"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "decided", "category": "drain_token", "aliases": ["decide", "decides"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "decrease", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "degree", "category": "drain_token", "aliases": ["degrees"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "delivery", "category": "drain_token", "aliases": ["deliveries"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "different", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
@@ -114,6 +117,7 @@
 {"lemma": "instagram", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "insurance", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "into", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
+{"lemma": "jacks", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "jumping", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "june", "category": "drain_token", "aliases": ["july", "august", "september", "october", "november", "december", "january", "february", "march", "april", "may"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "junior", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
@@ -124,6 +128,7 @@
 {"lemma": "lake", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "last", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "later", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
+{"lemma": "length", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "live", "category": "drain_token", "aliases": ["lives", "lived", "living"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "local", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "locals", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
@@ -171,12 +176,14 @@
 {"lemma": "player", "category": "drain_token", "aliases": ["players"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "pokemon", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "press", "category": "drain_token", "aliases": ["presses", "pressed"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "previous", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "problem", "category": "drain_token", "aliases": ["problems"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "purchase", "category": "drain_token", "aliases": [], "provenance": "phase_1_reader_supplemental_2026-05-26"}
 {"lemma": "purpose", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "put", "category": "drain_token", "aliases": ["puts"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "raise", "category": "drain_token", "aliases": ["raises", "raised"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "rate", "category": "drain_token", "aliases": ["rates"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "reach", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "reading", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "ready", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "rent", "category": "drain_token", "aliases": ["rents", "rented"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
@@ -216,6 +223,7 @@
 {"lemma": "started", "category": "drain_token", "aliases": ["start", "starts"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "still", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
 {"lemma": "storage", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "stray", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "studying", "category": "drain_token", "aliases": [], "provenance": "phase_1_reader_supplemental_2026-05-26"}
 {"lemma": "subway", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "summer", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
@@ -238,6 +246,7 @@
 {"lemma": "to", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
 {"lemma": "today", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "together", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
+{"lemma": "too", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "town", "category": "drain_token", "aliases": ["towns"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "train", "category": "drain_token", "aliases": ["trains"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "travel", "category": "drain_token", "aliases": ["travels", "traveled", "travelling", "traveling"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
@@ -249,6 +258,7 @@
 {"lemma": "two", "category": "drain_token", "aliases": ["three", "four", "five"], "provenance": "phase_1_reader_supplemental_2026-05-26"}
 {"lemma": "until", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "up", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
+{"lemma": "uphill", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "upload", "category": "drain_token", "aliases": ["uploads", "uploaded"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "varsity", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "very", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
@@ -259,10 +269,11 @@
 {"lemma": "way", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "weekly", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "weighing", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
-{"lemma": "weight", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
+{"lemma": "weight", "category": "drain_token", "aliases": ["weights"], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "well", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
 {"lemma": "when", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
 {"lemma": "where", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
+{"lemma": "which", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "while", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
 {"lemma": "wire", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "with", "category": "drain_token", "aliases": [], "provenance": "phase_1_reader_supplemental_2026-05-26"}
@@ -270,5 +281,6 @@
 {"lemma": "without", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
 {"lemma": "women", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "yet", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_2026-05-26"}
+{"lemma": "your", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_brief_11b_step2_2026-05-27"}
 {"lemma": "youtube", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
 {"lemma": "youtuber", "category": "drain_token", "aliases": [], "provenance": "phase_2_reader_gsm8k_2026-05-26"}
