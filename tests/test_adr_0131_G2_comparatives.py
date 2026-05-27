@@ -231,7 +231,24 @@ def _comparative_clause_refusal_count(probe_report_path: Path) -> int:
     on the embedded statement clause inside the ``candidate_graph`` /
     ``parser`` refusal reason, not on isolated keywords, to avoid
     false-positives on incidental mentions ('he is more careful than',
-    discourse glue, etc.)."""
+    discourse glue, etc.).
+
+    Post-#359 (wrong=0 fix) the candidate-graph emits two distinct
+    refusal-reason families that both quote a statement clause:
+
+    1. ``"no admissible candidate for statement: '...'"`` — the parser
+       returned no candidates. THIS is the comparative-parse-failure
+       this G.2 metric tracks.
+    2. ``"recognizer matched but produced no injection for statement:
+       '...'"`` — a ratified recognizer matched but its injector
+       returned (); the statement quoted there may incidentally
+       contain comparative anchors but the refusal cause is the
+       missing injector, NOT the comparative parse.
+
+    The counter explicitly filters to family (1) — without this filter
+    the metric over-counts whenever #359-class refusals quote a
+    statement that happens to contain a comparative anchor.
+    """
     data = json.loads(probe_report_path.read_text(encoding="utf-8"))
     per_case = data["per_case"]
     count = 0
@@ -240,6 +257,10 @@ def _comparative_clause_refusal_count(probe_report_path: Path) -> int:
             continue
         reason = d["reason"]
         if "statement" not in reason and "statement clause" not in reason:
+            continue
+        # Filter family (1): parser-path refusals only. Recognizer-path
+        # refusals (post-#359) get excluded.
+        if "recognizer matched but produced no injection" in reason:
             continue
         for pat in _COMPARATIVE_STATEMENT_PATTERNS:
             if pat.search(reason):

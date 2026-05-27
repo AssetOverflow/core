@@ -13,17 +13,17 @@
   "per_case": [
     {
       "case_id": "gsm8k-train-sample-v1-0001",
-      "reason": "candidate_graph: no branch produced a solvable graph",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Tina makes $18.00 an hour.' (category=rate_with_currency)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0002",
-      "reason": "candidate_graph: no admissible candidate for statement: 'She gives 1/4 of that to a friend.'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She splits it up into 25-foot sections.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0003",
-      "reason": "candidate_graph: no admissible candidate for question: 'If the student council sells the erasers for $0.75 each, how much money will they make?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The local bookstore donated 48 boxes of erasers.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
@@ -38,7 +38,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0006",
-      "reason": "candidate_graph: no admissible candidate for question: 'How many pages do the books she reads now have?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Mandy started reading books with only 8 pages when she was 6 years old.' (category=multiplicative_aggregation)",
       "verdict": "refused"
     },
     {
@@ -63,17 +63,17 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0011",
-      "reason": "candidate_graph: no branch produced a solvable graph",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup.' (category=rate_with_currency)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0012",
-      "reason": "candidate_graph: no admissible candidate for question: \"How many of Dennis's rocks are left?\"",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He put all of them in his aquarium but his fish ate half of them.' (category=descriptive_setup_no_quantity)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0013",
-      "reason": "candidate_graph: no admissible candidate for question: \"What's the total number of video hours she has uploaded at the end of the month?\"",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel.' (category=multiplicative_aggregation)",
       "verdict": "refused"
     },
     {
@@ -83,17 +83,17 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0015",
-      "reason": "candidate_graph: no admissible candidate for question: \"What's the total time he takes to reach the Bronx from Manhattan?\"",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0016",
-      "reason": "candidate_graph: no admissible candidate for question: 'How many stop signs per mile did Rudolph encounter on his trip across town?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs.\" (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0017",
-      "reason": "candidate_graph: no admissible candidate for question: 'How much will it cost him?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He\u2019s charging $50.00 per day or $500.00 for 14 days.' (category=temporal_aggregation)",
       "verdict": "refused"
     },
     {
@@ -103,57 +103,57 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0019",
-      "reason": "candidate_graph: no admissible candidate for question: 'How much did he pay in total?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The dog ends up having health problems and this requires 3 vet appointments,  which cost $400 each.' (category=currency_amount)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0020",
-      "reason": "candidate_graph: no admissible candidate for question: 'If the cost of one parakeet was $10, what would it cost to purchase all of the pets for sale at the pet shop, in dollars?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Two puppies, two kittens, and three parakeets were for sale at the pet shop.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0021",
-      "reason": "candidate_graph: no admissible candidate for question: 'How much total weight does he move?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He bench presses 15 pounds for 10 reps and does 3 sets.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0022",
-      "reason": "candidate_graph: no admissible candidate for question: 'If Erica trawled 80 kg of fish in the past four months, not including today, how much money will she have earned in the past four months including today (assuming she sells all her fish)?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish.' (category=rate_with_currency)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0023",
-      "reason": "candidate_graph: no branch produced a solvable graph",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Nicole collected 400 Pokemon cards.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0024",
-      "reason": "candidate_graph: no admissible candidate for question: 'How many jumping jacks did Brooke do?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday, and 50 on Thursday.' (category=temporal_aggregation)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0025",
-      "reason": "candidate_graph: no admissible candidate for question: \"If three of Lilibeth's friends pick the same amount as her, how many strawberries do Lilibeth and her friends pick in all?\"",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Lilibeth fills 6 baskets where each basket holds 50 strawberries.' (category=multiplicative_aggregation)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0026",
-      "reason": "candidate_graph: no admissible candidate for statement: 'The bill is 3/4 of their total money.'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner.' (category=currency_amount)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0027",
-      "reason": "candidate_graph: no admissible candidate for question: 'How many followers does Malcolm have on all his social media?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Malcolm has 240 followers on Instagram and 500 followers on Facebook.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0028",
-      "reason": "candidate_graph: no admissible candidate for statement: 'He sells 150  tickets a day for $10 each.'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'It cost $100,000 to open initially.' (category=currency_amount)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0029",
-      "reason": "candidate_graph: no admissible candidate for question: 'If the mouse cost $16, how much did Fabian spent on his new accessories?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The cost of the keyboard was three times greater than the cost of the mouse.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
@@ -163,22 +163,22 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0031",
-      "reason": "candidate_graph: no admissible candidate for question: 'How much will it cost Jeremie and her 3 friends to go to the amusement park and buy each of them a set of snacks?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Jeremie wants to go to an amusement park with 3 friends at the end of summer.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0032",
-      "reason": "candidate_graph: no admissible candidate for question: 'How long does he spend on all the pictures?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He draws and colors 10 pictures.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0033",
-      "reason": "candidate_graph: no admissible candidate for question: \"How old will Rachel's father be when she is 25 years old?\"",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Rachel is 12 years old, and her grandfather is 7 times her age.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0034",
-      "reason": "candidate_graph: no admissible candidate for question: 'If he can improve his speed by forty percent, how many yards will he be able to run within 10 seconds?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He can run 40 yards within 5 seconds.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
@@ -188,32 +188,32 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0036",
-      "reason": "candidate_graph: no admissible candidate for question: 'How much time did she spend studying in total during the five days?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She studied for 2 hours on Wednesday and three times as long on Thursday.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0037",
-      "reason": "candidate_graph: no admissible candidate for question: 'How much weight does he have to lose in May to meet his goal?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Michael wants to lose 10 pounds by June.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0038",
-      "reason": "candidate_graph: no admissible candidate for question: 'How many ladies are on the two floors in total?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'There are three times that many girls at a party being held on the second floor of the building.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0039",
-      "reason": "candidate_graph: no admissible candidate for question: 'How much weight, in pounds, did the three family members gain at their reunion?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Orlando gained 5 pounds.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0040",
-      "reason": "candidate_graph: no admissible candidate for question: 'In total, how many legs do his animals have?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He now has 2 horses, 5 dogs, 7 cats, 3 turtles, and 1 goat.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0041",
-      "reason": "candidate_graph: no admissible candidate for question: 'If all but 4 of the guests eat the brownies ala mode (with 2 scoops of vanilla ice cream), how many tubs of ice cream did the guests eat?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The guests eat all of 1 pan, and 75% of the 2nd pan.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
@@ -223,27 +223,27 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0043",
-      "reason": "candidate_graph: no admissible candidate for question: 'How much money will she be left with after the purchase?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Her mother gave her an additional $4, and her father twice as much as her mother.' (category=currency_amount)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0044",
-      "reason": "candidate_graph: no branch produced a solvable graph",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'John invests in a bank and gets 10% simple interest.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0045",
-      "reason": "candidate_graph: no admissible candidate for question: 'How much money did he earn during these two days?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Each survey has 10 questions.' (category=multiplicative_aggregation)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0046",
-      "reason": "candidate_graph: no admissible candidate for question: 'How many students own dogs?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Half of the students are girls, the other half are boys.' (category=descriptive_setup_no_quantity)",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0047",
-      "reason": "candidate_graph: no admissible candidate for question: 'What is the total weight, in ounces, of the remaining coconut macaroons?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'John bakes 12 coconut macaroons, each weighing 5 ounces.' (category=multiplicative_aggregation)",
       "verdict": "refused"
     },
     {
@@ -253,7 +253,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0049",
-      "reason": "candidate_graph: no admissible candidate for question: 'In minutes, how much longer was the second route compared with the first?'",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Malcolm is trying to find the fastest walk to school and is currently comparing two routes.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
@@ -265,5 +265,5 @@
   "sample_count": 50,
   "sample_path": "evals/gsm8k_math/train_sample/v1/cases.jsonl",
   "schema_version": 1,
-  "use_reader": true
+  "use_reader": false
 }
