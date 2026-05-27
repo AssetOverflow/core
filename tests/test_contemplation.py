@@ -35,6 +35,7 @@ CORPUS_BYTES_BEFORE = _CORPUS_PATH.read_bytes() if _CORPUS_PATH.exists() else b"
 def _phase_b_candidate(
     *, subject: str = "wisdom", intent: str = "cause",
     candidate_id: str = "cand_abc", trace: str = "trace_xyz",
+    domain: str = "cognition",
 ) -> DiscoveryCandidate:
     return DiscoveryCandidate(
         candidate_id=candidate_id,
@@ -48,6 +49,7 @@ def _phase_b_candidate(
         source_turn_trace=trace,
         pack_consistent=True,
         boundary_clean=True,
+        domain=domain,
     )
 
 
@@ -93,8 +95,8 @@ def test_empty_pack_and_corpus_terminates_with_gap(monkeypatch):
     """No pack, no corpus ⇒ every probe fails, parent gap-records."""
     from teaching import contemplation as contemp_mod
 
-    monkeypatch.setattr(contemp_mod, "_pack_index", lambda: {})
-    monkeypatch.setattr(contemp_mod, "_corpus_index", lambda: {})
+    monkeypatch.setattr(contemp_mod, "_pack_index_for_domain", lambda _domain: {})
+    monkeypatch.setattr(contemp_mod, "_corpus_index_for_domain", lambda _domain: {})
 
     cand = _phase_b_candidate()
     out = contemplate(cand)
@@ -104,6 +106,55 @@ def test_empty_pack_and_corpus_terminates_with_gap(monkeypatch):
     assert out.sub_questions  # gap-recorded
     assert all(sq.outcome == "gap_recorded" for sq in out.sub_questions)
     assert out.recursion_overflow is False
+
+
+# ---------------------------------------------------------------------------
+# Domain-aware partition
+# ---------------------------------------------------------------------------
+
+
+def test_math_contemplation_does_not_borrow_cognition_corpus():
+    """Math candidates fail closed instead of using cognition corpus evidence."""
+    cand = DiscoveryCandidate(
+        candidate_id="cand_math_no_cognition_leak",
+        proposed_chain={
+            "subject": "light",
+            "intent": "cause",
+            "connective": "reveals",
+            "object": "truth",
+        },
+        trigger="would_have_grounded",
+        source_turn_trace="t_math",
+        pack_consistent=True,
+        boundary_clean=True,
+        domain="math",
+    )
+    out = contemplate(cand)
+    assert out.domain == "math"
+    assert out.polarity == "undetermined"
+    assert not any(e.source == "corpus" for e in out.evidence)
+
+
+def test_math_contemplation_uses_math_pack_residency():
+    """Math candidates can receive math-pack evidence without corpus leakage."""
+    cand = DiscoveryCandidate(
+        candidate_id="cand_math_pack",
+        proposed_chain={
+            "subject": "does",
+            "intent": "admissibility",
+            "connective": "recognizes",
+            "object": "does",
+        },
+        trigger="would_have_grounded",
+        source_turn_trace="t_math_pack",
+        pack_consistent=True,
+        boundary_clean=True,
+        domain="math",
+    )
+    out = contemplate(cand)
+    assert out.domain == "math"
+    assert any(e.source == "pack" and e.ref == "does" for e in out.evidence)
+    assert not any(e.source == "corpus" for e in out.evidence)
 
 
 # ---------------------------------------------------------------------------
@@ -172,7 +223,7 @@ def test_mixed_evidence_upgrades_claim_domain(monkeypatch):
     """Mixed affirm + falsify ⇒ undetermined AND domain upgrades one tier."""
     from teaching import contemplation as contemp_mod
 
-    def fake_corpus_probe(subject, intent, connective, obj):
+    def fake_corpus_probe(subject, intent, connective, obj, *, domain="cognition"):
         return (
             EvidencePointer(
                 source="corpus", ref="chain_aff", polarity="affirms",
