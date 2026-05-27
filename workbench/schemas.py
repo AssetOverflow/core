@@ -196,3 +196,50 @@ class ReplayComparison:
     replay_hash: str | None
     equivalent: bool
     divergences: list[ReplayDivergence] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# ADR-0172 W4 — Math proposal schemas
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class MathReasoningStep:
+    step_index: int
+    step_kind: str
+    claim: str
+    justification: str
+    input_pointers: list[str]
+    output_payload: Any
+
+
+@dataclass(frozen=True, slots=True)
+class MathProposalSummary:
+    proposal_id: str
+    domain: Literal["math"]
+    shape_category: str
+    proposed_change_kind: str
+    structural_commonality: str
+    evidence_count: int
+    replay_equivalence_hash: str
+
+
+@dataclass(frozen=True, slots=True)
+class MathProposalDetail(MathProposalSummary):
+    wrong_zero_assertion: str
+    proposed_change_payload: Any
+    reasoning_trace_id: str
+    reasoning_trace_steps: list[MathReasoningStep]
+    evidence_hashes: list[str]
+    handler_name: str | None
+    suggested_ratify_cli: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class MathRatifyResult:
+    proposal_id: str
+    change_kind: str
+    handler_name: str
+    routing_status: Literal["routed", "not_implemented"]
+    message: str
+    suggested_cli: str | None = None
