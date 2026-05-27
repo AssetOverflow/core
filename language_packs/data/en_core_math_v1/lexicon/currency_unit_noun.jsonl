@@ -1,0 +1,8 @@
+{"lemma": "money", "category": "currency_unit_noun", "aliases": [], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "profit", "category": "currency_unit_noun", "aliases": [], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "interest", "category": "currency_unit_noun", "aliases": [], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "income", "category": "currency_unit_noun", "aliases": [], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "savings", "category": "currency_unit_noun", "aliases": [], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "cost", "category": "currency_unit_noun", "aliases": ["costs"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "amount", "category": "currency_unit_noun", "aliases": ["amounts"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "total", "category": "currency_unit_noun", "aliases": ["totals"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}

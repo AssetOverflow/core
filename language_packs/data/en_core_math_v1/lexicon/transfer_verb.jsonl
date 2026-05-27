@@ -1,0 +1,7 @@
+{"lemma": "give", "category": "transfer_verb", "aliases": ["gives", "gave"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "send", "category": "transfer_verb", "aliases": ["sends", "sent"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "hand", "category": "transfer_verb", "aliases": ["hands", "handed"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "pass", "category": "transfer_verb", "aliases": ["passes", "passed"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "mail", "category": "transfer_verb", "aliases": ["mails", "mailed"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "deliver", "category": "transfer_verb", "aliases": ["delivers", "delivered"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "return", "category": "transfer_verb", "aliases": ["returns", "returned"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}

@@ -1,0 +1,13 @@
+{"lemma": "shuck", "category": "capacity_verb", "aliases": ["shucks"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "pick", "category": "capacity_verb", "aliases": ["picks"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "pack", "category": "capacity_verb", "aliases": ["packs"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "make", "category": "capacity_verb", "aliases": ["makes", "made"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "produce", "category": "capacity_verb", "aliases": ["produces", "produced"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "type", "category": "capacity_verb", "aliases": ["types", "typed"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "read", "category": "capacity_verb", "aliases": ["reads"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "write", "category": "capacity_verb", "aliases": ["writes", "wrote"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "paint", "category": "capacity_verb", "aliases": ["paints", "painted"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "run", "category": "capacity_verb", "aliases": ["runs", "ran"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "score", "category": "capacity_verb", "aliases": ["scores", "scored"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "answer", "category": "capacity_verb", "aliases": ["answers", "answered"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
+{"lemma": "complete", "category": "capacity_verb", "aliases": ["completes", "completed"], "provenance": "ported_from_math_candidate_parser_2026-05-26"}
