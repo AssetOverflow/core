@@ -36,7 +36,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from itertools import product
-from typing import Final, Union
+from typing import TYPE_CHECKING, Final, Union
+
+if TYPE_CHECKING:
+    from core.config import RuntimeConfig
 
 from generate.math_candidate_parser import (
     CandidateInitial,
@@ -115,6 +118,12 @@ class CandidateGraphResult:
     # Diagnostics for inner-loop signal in P6 runner.
     branches_enumerated: int
     branches_admissible: int
+    # ADR-0164 Phase 1 — reader trace events (JSON-encoded strings).
+    # Each element is a JSON object carrying {"layer", "phase", "outcome", ...}.
+    # Empty tuple when comprehension_reader_questions flag is False (default).
+    # Deferred: full integration with chat/telemetry.py JSONL sink is a
+    # follow-up; these events are available for tests and delta-report analysis.
+    reader_trace: tuple[str, ...] = ()
 
     @property
     def is_admitted(self) -> bool:
@@ -289,6 +298,69 @@ def _collapse_per_sentence_ties(
 
 
 # ---------------------------------------------------------------------------
+# ADR-0164 Phase 1 — comprehension reader dispatch helper
+# ---------------------------------------------------------------------------
+
+def _try_reader_for_question(
+    question_sentence: str,
+    per_sentence_choices: list[list[SentenceChoice]],
+    statement_sentence_count: int,
+    trace_out: list[str],
+) -> list[CandidateUnknown] | None:
+    """Invoke the Phase-1 comprehension reader for the question sentence.
+
+    Returns a list with one CandidateUnknown on reader admission, or None
+    when the reader refuses (caller falls through to the regex parser).
+
+    Appends a JSON-encoded trace event to ``trace_out`` on every invocation
+    (admit or fallthrough_to_regex).
+
+    This function is the hybrid-dispatch core for ADR-0164 Phase 1.  The
+    fallthrough path (reader refusal → regex) is intentional and must never
+    raise: the reader is purely additive at Phase 1.
+    """
+    try:
+        from generate.comprehension.lifecycle_runtime_adapter import (
+            build_problem_state_from_candidates,
+            invoke_reader_for_question,
+            make_admit_trace_event,
+            make_fallthrough_trace_event,
+            project_to_candidate_unknown,
+        )
+    except ImportError:
+        return None  # adapter not available — fall through silently
+
+    # Flatten per_sentence_choices to a single list for state construction.
+    # Take the first choice per sentence (deterministic: tiebreaker already ran).
+    flat: list[SentenceChoice] = [choices[0] for choices in per_sentence_choices if choices]
+    try:
+        problem_state = build_problem_state_from_candidates(flat, statement_sentence_count)
+    except Exception:
+        return None  # construction failure → fall through
+
+    result = invoke_reader_for_question(question_sentence, problem_state)
+    if isinstance(result, tuple):
+        slot, canonical_unit = result
+        trace_out.append(make_admit_trace_event(slot, canonical_unit))
+        candidate = project_to_candidate_unknown(
+            slot, canonical_unit, question_sentence, problem_state
+        )
+        if candidate is not None and _question_admissible(candidate):
+            return [candidate]
+        # Reader admitted but projection failed or failed admissibility.
+        # Do NOT fall through to regex (the reader's admission is authoritative
+        # on what it could parse; if projection fails it's a structural gap,
+        # not a reason to let the regex guess differently).
+        return None
+    else:
+        # ReaderRefusal — fall through to regex.
+        from generate.comprehension.state import ReaderRefusal
+        if isinstance(result, ReaderRefusal):
+            trace_out.append(make_fallthrough_trace_event(result))
+        return None
+
+
+# ---------------------------------------------------------------------------
 # Graph construction from one branch
 # ---------------------------------------------------------------------------
 
@@ -344,9 +416,20 @@ def _build_graph(
 # Orchestrator
 # ---------------------------------------------------------------------------
 
-def parse_and_solve(text: str) -> CandidateGraphResult:
+def parse_and_solve(
+    text: str,
+    config: "RuntimeConfig | None" = None,
+) -> CandidateGraphResult:
     """End-to-end: parse text via candidate-graph topology, solve each
     admissible branch, apply decision rule.
+
+    Args:
+        text: The problem text to parse.
+        config: Optional :class:`core.config.RuntimeConfig`.  When None,
+            defaults to flag-OFF behaviour (byte-identical to today).
+            Pass ``RuntimeConfig(comprehension_reader_questions=True)`` to
+            activate the ADR-0164 Phase-1 comprehension reader for question
+            sentences.
 
     Returns :class:`CandidateGraphResult` with either an admitted
     ``answer`` + ``selected_graph`` or a ``refusal_reason`` string
@@ -360,6 +443,11 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
       filter at the per-sentence level (already applied during
       filtering).
     - Branches that disagree on the final answer trigger refusal.
+    - When the comprehension reader is active (flag ON), a reader refusal
+      falls through to the existing regex parser — the reader is purely
+      additive.  A reader admission that produces wrong > 0 cannot occur
+      because the same admissibility gate, solver, and verifier run
+      downstream of the reader as they run today.
     """
     if not isinstance(text, str) or not text.strip():
         return CandidateGraphResult(
@@ -545,7 +633,32 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
             )
         per_sentence_choices.append(_collapse_per_sentence_ties(choices))
 
-    question_choices = _filtered_question_choices(question_sentences[0], text)
+    # ADR-0164 Phase 1 — comprehension reader hybrid dispatch.
+    # When comprehension_reader_questions is True, try the reader FIRST.
+    # On reader admission, use the reader's CandidateUnknown; on refusal,
+    # fall through to the existing regex question parser (Pattern A/B/C).
+    # The reader is purely additive: a refusal MUST NOT prevent admission
+    # by the regex parser.
+    reader_trace: list[str] = []
+    reader_question_choices: list[CandidateUnknown] | None = None
+    _use_reader = (
+        config is not None and config.comprehension_reader_questions
+    )
+    if _use_reader:
+        reader_question_choices = _try_reader_for_question(
+            question_sentences[0],
+            per_sentence_choices,
+            len(statement_sentences),
+            reader_trace,
+        )
+
+    # Fall through to the regex parser when the flag is off OR the reader
+    # refused on the question sentence.
+    if reader_question_choices is not None:
+        question_choices = reader_question_choices
+    else:
+        question_choices = _filtered_question_choices(question_sentences[0], text)
+
     if not question_choices:
         return CandidateGraphResult(
             answer=None, selected_graph=None,
@@ -554,6 +667,7 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
                 f"{question_sentences[0]!r}"
             ),
             branches_enumerated=0, branches_admissible=0,
+            reader_trace=tuple(reader_trace),
         )
 
     # Cartesian product across statement choices × question choices.
@@ -569,6 +683,7 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
                 f"{MAX_TOTAL_BRANCHES} (refusing rather than truncating)"
             ),
             branches_enumerated=total, branches_admissible=0,
+            reader_trace=tuple(reader_trace),
         )
 
     admissible: list[CandidateGraphAnswer] = []
@@ -593,6 +708,7 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
             refusal_reason="no branch produced a solvable graph",
             branches_enumerated=branches_enumerated,
             branches_admissible=0,
+            reader_trace=tuple(reader_trace),
         )
 
     # Decision rule: all answers identical → emit; otherwise → refuse.
@@ -606,6 +722,7 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
             ),
             branches_enumerated=branches_enumerated,
             branches_admissible=len(admissible),
+            reader_trace=tuple(reader_trace),
         )
 
     # Single agreed answer. Pick the first admissible graph as the
@@ -617,4 +734,5 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
         refusal_reason=None,
         branches_enumerated=branches_enumerated,
         branches_admissible=len(admissible),
+        reader_trace=tuple(reader_trace),
     )
