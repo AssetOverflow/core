@@ -177,12 +177,16 @@ def test_refusal_reason_distribution_is_stable(artifact):
     # additions). The unknown_word row strictly decreased; previously-hidden
     # bottlenecks at downstream frames became visible (real new work, not
     # regression). See `audit_brief_11.md` for the before/after table.
+    # Counts updated post-B1 (lexicon closure wave 3 adds path/journey/sees).
+    # unknown_word 5→3 (-2); case 0049 path resolution surfaced its pronoun
+    # barrier (unresolved_pronoun +1) and quantity gap (incomplete_operation
+    # +1). wrong=0 invariant preserved (admitted=0).
     expected = {
-        "incomplete_operation": 20,
+        "incomplete_operation": 21,
         "unexpected_category": 17,
-        "unknown_word": 5,
+        "unknown_word": 3,
         "unattached_quantity": 4,
-        "unresolved_pronoun": 3,
+        "unresolved_pronoun": 4,
         "no_question_target": 1,
     }
     assert Counter(artifact["summary"]["refusal_reasons"]) == Counter(expected)
