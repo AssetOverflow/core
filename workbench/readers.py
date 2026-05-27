@@ -55,6 +55,7 @@ _DEFAULT_MATH_AUDIT_PATH = (
 _HANDLER_DISPATCH: dict[str, str] = {
     "vocabulary_addition": "LexicalClaim",
     "frame_reclassification": "FrameClaim",
+    "composition_reclassification": "CompositionClaim",
 }
 
 
@@ -404,6 +405,14 @@ def read_math_proposal(
             f"# apply_frame_claim(claim=<evidence>, frame_category='increment_frame', "
             f"polarity='affirms', reviewer='<you>')"
         )
+    elif handler_name == "CompositionClaim":
+        suggested_cli = (
+            f"# ratify via Python REPL (ADR-0169):\n"
+            f"from teaching.math_composition_ratification import apply_composition_claim\n"
+            f"# apply_composition_claim(claim=<evidence>, "
+            f"composition_category='multiplicative_composition', "
+            f"polarity='affirms', reviewer='<you>')"
+        )
 
     return MathProposalDetail(
         proposal_id=proposal_id,
@@ -464,6 +473,13 @@ def ratify_math_proposal(
         suggested_cli = (
             f"from teaching.math_frame_ratification import apply_frame_claim\n"
             f"# apply_frame_claim(claim=<evidence>, frame_category='increment_frame', "
+            f"polarity='affirms', reviewer='<you>')"
+        )
+    elif handler_name == "CompositionClaim":
+        suggested_cli = (
+            f"from teaching.math_composition_ratification import apply_composition_claim\n"
+            f"# apply_composition_claim(claim=<evidence>, "
+            f"composition_category='multiplicative_composition', "
             f"polarity='affirms', reviewer='<you>')"
         )
 

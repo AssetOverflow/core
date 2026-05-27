@@ -9,7 +9,7 @@ Verifies the eight obligations specified in the ADR-0172 brief:
 5. JSON-serializable payload enforced.
 6. wrong_zero_assertion non-empty (≥40 chars) enforced.
 7. reasoning_trace required (None rejected).
-8. all four change_kinds round-trip cleanly.
+8. all five change_kinds round-trip cleanly (including ADR-0169 CC-2's composition_reclassification).
 
 W0 dependency: ``teaching/math_reasoning_trace.py`` (A1 branch) has not
 landed yet.  Tests use a minimal stub that exposes the ``trace_id`` duck-
@@ -208,7 +208,7 @@ def test_reasoning_trace_required_empty_trace_id() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test 8 — all four change_kinds round-trip
+# Test 8 — all five change_kinds round-trip
 # ---------------------------------------------------------------------------
 
 
@@ -217,6 +217,7 @@ def test_reasoning_trace_required_empty_trace_id() -> None:
     "injector_sub_shape",
     "vocabulary_addition",
     "frame_reclassification",
+    "composition_reclassification",  # ADR-0169 CC-2
 ])
 def test_all_four_change_kinds_round_trip(kind: str) -> None:
     """Every valid change_kind is accepted and round-trips through the schema."""
