@@ -97,14 +97,86 @@ attempts or an explicit human constant:
 
 - `n(C), correct(C), wrong(C), refused(C)` — already produced by the eval harness.
 - `t2_verified(C), t2_agrees_gold(C)` — on the live gold anchor set.
-- `reliability(C) = conservative_floor(correct(C), n(C))` — a deterministic
-  **lower bound**, pessimistic at small `n`, so luck cannot grant appetite.
+- `reliability(C) = conservative_floor(correct(C), k(C))` where
+  `k(C) = correct(C) + wrong(C)` is the **committed** attempt count — a
+  deterministic lower bound on *precision when the engine commits*. **Refusals
+  are excluded from the denominator on purpose**: refusing is always safe, so a
+  high refusal rate is a *coverage* fact (tracked by `refused(C)`), never a
+  *reliability* penalty. Using total `n` would wrongly tie trust to coverage.
 - `t2_precision(C) = conservative_floor(t2_agrees_gold(C), t2_verified(C))` — how
   trustworthy self-verification is on `C`; the number that licenses widening past
   gold.
 
-This lives in the **calibration module**; `conservative_floor` is fixed arithmetic
-(see Open Questions for its shape).
+This lives in the **calibration module**; `conservative_floor` is the pinned
+fixed-arithmetic function in §4a.
+
+### 4a. The `conservative_floor` function (pinned)
+
+`conservative_floor(s, k)` returns a deterministic lower bound on the success
+proportion given `s` successes in `k` committed trials. Pinned as the **one-sided
+Wilson lower bound** with a hard evidence floor:
+
+```text
+constants (system-wide, pinned):
+  z      = 2.576     # ~99% one-sided pessimism; the single global caution knob
+  N_min  = 10        # minimum committed trials before any reliability is claimed
+
+conservative_floor(s, k):
+  if k < N_min:                      return 0.0      # insufficient evidence
+  p   = s / k
+  z2  = z * z
+  denom  = 1 + z2 / k
+  center = (p + z2 / (2*k)) / denom
+  margin = (z / denom) * sqrt( p*(1 - p)/k + z2 / (4*k*k) )
+  return max(0.0, center - margin)
+```
+
+**Why this shape.**
+- *Pessimistic at small k, converges as k grows.* With a perfect record (`s = k`)
+  the bound is `k / (k + z²)`, so reliability is *earned by volume*, not granted by
+  a lucky streak. The `z²/(2k)` and `z²/(4k²)` terms pull a thin sample toward
+  ignorance.
+- *Asymmetric by construction.* It is a **lower** bound — the engine acts on the
+  pessimistic estimate of its own reliability, so the FP≫FN asymmetry is encoded in
+  the estimator itself, not bolted on.
+- *Two independent dials.* `z` (pinned) = how skeptical the *estimator* is, global.
+  `θ_required` (human-set, per class) = how much reliability an *action* demands.
+  Raising autonomy moves `θ`; it never touches `z` and the engine touches neither.
+
+**Boundary behavior (pin these in tests).**
+- `k = 0` or `k < N_min` → `0.0` (no claim from trivial evidence).
+- range is `[0.0, 1.0)`; it never returns exactly `1.0` (no finite record proves
+  perfection — the floor is forever shy of certainty).
+
+**What it costs to clear a ceiling** (perfect record, `z = 2.576`, `z² ≈ 6.64`):
+
+| `θ_required` | committed clean trials to clear |
+|---|---|
+| 0.85 (e.g. `θ_propose`) | ~38 |
+| 0.90 | ~60 |
+| 0.95 | ~127 |
+| 0.99 (e.g. `θ_serve`) | ~657 |
+
+A single wrong commitment in 40 drops reliability from ~0.86 to ~0.82 — back below
+a 0.85 propose gate until more clean commitments accumulate. That is the asymmetry
+working: errors cost more standing than successes buy, and standing is re-earned by
+volume. Auto-serving a class is deliberately expensive (hundreds of clean
+commitments); the ratification corridor is the path to serving *before* that bar is
+met.
+
+**Determinism contract.** `conservative_floor` is computed in IEEE-754 float64 and
+the result **rounded half-to-even to 1e-9** before any gate comparison; `θ`
+constants are specified to the same precision. This makes
+`reliability / θ_required ≥ 1` byte-stable and replayable across backends (no
+platform-dependent `sqrt` divergence reaches the verdict). A replay test must fail
+on any run-to-run difference (invariant #3).
+
+**Residual: precision can be gamed by easy instances.** A class that commits only
+to trivial instances and refuses the hard ones shows high precision with thin
+coverage. Defense is *not* in this function: per-class axis granularity, the live
+gold tether, and human-set ceilings already bound it, and a human MAY add an
+optional per-class **coverage floor** (`(correct+wrong)/n ≥ c_min`) as a *separate*
+serving precondition. The floor function stays precision-only and clean.
 
 ### 5. The checkability ladder — privilege ∝ reversibility
 
@@ -256,10 +328,10 @@ Per CLAUDE.md §Schema-Defined Proof Obligations, each of these requires a test 
 
 ## Open questions
 
-1. **Shape of `conservative_floor` and `N_min`** — how pessimistic at small `n`.
-   This single choice sets how cautiously the system earns autonomy. Candidate:
-   a deterministic Wilson/Wald-style lower bound, or a simpler `require n ≥ N_min
-   AND wrong ≤ W_max` rule. Resolve before Phase 1 PR.
+1. ~~**Shape of `conservative_floor` and `N_min`.**~~ **RESOLVED (§4a):** one-sided
+   Wilson lower bound over *committed* trials, `z = 2.576`, `N_min = 10`, float64
+   rounded half-to-even to 1e-9 for replay. `z` is the single pinned pessimism
+   constant; per-class `θ` ceilings remain the human autonomy dial.
 2. **First practice-arena home.** GSM8K train (gold-labeled, checkable, already
    wired) is the obvious Phase 2/3 home; confirm no serving-path coupling remains
    after the train_sample double-duty decoupling.
