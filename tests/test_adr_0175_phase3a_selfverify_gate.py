@@ -162,15 +162,31 @@ class TestSelectUnique:
         assert select_self_verified([spurious], "Martha has 20 apples and 5 friends.") is None
 
     def test_disagreeing_self_verified_refuses(self) -> None:
-        # two grounded derivations that disagree on the answer -> refuse (wrong=0)
+        # two COMPLETE grounded derivations that disagree -> refuse (wrong=0).
+        # Both use all problem quantities {5, 3}; different ops -> different answers.
+        text = "She has 5 apples and 3 apples."
+        d_add = GroundedDerivation(
+            start=_q(5, "apples", "5"),
+            steps=(Step(op="add", operand=_q(3, "apples", "3"), cue="and"),),
+        )  # 8
+        d_mul = GroundedDerivation(
+            start=_q(5, "apples", "5"),
+            steps=(Step(op="multiply", operand=_q(3, "apples", "3"), cue="and"),),
+        )  # 15
+        assert d_add.answer != d_mul.answer
+        assert select_self_verified([d_add, d_mul], text) is None
+
+    def test_incomplete_derivation_refuses(self) -> None:
+        # completeness clause: a derivation that ignores a stated quantity is an
+        # incomplete reading -> not self-verified (catches multi-step first-steps).
         text = "He bench presses 15 pounds for 10 reps and does 3 sets."
-        d1 = _mult_0021()  # 450
-        d2 = GroundedDerivation(  # 15 x 10 = 150 (grounded but different answer)
+        partial = GroundedDerivation(  # uses 15,10 but ignores the stated 3
             start=_q(15, "pounds", "15"),
-            steps=(Step(op="multiply", operand=_q(10, "reps", "10"), cue="reps"),),
+            steps=(Step(op="multiply", operand=_q(10, "reps", "10"), cue="for"),),
         )
-        assert d1.answer != d2.answer
-        assert select_self_verified([d1, d2], text) is None
+        sv = self_verifies(partial, text)
+        assert sv.verified is False
+        assert any("incomplete" in r for r in sv.reasons)
 
     def test_agreeing_self_verified_resolves(self) -> None:
         # two self-verifying derivations that AGREE -> resolve (convergent evidence)

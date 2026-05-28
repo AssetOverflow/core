@@ -30,6 +30,8 @@ from typing import Final
 # Canonical grounding primitives — reused so this gate stays identical to the
 # round-trip filter's notion of "appears in the problem text".
 from generate.math_roundtrip import _token_in, _tokens, _value_grounds
+from collections import Counter
+from generate.derivation.extract import extract_quantities
 from generate.derivation.model import GroundedDerivation
 
 _SAME_UNIT_REQUIRED: Final[frozenset[str]] = frozenset({"add", "subtract"})
@@ -76,6 +78,20 @@ def self_verifies(derivation: GroundedDerivation, problem_text: str) -> SelfVeri
     for step in derivation.steps:
         if step.op == "divide" and step.operand.value == 0:
             reasons.append("division by zero")
+
+    # 5. completeness — a trustworthy derivation must account for every quantity
+    #    the problem states. A derivation that ignores given numbers is an
+    #    incomplete reading (typically a correct *first step* of a multi-step
+    #    problem, mistaken for the whole answer). Refuse-preferring: unused
+    #    quantities -> not self-verified. This is the clause the practice-lane
+    #    microscope identified (ADR-0175 self-verification strengthening): it
+    #    catches the multi-step-incomplete attempts the cue/grounding clauses
+    #    cannot, because their operands ARE grounded.
+    problem_quantities = Counter(q.source_token for q in extract_quantities(problem_text))
+    used = Counter([derivation.start.source_token] + [step.operand.source_token for step in derivation.steps])
+    unused = problem_quantities - used
+    if unused:
+        reasons.append(f"incomplete: unused problem quantities {sorted(unused.keys())}")
 
     return SelfVerification(verified=not reasons, reasons=tuple(reasons))
 
