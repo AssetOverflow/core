@@ -1012,6 +1012,16 @@ def _match_multiplicative_aggregation(
         # ME-3 dispatch — same Literal narrowing keeps the return type
         # consistent ('aggregate' is reused).
         return _try_extract_additive_composition_anchor(statement, spec)
+    if anchor_kind == "subtractive_quantity_composition":
+        # ME-4 dispatch — subtractive shape returns ("amount" intent).
+        # Cast the Literal return: the matcher signature widens at the
+        # type level to include any 'aggregate'/'amount' but the caller
+        # in match() reads graph_intent verbatim.
+        sub_result = _try_extract_subtractive_composition_anchor(statement, spec)
+        if sub_result is None:
+            return None
+        anchors, _ = sub_result
+        return (anchors, "aggregate")  # reuse 'aggregate' label for subtractive too
     if anchor_kind != "multiplicative_aggregate":
         return None
     padded = _padded_lower(statement)
@@ -1182,6 +1192,156 @@ _ADDITIVE_COMPOSITION_VERBS: Final[frozenset[str]] = frozenset({
     "lost", "gained", "earned", "saved", "made", "paid", "spent",
     "bought", "sold", "added", "removed", "received",
 })
+
+
+# ---------------------------------------------------------------------------
+# ME-4 — subtractive composition matcher.
+#
+# Admits "<Subject> <init-verb> <N> <unit>(,| then|; etc.) <sub-verb>
+# <M> <unit>" (same unit; positive initial verb followed by removal
+# verb) and emits a pre-composed CandidateInitial(N - M, unit).
+#
+# Refusal-preferring discipline: count_b >= count_a → refuse
+# (non-negative remainder; subtractive composition that goes below
+# zero is a wrong>0 hazard).
+# ---------------------------------------------------------------------------
+
+_SUBTRACTIVE_TWO_QUANTITY_RE: Final[re.Pattern[str]] = re.compile(
+    r"""(?ix)
+    ^\s*
+    (?P<subject>[A-Z][a-zA-Z]+)
+    \s+
+    (?P<verb_a>had|has|got|owns|owned|earned|saved|made|received|bought)
+    \s+
+    (?P<count_a>\d+(?:\.\d+)?)
+    \s+
+    (?P<unit_a>[a-z]+)
+    \s*
+    (?:,|\sthen\s|;|\s+and\s+then\s+|\s+then\s+|\s+and\s+)
+    \s*
+    (?:then\s+)?
+    (?P<verb_b>lost|spent|gave|donated|paid|removed|sold|used|consumed)
+    (?:\s+away)?
+    \s+
+    (?P<count_b>\d+(?:\.\d+)?)
+    \s+
+    (?P<unit_b>[a-z]+)
+    \b
+    """,
+)
+
+_SUBTRACTIVE_COMPOSITION_SHAPE: Final[str] = "bound(initial) − bound(removed)"
+
+
+_SUBTRACTIVE_INITIAL_VERBS: Final[frozenset[str]] = frozenset({
+    "had", "has", "got", "owns", "owned", "earned", "saved",
+    "made", "received", "bought",
+})
+
+_SUBTRACTIVE_REMOVAL_VERBS: Final[frozenset[str]] = frozenset({
+    "lost", "spent", "gave", "donated", "paid", "removed",
+    "sold", "used", "consumed",
+})
+
+
+def _try_extract_subtractive_composition_anchor(
+    statement: str, spec: Mapping[str, Any]
+) -> tuple[tuple[Mapping[str, Any], ...], Literal["amount"]] | None:
+    """Extract a pre-composed CandidateInitial for subtractive composition.
+
+    See module docstring above for narrowness layers. ``count_b >=
+    count_a`` refuses (non-negative remainder discipline; wrong>0
+    hazard).
+    """
+    if spec.get("anchor_kind") != "subtractive_quantity_composition":
+        return None
+    observed_units = set(spec.get("observed_units") or ())
+    if not observed_units:
+        return None
+
+    matches = list(_SUBTRACTIVE_TWO_QUANTITY_RE.finditer(statement))
+    if len(matches) != 1:
+        return None
+
+    m = matches[0]
+    subject = m.group("subject")
+    if subject.lower() in _REFUSED_SUBJECT_TOKENS:
+        return None
+    if subject.lower() in _COMMON_DETERMINERS_AT_HEAD:
+        return None
+
+    verb_a = m.group("verb_a").lower()
+    verb_b = m.group("verb_b").lower()
+    if verb_a not in _SUBTRACTIVE_INITIAL_VERBS:
+        return None
+    if verb_b not in _SUBTRACTIVE_REMOVAL_VERBS:
+        return None
+
+    unit_a = m.group("unit_a").lower()
+    unit_b = m.group("unit_b").lower()
+    if unit_a.rstrip("s") != unit_b.rstrip("s"):
+        return None
+    canonical_unit = unit_a
+    if (
+        canonical_unit not in observed_units
+        and canonical_unit.rstrip("s") not in observed_units
+    ):
+        return None
+
+    count_a_token = m.group("count_a")
+    count_b_token = m.group("count_b")
+    try:
+        count_a = float(count_a_token)
+        count_b = float(count_b_token)
+    except ValueError:
+        return None
+    if count_a <= 0 or count_b <= 0:
+        return None
+    if count_b >= count_a:
+        return None  # Non-negative remainder; wrong>0 hazard.
+
+    composed_value_f = count_a - count_b
+    composed_value: int | float
+    if (
+        composed_value_f.is_integer()
+        and "." not in count_a_token
+        and "." not in count_b_token
+    ):
+        composed_value = int(composed_value_f)
+    else:
+        composed_value = composed_value_f
+
+    from generate.math_candidate_parser import CandidateInitial
+    from generate.math_problem_graph import InitialPossession, Quantity
+
+    matched_anchor = verb_a if verb_a in {
+        "has", "had", "saved", "earned", "got", "received", "bought", "made", "paid",
+    } else "had"
+
+    composed_initial = CandidateInitial(
+        initial=InitialPossession(
+            entity=subject,
+            quantity=Quantity(value=composed_value, unit=canonical_unit),
+        ),
+        source_span=m.group(0),
+        matched_anchor=matched_anchor,
+        matched_value_token=str(composed_value),
+        matched_unit_token=canonical_unit,
+        matched_entity_token=subject,
+    )
+
+    anchor: Mapping[str, Any] = {
+        "kind": "subtractive_quantity_composition",
+        "composition_shape": _SUBTRACTIVE_COMPOSITION_SHAPE,
+        "composed_initial": composed_initial,
+        "count_a": count_a_token,
+        "count_b": count_b_token,
+        "unit": canonical_unit,
+        "subject": subject,
+        "initial_verb": verb_a,
+        "removal_verb": verb_b,
+    }
+    return ((anchor,), "amount")
 
 
 def _match_currency_amount(
