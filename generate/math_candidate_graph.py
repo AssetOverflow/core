@@ -38,10 +38,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from itertools import product
-from typing import TYPE_CHECKING, Final, Union
-
-if TYPE_CHECKING:
-    from core.config import RuntimeConfig
+from typing import Final, Union
 
 from generate.comprehension.state import Hypothesis
 from generate.math_candidate_parser import (
@@ -121,11 +118,10 @@ class CandidateGraphResult:
     # Diagnostics for inner-loop signal in P6 runner.
     branches_enumerated: int
     branches_admissible: int
-    # ADR-0164 Phase 1 — reader trace events (JSON-encoded strings).
-    # Each element is a JSON object carrying {"layer", "phase", "outcome", ...}.
-    # Empty tuple when comprehension_reader_questions flag is False (default).
-    # Deferred: full integration with chat/telemetry.py JSONL sink is a
-    # follow-up; these events are available for tests and delta-report analysis.
+    # Reader trace events (JSON-encoded strings).  Each element is a JSON
+    # object carrying {"layer", "phase", "outcome", ...}.  Carries the
+    # ADR-0174 Phase-2 constraint-elimination events from the recognizer
+    # path.  Deferred: full integration with chat/telemetry.py JSONL sink.
     reader_trace: tuple[str, ...] = ()
 
     @property
@@ -359,69 +355,6 @@ def _collapse_per_sentence_ties(
 
 
 # ---------------------------------------------------------------------------
-# ADR-0164 Phase 1 — comprehension reader dispatch helper
-# ---------------------------------------------------------------------------
-
-def _try_reader_for_question(
-    question_sentence: str,
-    per_sentence_choices: list[list[SentenceChoice]],
-    statement_sentence_count: int,
-    trace_out: list[str],
-) -> list[CandidateUnknown] | None:
-    """Invoke the Phase-1 comprehension reader for the question sentence.
-
-    Returns a list with one CandidateUnknown on reader admission, or None
-    when the reader refuses (caller falls through to the regex parser).
-
-    Appends a JSON-encoded trace event to ``trace_out`` on every invocation
-    (admit or fallthrough_to_regex).
-
-    This function is the hybrid-dispatch core for ADR-0164 Phase 1.  The
-    fallthrough path (reader refusal → regex) is intentional and must never
-    raise: the reader is purely additive at Phase 1.
-    """
-    try:
-        from generate.comprehension.lifecycle_runtime_adapter import (
-            build_problem_state_from_candidates,
-            invoke_reader_for_question,
-            make_admit_trace_event,
-            make_fallthrough_trace_event,
-            project_to_candidate_unknown,
-        )
-    except ImportError:
-        return None  # adapter not available — fall through silently
-
-    # Flatten per_sentence_choices to a single list for state construction.
-    # Take the first choice per sentence (deterministic: tiebreaker already ran).
-    flat: list[SentenceChoice] = [choices[0] for choices in per_sentence_choices if choices]
-    try:
-        problem_state = build_problem_state_from_candidates(flat, statement_sentence_count)
-    except Exception:
-        return None  # construction failure → fall through
-
-    result = invoke_reader_for_question(question_sentence, problem_state)
-    if isinstance(result, tuple):
-        slot, canonical_unit = result
-        trace_out.append(make_admit_trace_event(slot, canonical_unit))
-        candidate = project_to_candidate_unknown(
-            slot, canonical_unit, question_sentence, problem_state
-        )
-        if candidate is not None and _question_admissible(candidate):
-            return [candidate]
-        # Reader admitted but projection failed or failed admissibility.
-        # Do NOT fall through to regex (the reader's admission is authoritative
-        # on what it could parse; if projection fails it's a structural gap,
-        # not a reason to let the regex guess differently).
-        return None
-    else:
-        # ReaderRefusal — fall through to regex.
-        from generate.comprehension.state import ReaderRefusal
-        if isinstance(result, ReaderRefusal):
-            trace_out.append(make_fallthrough_trace_event(result))
-        return None
-
-
-# ---------------------------------------------------------------------------
 # Graph construction from one branch
 # ---------------------------------------------------------------------------
 
@@ -474,126 +407,15 @@ def _build_graph(
 
 
 # ---------------------------------------------------------------------------
-# Comprehension reader integration (ADR-0164 Phase 2)
-# ---------------------------------------------------------------------------
-
-
-def _tokenize_sentence(sentence: str) -> list[str]:
-    """Split a sentence string into tokens for the reader.
-
-    Handles punctuation attachment: "." and "?" are emitted as separate
-    tokens if attached to a word (e.g. "dollars." → ["dollars", "."]).
-    Commas are split off too.
-    """
-    import re as _re
-    raw = _re.split(r"\s+", sentence.strip())
-    out: list[str] = []
-    for tok in raw:
-        if not tok:
-            continue
-        # Detach trailing punctuation.
-        if len(tok) > 1 and tok[-1] in (".", "?", "!"):
-            out.append(tok[:-1])
-            out.append(tok[-1])
-        elif len(tok) > 1 and tok[-1] == ",":
-            out.append(tok[:-1])
-            out.append(",")
-        else:
-            out.append(tok)
-    return [t for t in out if t]
-
-
-def _try_comprehension_reader(text: str) -> CandidateGraphResult | None:
-    """Attempt to parse and solve *text* via the incremental reader.
-
-    Returns a :class:`CandidateGraphResult` on success or reader refusal,
-    or ``None`` if the reader itself errors unexpectedly (caller falls
-    through to regex path).
-
-    All-or-nothing: if the reader refuses on ANY sentence, returns None
-    so the existing regex path can try. This guarantees wrong == 0 —
-    the reader either produces a verified graph or steps aside.
-    """
-    try:
-        from generate.comprehension.lifecycle import (
-            apply_word,
-            begin_sentence,
-            end_sentence,
-            finalize,
-        )
-        from generate.comprehension.state import (
-            EntityRef,
-            ProblemReadingState,
-            ReaderRefusal,
-        )
-        from generate.math_solver import SolveError, solve
-    except Exception:
-        return None
-
-    sentences = _split_sentences(text)
-    if not sentences:
-        return None
-
-    ps = ProblemReadingState(
-        entity_registry=(),
-        accumulated_initial_state=(),
-        accumulated_operations=(),
-        unknown_target_slot=None,
-        pronoun_resolution_history=(),
-        sentence_index=0,
-        source_text_offset=0,
-    )
-
-    for sentence in sentences:
-        tokens = _tokenize_sentence(sentence)
-        ss = begin_sentence(ps, ps.source_text_offset)
-        for tok in tokens:
-            result = apply_word(ss, ps, tok)
-            if isinstance(result, ReaderRefusal):
-                return None  # fall through to regex
-            ss = result
-        end = end_sentence(ss, ps)
-        if isinstance(end, ReaderRefusal):
-            return None  # fall through to regex
-        ps = end
-
-    graph_or_refusal = finalize(ps)
-    if isinstance(graph_or_refusal, ReaderRefusal):
-        return None  # fall through to regex
-
-    graph = graph_or_refusal
-    try:
-        answer = solve(graph)
-    except (SolveError, Exception):
-        return None  # fall through to regex
-
-    return CandidateGraphResult(
-        answer=answer,
-        selected_graph=graph,
-        refusal_reason=None,
-        branches_enumerated=1,
-        branches_admissible=1,
-    )
-
-
-# ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
 
-def parse_and_solve(
-    text: str,
-    config: "RuntimeConfig | None" = None,
-) -> CandidateGraphResult:
+def parse_and_solve(text: str) -> CandidateGraphResult:
     """End-to-end: parse text via candidate-graph topology, solve each
     admissible branch, apply decision rule.
 
     Args:
         text: The problem text to parse.
-        config: Optional :class:`core.config.RuntimeConfig`.  When None,
-            defaults to flag-OFF behaviour (byte-identical to today).
-            Pass ``RuntimeConfig(comprehension_reader_questions=True)`` to
-            activate the ADR-0164 Phase-1 comprehension reader for question
-            sentences.
 
     Returns :class:`CandidateGraphResult` with either an admitted
     ``answer`` + ``selected_graph`` or a ``refusal_reason`` string
@@ -607,11 +429,14 @@ def parse_and_solve(
       filter at the per-sentence level (already applied during
       filtering).
     - Branches that disagree on the final answer trigger refusal.
-    - When the comprehension reader is active (flag ON), a reader refusal
-      falls through to the existing regex parser — the reader is purely
-      additive.  A reader admission that produces wrong > 0 cannot occur
-      because the same admissibility gate, solver, and verifier run
-      downstream of the reader as they run today.
+
+    ADR-0174 Phase 5a: the recognizer/candidate-graph path is the single
+    canonical reader.  The flag-gated incremental-reader dispatch
+    (``_try_comprehension_reader`` / ``_try_reader_for_question``) was
+    retired — it admitted 0/50 on train_sample and only added a dead
+    fall-through.  ``lifecycle.py`` itself survives because the ADR-0172
+    contemplation corridor (``comprehension/audit.py`` →
+    ``teaching/math_*``) still uses its reader surface.
     """
     if not isinstance(text, str) or not text.strip():
         return CandidateGraphResult(
@@ -619,17 +444,6 @@ def parse_and_solve(
             refusal_reason="empty or non-string problem",
             branches_enumerated=0, branches_admissible=0,
         )
-
-    # ADR-0164 Phase 2 — comprehension reader path (flag-gated, off by default).
-    # All-or-nothing: reader either solves the whole problem or falls through.
-    # Reuses the same RuntimeConfig.comprehension_reader_questions flag that
-    # Phase 1 introduced (#331). Whole-problem reader takes priority over the
-    # Phase 1 question-only hybrid path because finalize() emits a complete
-    # MathProblemGraph that the existing solver consumes unchanged.
-    if config is not None and config.comprehension_reader_questions:
-        reader_result = _try_comprehension_reader(text)
-        if reader_result is not None:
-            return reader_result
 
     sentences = _split_sentences(text)
     if not sentences:
@@ -1156,35 +970,13 @@ def parse_and_solve(
         if _head is not None:
             _prior_subject = _head
 
-    # ADR-0164 Phase 1 — comprehension reader hybrid dispatch.
-    # When comprehension_reader_questions is True, try the reader FIRST.
-    # On reader admission, use the reader's CandidateUnknown; on refusal,
-    # fall through to the existing regex question parser (Pattern A/B/C).
-    # The reader is purely additive: a refusal MUST NOT prevent admission
-    # by the regex parser.
     # ADR-0174 Phase 2 — seed reader_trace with statement-stage
-    # constraint-propagation events so consumers see Phase-1 (ADR-0164)
-    # reader events and Phase-2 (ADR-0174) elimination events in one
-    # ordered stream.
+    # constraint-propagation events so consumers still see the Phase-2
+    # elimination events in one ordered stream.  (ADR-0174 Phase 5a: the
+    # flag-gated question-reader dispatch was retired; the recognizer
+    # question parser is the single path.)
     reader_trace: list[str] = list(_statement_trace)
-    reader_question_choices: list[CandidateUnknown] | None = None
-    _use_reader = (
-        config is not None and config.comprehension_reader_questions
-    )
-    if _use_reader:
-        reader_question_choices = _try_reader_for_question(
-            question_sentences[0],
-            per_sentence_choices,
-            len(statement_sentences),
-            reader_trace,
-        )
-
-    # Fall through to the regex parser when the flag is off OR the reader
-    # refused on the question sentence.
-    if reader_question_choices is not None:
-        question_choices = reader_question_choices
-    else:
-        question_choices = _filtered_question_choices(question_sentences[0], text)
+    question_choices = _filtered_question_choices(question_sentences[0], text)
 
     if not question_choices:
         return CandidateGraphResult(

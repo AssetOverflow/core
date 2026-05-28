@@ -180,8 +180,7 @@ def test_wrong_zero_preserved():
     while here.parent != here and not (here / "pyproject.toml").exists():
         here = here.parent
     subprocess.run(
-        [sys.executable, "-m", "evals.gsm8k_math.train_sample.v1.runner",
-         "--use-reader"],
+        [sys.executable, "-m", "evals.gsm8k_math.train_sample.v1.runner"],
         cwd=here,
         capture_output=True,
     )
@@ -200,8 +199,7 @@ def test_case_0050_remains_refused():
     while here.parent != here and not (here / "pyproject.toml").exists():
         here = here.parent
     subprocess.run(
-        [sys.executable, "-m", "evals.gsm8k_math.train_sample.v1.runner",
-         "--use-reader"],
+        [sys.executable, "-m", "evals.gsm8k_math.train_sample.v1.runner"],
         cwd=here,
         capture_output=True,
     )

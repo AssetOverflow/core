@@ -120,8 +120,7 @@ def test_wrong_zero_preserved_on_train_sample():
     import sys
 
     result = subprocess.run(
-        [sys.executable, "-m", "evals.gsm8k_math.train_sample.v1.runner",
-         "--use-reader"],
+        [sys.executable, "-m", "evals.gsm8k_math.train_sample.v1.runner"],
         cwd=_repo_root(),
         capture_output=True,
         text=True,
@@ -141,8 +140,7 @@ def test_case_0050_remains_refused_after_rat1():
     import sys
 
     subprocess.run(
-        [sys.executable, "-m", "evals.gsm8k_math.train_sample.v1.runner",
-         "--use-reader"],
+        [sys.executable, "-m", "evals.gsm8k_math.train_sample.v1.runner"],
         cwd=_repo_root(),
         capture_output=True,
     )

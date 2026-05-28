@@ -38,7 +38,6 @@ class CoverageReport:
     counts: CoverageCounts
     refusal_taxonomy: Mapping[str, int]
     case_0050_verdict: str | None
-    use_reader: bool
     delta: Mapping[str, int] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, object]:
@@ -54,7 +53,6 @@ class CoverageReport:
             },
             "refusal_taxonomy": dict(self.refusal_taxonomy),
             "case_0050_verdict": self.case_0050_verdict,
-            "use_reader": self.use_reader,
             "delta": dict(self.delta),
         }
 
@@ -98,7 +96,6 @@ def build_coverage_report(
     lane: str,
     split: str,
     version: str,
-    use_reader: bool,
     baseline_path: Path | None = None,
 ) -> CoverageReport:
     """Build a :class:`CoverageReport` from a runner-emitted report.json.
@@ -153,7 +150,6 @@ def build_coverage_report(
         counts=counts,
         refusal_taxonomy=sorted_taxonomy,
         case_0050_verdict=case_0050_verdict,
-        use_reader=use_reader,
         delta=delta,
     )
 

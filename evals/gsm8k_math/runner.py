@@ -31,12 +31,9 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from generate.math_candidate_graph import parse_and_solve
-
-if TYPE_CHECKING:
-    from core.config import RuntimeConfig
 from generate.math_parser import ParseError, parse_problem
 from generate.math_problem_graph import MathProblemGraph
 from generate.math_realizer import RealizerError, realize
@@ -240,7 +237,6 @@ def _score_one(case: dict[str, Any]) -> CaseOutcome:
 # the canonical run.honest_runner.json artifact can be trusted for cross-phase comparison.
 def _score_one_candidate_graph(
     case: dict[str, Any],
-    config: "RuntimeConfig | None" = None,
 ) -> CaseOutcome:
     """ADR-0126 P4 — score one case via the candidate-graph pipeline.
 
@@ -263,16 +259,13 @@ def _score_one_candidate_graph(
     Args:
         case: Case record with keys ``id``, ``problem``, ``expected_answer``,
             ``expected_unit``.
-        config: Optional :class:`core.config.RuntimeConfig`.  Passed through
-            to :func:`generate.math_candidate_graph.parse_and_solve`.  When
-            None, flag-OFF (default) behaviour is preserved.
     """
     case_id = case["id"]
     expected_answer = case["expected_answer"]
     expected_unit = case["expected_unit"]
 
     # Stage 1 — candidate-graph parse + internal solve + decision rule.
-    cg_result = parse_and_solve(case["problem"], config=config)
+    cg_result = parse_and_solve(case["problem"])
     if not cg_result.is_admitted:
         return CaseOutcome(
             case_id=case_id,

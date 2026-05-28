@@ -441,7 +441,7 @@ the lift gate to the wrong work.
 | Original Phase 5 premise | Verified reality (2026-05-28) |
 |---|---|
 | `math_parser.py` is the legacy parser to remove from runtime | Already out of the chat runtime **and** the candidate-graph (`_score_one_candidate_graph` → `parse_and_solve`) train_sample scoring path. Live only in `_score_one`, `evals/gsm8k_math/verify.py`, and the perturbation / OOD / bounded-grammar obligation lanes (`core/capability/perturbation_b3.py`, `generate/perturbation_suite.py`, `evals/gsm8k_parser_dev/*`, `evals/math_bounded_grammar`, `evals/obligation_2_ood_ratio`). CLEANUP-C2 keeps it as the `--legacy-parser` baseline. **Nothing to remove from the live path.** |
-| `lifecycle.py` is the reader to promote to primary | `_try_comprehension_reader` (lifecycle apply_word/finalize) **admits 0/50** on train_sample. It runs first when the flag is on, refuses every case, and falls through to the recognizer path every time. It is the dead-weight parallel parser. |
+| `lifecycle.py` is the reader to promote to primary | `_try_comprehension_reader` (lifecycle apply_word/finalize) **admits 0/50** on train_sample — inert *in GSM8K scoring*. **But `lifecycle.py` is NOT dead:** `generate/comprehension/audit.py` (`audit_problem`/`AuditRow`) imports its reader surface, and `audit_problem` is load-bearing for the ADR-0172 math-contemplation teaching corridor (`teaching/math_evidence.py`, `math_contemplation.py`, `math_inference_proposal.py`, `math_claim_signature.py`, `math_contemplation_proposal.py`, `core/cli.py`, `evals/flywheel_demo`). The reader's *refusals* become teaching evidence. So the file stays; only its **GSM8K-scoring dispatch** is inert and retirable. |
 | Integration target is per-token `apply_word` | All Phase 2/3a/3b/4 defenses (`eliminate_violating`, `reevaluate`, `contemplate`) are wired into the recognizer/candidate-graph path, which produces all 3 correct cases. `lifecycle.py` carries none of them. |
 | `correct ≥ 25` is the Phase 5 gate | Structural collapse is a refactor → **~0 lift**. The lift lives in removing the 3–5 narrowness layers refusing simultaneously per case — *semantic* work the original phase never separated. |
 
@@ -454,51 +454,75 @@ lift phase (5b).
 
 ### Retirement-safe vs load-bearing
 
-- **Retire (5a):** `generate/comprehension/lifecycle.py` (~1,872 LOC)
-  and `generate/comprehension/lifecycle_runtime_adapter.py`; **both**
-  flag-gated readers in `math_candidate_graph.py` —
-  `_try_comprehension_reader` (whole-problem, admits 0/50) and
-  `_try_reader_for_question` (question-stage, via the adapter) — plus
-  the `comprehension_reader_questions` config flag they share and the
+- **Retire (5a) — GSM8K-scoring-only inert dispatch (~580 LOC):**
+  `generate/comprehension/lifecycle_runtime_adapter.py` (402 LOC, imported
+  *only* by the question-reader dispatch); **both** flag-gated reader
+  dispatches in `math_candidate_graph.py` — `_try_comprehension_reader`
+  (whole-problem, admits 0/50), `_try_reader_for_question` (question-stage,
+  via the adapter), and the `_tokenize_sentence` helper they use; the
+  `comprehension_reader_questions` config flag they share and the
   `--use-reader` plumbing in the train_sample runner;
-  `generate/comprehension/audit.py`'s lifecycle dependency.
-- **Keep (load-bearing for the recognizer path):** `state.py` —
-  including `ProblemReadingState`, which is **not** lifecycle-only: it is
-  `contemplate()`'s parameter type and is constructed in the Phase 4
-  recognizer wiring (`math_candidate_graph.py:928`). Also keep
-  `Hypothesis`, `UnknownHeld`, `HYPOTHESIS_CAP`,
-  `constraint_propagation.py`, `lookback.py`, `contemplate.py`, and the
-  `recognizer_anchor_inject.py` injector table.
+  `tests/test_reader_coexistence.py` (its flag-ON/OFF byte-identity premise
+  dissolves once there is one path).
+- **KEEP — load-bearing, corrected from the first draft:**
+  - `generate/comprehension/lifecycle.py` (**stays** — the
+    audit→teaching corridor uses its reader surface; only its scoring
+    dispatch is inert). `tests/test_reader_phase2.py` and
+    `test_reader_question_frame.py` import it directly and stay.
+  - `generate/comprehension/audit.py` (`audit_problem`/`AuditRow`) — the
+    ADR-0172 contemplation/evidence entry point.
+  - `state.py` — including `ProblemReadingState` (`contemplate()`'s
+    parameter type, constructed in the Phase 4 recognizer wiring at
+    `math_candidate_graph.py:928`), `Hypothesis`, `UnknownHeld`,
+    `HYPOTHESIS_CAP`; `constraint_propagation.py`, `lookback.py`,
+    `contemplate.py`, and the `recognizer_anchor_inject.py` injector table.
+
+  > **Correction (2026-05-28, during 5a pre-flight):** the first draft of
+  > this scope said "retire lifecycle.py (~1,872 LOC)". A pre-deletion
+  > trace found `audit.py` imports lifecycle's reader surface and feeds
+  > the live teaching corridor, so lifecycle.py is **dual-use** and must
+  > stay. 5a's real payoff is ~580 LOC (the scoring dispatch + adapter +
+  > flag), not the projected ~1,872. The deeper LOC reduction the parent
+  > ADR projected does not materialize while the contemplation corridor
+  > keeps the reader alive.
 
 ### Phase 5a — Retire the inert parallel parser (structural)
 
-Scope:
-1. Delete both flag-gated reader functions (`_try_comprehension_reader`
-   and `_try_reader_for_question`) and their call sites; drop the
-   `comprehension_reader_questions` config flag and the `--use-reader`
-   runner plumbing (the recognizer path runs unconditionally — it is no
-   longer "opt-in reader vs regex," it is the only reader).
-2. Delete `generate/comprehension/lifecycle.py` and
-   `lifecycle_runtime_adapter.py`; re-home or retire `audit.py` (its only
-   role was tracing the inert reader — confirm nothing else consumes its
-   output).
-3. Collapse the duplicate per-sentence-choice scaffolding in
-   `math_candidate_graph.py` now that there is a single parse path.
-4. Trim `state.py` to what the recognizer path actually imports.
-   `EntityRef`, `SentenceState`, and the `begin_sentence`/`apply_word`/
-   `end_sentence`/`finalize` reader surface leave with `lifecycle.py`.
-   **Keep `ProblemReadingState`** (contemplate type + Phase 4 wiring) and
-   `ReaderRefusal` (still returned by the question-stage path until both
-   readers are removed together). Verify each symbol's live references
-   before removing it — the earlier "leaves with the reader" assumption
-   was wrong for `ProblemReadingState`.
+Scope (corrected):
+1. Delete both flag-gated reader **dispatch functions**
+   (`_try_comprehension_reader`, `_try_reader_for_question`) and their
+   call sites in `math_candidate_graph.py`, plus the `_tokenize_sentence`
+   helper; drop the `comprehension_reader_questions` config flag and the
+   `--use-reader` runner plumbing (the recognizer path runs
+   unconditionally — it is no longer "opt-in reader vs regex," it is the
+   only scoring path).
+2. Delete `generate/comprehension/lifecycle_runtime_adapter.py` (used only
+   by the question-reader dispatch). **Do NOT delete `lifecycle.py` or
+   `audit.py`** — both feed the live ADR-0172 contemplation corridor.
+3. Remove `tests/test_reader_coexistence.py` (flag-ON/OFF premise gone);
+   keep `test_reader_phase2.py` / `test_reader_question_frame.py` (they
+   test `lifecycle.py`, which stays).
+4. Leave `state.py` intact. `ProblemReadingState`/`ReaderRefusal` are
+   load-bearing (contemplate + audit corridor); `EntityRef`/`SentenceState`
+   remain referenced by the surviving `lifecycle.py`. No state.py trim in
+   5a.
+5. Collapsing the duplicate per-sentence-choice scaffolding is deferred —
+   with the question-reader branch gone the dispatch is already single-path;
+   any further structural collapse is its own follow-up, not load-bearing
+   for 5a.
 
 Acceptance (5a):
 - train_sample **3/47/0 unchanged** — byte-identical verdicts; this is a
   refactor, not a behaviour change. (Honest: ~0 lift is the *expected*
   and *correct* outcome of 5a.)
-- Net **−LOC** (retires ≥ 1,872 lifecycle lines + scaffolding; the
-  ADR's projected net removal becomes real here).
+- Net **−1,038 LOC** of code + tests (as shipped: adapter 402 +
+  `test_reader_coexistence.py` 302 + train_sample delta-report/`use_reader`
+  plumbing ~96 + the two `math_candidate_graph` dispatch fns/tokenizer +
+  coverage-CLI `use_reader` field + stale delta artifact, against ~53 lines
+  of replacement docstrings/comments). Larger than the first ~580 estimate
+  because the coexistence test and delta-report harness were bigger than
+  scoped. The parent ADR's ~1,872-line figure still does **not** apply:
+  `lifecycle.py` stays for the teaching corridor.
 - Capability-axis lanes G1–G5, S1 remain 100% `wrong = 0`.
 - Determinism / `trace_hash` invariant holds; pinned lane SHAs pass.
 - `math_parser.py` baseline lanes untouched (out of scope — keep).

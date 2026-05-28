@@ -2038,14 +2038,10 @@ def cmd_teaching_coverage(args: argparse.Namespace) -> int:
         return 1
     report_path = lane_dir / "report.json"
 
-    use_reader = bool(args.use_reader)
-
     if args.run or not report_path.exists():
         import subprocess
         runner_module = f"evals.{lane}.{split}.{version}.runner"
         runner_args = [sys.executable, "-m", runner_module]
-        if use_reader:
-            runner_args.append("--use-reader")
         try:
             subprocess.run(
                 runner_args,
@@ -2069,14 +2065,13 @@ def cmd_teaching_coverage(args: argparse.Namespace) -> int:
         lane=lane,
         split=split,
         version=version,
-        use_reader=use_reader,
         baseline_path=baseline_path,
     )
 
     if args.json:
         print(json.dumps(report.as_dict(), indent=2, sort_keys=True))
     else:
-        print(f"Lane: {report.lane}/{report.split}/{report.version} (use_reader={report.use_reader})")
+        print(f"Lane: {report.lane}/{report.split}/{report.version}")
         if report.delta:
             print(
                 f"Counts: correct={report.counts.correct} "
@@ -4630,10 +4625,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     teaching_coverage.add_argument(
         "--version", default="v1", help="lane version (default: v1)",
-    )
-    teaching_coverage.add_argument(
-        "--use-reader", action="store_true",
-        help="pass --use-reader to the runner (matches train_sample default)",
     )
     teaching_coverage.add_argument(
         "--run", action="store_true",
