@@ -3,6 +3,7 @@ import { ReplayStatusBadge, TraceHashBadge, ReplayStatus } from "../../design/co
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ReplayDiffViewer } from "./ReplayDiffViewer";
 import { ReplayMetadataTable } from "./ReplayMetadataTable";
+import { Link, useSearchParams } from "react-router-dom";
 
 interface ReplayComparisonPanelProps {
   artifact: ArtifactDetail;
@@ -15,6 +16,9 @@ export function ReplayComparisonPanel({
   comparison,
   status,
 }: ReplayComparisonPanelProps) {
+  const [searchParams] = useSearchParams();
+  const fromProposal = searchParams.get("fromProposal");
+
   const finalComparison: ReplayComparison = comparison || {
     artifact_id: artifact.artifact_id,
     original_hash: artifact.digest,
@@ -25,6 +29,17 @@ export function ReplayComparisonPanel({
 
   return (
     <div className="space-y-6" data-testid="replay-comparison-panel">
+      {fromProposal && (
+        <div className="mb-2">
+          <Link
+            to={`/proposals?proposal_id=${encodeURIComponent(fromProposal)}`}
+            className="text-xs text-[var(--color-link)] hover:underline inline-flex items-center gap-1 font-medium"
+            data-testid="back-to-proposal"
+          >
+            Back to proposal #{fromProposal}
+          </Link>
+        </div>
+      )}
       <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-4">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)]">Replay Evidence</h2>
         <ReplayStatusBadge value={status} />

@@ -209,11 +209,13 @@ describe("W-031 Replay Theater Tests", () => {
       };
 
       render(
-        <ReplayComparisonPanel
-          artifact={mockArtifactDetail}
-          comparison={eqComparison}
-          status={ReplayStatus.EQUIVALENT}
-        />
+        <MemoryRouter>
+          <ReplayComparisonPanel
+            artifact={mockArtifactDetail}
+            comparison={eqComparison}
+            status={ReplayStatus.EQUIVALENT}
+          />
+        </MemoryRouter>
       );
 
       // Check for calm empty state text
@@ -262,6 +264,14 @@ describe("W-031 Replay Theater Tests", () => {
       expect(badges[2].textContent).toBe("info");
     });
 
+    it("renders severity label text ('breaking', 'material', 'low') next to badges", () => {
+      render(<ReplayDiffViewer divergences={mockReplayComparison.divergences} />);
+
+      expect(screen.getByTestId("severity-label-failure").textContent).toBe("breaking");
+      expect(screen.getByTestId("severity-label-warning").textContent).toBe("material");
+      expect(screen.getByTestId("severity-label-info").textContent).toBe("low");
+    });
+
     it("renders nothing (null) with 0 divergences", () => {
       const { container } = render(<ReplayDiffViewer divergences={[]} />);
       expect(container.firstChild).toBeNull();
@@ -297,6 +307,36 @@ describe("W-031 Replay Theater Tests", () => {
       expect(pathEl.tagName.toLowerCase()).not.toBe("a");
       expect(pathEl.closest("a")).toBeNull();
       expect(pathEl.textContent).toBe(mockArtifactDetail.path);
+    });
+
+    it("renders timestamp, digest, run id, lane, and explicit severity labels", () => {
+      const detailWithMeta: ArtifactDetail = {
+        ...mockArtifactDetail,
+        created_at: "2026-05-26T12:00:00Z",
+        content: {
+          run_id: "run-999",
+          lane: "contemplation_quality",
+        },
+      };
+
+      render(
+        <ReplayMetadataTable
+          artifact={detailWithMeta}
+          comparison={mockReplayComparison}
+        />
+      );
+
+      // Verify timestamp
+      expect(screen.getByTestId("artifact-created-at")).toHaveTextContent("2026");
+
+      // Verify run id & lane
+      expect(screen.getByTestId("artifact-run-id")).toHaveTextContent("run-999");
+      expect(screen.getByTestId("artifact-lane")).toHaveTextContent("contemplation_quality");
+
+      // Verify divergence counts with textual labels
+      expect(screen.getByText("Failure (breaking): 1")).toBeInTheDocument();
+      expect(screen.getByText("Warning (material): 1")).toBeInTheDocument();
+      expect(screen.getByText("Info (low): 1")).toBeInTheDocument();
     });
   });
 
@@ -392,6 +432,82 @@ describe("W-031 Replay Theater Tests", () => {
 
       expect(await screen.findByText("What failed")).toBeInTheDocument();
       expect(screen.getByText("disk read error")).toBeInTheDocument();
+    });
+
+    it("renders Selected artifact not found when selected ID returns null detail data", async () => {
+      const fetchMock = vi.fn().mockImplementation((url: string) => {
+        if (url.endsWith("/artifacts")) {
+          return Promise.resolve({
+            json: () => Promise.resolve({ ok: true, generated_at: "now", data: { items: mockArtifacts } }),
+          });
+        }
+        if (url.endsWith("/artifacts/missing-id")) {
+          return Promise.resolve({
+            json: () => Promise.resolve({ ok: true, generated_at: "now", data: null }),
+          });
+        }
+        if (url.endsWith("/replay/missing-id")) {
+          return Promise.resolve({
+            json: () => Promise.resolve({ ok: true, generated_at: "now", data: mockReplayComparison }),
+          });
+        }
+        return Promise.reject(new Error("Unknown route"));
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      renderWithProviders(<ReplayRoute />, ["/replay?artifactId=missing-id"]);
+
+      expect(await screen.findByText("Selected artifact not found.")).toBeInTheDocument();
+    });
+
+    it("renders ErrorState in left pane when artifacts loading fails", async () => {
+      const fetchMock = vi.fn().mockImplementation((url: string) => {
+        if (url.endsWith("/artifacts")) {
+          return Promise.resolve({
+            json: () => Promise.resolve({
+              ok: false,
+              generated_at: "now",
+              error: { code: "read_error", message: "Failed to read artifacts index" },
+            }),
+          });
+        }
+        return Promise.reject(new Error("Unknown route"));
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      renderWithProviders(<ReplayRoute />, ["/replay"]);
+
+      const errorElements = await screen.findAllByText("Failed to read artifacts index");
+      expect(errorElements.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText("No corpus mutation occurred.").length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("renders Back to proposal link only when fromProposal query parameter is present", () => {
+      const { unmount } = renderWithProviders(
+        <ReplayComparisonPanel
+          artifact={mockArtifactDetail}
+          comparison={mockReplayComparison}
+          status={ReplayStatus.DIVERGED}
+        />,
+        ["/replay?artifactId=art-trace-1"]
+      );
+
+      expect(screen.queryByTestId("back-to-proposal")).not.toBeInTheDocument();
+      unmount();
+
+      renderWithProviders(
+        <ReplayComparisonPanel
+          artifact={mockArtifactDetail}
+          comparison={mockReplayComparison}
+          status={ReplayStatus.DIVERGED}
+        />,
+        ["/replay?artifactId=art-trace-1&fromProposal=proposal-777"]
+      );
+
+      const link = screen.getByTestId("back-to-proposal");
+      expect(link).toBeInTheDocument();
+      expect(link).toHaveTextContent("Back to proposal #proposal-777");
+      expect(link.getAttribute("href")).toBe("/proposals?proposal_id=proposal-777");
     });
   });
 

@@ -54,6 +54,12 @@ export function ReplayDiffViewer({ divergences }: ReplayDiffViewerProps) {
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border-subtle)] pb-2">
                 <div className="flex items-center gap-2">
                   <ReplayDivergenceSeverityBadge value={div.severity as ReplayDivergenceSeverity} />
+                  <span
+                    className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]"
+                    data-testid={`severity-label-${div.severity}`}
+                  >
+                    {div.severity === "failure" ? "breaking" : div.severity === "warning" ? "material" : "low"}
+                  </span>
                   <span className="font-mono text-xs text-[var(--color-text-secondary)] break-all select-all">
                     {div.path}
                   </span>
