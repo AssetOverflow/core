@@ -5,7 +5,7 @@
 **Author:** Shay
 **Anchor:** [[thesis-decoding-not-generating]]
 **Discussion / derivation:** [SESSION-2026-05-28 — From "Another Matcher" to a Self-Calibrating Problem Solver](../sessions/SESSION-2026-05-28-risk-reward-learning-architecture.md)
-**Builds on:** [ADR-0174 — Held-Hypothesis Comprehension](./ADR-0174-held-hypothesis-comprehension.md) (the `eliminate_violating` / `reevaluate` / `contemplate` substrate — here **repointed from reading to solving**), the calibration module, capability axes G1–G5, the round-trip filter + multi-branch disagreement rule, teaching-safety (proposal-only / reviewed = the seal)
+**Builds on:** [ADR-0174 — Held-Hypothesis Comprehension](./ADR-0174-held-hypothesis-comprehension.md) (the `eliminate_violating` / `reevaluate` / `contemplate` substrate — here **generalized** from reading to solving; see §"Pre-implementation audit" — it is reading-coupled today, not a drop-in), capability axes G1–G5, the round-trip filter + multi-branch disagreement rule, teaching-safety (proposal-only / reviewed = the seal). The per-class reliability ledger is **new** (the existing `calibration/` module is a grid-search param tuner, not a ledger).
 **Supersedes:** the matcher-oriented Phase 5b sub-phases (5b.1 single-sentence / 5b.2 cross-sentence / 5b.3 deep) in ADR-0174 — they collapse into *instances* of this architecture.
 
 ---
@@ -107,8 +107,9 @@ attempts or an explicit human constant:
   trustworthy self-verification is on `C`; the number that licenses widening past
   gold.
 
-This lives in the **calibration module**; `conservative_floor` is the pinned
-fixed-arithmetic function in §4a.
+This ledger is **new** (it is *not* the existing `calibration/` module, which is a
+deterministic grid-search hyperparameter tuner — orthogonal, no reuse).
+`conservative_floor` is the pinned fixed-arithmetic function in §4a.
 
 ### 4a. The `conservative_floor` function (pinned)
 
@@ -290,19 +291,23 @@ Per CLAUDE.md §Schema-Defined Proof Obligations, each of these requires a test 
   canaries (0050) keep guarding serving.
 - **Risk concentrates in the search + checker.** This is where the project's
   correctness mandate is most stressed; invariants #1–#2 are the load-bearing work.
-- **Mostly composition, not new machinery:** classes = capability axes; counts =
-  eval harness; reliability + lower bound = calibration module; replay guarantees
-  reproducibility; `θ` = a small config table; seal = teaching-safety; elimination
-  = ADR-0174's `eliminate_violating`/`reevaluate`/`contemplate` repointed to
-  solving.
+- **Part composition, part new (see Pre-implementation audit):** classes =
+  capability axes; counts = eval harness; replay = existing determinism; `θ` = a
+  small config table; seal = teaching-safety. **New or generalized:** the
+  reliability **ledger + `conservative_floor`** (new; not the `calibration/` tuner);
+  the elimination substrate (`eliminate_violating`/`reevaluate`/`contemplate`)
+  **generalized** off its reading-coupled types; a **solver-practice evidence type**
+  for the corridor (today's `MathReaderRefusalEvidence` is reader-refusal-shaped).
 
 ## Phasing (wrong=0-first; each phase ships its proof obligations)
 
 1. **Ledger + gate substrate.** Per-class calibration ledger, `conservative_floor`,
    the ratio gate, `θ` config table. Invariants #3–#4 proven. Zero behavior change
    to serving.
-2. **Sealed practice regime on GSM8K train.** Run attempt-and-eliminate over the 47
-   (Tier-1 gold checkable); score correct/wrong/refused as *practice* metrics;
+2. **Sealed practice regime on GSM8K train — as a NEW lane.** Run
+   attempt-and-eliminate over the 47 (Tier-1 gold checkable) in a *separate* runner;
+   **do not modify the wrong=0-pinned train_sample serving runner** (~25 tests +
+   its exit criterion guard it). Score correct/wrong/refused as *practice* metrics;
    wrongs produce elimination records. Invariant #1 proven (nothing leaks to
    serving). Diagnostic refusal (§8) emitted.
 3. **Grounded derivation search.** Bounded, deterministic operation-chain search
@@ -312,9 +317,11 @@ Per CLAUDE.md §Schema-Defined Proof Obligations, each of these requires a test 
 4. **Tier-2 self-verification + provenance + tether.** Convergent self-verification,
    per-belief provenance, the live gold tether + `t2_precision`. Invariant #5
    proven. Widen the arena past gold-labeled material.
-5. **Self-proving proposals into the ratification corridor.** Practice emits
-   proof-carrying proposals; the (narrowing) HITL gate admits to serving. Measure
-   the serving-`correct` lift this produces with `wrong=0` held.
+5. **Self-proving proposals into the ratification corridor.** Add a
+   **solver-practice evidence type** alongside the reader-refusal-coupled
+   `MathReaderRefusalEvidence`; practice emits proof-carrying proposals; the
+   (narrowing) HITL gate admits to serving. Measure the serving-`correct` lift this
+   produces with `wrong=0` held.
 
 ## Acceptance criteria (Proposed → Accepted)
 
@@ -338,6 +345,42 @@ Per CLAUDE.md §Schema-Defined Proof Obligations, each of these requires a test 
 3. **Search bound + determinism budget.** The operation-chain search must be
    bounded and replay-stable; fix the enumeration order and depth cap before
    Phase 3.
+
+## Pre-implementation audit (2026-05-28)
+
+Per CLAUDE.md §Lookback Review Discipline + §ADR cross-reference discipline, the
+existing substrate was audited for conflicts *before* any code. **No hard blockers
+or contradictions.** Findings:
+
+**Reinforcing alignments (the design fits the grain):**
+- **ADR-0165 (Regex Scope Rule).** Its line — regex may match *orthographic shape*
+  (lexemes) but never *grammar* (how words combine to mean X) — is exactly this
+  ADR's thin-front-end / thick-solver split. Extraction stays lexeme-level;
+  *combining is the solver's attempt, never grammar-regex.* 0175 fulfills 0165.
+- **INV-07 governance** already forbids non-deterministic/low-trust frontends from
+  claiming `AUTO_ACCEPT_ELIGIBLE` at construction — our no-self-authorization
+  principle, pre-wired.
+- **`MAX_TOTAL_BRANCHES = 64`** establishes bounded-deterministic-enumeration-with-
+  refuse-on-overflow; the derivation search inherits this pattern.
+- **The seal** (teaching-safety, proposal-only/reviewed) exists and is reusable.
+
+**Drift corrected in this ADR (overclaims of reuse):**
+- The reliability **ledger is new** — `calibration/` is a grid-search param tuner,
+  not a per-class ledger.
+- The 0174 elimination substrate is **reading-coupled** (`Hypothesis`,
+  `ProblemReadingState`, parse-shaped predicates); "repoint to solving" requires
+  **generalization**, not drop-in reuse.
+- The teaching corridor's evidence schema (`MathReaderRefusalEvidence`, grouped by
+  `refusal_reason × missing_operator`) is **reader-refusal-coupled**; solver-practice
+  proposals need a **new evidence type**.
+
+**Binding constraints (not conflicts):**
+- **wrong=0 is pinned on the serving/eval lane by ~25 test files + the train_sample
+  runner exit criterion.** Preserved, not contradicted — therefore **practice must
+  be a separate lane**; it cannot reuse the train_sample runner. Confirms the
+  double-duty decouple is mandatory.
+- Determinism invariants (INV-05/13) bind the ledger/gate/search → the §4a float
+  rounding contract.
 
 ## Cross-references
 
