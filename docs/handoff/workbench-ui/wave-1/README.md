@@ -108,3 +108,89 @@ fails the trust-classification check.
 - [ ] `pnpm test` and `pnpm test:enum-coverage` green on the merged tip
 - [ ] CommandPalette has entries for the new interactions added by each brief
 - [ ] All four briefs in this folder marked done in their respective files
+
+---
+
+## Live status (wave coordinator: Opus 4.7)
+
+> **Last updated:** 2026-05-28 — initial snapshot, no branches pushed yet
+> **Coordinator role:** maintained by Opus 4.7 on operator workstation.
+> Source of truth for PR state is `gh pr list`; this table is a
+> human-readable projection refreshed on operator request.
+
+### Per-brief tracker
+
+| Brief | Operator         | Branch                                | Pushed | PR  | Draft | CI    | Mergeable | Notes |
+|-------|------------------|---------------------------------------|--------|-----|-------|-------|-----------|-------|
+| 1a    | Opus 4.6         | `workbench/wave-1a-chat-polish`       | no     | —   | —     | —     | —         | dispatched |
+| 1b    | Sonnet 4.6       | `workbench/wave-1b-proposals-polish`  | no     | —   | —     | —     | —         | dispatched |
+| 1c    | Gemini 3.1 Pro   | `workbench/wave-1c-replay-polish`     | no     | —   | —     | —     | —         | dispatched |
+| 1d    | GPT-OSS / Copilot| `workbench/wave-1d-evals-polish`      | no     | —   | —     | —     | —         | dispatched |
+
+Refresh command (run on operator workstation, paste to coordinator):
+
+```bash
+gh pr list --base feat/workbench-ui-continuation --state all \
+  --json number,title,headRefName,state,mergeable,isDraft,statusCheckRollup \
+  --limit 20
+```
+
+### Conflict watchlist
+
+Files where >1 brief is allowed to touch (additive only).
+Coordinator inspects these at every PR open and again before merge:
+
+- `workbench-ui/src/types/api.ts` — append-only by all four. Coordinator
+  verifies each PR's diff against this file is **purely additive** at the
+  bottom of the section the brief owns.
+- CommandPalette command registry — each brief adds **only** its own
+  entries. If two briefs touched the same registry array, second-to-merge
+  rebases additively.
+- Any colocated test utility that ends up shared. None expected; if one
+  appears, it gets promoted to a small helper file in a follow-up PR, not
+  in any of the 4 wave-1 PRs.
+
+### Merge-order policy
+
+All four briefs are parallel-safe by construction (disjoint `src/app/<feature>/**`).
+**Order of merge is FIFO by green-CI time**, not by brief letter. The
+coordinator:
+
+1. Verifies the PR's owned-files scope matches its brief.
+2. Verifies the diff against `src/types/api.ts` is additive at the bottom
+   of the owning section.
+3. Verifies `pnpm test` and `pnpm test:enum-coverage` are green on the PR.
+4. Verifies the PR description answers the four CLAUDE.md §PR Checklist
+   questions.
+5. Approves and merges. No re-bases required between briefs unless a
+   conflict actually appears on the watchlist surfaces.
+
+If a conflict does appear on `src/types/api.ts` or CommandPalette, the
+**later** PR rebases its additive change and force-pushes; the earlier PR
+is not blocked.
+
+### Wave 2 readiness gate
+
+Wave 2 brief pack opens only when:
+
+- [ ] All four wave-1 PRs merged to `feat/workbench-ui-continuation`
+- [ ] `pnpm test` and `pnpm test:enum-coverage` green on the merged tip
+- [ ] No off-limits files modified across the merged diff
+- [ ] No backend Python changes across the merged diff
+- [ ] This `Live status` section marked `Wave complete — ready for Wave 2`
+
+When the coordinator declares readiness, Wave 2 covers Phase 2 (Runs),
+Phase 3 (Trace), and Phase 5 contract drafts. Phase 4 (Inspector) stays
+gated until Runs/Trace entity shapes land.
+
+### Coordinator escalation triggers
+
+The coordinator flags to the operator (interrupts the wave) if:
+
+- a PR's diff touches off-limits files,
+- a PR introduces a backend Python change,
+- a PR introduces any mutation hook (`useMutation`, POST/PUT/PATCH/DELETE)
+  in Replay or Evals (read-only routes per addendum §1),
+- a PR weakens or removes the `trace_hash` stability test in Chat,
+- a PR introduces hex literals (must use tokens),
+- CI red on a PR persists past the operator's expected cycle time.
