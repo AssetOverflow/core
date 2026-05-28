@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from itertools import product
 from typing import TYPE_CHECKING, Final, Union
@@ -833,6 +834,144 @@ def parse_and_solve(
                         inject_from_match,
                     )
                     injected = inject_from_match(recognizer_match, s)
+                    # ADR-0174 Phase 3 — lookback pronoun resolution.
+                    # When the matcher tagged any anchor with
+                    # ``requires_pronoun_resolution``, the injected
+                    # candidates carry the pronoun as actor/entity and
+                    # are held until lookback either binds them to a
+                    # discourse antecedent or drops them.  The
+                    # discourse map (_discourse_prior_subjects /
+                    # _prior_subject) is consulted in the same
+                    # precedence as ME-2 cross-sentence binding so
+                    # behaviour is consistent across recognizer
+                    # categories.  When no antecedent is available,
+                    # we drop the candidates (refusal-preferring;
+                    # preserves wrong=0).
+                    if injected and any(
+                        isinstance(a, Mapping)
+                        and a.get("requires_pronoun_resolution")
+                        for a in recognizer_match.parsed_anchors
+                    ):
+                        from generate.comprehension.lookback import (
+                            PronounResolution,
+                            reevaluate,
+                        )
+                        from generate.comprehension.constraint_propagation import (
+                            hypothesis_from_initial as _hyp_from_initial,
+                            hypothesis_from_operation as _hyp_from_operation,
+                        )
+
+                        # Extract the held pronoun (the matcher
+                        # guarantees a single subject_role across the
+                        # anchor set for discrete_count_statement v1).
+                        _held_pronoun: str | None = None
+                        for a in recognizer_match.parsed_anchors:
+                            if (
+                                isinstance(a, Mapping)
+                                and a.get("requires_pronoun_resolution")
+                            ):
+                                _sr = a.get("subject_role")
+                                if isinstance(_sr, str):
+                                    _held_pronoun = _sr
+                                    break
+
+                        _antecedent = _effective_prior
+                        # ADR-0174 Phase 3a — multi-actor pronoun
+                        # ambiguity defense.  When the problem has
+                        # more than one distinct proper-noun subject
+                        # in prior context, picking the most-recent
+                        # is a guess (e.g. "Alice has 5. Bob has 3.
+                        # She buys 2." — "She" should bind to Alice
+                        # by gender but the discourse map returns
+                        # Bob).  No safety net downstream would catch
+                        # a wrong attribution (single-binding
+                        # emission → no multi-branch disagreement;
+                        # verifier re-derives the same wrong graph).
+                        # Refuse rather than guess.  Surfaced by
+                        # 2026-05-28 Phase 1-3a lookback review;
+                        # see project-adr-0174-multi-actor-pronoun-hazard
+                        # memory and CLAUDE.md §Lookback Review
+                        # Discipline.
+                        _distinct_priors = {
+                            v for v in _discourse_prior_subjects.values()
+                            if v is not None
+                        }
+                        if _prior_subject is not None:
+                            _distinct_priors.add(_prior_subject)
+                        _multi_actor_ambiguous = len(_distinct_priors) > 1
+                        if _held_pronoun is None or not _antecedent:
+                            # No resolution path available — drop the
+                            # held candidates and log the lookback
+                            # event so the trace records why.
+                            _statement_trace.append(json.dumps({
+                                "layer": "lookback",
+                                "phase": 3,
+                                "outcome": "no_antecedent",
+                                "pronoun": _held_pronoun or "<missing>",
+                                "sentence_index": s_idx,
+                            }, sort_keys=True))
+                            injected = ()
+                        elif _multi_actor_ambiguous:
+                            # Refusal-preferring discipline: multiple
+                            # distinct proper-noun subjects in prior
+                            # context means the resolver would be
+                            # guessing.  Drop the held candidates,
+                            # log the ambiguous-antecedent event.
+                            _statement_trace.append(json.dumps({
+                                "layer": "lookback",
+                                "phase": 3,
+                                "outcome": "no_antecedent_ambiguous",
+                                "pronoun": _held_pronoun,
+                                "candidate_antecedents": sorted(_distinct_priors),
+                                "sentence_index": s_idx,
+                            }, sort_keys=True))
+                            injected = ()
+                        else:
+                            _refinement = PronounResolution(
+                                pronoun=_held_pronoun,
+                                resolved_to=_antecedent,
+                                evidence_source=(
+                                    "discourse_prior_subjects"
+                                    if s in _discourse_prior_subjects
+                                    else "running_subject"
+                                ),
+                            )
+                            _resolved: list[object] = []
+                            _all_resolved = True
+                            for _rank, _c in enumerate(injected):
+                                if isinstance(_c, CandidateInitial):
+                                    _base = _hyp_from_initial(_c, _rank)
+                                elif isinstance(_c, CandidateOperation):
+                                    _base = _hyp_from_operation(_c, _rank)
+                                else:
+                                    _all_resolved = False
+                                    break
+                                _held = Hypothesis(
+                                    candidate=_base.candidate,
+                                    category_assignments=_base.category_assignments,
+                                    constraint_state=_base.constraint_state,
+                                    confidence_rank=_base.confidence_rank,
+                                    unresolved=("actor_pronoun",),
+                                )
+                                _result = reevaluate(_held, _refinement)
+                                _statement_trace.append(json.dumps({
+                                    "layer": "lookback",
+                                    "phase": 3,
+                                    "outcome": "admitted" if _result.refined else "eliminated",
+                                    "pronoun": _held_pronoun,
+                                    "resolved_to": _antecedent,
+                                    "confidence_rank": _rank,
+                                    "evidence_source": _refinement.evidence_source,
+                                    "sentence_index": s_idx,
+                                }, sort_keys=True))
+                                if _result.refined is None:
+                                    _all_resolved = False
+                                    break
+                                _resolved.append(_result.refined.candidate)  # type: ignore[arg-type]
+                            if _all_resolved and _resolved:
+                                injected = tuple(_resolved)
+                            else:
+                                injected = ()
                     if injected:
                         # ADR-0174 Phase 2 — hypothesis-based admission
                         # with structured elimination tracing.  Each
@@ -912,11 +1051,17 @@ def parse_and_solve(
                             f"(category={recognizer_match.category.value})"
                         ),
                         branches_enumerated=0, branches_admissible=0,
+                        # ADR-0174 Phase 3a — preserve statement-stage
+                        # trace events on early refusal so consumers see
+                        # WHY admission failed (lookback no_antecedent,
+                        # constraint_propagation eliminations, etc.).
+                        reader_trace=tuple(_statement_trace),
                     )
             return CandidateGraphResult(
                 answer=None, selected_graph=None,
                 refusal_reason=f"no admissible candidate for statement: {s!r}",
                 branches_enumerated=0, branches_admissible=0,
+                reader_trace=tuple(_statement_trace),
             )
         per_sentence_choices.append(_collapse_per_sentence_ties(choices))
         # ME-2 — update prior_subject AFTER this sentence is processed.
