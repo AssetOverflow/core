@@ -87,12 +87,11 @@ def self_verifies(derivation: GroundedDerivation, problem_text: str) -> SelfVeri
     #    microscope identified (ADR-0175 self-verification strengthening): it
     #    catches the multi-step-incomplete attempts the cue/grounding clauses
     #    cannot, because their operands ARE grounded.
-    problem_quantities = {q.source_token for q in extract_quantities(problem_text)}
-    used = {derivation.start.source_token}
-    used.update(step.operand.source_token for step in derivation.steps)
+    problem_quantities = Counter(q.source_token for q in extract_quantities(problem_text))
+    used = Counter([derivation.start.source_token] + [step.operand.source_token for step in derivation.steps])
     unused = problem_quantities - used
     if unused:
-        reasons.append(f"incomplete: unused problem quantities {sorted(unused)}")
+        reasons.append(f"incomplete: unused problem quantities {sorted(unused.keys())}")
 
     return SelfVerification(verified=not reasons, reasons=tuple(reasons))
 
