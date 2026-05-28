@@ -246,6 +246,14 @@ Wire `contemplate` into `finalize()`. The function consults vault + packs + audi
 
 ### Phase 5 — Remove parallel parsers
 
+> **SUPERSEDED by the §"Phase 5 — Scope (amended 2026-05-28)" section
+> below.** The text in this subsection rests on three premises that a
+> pre-scope investigation proved false against the shipped code:
+> `math_parser.py` is already out of the runtime/scoring path,
+> `lifecycle.py` admits 0/50 (it is the inert parallel parser, not the
+> reader to promote), and `correct ≥ 25` is a *semantic* gate that
+> structural collapse cannot meet. Read the amended scope, not this.
+
 Delete `generate/math_parser.py`'s runtime invocation paths. Remove the per-category injector dispatch table; injectors become inlined hypothesis emitters. Collapse the duplicate per-sentence-choices scaffolding in `math_candidate_graph.py`.
 
 **Acceptance:**
@@ -417,5 +425,220 @@ The lookback review found 13 of 17 `VALID_PREDICATE_NAMES` lacked
 direct predicate-name assertions in tests, and all 4
 `_check_composed_initial` sub-checks were untested (parity verified
 manually). Backfill landed in the same Phase 3a PR (10 new tests).
+
+---
+
+## Phase 5 — Scope (amended 2026-05-28)
+
+A pre-implementation investigation (per CLAUDE.md §Lookback Review
+Discipline, triggered "before starting the next phase") established the
+verified ground truth below. The original §Phase 5 subsection is
+**superseded** — it inverted the promote/retire direction and attached
+the lift gate to the wrong work.
+
+### Verified ground truth
+
+| Original Phase 5 premise | Verified reality (2026-05-28) |
+|---|---|
+| `math_parser.py` is the legacy parser to remove from runtime | Already out of the chat runtime **and** the candidate-graph (`_score_one_candidate_graph` → `parse_and_solve`) train_sample scoring path. Live only in `_score_one`, `evals/gsm8k_math/verify.py`, and the perturbation / OOD / bounded-grammar obligation lanes (`core/capability/perturbation_b3.py`, `generate/perturbation_suite.py`, `evals/gsm8k_parser_dev/*`, `evals/math_bounded_grammar`, `evals/obligation_2_ood_ratio`). CLEANUP-C2 keeps it as the `--legacy-parser` baseline. **Nothing to remove from the live path.** |
+| `lifecycle.py` is the reader to promote to primary | `_try_comprehension_reader` (lifecycle apply_word/finalize) **admits 0/50** on train_sample — inert *in GSM8K scoring*. **But `lifecycle.py` is NOT dead:** `generate/comprehension/audit.py` (`audit_problem`/`AuditRow`) imports its reader surface, and `audit_problem` is load-bearing for the ADR-0172 math-contemplation teaching corridor (`teaching/math_evidence.py`, `math_contemplation.py`, `math_inference_proposal.py`, `math_claim_signature.py`, `math_contemplation_proposal.py`, `core/cli.py`, `evals/flywheel_demo`). The reader's *refusals* become teaching evidence. So the file stays; only its **GSM8K-scoring dispatch** is inert and retirable. |
+| Integration target is per-token `apply_word` | All Phase 2/3a/3b/4 defenses (`eliminate_violating`, `reevaluate`, `contemplate`) are wired into the recognizer/candidate-graph path, which produces all 3 correct cases. `lifecycle.py` carries none of them. |
+| `correct ≥ 25` is the Phase 5 gate | Structural collapse is a refactor → **~0 lift**. The lift lives in removing the 3–5 narrowness layers refusing simultaneously per case — *semantic* work the original phase never separated. |
+
+**Decision (Invert + split):** the recognizer/candidate-graph path
+(`generate/math_candidate_graph.parse_and_solve` + `math_candidate_parser`
++ `recognizer_match` + `recognizer_anchor_inject`, over the `state.py`
+hypothesis primitives) is **the canonical reader**. `lifecycle.py` is
+retired. Phase 5 splits into a safe structural phase (5a) and a semantic
+lift phase (5b).
+
+### Retirement-safe vs load-bearing
+
+- **Retire (5a) — GSM8K-scoring-only inert dispatch (~580 LOC):**
+  `generate/comprehension/lifecycle_runtime_adapter.py` (402 LOC, imported
+  *only* by the question-reader dispatch); **both** flag-gated reader
+  dispatches in `math_candidate_graph.py` — `_try_comprehension_reader`
+  (whole-problem, admits 0/50), `_try_reader_for_question` (question-stage,
+  via the adapter), and the `_tokenize_sentence` helper they use; the
+  `comprehension_reader_questions` config flag they share and the
+  `--use-reader` plumbing in the train_sample runner;
+  `tests/test_reader_coexistence.py` (its flag-ON/OFF byte-identity premise
+  dissolves once there is one path).
+- **KEEP — load-bearing, corrected from the first draft:**
+  - `generate/comprehension/lifecycle.py` (**stays** — the
+    audit→teaching corridor uses its reader surface; only its scoring
+    dispatch is inert). `tests/test_reader_phase2.py` and
+    `test_reader_question_frame.py` import it directly and stay.
+  - `generate/comprehension/audit.py` (`audit_problem`/`AuditRow`) — the
+    ADR-0172 contemplation/evidence entry point.
+  - `state.py` — including `ProblemReadingState` (`contemplate()`'s
+    parameter type, constructed in the Phase 4 recognizer wiring at
+    `math_candidate_graph.py:928`), `Hypothesis`, `UnknownHeld`,
+    `HYPOTHESIS_CAP`; `constraint_propagation.py`, `lookback.py`,
+    `contemplate.py`, and the `recognizer_anchor_inject.py` injector table.
+
+  > **Correction (2026-05-28, during 5a pre-flight):** the first draft of
+  > this scope said "retire lifecycle.py (~1,872 LOC)". A pre-deletion
+  > trace found `audit.py` imports lifecycle's reader surface and feeds
+  > the live teaching corridor, so lifecycle.py is **dual-use** and must
+  > stay. 5a's real payoff is ~580 LOC (the scoring dispatch + adapter +
+  > flag), not the projected ~1,872. The deeper LOC reduction the parent
+  > ADR projected does not materialize while the contemplation corridor
+  > keeps the reader alive.
+
+### Phase 5a — Retire the inert parallel parser (structural)
+
+Scope (corrected):
+1. Delete both flag-gated reader **dispatch functions**
+   (`_try_comprehension_reader`, `_try_reader_for_question`) and their
+   call sites in `math_candidate_graph.py`, plus the `_tokenize_sentence`
+   helper; drop the `comprehension_reader_questions` config flag and the
+   `--use-reader` runner plumbing (the recognizer path runs
+   unconditionally — it is no longer "opt-in reader vs regex," it is the
+   only scoring path).
+2. Delete `generate/comprehension/lifecycle_runtime_adapter.py` (used only
+   by the question-reader dispatch). **Do NOT delete `lifecycle.py` or
+   `audit.py`** — both feed the live ADR-0172 contemplation corridor.
+3. Remove `tests/test_reader_coexistence.py` (flag-ON/OFF premise gone);
+   keep `test_reader_phase2.py` / `test_reader_question_frame.py` (they
+   test `lifecycle.py`, which stays).
+4. Leave `state.py` intact. `ProblemReadingState`/`ReaderRefusal` are
+   load-bearing (contemplate + audit corridor); `EntityRef`/`SentenceState`
+   remain referenced by the surviving `lifecycle.py`. No state.py trim in
+   5a.
+5. Collapsing the duplicate per-sentence-choice scaffolding is deferred —
+   with the question-reader branch gone the dispatch is already single-path;
+   any further structural collapse is its own follow-up, not load-bearing
+   for 5a.
+
+Acceptance (5a):
+- train_sample **3/47/0 unchanged** — byte-identical verdicts; this is a
+  refactor, not a behaviour change. (Honest: ~0 lift is the *expected*
+  and *correct* outcome of 5a.)
+- Net **−1,038 LOC** of code + tests (as shipped: adapter 402 +
+  `test_reader_coexistence.py` 302 + train_sample delta-report/`use_reader`
+  plumbing ~96 + the two `math_candidate_graph` dispatch fns/tokenizer +
+  coverage-CLI `use_reader` field + stale delta artifact, against ~53 lines
+  of replacement docstrings/comments). Larger than the first ~580 estimate
+  because the coexistence test and delta-report harness were bigger than
+  scoped. The parent ADR's ~1,872-line figure still does **not** apply:
+  `lifecycle.py` stays for the teaching corridor.
+- Capability-axis lanes G1–G5, S1 remain 100% `wrong = 0`.
+- Determinism / `trace_hash` invariant holds; pinned lane SHAs pass.
+- `math_parser.py` baseline lanes untouched (out of scope — keep).
+
+### Phase 5b — Operation-capability buildout (semantic, the real lift)
+
+This is where `correct` climbs toward 25. It is **not** a refactor and
+carries the live `wrong = 0` risk; it lands as its own sub-phases
+(candidate sub-ADR: **ADR-0174.1**) with per-sub-phase wrong=0 obligations,
+not as a big bang.
+
+#### Verified ground truth (2026-05-28 measurement)
+
+The 47 train_sample refusals were profiled against **GSM8K's own
+`<<a*b=c>>` calculator annotations** (ground-truth operations, not
+brute-forced — brute-force number-matching was tried and rejected for
+producing spurious coincidental hits, e.g. matching gold=4 to a stray
+`20/5`):
+
+| Profile | Count | Share |
+|---|---|---|
+| Uses multiplication (`*`) | **37/47** | 79% |
+| Uses mul **or** div | 43/47 | 91% |
+| Pure add/subtract | 4/47 | 9% |
+| **Single-step solvable** | **0/47** | **0%** |
+
+Step-count histogram: `2 steps: 13 · 3: 12 · 4: 8 · 5: 8 · 6: 3 · 7: 3`.
+
+Two load-bearing consequences:
+
+1. **Multiplication is the foundational capability, not a niche.** At 79%
+   it is maximally general — building genuine multiplicative
+   quantity-extraction is "getting generally smarter," the opposite of
+   overfitting. (Per Shay's framing: a change that flips a large *general*
+   chunk is a real capability; a per-phrasing patch that flips one case is
+   overfitting. Breadth-of-impact is the test, not where the code lives.)
+
+2. **No case flips from an operation matcher alone.** Zero single-step
+   cases. Multiplication is *necessary but not sufficient* for all 37 — the
+   unit that flips a case is **operation + composition** (extract quantities
+   across sentences/question → apply op → combine). A "multiplication
+   sentence matcher" in isolation flips ~2 cases (only the single-sentence
+   multiplicative aggregate, 0021-class) and would be overfitting-adjacent.
+
+The solver is **already capable**: `VALID_OPERATION_KINDS` =
+`{add, subtract, transfer, multiply, divide, apply_rate, compare_additive,
+compare_multiplicative}` with pack lemmas for each. The gap is entirely the
+**reader → injector → `Operation`** front-end: the recognizer matches a
+shape category but extracts **zero anchors** on real corpus sentences, and
+the injectors only handle narrow Wave-A stub shapes. Phase 5b builds the
+front-end down to the operations the solver is already waiting for.
+
+#### What to build (and what NOT to)
+
+- **Build:** general quantity-extraction (operands from a clause, across
+  sentences, and from the question sentence) + injectors that emit
+  first-class `multiply` / `divide` / `compare_multiplicative` operations +
+  the multi-step composition spine that chains them. The held-hypothesis /
+  `eliminate_violating` / `reevaluate` substrate (Phases 1–4) is the
+  wrong=0 scaffold for chains longer than 2 steps.
+- **Do NOT:** widen the `discrete_count_statement` injector to absorb these.
+  The recognizer *mis-matches* multiplicative/comparative problems as
+  discrete-count (number + noun present); the injector *correctly* refuses.
+  Forcing those into a discrete-count frame is overfitting and a wrong=0
+  hazard. Route them to the correct operation injector instead.
+
+#### Sub-phase sequence (biggest-chunk-first, measure-the-flip-gated)
+
+Each sub-phase is a complete vertical slice (extraction → injector →
+existing solver op) whose success is judged by **how many cases flip**, not
+by whether a layer was touched:
+
+- **5b.1 — Single-sentence multiplicative aggregate** (0021-class:
+  "15 pounds for 10 reps and does 3 sets"). One clause, N operands, one
+  `multiply` chain — no cross-sentence binding. The cleanest possible
+  proof-of-capability. Small expected flip (~2–4) but it stands up the
+  extraction→multiply→solve path end-to-end with wrong=0.
+- **5b.2 — Shallow 2–3 step composition** (the real chunk: **25/47** cases
+  at ≤3 steps). Cross-sentence + question-sentence operand binding (e.g.
+  0003: 48 boxes × 24/box × $0.75-in-question), op + one combine. This is
+  where the bulk of the lift lives.
+- **5b.3 — Deep multi-step (4–7 steps, 22/47)** under the held-hypothesis
+  elimination machinery. Highest wrong=0 surface (long chains = more ways to
+  admit a wrong answer); last, and only after 5b.1–5b.2 lock the
+  extraction/composition contracts.
+
+#### Dependencies / out-of-scope-but-required
+
+- **Solver gaps (separate solver ADR):** same-actor multi-quantity
+  aggregation and cross-unit superordinate sums — the reader can parse some
+  shapes the solver still refuses to compute. Sequence the solver ADR before
+  the 5b sub-phases that need those shapes.
+- **Comparatives** reuse the existing ADR-0131 G2 axis and
+  `compare_multiplicative` / `compare_additive` solver ops — extend, don't
+  reinvent.
+
+#### Acceptance (5b)
+
+- Per-sub-phase `correct` delta reported with `wrong = 0` held at every
+  step; case 0050 canary stays refused.
+- **Generality guard:** every flipped case must also hold under the
+  ADR-0114a perturbation / OOD axes. A capability that flips N train_sample
+  cases but collapses under reworded inputs was overfitting to the sample
+  and does not count toward the chunk.
+- `correct ≥ 25` is the *cumulative* Round-2 target, reached by composition
+  of sub-phases — never asserted of any single sub-phase.
+- Capability-axis lanes G1–G5, S1 remain 100% `wrong = 0`.
+
+### Sequencing
+
+- **5a — shipped** (PR #430): single parse path, net −1,038 LOC, 3/47/0
+  byte-identical, wrong=0 held. Behaviour-preserving refactor; ~0 lift was
+  the expected, correct outcome.
+- **5b — next**, as its own sub-ADR (ADR-0174.1): 5b.1 → 5b.2 → 5b.3,
+  biggest-chunk-first, each gated by measured flip-count + the perturbation
+  generality guard + wrong=0. The solver ADR (multi-quantity / cross-unit
+  sums) sequences before the 5b sub-phases that depend on it.
 
 ---

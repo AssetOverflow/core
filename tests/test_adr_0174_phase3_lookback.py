@@ -461,7 +461,7 @@ class TestWrongZeroPreservation:
             for line in Path(_CASES_PATH).open(encoding="utf-8")
             if line.strip()
         ]
-        report = build_report(cases, use_reader=True)
+        report = build_report(cases)
         counts = report["counts"]
         assert counts["wrong"] == 0, (
             f"wrong=0 invariant violated: {counts}"

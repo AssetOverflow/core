@@ -228,7 +228,7 @@ class TestWrongZeroPreservation:
         cases = [
             json.loads(l) for l in Path(_CASES_PATH).open() if l.strip()
         ]
-        report = build_report(cases, use_reader=True)
+        report = build_report(cases)
         assert report["counts"]["wrong"] == 0
 
     def test_case_0050_remains_refused(self) -> None:

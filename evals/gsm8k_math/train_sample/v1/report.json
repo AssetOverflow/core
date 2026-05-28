@@ -143,7 +143,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0027",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Malcolm has 240 followers on Instagram and 500 followers on Facebook.' (category=discrete_count_statement)",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The number of followers he has on Twitter is half the number of followers he has on Instagram and Facebook combined.' (category=descriptive_setup_no_quantity)",
       "verdict": "refused"
     },
     {
@@ -264,6 +264,5 @@
   ],
   "sample_count": 50,
   "sample_path": "evals/gsm8k_math/train_sample/v1/cases.jsonl",
-  "schema_version": 1,
-  "use_reader": true
+  "schema_version": 1
 }

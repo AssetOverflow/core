@@ -62,7 +62,7 @@ def test_build_coverage_report_basic(tmp_path: Path):
         ],
     )
     r = build_coverage_report(
-        report_path, lane="t", split="s", version="v1", use_reader=True,
+        report_path, lane="t", split="s", version="v1",
     )
     assert r.counts == CoverageCounts(correct=2, refused=3, wrong=0)
     assert r.counts.total() == 5
@@ -85,7 +85,7 @@ def test_case_0050_verdict_captured(tmp_path: Path):
         ],
     )
     r = build_coverage_report(
-        report_path, lane="gsm8k_math", split="train_sample", version="v1", use_reader=True,
+        report_path, lane="gsm8k_math", split="train_sample", version="v1",
     )
     assert r.case_0050_verdict == "refused"
 
@@ -97,7 +97,7 @@ def test_delta_computation(tmp_path: Path):
     _write_report(baseline_path, correct=3, refused=47, wrong=0, per_case=[])
     r = build_coverage_report(
         report_path,
-        lane="t", split="s", version="v1", use_reader=True,
+        lane="t", split="s", version="v1",
         baseline_path=baseline_path,
     )
     assert r.delta == {"correct": 1, "refused": -1, "wrong": 0}
@@ -108,7 +108,7 @@ def test_no_baseline_means_empty_delta(tmp_path: Path):
     _write_report(report_path, correct=3, refused=47, wrong=0, per_case=[])
     r = build_coverage_report(
         report_path,
-        lane="t", split="s", version="v1", use_reader=False,
+        lane="t", split="s", version="v1",
         baseline_path=None,
     )
     assert r.delta == {}
@@ -118,7 +118,7 @@ def test_missing_report_raises(tmp_path: Path):
     with pytest.raises(FileNotFoundError):
         build_coverage_report(
             tmp_path / "nope.json",
-            lane="t", split="s", version="v1", use_reader=False,
+            lane="t", split="s", version="v1",
         )
 
 
@@ -128,11 +128,10 @@ def test_as_dict_round_trip(tmp_path: Path):
         {"case_id": "x-0001", "verdict": "correct"},
         {"case_id": "x-0002", "verdict": "refused", "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'X.' (category=discrete_count_statement)"},
     ])
-    r = build_coverage_report(report_path, lane="t", split="s", version="v1", use_reader=True)
+    r = build_coverage_report(report_path, lane="t", split="s", version="v1")
     d = r.as_dict()
     assert d["counts"]["total"] == 2
     assert "recognizer_empty_injection(discrete_count_statement)" in d["refusal_taxonomy"]
-    assert d["use_reader"] is True
 
 
 def test_taxonomy_sorted_by_count_desc(tmp_path: Path):
@@ -141,7 +140,7 @@ def test_taxonomy_sorted_by_count_desc(tmp_path: Path):
         {"case_id": f"x-{i:04d}", "verdict": "refused", "reason": "candidate_graph: no admissible candidate for question: '?'" if i < 1 else "candidate_graph: recognizer matched but produced no injection for statement: 'X.' (category=multiplicative_aggregation)"}
         for i in range(4)
     ])
-    r = build_coverage_report(report_path, lane="t", split="s", version="v1", use_reader=False)
+    r = build_coverage_report(report_path, lane="t", split="s", version="v1")
     keys = list(r.refusal_taxonomy.keys())
     assert keys[0] == "recognizer_empty_injection(multiplicative_aggregation)"  # 3 > 1
     assert keys[1] == "no_admissible_question"
@@ -150,7 +149,7 @@ def test_taxonomy_sorted_by_count_desc(tmp_path: Path):
 def test_wrong_zero_invariant_visible_via_as_dict(tmp_path: Path):
     report_path = tmp_path / "report.json"
     _write_report(report_path, correct=0, refused=0, wrong=2, per_case=[])
-    r = build_coverage_report(report_path, lane="t", split="s", version="v1", use_reader=False)
+    r = build_coverage_report(report_path, lane="t", split="s", version="v1")
     assert r.as_dict()["counts"]["wrong"] == 2
 
 
