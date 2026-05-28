@@ -366,11 +366,28 @@ class MathProblemGraph:
                 )
             seen.add(e)
         entity_set = set(self.entities)
+        # ADR-0174 Phase 3 diagnostic — refuse contradictory initial
+        # possessions for the same (entity, unit). Surfaced 2026-05-28
+        # by post-merge diagnostic: prior behavior silently overwrote
+        # earlier with later in math_solver.solve()'s state dict, so
+        # 'Sam has 5 marbles. Sam has 3 marbles.' returned 3.0 — a
+        # wrong=0 violation (definite answer from contradictory input).
+        # Refuse at construction; admit duplicates only when the value
+        # matches (redundant but not contradictory).
+        seen_initial: dict[tuple[str, str], int | float] = {}
         for p in self.initial_state:
             if p.entity not in entity_set:
                 raise MathGraphError(
                     f"initial_state references unknown entity {p.entity!r}"
                 )
+            key = (p.entity, p.quantity.unit)
+            if key in seen_initial and seen_initial[key] != p.quantity.value:
+                raise MathGraphError(
+                    f"initial_state contains contradictory possessions for "
+                    f"({p.entity!r}, {p.quantity.unit!r}): "
+                    f"{seen_initial[key]} vs {p.quantity.value}"
+                )
+            seen_initial[key] = p.quantity.value
         for op in self.operations:
             if op.actor not in entity_set:
                 raise MathGraphError(
