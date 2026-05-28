@@ -791,6 +791,17 @@ def _match_discrete_count_statement(
     anchor = _try_extract_discrete_count_anchor(statement, padded, spec)
     if anchor is not None:
         return ((anchor,), "count")
+    # ADR-0174 Phase 3b — when single-anchor extraction fails (typically
+    # because of clause_split layer refusal), try the compound-clause
+    # extractor.  Pure conjunctive lists of discrete counts ("Malcolm has
+    # 240 followers on Instagram and 500 followers on Facebook") emit
+    # multiple anchors sharing the head's subject + verb. Refusal-
+    # preferring: if any tail clause fails to ground a count+noun pair
+    # from the closed observed_counted_nouns set, the whole compound
+    # refuses.
+    compound = _try_extract_compound_discrete_count_anchors(statement, padded, spec)
+    if compound is not None:
+        return (compound, "count")
     return (tuple(), "count")
 
 
@@ -1013,6 +1024,192 @@ def _try_extract_discrete_count_anchor(
         # Hypothesis carries unresolved=("actor_pronoun",).
         anchor["requires_pronoun_resolution"] = True
     return anchor
+
+
+# ---------------------------------------------------------------------------
+# ADR-0174 Phase 3b — compound-clause held hypotheses
+# ---------------------------------------------------------------------------
+
+# Markers that defeat compound extraction.  Each indicates a clause
+# whose semantics are NOT a pure count of items (multiplicative
+# comparison, percent, fraction). Refusal-preferring: if any of these
+# appears in the sentence we refuse the compound extraction; the case
+# routes to a future phase that handles those shapes.
+_COMPOUND_REFUSE_SUBSTRINGS: Final[tuple[str, ...]] = (
+    " times ", " times.", " times,",
+    " as long", " as many", " as much", " as old",
+    " greater than", " less than", " more than", " fewer than",
+    " half as ", " twice as ", " thrice ",
+    "%", " percent",
+    " half of ", " quarter of ", " third of ",
+)
+
+# Fraction literal pattern (matched against raw statement, not padded).
+_COMPOUND_FRACTION_RE: Final[re.Pattern[str]] = re.compile(r"\b\d+/\d+\b")
+
+
+def _try_extract_compound_discrete_count_anchors(
+    statement: str,
+    padded_lower: str,
+    spec: Mapping[str, Any],
+) -> tuple[Mapping[str, Any], ...] | None:
+    """ADR-0174 Phase 3b — emit N anchors for compound-clause sentences.
+
+    Handles ``<Subject> <verb> <count_1> <unit_1>[, <count_2> <unit_2>,
+    ..., and <count_k> <unit_k>]`` shapes — pure conjunctive lists of
+    discrete counts sharing one subject + one verb. Each anchor
+    inherits ``subject_role``, ``verb_token``, ``anchor_kind``, and
+    ``requires_pronoun_resolution`` from the head clause.
+
+    Refusal-preferring (wrong=0 doctrine):
+      - Returns ``None`` when no conjunctive separator is present
+        (sentence is single-anchor or not a list).
+      - Returns ``None`` when any multiplicative / percent / fraction
+        marker appears (out-of-scope shapes — refuse rather than mis-
+        attribute the math).
+      - Returns ``None`` when the head clause doesn't match the
+        canonical discrete-count regex (no shared subject + verb to
+        propagate; refuse rather than guess).
+      - Returns ``None`` when the head verb isn't in the closed
+        whitelist (verb expansion is separate work).
+      - Returns ``None`` when any tail clause fails to ground a
+        ``<count> <observed_counted_noun>`` pair (all-or-nothing per
+        sentence; admitting partial state would create an incomplete
+        graph).
+      - Returns ``None`` if only one anchor extracts (the existing
+        single-anchor extractor handles that path).
+
+    Cap: bounded by ``HYPOTHESIS_CAP=8``. Sentences exceeding the cap
+    refuse rather than truncate (cap is structural, not heuristic).
+    """
+    # Spec validation
+    raw_kinds = spec.get("observed_count_kinds") or ()
+    raw_nouns = spec.get("observed_counted_nouns") or ()
+    observed_kinds: list[str] = [str(k) for k in raw_kinds]
+    observed_nouns: list[str] = [str(n) for n in raw_nouns]
+    if not observed_kinds or not observed_nouns:
+        return None
+
+    # Must have a conjunctive separator — otherwise this isn't compound
+    has_conjunctive = any(
+        tok in padded_lower
+        for tok in (", and ", " and ", ", ")
+    )
+    if not has_conjunctive:
+        return None
+
+    # Refuse on multiplicative / percent / fraction markers
+    s_lc = " " + statement.lower() + " "
+    for marker in _COMPOUND_REFUSE_SUBSTRINGS:
+        if marker in s_lc:
+            return None
+    if _COMPOUND_FRACTION_RE.search(statement):
+        return None
+
+    # Head match via existing regex — captures subject + verb +
+    # first(count, noun). The regex's trailing-content allowance
+    # absorbs the rest of the sentence; we re-parse the tail below.
+    extract_re = _extract_discrete_count_re_for(observed_nouns)
+    head_m = extract_re.match(statement.strip())
+    if head_m is None:
+        return None  # head doesn't match canonical shape
+
+    subject = head_m.group("subject")
+    requires_pronoun_resolution = subject.lower() in _REFUSED_SUBJECT_TOKENS
+    verb = head_m.group("verb").lower()
+    if verb in _POSSESSION_VERBS:
+        anchor_kind: Literal["possession", "acquisition"] = "possession"
+    elif verb in _ACQUISITION_VERBS:
+        anchor_kind = "acquisition"
+    else:
+        return None  # head verb not in whitelist — refuse compound
+
+    def _resolve_count_kind(count_token: str) -> str | None:
+        if count_token.isdigit():
+            return "integer"
+        lc = count_token.lower()
+        if lc in _NUMBER_WORDS:
+            return "word"
+        if _HYPHEN_CARDINAL_RE.match(lc):
+            left, _, right = lc.partition("-")
+            if left in _NUMBER_WORDS or right in _NUMBER_WORDS:
+                return "word"
+        return None
+
+    def _build_anchor(count_token: str, noun_surface: str) -> Mapping[str, Any] | None:
+        count_kind = _resolve_count_kind(count_token)
+        if count_kind is None:
+            return None
+        if count_kind not in observed_kinds:
+            return None
+        # Canonicalise noun casing to the spec's observed form.
+        canon = noun_surface
+        nl = noun_surface.lower()
+        for observed_n in observed_nouns:
+            if observed_n.lower() == nl:
+                canon = observed_n
+                break
+        anchor: dict[str, Any] = {
+            "kind": "discrete_count",
+            "subject_role": subject,
+            "count_token": count_token,
+            "count_kind": count_kind,
+            "counted_noun": canon,
+            "anchor_kind": anchor_kind,
+            "verb_token": verb,
+        }
+        if requires_pronoun_resolution:
+            anchor["requires_pronoun_resolution"] = True
+        return anchor
+
+    # First anchor — from the head match
+    first_anchor = _build_anchor(head_m.group("count"), head_m.group("noun"))
+    if first_anchor is None:
+        return None
+    anchors: list[Mapping[str, Any]] = [first_anchor]
+
+    # Tail: search for additional <count> <observed_noun> pairs in the
+    # statement string AFTER the head's noun match. Each tail anchor
+    # must independently ground; any failure refuses the whole compound.
+    head_end = head_m.end("noun")
+    tail = statement.strip()[head_end:].rstrip(".!?")
+    noun_alt = "|".join(
+        re.escape(n) for n in sorted(observed_nouns, key=len, reverse=True)
+    )
+    tail_pattern = re.compile(
+        r"\b(?P<count>\d+|[A-Za-z\-]+)\s+(?P<noun>" + noun_alt + r")",
+        flags=re.IGNORECASE,
+    )
+    for tm in tail_pattern.finditer(tail):
+        tail_anchor = _build_anchor(tm.group("count"), tm.group("noun"))
+        if tail_anchor is None:
+            return None  # all-or-nothing; preserves wrong=0
+        anchors.append(tail_anchor)
+
+    # Wrong=0 hazard defense — all-or-nothing across UNACCOUNTED counts.
+    # Without this check, a tail clause like "1 bogusnoun" (where
+    # 'bogusnoun' is not in observed_counted_nouns) would silently fail
+    # to produce an anchor while leaving the digit '1' unaccounted —
+    # admitting partial state. The check: every digit run in the tail
+    # must be accounted for by an extracted anchor's count_token. Any
+    # unaccounted digit means a clause we didn't ground; refuse the
+    # whole compound. Surfaced by 2026-05-28 Phase 3b implementation
+    # lookback review.
+    tail_digit_count = len(_DIGIT_RUN_RE.findall(tail))
+    extracted_tail_count = len(anchors) - 1  # minus the head's anchor
+    if tail_digit_count != extracted_tail_count:
+        return None
+
+    # Not compound — single-anchor extractor handles this
+    if len(anchors) < 2:
+        return None
+
+    # HYPOTHESIS_CAP enforcement — refusal-preferring rather than truncate
+    from generate.comprehension.state import HYPOTHESIS_CAP
+    if len(anchors) > HYPOTHESIS_CAP:
+        return None
+
+    return tuple(anchors)
 
 
 def _match_multiplicative_aggregation(
