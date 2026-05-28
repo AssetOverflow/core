@@ -240,7 +240,7 @@ class TestINV02GateOnlyNormalization:
         for dirpath, dirnames, filenames in os.walk(root):
             dirnames[:] = [
                 d for d in dirnames
-                if d not in {".git", ".venv", "__pycache__", ".pytest_cache", ".hypothesis"}
+                if d not in {".git", ".venv", "__pycache__", ".pytest_cache", ".hypothesis", ".claude"}
             ]
             for fname in filenames:
                 if not fname.endswith(".py"):
@@ -649,7 +649,7 @@ PROJECT_ROOT_FOR_INV21 = Path(__file__).resolve().parent.parent
 
 EXCLUDED_DIRS: frozenset[str] = frozenset({
     "tests", "evals", "benchmarks", "scripts", "docs",
-    "core-rs", ".venv", "__pycache__",
+    "core-rs", ".venv", "__pycache__", ".claude",
 })
 
 
