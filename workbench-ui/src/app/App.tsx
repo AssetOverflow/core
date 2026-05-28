@@ -5,7 +5,7 @@ import { Shell } from "./Shell";
 import { PreviewPage } from "../preview/PreviewPage";
 import { ChatRoute } from "../routes/ChatRoute";
 import { ProposalsRoute } from "./proposals/ProposalsRoute";
-import { TraceRoutePlaceholder } from "../routes/TraceRoutePlaceholder";
+import { TraceRoute } from "./trace/TraceRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { RunsRoute } from "./runs/RunsRoute";
@@ -22,7 +22,7 @@ export function App() {
           <Route path="/" element={<Shell />}>
             <Route index element={<Navigate to="/chat" replace />} />
             <Route path="chat" element={<ChatRoute />} />
-            <Route path="trace" element={<TraceRoutePlaceholder />} />
+            <Route path="trace" element={<TraceRoute />} />
             <Route path="replay" element={<ReplayRoute />} />
             <Route path="proposals" element={<ProposalsRoute />} />
             <Route path="evals" element={<EvalsRoute />} />
