@@ -248,6 +248,188 @@ class TestCheckConstraintsOperationParity:
         assert roundtrip_admissible(op) is False
 
 
+class TestCheckConstraintsInitialPredicateNames:
+    """Predicate-name assertions for every initial.* failure path.
+    Surfaced by 2026-05-28 lookback review — 13 of 17 predicates in
+    VALID_PREDICATE_NAMES lacked direct elimination-reason assertions."""
+
+    def test_initial_value_grounds_predicate_name(self) -> None:
+        ic = _initial(matched_value_token="99")  # source has "3"
+        result = check_constraints(hypothesis_from_initial(ic, 0))
+        assert result.admitted is False
+        first_fail = next(
+            (p for p, o in result.predicates_run if o == "fail"), None
+        )
+        assert first_fail == "initial.value_grounds"
+
+    def test_initial_unit_grounds_predicate_name(self) -> None:
+        ic = _initial(matched_unit_token="oranges")  # source has "apples"
+        result = check_constraints(hypothesis_from_initial(ic, 0))
+        assert result.admitted is False
+        first_fail = next(
+            (p for p, o in result.predicates_run if o == "fail"), None
+        )
+        assert first_fail == "initial.unit_grounds"
+
+    def test_initial_entity_grounds_predicate_name(self) -> None:
+        ic = _initial(matched_entity_token="Tom")  # source has "Sam"
+        result = check_constraints(hypothesis_from_initial(ic, 0))
+        assert result.admitted is False
+        first_fail = next(
+            (p for p, o in result.predicates_run if o == "fail"), None
+        )
+        assert first_fail == "initial.entity_grounds"
+
+
+class TestCheckConstraintsOperationPredicateNames:
+    """Predicate-name assertions for every operation.* failure path."""
+
+    def test_operation_verb_grounds_predicate_name(self) -> None:
+        # Verb registered for kind but not in source span — distinct
+        # from verb_registered failure.
+        op = CandidateOperation(
+            op=Operation(actor="Sam", kind="add",
+                         operand=Quantity(value=5, unit="apples")),
+            source_span="Sam now owns 5 apples.",  # 'buys' not in source
+            matched_verb="buys",
+            matched_value_token="5",
+            matched_unit_token="apples",
+            matched_actor_token="Sam",
+        )
+        result = check_constraints(hypothesis_from_operation(op, 0))
+        assert result.admitted is False
+        first_fail = next(
+            (p for p, o in result.predicates_run if o == "fail"), None
+        )
+        assert first_fail == "operation.verb_grounds"
+
+    def test_operation_value_grounds_predicate_name(self) -> None:
+        op = _operation_add(
+            matched_value_token="99",  # source has "5"
+            source_span="Sam buys 5 apples.",
+        )
+        result = check_constraints(hypothesis_from_operation(op, 0))
+        assert result.admitted is False
+        first_fail = next(
+            (p for p, o in result.predicates_run if o == "fail"), None
+        )
+        assert first_fail == "operation.value_grounds"
+
+    def test_operation_unit_grounds_predicate_name(self) -> None:
+        op = _operation_add(
+            matched_unit_token="oranges",  # source has "apples"
+            source_span="Sam buys 5 apples.",
+        )
+        result = check_constraints(hypothesis_from_operation(op, 0))
+        assert result.admitted is False
+        first_fail = next(
+            (p for p, o in result.predicates_run if o == "fail"), None
+        )
+        assert first_fail == "operation.unit_grounds"
+
+
+class TestCheckConstraintsComposedInitialPath:
+    """The RAT-1 composed_initial path was completely untested before
+    2026-05-28 lookback review — parity was manually verified but no
+    automated test asserted the 4 sub-checks fire correctly."""
+
+    def _composed(self, **ev_overrides: str) -> CandidateInitial:
+        from generate.math_problem_graph import InitialPossession, Quantity
+        ev: dict[str, str] = {
+            "composition_shape": "bound(count) × bound(unit_cost)",
+            "input_tokens": "3|400",
+            "entity_source": "prior_sentence",
+            "currency_symbol": "$",
+        }
+        ev.update(ev_overrides)
+        return CandidateInitial(
+            initial=InitialPossession(
+                entity="John", quantity=Quantity(value=1200, unit="dollars"),
+            ),
+            source_span="3 vet appointments at $400 each",
+            matched_anchor="has",
+            matched_value_token="1200",
+            matched_unit_token="dollars",
+            matched_entity_token="John",
+            composition_evidence=ev,
+        )
+
+    def test_well_formed_composed_initial_admits(self) -> None:
+        ic = self._composed()
+        result = check_constraints(hypothesis_from_initial(ic, 0))
+        assert result.admitted is True
+        # All 4 sub-checks run (some may skip).
+        predicate_names = {p for p, _ in result.predicates_run}
+        assert "composed_initial.evidence_complete" in predicate_names
+        assert "composed_initial.input_tokens_ground" in predicate_names
+        assert "composed_initial.entity_token_present" in predicate_names
+
+    def test_composed_initial_missing_evidence_key_eliminated(self) -> None:
+        # Construct via dict mutation since the field is a Mapping
+        ev_partial = {
+            "composition_shape": "shape",
+            "input_tokens": "3|400",
+            # entity_source missing
+        }
+        ic = self._composed()
+        # Replace composition_evidence via dataclasses.replace would
+        # break frozen; build a new candidate directly.
+        from generate.math_problem_graph import InitialPossession, Quantity
+        ic2 = CandidateInitial(
+            initial=InitialPossession(
+                entity="John", quantity=Quantity(value=1200, unit="dollars"),
+            ),
+            source_span=ic.source_span,
+            matched_anchor=ic.matched_anchor,
+            matched_value_token=ic.matched_value_token,
+            matched_unit_token=ic.matched_unit_token,
+            matched_entity_token=ic.matched_entity_token,
+            composition_evidence=ev_partial,
+        )
+        result = check_constraints(hypothesis_from_initial(ic2, 0))
+        assert result.admitted is False
+        first_fail = next(
+            (p for p, o in result.predicates_run if o == "fail"), None
+        )
+        assert first_fail == "composed_initial.evidence_complete"
+
+    def test_composed_initial_input_token_missing_eliminated(self) -> None:
+        ic = self._composed(input_tokens="999|400")  # 999 not in source
+        result = check_constraints(hypothesis_from_initial(ic, 0))
+        assert result.admitted is False
+        first_fail = next(
+            (p for p, o in result.predicates_run if o == "fail"), None
+        )
+        assert first_fail == "composed_initial.input_tokens_ground"
+
+    def test_composed_initial_currency_symbol_missing_eliminated(self) -> None:
+        # Build a candidate whose source span has no $ but evidence
+        # claims currency_symbol="$".
+        from generate.math_problem_graph import InitialPossession, Quantity
+        ic = CandidateInitial(
+            initial=InitialPossession(
+                entity="John", quantity=Quantity(value=1200, unit="dollars"),
+            ),
+            source_span="3 vet appointments at 400 each",  # no $
+            matched_anchor="has",
+            matched_value_token="1200",
+            matched_unit_token="dollars",
+            matched_entity_token="John",
+            composition_evidence={
+                "composition_shape": "shape",
+                "input_tokens": "3|400",
+                "entity_source": "prior_sentence",
+                "currency_symbol": "$",
+            },
+        )
+        result = check_constraints(hypothesis_from_initial(ic, 0))
+        assert result.admitted is False
+        first_fail = next(
+            (p for p, o in result.predicates_run if o == "fail"), None
+        )
+        assert first_fail == "composed_initial.currency_symbol_present"
+
+
 class TestCheckConstraintsResultShape:
     def test_predicates_run_only_uses_known_predicate_names(self) -> None:
         ic = _initial()

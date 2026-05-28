@@ -292,9 +292,13 @@ def reevaluate(
     hypothesis so trace serialisation can record the before/after pair.
     """
     # Dispatch on refinement kind. Phase 3a knows pronoun_resolution.
+    # The defensive raise below is unreachable today (the Refinement
+    # Union has one member), but it is correct future-proofing for
+    # Phase 3b's CompoundClauseExpansion and other refinement types —
+    # if a caller passes a non-Union type by accident, fail loudly.
     if isinstance(refinement, PronounResolution):
         return _apply_pronoun_resolution(hypothesis, refinement)
-    raise ComprehensionStateError(
+    raise ComprehensionStateError(  # type: ignore[unreachable]
         f"reevaluate: unsupported refinement type {type(refinement).__name__}"
     )
 

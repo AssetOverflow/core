@@ -876,6 +876,29 @@ def parse_and_solve(
                                     break
 
                         _antecedent = _effective_prior
+                        # ADR-0174 Phase 3a — multi-actor pronoun
+                        # ambiguity defense.  When the problem has
+                        # more than one distinct proper-noun subject
+                        # in prior context, picking the most-recent
+                        # is a guess (e.g. "Alice has 5. Bob has 3.
+                        # She buys 2." — "She" should bind to Alice
+                        # by gender but the discourse map returns
+                        # Bob).  No safety net downstream would catch
+                        # a wrong attribution (single-binding
+                        # emission → no multi-branch disagreement;
+                        # verifier re-derives the same wrong graph).
+                        # Refuse rather than guess.  Surfaced by
+                        # 2026-05-28 Phase 1-3a lookback review;
+                        # see project-adr-0174-multi-actor-pronoun-hazard
+                        # memory and CLAUDE.md §Lookback Review
+                        # Discipline.
+                        _distinct_priors = {
+                            v for v in _discourse_prior_subjects.values()
+                            if v is not None
+                        }
+                        if _prior_subject is not None:
+                            _distinct_priors.add(_prior_subject)
+                        _multi_actor_ambiguous = len(_distinct_priors) > 1
                         if _held_pronoun is None or not _antecedent:
                             # No resolution path available — drop the
                             # held candidates and log the lookback
@@ -885,6 +908,21 @@ def parse_and_solve(
                                 "phase": 3,
                                 "outcome": "no_antecedent",
                                 "pronoun": _held_pronoun or "<missing>",
+                                "sentence_index": s_idx,
+                            }, sort_keys=True))
+                            injected = ()
+                        elif _multi_actor_ambiguous:
+                            # Refusal-preferring discipline: multiple
+                            # distinct proper-noun subjects in prior
+                            # context means the resolver would be
+                            # guessing.  Drop the held candidates,
+                            # log the ambiguous-antecedent event.
+                            _statement_trace.append(json.dumps({
+                                "layer": "lookback",
+                                "phase": 3,
+                                "outcome": "no_antecedent_ambiguous",
+                                "pronoun": _held_pronoun,
+                                "candidate_antecedents": sorted(_distinct_priors),
                                 "sentence_index": s_idx,
                             }, sort_keys=True))
                             injected = ()
@@ -1013,11 +1051,17 @@ def parse_and_solve(
                             f"(category={recognizer_match.category.value})"
                         ),
                         branches_enumerated=0, branches_admissible=0,
+                        # ADR-0174 Phase 3a — preserve statement-stage
+                        # trace events on early refusal so consumers see
+                        # WHY admission failed (lookback no_antecedent,
+                        # constraint_propagation eliminations, etc.).
+                        reader_trace=tuple(_statement_trace),
                     )
             return CandidateGraphResult(
                 answer=None, selected_graph=None,
                 refusal_reason=f"no admissible candidate for statement: {s!r}",
                 branches_enumerated=0, branches_admissible=0,
+                reader_trace=tuple(_statement_trace),
             )
         per_sentence_choices.append(_collapse_per_sentence_ties(choices))
         # ME-2 — update prior_subject AFTER this sentence is processed.

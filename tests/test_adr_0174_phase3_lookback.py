@@ -347,6 +347,74 @@ class TestPhase3WiringEndToEnd:
             for ev in lookback_events
         ), f"expected lookback admitted event; trace={lookback_events}"
 
+    def test_multi_actor_ambiguous_refuses_with_no_antecedent_ambiguous(self) -> None:
+        """ADR-0174 Phase 3a wrong=0 hazard defense — surfaced by
+        2026-05-28 lookback review.
+
+        When a problem has more than one distinct proper-noun subject
+        in prior context, the _discourse_prior_subjects lookup is
+        gender-blind and would silently pick the most-recent-prior as
+        the antecedent. In 'Alice has 5. Bob has 3. She buys 2.',
+        this would resolve 'She' to 'Bob' and attribute Alice's
+        purchase to Bob — wrong attribution with no downstream safety
+        net.
+
+        Defense: refuse with no_antecedent_ambiguous trace event when
+        multiple distinct proper-noun subjects appear in prior
+        context. Refusal-preferring discipline preserves wrong=0.
+        """
+        from generate.math_candidate_graph import parse_and_solve
+        text = (
+            "Alice has 5 Pokemon cards. "
+            "Bob has 3 Pokemon cards. "
+            "She collected 2 Pokemon cards. "
+            "How many Pokemon cards does Bob have?"
+        )
+        r = parse_and_solve(text)
+        # MUST refuse — wrong attribution is the hazard.
+        assert r.answer is None
+        lookback_events = [
+            json.loads(ev) for ev in r.reader_trace
+            if json.loads(ev).get("layer") == "lookback"
+        ]
+        ambig = [
+            ev for ev in lookback_events
+            if ev.get("outcome") == "no_antecedent_ambiguous"
+        ]
+        assert ambig, (
+            f"expected no_antecedent_ambiguous event; trace={lookback_events}"
+        )
+        ev = ambig[0]
+        assert "Alice" in ev["candidate_antecedents"]
+        assert "Bob" in ev["candidate_antecedents"]
+        assert ev["pronoun"] == "She"
+
+    def test_single_actor_pronoun_still_resolves(self) -> None:
+        """Counter-test: when there's only ONE distinct prior subject,
+        the defense MUST NOT fire — pronoun resolution proceeds."""
+        from generate.math_candidate_graph import parse_and_solve
+        text = (
+            "Bob has 10 Pokemon cards. "
+            "He collected 5 Pokemon cards. "
+            "How many Pokemon cards does Bob have?"
+        )
+        r = parse_and_solve(text)
+        lookback_events = [
+            json.loads(ev) for ev in r.reader_trace
+            if json.loads(ev).get("layer") == "lookback"
+        ]
+        assert not any(
+            ev.get("outcome") == "no_antecedent_ambiguous"
+            for ev in lookback_events
+        ), (
+            f"single-actor case must not trigger ambiguity defense; "
+            f"trace={lookback_events}"
+        )
+        assert any(
+            ev.get("outcome") == "admitted" and ev.get("resolved_to") == "Bob"
+            for ev in lookback_events
+        )
+
     def test_no_antecedent_emits_no_antecedent_trace_event(self) -> None:
         from generate.math_candidate_graph import parse_and_solve
         # No proper-noun antecedent before the held pronoun sentence.
@@ -359,20 +427,11 @@ class TestPhase3WiringEndToEnd:
             json.loads(ev) for ev in r.reader_trace
             if json.loads(ev).get("layer") == "lookback"
         ]
-        # Either we emitted a no_antecedent event, OR the sentence
-        # refused before reaching the lookback path. Both preserve
-        # wrong=0; the assertion captures the intent.
-        no_antecedent = any(
-            ev.get("outcome") == "no_antecedent"
-            for ev in lookback_events
-        )
-        # The problem should refuse cleanly regardless.
         assert r.refusal_reason is not None or r.answer is None
-        # If lookback fired at all, it must have been no_antecedent.
         for ev in lookback_events:
-            assert ev.get("outcome") in ("no_antecedent", "eliminated"), (
-                f"unexpected lookback outcome on no-antecedent input: {ev}"
-            )
+            assert ev.get("outcome") in (
+                "no_antecedent", "no_antecedent_ambiguous", "eliminated"
+            ), f"unexpected lookback outcome on no-antecedent input: {ev}"
 
 
 # ---------------------------------------------------------------------------
