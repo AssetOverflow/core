@@ -89,6 +89,25 @@ SentenceFrame = Literal[
 
 _LOOKBACK_MAX: Final[int] = 8
 
+# ADR-0174 — held-hypothesis state primitive.
+#
+# HYPOTHESIS_CAP is a structural assertion that a coherent sentence has at
+# most a few plausible parses. Exceeding this cap is a signal the read has
+# lost coherence; the reader refuses rather than enumerating further.
+# This is a refusal threshold, not a probability cutoff or a heuristic
+# limit on capability. Initial value 4, to be set by measurement once
+# Phase 1 data collection lands (ADR-0174 §"Open questions" #1).
+HYPOTHESIS_CAP: Final[int] = 4
+
+# Closed set of confidence-rank values for held hypotheses. The reader
+# orders hypotheses by appearance (0 = first emitted) and uses this rank
+# only for tie-breaking when constraints eliminate equally-plausible
+# survivors. Per ADR-0174 §Constraints, no stochastic ranking is
+# permitted; the rank is structural, not probabilistic.
+VALID_HYPOTHESIS_CONFIDENCE_RANKS: Final[frozenset[int]] = frozenset(
+    range(HYPOTHESIS_CAP)
+)
+
 # ---------------------------------------------------------------------------
 # Error
 # ---------------------------------------------------------------------------
@@ -679,6 +698,171 @@ class SentenceReadingState:
 # All fields required (no defaults) — initial construction is explicit.
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# ADR-0174 — held-hypothesis primitives
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class UnknownHeld:
+    """An unknown token the reader is holding open rather than refusing on.
+
+    Per ADR-0174 §Decision, when ``apply_word`` encounters a token absent
+    from the lexicon, the reader narrows the hypothesis space to
+    interpretations that do not depend on this token's category rather
+    than collapsing. The token is recorded here so downstream resolution
+    (lookback re-evaluation, in-loop contemplation) can target it.
+
+    Phase 1 (this primitive only): the type exists so ``ProblemReadingState``
+    can carry it. No ``apply_word`` behavior change yet — unknown tokens
+    continue to emit ``ReaderRefusal`` in Phase 1. Phase 3 wires the
+    "hold instead of refuse" behavior.
+
+    Fields:
+        token:               Surface form of the unknown token.
+        position:            Token index within the sentence where it appeared.
+        narrowed_categories: Categories still consistent with surviving
+                             hypotheses after this token. Empty frozenset
+                             means the unknown eliminated every hypothesis
+                             and the reader must refuse.
+    """
+
+    token: str
+    position: int
+    narrowed_categories: frozenset[str]
+
+    def __post_init__(self) -> None:
+        _require_non_empty_str(self.token, "UnknownHeld.token")
+        _require_non_negative_int(self.position, "UnknownHeld.position")
+        if not isinstance(self.narrowed_categories, frozenset):
+            raise ComprehensionStateError(
+                "UnknownHeld.narrowed_categories must be frozenset[str]; "
+                f"got {type(self.narrowed_categories).__name__}"
+            )
+        for cat in self.narrowed_categories:
+            if not isinstance(cat, str) or not cat:
+                raise ComprehensionStateError(
+                    "UnknownHeld.narrowed_categories entries must be non-empty "
+                    f"str; got {cat!r}"
+                )
+
+
+@dataclass(frozen=True, slots=True)
+class Hypothesis:
+    """One open interpretation in the reader's hypothesis set.
+
+    Per ADR-0174 §Decision, the reader carries up to ``HYPOTHESIS_CAP``
+    open hypotheses and applies EMIT / ELIMINATE / HOLD operators per
+    token. A hypothesis survives until either (a) a constraint check
+    eliminates it, (b) the cap is exceeded, or (c) finalization picks a
+    unique survivor.
+
+    Phase 1 (this primitive only): the type exists so ``ProblemReadingState``
+    can carry a tuple of them. No ``apply_word`` behavior change yet —
+    the reader continues to operate single-committed in Phase 1. Phase 2
+    wires continuous constraint propagation; Phase 3 wires lookback.
+
+    The ``candidate`` field is intentionally typed as ``object`` rather
+    than ``CandidateInitial | CandidateOperation | CandidateUnknown``:
+    those types live in ``generate.math_roundtrip`` and
+    ``generate.math_candidate_graph``, importing them here would create
+    a circular dependency. Validation of the concrete type happens at
+    the call site (in ``lifecycle.apply_word`` and downstream admission)
+    where those types are already available.
+
+    Fields:
+        candidate:            The in-flight candidate this hypothesis represents
+                              (CandidateInitial | CandidateOperation | CandidateUnknown
+                              once admitted; raw structured object during reading).
+        category_assignments: Per-token category trace. Each entry is
+                              (token_index, assigned_category, surface_token).
+                              Lookback re-evaluation (Phase 3) walks this
+                              trace to recompute prior assignments.
+        constraint_state:     Opaque structured record of which admissibility
+                              predicates have fired and what they have
+                              verified. Phase 2 populates this; Phase 1
+                              carries the empty tuple.
+        confidence_rank:      0-indexed appearance order; ties broken by
+                              this rank. Structural, not probabilistic.
+        unresolved:           Slots the hypothesis still needs filled
+                              (e.g. "actor", "verb", "value") before it
+                              can be admitted. Empty tuple means the
+                              hypothesis is complete and ready for the
+                              admissibility gate.
+    """
+
+    candidate: object
+    category_assignments: tuple[tuple[int, str, str], ...]
+    constraint_state: tuple[tuple[str, str], ...]
+    confidence_rank: int
+    unresolved: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if self.candidate is None:
+            raise ComprehensionStateError(
+                "Hypothesis.candidate must not be None — empty hypotheses are "
+                "structurally invalid"
+            )
+        if not isinstance(self.category_assignments, tuple):
+            raise ComprehensionStateError(
+                "Hypothesis.category_assignments must be tuple"
+            )
+        for idx, ca in enumerate(self.category_assignments):
+            if not (
+                isinstance(ca, tuple)
+                and len(ca) == 3
+                and isinstance(ca[0], int)
+                and not isinstance(ca[0], bool)
+                and ca[0] >= 0
+                and isinstance(ca[1], str) and ca[1]
+                and isinstance(ca[2], str) and ca[2]
+            ):
+                raise ComprehensionStateError(
+                    f"Hypothesis.category_assignments[{idx}] must be "
+                    "(token_index:int>=0, category:non-empty str, "
+                    f"surface_token:non-empty str); got {ca!r}"
+                )
+        if not isinstance(self.constraint_state, tuple):
+            raise ComprehensionStateError(
+                "Hypothesis.constraint_state must be tuple"
+            )
+        for idx, cs in enumerate(self.constraint_state):
+            if not (
+                isinstance(cs, tuple)
+                and len(cs) == 2
+                and isinstance(cs[0], str) and cs[0]
+                and isinstance(cs[1], str) and cs[1]
+            ):
+                raise ComprehensionStateError(
+                    f"Hypothesis.constraint_state[{idx}] must be "
+                    f"(predicate:non-empty str, outcome:non-empty str); got {cs!r}"
+                )
+        if (
+            not isinstance(self.confidence_rank, int)
+            or isinstance(self.confidence_rank, bool)
+            or self.confidence_rank not in VALID_HYPOTHESIS_CONFIDENCE_RANKS
+        ):
+            raise ComprehensionStateError(
+                f"Hypothesis.confidence_rank must be int in [0, {HYPOTHESIS_CAP}); "
+                f"got {self.confidence_rank!r}"
+            )
+        if not isinstance(self.unresolved, tuple):
+            raise ComprehensionStateError(
+                "Hypothesis.unresolved must be tuple[str, ...]"
+            )
+        for idx, slot in enumerate(self.unresolved):
+            if not isinstance(slot, str) or not slot:
+                raise ComprehensionStateError(
+                    f"Hypothesis.unresolved[{idx}] must be non-empty str; "
+                    f"got {slot!r}"
+                )
+
+
+# ---------------------------------------------------------------------------
+# Problem-scoped state
+# ---------------------------------------------------------------------------
+
+
 @dataclass(frozen=True, slots=True)
 class ProblemReadingState:
     entity_registry: tuple[EntityRef, ...]
@@ -688,6 +872,16 @@ class ProblemReadingState:
     pronoun_resolution_history: tuple[PronounResolution, ...]
     sentence_index: int
     source_text_offset: int
+    # ADR-0174 Phase 1 — held-hypothesis primitives. Default to empty
+    # tuples; Phase 1 introduces the substrate without altering any
+    # admission behavior. Empty tuples carry the same meaning today's
+    # state has — no held hypotheses, no unknown tokens held open.
+    # The canonical-bytes serializer will include these fields as
+    # ``[]`` once any state is constructed without explicit values,
+    # which is intentional: it is the marker that ADR-0174 substrate
+    # is present, and downstream replay can branch on it.
+    open_hypotheses: tuple["Hypothesis", ...] = ()
+    unknown_held: tuple["UnknownHeld", ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.entity_registry, tuple):
@@ -746,6 +940,51 @@ class ProblemReadingState:
         _require_non_negative_int(
             self.source_text_offset, "ProblemReadingState.source_text_offset"
         )
+        # ADR-0174 — held-hypothesis invariants.
+        if not isinstance(self.open_hypotheses, tuple):
+            raise ComprehensionStateError(
+                "ProblemReadingState.open_hypotheses must be "
+                "tuple[Hypothesis, ...]"
+            )
+        if len(self.open_hypotheses) > HYPOTHESIS_CAP:
+            raise ComprehensionStateError(
+                f"ProblemReadingState.open_hypotheses exceeds HYPOTHESIS_CAP="
+                f"{HYPOTHESIS_CAP}; got {len(self.open_hypotheses)} hypotheses. "
+                "Per ADR-0174 §Constraints, exceeding the cap is a structural "
+                "signal that the read has lost coherence — the reader must "
+                "refuse rather than enumerate further."
+            )
+        for idx, hyp in enumerate(self.open_hypotheses):
+            if not isinstance(hyp, Hypothesis):
+                raise ComprehensionStateError(
+                    f"ProblemReadingState.open_hypotheses[{idx}] must be "
+                    f"Hypothesis; got {type(hyp).__name__}"
+                )
+        # Confidence ranks must be unique and dense from 0 — structural
+        # ordering, not probabilistic. Catches accidental rank collisions
+        # at construction rather than at admission.
+        ranks = [hyp.confidence_rank for hyp in self.open_hypotheses]
+        if len(set(ranks)) != len(ranks):
+            raise ComprehensionStateError(
+                "ProblemReadingState.open_hypotheses confidence_ranks must be "
+                f"unique; got {ranks}"
+            )
+        if ranks and set(ranks) != set(range(len(ranks))):
+            raise ComprehensionStateError(
+                "ProblemReadingState.open_hypotheses confidence_ranks must be "
+                f"dense from 0 to len-1; got {sorted(ranks)}"
+            )
+        if not isinstance(self.unknown_held, tuple):
+            raise ComprehensionStateError(
+                "ProblemReadingState.unknown_held must be "
+                "tuple[UnknownHeld, ...]"
+            )
+        for idx, uh in enumerate(self.unknown_held):
+            if not isinstance(uh, UnknownHeld):
+                raise ComprehensionStateError(
+                    f"ProblemReadingState.unknown_held[{idx}] must be "
+                    f"UnknownHeld; got {type(uh).__name__}"
+                )
 
     def canonical_bytes(self) -> bytes:
         return to_canonical_bytes(self)
@@ -779,6 +1018,10 @@ def _canonical_dict_omit_none(obj: Any) -> Any:
         return obj
     if isinstance(obj, (tuple, list)):
         return [_canonical_dict_omit_none(item) for item in obj]
+    if isinstance(obj, frozenset):
+        # ADR-0174 — frozenset serialised as a sorted list so canonical
+        # bytes are deterministic regardless of insertion order.
+        return [_canonical_dict_omit_none(item) for item in sorted(obj)]
     if hasattr(obj, "__dataclass_fields__"):
         out: dict[str, Any] = {}
         for key in sorted(obj.__dataclass_fields__.keys()):
