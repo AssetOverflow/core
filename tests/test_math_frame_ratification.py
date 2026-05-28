@@ -424,10 +424,14 @@ def test_duplicate_surface_polarity_with_new_evidence_appends_hash(
 # ---------------------------------------------------------------------------
 
 
-def test_manifest_checksum_unchanged_by_frame_ratification(pack_copy: Path) -> None:
-    manifest_bytes_before = (pack_copy / "manifest.json").read_bytes()
-    manifest_sha_before = _manifest_sha(pack_copy)
-    declared_before = json.loads(manifest_bytes_before)["checksum"]
+def test_lexicon_checksum_preserved_by_frame_ratification(pack_copy: Path) -> None:
+    """RAT-1 — the lexicon ``checksum`` field is preserved across frame
+    ratification. The manifest may gain a ``frame_checksum`` field
+    (auto-compile per RAT-1), but the pre-existing lexicon checksum
+    bytes are untouched.
+    """
+    manifest_before = json.loads((pack_copy / "manifest.json").read_bytes())
+    declared_before = manifest_before["checksum"]
 
     apply_frame_claim(
         claim=_claim("gives"),
@@ -437,10 +441,13 @@ def test_manifest_checksum_unchanged_by_frame_ratification(pack_copy: Path) -> N
         pack_root=pack_copy,
     )
 
-    manifest_bytes_after = (pack_copy / "manifest.json").read_bytes()
-    assert manifest_bytes_after == manifest_bytes_before
-    assert _manifest_sha(pack_copy) == manifest_sha_before
-    assert json.loads(manifest_bytes_after)["checksum"] == declared_before
+    manifest_after = json.loads((pack_copy / "manifest.json").read_bytes())
+    assert manifest_after["checksum"] == declared_before, (
+        "lexicon checksum must not change during frame ratification"
+    )
+    # RAT-1: frame_checksum may now be present (auto-compile).
+    if "frame_checksum" in manifest_after:
+        assert isinstance(manifest_after["frame_checksum"], str)
 
 
 # ---------------------------------------------------------------------------

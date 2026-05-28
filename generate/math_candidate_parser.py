@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Final, Literal, cast
+from typing import Final, Literal, Mapping, cast
 
 from generate.math_problem_graph import (
     Comparison,
@@ -79,6 +79,14 @@ class CandidateInitial:
     matched_value_token: str  # '3' or 'three'
     matched_unit_token: str
     matched_entity_token: str
+    # RAT-1 — composed-candidate evidence. When non-None this candidate
+    # was produced by a registry-gated composition (ADR-0169) rather
+    # than a literal extraction; the value/unit/entity are DERIVED, so
+    # the admissibility gate checks each composition INPUT grounds in
+    # source_span instead of the derived value. Schema keys:
+    #   count_token, amount_token, currency_symbol, composition_shape,
+    #   entity_source.
+    composition_evidence: Mapping[str, str] | None = None
 
     def __post_init__(self) -> None:
         # ADR-0127 widens the anchor set to include 'there are/were/is/was'

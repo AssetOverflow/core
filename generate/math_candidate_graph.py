@@ -232,7 +232,19 @@ def _initial_admissible(ic: CandidateInitial) -> bool:
     """Light structural ground-check for initial-possession candidates.
 
     Same shape as roundtrip_admissible but for the initial-possession
-    slot set (entity, anchor, value, unit)."""
+    slot set (entity, anchor, value, unit).
+
+    RAT-1 — when ``ic.composition_evidence`` is non-None the candidate
+    is a registry-gated composition (ADR-0169); the derived value /
+    canonical unit / cross-sentence entity will not literally appear in
+    source_span. Branch to :func:`_composed_initial_admissible` which
+    checks the composition INPUT tokens (count, amount, currency
+    symbol) ground instead. The composition_shape is gated upstream by
+    the composition_registry consult in
+    :func:`generate.recognizer_anchor_inject.inject_from_match`.
+    """
+    if ic.composition_evidence is not None:
+        return _composed_initial_admissible(ic)
     from generate.math_roundtrip import _tokens, _value_grounds, _token_in, _unit_grounds
     haystack = _tokens(ic.source_span)
     if not _token_in(ic.matched_anchor, haystack):
@@ -246,6 +258,52 @@ def _initial_admissible(ic: CandidateInitial) -> bool:
     for tok in ic.matched_entity_token.split():
         if not _token_in(tok, haystack):
             return False
+    return True
+
+
+def _composed_initial_admissible(ic: CandidateInitial) -> bool:
+    """RAT-1 — admissibility gate for registry-gated composition candidates.
+
+    Preserves wrong=0 by requiring each composition INPUT token to
+    ground in source_span. The derived value (e.g. ``1200`` from
+    ``3 × 400``, or ``150`` from ``100 + 50``) and canonicalized unit
+    are NOT required to be literal because they are deterministic
+    arithmetic over grounded inputs.
+
+    composition_evidence schema (all keys required):
+      - composition_shape: str   — the surface_pattern (registry-gated upstream)
+      - input_tokens:     str    — pipe-separated list of literal tokens
+                                   (e.g. "3|400" for multiplicative,
+                                    "100|50" for additive)
+      - entity_source:    str    — "same_sentence" | "prior_sentence"
+    Optional:
+      - currency_symbol:  str    — substring required in source_span (for currency shapes)
+
+    Each input_token must ground in source_span tokens.
+    matched_entity_token must be non-empty (matcher's binding is
+    trusted; cross-unit/cross-sentence refusals happen upstream).
+    """
+    from generate.math_roundtrip import _tokens, _token_in
+
+    ev = ic.composition_evidence
+    if not ev:
+        return False
+    required = {"composition_shape", "input_tokens", "entity_source"}
+    if not required.issubset(ev.keys()):
+        return False
+
+    haystack = _tokens(ic.source_span)
+    input_tokens = ev["input_tokens"].split("|") if ev["input_tokens"] else []
+    if not input_tokens:
+        return False
+    for tok in input_tokens:
+        if not _token_in(tok, haystack):
+            return False
+    currency_symbol = ev.get("currency_symbol")
+    if currency_symbol and currency_symbol not in ic.source_span:
+        return False
+    if not ic.matched_entity_token or not ic.matched_entity_token.strip():
+        return False
     return True
 
 
@@ -584,6 +642,32 @@ def parse_and_solve(
     # ADR-0136.S.0 — Strip context-filler sentences before any extraction.
     # A sentence with no digit and no word-number cannot introduce parseable
     # numeric state; skipping it is provably safe for wrong == 0.
+    #
+    # RAT-1 — but context-filler sentences DO carry proper-noun subjects
+    # that downstream composition shapes (case 0019: "John adopts a dog"
+    # establishes John before the composition sentence) need for
+    # cross-sentence subject binding. Capture the discourse subjects
+    # BEFORE filtering so the cross-sentence resolver can reach them.
+    from generate.recognizer_match import extract_proper_noun_subject as _rat1_extract_subj
+    _discourse_prior_subjects: dict[str, str] = {}
+    _running_subject: str | None = None
+    for _s in statement_sentences:
+        head = _rat1_extract_subj(_s)
+        if head is not None:
+            _running_subject = head
+        # Map this statement to the subject available BEFORE it.
+        _discourse_prior_subjects[_s] = _running_subject if _running_subject and _running_subject != head else (
+            _running_subject if head is None else _discourse_prior_subjects.get(_s)
+        )
+    # Re-walk to set the strict "prior" (head from EARLIER sentences only).
+    _running_subject = None
+    _discourse_prior_subjects = {}
+    for _s in statement_sentences:
+        _discourse_prior_subjects[_s] = _running_subject
+        head = _rat1_extract_subj(_s)
+        if head is not None:
+            _running_subject = head
+
     numeric_statement_sentences = [
         s for s in statement_sentences if classify_sentence(s) == "numeric_state"
     ]
@@ -709,6 +793,10 @@ def parse_and_solve(
     # statement; only prior sentences contribute).
     _prior_subject: str | None = None
     for s in statement_sentences:
+        # RAT-1 — prefer the discourse-level prior (which sees context-filler
+        # sentences like "John adopts a dog from a shelter"); fall back to
+        # the in-loop running subject when discourse map has no entry.
+        _effective_prior = _discourse_prior_subjects.get(s, _prior_subject) or _prior_subject
         choices = _filtered_statement_choices(s)
         if not choices:
             if _ratified_registry:
@@ -717,7 +805,7 @@ def parse_and_solve(
                     match as _recognizer_match,
                 )
                 recognizer_match = _recognizer_match(
-                    s, _ratified_registry, prior_subject=_prior_subject
+                    s, _ratified_registry, prior_subject=_effective_prior
                 )
                 if recognizer_match is not None:
                     # ADR-0163.D.2 — per-category anchor injection.
