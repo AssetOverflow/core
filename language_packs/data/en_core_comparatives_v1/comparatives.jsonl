@@ -1,0 +1,9 @@
+{"lexeme":"double","op":"multiply","scalar":2.0}
+{"lexeme":"doubled","op":"multiply","scalar":2.0}
+{"lexeme":"half","op":"multiply","scalar":0.5}
+{"lexeme":"quadruple","op":"multiply","scalar":4.0}
+{"lexeme":"quadrupled","op":"multiply","scalar":4.0}
+{"lexeme":"quarter","op":"multiply","scalar":0.25}
+{"lexeme":"triple","op":"multiply","scalar":3.0}
+{"lexeme":"tripled","op":"multiply","scalar":3.0}
+{"lexeme":"twice","op":"multiply","scalar":2.0}
