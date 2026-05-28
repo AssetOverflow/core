@@ -7,7 +7,9 @@ guard that keeps the (Phase 3b) bounded search honest.
 
 from __future__ import annotations
 
+from generate.derivation.extract import extract_quantities
 from generate.derivation.model import GroundedDerivation, Quantity, Step, VALID_OPS
+from generate.derivation.search import MULTIPLICATIVE_CUES, search_multiplicative
 from generate.derivation.verify import (
     Resolution,
     SelfVerification,
@@ -17,11 +19,14 @@ from generate.derivation.verify import (
 
 __all__ = [
     "GroundedDerivation",
+    "MULTIPLICATIVE_CUES",
     "Quantity",
     "Resolution",
     "SelfVerification",
     "Step",
     "VALID_OPS",
+    "extract_quantities",
+    "search_multiplicative",
     "select_self_verified",
     "self_verifies",
 ]
