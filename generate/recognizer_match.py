@@ -997,8 +997,22 @@ def _match_multiplicative_aggregation(
       - statement does NOT carry currency-per-unit framing
 
     Returns ``(empty parsed_anchors, "aggregate")`` on a hit.
+
+    ME-3 (ADR-0169 additive composition) — when
+    ``spec["anchor_kind"] == "additive_quantity_composition"`` this
+    matcher dispatches to :func:`_try_extract_additive_composition_anchor`
+    which publishes ``composition_shape`` + a pre-composed
+    :class:`CandidateInitial` in ``parsed_anchors`` for two same-unit
+    quantities connected by ``and``. The graph_intent is widened from
+    ``"aggregate"`` to also include ``"additive"`` so the dispatcher in
+    :func:`match` can recognize composition emissions.
     """
-    if spec.get("anchor_kind") != "multiplicative_aggregate":
+    anchor_kind = spec.get("anchor_kind")
+    if anchor_kind == "additive_quantity_composition":
+        # ME-3 dispatch — same Literal narrowing keeps the return type
+        # consistent ('aggregate' is reused).
+        return _try_extract_additive_composition_anchor(statement, spec)
+    if anchor_kind != "multiplicative_aggregate":
         return None
     padded = _padded_lower(statement)
     if not any(c in padded for c in _MULTIPLICATIVE_CONNECTIVES):
@@ -1015,6 +1029,159 @@ def _match_multiplicative_aggregation(
     if _has_currency_symbol(statement) and _has_per_unit_framing(padded):
         return None
     return (tuple(), "aggregate")
+
+
+# ---------------------------------------------------------------------------
+# ME-3 — additive composition matcher.
+#
+# Admits "<count_a> <unit> and <count_b> <unit>" shape (same unit) and
+# emits a pre-composed CandidateInitial whose value is the sum.
+#
+# Subject-binding discipline:
+# - SAME-SENTENCE proper-noun subject preferred (Option A from ME-1).
+# - When absent, the caller MAY supply ``prior_subject`` via the match()
+#   dispatcher (ME-2 path); the ME-3 helper does NOT itself consult
+#   ``prior_subject`` — that path is reserved for the cross-sentence
+#   composition extension (a future ME-3b if needed). v1 ME-3 narrowness
+#   matches the dispatch pack: refuse on subject-absent.
+# - Pronoun subject refused (mirrors existing _REFUSED_SUBJECT_TOKENS).
+# ---------------------------------------------------------------------------
+
+_ADDITIVE_TWO_QUANTITY_RE: Final[re.Pattern[str]] = re.compile(
+    r"""(?ix)
+    ^\s*
+    (?P<subject>[A-Z][a-zA-Z]+)
+    \s+
+    (?P<verb>lost|gained|earned|saved|made|paid|spent|bought|sold|added|removed|received)
+    \s+
+    (?P<count_a>\d+(?:\.\d+)?)
+    \s+
+    (?P<unit_a>[a-z]+)
+    (?:\s+[a-z]+\s+[a-z]+)?           # optional time/location phrase like "in March"
+    \s+and\s+
+    (?P<count_b>\d+(?:\.\d+)?)
+    \s+
+    (?P<unit_b>[a-z]+)
+    (?:\s+[a-z]+\s+[a-z]+)?           # optional second time/location phrase
+    \b
+    """,
+)
+
+_ADDITIVE_COMPOSITION_SHAPE: Final[str] = "bound(qty_a) + bound(qty_b)"
+
+
+def _try_extract_additive_composition_anchor(
+    statement: str, spec: Mapping[str, Any]
+) -> tuple[tuple[Mapping[str, Any], ...], Literal["aggregate"]] | None:
+    """Extract a pre-composed CandidateInitial for additive composition.
+
+    Narrowness layers (all required):
+
+    1. ``spec["anchor_kind"] == "additive_quantity_composition"`` (caller)
+    2. ``spec["observed_units"]`` is non-empty
+    3. Exactly one match of :data:`_ADDITIVE_TWO_QUANTITY_RE`
+    4. ``unit_a == unit_b`` (same-unit composition only; cross-unit
+       addition is ill-defined without a conversion table — refuse)
+    5. Both unit tokens in ``observed_units``
+    6. Both counts are positive
+    7. Subject is a proper noun not in :data:`_REFUSED_SUBJECT_TOKENS`
+    8. Verb in :data:`_ADDITIVE_COMPOSITION_VERBS`
+
+    Refuses on any failure; refusal-preferring discipline.
+    """
+    if spec.get("anchor_kind") != "additive_quantity_composition":
+        return None
+    observed_units = set(spec.get("observed_units") or ())
+    if not observed_units:
+        return None
+
+    matches = list(_ADDITIVE_TWO_QUANTITY_RE.finditer(statement))
+    if len(matches) != 1:
+        return None
+
+    m = matches[0]
+    subject = m.group("subject")
+    if subject.lower() in _REFUSED_SUBJECT_TOKENS:
+        return None
+    if subject.lower() in _COMMON_DETERMINERS_AT_HEAD:
+        return None
+
+    verb = m.group("verb").lower()
+    if verb not in _ADDITIVE_COMPOSITION_VERBS:
+        return None
+
+    unit_a = m.group("unit_a").lower()
+    unit_b = m.group("unit_b").lower()
+    # Strip trailing 's' for plural normalization on the comparison
+    # (apples vs apple). Refuse on stem mismatch.
+    if unit_a.rstrip("s") != unit_b.rstrip("s"):
+        return None
+    canonical_unit = unit_a
+    if canonical_unit not in observed_units and canonical_unit.rstrip("s") not in observed_units:
+        return None
+
+    count_a_token = m.group("count_a")
+    count_b_token = m.group("count_b")
+    try:
+        count_a = float(count_a_token)
+        count_b = float(count_b_token)
+    except ValueError:
+        return None
+    if count_a <= 0 or count_b <= 0:
+        return None
+
+    composed_value_f = count_a + count_b
+    if composed_value_f != composed_value_f:  # NaN guard
+        return None
+    composed_value: int | float
+    if (
+        composed_value_f.is_integer()
+        and "." not in count_a_token
+        and "." not in count_b_token
+    ):
+        composed_value = int(composed_value_f)
+    else:
+        composed_value = composed_value_f
+
+    from generate.math_candidate_parser import CandidateInitial
+    from generate.math_problem_graph import InitialPossession, Quantity
+
+    # Verb whitelist maps to a CandidateInitial.matched_anchor value
+    # the post-init guard accepts (existing whitelist includes
+    # has/have/had/saved/earned/got/received/bought/made/paid).
+    matched_anchor = verb if verb in {
+        "saved", "earned", "got", "received", "bought", "made", "paid"
+    } else "had"
+
+    composed_initial = CandidateInitial(
+        initial=InitialPossession(
+            entity=subject,
+            quantity=Quantity(value=composed_value, unit=canonical_unit),
+        ),
+        source_span=m.group(0),
+        matched_anchor=matched_anchor,
+        matched_value_token=str(composed_value),
+        matched_unit_token=canonical_unit,
+        matched_entity_token=subject,
+    )
+
+    anchor: Mapping[str, Any] = {
+        "kind": "additive_quantity_composition",
+        "composition_shape": _ADDITIVE_COMPOSITION_SHAPE,
+        "composed_initial": composed_initial,
+        "count_a": count_a_token,
+        "count_b": count_b_token,
+        "unit": canonical_unit,
+        "subject": subject,
+        "verb": verb,
+    }
+    return ((anchor,), "aggregate")
+
+
+_ADDITIVE_COMPOSITION_VERBS: Final[frozenset[str]] = frozenset({
+    "lost", "gained", "earned", "saved", "made", "paid", "spent",
+    "bought", "sold", "added", "removed", "received",
+})
 
 
 def _match_currency_amount(

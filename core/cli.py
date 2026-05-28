@@ -84,6 +84,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_matcher_extension_end_to_end_admission.py",
         "tests/test_me2_cross_sentence_subject.py",
         "tests/test_me2_case_0019_admits.py",
+        "tests/test_me3_additive_composition.py",
     ),
     "algebra": (
         "tests/test_versor_closure.py",
