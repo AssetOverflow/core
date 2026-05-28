@@ -3,9 +3,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { proposalDetail, proposalSummaries } from "../../api/__fixtures__/proposals";
+import { getExtraCommands, unregisterCommands } from "../../commands/registry";
 import { SuggestedCLIBox } from "./SuggestedCLIBox";
+import { ProposalStateBadge } from "./ProposalStateBadge";
 import { ProposalTable } from "./ProposalTable";
 import { ProposalsRoute } from "./ProposalsRoute";
 
@@ -137,10 +139,83 @@ describe("ProposalsRoute", () => {
 });
 
 describe("SuggestedCLIBox", () => {
-  it("shows the correct terminal review commands for a proposal id", () => {
-    render(<SuggestedCLIBox proposalId="proposal-123" />);
+  it("shows fallback commands when suggested_cli is null", () => {
+    render(<SuggestedCLIBox proposal={{ proposal_id: "proposal-123", suggested_cli: null }} />);
 
     expect(screen.getByText("core teaching review --proposal-id proposal-123 --accept")).toBeInTheDocument();
     expect(screen.getByText("core teaching review --proposal-id proposal-123 --reject")).toBeInTheDocument();
+  });
+
+  it("shows suggested_cli from the API when present", () => {
+    render(
+      <SuggestedCLIBox
+        proposal={{ proposal_id: "proposal-123", suggested_cli: "core teaching review --proposal-id proposal-123 --accept --auto" }}
+      />,
+    );
+
+    expect(
+      screen.getByText("core teaching review --proposal-id proposal-123 --accept --auto"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("--reject")).not.toBeInTheDocument();
+  });
+
+  it("code element carries select-all class for keyboard copy", () => {
+    const { container } = render(
+      <SuggestedCLIBox proposal={{ proposal_id: "proposal-123", suggested_cli: null }} />,
+    );
+
+    const codeEl = container.querySelector("code");
+    expect(codeEl).not.toBeNull();
+    expect(codeEl!.className).toContain("select-all");
+  });
+});
+
+describe("⌘K proposal command registration", () => {
+  beforeEach(() => {
+    // Clear any commands registered by previous tests.
+    unregisterCommands(getExtraCommands().map((c) => c.path));
+  });
+
+  afterEach(() => {
+    unregisterCommands(getExtraCommands().map((c) => c.path));
+    vi.restoreAllMocks();
+  });
+
+  it("registers proposal commands when the route mounts with proposals", async () => {
+    stubProposalFetch(proposalSummaries);
+    renderRoute("/proposals?state=pending");
+
+    await waitFor(() => {
+      const cmds = getExtraCommands();
+      expect(cmds.some((c) => c.name.includes("proposal-p"))).toBe(true);
+    });
+  });
+
+  it("registered commands contain a /proposals path with proposal_id", async () => {
+    stubProposalFetch(proposalSummaries);
+    renderRoute("/proposals?state=pending");
+
+    await waitFor(() => {
+      const cmds = getExtraCommands();
+      const proposalCmd = cmds.find((c) => c.path.includes("proposal_id="));
+      expect(proposalCmd).toBeDefined();
+      expect(proposalCmd!.path).toMatch(/^\/proposals\?/);
+    });
+  });
+});
+
+describe("ProposalStateBadge lifecycle colors", () => {
+  const STATES = ["pending", "accepted", "rejected", "withdrawn"] as const;
+
+  it.each(STATES)("renders %s state using a CSS custom property token", (state) => {
+    const { container } = render(<ProposalStateBadge value={state} />);
+    // InfoBadge renders a Popover.Trigger button with inline style containing the color token.
+    const trigger = container.querySelector("button");
+    expect(trigger).not.toBeNull();
+    const styleAttr = trigger!.getAttribute("style") ?? "";
+    // Must reference a CSS custom property from the review palette.
+    expect(styleAttr).toMatch(/--color-review-/);
+    // Must not embed a raw hex literal.
+    expect(styleAttr).not.toMatch(/#[0-9a-fA-F]{3,6}/);
   });
 });
