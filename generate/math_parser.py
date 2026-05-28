@@ -1,5 +1,13 @@
 """ADR-0115 Phase 1.3 — deterministic math word-problem parser.
 
+.. deprecated::
+    This module is the **legacy regex parser path**. New callers should use
+    :func:`generate.math_candidate_graph.parse_and_solve`, which layers the
+    recognizer-driven candidate-graph topology on top. This module remains as
+    the fallback path wired inside ``math_candidate_graph.py``; it should not
+    be invoked directly by pipeline or eval code.
+
+
 Turns a grade-school math word problem into a :class:`MathProblemGraph`
 via rule-based extraction. No LLM, no sampling, no statistical anything.
 Same input string always produces the same graph; failures raise

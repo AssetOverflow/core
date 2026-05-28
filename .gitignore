@@ -40,3 +40,10 @@ evals/gsm8k_math/holdouts/v1/cases-train*
 # ADR-0172 W3 — math-contemplation proposals are generated on demand; the
 # directory skeleton (.gitkeep) is committed, the generated JSONL is not.
 teaching/math_proposals/proposals.jsonl
+
+# ADR-0146 — engine_state/ is per-session mutable checkpoint state; only the
+# module itself (engine_state/__init__.py) is tracked. Runtime-generated files
+# are not source artifacts.
+engine_state/manifest.json
+engine_state/recognizers.jsonl
+engine_state/discovery_candidates.jsonl

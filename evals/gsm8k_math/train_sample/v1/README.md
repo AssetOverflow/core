@@ -49,3 +49,24 @@ Each case in `cases.jsonl` preserves:
 - `question`: the verbatim question string
 - `answer_expression`: the verbatim answer field containing reasoning steps and number suffix
 - `answer_numeric`: the integer or float parsed from the `#### N` suffix in the answer expression
+
+## ADR-0164 Reader — Zero-Delta Diagnosis
+
+`report.json` records `use_reader: true` (3 correct / 47 refused / 0 wrong), identical counts
+to the baseline. The reader is not silent: both Phase 2 (whole-problem) and Phase 1
+(question-only hybrid) are called. The zero-delta has a structural cause — all 47 refusals
+are **statement-level**, not question-level:
+
+- Phase 2 (`_try_comprehension_reader`) processes every sentence in order. It refuses on the
+  first statement it cannot classify (unknown rate, multiplicative aggregation, fractional
+  scale, etc.) and returns `None`, passing control to the regex pipeline.
+- Phase 1 (`_try_reader_for_question`) is subsequently reached but only substitutes the
+  question's `CandidateUnknown`. It cannot recover cases whose statement sentences produced
+  no injector output (`NO_INJECTOR`) or no admissible candidate — those remain refused after
+  Phase 1's contribution.
+
+Decision: the reader is structurally correct (`wrong == 0` preserved), inert on this sample
+because the bottleneck is statement parsing / injector dispatch gaps (C2 in the cleanup wave),
+not question parsing. No scope change needed; the reader unblocks when injector coverage
+expands. Record this as the truth-test gate: reader lift will show only after `NO_INJECTOR`
+refusals convert to admitted cases.

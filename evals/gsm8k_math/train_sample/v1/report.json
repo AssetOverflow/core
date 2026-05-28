@@ -265,5 +265,5 @@
   "sample_count": 50,
   "sample_path": "evals/gsm8k_math/train_sample/v1/cases.jsonl",
   "schema_version": 1,
-  "use_reader": false
+  "use_reader": true
 }
