@@ -69,6 +69,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_adr_0172_w5_inference_proposal.py",
         "tests/test_math_frame_ratification.py",
         "tests/test_math_composition_ratification.py",
+        "tests/test_teaching_coverage_cli.py",
     ),
     "packs": (
         "tests/test_core_semantic_seed_pack.py",
@@ -1991,6 +1992,101 @@ def cmd_teaching_seed_recognizer(args: argparse.Namespace) -> int:
     print(f"anchor_kind          : {args.anchor_kind}")
     print(f"log_path             : {log.path}")
     print(f"review_date          : {review_date}")
+    return 0
+
+
+def cmd_teaching_coverage(args: argparse.Namespace) -> int:
+    """Brief D — per-shape admission histogram with deltas vs committed baseline.
+
+    Reads (or runs, if ``--run``) the lane's ``report.json`` and emits
+    a clean histogram of counts + refusal taxonomy. Pure read by default.
+    Useful for measuring the effect of ratifications + matcher
+    extensions without re-eyeballing report.json.
+    """
+    from pathlib import Path
+
+    from teaching.coverage import (
+        build_coverage_report,
+        fetch_committed_baseline,
+    )
+
+    lane = args.lane or "gsm8k_math"
+    split = args.split or "train_sample"
+    version = args.version or "v1"
+
+    repo_root = Path(__file__).resolve().parent.parent
+    lane_dir = repo_root / "evals" / lane / split / version
+    if not lane_dir.is_dir():
+        print(f"ERROR: lane directory not found: {lane_dir}", file=sys.stderr)
+        return 1
+    report_path = lane_dir / "report.json"
+
+    use_reader = bool(args.use_reader)
+
+    if args.run or not report_path.exists():
+        import subprocess
+        runner_module = f"evals.{lane}.{split}.{version}.runner"
+        runner_args = [sys.executable, "-m", runner_module]
+        if use_reader:
+            runner_args.append("--use-reader")
+        try:
+            subprocess.run(
+                runner_args,
+                cwd=repo_root,
+                check=True,
+                capture_output=True,
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+            print(f"ERROR: runner failed: {exc}", file=sys.stderr)
+            return 1
+
+    baseline_path = None
+    if args.delta:
+        report_relpath = (
+            f"evals/{lane}/{split}/{version}/report.json"
+        )
+        baseline_path = fetch_committed_baseline(report_relpath, repo_root)
+
+    report = build_coverage_report(
+        report_path,
+        lane=lane,
+        split=split,
+        version=version,
+        use_reader=use_reader,
+        baseline_path=baseline_path,
+    )
+
+    if args.json:
+        print(json.dumps(report.as_dict(), indent=2, sort_keys=True))
+    else:
+        print(f"Lane: {report.lane}/{report.split}/{report.version} (use_reader={report.use_reader})")
+        if report.delta:
+            print(
+                f"Counts: correct={report.counts.correct} "
+                f"refused={report.counts.refused} "
+                f"wrong={report.counts.wrong}  "
+                f"(Δ from HEAD: correct={report.delta['correct']:+d} "
+                f"refused={report.delta['refused']:+d} "
+                f"wrong={report.delta['wrong']:+d})"
+            )
+        else:
+            print(
+                f"Counts: correct={report.counts.correct} "
+                f"refused={report.counts.refused} "
+                f"wrong={report.counts.wrong}"
+            )
+        print()
+        if report.refusal_taxonomy:
+            print("Refusal taxonomy:")
+            for bucket, n in report.refusal_taxonomy.items():
+                print(f"  {n:>3}  {bucket}")
+            print()
+        wrong_ok = "✓" if report.counts.wrong == 0 else "✗"
+        hazard = report.case_0050_verdict
+        print(f"Wrong=0: {wrong_ok}")
+        if hazard is not None:
+            hazard_ok = "✓" if hazard == "refused" else "✗"
+            print(f"Case 0050 hazard pin: {hazard} {hazard_ok}")
     return 0
 
 
@@ -4498,6 +4594,36 @@ def build_parser() -> argparse.ArgumentParser:
         "--log", default=None, help="proposal log path",
     )
     teaching_seed_recognizer.set_defaults(func=cmd_teaching_seed_recognizer)
+
+    teaching_coverage = teaching_sub.add_parser(
+        "coverage",
+        help="Brief D — per-shape admission histogram with optional deltas vs HEAD",
+    )
+    teaching_coverage.add_argument(
+        "--lane", default="gsm8k_math", help="eval lane (default: gsm8k_math)",
+    )
+    teaching_coverage.add_argument(
+        "--split", default="train_sample", help="lane split (default: train_sample)",
+    )
+    teaching_coverage.add_argument(
+        "--version", default="v1", help="lane version (default: v1)",
+    )
+    teaching_coverage.add_argument(
+        "--use-reader", action="store_true",
+        help="pass --use-reader to the runner (matches train_sample default)",
+    )
+    teaching_coverage.add_argument(
+        "--run", action="store_true",
+        help="re-run the lane's runner even if report.json exists",
+    )
+    teaching_coverage.add_argument(
+        "--delta", action="store_true",
+        help="compute delta vs the report.json committed at HEAD",
+    )
+    teaching_coverage.add_argument(
+        "--json", action="store_true", help="emit machine-readable JSON",
+    )
+    teaching_coverage.set_defaults(func=cmd_teaching_coverage)
 
     teaching_refusal_taxonomy = teaching_sub.add_parser(
         "refusal-taxonomy",
