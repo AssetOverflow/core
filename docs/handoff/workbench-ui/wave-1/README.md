@@ -113,7 +113,7 @@ fails the trust-classification check.
 
 ## Live status (wave coordinator: Opus 4.7)
 
-> **Last updated:** 2026-05-28 — 1a PR open and mergeable; 1b/1c/1d in flight
+> **Last updated:** 2026-05-28 — 3 of 4 PRs open; 1d cleaned of off-scope base commits; awaiting 1b
 > **Coordinator role:** maintained by Opus 4.7 on operator workstation.
 > Source of truth for PR state is `gh pr list`; this table is a
 > human-readable projection refreshed on operator request.
@@ -122,10 +122,10 @@ fails the trust-classification check.
 
 | Brief | Operator           | Branch                                | Pushed | PR    | Draft | CI       | Mergeable | Notes |
 |-------|--------------------|---------------------------------------|--------|-------|-------|----------|-----------|-------|
-| 1a    | Opus 4.6           | `workbench/wave-1a-chat-polish`       | yes    | #415  | no    | sourcery ip | yes    | scope OK; see 1a-note below |
-| 1b    | Sonnet 4.6         | `workbench/wave-1b-proposals-polish`  | no     | —     | —     | —        | —         | dispatched |
-| 1c    | Gemini 3.1 Pro     | `workbench/wave-1c-replay-polish`     | no     | —     | —     | —        | —         | dispatched |
-| 1d    | Gemini 3.5 Flash † | `workbench/wave-1d-evals-polish`      | no     | —     | —     | —        | —         | re-dispatched from GPT-OSS-120B (couldn't locate brief) |
+| 1a    | Opus 4.6           | `workbench/wave-1a-chat-polish`       | yes    | #415  | no    | sourcery ip | yes    | scope OK; see 1a-note |
+| 1b    | Sonnet 4.6         | `workbench/wave-1b-proposals-polish`  | no     | —     | —     | —        | —         | dispatched, in flight |
+| 1c    | Gemini 3.1 Pro     | `workbench/wave-1c-replay-polish`     | yes    | #417  | no    | sourcery ip | yes    | scope 100% clean |
+| 1d    | Gemini 3.5 Flash † | `polish-workbench-evals-flow`         | yes    | #418  | no    | re-running  | yes    | branch name deviated; cleaned post-push; see 1d-note |
 
 † Dispatch-shape learning: file-lookup-from-stale-base is a Gemini Flash task,
 not a GPT-OSS one. Carry into Wave 2 operator assignment.
@@ -143,6 +143,39 @@ list, but:
 Both accepted by coordinator. Brief authoring lesson recorded for Wave 2:
 explicitly carve out CommandPalette and the live route entry-points from
 the "off-limits" list, since both are necessary for feature polish.
+
+**1d-note (PR #418):** Original push contained three off-scope artifacts
+that pre-existed on the branch base (not introduced by the operator):
+
+- `docs/decisions/ADR-0174-held-hypothesis-comprehension.md` (+294 lines, operator's separate work)
+- `generate/math_roundtrip.py` (backend Python — addendum off-limits)
+- `tests/test_math_roundtrip.py` (backend Python — addendum off-limits)
+
+Root cause: the operator's worktree base (`polish-workbench-evals-flow`)
+was rooted at commits `f90f0cf` (ADR-0174) and `86d4e98` (roundtrip fix)
+before the operator started. The Gemini Flash operator's own commit
+(`37b04d5`) was clean and in scope. The merge of
+`feat/workbench-ui-continuation` into the branch happened mid-task and
+did not introduce the off-scope content — it was already there.
+
+**Remediation (coordinator):** force-pushed a clean branch consisting only
+of the operator's commit cherry-picked onto `feat/workbench-ui-continuation`
+HEAD. New tip is `b9ee22d`. Diff = 5 files, all in scope. PR re-CI'd.
+
+**Salvaged content:** ADR-0174 preserved at
+`/tmp/shay-rescued-from-pr418/ADR-0174-held-hypothesis-comprehension.md`
+for separate-PR handling per operator decision.
+
+**Brief authoring lesson for Wave 2:** dispatch line must specify
+`origin/feat/workbench-ui-continuation` explicitly, **and** the brief
+must include a "check your base SHA" step before the first edit so
+operators on stale or pre-loaded worktrees catch it immediately:
+
+```bash
+git merge-base HEAD origin/feat/workbench-ui-continuation
+# Must equal HEAD of origin/feat/workbench-ui-continuation;
+# if not, abort and reseat the worktree.
+```
 
 Refresh command (run on operator workstation, paste to coordinator):
 
