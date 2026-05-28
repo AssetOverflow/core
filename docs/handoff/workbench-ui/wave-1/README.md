@@ -113,19 +113,19 @@ fails the trust-classification check.
 
 ## Live status (wave coordinator: Opus 4.7)
 
-> **Last updated:** 2026-05-28 — 3 of 4 PRs open; 1d cleaned of off-scope base commits; awaiting 1b
+> **Last updated:** 2026-05-28 — #417 and #419 MERGED; #415 and #418 rebased onto registry pattern; awaiting final merge approval
 > **Coordinator role:** maintained by Opus 4.7 on operator workstation.
 > Source of truth for PR state is `gh pr list`; this table is a
 > human-readable projection refreshed on operator request.
 
 ### Per-brief tracker
 
-| Brief | Operator           | Branch                                | Pushed | PR    | Draft | CI       | Mergeable | Notes |
-|-------|--------------------|---------------------------------------|--------|-------|-------|----------|-----------|-------|
-| 1a    | Opus 4.6           | `workbench/wave-1a-chat-polish`       | yes    | #415  | no    | sourcery ip | yes    | scope OK; see 1a-note |
-| 1b    | Sonnet 4.6         | `workbench/wave-1b-proposals-polish`  | yes    | #419  | no    | sourcery ✓ | yes      | introduces command registry; see 1b-note |
-| 1c    | Gemini 3.1 Pro     | `workbench/wave-1c-replay-polish`     | yes    | #417  | no    | sourcery ip | yes    | scope 100% clean |
-| 1d    | Gemini 3.5 Flash † | `polish-workbench-evals-flow`         | yes    | #418  | no    | re-running  | yes    | branch name deviated; cleaned post-push; see 1d-note |
+| Brief | Operator           | Branch                                | PR    | State                  | Notes |
+|-------|--------------------|---------------------------------------|-------|------------------------|-------|
+| 1a    | Opus 4.6           | `workbench/wave-1a-chat-polish`       | #415  | rebased; tests 124 ✓; awaiting merge | ported chat commands to STATIC_COMMANDS; see 1a-note + rebase-note |
+| 1b    | Sonnet 4.6         | `workbench/wave-1b-proposals-polish`  | #419  | **MERGED** at 15:17 UTC | introduced module command registry; see 1b-note |
+| 1c    | Gemini 3.1 Pro     | `workbench/wave-1c-replay-polish`     | #417  | **MERGED** at 15:17 UTC | scope 100% clean |
+| 1d    | Gemini 3.5 Flash † | `polish-workbench-evals-flow`         | #418  | rebased; tests 122 ✓; awaiting merge | new `useEvalCommands` hook on registry; see 1d-note + rebase-note |
 
 † Dispatch-shape learning: file-lookup-from-stale-base is a Gemini Flash task,
 not a GPT-OSS one. Carry into Wave 2 operator assignment.
@@ -198,6 +198,26 @@ coordinator merges in this order:
 
 This converges all four briefs onto a single Phase-7-ready ⌘K pattern
 without losing per-brief PR audit trail.
+
+**Rebase-note (1a, PR #415):** coordinator force-pushed `916d5a6` over `9fac0b1`.
+Resolution dropped 1a's direct CommandPalette edits and added `"New chat session"`
+to `STATIC_COMMANDS`. `"Jump to proposal"` removed because 1b's
+`useProposalCommands` makes it redundant (each proposal gets its own
+`Open proposal <id>` entry via the registry). Removed the `id` field on
+the `Command` interface — registry uses `path` as the React key and dedup key.
+Tests: 124 passed, enum-coverage 2 passed. Sourcery: green.
+
+**Rebase-note (1d, PR #418):** coordinator force-pushed `7d49eee` over `b9ee22d`.
+Resolution dropped 1d's direct CommandPalette edits (no more `useEvalLanes`
+inside CommandPalette). Added `workbench-ui/src/app/evals/useEvalCommands.ts`
+which registers `Open eval lane <name>` entries via the registry. `EvalsRoute`
+calls `useEvalCommands(lanes ?? [])`. Also fixed a botched auto-merge artifact
+in EvalsRoute.tsx (duplicated import block from `e954c66`). Test rendering
+order swapped (`<CommandPalette/>` before `<EvalsRoute/>`) so the palette's
+subscribe effect runs before the route's registerCommands effect — production
+behavior is unaffected because routes mount long before palette opens, so
+`getExtraCommands()` is already populated when the palette renders.
+Tests: 122 passed, enum-coverage 6 passed.
 
 Refresh command (run on operator workstation, paste to coordinator):
 
