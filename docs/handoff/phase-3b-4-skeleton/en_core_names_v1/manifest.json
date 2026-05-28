@@ -1,0 +1,24 @@
+{
+  "pack_id": "en_core_names_v1",
+  "schema_version": 1,
+  "description": "English first-name gender pack for ADR-0174 Phase 4 in-loop contemplate. Closed-set, refusal-preferring on uncovered names. Expansion via standard HITL corridor (ADR-0150/0152).",
+  "adr": "ADR-0174",
+  "phase": "Phase 4",
+  "files": [
+    {
+      "path": "gender.jsonl",
+      "schema": {
+        "name": "str — proper-noun first name, surface form",
+        "gender": "literal: female | male — unambiguous gendered association"
+      },
+      "entry_count": 59,
+      "checksum": "f65836e7a25a9db8aae984d259b60e161574ff3b4bb135a924aa767a794fbd21"
+    }
+  ],
+  "discipline": {
+    "ambiguity": "Names with ambiguous gender (Jordan, Alex, Casey, Pat, Taylor, Morgan, Sam, Chris, Robin, Riley) MUST NOT be added without explicit HITL review. Refusal-preferring discipline: when the consult returns no entry or contradictory entries, the contemplate caller refuses cleanly rather than guessing.",
+    "expansion": "New entries enter via core teaching propose-from-exemplars when Phase 4 wiring produces refusal evidence on uncovered names. Each addition reviewed against the unambiguous-gender criterion. Cultural / regional name variations evaluated case-by-case.",
+    "regional_scope": "v1 covers common English (US/UK/CA/AU) first names. Cross-cultural names with English-language gendered associations included only when unambiguous (e.g. 'Malcolm' is consistently male in English-language usage). Non-English-language name packs are separate packs (en_*_v2 or distinct pack IDs)."
+  },
+  "wrong_zero_protection": "This pack is a Phase 4 evidence source. The contemplate adapter MUST return None (caller refuses) when: (a) any antecedent in the multi-actor set lacks an entry; (b) all antecedents share the same gender (still ambiguous); (c) the pronoun's required gender doesn't match exactly one antecedent."
+}
