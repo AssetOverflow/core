@@ -113,19 +113,24 @@ fails the trust-classification check.
 
 ## Live status (wave coordinator: Opus 4.7)
 
-> **Last updated:** 2026-05-28 — #417 and #419 MERGED; #415 and #418 rebased onto registry pattern; awaiting final merge approval
-> **Coordinator role:** maintained by Opus 4.7 on operator workstation.
-> Source of truth for PR state is `gh pr list`; this table is a
-> human-readable projection refreshed on operator request.
+> **Status: WAVE COMPLETE — READY FOR WAVE 2** (2026-05-28 15:33 UTC)
+> All four PRs merged. Tests 129 + enum-coverage 6 green on merged tip
+> at `82a50e2`. No off-limits files touched. No backend Python changes.
+> Coordinator role discharged.
 
 ### Per-brief tracker
 
-| Brief | Operator           | Branch                                | PR    | State                  | Notes |
-|-------|--------------------|---------------------------------------|-------|------------------------|-------|
-| 1a    | Opus 4.6           | `workbench/wave-1a-chat-polish`       | #415  | rebased; tests 124 ✓; awaiting merge | ported chat commands to STATIC_COMMANDS; see 1a-note + rebase-note |
-| 1b    | Sonnet 4.6         | `workbench/wave-1b-proposals-polish`  | #419  | **MERGED** at 15:17 UTC | introduced module command registry; see 1b-note |
-| 1c    | Gemini 3.1 Pro     | `workbench/wave-1c-replay-polish`     | #417  | **MERGED** at 15:17 UTC | scope 100% clean |
-| 1d    | Gemini 3.5 Flash † | `polish-workbench-evals-flow`         | #418  | rebased; tests 122 ✓; awaiting merge | new `useEvalCommands` hook on registry; see 1d-note + rebase-note |
+| Brief | Operator           | PR    | Merged at      | Notes |
+|-------|--------------------|-------|----------------|-------|
+| 1a    | Opus 4.6           | #415  | 15:29:57 UTC   | rebased onto registry; chat commands in STATIC_COMMANDS |
+| 1b    | Sonnet 4.6         | #419  | 15:17:22 UTC   | introduced module command registry |
+| 1c    | Gemini 3.1 Pro     | #417  | 15:17:05 UTC   | 100% clean scope |
+| 1d    | Gemini 3.5 Flash † | #418  | 15:30:01 UTC   | rebased onto registry via new `useEvalCommands` hook |
+
+Follow-up commit `82a50e2` fixed an evals test that the coordinator
+edited during the 1d rebase but forgot to amend before force-push.
+Lesson recorded for Wave 2: after editing files post-`git rebase --continue`,
+amend the rebased commit before push.
 
 † Dispatch-shape learning: file-lookup-from-stale-base is a Gemini Flash task,
 not a GPT-OSS one. Carry into Wave 2 operator assignment.
