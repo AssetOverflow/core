@@ -1,0 +1,91 @@
+{
+  "adr": "0175",
+  "counts": {
+    "correct": 3,
+    "refused": 47,
+    "wrong": 0
+  },
+  "diagnosis_counts": {
+    "genuine_ambiguity": 0,
+    "knowledge_gap": 12,
+    "skill_gap": 35
+  },
+  "elimination_records": [],
+  "per_class": {
+    "additive": {
+      "committed": 0,
+      "correct": 0,
+      "coverage": 0.0,
+      "refused": 4,
+      "reliability": 0.0,
+      "wrong": 0
+    },
+    "divisive": {
+      "committed": 0,
+      "correct": 0,
+      "coverage": 0.0,
+      "refused": 6,
+      "reliability": 0.0,
+      "wrong": 0
+    },
+    "multiplicative": {
+      "committed": 3,
+      "correct": 3,
+      "coverage": 0.075,
+      "refused": 37,
+      "reliability": 0.0,
+      "wrong": 0
+    }
+  },
+  "refusal_diagnoses": {
+    "gsm8k-train-sample-v1-0001": "skill_gap",
+    "gsm8k-train-sample-v1-0002": "skill_gap",
+    "gsm8k-train-sample-v1-0003": "skill_gap",
+    "gsm8k-train-sample-v1-0004": "knowledge_gap",
+    "gsm8k-train-sample-v1-0005": "knowledge_gap",
+    "gsm8k-train-sample-v1-0006": "skill_gap",
+    "gsm8k-train-sample-v1-0007": "knowledge_gap",
+    "gsm8k-train-sample-v1-0008": "knowledge_gap",
+    "gsm8k-train-sample-v1-0009": "knowledge_gap",
+    "gsm8k-train-sample-v1-0010": "knowledge_gap",
+    "gsm8k-train-sample-v1-0011": "skill_gap",
+    "gsm8k-train-sample-v1-0012": "skill_gap",
+    "gsm8k-train-sample-v1-0013": "skill_gap",
+    "gsm8k-train-sample-v1-0015": "skill_gap",
+    "gsm8k-train-sample-v1-0016": "skill_gap",
+    "gsm8k-train-sample-v1-0017": "skill_gap",
+    "gsm8k-train-sample-v1-0019": "skill_gap",
+    "gsm8k-train-sample-v1-0020": "skill_gap",
+    "gsm8k-train-sample-v1-0021": "skill_gap",
+    "gsm8k-train-sample-v1-0022": "skill_gap",
+    "gsm8k-train-sample-v1-0023": "skill_gap",
+    "gsm8k-train-sample-v1-0024": "skill_gap",
+    "gsm8k-train-sample-v1-0025": "knowledge_gap",
+    "gsm8k-train-sample-v1-0026": "knowledge_gap",
+    "gsm8k-train-sample-v1-0027": "skill_gap",
+    "gsm8k-train-sample-v1-0028": "skill_gap",
+    "gsm8k-train-sample-v1-0029": "skill_gap",
+    "gsm8k-train-sample-v1-0030": "knowledge_gap",
+    "gsm8k-train-sample-v1-0031": "skill_gap",
+    "gsm8k-train-sample-v1-0032": "skill_gap",
+    "gsm8k-train-sample-v1-0033": "skill_gap",
+    "gsm8k-train-sample-v1-0034": "skill_gap",
+    "gsm8k-train-sample-v1-0035": "knowledge_gap",
+    "gsm8k-train-sample-v1-0036": "skill_gap",
+    "gsm8k-train-sample-v1-0037": "skill_gap",
+    "gsm8k-train-sample-v1-0038": "skill_gap",
+    "gsm8k-train-sample-v1-0039": "skill_gap",
+    "gsm8k-train-sample-v1-0040": "skill_gap",
+    "gsm8k-train-sample-v1-0041": "skill_gap",
+    "gsm8k-train-sample-v1-0043": "skill_gap",
+    "gsm8k-train-sample-v1-0044": "skill_gap",
+    "gsm8k-train-sample-v1-0045": "skill_gap",
+    "gsm8k-train-sample-v1-0046": "skill_gap",
+    "gsm8k-train-sample-v1-0047": "skill_gap",
+    "gsm8k-train-sample-v1-0048": "knowledge_gap",
+    "gsm8k-train-sample-v1-0049": "skill_gap",
+    "gsm8k-train-sample-v1-0050": "knowledge_gap"
+  },
+  "regime": "practice",
+  "schema_version": 1
+}
