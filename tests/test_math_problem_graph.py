@@ -185,6 +185,78 @@ class TestGroundTruthGraphsAgreeWithExpectedAnswers:
         )
 
 
+class TestContradictoryInitialPossessionsRefuse:
+    """ADR-0174 Phase 3 post-merge diagnostic — surfaced 2026-05-28.
+
+    Before this fix, two contradictory initial possessions for the
+    same (entity, unit) silently overwrote each other in
+    math_solver.solve()'s state dict (line 207: last-write-wins
+    semantics). 'Sam has 5 marbles. Sam has 3 marbles.' would return
+    3.0 — a wrong=0 violation (definite answer from genuinely
+    contradictory input).
+
+    Fix: MathProblemGraph.__post_init__ now raises MathGraphError on
+    contradictory (entity, unit) initial possessions. Identical
+    duplicates are admitted (redundant but not contradictory).
+    """
+
+    def _ip(self, entity: str, value: int, unit: str) -> InitialPossession:
+        return InitialPossession(
+            entity=entity, quantity=Quantity(value=value, unit=unit)
+        )
+
+    def test_contradictory_initial_possessions_refused(self) -> None:
+        with pytest.raises(MathGraphError, match="contradictory possessions"):
+            MathProblemGraph(
+                entities=("Sam",),
+                initial_state=(
+                    self._ip("Sam", 5, "marbles"),
+                    self._ip("Sam", 3, "marbles"),
+                ),
+                operations=(),
+                unknown=Unknown(entity="Sam", unit="marbles"),
+            )
+
+    def test_identical_duplicate_initial_admitted(self) -> None:
+        # Redundant but not contradictory — must admit.
+        g = MathProblemGraph(
+            entities=("Sam",),
+            initial_state=(
+                self._ip("Sam", 5, "marbles"),
+                self._ip("Sam", 5, "marbles"),
+            ),
+            operations=(),
+            unknown=Unknown(entity="Sam", unit="marbles"),
+        )
+        assert len(g.initial_state) == 2
+
+    def test_different_units_same_actor_admitted(self) -> None:
+        # Sam has apples AND Sam has oranges — no contradiction.
+        g = MathProblemGraph(
+            entities=("Sam",),
+            initial_state=(
+                self._ip("Sam", 5, "apples"),
+                self._ip("Sam", 3, "oranges"),
+            ),
+            operations=(),
+            unknown=Unknown(entity="Sam", unit="apples"),
+        )
+        assert len(g.initial_state) == 2
+
+    def test_different_actors_same_unit_admitted(self) -> None:
+        # Sam has marbles AND Tom has marbles — different keys.
+        g = MathProblemGraph(
+            entities=("Sam", "Tom"),
+            initial_state=(
+                self._ip("Sam", 5, "marbles"),
+                self._ip("Tom", 3, "marbles"),
+            ),
+            operations=(),
+            unknown=Unknown(entity="Sam", unit="marbles"),
+        )
+        assert len(g.initial_state) == 2
+
+
 class TestCaseIdsAreSequential:
     def test_ids_are_gpd_zero_padded_sequential(self) -> None:
         cases = _load_cases()
