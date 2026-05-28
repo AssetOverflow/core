@@ -293,6 +293,35 @@ Current near-term sequence:
 Avoid broad docs-first churn, dashboard work, or large infrastructure unless it
 unlocks one of these steps.
 
+## Architectural Scan Exclusions
+
+The invariant tests in `tests/test_architectural_invariants.py` perform
+full source-tree walks to enforce structural claims (INV-02, INV-21,
+INV-24).  These scans **must** exclude `.claude/` from traversal.
+
+**Why this matters:** Agent operators (Claude Code, Codex, Gemini) create
+worktrees under `.claude/worktrees/`.  Those worktrees contain full copies
+of the source tree — including `vault/`, `chat/`, `generate/`, etc. — and
+will trip every structural invariant that scans for forbidden callsites.
+The failures are silent killers: the tests report real-looking violations
+against files that aren't in the live codebase, poisoning the smoke suite
+and masking actual regressions.
+
+**Maintained exclusion sets** (keep `.claude` in both):
+
+```python
+# INV-02  os.walk exclusion (test_normalize_not_called_outside_gate)
+{".git", ".venv", "__pycache__", ".pytest_cache", ".hypothesis", ".claude"}
+
+# INV-21 / INV-24  rglob exclusion (EXCLUDED_DIRS)
+{"tests", "evals", "benchmarks", "scripts", "docs",
+ "core-rs", ".venv", "__pycache__", ".claude"}
+```
+
+If you add a new source-tree scan to the invariant suite, add `.claude`
+to its exclusion set before the first commit.  Never rely on worktrees
+being pruned — they can persist across sessions and CI runs.
+
 ## PR Checklist
 
 Before opening or merging, answer:
