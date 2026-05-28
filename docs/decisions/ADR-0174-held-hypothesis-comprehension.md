@@ -527,34 +527,118 @@ Acceptance (5a):
 - Determinism / `trace_hash` invariant holds; pinned lane SHAs pass.
 - `math_parser.py` baseline lanes untouched (out of scope — keep).
 
-### Phase 5b — Remove the narrowness layers (semantic, the real lift)
+### Phase 5b — Operation-capability buildout (semantic, the real lift)
 
 This is where `correct` climbs toward 25. It is **not** a refactor and
-carries the live `wrong = 0` risk; it should land as its own sub-phases
-(candidate: ADR-0174.1) with per-layer wrong=0 obligations, not as a big
-bang. The diagnostic established each refusing case stacks 3–5 narrowness
-layers simultaneously, so lift requires removing them *together* per case
-class, not one global knob at a time.
+carries the live `wrong = 0` risk; it lands as its own sub-phases
+(candidate sub-ADR: **ADR-0174.1**) with per-sub-phase wrong=0 obligations,
+not as a big bang.
 
-Known narrowness layers to attack (from the S4-dominant refusal
-diagnostic), each gated by a wrong=0 obligation:
-- clause-split narrowness on `discrete_count_statement` (13 of 21 S4
-  refusals fail here);
-- verb-class whitelist (the VE-A/B/C verb-expansion brief) — widen the
-  admitted verb set under the existing round-trip + disagreement gates;
-- solver capability gaps (same-actor multi-quantity aggregation,
-  cross-unit superordinate sums) — a **separate solver ADR**, since the
-  reader can parse what the solver still refuses to compute.
+#### Verified ground truth (2026-05-28 measurement)
 
-Acceptance (5b): per-sub-phase `correct` deltas with `wrong = 0` held at
-every step; `correct ≥ 25` is the *cumulative* Round-2 target, reached by
-composition of sub-phases, not asserted of any single one.
+The 47 train_sample refusals were profiled against **GSM8K's own
+`<<a*b=c>>` calculator annotations** (ground-truth operations, not
+brute-forced — brute-force number-matching was tried and rejected for
+producing spurious coincidental hits, e.g. matching gold=4 to a stray
+`20/5`):
+
+| Profile | Count | Share |
+|---|---|---|
+| Uses multiplication (`*`) | **37/47** | 79% |
+| Uses mul **or** div | 43/47 | 91% |
+| Pure add/subtract | 4/47 | 9% |
+| **Single-step solvable** | **0/47** | **0%** |
+
+Step-count histogram: `2 steps: 13 · 3: 12 · 4: 8 · 5: 8 · 6: 3 · 7: 3`.
+
+Two load-bearing consequences:
+
+1. **Multiplication is the foundational capability, not a niche.** At 79%
+   it is maximally general — building genuine multiplicative
+   quantity-extraction is "getting generally smarter," the opposite of
+   overfitting. (Per Shay's framing: a change that flips a large *general*
+   chunk is a real capability; a per-phrasing patch that flips one case is
+   overfitting. Breadth-of-impact is the test, not where the code lives.)
+
+2. **No case flips from an operation matcher alone.** Zero single-step
+   cases. Multiplication is *necessary but not sufficient* for all 37 — the
+   unit that flips a case is **operation + composition** (extract quantities
+   across sentences/question → apply op → combine). A "multiplication
+   sentence matcher" in isolation flips ~2 cases (only the single-sentence
+   multiplicative aggregate, 0021-class) and would be overfitting-adjacent.
+
+The solver is **already capable**: `VALID_OPERATION_KINDS` =
+`{add, subtract, transfer, multiply, divide, apply_rate, compare_additive,
+compare_multiplicative}` with pack lemmas for each. The gap is entirely the
+**reader → injector → `Operation`** front-end: the recognizer matches a
+shape category but extracts **zero anchors** on real corpus sentences, and
+the injectors only handle narrow Wave-A stub shapes. Phase 5b builds the
+front-end down to the operations the solver is already waiting for.
+
+#### What to build (and what NOT to)
+
+- **Build:** general quantity-extraction (operands from a clause, across
+  sentences, and from the question sentence) + injectors that emit
+  first-class `multiply` / `divide` / `compare_multiplicative` operations +
+  the multi-step composition spine that chains them. The held-hypothesis /
+  `eliminate_violating` / `reevaluate` substrate (Phases 1–4) is the
+  wrong=0 scaffold for chains longer than 2 steps.
+- **Do NOT:** widen the `discrete_count_statement` injector to absorb these.
+  The recognizer *mis-matches* multiplicative/comparative problems as
+  discrete-count (number + noun present); the injector *correctly* refuses.
+  Forcing those into a discrete-count frame is overfitting and a wrong=0
+  hazard. Route them to the correct operation injector instead.
+
+#### Sub-phase sequence (biggest-chunk-first, measure-the-flip-gated)
+
+Each sub-phase is a complete vertical slice (extraction → injector →
+existing solver op) whose success is judged by **how many cases flip**, not
+by whether a layer was touched:
+
+- **5b.1 — Single-sentence multiplicative aggregate** (0021-class:
+  "15 pounds for 10 reps and does 3 sets"). One clause, N operands, one
+  `multiply` chain — no cross-sentence binding. The cleanest possible
+  proof-of-capability. Small expected flip (~2–4) but it stands up the
+  extraction→multiply→solve path end-to-end with wrong=0.
+- **5b.2 — Shallow 2–3 step composition** (the real chunk: **25/47** cases
+  at ≤3 steps). Cross-sentence + question-sentence operand binding (e.g.
+  0003: 48 boxes × 24/box × $0.75-in-question), op + one combine. This is
+  where the bulk of the lift lives.
+- **5b.3 — Deep multi-step (4–7 steps, 22/47)** under the held-hypothesis
+  elimination machinery. Highest wrong=0 surface (long chains = more ways to
+  admit a wrong answer); last, and only after 5b.1–5b.2 lock the
+  extraction/composition contracts.
+
+#### Dependencies / out-of-scope-but-required
+
+- **Solver gaps (separate solver ADR):** same-actor multi-quantity
+  aggregation and cross-unit superordinate sums — the reader can parse some
+  shapes the solver still refuses to compute. Sequence the solver ADR before
+  the 5b sub-phases that need those shapes.
+- **Comparatives** reuse the existing ADR-0131 G2 axis and
+  `compare_multiplicative` / `compare_additive` solver ops — extend, don't
+  reinvent.
+
+#### Acceptance (5b)
+
+- Per-sub-phase `correct` delta reported with `wrong = 0` held at every
+  step; case 0050 canary stays refused.
+- **Generality guard:** every flipped case must also hold under the
+  ADR-0114a perturbation / OOD axes. A capability that flips N train_sample
+  cases but collapses under reworded inputs was overfitting to the sample
+  and does not count toward the chunk.
+- `correct ≥ 25` is the *cumulative* Round-2 target, reached by composition
+  of sub-phases — never asserted of any single sub-phase.
+- Capability-axis lanes G1–G5, S1 remain 100% `wrong = 0`.
 
 ### Sequencing
 
-5a first (clean substrate, single parse path, net −LOC, zero behaviour
-risk), then 5b sub-phases. 5a is direct-push-eligible only if it holds
-3/47/0 byte-identical and passes the smoke + lane-SHA gate; any verdict
-shift means it stopped being a refactor and needs branch+PR review.
+- **5a — shipped** (PR #430): single parse path, net −1,038 LOC, 3/47/0
+  byte-identical, wrong=0 held. Behaviour-preserving refactor; ~0 lift was
+  the expected, correct outcome.
+- **5b — next**, as its own sub-ADR (ADR-0174.1): 5b.1 → 5b.2 → 5b.3,
+  biggest-chunk-first, each gated by measured flip-count + the perturbation
+  generality guard + wrong=0. The solver ADR (multi-quantity / cross-unit
+  sums) sequences before the 5b sub-phases that depend on it.
 
 ---
