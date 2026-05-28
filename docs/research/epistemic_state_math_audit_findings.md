@@ -50,6 +50,69 @@ The epistemic-state effort is therefore not inventing a taxonomy from scratch. I
 
 ---
 
+## Prior ADR Compatibility Gate
+
+This document is subordinate to the existing ADR record. It is not an implementation ADR, does not supersede any prior ADR, and must not be used to reinterpret accepted decisions without a separate ratified ADR.
+
+Before Phase 2 or any runtime work proceeds, the following compatibility rules apply.
+
+### ADR chains reviewed for compatibility
+
+| ADR chain / decision area | Compatibility constraint for epistemic-state work |
+|---|---|
+| ADR-0022 through ADR-0026 — forward semantic control | Preserve deterministic admissibility, honest exhaustion, and trace-evidenced generation behavior. Epistemic labels must not weaken admissibility gates or hide exhaustion. |
+| ADR-0027 through ADR-0045 — identity/safety/ethics pack architecture | Preserve pack-governed, auditable behavior. Epistemic states may describe pack-grounded claims but must not bypass pack ratification or safety policy. |
+| ADR-0091 through ADR-0111 — domain ratification and audit-passed promotion | Preserve the difference between `reasoning-capable`, `audit-passed`, and future `expert`. Epistemic states must not create an unofficial promotion tier. |
+| ADR-0105 / ADR-0119.1 / ADR-0119.7 — sealed holdout discipline | Preserve sealed-holdout boundaries. Epistemic audit labels must not imply knowledge of sealed cases or alter holdout governance. |
+| ADR-0114a — anti-overfitting proof obligations | Preserve replay-equal trace requirements, typed refusal, zero-wrong doctrine, deterministic replay, and operation provenance via pack lemmas. |
+| ADR-0115 through ADR-0118 — math graph / solver / verifier / realizer | Preserve the existing parser -> graph -> solver -> verifier -> realizer contracts. Epistemic vocabulary may describe these contracts but must not change them. |
+| ADR-0119.* — GSM8K eval lane and gates | Preserve `correct` / `wrong` / `refused` / `decoded_unarticulated` as eval/reporting buckets. Do not silently redefine lane metrics as primitive epistemic states. |
+| ADR-0126 through ADR-0135 — candidate graph and binding graph substrate | Preserve binding-graph admissibility and downstream solver/verifier behavior. Candidate-graph findings may be audited, but future taxonomy must distinguish historical regex-era machinery from preserved substrate contracts. |
+| ADR-0136 / ADR-0136.S.* / ADR-0163 | Treat regex recognizer and statement-layer refusal taxonomies as historical evidence where superseded. Do not revive deprecated regex sentence-template prescriptions under epistemic-state terminology. |
+| ADR-0164 — incremental comprehension reader | Preserve the reader as the current front-end direction where it supersedes regex recognizer production. Epistemic routing states must align with reader-first / fallback semantics and must not bypass admissibility. |
+| ADR-0165 — regex scope rule | Preserve the lexeme-only regex boundary. No future epistemic-state work may justify sentence-level regex grammar templates unless a new ADR explicitly supersedes ADR-0165 and is ratified. |
+| ADR-0150 / ADR-0152 / ADR-0155 / ADR-0161 — contemplation / HITL corridor | Preserve reviewed teaching, proposal, and ratification governance for new lexicon entries, categories, primitives, or future epistemic states. |
+
+### Non-overrides
+
+This document does not override:
+
+- `wrong = 0` as a gate where prior ADRs require it,
+- typed refusal as the safe failure mode,
+- replay-equal `SolutionTrace` as the evidence substrate for correct answers,
+- pack-lemma operation provenance,
+- sealed holdout governance,
+- HITL ratification for new learned structures,
+- ADR-0164's reader direction,
+- ADR-0165's lexeme-only regex boundary,
+- accepted lane-shape thresholds or promotion contracts.
+
+### Supersession discipline
+
+If future epistemic-state work appears to contradict, weaken, rename, or replace an accepted ADR contract, it must stop and produce a new ADR-level decision request.
+
+That request must explicitly state:
+
+1. the prior ADR(s) affected,
+2. the exact clause or contract being changed,
+3. whether the change is a clarification, amendment, or supersession,
+4. what evidence justifies the change,
+5. what invariants remain preserved,
+6. what new acceptance gates apply,
+7. that the change requires operator ratification before implementation.
+
+### Phase 2 gate
+
+Phase 2 must not proceed until reviewers accept that:
+
+- this document is advisory and descriptive, not supersessive,
+- candidate-graph / recognizer observations are treated in light of ADR-0164 and ADR-0165,
+- `correct`, `wrong`, `refused`, and `decoded_unarticulated` remain eval/reporting outcomes unless a later ADR ratifies a deeper internal representation,
+- no deprecated regex-sentence-template path is being revived,
+- any future runtime adoption will preserve existing replay, refusal, provenance, and governance contracts.
+
+---
+
 ## Strongly Confirmed Proposition States
 
 The following starter states mapped cleanly and repeatedly across the classic math spine.
@@ -296,7 +359,8 @@ Phase 1 is complete when the project agrees that:
 - runner buckets like `correct`, `wrong`, and `refused` are not primitive epistemic states,
 - decoded-but-unarticulated is an articulation failure over a decoded proposition,
 - bounded refusal is operational policy, not semantic ambiguity,
-- future transition audits must record both proposition state and operational/meta state when both are present.
+- future transition audits must record both proposition state and operational/meta state when both are present,
+- prior ADR compatibility has been reviewed and no supersession proceeds without explicit operator ratification.
 
 ---
 
@@ -304,7 +368,9 @@ Phase 1 is complete when the project agrees that:
 
 ### Phase 2 — Define Transition Invariants
 
-Extract deterministic transitions:
+Phase 2 is blocked until the Prior ADR Compatibility Gate above is accepted by reviewers / operator.
+
+Once unblocked, extract deterministic transitions:
 
 | From | To | Trigger |
 |---|---|---|
@@ -378,6 +444,7 @@ This document does not:
 - modify code,
 - define a final ADR,
 - audit non-math subsystems,
-- claim the starter taxonomy is final.
+- claim the starter taxonomy is final,
+- supersede or amend any existing ADR.
 
-It records bounded findings and prepares the next phase of epistemic-state design.
+It records bounded findings and prepares the next phase of epistemic-state design under prior ADR governance.
