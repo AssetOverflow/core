@@ -103,7 +103,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0019",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The dog ends up having health problems and this requires 3 vet appointments,  which cost $400 each.' (category=currency_amount)",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'After the first appointment, John paid $100 for pet insurance that covers 80% of the subsequent visits.' (category=currency_amount)",
       "verdict": "refused"
     },
     {
@@ -123,7 +123,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0023",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Nicole collected 400 Pokemon cards.' (category=discrete_count_statement)",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: \"Cindy collected twice as many, and Rex collected half of Nicole and Cindy's combined total.\" (category=descriptive_setup_no_quantity)",
       "verdict": "refused"
     },
     {
@@ -133,12 +133,12 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0025",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Lilibeth fills 6 baskets where each basket holds 50 strawberries.' (category=multiplicative_aggregation)",
+      "reason": "candidate_graph: no admissible candidate for question: \"If three of Lilibeth's friends pick the same amount as her, how many strawberries do Lilibeth and her friends pick in all?\"",
       "verdict": "refused"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0026",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner.' (category=currency_amount)",
+      "reason": "candidate_graph: no admissible candidate for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner.'",
       "verdict": "refused"
     },
     {
@@ -243,7 +243,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0047",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'John bakes 12 coconut macaroons, each weighing 5 ounces.' (category=multiplicative_aggregation)",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He then packs an equal number of the macaroons in 4 different brown bags, ready for delivery.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
