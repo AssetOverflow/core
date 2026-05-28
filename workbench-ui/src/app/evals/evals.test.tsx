@@ -440,7 +440,7 @@ describe("W-030 Component Tests", () => {
       expect(screen.getByText("Disk read error")).toBeInTheDocument();
     });
 
-    it("CommandPalette registers dynamic command entries driven by useEvalLanes", () => {
+    it("CommandPalette registers dynamic command entries driven by useEvalLanes", async () => {
       vi.mocked(useEvalLanes).mockReturnValue({
         data: mockLanes,
         isLoading: false,
@@ -449,22 +449,30 @@ describe("W-030 Component Tests", () => {
       } as any);
 
       const client = makeClient();
-      // Render EvalsRoute alongside the palette: route mounts useEvalCommands,
-      // which registers the lanes into the module-level command registry.
+      // Render the palette first so its subscribe effect attaches before
+      // EvalsRoute's useEvalCommands effect fires registerCommands(). Otherwise
+      // notify() runs with zero listeners and the palette never re-renders.
+      // In real app usage, routes mount long before the palette opens, so
+      // getExtraCommands() is already populated at palette mount time and the
+      // ordering issue does not surface.
       render(
         <QueryClientProvider client={client}>
           <MemoryRouter>
-            <EvalsRoute />
             <CommandPalette open={true} onOpenChange={vi.fn()} />
+            <EvalsRoute />
           </MemoryRouter>
         </QueryClientProvider>
       );
 
-      // Verify static commands
+      // Static commands render synchronously
       expect(screen.getByRole("button", { name: "Open Chat" })).toBeInTheDocument();
-      // Verify dynamic commands registered via useEvalCommands
-      expect(screen.getByRole("button", { name: "Open eval lane contemplation_quality" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Open eval lane unsafe_lane" })).toBeInTheDocument();
+      // Dynamic commands register via effect; await DOM update
+      expect(
+        await screen.findByRole("button", { name: "Open eval lane contemplation_quality" }),
+      ).toBeInTheDocument();
+      expect(
+        await screen.findByRole("button", { name: "Open eval lane unsafe_lane" }),
+      ).toBeInTheDocument();
     });
   });
 });
