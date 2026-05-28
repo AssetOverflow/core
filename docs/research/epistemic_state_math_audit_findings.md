@@ -183,22 +183,124 @@ This state already effectively exists in the GSM8K runner as `decoded_unarticula
 
 ---
 
+## Phase 1 — Separate Semantic vs Operational States
+
+Phase 1 completes the first pressure-test required before an ADR can safely define a final epistemic vocabulary.
+
+The central decision is that a state must not be classified by its surface spelling alone. It must be classified by what kind of fact it reports.
+
+### Axis Definitions
+
+| Axis | Reports | Does not report | Canonical question |
+|---|---|---|---|
+| Proposition epistemic axis | The semantic status of a proposition, candidate, graph, trace, or answer. | Which subsystem route was used, why a route fell through, or whether a runtime policy boundary was hit. | What is known about this proposition? |
+| Operational/meta epistemic axis | The engine's deterministic attempt to reach, select, bound, route, or surface a proposition. | Whether the proposition itself is true, grounded, contradicted, or replay-equal. | What happened while trying to know or surface it? |
+| Artifact/replay axis | Whether a graph, trace, answer, or report is byte-stable and replay-equal. | Whether the proposition was easy to parse or whether all possible routes were explored. | Can this result be reproduced exactly? |
+| Articulation axis | Whether a decoded proposition can be rendered on the user-facing surface. | Whether the decoded answer is semantically correct. | Can the known proposition be spoken faithfully? |
+
+### Boundary Rule
+
+A state is **proposition-level** only when changing the state would change what CORE claims about the proposition itself.
+
+A state is **operational/meta-level** when changing the state would change the route, refusal reason, boundedness, or surface behavior without necessarily changing the proposition's truth status.
+
+A state is **artifact/replay-level** when it reports byte equality, canonical identity, deterministic replay, or stable trace/report reproduction.
+
+A state is **articulation-level** when the proposition is already semantically available but the rendering/surface path succeeds or fails.
+
+### Phase 1 Classification Matrix
+
+| State | Proposition-level? | Operational/meta? | Artifact/replay? | Articulation? | Clean starter state? | Classification | Notes |
+|---|---:|---:|---:|---:|---:|---|---|
+| `PERCEIVED` | yes | no | no | no | yes | Proposition | Span/token has been observed but not yet committed to meaning. |
+| `EVIDENCED` | yes | no | no | no | yes | Proposition | Source-grounded features or candidates exist. |
+| `DERIVED_EVIDENCED` | yes | partly | no | no | no | Proposition + derivation qualifier | Inputs are evidenced, while output value/structure is deterministic derivation. Should not collapse to plain `EVIDENCED` without recording derivation. |
+| `PREFERRED_EVIDENCED` | yes | yes | no | no | no | Proposition + selection qualifier | Candidate remains evidenced, but a deterministic preference policy selected it over alternatives. Selection must remain visible. |
+| `VERIFIED` | yes | no | partly | no | yes | Proposition | Cross-checked against pack/oracle/solver/verifier semantics. May involve artifacts, but core meaning is proposition-level verification. |
+| `DECODED` | yes | no | yes | no | yes | Proposition + replay | Verified proposition with replay equality / canonical identity. Strongest semantic state in the current math spine. |
+| `DECODED_UNARTICULATED` | yes | no | yes | yes | no | Proposition + articulation failure | The answer remains decoded; the surface failed. This is not `UNDETERMINED` and not `CONTRADICTED`. |
+| `UNVERIFIED-POSSIBLE` | yes | no | no | no | yes | Proposition | Consistent but not directly verified. Useful for candidate futures but not strongly used in the audited classic path. |
+| `UNVERIFIED-NOVEL` | yes | no | no | no | yes | Proposition | Non-contradicting and structurally unseen. Likely important for future recognition/teaching paths. |
+| `CONTRADICTED` | yes | no | sometimes | no | yes | Proposition | Conflicts with typed semantic rules, graph integrity, or replay checks. |
+| `AMBIGUOUS` | yes | no | no | no | yes | Proposition | Input supports multiple incompatible admissible propositions. |
+| `UNDETERMINED` | yes | no | no | no | yes | Proposition | Feature lift, graph construction, solving, or answer resolution cannot complete. |
+| `ROUTE_FALLTHROUGH` | no | yes | no | no | no | Operational/meta | One path refused or failed and another path may continue. This is not a claim about proposition truth. |
+| `AUTHORITY_ADMITTED` | partly | yes | no | no | no | Operational/meta + admission qualifier | A route admits authoritatively enough to prevent fallback reinterpretation. The admitted proposition still needs its proposition state. |
+| `BOUNDED_REFUSAL` | no | yes | no | no | no | Operational/meta | Refusal caused by deterministic computation/search boundary, not semantic contradiction. |
+| `REFUSED` | no | yes | no | no | no | Operational surface bucket | Runner-level bucket that can hide `UNDETERMINED`, `AMBIGUOUS`, `BOUNDED_REFUSAL`, or `CONTRADICTED`. Must not become a proposition state by itself. |
+| `WRONG` | partly | yes | sometimes | no | no | Eval surface bucket | Usually external-oracle contradiction, but not a primitive epistemic state. It is an eval classification over a trace/result. |
+| `CORRECT` | partly | yes | sometimes | no | no | Eval surface bucket | Usually decoded + oracle match, but should not replace the lower-level state. |
+
+### Non-Conflation Rules
+
+The ADR should preserve these distinctions:
+
+1. `REFUSED` is not a proposition state.
+   - It is a surface outcome bucket.
+   - It must carry a cause such as `UNDETERMINED`, `AMBIGUOUS`, `BOUNDED_REFUSAL`, or `CONTRADICTED`.
+
+2. `WRONG` is not a primitive proposition state.
+   - It is an eval outcome.
+   - Internally it usually means `CONTRADICTED` against verifier replay or external oracle expectation.
+
+3. `CORRECT` is not a primitive proposition state.
+   - It is an eval outcome.
+   - Internally it usually means `DECODED` plus expected-answer agreement.
+
+4. `DECODED_UNARTICULATED` must not downgrade the proposition to `UNDETERMINED`.
+   - The proposition was decoded.
+   - The articulation path failed.
+
+5. `BOUNDED_REFUSAL` must not become `AMBIGUOUS`.
+   - Branch cap refusal says exploration exceeded policy bounds.
+   - It does not assert that multiple incompatible propositions were found.
+
+6. `ROUTE_FALLTHROUGH` must not become `UNDETERMINED`.
+   - A route may fail while another route succeeds.
+   - The failed route is not final knowledge about the proposition.
+
+7. `DERIVED_EVIDENCED` must not be treated as unsupported novelty.
+   - The derived value may be absent from the literal span.
+   - The derivation can still be grounded in evidenced operands.
+
+### Recommended Phase 1 ADR Shape
+
+A future ADR should avoid a single unqualified enum as the internal model.
+
+The minimum safe internal shape is a pair:
+
+```text
+(proposition_state, operational_state?)
+```
+
+A stronger shape is a typed event record:
+
+```text
+EpistemicEvent {
+  proposition_state?: PropositionEpistemicState,
+  operational_state?: OperationalEpistemicState,
+  artifact_state?: ArtifactReplayState,
+  articulation_state?: ArticulationState,
+  evidence_ref: ...,
+  transition_reason: ...,
+}
+```
+
+The reporting surface may still collapse this to human-readable labels, but the trace should preserve the axes.
+
+### Phase 1 Completion Criteria
+
+Phase 1 is complete when the project agrees that:
+
+- proposition states and operational/meta states are separate axes,
+- runner buckets like `correct`, `wrong`, and `refused` are not primitive epistemic states,
+- decoded-but-unarticulated is an articulation failure over a decoded proposition,
+- bounded refusal is operational policy, not semantic ambiguity,
+- future transition audits must record both proposition state and operational/meta state when both are present.
+
+---
+
 ## Phased Plan
-
-### Phase 1 — Separate Semantic vs Operational States
-
-Define which states belong to proposition semantics and which belong to orchestration/runtime policy.
-
-Goal: prevent category collapse.
-
-Deliverable:
-
-| State | Proposition-level? | Operational/meta? | Notes |
-|---|---:|---:|---|
-| `DECODED` | yes | no | Replay-equal verified proposition. |
-| `BOUNDED_REFUSAL` | no | yes | Deterministic computation policy boundary. |
-| `AMBIGUOUS` | yes | no | Multiple incompatible admissible propositions. |
-| `ROUTE_FALLTHROUGH` | no | yes | Route-level delegation/fallback. |
 
 ### Phase 2 — Define Transition Invariants
 
