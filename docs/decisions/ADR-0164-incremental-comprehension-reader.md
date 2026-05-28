@@ -1,6 +1,6 @@
 # ADR-0164 — Incremental Comprehension Reader (replaces regex sentence-template parsing)
 
-**Status:** Proposed
+**Status:** Partially implemented (Phase 1 + 2 shipped; eval delta pending lexicon expansion)
 **Date:** 2026-05-26
 **Author:** Shay
 **Anchor:** [[thesis-decoding-not-generating]]
@@ -388,3 +388,34 @@ This ADR moves to **Accepted** when:
 - **The thesis**: `[[thesis-decoding-not-generating]]` — the reader is a
   decoder. Each word narrows the space; the meaning is the accumulation,
   not the match.
+
+---
+
+## Current status (2026-05-27)
+
+Phase 1 and Phase 2 are implemented. Measurement as of post-ME-5 (PR #404):
+
+| Phase | Implemented | Tests | Eval delta |
+|---|---|---|---|
+| Phase 1 (question hybrid) | ✅ | 33 tests (coexistence + question_frame) | 0 net new cases (case 0027 already correct via regex) |
+| Phase 2 (whole-problem) | ✅ | 19 tests (reader_phase2) | 0 new cases |
+| Phase 3 (retire regex question parser) | Not started | — | — |
+
+`wrong = 0` is preserved under flag ON across all 50 train-sample cases.
+
+**Why zero eval delta today.** The 47 refused cases fail the reader at or before
+the first non-trivial token:
+
+- Fraction/percentage literals (`0004`, `0005`, `0010`, `0041`, others) — explicit
+  Phase 2.1 deferral in `lifecycle.py:344`.
+- Unknown words (verbs, nouns absent from the math lexicon) — most of the 47.
+- Multi-quantity composition structures — out of Phase 2 scope.
+
+**Next lift path.** Lexicon expansion via the ratification corridor
+(ADR-0150/0152/0155/0161) is the highest-leverage first step — no code change
+required, and a batch of 10–15 common unknown verbs is estimated to unlock ≥ 1
+new Phase 2 admission. If lexicon expansion yields 0 new admissions, the
+bottleneck is structural (frame rules) and Phase 2.1 fraction scope becomes the
+next ADR target.
+
+See `docs/handoff/COMPREHENSION-READER-AUDIT.md` for the full investigation.
