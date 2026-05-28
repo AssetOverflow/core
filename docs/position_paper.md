@@ -174,25 +174,26 @@ lacks geometric grounding. When the parser does not find an admissible candidate
 for a statement or question, it refuses — with a named reason. There is no path
 from "ungrounded input" to "completed output."
 
-The refusal taxonomy for the 47 refused cases is fully enumerated. Primary
-barriers by frequency:
+The refusal taxonomy for the 47 refused cases is fully enumerated by the
+candidate-graph pipeline. Each refusal carries a named shape category — the
+recognizer saw a statement shape its registered injector could not turn into
+typed solver state, so the candidate refuses instead of fabricating a guess.
 
 | Barrier category | Count | Description |
 |---|---|---|
-| `fraction_operand` | 8 | Fractional quantities ("1/4 of", "half of") not yet parsed |
-| `compound_comparative` | 6 | Multi-clause comparatives ("three times as many as") |
-| `compound_statement` | 5 | Multi-event sentences requiring joint resolution |
-| `novel_initial_verb/form` | 5 | Opening sentence patterns not yet in grammar coverage |
-| `rate_earnings/price` | 4 | Monetary rate statements ("$18/hour", "$2 per cup") |
-| `conditional_question` | 4 | Questions with conditional framing ("if X, how many") |
-| `distributive_multiply` | 3 | Per-unit distributive operations |
-| `temporal_frequency` | 2 | Recurring event patterns ("every other day") |
-| Other named categories | 10 | Each with exactly one case |
+| `recognized_but_uninjectable(discrete_count_statement)` | 21 | Multi-word possession / acquisition shapes ("Lily has three boxes of pencils") whose v1 injector covers only the single-word DCS surface |
+| `no_admissible_candidate` | 10 | Statement shape unrecognized by the v1 parser AND no registered recognizer matched — refuses cleanly, no admissible branch enumerated |
+| `recognized_but_uninjectable(multiplicative_aggregation)` | 5 | Multi-quantity composition shapes ("3 vet appointments cost $400 each") — recognizer detects the shape; injector for the composed operand is the ADR-0169 frontier |
+| `recognized_but_uninjectable(currency_amount)` | 4 | Currency-amount detections without per-unit framing — recognizer detects; v1 injector deliberately deferred |
+| `recognized_but_uninjectable(rate_with_currency)` | 3 | Per-unit-rate statements ("$18 per hour") — detection works; rate→initial injection is the next deferred shape |
+| `recognized_but_uninjectable(descriptive_setup_no_quantity)` | 2 | Setup sentences with no quantity to compose — contributing zero math state is correct; the refusal here is the no-admissible-candidate failure mode |
+| `recognized_but_uninjectable(temporal_aggregation)` | 2 | Event-count-per-window patterns ("10 oysters in 5 minutes") — needs a rate primitive in the algebra |
 
 Every refusal has a named reason. Not "low confidence," not "out of distribution"
-— a specific grammatical category the parser has not yet been trained to handle.
-This is a work queue, not a mystery. Each named barrier is a parser extension. As
-coverage grows, correct count grows. Wrong count stays 0 by architectural
+— a specific shape category the recognizer detected but the injector has not yet
+been wired to turn into typed solver state. This is a work queue, not a mystery.
+Each named barrier corresponds to one or two extension PRs in the active backlog.
+As coverage grows, correct count grows. Wrong count stays 0 by architectural
 guarantee, not by tuning.
 
 The question a generative system cannot answer: "which of my answers are wrong?"
@@ -231,12 +232,17 @@ fabrication.
 
 ## 5. Honest Gaps
 
-**Math parser coverage is the active frontier.** The 47 refusals on the train
-sample are not failures of reasoning — they are failures of parsing. The solver,
-once a problem reaches it, produces correct answers (3 cases, 100% solve rate on
-admitted problems). The gap is in grammar coverage: fractional operands, compound
-comparatives, monetary rates, and temporal frequencies are the next four parser
-extensions. These are enumerated, not estimated.
+**Math injector coverage is the active frontier.** The 47 refusals on the train
+sample are not failures of reasoning — they are failures of injection. The
+solver, once a problem reaches it, produces correct answers (3 cases, 100%
+solve rate on admitted problems). The recognizer already detects most refused
+shapes; what's missing is the per-shape injector that turns a recognized
+statement into typed solver state without fabricating quantities the source
+does not contain. The architecture for closing this gap — a reviewed
+composition-pattern registry consumed by a registry-driven injector — is in
+place; new shape coverage ships as per-shape matcher extensions that publish
+pre-composed candidates the registry gates. These are enumerated, not
+estimated.
 
 **The holdout is sealed.** The real GSM8K test set (1,319 cases) is
 age-encrypted and has not been run against a system with sufficient parser
