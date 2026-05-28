@@ -1,9 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { useState } from "react";
 import { CommandPalette } from "./CommandPalette";
+
+vi.mock("../../../api/queries", () => ({
+  useEvalLanes: () => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+  }),
+}));
 
 function PaletteHarness({ initialOpen = false }: { initialOpen?: boolean }) {
   const [open, setOpen] = useState(initialOpen);
