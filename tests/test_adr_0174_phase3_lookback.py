@@ -363,12 +363,19 @@ class TestPhase3WiringEndToEnd:
         multiple distinct proper-noun subjects appear in prior
         context. Refusal-preferring discipline preserves wrong=0.
         """
+        # ADR-0174 Phase 4 amendment: when Phase 4's contemplate can
+        # disambiguate the pronoun via gendered-names pack (mixed-
+        # gender antecedents), the defense correctly does NOT fire —
+        # the case admits via Phase 4. To test the defense in
+        # isolation, use SAME-GENDER antecedents so Phase 4 returns
+        # None (no disambiguation possible) and the defense still
+        # fires.
         from generate.math_candidate_graph import parse_and_solve
         text = (
             "Alice has 5 Pokemon cards. "
-            "Bob has 3 Pokemon cards. "
+            "Mary has 3 Pokemon cards. "
             "She collected 2 Pokemon cards. "
-            "How many Pokemon cards does Bob have?"
+            "How many Pokemon cards does Alice have?"
         )
         r = parse_and_solve(text)
         # MUST refuse — wrong attribution is the hazard.
@@ -386,7 +393,7 @@ class TestPhase3WiringEndToEnd:
         )
         ev = ambig[0]
         assert "Alice" in ev["candidate_antecedents"]
-        assert "Bob" in ev["candidate_antecedents"]
+        assert "Mary" in ev["candidate_antecedents"]
         assert ev["pronoun"] == "She"
 
     def test_single_actor_pronoun_still_resolves(self) -> None:

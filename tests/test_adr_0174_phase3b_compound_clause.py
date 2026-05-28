@@ -192,12 +192,18 @@ class TestPronounMultiActorDefenseOnCompound:
         path output too. Tracked in
         project-adr-0174-multi-actor-pronoun-hazard memory.
         """
+        # ADR-0174 Phase 4 amendment: with mixed-gender antecedents,
+        # Phase 4's contemplate would resolve the pronoun via the
+        # gendered-names pack (Alice=female, Bob=male). To test the
+        # Phase 3a defense in isolation on a COMPOUND case, use
+        # same-gender antecedents so Phase 4 returns None and the
+        # defense still fires.
         from generate.math_candidate_graph import parse_and_solve
         text = (
             "Alice has 5 followers. "
-            "Bob has 3 followers. "
-            "He has 2 followers on Instagram and 4 followers on Facebook. "
-            "How many followers does Bob have?"
+            "Mary has 3 followers. "
+            "She has 2 followers on Instagram and 4 followers on Facebook. "
+            "How many followers does Alice have?"
         )
         r = parse_and_solve(text)
         lookback = [
