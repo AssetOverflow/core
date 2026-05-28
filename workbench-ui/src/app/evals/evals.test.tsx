@@ -16,11 +16,13 @@ vi.mock("../../api/queries", async (importOriginal) => {
   return {
     ...actual,
     useEvalLanes: vi.fn(),
+    useEvalLane: vi.fn(),
     useEvalRun: vi.fn(),
   };
 });
 
-import { useEvalLanes, useEvalRun } from "../../api/queries";
+import { useEvalLanes, useEvalLane, useEvalRun } from "../../api/queries";
+import { CommandPalette } from "../../design/components/primitives/CommandPalette";
 
 const mockLanes: EvalLaneSummary[] = [
   { lane: "contemplation_quality", versions: ["v1", "v2"], read_only: true, description: "Contemplation checks" },
@@ -49,6 +51,27 @@ describe("W-030 Component Tests", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+
+    vi.mocked(useEvalLanes).mockReturnValue({
+      data: mockLanes,
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as any);
+    vi.mocked(useEvalLane).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new WorkbenchApiError("not_found", "No run history found"),
+    } as any);
+    vi.mocked(useEvalRun).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isError: false,
+      isSuccess: false,
+      error: null,
+    } as any);
+
     fetchMock.mockImplementation((url: any) => {
       const urlStr = typeof url === "string" ? url : String(url?.url || url || "");
       if (urlStr.endsWith("/evals")) {
@@ -162,10 +185,45 @@ describe("W-030 Component Tests", () => {
 
       // Verify lexicographical order
       expect(cards1).toEqual(cards2);
+      expect(cards1.length).toBe(3);
       expect(cards1[0]).toContain("accuracy");
       expect(cards1[1]).toContain("latency ms");
       expect(cards1[2]).toContain("passed");
-      expect(cards1[3]).toContain("total");
+      expect(cards1[2]).toContain("9/10");
+    });
+
+    it("renders actual / target, emphasizes actual, and applies failure color token when target is not met", () => {
+      const metrics = {
+        passed: 4,
+        total: 5,
+        latency_ms: 150,
+        latency_ms_target: 100, // failing because actual > target
+        accuracy: 0.9,
+        accuracy_target: 0.95, // failing because actual < target
+      };
+
+      const { container } = render(<EvalMetricGrid metrics={metrics} />);
+
+      const cards = container.querySelectorAll('[data-testid="metric-card"]');
+      expect(cards.length).toBe(3);
+
+      const passedCard = Array.from(cards).find(c => c.textContent?.includes("passed"));
+      expect(passedCard).toBeDefined();
+      expect(passedCard?.querySelector(".text-\\[var\\(--color-state-contradicted\\)\\]")).toBeInTheDocument();
+      expect(passedCard?.textContent).toContain("4");
+      expect(passedCard?.textContent).toContain("5");
+
+      const latencyCard = Array.from(cards).find(c => c.textContent?.includes("latency ms"));
+      expect(latencyCard).toBeDefined();
+      expect(latencyCard?.querySelector(".text-\\[var\\(--color-state-contradicted\\)\\]")).toBeInTheDocument();
+      expect(latencyCard?.textContent).toContain("150");
+      expect(latencyCard?.textContent).toContain("100");
+
+      const accuracyCard = Array.from(cards).find(c => c.textContent?.includes("accuracy"));
+      expect(accuracyCard).toBeDefined();
+      expect(accuracyCard?.querySelector(".text-\\[var\\(--color-state-contradicted\\)\\]")).toBeInTheDocument();
+      expect(accuracyCard?.textContent).toContain("0.9");
+      expect(accuracyCard?.textContent).toContain("0.95");
     });
   });
 
@@ -294,6 +352,119 @@ describe("W-030 Component Tests", () => {
       // Expect it to call fetch successfully without throwing refusals
       const res = await runEvalLane({ lane: "contemplation_quality", split: "holdout" });
       expect(res).toEqual(mockResult);
+    });
+
+    it("renders loading state when lane list is loading", () => {
+      vi.mocked(useEvalLanes).mockReturnValue({
+        data: null,
+        isLoading: true,
+        isError: false,
+        error: null,
+      } as any);
+
+      const client = makeClient();
+      render(
+        <QueryClientProvider client={client}>
+          <MemoryRouter initialEntries={["/evals"]}>
+            <EvalsRoute />
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+
+      expect(screen.getByText("Loading eval lanes...")).toBeInTheDocument();
+    });
+
+    it("renders empty state when there are no lanes", () => {
+      vi.mocked(useEvalLanes).mockReturnValue({
+        data: [],
+        isLoading: false,
+        isError: false,
+        error: null,
+      } as any);
+
+      const client = makeClient();
+      render(
+        <QueryClientProvider client={client}>
+          <MemoryRouter initialEntries={["/evals"]}>
+            <EvalsRoute />
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+
+      expect(screen.getByText("No eval lanes discovered.")).toBeInTheDocument();
+    });
+
+    it("renders loading and error states for the selected lane detail view", () => {
+      vi.mocked(useEvalLanes).mockReturnValue({
+        data: mockLanes,
+        isLoading: false,
+        isError: false,
+        error: null,
+      } as any);
+
+      // Mock useEvalLane to return loading
+      vi.mocked(useEvalLane).mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isError: false,
+        error: null,
+      } as any);
+
+      const client = makeClient();
+      const { rerender } = render(
+        <QueryClientProvider client={client}>
+          <MemoryRouter initialEntries={["/evals?lane=contemplation_quality"]}>
+            <EvalsRoute />
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+
+      expect(screen.getByText("Loading eval lane details...")).toBeInTheDocument();
+
+      // Mock useEvalLane to return error (other than not_found)
+      vi.mocked(useEvalLane).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+        error: new WorkbenchApiError("read_error", "Disk read error"),
+      } as any);
+
+      rerender(
+        <QueryClientProvider client={client}>
+          <MemoryRouter initialEntries={["/evals?lane=contemplation_quality"]}>
+            <EvalsRoute />
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+
+      expect(screen.getByText("Disk read error")).toBeInTheDocument();
+    });
+
+    it("CommandPalette registers dynamic command entries driven by useEvalLanes", () => {
+      vi.mocked(useEvalLanes).mockReturnValue({
+        data: mockLanes,
+        isLoading: false,
+        isError: false,
+        error: null,
+      } as any);
+
+      const client = makeClient();
+      // Render EvalsRoute alongside the palette: route mounts useEvalCommands,
+      // which registers the lanes into the module-level command registry.
+      render(
+        <QueryClientProvider client={client}>
+          <MemoryRouter>
+            <EvalsRoute />
+            <CommandPalette open={true} onOpenChange={vi.fn()} />
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+
+      // Verify static commands
+      expect(screen.getByRole("button", { name: "Open Chat" })).toBeInTheDocument();
+      // Verify dynamic commands registered via useEvalCommands
+      expect(screen.getByRole("button", { name: "Open eval lane contemplation_quality" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Open eval lane unsafe_lane" })).toBeInTheDocument();
     });
   });
 });
