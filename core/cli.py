@@ -88,6 +88,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_me4_subtractive_composition.py",
         "tests/test_me5_all_categories_integration.py",
         "tests/test_rat1_end_to_end_admission.py",
+        "tests/test_wave_a_multiplicative_aggregation_injector.py",
     ),
     "algebra": (
         "tests/test_versor_closure.py",
@@ -1937,6 +1938,8 @@ def cmd_teaching_seed_recognizer(args: argparse.Namespace) -> int:
         canonical_pattern["anchor_count_max"] = args.anchor_count_max
     if args.graph_intent:
         canonical_pattern["graph_intent"] = args.graph_intent
+    if getattr(args, "extract_values", False):
+        canonical_pattern["extract_values"] = True
 
     recognizer_spec = {
         "shape_category": args.shape_category,
@@ -4483,6 +4486,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     teaching_seed_recognizer.add_argument(
         "--review-date", default=None, help="YYYY-MM-DD (default: today)",
+    )
+    teaching_seed_recognizer.add_argument(
+        "--extract-values", action="store_true",
+        help="WAVE-A — opt the recognizer spec into value-extracting matcher path",
     )
     teaching_seed_recognizer.add_argument(
         "--note", default="", help="operator note",

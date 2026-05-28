@@ -1032,14 +1032,11 @@ def _match_multiplicative_aggregation(
         return _try_extract_additive_composition_anchor(statement, spec)
     if anchor_kind == "subtractive_quantity_composition":
         # ME-4 dispatch — subtractive shape returns ("amount" intent).
-        # Cast the Literal return: the matcher signature widens at the
-        # type level to include any 'aggregate'/'amount' but the caller
-        # in match() reads graph_intent verbatim.
         sub_result = _try_extract_subtractive_composition_anchor(statement, spec)
         if sub_result is None:
             return None
         anchors, _ = sub_result
-        return (anchors, "aggregate")  # reuse 'aggregate' label for subtractive too
+        return (anchors, "aggregate")
     if anchor_kind != "multiplicative_aggregate":
         return None
     padded = _padded_lower(statement)
@@ -1056,7 +1053,146 @@ def _match_multiplicative_aggregation(
         return None
     if _has_currency_symbol(statement) and _has_per_unit_framing(padded):
         return None
+
+    # WAVE-A — value-extracting variant. When the spec opts in via
+    # ``extract_values: True`` (a separate signal from anchor_kind so
+    # existing detection-only specs are unaffected), try to extract
+    # the M (outer count) and N (inner count) values from the canonical
+    # "<Subject> <verb> <M> <outer-noun>, each <verb> <N> <unit>" shape.
+    # On extraction success, emit a pre-composed CandidateInitial with
+    # composition_evidence (mirrors the ME-1..ME-4 pattern). The detection-
+    # only behaviour is preserved when extract_values is absent or False.
+    if spec.get("extract_values"):
+        emit = _try_extract_each_weighing_anchor(statement, spec)
+        if emit is not None:
+            return emit
     return (tuple(), "aggregate")
+
+
+# ---------------------------------------------------------------------------
+# WAVE-A — multiplicative aggregation injector with value extraction.
+#
+# Targets the canonical "<Subject> <bake-verb> <M> <outer-noun>, each
+# <weigh-verb>ing <N> <unit>" shape (case 0047 in the train_sample
+# audit). Emits a pre-composed CandidateInitial(value=M*N, unit=unit,
+# entity=Subject) with composition_evidence so the wave-A admission
+# fires through the same _composed_initial_admissible gate as ME-1..ME-4.
+# ---------------------------------------------------------------------------
+
+_MULT_AGG_EACH_WEIGHING_RE: Final[re.Pattern[str]] = re.compile(
+    r"""(?ix)
+    ^\s*
+    (?P<subject>[A-Z][a-zA-Z]+)
+    \s+
+    (?P<outer_verb>bakes|baked|made|makes|fills|filled|has|had|owns|holds|held|contains|brings|brought|carries|carried|buys|bought)
+    \s+
+    (?P<count_a>\d+(?:\.\d+)?)
+    \s+
+    (?P<outer_noun>[a-z][a-zA-Z\-]+(?:\s+[a-z][a-zA-Z\-]+)?)
+    \s*,?\s+
+    (?:each\s+(?:weighing|holding|containing|costing)|where\s+each\s+(?:bag|basket|box|crate|carton|container|one|item)\s+holds)
+    \s+
+    (?P<count_b>\d+(?:\.\d+)?)
+    \s+
+    (?P<unit>[a-z]+)
+    \b
+    """,
+)
+
+_MULT_AGG_SHAPE: Final[str] = "bound(outer_count) × bound(per_outer_count)"
+
+
+def _try_extract_each_weighing_anchor(
+    statement: str, spec: Mapping[str, Any]
+) -> tuple[tuple[Mapping[str, Any], ...], Literal["aggregate"]] | None:
+    """Extract a pre-composed CandidateInitial for the "each weighing" shape.
+
+    Narrowness:
+    - Exactly one match of :data:`_MULT_AGG_EACH_WEIGHING_RE`
+    - Subject is a proper noun not in pronoun/determiner sets
+    - Outer count + inner count are both positive numerics
+    - Inner unit is in ``spec["observed_units"]`` (or its singular form)
+    - Outer verb in the canonical whitelist (mapped via matched_anchor)
+
+    Refuses on any failure; refusal-preferring.
+    """
+    observed_units = set(spec.get("observed_units") or ())
+    if not observed_units:
+        return None
+
+    matches = list(_MULT_AGG_EACH_WEIGHING_RE.finditer(statement))
+    if len(matches) != 1:
+        return None
+
+    m = matches[0]
+    subject = m.group("subject")
+    if subject.lower() in _REFUSED_SUBJECT_TOKENS:
+        return None
+    if subject.lower() in _COMMON_DETERMINERS_AT_HEAD:
+        return None
+
+    count_a_token = m.group("count_a")
+    count_b_token = m.group("count_b")
+    try:
+        count_a = float(count_a_token)
+        count_b = float(count_b_token)
+    except ValueError:
+        return None
+    if count_a <= 0 or count_b <= 0:
+        return None
+
+    unit = m.group("unit").lower()
+    if unit not in observed_units and unit.rstrip("s") not in observed_units:
+        return None
+
+    composed_value_f = count_a * count_b
+    composed_value: int | float
+    if (
+        composed_value_f.is_integer()
+        and "." not in count_a_token
+        and "." not in count_b_token
+    ):
+        composed_value = int(composed_value_f)
+    else:
+        composed_value = composed_value_f
+
+    from generate.math_candidate_parser import CandidateInitial
+    from generate.math_problem_graph import InitialPossession, Quantity
+
+    # matched_anchor must be in CandidateInitial post-init whitelist.
+    outer_verb = m.group("outer_verb").lower()
+    matched_anchor = outer_verb if outer_verb in {
+        "has", "had", "made", "makes", "buys", "bought", "paid", "earned", "saved", "got", "received"
+    } else "had"
+
+    composed_initial = CandidateInitial(
+        initial=InitialPossession(
+            entity=subject,
+            quantity=Quantity(value=composed_value, unit=unit),
+        ),
+        source_span=m.group(0),
+        matched_anchor=matched_anchor,
+        matched_value_token=str(composed_value),
+        matched_unit_token=unit,
+        matched_entity_token=subject,
+        composition_evidence={
+            "composition_shape": _MULT_AGG_SHAPE,
+            "input_tokens": f"{count_a_token}|{count_b_token}",
+            "entity_source": "same_sentence",
+        },
+    )
+
+    anchor: Mapping[str, Any] = {
+        "kind": "multiplicative_aggregate_each_weighing",
+        "composition_shape": _MULT_AGG_SHAPE,
+        "composed_initial": composed_initial,
+        "count_a": count_a_token,
+        "count_b": count_b_token,
+        "unit": unit,
+        "subject": subject,
+        "outer_verb": outer_verb,
+    }
+    return ((anchor,), "aggregate")
 
 
 # ---------------------------------------------------------------------------
