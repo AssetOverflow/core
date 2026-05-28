@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping
@@ -61,24 +62,30 @@ class CoverageReport:
 def _classify_refusal(reason: str) -> str:
     """Map a per-case refusal reason string to a stable category bucket.
 
+    Matching is case-insensitive throughout — the raw runner output is
+    consistently lowercase prose today, but normalizing once avoids
+    drift if upstream casing changes.
+
     Buckets:
     - ``recognizer_empty_injection(<ShapeCategory>)`` — recognizer
-      matched but injector returned empty
-    - ``no_admissible_candidate`` — neither parser nor recognizer admitted
-    - ``no_admissible_question`` — statement(s) admitted; question parser refused
+      matched but the per-category injector returned empty
+    - ``no_admissible_question`` — statement(s) admitted; question
+      parser refused
+    - ``no_admissible_statement`` — neither parser nor recognizer
+      admitted any statement
     - ``unexpected_question_count`` — !=1 question sentence
     - ``other`` — any unmatched reason text
     """
     if not reason:
         return "other"
     lower = reason.lower()
-    if "recognizer matched but produced no injection" in reason:
-        m = _REASON_CATEGORY_RE.search(reason)
+    if "recognizer matched but produced no injection" in lower:
+        m = _REASON_CATEGORY_RE.search(lower)
         cat = m.group(1) if m else "unknown"
         return f"recognizer_empty_injection({cat})"
-    if "no admissible candidate for question" in reason:
+    if "no admissible candidate for question" in lower:
         return "no_admissible_question"
-    if "no admissible candidate for statement" in reason:
+    if "no admissible candidate for statement" in lower:
         return "no_admissible_statement"
     if "expected exactly one question sentence" in lower:
         return "unexpected_question_count"
@@ -171,9 +178,21 @@ def fetch_committed_baseline(
         return None
     if not result.stdout.strip():
         return None
-    tmp = repo_root / ".git" / "coverage_baseline_tmp.json"
-    tmp.write_text(result.stdout, encoding="utf-8")
-    return tmp
+    # Use the system temp dir with a unique filename to avoid:
+    # (a) failures in non-git checkouts or worktrees where .git is a
+    #     file pointing elsewhere
+    # (b) concurrent-access collisions if two operators run
+    #     ``core teaching coverage --delta`` simultaneously
+    fd, tmp_path = tempfile.mkstemp(
+        prefix="core_coverage_baseline_", suffix=".json"
+    )
+    try:
+        with open(fd, "w", encoding="utf-8") as fh:
+            fh.write(result.stdout)
+    except Exception:
+        Path(tmp_path).unlink(missing_ok=True)
+        return None
+    return Path(tmp_path)
 
 
 __all__ = [

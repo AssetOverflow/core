@@ -2014,6 +2014,23 @@ def cmd_teaching_coverage(args: argparse.Namespace) -> int:
     split = args.split or "train_sample"
     version = args.version or "v1"
 
+    # Validate inputs against a strict whitelist before any path
+    # construction or subprocess invocation. The runner module name is
+    # built from these tokens (``f"evals.{lane}.{split}.{version}.runner"``)
+    # and passed to ``python -m``. Python's module loader would reject
+    # most malicious payloads, but a strict whitelist is the defense-in-
+    # depth response to the Sourcery security advisory: reject
+    # everything except ``[a-z0-9_]+``.
+    import re as _re
+    _safe_token_re = _re.compile(r"^[a-z0-9_]+$")
+    for label, value in (("lane", lane), ("split", split), ("version", version)):
+        if not _safe_token_re.match(value):
+            print(
+                f"ERROR: {label}={value!r} must match ^[a-z0-9_]+$",
+                file=sys.stderr,
+            )
+            return 1
+
     repo_root = Path(__file__).resolve().parent.parent
     lane_dir = repo_root / "evals" / lane / split / version
     if not lane_dir.is_dir():

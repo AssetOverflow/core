@@ -152,3 +152,58 @@ def test_wrong_zero_invariant_visible_via_as_dict(tmp_path: Path):
     _write_report(report_path, correct=0, refused=0, wrong=2, per_case=[])
     r = build_coverage_report(report_path, lane="t", split="s", version="v1", use_reader=False)
     assert r.as_dict()["counts"]["wrong"] == 2
+
+
+# ---------------------------------------------------------------------------
+# Sourcery review follow-ups (PR #410 round 1)
+# ---------------------------------------------------------------------------
+
+
+def test_classify_refusal_is_case_insensitive():
+    """Mixed-case reason text classifies into the same bucket."""
+    mixed = (
+        "Candidate_Graph: Recognizer Matched But Produced No Injection "
+        "for statement: 'X.' (category=currency_amount)"
+    )
+    assert _classify_refusal(mixed) == "recognizer_empty_injection(currency_amount)"
+
+
+def test_classify_docstring_matches_implementation_buckets():
+    """The docstring's bucket list matches the values _classify_refusal returns."""
+    expected_buckets = {
+        "recognizer_empty_injection",
+        "no_admissible_question",
+        "no_admissible_statement",
+        "unexpected_question_count",
+        "other",
+    }
+    doc = _classify_refusal.__doc__ or ""
+    for bucket in expected_buckets:
+        assert bucket in doc, f"docstring missing bucket: {bucket}"
+
+
+def test_fetch_committed_baseline_uses_system_temp(tmp_path, monkeypatch):
+    """The baseline temp file lives in tempfile.gettempdir(), not .git/."""
+    import tempfile as _tempfile
+    from teaching.coverage import fetch_committed_baseline
+
+    class _FakeCompleted:
+        def __init__(self, stdout: str) -> None:
+            self.stdout = stdout
+
+    import subprocess as _sp
+
+    fake_baseline = '{"counts": {"correct": 1, "refused": 1, "wrong": 0}}'
+
+    def _fake_run(*_args, **_kwargs):
+        return _FakeCompleted(fake_baseline)
+
+    monkeypatch.setattr(_sp, "run", _fake_run)
+
+    out = fetch_committed_baseline("evals/x/report.json", tmp_path)
+    assert out is not None
+    sys_temp = Path(_tempfile.gettempdir()).resolve()
+    assert str(out.resolve()).startswith(str(sys_temp)), (
+        f"baseline temp must be under {sys_temp}, got {out!r}"
+    )
+    out.unlink(missing_ok=True)
