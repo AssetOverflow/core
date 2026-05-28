@@ -92,12 +92,16 @@ _LOOKBACK_MAX: Final[int] = 8
 # ADR-0174 — held-hypothesis state primitive.
 #
 # HYPOTHESIS_CAP is a structural assertion that a coherent sentence has at
-# most a few plausible parses. Exceeding this cap is a signal the read has
-# lost coherence; the reader refuses rather than enumerating further.
-# This is a refusal threshold, not a probability cutoff or a heuristic
-# limit on capability. Initial value 4, to be set by measurement once
-# Phase 1 data collection lands (ADR-0174 §"Open questions" #1).
-HYPOTHESIS_CAP: Final[int] = 4
+# most a few plausible parses (or, for compound-clause sentences per Phase
+# 3b, at most a few enumerated anchors). Exceeding this cap is a signal the
+# read has lost coherence; the reader refuses rather than enumerating
+# further. This is a refusal threshold, not a probability cutoff.
+#
+# Raised from 4 to 8 in ADR-0174 Phase 3b: case 0040 ("He now has 2 horses,
+# 5 dogs, 7 cats, 3 turtles, and 1 goat") emits 5 anchors via compound-
+# clause held hypotheses. 8 gives headroom (e.g. comma-separated list of
+# 7 items) without becoming a permissive cap.
+HYPOTHESIS_CAP: Final[int] = 8
 
 # Closed set of confidence-rank values for held hypotheses. The reader
 # orders hypotheses by appearance (0 = first emitted) and uses this rank

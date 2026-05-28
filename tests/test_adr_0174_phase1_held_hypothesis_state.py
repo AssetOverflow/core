@@ -318,10 +318,13 @@ class TestProblemReadingStateHypothesisFields:
 
 
 class TestADR0174Constants:
-    def test_hypothesis_cap_is_four(self) -> None:
-        """ADR-0174 §Open questions #1: initial value is 4. Changes here
-        require an ADR amendment (or measurement evidence in Phase 1)."""
-        assert HYPOTHESIS_CAP == 4
+    def test_hypothesis_cap_is_eight(self) -> None:
+        """ADR-0174 §Open questions #1: initial value was 4 (Phase 1).
+        Raised to 8 in Phase 3b: case 0040 ("He now has 2 horses, 5
+        dogs, 7 cats, 3 turtles, and 1 goat") emits 5 anchors via
+        compound-clause held hypotheses. Cap=8 gives headroom (e.g.
+        comma-separated list of 7 items) without becoming permissive."""
+        assert HYPOTHESIS_CAP == 8
 
     def test_valid_confidence_ranks_are_range_cap(self) -> None:
         assert VALID_HYPOTHESIS_CONFIDENCE_RANKS == frozenset(
