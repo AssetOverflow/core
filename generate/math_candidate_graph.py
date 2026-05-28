@@ -33,6 +33,7 @@ decision rule above):
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from itertools import product
@@ -41,6 +42,7 @@ from typing import TYPE_CHECKING, Final, Union
 if TYPE_CHECKING:
     from core.config import RuntimeConfig
 
+from generate.comprehension.state import Hypothesis
 from generate.math_candidate_parser import (
     CandidateInitial,
     CandidateUnknown,
@@ -792,7 +794,12 @@ def parse_and_solve(
     # statement's subject is not yet trusted when matching that same
     # statement; only prior sentences contribute).
     _prior_subject: str | None = None
-    for s in statement_sentences:
+    # ADR-0174 Phase 2 — statement-scoped trace of constraint eliminations.
+    # Merged into the question-stage reader_trace below so the consumer
+    # sees both per-sentence eliminations (Phase 2) and reader events
+    # (Phase 1, ADR-0164) in one stream.
+    _statement_trace: list[str] = []
+    for s_idx, s in enumerate(statement_sentences):
         # RAT-1 — prefer the discourse-level prior (which sees context-filler
         # sentences like "John adopts a dog from a shelter"); fall back to
         # the in-loop running subject when discourse map has no entry.
@@ -827,24 +834,53 @@ def parse_and_solve(
                     )
                     injected = inject_from_match(recognizer_match, s)
                     if injected:
-                        # ADR-0170 — dispatch admissibility on the
-                        # concrete candidate type. CandidateInitial uses
-                        # the existing _initial_admissible gate;
-                        # CandidateOperation uses the parser's
-                        # roundtrip_admissible gate (same predicate
-                        # operations from the regex path already pass
-                        # through). No new admission semantics — each
-                        # type is gated by the predicate it was always
-                        # gated by; the dispatch just unifies the
-                        # injector path with the parser path.
-                        admitted: list[SentenceChoice] = []
-                        for c in injected:
+                        # ADR-0174 Phase 2 — hypothesis-based admission
+                        # with structured elimination tracing.  Each
+                        # injected candidate becomes a Hypothesis with
+                        # confidence_rank == emission order; the
+                        # constraint propagator runs the same predicates
+                        # _initial_admissible / roundtrip_admissible run
+                        # today (decomposed into sub-checks) and returns
+                        # (survivors, eliminations).  Eliminations append
+                        # as JSON trace events to reader_trace so the
+                        # operator can see WHICH predicate eliminated the
+                        # candidate, not just that admission failed.
+                        # Admission semantics are byte-equivalent to the
+                        # pre-Phase-2 inline loop: a candidate survives
+                        # here iff it survived the predicate dispatch
+                        # there.
+                        from generate.comprehension.constraint_propagation import (
+                            eliminate_violating,
+                            hypothesis_from_initial,
+                            hypothesis_from_operation,
+                        )
+
+                        hyps_in: list[Hypothesis] = []
+                        for rank, c in enumerate(injected):
                             if isinstance(c, CandidateInitial):
-                                if _initial_admissible(c):
-                                    admitted.append(c)
+                                hyps_in.append(
+                                    hypothesis_from_initial(c, rank)
+                                )
                             elif isinstance(c, CandidateOperation):
-                                if roundtrip_admissible(c):
-                                    admitted.append(c)
+                                hyps_in.append(
+                                    hypothesis_from_operation(c, rank)
+                                )
+                        survivors, eliminations = eliminate_violating(
+                            tuple(hyps_in)
+                        )
+                        for elim in eliminations:
+                            _statement_trace.append(json.dumps({
+                                "layer": "constraint_propagation",
+                                "phase": 2,
+                                "outcome": "eliminated",
+                                "confidence_rank": elim.confidence_rank,
+                                "predicate": elim.predicate,
+                                "reason": elim.reason,
+                                "sentence_index": s_idx,
+                            }, sort_keys=True))
+                        admitted: list[SentenceChoice] = [
+                            h.candidate for h in survivors  # type: ignore[misc]
+                        ]
                         if len(admitted) == len(injected) and admitted:
                             per_sentence_choices.append(
                                 _collapse_per_sentence_ties(admitted)
@@ -900,7 +936,11 @@ def parse_and_solve(
     # fall through to the existing regex question parser (Pattern A/B/C).
     # The reader is purely additive: a refusal MUST NOT prevent admission
     # by the regex parser.
-    reader_trace: list[str] = []
+    # ADR-0174 Phase 2 — seed reader_trace with statement-stage
+    # constraint-propagation events so consumers see Phase-1 (ADR-0164)
+    # reader events and Phase-2 (ADR-0174) elimination events in one
+    # ordered stream.
+    reader_trace: list[str] = list(_statement_trace)
     reader_question_choices: list[CandidateUnknown] | None = None
     _use_reader = (
         config is not None and config.comprehension_reader_questions
