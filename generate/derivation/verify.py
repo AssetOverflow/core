@@ -55,8 +55,11 @@ def self_verifies(derivation: GroundedDerivation, problem_text: str) -> SelfVeri
     tokens = _tokens(problem_text)
     reasons: list[str] = []
 
-    # 1. operand grounding — every value must be sourced from the text.
-    operands = [derivation.start, *(s.operand for s in derivation.steps)]
+    # 1. operand grounding — every TEXT operand value must be sourced from the
+    #    text. Comparative operands (ADR-0176 MS-2: twice -> x2, 'N times' -> xN)
+    #    are grounded by their cue (clause 2), not by a text value token, so they
+    #    are exempt here — their pack-supplied scalar is not a number in the text.
+    operands = [derivation.start, *(s.operand for s in derivation.steps if not s.comparative)]
     for q in operands:
         if not _value_grounds(q.source_token, tokens):
             reasons.append(f"operand {q.source_token!r} not grounded in text")
@@ -99,13 +102,23 @@ def self_verifies(derivation: GroundedDerivation, problem_text: str) -> SelfVeri
 def select_self_verified(
     derivations: list[GroundedDerivation],
     problem_text: str,
+    *,
+    target_units: tuple[str, ...] = (),
 ) -> Resolution | None:
     """Among the self-verifying derivations, return the unique answer or refuse.
 
     Refuse-preferring: ``None`` when zero self-verify (no grounded derivation) or
     when the self-verifying ones disagree (the multi-branch disagreement rule).
+
+    ADR-0176 MS-2 question-targeting: when ``target_units`` is non-empty (the unit
+    the question asks for), derivations whose ``answer_unit`` is not among them are
+    dropped — a chain that computes the wrong kind of quantity answered a different
+    question. Empty ``target_units`` imposes no constraint (the unit signal may be
+    unavailable, e.g. a superordinate the units pack doesn't yet cover).
     """
     verified = [d for d in derivations if self_verifies(d, problem_text).verified]
+    if target_units:
+        verified = [d for d in verified if d.answer_unit in target_units]
     if not verified:
         return None
     distinct = {round(d.answer, 9) for d in verified}
