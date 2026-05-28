@@ -292,3 +292,130 @@ This ADR moves to **Accepted** when:
 - **Thesis anchor**: [[thesis-decoding-not-generating]] — every change in this ADR must pass the "teach the engine to find, not store another found thing" gate.
 - **HITL corridor preserved**: ADR-0150 (contemplation), ADR-0152 (proposal), ADR-0155 (review), ADR-0161 (HITL queue), ADR-0172 (math-corpus decomposition).
 - **Anti-overfitting obligations**: ADR-0114a — held-hypothesis reads are evaluated against the same obligations as the existing pipeline; perturbation, OOD ratio, depth curve, and adversarial axes all apply.
+
+---
+
+## Implementation Notes (added 2026-05-28 after Phase 1-3a lookback review)
+
+The 2026-05-28 lookback review (per CLAUDE.md §Lookback Review Discipline)
+surfaced drift between this ADR's spec text and what Phases 1-3a
+actually shipped. Documenting honestly here so Phase 4-5 implementers
+work from accurate ground truth.
+
+### `reevaluate` signature — implementation differs from spec
+
+**ADR text (§Decision §2):**
+```text
+reevaluate(hypotheses, new_token, position) -> (refined_hypotheses, eliminations)
+```
+
+**As shipped (Phase 3a, PR #423):**
+```python
+reevaluate(hypothesis: Hypothesis, refinement: Refinement) -> ReevaluateResult
+```
+
+Differences and rationale:
+
+- Single hypothesis + refinement object, not hypothesis set + token+position.
+  More composable: refinement objects (`PronounResolution` etc.) are
+  reusable; the caller decides which hypotheses to apply to which
+  refinements.
+- Returns a single `ReevaluateResult` (refined-or-None plus
+  bookkeeping), not a (refined_hypotheses, eliminations) tuple.
+  Bulk-eliminate semantics belong on a higher-level orchestrator (not
+  yet built — Phase 4 work).
+
+The shipped design is preferred and the ADR text should be considered
+amended. Phase 4 implementers should follow the shipped signature.
+
+### Phase 2 is per-candidate, not per-token
+
+**ADR text (§Decision §3):**
+> Move them inside the reader so they fire per-token: After every EMIT,
+> run the in-flight constraint check against the partial hypothesis.
+
+**As shipped (Phase 2, PR #420):**
+Constraint propagation runs at the `math_candidate_graph` recognizer-
+injection site (per-candidate, after `inject_from_match` returns), not
+inside `lifecycle.apply_word` (per-token, during reading).
+
+This is a real substrate-vs-active-wiring gap. The check_constraints
+primitive is available; the per-token integration is Phase 5 work
+(legacy parser removal + apply_word refactor). Phase 2 is more
+honestly described as "constraint propagation substrate ready for
+per-token wiring in Phase 5."
+
+### Lookback recompute scope is candidate-level, not token-level
+
+**ADR text (§Decision §2):**
+> For each hypothesis, recomputes the category assignment of any *prior*
+> token whose role depended on the now-resolved ambiguity.
+
+**As shipped (Phase 3a, PR #423):**
+`PronounResolution` appends one `(0, "pronoun_resolved", pronoun)`
+entry to `Hypothesis.category_assignments` and rewrites the candidate's
+semantic actor field. It does not walk back through per-token
+assignments because Phase 1-3a's `category_assignments` is
+candidate-level, not token-level. Per-token category assignment
+becomes meaningful in Phase 5 (apply_word refactor).
+
+Phase 3b will widen this when compound-clause refinement enters
+(multiple per-clause assignments do need recompute walks).
+
+### Hypothesis.constraint_state is never populated by Phase 2
+
+The Phase 1 substrate carries `Hypothesis.constraint_state: tuple[tuple[str, str], ...]`
+for recording predicate outcomes. Phase 2's `check_constraints`
+populates `ConstraintResult.predicates_run` but does NOT copy that
+into `Hypothesis.constraint_state` on the survivors. Survivors carry
+forward their original (empty) constraint_state.
+
+Phase 4 (in-loop contemplation) may want to consult
+`constraint_state` to decide which evidence to seek. If so, Phase 4
+must wire the population step explicitly. Not a Phase 2 defect — it's
+a Phase 2 scope limit.
+
+### Multi-actor pronoun wrong=0 hazard defense (Phase 3a follow-up)
+
+The 2026-05-28 review surfaced a real wrong=0 hazard in Phase 3a's
+`PronounResolution` wiring: the `_discourse_prior_subjects` lookup is
+gender-blind and stores only most-recent-prior subject. In multi-actor
+problems ("Alice has 5. Bob has 3. She buys 2."), this could resolve
+"She" to "Bob" and produce wrong attribution.
+
+Fix landed in the same Phase 3a PR (PR #423): defensive
+`no_antecedent_ambiguous` refusal when more than one distinct
+proper-noun subject appears in prior context. Refusal-preferring
+discipline preserves `wrong = 0`.
+
+This is the prototype for refinement-quality gating that Phase 4 (in-
+loop contemplation) inherits: ambiguity that resolution cannot
+disambiguate is a refusal, not a guess.
+
+### LOC accounting
+
+The ADR §"What this collapses" projects "Net ~1,900 lines removed"
+once Phase 5 retires the legacy parser. Honest current state:
+
+- Phase 1 added ~243 lines (`state.py`)
+- Phase 2 added ~726 lines (`constraint_propagation.py` new module) +
+  ~50 lines `math_candidate_graph.py` wiring
+- Phase 3a added ~387 lines (`lookback.py` new module) + ~125 lines
+  `math_candidate_graph.py` wiring + ~15 lines `recognizer_match.py`
+
+**Phases 1-3a net: +1,500 lines added.** Phase 5 will remove
+math_parser.py (~1,100 lines) + per-category dispatch (~400 lines) +
+duplicate per-sentence-choice scaffolding (~300 lines) to reach the
+projected net removal.
+
+The substrate is correctly load-bearing; the line-count payoff is in
+Phase 5.
+
+### Test coverage backfill
+
+The lookback review found 13 of 17 `VALID_PREDICATE_NAMES` lacked
+direct predicate-name assertions in tests, and all 4
+`_check_composed_initial` sub-checks were untested (parity verified
+manually). Backfill landed in the same Phase 3a PR (10 new tests).
+
+---
