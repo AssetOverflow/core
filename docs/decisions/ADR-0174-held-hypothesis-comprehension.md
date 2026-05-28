@@ -246,6 +246,14 @@ Wire `contemplate` into `finalize()`. The function consults vault + packs + audi
 
 ### Phase 5 — Remove parallel parsers
 
+> **SUPERSEDED by the §"Phase 5 — Scope (amended 2026-05-28)" section
+> below.** The text in this subsection rests on three premises that a
+> pre-scope investigation proved false against the shipped code:
+> `math_parser.py` is already out of the runtime/scoring path,
+> `lifecycle.py` admits 0/50 (it is the inert parallel parser, not the
+> reader to promote), and `correct ≥ 25` is a *semantic* gate that
+> structural collapse cannot meet. Read the amended scope, not this.
+
 Delete `generate/math_parser.py`'s runtime invocation paths. Remove the per-category injector dispatch table; injectors become inlined hypothesis emitters. Collapse the duplicate per-sentence-choices scaffolding in `math_candidate_graph.py`.
 
 **Acceptance:**
@@ -417,5 +425,112 @@ The lookback review found 13 of 17 `VALID_PREDICATE_NAMES` lacked
 direct predicate-name assertions in tests, and all 4
 `_check_composed_initial` sub-checks were untested (parity verified
 manually). Backfill landed in the same Phase 3a PR (10 new tests).
+
+---
+
+## Phase 5 — Scope (amended 2026-05-28)
+
+A pre-implementation investigation (per CLAUDE.md §Lookback Review
+Discipline, triggered "before starting the next phase") established the
+verified ground truth below. The original §Phase 5 subsection is
+**superseded** — it inverted the promote/retire direction and attached
+the lift gate to the wrong work.
+
+### Verified ground truth
+
+| Original Phase 5 premise | Verified reality (2026-05-28) |
+|---|---|
+| `math_parser.py` is the legacy parser to remove from runtime | Already out of the chat runtime **and** the candidate-graph (`_score_one_candidate_graph` → `parse_and_solve`) train_sample scoring path. Live only in `_score_one`, `evals/gsm8k_math/verify.py`, and the perturbation / OOD / bounded-grammar obligation lanes (`core/capability/perturbation_b3.py`, `generate/perturbation_suite.py`, `evals/gsm8k_parser_dev/*`, `evals/math_bounded_grammar`, `evals/obligation_2_ood_ratio`). CLEANUP-C2 keeps it as the `--legacy-parser` baseline. **Nothing to remove from the live path.** |
+| `lifecycle.py` is the reader to promote to primary | `_try_comprehension_reader` (lifecycle apply_word/finalize) **admits 0/50** on train_sample. It runs first when the flag is on, refuses every case, and falls through to the recognizer path every time. It is the dead-weight parallel parser. |
+| Integration target is per-token `apply_word` | All Phase 2/3a/3b/4 defenses (`eliminate_violating`, `reevaluate`, `contemplate`) are wired into the recognizer/candidate-graph path, which produces all 3 correct cases. `lifecycle.py` carries none of them. |
+| `correct ≥ 25` is the Phase 5 gate | Structural collapse is a refactor → **~0 lift**. The lift lives in removing the 3–5 narrowness layers refusing simultaneously per case — *semantic* work the original phase never separated. |
+
+**Decision (Invert + split):** the recognizer/candidate-graph path
+(`generate/math_candidate_graph.parse_and_solve` + `math_candidate_parser`
++ `recognizer_match` + `recognizer_anchor_inject`, over the `state.py`
+hypothesis primitives) is **the canonical reader**. `lifecycle.py` is
+retired. Phase 5 splits into a safe structural phase (5a) and a semantic
+lift phase (5b).
+
+### Retirement-safe vs load-bearing
+
+- **Retire (5a):** `generate/comprehension/lifecycle.py` (~1,872 LOC)
+  and `generate/comprehension/lifecycle_runtime_adapter.py`; **both**
+  flag-gated readers in `math_candidate_graph.py` —
+  `_try_comprehension_reader` (whole-problem, admits 0/50) and
+  `_try_reader_for_question` (question-stage, via the adapter) — plus
+  the `comprehension_reader_questions` config flag they share and the
+  `--use-reader` plumbing in the train_sample runner;
+  `generate/comprehension/audit.py`'s lifecycle dependency.
+- **Keep (load-bearing for the recognizer path):** `state.py` —
+  including `ProblemReadingState`, which is **not** lifecycle-only: it is
+  `contemplate()`'s parameter type and is constructed in the Phase 4
+  recognizer wiring (`math_candidate_graph.py:928`). Also keep
+  `Hypothesis`, `UnknownHeld`, `HYPOTHESIS_CAP`,
+  `constraint_propagation.py`, `lookback.py`, `contemplate.py`, and the
+  `recognizer_anchor_inject.py` injector table.
+
+### Phase 5a — Retire the inert parallel parser (structural)
+
+Scope:
+1. Delete both flag-gated reader functions (`_try_comprehension_reader`
+   and `_try_reader_for_question`) and their call sites; drop the
+   `comprehension_reader_questions` config flag and the `--use-reader`
+   runner plumbing (the recognizer path runs unconditionally — it is no
+   longer "opt-in reader vs regex," it is the only reader).
+2. Delete `generate/comprehension/lifecycle.py` and
+   `lifecycle_runtime_adapter.py`; re-home or retire `audit.py` (its only
+   role was tracing the inert reader — confirm nothing else consumes its
+   output).
+3. Collapse the duplicate per-sentence-choice scaffolding in
+   `math_candidate_graph.py` now that there is a single parse path.
+4. Trim `state.py` to what the recognizer path actually imports.
+   `EntityRef`, `SentenceState`, and the `begin_sentence`/`apply_word`/
+   `end_sentence`/`finalize` reader surface leave with `lifecycle.py`.
+   **Keep `ProblemReadingState`** (contemplate type + Phase 4 wiring) and
+   `ReaderRefusal` (still returned by the question-stage path until both
+   readers are removed together). Verify each symbol's live references
+   before removing it — the earlier "leaves with the reader" assumption
+   was wrong for `ProblemReadingState`.
+
+Acceptance (5a):
+- train_sample **3/47/0 unchanged** — byte-identical verdicts; this is a
+  refactor, not a behaviour change. (Honest: ~0 lift is the *expected*
+  and *correct* outcome of 5a.)
+- Net **−LOC** (retires ≥ 1,872 lifecycle lines + scaffolding; the
+  ADR's projected net removal becomes real here).
+- Capability-axis lanes G1–G5, S1 remain 100% `wrong = 0`.
+- Determinism / `trace_hash` invariant holds; pinned lane SHAs pass.
+- `math_parser.py` baseline lanes untouched (out of scope — keep).
+
+### Phase 5b — Remove the narrowness layers (semantic, the real lift)
+
+This is where `correct` climbs toward 25. It is **not** a refactor and
+carries the live `wrong = 0` risk; it should land as its own sub-phases
+(candidate: ADR-0174.1) with per-layer wrong=0 obligations, not as a big
+bang. The diagnostic established each refusing case stacks 3–5 narrowness
+layers simultaneously, so lift requires removing them *together* per case
+class, not one global knob at a time.
+
+Known narrowness layers to attack (from the S4-dominant refusal
+diagnostic), each gated by a wrong=0 obligation:
+- clause-split narrowness on `discrete_count_statement` (13 of 21 S4
+  refusals fail here);
+- verb-class whitelist (the VE-A/B/C verb-expansion brief) — widen the
+  admitted verb set under the existing round-trip + disagreement gates;
+- solver capability gaps (same-actor multi-quantity aggregation,
+  cross-unit superordinate sums) — a **separate solver ADR**, since the
+  reader can parse what the solver still refuses to compute.
+
+Acceptance (5b): per-sub-phase `correct` deltas with `wrong = 0` held at
+every step; `correct ≥ 25` is the *cumulative* Round-2 target, reached by
+composition of sub-phases, not asserted of any single one.
+
+### Sequencing
+
+5a first (clean substrate, single parse path, net −LOC, zero behaviour
+risk), then 5b sub-phases. 5a is direct-push-eligible only if it holds
+3/47/0 byte-identical and passes the smoke + lane-SHA gate; any verdict
+shift means it stopped being a refactor and needs branch+PR review.
 
 ---
