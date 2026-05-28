@@ -6,6 +6,7 @@ import { LoadingState } from "../../design/components/states/LoadingState";
 import { RunsListTable } from "./RunsListTable";
 import { RunDetail } from "./RunDetail";
 import { useRunCommands } from "./useRunCommands";
+import { useInspectorPublish } from "../inspector/InspectorStore";
 
 export function RunsRoute() {
   const { data: runs, isLoading, isError, error } = useArtifacts();
@@ -13,6 +14,9 @@ export function RunsRoute() {
   const selectedId = searchParams.get("runId");
 
   useRunCommands(runs ?? []);
+  useInspectorPublish(
+    selectedId ? { kind: "artifact", artifactId: selectedId } : null,
+  );
 
   function handleSelect(id: string) {
     const next = new URLSearchParams(searchParams);

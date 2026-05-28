@@ -4,10 +4,11 @@ import { LeftNav } from "./LeftNav";
 import { StatusFooter } from "./StatusFooter";
 import { RightInspector } from "./RightInspector";
 import { ApiErrorBoundary } from "./ApiErrorBoundary";
+import { InspectorProvider, useInspector } from "./inspector/InspectorStore";
 
-export function Shell() {
-  // RightInspector defaults to collapsed in W-027
-  const inspectorCollapsed = true;
+function ShellLayout() {
+  const { state } = useInspector();
+  const inspectorCollapsed = state.collapsed;
 
   return (
     <div
@@ -48,5 +49,13 @@ export function Shell() {
         <StatusFooter />
       </div>
     </div>
+  );
+}
+
+export function Shell() {
+  return (
+    <InspectorProvider>
+      <ShellLayout />
+    </InspectorProvider>
   );
 }

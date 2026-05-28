@@ -23,6 +23,7 @@ import { ErrorState } from "../../design/components/states/ErrorState";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { WorkbenchApiError } from "../../api/client";
 import { ReplayStatus } from "../../design/components/badges";
+import { useInspectorPublish } from "../inspector/InspectorStore";
 
 export function ReplayRoute() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,6 +32,10 @@ export function ReplayRoute() {
   const artifactsQuery = useArtifacts();
   const detailQuery = useArtifactDetail(selectedId || "");
   const comparisonQuery = useReplayComparison(selectedId || "");
+
+  useInspectorPublish(
+    selectedId ? { kind: "replay-diff", artifactId: selectedId } : null,
+  );
 
   function handleSelect(id: string) {
     setSearchParams({ artifactId: id });

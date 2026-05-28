@@ -12,6 +12,7 @@ import { ProposalSummaryCard } from "./ProposalSummaryCard";
 import { ProposalTable } from "./ProposalTable";
 import { ReplayEvidenceCard } from "./ReplayEvidenceCard";
 import { useProposalCommands } from "./useProposalCommands";
+import { useInspectorPublish } from "../inspector/InspectorStore";
 
 const filters: ProposalStateFilter[] = ["pending", "accepted", "rejected", "all"];
 
@@ -43,6 +44,11 @@ export function ProposalsRoute() {
 
   const proposals = useMemo(() => proposalsQuery.data ?? [], [proposalsQuery.data]);
   useProposalCommands(proposals);
+  useInspectorPublish(
+    selectedProposalId
+      ? { kind: "proposal", proposalId: selectedProposalId }
+      : null,
+  );
 
   function updateRoute(next: { proposalId?: string | null; state?: ProposalStateFilter }) {
     const params = new URLSearchParams(searchParams);

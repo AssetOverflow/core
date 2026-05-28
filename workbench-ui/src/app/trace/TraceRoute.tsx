@@ -8,6 +8,7 @@ import { cn } from "../../design/lib";
 import type { ArtifactRef } from "../../types/api";
 import { TraceDetail } from "./TraceDetail";
 import { useTraceCommands } from "./useTraceCommands";
+import { useInspectorPublish } from "../inspector/InspectorStore";
 
 function formatTime(iso: string | null): string {
   if (!iso) return "—";
@@ -34,6 +35,9 @@ export function TraceRoute() {
   }, [artifacts]);
 
   useTraceCommands(traces);
+  useInspectorPublish(
+    selectedId ? { kind: "trace-node", artifactId: selectedId } : null,
+  );
 
   function handleSelect(id: string) {
     const next = new URLSearchParams(searchParams);

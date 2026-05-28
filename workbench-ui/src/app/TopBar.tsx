@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { CommandPalette } from "../design/components/primitives/CommandPalette";
 import { useRuntimeStatus } from "../api/queries";
+import { useInspector } from "./inspector/InspectorStore";
 
 export function TopBar() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const { isLoading, isError } = useRuntimeStatus();
+  const { state: inspectorState, toggleCollapsed } = useInspector();
 
   function openPalette() {
     setPaletteOpen(true);
@@ -77,6 +79,22 @@ export function TopBar() {
 
       {/* Connection pill */}
       <div className="shrink-0">{connectionPill}</div>
+
+      {/* Inspector toggle — rightmost */}
+      <button
+        type="button"
+        onClick={toggleCollapsed}
+        aria-expanded={!inspectorState.collapsed}
+        aria-controls="right-inspector"
+        aria-label={
+          inspectorState.collapsed ? "Open inspector" : "Close inspector"
+        }
+        title={inspectorState.collapsed ? "Open inspector" : "Close inspector"}
+        data-testid="topbar-inspector-toggle"
+        className="shrink-0 rounded border border-[var(--color-border-subtle)] bg-[var(--color-surface-sunken)] px-2 py-1 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]"
+      >
+        {inspectorState.collapsed ? "Inspector →" : "← Inspector"}
+      </button>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </header>
