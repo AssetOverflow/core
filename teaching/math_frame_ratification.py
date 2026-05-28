@@ -335,6 +335,10 @@ def apply_frame_claim(
     _write_entries(target_file, entries)
     after = _sha256_file(target_file)
 
+    # RAT-1 — close the ratify→runtime gap (mirrors composition handler).
+    from language_packs.compile_pack import compile_pack
+    compile_pack(root)
+
     return FrameRatificationReceipt(
         target_file=target_relative,
         surface_form=surface_form,

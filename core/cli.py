@@ -87,6 +87,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_me3_additive_composition.py",
         "tests/test_me4_subtractive_composition.py",
         "tests/test_me5_all_categories_integration.py",
+        "tests/test_rat1_end_to_end_admission.py",
     ),
     "algebra": (
         "tests/test_versor_closure.py",
@@ -1846,6 +1847,147 @@ def cmd_teaching_supersede(args: argparse.Namespace) -> int:
     print(f"review_date    : {args.review_date}")
     if args.note:
         print(f"note           : {args.note}")
+    return 0
+
+
+def cmd_teaching_compile_pack(args: argparse.Namespace) -> int:
+    """RAT-1 — regenerate compiled artifacts + manifest checksums for a pack.
+
+    Reads ``{pack}/frames/*.jsonl`` and ``{pack}/compositions/*.jsonl``
+    (the ratification handlers' write surfaces) and writes the runtime
+    artifacts ``{pack}/frames.jsonl`` + ``{pack}/compositions.jsonl``
+    plus the matching manifest checksum fields. Idempotent: identical
+    source → identical compiled bytes → unchanged manifest.
+
+    Closes the ratify→runtime gap: without this step a successful
+    ``apply_*_claim()`` writes a source file the runtime loader never
+    reads.
+    """
+    from pathlib import Path
+
+    from language_packs.compile_pack import compile_pack
+
+    pack_root = Path(args.pack) if args.pack else (
+        Path(__file__).resolve().parent.parent
+        / "language_packs" / "data" / "en_core_math_v1"
+    )
+    receipt = compile_pack(pack_root.resolve())
+
+    if args.json:
+        print(json.dumps({
+            "pack_path": str(receipt.pack_path),
+            "frame_checksum": receipt.frame_checksum,
+            "composition_checksum": receipt.composition_checksum,
+            "frame_bytes_written": receipt.frame_bytes_written,
+            "composition_bytes_written": receipt.composition_bytes_written,
+            "manifest_updated": receipt.manifest_updated,
+        }, indent=2, sort_keys=True))
+    else:
+        print(f"pack                 : {receipt.pack_path}")
+        print(f"frame_checksum       : {receipt.frame_checksum[:24]}...")
+        print(f"composition_checksum : {receipt.composition_checksum[:24]}...")
+        print(f"frame bytes          : {receipt.frame_bytes_written}")
+        print(f"composition bytes    : {receipt.composition_bytes_written}")
+        print(f"manifest_updated     : {receipt.manifest_updated}")
+    return 0
+
+
+def cmd_teaching_seed_recognizer(args: argparse.Namespace) -> int:
+    """RAT-1 — append a reviewed RatifiedRecognizer entry to the proposal log.
+
+    Operator-explicit seeding for new ``anchor_kind`` values that the
+    contemplation pipeline hasn't yet produced via exemplar harvest.
+    Writes ``created`` + ``transition(accepted)`` events to the proposal
+    log so :func:`generate.recognizer_registry.load_ratified_registry`
+    picks it up on next load.
+
+    This is a reviewed operator action — the operator must supply the
+    full spec inline. There is no inference, no auto-fill from
+    exemplars, no fallback. Every call appends one proposal pair.
+    """
+    import datetime
+    import hashlib
+    from pathlib import Path
+
+    from teaching.proposals import ProposalLog
+
+    log_path = Path(args.log) if args.log else None
+    log = ProposalLog(log_path)
+
+    review_date = args.review_date or datetime.date.today().isoformat()
+
+    canonical_pattern: dict[str, Any] = {
+        "anchor_kind": args.anchor_kind,
+        "shape_category": args.shape_category,
+        "outcome": "admissible",
+    }
+    if args.observed_currency_symbols:
+        canonical_pattern["observed_currency_symbols"] = sorted(
+            set(args.observed_currency_symbols)
+        )
+    if args.observed_per_units:
+        canonical_pattern["observed_per_units"] = sorted(
+            set(args.observed_per_units)
+        )
+    if args.observed_units:
+        canonical_pattern["observed_units"] = sorted(set(args.observed_units))
+    if args.anchor_count_min is not None:
+        canonical_pattern["anchor_count_min"] = args.anchor_count_min
+    if args.anchor_count_max is not None:
+        canonical_pattern["anchor_count_max"] = args.anchor_count_max
+    if args.graph_intent:
+        canonical_pattern["graph_intent"] = args.graph_intent
+
+    recognizer_spec = {
+        "shape_category": args.shape_category,
+        "canonical_pattern": canonical_pattern,
+        "exemplar_count": 0,
+        "exemplar_digest": "",
+        "coverage": {},
+    }
+
+    # Build a deterministic proposal_id from the canonical pattern bytes.
+    spec_bytes = json.dumps(
+        canonical_pattern, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    spec_digest = hashlib.sha256(spec_bytes).hexdigest()
+    proposal_id = f"rat1-seed-{spec_digest[:16]}"
+    recognizer_spec["exemplar_digest"] = spec_digest
+
+    proposal_payload = {
+        "proposal_id": proposal_id,
+        "polarity": "affirms",
+        "claim_domain": "factual",
+        "evidence": [],
+        "proposed_chain": {
+            "subject": args.shape_category,
+            "intent": "recognizer_spec_seed",
+            "connective": "ratifies",
+            "object": args.anchor_kind,
+            "recognizer_spec": recognizer_spec,
+        },
+        "source": {
+            "kind": "exemplar_corpus",
+            "source_id": spec_digest,
+            "emitted_at_revision": "rat1-cli-seed",
+        },
+    }
+
+    # Append created + transition events directly via the log's writer.
+    log._append({"event": "created", "proposal": proposal_payload})
+    log._append({
+        "event": "transition",
+        "proposal_id": proposal_id,
+        "to": "accepted",
+        "note": args.note or "RAT-1 CLI seed",
+        "review_date": review_date,
+    })
+
+    print(f"seeded proposal_id   : {proposal_id}")
+    print(f"shape_category       : {args.shape_category}")
+    print(f"anchor_kind          : {args.anchor_kind}")
+    print(f"log_path             : {log.path}")
+    print(f"review_date          : {review_date}")
     return 0
 
 
@@ -4291,6 +4433,64 @@ def build_parser() -> argparse.ArgumentParser:
         help="explicit new chain_id (default: <intent>_<subject>_<connective>_<object>)",
     )
     teaching_supersede.set_defaults(func=cmd_teaching_supersede)
+
+    teaching_compile_pack = teaching_sub.add_parser(
+        "compile-pack",
+        help="RAT-1 — regenerate compiled artifacts + manifest checksums for a pack",
+    )
+    teaching_compile_pack.add_argument(
+        "--pack", default=None,
+        help="pack root path (default: language_packs/data/en_core_math_v1)",
+    )
+    teaching_compile_pack.add_argument(
+        "--json", action="store_true", help="emit machine-readable JSON",
+    )
+    teaching_compile_pack.set_defaults(func=cmd_teaching_compile_pack)
+
+    teaching_seed_recognizer = teaching_sub.add_parser(
+        "seed-recognizer",
+        help="RAT-1 — append a reviewed RatifiedRecognizer entry to the proposal log",
+    )
+    teaching_seed_recognizer.add_argument(
+        "--shape-category", required=True,
+        help="ShapeCategory value (e.g. rate_with_currency, multiplicative_aggregation)",
+    )
+    teaching_seed_recognizer.add_argument(
+        "--anchor-kind", required=True,
+        help="anchor_kind value (e.g. currency_per_unit_composition)",
+    )
+    teaching_seed_recognizer.add_argument(
+        "--observed-currency-symbols", nargs="*", default=None,
+        help="currency symbols the recognizer admits",
+    )
+    teaching_seed_recognizer.add_argument(
+        "--observed-per-units", nargs="*", default=None,
+        help="per-unit tokens the recognizer admits",
+    )
+    teaching_seed_recognizer.add_argument(
+        "--observed-units", nargs="*", default=None,
+        help="unit tokens the recognizer admits (for additive/subtractive)",
+    )
+    teaching_seed_recognizer.add_argument(
+        "--anchor-count-min", type=int, default=None,
+    )
+    teaching_seed_recognizer.add_argument(
+        "--anchor-count-max", type=int, default=None,
+    )
+    teaching_seed_recognizer.add_argument(
+        "--graph-intent", default=None,
+        help="rate / aggregate / amount / setup / count",
+    )
+    teaching_seed_recognizer.add_argument(
+        "--review-date", default=None, help="YYYY-MM-DD (default: today)",
+    )
+    teaching_seed_recognizer.add_argument(
+        "--note", default="", help="operator note",
+    )
+    teaching_seed_recognizer.add_argument(
+        "--log", default=None, help="proposal log path",
+    )
+    teaching_seed_recognizer.set_defaults(func=cmd_teaching_seed_recognizer)
 
     teaching_refusal_taxonomy = teaching_sub.add_parser(
         "refusal-taxonomy",

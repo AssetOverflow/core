@@ -358,6 +358,13 @@ def apply_composition_claim(
     _write_entries(target_file, entries)
     after = _sha256_file(target_file)
 
+    # RAT-1 — close the ratify→runtime gap: regenerate the compiled
+    # composition artifact and update the pack manifest's
+    # composition_checksum so the next runtime turn loads the new entry.
+    # Idempotent; identical source → identical compiled bytes.
+    from language_packs.compile_pack import compile_pack
+    compile_pack(root)
+
     return CompositionRatificationReceipt(
         target_file=target_relative,
         surface_pattern=normalized_pattern,

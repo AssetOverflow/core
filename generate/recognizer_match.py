@@ -508,6 +508,12 @@ def _try_extract_currency_per_unit_composition_anchor(
         matched_value_token=str(composed_value),
         matched_unit_token=unit,
         matched_entity_token=subject,
+        composition_evidence={
+            "composition_shape": _COMPOSITION_SHAPE_MULTIPLICATIVE,
+            "input_tokens": f"{count_token}|{amount_token}",
+            "currency_symbol": symbol,
+            "entity_source": "same_sentence",
+        },
     )
 
     anchor: Mapping[str, Any] = {
@@ -660,6 +666,12 @@ def try_extract_cross_sentence_composition_anchor(
         matched_value_token=str(composed_value),
         matched_unit_token=unit,
         matched_entity_token=entity,
+        composition_evidence={
+            "composition_shape": _COMPOSITION_SHAPE_MULTIPLICATIVE,
+            "input_tokens": f"{count_token}|{amount_token}",
+            "currency_symbol": symbol,
+            "entity_source": "prior_sentence",
+        },
     )
 
     anchor: Mapping[str, Any] = {
@@ -691,6 +703,12 @@ def try_extract_cross_sentence_composition_anchor(
 _PER_UNIT_TOKENS: Final[tuple[str, ...]] = (
     " per ", "/", " an hour", " a hour", " a day", " a week", " a month",
     " a year", " for one ", " for each ", " for every ",
+    # RAT-1 — standalone per-item quantifiers. "$400 each" is per-unit
+    # framing semantically equivalent to "$400 per item". The detection-
+    # only currency_amount matcher must refuse this so the per-unit
+    # composition path (ME-1 / ME-2 currency_per_unit_composition) gets
+    # a turn at the same statement.
+    " each ", " each.", " apiece ", " apiece.",
 )
 
 _TEMPORAL_QUANTIFIER_TOKENS: Final[tuple[str, ...]] = (
@@ -1173,6 +1191,11 @@ def _try_extract_additive_composition_anchor(
         matched_value_token=str(composed_value),
         matched_unit_token=canonical_unit,
         matched_entity_token=subject,
+        composition_evidence={
+            "composition_shape": _ADDITIVE_COMPOSITION_SHAPE,
+            "input_tokens": f"{count_a_token}|{count_b_token}",
+            "entity_source": "same_sentence",
+        },
     )
 
     anchor: Mapping[str, Any] = {
@@ -1328,6 +1351,11 @@ def _try_extract_subtractive_composition_anchor(
         matched_value_token=str(composed_value),
         matched_unit_token=canonical_unit,
         matched_entity_token=subject,
+        composition_evidence={
+            "composition_shape": _SUBTRACTIVE_COMPOSITION_SHAPE,
+            "input_tokens": f"{count_a_token}|{count_b_token}",
+            "entity_source": "same_sentence",
+        },
     )
 
     anchor: Mapping[str, Any] = {

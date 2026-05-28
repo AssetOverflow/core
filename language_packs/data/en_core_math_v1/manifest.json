@@ -1,17 +1,6 @@
 {
-  "pack_id": "en_core_math_v1",
-  "language": "en",
-  "role": "domain_seed",
-  "script": "Latin",
-  "normalization_policy": "unitize_versor",
-  "source_manifest": "en_core_math_v1.lexicon.jsonl",
-  "determinism_class": "D0",
   "checksum": "1fb9b0d790258736267d528e8e8a2436ce88b9ce690805fe2813ba077861ba2a",
-  "version": "1.0.0",
-  "gate_engaged": false,
-  "oov_policy": "tagged_fallback",
-  "definitional_layer": false,
-  "provenance": "adr-0164:seed:ported_from_math_candidate_parser_2026-05-26",
+  "composition_checksum": "a20d3c19b0429282f42346fdaab6e78ddae9eadccf38870acde8968cc8fb6e34",
   "deferred": [
     "give_away: multi-word phrase from _INIT_MUT_SUBTRACT_VERBS; needs phrase-level lexicon support",
     "pick_up: multi-word phrase from _INIT_MUT_ADD_VERBS; needs phrase-level lexicon support",
@@ -22,5 +11,18 @@
     "distributive_modifier (each, per): from ADR-0164 table; not in parser source as closed set",
     "count_unit_noun: dynamic open class (apples, books, kids); not a fixed whitelist; deferred by design",
     "time_unit_noun: available in _TIME_UNIT_SET but not in brief's required categories; deferred to Phase 3"
-  ]
+  ],
+  "definitional_layer": false,
+  "determinism_class": "D0",
+  "frame_checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "gate_engaged": false,
+  "language": "en",
+  "normalization_policy": "unitize_versor",
+  "oov_policy": "tagged_fallback",
+  "pack_id": "en_core_math_v1",
+  "provenance": "adr-0164:seed:ported_from_math_candidate_parser_2026-05-26",
+  "role": "domain_seed",
+  "script": "Latin",
+  "source_manifest": "en_core_math_v1.lexicon.jsonl",
+  "version": "1.0.0"
 }
