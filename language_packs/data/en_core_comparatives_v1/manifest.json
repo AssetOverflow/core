@@ -1,0 +1,24 @@
+{
+  "pack_id": "en_core_comparatives_v1",
+  "schema_version": 1,
+  "description": "English multiplicative-comparative primitives for ADR-0176 multi-step composition. Maps comparative lexemes to a scalar operation (twice -> x2, half -> x0.5). These are irreducible world-facts the engine cannot derive from arithmetic (ADR-0175 section 10). Closed-set, refusal-preferring on uncovered comparatives. The '<number> times' pattern is handled by the extractor, not enumerated here. Expansion via the standard HITL corridor (ADR-0150/0152).",
+  "adr": "ADR-0176",
+  "files": [
+    {
+      "path": "comparatives.jsonl",
+      "schema": {
+        "lexeme": "str - comparative surface lexeme (lowercase)",
+        "op": "literal: multiply - the operation the comparative licenses",
+        "scalar": "float - the multiplier (twice=2.0, half=0.5, quarter=0.25)"
+      },
+      "entry_count": 9,
+      "checksum": "2cdfa48093ad81eea36a257a0092c305256344048f5ce74671c119b1e51adfb6"
+    }
+  ],
+  "discipline": {
+    "closed_set": "Only unambiguous multiplicative-scalar comparatives are included. The referent (which quantity the scalar applies to) is NOT resolved here - that is the multi-step search's job (ADR-0176). This pack supplies only the scalar primitive.",
+    "ambiguity": "Comparatives whose scalar is non-terminating or context-dependent (e.g. 'a third' -> 1/3, 'several', 'a few', 'more') MUST NOT be added without explicit HITL review. Refusal-preferring: an uncovered comparative yields no scalar, and the search refuses rather than guesses.",
+    "expansion": "New entries enter via core teaching propose-from-exemplars when multi-step practice produces refusal evidence on uncovered comparatives. Each addition reviewed against the unambiguous-terminating-scalar criterion.",
+    "checksum_rule": "checksum is sha256 of the exact bytes of comparatives.jsonl as written to disk (CLAUDE.md pack discipline)."
+  }
+}
