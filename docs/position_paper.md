@@ -9,8 +9,7 @@
 Current AI systems generate plausible outputs by sampling from distributions over
 tokens. This paper argues that generation and cognition are architecturally
 distinct: cognition is the decoding of structure that already exists, not the
-synthesis of structure from statistical residue. We describe CORE (Continuous
-Orthogonal Resonance Engine), a cognitive architecture grounded entirely in
+synthesis of structure from statistical residue. We describe CORE , a cognitive architecture grounded entirely in
 Conformal Geometric Algebra Cl(4,1), where memory is versor stabilization,
 reasoning is field propagation, and alignment properties are substrate invariants
 — not training objectives, prompt constraints, or classifier overlays. The
