@@ -293,6 +293,68 @@ Current near-term sequence:
 Avoid broad docs-first churn, dashboard work, or large infrastructure unless it
 unlocks one of these steps.
 
+## Lookback Review Discipline
+
+Multi-PR architectural work accumulates latent defects when each PR
+is reviewed only against its own acceptance criteria.  A hazard
+introduced in PR N can sit dormant until PR N+2 exercises it — by
+which point the substrate is harder to fix and three PRs are
+implicated rather than one.
+
+**Mandatory lookback review** is triggered at three points:
+
+1. **Before starting the next phase of a multi-phase ADR.**  Before
+   any code on Phase N+1, audit Phase N's shipped substrate.  Check
+   for: ADR-doc vs implementation drift, untested predicate paths,
+   wrong=0 hazard surfaces, cross-phase trace/event/rank consistency,
+   things the ADR says that didn't actually ship.
+
+2. **Before merging a stacked PR sequence into main.**  When 2+ PRs
+   stack (PR #420 stacked on #416, #423 stacked on #420), the
+   review-each-PR-individually pattern misses cross-PR consistency
+   issues.  Audit the whole stack as one unit before any merge.
+
+3. **After any 3+ PR sequence on the same module or architectural
+   surface.**  When work concentrates on one area, regression risk
+   compounds.  Audit before claiming the surface is "stable" or
+   "ready for the next layer."
+
+**What a lookback review covers** (template — adjust per scope):
+
+- **Documentation drift.**  Does what shipped match what the ADR / brief
+  said would ship?  Signature differences, scope reductions, missing
+  pieces — flag them.
+- **Test coverage gaps.**  Run the test suite under coverage.  For every
+  predicate/branch in a closed-set contract (like
+  `VALID_PREDICATE_NAMES`), confirm at least one test asserts the
+  specific elimination/admission path.  Vacuous tests (assertions
+  that pass under broken impl) are coverage gaps.
+- **Parity gaps.**  When a new implementation claims byte-equivalence
+  with an existing one, exercise BOTH on the same inputs and confirm
+  identical outputs — including failure modes, not just success.
+- **wrong=0 hazard surface.**  Every new code path: under what input
+  conditions could it admit a candidate the prior path would have
+  refused?  Trace upstream to confirm no input class can trigger it.
+  If a class CAN trigger it, build the defensive refusal NOW, before
+  the next phase makes it load-bearing.
+- **Cross-PR consistency.**  Trace event shapes, rank handling,
+  determinism contracts, dataclass invariants — do they compose
+  cleanly across PRs?
+- **Honest LOC accounting.**  Did this phase net add or net remove
+  lines?  ADR claims of "removes ~N lines" only count post-collapse;
+  intermediate phases that ADD substrate before removal happens
+  should be called out.
+
+**Output.**  The review produces a structured report with findings
+categorized as: solid, gaps (no risk), drift (need amendment), and
+hazards (live wrong=0 risks).  Hazards require a fix-before-next-phase
+decision.
+
+**Cost.**  A lookback review on a 3-PR substrate typically takes
+20-40 minutes of focused tool calls.  Skipping it costs more: every
+PR built on an undetected hazard becomes implicated when the hazard
+fires, and the fix has to land across multiple PRs instead of one.
+
 ## Architectural Scan Exclusions
 
 The invariant tests in `tests/test_architectural_invariants.py` perform
