@@ -125,6 +125,21 @@ def audit_problem_to_evidence(
 # ---------------------------------------------------------------------------
 
 
+# Enriched payload for composition_reclassification groups.  Each entry maps
+# missing_operator → (composition_category, surface_pattern) so the proposal
+# payload is directly ratifiable without operator-side design.
+_COMPOSITION_ENRICHMENT: dict[str, tuple[str, str]] = {
+    "quantity_extraction": (
+        "multiplicative_composition",
+        "bound(count) × bound(unit_cost)",
+    ),
+    "multi_quantity_composition": (
+        "additive_composition",
+        "bound(qty_a) + bound(qty_b)",
+    ),
+}
+
+
 # Widened dispatch (ADR-0172 tightening follow-up #2): the original
 # single-key heuristic (refusal_reason only) collapsed every audit_brief_11
 # group to injector_sub_shape because the reader's actual refusal_reasons
@@ -206,10 +221,18 @@ def _modal_anchor_payload(
     refusal_reason: str,
     missing_operator: str,
     evidence: tuple[MathReaderRefusalEvidence, ...],
+    change_kind: str,
 ) -> dict:
-    """Build a deterministic, JSON-safe placeholder payload for the group."""
+    """Build a deterministic, JSON-safe payload for the group.
 
-    return {
+    For ``composition_reclassification`` groups the payload is enriched with
+    ``surface_pattern``, ``composition_category``, and ``polarity`` so the
+    operator can call ``apply_composition_claim()`` directly without any
+    field synthesis.  All other change kinds retain the base evidence-
+    aggregation payload.
+    """
+
+    payload: dict = {
         "evidence_count": len(evidence),
         "group_key": {
             "missing_operator": missing_operator,
@@ -217,6 +240,14 @@ def _modal_anchor_payload(
         },
         "modal_sub_type": evidence[0].sub_type,
     }
+    if change_kind == "composition_reclassification":
+        enrichment = _COMPOSITION_ENRICHMENT.get(missing_operator)
+        if enrichment is not None:
+            composition_category, surface_pattern = enrichment
+            payload["composition_category"] = composition_category
+            payload["surface_pattern"] = surface_pattern
+            payload["polarity"] = "affirms"
+    return payload
 
 
 def _build_reasoning_trace(
@@ -327,6 +358,7 @@ def _build_proposal_for_group(
         refusal_reason=refusal_reason,
         missing_operator=missing_operator,
         evidence=evidence,
+        change_kind=change_kind,
     )
     trace = _build_reasoning_trace(
         refusal_reason=refusal_reason,
