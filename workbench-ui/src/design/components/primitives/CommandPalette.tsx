@@ -2,17 +2,24 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Search } from "lucide-react";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useNavigate, useInRouterContext } from "react-router-dom";
+import { getExtraCommands, subscribeToCommands } from "../../../commands/registry";
 
 interface Command {
   name: string;
   path: string;
 }
 
-const COMMANDS: Command[] = [
+const STATIC_COMMANDS: Command[] = [
   { name: "Open Chat", path: "/chat" },
   { name: "Open Proposals", path: "/proposals" },
   { name: "Open Evals", path: "/evals" },
 ];
+
+function useAllCommands(): Command[] {
+  const [extra, setExtra] = useState<Command[]>(getExtraCommands);
+  useEffect(() => subscribeToCommands(() => setExtra(getExtraCommands())), []);
+  return [...STATIC_COMMANDS, ...extra];
+}
 
 // Inner shell that safely calls useNavigate — only rendered inside a Router.
 function RouterCommandPalette(props: {
@@ -56,8 +63,9 @@ function CommandPaletteContent({
   const [query, setQuery] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const allCommands = useAllCommands();
 
-  const filtered = COMMANDS.filter((cmd) =>
+  const filtered = allCommands.filter((cmd) =>
     cmd.name.toLowerCase().includes(query.toLowerCase()),
   );
 

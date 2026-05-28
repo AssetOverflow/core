@@ -11,6 +11,7 @@ import { ProposalProvenanceViewer } from "./ProposalProvenanceViewer";
 import { ProposalSummaryCard } from "./ProposalSummaryCard";
 import { ProposalTable } from "./ProposalTable";
 import { ReplayEvidenceCard } from "./ReplayEvidenceCard";
+import { useProposalCommands } from "./useProposalCommands";
 
 const filters: ProposalStateFilter[] = ["pending", "accepted", "rejected", "all"];
 
@@ -41,6 +42,7 @@ export function ProposalsRoute() {
   }, [filter, searchParams]);
 
   const proposals = useMemo(() => proposalsQuery.data ?? [], [proposalsQuery.data]);
+  useProposalCommands(proposals);
 
   function updateRoute(next: { proposalId?: string | null; state?: ProposalStateFilter }) {
     const params = new URLSearchParams(searchParams);
