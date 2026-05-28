@@ -30,6 +30,7 @@ from typing import Final
 # Canonical grounding primitives — reused so this gate stays identical to the
 # round-trip filter's notion of "appears in the problem text".
 from generate.math_roundtrip import _token_in, _tokens, _value_grounds
+from collections import Counter
 from generate.derivation.extract import extract_quantities
 from generate.derivation.model import GroundedDerivation
 
