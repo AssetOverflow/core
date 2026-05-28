@@ -912,20 +912,101 @@ def parse_and_solve(
                             }, sort_keys=True))
                             injected = ()
                         elif _multi_actor_ambiguous:
-                            # Refusal-preferring discipline: multiple
-                            # distinct proper-noun subjects in prior
-                            # context means the resolver would be
-                            # guessing.  Drop the held candidates,
-                            # log the ambiguous-antecedent event.
-                            _statement_trace.append(json.dumps({
-                                "layer": "lookback",
-                                "phase": 3,
-                                "outcome": "no_antecedent_ambiguous",
-                                "pronoun": _held_pronoun,
-                                "candidate_antecedents": sorted(_distinct_priors),
-                                "sentence_index": s_idx,
-                            }, sort_keys=True))
-                            injected = ()
+                            # ADR-0174 Phase 4 — invoke in-loop
+                            # contemplate before declaring ambiguity.
+                            # When the gendered-names pack uniquely
+                            # binds the pronoun to one antecedent,
+                            # admit via the resolved binding. When
+                            # contemplate returns None (ambiguous
+                            # evidence, missing names, epicene
+                            # pronoun), the Phase 3a defense fires
+                            # cleanly — refusal-preferring discipline.
+                            from generate.comprehension.contemplate import (
+                                contemplate,
+                            )
+                            from generate.comprehension.state import (
+                                ProblemReadingState as _PRS,
+                            )
+                            # Phase 4 invocation requires Hypothesis
+                            # residuals so contemplate can match its
+                            # contract. Build the held hypotheses
+                            # here (mirrors the post-resolution path
+                            # below) so contemplate has well-typed
+                            # input even though Phase 4a only uses
+                            # candidate_antecedents.
+                            _ps_stub = _PRS(
+                                entity_registry=(),
+                                accumulated_initial_state=(),
+                                accumulated_operations=(),
+                                unknown_target_slot=None,
+                                pronoun_resolution_history=(),
+                                sentence_index=s_idx,
+                                source_text_offset=0,
+                            )
+                            _ant_tuple = tuple(sorted(_distinct_priors))
+                            _residual: tuple[Hypothesis, ...] = tuple(
+                                Hypothesis(
+                                    candidate=(ant,),  # sentinel; Phase 4a uses candidate_antecedents
+                                    category_assignments=(),
+                                    constraint_state=(),
+                                    confidence_rank=i,
+                                    unresolved=("actor_pronoun",),
+                                )
+                                for i, ant in enumerate(_ant_tuple)
+                            )
+                            _resolution = contemplate(
+                                _ps_stub, _residual,
+                                pronoun_hint=_held_pronoun,
+                                candidate_antecedents=_ant_tuple,
+                            )
+                            if _resolution is not None and _resolution.source == "pack":
+                                # Pack adapter encoded the chosen
+                                # antecedent in evidence[-1] as
+                                # ("en_core_names_v1", "chosen=<name>").
+                                _chosen: str | None = None
+                                for _src, _fact in _resolution.evidence:
+                                    if _fact.startswith("chosen="):
+                                        _chosen = _fact.split("=", 1)[1]
+                                        break
+                                if _chosen is not None:
+                                    _statement_trace.append(json.dumps({
+                                        "layer": "contemplate",
+                                        "phase": 4,
+                                        "outcome": "resolved",
+                                        "source": _resolution.source,
+                                        "pronoun": _held_pronoun,
+                                        "resolved_to": _chosen,
+                                        "evidence": [list(e) for e in _resolution.evidence],
+                                        "sub_question": _resolution.sub_question,
+                                        "sentence_index": s_idx,
+                                    }, sort_keys=True))
+                                    # Override _antecedent for the
+                                    # downstream PronounResolution
+                                    # path below; the multi-actor
+                                    # branch becomes admit-via-evidence
+                                    # instead of refuse-on-ambiguity.
+                                    _antecedent = _chosen
+                                    _multi_actor_ambiguous = False  # admit path proceeds
+                            if _multi_actor_ambiguous:
+                                # Contemplate didn't disambiguate —
+                                # original Phase 3a defense fires.
+                                _statement_trace.append(json.dumps({
+                                    "layer": "contemplate",
+                                    "phase": 4,
+                                    "outcome": "ambiguous_unresolvable",
+                                    "pronoun": _held_pronoun,
+                                    "candidate_antecedents": sorted(_distinct_priors),
+                                    "sentence_index": s_idx,
+                                }, sort_keys=True))
+                                _statement_trace.append(json.dumps({
+                                    "layer": "lookback",
+                                    "phase": 3,
+                                    "outcome": "no_antecedent_ambiguous",
+                                    "pronoun": _held_pronoun,
+                                    "candidate_antecedents": sorted(_distinct_priors),
+                                    "sentence_index": s_idx,
+                                }, sort_keys=True))
+                                injected = ()
                         else:
                             _refinement = PronounResolution(
                                 pronoun=_held_pronoun,
