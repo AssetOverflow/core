@@ -944,8 +944,15 @@ def _try_extract_discrete_count_anchor(
         return None
 
     subject = m.group("subject")
-    if subject.lower() in _REFUSED_SUBJECT_TOKENS:
-        return None
+    # ADR-0174 Phase 3 — pronoun-subject statements are no longer
+    # rejected outright.  Instead they emit a HELD anchor (with the
+    # pronoun in subject_role and ``requires_pronoun_resolution=True``)
+    # so the downstream candidate-graph layer can stash them in
+    # ``ProblemReadingState.open_hypotheses`` and run the lookback
+    # reevaluate pass against the discourse subject map.  When no
+    # antecedent resolves, the held hypothesis is dropped (refusal-
+    # preferring discipline preserves wrong=0).
+    requires_pronoun_resolution = subject.lower() in _REFUSED_SUBJECT_TOKENS
 
     verb = m.group("verb").lower()
     if verb in _POSSESSION_VERBS:
@@ -988,7 +995,7 @@ def _try_extract_discrete_count_anchor(
             canon = observed_n
             break
 
-    return {
+    anchor: dict[str, Any] = {
         "kind": "discrete_count",
         "subject_role": subject,
         "count_token": count_token,
@@ -1000,6 +1007,12 @@ def _try_extract_discrete_count_anchor(
         "anchor_kind": anchor_kind,
         "verb_token": verb,
     }
+    if requires_pronoun_resolution:
+        # ADR-0174 Phase 3 marker — the downstream injector reads this
+        # and emits a held CandidateOperation/CandidateInitial whose
+        # Hypothesis carries unresolved=("actor_pronoun",).
+        anchor["requires_pronoun_resolution"] = True
+    return anchor
 
 
 def _match_multiplicative_aggregation(
