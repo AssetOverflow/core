@@ -463,8 +463,47 @@ def _locate_possession_verb(sentence: str) -> str | None:
 # registers its injector.  No global state, no side effects.
 # ---------------------------------------------------------------------------
 
+_WAVE_A_INJECTABLE_ANCHOR_KINDS: frozenset[str] = frozenset({
+    "multiplicative_aggregate_each_weighing",
+})
+
+
+def inject_multiplicative_aggregation(
+    match: RecognizerMatch,
+    sentence: str,
+) -> tuple[InjectorEmission, ...]:
+    """WAVE-A — inject the pre-composed CandidateInitial for the
+    specific value-extracted multiplicative_aggregate shapes.
+
+    Narrow by anchor ``kind`` to avoid intercepting ME-3 / ME-4
+    additive/subtractive anchors that share the same matcher entry
+    point but require the composition_registry consult path. Only
+    anchors whose ``kind`` is in
+    :data:`_WAVE_A_INJECTABLE_ANCHOR_KINDS` emit here; everything else
+    returns () and falls through to ``_consult_composition_registry``.
+    """
+    if not match.parsed_anchors:
+        return ()
+    out: list[InjectorEmission] = []
+    for anchor in match.parsed_anchors:
+        if not isinstance(anchor, Mapping):
+            continue
+        kind = anchor.get("kind")
+        if kind not in _WAVE_A_INJECTABLE_ANCHOR_KINDS:
+            continue
+        composed = anchor.get("composed_initial")
+        if isinstance(composed, CandidateInitial):
+            out.append(composed)
+    return tuple(out)
+
+
 _INJECTORS: Mapping[ShapeCategory, "type"] = {
     ShapeCategory.DISCRETE_COUNT_STATEMENT: inject_discrete_count_statement,  # type: ignore[dict-item]
+    # WAVE-A — multiplicative_aggregation now has a per-category
+    # injector that consumes value-extracted anchors. Specs without
+    # ``extract_values=True`` continue to return empty parsed_anchors
+    # (detection-only) so the existing wrong=0 path is byte-identical.
+    ShapeCategory.MULTIPLICATIVE_AGGREGATION: inject_multiplicative_aggregation,  # type: ignore[dict-item]
     # All other recognizer categories route to the empty-tuple fallback
     # in ``inject_from_match`` — `_INJECTORS.get(category)` returns
     # ``None`` and the dispatcher returns ``()``, which the
