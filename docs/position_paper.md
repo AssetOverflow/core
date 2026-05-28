@@ -142,6 +142,24 @@ structure need review before they enter that structure. A system that accepts an
 confident-sounding correction without review is a generative system in different
 clothing.
 
+Two invariants enforce this at the architecture level, not the policy level.
+
+**One-mutation-path invariant.** Knowledge enters the runtime field through
+exactly one reviewed path. Every module that writes to the vault is explicitly
+allowlisted in `tests/test_architectural_invariants.py::TestINV21OneMutationPath`.
+Adding a new write path requires editing the allowlist with a documented
+justification — the CI failure is the prompt to do so, not a roadblock to route
+around. Any backdoor — a debug endpoint, an admin override, a fast-path for
+"known good" sources — collapses the guarantee. The test makes that collapse
+visible at commit time.
+
+**Non-hardening invariant.** No claim is ever locked. Even `COHERENT` is
+revisable. There is no `final`, `frozen`, `axiom`, or `permanent` flag in the
+codebase — their absence is enforced by test. `FALSIFIED` claims are retained for
+audit and remain eligible for reinvestigation if new coherence emerges. A system
+that cannot revise a settled belief because doing so would threaten its identity
+has ossified. CORE cannot ossify by construction.
+
 ---
 
 ## 4. Evidence
@@ -285,6 +303,17 @@ The teaching safety properties follow from the same logic. A system that cannot
 accept arbitrary identity rewrites is not one that was trained to resist them. It
 is one where identity is a geometric trajectory, and a rewrite is a geometric
 violation detectable independently of the phrasing used to attempt it.
+
+A concrete example: during architecture audit, CORE was found to have a
+self-reinforcing fabrication path — the system could recall its own prior output
+as evidence, cite it, and compound it across turns. This is not a hypothetical
+failure mode; it is the epistemic structure of every system that stores its own
+outputs without epistemic tagging. The path was found and closed architecturally:
+every vault write now stamps an `EpistemicStatus`, the default is `SPECULATIVE`,
+and any inference path that feeds the user-facing surface must pass
+`min_status=COHERENT`. The fabrication loop cannot reopen quietly — the
+one-mutation-path invariant ensures any new vault write path triggers a CI
+failure until explicitly reviewed.
 
 The deeper alignment claim: if cognition is decoding, then the space being decoded
 has structure that exists independently of the system decoding it. Truth is
