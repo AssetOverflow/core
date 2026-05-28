@@ -3317,6 +3317,12 @@ def _run_demo_phase6(emit_json: bool, *, with_preamble: bool = True) -> dict[str
 def cmd_demo(args: argparse.Namespace) -> int:
     """Run the ADR-0024 chain comparative demos for investors / reviewers."""
     target = args.target
+    if target == "flywheel":
+        from evals.flywheel_demo.run_tour import run_tour as run_flywheel_tour
+
+        result = run_flywheel_tour(emit_json=args.json)
+        return 0 if result.all_passed else 1
+
     if target == "list-results":
         index_path = _write_results_index()
         data = json.loads(index_path.read_text())
@@ -4773,6 +4779,7 @@ def build_parser() -> argparse.ArgumentParser:
             "conversation",
             "showcase",
             "audit-passed",
+            "flywheel",
             "all",
             "list-results",
         ],

@@ -67,6 +67,39 @@ pytest tests/test_versor_closure.py        # the core invariant — must pass fi
 pytest tests/                              # full suite (~4 minutes, 1099 tests)
 ```
 
+### Watch the flywheel turn — one command
+
+For a public-facing reproduction of the core thesis, in **four
+falsifiable scenes**:
+
+```bash
+core demo flywheel
+```
+
+This runs end-to-end on the canonical pack:
+
+1. **Ratify** — `apply_composition_claim()` writes a reviewed JSONL
+   artifact; RAT-1's `compile_pack` regenerates the runtime
+   `compositions.jsonl` + updates the manifest checksum.
+2. **Load** — `composition_registry` reads the new entry on the next
+   runtime turn.
+3. **Solve** — a real problem (`"Lilibeth fills 6 baskets where each
+   basket holds 50 strawberries. How many strawberries does Lilibeth
+   have?"`) admits via the matcher → injector → admission chain and
+   produces `answer=300`.
+4. **Hazard** — case 0050 (the `wrong=0` canary) remains refused —
+   no SAFE composition category can convert it from refused to
+   wrong.
+
+Every scene is byte-deterministic; the canonical pack is read-only
+throughout; the demo mutates only a synthetic test pack in a
+tempdir. See [`evals/flywheel_demo/run_tour.py`](evals/flywheel_demo/run_tour.py).
+
+```bash
+core teaching coverage --use-reader        # per-shape histogram + hazard pin status
+core teaching coverage --use-reader --delta  # diff vs HEAD's committed report.json
+```
+
 ### CLI
 
 The `core` CLI exposes curated entry points so reviewers can run any
