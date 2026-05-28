@@ -113,19 +113,36 @@ fails the trust-classification check.
 
 ## Live status (wave coordinator: Opus 4.7)
 
-> **Last updated:** 2026-05-28 — initial snapshot, no branches pushed yet
+> **Last updated:** 2026-05-28 — 1a PR open and mergeable; 1b/1c/1d in flight
 > **Coordinator role:** maintained by Opus 4.7 on operator workstation.
 > Source of truth for PR state is `gh pr list`; this table is a
 > human-readable projection refreshed on operator request.
 
 ### Per-brief tracker
 
-| Brief | Operator         | Branch                                | Pushed | PR  | Draft | CI    | Mergeable | Notes |
-|-------|------------------|---------------------------------------|--------|-----|-------|-------|-----------|-------|
-| 1a    | Opus 4.6         | `workbench/wave-1a-chat-polish`       | no     | —   | —     | —     | —         | dispatched |
-| 1b    | Sonnet 4.6       | `workbench/wave-1b-proposals-polish`  | no     | —   | —     | —     | —         | dispatched |
-| 1c    | Gemini 3.1 Pro   | `workbench/wave-1c-replay-polish`     | no     | —   | —     | —     | —         | dispatched |
-| 1d    | GPT-OSS / Copilot| `workbench/wave-1d-evals-polish`      | no     | —   | —     | —     | —         | dispatched |
+| Brief | Operator           | Branch                                | Pushed | PR    | Draft | CI       | Mergeable | Notes |
+|-------|--------------------|---------------------------------------|--------|-------|-------|----------|-----------|-------|
+| 1a    | Opus 4.6           | `workbench/wave-1a-chat-polish`       | yes    | #415  | no    | sourcery ip | yes    | scope OK; see 1a-note below |
+| 1b    | Sonnet 4.6         | `workbench/wave-1b-proposals-polish`  | no     | —     | —     | —        | —         | dispatched |
+| 1c    | Gemini 3.1 Pro     | `workbench/wave-1c-replay-polish`     | no     | —     | —     | —        | —         | dispatched |
+| 1d    | Gemini 3.5 Flash † | `workbench/wave-1d-evals-polish`      | no     | —     | —     | —        | —         | re-dispatched from GPT-OSS-120B (couldn't locate brief) |
+
+† Dispatch-shape learning: file-lookup-from-stale-base is a Gemini Flash task,
+not a GPT-OSS one. Carry into Wave 2 operator assignment.
+
+**1a-note (PR #415):** Diff includes `src/design/components/primitives/CommandPalette*`
+and `src/routes/ChatRoute.tsx`. Both are outside the brief's literal owned-files
+list, but:
+- CommandPalette edits are **explicitly permitted by the parent plan**
+  (§Constraints: "Only `EmptyState` and `CommandPalette` may be edited" in
+  `src/design/`). The brief was over-tightened; plan wins.
+- `src/routes/ChatRoute.tsx` is the live route entry for Chat (not a placeholder).
+  `?reset=1` query-param handling for "New chat session" belongs there.
+  Semantically correct; soft scope expansion.
+
+Both accepted by coordinator. Brief authoring lesson recorded for Wave 2:
+explicitly carve out CommandPalette and the live route entry-points from
+the "off-limits" list, since both are necessary for feature polish.
 
 Refresh command (run on operator workstation, paste to coordinator):
 
