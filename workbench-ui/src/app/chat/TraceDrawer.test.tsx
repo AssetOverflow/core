@@ -35,9 +35,34 @@ describe("TraceDrawer", () => {
     expect(screen.getByText(/turn_cost_ms:/)).toBeInTheDocument();
     expect(screen.getByText(/mutation_mode:/)).toBeInTheDocument();
     expect(screen.getByText(/checkpoint_emitted:/)).toBeInTheDocument();
-    expect(screen.getByText("Final surface")).toBeInTheDocument();
-    expect(screen.getByText("Walk surface (telemetry)")).toBeInTheDocument();
     expect(screen.getByText(/grounding_source:/)).toBeInTheDocument();
+  });
+
+  it("renders all three surfaces distinctly with labels", () => {
+    render(
+      <MemoryRouter>
+        <TraceDrawer result={happyChatTurn} open onOpenChange={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText(/^surface/)).toBeInTheDocument();
+    expect(screen.getByText(/^articulation_surface/)).toBeInTheDocument();
+    expect(screen.getByText(/^walk_surface/)).toBeInTheDocument();
+    expect(screen.getByText("(user-facing response)")).toBeInTheDocument();
+    expect(screen.getByText("(realizer output)")).toBeInTheDocument();
+    expect(screen.getByText("(manifold evidence)")).toBeInTheDocument();
+  });
+
+  it("renders 'not emitted' when articulation_surface or walk_surface is null", () => {
+    const nullSurfaces = { ...happyChatTurn, articulation_surface: null, walk_surface: null };
+    render(
+      <MemoryRouter>
+        <TraceDrawer result={nullSurfaces} open onOpenChange={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    const notEmitted = screen.getAllByText("not emitted");
+    expect(notEmitted.length).toBe(2);
   });
 
   it("renders refusal panel with violated boundary detail", () => {

@@ -97,9 +97,9 @@ export function EvidenceStrip({
         </BadgeRegion>
       ) : null}
       {result.trace_hash ? (
-        <span onClick={() => onOpen("trace")}>
+        <BadgeRegion label="Open trace evidence" onClick={() => onOpen("trace")}>
           <CopyableHash value={result.trace_hash} />
-        </span>
+        </BadgeRegion>
       ) : null}
     </div>
   );
