@@ -123,7 +123,7 @@ fails the trust-classification check.
 | Brief | Operator           | Branch                                | Pushed | PR    | Draft | CI       | Mergeable | Notes |
 |-------|--------------------|---------------------------------------|--------|-------|-------|----------|-----------|-------|
 | 1a    | Opus 4.6           | `workbench/wave-1a-chat-polish`       | yes    | #415  | no    | sourcery ip | yes    | scope OK; see 1a-note |
-| 1b    | Sonnet 4.6         | `workbench/wave-1b-proposals-polish`  | no     | —     | —     | —        | —         | dispatched, in flight |
+| 1b    | Sonnet 4.6         | `workbench/wave-1b-proposals-polish`  | yes    | #419  | no    | sourcery ✓ | yes      | introduces command registry; see 1b-note |
 | 1c    | Gemini 3.1 Pro     | `workbench/wave-1c-replay-polish`     | yes    | #417  | no    | sourcery ip | yes    | scope 100% clean |
 | 1d    | Gemini 3.5 Flash † | `polish-workbench-evals-flow`         | yes    | #418  | no    | re-running  | yes    | branch name deviated; cleaned post-push; see 1d-note |
 
@@ -176,6 +176,28 @@ git merge-base HEAD origin/feat/workbench-ui-continuation
 # Must equal HEAD of origin/feat/workbench-ui-continuation;
 # if not, abort and reseat the worktree.
 ```
+
+**1b-note (PR #419):** Sonnet 4.6 added `workbench-ui/src/commands/registry.ts`
+(new top-level dir, outside owned scope) introducing a parallel-safe
+module-level command pub-sub. Each route registers its commands via
+`useAllCommands()` / `useProposalCommands()` instead of editing
+CommandPalette directly. This is architecturally cleaner than the direct
+edits in 1a and 1d, and is the right end-state for Phase 7 (⌘K registry
+completion). Accepted as a soft scope expansion.
+
+**Merge sequencing decision:** to converge on the registry pattern,
+coordinator merges in this order:
+
+1. #417 (1c Replay) — no CommandPalette touch, no conflicts.
+2. #419 (1b Proposals) — introduces the registry.
+3. Coordinator rebases #415 (1a Chat) onto new HEAD, ports its two
+   commands to the registry, force-pushes, awaits CI.
+4. Coordinator rebases #418 (1d Evals) onto new HEAD, ports its dynamic
+   eval-lane commands to the registry, force-pushes, awaits CI.
+5. Operator approves the final two merges.
+
+This converges all four briefs onto a single Phase-7-ready ⌘K pattern
+without losing per-brief PR audit trail.
 
 Refresh command (run on operator workstation, paste to coordinator):
 
