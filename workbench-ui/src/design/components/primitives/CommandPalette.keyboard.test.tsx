@@ -35,22 +35,14 @@ describe("CommandPalette keyboard contract", () => {
     expect(screen.queryByRole("dialog", { name: "Command Palette" })).not.toBeInTheDocument();
   });
 
-  it("ArrowDown/ArrowUp traverses the three commands", async () => {
+  it("ArrowDown/ArrowUp traverses all commands", async () => {
     const user = userEvent.setup();
     render(<PaletteHarness initialOpen={true} />);
 
     const dialog = screen.getByRole("dialog", { name: "Command Palette" });
 
-    // All three commands should be present
-    const chatBtn = screen.getByRole("button", { name: "Open Chat" });
-    const proposalsBtn = screen.getByRole("button", { name: "Open Proposals" });
-    const evalsBtn = screen.getByRole("button", { name: "Open Evals" });
-    expect(chatBtn).toBeInTheDocument();
-    expect(proposalsBtn).toBeInTheDocument();
-    expect(evalsBtn).toBeInTheDocument();
-
-    // Initially first item (index 0) is focused — check aria-selected
     const items = dialog.querySelectorAll('[role="option"]');
+    const lastIdx = items.length - 1;
     expect(items[0].getAttribute("aria-selected")).toBe("true");
     expect(items[1].getAttribute("aria-selected")).toBe("false");
 
@@ -59,17 +51,19 @@ describe("CommandPalette keyboard contract", () => {
     expect(items[0].getAttribute("aria-selected")).toBe("false");
     expect(items[1].getAttribute("aria-selected")).toBe("true");
 
-    // ArrowDown moves to index 2
-    await user.keyboard("{ArrowDown}");
-    expect(items[2].getAttribute("aria-selected")).toBe("true");
+    // ArrowDown to last
+    for (let i = 1; i < lastIdx; i++) {
+      await user.keyboard("{ArrowDown}");
+    }
+    expect(items[lastIdx].getAttribute("aria-selected")).toBe("true");
 
-    // ArrowDown at end stays at 2 (clamped)
+    // ArrowDown at end stays clamped
     await user.keyboard("{ArrowDown}");
-    expect(items[2].getAttribute("aria-selected")).toBe("true");
+    expect(items[lastIdx].getAttribute("aria-selected")).toBe("true");
 
-    // ArrowUp moves back to index 1
+    // ArrowUp moves back
     await user.keyboard("{ArrowUp}");
-    expect(items[1].getAttribute("aria-selected")).toBe("true");
+    expect(items[lastIdx - 1].getAttribute("aria-selected")).toBe("true");
   });
 
   it("Enter activates the focused command and closes the palette", async () => {
@@ -84,7 +78,7 @@ describe("CommandPalette keyboard contract", () => {
     expect(screen.queryByRole("dialog", { name: "Command Palette" })).not.toBeInTheDocument();
   });
 
-  it("fuzzy filter: typing 'ch' shows Open Chat", async () => {
+  it("fuzzy filter: typing 'ch' shows chat commands", async () => {
     const user = userEvent.setup();
     render(<PaletteHarness initialOpen={true} />);
 
@@ -92,8 +86,7 @@ describe("CommandPalette keyboard contract", () => {
     await user.type(input, "ch");
 
     expect(screen.getByRole("button", { name: "Open Chat" })).toBeInTheDocument();
-    // Proposals and Evals should not match "ch"
-    expect(screen.queryByRole("button", { name: "Open Proposals" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "New chat session" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open Evals" })).not.toBeInTheDocument();
   });
 

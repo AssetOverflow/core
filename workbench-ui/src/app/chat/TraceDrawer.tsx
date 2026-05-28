@@ -124,11 +124,18 @@ export function TraceDrawer({
             </Panel>
             <Panel id="surfaces" title="Surfaces">
               <dl className="m-0 grid gap-3 text-sm">
-                <div><dt className="font-semibold">Final surface</dt><dd className="m-0">{result.surface}</dd></div>
-                {result.articulation_surface && result.articulation_surface !== result.surface ? (
-                  <div><dt className="font-semibold">Articulation surface</dt><dd className="m-0">{result.articulation_surface}</dd></div>
-                ) : null}
-                <div><dt className="font-semibold">Walk surface (telemetry)</dt><dd className="m-0 font-mono text-xs">{result.walk_surface || "not emitted"}</dd></div>
+                <div>
+                  <dt className="font-semibold">surface <span className="font-normal text-[var(--color-text-secondary)]">(user-facing response)</span></dt>
+                  <dd className="m-0">{result.surface}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">articulation_surface <span className="font-normal text-[var(--color-text-secondary)]">(realizer output)</span></dt>
+                  <dd className="m-0">{result.articulation_surface ?? "not emitted"}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">walk_surface <span className="font-normal text-[var(--color-text-secondary)]">(manifold evidence)</span></dt>
+                  <dd className="m-0 font-mono text-xs">{result.walk_surface ?? "not emitted"}</dd>
+                </div>
               </dl>
             </Panel>
             <Panel id="grounding" title="Grounding">

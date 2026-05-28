@@ -11,6 +11,7 @@ interface Command {
 
 const STATIC_COMMANDS: Command[] = [
   { name: "Open Chat", path: "/chat" },
+  { name: "New chat session", path: "/chat?reset=1" },
   { name: "Open Proposals", path: "/proposals" },
   { name: "Open Evals", path: "/evals" },
 ];

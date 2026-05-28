@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { WorkbenchApiError } from "../api/client";
 import { useChatTurn } from "../api/queries";
 import { EmptyState } from "../design/components/states/EmptyState";
@@ -13,6 +14,15 @@ export function ChatRoute() {
   const chatTurn = useChatTurn();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerFocus, setDrawerFocus] = useState<TraceFocus>("metadata");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("reset") === "1") {
+      chatTurn.reset();
+      setDrawerOpen(false);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
 
   function openTrace(focus: TraceFocus) {
     setDrawerFocus(focus);
