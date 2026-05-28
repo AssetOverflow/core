@@ -338,6 +338,48 @@ class TestNumberGrounding:
         assert roundtrip_admissible(c)
 
 
+class TestMultiWordUnitGrounding:
+    """Multi-word units (e.g. 'Pokemon cards') ground when every
+    component word appears in source. Conjunctive — missing one
+    component refuses, preserving wrong=0."""
+
+    def test_two_word_unit_grounds_when_both_components_present(self) -> None:
+        c = CandidateOperation(
+            op=Operation(actor="Nicole", kind="add",
+                         operand=Quantity(value=400, unit="Pokemon cards")),
+            source_span="Nicole collected 400 Pokemon cards.",
+            matched_verb="collected",
+            matched_value_token="400",
+            matched_unit_token="Pokemon cards",
+            matched_actor_token="Nicole",
+        )
+        assert roundtrip_admissible(c)
+
+    def test_two_word_unit_refuses_when_one_component_missing(self) -> None:
+        c = CandidateOperation(
+            op=Operation(actor="Nicole", kind="add",
+                         operand=Quantity(value=400, unit="Pokemon cards")),
+            source_span="Nicole collected 400 cards.",  # 'Pokemon' missing
+            matched_verb="collected",
+            matched_value_token="400",
+            matched_unit_token="Pokemon cards",
+            matched_actor_token="Nicole",
+        )
+        assert not roundtrip_admissible(c)
+
+    def test_single_word_unit_unaffected(self) -> None:
+        c = CandidateOperation(
+            op=Operation(actor="Sam", kind="add",
+                         operand=Quantity(value=3, unit="apples")),
+            source_span="Sam buys 3 apples.",
+            matched_verb="buys",
+            matched_value_token="3",
+            matched_unit_token="apples",
+            matched_actor_token="Sam",
+        )
+        assert roundtrip_admissible(c)
+
+
 # ---------------------------------------------------------------------------
 # Constructor validation — illegal CandidateOperation states are
 # refused at construction (not at filter time).

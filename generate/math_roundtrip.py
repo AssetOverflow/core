@@ -293,6 +293,13 @@ def _unit_grounds(
     if _token_in(unit_token, haystack_tokens):
         return True
     lower = unit_token.lower()
+    # Multi-word units (e.g. "Pokemon cards", "stop signs") ground when
+    # every component appears as a word token in source. Conjunctive by
+    # design — a missing component means the unit cannot be reconstructed
+    # from the source, which preserves wrong=0.
+    parts = lower.split()
+    if len(parts) > 1 and all(p in haystack_tokens for p in parts):
+        return True
     if lower in ("cent", "cents"):
         if "$" in source_span or "¢" in source_span:
             return True
