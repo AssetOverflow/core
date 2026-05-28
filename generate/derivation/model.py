@@ -36,6 +36,10 @@ class Step:
     op: str
     operand: Quantity
     cue: str
+    # ADR-0176 MS-2: when True the operand is a comparative scalar (twice -> x2,
+    # 'N times' -> xN). It is grounded by ``cue`` (the comparative lexeme), not by a
+    # text value token, and it does not count as a body quantity for completeness.
+    comparative: bool = False
 
     def __post_init__(self) -> None:
         if self.op not in VALID_OPS:

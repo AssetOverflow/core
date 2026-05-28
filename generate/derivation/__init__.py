@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from generate.derivation.comparatives import (
     ComparativeScalar,
+    comparative_step,
     extract_comparative_scalars,
 )
 from generate.derivation.extract import extract_quantities
@@ -32,6 +33,7 @@ __all__ = [
     "Step",
     "Target",
     "VALID_OPS",
+    "comparative_step",
     "extract_comparative_scalars",
     "extract_quantities",
     "extract_target",

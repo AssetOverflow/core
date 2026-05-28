@@ -32,11 +32,11 @@ class TestExtractComparativeScalars:
 
     def test_word_number_times(self) -> None:
         cs = extract_comparative_scalars("Brooke does three times as many jumping jacks.")
-        assert cs == (ComparativeScalar("multiply", 3.0, "three times", "times"),)
+        assert cs == (ComparativeScalar("multiply", 3.0, "three times", "times", number_token="three"),)
 
     def test_digit_times(self) -> None:
         cs = extract_comparative_scalars("The price is 5 times the cost.")
-        assert cs == (ComparativeScalar("multiply", 5.0, "5 times", "times"),)
+        assert cs == (ComparativeScalar("multiply", 5.0, "5 times", "times", number_token="5"),)
 
     def test_triple_and_quarter(self) -> None:
         assert extract_comparative_scalars("output tripled")[0].scalar == 3.0

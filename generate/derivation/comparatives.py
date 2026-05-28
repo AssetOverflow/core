@@ -22,6 +22,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
+from generate.derivation.model import Quantity, Step
 from generate.math_roundtrip import WORD_NUMBERS
 
 _PACK_DIR: Final[Path] = (
@@ -40,6 +41,10 @@ class ComparativeScalar:
     scalar: float
     source_span: str
     cue: str
+    # The number token of a "<N> times" comparative (e.g. "7" / "three"), or None
+    # for a fixed lexeme (twice/half). Used by completeness so a digit comparative
+    # ("7 times") is counted as consuming the body quantity "7".
+    number_token: str | None = None
 
 
 @lru_cache(maxsize=1)
@@ -88,7 +93,10 @@ def extract_comparative_scalars(text: str) -> tuple[ComparativeScalar, ...]:
         if n is None or n <= 0:
             continue
         found.append(
-            (m.start(), ComparativeScalar("multiply", n, m.group(0), "times"))
+            (
+                m.start(),
+                ComparativeScalar("multiply", n, m.group(0), "times", number_token=m.group(1)),
+            )
         )
 
     # Fixed comparative lexemes (word-boundary, case-insensitive).
@@ -100,3 +108,20 @@ def extract_comparative_scalars(text: str) -> tuple[ComparativeScalar, ...]:
 
     found.sort(key=lambda pair: (pair[0], pair[1].cue))
     return tuple(cs for _, cs in found)
+
+
+def comparative_step(cs: ComparativeScalar) -> Step:
+    """Bridge a comparative scalar into a derivation :class:`Step` (ADR-0176 MS-2).
+
+    The step is flagged ``comparative=True``: its operand value is the pack-supplied
+    scalar (grounded by the comparative cue, not by a text value token). Its
+    ``source_token`` is the ``<N> times`` number token when present (so completeness
+    counts the consumed body quantity), else the comparative lexeme.
+    """
+    source = cs.number_token if cs.number_token is not None else cs.cue
+    return Step(
+        op=cs.op,
+        operand=Quantity(value=cs.scalar, unit="", source_token=source),
+        cue=cs.cue,
+        comparative=True,
+    )
