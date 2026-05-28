@@ -124,8 +124,9 @@ evidence; this column is a recommendation only.
 
 ### Hazard pinning — non-negotiable
 
-Every VE-A / VE-B PR MUST include a test that asserts case 0050
-remains refused after the widening:
+Every VE-A / VE-B PR MUST include **two** safety tests.
+
+#### Hazard test #1 — case 0050 canary
 
 ```python
 def test_case_0050_remains_refused_after_verb_widening(self) -> None:
@@ -145,6 +146,49 @@ def test_case_0050_remains_refused_after_verb_widening(self) -> None:
 ```
 
 Reference: memory `feedback-wrong-zero-hazard-case-0050`.
+
+#### Hazard test #2 — multi-actor pronoun safety (ADR-0174 Phase 3a)
+
+VE-A / VE-B widens the verb whitelist, which means more
+discrete_count_statement cases will reach the ADR-0174 Phase 3a
+lookback wiring. When the widened verb appears in a multi-actor
+problem, the Phase 3a defense (`no_antecedent_ambiguous` refusal on
+multiple distinct prior subjects) MUST fire — otherwise the pronoun
+could be mis-resolved and produce a wrong answer with no downstream
+safety net catching it.
+
+```python
+def test_multi_actor_pronoun_with_widened_verb_refuses_safely(self) -> None:
+    """ADR-0174 Phase 3a multi-actor hazard — when more than one
+    proper-noun subject appears in prior context, the pronoun
+    resolver must refuse rather than guess the most-recent.
+    Verb widening must preserve this defense."""
+    from generate.math_candidate_graph import parse_and_solve
+    import json
+    # Replace <widened_verb> with one this PR adds.
+    text = (
+        "Alice has 5 marbles. "
+        "Bob has 3 marbles. "
+        "She <widened_verb> 2 marbles. "
+        "How many marbles does Bob have?"
+    )
+    r = parse_and_solve(text)
+    # MUST refuse — wrong attribution is the hazard.
+    assert r.answer is None
+    # Trace MUST include no_antecedent_ambiguous.
+    lookback_events = [
+        json.loads(ev) for ev in r.reader_trace
+        if json.loads(ev).get("layer") == "lookback"
+    ]
+    assert any(
+        ev.get("outcome") == "no_antecedent_ambiguous"
+        for ev in lookback_events
+    ), f"multi-actor defense did not fire; trace={lookback_events}"
+```
+
+Reference: memory `project-adr-0174-multi-actor-pronoun-hazard`,
+CLAUDE.md §Lookback Review Discipline (the discipline that surfaced
+this hazard at the right time).
 
 ---
 
