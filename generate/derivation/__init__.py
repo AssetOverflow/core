@@ -14,6 +14,7 @@ from generate.derivation.comparatives import (
 from generate.derivation.extract import extract_quantities
 from generate.derivation.model import GroundedDerivation, Quantity, Step, VALID_OPS
 from generate.derivation.search import MULTIPLICATIVE_CUES, search_multiplicative
+from generate.derivation.target import Target, extract_target
 from generate.derivation.verify import (
     Resolution,
     SelfVerification,
@@ -29,9 +30,11 @@ __all__ = [
     "Resolution",
     "SelfVerification",
     "Step",
+    "Target",
     "VALID_OPS",
     "extract_comparative_scalars",
     "extract_quantities",
+    "extract_target",
     "search_multiplicative",
     "select_self_verified",
     "self_verifies",
