@@ -382,6 +382,47 @@ or contradictions.** Findings:
 - Determinism invariants (INV-05/13) bind the ledger/gate/search → the §4a float
   rounding contract.
 
+## Lookback review — Phases 1–3b stack (2026-05-28)
+
+Per CLAUDE.md §Lookback Review Discipline (5 PRs on one new surface + before
+merging a stacked sequence). Shipped: Phase 1 `core/reliability_gate/` (#432),
+Phase 2 `evals/gsm8k_math/practice/v1/` (#433), Phase 3a `generate/derivation/`
+self-verify gate (#434), Phase 3b multiplicative search (#435).
+
+**Solid.** All four invariants exercised by failing-under-violation tests
+(#1 seal, #2 spurious-refusal, #3 determinism, #4 no-self-authorization); 84
+tests green; seal grep-verified (no `generate`/`chat` import of any new surface;
+serving 3/47/0 unchanged; 0050 refuses in serving).
+
+**No live hazards.** Phase 3b's search produced 9 wrong attempts — all sealed
+practice eliminations, never served; nothing reads the practice ledger to gate
+serving yet.
+
+**Drift recorded:**
+
+1. **The shipped self-verification gate (3a) is *partial* vs this ADR's Tier-2 /
+   Phase-3 spec.** Shipped: `operand-grounding ∧ cue-grounding ∧ unit ∧
+   uniqueness`. **Not yet wired: round-trip and no-contradiction-with-vault.**
+   Phase 3b's headline finding — self-verification is **necessary but NOT
+   sufficient** (9 of 13 self-verified attempts were wrong vs gold) — is partly
+   *because* those stronger clauses are deferred. **Consequence:** before Phase 5
+   lets self-verification gate proposals, the gate MUST be strengthened
+   (wire round-trip + no-contradiction; broaden candidate enumeration so
+   disagreement refuses ambiguous cases) and the cue model refined from the
+   practice eliminations. This inserts a **self-verification-strengthening phase
+   before Phase 5**.
+
+2. **Class taxonomy divergence.** Phase 2 buckets by gold-derived operation class
+   `{multiplicative, divisive, additive}`; this ADR says `class = capability axis
+   G1–G5`. The train_sample cases are not axis-tagged, so operation-class is the
+   pragmatic per-case label. Reconcile when the practice arena widens beyond
+   train_sample.
+
+3. **Minor test gaps (no risk):** a few defensive/edge branches untested
+   (`Step` invalid-op, `.answer` subtract, floor TypeError + ≥1.0 clamp); not
+   invariant-bearing. `pytest-cov` unavailable (numpy/coverage process conflict);
+   coverage audited manually.
+
 ## Cross-references
 
 - **Derivation:** [SESSION-2026-05-28](../sessions/SESSION-2026-05-28-risk-reward-learning-architecture.md).
