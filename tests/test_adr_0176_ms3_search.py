@@ -66,14 +66,15 @@ class TestTargetThreading:
         assert search_chain(text, target).answer == 300.0
 
 
-class TestDecimalGroundingGapIsDeferred:
-    def test_decimal_operand_currently_refused(self) -> None:
-        # Documents the known gap: $0.75 tokenizes to 0/75 so "0.75" is not grounded
-        # by the shared round-trip primitive -> the (correct, 864) product refuses.
-        # When decimal/currency grounding lands, this should flip. Asserting the
-        # CURRENT behaviour so the fix is detectable.
+class TestDecimalGroundingResolves:
+    def test_decimal_operand_grounds_and_resolves(self) -> None:
+        # ADR-0179 EX-2 (#447) landed bare-decimal grounding in the shared round-trip
+        # primitive, so "0.75" is now grounded and the (correct, 864) product
+        # self-verifies. This previously refused (the decimal grounding gap); the
+        # flip is the EX-2 acceptance signal.
         text = (
             "There are 48 boxes with 24 erasers in each box. "
             "They sell the erasers for $0.75 each. How much money will they make?"
         )
-        assert search_chain(text) is None  # refused today (decimal grounding gap)
+        res = search_chain(text)
+        assert res is not None and res.answer == 864.0  # 48 * 24 * 0.75
