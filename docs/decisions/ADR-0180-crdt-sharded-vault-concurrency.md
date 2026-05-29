@@ -90,6 +90,21 @@ be checkable:
    must be computed on the serialized portion of the path (§1.5.2 row 2-4),
    not on the sharded portion.
 
+> **Amendment (2026-05-29, post T-1…T-4).** Finding 1 of
+> [docs/audit/ADR-0180-t1-t4-findings.md](../audit/ADR-0180-t1-t4-findings.md)
+> establishes that `compute_trace_hash` (`core/cognition/trace.py:35`) folds
+> `vault_hits` — an **int count** — and *not* vault contents. The
+> content-addressed re-sort obligation in point 2 is therefore **vacuous at the
+> `compute_trace_hash` layer today**: there are no vault contents in the payload
+> to reorder. The obligation it names is real, but it lives at **`recall()`** —
+> the recall *result set* and its count must be order-invariant under a
+> reordered deque (pinned by T-2b,
+> `recall_result_set_invariant_to_insertion_order`). Point 2 above is amended to
+> apply to the **recall result set and to any future contents-bearing hash**,
+> not to today's count-only `compute_trace_hash`. The re-sort requirement on the
+> hashing step becomes live again only if/when vault contents (beyond a count)
+> enter the trace-hash payload.
+
 ### 1.5.4 Pre-Refactor Test Obligations (Python-side, on `main`)
 
 Before any code in `core-rs/src/vault.rs` changes, the following must exist
@@ -168,6 +183,18 @@ asynchronous Semilattice Joins.
 * A background, lock-free **Merge Kernel** sweeps these Deltas and folds them
   into the global `Vault` using atomic compare-and-swap (CAS) operations or
   unified memory tensor reductions via MLX.
+* **Content-addressed tiebreak (amendment 2026-05-29, post T-1…T-4).** Finding 2
+  of [docs/audit/ADR-0180-t1-t4-findings.md](../audit/ADR-0180-t1-t4-findings.md)
+  shows `vault_recall` breaks equal-score ties by ascending deque index
+  (`vault/store.py`), and index is assigned by storage order. Two entries with
+  *exactly equal* CGA inner scores can therefore surface in an order that depends
+  on arrival — which the sub-50ms reorder window (§3.2) can perturb. The Merge
+  Kernel must assign deque order to tie-scored entries by a **content-addressed
+  key on the multivector + provenance bytes**, not by arrival order, so that
+  equal-score recall is total and arrival-independent. This is the general-path
+  analog of the `(canonical_sha256, ir_sha256, projection_sha256)` merge key
+  ADR-0181 §2.2 already uses for audio; the kernel adopts the same discipline for
+  every modality.
 
 ### 2.3 Nanospin Orchestration & Zero-Copy Symbiosis
 
