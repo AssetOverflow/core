@@ -146,10 +146,16 @@ gated wrong=0-first and measured honestly.
     clause refuses. This is the wrong=0-first floor (`compose_sequential` is sealed
     substrate, not yet wired to a scorer, so serving stayed `3/47/0`); tests in
     `tests/test_adr_0178_gb3_referent_guard.py` would fail against the pre-guard code.
-  - **GB-3b — constructive cross-clause chaining (next).** Consume GB-1
-    `ClauseResult`s and combine across clauses *referent-safely* (the chainer GB-2
-    was originally scoped to be), with lookback revising an earlier choice. Builds on
-    the now-safe GB-3a floor.
+  - **GB-3b — referent-aware accumulation chaining (scoped).** Consume GB-1
+    `ClauseResult`s and combine across clauses *referent-safely*: the first reading
+    is **single-referent accumulation** (`X has N. He buys M more.` → `N ± M`),
+    licensed by a closed change-verb cue set + a minimal "no new actor" referent
+    guard (generalises GB-3a: chain-when-licensed rather than refuse-all-multi-clause).
+    Measured target: the **46 `sum-of-all == gold` additive practice cases** (all
+    currently refusing) + the subtract analog — the first chunk where comprehension
+    visibly flips at scale. Full scope, cross-references (ADR-0164.2/.3, ADR-0174
+    multi-actor hazard), wrong=0 obligations, and increments in
+    [ADR-0178-GB3b-referent-accumulation-scope.md](./ADR-0178-GB3b-referent-accumulation-scope.md).
 - **GB-4 — held structural hypotheses + eliminate** (repoint `eliminate_violating` /
   `contemplate`): hold >1 structure on ambiguity, eliminate downstream, refuse if
   irreducible.
