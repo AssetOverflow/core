@@ -1,7 +1,8 @@
 # ADR-0173 — Workbench Ratification Trust Boundary
 
-**Status:** Proposed (W0 of the workbench-UI wave; no UI code in this PR)
-**Date:** 2026-05-27
+**Status:** Accepted (W0 of the workbench-UI wave; doctrine only — UI
+implementation gated to the W1..W4 acceptance gates below)
+**Date:** 2026-05-27 (proposed); 2026-05-29 (accepted)
 **Author:** Shay
 **Parent:** [ADR-0160](./ADR-0160-core-workbench-v1.md), [ADR-0161](./ADR-0161-hitl-async-queue.md), [ADR-0162](./ADR-0162-workbench-design-system.md)
 **Related:** ADR-0146 (checkpoints), ADR-0150 (engine_state durability), ADR-0152 (replay), ADR-0167 (audit-as-evidence), ADR-0168 / 0168.1 (FrameClaim), ADR-0169 / 0169.1 (CompositionClaim), ADR-0172 (math contemplation corridor), `docs/handoff/WORKBENCH-UI-WAVE-SCOPING.md`
