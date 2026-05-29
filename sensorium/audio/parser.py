@@ -97,14 +97,9 @@ def parse(tokens: tuple[AudioToken, ...], n_hops: int) -> AudioIR:
                 AuditoryEvent("nonspeech.noise", start, end, (("noise_q", dur),), ())
             )
 
-    ir_payload = {
-        "speech": [_ev(e) for e in speech_spans],
-        "pause": [_ev(e) for e in pause_spans],
-        "prosody": [_ev(e) for e in prosody_arcs],
-        "turn": [_ev(e) for e in turn_events],
-        "non_speech": [_ev(e) for e in non_speech_events],
-        "content_anchor": [],
-    }
+    ir_payload = _ir_payload(
+        speech_spans, pause_spans, prosody_arcs, turn_events, non_speech_events, ()
+    )
     return AudioIR(
         speech_spans=tuple(speech_spans),
         pause_spans=tuple(pause_spans),
@@ -124,3 +119,29 @@ def _ev(e: AuditoryEvent) -> dict:
         "attrs": [list(a) for a in e.attrs],
         "evidence_ids": list(e.evidence_ids),
     }
+
+
+def _ir_payload(speech, pause, prosody, turn, non_speech, content_anchor) -> dict:
+    """Canonical JSON-serialisable IR image — the single source of truth for
+    ``ir_sha256`` so a hint-augmented IR (PR-6) hashes by the same rule."""
+    return {
+        "speech": [_ev(e) for e in speech],
+        "pause": [_ev(e) for e in pause],
+        "prosody": [_ev(e) for e in prosody],
+        "turn": [_ev(e) for e in turn],
+        "non_speech": [_ev(e) for e in non_speech],
+        "content_anchor": [_ev(e) for e in content_anchor],
+    }
+
+
+def ir_sha256_of(ir: AudioIR) -> str:
+    """Recompute ``ir_sha256`` from an AudioIR's events. Byte-identical to what
+    ``parse`` stored for an un-augmented IR (regression-guarded in tests); the
+    teacher-hint admission path (`sensorium.audio.teachers`) uses it to re-hash
+    an IR after appending content anchors."""
+    return sha256_json(
+        _ir_payload(
+            ir.speech_spans, ir.pause_spans, ir.prosody_arcs,
+            ir.turn_events, ir.non_speech_events, ir.content_anchors,
+        )
+    )

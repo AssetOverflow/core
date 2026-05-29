@@ -23,6 +23,13 @@ dev = [
     "pytest-asyncio>=0.23",
     "hypothesis>=6.100",
 ]
+# ADR-0181 PR-6 — audio teacher / shadow lanes. Strictly optional: the
+# deterministic compiler is the substrate; these models only label or align and
+# are admitted as typed hints (sensorium.audio.teachers). Never runtime-required.
+audio-whisper = ["openai-whisper>=20231117"]
+audio-nemo = ["nemo_toolkit[asr]>=1.23"]
+audio-clap = ["laion-clap>=1.1.6"]
+audio-encodec = ["encodec>=0.1.1"]
 
 [project.scripts]
 core = "core.cli:main"
