@@ -6,6 +6,12 @@
 **Governed by:** [ADR-0175](./ADR-0175-calibrated-attempt-and-eliminate-learning.md) (the serving/sealed two-regime doctrine + the Phase-5 ratification bridge)
 **Gating:** [ADR-0166](./ADR-0166-measurement-capability-sequencing.md)
 **Cue discipline:** [ADR-0165](./ADR-0165-regex-scope-rule.md)
+**Supersedes the premise of:** [ADR-0185](./ADR-0185-division-reading.md) — its
+central claim ("the engine cannot divide") is true only of the derivation reader,
+which does not feed the goal metric. The candidate-graph reader (the goal organ)
+**already divides**; a division *reading* added to `generate/derivation/*` cannot
+move `3/47/0`. ADR-0185 is retained as a record but is **not implemented**; any
+division work belongs in the candidate-graph path under this ADR's seal.
 
 ---
 
