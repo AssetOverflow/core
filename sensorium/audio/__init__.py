@@ -6,10 +6,19 @@ Audio enters CORE as a compiler, not an embedding bridge: canonical waveform
 replayable. Each compiled chunk is one AudioCompilationUnit — the Delta-CRDT
 delta the audio adapter writes into its thread-local arena (ADR-0181 §2.1).
 
-PR-2 ships the deterministic substrate only. Pack artifacts + the
-AudioProjectionHead adapter land in PR-3; evals in PR-4; CRDT wiring in PR-5.
+PR-2 ships the deterministic substrate; pack artifacts + the AudioProjectionHead
+adapter land in PR-3; evals in PR-4; the Delta-CRDT arena/merge wiring (PR-5)
+lives in ``sensorium.audio.arena``.
 """
 
+from sensorium.audio.arena import (
+    AudioArena,
+    AudioDelta,
+    audio_merge_trace_hash,
+    merge_audio_deltas,
+    reset_thread_local_audio_arena,
+    thread_local_audio_arena,
+)
 from sensorium.audio.compiler import AudioCompiler, compile_events
 from sensorium.audio.operators import (
     DEFAULT_OPERATOR_REGISTRY,
@@ -28,6 +37,12 @@ from sensorium.audio.types import (
 )
 
 __all__ = [
+    "AudioArena",
+    "AudioDelta",
+    "audio_merge_trace_hash",
+    "merge_audio_deltas",
+    "reset_thread_local_audio_arena",
+    "thread_local_audio_arena",
     "AudioCompiler",
     "compile_events",
     "AudioOperatorRegistry",
