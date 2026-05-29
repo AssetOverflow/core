@@ -1,0 +1,100 @@
+{
+  "active_corpus_byte_identical": true,
+  "after": {
+    "grounding_source": "teaching",
+    "surface": "narrative \u2014 teaching-grounded (cognition_chains_v1): rhetoric.narrative; language.discourse. narrative reveals meaning (cognition.meaning). No session evidence yet."
+  },
+  "all_claims_supported": true,
+  "before": {
+    "grounding_source": "none",
+    "surface": "I don't know \u2014 insufficient grounding for that yet."
+  },
+  "cold_subject": "narrative",
+  "engine_connective": "reveals",
+  "engine_object": "meaning",
+  "learning_arc_closed": true,
+  "prompt": "Why does narrative exist?",
+  "scenes": [
+    {
+      "claim": "No (narrative, cause) chain in corpus \u2014 runtime returns disclosure.  Checkpoint enriches and persists the candidate.",
+      "detail": {
+        "candidates_persisted": 1,
+        "grounding_source": "none",
+        "prompt": "Why does narrative exist?",
+        "surface": "I don't know \u2014 insufficient grounding for that yet."
+      },
+      "scene": "S1_cold_session"
+    },
+    {
+      "claim": "contemplate() structured the candidate autonomously: sub_questions enumerate corpus-derived chain candidates.  The (narrative, cause, reveals, meaning) chain was engine-identified.",
+      "detail": {
+        "candidate_id": "2795ac86bb692389ba816024c30e9928b3d92de11267d3fe34511a7ab286b8e8",
+        "claim_domain": "factual",
+        "engine_chain": {
+          "connective": "reveals",
+          "intent": "cause",
+          "object": "meaning",
+          "subject": "narrative"
+        },
+        "engine_chain_found": true,
+        "engine_derived_chains_count": 15,
+        "polarity": "undetermined",
+        "sub_questions_count": 15
+      },
+      "scene": "S2_checkpoint_enrichment"
+    },
+    {
+      "claim": "Connective and object were engine-derived from corpus decomposition.  source.kind='contemplation'.  Replay gate passed.  State: pending.",
+      "detail": {
+        "proposal_id": "05e167163c1f22c1d8eb8f5418ae795d",
+        "proposed_chain": {
+          "connective": "reveals",
+          "intent": "cause",
+          "object": "meaning",
+          "subject": "narrative"
+        },
+        "replay_evidence": {
+          "baseline": {
+            "intent_accuracy": 1.0,
+            "surface_groundedness": 1.0,
+            "term_capture_rate": 1.0,
+            "versor_closure_rate": 1.0
+          },
+          "candidate": {
+            "intent_accuracy": 1.0,
+            "surface_groundedness": 1.0,
+            "term_capture_rate": 1.0,
+            "versor_closure_rate": 1.0
+          },
+          "regressed_metrics": [],
+          "replay_equivalent": true
+        },
+        "source_kind": "contemplation",
+        "state": "pending"
+      },
+      "scene": "S3_engine_authored_proposal"
+    },
+    {
+      "claim": "accept_proposal is the sole corpus-write surface.  Transient path leaves active corpus byte-identical.",
+      "detail": {
+        "active_corpus_byte_identical": true,
+        "chain_id": "cause_narrative_reveals_meaning",
+        "transient_corpus": "/tmp/learning_arc_demo_7ub546re/cognition_chains_v1.jsonl",
+        "transient_lines_after": 27,
+        "transient_lines_before": 26
+      },
+      "scene": "S4_operator_ratifies"
+    },
+    {
+      "claim": "Same prompt now produces a deterministic teaching-grounded surface containing the engine-authored chain's subject / connective / object.",
+      "detail": {
+        "contains_connective_reveals": true,
+        "contains_object_meaning": true,
+        "contains_subject": true,
+        "grounding_source": "teaching",
+        "surface": "narrative \u2014 teaching-grounded (cognition_chains_v1): rhetoric.narrative; language.discourse. narrative reveals meaning (cognition.meaning). No session evidence yet."
+      },
+      "scene": "S5_grounded_session"
+    }
+  ]
+}
