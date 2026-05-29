@@ -1,0 +1,33 @@
+pack_id = "atomic_definitions_everyday_v1"
+name = "Atomic Definitions — Everyday Objects (English)"
+version = "0.1.0"
+status = "draft"
+language = "en"
+script = "Latin"
+normalization = "deterministic"
+default = false
+
+# Layer 2 atomic grounding for everyday concrete objects.
+# Dense manifold thickener: 82 lemma entries with senses, frames,
+# morphology, and probes. Builds a coherent base before any
+# composed or technical expansion.
+# Prerequisites: en (base), packs/identity, packs/safety
+
+[contracts]
+lemma_first = true
+shared_field_target = true
+local_readback = true
+alignment_required = false
+
+[gates]
+schema = false
+lexical = false
+morphology = false
+lift = false
+readback = false
+determinism = false
+alignment = false
+coverage = false
+
+# Gates are false until the gate runner confirms passage.
+# Do not manually set these to true.
