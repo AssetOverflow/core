@@ -34,8 +34,17 @@ from evals.gsm8k_math.confusers.v1.runner import (
 #     *before* a stated change ("...before lunch?") is refused — the forward reader
 #     computes the net, the wrong temporal point. 0020 refuses; its 'left' twin 0021
 #     still solves. wrong 2->1 (only 0016 remains). pair_tells 1->0.
-_BASELINE_WRONG = 1
+#   2026-05-29 (ADR-0182 anchor-skip + intra-clause): a sentence packing state+change
+#     ("Tom has 8 tickets and buys 4 more tickets") is read via conjunction split, and
+#     a leading all-foreign block ("A train travels 60 miles ... for 2 hours") is
+#     skipped from anchor selection. 0016 refuses (product 3840 vs additive 12). BONUS:
+#     the clean twin 0017 ("Tom has 8 ... and buys 4 more", no distractor) now *solves*
+#     12 — genuine comprehension, not just refusal. wrong 1->0; genuine positives 7->8
+#     solved. The 1 remaining spurious is 0010 (multi-referent "altogether", a separate
+#     H1 graduation question).
+_BASELINE_WRONG = 0
 _BASELINE_PAIR_TELLS = 0
+_BASELINE_POSITIVES_SOLVED = 8
 
 
 class TestSchema:
@@ -76,7 +85,10 @@ class TestProbeBaseline:
         results = run_probe()
         positives = [r for r in results if r.expected == "solve"]
         solved = sum(1 for r in positives if r.verdict == "solved")
-        assert solved >= 7, f"genuine positives solving dropped to {solved}"
+        assert solved >= _BASELINE_POSITIVES_SOLVED, (
+            f"genuine positives solving dropped to {solved} (baseline "
+            f"{_BASELINE_POSITIVES_SOLVED})"
+        )
         # and a positive must never be answered WRONG (that would be a real defect).
         assert all(r.verdict != "wrong" for r in positives)
 
@@ -97,14 +109,20 @@ class TestProbeBaseline:
             "divisor is no longer reaching the completeness/polarity gate."
         )
 
-    def test_distractor_0014_refuses_via_pooling(self) -> None:
-        # ADR-0182: 0014's blunt product (300) and its competing additive reading
-        # (25) disagree under cross-composer pooling -> refuse. Fails loudly if
-        # pooling regresses (the unique product would commit 300 again). 0016 is
-        # NOT asserted here — its distractor sits in the anchor clause and needs
-        # anchor-skip, a separate step (see ADR-0182 §3b).
+    def test_distractor_quantity_refuses(self) -> None:
+        # ADR-0182: both distractor confusers refuse. 0014 via the change-clause
+        # drop (product 300 vs additive 25); 0016 via anchor-skip + intra-clause
+        # (product 3840 vs additive 12). Fails loudly if either regresses.
         by_id = {r.case_id: r for r in run_probe()}
         assert by_id["confuser-v1-0014"].verdict == "refused"
+        assert by_id["confuser-v1-0016"].verdict == "refused"
+
+    def test_intra_clause_twin_0017_solves(self) -> None:
+        # the discrimination: 0017 ("Tom has 8 tickets and buys 4 more tickets", the
+        # clean twin of 0016) is genuinely *read* to 12 — comprehension, not refusal.
+        by_id = {r.case_id: r for r in run_probe()}
+        assert by_id["confuser-v1-0017"].verdict == "solved"
+        assert by_id["confuser-v1-0017"].answered == 12.0
 
     def test_disguised_polarity_does_not_misfire(self) -> None:
         # ADR-0182 bonus: the spurious "buys X for N <unit>" product disagrees with
