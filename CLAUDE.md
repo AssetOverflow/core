@@ -104,6 +104,14 @@ runtime path.  Vault recall is exact and deterministic.
 - `calibration/*` — bounded replay-based calibration.
 - `docs/runtime_contracts.md` — response, telemetry, memory, identity, and testing contracts.
 
+### GSM8K math comprehension substrate (sealed; serving stays `3/47/0` until ratified)
+
+- `core/reliability_gate/` — calibrated-learning ledger + gate (ADR-0175): `ClassTally` counts, `conservative_floor` (one-sided Wilson, N_MIN=10), θ ceilings.
+- `generate/derivation/` — the comprehension composer: `extract.py` (lexeme quantity extraction, EX-1/4/5 + function-word unit filter), `clauses.py` (GB-1 segmentation), `compose.py` (GB-2a list-sum + GB-3a clause-scoped referent guard), `accumulate.py` (GB-3b.1 single-referent gain/loss chaining), `multistep.py`/`search.py` (bounded search), `verify.py` (the wrong=0 self-verification gate: grounding ∧ cue ∧ unit ∧ completeness ∧ uniqueness).
+- `generate/cue_precision/` — `(cue, op, unit_shape)` reliability ledger + trainer (ADR-0177 CP-1/CP-2a); inert (consulted by no serving/gate path yet).
+- `evals/gsm8k_math/` — `train_sample/` (real GSM8K, the capability metric), `practice/` (sealed attempt-and-eliminate lane + ADR-0163-F additive set), `confusers/` (ADR-0163-F2 discrimination probe — scored by `wrong→0` + pair-consistency, NOT flip-count).
+- `scripts/verify_lane_shas.py`, `scripts/generate_claims.py --check` — the serving-frozen gate (pinned eval-lane SHAs + `CLAIMS.md`).
+
 ## Efficiency and Performance Doctrine
 
 Performance is part of correctness for this project because slow feedback hides
