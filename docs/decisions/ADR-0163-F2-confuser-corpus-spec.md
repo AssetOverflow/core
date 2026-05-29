@@ -41,12 +41,56 @@ lane:
 |---|---|---|
 | **`wrong` on confusers** | the reader committed an answer a confuser was built to trip | **must be 0** |
 | **`refused` on confusers** | the reader declined (the correct response to a not-yet-readable shape) | expected-high, honest frontier |
+| **`spurious` on confusers** | committed the *correct* value on a `refuse` case (right answer, but the bar was "don't commit yet") | see §2.1 — a *graduation signal*, not automatically a defect |
 | **`solved` on the paired positives** | the reader genuinely read the near-identical solvable case | real-capability signal |
 
 The headline number is **wrong=0**, never "how many solved." A change that solves
 more confusers is only progress if it does so by a **general mechanism** that also
 keeps `wrong=0` — and is validated on the held-out real lane, not by passing these
 specific rows.
+
+## 2.1 `refuse` is maturity-relative — every confuser is a solvable coverage target
+
+**Amendment (2026-05-29).** A confuser's `expected: refuse` does **not** mean the
+problem is unanswerable or missing information. Every confuser carries its **true
+gold** in `answer_numeric` and is, ultimately, a **solvable coverage target**. The
+`refuse` label is **relative to what the reader can currently comprehend**: it means
+*"the engine cannot yet read this category, so refusing is the honest outcome —
+committing a **wrong** value is the defect."*
+
+The clearest example is `confuser-v1-0001`:
+
+> "Dan has 50 coins. He buys a toy **for** 30 coins. How many coins does Dan have
+> **left**?" — gold **20**.
+
+This is a plain subtraction (`50 − 30 = 20`; "left" even names the operation). It is
+labelled `refuse` only because today's reader has `buys` in its *gain* lexeme set and
+would commit `50 + 30 = 80`. A mature reader **should solve it to 20** — at which
+point its honest label is `solve`, not `refuse`.
+
+**Graduation protocol.** When a *general* mechanism teaches the reader to read a
+category correctly — validated on `train_sample` + the category, with `wrong=0`
+preserved (the §3/§8 guardrails) — those cases **graduate** `refuse → solve`, and
+committing their gold becomes a *win*. Graduation is the intended success path; it
+does **not** contradict "never optimise `refused` down by patches" (§2), because the
+bar is comprehension proven generally, not a row passed by vocab fitting.
+
+**`spurious` reframed.** A correct-valued commit on a `refuse` case is scored
+`spurious` (right value, but the case said "don't commit yet"). That is
+**"solved-before-graduation" — a signal to re-examine the case for graduation, not
+automatically a defect.** The **pair-consistency** check is the discriminator: a
+reader that solves the twin *and* commits the confuser by the same surface cue is
+surface-matching (a real tell); a reader that commits the correct gold *while still
+discriminating the pair* has genuinely read it, and the case should graduate. Until a
+category graduates, `spurious` stays flagged (conservative — wrong=0 first).
+
+**No category in v1 is degenerate.** Every current confuser is a solvable coverage
+target (disguised-polarity, pseudo-accumulation/fractions, multi-referent,
+multi-actor-pronoun, distractor, temporal-scope, comparative-referent, unit-confuser
+all have a definite gold reading). A genuinely *unanswerable* case (truly
+insufficient/contradictory information) — if ever added — would be labelled
+`expected: refuse` with `answer_numeric: null` and a `degenerate: true` flag, so the
+two senses of "refuse" (not-yet-readable vs unanswerable) stay distinguishable.
 
 ## 3. Anti-overfitting design rules (the load-bearing part)
 
@@ -68,7 +112,10 @@ specific rows.
    (below), with varied surface forms, so "passing the category" can't be one rule.
 5. **Expected-behavior labelling.** Each case is labelled `expected: refuse | solve`.
    Most confusers are `refuse` (the reader can't yet read them and must not guess) —
-   so the corpus is primarily a *refusal-correctness* test.
+   so the corpus is primarily a *refusal-correctness* test. The `refuse` label is
+   **maturity-relative**, not a claim of unanswerability: every confuser carries its
+   true gold and graduates `refuse → solve` once a general mechanism reads its
+   category (see §2.1).
 
 ## 4. Confuser categories (grounded in observed real misfires)
 
