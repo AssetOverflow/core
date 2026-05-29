@@ -1,0 +1,8 @@
+{"operator_id":"audio.pause.short.v1","event_type":"pause.short","blade_alias":"B_PAUSE_SHORT","blade_index":6,"rotor_kind":"elliptic","base_theta_q":48,"gain_rules":{"dur_hops":2},"theta_clip_q":768,"version":"1"}
+{"operator_id":"audio.pause.long.v1","event_type":"pause.long","blade_alias":"B_PAUSE_LONG","blade_index":7,"rotor_kind":"elliptic","base_theta_q":96,"gain_rules":{"dur_hops":2},"theta_clip_q":768,"version":"1"}
+{"operator_id":"audio.speech.voiced.v1","event_type":"speech.voiced","blade_alias":"B_SPEECH","blade_index":8,"rotor_kind":"elliptic","base_theta_q":64,"gain_rules":{"dur_hops":1},"theta_clip_q":768,"version":"1"}
+{"operator_id":"audio.prosody.rise.v1","event_type":"prosody.rise","blade_alias":"B_PITCH_RISE","blade_index":10,"rotor_kind":"elliptic","base_theta_q":64,"gain_rules":{"slope_q":3},"theta_clip_q":768,"version":"1"}
+{"operator_id":"audio.prosody.fall.v1","event_type":"prosody.fall","blade_alias":"B_PITCH_FALL","blade_index":11,"rotor_kind":"elliptic","base_theta_q":64,"gain_rules":{"slope_q":3},"theta_clip_q":768,"version":"1"}
+{"operator_id":"audio.prosody.emph.v1","event_type":"prosody.emphasis","blade_alias":"B_EMPHASIS","blade_index":13,"rotor_kind":"elliptic","base_theta_q":32,"gain_rules":{"delta_db_q":4},"theta_clip_q":768,"version":"1"}
+{"operator_id":"audio.turn.boundary.v1","event_type":"turn.boundary","blade_alias":"B_TURN","blade_index":6,"rotor_kind":"elliptic","base_theta_q":160,"gain_rules":{"boundary_q":2},"theta_clip_q":768,"version":"1"}
+{"operator_id":"audio.nonspeech.noise.v1","event_type":"nonspeech.noise","blade_alias":"B_NOISE","blade_index":7,"rotor_kind":"elliptic","base_theta_q":200,"gain_rules":{"noise_q":2},"theta_clip_q":768,"version":"1"}

@@ -1,0 +1,15 @@
+{
+  "basis_version": "audio-basis-v1",
+  "comment": "Elliptic grade-2 planes only (e_a e_b, a,b in {e1..e4}) — square to -1. Indices 9,12,14,15 touch e5 and are hyperbolic; excluded from v1. See ADR-0181 / sensorium/audio/operators.py.",
+  "elliptic_planes": [6, 7, 8, 10, 11, 13],
+  "aliases": {
+    "B_PAUSE_SHORT": 6,
+    "B_PAUSE_LONG": 7,
+    "B_SPEECH": 8,
+    "B_PITCH_RISE": 10,
+    "B_PITCH_FALL": 11,
+    "B_EMPHASIS": 13,
+    "B_TURN": 6,
+    "B_NOISE": 7
+  }
+}
