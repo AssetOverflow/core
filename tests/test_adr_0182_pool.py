@@ -167,3 +167,41 @@ class TestPriorStateQuestionGuard:
         # discrimination: the twin asking 'left' commits the forward net (30).
         resolution = resolve_pooled(_LEFT_TWIN)
         assert resolution is not None and resolution.answer == 30.0
+
+
+_ANCHOR_SKIP_0016 = (
+    "A train travels at 60 miles per hour for 2 hours. Tom has 8 tickets and "
+    "buys 4 more tickets. How many tickets does Tom have?"
+)
+_INTRACLAUSE_TWIN = "Tom has 8 tickets and buys 4 more tickets. How many tickets does Tom have?"
+
+
+class TestAnchorSkipIntraClause:
+    """ADR-0182 anchor-skip: a sentence packing state+change ("Tom has 8 tickets and
+    buys 4 more tickets") is read by splitting on the conjunction, and a leading
+    all-foreign block ("A train travels 60 miles ... for 2 hours") is skipped from
+    anchor selection. Its quantities go unused -> the pool's isolated-foreign
+    exemption makes the reading commit-ineligible -> it forces a disagreement refusal
+    on the distractor case, while the clean twin commits."""
+
+    def test_intra_clause_state_and_change_resolves(self) -> None:
+        # the clean twin: "has 8 ... and buys 4 more" -> 12, committed.
+        resolution = resolve_pooled(_INTRACLAUSE_TWIN)
+        assert resolution is not None and resolution.answer == 12.0
+
+    def test_anchor_skip_candidate_is_exempt(self) -> None:
+        # the 0016 reading skips the train block; 8+4=12 leaves 60/2 unused-foreign.
+        cands = accumulation_candidates(_ANCHOR_SKIP_0016)
+        assert cands, "expected an anchor-skip accumulation candidate"
+        twelve = [d for d in cands if d.answer == 12.0]
+        assert twelve, "expected the 8+4=12 reading"
+        assert classify_derivation(twelve[0], _ANCHOR_SKIP_0016) == "exempt"
+
+    def test_distractor_0016_refuses_via_disagreement(self) -> None:
+        # product 3840 (complete) vs additive 12 (exempt) disagree -> refuse.
+        assert resolve_pooled(_ANCHOR_SKIP_0016) is None
+
+    def test_no_anchor_skip_candidate_without_conjunction(self) -> None:
+        # a plain single-quantity sentence yields no spurious extra reading.
+        cands = accumulation_candidates("Sam has 14 apples. He buys 9 more apples.")
+        assert all(d.answer == 23.0 for d in cands)
