@@ -1,0 +1,30 @@
+# Orthographic rules for the everyday pack (English)
+# Mirrors the structure of packs/en/orthography.yaml
+
+rules:
+  - id: "everyday-en-script-validation"
+    type: "script_validation"
+    script: "Latin"
+    allow_diacritics: false
+    notes: "Everyday English objects; no loanword diacritics expected at this layer."
+
+  - id: "everyday-en-case-normalization"
+    type: "case_normalization"
+    default_case: "lowercase"
+    exceptions:
+      - lemma_id: "everyday:sun"
+        note: "Capitalize only in astronomical/proper-noun context; lowercase as common noun."
+      - lemma_id: "everyday:moon"
+        note: "Same as sun: lowercase common noun, uppercase as proper celestial body."
+
+  - id: "everyday-en-irregular-plurals"
+    type: "morphological_flag"
+    flagged_classes:
+      - morph_class: "irregular"
+        note: "Irregular plurals (tooth/teeth, foot/feet, leaf/leaves, knife/knives, fish/fish) must be resolved via morphology.jsonl, not inferred by default suffix rules."
+
+  - id: "everyday-en-mass-noun-singular-default"
+    type: "morphological_flag"
+    flagged_classes:
+      - morph_class: "mass"
+        note: "Mass nouns (water, fire, smoke, rain, dust, blood, milk, meat, cloth, bread, rope, soil) default to singular surface form; plural only under explicit count-frame activation."

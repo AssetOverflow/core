@@ -1,0 +1,33 @@
+pack_id = "everyday"
+name = "Atomic Definitions — Everyday Objects (English)"
+version = "0.1.0"
+status = "draft"
+language = "en"
+script = "Latin"
+normalization = "deterministic"
+default = false
+
+# Layer 2 atomic grounding for everyday concrete objects.
+# 82 lemmas across artifacts, substances, phenomena, organisms,
+# body parts, places, agents, and logos-adjacent entries.
+# Builds a dense manifold before any composed or technical expansion.
+# Prerequisites: packs/en (base), packs/identity, packs/safety
+
+[contracts]
+lemma_first = true
+shared_field_target = true
+local_readback = true
+alignment_required = false
+
+[gates]
+schema = false
+lexical = false
+morphology = false
+lift = false
+readback = false
+determinism = false
+alignment = false
+coverage = false
+
+# Gates are false until the gate runner confirms passage.
+# Do not manually set these to true.
