@@ -18,6 +18,7 @@ from __future__ import annotations
 from generate.derivation.accumulate import accumulation_candidates
 from generate.derivation.model import GroundedDerivation, Quantity, Step
 from generate.derivation.pool import resolve_pooled
+from generate.derivation.target import asks_prior_state
 from generate.derivation.verify import classify_derivation
 
 _DISTRACTOR_0014 = (
@@ -102,3 +103,43 @@ class TestResolvePooled:
         a = resolve_pooled(_CLEAN_ACCUMULATION)
         b = resolve_pooled(_CLEAN_ACCUMULATION)
         assert a is not None and b is not None and a.answer == b.answer
+
+
+_BEFORE_Q = "Lisa had 50 dollars. She spent 20 on lunch. How much money did Lisa have before lunch?"
+_LEFT_TWIN = "Lisa had 50 dollars. She spent 20 on lunch. How much money does Lisa have left?"
+
+
+class TestPriorStateQuestionGuard:
+    """ADR-0182 — a question asking for a *prior* state is refused (the forward
+    composers compute the final state, the wrong temporal point). Question-clause
+    scoped, so body narrative ('before school starts') does not trip it."""
+
+    def test_before_question_detected(self) -> None:
+        assert asks_prior_state(_BEFORE_Q) is True
+
+    def test_left_twin_not_detected(self) -> None:
+        # the minimal-pair twin asks for the net ('left') -> forward reading, solvable.
+        assert asks_prior_state(_LEFT_TWIN) is False
+
+    def test_before_in_body_not_detected(self) -> None:
+        # 'before' in narrative (not the question clause) must NOT trip the guard,
+        # or it would wrongly refuse train-0003 (gold 864, currently committed).
+        body_before = (
+            "The student council sells erasers in the morning before school starts. "
+            "There are 24 erasers in each box. If they sell 48 boxes, how many erasers?"
+        )
+        assert asks_prior_state(body_before) is False
+
+    def test_used_to_make_is_not_a_prior_marker(self) -> None:
+        # the purpose infinitive 'used to make' is a false positive guarded against.
+        assert asks_prior_state("If 50 beads are used to make one bracelet, how many bracelets?") is False
+
+    def test_prior_state_question_refuses(self) -> None:
+        # the forward reading computes 50-20=30 (the net); the question asks the
+        # pre-change state -> refuse, not commit 30.
+        assert resolve_pooled(_BEFORE_Q) is None
+
+    def test_left_twin_still_resolves_forward(self) -> None:
+        # discrimination: the twin asking 'left' commits the forward net (30).
+        resolution = resolve_pooled(_LEFT_TWIN)
+        assert resolution is not None and resolution.answer == 30.0

@@ -28,7 +28,7 @@ from generate.derivation.search import (
     multiplicative_candidates,
     search_multiplicative,
 )
-from generate.derivation.target import Target, extract_target
+from generate.derivation.target import Target, asks_prior_state, extract_target
 from generate.derivation.verify import (
     Resolution,
     SelfVerification,
@@ -49,6 +49,7 @@ __all__ = [
     "Target",
     "VALID_OPS",
     "accumulation_candidates",
+    "asks_prior_state",
     "candidate_chains",
     "classify_derivation",
     "clause_local_results",

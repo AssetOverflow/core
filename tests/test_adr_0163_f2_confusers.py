@@ -30,8 +30,12 @@ from evals.gsm8k_math.confusers.v1.runner import (
 #     the spurious "for N coins" product disagrees with the accumulation reading)
 #     now refuse. wrong 5->2 (0016 needs anchor-skip; 0020 is temporal-scope).
 #     pair_tells 4->1 (0001/0003/0014 clear; 0020 remains).
-_BASELINE_WRONG = 2
-_BASELINE_PAIR_TELLS = 1
+#   2026-05-29 (ADR-0182 prior-state question guard): a question asking for a state
+#     *before* a stated change ("...before lunch?") is refused — the forward reader
+#     computes the net, the wrong temporal point. 0020 refuses; its 'left' twin 0021
+#     still solves. wrong 2->1 (only 0016 remains). pair_tells 1->0.
+_BASELINE_WRONG = 1
+_BASELINE_PAIR_TELLS = 0
 
 
 class TestSchema:
@@ -110,6 +114,22 @@ class TestProbeBaseline:
         disguised = [r for r in results if r.category == "disguised-polarity"]
         assert disguised
         assert all(r.verdict != "wrong" for r in disguised)
+
+    def test_temporal_scope_does_not_misfire(self) -> None:
+        # ADR-0182 prior-state question guard: a "before <event>?" question is
+        # refused (the forward reader computes the net, the wrong temporal point).
+        # Fails loudly if the guard regresses (0020 would commit 30 again).
+        results = run_probe()
+        temporal = [r for r in results if r.category == "temporal-scope"]
+        assert temporal
+        assert all(r.verdict != "wrong" for r in temporal)
+
+    def test_before_left_minimal_pair_discriminated(self) -> None:
+        # 0020 ("before lunch") refuses; its twin 0021 ("left") solves the net.
+        # This is the pair-consistency win (the last surface-match tell cleared).
+        by_id = {r.case_id: r for r in run_probe()}
+        assert by_id["confuser-v1-0020"].verdict == "refused"
+        assert by_id["confuser-v1-0021"].verdict == "solved"
 
     def test_deterministic(self) -> None:
         assert summarize(run_probe()) == summarize(run_probe())
