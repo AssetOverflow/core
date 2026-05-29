@@ -255,8 +255,6 @@ The development frontier has moved beyond the audit-passed foundations (ADR-0091
 
 ### Proposed-but-unimplemented ADRs
 
-_Historical — accurate as of ADR-0125; see the Index for the complete, current list of Proposed ADRs._
-
 The following ADRs carry a status of **Proposed** in the Index:
 
 #### Core Infrastructure & Metadata
