@@ -146,6 +146,27 @@ Each needs a failing-under-violation test (CLAUDE.md §Schema-Defined Proof Obli
   only if its patterns clear `θ`; the search orders/prunes by reliability. Tests:
   invariant #1 (cold ⇒ no proposals, no regression); U2 never causes a wrong=0
   violation.
+  - **CP-2a — ledger training + measurement (landed).** The training step
+    (`generate/cue_precision/trainer.py`) folds gold-labelled candidate readings
+    from the real search enumerators (`search._sentence_candidates` +
+    `multistep.candidate_chains`) into the CP-1 ledger; the measurement
+    (`evals/gsm8k_math/practice/v1/cue_precision_report.py`) reports per-pattern
+    reliability over the 200 sealed cases (50 train_sample + 150 ADR-0163-F
+    additive). Inert: trains/reports only, consulted by nobody — serving `3/47/0`
+    byte-identical, practice counts unchanged. `search_chain` now delegates
+    enumeration to the public `candidate_chains` (verified byte-identical).
+  - **CP-2a finding (load-bearing): no cue is reliable yet — CP-2b is blocked on
+    candidate *generation*, not on the ledger.** Trained over 200 cases, **every**
+    `(cue, op, unit_shape)` pattern floors at ≈ 0.0 (best: `for·multiply·cross_unit`
+    = 0.0116 at 2/34; `each·multiply` ≈ 0.006; `times·multiply` 0/57, `total·add`
+    0/47). The blunt product/sum-of-all readings the search proposes are almost
+    always wrong vs gold, so the conservative floor correctly trusts nothing. The
+    lever is therefore **not** "trust high-reliability cues" (there are none) — it
+    is that the candidate readings must get *less crude* (clause structure +
+    referent-awareness, i.e. **ADR-0178 GB-3b**) before any pattern earns reliability.
+    Cue-precision (CP-2b) and compositional structure (GB-3b) are **coupled, and
+    structure comes first.** This is the ADR-0177 §"bottleneck" honesty, now
+    measured rather than asserted. (Table reproducible via the report; deterministic.)
 - **CP-3 — disagreement resolution (U3), wrong=0-first.** Margin+θ-gated resolution;
   **prove ties refuse before enabling resolution.** Measure any coverage delta.
 - **CP-4 — measurement + scale dependency.** Per-pattern reliability table; the
