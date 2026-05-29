@@ -7,6 +7,11 @@ guard that keeps the (Phase 3b) bounded search honest.
 
 from __future__ import annotations
 
+from generate.derivation.clauses import (
+    ClauseResult,
+    clause_local_results,
+    segment_clauses,
+)
 from generate.derivation.comparatives import (
     ComparativeScalar,
     comparative_step,
@@ -25,6 +30,7 @@ from generate.derivation.verify import (
 )
 
 __all__ = [
+    "ClauseResult",
     "ComparativeScalar",
     "GroundedDerivation",
     "MULTIPLICATIVE_CUES",
@@ -34,12 +40,14 @@ __all__ = [
     "Step",
     "Target",
     "VALID_OPS",
+    "clause_local_results",
     "comparative_step",
     "extract_comparative_scalars",
     "extract_quantities",
     "extract_target",
     "search_chain",
     "search_multiplicative",
+    "segment_clauses",
     "select_self_verified",
     "self_verifies",
 ]
