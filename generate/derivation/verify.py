@@ -50,9 +50,10 @@ class Resolution:
     derivation: GroundedDerivation
 
 
-def self_verifies(derivation: GroundedDerivation, problem_text: str) -> SelfVerification:
-    """Decide whether ``derivation`` self-verifies against ``problem_text``."""
-    tokens = _tokens(problem_text)
+def _base_reasons(derivation: GroundedDerivation, tokens: frozenset[str]) -> list[str]:
+    """The grounding ∧ cue ∧ unit ∧ divide-by-zero clauses (everything *but*
+    completeness). Shared by :func:`self_verifies` and :func:`classify_derivation`
+    so the two cannot drift."""
     reasons: list[str] = []
 
     # 1. operand grounding — every TEXT operand value must be sourced from the
@@ -82,6 +83,24 @@ def self_verifies(derivation: GroundedDerivation, problem_text: str) -> SelfVeri
         if step.op == "divide" and step.operand.value == 0:
             reasons.append("division by zero")
 
+    return reasons
+
+
+def _unused_quantities(derivation: GroundedDerivation, problem_text: str) -> Counter[str]:
+    """Problem quantities (by source token) the derivation does not consume."""
+    problem_quantities = Counter(q.source_token for q in extract_quantities(problem_text))
+    used = Counter(
+        [derivation.start.source_token]
+        + [step.operand.source_token for step in derivation.steps]
+    )
+    return problem_quantities - used
+
+
+def self_verifies(derivation: GroundedDerivation, problem_text: str) -> SelfVerification:
+    """Decide whether ``derivation`` self-verifies against ``problem_text``."""
+    tokens = _tokens(problem_text)
+    reasons = _base_reasons(derivation, tokens)
+
     # 5. completeness — a trustworthy derivation must account for every quantity
     #    the problem states. A derivation that ignores given numbers is an
     #    incomplete reading (typically a correct *first step* of a multi-step
@@ -90,13 +109,52 @@ def self_verifies(derivation: GroundedDerivation, problem_text: str) -> SelfVeri
     #    microscope identified (ADR-0175 self-verification strengthening): it
     #    catches the multi-step-incomplete attempts the cue/grounding clauses
     #    cannot, because their operands ARE grounded.
-    problem_quantities = Counter(q.source_token for q in extract_quantities(problem_text))
-    used = Counter([derivation.start.source_token] + [step.operand.source_token for step in derivation.steps])
-    unused = problem_quantities - used
+    unused = _unused_quantities(derivation, problem_text)
     if unused:
         reasons.append(f"incomplete: unused problem quantities {sorted(unused.keys())}")
 
     return SelfVerification(verified=not reasons, reasons=tuple(reasons))
+
+
+def classify_derivation(derivation: GroundedDerivation, problem_text: str) -> str | None:
+    """ADR-0182 — the commit-eligibility class of a derivation, for pooling.
+
+    Returns:
+
+    * ``"complete"`` — passes every clause *including* full completeness;
+      **commit-eligible** (may resolve as an answer).
+    * ``"exempt"``  — passes every base clause and the only unused quantities are
+      **isolated-foreign** (unit non-empty ∧ equal to no *used* operand's unit, i.e.
+      a candidate distractor standing alone in a dimension the reading never
+      touches); **commit-INELIGIBLE**. It exists only to enter the pool and force a
+      disagreement → refusal, never to be committed alone (see :mod:`generate.
+      derivation.pool`). This keeps the commit-path completeness guarantee
+      (ADR-0175's multi-step-incomplete defence) intact — the exemption widens only
+      what can *refuse*.
+    * ``None``      — fails a base clause, or an unused quantity is not
+      isolated-foreign (empty unit, or a unit shared with a used operand → real
+      signal the reading dropped).
+    """
+    tokens = _tokens(problem_text)
+    if _base_reasons(derivation, tokens):
+        return None
+    unused = _unused_quantities(derivation, problem_text)
+    if not unused:
+        return "complete"
+
+    used_units = {derivation.start.unit, *(step.operand.unit for step in derivation.steps)}
+    units_by_token: dict[str, set[str]] = {}
+    for q in extract_quantities(problem_text):
+        units_by_token.setdefault(q.source_token, set()).add(q.unit)
+
+    for token in unused:
+        token_units = units_by_token.get(token, {""})
+        # isolated-foreign iff *every* occurrence has a non-empty unit not shared
+        # with any used operand. An empty unit, or a unit a used operand carries,
+        # disqualifies the exemption — that quantity is real signal, not a distractor.
+        if any((not unit) or (unit in used_units) for unit in token_units):
+            return None
+    return "exempt"
 
 
 def select_self_verified(

@@ -22,21 +22,23 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from generate.derivation.accumulate import compose_accumulation
-from generate.derivation.multistep import search_chain
-from generate.derivation.search import search_multiplicative
+from generate.derivation.pool import resolve_pooled
 
 _CASES_PATH: Final[Path] = Path(__file__).resolve().parent / "cases.jsonl"
 _TOL: Final[float] = 1e-6
 
 
 def _engine_answer(problem_text: str) -> float | None:
-    """The sealed engine's attempt: first composer to resolve wins (fixed order)."""
-    for composer in (compose_accumulation, search_multiplicative, search_chain):
-        resolution = composer(problem_text)
-        if resolution is not None:
-            return resolution.answer
-    return None
+    """The sealed engine's attempt (ADR-0182 cross-composer pooling).
+
+    Pools the ungated readings of every composer (accumulation, multiplicative,
+    chain) and resolves them together: a single ``complete`` answer commits;
+    disagreement among the pool — e.g. a distractor problem's blunt product vs its
+    competing additive reading — refuses. Replaces the prior first-composer-wins
+    order, which had no way to notice it held two incompatible readings.
+    """
+    resolution = resolve_pooled(problem_text)
+    return resolution.answer if resolution is not None else None
 
 
 @dataclass(frozen=True, slots=True)

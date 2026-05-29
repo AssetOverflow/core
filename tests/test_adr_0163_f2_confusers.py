@@ -24,8 +24,14 @@ from evals.gsm8k_math.confusers.v1.runner import (
 #     misfires (0005->796, 0007->996) now refuse — the 25-foot/20-inch divisor is
 #     finally visible to the completeness/polarity gate. wrong 7->5. pair_tells
 #     unchanged (the pseudo-accumulation cases carry no positive twin).
-_BASELINE_WRONG = 5
-_BASELINE_PAIR_TELLS = 4
+#   2026-05-29 (ADR-0182 cross-composer pooling): the engine now pools every
+#     composer's readings and refuses on disagreement. The distractor 0014
+#     (product 300 vs additive 25) and BOTH disguised-polarity cases (0001/0003:
+#     the spurious "for N coins" product disagrees with the accumulation reading)
+#     now refuse. wrong 5->2 (0016 needs anchor-skip; 0020 is temporal-scope).
+#     pair_tells 4->1 (0001/0003/0014 clear; 0020 remains).
+_BASELINE_WRONG = 2
+_BASELINE_PAIR_TELLS = 1
 
 
 class TestSchema:
@@ -86,6 +92,24 @@ class TestProbeBaseline:
             "pseudo-accumulation confuser misfired — the hyphen-bonded-unit "
             "divisor is no longer reaching the completeness/polarity gate."
         )
+
+    def test_distractor_0014_refuses_via_pooling(self) -> None:
+        # ADR-0182: 0014's blunt product (300) and its competing additive reading
+        # (25) disagree under cross-composer pooling -> refuse. Fails loudly if
+        # pooling regresses (the unique product would commit 300 again). 0016 is
+        # NOT asserted here — its distractor sits in the anchor clause and needs
+        # anchor-skip, a separate step (see ADR-0182 §3b).
+        by_id = {r.case_id: r for r in run_probe()}
+        assert by_id["confuser-v1-0014"].verdict == "refused"
+
+    def test_disguised_polarity_does_not_misfire(self) -> None:
+        # ADR-0182 bonus: the spurious "buys X for N <unit>" product disagrees with
+        # the accumulation reading, so both disguised-polarity cases refuse instead
+        # of committing the gain-polarity sum.
+        results = run_probe()
+        disguised = [r for r in results if r.category == "disguised-polarity"]
+        assert disguised
+        assert all(r.verdict != "wrong" for r in disguised)
 
     def test_deterministic(self) -> None:
         assert summarize(run_probe()) == summarize(run_probe())

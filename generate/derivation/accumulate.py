@@ -127,8 +127,20 @@ def _cue(clause: str, polarity: int) -> str:
     return "gives"  # the only remaining licensed loss path (gives … to/away)
 
 
-def compose_accumulation(problem_text: str) -> Resolution | None:
-    """GB-3b.1 composer — single-referent gain/loss accumulation. Refuse-preferring."""
+def _build_accumulation(
+    problem_text: str, *, drop_isolated_foreign: bool
+) -> GroundedDerivation | None:
+    """Construct the single-referent accumulation chain (ungated).
+
+    ``drop_isolated_foreign`` (ADR-0182): when a change clause carries more than
+    one quantity, drop those with a **non-empty unit foreign to the anchor's unit**
+    (a candidate distractor — ``studies for 3 hours`` among ``pencils``) and proceed
+    if exactly one same-unit/unitless change remains. With the flag off this is the
+    strict GB-3b.1 reading (a multi-quantity change clause refuses), so
+    :func:`compose_accumulation` is byte-identical to its pre-ADR-0182 behavior.
+    The distractor-skip reading is **never committed alone** — it only ever enters
+    the pool to force a disagreement refusal (see :mod:`generate.derivation.pool`).
+    """
     clauses = segment_clauses(problem_text)
     quantity_clauses = [c for c in clauses if extract_quantities(c)]
     if len(quantity_clauses) < 2:
@@ -145,7 +157,11 @@ def compose_accumulation(problem_text: str) -> Resolution | None:
     for clause in change_clauses:
         if not _same_referent(clause, anchor_subject):
             return None  # new named actor -> referent hazard -> refuse
-        change_quantities = extract_quantities(clause)
+        change_quantities = list(extract_quantities(clause))
+        if drop_isolated_foreign and len(change_quantities) > 1:
+            change_quantities = [
+                q for q in change_quantities if not (q.unit and q.unit != start.unit)
+            ]
         if len(change_quantities) != 1:
             return None  # one change per clause (multi-change is GB-3b.2)
         polarity = _polarity(clause)
@@ -159,5 +175,31 @@ def compose_accumulation(problem_text: str) -> Resolution | None:
 
     if not steps:
         return None
-    derivation = GroundedDerivation(start=start, steps=tuple(steps))
+    return GroundedDerivation(start=start, steps=tuple(steps))
+
+
+def compose_accumulation(problem_text: str) -> Resolution | None:
+    """GB-3b.1 composer — single-referent gain/loss accumulation. Refuse-preferring.
+
+    The strict (commit) reading: it gates the no-distractor-skip derivation through
+    the unchanged self-verification gate. Behavior is byte-identical to pre-ADR-0182.
+    """
+    derivation = _build_accumulation(problem_text, drop_isolated_foreign=False)
+    if derivation is None:
+        return None
     return select_self_verified([derivation], problem_text, target_units=())
+
+
+def accumulation_candidates(problem_text: str) -> tuple[GroundedDerivation, ...]:
+    """ADR-0182 — the ungated accumulation readings for cross-composer pooling.
+
+    The strict reading and (when it differs) the distractor-skip reading. Ungated:
+    the pool classifies each (``complete`` commits, ``exempt`` refuses-only) and the
+    disagreement rule does the wrong=0 work. Deterministic; de-dup is the pool's job.
+    """
+    candidates: list[GroundedDerivation] = []
+    for drop in (False, True):
+        derivation = _build_accumulation(problem_text, drop_isolated_foreign=drop)
+        if derivation is not None:
+            candidates.append(derivation)
+    return tuple(candidates)
