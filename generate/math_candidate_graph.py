@@ -410,9 +410,17 @@ def _build_graph(
 # Orchestrator
 # ---------------------------------------------------------------------------
 
-def parse_and_solve(text: str) -> CandidateGraphResult:
+def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
     """End-to-end: parse text via candidate-graph topology, solve each
     admissible branch, apply decision rule.
+
+    ADR-0186 — ``sealed`` selects the sealed injector lane. The default
+    ``sealed=False`` is the frozen serving path (the ``train_sample`` runner
+    and serving always pass it), so ``3/47/0`` is byte-identical. ``sealed=True``
+    additionally consults ``_SEALED_INJECTORS`` (the in-development W2-W5
+    injectors) at the per-statement injection site below; it is used only by
+    the sealed eval runner. The seal is injector eligibility, not a forked
+    reader — every other reader step is identical.
 
     Args:
         text: The problem text to parse.
@@ -647,7 +655,7 @@ def parse_and_solve(text: str) -> CandidateGraphResult:
                     from generate.recognizer_anchor_inject import (
                         inject_from_match,
                     )
-                    injected = inject_from_match(recognizer_match, s)
+                    injected = inject_from_match(recognizer_match, s, sealed=sealed)
                     # ADR-0174 Phase 3 — lookback pronoun resolution.
                     # When the matcher tagged any anchor with
                     # ``requires_pronoun_resolution``, the injected

@@ -73,6 +73,8 @@ InjectorEmission = Union[CandidateInitial, CandidateOperation]
 def inject_from_match(
     match: RecognizerMatch,
     sentence: str,
+    *,
+    sealed: bool = False,
 ) -> tuple[InjectorEmission, ...]:
     """Dispatch a recognizer match to its per-category injector.
 
@@ -83,6 +85,17 @@ def inject_from_match(
     The v1 ``discrete_count_statement`` injector continues to emit only
     ``CandidateInitial`` — the widening is type-level only in this PR.
 
+    ADR-0186 — the **sealed injector lane**. When ``sealed=True`` the
+    dispatch first consults :data:`_SEALED_INJECTORS` (the in-development
+    W2-W5 injectors); a sealed injector that emits short-circuits and
+    returns its emission. When ``sealed=False`` (the default, and the
+    value the frozen serving path / ``train_sample`` runner always pass)
+    ``_SEALED_INJECTORS`` is **not** consulted at all, so the frozen
+    ``3/47/0`` metric is byte-identical until a reviewed Phase-5 promotion
+    moves an entry into :data:`_INJECTORS`. The seal is injector
+    *eligibility*, not a forked reader: every emission still passes the
+    unchanged admissibility gate downstream.
+
     CW-2 (ADR-0169 consumption) — when the per-category injector
     returns empty AND the matcher published a ``composition_shape`` key
     in ``parsed_anchors``, the composition registry is consulted: an
@@ -92,6 +105,12 @@ def inject_from_match(
     over the reviewed math pack — it cannot weaken any existing
     admission gate. See :mod:`generate.comprehension.composition_registry`.
     """
+    if sealed:
+        sealed_injector = _SEALED_INJECTORS.get(match.category)
+        if sealed_injector is not None:
+            emitted = sealed_injector(match, sentence)
+            if emitted:
+                return emitted
     injector = _INJECTORS.get(match.category)
     if injector is not None:
         emitted = injector(match, sentence)
@@ -529,6 +548,21 @@ _INJECTORS: Mapping[ShapeCategory, "type"] = {
     # See docs/decisions/ADR-0170-injector-contract-widening.md for the
     # contract widening that unblocks DCS-S1 / A1 / A3.
 }
+
+
+# ADR-0186 — the sealed injector lane (resume ADR-0170 W2-W5 under the
+# ADR-0175 serving seal). Entries here are consulted **only** when
+# ``inject_from_match(..., sealed=True)`` — i.e. by the sealed eval runner,
+# never by the frozen serving path or the ``train_sample`` runner (both pass
+# ``sealed=False``). This keeps the frozen ``3/47/0`` metric byte-identical
+# until a reviewed Phase-5 promotion moves an entry into ``_INJECTORS``.
+#
+# It is intentionally empty at land time: this PR ships the seal *mechanism*
+# (the dispatch + the byte-identical guarantee), validated by
+# tests/test_adr_0186_sealed_injector_lane.py. The first sealed *capability*
+# (per ADR-0186 §5.3, the CandidateRate schema unblocking the matcher-complete
+# rate_with_currency / temporal_aggregation categories) is its own follow-up.
+_SEALED_INJECTORS: Mapping[ShapeCategory, "type"] = {}
 
 
 __all__ = [
