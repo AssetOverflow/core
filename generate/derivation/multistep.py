@@ -65,6 +65,27 @@ def _candidate_chains(
     return candidates
 
 
+def candidate_chains(
+    problem_text: str, target: Target | None = None
+) -> list[GroundedDerivation]:
+    """The bounded, deterministic candidate readings :func:`search_chain` weighs.
+
+    The *enumeration* half of the search, with no gate applied: extract quantities,
+    refuse-on-overflow (``> MAX_QUANTITIES``) / too-few (``< 2``) by yielding no
+    candidates, derive the target, and build the principled set. Exposed for CP-2
+    ledger training (ADR-0177), which must see every reading the search considers —
+    not just the one it resolves to. ``search_chain`` delegates here, so the two
+    can never drift.
+    """
+    quantities = list(extract_quantities(problem_text))
+    if not 2 <= len(quantities) <= MAX_QUANTITIES:
+        return []  # refuse-on-overflow / too few to compose
+    resolved: Target = target if target is not None else extract_target(
+        problem_text, known_units=tuple(q.unit for q in quantities)
+    )
+    return _candidate_chains(quantities, problem_text, resolved)
+
+
 def search_chain(problem_text: str, target: Target | None = None) -> Resolution | None:
     """Target-guided bounded multi-step search over the problem's quantities.
 
@@ -72,18 +93,11 @@ def search_chain(problem_text: str, target: Target | None = None) -> Resolution 
     (and, when a target unit is known, matches it); refuses on no candidate,
     disagreement, or > :data:`MAX_QUANTITIES` quantities. Deterministic.
     """
-    quantities = list(extract_quantities(problem_text))
-    if not 2 <= len(quantities) <= MAX_QUANTITIES:
-        return None  # refuse-on-overflow / too few to compose
-
-    resolved: Target = target if target is not None else extract_target(
-        problem_text, known_units=tuple(q.unit for q in quantities)
-    )
-    candidates = _candidate_chains(quantities, problem_text, resolved)
     # Target-UNIT matching is deferred: the model's answer_unit is the start
     # quantity's unit, which is wrong for cross-unit products (6 boxes x 50 apples
     # -> value 300 but unit "boxes"), so a unit gate would over-refuse correct
     # answers. The Target still prunes via its aggregation cue + supplies the
-    # question quantities (above). Unit matching returns once a result-unit model
-    # exists (a superordinate-units pack + product-unit inference).
-    return select_self_verified(candidates, problem_text, target_units=())
+    # question quantities. Unit matching returns once a result-unit model exists.
+    return select_self_verified(
+        candidate_chains(problem_text, target), problem_text, target_units=()
+    )

@@ -23,6 +23,13 @@ this module, so none of this can move the serving ``3/47/0``):
 * **EX-5 — sentence-final numbers.** A number with no following unit word (end of
   sentence/text or before terminal punctuation) extracts with an empty unit so it
   stays available to the completeness check without inventing a unit lexeme.
+* **Unit hygiene (function-word filter).** When the token after a number is a
+  function word (``$0.75 each`` → ``each``, ``$40 to go`` → ``to``, ``3/4 of`` →
+  ``of``), the single-word unit pattern would tag it as the unit — a spurious unit
+  that corrupts same-unit detection (GB-2/GB-3) and CP-1's ``unit_shape``. Such
+  units are blanked (empty, like a sentence-final number): the value stays
+  grounded, the unit is honestly unknown. Closed lexeme set (``_NON_UNIT_WORDS``),
+  not a grammar template (ADR-0165).
 
 EX-3 (multi-word units) is deliberately **not** integrated. Two distinct traps
 defeat the tightest lookahead-anchored rule the brief admits:
@@ -88,13 +95,35 @@ _FINAL_NUMBER_RE: Final[re.Pattern[str]] = re.compile(
 )
 
 
+# Function words that are never units. When the token immediately after a number
+# is one of these (``$0.75 each``, ``$40 to go``, ``3/4 of``), the single-word unit
+# pattern would otherwise tag the function word as the unit — a spurious unit that
+# corrupts same-unit detection (GB-2/GB-3) and CP-1's unit_shape. Emitting an empty
+# unit instead (like a sentence-final number) is honest: the value is grounded, the
+# unit is simply unknown. Closed lexeme set (cf. ``WORD_NUMBERS``); ADR-0165-safe —
+# it names tokens that are not unit nouns, it does not parse sentence structure.
+_NON_UNIT_WORDS: Final[frozenset[str]] = frozenset(
+    {
+        "a", "an", "the", "of", "to", "for", "in", "on", "at", "as", "than",
+        "per", "each", "every", "and", "or", "with", "by", "from", "more",
+        "less", "about", "that",
+    }
+)
+
+
+def _clean_unit(unit: str) -> str:
+    """Lowercase a unit token; blank it if it is a non-unit function word."""
+    lowered = unit.lower()
+    return "" if lowered in _NON_UNIT_WORDS else lowered
+
+
 def _quantity(value_token: str, unit: str) -> Quantity | None:
     """Build a quantity from an already-matched numeric token."""
     try:
         value = float(value_token)
     except ValueError:  # pragma: no cover - regex guarantees numeric
         return None
-    return Quantity(value=value, unit=unit.lower(), source_token=value_token)
+    return Quantity(value=value, unit=_clean_unit(unit), source_token=value_token)
 
 
 def _resolve_word_number(first: str, second: str | None) -> float | None:
@@ -172,7 +201,7 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
         found.append(
             (
                 match.start(1),
-                Quantity(value=value, unit=match.group(3).lower(), source_token=source_token),
+                Quantity(value=value, unit=_clean_unit(match.group(3)), source_token=source_token),
             )
         )
 
