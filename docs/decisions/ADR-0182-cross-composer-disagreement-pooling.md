@@ -1,6 +1,10 @@
 # ADR-0182 — Cross-composer disagreement pooling: refuse distractor-quantity confusers without a reactive cue rule
 
-**Status:** Proposed (spec only — no code). Follow-on to
+**Status:** Accepted / Implemented (PRs #476, #480, #481). See
+[§8 Realized results](#8-realized-results-2026-05-29) for actuals vs the
+predictions below — the implementation **exceeded** the spec and required one
+mechanism the spec under-scoped (intra-clause reading). The spec text below §7 is
+retained unedited for provenance. Follow-on to
 [ADR-0163-F2](./ADR-0163-F2-confuser-corpus-spec.md) (the confuser probe),
 [ADR-0175](./ADR-0175-calibrated-attempt-and-eliminate-learning.md) (the
 self-verification gate), and [ADR-0177](./ADR-0177-cue-precision-learning.md)
@@ -211,3 +215,60 @@ discipline exists to catch.
    ([ADR-0179 EX hazard pin](./ADR-0179-extraction-richness.md)). A fraction-operand
    PR will change which quantities exist; sequence pooling and fraction support so
    their completeness interactions are validated together, not pairwise-blind.
+
+## 8. Realized results (2026-05-29)
+
+Implemented across three PRs on the sealed lane; serving `train_sample` `3/47/0` and
+the practice lane stayed **byte-identical throughout** (the pool is reached only by
+the confuser runner — `chat/`, serving, and practice call `compose_accumulation`/the
+serving scorer, never `accumulation_candidates`). The four-PR stack (with EX-6 #473)
+got a lookback review whose findings are folded in below.
+
+### Confuser `wrong`: spec predicted `5 → 4 → 3`; actual `5 → 2 → 1 → 0`
+
+| PR | mechanism | predicted | **actual** |
+|---|---|---|---|
+| #476 | cross-composer pooling + commit-ineligible exemption | 0014 only (`5→4`) | **`5→2`** — 0014 **and** both disguised-polarity (0001/0003) refused |
+| #480 | prior-state question guard (`asks_prior_state`) | *not in this spec* | **`2→1`** — temporal-scope 0020 refuses |
+| #481 | anchor-skip **+ intra-clause** accumulation | 0016 (`→3`) | **`1→0`** — 0016 refuses **and** clean twin 0017 *solves* 12 |
+
+`8 solved / 21 refused / 0 wrong / 1 spurious`; pair-tells `4→0`.
+
+### Where reality diverged from the spec (honest drift)
+
+- **Pooling exceeded its predicted scope.** The disagreement rule also caught
+  **disguised-polarity** (0001/0003): the spurious `buys X for N coins` product
+  disagrees with the accumulation reading → refuse. The spec scoped pooling to
+  distractor-quantity only.
+- **0016 needed more than anchor-skip.** §3b framed 0016 as "anchor selection skips
+  an all-foreign leading clause." In fact its Tom sentence packs **state + change in
+  one sentence** ("Tom has 8 tickets **and** buys 4 more tickets"), so it also needed
+  **intra-clause accumulation** (a conjunction-level split, *local* to
+  `accumulation_candidates` — the global GB-1 segmenter is untouched). This was
+  validated as a **real** pattern (`train-0010` "had 20 … then lost 12";
+  `practice-0121`), not a 0016-only contrivance — and it produced the bonus 0017
+  *solve*, the comprehension-vs-surface-match discrimination the corpus exists to test.
+- **The prior-state guard (#480) is a distinct lever**, not the pooling mechanism —
+  question-time reading rather than candidate disagreement. Recorded here because it
+  landed in the same arc and shares the `resolve_pooled` entry point.
+
+### Lookback findings (four-PR stack, folded in)
+
+- **Solid:** serving frozen by construction + empirically; commit-ineligibility
+  proven by `test_exempt_only_never_commits`; clean cross-PR composition;
+  deterministic; `+712/−31` LOC honest (additive substrate).
+- **Gap (fixed):** the anchor-skip refuse branches (referent guard, polarity-cue
+  requirement) were untested — *asserted but not proven*. Closed with non-vacuous
+  failing-under-violation tests (#481, `4205605`).
+- **No live wrong=0 hazard:** the multi-actor + distractor + product-cue shape
+  commits the blunt product, but the **prior path committed it identically** —
+  anchor-skip declines to fabricate a cross-actor reading rather than widening the
+  surface. Dormant (no corpus case), confined to the sealed pool.
+
+### Still open
+
+- **`0010` (multi-referent, the lone spurious):** "Maria has 12 books. Sara has 8
+  books. How many altogether?" → answers 20, should refuse (H1). A graduation/refusal
+  question per [ADR-0163-F2 §2.1](./ADR-0163-F2-confuser-corpus-spec.md), not a wrong.
+- **CP-2b (cue precision)** remains the path to *solving* (rather than refusing) the
+  disguised-polarity / `for`-overloaded cases later.
