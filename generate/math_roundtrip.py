@@ -359,6 +359,15 @@ def _value_grounds(value_token: str, haystack_tokens: frozenset[str]) -> bool:
         m = re.fullmatch(r"(\d+)/(\d+)", value_token)
         if m is not None:
             return m.group(1) in haystack_tokens and m.group(2) in haystack_tokens
+    # ADR-0179 EX-2 — bare decimal "N.M" (the currency branch above handles the
+    # symbol form $N.NN; a decimal written without a symbol, e.g. "0.75", is never
+    # a single token because the word-boundary tokenizer splits on ".", so it
+    # grounds exactly when both digit-runs appear as tokens — symmetric with the
+    # $N.NN and N/M widenings. Only returns True on a match; non-matching decimals
+    # fall through to the existing paths (which ultimately refuse).
+    if "." in value_token and re.fullmatch(r"\d+\.\d+", value_token) is not None:
+        if all(part in haystack_tokens for part in value_token.split(".")):
+            return True
     if "-" in value_token and not value_token[0].isdigit():
         try:
             from language_packs.numerics_loader import parse_compound_cardinal
