@@ -205,3 +205,47 @@ class TestAnchorSkipIntraClause:
         # a plain single-quantity sentence yields no spurious extra reading.
         cands = accumulation_candidates("Sam has 14 apples. He buys 9 more apples.")
         assert all(d.answer == 23.0 for d in cands)
+
+    # --- ADR-0182 lookback: the anchor-skip refuse branches (failing-under-violation) ---
+
+    def test_anchor_skip_referent_guard_discriminates_actor(self) -> None:
+        # NON-VACUOUS failing-under-violation: the ONLY difference between these two
+        # is the change sub-clause's subject (pronoun 'he' vs new name 'Sara').
+        # Same referent -> the 8+4=12 anchor-skip reading IS produced; new actor ->
+        # the referent guard suppresses it. If `_same_referent` were removed, the
+        # new-actor case would also produce 12 and the second assertion fails.
+        same_referent = (
+            "A train travels at 60 miles per hour for 2 hours. Tom has 8 tickets and "
+            "he buys 4 more tickets. How many tickets does Tom have?"
+        )
+        new_actor = (
+            "A train travels at 60 miles per hour for 2 hours. Tom has 8 tickets and "
+            "Sara buys 4 more tickets. How many tickets does Tom have?"
+        )
+        assert any(d.answer == 12.0 for d in accumulation_candidates(same_referent)), (
+            "same-referent anchor-skip should produce the 8+4=12 reading"
+        )
+        assert all(d.answer != 12.0 for d in accumulation_candidates(new_actor)), (
+            "anchor-skip chained across a new actor (Sara onto Tom)"
+        )
+
+    def test_anchor_skip_requires_a_polarity_cue(self) -> None:
+        # NON-VACUOUS: same structure, change sub-clause with vs without a licensed
+        # cue. "gets 4 more" -> +4 -> 12 produced; "owns 4" (no gain/loss/more cue)
+        # -> polarity None -> not guessed -> no candidate.
+        with_cue = (
+            "A train travels at 60 miles per hour for 2 hours. Tom has 8 tickets and "
+            "gets 4 more tickets. How many tickets does Tom have?"
+        )
+        no_cue = (
+            "A train travels at 60 miles per hour for 2 hours. Tom has 8 tickets and "
+            "owns 4 tickets. How many tickets does Tom have?"
+        )
+        assert any(d.answer == 12.0 for d in accumulation_candidates(with_cue))
+        assert all(d.answer != 12.0 for d in accumulation_candidates(no_cue))
+
+    def test_anchor_skip_refuses_without_single_quantity_anchor(self) -> None:
+        # No sub-clause yields a single-quantity anchor -> the anchor-skip path
+        # produces nothing (it does not force a multi-quantity clause to anchor).
+        no_anchor = "A train travels at 60 miles per hour for 2 hours and covers 5 towns."
+        assert accumulation_candidates(no_anchor) == ()
