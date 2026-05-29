@@ -94,6 +94,71 @@ class TestNoRegression:
         assert _triples("It costs 0.75 dollars.") == [(0.75, "dollars", "0.75")]
 
 
+class TestEX6HyphenatedUnitNumbers:
+    """ADR-0163-F2 — hyphen-bonded number-unit tokens (``25-foot``, ``20-inch``).
+
+    The base ``_QTY_RE`` requires ``number + whitespace + unit word``, so a number
+    bonded to its unit by a hyphen (``25-foot sections``, ``20-inch pieces``) was
+    invisible — the very blind spot behind the pseudo-accumulation confusers
+    (0005 ``→796``, 0007 ``→996``): the completeness clause could not see the
+    ``25``/``20`` divisor, so the accumulation reading was wrongly "complete".
+
+    This is a tight, ADR-0165-safe lexeme pattern (digit run, a hyphen, an
+    alphabetic unit word) — strictly distinct from the deferred EX-3 multi-word
+    *space-separated* unit problem. Over-extraction here only costs refusals
+    (the gate is refuse-preferring), never a wrong answer.
+    """
+
+    def test_hyphen_bonded_unit_extracts_value_and_unit(self) -> None:
+        assert _triples("She cuts it into 20-inch pieces.") == [(20.0, "inch", "20")]
+
+    def test_hyphen_bonded_unit_mid_sentence(self) -> None:
+        assert _triples("She splits it into 25-foot sections.") == [(25.0, "foot", "25")]
+
+    def test_decimal_hyphen_bonded_unit(self) -> None:
+        assert _triples("He ran a 2.5-mile loop.") == [(2.5, "mile", "2.5")]
+
+    def test_hyphen_unit_not_double_counted_as_final_number(self) -> None:
+        # the hyphen pass claims the digit span; the bare-final pass must not
+        # also surface "25" with an empty unit.
+        assert len(extract_quantities("It was 25-foot.")) == 1
+
+    def test_word_compound_still_takes_word_number_path(self) -> None:
+        # digit-hyphen is a different lexeme from the EX-1 word-word compound;
+        # "twenty-four" must still resolve via the word-number path, unaffected.
+        assert _triples("The team scored twenty-four points.") == [
+            (24.0, "points", "twenty-four"),
+        ]
+
+    def test_numeric_range_is_not_read_as_unit(self) -> None:
+        # "3-5" is digit-hyphen-DIGIT; the unit group requires letters, so the
+        # hyphen pass must not fire and invent a unit from the second number.
+        assert all(q.unit != "5" for q in extract_quantities("Pick 3-5 apples."))
+
+
+class TestSlashFractionLeakHazard:
+    """Honest pin (deferred hazard): a slash-fraction leaks its denominator.
+
+    ``"gives 1/4 to a friend"`` extracts the bare ``4`` (the base ``_QTY_RE``
+    sees ``4`` + space + the function-word ``to``, blanks the unit, and emits a
+    standalone quantity ``4``). This is a grounded-but-wrong operand — it is the
+    second half of the pseudo-accumulation misfire (``1000 - 4 = 996``).
+
+    It is **not** fixed in this PR on purpose. Suppressing the leaked ``4`` *removes*
+    a quantity, which can *unblock* the completeness clause (a derivation that was
+    "incomplete" because it ignored the spurious ``4`` could become "complete" and
+    commit) — i.e. the fix is not unambiguously refuse-preferring and needs its own
+    train_sample + probe validation. The hyphen-unit pass (TestEX6) already drives
+    confusers 0005/0007 to *refuse* via the polarity-None ``cuts``/``splits`` clause,
+    so this leak is currently dormant behind that refusal. This test pins the leak
+    so a future fraction-operand PR addresses it deliberately, not by accident.
+    """
+
+    def test_slash_fraction_denominator_currently_leaks(self) -> None:
+        # documents current (leaky) behavior — flip this when fractions are modeled.
+        assert (4.0, "", "4") in _triples("She gives 1/4 to a friend.")
+
+
 class TestEX3StillDeferred:
     """Honest pin: EX-3 (multi-word units) remains deferred after the Track C redo.
 
