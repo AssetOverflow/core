@@ -1,0 +1,38 @@
+{
+  "pack_id": "audio_core_v1",
+  "modality": "audio",
+  "cl41_dim": 32,
+  "compiler_version": "0.1.0",
+  "basis_version": "audio-basis-v1",
+  "canonical": {
+    "sample_rate": 24000,
+    "channels": 1,
+    "frame_ms": 20,
+    "hop_ms": 10,
+    "output_dtype": "float32",
+    "internal_dtype": "float64"
+  },
+  "resampling": {
+    "algorithm": "polyphase_fir",
+    "fir_path": "resample_fir_v1.npy",
+    "fir_sha256": "bcbea0eb13e8217cb001a962863cc430b89d8912091e0cfe635dd1a3d4e9a06b",
+    "padtype": "constant",
+    "cval": 0.0
+  },
+  "gating": {
+    "gate_engaged": false,
+    "checksum_verified": false,
+    "versor_condition_max": 1e-06
+  },
+  "ordering": {
+    "event_precedence": [
+      "channel",
+      "pause",
+      "speech",
+      "prosody",
+      "turn",
+      "non_speech",
+      "content_anchor"
+    ]
+  }
+}

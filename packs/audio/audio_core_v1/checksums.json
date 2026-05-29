@@ -1,0 +1,9 @@
+{
+  "files": {
+    "basis_map.json": "sha256:423fa846961bd66f8ed67da9ebf92d3f2a26ce71e671415cb9a13ba8ff4d2c71",
+    "manifest.json": "sha256:e1a2f13e84cb6b51f07adae490004ac3c2bde6db4b9115dcf5b60cf459919fc4",
+    "operators.jsonl": "sha256:a240e5e9963654e3500cf3aa9f8560273db4c12c1e9280f960dfac35f71dd594",
+    "resample_fir_v1.npy": "sha256:bcbea0eb13e8217cb001a962863cc430b89d8912091e0cfe635dd1a3d4e9a06b"
+  },
+  "pack_id": "audio_core_v1"
+}
