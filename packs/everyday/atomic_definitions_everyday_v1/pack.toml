@@ -8,10 +8,19 @@ normalization = "deterministic"
 default = false
 
 # Layer 2 atomic grounding for everyday concrete objects.
-# Dense manifold thickener: 82 lemma entries with senses, frames,
-# morphology, and probes. Builds a coherent base before any
-# composed or technical expansion.
-# Prerequisites: en (base), packs/identity, packs/safety
+# 83 lemmas with full senses, frames, morphology, and probes.
+# Thickens the semantic manifold before any composed or technical
+# expansion. Prerequisites: packs/en (base), packs/primitives,
+# packs/identity, packs/safety.
+#
+# Semantic families covered:
+#   artifact (containers, furniture, tools, structures, light-sources)
+#   substance (natural, food, biological)
+#   organism (plant, animal, body-part)
+#   place (landform, waterway, path, structure)
+#   phenomenon (elemental, weather, celestial, temporal)
+#   agent (human)
+#   logos (name, identity)
 
 [contracts]
 lemma_first = true

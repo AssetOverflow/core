@@ -1,4 +1,4 @@
-"""Deterministic lift rules for the everyday atomic definitions pack."""
+"""Deterministic lift rules for the atomic_definitions_everyday_v1 pack."""
 
 from __future__ import annotations
 

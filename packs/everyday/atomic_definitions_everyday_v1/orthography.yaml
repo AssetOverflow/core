@@ -1,6 +1,5 @@
 language: en
 script: Latin
-pack_scope: everyday
 
 normalization:
   unicode_normal_form: NFC
@@ -8,7 +7,6 @@ normalization:
   # Surface forms preserve original casing.
   # Indexing and lemma lookup use lowercased forms.
   strip_diacritics: false
-  # No diacritics expected in this pack's lemma set.
 
 punctuation:
   strategy: preserve
@@ -19,6 +17,5 @@ spacing:
 script_direction: ltr
 
 notes: >
-  This pack's lemma set consists entirely of common English nouns
-  with no loanword diacritics, archaic spellings, or non-Latin
-  characters. Normalization rules mirror the base en pack.
+  Inherits English base orthography from packs/en/orthography.yaml.
+  No overrides required — all lemmas are standard lowercase Latin forms.
