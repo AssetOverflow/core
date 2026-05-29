@@ -65,6 +65,13 @@ def _sentence_candidates(problem_text: str) -> list[GroundedDerivation]:
     return candidates
 
 
+def multiplicative_candidates(problem_text: str) -> list[GroundedDerivation]:
+    """ADR-0182 — the ungated in-clause product candidates, for cross-composer
+    pooling. Same construction :func:`search_multiplicative` gates, exposed so the
+    pool can weigh products against the other composers' readings."""
+    return _sentence_candidates(problem_text)
+
+
 def search_multiplicative(problem_text: str) -> Resolution | None:
     """Attempt a grounded in-clause multiplicative product.
 
