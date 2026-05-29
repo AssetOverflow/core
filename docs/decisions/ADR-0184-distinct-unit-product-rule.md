@@ -1,6 +1,10 @@
 # ADR-0184 — Distinct-unit product rule: cut the product-of-all over-commit (the first lever measured against real GSM8K)
 
-**Status:** Proposed (spec only — no code). Follow-on to
+**Status:** Accepted / Implemented. Implementation refined the mechanism: the rule
+is a **commit-ineligibility downgrade in `classify_derivation`** (§3), *not* the
+shared unit-clause failure §3 originally proposed — putting it in the shared gate
+regressed the disagreement refusals ADR-0182 relies on (see §3.1, the finding).
+Follow-on to
 [ADR-0175](./ADR-0175-calibrated-attempt-and-eliminate-learning.md) (the
 self-verification gate), [ADR-0182](./ADR-0182-cross-composer-disagreement-pooling.md)
 (pooling), and [ADR-0177](./ADR-0177-cue-precision-learning.md) (cue precision — the
@@ -62,23 +66,34 @@ loss**. "Span >1 clause" cuts more but destroys `0003` (a *correct* 3-sentence
 rate-chain `48 boxes × 24 erasers/box × $0.75`); "drop all products" loses both
 correct answers. Coverage is never bought at the cost of a correct answer.
 
-## 3. The rule
+## 3. The rule (as implemented)
 
-Refine the gate's **unit-consistency clause** (`verify.py` clause 3). Today:
+The dimensional predicate (`_is_repeated_unit_product`): a **pure multiplicative
+chain** (every step `multiply`) whose operands — including the start — repeat a
+**non-empty** unit forms `unit²` (`apples × apples`, `cards × cards`), which is
+almost never the answer to a word problem asking for that unit. Empty-unit operands
+are exempt (an unknown unit cannot be shown to collide — and the *correct* `0003`
+multiplies a blank-unit `0.75`). Divide is exempt — same-unit division (`feet /
+feet`) is a legitimate dimensionless count. Dimensional, not lexical (ADR-0165-safe).
 
-- `add`/`subtract` require a shared unit;
-- `multiply`/`divide` may compose across **any** units.
+Such a product is **classified `exempt` (commit-ineligible) in
+`classify_derivation`**, *not* failed in the shared `_base_reasons` gate. It stays in
+the pool — it may force a disagreement refusal — but can never resolve as the answer.
+A unique repeated-unit product is therefore `exempt`-only → refuse (the `0042`-class
+cut); a distinct-unit product stays `complete` → commit (`0003`/`0021`).
 
-New:
+### 3.1 Finding — why a shared unit-clause failure was wrong
 
-- `multiply`/`divide` may compose across **distinct** units, but a `multiply` step
-  whose operand carries a **non-empty unit already present** among the product's
-  prior operands is a **unit-incoherence** failure (it forms `unit²`, which is
-  almost never the answer to a word problem asking for that unit).
-
-Empty-unit operands are exempt (an unknown unit cannot be shown to collide — and the
-*correct* `0003` multiplies a blank-unit `0.75`). The rule is dimensional, not
-lexical: it names a property of the composed quantities, not a cue (ADR-0165-safe).
+The first implementation put the predicate in the shared unit-consistency clause, so
+a repeated-unit product **failed** (was dropped from the pool entirely). That cut the
+5 `train_sample` wrongs **but regressed the confuser probe `1 → 3`**: the
+disguised-polarity cases `0001`/`0003` refuse only because the `coins × coins` product
+*disagrees* with the `coins + coins` accumulation reading. Dropping the product left
+the (wrong) additive reading unique → it committed (`0001 → 80`, `0003 → 30`). The fix
+is the **downgrade**: keep the product as a commit-ineligible `exempt` candidate so it
+still forces the disagreement, but can never commit. (This is the same commit-
+ineligibility concept ADR-0182 introduced.) Pinned by
+`test_downgrade_not_removal_preserves_disagreement_refusal`.
 
 ### Why this keeps the correct products
 
@@ -98,8 +113,10 @@ mis-read as `4×20×6×25`) — never a real quantity.
 1. **`train_sample` (real, the metric):** sealed-reader `wrong 13 → 8`, `correct`
    held at 2 (0003/0021). Failing-under-violation: a test that the 5 named cases
    (0001/0017/0042/0045/0048) refuse, and 0003/0021 still commit.
-2. **Confuser probe:** `wrong` stays 0, positives still solve (the rule must not make
-   any curated product-positive refuse). Re-run the probe.
+2. **Confuser probe:** `wrong` must not regress and positives still solve. The
+   §3.1 finding makes this load-bearing: the naive shared-clause version regressed
+   it `1 → 3`; the downgrade holds it at baseline (`1` on main pre-#481; `0` once
+   anchor-skip lands). `0001`/`0003` must stay **refused**, not commit `80`/`30`.
 3. **Practice search lane:** `search_runner` commits products; confirm `wrong=0` and
    `correct` not reduced (the rule may only *add* refusals there).
 4. **Serving frozen:** `verify` is not on the serving path (`chat/` →
@@ -110,11 +127,14 @@ mis-read as `4×20×6×25`) — never a real quantity.
 
 ## 5. Where it lives
 
-`generate/derivation/verify.py`, inside the unit-consistency clause shared by
-`self_verifies` and `classify_derivation` (so the commit gate and the pool's
-classifier cannot drift). Sealed lane only. A focused
-`tests/test_adr_0184_distinct_unit_product.py` pins the dimensional rule and the
-5-cut / 2-kept obligation.
+`generate/derivation/verify.py`: `_is_repeated_unit_product` (the dimensional
+predicate) consulted by `classify_derivation`, which downgrades an otherwise-
+`complete` repeated-unit product to `exempt`. `self_verifies` / `_base_reasons` are
+**unchanged** — so the search lanes (practice) and serving stay byte-identical, and
+the change is confined to the pool's commit-eligibility (where the over-commit lives).
+Sealed lane only. `tests/test_adr_0184_distinct_unit_product.py` pins the predicate,
+the downgrade, the `0042`-class refusal, and the §3.1 downgrade-not-removal
+regression guard.
 
 ## 6. What this does NOT fix — the honest hand-off to cue precision
 

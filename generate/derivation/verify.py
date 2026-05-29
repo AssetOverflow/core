@@ -116,6 +116,24 @@ def self_verifies(derivation: GroundedDerivation, problem_text: str) -> SelfVeri
     return SelfVerification(verified=not reasons, reasons=tuple(reasons))
 
 
+def _is_repeated_unit_product(derivation: GroundedDerivation) -> bool:
+    """ADR-0184 — a *pure* multiplicative product that revisits a non-empty
+    dimension (``apples × apples``, ``cards × cards``), forming ``unit²``.
+
+    A genuine rate-chain composes **distinct** dimensions (``boxes × erasers/box ×
+    $/eraser``); a product that repeats a dimension is multiplying independent groups
+    (``4 bags×20 + 6 bags×25`` mis-read as ``4×20×6×25``) — never a real quantity.
+    Empty units are exempt (an unknown dimension cannot be shown to collide, and a
+    correct rate-chain may carry a blank-unit scalar like ``$0.75``). Divide is
+    exempt — same-unit division (``feet / feet``) is a legitimate dimensionless count.
+    Dimensional, not lexical (ADR-0165-safe)."""
+    if not derivation.steps or not all(step.op == "multiply" for step in derivation.steps):
+        return False
+    units = [derivation.start.unit, *(step.operand.unit for step in derivation.steps)]
+    non_empty = [unit for unit in units if unit]
+    return len(non_empty) != len(set(non_empty))
+
+
 def classify_derivation(derivation: GroundedDerivation, problem_text: str) -> str | None:
     """ADR-0182 — the commit-eligibility class of a derivation, for pooling.
 
@@ -123,14 +141,17 @@ def classify_derivation(derivation: GroundedDerivation, problem_text: str) -> st
 
     * ``"complete"`` — passes every clause *including* full completeness;
       **commit-eligible** (may resolve as an answer).
-    * ``"exempt"``  — passes every base clause and the only unused quantities are
-      **isolated-foreign** (unit non-empty ∧ equal to no *used* operand's unit, i.e.
-      a candidate distractor standing alone in a dimension the reading never
-      touches); **commit-INELIGIBLE**. It exists only to enter the pool and force a
-      disagreement → refusal, never to be committed alone (see :mod:`generate.
-      derivation.pool`). This keeps the commit-path completeness guarantee
-      (ADR-0175's multi-step-incomplete defence) intact — the exemption widens only
-      what can *refuse*.
+    * ``"exempt"``  — **commit-INELIGIBLE**: it may enter the pool and force a
+      disagreement → refusal, but never resolve as the answer alone. Two ways to
+      earn it: (ADR-0182) the only unused quantities are **isolated-foreign**
+      (a candidate distractor standing alone in a dimension the reading never
+      touches); or (ADR-0184) the derivation is a **repeated-unit product**
+      (``unit²`` — dimensionally impossible as the answer, but still a real reading
+      that should *disagree* with an additive rival, e.g. ``coins × coins`` vs
+      ``coins + coins`` on a disguised-polarity confuser). Keeping it commit-
+      ineligible — rather than dropping it — preserves the disagreement refusals
+      ADR-0182 relies on; dropping it would unmask the additive reading as a unique
+      (wrong) commit.
     * ``None``      — fails a base clause, or an unused quantity is not
       isolated-foreign (empty unit, or a unit shared with a used operand → real
       signal the reading dropped).
@@ -138,9 +159,12 @@ def classify_derivation(derivation: GroundedDerivation, problem_text: str) -> st
     tokens = _tokens(problem_text)
     if _base_reasons(derivation, tokens):
         return None
+    repeated_unit_product = _is_repeated_unit_product(derivation)
     unused = _unused_quantities(derivation, problem_text)
     if not unused:
-        return "complete"
+        # ADR-0184: a dimensionally-impossible product is commit-ineligible (exempt),
+        # not commit-eligible — but it stays in the pool to force disagreement.
+        return "exempt" if repeated_unit_product else "complete"
 
     used_units = {derivation.start.unit, *(step.operand.unit for step in derivation.steps)}
     units_by_token: dict[str, set[str]] = {}
