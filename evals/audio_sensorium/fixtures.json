@@ -1,0 +1,20 @@
+{
+  "sample_rate": 24000,
+  "comment": "Deterministic synthesis specs. Each fixture is designed with a predictable parse so the gate grades parser semantics, not just determinism (ADR-0181 PR-4).",
+  "fixtures": [
+    {"id": "silence_500ms", "kind": "silence", "ms": 500,
+     "expect": "long pause + turn boundary, no speech"},
+    {"id": "rise_question", "kind": "tone", "ms": 300, "hz": 150, "sweep": 90, "amp": 0.5,
+     "expect": "voiced speech + rising final contour"},
+    {"id": "fall_statement", "kind": "tone", "ms": 300, "hz": 230, "sweep": -90, "amp": 0.5,
+     "expect": "voiced speech + falling final contour"},
+    {"id": "noise_burst", "kind": "noise", "ms": 300, "seed": 7, "amp": 0.3,
+     "expect": "non-speech broadband noise"},
+    {"id": "speech_then_pause", "kind": "concat",
+     "parts": [
+       {"kind": "tone", "ms": 300, "hz": 150, "amp": 0.5},
+       {"kind": "silence", "ms": 400}
+     ],
+     "expect": "voiced speech then long pause + turn boundary"}
+  ]
+}
