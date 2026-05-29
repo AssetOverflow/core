@@ -300,6 +300,10 @@ carries what the teacher bootstrapped. Two ways that holds:
   front-end + taught vocabulary lets the engine recognise words itself, lawfully,
   0-param. Whisper was just the bootstrap that helped build that vocabulary.
 
+Paths (A)/(B) are the subject of
+[ADR-0183 (stub)](decisions/ADR-0183-lawful-audio-lexeme-path.md) — deferred, but
+on the record so the serving-path boundary isn't crossed silently.
+
 **The trap to avoid:** teaching with a model does **not** automatically transfer
 word-recognition into a 0-param engine the way distillation transfers into a
 student network. Nothing transfers unless path (A) or (B) actually exists to use
