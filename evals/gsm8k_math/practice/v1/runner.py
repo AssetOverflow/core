@@ -34,6 +34,7 @@ REFUSAL_DIAGNOSES: tuple[str, ...] = ("skill_gap", "knowledge_gap", "genuine_amb
 
 _HERE = Path(__file__).resolve().parent
 _REPORT_PATH = _HERE / "report.json"
+_PRACTICE_CASES_PATH = _HERE / "cases.jsonl"
 _CALC_RE = re.compile(r"<<([^=>]+)=")
 
 
@@ -183,8 +184,25 @@ def run_practice(
     )
 
 
+def _load_practice_cases(path: Path = _PRACTICE_CASES_PATH) -> list[dict[str, Any]]:
+    """Load cases from the practice-specific cases.jsonl (no count assertion)."""
+    records: list[dict[str, Any]] = []
+    with path.open("r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            records.append(json.loads(line))
+    return records
+
+
 def build_report() -> PracticeReport:
     return run_practice(_load_cases(_CASES_PATH))
+
+
+def build_practice_report() -> PracticeReport:
+    """Run the practice lane over the dedicated practice case set."""
+    return run_practice(_load_practice_cases())
 
 
 def write_report(report: PracticeReport, path: Path = _REPORT_PATH) -> None:
