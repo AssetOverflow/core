@@ -244,75 +244,78 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 
 ## Current frontier
 
-The ADR-0091..0114 slate is fully accepted (0091..0113) plus one proposed-roadmap entry (0114) and mechanically evidenced:
+_Current as of 2026-05-29 (ADR-0183)._
 
-- Domain Pack Contract v1 — ADR-0091
-- Reviewer Registry v1 — ADR-0092
-- Domain Contract v1 enforcement — ADR-0093
-- Proposal Source Provenance — ADR-0094
-- Miner-Sourced Teaching Proposals — ADR-0095
-- Fabrication-control negative eval lane — ADR-0096
-- `mathematics_logic` reasoning-capable ratification — ADR-0097
-- Demo Composition Contract — ADR-0098
-- Public Showcase Demo — ADR-0099
-- `physics` reasoning-capable ratification — ADR-0100
-- `systems_software` reasoning-capable ratification — ADR-0101
-- `hebrew_greek_textual_reasoning` multi-pack reasoning-capable ratification — ADR-0102
-- Hebrew/Greek fluency lane attachment for ADR-0102 — ADR-0103
-- Curriculum-Sourced Teaching Proposals — ADR-0104
-- Sealed Holdout Encryption via age — ADR-0105
-- Expert-Demo Promotion Contract — ADR-0106
-- `mathematics_logic` Expert-Demo Promotion deferred (first attempt) — ADR-0107
-- Proposed-ADR Sequencing — ADR-0108
-- Lane-Shape-Aware Thresholds (ADR-0106 amendment) — ADR-0109
-- `mathematics_logic` Expert-Demo Promotion (first successful) — ADR-0110
-- `physics` Expert-Demo Promotion (second successful) — ADR-0111
-- Runnable Audit-Passed Showcase (originally "Expert-Demo"; renamed) — ADR-0112 + ADR-0113
-- Rename `expert-demo` → `audit-passed`; reserve `expert` namespace — ADR-0113
-- Expert-Capability Roadmap (GSM8K-Math first); proposed — ADR-0114
-- Math Problem Parser & Typed Graph (Phase 1.1 schema + 5 seeds + Phase 1.2 45 more cases + Phase 1.3 parser engine; 50/50 byte-equal) — ADR-0115
-- Anti-Overfitting Proof Obligations for any future `expert` promotion (10-point falsifiable framework) — ADR-0114a
-- Deterministic Solver (Phase 2; SolutionTrace + en_arithmetic_v1 pack; discharges ADR-0114a obligations #3, #4, #9, #10) — ADR-0116
-- SolutionTrace Verifier (Phase 3; solver-independent replay; lifts ADR-0114a Obligation #3 to verifier fidelity) — ADR-0117
-- OOD Surface Generator (150 deterministic variants; discharges ADR-0114a obligation #2 for the GSM8K-style parser dev lane) — ADR-0118a
-- Stepped Realizer (Phase 4; SolutionTrace → show-your-work prose; substrate for ADR-0119 GSM8K eval lane) — ADR-0118
-- `symbolic_logic` Lane-Shape Remap (ADR-0109 amendment) — ADR-0123
-- `systems_software` Audit-Passed Promotion (third successful) — ADR-0124
-- `all_three_pass_rate` Synonym in `inference_shape` (ADR-0109 Amendment) — ADR-0123a
-- Reasoning-Isolation Perturbation Suite (224 deterministic applicable semantic perturbations; discharges ADR-0114a obligation #5 for the GSM8K-style parser dev lane) — ADR-0125
-- GSM8K Eval Lane Roadmap (Phase 5; decomposes into 5.1..5.8; proposed) — ADR-0119
-- Seal `fabrication_control` Holdout (ADR-0105 Amendment) — ADR-0119.1
-- GSM8K Eval Corpus Dev/Public Splits (200 CORE-original cases; verify.py 200/200; sealed holdout placeholder reserved for ADR-0119.7) — ADR-0119.2
-- gsm8k_math Lane Runner (Phase 5.3; correct/wrong/refused triple; wrong==0 gate; current: 200/200 correct on dev+public) — ADR-0119.3
-- GSM8K Math: Frontier-Baseline Comparison (citations for Claude 3.5, GPT-4, Gemini 1.5; comparison_v1.json; discharges ADR-0114a §Obligation #7) — ADR-0119.4
-- GSM8K Math Depth-Curve Measurement Harness (discharges ADR-0114a Obligation #6 measurement-side) — ADR-0119.6
-- Sealed GSM8K Test Set (1,319 cases age-encrypted; one-way seal; first honest CORE-vs-real-GSM8K measurement: 0/1319 correct, **0 wrong** — ADR-0114a Obligation #4 holds against external corpus) — ADR-0119.7
-- GSM8K Math Adversarial Generation (38 cases × 12 families; **closes ADR-0114a Obligation #8**; misparse rate 0/38; 10 of 10 obligations now discharged on main) — ADR-0119.5
-- gsm8k_math Overall Lane Gate (Phase 5.8; new `gsm8k_capability_shape` in `LANE_SHAPE_REGISTRY`; composes wrong==0 + correct+refused==total + overall_pass; live dev 50/50 + public 150/150 pass) — ADR-0119.8
-- First `expert` Promotion Contract (composes all 10 ADR-0114a obligations + correct_rate ≥ 0.60 floor + depth-curve ε=0.05 + signed expert_claims; proposed; ADR-0121 the first worked attempt) — ADR-0120
-- First `expert` Promotion Attempt — `mathematics_logic` — DEFERRED (mirrors ADR-0107 → ADR-0110 pattern for audit-passed; all 10 obligations pass; correct_rate gate refuses honestly at 0/1319; parser-expansion arc is the named unlock; `wrong == 0` discipline holds against external benchmark) — ADR-0121
-- Parser-Expansion Arc — first class shipped (rate/per-unit) as **substrate-only with lift deferred** (`Rate` dataclass + `apply_rate` operation kind + parser/solver/verifier/realizer + `en_arithmetic_v1:apply_rate` pack lemma; 41 invariants pinned; sealed `correct_rate` stays at 0/1319 with `wrong == 0`; multi-construction barrier documented — every real GSM8K rate problem combines rate with ≥1 other class, so per-ADR lift signal is corrected to cumulative-after-3rd-or-4th-class) — ADR-0122
-- Parser-Expansion Arc — comparison-phrasing class shipped **fully end-to-end** as substrate (PR #155 `feat/adr-0123-substrate`: `Comparison` dataclass + `compare_additive`/`compare_multiplicative` operation kinds + parser patterns for `N more`/`N fewer`/`twice`/`N times`/`half` + solver/verifier wiring + `en_arithmetic_v1:compare_additive` + `en_arithmetic_v1:compare_multiplicative` pack lemmas) **+ surface** (this ADR: `_compare_additive_sentence` + `_compare_multiplicative_sentence` realizer helpers wired into `_step_sentence`; `parse_problem → solve → realize` operates end-to-end on all four comparison shapes); sealed `correct_rate` stays at 0/1319 with `wrong == 0` (multi-construction barrier holds; cumulative lift signal expected after the 3rd/4th class lands) — ADR-0123
-- **Phase 5 complete (2026-05-22):** All ADR-0119 sub-phases (5.1..5.8) landed; ADR-0114a 10/10 obligations discharged for the gsm8k_math lane on main; first honest CORE-vs-real-GSM8K measurement published (0/1319 correct, 0 wrong, 1319 refused); ADR-0120 (first `expert` promotion contract) is the next gate.
+The development frontier has moved beyond the audit-passed foundations (ADR-0091–0125) into native multi-modal execution and autonomous calibration. Key active arcs include:
 
-ADR-0080 has also landed: Contemplation Loop Phase 1 adds a read-only frontier-compare miner that emits `SPECULATIVE` findings only.
-
-Seven lanes are SHA-pinned in `scripts/verify_lane_shas.py` and gated by the `lane-shas` GitHub Actions workflow:
-
-- `reviewer_registry`
-- `domain_contract_validation`
-- `miner_loop_closure`
-- `curriculum_loop_closure`
-- `fabrication_control_summary`
-- `demo_composition`
-- `public_demo`
+- **Auditory Modality & CRDT Substrate (ADR-0180, ADR-0181, ADR-0183)**: Shifting from text-only to concurrent multi-modal pipelines. Introduces a lock-free Delta-CRDT shared vault substrate to eliminate thread contention under continuous vision/audio ingestion, and ships `audio_core_v1` as a deterministic acoustic compiler lowerable to unit-versors. ADR-0183 stubs the serving-time ASR boundary, ensuring lexical extraction is either text-side or deterministically decoded under `wrong=0`.
+- **Calibrated Attempt-and-Eliminate Learning (ADR-0175)**: Establishes a formal precision-only reliability ledger and ratio-gate using the one-sided Wilson lower bound (`conservative_floor`). It separates the safe serving regime (`wrong=0`) from a sealed practice regime where failures are treated as elimination signals to prune the solver's search.
+- **Incremental Comprehension & Verification (ADR-0164, ADR-0174)**: Transitioned sentence extraction from brittle regex sentence templates to a deterministic incremental reader based on shift-reduce over semantic categories. The reader is backed by held-hypothesis evaluation, lookback, and in-loop contemplation.
+- **Measurement & Evaluation Discipline (ADR-0166, ADR-0163-F2)**: Establishes the `capability-before-measurement` rule to ensure eval lanes are only built when operators exist and can admit at least one case. F2 defines a confuser corpus discrimination probe rather than a mere coverage target.
 
 ### Proposed-but-unimplemented ADRs
 
-Sequencing per ADR-0108. Listed in priority order:
+The following ADRs carry a status of **Proposed** in the Index:
 
-1. **[ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs.** Optional per-entry definitional block. Deferred — value surfaces during a worked expert promotion that needs definitional depth.
-2. **[ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis.** A third substantive selection axis sibling to anchor-lens. Lowest current priority — no active downstream consumer; register + anchor-lens already demonstrate the orthogonality pattern.
+#### Core Infrastructure & Metadata
+- [ADR-0084](ADR-0084-definitional-layer.md) — Definitional Layer for Lexicon Packs
+- [ADR-0087](ADR-0087-rhetorical-style-axis.md) — Rhetorical Style Axis
+- [ADR-0129](ADR-0129-spaced-correction-replay-deferred.md) — Spaced Reviewed-Correction Replay (Deferred Proposal)
+- [ADR-0130](ADR-0130-pre-articulation-calibration-deferred.md) — Pre-Articulation Calibration Logging (Deferred Proposal)
+- [ADR-0140](ADR-0140-core-trace-protocol-v0.md) — CORE Trace Protocol v0
+
+#### Auditory Modality & Delta-CRDT Concurrency
+- [ADR-0180](ADR-0180-crdt-sharded-vault-concurrency.md) — Delta-CRDT Sharded Substrate for Multimodal Concurrency
+- [ADR-0181](ADR-0181-audio-compiler-delta-crdt.md) — CORE-native Audio Compiler over the Delta-CRDT Substrate
+- [ADR-0183](ADR-0183-lawful-audio-lexeme-path.md) — Lawful Audio→Lexeme Path (stub)
+
+#### Expert Promotion & Evaluation (Math/GSM8K)
+- [ADR-0114](ADR-0114-expert-capability-roadmap-gsm8k-first.md) — Expert-Capability Roadmap: GSM8K-Math First
+- [ADR-0119](ADR-0119-gsm8k-eval-lane-roadmap.md) — GSM8K Eval Lane Roadmap (Phase 5)
+- [ADR-0120](ADR-0120-expert-promotion-contract.md) — First `expert` Promotion Contract
+- [ADR-0131](ADR-0131-math-expert-rebench.md) — Re-Target Math Expert Promotion to Architecture-Aligned Benchmarks
+- [ADR-0131.1.F](ADR-0131.1.F-frontier-baseline-comparison.md) — B1 Symbolic Equivalence: Frontier-Baseline Comparison
+- [ADR-0131.G](ADR-0131.G-gsm8k-coverage-probe.md) — GSM8K Coverage Probe: Honest Measurement Under the Safety Rail
+- [ADR-0131.G.0](ADR-0131.G.0-probe-substrate.md) — Probe Substrate: Candidate-Graph Pipeline
+- [ADR-0131.G.2](ADR-0131.G.2-comparatives.md) — Capability axis: comparative operations (additive + multiplicative)
+- [ADR-0131.G.3](ADR-0131.G.3-numerics.md) — Numeric Literals (money + hyphenated cardinals)
+- [ADR-0131.G.3.1](ADR-0131.G.3.1-numerics-extensions.md) — Numerics extensions (fractions + multi-currency + multi-token cardinals + word-num-adjective)
+- [ADR-0131.G.4](ADR-0131.G.4-multi-clause.md) — Capability axis: multi-clause composition (conjoined subjects, conjoined objects, embedded quantifiers)
+- [ADR-0163](ADR-0163-F2-confuser-corpus-spec.md) — F2 — Confuser Corpus: a discrimination probe, not a coverage target
+- [ADR-0163](ADR-0163-gsm8k-path-to-mastery.md) — Path to GSM8K mastery: candidate-graph admissibility via the contemplation/HITL corridor
+
+#### Incremental Comprehension Reader & Skill Acquisition
+- [ADR-0126](ADR-0126-candidate-graph-parser.md) — Candidate-Graph Parser with Round-Trip Verifier-Filter
+- [ADR-0127](ADR-0127-units-pack-and-units-aware-parser.md) — `en_units_v1` Pack + Units-Aware Candidate Extractors
+- [ADR-0128](ADR-0128-numerics-pack.md) — `en_numerics_v1` Pack
+- [ADR-0164.1](ADR-0164.1-lexical-primitive-scope.md) — Lexical Primitive Set Scope (seed registry for `en_core_math_v1`)
+- [ADR-0164.2](ADR-0164.2-pronoun-entity-resolution.md) — Pronoun / Entity Resolution Policy
+- [ADR-0164.3](ADR-0164.3-cross-sentence-state.md) — Cross-Sentence Reading State
+- [ADR-0164.4](ADR-0164.4-phase2-statement-frame-reader.md) — Phase 2 Statement-Frame Reader
+- [ADR-0165](ADR-0165-regex-scope-rule.md) — Regex Scope Rule: Lexemes Only, Never Grammar
+- [ADR-0166](ADR-0166-measurement-capability-sequencing.md) — Measurement-Capability Sequencing Discipline
+- [ADR-0167](ADR-0167-audit-as-teaching-evidence.md) — Audit-as-Teaching-Evidence (Math Reader → Contemplation)
+- [ADR-0168](ADR-0168-frameclaim-ratification.md) — FrameClaim Ratification Doctrine
+- [ADR-0168.1](ADR-0168.1-math-frameclaim-proposal-adapter.md) — MathFrameClaimProposal Adapter
+- [ADR-0169](ADR-0169-compositionclaim-ratification.md) — CompositionClaim Ratification Doctrine
+- [ADR-0169.1](ADR-0169.1-math-compositionclaim-proposal-adapter.md) — MathCompositionClaimProposal Adapter
+- [ADR-0170](ADR-0170-injector-contract-widening.md) — Recognizer Injector Contract Widening
+- [ADR-0172](ADR-0172-math-corpus-decomposition-mechanism.md) — Math-Domain Corpus-Decomposition Mechanism (Learning-Arc Analog)
+- [ADR-0174](ADR-0174-held-hypothesis-comprehension.md) — Held-Hypothesis Comprehension with Lookback and In-Loop Contemplation
+- [ADR-0175](ADR-0175-calibrated-attempt-and-eliminate-learning.md) — Calibrated Attempt-and-Eliminate Learning: Two Regimes Under wrong=0
+- [ADR-0176](ADR-0176-multistep-composition-question-targeting.md) — Multi-Step Grounded Composition with Question-Targeting
+- [ADR-0177](ADR-0177-cue-precision-learning.md) — Cue-Precision Learning: from practice eliminations to trusted cue→op patterns
+- [ADR-0178](ADR-0178-GB3b-referent-accumulation-scope.md) — ADR-0178 GB-3b — referent-aware accumulation chaining (scope)
+- [ADR-0178](ADR-0178-compositional-structure.md) — Compositional Structure: Comprehension-Guided Multi-Step Derivation (Gap B)
+- [ADR-0179](ADR-0179-extraction-richness.md) — Extraction Richness: feeding the comprehension composer real quantities
+- [ADR-0182](ADR-0182-cross-composer-disagreement-pooling.md) — Cross-composer disagreement pooling: refuse distractor-quantity confusers without a reactive cue rule
+
+#### Workbench UI
+- [ADR-0160](ADR-0160-core-workbench-v1.md) — CORE Workbench v1: operator/auditor UI before public chat
+- [ADR-0161](ADR-0161-hitl-async-queue.md) — HITL Async Queue (W-009, L11)
+- [ADR-0162](ADR-0162-workbench-design-system.md) — Workbench Design System (v1)
+
+_Historical — accurate as of ADR-0125; see the Index for the complete, current list of domain promotions._
 
 ADR-0080 (Contemplation Loop, Phase 1), ADR-0110 (math audit-passed), ADR-0111 (physics audit-passed), and ADR-0124 (systems_software audit-passed) have all landed — `mathematics_logic`, `physics`, and `systems_software` are at `audit_passed=true`; the contemplation loop emits read-only `SPECULATIVE` findings from `frontier_compare` reports. The remaining ratified domain (`hebrew_greek_textual_reasoning`) needs its own promotion ADR.
 
@@ -320,11 +323,15 @@ ADR-0122 attempted `systems_software` promotion and deferred honestly on a lane-
 
 ### Open candidate directions (no ADR yet)
 
+_Historical — accurate as of ADR-0125; see the Index for the complete, current list._
+
 - **Multi-reviewer holdout governance and threshold signing.** ADR-0105 seals holdout payloads with a single recipient identity; multi-reviewer governance remains future work.
 
 ---
 
 ## Accepted reasoning-capable domains
+
+_Historical — accurate as of ADR-0125; see the Index for the complete, current list of domain promotions._
 
 Per ADR-0106, `audit_passed` is **contract-gated**, not threshold-only: a domain row may carry `audit_passed=true` only when a reviewer-signed `audit_passed_claims` entry exists whose evidence-bundle digest reproduces byte-for-byte. ADR-0107 attempted the first worked promotion and the contract refused; ADR-0109 amended the threshold rules; ADR-0110 then successfully promoted `mathematics_logic` (the first domain at `audit_passed=true`); ADR-0111 promoted `physics` second without further contract change, retiring the "math-only" objection. The other two ratified domains remain at `reasoning-capable` pending their own promotion ADRs.
 
@@ -422,6 +429,20 @@ ADR-0163's *diagnosis* (the front-end is the bottleneck) is reaffirmed;
 its *prescription* (Phases B–E recognizer production) is partially
 superseded. ADR-0136 and its S-family have the same disposition.
 
+### Measurement-Capability Sequencing — ADR-0166 (2026-05-27)
+
+Establishes the structural sequencing invariant: capability (operators, rules) must land on `main` and admit at least one test case before the eval lanes that measure it can be authored. Prevents noise of 100% refusing lanes from masking actual development priorities.
+
+### Calibrated learning and reliability — ADR-0175 through ADR-0177 (2026-05-28)
+
+Establishes calibrated attempt-and-eliminate learning under a strict two-regime separation:
+1. **Serving**: Safe production path requiring `wrong=0` via a strict, high-reliability Wilson lower bound gate.
+2. **Practice**: Sealed evaluation path where mistakes serve as checkable elimination signals to prune solver paths.
+
+### Multimodal Audio modality & CRDT substrate — ADR-0180 through ADR-0183 (2026-05-29)
+
+Shifts the engine toward concurrent multi-modal pipelines. Decouples physical lock contention on vision/audio from the logical manifold using Delta-CRDT sharding in Rust (ADR-0180), implements `audio_core_v1` as a deterministic acoustic compiler (ADR-0181), and stubs ASR serving boundaries to prevent learned Whisper models from contaminating production serving paths (ADR-0183).
+
 ---
 
 ## Session Logs
@@ -435,3 +456,5 @@ Session logs record the decisions and rationale from individual working sessions
 | 2026-05-12 (language packs) | [SESSION-2026-05-12-language-packs-addendum.md](SESSION-2026-05-12-language-packs-addendum.md) |
 | 2026-05-13 | [SESSION-2026-05-13.md](SESSION-2026-05-13.md) |
 | 2026-05-26 (comprehension reader) | [SESSION-2026-05-26-comprehension-reader.md](SESSION-2026-05-26-comprehension-reader.md) |
+| 2026-05-27 (parallel dispatch) | [SESSION-2026-05-27-adr-0167-parallel-dispatch.md](SESSION-2026-05-27-adr-0167-parallel-dispatch.md) |
+| 2026-05-27 (tier 3 sequencing) | [SESSION-2026-05-27-tier3-sequencing.md](SESSION-2026-05-27-tier3-sequencing.md) |
