@@ -24,11 +24,28 @@ this module, so none of this can move the serving ``3/47/0``):
   sentence/text or before terminal punctuation) extracts with an empty unit so it
   stays available to the completeness check without inventing a unit lexeme.
 
-EX-3 (multi-word units) is deliberately **not** integrated: the greedy lowercase
-unit span regresses GB-2's same-unit detection (``"6 apples and 4 apples"`` →
-unit ``"apples and"``) and does not cleanly recover real multi-word units from
-0024-class text (``"20 jumping jacks on Monday"`` → ``"jumping jacks on"``). See
-``docs/handoff/AUDIT-ADR-0179-EX-RECONCILE.md``.
+EX-3 (multi-word units) is deliberately **not** integrated. Two distinct traps
+defeat the tightest lookahead-anchored rule the brief admits:
+
+1. **Connective-crossing** (in
+   ``docs/handoff/AUDIT-ADR-0179-EX-RECONCILE.md``). The greedy lowercase unit
+   span regresses GB-2's same-unit detection (``"6 apples and 4 apples"`` → unit
+   ``"apples and"``) and does not cleanly recover real multi-word units from
+   0024-class text (``"20 jumping jacks on Monday"`` → ``"jumping jacks on"``).
+2. **Postmodifier-adjective tails** (discovered during the Track C redo of
+   ``docs/handoff/PARALLEL-WORK-PLAN-2026-05-29.md``). Even a *tight*
+   ``digit + lc word + lc word + (?=clause-terminator)`` rule fires on
+   ``"25 years old?"`` and produces unit ``"years old"`` instead of
+   ``"years"`` — regressing
+   ``tests/test_adr_0176_ms1_question_target.py::TestQuestionQuantities::test_extracts_quantity_stated_in_question``.
+   The pattern is endemic: GSM8K cases 0006/0033 and several MS2 chain tests use
+   ``"X years old"``. Closing it would need a second closed lexeme set (a stop
+   list of measurement postmodifiers — ``old``, ``tall``, ``long``, ``wide``,
+   ``deep``, ``high``, ``away``, ``apart``, ``ago``, …) which the audit did not
+   anticipate and which the Track C brief judged too open-ended to enumerate
+   responsibly. ``TestEX3StillDeferred`` in
+   ``tests/test_adr_0179_extract.py`` pins this second trap so no future redo
+   silently re-introduces it.
 """
 
 from __future__ import annotations

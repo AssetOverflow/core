@@ -94,6 +94,55 @@ class TestNoRegression:
         assert _triples("It costs 0.75 dollars.") == [(0.75, "dollars", "0.75")]
 
 
+class TestEX3StillDeferred:
+    """Honest pin: EX-3 (multi-word units) remains deferred after the Track C redo.
+
+    The brief in ``docs/handoff/PARALLEL-WORK-PLAN-2026-05-29.md`` Track C asked
+    for a *tight* rule satisfying:
+
+    * (a) ``"12 jumping jacks."`` → unit ``"jumping jacks"`` only where tight;
+    * (b) ``"6 apples and 4 apples."`` → two ``apples`` quantities (not
+      ``"apples and"``);
+    * (c) all GB-1/GB-2/GB-3 tests stay green;
+
+    plus the plan's global rule that *no currently-green test* be regressed.
+
+    A candidate rule —
+    ``(?<![\\w.])(\\d+(?:\\.\\d+)?)\\s+([a-z]+\\s+[a-z]+)(?=\\s*[.?!,]|\\s*$)``
+    — satisfies (a)+(b)+(c) against the four listed test files but **regresses
+    a different green test**: ``test_adr_0176_ms1_question_target.py
+    ::TestQuestionQuantities::test_extracts_quantity_stated_in_question``,
+    which pins ``"25 years old?"`` → unit ``"years"``. The candidate rule fires
+    on ``"25 years old"`` and produces unit ``"years old"`` — and the
+    postmodifier-adjective tail (``"old"`` / ``"tall"`` / ``"long"`` / ``"wide"``
+    / ``"away"`` / ``"ago"`` / …) is endemic in GSM8K (cases 0006, 0033 and
+    several MS2 chain tests all use ``"X years old"``).
+
+    The audit at ``docs/handoff/AUDIT-ADR-0179-EX-RECONCILE.md`` named the first
+    trap (connective-crossing). This pin names the second one
+    (postmodifier-adjective tails), so the deferred status of EX-3 is owned by
+    *both* known traps and a future redo cannot silently land without addressing
+    them.
+
+    These assertions hold against the *current* (no-EX-3) extractor. Any patch
+    that introduces a multi-word-unit pass without also blocking postmodifier
+    tails will flip them — that is the point.
+    """
+
+    def test_postmodifier_adjective_does_not_inflate_unit_to_two_words(self) -> None:
+        # The trap. Naive tight EX-3 produces "years old"; the correct unit is
+        # "years" alone.
+        qs = extract_quantities("How old will the father be when she is 25 years old?")
+        assert [(q.value, q.unit) for q in qs] == [(25.0, "years")]
+
+    def test_postmodifier_trap_present_for_full_sentence_form_too(self) -> None:
+        # The same trap with a period instead of a question mark, paralleling
+        # ``"Rachel is 12 years old."`` from GSM8K case 0033 / the MS2 chain tests.
+        qs = extract_quantities("Rachel is 12 years old.")
+        assert qs[0].value == 12.0
+        assert qs[0].unit == "years"
+
+
 class TestRealCase0024StillBlocked:
     """Honest pin: the EX-4 unit-list pattern does NOT recover real case 0024.
 
