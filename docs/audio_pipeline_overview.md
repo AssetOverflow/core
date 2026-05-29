@@ -276,6 +276,39 @@ The real doctrinal commitment is **not** admitting a teacher; it's whenever
 someone builds the **consumer** that reads teacher hints into comprehension. No
 such consumer exists yet. That is the PR to scrutinise hard.
 
+### Teacher = bootstrap scaffolding; the serving path stays Whisper-free
+
+A teacher is **scaffolding for the teaching phase, not a production component.**
+This is *not* ML distillation: CORE has no weights, so Whisper does not train a
+"student." Its only job is to *propose* transcripts → a human reviews them → they
+become **taught associations** (acoustic-pattern ↔ lexeme) in curated packs. Then
+the engine decodes audio and recalls against what it learned — and Whisper is
+gone.
+
+**Serving rule:** the production/serving path must never call a teacher. Teachers
+are admitted only on the *teaching* side (reviewed, evidence-only). The day
+someone proposes a teacher in the serving path is the day to say no.
+
+**Production is Whisper-free — on one condition.** Removing the teacher only
+leaves the engine able to handle words if, by then, a **lawful runtime path**
+carries what the teacher bootstrapped. Two ways that holds:
+
+- **(A) Words arrive as text** — audio stays a paralinguistic sense
+  (prosody/turns/affect/coarse phonetics); the *what* comes through the text
+  modality. Whisper never needed at runtime. Cleanest.
+- **(B) The deterministic audio→lexeme decode matured** — a formant/phonetic
+  front-end + taught vocabulary lets the engine recognise words itself, lawfully,
+  0-param. Whisper was just the bootstrap that helped build that vocabulary.
+
+**The trap to avoid:** teaching with a model does **not** automatically transfer
+word-recognition into a 0-param engine the way distillation transfers into a
+student network. Nothing transfers unless path (A) or (B) actually exists to use
+what was taught. Remove the teacher with neither in place and the engine is
+simply **deaf to words again** — it keeps all of prosody/turns/affect, but loses
+lexical content.
+
+Hold it in one line: **the teacher teaches; the lawful path serves.**
+
 ---
 
 ## 10. Specs quick-reference (all from the code)
