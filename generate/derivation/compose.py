@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from typing import Final
 
+from generate.derivation.clauses import segment_clauses
 from generate.derivation.comparatives import comparative_step, extract_comparative_scalars
 from generate.derivation.extract import extract_quantities
 from generate.derivation.model import GroundedDerivation, Quantity, Step
@@ -41,7 +42,7 @@ def _same_unit(quantities: list[Quantity]) -> bool:
 
 
 def compose_sequential(problem_text: str) -> Resolution | None:
-    """GB-2 composer — the same-unit **list-sum-then-scale** structure.
+    """GB-2/GB-3 composer — the **clause-local** same-unit list-sum-then-scale.
 
     Scope (deliberately narrow): only same-unit quantity *lists*. The list sums
     (additive cue) and any stated comparative scales the sum (sum-then-scale). A
@@ -51,17 +52,40 @@ def compose_sequential(problem_text: str) -> Resolution | None:
 
     Product-of-all / cross-unit products are **not** this composer's job (that is
     MS-3 ``search_chain``); a non-same-unit problem yields no candidate here and
-    refuses. This keeps GB-2 to the one structure it adds and avoids the
+    refuses. This keeps the composer to the one structure it adds and avoids the
     product×comparative blowups a blunt all-bases composer produced.
+
+    **GB-3 referent guard (wrong=0-first).** The list-sum structure must be
+    licensed *within a single clause*. The earlier whole-problem version summed any
+    same-unit quantities anywhere in the text, which silently merged unrelated
+    referents/scopes (a later sentence's quantity, a second actor's total, a
+    depletion event) into one sum — admitting wrong structures whose value happened
+    to ground (audit ADR-0178 hazards H1/H2/H3). This composer cannot model
+    referents, so when the licensed structure would span clauses it **refuses**
+    (cross-clause, referent-aware chaining is GB-3b):
+
+    * quantities must live in exactly **one** clause (segment_clauses); 0 or >1
+      quantity-bearing clauses ⇒ refuse;
+    * any comparative scalar **outside** that clause ⇒ refuse (it binds to a
+      referent/structure this slice does not model).
 
     Refuse-preferring; deterministic; sealed.
     """
-    quantities = list(extract_quantities(problem_text))
+    # GB-3: the structure must be licensed within a single clause (referent guard).
+    quantity_clauses = [c for c in segment_clauses(problem_text) if extract_quantities(c)]
+    if len(quantity_clauses) != 1:
+        return None
+    clause = quantity_clauses[0]
+    # A comparative living outside the list clause binds an unmodelled referent.
+    if len(extract_comparative_scalars(problem_text)) != len(extract_comparative_scalars(clause)):
+        return None
+
+    quantities = list(extract_quantities(clause))
     if not 2 <= len(quantities) <= MAX_QUANTITIES or not _same_unit(quantities):
         return None
 
-    tokens = _tokens(problem_text)
-    tail = tuple(comparative_step(cs) for cs in extract_comparative_scalars(problem_text))
+    tokens = _tokens(clause)
+    tail = tuple(comparative_step(cs) for cs in extract_comparative_scalars(clause))
     start, *rest = quantities
 
     candidates: list[GroundedDerivation] = []

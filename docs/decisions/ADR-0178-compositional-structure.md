@@ -131,8 +131,25 @@ gated wrong=0-first and measured honestly.
 - **GB-2 — sequential combination (chains).** Combine running result with the next
   clause via the relational cue → op (guided by ADR-0177 + comparatives). Flips the
   sequential-chain gold cases (0003/0024-class) under self-verification + uniqueness.
+  - **Shipped narrower than scoped (drift G1, audit `AUDIT-ADR-0178-GB1-GB2.md`).**
+    What landed is a **same-unit list-sum-then-scale slice** (`compose_sequential`)
+    that re-extracted from the *whole problem* — it did **not** consume GB-1's
+    `ClauseResult`s and did **not** chain across clauses, so it never flipped real
+    0003/0024 (those stay blocked on extraction + cross-clause chaining). Treat the
+    landed code as **GB-2a (list structure)**, not the full sequential chainer.
 - **GB-3 — lookback / reevaluate** (repoint ADR-0174 `reevaluate`): a later clause
   revises an earlier structural choice. wrong=0-first.
+  - **GB-3a — referent guard (landed).** The lookback review proved GB-2a's
+    whole-problem aggregation admitted wrong structures across referents/scopes
+    (hazards H1/H2/H3 returned 12/20/13). `compose_sequential` is now **clause-scoped**:
+    the list-sum must be licensed within one clause, and a comparative outside that
+    clause refuses. This is the wrong=0-first floor (`compose_sequential` is sealed
+    substrate, not yet wired to a scorer, so serving stayed `3/47/0`); tests in
+    `tests/test_adr_0178_gb3_referent_guard.py` would fail against the pre-guard code.
+  - **GB-3b — constructive cross-clause chaining (next).** Consume GB-1
+    `ClauseResult`s and combine across clauses *referent-safely* (the chainer GB-2
+    was originally scoped to be), with lookback revising an earlier choice. Builds on
+    the now-safe GB-3a floor.
 - **GB-4 — held structural hypotheses + eliminate** (repoint `eliminate_violating` /
   `contemplate`): hold >1 structure on ambiguity, eliminate downstream, refuse if
   irreducible.
