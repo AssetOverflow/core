@@ -1,6 +1,6 @@
 # ADR-0055 — Inter-Session Memory: Reviewed Discovery Promotion
 
-**Status:** Phase A + Phase B Accepted; Phases C–E Proposed
+**Status:** Phase A + Phase B Accepted; Phase C Implemented (split into [ADR-0056](./ADR-0056-contemplation-loop-c1.md) C1 + [ADR-0057](./ADR-0057-teaching-chain-proposal-review.md) C2, both Accepted); Phases D–E substantially landed (`teaching/epistemic.py`, corpus-flywheel / learning-arc)
 **Date:** 2026-05-18
 **Author:** Shay
 
@@ -338,7 +338,13 @@ shifts.  Identity packs stay hand-ratified per ADR-0027.
 ## Cross-References
 
 - [ADR-0021](./ADR-0021-epistemic-status.md) — `EpistemicStatus`
-  tiers that Phase D depends on.
+  tiers that Phase D depends on; realized in `teaching/epistemic.py`.
+- [ADR-0056](./ADR-0056-contemplation-loop-c1.md) — Phase **C1**:
+  contemplation loop (question decomposition + polarity + domain
+  typing). Accepted, implemented.
+- [ADR-0057](./ADR-0057-teaching-chain-proposal-review.md) — Phase
+  **C2**: `TeachingChainProposal` + review + replay-equivalence
+  gate, the review surface this ADR proposed. Accepted.
 - [ADR-0027](./ADR-0027-identity-packs.md) — ratified-pack
   authority; out of scope for discovery promotion.
 - [ADR-0040](./ADR-0040-structured-logging-sink.md) /
@@ -357,9 +363,8 @@ shifts.  Identity packs stay hand-ratified per ADR-0027.
 
 ## Verification (phase-by-phase)
 
-This ADR is Proposed; no code yet.  Each phase lands as its own
-ADR.  Acceptance criteria, expressed up front so later ADRs have
-a contract:
+Each phase landed as its own ADR (C as ADR-0056/0057). Acceptance
+criteria, expressed up front so later ADRs had a contract:
 
 - **Phase A**: `core teaching audit` is deterministic; corpus
   drops surface with reason; supersession field defaults `null`

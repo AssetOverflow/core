@@ -64,7 +64,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0052](ADR-0052-teaching-grounded-surface.md) | Teaching-Grounded Surface for Cold-Start CAUSE / VERIFICATION | Accepted |
 | [ADR-0053](ADR-0053-cognition-lane-closure.md) | Cognition Lane Closure: Dev-Driven Corpus Expansion + CORRECTION Acknowledgement | Accepted |
 | [ADR-0054](ADR-0054-vault-recall-indexing-batching.md) | Vault Recall: Matrix-Cache Indexing + Batched API; Holdout Split Wired | Accepted |
-| [ADR-0055](ADR-0055-inter-session-memory-discovery-promotion.md) | Inter-Session Memory: Reviewed Discovery Promotion | Phase A + Phase B Accepted; Phases C–E Proposed |
+| [ADR-0055](ADR-0055-inter-session-memory-discovery-promotion.md) | Inter-Session Memory: Reviewed Discovery Promotion | Phase A + Phase B Accepted; Phase C Implemented (ADR-0056/0057); Phases D–E substantially landed |
 | [ADR-0056](ADR-0056-contemplation-loop-c1.md) | Contemplation Loop: Question Decomposition + Polarity + Domain Typing (Phase C1) | Accepted (implemented at `4eecf73`, 2026-05-18) |
 | [ADR-0057](ADR-0057-teaching-chain-proposal-review.md) | Teaching-Chain Proposal + Review + Replay-Equivalence Gate (Phase C2) | Accepted |
 | [ADR-0058](ADR-0058-forward-graph-constraint-status.md) | `forward_graph_constraint`: Engaged but Inert on Today's Cognition Lane | Accepted |
