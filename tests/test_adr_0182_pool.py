@@ -15,6 +15,7 @@ Sealed lane: ``chat/`` does not import these; serving ``3/47/0`` cannot move.
 
 from __future__ import annotations
 
+from generate.derivation import pool
 from generate.derivation.accumulate import accumulation_candidates
 from generate.derivation.model import GroundedDerivation, Quantity, Step
 from generate.derivation.pool import resolve_pooled
@@ -25,9 +26,13 @@ _DISTRACTOR_0014 = (
     "Kate has 20 pencils. She studies for 3 hours and then buys 5 more pencils. "
     "How many pencils does Kate have?"
 )
-# A distractor with NO multiplicative cue: the only candidate is the exempt additive
-# reading (no complete product exists). The commit-ineligibility rule must refuse it.
-_EXEMPT_ONLY = (
+# A distractor whose pool contains an exempt additive reading (20+5=25, "3 hours"
+# unused) AND a complete product (20*3*5=300) — three distinct answers, so refusal
+# here comes from the DISAGREEMENT rule, not commit-ineligibility. (The aggressive
+# composers manufacture the product from any such text, which is exactly why a
+# natural fixture cannot isolate the commit-ineligibility branch — see
+# test_exempt_only_never_commits, which injects a single-exempt pool directly.)
+_EXEMPT_PLUS_PRODUCT = (
     "Kate has 20 pencils. She rests for 3 hours and buys 5 more pencils."
 )
 _CLEAN_ACCUMULATION = "Sam has 14 apples. He buys 9 more apples."
@@ -86,17 +91,36 @@ class TestResolvePooled:
         # product 300 (complete) vs additive 25 (exempt) disagree -> refuse.
         assert resolve_pooled(_DISTRACTOR_0014) is None
 
-    def test_exempt_only_never_commits(self) -> None:
-        # THE wrong=0-critical obligation. The only verifying reading here is the
-        # exempt additive one (no multiplicative cue -> no competing product), so a
-        # commit would be on an incomplete reading. The commit-ineligibility rule
-        # must refuse. Flipping `exempt` to commit-eligible makes this commit 25 and
-        # this test fails loudly.
-        assert accumulation_candidates(_EXEMPT_ONLY), "expected an exempt candidate"
+    def test_extra_exempt_readings_do_not_break_refusal(self) -> None:
+        # A pool carrying an exempt additive reading alongside the complete product
+        # still refuses (three distinct answers -> disagreement). Guards that the
+        # exempt class does not accidentally suppress the disagreement rule.
+        assert accumulation_candidates(_EXEMPT_PLUS_PRODUCT), "expected a candidate"
         assert classify_derivation(
-            accumulation_candidates(_EXEMPT_ONLY)[-1], _EXEMPT_ONLY
+            accumulation_candidates(_EXEMPT_PLUS_PRODUCT)[-1], _EXEMPT_PLUS_PRODUCT
         ) == "exempt"
-        assert resolve_pooled(_EXEMPT_ONLY) is None
+        assert resolve_pooled(_EXEMPT_PLUS_PRODUCT) is None
+
+    def test_exempt_only_never_commits(self, monkeypatch) -> None:
+        # THE wrong=0-critical obligation, isolated. A pool whose ONLY verifying
+        # reading is exempt — a single distinct answer with no `complete` reading —
+        # must refuse on commit-ineligibility (pool.resolve_pooled requires a
+        # `complete` candidate to commit; an exempt-only answer never commits).
+        #
+        # The aggressive composers synthesise a competing `complete` product for any
+        # natural text (see test_extra_exempt_readings_do_not_break_refusal), so a
+        # corpus fixture cannot isolate this branch. We inject a single-exempt pool
+        # directly. Removing the commit-ineligibility clause makes this commit 25 and
+        # fails loudly; it is otherwise unguarded.
+        exempt = GroundedDerivation(
+            start=Quantity(20.0, "pencils", "20"),
+            steps=(Step(op="add", operand=Quantity(5.0, "pencils", "5"), cue="more"),),
+        )
+        assert classify_derivation(exempt, _DISTRACTOR_0014) == "exempt"
+        monkeypatch.setattr(pool, "pooled_candidates", lambda *_a: [exempt])
+        # one distinct answer (25), zero `complete` readings -> commit-ineligibility
+        # is the only clause that can refuse here.
+        assert resolve_pooled(_DISTRACTOR_0014) is None
 
     def test_deterministic(self) -> None:
         assert resolve_pooled(_DISTRACTOR_0014) == resolve_pooled(_DISTRACTOR_0014)
