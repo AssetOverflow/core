@@ -33,6 +33,7 @@ from generate.derivation.accumulate import accumulation_candidates
 from generate.derivation.model import GroundedDerivation
 from generate.derivation.multistep import candidate_chains
 from generate.derivation.search import multiplicative_candidates
+from generate.derivation.target import asks_prior_state
 from generate.derivation.verify import Resolution, classify_derivation
 
 
@@ -63,7 +64,15 @@ def resolve_pooled(problem_text: str) -> Resolution | None:
 
     Refuses on no verifying candidate, on disagreement among the pool, or when the
     sole answer is produced only by commit-ineligible (``exempt``) readings.
+
+    ADR-0182 question-scope guard: a question asking for a *prior* state ("how much
+    did Lisa have **before** lunch?") asks for a temporal point the forward composers
+    do not compute — they derive the final/net state. Until a question-time reader
+    exists, that is a refusal, never a guess at the wrong point.
     """
+    if asks_prior_state(problem_text):
+        return None
+
     classified = [
         (kind, derivation)
         for derivation in pooled_candidates(problem_text)
