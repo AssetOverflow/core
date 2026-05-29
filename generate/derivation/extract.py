@@ -30,6 +30,13 @@ this module, so none of this can move the serving ``3/47/0``):
   units are blanked (empty, like a sentence-final number): the value stays
   grounded, the unit is honestly unknown. Closed lexeme set (``_NON_UNIT_WORDS``),
   not a grammar template (ADR-0165).
+* **EX-6 — hyphen-bonded number-units** (ADR-0163-F2). A number bonded to its unit
+  by a hyphen (``25-foot``, ``20-inch``, ``2.5-mile``) was invisible to the base
+  ``number + space + word`` pattern, so the completeness check never saw the
+  divisor — the blind spot behind the pseudo-accumulation confusers (0005/0007).
+  Tight lexeme (digit run, hyphen, alphabetic unit word); the alphabetic-only unit
+  group keeps numeric ranges (``3-5``) out and only the first hyphen segment is
+  taken, so it stays clear of the deferred EX-3 multi-word-unit traps below.
 
 EX-3 (multi-word units) is deliberately **not** integrated. Two distinct traps
 defeat the tightest lookahead-anchored rule the brief admits:
@@ -92,6 +99,19 @@ _WORD_QTY_RE: Final[re.Pattern[str]] = re.compile(
 # EX-5: a number with no following unit, at end of sentence/text.
 _FINAL_NUMBER_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w.])(\d+(?:\.\d+)?)(?=\s*(?:[.?!]|$))"
+)
+
+# EX-6: a number bonded to its unit by a hyphen (``25-foot``, ``20-inch``,
+# ``2.5-mile``). The base ``_QTY_RE`` requires whitespace before the unit word,
+# so a hyphen-bonded unit was invisible — the blind spot behind the
+# pseudo-accumulation confusers (``25-foot`` / ``20-inch`` divisors the
+# completeness check never saw). Tight lexeme: a digit run, a single hyphen, an
+# alphabetic unit word. The trailing ``[a-zA-Z]+`` (not ``\d``) keeps numeric
+# ranges (``3-5``) out, and taking only the first hyphen segment keeps the
+# postmodifier tail (``25-year-old`` -> unit ``year``) from inflating the unit —
+# so this stays clear of the deferred EX-3 multi-word-unit traps.
+_HYPHEN_QTY_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w.])(\d+(?:\.\d+)?)-([a-zA-Z]+)"
 )
 
 
@@ -162,9 +182,10 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
     passes never double-count a number:
 
     1. EX-4 same-unit list (claims every number in the list);
-    2. digit + single unit word (skips numbers a list already claimed);
-    3. EX-1 word-number + unit word (alphabetic, disjoint from digit spans);
-    4. EX-5 sentence-final bare number (skips any already-claimed digit).
+    2. EX-6 hyphen-bonded number-unit (``25-foot``; claims the digit span);
+    3. digit + single unit word (skips numbers a list/hyphen pass already claimed);
+    4. EX-1 word-number + unit word (alphabetic, disjoint from digit spans);
+    5. EX-5 sentence-final bare number (skips any already-claimed digit).
     """
     found: list[tuple[int, Quantity]] = []
     claimed: list[tuple[int, int]] = []
@@ -178,6 +199,16 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
             if quantity is not None:
                 found.append((pos, quantity))
                 claimed.append((pos, pos + len(num.group(0))))
+
+    # 1b. EX-6 — hyphen-bonded number-unit (``25-foot``). Claims the digit span so
+    #     the bare/final passes never re-surface the number with a blank unit.
+    for match in _HYPHEN_QTY_RE.finditer(problem_text):
+        if _claimed(match.start(1), claimed):
+            continue
+        quantity = _quantity(match.group(1), match.group(2))
+        if quantity is not None:
+            found.append((match.start(1), quantity))
+            claimed.append(match.span(1))
 
     # 2. digit + single unit word — the original base pattern.
     for match in _QTY_RE.finditer(problem_text):

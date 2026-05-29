@@ -17,9 +17,14 @@ from evals.gsm8k_math.confusers.v1.runner import (
     summarize,
 )
 
-# Honest measured baseline (2026-05-29). The probe revealed the sealed composers
-# wrongly answer these confuser categories; this pins them so they cannot grow.
-_BASELINE_WRONG = 7
+# Honest measured baseline. The probe revealed the sealed composers wrongly answer
+# these confuser categories; this pins them so they cannot grow.
+#   2026-05-29 (initial): wrong=7, pair_tells=4.
+#   2026-05-29 (EX-6 hyphen-bonded units, ADR-0163-F2): the two pseudo-accumulation
+#     misfires (0005->796, 0007->996) now refuse — the 25-foot/20-inch divisor is
+#     finally visible to the completeness/polarity gate. wrong 7->5. pair_tells
+#     unchanged (the pseudo-accumulation cases carry no positive twin).
+_BASELINE_WRONG = 5
 _BASELINE_PAIR_TELLS = 4
 
 
@@ -67,6 +72,20 @@ class TestProbeBaseline:
 
     def test_pair_tells_do_not_regress(self) -> None:
         assert len(pair_inconsistencies()) <= _BASELINE_PAIR_TELLS
+
+    def test_pseudo_accumulation_does_not_misfire(self) -> None:
+        # ADR-0163-F2 EX-6: the hyphen-bonded-unit extraction made the
+        # 25-foot/20-inch divisor visible, so the pseudo-accumulation confusers
+        # (0005, 0007) refuse instead of committing 796/996. This is the specific
+        # obligation the fix proves — it fails loudly if the hyphen pass regresses
+        # (the gate would again miss the divisor and the category would misfire).
+        results = run_probe()
+        pseudo = [r for r in results if r.category == "pseudo-accumulation"]
+        assert pseudo, "pseudo-accumulation cases missing from corpus"
+        assert all(r.verdict != "wrong" for r in pseudo), (
+            "pseudo-accumulation confuser misfired — the hyphen-bonded-unit "
+            "divisor is no longer reaching the completeness/polarity gate."
+        )
 
     def test_deterministic(self) -> None:
         assert summarize(run_probe()) == summarize(run_probe())
