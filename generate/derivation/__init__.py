@@ -12,6 +12,7 @@ from generate.derivation.clauses import (
     clause_local_results,
     segment_clauses,
 )
+from generate.derivation.compose import compose_sequential
 from generate.derivation.comparatives import (
     ComparativeScalar,
     comparative_step,
@@ -41,6 +42,7 @@ __all__ = [
     "Target",
     "VALID_OPS",
     "clause_local_results",
+    "compose_sequential",
     "comparative_step",
     "extract_comparative_scalars",
     "extract_quantities",
