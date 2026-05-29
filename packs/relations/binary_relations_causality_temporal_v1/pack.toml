@@ -1,0 +1,44 @@
+pack_id = "binary_relations_causality_temporal_v1"
+name = "Binary Relations — Causality, Temporal, Spatial, State-Change (English)"
+version = "0.1.0"
+status = "draft"
+language = "en"
+script = "Latin"
+normalization = "deterministic"
+default = false
+
+# Layer 2 relational operator pack.
+# Covers the ~63 primitive relational lemmas that connect any two concepts:
+# causal (causes, enables, prevents, triggers, produces, blocks),
+# temporal (before, after, during, while, until, since, follows, precedes),
+# spatial (inside, outside, above, below, beside, through, between, across,
+#          along, toward, away, around, over, under, near, far),
+# and state-change (becomes, transforms, grows, decays, builds, breaks,
+#                   opens, closes, fills, empties, starts, stops, extends,
+#                   contracts, merges, splits, rises, falls).
+#
+# These are the field operators — the geometric arrows of the manifold.
+# Without this pack, downstream packs must re-derive causal and temporal
+# structure locally. With it, all domains inherit a shared propagation
+# substrate.
+#
+# Prerequisites: en (base), packs/everyday/atomic_definitions_everyday_v1
+
+[contracts]
+lemma_first = true
+shared_field_target = true
+local_readback = true
+alignment_required = false
+
+[gates]
+schema = false
+lexical = false
+morphology = false
+lift = false
+readback = false
+determinism = false
+alignment = false
+coverage = false
+
+# Gates are false until the gate runner confirms passage.
+# Do not manually set these to true.

@@ -1,0 +1,29 @@
+{"record_id":"rel:becomes:past","lemma_id":"rel:becomes","surface_form":"became","features":{"tense":"past"},"notes":"irregular past: become→became"}
+{"record_id":"rel:becomes:participle","lemma_id":"rel:becomes","surface_form":"become","features":{"tense":"past","aspect":"perfect"},"notes":"past participle: become (zero-change)"}
+{"record_id":"rel:grows:past","lemma_id":"rel:grows","surface_form":"grew","features":{"tense":"past"},"notes":"irregular past: grow→grew"}
+{"record_id":"rel:grows:participle","lemma_id":"rel:grows","surface_form":"grown","features":{"tense":"past","aspect":"perfect"},"notes":"past participle: grown"}
+{"record_id":"rel:builds:past","lemma_id":"rel:builds","surface_form":"built","features":{"tense":"past"},"notes":"irregular past: build→built"}
+{"record_id":"rel:builds:participle","lemma_id":"rel:builds","surface_form":"built","features":{"tense":"past","aspect":"perfect"},"notes":"past participle: built"}
+{"record_id":"rel:breaks:past","lemma_id":"rel:breaks","surface_form":"broke","features":{"tense":"past"},"notes":"irregular past: break→broke"}
+{"record_id":"rel:breaks:participle","lemma_id":"rel:breaks","surface_form":"broken","features":{"tense":"past","aspect":"perfect"},"notes":"past participle: broken"}
+{"record_id":"rel:rises:past","lemma_id":"rel:rises","surface_form":"rose","features":{"tense":"past"},"notes":"irregular past: rise→rose"}
+{"record_id":"rel:rises:participle","lemma_id":"rel:rises","surface_form":"risen","features":{"tense":"past","aspect":"perfect"},"notes":"past participle: risen"}
+{"record_id":"rel:falls:past","lemma_id":"rel:falls","surface_form":"fell","features":{"tense":"past"},"notes":"irregular past: fall→fell"}
+{"record_id":"rel:falls:participle","lemma_id":"rel:falls","surface_form":"fallen","features":{"tense":"past","aspect":"perfect"},"notes":"past participle: fallen"}
+{"record_id":"rel:far:comparative","lemma_id":"rel:far","surface_form":"farther","features":{"degree":"comparative"},"notes":"irregular comparative; further also valid in abstract contexts"}
+{"record_id":"rel:far:superlative","lemma_id":"rel:far","surface_form":"farthest","features":{"degree":"superlative"},"notes":"irregular superlative; furthest also valid"}
+{"record_id":"rel:follows:past","lemma_id":"rel:follows","surface_form":"followed","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:precedes:past","lemma_id":"rel:precedes","surface_form":"preceded","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:causes:past","lemma_id":"rel:causes","surface_form":"caused","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:enables:past","lemma_id":"rel:enables","surface_form":"enabled","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:prevents:past","lemma_id":"rel:prevents","surface_form":"prevented","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:triggers:past","lemma_id":"rel:triggers","surface_form":"triggered","features":{"tense":"past"},"notes":"consonant-doubled before -ed"}
+{"record_id":"rel:opens:past","lemma_id":"rel:opens","surface_form":"opened","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:closes:past","lemma_id":"rel:closes","surface_form":"closed","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:fills:past","lemma_id":"rel:fills","surface_form":"filled","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:empties:past","lemma_id":"rel:empties","surface_form":"emptied","features":{"tense":"past"},"notes":"y→ied"}
+{"record_id":"rel:merges:past","lemma_id":"rel:merges","surface_form":"merged","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:splits:past","lemma_id":"rel:splits","surface_form":"split","features":{"tense":"past"},"notes":"zero-change past: split→split"}
+{"record_id":"rel:transforms:past","lemma_id":"rel:transforms","surface_form":"transformed","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:connects:past","lemma_id":"rel:connects","surface_form":"connected","features":{"tense":"past"},"notes":null}
+{"record_id":"rel:separates:past","lemma_id":"rel:separates","surface_form":"separated","features":{"tense":"past"},"notes":null}
