@@ -941,10 +941,24 @@ def _resolve_reference_token(raw: str) -> tuple[str, str]:
 
 
 def _comparison_anchor_verb() -> str:
-    # 'has' / 'have' carry the comparator phrase. We don't include 'had/gets'
-    # etc. in P2 — past-tense + lemma-widening are deferred to a later axis
-    # to keep the precedence story narrow.
-    return r"(?:has|have)"
+    # ADR-0131.G.2a — widen the comparison anchor verb beyond 'has'/'have'.
+    # The verb here only names the action whose *quantity* is being compared
+    # ("A <verb> N more/×-as-many X than/as B"); it does not carry polarity
+    # the way accumulation verbs do, so a closed set of non-inverting action
+    # verbs is wrong=0-safe (the round-trip filter still requires the
+    # comparator anchor + reference actor to ground). The set reuses the
+    # already-vetted legacy math_parser._COMPARE_VERB lemmas plus the
+    # production/activity verbs observed in real GSM8K comparative statements
+    # ('does'/'collected'/'gained'/'studied' …).
+    #
+    # Deliberately EXCLUDED (polarity-inverting in a comparison context —
+    # admitting them could read the comparison backwards → wrong>0):
+    # lose/lost, win/won, spend/spent, use/used, give/gave, sell/sold.
+    return (
+        r"(?:has|have|had|gets|get|got|takes|take|took|buys|buy|bought|"
+        r"does|do|did|makes|make|made|collects|collect|collected|"
+        r"gains|gain|gained|studies|study|studied|reads|read)"
+    )
 
 
 _COMPARE_ADDITIVE_RE: Final[re.Pattern[str]] = re.compile(
@@ -965,15 +979,16 @@ _COMPARE_ADDITIVE_RE: Final[re.Pattern[str]] = re.compile(
 _COMPARE_MULT_ANCHOR_RE: Final[re.Pattern[str]] = re.compile(
     rf"^(?P<actor>{_ENTITY})\s+{_comparison_anchor_verb()}\s+"
     r"(?:a\s+)?(?P<anchor>twice|thrice|half|quarter|third)\s+as\s+many\s+"
-    r"(?P<unit>\w+)\s+as\s+"
+    r"(?P<unit>\w+(?:\s+\w+)?)\s+as\s+"
     rf"(?P<reference>{_COMPARE_REF})\s*\.?$"
 )
 
 # Multiplicative: explicit "N times as many <unit> as <REF>".
+# ADR-0131.G.2a — unit slot admits an optional second word ("jumping jacks").
 _COMPARE_MULT_NTIMES_RE: Final[re.Pattern[str]] = re.compile(
     rf"^(?P<actor>{_ENTITY})\s+{_comparison_anchor_verb()}\s+"
     rf"(?P<value>{_VALUE})\s+times\s+as\s+many\s+"
-    r"(?P<unit>\w+)\s+as\s+"
+    r"(?P<unit>\w+(?:\s+\w+)?)\s+as\s+"
     rf"(?P<reference>{_COMPARE_REF})\s*\.?$"
 )
 
