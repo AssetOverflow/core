@@ -162,9 +162,17 @@ class TestExtractionRefusal:
         # Two digit runs — v1 admits exactly one count.
         assert _try_extract("He has 2 horses, 5 dogs.") is None
 
-    def test_unobserved_counted_noun_refused(self) -> None:
-        # 'widgets' is not in the spec's observed_counted_nouns.
-        assert _try_extract("Sam has 5 widgets.") is None
+    def test_unobserved_counted_noun_now_admits(self) -> None:
+        # ADR-0192 — the counted-noun slot is OPEN: an unobserved noun
+        # ('widgets', not in the spec's observed_counted_nouns) admits
+        # under the simple possession shape. The other narrowness layers
+        # (subject/verb/count/clause) and the downstream ADR-0191
+        # completeness guard + round-trip hold wrong=0, not the noun list.
+        result = _try_extract("Sam has 5 widgets.")
+        assert result is not None
+        assert result["counted_noun"].lower() == "widgets"
+        assert result["count_token"] == "5"
+        assert result["anchor_kind"] == "possession"
 
     def test_non_possession_non_acquisition_verb_refused(self) -> None:
         # Post-W2 (ADR-0170): possession verbs (has/have/had) AND
