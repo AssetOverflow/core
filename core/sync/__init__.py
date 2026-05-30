@@ -4,6 +4,7 @@ This package is intentionally pure at import time: no object-store client,
 no network dependency, and no hot-path integration.
 """
 
+from core.sync.activation import ActivationDecision, ActivationLedger, ActivationRecord
 from core.sync.artifacts import (
     ARTIFACT_AUTHORITY,
     ArtifactAuthority,
@@ -14,6 +15,9 @@ from core.sync.manifest import ManifestCheck, SyncManifest, parse_manifest, vali
 
 __all__ = [
     "ARTIFACT_AUTHORITY",
+    "ActivationDecision",
+    "ActivationLedger",
+    "ActivationRecord",
     "ArtifactAuthority",
     "ArtifactType",
     "ManifestCheck",
