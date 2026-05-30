@@ -800,6 +800,33 @@ _Q_DID_RE: Final[re.Pattern[str]] = re.compile(
 )
 
 
+# ADR-0193 — additional total-across surface for the SAME unknown the solver
+# already aggregates (``Unknown(entity=None, unit=X)``). This widens the
+# question layer's aggregate branch from the single "do they have <cue>" verb
+# frame (ADR-0131.G.5) to the equally common existential frame:
+#   - "How many <unit> are there <agg-cue>?"  (cue REQUIRED — bare "are there"
+#     is too ambiguous to map to total-across, and ADR-0131.G.5 pins the bare
+#     form as a refusal probe)
+# This is a verb-frame extension over the SAME closed aggregate-cue vocabulary
+# established by ADR-0131.G.5 ({in total, altogether, combined, together} plus
+# the long-standing "in all"); it does NOT widen the cue set. The unit slot is
+# a 1-2 word noun phrase (matching _Q_DID_RE); a conjoined unit ("dogs and
+# cats") fails to match cleanly and refuses. wrong=0 is held downstream by the
+# question round-trip (unit must ground) + the ADR-0191 completeness guard
+# (every source quantity must be consumed).
+#
+# DEFERRED (NOT admitted here): "What is the total number of <unit>?".
+# ADR-0131.G.5 deliberately pins that surface as an out-of-closed-cue refusal
+# probe (``test_outside_closed_cue_refuses``). Promoting it is a correct future
+# step — the solver already sums it — but must be done by AMENDING
+# ADR-0131.G.5's closed-cue contract, not contradicted from this branch.
+_Q_THERE_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+(?P<unit>\w+(?:\s+\w+)?)\s+are\s+there"
+    r"(?:\s+(?:in\s+total|altogether|combined|together|in\s+all)){1,2}\s*\??$",
+    flags=re.IGNORECASE,
+)
+
+
 def extract_question_candidates(
     sentence: str, problem_text: str | None = None
 ) -> list[CandidateUnknown]:
@@ -833,6 +860,21 @@ def extract_question_candidates(
             )
         )
         return out  # specificity order: don't also try entity pattern
+
+    # ADR-0193 — "How many <unit> are there <agg-cue>?" (total-across).
+    m = _Q_THERE_RE.match(s)
+    if m is not None:
+        unit_raw = m.group("unit")
+        unit = _canonicalize_unit(unit_raw)
+        out.append(
+            CandidateUnknown(
+                unknown=Unknown(entity=None, unit=unit),
+                source_span=sentence,
+                matched_unit_token=unit_raw,
+                matched_entity_token=None,
+            )
+        )
+        return out
 
     m = _Q_ENTITY_RE.match(s)
     if m is not None:
