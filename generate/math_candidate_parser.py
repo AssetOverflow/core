@@ -87,6 +87,14 @@ class CandidateInitial:
     #   count_token, amount_token, currency_symbol, composition_shape,
     #   entity_source.
     composition_evidence: Mapping[str, str] | None = None
+    # ADR-0191 — completeness provenance. Aggregating extractors that
+    # collapse several source tokens into one derived value (day-enum sum,
+    # embedded-quantifier product, multi-word cardinal) list EVERY source
+    # quantity token they consumed here, so the candidate-graph reader's
+    # completeness guard (generate/math_completeness.py) can confirm no
+    # source quantity was silently dropped. Empty () means "single token"
+    # and the guard falls back to ``matched_value_token``.
+    consumed_value_tokens: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         # ADR-0127 widens the anchor set to include 'there are/were/is/was'
@@ -1358,6 +1366,9 @@ def _multi_word_cardinal_candidates(sentence: str) -> list[CandidateInitial]:
                 matched_value_token=value_raw.split()[0],
                 matched_unit_token=unit_raw,
                 matched_entity_token=m.group("entity"),
+                # ADR-0191 — the compound cardinal collapses every word into
+                # one value; the guard sees them via the joined surface form.
+                consumed_value_tokens=(value_raw,),
             )
         ]
     except Exception:
@@ -1595,7 +1606,8 @@ def _day_enumeration_candidates(sentence: str) -> list[CandidateInitial]:
     if m is None:
         return []
     n1 = int(m.group("n1"))
-    rest_nums = [int(x) for x in _DAY_ENUM_REST_RE.findall(m.group("rest"))]
+    rest_raw = _DAY_ENUM_REST_RE.findall(m.group("rest"))
+    rest_nums = [int(x) for x in rest_raw]
     if not rest_nums:
         return []
     total = float(n1 + sum(rest_nums))
@@ -1614,6 +1626,9 @@ def _day_enumeration_candidates(sentence: str) -> list[CandidateInitial]:
                 matched_value_token=m.group("n1"),
                 matched_unit_token=noun_raw,
                 matched_entity_token=m.group("entity"),
+                # ADR-0191 — the sum collapses every per-day count; record
+                # them all so the completeness guard sees full coverage.
+                consumed_value_tokens=(m.group("n1"), *rest_raw),
             )
         ]
     except Exception:
@@ -1670,6 +1685,8 @@ def _embedded_quantifier_candidates(sentence: str) -> list[CandidateInitial]:
                 matched_value_token=m_raw,
                 matched_unit_token=unit_raw,
                 matched_entity_token=m.group("entity"),
+                # ADR-0191 — the product N*M consumes both source tokens.
+                consumed_value_tokens=(n_raw, m_raw),
             )
         ]
     except Exception:
@@ -1750,6 +1767,8 @@ def _build_conj_embedded_sum(
                 matched_value_token=m1_raw,  # provenance: first per-container M
                 matched_unit_token=m.group("u1"),
                 matched_entity_token=m.group("entity"),
+                # ADR-0191 — the sum of two products consumes all four tokens.
+                consumed_value_tokens=(n1_raw, m1_raw, n2_raw, m2_raw),
             )
         ]
     except Exception:
