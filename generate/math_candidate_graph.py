@@ -60,6 +60,7 @@ from generate.math_problem_graph import (
     MathGraphError,
     MathProblemGraph,
 )
+from generate.math_completeness import uncovered_quantities
 from generate.math_roundtrip import CandidateOperation, roundtrip_admissible
 from generate.math_solver import SolveError, solve
 
@@ -103,6 +104,10 @@ class CandidateGraphAnswer:
 
     graph: MathProblemGraph
     answer: int | float
+    # ADR-0191 — the originating branch (statement choices + question
+    # choice).  Carries per-candidate consumed-token provenance the
+    # completeness guard needs; the MathProblemGraph itself discards it.
+    branch: tuple["SentenceChoice | CandidateUnknown", ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -463,6 +468,12 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
 
     question_sentences = [s for s in sentences if s.rstrip().endswith("?")]
     statement_sentences = [s for s in sentences if not s.rstrip().endswith("?")]
+    # ADR-0191 — preserve EVERY statement sentence before the numeric-only
+    # filter below drops non-numeric ones.  The completeness guard must see
+    # quantity signals carried in dropped sentences (e.g. "Jerry has twice
+    # as many … as Ivan" has no digit but a multiplier the reading must
+    # account for) to catch confabulations that emit a partial reading.
+    all_statement_sentences = list(statement_sentences)
 
     # ADR-0136.S.0 — Strip context-filler sentences before any extraction.
     # A sentence with no digit and no word-number cannot introduce parseable
@@ -1026,7 +1037,11 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
         except SolveError:
             continue
         admissible.append(
-            CandidateGraphAnswer(graph=graph, answer=trace.answer_value)
+            CandidateGraphAnswer(
+                graph=graph,
+                answer=trace.answer_value,
+                branch=(*stmt_choices, q_choice),
+            )
         )
 
     if not admissible:
@@ -1055,6 +1070,32 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
     # Single agreed answer. Pick the first admissible graph as the
     # canonical representative (deterministic since product() is ordered).
     chosen = admissible[0]
+
+    # ADR-0191 — completeness guard (the missing admissibility leg).
+    # The branch grounded + round-tripped, but that only proves the
+    # quantities it DID read are real — not that it read ALL of them.
+    # If any source quantity (across every statement sentence + the
+    # question) is absent from the chosen reading, emitting its answer
+    # would confabulate a partial reading.  Refuse instead (wrong==0).
+    # Refusal-only: this can never turn a refusal into an answer, so it
+    # cannot create a wrong answer — only remove confabulations.
+    uncovered = uncovered_quantities(
+        statement_sentences=all_statement_sentences,
+        question_text=question_sentences[0],
+        branch=chosen.branch,
+    )
+    if uncovered:
+        return CandidateGraphResult(
+            answer=None, selected_graph=None,
+            refusal_reason=(
+                "incomplete reading: source quantities "
+                f"{sorted(uncovered)} not consumed by the solved graph"
+            ),
+            branches_enumerated=branches_enumerated,
+            branches_admissible=len(admissible),
+            reader_trace=tuple(reader_trace),
+        )
+
     return CandidateGraphResult(
         answer=chosen.answer,
         selected_graph=chosen.graph,
