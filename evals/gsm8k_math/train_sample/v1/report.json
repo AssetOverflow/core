@@ -1,8 +1,8 @@
 {
   "adr": "0126",
   "counts": {
-    "correct": 3,
-    "refused": 47,
+    "correct": 4,
+    "refused": 46,
     "wrong": 0
   },
   "exit_criterion": {
@@ -128,8 +128,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0024",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Sidney does 20 jumping jacks on Monday, 36 on Tuesday, 40 on Wednesday, and 50 on Thursday.' (category=temporal_aggregation)",
-      "verdict": "refused"
+      "reason": "",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0025",

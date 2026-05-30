@@ -21,7 +21,7 @@ status predicate evaluates to `reasoning-capable` with no open gaps.
 | Domain | Status | ADR | Packs | Open gaps |
 | --- | --- | --- | --- | --- |
 | `philosophy_theology` | reasoning-capable | ADR-0085 | 2 | 0 |
-| `mathematics_logic` | expert | ADR-0097 | 1 | 0 |
+| `mathematics_logic` | audit-passed | ADR-0097 | 1 | 0 |
 | `physics` | audit-passed | ADR-0100 | 1 | 0 |
 | `systems_software` | audit-passed | ADR-0101 | 1 | 0 |
 | `hebrew_greek_textual_reasoning` | reasoning-capable | ADR-0102 | 4 | 0 |
