@@ -114,6 +114,11 @@ class CandidateInitial:
             "buy", "bought", "buys",
             "make", "made", "makes",
             "pay", "paid", "pays",
+            # ADR-0189a — production/activity possession ("Sidney does 20
+            # jumping jacks ..."): the actor performs N of a counted activity,
+            # i.e. holds a count of N. Admitted only via the day-enumeration
+            # extractor's closed shape; the whitelist is the runtime safety net.
+            "do", "does", "did",
         ):
             raise ValueError(
                 f"CandidateInitial.matched_anchor must be a registered initial-"
@@ -535,6 +540,8 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
     out.extend(_conj_subject_each_candidates(sentence))
     out.extend(_conj_object_candidates(sentence))
     out.extend(_embedded_quantifier_candidates(sentence))
+    # ADR-0189a — day-of-week count enumeration → summed initial.
+    out.extend(_day_enumeration_candidates(sentence))
 
     # ADR-0136.S.3 — compound initial-mutation: "Entity had N unit, but then verb M"
     out.extend(_init_mutation_candidates(sentence))
@@ -774,6 +781,16 @@ _Q_TOTAL_RE: Final[re.Pattern[str]] = re.compile(
     flags=re.IGNORECASE,
 )
 
+# ADR-0189a — activity question "How many <unit> did <Entity> <verb>?"
+# ("How many jumping jacks did Brooke do?"). The trailing verb mirrors the
+# day-enumeration / comparative activity anchor; the unit slot admits a
+# 1-2 word noun ("jumping jacks"). Resolves to Unknown(entity, unit).
+_Q_DID_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+(?P<unit>\w+(?:\s+\w+)?)\s+did\s+"
+    rf"(?P<entity>{_ENTITY})\s+\w+\s*\??$",
+    flags=re.IGNORECASE,
+)
+
 
 def extract_question_candidates(
     sentence: str, problem_text: str | None = None
@@ -810,6 +827,22 @@ def extract_question_candidates(
         return out  # specificity order: don't also try entity pattern
 
     m = _Q_ENTITY_RE.match(s)
+    if m is not None:
+        unit_raw = m.group("unit")
+        unit = _canonicalize_unit(unit_raw)
+        entity = _normalize_entity(m.group("entity"))
+        out.append(
+            CandidateUnknown(
+                unknown=Unknown(entity=entity, unit=unit),
+                source_span=sentence,
+                matched_unit_token=unit_raw,
+                matched_entity_token=m.group("entity"),
+            )
+        )
+        return out
+
+    # ADR-0189a — activity question "How many <unit> did <Entity> <verb>?"
+    m = _Q_DID_RE.match(s)
     if m is not None:
         unit_raw = m.group("unit")
         unit = _canonicalize_unit(unit_raw)
@@ -1527,6 +1560,64 @@ def _conj_object_candidates(sentence: str) -> list[CandidateInitial]:
         except Exception:
             return []
     return out
+
+
+# ADR-0189a — day-of-week count enumeration.
+# Shape: "<Actor> does N1 <noun> on <Day1>, N2 on <Day2>, ... and Nk on <Dayk>."
+# All counts are the same actor's same-unit activity; the total is their sum.
+# Closed to the seven day-of-week names so the "<count> on <Day>" enumeration
+# cannot be confused with other comma lists. Derived total grounds via the
+# first count token (matched_value_token), mirroring _embedded_quantifier.
+_DAY_NAME_RE: Final[str] = (
+    r"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)"
+)
+_DAY_ENUM_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<entity>{_ENTITY})\s+(?P<anchor>does|did|do)\s+"
+    rf"(?P<n1>\d+)\s+(?P<noun>[a-z]+(?:\s+[a-z]+)?)\s+on\s+{_DAY_NAME_RE}"
+    rf"(?P<rest>(?:,\s*(?:and\s+)?\d+\s+on\s+{_DAY_NAME_RE})+)"
+    r"\s*\.?$"
+)
+_DAY_ENUM_REST_RE: Final[re.Pattern[str]] = re.compile(
+    rf"(\d+)\s+on\s+{_DAY_NAME_RE}"
+)
+
+
+def _day_enumeration_candidates(sentence: str) -> list[CandidateInitial]:
+    """'<Actor> does N1 <noun> on <Day1>, N2 on <Day2>, ...' → summed initial.
+
+    Emits a single CandidateInitial whose value is the sum of all per-day
+    counts. The derived sum is not literal in source, so provenance anchors
+    on the first count token (which grounds), exactly as
+    _embedded_quantifier_candidates anchors on its per-container token.
+    """
+    s = sentence.strip()
+    m = _DAY_ENUM_RE.match(s)
+    if m is None:
+        return []
+    n1 = int(m.group("n1"))
+    rest_nums = [int(x) for x in _DAY_ENUM_REST_RE.findall(m.group("rest"))]
+    if not rest_nums:
+        return []
+    total = float(n1 + sum(rest_nums))
+    entity = _normalize_entity(m.group("entity"))
+    noun_raw = m.group("noun").strip()
+    unit = _canonicalize_unit(noun_raw)
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=entity,
+                    quantity=Quantity(value=total, unit=unit),
+                ),
+                source_span=sentence,
+                matched_anchor=m.group("anchor").lower(),
+                matched_value_token=m.group("n1"),
+                matched_unit_token=noun_raw,
+                matched_entity_token=m.group("entity"),
+            )
+        ]
+    except Exception:
+        return []
 
 
 def _embedded_quantifier_candidates(sentence: str) -> list[CandidateInitial]:
