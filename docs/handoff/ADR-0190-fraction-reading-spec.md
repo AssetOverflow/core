@@ -28,6 +28,42 @@ difference ("decrease by") question.
 
 ---
 
+## ⚠ BUILD-DISCOVERED REVISION (2026-05-30, started the build)
+
+The "routes cleanly through `compare_multiplicative`" assumption **holds for the
+arithmetic but NOT for any real fraction case.** Verified empirically:
+
+- `compare_multiplicative` **does** handle fractional factors:
+  `"Alice has 3/4 times as many apples as Bob"` (Bob=80) → **60** ✓;
+  `"half as many"` → **40** ✓. So the arithmetic mechanism exists.
+- **But it only works for the distinct-actor, same-unit, no-overwrite,
+  entity-reference shape** — and **none of the 5 train_sample fraction cases
+  match it:**
+  - **0046 / 0004 / 0041 — PARTITION** (the unit *changes*: `students → girls`).
+    `compare_multiplicative` does `state[(actor,unit)] = state[(ref,unit)]×factor`
+    with the SAME unit; it cannot produce a new-unit subset.
+  - **0005 — TEMPORAL self-overwrite** (`temperature → ¾·temperature`, same
+    entity+unit). The solver **refuses overwrite** (`math_solver.py` "would
+    overwrite existing state").
+  - **0010 — multi-step** (accumulation `20−12` + additive-fraction `1/4 more`).
+- Value resolution gotchas: `_resolve_value('half')` → **2** (NOT 0.5 — use
+  `_ANCHOR_TO_FACTOR['half']=(0.5,'fraction')`); slash-fractions work
+  (`3/4`→0.75); `'20%'` and `'a third'`/`'two thirds'` → None (need a map).
+- Reference binding: the solver matches the reference by **entity only**, so a
+  `"the students"` reference does NOT bind to the `(school, students)` state.
+
+**Revised real work = a new PARTITION operation**, not a `compare_multiplicative`
+reuse: `base[unit A, V] + "<frac> of <base> are <subset>" → subset[unit B,
+frac·V]`, where the base binds by **unit** (refuse if ambiguous), plus a
+chained-partition path (`20% of the girls`) and an **aggregate-without-overcount**
+question (sum only the leaf subsets `10+5=15`, not the `school/girls/boys`
+intermediates). This is a `math_problem_graph` + `math_solver` + extractor +
+round-trip build — a real architectural piece, NOT the clean reuse scoped below.
+The clean-reuse sections below remain valid ONLY for a (currently non-existent in
+train_sample) distinct-actor same-unit fraction surface.
+
+---
+
 ## The pieces (each general; each lands wrong=0-proven)
 
 ### Piece 1 — fraction-of extractor (foundational; all 5 fraction cases need it)
