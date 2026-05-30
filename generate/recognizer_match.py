@@ -895,6 +895,53 @@ def _extract_discrete_count_re_for(counted_nouns: list[str]) -> re.Pattern[str]:
     )
 
 
+# ADR-0192 — words that terminate (cannot be part of) an open counted-noun
+# phrase: prepositions, conjunctions, determiners, and comparative markers.
+# Bounding the phrase against these is what stops the open noun from
+# swallowing a trailing prepositional phrase ("mango trees on his farm" →
+# "mango trees", not "mango trees on his farm").
+_OPEN_NOUN_STOP: Final[str] = (
+    "on|in|at|to|for|with|of|from|by|per|into|onto|over|under|"
+    "and|or|but|than|as|that|which|who|whose|whom|while|when|because|"
+    "the|a|an|his|her|its|their|our|your|my|each|every|"
+    "more|fewer|less|most|fewest|other|another"
+)
+
+
+def _extract_discrete_count_re_open(counted_nouns: list[str]) -> re.Pattern[str]:
+    """ADR-0192 — open-vocabulary variant of the single-anchor extractor.
+
+    Strictly additive: the counted-noun slot matches either a ratified
+    ``observed_counted_nouns`` entry (closed branch — preserves casing
+    canonicalization and capitalized compounds like ``Pokemon cards``) OR
+    an OPEN lowercase noun phrase: 1–3 consecutive lowercase word tokens,
+    none a boundary/stop word.  The ``(?-i:...)`` makes the open branch
+    lowercase-only so it never captures a following proper noun, and the
+    stop-word lookahead bounds the phrase so it never swallows a trailing
+    prepositional phrase.  Every other narrowness layer (proper-noun
+    subject, verb whitelist, single numeric token, no clause-split) is
+    unchanged; wrong=0 is held downstream by the ADR-0191 completeness
+    guard + round-trip + branch-disagreement.
+    """
+    options = sorted({n for n in counted_nouns if n}, key=len, reverse=True)
+    closed_alt = "|".join(re.escape(n) for n in options)
+    open_tok = rf"(?-i:(?!(?:{_OPEN_NOUN_STOP})\b)[a-z]+)"
+    open_noun = rf"{open_tok}(?:\s+{open_tok}){{0,2}}"
+    noun_group = (
+        rf"(?P<noun>{closed_alt}|{open_noun})" if closed_alt
+        else rf"(?P<noun>{open_noun})"
+    )
+    return re.compile(
+        r"^\s*"
+        r"(?P<subject>(?-i:[A-Z][a-z]+))"
+        r"\s+(?P<verb>[A-Za-z]+)"
+        r"\s+(?P<count>\d+|[A-Za-z\-]+)"
+        r"\s+" + noun_group +
+        r"(?:\b.*)?$",
+        flags=re.IGNORECASE,
+    )
+
+
 _DIGIT_RUN_RE: Final[re.Pattern[str]] = re.compile(r"\d+(?:\.\d+)?")
 
 
@@ -948,8 +995,12 @@ def _try_extract_discrete_count_anchor(
     if _count_quantity_tokens(statement, padded_lower) != 1:
         return None
 
-    # Narrowness #1 + #5 — shape + counted-noun lemma.
-    extract_re = _extract_discrete_count_re_for(observed_nouns)
+    # Narrowness #1 — shape. ADR-0192: the counted-noun slot is open
+    # (adjective* + multi-word head) rather than gated on the closed
+    # observed_counted_nouns set; the other narrowness layers above plus
+    # the downstream ADR-0191 completeness guard / round-trip / branch
+    # disagreement hold wrong=0 without the curated noun list.
+    extract_re = _extract_discrete_count_re_open(observed_nouns)
     m = extract_re.match(statement.strip())
     if m is None:
         return None
