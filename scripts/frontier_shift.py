@@ -29,6 +29,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -63,6 +64,52 @@ def _gap_category(sentence: str, registry: tuple) -> str:
     return "no_recognizer_match"
 
 
+_DIGITS = re.compile(r"\d+")
+
+
+def _statement_read_fully(sentence: str) -> bool:
+    """True iff every numeric token in the statement is accounted for by some
+    admissible candidate — directly (a candidate value/provenance token) OR as
+    a factor of a product candidate (``5 bags of 50`` → 250 grounds both 5
+    and 50).
+
+    A statement that produces *a* candidate but drops numbers (0008's
+    ``5 bags of 50 and 2 bags of 100`` → a single ``add`` using one number)
+    is NOT read — counting it as readable is exactly the over-count that made
+    the first version's ``flip_ready`` optimistic.
+    """
+    nums = [int(x) for x in _DIGITS.findall(sentence)]
+    if not nums:
+        return True
+    cands = _filtered_statement_choices(sentence)
+    if not cands:
+        return False
+    values: set[int] = set()
+    tokens: set[int] = set()
+    for c in cands:
+        initial = getattr(c, "initial", None)
+        if initial is not None:
+            values.add(int(initial.quantity.value))
+        op = getattr(c, "op", None)
+        if op is not None and hasattr(op.operand, "value"):
+            values.add(int(op.operand.value))
+        tok = getattr(c, "matched_value_token", None)
+        if tok is not None:
+            try:
+                tokens.add(int(tok))
+            except ValueError:
+                pass
+    grounded = values | tokens
+
+    def is_grounded(d: int) -> bool:
+        if d in grounded:
+            return True
+        # factor of a product candidate (d × another source number == a value)
+        return any(d2 and v == d * d2 for v in values for d2 in nums)
+
+    return all(is_grounded(d) for d in nums)
+
+
 def _analyze_case(question: str, registry: tuple) -> dict[str, Any]:
     sentences = [
         clause for s in _split_sentences(question) for clause in split_partition_clauses(s)
@@ -73,10 +120,12 @@ def _analyze_case(question: str, registry: tuple) -> dict[str, Any]:
     gaps: set[str] = set()
     for s in statements:
         # Serving only scores numeric_state statements; filler/non-numeric
-        # are provably skippable, so they are not frontier gaps.
+        # are provably skippable, so they are not frontier gaps. A statement
+        # is a gap when it is not READ — no candidate, OR a candidate that
+        # drops numbers (mis-read), not merely "produces a candidate".
         if classify_sentence(s) != "numeric_state":
             continue
-        if not _filtered_statement_choices(s):
+        if not _statement_read_fully(s):
             gaps.add(_gap_category(s, registry))
 
     question_parses = any(
@@ -162,7 +211,18 @@ def build_report() -> dict[str, Any]:
     return {
         "instrument": "frontier_shift",
         "adr": "0190-follow-up",
-        "note": "serving candidate-graph path; flip_ready = sole remaining blocker",
+        "note": "serving candidate-graph path; flip_ready = sole remaining FIRST gate",
+        "caveat": (
+            "flip_ready is an UPPER BOUND, not a flip guarantee. It marks the "
+            "dominant first gate, but a real flip needs CORRECT reading at every "
+            "layer (statement structure + question + composition), which this "
+            "static tool cannot verify without solving. Known blind spots: "
+            "word-number statements (classify_sentence skips some) and "
+            "composition. The only reliable 'would this flip?' signal is to "
+            "ATTEMPT the build and let the wrong=0 gold-tether score it. Use this "
+            "to PRIORITIZE which layer is most common (question-parsing dominates), "
+            "not to promise specific flips."
+        ),
         "blocked_on_counts": dict(sorted(counts.items())),
         "leverage": leverage,
         "per_case": sorted(per_case, key=lambda d: d["case_id"]),

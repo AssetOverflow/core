@@ -1,35 +1,35 @@
 {
   "adr": "0190-follow-up",
   "blocked_on_counts": {
-    "both": 38,
+    "both": 37,
     "none": 5,
-    "question": 4,
+    "question": 5,
     "statement": 3
   },
+  "caveat": "flip_ready is an UPPER BOUND, not a flip guarantee. It marks the dominant first gate, but a real flip needs CORRECT reading at every layer (statement structure + question + composition), which this static tool cannot verify without solving. Known blind spots: word-number statements (classify_sentence skips some) and composition. The only reliable 'would this flip?' signal is to ATTEMPT the build and let the wrong=0 gold-tether score it. Use this to PRIORITIZE which layer is most common (question-parsing dominates), not to promise specific flips.",
   "instrument": "frontier_shift",
   "leverage": [
     {
       "advances": 42,
       "capability": "question_extractor",
-      "flip_ready": 4,
+      "flip_ready": 5,
       "flip_ready_cases": [
-        "0007",
-        "0008",
         "0009",
-        "0035"
+        "0012",
+        "0020",
+        "0029",
+        "0038"
       ]
     },
     {
-      "advances": 10,
-      "capability": "no_recognizer_match",
-      "flip_ready": 1,
-      "flip_ready_cases": [
-        "0010"
-      ]
-    },
-    {
-      "advances": 31,
+      "advances": 30,
       "capability": "inject:discrete_count_statement",
+      "flip_ready": 0,
+      "flip_ready_cases": []
+    },
+    {
+      "advances": 12,
+      "capability": "no_recognizer_match",
       "flip_ready": 0,
       "flip_ready_cases": []
     },
@@ -46,12 +46,6 @@
       "flip_ready_cases": []
     },
     {
-      "advances": 5,
-      "capability": "inject:descriptive_setup_no_quantity",
-      "flip_ready": 0,
-      "flip_ready_cases": []
-    },
-    {
       "advances": 3,
       "capability": "inject:rate_with_currency",
       "flip_ready": 0,
@@ -64,7 +58,7 @@
       "flip_ready_cases": []
     }
   ],
-  "note": "serving candidate-graph path; flip_ready = sole remaining blocker",
+  "note": "serving candidate-graph path; flip_ready = sole remaining FIRST gate",
   "per_case": [
     {
       "blocked_on": "both",
@@ -82,7 +76,6 @@
       "question_parses": false,
       "solved": false,
       "statement_gaps": [
-        "inject:descriptive_setup_no_quantity",
         "inject:discrete_count_statement",
         "no_recognizer_match"
       ]
@@ -126,18 +119,22 @@
       ]
     },
     {
-      "blocked_on": "question",
+      "blocked_on": "both",
       "case_id": "0007",
       "question_parses": false,
       "solved": false,
-      "statement_gaps": []
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
     },
     {
-      "blocked_on": "question",
+      "blocked_on": "both",
       "case_id": "0008",
       "question_parses": false,
       "solved": false,
-      "statement_gaps": []
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
     },
     {
       "blocked_on": "question",
@@ -152,6 +149,7 @@
       "question_parses": true,
       "solved": false,
       "statement_gaps": [
+        "inject:discrete_count_statement",
         "no_recognizer_match"
       ]
     },
@@ -165,14 +163,11 @@
       ]
     },
     {
-      "blocked_on": "both",
+      "blocked_on": "question",
       "case_id": "0012",
       "question_parses": false,
       "solved": false,
-      "statement_gaps": [
-        "inject:descriptive_setup_no_quantity",
-        "inject:discrete_count_statement"
-      ]
+      "statement_gaps": []
     },
     {
       "blocked_on": "both",
@@ -240,13 +235,11 @@
       ]
     },
     {
-      "blocked_on": "both",
+      "blocked_on": "question",
       "case_id": "0020",
       "question_parses": false,
       "solved": false,
-      "statement_gaps": [
-        "inject:discrete_count_statement"
-      ]
+      "statement_gaps": []
     },
     {
       "blocked_on": "both",
@@ -263,7 +256,6 @@
       "question_parses": false,
       "solved": false,
       "statement_gaps": [
-        "inject:discrete_count_statement",
         "inject:rate_with_currency"
       ]
     },
@@ -273,7 +265,6 @@
       "question_parses": false,
       "solved": false,
       "statement_gaps": [
-        "inject:descriptive_setup_no_quantity",
         "inject:discrete_count_statement"
       ]
     },
@@ -282,7 +273,9 @@
       "case_id": "0024",
       "question_parses": true,
       "solved": true,
-      "statement_gaps": []
+      "statement_gaps": [
+        "inject:temporal_aggregation"
+      ]
     },
     {
       "blocked_on": "both",
@@ -308,7 +301,6 @@
       "question_parses": false,
       "solved": false,
       "statement_gaps": [
-        "inject:descriptive_setup_no_quantity",
         "inject:discrete_count_statement"
       ]
     },
@@ -324,13 +316,11 @@
       ]
     },
     {
-      "blocked_on": "both",
+      "blocked_on": "question",
       "case_id": "0029",
       "question_parses": false,
       "solved": false,
-      "statement_gaps": [
-        "inject:discrete_count_statement"
-      ]
+      "statement_gaps": []
     },
     {
       "blocked_on": "both",
@@ -381,11 +371,13 @@
       ]
     },
     {
-      "blocked_on": "question",
+      "blocked_on": "both",
       "case_id": "0035",
       "question_parses": false,
       "solved": false,
-      "statement_gaps": []
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
     },
     {
       "blocked_on": "both",
@@ -393,7 +385,6 @@
       "question_parses": false,
       "solved": false,
       "statement_gaps": [
-        "inject:descriptive_setup_no_quantity",
         "inject:discrete_count_statement"
       ]
     },
@@ -407,13 +398,11 @@
       ]
     },
     {
-      "blocked_on": "both",
+      "blocked_on": "question",
       "case_id": "0038",
       "question_parses": false,
       "solved": false,
-      "statement_gaps": [
-        "inject:discrete_count_statement"
-      ]
+      "statement_gaps": []
     },
     {
       "blocked_on": "both",
@@ -439,7 +428,8 @@
       "question_parses": false,
       "solved": false,
       "statement_gaps": [
-        "inject:discrete_count_statement"
+        "inject:discrete_count_statement",
+        "no_recognizer_match"
       ]
     },
     {
@@ -447,7 +437,9 @@
       "case_id": "0042",
       "question_parses": false,
       "solved": true,
-      "statement_gaps": []
+      "statement_gaps": [
+        "inject:multiplicative_aggregation"
+      ]
     },
     {
       "blocked_on": "both",
@@ -476,7 +468,8 @@
       "solved": false,
       "statement_gaps": [
         "inject:discrete_count_statement",
-        "inject:multiplicative_aggregation"
+        "inject:multiplicative_aggregation",
+        "no_recognizer_match"
       ]
     },
     {
@@ -484,7 +477,9 @@
       "case_id": "0046",
       "question_parses": true,
       "solved": true,
-      "statement_gaps": []
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
     },
     {
       "blocked_on": "both",
