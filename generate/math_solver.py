@@ -36,6 +36,7 @@ from generate.math_problem_graph import (
     Comparison,
     MathProblemGraph,
     Operation,
+    Partition,
     Quantity,
     Rate,
     Unknown,
@@ -57,6 +58,9 @@ _OPERATION_REQUIRED_LEMMAS: dict[str, str] = {
     "apply_rate": "apply_rate",
     "compare_additive": "compare_additive",
     "compare_multiplicative": "compare_multiplicative",
+    # ADR-0190 — partition is arithmetically a scaled multiply
+    # (subset = factor × base); it reuses the multiply lemma.
+    "partition": "multiply",
 }
 
 
@@ -88,7 +92,7 @@ class SolutionStep:
     operation_kind: str
     pack_lemma_id: str
     actor: str
-    operand: "Quantity | Rate | Comparison"
+    operand: "Quantity | Rate | Comparison | Partition"
     target: str | None
     before_value: float
     after_value: float
@@ -239,6 +243,8 @@ def _apply(
         return _apply_compare_additive(op, index, state, pack_bindings)
     if op.kind == "compare_multiplicative":
         return _apply_compare_multiplicative(op, index, state, pack_bindings)
+    if op.kind == "partition":
+        return _apply_partition(op, index, state, pack_bindings)
 
     if not isinstance(op.operand, Quantity):
         raise SolveError(
@@ -476,6 +482,74 @@ def _apply_compare_multiplicative(
         pack_lemma_id=pack_bindings[op.kind],
         actor=op.actor,
         operand=cmp,
+        target=None,
+        before_value=0.0,
+        after_value=after,
+        target_before=None,
+        target_after=None,
+    )
+
+
+def _apply_partition(
+    op: Operation,
+    index: int,
+    state: dict[tuple[str, str], float],
+    pack_bindings: Mapping[str, str],
+) -> SolutionStep:
+    """Apply a fractional partition (ADR-0190).
+
+    "Half of the students are girls" → ``state[(girls, girls)]`` =
+    ``state[(<holder>, students)]`` × 0.5. The base is bound by **unit**
+    (``Partition.base_unit``) — distinct from ``compare_multiplicative``,
+    which binds its reference by entity and preserves the unit. The subset
+    is written under the (changed) ``subset_unit`` so a downstream
+    aggregate over the subset unit sums only the leaf sub-populations.
+
+    Refuses (raises ``SolveError``, → refusal, never a wrong answer) on:
+      - no state holds ``base_unit`` (the population was never asserted);
+      - more than one entity holds ``base_unit`` (ambiguous base — refuse
+        rather than guess which population the fraction is taken of);
+      - the (actor, subset_unit) slot already exists (would overwrite).
+    """
+    part = op.operand
+    if not isinstance(part, Partition):
+        raise SolveError(
+            f"partition at step {index} requires a Partition operand; "
+            f"got {type(part).__name__}"
+        )
+    base_entries = [
+        (entity, value)
+        for (entity, unit), value in state.items()
+        if unit == part.base_unit
+    ]
+    if not base_entries:
+        raise SolveError(
+            f"partition at step {index} requires a base quantity in unit "
+            f"{part.base_unit!r}, but no such state exists"
+        )
+    base_entities = {entity for entity, _ in base_entries}
+    if len(base_entities) > 1:
+        raise SolveError(
+            f"partition at step {index} is ambiguous: multiple entities "
+            f"hold {part.base_unit!r} ({sorted(base_entities)!r}); refuse "
+            f"rather than guess which population the fraction is taken of"
+        )
+    base_value = base_entries[0][1]
+    actor_key = (op.actor, part.subset_unit)
+    if actor_key in state:
+        raise SolveError(
+            f"partition at step {index} would overwrite existing state for "
+            f"({op.actor!r}, {part.subset_unit!r}); refuse rather than "
+            f"silently redeclare"
+        )
+    after = base_value * float(part.factor)
+    state[actor_key] = after
+    return SolutionStep(
+        step_index=index,
+        operation_kind=op.kind,
+        pack_lemma_id=pack_bindings[op.kind],
+        actor=op.actor,
+        operand=part,
         target=None,
         before_value=0.0,
         after_value=after,

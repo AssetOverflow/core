@@ -40,6 +40,7 @@ from typing import Any
 from generate.math_problem_graph import (
     Comparison,
     MathProblemGraph,
+    Partition,
     Quantity,
     Rate,
     Unknown,
@@ -248,6 +249,9 @@ def _verify_step(step: SolutionStep, state: dict[tuple[str, str], float]) -> Non
         return
     if step.operation_kind == "compare_multiplicative":
         _verify_compare_multiplicative_step(step, state)
+        return
+    if step.operation_kind == "partition":
+        _verify_partition_step(step, state)
         return
 
     if not isinstance(step.operand, Quantity):
@@ -489,6 +493,63 @@ def _verify_compare_multiplicative_step(
         raise VerificationError(
             f"step {step.step_index} kind=compare_multiplicative would "
             f"overwrite existing state for ({step.actor!r}, {unit!r})"
+        )
+    state[actor_key] = fresh_after
+
+
+def _verify_partition_step(
+    step: SolutionStep, state: dict[tuple[str, str], float]
+) -> None:
+    """Verify a partition step (ADR-0190).
+
+    Independent replay: bind the base population by unit, scale by factor
+    into the (changed) subset unit. Refuses on non-Partition operand,
+    target set, before_value != 0, missing/ambiguous base, after-value
+    mismatch, or overwrite — mirroring the solver's own guards so a
+    mis-replayed partition can never be admitted.
+    """
+    if not isinstance(step.operand, Partition):
+        raise VerificationError(
+            f"step {step.step_index} kind=partition requires Partition "
+            f"operand; got {type(step.operand).__name__}"
+        )
+    part = step.operand
+    if step.target is not None:
+        raise VerificationError(
+            f"step {step.step_index} kind=partition must not declare a "
+            f"target; got {step.target!r}"
+        )
+    if step.before_value != 0.0:
+        raise VerificationError(
+            f"step {step.step_index} kind=partition declares before_value="
+            f"{step.before_value}, expected 0.0 (partition sets fresh state)"
+        )
+    base_entries = [
+        (entity, value)
+        for (entity, unit), value in state.items()
+        if unit == part.base_unit
+    ]
+    if not base_entries:
+        raise VerificationError(
+            f"step {step.step_index} kind=partition references base unit "
+            f"{part.base_unit!r} which no state holds"
+        )
+    if len({entity for entity, _ in base_entries}) > 1:
+        raise VerificationError(
+            f"step {step.step_index} kind=partition is ambiguous: multiple "
+            f"entities hold {part.base_unit!r}"
+        )
+    fresh_after = base_entries[0][1] * float(part.factor)
+    if fresh_after != step.after_value:
+        raise VerificationError(
+            f"step {step.step_index} declares after_value={step.after_value}, "
+            f"verifier computed {fresh_after}"
+        )
+    actor_key = (step.actor, part.subset_unit)
+    if actor_key in state:
+        raise VerificationError(
+            f"step {step.step_index} kind=partition would overwrite existing "
+            f"state for ({step.actor!r}, {part.subset_unit!r})"
         )
     state[actor_key] = fresh_after
 

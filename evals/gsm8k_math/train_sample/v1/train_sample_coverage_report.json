@@ -1,12 +1,12 @@
 {
   "adr": "0131.G",
   "metrics": {
-    "admission_rate": 0.08,
-    "admitted_solved": 4,
+    "admission_rate": 0.1,
+    "admitted_solved": 5,
     "admitted_wrong": 0,
     "cases_total": 50,
-    "refused": 46,
-    "refused_rate": 0.92,
+    "refused": 45,
+    "refused_rate": 0.9,
     "safety_rail_intact": true,
     "wrong_count_is_zero": true,
     "wrong_rate": 0.0
@@ -508,15 +508,15 @@
       "trace_hash": null
     },
     {
-      "actual_answer": null,
-      "actual_unit": null,
+      "actual_answer": 15.0,
+      "actual_unit": "dogs",
       "case_id": "gsm8k-train-sample-v1-0046",
       "expected_answer": 15.0,
       "expected_unit": "",
-      "outcome": "refused",
-      "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Half of the students are girls, the other half are boys.' (category=descriptive_setup_no_quantity)",
-      "trace_hash": null
+      "outcome": "correct",
+      "realized_prose": "school has 100 students. 0.5 of the students are girls, which is 50 girls. 0.5 of the students are boys, which is 50 boys. 0.2 of the girls are girls, which is 10 dogs. 0.1 of the boys are boys, which is 5 dogs. In total, they have 15 dogs.",
+      "reason": "",
+      "trace_hash": "baf6ce788e6569947702fb7890cf1ae3105c64de6bc11cfead7201c170c211b6"
     },
     {
       "actual_answer": null,
@@ -640,10 +640,6 @@
     {
       "count": 1,
       "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Erica lives near a lake where most locals "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Half of the students are girls, the other "
     },
     {
       "count": 1,

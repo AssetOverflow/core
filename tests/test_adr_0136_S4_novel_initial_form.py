@@ -252,18 +252,20 @@ class TestExtractInitialCandidatesWiring:
 # ---------------------------------------------------------------------------
 
 class TestGsm8kBarrierShifts:
-    def test_gsm8k_0046_barrier_shifts_to_sentence_2(self) -> None:
-        # Sentence 1 extracts cleanly (A school has 100 students).
-        # Sentence 2 "Half of the students are girls..." is fraction_operand → refusal.
+    def test_gsm8k_0046_graduated_via_partition(self) -> None:
+        # GRADUATED (ADR-0190): the fraction_operand barrier that once
+        # refused sentence 2 ("Half of the students are girls…") is resolved
+        # by the partition operation. 0046 now reads as a chain of fractional
+        # partitions (students→girls→dogs) and SOLVES to 15 — the first
+        # fraction flip (serving 4/46/0 → 5/45/0, wrong=0 preserved).
         r = parse_and_solve(
             "A school has 100 students. "
             "Half of the students are girls, the other half are boys.  "
             "20% of the girls have dogs at home and 10% of the boys have dogs at home.  "
             "How many students own dogs?"
         )
-        assert r.answer is None
-        assert r.refusal_reason is not None
-        assert "Half" in r.refusal_reason or "students" in r.refusal_reason
+        assert r.answer == 15.0
+        assert r.refusal_reason is None
 
     def test_gsm8k_0038_barrier_shifts_to_sentence_2(self) -> None:
         # Sentence 1 extracts cleanly (In a building, there are a hundred ladies...).

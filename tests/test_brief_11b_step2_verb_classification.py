@@ -44,6 +44,12 @@ EXPECTED_FILLER_CASES = frozenset(
     {
         "gsm8k-train-sample-v1-0002",
         "gsm8k-train-sample-v1-0016",
+        # ADR-0190 — partition entered the operation space; 0021's audit now
+        # surfaces its sentence-1 "John is lifting weights." (genuinely a
+        # pre_frame_filler) as the first row. Benign sealed-contemplation
+        # reclassification: 0021's serving is unaffected (still refused; the
+        # partition extractor does NOT fire on it) and serving wrong=0 holds.
+        "gsm8k-train-sample-v1-0021",
         "gsm8k-train-sample-v1-0025",
         "gsm8k-train-sample-v1-0028",
         "gsm8k-train-sample-v1-0030",

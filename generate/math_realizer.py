@@ -194,6 +194,14 @@ def _step_sentence(
             f"{_render_number(step.operand.value)} groups and keeps one "
             f"group, leaving {_render_number(step.after_value)}."
         )
+    if step.operation_kind == "partition":
+        part = step.operand
+        return (
+            f"{_render_number(part.factor)} of the "
+            f"{_unit_surface(part.base_unit, 2)} are "
+            f"{step.actor}, which is {_render_number(step.after_value)} "
+            f"{_unit_surface(part.subset_unit, step.after_value)}."
+        )
     raise RealizerError(
         f"step {step.step_index} has unknown operation_kind "
         f"{step.operation_kind!r}"

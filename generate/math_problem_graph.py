@@ -34,6 +34,7 @@ VALID_OPERATION_KINDS: Final[frozenset[str]] = frozenset(
         "apply_rate",
         "compare_additive",
         "compare_multiplicative",
+        "partition",
     }
 )
 
@@ -199,6 +200,50 @@ class Comparison:
 
 
 @dataclass(frozen=True, slots=True)
+class Partition:
+    """A fractional partition of a base population into a sub-population (ADR-0190).
+
+    "Half of the students are girls" → girls = 0.5 × students; the unit
+    CHANGES (``base_unit`` → ``subset_unit``). The base is bound by UNIT at
+    solve time (the population noun), refusing if ambiguous — distinct from
+    ``Comparison`` which binds its reference by entity and PRESERVES the unit
+    (so it cannot model a unit-changing subset).
+
+    - ``base_unit``:   the population noun the fraction is taken OF
+      ("of the students" → ``students``); bound by unit in state.
+    - ``subset_unit``: the resulting sub-population unit ("are girls" →
+      ``girls``; "have dogs" → ``dogs``).
+    - ``factor``:      strictly-positive multiplier (½, 0.2, ¾ …).
+    """
+
+    base_unit: str
+    subset_unit: str
+    factor: float
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.base_unit, str) or not self.base_unit:
+            raise MathGraphError("Partition.base_unit must be a non-empty string")
+        if not isinstance(self.subset_unit, str) or not self.subset_unit:
+            raise MathGraphError("Partition.subset_unit must be a non-empty string")
+        if not isinstance(self.factor, (int, float)) or isinstance(self.factor, bool):
+            raise MathGraphError(
+                f"Partition.factor must be int or float, got "
+                f"{type(self.factor).__name__}"
+            )
+        if self.factor <= 0:
+            raise MathGraphError(
+                f"Partition.factor must be strictly positive; got {self.factor!r}"
+            )
+
+    def as_json(self) -> dict[str, Any]:
+        return {
+            "base_unit": self.base_unit,
+            "subset_unit": self.subset_unit,
+            "factor": self.factor,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class InitialPossession:
     """Some entity holds some quantity at the start of the problem."""
 
@@ -230,7 +275,7 @@ class Operation:
 
     actor: str
     kind: str
-    operand: "Quantity | Rate | Comparison"
+    operand: "Quantity | Rate | Comparison | Partition"
     target: str | None = None
 
     def __post_init__(self) -> None:
@@ -275,6 +320,12 @@ class Operation:
                 raise MathGraphError(
                     "Operation.operand.reference_actor must differ from "
                     f"Operation.actor; both are {self.actor!r}"
+                )
+        elif self.kind == "partition":
+            if not isinstance(self.operand, Partition):
+                raise MathGraphError(
+                    "Operation.operand must be a Partition when "
+                    f"kind='partition'; got {type(self.operand).__name__}"
                 )
         else:
             if not isinstance(self.operand, Quantity):
@@ -465,7 +516,7 @@ def graph_from_dict(d: Mapping[str, Any]) -> MathProblemGraph:
 
 def _operand_from_dict(
     kind: str, operand: Mapping[str, Any]
-) -> "Quantity | Rate | Comparison":
+) -> "Quantity | Rate | Comparison | Partition":
     """Reconstruct an Operation.operand from its canonical JSON form.
 
     Dispatches on ``kind``:
@@ -503,5 +554,11 @@ def _operand_from_dict(
             delta=delta,
             factor=operand.get("factor"),
             direction=operand["direction"],
+        )
+    if kind == "partition":
+        return Partition(
+            base_unit=operand["base_unit"],
+            subset_unit=operand["subset_unit"],
+            factor=operand["factor"],
         )
     return Quantity(value=operand["value"], unit=operand["unit"])

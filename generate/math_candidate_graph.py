@@ -53,6 +53,7 @@ from generate.math_candidate_parser import (
     extract_initial_candidates,
     extract_operation_candidates,
     extract_question_candidates,
+    split_partition_clauses,
     _TIME_UNITS_TO_SECONDS,
     _to_seconds,
 )
@@ -454,6 +455,12 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
         )
 
     sentences = _split_sentences(text)
+    # ADR-0190 — split partition-only conjunctions into per-clause slots so
+    # multiple partitions in one sentence all apply (instead of competing in
+    # the per-sentence Cartesian product). No-op for ordinary sentences.
+    sentences = [
+        clause for s in sentences for clause in split_partition_clauses(s)
+    ]
     if not sentences:
         return CandidateGraphResult(
             answer=None, selected_graph=None,

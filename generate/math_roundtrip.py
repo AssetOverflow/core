@@ -41,7 +41,13 @@ import re
 from dataclasses import dataclass
 from typing import Final, Mapping
 
-from generate.math_problem_graph import Comparison, Operation, Quantity, Rate
+from generate.math_problem_graph import (
+    Comparison,
+    Operation,
+    Partition,
+    Quantity,
+    Rate,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -436,6 +442,32 @@ def roundtrip_admissible(c: CandidateOperation) -> bool:
     the solver, never produces a number, and never appears in any
     ``SolutionTrace``.
     """
+    # ADR-0190 — partition has its own grounding contract (two population
+    # units + a fractional factor with no verb anchor), handled here so it
+    # never threads the verb/value/unit steps written for the other kinds.
+    if c.op.kind == "partition":
+        part = c.op.operand
+        if not isinstance(part, Partition):
+            return False
+        haystack = _tokens(c.source_span)
+        # The subset actor and BOTH population units must ground in source.
+        if not _token_in(c.matched_actor_token, haystack):
+            return False
+        if not _unit_grounds(part.base_unit, c.source_span, haystack):
+            return False
+        if not _unit_grounds(part.subset_unit, c.source_span, haystack):
+            return False
+        # The fraction factor grounds three ways: a word anchor
+        # ("half"/"third"/"quarter", carried as matched_verb==value), a
+        # percentage ``N%`` (digits ground AND the '%' is present in source),
+        # or a slash ``N/M`` (handled by _value_grounds).
+        tok = c.matched_value_token
+        if tok == c.matched_verb and _token_in(c.matched_verb, haystack):
+            return True
+        if tok.endswith("%"):
+            return "%" in c.source_span and _value_grounds(tok[:-1], haystack)
+        return _value_grounds(tok, haystack)
+
     # 1. Verb must be registered for the claimed kind.
     valid_verbs = KIND_TO_VERBS.get(c.op.kind)
     if valid_verbs is None or c.matched_verb.lower() not in valid_verbs:

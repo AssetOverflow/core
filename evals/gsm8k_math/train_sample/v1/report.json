@@ -1,8 +1,8 @@
 {
   "adr": "0126",
   "counts": {
-    "correct": 4,
-    "refused": 46,
+    "correct": 5,
+    "refused": 45,
     "wrong": 0
   },
   "exit_criterion": {
@@ -238,8 +238,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0046",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Half of the students are girls, the other half are boys.' (category=descriptive_setup_no_quantity)",
-      "verdict": "refused"
+      "reason": "",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0047",

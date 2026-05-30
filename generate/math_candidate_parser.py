@@ -42,6 +42,7 @@ from generate.math_problem_graph import (
     Comparison,
     InitialPossession,
     Operation,
+    Partition,
     Quantity,
     Unknown,
 )
@@ -791,6 +792,17 @@ _Q_DID_RE: Final[re.Pattern[str]] = re.compile(
     flags=re.IGNORECASE,
 )
 
+# ADR-0190 — partition aggregate question: "How many <population> own/have
+# <thing>?" → total across every sub-population's <thing> count
+# (Unknown(entity=None, unit=<thing>)). The leading population noun scopes
+# the prose; the aggregated unit is the possessed <thing> the partitions
+# wrote ("how many students own dogs" → sum of girls-dogs + boys-dogs).
+_Q_OWN_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+\w+\s+(?:own|owns|have|has)\s+"
+    r"(?P<unit>\w+(?:\s+\w+)?)\s*\??$",
+    flags=re.IGNORECASE,
+)
+
 
 def extract_question_candidates(
     sentence: str, problem_text: str | None = None
@@ -857,6 +869,21 @@ def extract_question_candidates(
         )
         return out
 
+    # ADR-0190 — partition aggregate question "How many <pop> own <thing>?"
+    m = _Q_OWN_RE.match(s)
+    if m is not None:
+        unit_raw = m.group("unit")
+        unit = _canonicalize_unit(unit_raw)
+        out.append(
+            CandidateUnknown(
+                unknown=Unknown(entity=None, unit=unit),
+                source_span=sentence,
+                matched_unit_token=unit_raw,
+                matched_entity_token=None,
+            )
+        )
+        return out
+
     # ADR-0163.D.4 — Pattern A: mass-noun question
     out.extend(_pattern_a_mass_noun_candidates(sentence, problem_text))
     if out:
@@ -912,6 +939,8 @@ def extract_operation_candidates(sentence: str) -> list[CandidateOperation]:
     out.extend(_compare_nested_candidates(sentence))
     out.extend(_compare_multiplicative_candidates(sentence))
     out.extend(_compare_additive_candidates(sentence))
+    # ADR-0190 — fractional partition ("half of the students are girls").
+    out.extend(_partition_candidates(sentence))
 
     return out
 
@@ -1222,6 +1251,182 @@ def _compare_multiplicative_candidates(sentence: str) -> list[CandidateOperation
         if cand is not None:
             out.append(cand)
     return out
+
+
+# ---------------------------------------------------------------------------
+# ADR-0190 — fractional partition extractor.
+# "<frac> of [the] <BASE> are/have <SUBSET>" → partition operation.
+#   "are <X>"  (relabel):   actor=X,    subset_unit=X   (a new sub-population)
+#   "have <Y>" (predicate):  actor=BASE, subset_unit=Y   (the possessed count)
+# Word fractions (half/third/quarter), percentages (N%), and slash (N/M)
+# carry the factor; the base binds by UNIT at solve time (refuse if ambiguous).
+# ---------------------------------------------------------------------------
+
+_PARTITION_FACTOR_WORDS: Final[dict[str, float]] = {
+    "half": 0.5,
+    "a third": 1.0 / 3.0,
+    "a quarter": 0.25,
+    "a fourth": 0.25,
+}
+
+_PARTITION_FRAC: Final[str] = r"(?:half|a\s+third|a\s+quarter|a\s+fourth|\d+%|\d+/\d+)"
+
+_PARTITION_RE: Final[re.Pattern[str]] = re.compile(
+    rf"(?P<frac>{_PARTITION_FRAC})\s+of\s+(?:the\s+)?(?P<base>\w+)\s+"
+    r"(?P<verb>are|is|have|has|own|owns)\s+(?P<subset>\w+)",
+    flags=re.IGNORECASE,
+)
+
+# "the other half are boys" — elliptical second partition; base inherited
+# from the most recent explicit partition in the same sentence.
+_PARTITION_OTHER_HALF_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?:the\s+)?other\s+half\s+(?P<verb>are|is|have|has|own|owns)\s+(?P<subset>\w+)",
+    flags=re.IGNORECASE,
+)
+
+_PARTITION_RELABEL_VERBS: Final[frozenset[str]] = frozenset({"are", "is"})
+
+
+def _partition_factor(frac_surface: str) -> float | None:
+    s = frac_surface.strip().lower()
+    if s in _PARTITION_FACTOR_WORDS:
+        return _PARTITION_FACTOR_WORDS[s]
+    if s.endswith("%"):
+        try:
+            return float(s[:-1]) / 100.0
+        except ValueError:
+            return None
+    if "/" in s:
+        rv = _resolve_value(s)
+        return float(rv.value) if rv is not None else None
+    return None
+
+
+def _build_partition(
+    *,
+    frac_surface: str,
+    factor: float,
+    base: str,
+    verb: str,
+    subset: str,
+    sentence: str,
+) -> CandidateOperation | None:
+    base_unit = _canonicalize_unit(base)
+    if verb.lower() in _PARTITION_RELABEL_VERBS:
+        actor = _normalize_entity(subset)  # relabel: subset is the new population
+    else:
+        actor = _normalize_entity(base)  # predicate: actor is the base population
+    subset_unit = _canonicalize_unit(subset)
+    if base_unit == subset_unit:
+        # a unit-preserving "partition" is a misparse — refuse (the whole
+        # point of partition is the unit change base→subset).
+        return None
+    try:
+        op = Operation(
+            actor=actor,
+            kind="partition",
+            operand=Partition(
+                base_unit=base_unit, subset_unit=subset_unit, factor=factor
+            ),
+        )
+    except Exception:
+        return None
+    try:
+        return CandidateOperation(
+            op=op,
+            source_span=sentence,
+            matched_verb=frac_surface.lower(),
+            matched_value_token=frac_surface.lower(),
+            matched_unit_token=subset_unit,
+            matched_actor_token=actor,
+        )
+    except Exception:
+        return None
+
+
+def _partition_candidates(sentence: str) -> list[CandidateOperation]:
+    out: list[CandidateOperation] = []
+    last_base: str | None = None
+    for m in _PARTITION_RE.finditer(sentence):
+        frac = m.group("frac")
+        factor = _partition_factor(frac)
+        if factor is None:
+            continue
+        last_base = m.group("base")
+        cand = _build_partition(
+            frac_surface=frac,
+            factor=factor,
+            base=m.group("base"),
+            verb=m.group("verb"),
+            subset=m.group("subset"),
+            sentence=sentence,
+        )
+        if cand is not None:
+            out.append(cand)
+    if last_base is not None:
+        for m in _PARTITION_OTHER_HALF_RE.finditer(sentence):
+            cand = _build_partition(
+                frac_surface="half",
+                factor=0.5,
+                base=last_base,
+                verb=m.group("verb"),
+                subset=m.group("subset"),
+                sentence=sentence,
+            )
+            if cand is not None:
+                out.append(cand)
+    return out
+
+
+_PARTITION_CLAUSE_SPLIT_RE: Final[re.Pattern[str]] = re.compile(r",\s+|\s+and\s+")
+
+
+def split_partition_clauses(sentence: str) -> list[str]:
+    """Split a sentence on ``,`` / ``and`` IFF EVERY resulting clause is
+    partition-shaped; otherwise return ``[sentence]`` unchanged.
+
+    The candidate-graph picks one choice per sentence (Cartesian product),
+    so two partitions in one sentence ("20% of the girls have dogs and 10%
+    of the boys have dogs") would compete instead of both applying. Giving
+    each partition its own sentence slot lets all of them apply. The
+    all-clauses-partition-shaped gate keeps ordinary conjunctions ("Sam has
+    5 apples and 3 oranges") untouched — wrong=0-safe.
+    """
+    parts = [
+        p.strip().rstrip(".")
+        for p in _PARTITION_CLAUSE_SPLIT_RE.split(sentence.strip())
+        if p.strip()
+    ]
+    if len(parts) < 2:
+        return [sentence]
+    for p in parts:
+        if (
+            _PARTITION_RE.search(p) is None
+            and _PARTITION_OTHER_HALF_RE.search(p) is None
+        ):
+            return [sentence]
+    # Rewrite an elliptical "the other half are boys" clause into a full
+    # "half of the <base> are boys" using the base from the preceding
+    # explicit partition, so the isolated slot can still bind its base.
+    # The injected base noun is real — it appears in the sibling clause of
+    # the same sentence, so round-trip grounding stays honest.
+    base: str | None = None
+    rewritten: list[str] = []
+    for p in parts:
+        m_full = _PARTITION_RE.search(p)
+        if m_full is not None:
+            base = m_full.group("base")
+            rewritten.append(p)
+            continue
+        m_other = _PARTITION_OTHER_HALF_RE.search(p)
+        if m_other is not None and base is not None:
+            rewritten.append(
+                f"half of the {base} {m_other.group('verb')} "
+                f"{m_other.group('subset')}"
+            )
+            continue
+        rewritten.append(p)
+    return rewritten
 
 
 def _compare_nested_candidates(sentence: str) -> list[CandidateOperation]:

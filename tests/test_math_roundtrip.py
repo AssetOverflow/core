@@ -32,8 +32,19 @@ from generate.math_roundtrip import (
 class TestVerbRegistry:
     def test_kind_to_verbs_covers_all_operation_kinds(self) -> None:
         from generate.math_problem_graph import VALID_OPERATION_KINDS
+
+        # ADR-0190 — partition has a DEDICATED grounding contract in
+        # roundtrip_admissible (two population units + a word/%/slash
+        # factor with no verb anchor), handled before the generic
+        # verb/value/unit steps. It deliberately does not register in
+        # KIND_TO_VERBS; every OTHER kind must. (Its gate is exercised by
+        # the partition round-trip tests — this exemption is not a hole.)
+        dedicated_contract = {"partition"}
         for kind in VALID_OPERATION_KINDS:
-            assert kind in KIND_TO_VERBS, f"{kind} missing from KIND_TO_VERBS"
+            assert kind in KIND_TO_VERBS or kind in dedicated_contract, (
+                f"{kind} missing from KIND_TO_VERBS and has no dedicated "
+                f"round-trip contract"
+            )
 
     def test_add_subtract_disjoint_modulo_known_overlaps(self) -> None:
         # The two ambiguous overlap groups (give/send/return) are
