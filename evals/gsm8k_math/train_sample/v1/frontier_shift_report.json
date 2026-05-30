@@ -1,0 +1,528 @@
+{
+  "adr": "0190-follow-up",
+  "blocked_on_counts": {
+    "both": 38,
+    "none": 5,
+    "question": 4,
+    "statement": 3
+  },
+  "instrument": "frontier_shift",
+  "leverage": [
+    {
+      "advances": 42,
+      "capability": "question_extractor",
+      "flip_ready": 4,
+      "flip_ready_cases": [
+        "0007",
+        "0008",
+        "0009",
+        "0035"
+      ]
+    },
+    {
+      "advances": 10,
+      "capability": "no_recognizer_match",
+      "flip_ready": 1,
+      "flip_ready_cases": [
+        "0010"
+      ]
+    },
+    {
+      "advances": 31,
+      "capability": "inject:discrete_count_statement",
+      "flip_ready": 0,
+      "flip_ready_cases": []
+    },
+    {
+      "advances": 6,
+      "capability": "inject:multiplicative_aggregation",
+      "flip_ready": 0,
+      "flip_ready_cases": []
+    },
+    {
+      "advances": 5,
+      "capability": "inject:currency_amount",
+      "flip_ready": 0,
+      "flip_ready_cases": []
+    },
+    {
+      "advances": 5,
+      "capability": "inject:descriptive_setup_no_quantity",
+      "flip_ready": 0,
+      "flip_ready_cases": []
+    },
+    {
+      "advances": 3,
+      "capability": "inject:rate_with_currency",
+      "flip_ready": 0,
+      "flip_ready_cases": []
+    },
+    {
+      "advances": 3,
+      "capability": "inject:temporal_aggregation",
+      "flip_ready": 0,
+      "flip_ready_cases": []
+    }
+  ],
+  "note": "serving candidate-graph path; flip_ready = sole remaining blocker",
+  "per_case": [
+    {
+      "blocked_on": "both",
+      "case_id": "0001",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:rate_with_currency",
+        "inject:temporal_aggregation"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0002",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:descriptive_setup_no_quantity",
+        "inject:discrete_count_statement",
+        "no_recognizer_match"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0003",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0004",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement",
+        "no_recognizer_match"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0005",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "no_recognizer_match"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0006",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement",
+        "inject:multiplicative_aggregation"
+      ]
+    },
+    {
+      "blocked_on": "question",
+      "case_id": "0007",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": []
+    },
+    {
+      "blocked_on": "question",
+      "case_id": "0008",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": []
+    },
+    {
+      "blocked_on": "question",
+      "case_id": "0009",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": []
+    },
+    {
+      "blocked_on": "statement",
+      "case_id": "0010",
+      "question_parses": true,
+      "solved": false,
+      "statement_gaps": [
+        "no_recognizer_match"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0011",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:rate_with_currency"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0012",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:descriptive_setup_no_quantity",
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0013",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:multiplicative_aggregation"
+      ]
+    },
+    {
+      "blocked_on": "none",
+      "case_id": "0014",
+      "question_parses": false,
+      "solved": true,
+      "statement_gaps": [
+        "inject:temporal_aggregation"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0015",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0016",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0017",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement",
+        "inject:temporal_aggregation"
+      ]
+    },
+    {
+      "blocked_on": "none",
+      "case_id": "0018",
+      "question_parses": false,
+      "solved": true,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0019",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:currency_amount",
+        "no_recognizer_match"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0020",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0021",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0022",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement",
+        "inject:rate_with_currency"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0023",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:descriptive_setup_no_quantity",
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "none",
+      "case_id": "0024",
+      "question_parses": true,
+      "solved": true,
+      "statement_gaps": []
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0025",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:multiplicative_aggregation"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0026",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "no_recognizer_match"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0027",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:descriptive_setup_no_quantity",
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0028",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:currency_amount",
+        "inject:temporal_aggregation",
+        "no_recognizer_match"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0029",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0030",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement",
+        "no_recognizer_match"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0031",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:currency_amount",
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0032",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement",
+        "inject:multiplicative_aggregation"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0033",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0034",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "question",
+      "case_id": "0035",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": []
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0036",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:descriptive_setup_no_quantity",
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0037",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0038",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0039",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0040",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0041",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "none",
+      "case_id": "0042",
+      "question_parses": false,
+      "solved": true,
+      "statement_gaps": []
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0043",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:currency_amount",
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "statement",
+      "case_id": "0044",
+      "question_parses": true,
+      "solved": false,
+      "statement_gaps": [
+        "inject:currency_amount",
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0045",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement",
+        "inject:multiplicative_aggregation"
+      ]
+    },
+    {
+      "blocked_on": "none",
+      "case_id": "0046",
+      "question_parses": true,
+      "solved": true,
+      "statement_gaps": []
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0047",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement",
+        "inject:multiplicative_aggregation"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0048",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "no_recognizer_match"
+      ]
+    },
+    {
+      "blocked_on": "both",
+      "case_id": "0049",
+      "question_parses": false,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement"
+      ]
+    },
+    {
+      "blocked_on": "statement",
+      "case_id": "0050",
+      "question_parses": true,
+      "solved": false,
+      "statement_gaps": [
+        "inject:discrete_count_statement",
+        "no_recognizer_match"
+      ]
+    }
+  ]
+}
