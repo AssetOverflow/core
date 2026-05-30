@@ -431,3 +431,37 @@ serving yet.
   capability axes G1–G5, round-trip filter + disagreement rule, teaching-safety.
 - **Anti-overfitting obligations:** ADR-0114a (perturbation / OOD / depth / adversarial axes apply to every flipped case).
 - **Thesis:** [[thesis-decoding-not-generating]] — find, comprehend, rationalize; not a library of founds.
+
+---
+
+## Implemented — the PROPOSE step (autonomous loop closed)
+
+The attempt→score→ledger half already existed (`evals/gsm8k_math/practice`
+populates `dict[str, ClassTally]` scored against gold — the wrong=0 tether). The
+**missing seam was the gate consultation that turns earned reliability into a
+ratifiable proposal.** Nothing called `license_for` outside the gate itself.
+
+Now wired:
+
+```text
+run_practice  (attempt → gold-tether score → ClassTally ledger)
+  → propose_from_ledger   (core/reliability_gate/propose.py — the PROPOSE gate)
+  → ratification_queue.json   (HITL queue; NEVER a serving mutation)
+```
+
+- `propose_from_ledger(ledger, ceilings, action=PROPOSE)` emits a
+  `RatifiableProposal` for every class whose reliability (the conservative
+  Wilson floor, **0 below N_MIN=10 committed**) clears θ (PROPOSE=0.85). Refusals
+  never penalize; deterministic, sorted; proposal-only.
+- `propose_runner.py` closes the loop end-to-end. With an **aggressive sealed
+  scorer** (`resolve_pooled`) over the 150-case practice set it produced, on
+  first run: practice `95 correct / 5 wrong / 50 refused`, and **one** ratifiable
+  proposal — `additive`, reliability `0.8608 ≥ 0.85` (95/100). The 5 wrongs were
+  tolerated (attempt-and-eliminate) but did not breach the floor; every other
+  class stayed sealed. This is the gold-tethered autonomous contemplation: the
+  engine earns the right to *ask*, not to *serve*.
+
+Out of scope (next seams): ratification *consumption* (promote a ratified class
+into serving — the ADR-0175 Phase-5 bridge), and using the frontier-shift
+instrument to *prioritize* which classes to attempt. The PROPOSE gate is the
+load-bearing piece that makes both safe.

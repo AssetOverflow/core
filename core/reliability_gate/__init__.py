@@ -17,6 +17,7 @@ from core.reliability_gate.ceilings import Action, Ceilings
 from core.reliability_gate.floor import N_MIN, WILSON_Z, conservative_floor
 from core.reliability_gate.gate import LicenseDecision, license_for
 from core.reliability_gate.ledger import ClassTally
+from core.reliability_gate.propose import RatifiableProposal, propose_from_ledger
 
 __all__ = [
     "Action",
@@ -24,7 +25,9 @@ __all__ = [
     "ClassTally",
     "LicenseDecision",
     "N_MIN",
+    "RatifiableProposal",
     "WILSON_Z",
     "conservative_floor",
     "license_for",
+    "propose_from_ledger",
 ]
