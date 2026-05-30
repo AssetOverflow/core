@@ -256,6 +256,26 @@ _INITIAL_HAS_INDEF_RE: Final[re.Pattern[str]] = re.compile(
     r"\s*\.?$"
 )
 
+# ADR-0194 — labeled-container subject: "Jar A has 28 marbles.",
+# "Section G has 10 cars.", "District 2 has 19 voters.". GSM8K labels
+# containers/regions with a trailing single-letter or short-numeric label
+# that the bare _ENTITY slot cannot absorb. Sibling to _INITIAL_HAS_RE that
+# REQUIRES the label, so it never duplicates the bare-subject candidate;
+# _ENTITY stays unchanged for every other path. The label is a single
+# uppercase letter OR 1-2 digits, bounded by the following possession verb
+# (so a multi-word noun like "Jar Apple" does NOT match — "Apple" is not a
+# single-letter label). Same value/unit tail as _INITIAL_HAS_RE. wrong=0
+# is held downstream (completeness + round-trip + disagreement).
+_INITIAL_HAS_LABELED_RE: Final[re.Pattern[str]] = re.compile(
+    r"^(?P<entity>[A-Z]\w+\s+(?:[A-Z]|\d{1,2}))\s+"
+    r"(?P<anchor>has|have|had|started)(?:\s+(?:up|with))?\s+"
+    rf"(?P<value>{_VALUE})"
+    r"(?:\s+(?:full|loose|empty|whole|broken|new|old|small|large|fresh|raw|flat))?"
+    r"(?:\s+(?P<unit>\w+))?"
+    r"(?:\s+(?:of|in|for|with)\s+.+)?"
+    r"\s*\.?$"
+)
+
 # ADR-0136.S.4 — Shape B: prepositional-prefix existential.
 # "In a building, there are a hundred ladies on the first-floor studying."
 # Sibling to _INITIAL_THERE_ARE_RE; prefix is "In a <place>" (not bare
@@ -556,6 +576,9 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
 
     # ADR-0136.S.4 — Shape A: "A <noun> has N <unit>" indefinite-article subject.
     out.extend(_init_has_indef_candidates(sentence))
+
+    # ADR-0194 — labeled-container subject: "Jar A has 28 marbles."
+    out.extend(_init_has_labeled_candidates(sentence))
 
     m2 = _INITIAL_THERE_ARE_RE.match(s)
     if m2 is not None:
@@ -1940,6 +1963,52 @@ def _init_has_indef_candidates(sentence: str) -> list[CandidateInitial]:
                 matched_value_token=value_raw,
                 matched_unit_token=unit_raw if unit_raw is not None else final_unit,
                 matched_entity_token=noun,
+            )
+        ]
+    except Exception:
+        return []
+
+
+def _init_has_labeled_candidates(sentence: str) -> list[CandidateInitial]:
+    """ADR-0194 — labeled-container subject: 'Jar A has 28 marbles.'
+
+    Sibling to the _INITIAL_HAS_RE block in extract_initial_candidates.
+    Entity is '<Noun> <label>' (label = single uppercase letter or 1-2
+    digits), preserved by _normalize_entity. REQUIRES a label, so a
+    bare subject ('Jamie has 28 marbles') never reaches here and yields
+    no duplicate candidate. Same value/unit resolution and money
+    normalization as the definite-subject path.
+    """
+    s = sentence.strip().rstrip(".")
+    m = _INITIAL_HAS_LABELED_RE.match(s)
+    if m is None:
+        return []
+    value_raw = m.group("value")
+    rv = _resolve_value(value_raw)
+    if rv is None:
+        return []
+    entity = _normalize_entity(m.group("entity"))
+    unit_raw = m.group("unit")
+    if rv.unit_override is not None:
+        resolved_unit: str = rv.unit_override
+    elif unit_raw is not None:
+        resolved_unit = _canonicalize_unit(unit_raw)
+    else:
+        return []
+    value, final_unit = _money_unit_normalization(rv.value, resolved_unit)
+    assert final_unit is not None
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=entity,
+                    quantity=Quantity(value=value, unit=final_unit),
+                ),
+                source_span=sentence,
+                matched_anchor=m.group("anchor"),
+                matched_value_token=value_raw,
+                matched_unit_token=unit_raw if unit_raw is not None else final_unit,
+                matched_entity_token=m.group("entity"),
             )
         ]
     except Exception:
