@@ -35,6 +35,10 @@ from typing import Final
 from generate.derivation.clauses import segment_clauses
 from generate.derivation.extract import extract_quantities
 from generate.derivation.model import GroundedDerivation
+from generate.derivation.state.bind import (
+    continues_anchor_referent,
+    leading_subject_token,
+)
 from generate.derivation.state.ledger import build_accumulation_ledger
 from generate.derivation.state.replay import replay_accumulation_ledger
 from generate.derivation.verify import Resolution, select_self_verified
