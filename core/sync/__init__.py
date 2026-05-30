@@ -11,6 +11,13 @@ from core.sync.artifacts import (
     ArtifactType,
     authority_for,
 )
+from core.sync.journal import (
+    JournalDecision,
+    JournalDirection,
+    JournalEntry,
+    JournalStatus,
+    LocalSyncJournal,
+)
 from core.sync.manifest import ManifestCheck, SyncManifest, parse_manifest, validate_manifest
 
 __all__ = [
@@ -20,6 +27,11 @@ __all__ = [
     "ActivationRecord",
     "ArtifactAuthority",
     "ArtifactType",
+    "JournalDecision",
+    "JournalDirection",
+    "JournalEntry",
+    "JournalStatus",
+    "LocalSyncJournal",
     "ManifestCheck",
     "SyncManifest",
     "authority_for",
