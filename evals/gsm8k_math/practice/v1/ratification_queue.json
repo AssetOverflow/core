@@ -1,0 +1,24 @@
+{
+  "adr": "0175",
+  "note": "proposal-only ratification queue; never a serving mutation",
+  "practice_counts": {
+    "correct": 95,
+    "refused": 50,
+    "wrong": 5
+  },
+  "proposal_count": 1,
+  "proposals": [
+    {
+      "action": "propose",
+      "checker": "reliability",
+      "class_name": "additive",
+      "committed": 100,
+      "correct": 95,
+      "measured": 0.86084162,
+      "required": 0.85,
+      "wrong": 5
+    }
+  ],
+  "regime": "propose",
+  "schema_version": 1
+}
