@@ -50,7 +50,6 @@ DEFAULT_RESOLVABLE_PACK_IDS: tuple[str, ...] = (
     "en_core_spatial_v1",
     "en_core_causation_v1",
     "en_core_polarity_v1",
-    "en_core_syntax_v1",
     "en_core_relations_v1",
     "en_core_relations_v2",
     # ADR-0073c — synthetic English anchor lemmas for cross-lang collapse.
