@@ -27,6 +27,20 @@ When facing a design decision, the world offers two visible options: use what al
 
 ---
 
+## Native Substrate Direction — Python, Rust, Zig
+
+CORE is not moving toward a wholesale Zig rewrite. The architecture is moving toward a stricter native-substrate boundary:
+
+- **Python** remains the semantic source of truth: cognition runtime, teaching/review workflows, pack ratification, eval harnesses, and Workbench/operator tooling.
+- **Rust** remains the incumbent native algebra backend: Cl(4,1) products, versor operations, CGA inner product, exact recall, and diffusion surfaces already proven by parity gates.
+- **Zig** is a candidate material for the next native substrate layer: Delta-CRDT arenas/deltas/merge kernels, deterministic modality compilers such as `audio_core_v1`, stable C ABI surfaces, edge-native ingestion, and selected exact recall challenge kernels only after parity and benchmark proof.
+
+The rule is component law, not language preference. Zig may enter where explicit allocation, deterministic buffer ownership, C ABI clarity, and edge-native deployment materially strengthen CORE. Zig must not replace review-gated semantics, introduce approximate recall, hide repair in native code, or turn teacher/shadow models into substrate.
+
+Decision package: [`docs/zig/README.md`](docs/zig/README.md). Adoption gates: [`docs/zig/adoption-gates.md`](docs/zig/adoption-gates.md).
+
+---
+
 ## The Truth-Seeking Schema
 
 Co-equal with the algebraic substrate. CORE's epistemic schema is a foundational architectural commitment: every claim that enters the runtime field carries a typed position in a revision graph (`SPECULATIVE`, `COHERENT`, `CONTESTED`, `FALSIFIED`); coherence — not source authority — is the only admission signal; no claim is ever locked, even when COHERENT; identity cannot be rewritten by content; and exactly one mutation path admits knowledge, enforced by a CI-level architectural-invariant test.
