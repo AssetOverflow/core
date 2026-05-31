@@ -6,11 +6,11 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "en_core_syntax_v1.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "20154c1a29b8e11b5e2c59d728469f7d8989ea740ab9561c36e7f7f6f835e48c",
+  "checksum": "7151bf1f98e4cb638f0fb8fd17a5d1912859b3ff8e94f7a2857169dacf9ee37e",
   "version": "1.0.0",
   "gate_engaged": true,
   "oov_policy": "tagged_fallback",
   "definitional_layer": true,
   "provenance": "foundation-curriculum:reviewed:2026-05-30",
-  "glosses_checksum": "6acad97aec04704a5f174eb5d33b30434b67c8fad4efdc97a4e8334b532b7641"
+  "glosses_checksum": "9eaed2d5756b325641892ce9b0fda3ec781298d181072ad5739533ee08710d5f"
 }
