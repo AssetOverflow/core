@@ -52,7 +52,7 @@ clause
 sentence
 phrase
 antecedent
-consequent
+consequent_role
 referent
 anaphor
 qualifier
@@ -67,6 +67,8 @@ comparison
 attachment
 evidence_span
 ```
+
+`consequent_role` deliberately avoids the bare lemma `consequent`, which is already owned by `en_core_causation_v1` as a causal/resultant adjective. The pack test pins that ownership so the syntax substrate remains additive and does not steal existing lemma resolution.
 
 Primary namespace families:
 
