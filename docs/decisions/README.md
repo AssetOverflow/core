@@ -239,6 +239,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0181](ADR-0181-audio-compiler-delta-crdt.md) | CORE-native Audio Compiler over the Delta-CRDT Substrate | Proposed |
 | [ADR-0182](ADR-0182-cross-composer-disagreement-pooling.md) | Cross-composer disagreement pooling: refuse distractor-quantity confusers without a reactive cue rule | Proposed (spec only — no code). Follow-on to |
 | [ADR-0183](ADR-0183-lawful-audio-lexeme-path.md) | Lawful Audio→Lexeme Path (stub) | Proposed (stub — placeholder to record the fork; not yet a full design) |
+| [ADR-0196](ADR-0196-native-substrate-language-doctrine.md) | Native Substrate Language Doctrine (Python / Rust / Zig) | Accepted (2026-05-31) |
 
 ---
 
