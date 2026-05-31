@@ -235,7 +235,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0178](ADR-0178-GB3b-referent-accumulation-scope.md) | ADR-0178 GB-3b — referent-aware accumulation chaining (scope) | Proposed (scope only — no code). Sub-phase of |
 | [ADR-0178](ADR-0178-compositional-structure.md) | Compositional Structure: Comprehension-Guided Multi-Step Derivation (Gap B) | Proposed |
 | [ADR-0179](ADR-0179-extraction-richness.md) | Extraction Richness: feeding the comprehension composer real quantities | Proposed |
-| [ADR-0180](ADR-0180-crdt-sharded-vault-concurrency.md) | Delta-CRDT Sharded Substrate for Multimodal Concurrency | Proposed |
+| [ADR-0180](ADR-0180-crdt-sharded-vault-concurrency.md) | Delta-CRDT Sharded Substrate for Multimodal Concurrency | Accepted (2026-05-31 — G1 reference-contract lock) |
 | [ADR-0181](ADR-0181-audio-compiler-delta-crdt.md) | CORE-native Audio Compiler over the Delta-CRDT Substrate | Proposed |
 | [ADR-0182](ADR-0182-cross-composer-disagreement-pooling.md) | Cross-composer disagreement pooling: refuse distractor-quantity confusers without a reactive cue rule | Proposed (spec only — no code). Follow-on to |
 | [ADR-0183](ADR-0183-lawful-audio-lexeme-path.md) | Lawful Audio→Lexeme Path (stub) | Proposed (stub — placeholder to record the fork; not yet a full design) |
