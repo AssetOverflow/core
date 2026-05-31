@@ -47,7 +47,7 @@ EXPECTED_LEMMAS: tuple[str, ...] = (
     "sentence",
     "phrase",
     "antecedent",
-    "consequent",
+    "consequent_role",
     "referent",
     "anaphor",
     "qualifier",
@@ -168,7 +168,14 @@ def test_resolver_routes_syntax_lemmas_to_this_pack() -> None:
 
 def test_gloss_resolver_routes_syntax_lemmas_to_this_pack() -> None:
     clear_resolver_cache()
-    for lemma in ("subject", "predicate", "antecedent", "negation", "evidence_span"):
+    for lemma in (
+        "subject",
+        "predicate",
+        "antecedent",
+        "consequent_role",
+        "negation",
+        "evidence_span",
+    ):
         resolved = resolve_gloss(lemma)
         assert resolved is not None, lemma
         pack_id, pos, gloss = resolved
@@ -187,6 +194,7 @@ def test_prior_pack_lemma_resolution_unchanged() -> None:
         ("all", "en_core_quantitative_v1"),
         ("place", "en_core_spatial_v1"),
         ("cause", "en_core_causation_v1"),
+        ("consequent", "en_core_causation_v1"),
         ("never", "en_core_polarity_v1"),
         ("parent", "en_core_relations_v1"),
         ("mother", "en_core_relations_v2"),
