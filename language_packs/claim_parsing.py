@@ -75,14 +75,15 @@ class ParsedClaim:
 _ARTICLE_RE = re.compile(r"\b(?:a|an|the)\s+", re.IGNORECASE)
 _SPACES_RE = re.compile(r"\s+")
 _TERMINAL_RE = re.compile(r"[.?!]\s*$")
+_SUBJECT = r"(?:[A-Z][A-Za-z]*|he|she|it|they|we)"
 
 _CONDITIONAL_RE = re.compile(
     r"^if\s+(?P<antecedent>.+?),\s*(?P<consequent>.+?)\.?$",
     re.IGNORECASE,
 )
 _TEMPORAL_RE = re.compile(
-    r"^after\s+(?P<event>.+?),\s*(?P<subject>[A-Z][A-Za-z]*)\s+had\s+"
-    r"(?P<quantity>\d+)\s+(?P<object>[A-Za-z_ -]+?)\s+left\.?$",
+    rf"^after\s+(?P<event>.+?),\s*(?P<subject>{_SUBJECT})\s+had\s+"
+    r"(?P<quantity>\d+)(?:\s+(?P<object>[A-Za-z_ -]+?))?\s+left\.?$",
 )
 _NEGATED_POSSESSION_RE = re.compile(
     r"^(?P<subject>[A-Z][A-Za-z]*)\s+does\s+not\s+have\s+"
@@ -164,11 +165,12 @@ def parse_claim(text: str) -> ParsedClaim:
         )
 
     if match := _TEMPORAL_RE.match(evidence):
+        object_text = match.group("object")
         return ParsedClaim(
             kind="temporal_state",
             subject=match.group("subject"),
             relation="had_left_after",
-            object=_clean(match.group("object")),
+            object=_clean(object_text) if object_text else None,
             quantity=int(match.group("quantity")),
             qualifiers=(f"after {_clean(match.group('event'))}",),
             evidence_span=evidence,
