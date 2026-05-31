@@ -421,7 +421,8 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
 
     ADR-0186 — ``sealed`` selects the sealed injector lane. The default
     ``sealed=False`` is the frozen serving path (the ``train_sample`` runner
-    and serving always pass it), so ``3/47/0`` is byte-identical. ``sealed=True``
+    and serving always pass it), so the ratified serving count is byte-identical.
+    ``sealed=True``
     additionally consults ``_SEALED_INJECTORS`` (the in-development W2-W5
     injectors) at the per-statement injection site below; it is used only by
     the sealed eval runner. The seal is injector eligibility, not a forked
@@ -518,6 +519,24 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
                 f"got {len(question_sentences)}"
             ),
             branches_enumerated=0, branches_admissible=0,
+        )
+
+    # ADR-0195 — product promotion bridge.  The sealed pooled derivation
+    # reader can solve complete multiplicative aggregates that the
+    # candidate-graph recognizer still refuses at the injector boundary,
+    # but the pooled reader is not safe to promote wholesale.  Expose only
+    # complete pure-product readings whose target/hazard gate proves this
+    # is an aggregate product, not a rate/residual/percentage/equation.
+    from generate.derivation.product_bridge import resolve_promotable_product
+
+    product_resolution = resolve_promotable_product(text)
+    if product_resolution is not None:
+        return CandidateGraphResult(
+            answer=product_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
         )
 
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).

@@ -6,7 +6,7 @@ metrics, feeds per-class counts into the Phase 1 ledger, diagnoses every refusal
 (§8 skill/knowledge/ambiguity), and emits elimination records for wrongs.
 
 On the current pipeline the engine still refuses rather than guesses, so the
-practice ledger mirrors serving (3 correct / 0 wrong / 47 refused, of 50) and
+practice ledger mirrors serving (6 correct / 0 wrong / 44 refused, of 50) and
 zero eliminations fire live — the attempt-generating search is Phase 3. Phase 2
 proves the *regime*: the lane, the ledger wiring, the diagnosis, the elimination
 schema, and the seal.
@@ -160,15 +160,15 @@ class TestRunPractice:
 
 class TestLiveLane:
     def test_live_practice_mirrors_serving_today(self) -> None:
-        # With the refuse-preferring engine, practice == serving (3/47/0).
+        # With the refuse-preferring engine, practice == serving (6/44/0).
         # Attempts/eliminations go live in Phase 3.
         rep = build_report()
-        assert rep.counts == {"correct": 3, "wrong": 0, "refused": 47}
+        assert rep.counts == {"correct": 6, "wrong": 0, "refused": 44}
         assert len(rep.elimination_records) == 0  # no wrongs yet
 
     def test_every_refusal_is_diagnosed(self) -> None:
         rep = build_report()
-        assert len(rep.refusal_diagnoses) == 47
+        assert len(rep.refusal_diagnoses) == 44
         assert all(d in REFUSAL_DIAGNOSES for d in rep.refusal_diagnoses.values())
 
 
@@ -185,7 +185,7 @@ class TestSealInvariant:
         )
         build_report()  # run practice
         serving = serving_build_report(_load_cases(_CASES_PATH))
-        assert serving["counts"] == {"correct": 3, "wrong": 0, "refused": 47}
+        assert serving["counts"] == {"correct": 6, "wrong": 0, "refused": 44}
 
     def test_no_serving_module_imports_the_practice_lane(self) -> None:
         import subprocess

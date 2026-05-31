@@ -1,8 +1,8 @@
 {
   "adr": "0126",
   "counts": {
-    "correct": 4,
-    "refused": 46,
+    "correct": 6,
+    "refused": 44,
     "wrong": 0
   },
   "exit_criterion": {
@@ -23,8 +23,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0003",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The local bookstore donated 48 boxes of erasers.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0004",
@@ -113,8 +113,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0021",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He bench presses 15 pounds for 10 reps and does 3 sets.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0022",

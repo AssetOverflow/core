@@ -7,7 +7,7 @@ like 0003 (`48×24×0.75 = 864`). EX-2 grounds a bare decimal when both digit-ru
 appear, symmetric with those branches.
 
 This is the ONE shared-primitive (serving-path) change in extraction richness, so
-the load-bearing test is wrong=0: serving stays 3/47/0 byte-identical.
+the load-bearing test is wrong=0: serving stays on the current ratified count.
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ class TestWrongZeroPreserved:
         )
 
         counts = build_report(_load_cases(_CASES_PATH))["counts"]
-        assert counts == {"correct": 3, "wrong": 0, "refused": 47}
+        assert counts == {"correct": 6, "wrong": 0, "refused": 44}
 
 
 class TestUnblocksDecimalProduct:

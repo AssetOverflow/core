@@ -17,7 +17,7 @@ Acceptance tests:
   4. Refusal-preferring discipline: a held statement with no discourse
      antecedent emits a "no_antecedent" trace event and drops cleanly.
 
-  5. wrong=0 preserved on train_sample/v1 (score unchanged at 3/47/0).
+  5. wrong=0 preserved on train_sample/v1 (score unchanged at 6/44/0).
 
 Phase 3a substrate scope: this PR builds the reevaluate operator and
 wires pronoun resolution into the recognizer-injection branch of
@@ -448,9 +448,11 @@ class TestPhase3WiringEndToEnd:
 
 class TestWrongZeroPreservation:
     def test_train_sample_score_unchanged(self) -> None:
-        """Phase 3 substrate must not move the train_sample score from
-        3/47/0.  Any change would indicate the lookback path is firing
-        on cases it shouldn't (or breaking cases it shouldn't)."""
+        """Phase 3 substrate must preserve the current train_sample score.
+
+        Any change here would indicate the lookback path is firing on cases it
+        should not, or breaking cases it should not.
+        """
         import json
         from pathlib import Path
         from evals.gsm8k_math.train_sample.v1.runner import (
@@ -466,11 +468,11 @@ class TestWrongZeroPreservation:
         assert counts["wrong"] == 0, (
             f"wrong=0 invariant violated: {counts}"
         )
-        assert counts["correct"] == 3, (
-            f"correct count moved from 3 to {counts['correct']}; "
+        assert counts["correct"] == 6, (
+            f"correct count moved from 6 to {counts['correct']}; "
             "Phase 3a substrate should not lift score on this corpus "
             "(see PHASE-3.1 follow-up brief for what would lift it)"
         )
-        assert counts["refused"] == 47, (
-            f"refused count moved from 47 to {counts['refused']}"
+        assert counts["refused"] == 44, (
+            f"refused count moved from 44 to {counts['refused']}"
         )

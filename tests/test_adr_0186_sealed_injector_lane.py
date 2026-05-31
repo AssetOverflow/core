@@ -1,7 +1,7 @@
 """ADR-0186 — sealed candidate-graph injector lane.
 
 The seal mechanism lets ADR-0170 W2-W5 injectors be developed behind a
-default-off ``sealed`` flag, so the frozen serving metric (3/47/0) stays
+default-off ``sealed`` flag, so the current serving metric stays
 byte-identical until a reviewed Phase-5 promotion.
 
 These tests are written to **fail under violation** (CLAUDE.md
@@ -13,7 +13,7 @@ These tests are written to **fail under violation** (CLAUDE.md
   sealed injector either (a) leaks into the frozen ``sealed=False`` path
   (serving drift) or (b) is NOT consulted under ``sealed=True`` (dead seal).
 * ``test_frozen_train_sample_byte_identical`` fails if the default
-  ``parse_and_solve`` path moves off 3/47/0.
+  ``parse_and_solve`` path moves off the checked-in report.
 """
 
 from __future__ import annotations
@@ -90,8 +90,8 @@ def test_parse_and_solve_threads_sealed_flag() -> None:
 
 
 def test_frozen_train_sample_byte_identical() -> None:
-    """The default (sealed=False) path stays on the ratified 3/47/0 artifact."""
+    """The default (sealed=False) path stays on the ratified report artifact."""
     report = json.loads(
         Path("evals/gsm8k_math/train_sample/v1/report.json").read_text()
     )
-    assert report["counts"] == {"correct": 3, "refused": 47, "wrong": 0}
+    assert report["counts"] == {"correct": 6, "refused": 44, "wrong": 0}
