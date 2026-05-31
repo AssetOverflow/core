@@ -90,8 +90,8 @@ def inject_from_match(
     W2-W5 injectors); a sealed injector that emits short-circuits and
     returns its emission. When ``sealed=False`` (the default, and the
     value the frozen serving path / ``train_sample`` runner always pass)
-    ``_SEALED_INJECTORS`` is **not** consulted at all, so the frozen
-    ``3/47/0`` metric is byte-identical until a reviewed Phase-5 promotion
+    ``_SEALED_INJECTORS`` is **not** consulted at all, so the ratified
+    serving metric is byte-identical until a reviewed Phase-5 promotion
     moves an entry into :data:`_INJECTORS`. The seal is injector
     *eligibility*, not a forked reader: every emission still passes the
     unchanged admissibility gate downstream.
@@ -554,7 +554,7 @@ _INJECTORS: Mapping[ShapeCategory, "type"] = {
 # ADR-0175 serving seal). Entries here are consulted **only** when
 # ``inject_from_match(..., sealed=True)`` — i.e. by the sealed eval runner,
 # never by the frozen serving path or the ``train_sample`` runner (both pass
-# ``sealed=False``). This keeps the frozen ``3/47/0`` metric byte-identical
+# ``sealed=False``). This keeps the ratified serving metric byte-identical
 # until a reviewed Phase-5 promotion moves an entry into ``_INJECTORS``.
 #
 # It is intentionally empty at land time: this PR ships the seal *mechanism*

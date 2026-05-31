@@ -50,12 +50,30 @@ Each case in `cases.jsonl` preserves:
 - `answer_expression`: the verbatim answer field containing reasoning steps and number suffix
 - `answer_numeric`: the integer or float parsed from the `#### N` suffix in the answer expression
 
+## Current Report
+
+`report.json` currently records **6 correct / 44 refused / 0 wrong**. The
+ADR-0126 exit criterion remains unmet (`correct >= 10`, `wrong == 0`), so the
+runner still exits nonzero.
+
+The two most recent lifts are ADR-0195 product-promotion cases:
+
+- `gsm8k-train-sample-v1-0003` — complete revenue product
+  (`48 boxes x 24 erasers x $0.75`).
+- `gsm8k-train-sample-v1-0021` — complete total-work product
+  (`15 pounds x 10 reps x 3 sets`).
+
+Both are exposed through a guarded product bridge over the pooled derivation
+reader. The bridge does **not** promote the pooled reader wholesale; the eight
+known pooled-reader wrong commits remain refused.
+
 ## ADR-0164 Reader — Zero-Delta Diagnosis
 
-`report.json` records `use_reader: true` (3 correct / 47 refused / 0 wrong), identical counts
-to the baseline. The reader is not silent: both Phase 2 (whole-problem) and Phase 1
-(question-only hybrid) are called. The zero-delta has a structural cause — all 47 refusals
-are **statement-level**, not question-level:
+The older ADR-0164 reader run recorded `use_reader: true` (3 correct / 47 refused
+/ 0 wrong), identical counts to that baseline. The reader was not silent: both
+Phase 2 (whole-problem) and Phase 1 (question-only hybrid) were called. The
+zero-delta had a structural cause — all 47 refusals were **statement-level**, not
+question-level:
 
 - Phase 2 (`_try_comprehension_reader`) processes every sentence in order. It refuses on the
   first statement it cannot classify (unknown rate, multiplicative aggregation, fractional

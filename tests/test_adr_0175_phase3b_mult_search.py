@@ -9,7 +9,7 @@ Covers:
 - extraction + search behaviour;
 - the ADR-0114a generality guard (renumbered/reworded variants flip too — the
   capability is not memorised to the 0021 surface);
-- invariant #1 (seal): serving stays 3/47/0, the 0050 canary refuses in serving
+- invariant #1 (seal): serving stays 6/44/0, the 0050 canary refuses in serving
   and is not attempted-wrong in practice;
 - invariant #3 (determinism).
 """
@@ -113,9 +113,9 @@ class TestSealInvariant:
     def test_serving_unchanged_by_search(self) -> None:
         build_search_report()  # run practice with the search live
         assert serving_report(_load_cases(_CASES_PATH))["counts"] == {
-            "correct": 3,
+            "correct": 6,
             "wrong": 0,
-            "refused": 47,
+            "refused": 44,
         }
 
     def test_0050_canary_refuses_in_serving_and_is_not_attempted_wrong(self) -> None:
