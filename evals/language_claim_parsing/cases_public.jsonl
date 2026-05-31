@@ -1,0 +1,10 @@
+{"case_id":"language-claim-parsing-v1-0001","text":"John bought apples."}
+{"case_id":"language-claim-parsing-v1-0002","text":"Mary has 3 books."}
+{"case_id":"language-claim-parsing-v1-0003","text":"Sarah gave Tim 2 coins."}
+{"case_id":"language-claim-parsing-v1-0004","text":"The red ball is in the box."}
+{"case_id":"language-claim-parsing-v1-0005","text":"If it rains, the ground gets wet."}
+{"case_id":"language-claim-parsing-v1-0006","text":"John has more apples than Mary."}
+{"case_id":"language-claim-parsing-v1-0007","text":"John does not have apples."}
+{"case_id":"language-claim-parsing-v1-0008","text":"After selling 5 tickets, he had 12 left."}
+{"case_id":"language-claim-parsing-v1-0009","text":"John has fewer apples than Mary. How many apples does John have?"}
+{"case_id":"language-claim-parsing-v1-0010","text":"The sentence contains a structure not admitted by v1."}
