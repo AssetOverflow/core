@@ -1,0 +1,16 @@
+{
+  "pack_id": "en_core_syntax_v1",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_core_syntax_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "31ac3e05a1344e296e86cbcacdfc118583b17e2634dc752fd596528023b99900",
+  "version": "1.0.0",
+  "gate_engaged": true,
+  "oov_policy": "tagged_fallback",
+  "definitional_layer": true,
+  "provenance": "foundation-curriculum:reviewed:2026-05-30",
+  "glosses_checksum": "aebb2191739722d54c48fe10d10ab6bae2efb44bfd14f04ce72b6333a4a1ca98"
+}
