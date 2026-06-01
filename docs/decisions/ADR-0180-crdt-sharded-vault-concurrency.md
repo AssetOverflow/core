@@ -1,9 +1,9 @@
 # ADR-0180: Delta-CRDT Sharded Substrate for Multimodal Concurrency
 
-**Status:** Proposed
-**Date:** 2026-05-29
+**Status:** Accepted (2026-05-31) — Delta-CRDT reference contract locked at gate G1 (ADR-0196). See §5.
+**Date:** 2026-05-29 (Proposed) · 2026-05-31 (Accepted)
 **Authors:** Joshua M. Shay, Core R&D Engine
-**Domains:** `core-rs/src/vault.rs`, `sensorium/`, `field/`
+**Domains:** `core-rs/src/vault.rs`, `vault/crdt.py`, `sensorium/`, `field/`
 
 ## 1. Context & Problem Statement
 
@@ -240,3 +240,70 @@ asynchronous Semilattice Joins.
 3. **Trace Invariance Proof:** Extend `evals/` to prove that
    `hash(Sequential_Ingest) == hash(Concurrent_CRDT_Ingest)`. The order of
    asynchronous merging must not alter the final unified geometric topography.
+
+## 5. Status: Accepted — G1 reference-contract lock (2026-05-31)
+
+This ADR is accepted at **gate G1** of the native-substrate adoption ladder
+(ADR-0196 / `docs/zig/adoption-gates.md`): the Delta-CRDT substrate now has a
+**locked, executable reference contract**. This corresponds to slice **ZC-0**
+("contract pinning") in `docs/zig/crdt-substrate/implementation-slices.md`,
+whose exit gate is *"Python/Rust reference behavior is locked."*
+
+### 5.1 The locked contract
+
+- **Canonical reference:** `vault/crdt.py` — `ArenaEntry`, `Delta`,
+  `LocalArena`, `merge_kernel`, `canonical_bytes`, `delta_hash`. Pure
+  content law: no normalization, no versor closure/repair, no field mutation,
+  no global Vault writes (CLAUDE.md §Normalization Rules / §Core Primitives).
+- **Content order** is by the IEEE-754 bit pattern of the 32 versor components,
+  then the provenance bytes — never arrival order (§2.2 amendment). `+0.0`,
+  `-0.0`, and distinct NaN payloads are distinct content (bit-addressed).
+- **Canonical serialization** (`canonical_bytes`) is the cross-language
+  contract; `delta_hash` is its SHA-256. Layout (all little-endian):
+
+  ```text
+  u64   entry_count
+  per entry (canonical order):
+    32 x f32   versor components (IEEE-754, little-endian, 4 bytes each)
+    u64        provenance_length
+    bytes      provenance
+  ```
+
+### 5.2 Proof obligations (all failable; CLAUDE.md §Schema-Defined Proof Obligations)
+
+| Obligation | Test |
+|---|---|
+| C-1 commutativity, C-2 associativity, C-3 idempotence | `tests/test_crdt_semilattice_contract.py` |
+| C-4 permutation-invariant merge, C-5 duplicate-delta no-op, kernel == join-fold | `tests/test_crdt_semilattice_contract.py` |
+| Content ordering, distinct-provenance retention, signed-zero / NaN bit-addressing | `tests/test_crdt_content_ordering.py` |
+| C-7 arena push never mutates the global Vault; snapshot/merge purity | `tests/test_crdt_no_global_write_from_arena.py` |
+| Golden corpus: canonical bytes + merge hash regression-lock | `tests/test_crdt_semilattice_contract.py` + `tests/fixtures/crdt/merge_fixtures.json` |
+| **Rust ↔ Python byte-parity** | `core-rs/tests/test_crdt_hash_parity.rs` (+ `Delta::canonical_bytes` in `core-rs/src/vault.rs`) |
+
+The golden corpus is regenerated deterministically from the Python reference by
+`tests/fixtures/crdt/_generate.py` (single source of truth; it also emits the
+Rust-side expected hex). Mutation-tested: removing dedup breaks C-3/C-5;
+ordering by arrival breaks C-1.
+
+### 5.3 §4 execution-plan status
+
+1. **`core-rs` LocalArena / SemilatticeDelta** — **done** (`core-rs/src/vault.rs`,
+   `core-rs/tests/test_arena.rs`), now extended with `canonical_bytes` and
+   pinned to the Python reference by `test_crdt_hash_parity.rs`.
+2. **MLX zero-copy integration** — **deferred / out of scope** per §1.5.5
+   (hardware optimization; not required for the substrate contract).
+3. **Trace-invariance proof** — the *substrate-level* property is locked: the
+   merge kernel is permutation-invariant and `delta_hash` is replay-stable
+   (C-4). The full end-to-end `hash(Sequential_Ingest) ==
+   hash(Concurrent_CRDT_Ingest)` eval over a live concurrent modality pipeline
+   remains future work, to land when modality ingestion is wired — it rides on
+   the contract locked here.
+
+### 5.4 Boundary — what this ADR does NOT authorize
+
+This ADR locks the **reference contract only**. It does **not** authorize any
+Zig implementation. The Zig CRDT prototype (slices **ZC-1 and beyond**) remains
+at **gate G2** under ADR-0196 and requires a separate ADR before any Zig code,
+backend selector, or runtime wiring. The Rust substrate likewise stays a
+pure-CPU, Python-unbound substrate (§1.5.5) until a downstream ADR binds or
+promotes it.

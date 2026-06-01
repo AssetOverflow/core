@@ -248,6 +248,31 @@ impl Delta {
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
+
+    /// Canonical little-endian serialization of this Delta — the cross-language
+    /// G1 contract (ADR-0180 / ADR-0196). Byte-for-byte identical to the
+    /// Python reference `vault.crdt.canonical_bytes`; parity is pinned by
+    /// `tests/test_crdt_hash_parity.rs`. Layout:
+    ///
+    /// ```text
+    /// u64   entry_count
+    /// per entry (canonical order):
+    ///   32 x f32   versor components (IEEE-754, little-endian, 4 bytes each)
+    ///   u64        provenance_length
+    ///   bytes      provenance
+    /// ```
+    pub fn canonical_bytes(&self) -> Vec<u8> {
+        let mut out = Vec::new();
+        out.extend_from_slice(&(self.entries.len() as u64).to_le_bytes());
+        for entry in &self.entries {
+            for component in &entry.versor {
+                out.extend_from_slice(&component.to_le_bytes());
+            }
+            out.extend_from_slice(&(entry.provenance.len() as u64).to_le_bytes());
+            out.extend_from_slice(&entry.provenance);
+        }
+        out
+    }
 }
 
 /// The join-semilattice contract for Delta-CRDT state (ADR-0180 §2.2).
