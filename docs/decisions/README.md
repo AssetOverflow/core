@@ -239,7 +239,19 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0181](ADR-0181-audio-compiler-delta-crdt.md) | CORE-native Audio Compiler over the Delta-CRDT Substrate | Proposed |
 | [ADR-0182](ADR-0182-cross-composer-disagreement-pooling.md) | Cross-composer disagreement pooling: refuse distractor-quantity confusers without a reactive cue rule | Proposed (spec only — no code). Follow-on to |
 | [ADR-0183](ADR-0183-lawful-audio-lexeme-path.md) | Lawful Audio→Lexeme Path (stub) | Proposed (stub — placeholder to record the fork; not yet a full design) |
+| [ADR-0184](ADR-0184-distinct-unit-product-rule.md) | Distinct-unit product rule: cut the product-of-all over-commit | Accepted / Implemented |
+| [ADR-0185](ADR-0185-division-reading.md) | Division reading (rate / partition): eliminate-then-solve | Superseded by [ADR-0186](ADR-0186-sealed-candidate-graph-injector-lane.md) |
+| [ADR-0186](ADR-0186-sealed-candidate-graph-injector-lane.md) | Sealed candidate-graph injector lane: resume ADR-0170 W2–W5 under the ADR-0175 seal | Proposed (scoping + seal-mechanism ADR; first injector ships behind the seal) |
+| [ADR-0189](ADR-0189-comparative-verb-unit-widening.md) | Comparative reading: anchor-verb widening + multi-word units | Proposed (implemented in this PR) |
+| [ADR-0191](ADR-0191-candidate-graph-completeness-guard.md) | Candidate-graph completeness guard (the missing wrong=0 leg) | Proposed (implemented in this PR) |
+| [ADR-0192](ADR-0192-discrete-count-open-noun-class.md) | Open the discrete_count counted-noun class (firewall-backed) | Proposed (implemented in this PR) |
+| [ADR-0193](ADR-0193-aggregate-existential-question-frame.md) | Aggregate total-across: the existential question frame | Proposed (implemented in this PR) |
+| [ADR-0194](ADR-0194-labeled-container-subject.md) | Labeled-container subject entity shape | Proposed (implemented in this PR) |
+| [ADR-0195](ADR-0195-product-promotion-bridge.md) | Product Promotion Bridge | Accepted / Implemented |
 | [ADR-0196](ADR-0196-native-substrate-language-doctrine.md) | Native Substrate Language Doctrine (Python / Rust / Zig) | Accepted (2026-05-31) |
+| [ADR-0197](ADR-0197-vision-compiler-delta-crdt.md) | CORE-native Vision Compiler over the Delta-CRDT Substrate | Proposed |
+| [ADR-0198](ADR-0198-motor-efferent-decoder-spike.md) | Motor as Efferent Modality — Protocol Gap & Governance (Design Spike) | Proposed (design spike — no implementation) |
+| [ADR-0199](ADR-0199-cross-domain-learning-arena-contract.md) | Cross-Domain Learning Arena Contract | Proposed |
 
 ---
 
