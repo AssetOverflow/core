@@ -1,41 +1,51 @@
 """ADR-0175 Phase 2 — sealed practice lane over the GSM8K train sample.
 
+ADR-0199: this lane is now the **first instance** of the cross-domain learning
+arena. The domain-agnostic fold lives in :mod:`core.learning_arena.engine`; this
+module supplies only the GSM8K-specific pieces — the operation classifier
+(capability classes from gold), the refusal-reason router, and the
+solver/gold-tether adapters around the existing candidate-graph scorer. Behavior
+is unchanged: the public surface (``run_practice(cases, scorer=...)``,
+``build_report``, ``build_practice_report``, ``PracticeReport``,
+``EliminationRecord``, ``classify_operation``, ``diagnose_refusal``) is
+preserved byte-for-byte against the prior lane.
+
 Separate from the wrong=0-pinned serving runner (``train_sample/v1/runner.py``),
-which is **never modified**. Runs the 47 cases in *practice* mode: scores
-correct/wrong/refused as practice metrics (wrong is tolerated — it is the
-learning signal, not a lane failure), feeds per-class counts into the Phase 1
-reliability ledger, diagnoses every refusal (§8 skill/knowledge/ambiguity), and
-emits an elimination record for each wrong.
+which is **never modified**. Runs the cases in *practice* mode: wrong is the
+learning signal, not a lane failure.
 
 The seal (invariant #1): this lane writes only its own ``report.json``; no
 serving path reads it and no serving module imports this runner. A wrong here
 never becomes a served answer.
-
-On the current refuse-preferring pipeline the engine still declines rather than
-guesses, so the live practice ledger mirrors serving (3/47/0) and zero
-eliminations fire — the attempt-generating grounded search is Phase 3. Phase 2
-proves the *regime*: lane, ledger wiring, diagnosis, elimination schema, seal.
 """
 
 from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 
-from core.reliability_gate import ClassTally
+from core.learning_arena.engine import run_practice as _engine_run_practice
+from core.learning_arena.protocols import Problem
+# Re-exported so existing callers/tests keep importing these from the lane.
+from core.learning_arena.report import (  # noqa: F401
+    REFUSAL_DIAGNOSES,
+    EliminationRecord,
+    PracticeReport,
+)
 from evals.gsm8k_math.runner import _score_one_candidate_graph
 from evals.gsm8k_math.train_sample.v1.runner import _CASES_PATH, _adapt, _load_cases
 
 OPERATION_CLASSES: tuple[str, ...] = ("multiplicative", "divisive", "additive")
-REFUSAL_DIAGNOSES: tuple[str, ...] = ("skill_gap", "knowledge_gap", "genuine_ambiguity")
 
 _HERE = Path(__file__).resolve().parent
 _REPORT_PATH = _HERE / "report.json"
 _PRACTICE_CASES_PATH = _HERE / "cases.jsonl"
 _CALC_RE = re.compile(r"<<([^=>]+)=")
+
+_DOMAIN_ID = "mathematics_logic"
 
 
 def classify_operation(answer_expression: str) -> str:
@@ -75,61 +85,61 @@ def diagnose_refusal(reason: str) -> str:
     return "knowledge_gap"
 
 
-@dataclass(frozen=True, slots=True)
-class EliminationRecord:
-    """A wrong practice attempt that gold caught — the pruning signal (§9)."""
+# --- GSM8K instance of the ADR-0199 DomainSolver / GoldTether ------------------
 
-    case_id: str
-    class_name: str
-    attempted: float | None
-    gold: float
+
+@dataclass(frozen=True, slots=True)
+class _GSM8KAttempt:
+    """Concrete Attempt that also carries the scorer's gold verdict.
+
+    The candidate-graph scorer already decides correct/wrong/refused against the
+    dataset's ``expected_answer`` (gold independent of the engine's derivation —
+    ADR-0199 L-2). The tether reads that verdict via ``scorer_outcome`` so the
+    classification is reproduced exactly, not re-derived.
+    """
+
+    committed: bool
+    answer: Any
     reason: str
+    case_id: str
+    scorer_outcome: str
+    derivations: tuple[Any, ...] = field(default_factory=tuple)
+    trace_sha256: str = ""
 
 
 @dataclass(frozen=True, slots=True)
-class PracticeReport:
-    counts: Mapping[str, int]
-    ledger: Mapping[str, ClassTally]
-    refusal_diagnoses: Mapping[str, str]
-    elimination_records: tuple[EliminationRecord, ...]
+class _GSM8KSolver:
+    score: Callable[[dict[str, Any]], Any]
+    domain_id: str = _DOMAIN_ID
 
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            "schema_version": 1,
-            "adr": "0175",
-            "regime": "practice",
-            "counts": dict(self.counts),
-            "per_class": {
-                cls: {
-                    "correct": t.correct,
-                    "wrong": t.wrong,
-                    "refused": t.refused,
-                    "committed": t.committed,
-                    "reliability": t.reliability,
-                    "coverage": t.coverage,
-                }
-                for cls, t in sorted(self.ledger.items())
-            },
-            "refusal_diagnoses": dict(sorted(self.refusal_diagnoses.items())),
-            "diagnosis_counts": _bucket_counts(self.refusal_diagnoses),
-            "elimination_records": [
-                {
-                    "case_id": r.case_id,
-                    "class_name": r.class_name,
-                    "attempted": r.attempted,
-                    "gold": r.gold,
-                    "reason": r.reason,
-                }
-                for r in self.elimination_records
-            ],
-        }
+    def attempt(self, problem: Problem) -> _GSM8KAttempt:
+        outcome = self.score(_adapt(problem.payload))
+        return _GSM8KAttempt(
+            committed=(outcome.outcome != "refused"),
+            answer=getattr(outcome, "actual_answer", None),
+            reason=outcome.reason or "",
+            case_id=outcome.case_id,
+            scorer_outcome=outcome.outcome,
+        )
 
 
-def _bucket_counts(diagnoses: Mapping[str, str]) -> dict[str, int]:
-    out = {d: 0 for d in REFUSAL_DIAGNOSES}
-    for d in diagnoses.values():
-        out[d] = out.get(d, 0) + 1
-    return out
+@dataclass(frozen=True, slots=True)
+class _GSM8KGoldTether:
+    domain_id: str = _DOMAIN_ID
+
+    def is_correct(self, attempt: _GSM8KAttempt, problem: Problem) -> bool:
+        return attempt.scorer_outcome == "correct"
+
+    def gold_answer(self, problem: Problem) -> float:
+        return float(problem.payload["answer_numeric"])
+
+
+def _to_problem(raw: dict[str, Any]) -> Problem:
+    return Problem(
+        problem_id=str(raw.get("id", raw.get("case_id", ""))),
+        class_name=classify_operation(raw.get("answer_expression", "")),
+        payload=raw,
+    )
 
 
 def run_practice(
@@ -139,49 +149,16 @@ def run_practice(
 ) -> PracticeReport:
     """Run the cases in practice mode and build the report.
 
-    ``scorer`` is injectable for testing; it defaults to the candidate-graph
-    scorer :func:`evals.gsm8k_math.runner._score_one_candidate_graph`. The
-    practice lane only *reads* the engine's outcome — it never alters the
-    serving path.
+    Unchanged signature and behavior. ``scorer`` is injectable for testing; it
+    defaults to the candidate-graph scorer. The fold is delegated to the
+    domain-agnostic :func:`core.learning_arena.engine.run_practice` (ADR-0199);
+    this lane supplies the GSM8K solver/tether and the §8 diagnosis router.
     """
     score = scorer if scorer is not None else _score_one_candidate_graph
-    counts = {"correct": 0, "wrong": 0, "refused": 0}
-    ledger: dict[str, ClassTally] = {}
-    diagnoses: dict[str, str] = {}
-    elims: list[EliminationRecord] = []
-
-    for raw in cases:
-        cls = classify_operation(raw.get("answer_expression", ""))
-        outcome = score(_adapt(raw))
-        verdict = outcome.outcome
-        counts[verdict] = counts.get(verdict, 0) + 1
-        tally = ledger.get(cls) or ClassTally(cls)
-
-        if verdict == "correct":
-            tally = tally.record(correct=1)
-        elif verdict == "wrong":
-            tally = tally.record(wrong=1)
-            elims.append(
-                EliminationRecord(
-                    case_id=outcome.case_id,
-                    class_name=cls,
-                    attempted=getattr(outcome, "actual_answer", None),
-                    gold=float(raw["answer_numeric"]),
-                    reason=outcome.reason or "",
-                )
-            )
-        else:  # refused
-            tally = tally.record(refused=1)
-            diagnoses[outcome.case_id] = diagnose_refusal(outcome.reason or "")
-
-        ledger[cls] = tally
-
-    return PracticeReport(
-        counts=counts,
-        ledger=ledger,
-        refusal_diagnoses=diagnoses,
-        elimination_records=tuple(elims),
-    )
+    solver = _GSM8KSolver(score)
+    tether = _GSM8KGoldTether()
+    problems = [_to_problem(raw) for raw in cases]
+    return _engine_run_practice(problems, solver, tether, diagnose=diagnose_refusal)
 
 
 def _load_practice_cases(path: Path = _PRACTICE_CASES_PATH) -> list[dict[str, Any]]:
