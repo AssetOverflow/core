@@ -50,6 +50,14 @@ DEFAULT_RESOLVABLE_PACK_IDS: tuple[str, ...] = (
     "en_core_spatial_v1",
     "en_core_causation_v1",
     "en_core_polarity_v1",
+    # Foundation-curriculum syntax substrate.  Mounted AFTER the
+    # high-frequency content packs so it is purely additive: every lemma
+    # it owns is disjoint from earlier mounted packs.  Two colliders were
+    # renamed at authoring time so syntax never steals prior resolution
+    # (`agent`→`agent_role`, owned by en_core_meta_v1; `comparison`→
+    # `comparison_relation`, owned by en_core_cognition_v1).  `negation`
+    # is kept bare: no *mounted* pack owned it, so syntax now grounds it.
+    "en_core_syntax_v1",
     "en_core_relations_v1",
     "en_core_relations_v2",
     # ADR-0073c — synthetic English anchor lemmas for cross-lang collapse.
