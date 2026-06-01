@@ -1441,6 +1441,16 @@ def _try_extract_each_weighing_anchor(
             "input_tokens": f"{count_a_token}|{count_b_token}",
             "entity_source": "same_sentence",
         },
+        # ADR-0191 completeness provenance.  This is an aggregating initial:
+        # its derived value (count_a × count_b) collapses TWO source tokens
+        # into one quantity.  Without recording them, the completeness guard
+        # (generate/math_completeness.py) sees required={count_a, count_b}
+        # but consumed={composed_value} and refuses every WAVE-A reading as
+        # "incomplete" — a silent regression of the WAVE-A capability that
+        # predates the guard.  Expose both consumed tokens so the guard can
+        # confirm no source quantity was dropped.  wrong==0 is preserved:
+        # these tokens genuinely ARE the multiplicands of the emitted value.
+        consumed_value_tokens=(count_a_token, count_b_token),
     )
 
     anchor: Mapping[str, Any] = {
