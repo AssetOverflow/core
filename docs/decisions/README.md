@@ -252,6 +252,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0197](ADR-0197-vision-compiler-delta-crdt.md) | CORE-native Vision Compiler over the Delta-CRDT Substrate | Proposed |
 | [ADR-0198](ADR-0198-motor-efferent-decoder-spike.md) | Motor as Efferent Modality — Protocol Gap & Governance (Design Spike) | Proposed (design spike — no implementation) |
 | [ADR-0199](ADR-0199-cross-domain-learning-arena-contract.md) | Cross-Domain Learning Arena Contract | Proposed |
+| [ADR-0200](ADR-0200-conscience-and-graduated-autonomy.md) | The Conscience & Graduated-Autonomy Architecture (four-pillar `affirm_human_life`, autonomy ceiling, pack/floor split) | Proposed |
 
 ---
 

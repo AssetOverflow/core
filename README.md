@@ -258,7 +258,7 @@ core teaching supersessions                         # pair retired chains with r
 CORE distinguishes *contract-passing* from *demonstrated*. A pack that satisfies the nine ADR-0091 predicates earns a `reasoning-capable` ledger row; that's a structural claim, not an empirical one. Promotion to `audit_passed=true` (formerly `expert_demo`; renamed by [ADR-0113](docs/decisions/ADR-0113-rename-expert-demo-to-audit-passed.md)) requires a **reviewer-signed evidence-bundle digest** that reproduces byte-for-byte from on-disk lane results (ADR-0106 + ADR-0109).
 
 > **What `audit-passed` actually means** — and what it does NOT mean.
-> The gate verifies CORE *claim-shape compliance*: signed digest, replay determinism, typed refusal, exact recall, grounding-source provenance. **These are claim shapes a transformer LLM cannot structurally produce regardless of raw accuracy.** A frontier LLM might score higher on the same benchmark but cannot pass this contract because it cannot produce a digest that re-derives, cannot guarantee typed refusal, cannot emit a deterministic trace hash, cannot replay byte-equal. **This is NOT a raw-capability claim.** The future `expert` ledger tier ([ADR-0114](docs/decisions/ADR-0114-expert-capability-roadmap-gsm8k-first.md)) is reserved for an actual benchmark-calibrated capability claim; no domain holds it yet.
+> The gate verifies CORE *claim-shape compliance*: signed digest, replay determinism, typed refusal, exact recall, grounding-source provenance. **These are claim shapes a transformer LLM cannot structurally produce regardless of raw accuracy.** A frontier LLM might score higher on the same benchmark but cannot pass this contract because it cannot produce a digest that re-derives, cannot guarantee typed refusal, cannot emit a deterministic trace hash, cannot replay byte-equal. **This is NOT a raw-capability claim.** The `expert` ledger tier ([ADR-0114](docs/decisions/ADR-0114-expert-capability-roadmap-gsm8k-first.md); contract shipped in [ADR-0120](docs/decisions/ADR-0120-expert-promotion-contract.md)) sits one tier above `audit-passed` and certifies grammar-coverage + claim-shape discipline on **CORE-authored** evals — explicitly **not** raw-accuracy parity against frontier models. **As of this writing no domain holds `expert`:** `mathematics_logic` was signed into it (ledger flip, 2026-05-23) but the signature has since lapsed against advanced evidence, so the live ledger reports it as `audit-passed` — see the dedicated note below.
 
 | Layer | What it guarantees | ADR |
 |---|---|---|
@@ -277,6 +277,8 @@ CORE distinguishes *contract-passing* from *demonstrated*. A pack that satisfies
 | `systems_software` | **`audit-passed`** (third promotion, [ADR-0124](docs/decisions/ADR-0124-systems-software-audit-passed-promotion.md)) |
 | `hebrew_greek_textual_reasoning` | `reasoning-capable` |
 | `philosophy_theology` | `reasoning-capable` |
+
+> **On the `expert` tier (one above `audit-passed`).** The tier is wired and a promotion has been *signed once* — `mathematics_logic` via the [ADR-0120 ledger flip](docs/decisions/ADR-0120-math-expert-ledger-flip.md) (2026-05-23) — yet the table above still reads `audit-passed`, **correctly.** The expert composer requires the reviewer-signed `claim_digest` to match the *current* evidence-bundle digest; when the GSM8K evidence advanced (#488, #500) the recomputed digest changed and the stale signature stopped matching, so the live `core capability ledger` **refuses** the promotion and reports `audit-passed`. This is the signed-digest contract working as designed — a lapsed claim is demoted, not honored. (Details in "Path to … expert capability" below.)
 
 The contract has now demonstrated its load-bearing behavior end-to-end: refused one promotion attempt honestly ([ADR-0107](docs/decisions/ADR-0107-mathematics-logic-expert-demo-deferred.md)), amended its threshold rules once cleanly (ADR-0109), succeeded against `mathematics_logic` (ADR-0110), and succeeded against a second distinct domain `physics` without further contract change (ADR-0111). External readers can distinguish the two ceilings at a glance; the "math-only" objection is retired.
 
@@ -303,16 +305,46 @@ all landed.
 ADR-0114a's 10 anti-overfitting proof obligations are all discharged for the
 `gsm8k_math` lane.
 
+**Three distinct GSM8K numbers — do not conflate them:** (a) the *real* sealed test
+(HF `openai/gsm8k`, 1,319 rows): **0 correct / 0 wrong / 1,319 refused**; (b) a real
+50-case train sample currently at **6 correct / 0 wrong / 44 refused** (coverage
+climbing, wrong=0 held); and (c) a **CORE-authored** 150-case synthetic "public" split
+at **150/150** that the frontier comparison (vs Claude 96.4%, GPT-4 92%, Gemini 90.8%)
+is scored against — an apples-vs-oranges comparison, as
+`evals/gsm8k_math/baselines/comparison_v1.json` itself states, since the public split is
+original rule-built problems that exercise the grammar (no benchmark contamination).
+
 **First honest CORE-vs-real-GSM8K measurement (ADR-0119.7):** 0/1,319 correct,
 **0/1,319 wrong**, 1,319/1,319 refused. CORE refuses what it cannot grammar-handle;
 it does not confabulate. The zero-confabulation property holds against the external
 benchmark.
 
-**ADR-0120 (first `expert` promotion contract) is the next gate.** It will set the
-numeric expert threshold and ε, require all 10 ADR-0114a obligations as hard gates,
-and sign the first `expert_claims` entry — or defer honestly if the correct_rate
-gate is not yet met. **No domain is at `expert` today.** That status string remains
-reserved namespace.
+**ADR-0120 shipped the first `expert` promotion contract; the composer is wired and
+the gate passes — but no domain currently *holds* `expert`.** The exact, honest state,
+because it is easy to overclaim:
+
+- `mathematics_logic` *was* signed into `expert` (the
+  [ADR-0120 ledger flip](docs/decisions/ADR-0120-math-expert-ledger-flip.md),
+  2026-05-23) on a **composite of three CORE-authored evals** —
+  [ADR-0131.4](docs/decisions/ADR-0131.4-composite-math-gate.md) substituted these for
+  the original GSM8K `correct_rate ≥ 0.60` requirement: **B1** symbolic-equivalence
+  (185/185), **B2** teaching-corpus (40/40), **B3** bounded-grammar (50/50), each
+  **wrong=0**, all 10 ADR-0114a obligations discharged.
+- That signature has since **lapsed.** The reviewer-signed `claim_digest` is bound to
+  the exact evidence bundle; when the GSM8K evidence advanced (#488 → 4/46/0, #500 →
+  6/44/0) the recomputed digest changed (`4c46f530… → 02f6d3c8…`), so the signature no
+  longer matches and the expert composer **refuses** the promotion. The live
+  `core capability ledger` therefore reports `mathematics_logic` as **`audit-passed`**
+  today. The contract demoting a stale claim rather than honoring it is the mechanism
+  working as designed.
+- So `expert` certifies **grammar-coverage + claim-shape discipline on CORE-authored
+  problems** — it is **not** a raw-capability parity claim against frontier models, and
+  no domain has cleared a real external-benchmark bar. Real GSM8K stays an **ungated**
+  stress lane at 0/1,319 correct, 0 wrong, 1,319 refused.
+
+Re-earning the live `expert` row is a reviewer **re-signature over the current
+evidence** (operator action), not new capability work — the composite gate already
+passes.
 
 To run the GSM8K math eval lane:
 
