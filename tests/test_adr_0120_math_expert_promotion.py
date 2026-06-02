@@ -159,11 +159,13 @@ def test_obligation_9_refuses_when_a_lane_is_invalid_json(tmp_path: Path) -> Non
 
 
 def test_composer_runs_on_current_main_with_all_obligations_passing() -> None:
-    """The load-bearing snapshot. Updated by the ledger-flip PR after
-    the reviewer added the signed entry to ``docs/reviewers.yaml`` —
-    every obligation auditor passes, the composite gate passes,
-    technical_pass is True, the reviewer signature is present and
-    matches the computed digest, so promote_admitted is True.
+    """Fail-closed revert snapshot (ADR-0200). On current main every
+    obligation auditor passes, the composite gate passes, technical_pass is
+    True, and the reviewer signature is present — but a non-gating GSM8K
+    coverage metric drifted after signing, so the signature no longer matches
+    the evidence-derived digest. The composer therefore refuses:
+    promote_admitted is False with a digest-mismatch reason. This is
+    ADR-0120's load-bearing fail-closed safety property.
     """
     v = evaluate_math_expert_promotion()
     assert v.all_obligations_passed is True, (
@@ -174,9 +176,9 @@ def test_composer_runs_on_current_main_with_all_obligations_passing() -> None:
     assert v.technical_pass is True
     assert v.reviewer_signature is not None
     assert v.reviewer_signature.get("signed_by") == "shay-j"
-    assert v.reviewer_signature_matches is True
-    assert v.promote_admitted is True
-    assert v.refusal_reason == ""
+    assert v.reviewer_signature_matches is False
+    assert v.promote_admitted is False
+    assert "mismatch" in v.refusal_reason.lower()
     assert v.claim_digest  # non-empty
     assert len(v.claim_digest) == 64  # SHA-256 hex
 

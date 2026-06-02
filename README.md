@@ -78,7 +78,7 @@ English establishes the operational base. Hebrew and Koine Greek bring the hidde
 ```bash
 pip install -e ".[dev]"
 pytest tests/test_versor_closure.py        # the core invariant — must pass first
-pytest tests/                              # full suite (~4 minutes, 1099 tests)
+pytest tests/                              # full suite (~8,337 tests; some pre-existing reds — see docs/test-debt-quarantine.md)
 ```
 
 ### Watch the flywheel turn — one command
@@ -308,11 +308,16 @@ ADR-0114a's 10 anti-overfitting proof obligations are all discharged for the
 it does not confabulate. The zero-confabulation property holds against the external
 benchmark.
 
-**ADR-0120 (first `expert` promotion contract) is the next gate.** It will set the
-numeric expert threshold and ε, require all 10 ADR-0114a obligations as hard gates,
-and sign the first `expert_claims` entry — or defer honestly if the correct_rate
-gate is not yet met. **No domain is at `expert` today.** That status string remains
-reserved namespace.
+**ADR-0120 (the first `expert` promotion contract) has since been built and
+exercised.** On 2026-05-23 `mathematics_logic` was signed and briefly promoted to
+`expert` — then **auto-reverted to `audit-passed`** when its evidence bundle
+drifted: a *non-gating* GSM8K coverage metric moved, which changed the
+evidence-derived digest and invalidated the signature. That revert is the
+contract's fail-closed property working as designed — CORE revoked its own expert
+claim rather than carry a stale one. **No domain is at `expert` today**, and when
+`expert` is held at all it rests on CORE-authored lanes, not external GSM8K. Full
+record: [ADR-0200](docs/decisions/ADR-0200-expert-claim-reconciliation.md) and
+[`docs/claims_ledger.md`](docs/claims_ledger.md).
 
 To run the GSM8K math eval lane:
 

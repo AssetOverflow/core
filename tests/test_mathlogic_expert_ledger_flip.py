@@ -125,19 +125,21 @@ def _math_row(report: dict) -> dict:
     raise AssertionError("mathematics_logic row missing from ledger")
 
 
-def test_mathlogic_status_is_expert_with_signed_evidence() -> None:
-    """The load-bearing snapshot. Given the signed entry in
-    docs/reviewers.yaml AND every obligation auditor passing AND the
-    composite gate passing, the ledger reports
-    ``mathematics_logic.status == "expert"``."""
+def test_mathlogic_status_is_audit_passed_after_evidence_drift() -> None:
+    """Fail-closed revert snapshot (ADR-0200). The signed expert entry in
+    docs/reviewers.yaml no longer re-derives — a non-gating GSM8K coverage
+    metric drifted after signing — so the composer refuses and the ledger
+    reports ``mathematics_logic.status == "audit-passed"``, not "expert".
+    This is ADR-0120's fail-closed property firing by design."""
     report = ledger_report()
     row = _math_row(report)
-    assert row["status"] == "expert", (
-        f"expected status=expert; got {row['status']!r}; "
+    assert row["status"] == "audit-passed", (
+        f"expected status=audit-passed (expert fail-closed-reverted); "
+        f"got {row['status']!r}; "
         f"audit_passed_reason={row.get('audit_passed_reason')}; "
         f"expert_reason={row.get('expert_reason')}"
     )
-    assert row["predicates"]["expert"] is True
+    assert row["predicates"]["expert"] is False
     assert row["predicates"]["audit_passed"] is True
 
 
@@ -145,7 +147,9 @@ def test_mathlogic_row_carries_expert_reason() -> None:
     report = ledger_report()
     row = _math_row(report)
     assert "expert_reason" in row
-    assert "admitted" in row["expert_reason"].lower()
+    # Fail-closed revert (ADR-0200): the reason explains the digest mismatch,
+    # not an admission.
+    assert "mismatch" in row["expert_reason"].lower()
 
 
 def test_other_domains_have_expert_false_no_composer_wired() -> None:
