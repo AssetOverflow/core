@@ -1,7 +1,7 @@
 {
   "adr": "0120-math",
   "all_obligations_passed": true,
-  "claim_digest": "4c46f530351ce96fbdacf29d242b8d99d40e0c5a92d12b10c4862315147ebfa4",
+  "claim_digest": "02f6d3c8803b0a3154b84e1ba6a292556ae6a7ed4765507e617576fe342a9c94",
   "composite_gate_passed": true,
   "composite_gate_refusal": "",
   "domain": "mathematics_logic",
@@ -77,8 +77,8 @@
       "title": "operation provenance via pack"
     }
   ],
-  "promote_admitted": true,
-  "refusal_reason": "",
+  "promote_admitted": false,
+  "refusal_reason": "reviewer claim_digest mismatch \u2014 registry has '4c46f530351ce96fbdacf29d242b8d99d40e0c5a92d12b10c4862315147ebfa4', evidence-derived digest is '02f6d3c8803b0a3154b84e1ba6a292556ae6a7ed4765507e617576fe342a9c94'; the evidence bundle has changed since the signature was added",
   "reviewer_signature": {
     "claim_digest": "4c46f530351ce96fbdacf29d242b8d99d40e0c5a92d12b10c4862315147ebfa4",
     "domain_id": "mathematics_logic",
@@ -91,7 +91,7 @@
     "evidence_revision": "adr-0120-math:reviewed:2026-05-23",
     "signed_by": "shay-j"
   },
-  "reviewer_signature_matches": true,
+  "reviewer_signature_matches": false,
   "schema_version": 1,
   "technical_pass": true
 }

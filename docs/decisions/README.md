@@ -143,7 +143,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0119.7](ADR-0119.7-sealed-gsm8k-test.md) | Sealed GSM8K Test Set as gsm8k_math Holdout | Accepted |
 | [ADR-0119.8](ADR-0119.8-lane-gate.md) | gsm8k_math Overall Lane Gate (`gsm8k_capability_shape`) | Accepted |
 | [ADR-0120](ADR-0120-expert-promotion-contract.md) | First `expert` Promotion Contract | Proposed (contract-only; no domain promoted with this ADR) |
-| [ADR-0120](ADR-0120-math-expert-ledger-flip.md) | ADR-0120 (math, ledger flip) — Mathematics-Logic Domain Promoted to `expert` | Accepted — first `expert`-tier domain in the capability ledger |
+| [ADR-0120](ADR-0120-math-expert-ledger-flip.md) | ADR-0120 (math, ledger flip) — Mathematics-Logic Domain Promoted to `expert` | Accepted 2026-05-23; **auto-reverted to `audit-passed`** when evidence drifted — current status audit-passed (see [ADR-0200](ADR-0200-expert-claim-reconciliation.md)) |
 | [ADR-0120](ADR-0120-math-expert-promotion-wireup.md) | ADR-0120 (math) — Math-Expert Promotion Composer Wire-Up | Accepted (technical pass on first evaluation; awaiting reviewer signature for ledger admission) |
 | [ADR-0121](ADR-0121-mathematics-logic-expert-deferred.md) | `mathematics_logic` `expert` Promotion — Deferred (first attempt) | Accepted (the deferral is the decision) |
 | [ADR-0122](ADR-0122-parser-rate-per-unit.md) | Parser Expansion: Rate / Per-Unit Reasoning (substrate-only; lift deferred) | Accepted (substrate landed; sealed-lift gate deferred — the |
@@ -252,6 +252,7 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0197](ADR-0197-vision-compiler-delta-crdt.md) | CORE-native Vision Compiler over the Delta-CRDT Substrate | Proposed |
 | [ADR-0198](ADR-0198-motor-efferent-decoder-spike.md) | Motor as Efferent Modality — Protocol Gap & Governance (Design Spike) | Proposed (design spike — no implementation) |
 | [ADR-0199](ADR-0199-cross-domain-learning-arena-contract.md) | Cross-Domain Learning Arena Contract | Proposed |
+| [ADR-0200](ADR-0200-expert-claim-reconciliation.md) | Expert-Claim Reconciliation: record the math fail-closed revert as designed behavior | Proposed |
 
 ---
 

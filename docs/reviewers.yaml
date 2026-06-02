@@ -51,6 +51,20 @@ audit_passed_claims:
     evidence_revision: "adr-0124:reviewed:2026-05-22"
     signed_by: shay-j
     claim_digest: "17e24436b6875b89f6d1a5c2992557413c7ef456250f549d463159f54438c407"
+
+# ---------------------------------------------------------------------------
+# QUARANTINED (ADR-0200, 2026-06-02). The math_expert_claims entry below was a
+# VALID signature when made (2026-05-23 / #267): code + evidence reproduced
+# claim_digest 4c46f530... exactly. It is RETAINED as a historical receipt and
+# is intentionally NOT re-signed. It no longer validates: the GSM8K coverage
+# probe drifted (3/47 -> 4/46, PRs #310/#488), so the evidence-derived digest
+# is now 02f6d3c8... and the expert composer REFUSES promotion. The live ledger
+# reports mathematics_logic = audit-passed. Keeping this mismatch in place is
+# ADR-0120's fail-closed property firing by design. DO NOT re-sign to force the
+# ledger flip; the honest current status is audit-passed (expert rests on
+# CORE-authored lanes, not external GSM8K).
+# See docs/decisions/ADR-0200-expert-claim-reconciliation.md.
+# ---------------------------------------------------------------------------
 math_expert_claims:
     - domain_id: mathematics_logic
       evidence_lanes:

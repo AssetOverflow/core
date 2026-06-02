@@ -8,6 +8,18 @@
 ADR-0114a.{1,2,3,4,5,6,7,8,9,10} (obligation auditors)
 **Predecessor PRs:** #173, #176-#180, #182-#194
 
+> **Reconciliation note (ADR-0200, 2026-06-02).** This flip was **valid when it
+> was made** (2026-05-23 / #267): code + evidence reproduced the signed digest
+> `4c46f530...` exactly, and the empirical verdict below was correct *at that
+> commit*. It has since **auto-reverted to `audit-passed`.** The GSM8K coverage
+> probe drifted (`3/47 -> 4/46`, PRs #310/#488), changing the evidence-derived
+> digest to `02f6d3c8...`; the signature no longer matches and the composer
+> refuses — ADR-0120's documented fail-closed property firing as designed.
+> **Current ledger status: `audit-passed`.** The empirical block below is
+> preserved as the historical record. See
+> [ADR-0200](ADR-0200-expert-claim-reconciliation.md) and the
+> [claims ledger](../claims_ledger.md).
+
 ---
 
 ## Context
