@@ -126,7 +126,9 @@ def _policy_decision(simulated_input: dict[str, Any]) -> tuple[Decision, str]:
         return "REFUSE", f"under_determined: missing {','.join(missing)}"
     if simulated_input["route_state"] != "mapped":
         return "REFUSE", "under_determined: route is not mapped"
-    if not isinstance(simulated_input["path_confidence"], (int, float)):
+    if isinstance(simulated_input["path_confidence"], bool) or not isinstance(
+        simulated_input["path_confidence"], (int, float)
+    ):
         return "REFUSE", "under_determined: path_confidence is not numeric"
     if float(simulated_input["path_confidence"]) < 0.85:
         return "REFUSE", "under_determined: path confidence below bound"
@@ -136,6 +138,10 @@ def _policy_decision(simulated_input: dict[str, Any]) -> tuple[Decision, str]:
         return "STOP", f"path not clear: {simulated_input['obstacle_state']}"
     if simulated_input["obstacle_state"] != "clear":
         return "REFUSE", f"out_of_distribution: obstacle_state={simulated_input['obstacle_state']!r}"
+    if isinstance(simulated_input["path_count"], bool) or not isinstance(
+        simulated_input["path_count"], int
+    ):
+        return "REFUSE", "under_determined: path_count is not numeric"
     if int(simulated_input["path_count"]) < 1:
         return "STOP", "no admissible path in simulated record"
     return "PROCEED", "mapped route, clear path, sufficient confidence"
@@ -180,7 +186,7 @@ def _run_once(scenarios: tuple[Scenario, ...], trace_path: Path) -> tuple[Decisi
     if trace_path.exists():
         trace_path.unlink()
     sink = JsonlEventSink(trace_path)
-    pipeline = CognitiveTurnPipeline(ChatRuntime(), recognizer=_recognizer())
+    pipeline = CognitiveTurnPipeline(ChatRuntime(no_load_state=True), recognizer=_recognizer())
     records: list[DecisionRecord] = []
 
     for sequence_base, scenario in enumerate(scenarios):
