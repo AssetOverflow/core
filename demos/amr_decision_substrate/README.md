@@ -7,6 +7,13 @@ accountability substrate around a bounded AMR-style proceed / stop / refuse
 choice. The inputs are not camera, LiDAR, odometry, SLAM, localization, motor,
 or fleet-control data.
 
+Claims-ledger framing: this is a preparation artifact over simulated records.
+It is not deployment readiness, not perception, not motion planning, and not
+motor control. The demo proves only its local trace/refusal/replay surface over
+these fixtures. It does not imply a CORE expert domain, a robotics capability
+claim, or working vision/motor. Per the ledger, text is the active capability;
+audio is substrate with the gate CLOSED; vision and motor are proposed only.
+
 What is real CORE here:
 
 - `ChatRuntime`

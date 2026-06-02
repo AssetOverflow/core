@@ -8,10 +8,13 @@ into "basically done" fails the product.
 
 Honest answer:
 
-CORE has internal deterministic evidence and demos. External validation is not
-yet established unless and until a named third party has reviewed a specific
-artifact. For any benchmark, capability, or safety result, use
-`[VERIFY vs claims ledger]` rather than quoting numbers from memory.
+CORE has internal deterministic evidence and demos, but external validation is
+not established unless a named third party has reviewed a specific artifact.
+The claims ledger says no domain is at `expert`; `mathematics_logic`,
+`physics`, and `systems_software` are `audit-passed`, with the prior expert
+promotion fail-closed-reverted. `audit-passed` means CORE claim-shape compliance
+per ADR-0113: signed digest, replay determinism, typed refusal, exact recall,
+and grounding provenance. It is not a raw-capability or expert-level claim.
 
 Weak answer to avoid:
 
@@ -25,7 +28,9 @@ Honest answer:
 Do not claim working CORE-native vision or motor. The current robotics-adjacent
 demo is an abstract decision/accountability substrate over simulated situation
 records. It is not perception, SLAM, localization, path planning, motor control,
-or a robot integration.
+or a robot integration. Ledger multimodal status is: text is an active
+capability; audio is substrate with the capability gate CLOSED; vision and
+motor are proposed only.
 
 Weak answer to avoid:
 
@@ -55,8 +60,12 @@ Honest answer:
 Say only what the prepared demo proves: a simulated AMR-style situation record
 can be reduced into `PROCEED`, `STOP`, or `REFUSE`; the under-determined case
 materializes a CORE refusal reason; two fresh runs produce byte-identical replay
-artifacts; the demo preserves the versor closure invariant. Anything beyond that
-is roadmap or hypothesis.
+artifacts; the demo preserves the versor closure invariant. Ledger-wide
+determinism framing is stronger and still bounded: byte-identical replay/digest
+evidence is stable across processes and `PYTHONHASHSEED`; the expert revert was
+a single-source evidence-drift in a non-gating coverage metric, and the system
+caught that drift by failing closed to `audit-passed`, never to a false expert.
+None of this proves robotics-grade control.
 
 Weak answer to avoid:
 
@@ -82,7 +91,13 @@ Honest answer:
 
 The demo refuses. More generally, the desired contract is refuse rather than
 guess. If a current component fails to refuse where it should, that is a defect
-to report, not a behavior to explain away.
+to report, not a behavior to explain away. Use the ledger's exact GSM8K framing
+if the subject comes up: A sealed-real `0/0/1319` is the honest external number,
+showing zero-confabulation discipline plus an honest coverage gap, not an
+accuracy result; B synthetic-public `150/150/0` is CORE-authored and never "100%
+on GSM8K"; C train_sample `6/44/0` has exit-criterion NOT met, and the stricter
+probe reads `4/46` on the same 50; D composite `185/14/40/50 wrong=0` is
+CORE-authored and currently reverted.
 
 Weak answer to avoid:
 
@@ -134,7 +149,9 @@ A credible pilot would need a bounded decision interface, a written non-goal
 list, replayable traces, refusal cases, operator-review flow, and a comparison
 against an existing BrainOS decision/audit mechanism. It would also need failure
 criteria: if CORE cannot add clearer accountability without increasing
-integration risk, the pilot should stop.
+integration risk, the pilot should stop. Single-signer attestation is also a
+known boundary: the reviewer registry has one signer, `shay-j`, and a partner
+may reasonably probe that.
 
 Weak answer to avoid:
 
@@ -161,9 +178,11 @@ It should pass these checks:
 
 - No benchmark numbers unless copied from the approved claims ledger.
 - No claim that CORE has working vision/motor.
+- No claim that any domain is `expert`; `audit-passed` is claim-shape compliance,
+  not expert capability.
 - No implication that BrainOS is obsolete.
 - No hidden slide from simulated demo to real robot readiness.
 - Clear distinction between substrate, policy reducer, perception, planning,
   actuation, and fleet operations.
 - Every strong claim has either a cited external source, a repo artifact, or
-  `[VERIFY vs claims ledger]`.
+  the exact claims-ledger value and framing.

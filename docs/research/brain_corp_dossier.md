@@ -1,7 +1,7 @@
 # Brain Corp Dossier
 
-This is external research only. It does not assert CORE benchmark results,
-capability numbers, or claims-ledger facts.
+This is primarily external research. When CORE status is mentioned for
+conversation framing, it is reconciled to `docs/claims_ledger.md` on main.
 
 ## Snapshot
 
@@ -127,6 +127,11 @@ The possible gap is a substrate-level accountability layer for bounded decisions
 
 The current AMR demo should be described only as a preparation artifact that
 shows this shape over simulated records. It does not prove deployment readiness.
+Ledger framing keeps that boundary sharp: no CORE domain is at `expert`;
+`audit-passed` means claim-shape compliance, not raw capability; text is an
+active modality, audio is substrate with its gate CLOSED, and vision/motor are
+proposed only. Determinism should be framed as byte-stable trace/digest evidence
+and fail-closed drift detection, not robotics-grade control.
 
 ## Conversation Posture
 
@@ -135,7 +140,8 @@ Strong opening:
 "BrainOS is the robotics stack. We are not here to claim perception, planning,
 or motor control. We prepared a tiny simulated AMR-adjacent accountability demo
 to discuss whether a deterministic refusal/replay substrate could be useful
-beneath bounded decisions in a system like yours."
+beneath bounded decisions in a system like yours. The demo is a preparation
+artifact over simulated records, not deployment readiness."
 
 Weak opening:
 
