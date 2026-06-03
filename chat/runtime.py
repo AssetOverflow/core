@@ -37,6 +37,7 @@ from core.epistemic_state import (
     epistemic_state_for_grounding_source,
     normative_detail_from_verdicts,
 )
+from core.response_governance import govern_response, shape_surface
 from chat.telemetry import (
     TurnEventSink,
     format_correction_event_jsonl,
@@ -447,6 +448,13 @@ class ChatResponse:
     # Comma-separated violated boundary/commitment IDs when normative
     # clearance is VIOLATED or SUPPRESSED; empty string otherwise.
     normative_detail: str = ""
+    # ADR-0206 — Response Governance Bridge reach level for this turn.
+    # Mirrors the TurnEvent field so callers (CLI, demos, tests) can read
+    # the governed reach level from ChatResponse.  Scaffold contract:
+    # always "strict" (govern_response is STRICT-only until widening is
+    # built).  ``"strict"`` default preserves byte-identity for callers
+    # that construct ChatResponse without this field.
+    reach_level: str = "strict"
     # ADR-0072 (R5) — operator-visible register identity per turn.
     # Mirrors the TurnEvent fields so callers (CLI, demos, tests) can
     # read the register state from ChatResponse without re-parsing the
@@ -2335,9 +2343,24 @@ class ChatRuntime:
             refusal_emitted=refusal_emitted,
             hedge_injected=hedge_injected,
         )
-        main_epistemic_state = epistemic_state_for_grounding_source(
-            main_grounding_source
-        ).value
+        main_epistemic = epistemic_state_for_grounding_source(main_grounding_source)
+        main_epistemic_state = main_epistemic.value
+        # ADR-0206 — Response Governance Bridge seam (cognition path).
+        # govern_response is STRICT-only (scaffold), so shape_surface is the
+        # identity transform and response_surface is returned verbatim —
+        # byte-identical to the pre-bridge path.  This is live wiring, not
+        # dead code: the response surface now flows through the policy
+        # consumer, and the ONLY thing keeping it strict is the STRICT
+        # return value (proven by the live-wiring test).  The risk-reward
+        # widening pathway and the math-serving seam are deferred to their
+        # own PRs (ADR-0206 §5); wrong==0 is untouched here.
+        main_reach_policy = govern_response(epistemic_state=main_epistemic)
+        main_reach_level = main_reach_policy.level.value
+        response_surface = shape_surface(
+            main_reach_policy,
+            committed_surface=response_surface,
+            decode_state=main_epistemic,
+        )
         main_normative_clearance = clearance_from_verdicts(verdicts_bundle).value
         main_normative_detail = normative_detail_from_verdicts(verdicts_bundle)
         turn_event = TurnEvent(
@@ -2371,6 +2394,7 @@ class ChatRuntime:
             epistemic_state=main_epistemic_state,
             normative_clearance=main_normative_clearance,
             normative_detail=main_normative_detail,
+            reach_level=main_reach_level,
         )
         self.turn_log.append(turn_event)
         self._emit_turn_event(turn_event)
@@ -2421,6 +2445,7 @@ class ChatRuntime:
                 epistemic_state=main_epistemic_state,
                 normative_clearance=main_normative_clearance,
                 normative_detail=main_normative_detail,
+                reach_level=main_reach_level,
                 refusal_reason=refusal_surface if refusal_emitted else "",
                 dispatch_trace=dispatch_trace,
             )
