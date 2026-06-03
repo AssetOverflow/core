@@ -107,7 +107,15 @@ class TestWrongZeroPreserved:
         )
         outcome = _score_one_candidate_graph(case)
         assert outcome.outcome == "refused"
-        assert "no admissible candidate" in outcome.reason
+        # The unparseable "contemplates" sentence refuses. Historically this was
+        # "no admissible candidate"; post #359 the recognizer matches the
+        # discrete-count shape but produces no injection, giving the more specific
+        # "produced no injection" reason. Either non-admission phrasing is valid;
+        # the load-bearing invariant is that it refuses (wrong=0).
+        assert (
+            "no admissible candidate" in outcome.reason
+            or "produced no injection" in outcome.reason
+        )
 
     def test_question_with_unknown_entity_refuses(self) -> None:
         case = _case(

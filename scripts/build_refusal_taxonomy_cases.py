@@ -23,9 +23,15 @@ import re
 import sys
 from pathlib import Path
 
+# Matches both refusal-reason shapes the candidate-graph emits (PR #359 added
+# the second shape + the trailing "(category=...)"):
+#   "candidate_graph: no admissible candidate for {statement|question}: '<text>'"
+#   "candidate_graph: recognizer matched but produced no injection for statement: '<text>' (category=<c>)"
 _STATEMENT_RE = re.compile(
-    r"^candidate_graph:\s*no admissible candidate for\s+"
-    r"(?:statement|question):\s*['\"](.+)['\"]\s*$",
+    r"^candidate_graph:\s*"
+    r"(?:no admissible candidate for|recognizer matched but produced no injection for)\s+"
+    r"(?:statement|question):\s*['\"](.+)['\"]"
+    r"(?:\s*\(category=[^)]*\))?\s*$",
     re.DOTALL,
 )
 

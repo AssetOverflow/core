@@ -40,7 +40,10 @@ _SHAPE_CATEGORIES_PATH = _LANE_ROOT / "shape_categories.py"
 def test_cases_file_exists_and_nonempty():
     assert _CASES_PATH.exists(), f"expected case set at {_CASES_PATH}"
     cases = load_cases(_CASES_PATH)
-    assert len(cases) == 50, "v1 sample should mirror the 50-case GSM8K train sample"
+    # The lane covers the *refused* subset of the 50-case GSM8K train sample.
+    # As the reader improved, 6 cases now admit, leaving 44 refusals to
+    # categorize (build_cases filters to verdict == "refused").
+    assert len(cases) == 44, "v1 sample should mirror the refused GSM8K train cases"
 
 
 def test_case_schema_valid():
@@ -71,12 +74,17 @@ def test_lane_auto_discoverable():
 def test_lane_run_via_framework():
     lane = get_lane("refusal_taxonomy")
     result = run_lane(lane, version="v1", split="public")
-    assert result.metrics["total"] == 50
-    # Phase B round 2 extended the categorizer with three new shape
-    # categories; the post-extension histogram leaves only the residual
-    # uncategorized tail.  The exact rate is asserted against the
-    # committed report by ``test_committed_report_matches_categorizer``.
-    assert result.metrics["categorized_rate"] >= 0.95
+    assert result.metrics["total"] == 44
+    # NOTE: a hard ``categorized_rate >= 0.95`` floor was removed here. It is
+    # both redundant and perverse: the exact histogram (and therefore the rate)
+    # is pinned by ``test_committed_report_matches_categorizer``, and as the
+    # reader graduates *categorized* refusals into correct admissions, the
+    # residual refusal set skews toward the uncategorized tail — so the rate
+    # drifts DOWN precisely as the reader improves. We assert categorization is
+    # still meaningful (the bulk of refusals carry a shape) without a target
+    # that fights reader progress; the precise distribution is the committed
+    # report's job.
+    assert result.metrics["categorized_rate"] > 0.5
 
 
 # ---------------------------------------------------------------------------
