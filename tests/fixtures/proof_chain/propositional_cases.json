@@ -1,0 +1,737 @@
+{
+  "status": "ready_to_wire_when_proof_chain_lands",
+  "contract": "docs/decisions/ADR-0202-proposition-representation-contract.md",
+  "canonicalizer_contract": "docs/decisions/ADR-0201-proposition-canonicalizer.md",
+  "not_wired_into_live_suite": true,
+  "contains_concrete_formula_strings": true,
+  "conformance_policy": {
+    "non_refusal_cases": "All formula strings use the ADR-0202 grammar; every referenced atom is declared; every atom has a gloss and either FeatureBundle features or binding null.",
+    "refusal_cases": "Refusal probes either conform structurally and expect a proof-chain refusal, or intentionally present rejected input outside the formula grammar with a typed refusal reason."
+  },
+  "cases": [
+    {
+      "id": "PC-EQ-001",
+      "category": "equivalent_key",
+      "slot": "conjunction_commutativity",
+      "expected": "provable",
+      "expected_behavior": "identical_canonical_key",
+      "rationale": "Equivalent Boolean functions must share ROBDD identity under the fixed variable ordering.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "P_rains & Q_ground_wet",
+        "formula_b": "Q_ground_wet & P_rains",
+        "expected_relation": "same"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-EQ-002",
+      "category": "equivalent_key",
+      "slot": "disjunction_commutativity",
+      "expected": "provable",
+      "expected_behavior": "identical_canonical_key",
+      "rationale": "Operand order must not affect function identity.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "P_rains | Q_ground_wet",
+        "formula_b": "Q_ground_wet | P_rains",
+        "expected_relation": "same"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-EQ-003",
+      "category": "equivalent_key",
+      "slot": "conjunction_associativity",
+      "expected": "provable",
+      "expected_behavior": "identical_canonical_key",
+      "rationale": "Tree shape must not leak into canonical identity.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        },
+        "R_traffic_slow": {
+          "gloss": "traffic is slow",
+          "binding": { "features": { "agent": "traffic", "relation": "is", "state": "slow" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "(P_rains & Q_ground_wet) & R_traffic_slow",
+        "formula_b": "P_rains & (Q_ground_wet & R_traffic_slow)",
+        "expected_relation": "same"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-EQ-004",
+      "category": "equivalent_key",
+      "slot": "double_negation",
+      "expected": "provable",
+      "expected_behavior": "identical_canonical_key",
+      "rationale": "Logical involution must collapse to the original function.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "~~P_rains",
+        "formula_b": "P_rains",
+        "expected_relation": "same"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-EQ-005",
+      "category": "equivalent_key",
+      "slot": "implication_expansion",
+      "expected": "provable",
+      "expected_behavior": "identical_canonical_key",
+      "rationale": "Implication and its propositional expansion must be the same function.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "P_rains -> Q_ground_wet",
+        "formula_b": "~P_rains | Q_ground_wet",
+        "expected_relation": "same"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-EQ-006",
+      "category": "equivalent_key",
+      "slot": "de_morgan_conjunction",
+      "expected": "provable",
+      "expected_behavior": "identical_canonical_key",
+      "rationale": "Negated conjunction and disjunction of negations must share identity.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "~(P_rains & Q_ground_wet)",
+        "formula_b": "~P_rains | ~Q_ground_wet",
+        "expected_relation": "same"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-EQ-007",
+      "category": "equivalent_key",
+      "slot": "conjunction_distributes_over_disjunction",
+      "expected": "provable",
+      "expected_behavior": "identical_canonical_key",
+      "rationale": "Equivalent functions with different syntactic expansion must canonicalize together.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        },
+        "R_traffic_slow": {
+          "gloss": "traffic is slow",
+          "binding": { "features": { "agent": "traffic", "relation": "is", "state": "slow" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "P_rains & (Q_ground_wet | R_traffic_slow)",
+        "formula_b": "(P_rains & Q_ground_wet) | (P_rains & R_traffic_slow)",
+        "expected_relation": "same"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-EQ-008",
+      "category": "equivalent_key",
+      "slot": "disjunction_idempotence",
+      "expected": "provable",
+      "expected_behavior": "identical_canonical_key",
+      "rationale": "Duplicate operands must not create distinct Boolean identity.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "P_rains | P_rains",
+        "formula_b": "P_rains",
+        "expected_relation": "same"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-EQ-009",
+      "category": "equivalent_key",
+      "slot": "absorption",
+      "expected": "provable",
+      "expected_behavior": "identical_canonical_key",
+      "rationale": "Absorption catches syntactic normalizers that do not compute function identity.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "P_rains | (P_rains & Q_ground_wet)",
+        "formula_b": "P_rains",
+        "expected_relation": "same"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-NEQ-001",
+      "category": "different_key",
+      "slot": "implication_versus_converse_implication",
+      "expected": "not_provable",
+      "expected_behavior": "different_canonical_key",
+      "rationale": "Near-symmetric implications are not equivalent in general.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "P_rains -> Q_ground_wet",
+        "formula_b": "Q_ground_wet -> P_rains",
+        "expected_relation": "different"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-NEQ-002",
+      "category": "different_key",
+      "slot": "conjunction_versus_disjunction",
+      "expected": "not_provable",
+      "expected_behavior": "different_canonical_key",
+      "rationale": "The canonicalizer must not over-collapse common atoms.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "P_rains & Q_ground_wet",
+        "formula_b": "P_rains | Q_ground_wet",
+        "expected_relation": "different"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-NEQ-003",
+      "category": "different_key",
+      "slot": "grounded_atom_versus_negated_grounded_atom",
+      "expected": "not_provable",
+      "expected_behavior": "different_canonical_key",
+      "rationale": "Negation must change identity except for degenerate constants.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "P_rains",
+        "formula_b": "~P_rains",
+        "expected_relation": "different"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-NEQ-004",
+      "category": "different_key",
+      "slot": "strengthened_conjunction_versus_original_grounded_atom",
+      "expected": "not_provable",
+      "expected_behavior": "different_canonical_key",
+      "rationale": "Adding a premise changes the represented function.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "assertion": {
+        "kind": "canonical_key_relation",
+        "formula_a": "P_rains & Q_ground_wet",
+        "formula_b": "P_rains",
+        "expected_relation": "different"
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-TC-001",
+      "category": "tautology_or_contradiction",
+      "slot": "excluded_middle",
+      "expected": "provable",
+      "expected_behavior": "canonical_true_leaf",
+      "rationale": "A tautology must reduce to the TRUE terminal identity.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        }
+      },
+      "assertion": {
+        "kind": "terminal_key",
+        "formula": "P_rains | ~P_rains",
+        "expected_canonical_key": "T",
+        "expected_is_tautology": true,
+        "expected_is_contradiction": false
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-TC-002",
+      "category": "tautology_or_contradiction",
+      "slot": "contradiction",
+      "expected": "not_provable",
+      "expected_behavior": "canonical_false_leaf",
+      "rationale": "A contradiction must reduce to the FALSE terminal identity.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        }
+      },
+      "assertion": {
+        "kind": "terminal_key",
+        "formula": "P_rains & ~P_rains",
+        "expected_canonical_key": "F",
+        "expected_is_tautology": false,
+        "expected_is_contradiction": true
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-MP-001",
+      "category": "modus_ponens",
+      "slot": "valid_modus_ponens",
+      "expected": "provable",
+      "expected_behavior": "admit",
+      "rationale": "The first proof-chain rule should admit the canonical modus ponens form.",
+      "validation_scope": "validated at entailment only; typed rule-reasons pending phase 2.3 / ADR-0205",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "premises": ["P_rains -> Q_ground_wet", "P_rains"],
+      "conclusion": "Q_ground_wet",
+      "rule": "modus_ponens",
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-MP-002",
+      "category": "modus_ponens",
+      "slot": "invalid_modus_ponens_wrong_conclusion",
+      "expected": "refused",
+      "expected_behavior": "refuse",
+      "expected_refusal_reason": "conclusion_mismatch",
+      "validation_scope": "validated at entailment only; typed rule-reasons pending phase 2.3 / ADR-0205",
+      "rule_reason_status": "pending phase 2.3 / ADR-0205",
+      "rationale": "The rule must refuse a conclusion not entailed by the dependencies.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        },
+        "R_traffic_slow": {
+          "gloss": "traffic is slow",
+          "binding": { "features": { "agent": "traffic", "relation": "is", "state": "slow" } }
+        }
+      },
+      "premises": ["P_rains -> Q_ground_wet", "P_rains"],
+      "conclusion": "R_traffic_slow",
+      "rule": "modus_ponens",
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-MP-003",
+      "category": "modus_ponens",
+      "slot": "invalid_modus_ponens_missing_implication_premise",
+      "expected": "refused",
+      "expected_behavior": "refuse",
+      "expected_refusal_reason": "missing_implication",
+      "validation_scope": "validated at entailment only; typed rule-reasons pending phase 2.3 / ADR-0205",
+      "rule_reason_status": "pending phase 2.3 / ADR-0205",
+      "rationale": "The rule must refuse when the implication premise is missing.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "premises": ["P_rains"],
+      "conclusion": "Q_ground_wet",
+      "rule": "modus_ponens",
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-CYCLE-001",
+      "category": "acyclicity",
+      "slot": "two_node_dependency_cycle",
+      "expected": "refused",
+      "expected_behavior": "refuse",
+      "expected_refusal_reason": "circular_dependency",
+      "rationale": "Proof support must be a DAG; circular reasoning cannot prove the conclusion.",
+      "atoms": {
+        "P_rains": {
+          "gloss": "it is raining",
+          "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } }
+        },
+        "Q_ground_wet": {
+          "gloss": "the ground is wet",
+          "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } }
+        }
+      },
+      "proof_nodes": [
+        { "id": "n1", "formula": "P_rains", "depends_on": ["n2"] },
+        { "id": "n2", "formula": "Q_ground_wet", "depends_on": ["n1"] }
+      ],
+      "conclusion_node": "n1",
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    },
+    {
+      "id": "PC-OOR-001",
+      "category": "out_of_regime",
+      "slot": "universally_quantified_predicate_statement",
+      "expected": "refused",
+      "expected_behavior": "refuse",
+      "expected_refusal_reason": "out_of_decidable_regime",
+      "rationale": "The propositional canonicalizer must not silently handle predicate logic.",
+      "atoms": {},
+      "rejected_input": "forall x. rains(x) -> wet(x)",
+      "main_output_verified": {
+        "exception": "LogicRegimeError",
+        "reason": "out_of_decidable_regime"
+      },
+      "conformance_checklist": {
+        "formula_grammar": false,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": false,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true,
+        "intentional_refusal_probe": true
+      }
+    },
+    {
+      "id": "PC-OOR-002",
+      "category": "out_of_regime",
+      "slot": "existentially_quantified_predicate_statement",
+      "expected": "refused",
+      "expected_behavior": "refuse",
+      "expected_refusal_reason": "out_of_decidable_regime",
+      "rationale": "Quantification is outside the propositional equivalence corridor.",
+      "atoms": {},
+      "rejected_input": "exists x. wet(x)",
+      "main_output_verified": {
+        "exception": "LogicRegimeError",
+        "reason": "out_of_decidable_regime"
+      },
+      "conformance_checklist": {
+        "formula_grammar": false,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": false,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true,
+        "intentional_refusal_probe": true
+      }
+    },
+    {
+      "id": "PC-BUDGET-001",
+      "category": "budget",
+      "slot": "scalable_robdd_pressure_family",
+      "expected": "refused",
+      "expected_behavior": "refuse_when_budget_exceeded",
+      "expected_refusal_reason": "canonicalization_budget_exceeded",
+      "rationale": "Large construction should refuse deterministically rather than churn or guess.",
+      "atoms": {
+        "X_b00": { "gloss": "schematic budget atom 00", "binding": null },
+        "X_b01": { "gloss": "schematic budget atom 01", "binding": null },
+        "X_b02": { "gloss": "schematic budget atom 02", "binding": null },
+        "X_b03": { "gloss": "schematic budget atom 03", "binding": null },
+        "X_b04": { "gloss": "schematic budget atom 04", "binding": null },
+        "X_b05": { "gloss": "schematic budget atom 05", "binding": null },
+        "X_b06": { "gloss": "schematic budget atom 06", "binding": null },
+        "X_b07": { "gloss": "schematic budget atom 07", "binding": null }
+      },
+      "assertion": {
+        "kind": "budget_refusal",
+        "formula": "X_b00 iff X_b01 iff X_b02 iff X_b03 iff X_b04 iff X_b05 iff X_b06 iff X_b07",
+        "max_nodes": 8
+      },
+      "conformance_checklist": {
+        "formula_grammar": true,
+        "all_formula_atoms_declared": true,
+        "atom_ids_stable_and_valid": true,
+        "all_atoms_have_gloss": true,
+        "bindings_are_features_or_null": true,
+        "no_quantifiers_predicates_or_functions": true,
+        "expected_outcome_allowed": true,
+        "equivalence_uses_canonical_key": true
+      }
+    }
+  ]
+}
