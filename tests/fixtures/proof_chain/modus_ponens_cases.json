@@ -1,0 +1,491 @@
+{
+  "corpus_id": "proof_chain_modus_ponens_contract_oracle_v0",
+  "status": "contract_oracle_outcome_cross_checked",
+  "authorship_note": "Authored against ADR-0202 FORMULA grammar and the ADR-0205 modus_ponens/disagreement contract before implementation validation.",
+  "validation_note": "Outcome and reason cross-check passed 24/24 against the real ADR-0205 modus_ponens rule at merge b304270. The corpus remains an independent oracle; agreement does not mean it was implementation-derived.",
+  "proof_input_shape": "[PENDING ADR-0204 SHAPE]",
+  "formula_contract": "ADR-0202",
+  "rule_contract": "ADR-0205",
+  "cross_check": {
+    "rule_merge": "b304270",
+    "checked_dimension": "outcome_and_reason",
+    "result": "passed",
+    "passed_cases": 24,
+    "total_cases": 24,
+    "note": "Reason labels consolidated to the ADR-0205 closed reason set; reconciliation is clean on both outcome and reason."
+  },
+  "closed_reasons": [
+    "unique_canonical_conclusion",
+    "missing_implication",
+    "unestablished_antecedent",
+    "conclusion_mismatch",
+    "conclusion_disagreement"
+  ],
+  "case_defaults": {
+    "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+    "schematic_atom_binding": null
+  },
+  "cases": [
+    {
+      "id": "MP-VALID-001",
+      "category": "valid_modus_ponens",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "abstract antecedent", "binding": null },
+          "Q": { "gloss": "abstract consequent", "binding": null }
+        },
+        "premises": ["P", "P -> Q"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "admit", "reason": "unique_canonical_conclusion" },
+      "rationale": "Minimal MP: P and P -> Q yield exactly Q."
+    },
+    {
+      "id": "MP-VALID-002",
+      "category": "valid_modus_ponens",
+      "semantic_content": {
+        "atoms": {
+          "P_rains": { "gloss": "it is raining", "binding": { "features": { "agent": "sky", "relation": "is", "state": "raining" } } },
+          "Q_ground_wet": { "gloss": "the ground is wet", "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } } }
+        },
+        "premises": ["P_rains", "P_rains -> Q_ground_wet"],
+        "conclusion": "Q_ground_wet",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "admit", "reason": "unique_canonical_conclusion" },
+      "rationale": "Grounded atoms use FeatureBundle bindings, not node ids, while the formula relation remains MP."
+    },
+    {
+      "id": "MP-VALID-003",
+      "category": "valid_modus_ponens",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "first condition holds", "binding": null },
+          "R": { "gloss": "second condition holds", "binding": null },
+          "Q": { "gloss": "joint-condition consequence", "binding": null }
+        },
+        "premises": ["P and R", "(P and R) -> Q"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "admit", "reason": "unique_canonical_conclusion" },
+      "rationale": "A compound antecedent is valid when the established premise and implication antecedent are the same formula."
+    },
+    {
+      "id": "MP-VALID-004",
+      "category": "valid_modus_ponens",
+      "semantic_content": {
+        "atoms": {
+          "P_switch_on": { "gloss": "the switch is on", "binding": { "features": { "agent": "switch", "relation": "is", "state": "on" } } },
+          "Q_lamp_lit": { "gloss": "the lamp is lit", "binding": { "features": { "agent": "lamp", "relation": "is", "state": "lit" } } },
+          "R_alarm_on": { "gloss": "the alarm is on", "binding": { "features": { "agent": "alarm", "relation": "is", "state": "on" } } }
+        },
+        "premises": ["P_switch_on", "P_switch_on -> (Q_lamp_lit or R_alarm_on)"],
+        "conclusion": "Q_lamp_lit or R_alarm_on",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "admit", "reason": "unique_canonical_conclusion" },
+      "rationale": "MP yields the full disjunctive consequent, not either disjunct alone."
+    },
+    {
+      "id": "MP-VALID-005",
+      "category": "valid_modus_ponens",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "outer antecedent", "binding": null },
+          "Q": { "gloss": "inner antecedent", "binding": null },
+          "R": { "gloss": "inner consequent", "binding": null }
+        },
+        "premises": ["P", "P -> (Q -> R)"],
+        "conclusion": "Q -> R",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "admit", "reason": "unique_canonical_conclusion" },
+      "rationale": "A nested implication can be the consequent yielded by MP."
+    },
+    {
+      "id": "MP-VALID-006",
+      "category": "valid_modus_ponens",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "left alternative", "binding": null },
+          "Q": { "gloss": "right alternative", "binding": null },
+          "R": { "gloss": "blocking condition", "binding": null },
+          "S": { "gloss": "result", "binding": null }
+        },
+        "premises": ["(P or Q) and not R", "((P or Q) and not R) -> S"],
+        "conclusion": "S",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "admit", "reason": "unique_canonical_conclusion" },
+      "rationale": "OR, AND, and NOT can form the matched antecedent inside ADR-0202 grammar."
+    },
+    {
+      "id": "MP-INVALID-001",
+      "category": "invalid_typed_reason",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "abstract antecedent", "binding": null },
+          "Q": { "gloss": "abstract consequent", "binding": null },
+          "R": { "gloss": "unrelated conclusion", "binding": null }
+        },
+        "premises": ["P", "P -> Q"],
+        "conclusion": "R",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "conclusion_mismatch" },
+      "rationale": "MP yields Q, so a requested conclusion R is a conclusion mismatch."
+    },
+    {
+      "id": "MP-INVALID-002",
+      "category": "invalid_typed_reason",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "asserted premise", "binding": null },
+          "Q": { "gloss": "unsupported conclusion", "binding": null }
+        },
+        "premises": ["P"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "missing_implication" },
+      "rationale": "No implication premise exists, so MP has no implication operator to apply."
+    },
+    {
+      "id": "MP-INVALID-003",
+      "category": "invalid_typed_reason",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "antecedent", "binding": null },
+          "Q": { "gloss": "consequent asserted independently", "binding": null }
+        },
+        "premises": ["Q", "P -> Q"],
+        "conclusion": "P",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "unestablished_antecedent" },
+      "rationale": "Affirming the consequent is refused on the antecedent axis: P is not established."
+    },
+    {
+      "id": "MP-INVALID-004",
+      "category": "invalid_typed_reason",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "required antecedent", "binding": null },
+          "Q": { "gloss": "claimed consequent", "binding": null },
+          "R": { "gloss": "different established premise", "binding": null }
+        },
+        "premises": ["R", "P -> Q"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "unestablished_antecedent" },
+      "rationale": "An implication is present, but its antecedent P is not established."
+    },
+    {
+      "id": "MP-INVALID-005",
+      "category": "invalid_typed_reason",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "available premise", "binding": null },
+          "Q": { "gloss": "unavailable antecedent", "binding": null }
+        },
+        "premises": ["P", "Q -> P"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "unestablished_antecedent" },
+      "rationale": "The implication points from Q to P; using it to derive Q from P would invert the rule."
+    },
+    {
+      "id": "MP-INVALID-006",
+      "category": "invalid_typed_reason",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "narrow established fact", "binding": null },
+          "R": { "gloss": "alternative not established", "binding": null },
+          "Q": { "gloss": "claimed consequent", "binding": null }
+        },
+        "premises": ["P", "(P or R) -> Q"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "unestablished_antecedent" },
+      "rationale": "Single-step MP must not silently insert OR-introduction to establish P or R."
+    },
+    {
+      "id": "MP-INVALID-007",
+      "category": "invalid_typed_reason",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "antecedent", "binding": null },
+          "Q": { "gloss": "first disjunct", "binding": null },
+          "R": { "gloss": "second disjunct", "binding": null }
+        },
+        "premises": ["P", "P -> (Q or R)"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "conclusion_mismatch" },
+      "rationale": "MP yields Q or R, not Q; the rule must not strengthen a disjunctive consequent."
+    },
+    {
+      "id": "MP-INVALID-008",
+      "category": "invalid_typed_reason",
+      "semantic_content": {
+        "atoms": {
+          "P": { "gloss": "antecedent not established", "binding": null },
+          "Q": { "gloss": "claimed consequent", "binding": null }
+        },
+        "premises": ["P -> Q"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens"
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "unestablished_antecedent" },
+      "rationale": "The implication exists, but its antecedent is not established."
+    },
+    {
+      "id": "MP-DISAGREE-001",
+      "category": "disagreement_uniqueness",
+      "confirmation_status": "[CONFIRM WITH OPUS]",
+      "semantic_content": {
+        "atoms": {
+          "A": { "gloss": "first independent antecedent", "binding": null },
+          "B": { "gloss": "second independent antecedent", "binding": null },
+          "C": { "gloss": "shared consequent", "binding": null }
+        },
+        "premises": ["A", "A -> C", "B", "B -> C"],
+        "conclusion": "C",
+        "candidate_rule": "modus_ponens",
+        "candidate_derivation_paths": [
+          { "path_id": "left", "uses": ["A", "A -> C"], "yields": "C" },
+          { "path_id": "right", "uses": ["B", "B -> C"], "yields": "C" }
+        ]
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "admit", "reason": "unique_canonical_conclusion" },
+      "rationale": "[CONFIRM WITH OPUS] Distinct admissible paths reach one canonical conclusion."
+    },
+    {
+      "id": "MP-DISAGREE-002",
+      "category": "disagreement_uniqueness",
+      "confirmation_status": "[CONFIRM WITH OPUS]",
+      "semantic_content": {
+        "atoms": {
+          "A": { "gloss": "first antecedent", "binding": null },
+          "B": { "gloss": "second antecedent", "binding": null },
+          "P": { "gloss": "left conjunct", "binding": null },
+          "Q": { "gloss": "right conjunct", "binding": null }
+        },
+        "premises": ["A", "A -> (P and Q)", "B", "B -> (Q and P)"],
+        "conclusion": "P and Q",
+        "candidate_rule": "modus_ponens",
+        "candidate_derivation_paths": [
+          { "path_id": "left_surface_order", "uses": ["A", "A -> (P and Q)"], "yields": "P and Q" },
+          { "path_id": "right_surface_order", "uses": ["B", "B -> (Q and P)"], "yields": "Q and P" }
+        ]
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "admit", "reason": "unique_canonical_conclusion" },
+      "rationale": "[CONFIRM WITH OPUS] Surface order differs, but ADR-0202 canonical keys should collapse."
+    },
+    {
+      "id": "MP-DISAGREE-003",
+      "category": "disagreement_uniqueness",
+      "confirmation_status": "[CONFIRM WITH OPUS]",
+      "semantic_content": {
+        "atoms": {
+          "A": { "gloss": "first antecedent", "binding": null },
+          "B": { "gloss": "second antecedent", "binding": null },
+          "Q": { "gloss": "conditional antecedent", "binding": null },
+          "R": { "gloss": "conditional consequent", "binding": null }
+        },
+        "premises": ["A", "A -> (Q -> R)", "B", "B -> (not Q or R)"],
+        "conclusion": "Q -> R",
+        "candidate_rule": "modus_ponens",
+        "candidate_derivation_paths": [
+          { "path_id": "implication_surface", "uses": ["A", "A -> (Q -> R)"], "yields": "Q -> R" },
+          { "path_id": "or_surface", "uses": ["B", "B -> (not Q or R)"], "yields": "not Q or R" }
+        ]
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "admit", "reason": "unique_canonical_conclusion" },
+      "rationale": "[CONFIRM WITH OPUS] Different surfaces are equivalent under ADR-0202 and collapse by canonical key."
+    },
+    {
+      "id": "MP-DISAGREE-004",
+      "category": "disagreement_uniqueness",
+      "confirmation_status": "[CONFIRM WITH OPUS]",
+      "semantic_content": {
+        "atoms": {
+          "A": { "gloss": "first antecedent", "binding": null },
+          "B": { "gloss": "second antecedent", "binding": null },
+          "Q": { "gloss": "substantive conclusion", "binding": null },
+          "R": { "gloss": "irrelevant tautology support atom", "binding": null }
+        },
+        "premises": ["A", "A -> Q", "B", "B -> (Q and (R or not R))"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens",
+        "candidate_derivation_paths": [
+          { "path_id": "direct", "uses": ["A", "A -> Q"], "yields": "Q" },
+          { "path_id": "tautology_decorated", "uses": ["B", "B -> (Q and (R or not R))"], "yields": "Q and (R or not R)" }
+        ]
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "admit", "reason": "unique_canonical_conclusion" },
+      "rationale": "[CONFIRM WITH OPUS] Tautological decoration should drop, leaving the same canonical conclusion."
+    },
+    {
+      "id": "MP-DISAGREE-005",
+      "category": "disagreement_uniqueness",
+      "confirmation_status": "[CONFIRM WITH OPUS]",
+      "semantic_content": {
+        "atoms": {
+          "A": { "gloss": "first antecedent", "binding": null },
+          "B": { "gloss": "second antecedent", "binding": null },
+          "P": { "gloss": "left proposition", "binding": null },
+          "Q": { "gloss": "right proposition", "binding": null }
+        },
+        "premises": ["A", "A -> (P and Q)", "B", "B -> (P or Q)"],
+        "conclusion": "P and Q",
+        "candidate_rule": "modus_ponens",
+        "candidate_derivation_paths": [
+          { "path_id": "conjunction_path", "uses": ["A", "A -> (P and Q)"], "yields": "P and Q" },
+          { "path_id": "disjunction_path", "uses": ["B", "B -> (P or Q)"], "yields": "P or Q" }
+        ]
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "conclusion_disagreement" },
+      "rationale": "[CONFIRM WITH OPUS] One connective differs; the rule must refuse rather than pick a path."
+    },
+    {
+      "id": "MP-DISAGREE-006",
+      "category": "disagreement_uniqueness",
+      "confirmation_status": "[CONFIRM WITH OPUS]",
+      "semantic_content": {
+        "atoms": {
+          "A": { "gloss": "first antecedent", "binding": null },
+          "B": { "gloss": "second antecedent", "binding": null },
+          "Q_ground_wet": { "gloss": "the ground is wet", "binding": { "features": { "agent": "ground", "relation": "is", "state": "wet" } } },
+          "Q_ground_damp": { "gloss": "the ground is damp", "binding": { "features": { "agent": "ground", "relation": "is", "state": "damp" } } }
+        },
+        "premises": ["A", "A -> Q_ground_wet", "B", "B -> Q_ground_damp"],
+        "conclusion": "Q_ground_wet",
+        "candidate_rule": "modus_ponens",
+        "candidate_derivation_paths": [
+          { "path_id": "wet_path", "uses": ["A", "A -> Q_ground_wet"], "yields": "Q_ground_wet" },
+          { "path_id": "damp_path", "uses": ["B", "B -> Q_ground_damp"], "yields": "Q_ground_damp" }
+        ]
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "conclusion_disagreement" },
+      "rationale": "[CONFIRM WITH OPUS] Related glosses and bindings must not collapse distinct atom ids."
+    },
+    {
+      "id": "MP-DISAGREE-007",
+      "category": "disagreement_uniqueness",
+      "confirmation_status": "[CONFIRM WITH OPUS]",
+      "semantic_content": {
+        "atoms": {
+          "A": { "gloss": "first antecedent", "binding": null },
+          "B": { "gloss": "second antecedent", "binding": null },
+          "Q": { "gloss": "substantive proposition", "binding": null },
+          "R": { "gloss": "tautology support atom", "binding": null }
+        },
+        "premises": ["A", "A -> (R or not R)", "B", "B -> Q"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens",
+        "candidate_derivation_paths": [
+          { "path_id": "tautology_path", "uses": ["A", "A -> (R or not R)"], "yields": "R or not R" },
+          { "path_id": "substantive_path", "uses": ["B", "B -> Q"], "yields": "Q" }
+        ]
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "conclusion_disagreement" },
+      "rationale": "[CONFIRM WITH OPUS] T is not the same canonical conclusion as a substantive atom."
+    },
+    {
+      "id": "MP-DISAGREE-008",
+      "category": "disagreement_uniqueness",
+      "confirmation_status": "[CONFIRM WITH OPUS]",
+      "semantic_content": {
+        "atoms": {
+          "A": { "gloss": "first antecedent", "binding": null },
+          "B": { "gloss": "second antecedent", "binding": null },
+          "Q": { "gloss": "disputed proposition", "binding": null }
+        },
+        "premises": ["A", "A -> Q", "B", "B -> not Q"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens",
+        "candidate_derivation_paths": [
+          { "path_id": "positive_path", "uses": ["A", "A -> Q"], "yields": "Q" },
+          { "path_id": "negative_path", "uses": ["B", "B -> not Q"], "yields": "not Q" }
+        ]
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "conclusion_disagreement" },
+      "rationale": "[CONFIRM WITH OPUS] Contradictory conclusions must refuse under wrong=0."
+    },
+    {
+      "id": "MP-DISAGREE-009",
+      "category": "disagreement_uniqueness",
+      "confirmation_status": "[CONFIRM WITH OPUS]",
+      "semantic_content": {
+        "atoms": {
+          "A": { "gloss": "first antecedent", "binding": null },
+          "B": { "gloss": "second antecedent", "binding": null },
+          "P": { "gloss": "conditional left side", "binding": null },
+          "Q": { "gloss": "conditional right side", "binding": null }
+        },
+        "premises": ["A", "A -> (P -> Q)", "B", "B -> (Q -> P)"],
+        "conclusion": "P -> Q",
+        "candidate_rule": "modus_ponens",
+        "candidate_derivation_paths": [
+          { "path_id": "forward_conditional", "uses": ["A", "A -> (P -> Q)"], "yields": "P -> Q" },
+          { "path_id": "reverse_conditional", "uses": ["B", "B -> (Q -> P)"], "yields": "Q -> P" }
+        ]
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "conclusion_disagreement" },
+      "rationale": "[CONFIRM WITH OPUS] Implication direction is not normalized away by surface symmetry."
+    },
+    {
+      "id": "MP-DISAGREE-010",
+      "category": "disagreement_uniqueness",
+      "confirmation_status": "[CONFIRM WITH OPUS]",
+      "semantic_content": {
+        "atoms": {
+          "A": { "gloss": "first antecedent", "binding": null },
+          "B": { "gloss": "second antecedent", "binding": null },
+          "Q": { "gloss": "shared proposition", "binding": null },
+          "R": { "gloss": "additional proposition", "binding": null }
+        },
+        "premises": ["A", "A -> Q", "B", "B -> (Q and R)"],
+        "conclusion": "Q",
+        "candidate_rule": "modus_ponens",
+        "candidate_derivation_paths": [
+          { "path_id": "narrow_path", "uses": ["A", "A -> Q"], "yields": "Q" },
+          { "path_id": "stronger_path", "uses": ["B", "B -> (Q and R)"], "yields": "Q and R" }
+        ]
+      },
+      "proof_structure_wrapping": "[PENDING ADR-0204 SHAPE]",
+      "expected": { "outcome": "refuse", "reason": "conclusion_disagreement" },
+      "rationale": "[CONFIRM WITH OPUS] Entailment relation is not canonical conclusion identity."
+    }
+  ]
+}
