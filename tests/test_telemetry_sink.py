@@ -35,7 +35,7 @@ from packs.safety.check import SafetyCheckResult
 
 class TestSerializeTurnEvent:
     def test_metadata_only_by_default(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         rt.chat("light is")
         event = rt.turn_log[-1]
         out = serialize_turn_event(event)
@@ -46,7 +46,7 @@ class TestSerializeTurnEvent:
         assert "articulation_surface" not in out
 
     def test_include_content_opts_in(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         rt.chat("light is")
         event = rt.turn_log[-1]
         out = serialize_turn_event(event, include_content=True)
@@ -56,7 +56,7 @@ class TestSerializeTurnEvent:
         assert "articulation_surface" in out
 
     def test_pack_ids_emitted(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         rt.chat("light is")
         event = rt.turn_log[-1]
         out = serialize_turn_event(
@@ -70,7 +70,7 @@ class TestSerializeTurnEvent:
         assert out["identity_pack_id"] == "my_identity"
 
     def test_remediation_flags_default_false(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         rt.chat("light is")
         event = rt.turn_log[-1]
         out = serialize_turn_event(event)
@@ -78,7 +78,7 @@ class TestSerializeTurnEvent:
         assert out["hedge_injected"] is False
 
     def test_refusal_flag_rides_the_wire(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
 
         def _failing(ctx):  # noqa: ANN001
             return SafetyCheckResult(
@@ -97,14 +97,14 @@ class TestSerializeTurnEvent:
         assert out["safety_upheld"] is False
 
     def test_stub_path_flag(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         rt.chat("light is")
         event = rt.turn_log[-1]
         out = serialize_turn_event(event)
         assert out["stub_path"] is True
 
     def test_timestamp_opt_in(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         rt.chat("light is")
         event = rt.turn_log[-1]
         without = serialize_turn_event(event)
@@ -118,7 +118,7 @@ class TestSerializeTurnEvent:
 
 class TestFormatTurnEventJsonl:
     def test_deterministic_output(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         rt.chat("light is")
         event = rt.turn_log[-1]
         a = format_turn_event_jsonl(event, safety_pack_id="x", ethics_pack_id="y")
@@ -126,7 +126,7 @@ class TestFormatTurnEventJsonl:
         assert a == b
 
     def test_keys_alphabetised(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         rt.chat("light is")
         event = rt.turn_log[-1]
         line = format_turn_event_jsonl(event)
@@ -135,7 +135,7 @@ class TestFormatTurnEventJsonl:
         assert keys == sorted(keys)
 
     def test_no_trailing_newline(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         rt.chat("light is")
         event = rt.turn_log[-1]
         line = format_turn_event_jsonl(event)
@@ -200,14 +200,14 @@ class TestJsonlFileSink:
 
 class TestRuntimeAutoEmit:
     def test_no_sink_attached_is_noop(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         # No sink attached — chat() should not raise and turn_log
         # should still be populated.
         rt.chat("light is")
         assert rt.turn_log
 
     def test_attached_sink_receives_one_line_per_turn(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         sink = JsonlBufferSink()
         rt.attach_telemetry_sink(sink)
         rt.chat("light is")
@@ -215,7 +215,7 @@ class TestRuntimeAutoEmit:
         assert len(sink.lines) == 2
 
     def test_emitted_line_is_parseable_jsonl(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         sink = JsonlBufferSink()
         rt.attach_telemetry_sink(sink)
         rt.chat("light is")
@@ -226,7 +226,7 @@ class TestRuntimeAutoEmit:
         assert "stub_path" in parsed
 
     def test_default_attach_redacts_content(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         sink = JsonlBufferSink()
         rt.attach_telemetry_sink(sink)
         rt.chat("light is")
@@ -236,7 +236,7 @@ class TestRuntimeAutoEmit:
         assert "walk_surface" not in parsed
 
     def test_include_content_opt_in_at_attach(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         sink = JsonlBufferSink()
         rt.attach_telemetry_sink(sink, include_content=True)
         rt.chat("light is")
@@ -245,7 +245,7 @@ class TestRuntimeAutoEmit:
         assert "surface" in parsed
 
     def test_detach_via_none_stops_emission(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         sink = JsonlBufferSink()
         rt.attach_telemetry_sink(sink)
         rt.chat("light is")
@@ -254,7 +254,7 @@ class TestRuntimeAutoEmit:
         assert len(sink.lines) == 1
 
     def test_pack_ids_in_emitted_line(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         sink = JsonlBufferSink()
         rt.attach_telemetry_sink(sink)
         rt.chat("light is")
@@ -266,7 +266,7 @@ class TestRuntimeAutoEmit:
     def test_stub_path_also_emits(self) -> None:
         """ADR-0039 made stub paths populate turn_log; ADR-0040's
         sink must emit for stub turns too."""
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         sink = JsonlBufferSink()
         rt.attach_telemetry_sink(sink)
         rt.chat("light is")
@@ -274,7 +274,7 @@ class TestRuntimeAutoEmit:
         assert parsed["stub_path"] is True
 
     def test_refusal_visible_via_sink(self) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
 
         def _failing(ctx):  # noqa: ANN001
             return SafetyCheckResult(
@@ -295,7 +295,7 @@ class TestRuntimeAutoEmit:
     def test_sink_errors_are_not_swallowed(self) -> None:
         """Telemetry failures should surface, not silently drop the
         audit signal."""
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
 
         class _ExplodingSink:
             def emit(self, line: str) -> None:
@@ -316,7 +316,7 @@ class TestRuntimeAutoEmit:
 class TestFileSinkRoundTrip:
     def test_full_session_round_trips(self, tmp_path: Path) -> None:
         target = tmp_path / "session.jsonl"
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         with JsonlFileSink(target) as sink:
             rt.attach_telemetry_sink(sink)
             rt.chat("light is")
