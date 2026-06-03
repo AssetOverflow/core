@@ -140,8 +140,18 @@ class TestExtractionRefusal:
     def test_missing_counted_noun_refused(self) -> None:
         assert _try_extract("Sam has 5.") is None
 
-    def test_pronoun_subject_refused(self) -> None:
-        assert _try_extract("He has 5 apples.") is None
+    def test_pronoun_subject_flagged_for_resolution(self) -> None:
+        # ADR-0174: a bare pronoun subject is no longer hard-refused at
+        # extraction. It is admitted but tagged requires_pronoun_resolution=True;
+        # the candidate-graph (generate/math_candidate_graph.py) then refuses to
+        # commit an answer unless the pronoun resolves, so serving still refuses
+        # bare pronoun subjects end-to-end ("He has 5 apples. How many ..." ->
+        # answer=None). The defensive flag — not a None return — is the
+        # extraction-level contract; its absence would re-open the ADR-0174
+        # wrong=0 hazard, so pin it here.
+        result = _try_extract("He has 5 apples.")
+        assert result is not None
+        assert result["requires_pronoun_resolution"] is True
 
     def test_lowercase_subject_refused(self) -> None:
         assert _try_extract("sam has 5 apples.") is None

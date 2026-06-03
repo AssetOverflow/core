@@ -49,8 +49,6 @@ CASES_PATH = (
 )
 PACK_ROOT = REPO_ROOT / "language_packs" / "data" / "en_core_math_v1"
 PACK_HAZARD_CASE_ID = "gsm8k-train-sample-v1-0050"
-RATIFICATION_TARGET_CASE_ID = "gsm8k-train-sample-v1-0040"
-RATIFICATION_TARGET_SURFACE = "sees"
 
 
 # ---------------------------------------------------------------------------
@@ -205,21 +203,32 @@ def test_lexical_ratification_advances_unknown_word_row(
       8. Assert case 0050 hazard still pinned at sentence_index 0
     """
     cases = _load_cases()
-    case_0040 = next(
-        c for c in cases if c["case_id"] == RATIFICATION_TARGET_CASE_ID
-    )
     case_0050 = next(c for c in cases if c["case_id"] == PACK_HAZARD_CASE_ID)
 
-    # Step 1: initial audit produces a lexicon_entry refusal at 'sees'.
+    # Reader-stable synthetic target. The train_sample cases that once
+    # first-refused at an unknown WORD (case 0040 / 'sees') have been outgrown
+    # by the reader, so this e2e pins the self-teaching loop against a crafted
+    # statement instead: an unknown verb ('zorps') with a clear quantity, plus a
+    # second unknown verb ('quibbles') that keeps the statement refused after the
+    # first is ratified. The lexical-ratification primitives are unit-tested in
+    # test_math_lexical_ratification.py and others; this asserts the integration
+    # loop (audit -> evidence -> ratify -> re-audit -> the token resolves).
+    target_statement = (
+        "Sam zorps 5 apples and quibbles 3 oranges. How many apples does Sam have?"
+    )
+    target_surface = "zorps"
+    target_case_id = "synthetic-lexratify-zorps"
+
+    # Step 1: initial audit produces a lexicon_entry refusal at the unknown verb.
     _use_pack_for_reader(monkeypatch, pack_copy)
     result_before, rows_before = audit_problem(
-        case_0040["question"], case_id=case_0040["case_id"]
+        target_statement, case_id=target_case_id
     )
     assert isinstance(result_before, ReaderRefusal)
-    assert rows_before, "expected at least one audit row from case 0040"
+    assert rows_before, "expected at least one audit row"
     first_refusal = rows_before[0]
     assert first_refusal.missing_operator == "lexicon_entry"
-    assert first_refusal.token_text == RATIFICATION_TARGET_SURFACE
+    assert first_refusal.token_text == target_surface
 
     # Step 2: wrap as evidence.
     evidence = audit_to_evidence([first_refusal])
@@ -235,7 +244,7 @@ def test_lexical_ratification_advances_unknown_word_row(
         reviewer="w3a_test",
         pack_root=pack_copy,
     )
-    assert receipt.lemma == RATIFICATION_TARGET_SURFACE
+    assert receipt.lemma == target_surface
     assert receipt.category == "drain_token"
     assert receipt.file_sha256_before != receipt.file_sha256_after
 
@@ -244,36 +253,37 @@ def test_lexical_ratification_advances_unknown_word_row(
     lifecycle._get_lexicon.cache_clear()
     _use_pack_for_reader(monkeypatch, pack_copy)
     result_after, rows_after = audit_problem(
-        case_0040["question"], case_id=case_0040["case_id"]
+        target_statement, case_id=target_case_id
     )
 
-    # Lexicon resolves 'sees' as drain_token in the tmpdir pack.
+    # Lexicon now resolves the ratified verb as drain_token in the tmpdir pack.
     lex = comprehension_lexicon.load_lexicon(pack_copy)
-    resolved = comprehension_lexicon.lookup(lex, RATIFICATION_TARGET_SURFACE)
+    resolved = comprehension_lexicon.lookup(lex, target_surface)
     assert resolved is not None
     assert resolved.category == "drain_token"
 
-    # Refusal still happens (case 0040 has many barriers) but not on 'sees'
-    # and not as a lexicon_entry miss on that token.
+    # Refusal still happens (the second unknown verb 'quibbles' remains a
+    # barrier) but no longer as a lexicon_entry miss on the ratified token.
     assert isinstance(result_after, ReaderRefusal)
     if rows_after:
         new_refusal = rows_after[0]
-        # Either we advanced past sentence 0, OR we hit a different token,
+        # Either we advanced past the ratified token, OR hit a different token,
         # OR a different missing_operator class entirely.
         progressed = (
-            new_refusal.token_text != RATIFICATION_TARGET_SURFACE
+            new_refusal.token_text != target_surface
             or new_refusal.missing_operator != "lexicon_entry"
             or new_refusal.sentence_index != first_refusal.sentence_index
         )
         assert progressed, (
-            "ratification of 'sees' did not move the refusal class for case 0040: "
+            f"ratification of {target_surface!r} did not move the refusal class: "
             f"before={first_refusal.missing_operator!r}@s{first_refusal.sentence_index}"
             f"/{first_refusal.token_text!r}, "
             f"after={new_refusal.missing_operator!r}@s{new_refusal.sentence_index}"
             f"/{new_refusal.token_text!r}"
         )
 
-    # Step 7: wrong == 0 — case 0040 still refuses (not admitted).
+    # Step 7: wrong == 0 — the statement still refuses (not admitted): the
+    # ratified drain_token resolved one barrier but 'quibbles' remains.
     assert not _is_admission(result_after)
 
     # Step 8: case 0050 hazard still pinned.

@@ -132,7 +132,7 @@ def test_cli_single_corpus_produces_pending_proposal(tmp_path: Path) -> None:
     assert rec["proposal"]["source"]["kind"] == "exemplar_corpus"
 
 
-def test_cli_all_flag_proposes_three_corpora(tmp_path: Path) -> None:
+def test_cli_all_flag_proposes_all_exemplar_corpora(tmp_path: Path) -> None:
     log_path = tmp_path / "proposals.jsonl"
     code, out, _ = _invoke_cli([
         "teaching", "propose-from-exemplars",
@@ -143,8 +143,15 @@ def test_cli_all_flag_proposes_three_corpora(tmp_path: Path) -> None:
     assert code == 0
     payload = json.loads(out)
     cats = {p["shape_category"] for p in payload["proposals"]}
+    # --all proposes one pending proposal per exemplar corpus. The set grew
+    # from the original three as the ME-1..ME-5 matcher waves added
+    # currency_amount, discrete_count_statement, and multiplicative_aggregation
+    # exemplar corpora. Update this set when a new exemplar corpus is added.
     assert cats == {
+        "currency_amount",
         "descriptive_setup_no_quantity",
+        "discrete_count_statement",
+        "multiplicative_aggregation",
         "rate_with_currency",
         "temporal_aggregation",
     }

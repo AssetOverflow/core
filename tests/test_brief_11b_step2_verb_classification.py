@@ -44,6 +44,11 @@ EXPECTED_FILLER_CASES = frozenset(
     {
         "gsm8k-train-sample-v1-0002",
         "gsm8k-train-sample-v1-0016",
+        # 0021 joined the set as the auditor's verb classification evolved; it
+        # refuses with rows[0]=pre_frame_filler_sentence and still refuses after
+        # the filler sentence is elided (zero-lift holds — verified by the
+        # parametrized test_post_skip_simulation_still_refuses).
+        "gsm8k-train-sample-v1-0021",
         "gsm8k-train-sample-v1-0025",
         "gsm8k-train-sample-v1-0028",
         "gsm8k-train-sample-v1-0030",
@@ -63,6 +68,10 @@ EXPECTED_POST_SKIP = {
     "gsm8k-train-sample-v1-0016": (
         "unresolved_pronoun",
         "pronoun_resolution",
+    ),
+    "gsm8k-train-sample-v1-0021": (
+        "unknown_word",
+        "lexicon_entry",
     ),
     "gsm8k-train-sample-v1-0025": (
         "unknown_word",

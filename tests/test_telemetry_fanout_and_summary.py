@@ -92,7 +92,7 @@ class TestFanOutSink:
 
 class TestRuntimeWithFanOut:
     def test_runtime_attached_fanout_distributes(self, tmp_path: Path) -> None:
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         buf = JsonlBufferSink()
         target = tmp_path / "session.jsonl"
         with JsonlFileSink(target) as fsink:
@@ -163,7 +163,7 @@ class TestFormatVerdictSummary:
     def test_response_from_runtime_formats(self) -> None:
         """End-to-end: a real ChatResponse.verdicts bundle formats
         without error."""
-        rt = ChatRuntime(config=RuntimeConfig())
+        rt = ChatRuntime(config=RuntimeConfig(), no_load_state=True)
         resp = rt.chat("light is")
         out = format_verdict_summary(resp.verdicts)
         # Stub-path turn has no identity_score but valid verdicts.

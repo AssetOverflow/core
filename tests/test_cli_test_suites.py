@@ -73,12 +73,15 @@ def test_core_test_suite_accepts_pytest_flags_without_separator(monkeypatch) -> 
     rc = cli.main(["test", "--suite", "packs", "-q"])
 
     assert rc == 0
+    # Assert against the live suite definition rather than re-hardcoding the
+    # (growing) packs file list: the contract under test is that a curated
+    # suite expands to its files followed by the forwarded "-q", with no "--"
+    # separator needed.
     assert calls[0] == (
         cli.sys.executable,
         "-m",
         "pytest",
-        "tests/test_core_semantic_seed_pack.py",
-        "tests/test_adr_0127_pack_ratification.py",
+        *cli._TEST_SUITES["packs"],
         "-q",
     )
 
