@@ -1,8 +1,11 @@
 name: smoke
 
-# Fast PR gate — runs the smoke suite (~2-3 min) on every PR push.
+# Fast PR gate — runs the smoke suite on every PR push.
 # Covers: chat runtime, pipeline, architectural invariants, audio sensorium
-# (tests/test_audio_*.py — compiler/eval-gates/mount/CRDT-merge/teachers, ~3s).
+# (tests/test_audio_*.py — compiler/eval-gates/mount/CRDT-merge/teachers, ~3s),
+# and identity falsifiability (tests/test_pack_measurements_phase2.py, ADR-0043
+# — ratified packs diverge directionally; pack-invariant refusal floor; no
+# fabrication).  The falsifiability lane adds ~4 min but blocks-on-regression.
 #
 # Full pytest runs post-merge to main (see full-pytest.yml).
 # Regressions caught here block the PR; anything outside the smoke
@@ -51,4 +54,5 @@ jobs:
             tests/test_runtime_config.py \
             tests/test_cognitive_turn_pipeline.py \
             tests/test_architectural_invariants.py \
-            tests/test_audio_*.py
+            tests/test_audio_*.py \
+            tests/test_pack_measurements_phase2.py
