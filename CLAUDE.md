@@ -104,7 +104,7 @@ runtime path.  Vault recall is exact and deterministic.
 - `calibration/*` — bounded replay-based calibration.
 - `docs/runtime_contracts.md` — response, telemetry, memory, identity, and testing contracts.
 
-### GSM8K math comprehension substrate (sealed; serving stays `3/47/0` until ratified)
+### GSM8K math comprehension substrate (sealed; serving `6/44/0`, wrong=0 — moves only via ratified PRs)
 
 - `core/reliability_gate/` — calibrated-learning ledger + gate (ADR-0175): `ClassTally` counts, `conservative_floor` (one-sided Wilson, N_MIN=10), θ ceilings.
 - `generate/derivation/` — the comprehension composer: `extract.py` (lexeme quantity extraction, EX-1/4/5 + function-word unit filter), `clauses.py` (GB-1 segmentation), `compose.py` (GB-2a list-sum + GB-3a clause-scoped referent guard), `accumulate.py` (GB-3b.1 single-referent gain/loss chaining), `multistep.py`/`search.py` (bounded search), `verify.py` (the wrong=0 self-verification gate: grounding ∧ cue ∧ unit ∧ completeness ∧ uniqueness).
