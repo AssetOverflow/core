@@ -13,8 +13,10 @@ import pytest
 
 from generate.logic_canonical import (
     DEFAULT_MAX_NODES,
+    OUT_OF_DECIDABLE_REGIME,
     LogicBudgetError,
     LogicError,
+    LogicRegimeError,
     canonicalize,
 )
 from generate.logic_equivalence import Verdict, check_equivalence
@@ -165,3 +167,53 @@ def test_bounded_formula_stays_within_default_budget() -> None:
     # A realistic proof-step proposition canonicalizes well within budget.
     c = canonicalize("(P -> Q) & (Q -> R) & P", max_nodes=DEFAULT_MAX_NODES)
     assert c.canonical_key  # non-empty, did not refuse
+
+
+# ---------------------------------------------------------------------------
+# Out-of-regime: quantified / predicate input REFUSES with the typed reason
+# (ADR-0201.1). The boundary is enforced by DESIGN, before the generic grammar
+# error — not by the tokenizer incidentally choking on '.' or a predicate '('.
+# ---------------------------------------------------------------------------
+
+OUT_OF_REGIME_INPUTS = [
+    "forall x. rains(x) -> wet(x)",   # universal (the PC-OOR-001 corpus case)
+    "exists x. wet(x)",               # existential (PC-OOR-002)
+    "∀ x rains",                      # quantifier symbol
+    "∃ y wet",                        # quantifier symbol
+    "rains(x)",                       # predicate application, no quantifier word
+    "P & wet(y)",                     # predicate application mid-formula
+    "FORALL z holds",                 # case-insensitive keyword
+]
+
+
+@pytest.mark.parametrize("text", OUT_OF_REGIME_INPUTS)
+def test_out_of_regime_refuses_with_typed_reason(text: str) -> None:
+    with pytest.raises(LogicRegimeError) as exc:
+        canonicalize(text)
+    assert OUT_OF_DECIDABLE_REGIME in str(exc.value)
+    # And the equivalence path surfaces the typed reason, not a generic one.
+    v = check_equivalence(text, "P")
+    assert v.verdict is Verdict.REFUSED
+    assert OUT_OF_DECIDABLE_REGIME in v.reason
+
+
+def test_regime_error_is_a_logic_error_subclass() -> None:
+    # Callers refusing on LogicError still refuse on out-of-regime.
+    assert issubclass(LogicRegimeError, LogicError)
+
+
+def test_genuine_grammar_errors_are_not_misreported_as_out_of_regime() -> None:
+    # The detector is principled: malformed *propositional* input is a plain
+    # LogicError (grammar), NOT a regime refusal. Guards against over-firing.
+    for bad in ["P &", "P @ Q", "P -> -> Q", "(P", "P)"]:
+        with pytest.raises(LogicError) as exc:
+            canonicalize(bad)
+        assert not isinstance(exc.value, LogicRegimeError), bad
+        assert OUT_OF_DECIDABLE_REGIME not in str(exc.value), bad
+
+
+def test_keyword_operators_before_paren_are_not_predicate_application() -> None:
+    # `not (P)` is valid: NOT is a keyword operator, not an ATOM, so the
+    # ATOM-then-LPAREN predicate rule must not fire.
+    assert canonicalize("not (P)").canonical_key == canonicalize("~P").canonical_key
+    assert canonicalize("not(P)").canonical_key == canonicalize("~P").canonical_key
