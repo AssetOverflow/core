@@ -1911,6 +1911,12 @@ def _init_mutation_candidates(sentence: str) -> list[CandidateInitial]:
                 matched_value_token=n_raw,
                 matched_unit_token=unit_raw,
                 matched_entity_token=m.group("entity"),
+                # ADR-0136.S.3 collapses BOTH source tokens (initial n_raw and
+                # mutation m_raw) into one derived initial value. Expose both so
+                # the ADR-0191 completeness guard (uncovered_quantities) sees the
+                # mutation quantity as consumed; otherwise it false-positives on
+                # m_raw and over-refuses a sound reading. See _candidate_consumed_tokens.
+                consumed_value_tokens=(n_raw, m_raw),
             )
         ]
     except Exception:
