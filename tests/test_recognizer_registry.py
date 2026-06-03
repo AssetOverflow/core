@@ -287,7 +287,11 @@ def test_live_proposal_log_has_phase_c_proposals() -> None:
         f"expected {len(PHASE_C_PROPOSAL_IDS)} accepted Phase C proposals, "
         f"got {accepted_count}: {[(pid[:12], state[pid]['state']) for pid in PHASE_C_PROPOSAL_IDS]}"
     )
-    # Registry exposes the ratified set.
-    assert len(load_ratified_registry(log)) == len(PHASE_C_PROPOSAL_IDS)
+    # Registry exposes the ratified set, which has grown past round 1 as later
+    # ratification rounds (flywheel-demo, rat1-cli-seed, ME-waves) accepted more
+    # recognizers. The contract here is that the Phase C three remain present
+    # and ratified — not that they are the only entries.
+    registry_proposal_ids = {r.proposal_id for r in load_ratified_registry(log)}
+    assert set(PHASE_C_PROPOSAL_IDS) <= registry_proposal_ids
 
 
