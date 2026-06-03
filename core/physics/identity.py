@@ -298,6 +298,15 @@ class TurnEvent:
     epistemic_state: str = "undetermined"
     normative_clearance: str = "unassessable"
     normative_detail: str = ""
+    # ADR-0206 — Response Governance Bridge reach level for this turn.
+    # The reach policy that governed the response surface, as a
+    # lower_snake_case string mirroring core.response_governance.ReachLevel
+    # without importing that module here (preserving identity.py's
+    # low-coupling shared-value-type role).  Scaffold contract: always
+    # "strict" — govern_response emits STRICT-only until the risk-reward
+    # widening loop is built (ADR-0206 §3).  Default "strict" so callers
+    # that omit the field stay byte-identical and conservatively governed.
+    reach_level: str = "strict"
     # ADR-0153 (W-020a) — canonical SHA-256 trace hash for this turn,
     # back-stamped by ``CognitiveTurnPipeline.process`` after
     # ``compute_trace_hash`` runs.  Empty string on construction;
