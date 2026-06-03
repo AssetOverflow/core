@@ -21,6 +21,7 @@ Phase 5 (bounded-grammar / B3 integration) deferred.
 
 from __future__ import annotations
 
+from .acyclicity import CIRCULAR_DEPENDENCY, find_cycle
 from .adapter import (
     INTRODUCED_BY,
     REFUSED_UNIT_PROOF,
@@ -73,6 +74,7 @@ from .units import (
 __all__ = (
     "ADMISSIBILITY_REASONS",
     "ADMISSIBILITY_STATUSES",
+    "CIRCULAR_DEPENDENCY",
     "BASE_DIMENSIONS",
     "DIMENSIONLESS",
     "INTRODUCED_BY",
@@ -102,6 +104,7 @@ __all__ = (
     "bind_math_problem_graph",
     "bound_unknown_from_math_problem_graph",
     "check_admissibility",
+    "find_cycle",
     "infer_question_form",
     "parse_unit",
     "resolve_state_index",

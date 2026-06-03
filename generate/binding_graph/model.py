@@ -19,6 +19,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Final, Literal, Union
 
+from generate.binding_graph.acyclicity import CIRCULAR_DEPENDENCY, find_cycle
+
 # ---------------------------------------------------------------------------
 # Public errors
 # ---------------------------------------------------------------------------
@@ -463,6 +465,24 @@ class SemanticSymbolicBindingGraph:
                         f"BoundEquation references unknown dependency "
                         f"{dep!r} (lhs={eq.lhs_symbol_id!r})"
                     )
+
+        # ADR-0203 — acyclicity invariant. Referential integrity (above) proves
+        # every dependency names a known symbol; this proves the equation
+        # dependency structure has no cycle. A cycle is circular reasoning
+        # (conclude P because Q because P) — structurally well-formed, invalid.
+        # The math adapter is acyclic by construction, so this refuses no
+        # existing graph; it guards the structure before proof_chain (the first
+        # consumer that could build a cycle) wires in. Multiple equations sharing
+        # an lhs union their dependencies.
+        adjacency: dict[str, set[str]] = {}
+        for eq in self.equations:
+            adjacency.setdefault(eq.lhs_symbol_id, set()).update(eq.dependencies)
+        cycle = find_cycle({lhs: frozenset(deps) for lhs, deps in adjacency.items()})
+        if cycle is not None:
+            raise BindingGraphError(
+                f"{CIRCULAR_DEPENDENCY}: equation dependency cycle "
+                f"{' -> '.join(cycle)}"
+            )
 
         equation_count = len(self.equations)
         for unk in self.unknowns:
