@@ -30,6 +30,7 @@ hand-rolled symbolic normalizer.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Final
 
@@ -48,6 +49,21 @@ class LogicBudgetError(LogicError):
     guard). A subclass of :class:`LogicError` so callers that refuse on
     ``LogicError`` refuse on budget-exceeded too — the proof-domain analog of the
     math gate refusing rather than churning."""
+
+
+class LogicRegimeError(LogicError):
+    """Raised when the input is outside the decidable **propositional** regime —
+    quantified or predicate logic (ADR-0201.1; the typed refusal ADR-0202 §3
+    names). A subclass of :class:`LogicError` so callers that refuse on
+    ``LogicError`` refuse here too, but it carries the typed
+    :data:`OUT_OF_DECIDABLE_REGIME` reason so the regime boundary is
+    distinguishable from a generic malformed-formula grammar error.
+
+    Crucially, the boundary is enforced **by design** (see
+    :func:`_reject_out_of_regime_text` / :func:`_reject_out_of_regime_tokens`),
+    not by the tokenizer incidentally choking on an out-of-grammar character —
+    the latter is the by-luck-not-by-design refusal the ``wrong == 0``
+    discipline rejects."""
 
 
 # ---------------------------------------------------------------------------
@@ -460,11 +476,69 @@ class CanonicalProposition:
     is_contradiction: bool
 
 
+# ---------------------------------------------------------------------------
+# Out-of-regime detection (ADR-0201.1)
+#
+# Propositional logic is the only regime with a canonical form + decidable
+# equivalence. Quantified / predicate input must REFUSE with the typed
+# `out_of_decidable_regime` reason (ADR-0202 §3) — by DESIGN, recognized as
+# out-of-regime, not by accident of the tokenizer choking on an out-of-grammar
+# character. These checks run BEFORE the generic grammar error so the regime
+# boundary is principled, typed, and inspectable.
+# ---------------------------------------------------------------------------
+
+OUT_OF_DECIDABLE_REGIME: Final[str] = "out_of_decidable_regime"
+
+# Quantifier markers: ASCII keywords (word-boundary, case-insensitive) and the
+# logic symbols ∀ / ∃. Their presence means first-order/predicate reasoning,
+# which has no ROBDD canonical form and is undecidable in general. `forall` and
+# `exists` are therefore reserved — not usable as atom ids.
+_QUANTIFIER_WORD_RE: Final[re.Pattern[str]] = re.compile(r"\b(forall|exists)\b", re.IGNORECASE)
+_QUANTIFIER_SYMBOLS: Final[frozenset[str]] = frozenset({"∀", "∃"})  # ∀ ∃
+
+
+def _reject_out_of_regime_text(formula: str) -> None:
+    """Refuse raw input that carries a quantifier marker. Runs before tokenizing
+    so quantifier symbols (∀/∃) and the ``forall x. …`` / ``exists x. …`` shape
+    refuse with the typed regime reason rather than a generic 'unexpected
+    character' grammar error from the trailing ``.``/predicate syntax."""
+    for sym in sorted(_QUANTIFIER_SYMBOLS):
+        if sym in formula:
+            raise LogicRegimeError(f"{OUT_OF_DECIDABLE_REGIME}: quantifier symbol {sym!r}")
+    match = _QUANTIFIER_WORD_RE.search(formula)
+    if match is not None:
+        raise LogicRegimeError(f"{OUT_OF_DECIDABLE_REGIME}: quantifier {match.group(0)!r}")
+
+
+def _reject_out_of_regime_tokens(tokens: list[tuple[str, str]]) -> None:
+    """Refuse predicate-application shape — an atom immediately applied to an
+    argument list, e.g. ``rains(x)``. In the propositional grammar an atom is
+    never followed by ``(`` (grouping only follows an operator or opens an
+    expression), so ``ATOM (`` is a predicate, not a well-formed propositional
+    formula. Runs before the parser's generic trailing-token error so the regime
+    boundary is the reason that surfaces. (Keyword operators such as ``not`` are
+    NOT ``ATOM`` tokens, so ``not (P)`` is unaffected.)"""
+    for (kind, lexeme), (next_kind, _next_lexeme) in zip(tokens, tokens[1:]):
+        if kind == "ATOM" and next_kind == "LPAREN":
+            raise LogicRegimeError(
+                f"{OUT_OF_DECIDABLE_REGIME}: predicate application {lexeme!r}(…)"
+            )
+
+
 def canonicalize(formula: str, *, max_nodes: int = DEFAULT_MAX_NODES) -> CanonicalProposition:
     """Canonicalize ``formula`` to its ROBDD identity under the sorted-atom
-    ordering. Raises :class:`LogicError` on out-of-grammar input and
-    :class:`LogicBudgetError` if the diagram exceeds ``max_nodes``."""
-    ast = _Parser(_tokenize(formula)).parse()
+    ordering. Refusal-first:
+
+    * :class:`LogicRegimeError` (``out_of_decidable_regime``) if the input is
+      quantified / predicate logic — checked *before* grammar, so the regime
+      boundary is principled, not an incidental tokenizer failure;
+    * :class:`LogicError` on out-of-grammar (malformed propositional) input;
+    * :class:`LogicBudgetError` if the diagram exceeds ``max_nodes``.
+    """
+    _reject_out_of_regime_text(formula)
+    tokens = _tokenize(formula)
+    _reject_out_of_regime_tokens(tokens)
+    ast = _Parser(tokens).parse()
     declared = tuple(sorted(_collect_atoms(ast)))  # fixed variable ordering
     index_of = {name: i for i, name in enumerate(declared)}
     bdd = _Bdd(var_count=len(declared), max_nodes=max_nodes)

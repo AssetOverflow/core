@@ -19,8 +19,10 @@ from typing import Final
 
 from generate.logic_canonical import (
     DEFAULT_MAX_NODES,
+    OUT_OF_DECIDABLE_REGIME,
     LogicBudgetError,
     LogicError,
+    LogicRegimeError,
     canonicalize,
 )
 
@@ -64,6 +66,15 @@ def check_equivalence(
             canonical_a=None,
             canonical_b=None,
             reason=f"canonicalization_budget_exceeded: {exc}",
+        )
+    except LogicRegimeError as exc:
+        # Out of the decidable propositional regime (quantified/predicate).
+        # Caught before the generic LogicError branch since it is a subclass.
+        return EquivalenceVerdict(
+            verdict=Verdict.REFUSED,
+            canonical_a=None,
+            canonical_b=None,
+            reason=f"{OUT_OF_DECIDABLE_REGIME}: {exc}",
         )
     except LogicError as exc:
         return EquivalenceVerdict(
