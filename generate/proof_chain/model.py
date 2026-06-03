@@ -37,26 +37,26 @@ class ProofNode:
     depends_on: tuple[str, ...]
     rule: str
 
-def __post_init__(self) -> None:
-    object.__setattr__(self, "depends_on", tuple(self.depends_on))
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "depends_on", tuple(self.depends_on))
 
-    if not isinstance(self.node_id, str) or not self.node_id.isidentifier():
-        raise ProofError(
-            "ProofNode.node_id must be a Python identifier str; "
-            f"got {self.node_id!r}"
-        )
-    if not isinstance(self.formula, str) or not self.formula.strip():
-        raise ProofError("ProofNode.formula must be a non-empty str")
-    if not isinstance(self.rule, str) or not self.rule.strip():
-        raise ProofError("ProofNode.rule must be a non-empty str")
-    if self.rule != self.rule.strip():
-        raise ProofError("ProofNode.rule must not have leading/trailing whitespace")
-    if self.rule == "premise" and self.depends_on:
-        raise ProofError('ProofNode.rule == "premise" requires empty depends_on')
-    if self.node_id in self.depends_on:
-        # A self-dependency is a length-1 cycle; the binding-graph acyclicity
-        # guard (ADR-0203) would also catch it, but refuse early and clearly.
-        raise ProofError(f"ProofNode {self.node_id!r} depends on itself")
+        if not isinstance(self.node_id, str) or not self.node_id.isidentifier():
+            raise ProofError(
+                "ProofNode.node_id must be a Python identifier str; "
+                f"got {self.node_id!r}"
+            )
+        if not isinstance(self.formula, str) or not self.formula.strip():
+            raise ProofError("ProofNode.formula must be a non-empty str")
+        if not isinstance(self.rule, str) or not self.rule.strip():
+            raise ProofError("ProofNode.rule must be a non-empty str")
+        if self.rule != self.rule.strip():
+            raise ProofError("ProofNode.rule must not have leading/trailing whitespace")
+        if self.rule == "premise" and self.depends_on:
+            raise ProofError('ProofNode.rule == "premise" requires empty depends_on')
+        if self.node_id in self.depends_on:
+            # A self-dependency is a length-1 cycle; the binding-graph acyclicity
+            # guard (ADR-0203) would also catch it, but refuse early and clearly.
+            raise ProofError(f"ProofNode {self.node_id!r} depends on itself")
 
 
 @dataclass(frozen=True, slots=True)

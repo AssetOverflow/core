@@ -266,6 +266,41 @@ def _collect_atoms(ast: _Ast) -> set[str]:
     return _collect_atoms(ast[1]) | _collect_atoms(ast[2])
 
 
+_BINARY_OPS: Final[dict[str, str]] = {"and": "&", "or": "|", "implies": "->", "iff": "<->"}
+
+
+def _unparse(ast: _Ast) -> str:
+    """Render an AST back to a fully-parenthesized formula string. Used to hand a
+    sub-formula (e.g. an implication's antecedent/consequent) back to
+    :func:`canonicalize`. Parenthesized everywhere so re-parsing is unambiguous."""
+    kind = ast[0]
+    if kind == "atom":
+        return ast[1]
+    if kind == "const":
+        return "true" if ast[1] else "false"
+    if kind == "not":
+        return f"(~{_unparse(ast[1])})"
+    return f"({_unparse(ast[1])} {_BINARY_OPS[kind]} {_unparse(ast[2])})"
+
+
+def parse_top_implication(formula: str) -> tuple[str, str] | None:
+    """If ``formula``'s top-level connective is ``->``, return
+    ``(antecedent, consequent)`` as formula strings; else ``None``.
+
+    Modus ponens needs the syntactic antecedent/consequent of an implication
+    premise — the ROBDD form does not preserve which side is which (``P->Q`` and
+    ``~P|Q`` share one diagram), so this works at the parse layer. Raises
+    :class:`LogicError` / :class:`LogicRegimeError` on malformed / out-of-regime
+    input, consistent with :func:`canonicalize`."""
+    _reject_out_of_regime_text(formula)
+    tokens = _tokenize(formula)
+    _reject_out_of_regime_tokens(tokens)
+    ast = _Parser(tokens).parse()
+    if ast[0] == "implies":
+        return _unparse(ast[1]), _unparse(ast[2])
+    return None
+
+
 # ---------------------------------------------------------------------------
 # ROBDD manager (hand-rolled, minimal: mk + apply + negate + unique table)
 # ---------------------------------------------------------------------------
