@@ -41,6 +41,14 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_runtime_config.py",
         "tests/test_cognitive_turn_pipeline.py",
         "tests/test_architectural_invariants.py",
+        # ADR-0043 — identity falsifiability: ratified identity packs must
+        # produce distinct, directionally-correct articulations, with a
+        # pack-invariant grounding/refusal floor and zero fabrication.  Lives
+        # only under ``full`` historically, so a divergence regression cleared
+        # the PR gate and surfaced only post-merge.  Promoted into smoke so
+        # the falsifiability claim blocks-on-regression rather than
+        # detect-after-merge.
+        "tests/test_pack_measurements_phase2.py",
     ),
     "runtime": (
         "tests/test_chat_runtime.py",
