@@ -23,7 +23,7 @@
     {
       "case_id": "gsm8k-train-sample-v1-0003",
       "notes": "",
-      "primary_barrier": "novel_initial_verb",
+      "primary_barrier": "admitted",
       "secondary_barriers": [
         "distributive_multiply",
         "rate_price"
@@ -147,11 +147,10 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0019",
-      "notes": "",
-      "primary_barrier": "rate_price",
+      "notes": "Reader now resolves the prior '$400 per vet appointment' barrier; first refusal moved to 'After the first appointment, John paid $100 for pet insurance that covers 80% of the subsequent visits' \u2014 needs percentage_rate (80% of a subsequent-visit set).",
+      "primary_barrier": "percentage_rate",
       "secondary_barriers": [
-        "percentage_of",
-        "conditional_branch"
+        "rate_price"
       ]
     },
     {
@@ -165,7 +164,7 @@
     {
       "case_id": "gsm8k-train-sample-v1-0021",
       "notes": "",
-      "primary_barrier": "distributive_multiply",
+      "primary_barrier": "admitted",
       "secondary_barriers": []
     },
     {
@@ -179,24 +178,25 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0023",
-      "notes": "",
-      "primary_barrier": "novel_initial_verb",
+      "notes": "Reader now resolves 'Nicole collected 400 Pokemon cards' (initial); refuses on 'Cindy collected twice as many, and Rex collected half of Nicole and Cindy's combined total' \u2014 needs compound_comparative ('twice as many') plus fraction_operand ('half of combined').",
+      "primary_barrier": "compound_comparative",
       "secondary_barriers": [
-        "fraction_operand",
-        "distributive_divide"
+        "fraction_operand"
       ]
     },
     {
       "case_id": "gsm8k-train-sample-v1-0024",
       "notes": "",
-      "primary_barrier": "multi_day_accumulation",
+      "primary_barrier": "admitted",
       "secondary_barriers": []
     },
     {
       "case_id": "gsm8k-train-sample-v1-0025",
-      "notes": "",
+      "notes": "Reader now resolves 'Lilibeth fills 6 baskets where each basket holds 50 strawberries'; refuses on the question 'If three of Lilibeth's friends pick the same amount as her, how many ... in all?' \u2014 needs distributive_multiply (3 friends x her amount) over a total question.",
       "primary_barrier": "distributive_multiply",
-      "secondary_barriers": []
+      "secondary_barriers": [
+        "complex_question"
+      ]
     },
     {
       "case_id": "gsm8k-train-sample-v1-0026",
@@ -208,10 +208,10 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0027",
-      "notes": "",
-      "primary_barrier": "multi_attribute_accumulation",
+      "notes": "Reader now resolves 'Malcolm has 240 followers on Instagram and 500 on Facebook'; refuses on 'The number of followers he has on Twitter is half the number ... on Instagram and Facebook combined' \u2014 needs fraction_operand ('half of combined').",
+      "primary_barrier": "fraction_operand",
       "secondary_barriers": [
-        "multi_step_complex"
+        "compound_statement"
       ]
     },
     {
@@ -364,11 +364,9 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0047",
-      "notes": "",
-      "primary_barrier": "novel_initial_verb",
-      "secondary_barriers": [
-        "embedded_per_unit"
-      ]
+      "notes": "Reader now resolves 'John bakes 12 coconut macaroons, each weighing 5 ounces'; refuses on 'He then packs an equal number of the macaroons in 4 different brown bags' \u2014 needs partition_divide (12 / 4 equal).",
+      "primary_barrier": "partition_divide",
+      "secondary_barriers": []
     },
     {
       "case_id": "gsm8k-train-sample-v1-0048",
@@ -394,8 +392,8 @@
   ],
   "schema_version": 2,
   "summary": {
-    "admitted": 3,
-    "refused": 47,
+    "admitted": 6,
+    "refused": 44,
     "total_cases": 50,
     "wrong": 0
   }

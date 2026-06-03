@@ -22,29 +22,60 @@ def test_wrong_is_zero() -> None:
     assert rescan["summary"]["wrong"] == 0
 
 
-def test_admission_set_unchanged() -> None:
-    """S.4 did not change the admission set: {0014, 0018, 0042}."""
+def test_admission_set_grew_monotonically_over_v3() -> None:
+    """The reader admits the v3 set plus three new *correct* solves.
+
+    v3 admitted {0014, 0018, 0042}. Later capability waves added three correct
+    admissions (0003, 0021, 0024) — the +3 that moved the serving metric from
+    3 to 6. No v3 admission was lost (monotonic), and wrong stays 0
+    (test_wrong_is_zero), so every gain is a sound solve.
+    """
     rescan, _ = build_rescan()
     admitted = {
         c["case_id"] for c in rescan["per_case"] if c["current_outcome"] == "admitted"
     }
-    assert admitted == {
+    v3_admitted = {
         "gsm8k-train-sample-v1-0014",
         "gsm8k-train-sample-v1-0018",
         "gsm8k-train-sample-v1-0042",
     }
+    # No regression: every case v3 solved is still solved.
+    assert v3_admitted <= admitted
+    assert admitted == v3_admitted | {
+        "gsm8k-train-sample-v1-0003",
+        "gsm8k-train-sample-v1-0021",
+        "gsm8k-train-sample-v1-0024",
+    }
 
 
-def test_exactly_two_shifts_v3_to_v4() -> None:
-    """S.4 shifted exactly two cases (gsm8k-0038, gsm8k-0046)."""
+def test_barrier_shifts_from_v3_baseline() -> None:
+    """The live reader has diverged from the v3 baseline on ten cases.
+
+    S.4 shifted two (0038, 0046). Later capability waves (0163-D.2, 0174, 0178,
+    0191, 0192) advanced the reader past five more v3-era barriers (0019, 0023,
+    0025, 0027, 0047) — still refusing, one sentence deeper — and turned three
+    refusals into correct admissions (0003, 0021, 0024). All ten are
+    soundness-preserving (wrong stays 0); the five still-refusing shifts each
+    carry an override in _V4_BARRIER_OVERRIDES.
+    """
     rescan, _ = build_rescan()
-    assert rescan["summary"]["barrier_shifted_v3_to_v4"] == 2
+    # 10 = 7 first-refusal/barrier shifts + 3 refused->admitted transitions
+    # (0003, 0021, 0024), which also count as shifts (outcome changed).
+    assert rescan["summary"]["barrier_shifted_v3_to_v4"] == 10
     shifted = sorted(
         c["case_id"] for c in rescan["per_case"] if c["barrier_shifted"]
     )
     assert shifted == [
+        "gsm8k-train-sample-v1-0003",
+        "gsm8k-train-sample-v1-0019",
+        "gsm8k-train-sample-v1-0021",
+        "gsm8k-train-sample-v1-0023",
+        "gsm8k-train-sample-v1-0024",
+        "gsm8k-train-sample-v1-0025",
+        "gsm8k-train-sample-v1-0027",
         "gsm8k-train-sample-v1-0038",
         "gsm8k-train-sample-v1-0046",
+        "gsm8k-train-sample-v1-0047",
     ]
 
 

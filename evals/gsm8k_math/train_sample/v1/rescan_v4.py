@@ -25,14 +25,81 @@ _V3_RESCAN_PATH = _HERE / "refusal_rescan_v3.json"
 _RESCAN_V4_PATH = _HERE / "refusal_rescan_v4.json"
 _TAXONOMY_V4_PATH = _HERE / "refusal_taxonomy_v4.json"
 
+# Matches both refusal-reason shapes the candidate-graph emits:
+#   "no admissible candidate for {statement|question}: '<text>'"
+#   "recognizer matched but produced no injection for statement: '<text>' (category=<c>)"
+# (PR #359 added the second shape + trailing "(category=...)").  Greedy capture
+# with an anchored closing quote tolerates statements containing apostrophes
+# (e.g. "Rudolph's"); the optional category suffix is consumed after the quote.
 _FIRST_REFUSAL_RE = re.compile(
-    r"no admissible candidate for (?:statement|question): ['\"](.+?)['\"]$"
+    r"(?:no admissible candidate for|recognizer matched but produced no injection for) "
+    r"(?:statement|question): ['\"](.+)['\"](?:\s*\(category=[^)]*\))?\s*$"
 )
 
 # Barrier reclassification for cases whose first-refusal sentence changed since v3.
-# S.4 shifted exactly two cases (0038, 0046) by widening initial-state subject
-# shapes (indefinite-article + prepositional-prefix existential).
+# This rescan re-runs the LIVE reader (see module docstring), so it tracks the
+# reader's current divergence from the v3 baseline — not only the S.4 cut.
+#
+# S.4 originally shifted two cases (0038, 0046) by widening initial-state subject
+# shapes (indefinite-article + prepositional-prefix existential). Later capability
+# waves (ADR-0163-D.2 discrete-count, 0174 held-hypothesis, 0178 compose, 0191
+# completeness guard, 0192 discrete_count) advanced the reader past five more
+# v3-era barriers, shifting their first-refusal one sentence deeper. All shifts
+# are soundness-preserving (the cases still refuse; wrong stays 0). Each shifted
+# case carries an override documenting its new first-refusal barrier.
+# NOTE: because this asserts against the live reader, future reader advances will
+# add shifts here — a follow-up should cut a frozen v5 snapshot or derive the
+# expected set from the committed artifact instead of the live run.
 _V4_BARRIER_OVERRIDES: dict[str, dict[str, Any]] = {
+    "gsm8k-train-sample-v1-0019": {
+        "primary_barrier": "percentage_rate",
+        "secondary_barriers": ["rate_price"],
+        "notes": (
+            "Reader now resolves the prior '$400 per vet appointment' barrier; "
+            "first refusal moved to 'After the first appointment, John paid $100 "
+            "for pet insurance that covers 80% of the subsequent visits' — needs "
+            "percentage_rate (80% of a subsequent-visit set)."
+        ),
+    },
+    "gsm8k-train-sample-v1-0023": {
+        "primary_barrier": "compound_comparative",
+        "secondary_barriers": ["fraction_operand"],
+        "notes": (
+            "Reader now resolves 'Nicole collected 400 Pokemon cards' (initial); "
+            "refuses on 'Cindy collected twice as many, and Rex collected half of "
+            "Nicole and Cindy's combined total' — needs compound_comparative "
+            "('twice as many') plus fraction_operand ('half of combined')."
+        ),
+    },
+    "gsm8k-train-sample-v1-0025": {
+        "primary_barrier": "distributive_multiply",
+        "secondary_barriers": ["complex_question"],
+        "notes": (
+            "Reader now resolves 'Lilibeth fills 6 baskets where each basket holds "
+            "50 strawberries'; refuses on the question 'If three of Lilibeth's "
+            "friends pick the same amount as her, how many ... in all?' — needs "
+            "distributive_multiply (3 friends x her amount) over a total question."
+        ),
+    },
+    "gsm8k-train-sample-v1-0027": {
+        "primary_barrier": "fraction_operand",
+        "secondary_barriers": ["compound_statement"],
+        "notes": (
+            "Reader now resolves 'Malcolm has 240 followers on Instagram and 500 "
+            "on Facebook'; refuses on 'The number of followers he has on Twitter "
+            "is half the number ... on Instagram and Facebook combined' — needs "
+            "fraction_operand ('half of combined')."
+        ),
+    },
+    "gsm8k-train-sample-v1-0047": {
+        "primary_barrier": "partition_divide",
+        "secondary_barriers": [],
+        "notes": (
+            "Reader now resolves 'John bakes 12 coconut macaroons, each weighing "
+            "5 ounces'; refuses on 'He then packs an equal number of the macaroons "
+            "in 4 different brown bags' — needs partition_divide (12 / 4 equal)."
+        ),
+    },
     "gsm8k-train-sample-v1-0038": {
         "primary_barrier": "compound_comparative",
         "secondary_barriers": ["aggregate_sum"],
