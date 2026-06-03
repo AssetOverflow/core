@@ -26,6 +26,15 @@ The three `modus_ponens` cases are validated at entailment only. Their typed rul
 reasons (`conclusion_mismatch` / `missing_implication`) are marked pending phase
 2.3 / ADR-0205, when the rule checker lands.
 
+`modus_ponens_cases.json` is the independent 24-case adversarial MP corpus
+authored against the ADR-0202/ADR-0205 contract. It was not authored by validating
+against the implementation. After ADR-0205 landed, reconciliation cross-checked
+24/24 on outcome and reason against the real rule at merge `b304270`. Reason
+labels are consolidated to ADR-0205's five closed reasons:
+`unique_canonical_conclusion`, `missing_implication`,
+`unestablished_antecedent`, `conclusion_mismatch`, and
+`conclusion_disagreement`.
+
 The two out-of-regime cases assert `out_of_decidable_regime` and record that this
 is the `LogicRegimeError` reason produced by merged main after ADR-0201.1.
 
