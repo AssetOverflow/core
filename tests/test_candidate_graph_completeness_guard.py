@@ -89,3 +89,64 @@ def test_guard_is_refusal_only_not_answer_changing() -> None:
     # Same value, same unit-bearing graph — guard does not mutate solving.
     assert res.answer == 438.0
     assert res.selected_graph is not None
+
+
+@pytest.mark.parametrize(
+    ("factor", "comparative"),
+    [
+        ("2", "as many"),
+        ("3", "as many"),
+        ("5", "as many"),
+        ("two", "as many"),
+        ("three", "as many"),
+        ("five", "as many"),
+        ("3", "more"),
+        ("three", "more"),
+        ("3", "the number of"),
+        ("3", "the"),
+    ],
+)
+def test_n_times_without_reference_refuses(
+    factor: str, comparative: str
+) -> None:
+    """A dropped comparative multiplier must not admit as an initial
+    possession of ``<N> times``.
+
+    This is the Phase-5b hard negative: if future emission work makes
+    comparative-multiplicative surfaces reach the graph, the gate must
+    refuse incomplete ``<N> times ...`` clauses instead of consuming
+    the scalar as an ordinary count.
+    """
+    res = parse_and_solve(
+        "Tom has 7 apples. "
+        f"Jerry has {factor} times {comparative} apples. "
+        "How many apples do they have together?"
+    )
+    assert res.answer is None
+
+
+def test_n_times_as_many_with_reference_still_solves() -> None:
+    """The guard only blocks incomplete comparative clauses; a fully
+    referenced compare_multiplicative graph still solves."""
+    res = parse_and_solve(
+        "Tom has 7 apples. Jerry has 3 times as many apples as Tom. "
+        "How many apples do they have together?"
+    )
+    assert res.answer == 28.0
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Tom has 7 apples. Jerry has twice as many apples. "
+        "How many apples do they have together?",
+        "Tom has 7 apples. Jerry has double the apples. "
+        "How many apples do they have together?",
+        "Ivan has 20 dice. Jerry has twice as many dice as Ivan. "
+        "How many dice do they have altogether?",
+    ],
+)
+def test_existing_multiplier_refusals_stay_refused(question: str) -> None:
+    """Existing safe multiplier refusals must not become admissions."""
+    res = parse_and_solve(question)
+    assert res.answer is None

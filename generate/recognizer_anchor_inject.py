@@ -304,6 +304,17 @@ def _build_initial_from_discrete_count(
     if value is None:
         return None
 
+    # A surface like "Jerry has 3 times as many apples", "3 times more
+    # apples", or "3 times the apples" is not an initial possession of
+    # "3 times"; it is an incomplete comparative-multiplicative clause.
+    # Letting this through as an initial consumes the scalar token and
+    # defeats the ADR-0191 completeness guard. Refuse here until a real
+    # compare_multiplicative operation can be emitted.
+    if counted_noun.lower() == "times" and _count_token_followed_by_times(
+        sentence, count_token
+    ):
+        return None
+
     # CandidateInitial requires an anchor verb token recognized in its
     # post-init whitelist (has/have/had/owns/owned/holds/held/contains/
     # contained — matched by the recognizer's narrowness rule).  We pick
@@ -431,6 +442,26 @@ def _locate_token(sentence: str, target_lc: str) -> str | None:
         if tok == target_lc:
             return tok
     return None
+
+
+def _count_token_followed_by_times(sentence: str, count_token: str) -> bool:
+    """True when the count surface is immediately followed by ``times``.
+
+    The discrete-count recognizer can otherwise misread comparative
+    multiplier surfaces as an initial possession of ``<N> times``. This
+    check intentionally sits at the injector boundary: it only suppresses
+    the malformed initial candidate and does not create any new
+    admitting path.
+    """
+    target = count_token.lower()
+    tokens = [
+        raw.strip(".,;:!?\"'()[]{}").lower()
+        for raw in sentence.split()
+    ]
+    for i, tok in enumerate(tokens[:-1]):
+        if tok == target and tokens[i + 1] == "times":
+            return True
+    return False
 
 
 def _resolve_count_value(count_token: str, count_kind: str) -> int | None:
