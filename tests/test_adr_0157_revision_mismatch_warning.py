@@ -32,7 +32,7 @@ def test_matching_revision_emits_no_warning(tmp_path) -> None:
     _write_manifest(tmp_path, revision="abc123def456")
     store = EngineStateStore(tmp_path)
 
-    with patch("engine_state._git_revision", return_value="abc123def456"):
+    with patch("engine_state.get_git_revision", return_value="abc123def456"):
         with warnings.catch_warnings():
             warnings.simplefilter("error", RuntimeWarning)
             manifest = store.load_manifest()
@@ -45,7 +45,7 @@ def test_mismatched_revision_emits_runtime_warning(tmp_path) -> None:
     _write_manifest(tmp_path, revision="oldrevisionabc")
     store = EngineStateStore(tmp_path)
 
-    with patch("engine_state._git_revision", return_value="newrevisionxyz"):
+    with patch("engine_state.get_git_revision", return_value="newrevisionxyz"):
         with pytest.warns(RuntimeWarning, match="oldrevisionabc"):
             manifest = store.load_manifest()
 
@@ -56,7 +56,7 @@ def test_warning_message_contains_both_revisions(tmp_path) -> None:
     _write_manifest(tmp_path, revision="stored000000")
     store = EngineStateStore(tmp_path)
 
-    with patch("engine_state._git_revision", return_value="current11111"):
+    with patch("engine_state.get_git_revision", return_value="current11111"):
         with pytest.warns(RuntimeWarning) as record:
             store.load_manifest()
 
@@ -70,7 +70,7 @@ def test_manifest_returned_intact_despite_mismatch(tmp_path) -> None:
     _write_manifest(tmp_path, revision="old", turn_count=42)
     store = EngineStateStore(tmp_path)
 
-    with patch("engine_state._git_revision", return_value="new"):
+    with patch("engine_state.get_git_revision", return_value="new"):
         with pytest.warns(RuntimeWarning):
             manifest = store.load_manifest()
 
@@ -84,7 +84,7 @@ def test_stored_unknown_revision_suppresses_warning(tmp_path) -> None:
     _write_manifest(tmp_path, revision="unknown")
     store = EngineStateStore(tmp_path)
 
-    with patch("engine_state._git_revision", return_value="abc123"):
+    with patch("engine_state.get_git_revision", return_value="abc123"):
         with warnings.catch_warnings():
             warnings.simplefilter("error", RuntimeWarning)
             manifest = store.load_manifest()
@@ -96,7 +96,7 @@ def test_current_unknown_revision_suppresses_warning(tmp_path) -> None:
     _write_manifest(tmp_path, revision="abc123def456")
     store = EngineStateStore(tmp_path)
 
-    with patch("engine_state._git_revision", return_value="unknown"):
+    with patch("engine_state.get_git_revision", return_value="unknown"):
         with warnings.catch_warnings():
             warnings.simplefilter("error", RuntimeWarning)
             manifest = store.load_manifest()
