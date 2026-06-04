@@ -1,4 +1,4 @@
-<!-- CANONICAL | evals/deductive_logic/contract.md | 2026-06-04 | deductive-logic lane | what CORE's propositional entailment operator decides, and its honesty boundary | verified: holdout 500/500 correct wrong=0, 8000-case engine-vs-oracle fuzz 0 disagreements -->
+<!-- CANONICAL | evals/deductive_logic/contract.md | 2026-06-04 | deductive-logic lane | what CORE's propositional entailment operator decides, and its honesty boundary | verified: holdout 500/500 correct wrong=0, deterministic 3,000-case engine-vs-oracle fuzz (2,796 definite) 0 disagreements -->
 
 # deductive-logic eval lane (ADR-0206)
 
@@ -27,8 +27,14 @@ make stochastic.
 |---|---:|---:|---:|---:|---:|
 | dev | 200 | 200 | **0** | **0** | 74 |
 | **holdout v1** | 500 | **500** | **0** | **0** | **227** (117 entailed + 110 refuted) |
-| external mirror v1 | 16 | **16** | **0** | **0** | 12 |
-| fuzz (fresh random, engine vs oracle) | 7,340 | 7,340 | **0** | **0** | 3,360 |
+| external (hand-authored, illustrative) v1 | 16 | **16** | **0** | **0** | 12 |
+| fuzz (seed 424242, engine vs oracle) | 2,796 | 2,796 | **0** | **0** | 1,241 |
+
+(The fuzz row is the deterministic `test_engine_matches_independent_oracle_fuzz`
+gate: 3,000 random formulas, 2,796 of them in-regime/definite, **0**
+engine-vs-oracle disagreements; a complementary 4,000-case fuzz exercises
+inconsistent-premise refusal. The property holds far more broadly than the
+committed gate — these are the numbers CI actually pins, not a headline count.)
 
 **100% correct with `wrong = 0` and `refused = 0` on committed in-regime
 cases**, and the correct answers include hundreds of non-trivial multi-hop
@@ -39,8 +45,9 @@ entailments and refutations — not just `unknown` pass-throughs.
 The gold is **not** computed by the engine under test. It comes from an *independent*
 truth-table decision procedure (`oracle.py`): a separate parser + brute-force model
 enumeration over all 2^k assignments, sharing **no code** with the ROBDD engine. Two
-independently-coded sound procedures agreeing on **8,000** fresh random problems with
-**zero disagreements** is real soundness evidence — exactly the property the GSM8K
+independently-coded sound procedures agreeing on every committed case plus a
+deterministic 3,000-case fuzz (2,796 definite, **zero disagreements**) is real
+soundness evidence — exactly the property the GSM8K
 composer could never establish (it could not tell its 2 right answers from its 87
 wrong ones). A single engine/oracle disagreement fails the test suite. A refusal
 on a committed in-regime case is also a lane failure; refusal-boundary cases are
@@ -89,6 +96,6 @@ evals/deductive_logic/
   runner.py            # engine vs gold; correct/wrong/refused + class breakdown
   dev/cases.jsonl      # seed 20260604, 200 cases
   holdout/v1/cases.jsonl  # seed 70260604, 500 cases (disjoint)
-  external/v1/cases.jsonl # frozen finite-entity/proposition mirror cases
+  external/v1/cases.jsonl # frozen hand-authored propositional cases (illustrative; NOT a published-benchmark mirror)
   refusal/v1/cases.jsonl  # refusal-boundary cases, tested separately
 ```

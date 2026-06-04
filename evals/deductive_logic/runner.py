@@ -22,6 +22,7 @@ cases live in unit tests, not in these dev/holdout formula splits.
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from collections import Counter
@@ -30,6 +31,14 @@ from pathlib import Path
 from generate.proof_chain.entail import Entailment, evaluate_entailment
 
 _ROOT = Path(__file__).resolve().parent
+
+# The committed splits this lane scores (refusal-boundary cases live in unit
+# tests, not here). Order is fixed for deterministic report bytes.
+_SPLITS: tuple[tuple[str, Path], ...] = (
+    ("dev", _ROOT / "dev" / "cases.jsonl"),
+    ("holdout_v1", _ROOT / "holdout" / "v1" / "cases.jsonl"),
+    ("external_v1", _ROOT / "external" / "v1" / "cases.jsonl"),
+)
 
 
 def _load(path: Path) -> list[dict]:
@@ -103,7 +112,72 @@ def _run(name: str, path: Path) -> dict:
     return report
 
 
-if __name__ == "__main__":
+def build_combined_report() -> dict:
+    """Deterministic per-split + aggregate report over the committed splits.
+
+    Pure over the committed ``cases.jsonl`` files: same inputs → byte-identical
+    JSON (no examples lists, no timestamps), so it is safe to SHA-pin
+    (``scripts/verify_lane_shas.py``). The human-facing ``_run`` stdout view
+    keeps the example breakdowns; the pinned artifact carries only the counts
+    that constitute the capability claim.
+    """
+    splits: dict[str, dict] = {}
+    aggregate = {"n": 0, "correct": 0, "wrong": 0, "refused": 0}
+    for name, path in _SPLITS:
+        report = build_report(_load(path))
+        splits[name] = {
+            "n": report["n"],
+            "counts": report["counts"],
+            "by_gold": report["by_gold"],
+            "correct_by_gold": report["correct_by_gold"],
+            "all_cases_correct": report["all_cases_correct"],
+        }
+        aggregate["n"] += report["n"]
+        for key in ("correct", "wrong", "refused"):
+            aggregate[key] += report["counts"][key]
+    return {
+        "schema_version": 1,
+        "lane": "deductive_logic",
+        "adr": "ADR-0206",
+        "splits": splits,
+        "aggregate": aggregate,
+        "wrong_is_zero": aggregate["wrong"] == 0,
+        "refused_is_zero": aggregate["refused"] == 0,
+        "all_correct": all(s["all_cases_correct"] for s in splits.values()),
+    }
+
+
+def write_combined_report(path: Path) -> dict:
+    report = build_combined_report()
+    path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return report
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--report",
+        type=Path,
+        default=None,
+        help=(
+            "write the deterministic combined JSON report to this path "
+            "(used by scripts/verify_lane_shas.py); default prints the "
+            "human-facing per-split breakdown to stdout"
+        ),
+    )
+    args = parser.parse_args(argv)
+
+    if args.report is not None:
+        report = write_combined_report(args.report)
+        gate_ok = (
+            report["wrong_is_zero"]
+            and report["refused_is_zero"]
+            and report["all_correct"]
+        )
+        return 0 if gate_ok else 1
+
     reports = {
         "dev": _run("dev", _ROOT / "dev" / "cases.jsonl"),
         "holdout-v1": _run("holdout-v1", _ROOT / "holdout" / "v1" / "cases.jsonl"),
@@ -112,4 +186,8 @@ if __name__ == "__main__":
     total_wrong = sum(r["counts"]["wrong"] for r in reports.values())
     total_refused = sum(r["counts"]["refused"] for r in reports.values())
     all_correct = all(r["all_cases_correct"] for r in reports.values())
-    sys.exit(0 if total_wrong == 0 and total_refused == 0 and all_correct else 1)
+    return 0 if total_wrong == 0 and total_refused == 0 and all_correct else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -70,6 +70,10 @@ _LANE_ADR: dict[str, tuple[str, str]] = {
         "ADR-0131",
         "Math teaching corpus replays deterministically; all chains pass exit criterion (correct_rate=1.0, wrong=0)",
     ),
+    "deductive_logic_v1": (
+        "ADR-0206",
+        "Propositional entailment scored against an independent truth-table oracle; dev+holdout+external 716/716 correct, wrong=0, refused=0",
+    ),
 }
 
 

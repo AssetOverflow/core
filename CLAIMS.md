@@ -42,6 +42,7 @@ is a CI failure (`.github/workflows/lane-shas.yml`).
 | ADR-0099 | `public_demo` | Public showcase runs deterministically under 30s; all claims supported | `evals/public_demo/results/v1_dev.json` | `e323adb35ea17987991395424c603ff93bca08c11bc2713bd9f6338e86bb269f` |
 | ADR-0104 | `curriculum_loop_closure` | Curriculum-sourced proposals route through single reviewed teaching path | `evals/curriculum_loop_closure/results/v1_dev.json` | `b46d56b2d209172cc3ffaf3776dc8dcfe55093f13587c5cb67372be6dfa23e8d` |
 | ADR-0131 | `math_teaching_corpus_v1` | Math teaching corpus replays deterministically; all chains pass exit criterion (correct_rate=1.0, wrong=0) | `evals/math_teaching_corpus/v1/report.json` | `eaf160d145da29f9050ede8d58bf111b0f651dd40aeae9201857d0b97e014dd4` |
+| ADR-0206 | `deductive_logic_v1` | Propositional entailment scored against an independent truth-table oracle; dev+holdout+external 716/716 correct, wrong=0, refused=0 | `evals/deductive_logic/report.json` | `97a230949016e38d5e3f37a69e4245b320575ee70e5af92ff7607f7b05f74b5f` |
 
 ## Verification
 

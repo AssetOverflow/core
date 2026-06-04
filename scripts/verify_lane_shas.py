@@ -41,6 +41,7 @@ PINNED_SHAS: dict[str, str] = {
     "demo_composition": "3a3d09f3a87462737e615c2dd3481b9e13e5ff8fadee0043c37873494ded556d",
     "public_demo": "e323adb35ea17987991395424c603ff93bca08c11bc2713bd9f6338e86bb269f",
     "math_teaching_corpus_v1": "eaf160d145da29f9050ede8d58bf111b0f651dd40aeae9201857d0b97e014dd4",
+    "deductive_logic_v1": "97a230949016e38d5e3f37a69e4245b320575ee70e5af92ff7607f7b05f74b5f",
 }
 
 
@@ -51,10 +52,19 @@ class LaneSpec:
     report_relative: str
     accepts_report_flag: bool = True
     extra_args: tuple[str, ...] = field(default_factory=tuple)
+    # Run via ``python -m pkg.mod`` instead of ``python path/to/runner.py``.
+    # Required when the runner's own directory holds a module that would shadow
+    # an absolute import in script mode — e.g. the deductive lane's local
+    # ``generate.py`` shadows the ``generate`` package when run as a script.
+    run_as_module: bool = False
 
     @property
     def runner_path(self) -> Path:
         return REPO_ROOT / self.runner_module
+
+    @property
+    def runner_dotted(self) -> str:
+        return self.runner_module.removesuffix(".py").replace("/", ".")
 
     @property
     def canonical_report(self) -> Path:
@@ -105,6 +115,12 @@ LANE_SPECS: tuple[LaneSpec, ...] = (
         report_relative="evals/math_teaching_corpus/v1/report.json",
         accepts_report_flag=False,
     ),
+    LaneSpec(
+        lane_id="deductive_logic_v1",
+        runner_module="evals/deductive_logic/runner.py",
+        report_relative="evals/deductive_logic/report.json",
+        run_as_module=True,
+    ),
 )
 
 
@@ -112,7 +128,10 @@ def _invoke_runner(spec: LaneSpec, *, target_path: Path | None = None) -> Path:
     import os
 
     env = {"PYTHONPATH": str(REPO_ROOT), **os.environ}
-    args: list[str] = [sys.executable, str(spec.runner_path)]
+    if spec.run_as_module:
+        args = [sys.executable, "-m", spec.runner_dotted]
+    else:
+        args = [sys.executable, str(spec.runner_path)]
     if target_path is not None and spec.accepts_report_flag:
         args.extend(["--report", str(target_path)])
     args.extend(spec.extra_args)
