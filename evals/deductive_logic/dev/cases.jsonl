@@ -1,0 +1,200 @@
+{"gold": "unknown", "id": "dl-dev-v1-0000", "premises": ["e", "(~b & f) -> c", "(a & ~d) -> ~g", "(g & ~b) -> g", "(~g & ~b) -> ~a", "(c) -> e"], "query": "a"}
+{"gold": "unknown", "id": "dl-dev-v1-0001", "premises": ["~b", "(e) -> ~f", "(~g & a) -> g", "(e & a) -> b", "(b & e) -> ~e"], "query": "e"}
+{"gold": "refuted", "id": "dl-dev-v1-0002", "premises": ["~d", "(~d & ~e) -> d", "(a) -> d", "(d) -> c", "(~a) -> ~d", "(c & ~e) -> c"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0003", "premises": ["~a", "(~g) -> d", "(~e & d) -> ~f", "(~b & ~g) -> ~f", "(a) -> c", "(~b & ~f) -> g"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0004", "premises": ["~c", "~g", "b", "(~d) -> ~g", "(b) -> f"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0005", "premises": ["e", "~f", "d", "(~a & ~f) -> ~a", "(~b) -> b", "(d & ~e) -> e", "(~e) -> d"], "query": "a"}
+{"gold": "entailed", "id": "dl-dev-v1-0006", "premises": ["~e", "b", "(~c & ~f) -> e", "(~c) -> ~a"], "query": "b"}
+{"gold": "unknown", "id": "dl-dev-v1-0007", "premises": ["~a", "~g", "(e & d) -> ~c", "(e & d) -> ~f", "(~d) -> d", "(e & ~a) -> e", "(~a & c) -> ~g"], "query": "~e"}
+{"gold": "unknown", "id": "dl-dev-v1-0008", "premises": ["~a", "(b) -> ~f", "(b) -> c"], "query": "~f"}
+{"gold": "refuted", "id": "dl-dev-v1-0009", "premises": ["c", "~d", "(f) -> f", "(~c & ~d) -> c", "(~c & ~d) -> f", "(g) -> ~c", "(~d) -> f"], "query": "~f"}
+{"gold": "entailed", "id": "dl-dev-v1-0010", "premises": ["c", "~g", "(g & c) -> g", "(b) -> ~c", "(~c & b) -> ~g", "(g) -> ~c"], "query": "c"}
+{"gold": "refuted", "id": "dl-dev-v1-0011", "premises": ["d", "~c", "(c) -> d", "(~f & a) -> ~d", "(f & a) -> f", "(f & a) -> ~c"], "query": "~d"}
+{"gold": "entailed", "id": "dl-dev-v1-0012", "premises": ["~g", "d", "~b", "(b) -> ~g", "(~e) -> ~c"], "query": "~b"}
+{"gold": "refuted", "id": "dl-dev-v1-0013", "premises": ["b", "a", "(e) -> e", "(~b & f) -> b", "(~e) -> d"], "query": "~a"}
+{"gold": "unknown", "id": "dl-dev-v1-0014", "premises": ["a", "~e", "(f) -> c", "(c & f) -> a"], "query": "~c"}
+{"gold": "entailed", "id": "dl-dev-v1-0015", "premises": ["~e", "(~b) -> e", "(b) -> ~e"], "query": "~e"}
+{"gold": "entailed", "id": "dl-dev-v1-0016", "premises": ["g", "~b", "(~d) -> ~g", "(a & e) -> b", "(e & f) -> c", "(~d) -> ~d"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0017", "premises": ["~f", "~b", "(~d & c) -> ~a", "(d & c) -> a", "(~c & f) -> ~c", "(~f & b) -> ~d"], "query": "g"}
+{"gold": "unknown", "id": "dl-dev-v1-0018", "premises": ["~a", "(b) -> g", "(g) -> b", "(g & a) -> ~a"], "query": "b"}
+{"gold": "unknown", "id": "dl-dev-v1-0019", "premises": ["~f", "(d & ~f) -> a", "(c) -> b"], "query": "~a"}
+{"gold": "unknown", "id": "dl-dev-v1-0020", "premises": ["a", "d", "b", "(~f & c) -> ~d", "(~f & ~b) -> ~b", "(~b & f) -> ~e"], "query": "e"}
+{"gold": "entailed", "id": "dl-dev-v1-0021", "premises": ["b", "e", "(~e & b) -> ~b", "(~b & ~f) -> ~f", "(a & ~f) -> ~f", "(a) -> ~b", "(~f) -> a"], "query": "~a"}
+{"gold": "unknown", "id": "dl-dev-v1-0022", "premises": ["a", "~e", "(~c) -> ~f", "(a & f) -> ~g", "(c & ~f) -> e", "(a) -> a"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0023", "premises": ["~g", "f", "~c", "(~b & ~d) -> a", "(~c & ~a) -> g", "(e) -> c"], "query": "~b"}
+{"gold": "refuted", "id": "dl-dev-v1-0024", "premises": ["d", "c", "(d) -> ~a", "(~b & a) -> ~g"], "query": "~c"}
+{"gold": "unknown", "id": "dl-dev-v1-0025", "premises": ["~f", "(~f & b) -> c", "(a) -> a", "(c & f) -> ~b", "(~b & c) -> b"], "query": "a"}
+{"gold": "unknown", "id": "dl-dev-v1-0026", "premises": ["~e", "(~a) -> ~a", "(c) -> ~d", "(~d) -> ~c"], "query": "~a"}
+{"gold": "unknown", "id": "dl-dev-v1-0027", "premises": ["~e", "~d", "(f) -> ~b", "(~d) -> ~e", "(e & ~c) -> ~d", "(b) -> f"], "query": "c"}
+{"gold": "refuted", "id": "dl-dev-v1-0028", "premises": ["~g", "(~f & ~d) -> c", "(~c) -> f", "(~f & ~g) -> c"], "query": "g"}
+{"gold": "unknown", "id": "dl-dev-v1-0029", "premises": ["a", "(e & ~b) -> g", "(a) -> e", "(e & ~g) -> a"], "query": "~g"}
+{"gold": "unknown", "id": "dl-dev-v1-0030", "premises": ["b", "g", "(~e & ~c) -> b", "(~a) -> ~e", "(~f) -> ~f", "(b & ~c) -> f"], "query": "~e"}
+{"gold": "unknown", "id": "dl-dev-v1-0031", "premises": ["e", "(g) -> d", "(g) -> ~f", "(e & b) -> f", "(~e) -> ~d", "(b & g) -> ~c"], "query": "b"}
+{"gold": "entailed", "id": "dl-dev-v1-0032", "premises": ["e", "~c", "~f", "(g & ~d) -> ~c", "(~g & c) -> f", "(~c) -> ~f", "(~g) -> ~d", "(~a & ~f) -> a"], "query": "a"}
+{"gold": "entailed", "id": "dl-dev-v1-0033", "premises": ["~b", "~g", "(g) -> b", "(~d & g) -> ~e"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0034", "premises": ["~d", "b", "(~c) -> g", "(~g) -> ~c"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0035", "premises": ["d", "(~g & ~e) -> ~b", "(~e) -> d"], "query": "~g"}
+{"gold": "entailed", "id": "dl-dev-v1-0036", "premises": ["d", "(~c) -> ~d", "(~d) -> ~d"], "query": "c"}
+{"gold": "refuted", "id": "dl-dev-v1-0037", "premises": ["~g", "~e", "(c & ~g) -> e", "(~e & ~g) -> ~g", "(d & b) -> f"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0038", "premises": ["g", "(~b & e) -> f", "(~g) -> e", "(c & g) -> e", "(e & ~g) -> c", "(b) -> ~f"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0039", "premises": ["~b", "(b) -> ~e", "(~b) -> g", "(~b & f) -> ~g"], "query": "e"}
+{"gold": "unknown", "id": "dl-dev-v1-0040", "premises": ["~d", "(b & ~d) -> ~f", "(~d) -> b"], "query": "~a"}
+{"gold": "refuted", "id": "dl-dev-v1-0041", "premises": ["~e", "a", "~g", "(~c & f) -> e", "(~e & ~f) -> c", "(~c & f) -> ~d"], "query": "~c"}
+{"gold": "unknown", "id": "dl-dev-v1-0042", "premises": ["~d", "(~a & g) -> ~f", "(~g & c) -> ~a", "(~d & g) -> f"], "query": "~a"}
+{"gold": "unknown", "id": "dl-dev-v1-0043", "premises": ["e", "~d", "(g) -> ~g", "(~b & a) -> ~g", "(a & ~b) -> ~e"], "query": "a"}
+{"gold": "entailed", "id": "dl-dev-v1-0044", "premises": ["~b", "~c", "a", "(c & ~d) -> ~d", "(a & ~d) -> ~c"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0045", "premises": ["~b", "(e & d) -> ~g", "(b & d) -> ~b"], "query": "~e"}
+{"gold": "refuted", "id": "dl-dev-v1-0046", "premises": ["c", "e", "(~c) -> ~d", "(d & e) -> e", "(c & ~d) -> ~c", "(d & ~f) -> d", "(e & b) -> ~e"], "query": "~d"}
+{"gold": "unknown", "id": "dl-dev-v1-0047", "premises": ["~a", "(c & ~b) -> e", "(e) -> ~g"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0048", "premises": ["a", "~c", "(a & b) -> ~a", "(~b & e) -> ~b", "(d) -> d"], "query": "~d"}
+{"gold": "refuted", "id": "dl-dev-v1-0049", "premises": ["~b", "(~d) -> ~c", "(b) -> ~c", "(d & ~f) -> ~c", "(~b & c) -> ~f", "(~f & ~c) -> b"], "query": "~f"}
+{"gold": "unknown", "id": "dl-dev-v1-0050", "premises": ["~a", "g", "(~a) -> f", "(~f & ~a) -> a", "(g & ~f) -> ~a"], "query": "b"}
+{"gold": "unknown", "id": "dl-dev-v1-0051", "premises": ["g", "(b & d) -> ~f", "(a) -> ~c", "(~b & ~f) -> ~g"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0052", "premises": ["f", "~g", "(~e & ~d) -> ~e", "(~g & ~b) -> e", "(b & ~e) -> ~d", "(~f) -> g", "(c & ~d) -> ~f"], "query": "b"}
+{"gold": "unknown", "id": "dl-dev-v1-0053", "premises": ["~b", "c", "(g & b) -> a", "(a & e) -> g", "(c & ~f) -> ~b"], "query": "~g"}
+{"gold": "unknown", "id": "dl-dev-v1-0054", "premises": ["~c", "(~g & ~a) -> ~c", "(e) -> e", "(b) -> ~f", "(g & a) -> ~c", "(g & c) -> ~b"], "query": "f"}
+{"gold": "unknown", "id": "dl-dev-v1-0055", "premises": ["b", "d", "e", "(~a) -> a", "(e) -> a", "(a & d) -> d"], "query": "~g"}
+{"gold": "unknown", "id": "dl-dev-v1-0056", "premises": ["~c", "(c) -> ~e", "(d & e) -> ~g", "(f & ~g) -> f"], "query": "~d"}
+{"gold": "unknown", "id": "dl-dev-v1-0057", "premises": ["f", "b", "(g) -> d", "(c & e) -> ~c", "(~d) -> e"], "query": "~g"}
+{"gold": "entailed", "id": "dl-dev-v1-0058", "premises": ["f", "~g", "~b", "(b & e) -> g", "(~a & e) -> ~c", "(~c) -> c", "(~b & ~f) -> ~g"], "query": "c"}
+{"gold": "refuted", "id": "dl-dev-v1-0059", "premises": ["~d", "~g", "(g & c) -> e", "(~g) -> ~e", "(g & e) -> e", "(e) -> ~d", "(~b) -> ~g"], "query": "g"}
+{"gold": "unknown", "id": "dl-dev-v1-0060", "premises": ["f", "(g) -> a", "(~c & ~d) -> ~g", "(e) -> ~d", "(a & g) -> e"], "query": "g"}
+{"gold": "unknown", "id": "dl-dev-v1-0061", "premises": ["a", "~g", "(~f & ~b) -> g", "(~g) -> d", "(a & b) -> a", "(~d) -> ~a"], "query": "f"}
+{"gold": "entailed", "id": "dl-dev-v1-0062", "premises": ["f", "~d", "(a & ~f) -> ~a", "(~d) -> ~e", "(a & f) -> ~e", "(d & c) -> ~a", "(e) -> ~f"], "query": "~e"}
+{"gold": "refuted", "id": "dl-dev-v1-0063", "premises": ["d", "(~a & d) -> ~a", "(~a & e) -> ~e"], "query": "~d"}
+{"gold": "entailed", "id": "dl-dev-v1-0064", "premises": ["f", "e", "(c & ~f) -> f", "(b) -> d", "(~c) -> ~e", "(e & c) -> ~d"], "query": "e"}
+{"gold": "entailed", "id": "dl-dev-v1-0065", "premises": ["e", "c", "(d) -> ~c", "(d) -> a", "(e & ~c) -> ~c", "(~c) -> ~d", "(e) -> ~d"], "query": "e"}
+{"gold": "refuted", "id": "dl-dev-v1-0066", "premises": ["~d", "b", "(b & d) -> ~d", "(c & g) -> d", "(d) -> d", "(~b) -> ~g", "(d & c) -> ~g"], "query": "d"}
+{"gold": "entailed", "id": "dl-dev-v1-0067", "premises": ["b", "a", "~f", "(~b & ~e) -> a", "(c) -> ~a", "(~e) -> ~c", "(d & ~g) -> e"], "query": "~f"}
+{"gold": "entailed", "id": "dl-dev-v1-0068", "premises": ["~b", "~d", "e", "(~e & ~a) -> e", "(~c) -> c"], "query": "~b"}
+{"gold": "entailed", "id": "dl-dev-v1-0069", "premises": ["d", "f", "~g", "(e) -> ~a", "(d) -> ~e"], "query": "d"}
+{"gold": "entailed", "id": "dl-dev-v1-0070", "premises": ["a", "~g", "(~c) -> ~d", "(g & e) -> ~g", "(~c & ~e) -> ~c"], "query": "~g"}
+{"gold": "refuted", "id": "dl-dev-v1-0071", "premises": ["~c", "f", "(~c) -> ~b", "(c) -> ~e", "(e & ~b) -> ~c", "(~f) -> c", "(e) -> ~c"], "query": "~f"}
+{"gold": "unknown", "id": "dl-dev-v1-0072", "premises": ["~d", "(~a) -> ~c", "(c) -> e", "(~c) -> ~d", "(~a & e) -> ~a", "(~e & a) -> e"], "query": "a"}
+{"gold": "refuted", "id": "dl-dev-v1-0073", "premises": ["~g", "~d", "(~d & e) -> c", "(~d) -> ~b", "(~g) -> ~f", "(~d & c) -> b"], "query": "e"}
+{"gold": "unknown", "id": "dl-dev-v1-0074", "premises": ["e", "(e & ~g) -> g", "(~a) -> c"], "query": "~a"}
+{"gold": "unknown", "id": "dl-dev-v1-0075", "premises": ["e", "c", "a", "(d & ~c) -> c", "(e) -> ~g"], "query": "b"}
+{"gold": "entailed", "id": "dl-dev-v1-0076", "premises": ["a", "~c", "~e", "(g) -> ~a", "(~g & ~f) -> e", "(~d) -> ~g", "(~e & g) -> ~a"], "query": "~g"}
+{"gold": "refuted", "id": "dl-dev-v1-0077", "premises": ["~f", "(g & ~f) -> ~d", "(f & e) -> ~d", "(e & a) -> ~c"], "query": "f"}
+{"gold": "entailed", "id": "dl-dev-v1-0078", "premises": ["f", "~c", "(d & a) -> a", "(~g) -> ~c", "(~g & ~f) -> ~g"], "query": "f"}
+{"gold": "refuted", "id": "dl-dev-v1-0079", "premises": ["~b", "(b & c) -> ~d", "(c) -> b", "(b) -> e"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0080", "premises": ["g", "(g & f) -> f", "(~e & c) -> ~f", "(~e) -> e"], "query": "f"}
+{"gold": "unknown", "id": "dl-dev-v1-0081", "premises": ["~f", "(a) -> ~d", "(d) -> ~c", "(f) -> d", "(~b) -> ~c", "(b & ~a) -> d"], "query": "b"}
+{"gold": "unknown", "id": "dl-dev-v1-0082", "premises": ["~f", "~b", "~g", "(b & ~e) -> g", "(~d) -> d", "(~c & ~b) -> ~g", "(~a & b) -> ~g"], "query": "~e"}
+{"gold": "refuted", "id": "dl-dev-v1-0083", "premises": ["f", "(~a) -> f", "(~g) -> g"], "query": "~f"}
+{"gold": "entailed", "id": "dl-dev-v1-0084", "premises": ["g", "b", "f", "(e & ~a) -> ~c", "(d) -> a"], "query": "b"}
+{"gold": "refuted", "id": "dl-dev-v1-0085", "premises": ["b", "~e", "(~a) -> ~d", "(~a) -> ~d", "(~a & ~b) -> d", "(~b) -> ~e"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0086", "premises": ["~g", "b", "(g) -> e", "(~b & ~d) -> ~b"], "query": "a"}
+{"gold": "unknown", "id": "dl-dev-v1-0087", "premises": ["~d", "(d & ~a) -> b", "(a & ~b) -> b", "(~c) -> c"], "query": "~g"}
+{"gold": "refuted", "id": "dl-dev-v1-0088", "premises": ["b", "f", "g", "(~a & e) -> ~b", "(~b & a) -> g", "(~d) -> ~b", "(~g & ~d) -> a", "(b & e) -> ~e"], "query": "e"}
+{"gold": "unknown", "id": "dl-dev-v1-0089", "premises": ["~a", "(~b) -> ~f", "(c & b) -> f", "(~g) -> e", "(~b) -> a"], "query": "~g"}
+{"gold": "refuted", "id": "dl-dev-v1-0090", "premises": ["c", "~d", "(c) -> ~d", "(a) -> ~b", "(~d & ~f) -> ~b", "(f & ~c) -> ~c"], "query": "~c"}
+{"gold": "unknown", "id": "dl-dev-v1-0091", "premises": ["~g", "(~c) -> f", "(~d) -> ~f", "(~c) -> f", "(g & ~f) -> f"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0092", "premises": ["~b", "f", "(~a) -> ~b", "(a) -> e", "(e) -> e", "(b) -> ~c", "(c) -> ~e"], "query": "~d"}
+{"gold": "unknown", "id": "dl-dev-v1-0093", "premises": ["~c", "(d) -> ~a", "(d & e) -> c", "(~a) -> ~b"], "query": "~g"}
+{"gold": "unknown", "id": "dl-dev-v1-0094", "premises": ["g", "(f) -> ~e", "(d) -> ~b", "(b & ~f) -> ~g", "(g & ~f) -> c", "(d) -> ~d"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0095", "premises": ["~g", "f", "(d) -> g", "(~e) -> d", "(~f & ~g) -> ~g", "(f & g) -> a"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0096", "premises": ["~e", "(~e & ~c) -> d", "(~d & ~c) -> e", "(f & e) -> f", "(~f) -> ~d", "(d & c) -> ~d"], "query": "~d"}
+{"gold": "unknown", "id": "dl-dev-v1-0097", "premises": ["~b", "a", "(~f) -> ~a", "(~f & ~e) -> a", "(~b & ~f) -> e", "(a & d) -> ~b"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0098", "premises": ["~c", "(~c & g) -> ~g", "(g) -> c", "(~g & f) -> f"], "query": "~e"}
+{"gold": "unknown", "id": "dl-dev-v1-0099", "premises": ["~e", "~g", "(~f & ~e) -> ~f", "(~f & g) -> ~f"], "query": "~a"}
+{"gold": "refuted", "id": "dl-dev-v1-0100", "premises": ["~f", "~c", "(d) -> f", "(d) -> e", "(d & f) -> ~f", "(e) -> e"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0101", "premises": ["a", "(a) -> g", "(~e & ~d) -> ~c", "(~g & c) -> ~g", "(~b & a) -> ~e"], "query": "b"}
+{"gold": "entailed", "id": "dl-dev-v1-0102", "premises": ["~a", "(~a) -> ~b", "(~b & a) -> b"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0103", "premises": ["~d", "(a) -> ~b", "(g) -> g"], "query": "b"}
+{"gold": "unknown", "id": "dl-dev-v1-0104", "premises": ["~b", "~c", "(~b & ~c) -> ~e", "(b) -> ~c", "(~b & ~f) -> b", "(g) -> f"], "query": "~d"}
+{"gold": "unknown", "id": "dl-dev-v1-0105", "premises": ["e", "~f", "~g", "(c) -> ~g", "(b & g) -> ~a", "(~a) -> g"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0106", "premises": ["~d", "a", "e", "(~a & d) -> b", "(f & a) -> ~b", "(~b) -> ~e", "(~e & ~f) -> ~e", "(c & ~a) -> d"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0107", "premises": ["~d", "g", "(g & d) -> f", "(d & b) -> f", "(~d & ~b) -> d"], "query": "f"}
+{"gold": "unknown", "id": "dl-dev-v1-0108", "premises": ["~c", "~b", "(c) -> g", "(~f & ~a) -> ~c"], "query": "g"}
+{"gold": "unknown", "id": "dl-dev-v1-0109", "premises": ["~g", "(~b & ~e) -> a", "(~e & a) -> ~c", "(~b & c) -> b"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0110", "premises": ["d", "~g", "(~g & ~d) -> g", "(~g & ~d) -> ~e", "(g & ~b) -> d"], "query": "~e"}
+{"gold": "unknown", "id": "dl-dev-v1-0111", "premises": ["~c", "~f", "(c) -> f", "(~d) -> d", "(~c & a) -> ~g", "(~d & ~c) -> b", "(~b) -> ~d"], "query": "~g"}
+{"gold": "unknown", "id": "dl-dev-v1-0112", "premises": ["e", "g", "(g) -> d", "(~d & g) -> ~g", "(g & ~d) -> ~d", "(d & ~e) -> e"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0113", "premises": ["~g", "(~f) -> g", "(g) -> ~g", "(~f & ~c) -> ~b", "(g & ~b) -> e", "(b) -> b"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0114", "premises": ["~g", "(~b & c) -> c", "(~c & ~d) -> ~b", "(~b) -> ~c", "(~b & g) -> ~g", "(c & ~b) -> ~e"], "query": "e"}
+{"gold": "entailed", "id": "dl-dev-v1-0115", "premises": ["~d", "(g) -> d", "(e & ~a) -> ~a"], "query": "~g"}
+{"gold": "refuted", "id": "dl-dev-v1-0116", "premises": ["g", "~c", "~e", "(~g) -> ~e", "(b & f) -> ~b", "(e) -> e", "(~c) -> g"], "query": "c"}
+{"gold": "entailed", "id": "dl-dev-v1-0117", "premises": ["~c", "e", "(~b & e) -> c", "(b) -> d", "(~e) -> ~e", "(~c) -> d"], "query": "d"}
+{"gold": "refuted", "id": "dl-dev-v1-0118", "premises": ["~d", "c", "e", "(d) -> ~c", "(f) -> ~e", "(f) -> ~d", "(~g & e) -> ~e", "(~d) -> ~d"], "query": "f"}
+{"gold": "refuted", "id": "dl-dev-v1-0119", "premises": ["c", "d", "b", "(~e & f) -> ~d", "(~c & ~g) -> ~d"], "query": "~d"}
+{"gold": "unknown", "id": "dl-dev-v1-0120", "premises": ["f", "e", "(~b & ~f) -> ~d", "(d & e) -> b", "(~b & ~d) -> f", "(~b & e) -> e"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0121", "premises": ["~e", "(~e & f) -> ~e", "(f & a) -> ~g", "(a) -> g", "(~c) -> ~a", "(d & ~g) -> b"], "query": "~c"}
+{"gold": "unknown", "id": "dl-dev-v1-0122", "premises": ["b", "(~b) -> ~g", "(e) -> d", "(b & ~f) -> ~g", "(b & c) -> f", "(~c & ~e) -> b"], "query": "~d"}
+{"gold": "entailed", "id": "dl-dev-v1-0123", "premises": ["~a", "(a & f) -> ~e", "(e) -> ~d"], "query": "~a"}
+{"gold": "entailed", "id": "dl-dev-v1-0124", "premises": ["e", "a", "(~e & ~g) -> ~g", "(~c & a) -> e", "(~e) -> ~b"], "query": "a"}
+{"gold": "unknown", "id": "dl-dev-v1-0125", "premises": ["b", "~e", "a", "(e & f) -> b", "(~c) -> f"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0126", "premises": ["d", "(~f & c) -> d", "(~c) -> a", "(~c) -> ~f"], "query": "b"}
+{"gold": "unknown", "id": "dl-dev-v1-0127", "premises": ["b", "e", "(~a) -> ~d", "(~b) -> ~b"], "query": "~a"}
+{"gold": "unknown", "id": "dl-dev-v1-0128", "premises": ["c", "~g", "~f", "(~e & ~a) -> a", "(~d & ~f) -> ~c", "(g) -> b", "(d) -> ~e", "(e & ~d) -> g"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0129", "premises": ["g", "(f & ~c) -> ~g", "(~a & c) -> ~a"], "query": "~b"}
+{"gold": "entailed", "id": "dl-dev-v1-0130", "premises": ["a", "~c", "(~d) -> a", "(b) -> ~f", "(a) -> ~d", "(d & ~f) -> a", "(~d & b) -> c"], "query": "~c"}
+{"gold": "refuted", "id": "dl-dev-v1-0131", "premises": ["d", "~b", "(d & f) -> ~f", "(~b & f) -> ~b", "(~b & f) -> f"], "query": "~d"}
+{"gold": "refuted", "id": "dl-dev-v1-0132", "premises": ["g", "c", "(~c) -> e", "(~c & ~e) -> d", "(c) -> ~d", "(g) -> e"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0133", "premises": ["~f", "b", "d", "(f) -> b", "(d & ~a) -> d"], "query": "~g"}
+{"gold": "refuted", "id": "dl-dev-v1-0134", "premises": ["c", "(c & b) -> ~b", "(~b) -> c", "(~d) -> a"], "query": "b"}
+{"gold": "entailed", "id": "dl-dev-v1-0135", "premises": ["~a", "(d) -> ~g", "(g & ~a) -> ~c", "(~c & e) -> ~d", "(g & ~d) -> d"], "query": "~a"}
+{"gold": "unknown", "id": "dl-dev-v1-0136", "premises": ["d", "(~g) -> f", "(~a) -> ~a", "(~d & ~a) -> e", "(~d) -> d"], "query": "g"}
+{"gold": "unknown", "id": "dl-dev-v1-0137", "premises": ["~e", "b", "(~d & a) -> ~g", "(a) -> ~g", "(e & ~f) -> ~d", "(g & e) -> g", "(~f & ~a) -> ~e"], "query": "f"}
+{"gold": "entailed", "id": "dl-dev-v1-0138", "premises": ["d", "(~c) -> a", "(~a) -> ~d", "(~c & ~a) -> c"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0139", "premises": ["d", "(~g) -> ~f", "(~b) -> ~c", "(~f) -> ~e", "(c) -> ~g"], "query": "g"}
+{"gold": "unknown", "id": "dl-dev-v1-0140", "premises": ["f", "~b", "(c) -> f", "(~a) -> ~d", "(~g) -> ~e", "(~g & b) -> d"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0141", "premises": ["~c", "(~c) -> ~f", "(~c & b) -> g", "(e & b) -> c", "(b) -> c", "(~f & ~g) -> e"], "query": "~e"}
+{"gold": "unknown", "id": "dl-dev-v1-0142", "premises": ["~c", "~g", "(~c) -> ~c", "(~c & f) -> ~d", "(f) -> ~c"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0143", "premises": ["d", "e", "(~b) -> a", "(c & ~a) -> ~b", "(d & ~c) -> ~c"], "query": "a"}
+{"gold": "entailed", "id": "dl-dev-v1-0144", "premises": ["c", "(~g) -> d", "(c) -> ~d"], "query": "~d"}
+{"gold": "refuted", "id": "dl-dev-v1-0145", "premises": ["~g", "e", "(g) -> ~e", "(~g & ~f) -> g", "(b & a) -> b", "(~f & e) -> e", "(~b & f) -> b"], "query": "~e"}
+{"gold": "unknown", "id": "dl-dev-v1-0146", "premises": ["c", "e", "(~a) -> d", "(c & b) -> ~d"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0147", "premises": ["g", "d", "(~f & e) -> e", "(~a & e) -> ~a"], "query": "~e"}
+{"gold": "refuted", "id": "dl-dev-v1-0148", "premises": ["~c", "~b", "d", "(~f) -> ~d", "(d) -> e", "(~g) -> ~e", "(~f) -> ~c"], "query": "b"}
+{"gold": "unknown", "id": "dl-dev-v1-0149", "premises": ["~g", "d", "f", "(d & f) -> ~e", "(~c & g) -> ~f", "(~f & e) -> ~b", "(~c) -> ~e"], "query": "a"}
+{"gold": "unknown", "id": "dl-dev-v1-0150", "premises": ["b", "(e & d) -> f", "(~d) -> ~c"], "query": "a"}
+{"gold": "unknown", "id": "dl-dev-v1-0151", "premises": ["c", "(~e) -> d", "(~e & g) -> ~d", "(a & e) -> b", "(~a) -> a"], "query": "~g"}
+{"gold": "unknown", "id": "dl-dev-v1-0152", "premises": ["~a", "(e & ~d) -> ~e", "(~d) -> f", "(~a & ~b) -> b"], "query": "~e"}
+{"gold": "unknown", "id": "dl-dev-v1-0153", "premises": ["~a", "(~c) -> ~f", "(~d & ~f) -> d", "(~a) -> c", "(~a & f) -> c"], "query": "~d"}
+{"gold": "refuted", "id": "dl-dev-v1-0154", "premises": ["g", "~c", "(c) -> a", "(g) -> f", "(c) -> ~a", "(~g) -> g"], "query": "~g"}
+{"gold": "unknown", "id": "dl-dev-v1-0155", "premises": ["~e", "(a & ~g) -> a", "(~e & ~b) -> ~d", "(~b & ~a) -> ~e"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0156", "premises": ["~c", "(~e & a) -> ~a", "(f & a) -> ~g", "(~b) -> ~c"], "query": "~a"}
+{"gold": "unknown", "id": "dl-dev-v1-0157", "premises": ["b", "c", "(~c & ~d) -> ~e", "(b & d) -> b", "(~e) -> f", "(d & c) -> ~e", "(~e & ~b) -> ~d"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0158", "premises": ["~b", "(g) -> f", "(~g) -> a", "(~b) -> a", "(~g) -> ~b"], "query": "e"}
+{"gold": "refuted", "id": "dl-dev-v1-0159", "premises": ["a", "e", "(~c & f) -> e", "(~b & ~f) -> f", "(~f & e) -> a"], "query": "~e"}
+{"gold": "refuted", "id": "dl-dev-v1-0160", "premises": ["g", "b", "(a) -> a", "(~e & a) -> e", "(g) -> a", "(a) -> e", "(~e) -> e"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0161", "premises": ["e", "~b", "a", "(~d) -> ~d", "(f & ~e) -> c", "(d) -> ~a", "(~c & b) -> b", "(~a) -> ~a"], "query": "~c"}
+{"gold": "unknown", "id": "dl-dev-v1-0162", "premises": ["e", "(~e & ~a) -> ~a", "(a & g) -> c", "(~g) -> ~g", "(~a & ~c) -> a", "(~g) -> c"], "query": "~g"}
+{"gold": "unknown", "id": "dl-dev-v1-0163", "premises": ["c", "(d & a) -> ~f", "(~e) -> ~g"], "query": "~f"}
+{"gold": "unknown", "id": "dl-dev-v1-0164", "premises": ["~a", "(~a) -> ~f", "(f) -> ~f", "(b) -> ~f", "(~f & c) -> ~b", "(b & ~f) -> ~a"], "query": "~d"}
+{"gold": "unknown", "id": "dl-dev-v1-0165", "premises": ["b", "d", "(g) -> ~e", "(a & ~c) -> b"], "query": "~c"}
+{"gold": "unknown", "id": "dl-dev-v1-0166", "premises": ["g", "(~e & ~a) -> e", "(e) -> ~a", "(g) -> g"], "query": "a"}
+{"gold": "unknown", "id": "dl-dev-v1-0167", "premises": ["b", "~d", "(~c & b) -> f", "(a) -> ~d", "(b) -> g"], "query": "~c"}
+{"gold": "unknown", "id": "dl-dev-v1-0168", "premises": ["g", "e", "(c) -> f", "(~a) -> e"], "query": "~c"}
+{"gold": "refuted", "id": "dl-dev-v1-0169", "premises": ["~f", "~d", "(~g) -> ~f", "(g) -> c", "(f & ~g) -> c"], "query": "d"}
+{"gold": "entailed", "id": "dl-dev-v1-0170", "premises": ["~e", "(a) -> g", "(~a) -> a", "(e) -> c", "(~c) -> d", "(~g & f) -> ~g"], "query": "g"}
+{"gold": "refuted", "id": "dl-dev-v1-0171", "premises": ["f", "~e", "~d", "(f & a) -> b", "(~e & ~g) -> a"], "query": "e"}
+{"gold": "entailed", "id": "dl-dev-v1-0172", "premises": ["b", "~f", "(e) -> ~b", "(e) -> e"], "query": "b"}
+{"gold": "entailed", "id": "dl-dev-v1-0173", "premises": ["b", "~f", "(~e & ~f) -> e", "(~f) -> ~a", "(e) -> e", "(~a) -> ~g", "(~b) -> a"], "query": "e"}
+{"gold": "unknown", "id": "dl-dev-v1-0174", "premises": ["~a", "(~c) -> ~d", "(~b) -> ~d", "(~f & ~g) -> a", "(~d) -> ~g", "(f & c) -> c"], "query": "~c"}
+{"gold": "unknown", "id": "dl-dev-v1-0175", "premises": ["~g", "(~e & d) -> d", "(d) -> ~f", "(~g) -> ~g", "(~b & e) -> ~f", "(~g & ~c) -> ~a"], "query": "~c"}
+{"gold": "unknown", "id": "dl-dev-v1-0176", "premises": ["~c", "~a", "(e & ~d) -> ~f", "(c) -> d", "(~e & d) -> g", "(e & ~c) -> d"], "query": "~f"}
+{"gold": "entailed", "id": "dl-dev-v1-0177", "premises": ["~g", "(~f) -> f", "(g & ~b) -> a", "(~e & ~a) -> e", "(~e) -> e", "(a) -> f"], "query": "e"}
+{"gold": "unknown", "id": "dl-dev-v1-0178", "premises": ["a", "e", "d", "(e & f) -> f", "(~d) -> f", "(g & ~b) -> ~e", "(~f) -> ~e"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0179", "premises": ["f", "~a", "(a & ~e) -> ~f", "(~a & d) -> d"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0180", "premises": ["~d", "c", "(d) -> ~f", "(~g) -> ~f", "(~b & ~c) -> ~g"], "query": "~e"}
+{"gold": "unknown", "id": "dl-dev-v1-0181", "premises": ["~d", "(~c & d) -> b", "(c) -> a", "(~b & ~f) -> c"], "query": "a"}
+{"gold": "unknown", "id": "dl-dev-v1-0182", "premises": ["g", "(g & f) -> ~f", "(a) -> f", "(f) -> ~e", "(a & g) -> a"], "query": "~b"}
+{"gold": "unknown", "id": "dl-dev-v1-0183", "premises": ["a", "(~a) -> ~a", "(~d & ~a) -> ~d", "(~e) -> ~e", "(~b) -> b", "(f & c) -> b"], "query": "~d"}
+{"gold": "unknown", "id": "dl-dev-v1-0184", "premises": ["~g", "(e) -> ~b", "(~e) -> ~e"], "query": "~e"}
+{"gold": "unknown", "id": "dl-dev-v1-0185", "premises": ["~b", "(~a & ~b) -> ~g", "(~f & d) -> b", "(d) -> f"], "query": "~d"}
+{"gold": "refuted", "id": "dl-dev-v1-0186", "premises": ["~d", "~f", "(~e) -> f", "(~a & e) -> ~d", "(f & d) -> ~d"], "query": "~e"}
+{"gold": "unknown", "id": "dl-dev-v1-0187", "premises": ["d", "g", "~e", "(c) -> ~f", "(c & ~e) -> e"], "query": "b"}
+{"gold": "unknown", "id": "dl-dev-v1-0188", "premises": ["d", "g", "~a", "(b & f) -> b", "(b) -> ~d"], "query": "~f"}
+{"gold": "entailed", "id": "dl-dev-v1-0189", "premises": ["b", "c", "(~b) -> e", "(b & ~c) -> ~c", "(~f) -> e"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0190", "premises": ["b", "~d", "(f) -> f", "(d & ~g) -> g"], "query": "~e"}
+{"gold": "entailed", "id": "dl-dev-v1-0191", "premises": ["e", "~b", "(g) -> ~g", "(~e) -> ~e"], "query": "e"}
+{"gold": "unknown", "id": "dl-dev-v1-0192", "premises": ["~e", "(e & ~a) -> ~b", "(g) -> ~a", "(c & ~a) -> f", "(e & b) -> g"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0193", "premises": ["b", "(~a & ~g) -> ~a", "(f) -> ~a", "(~g & b) -> d", "(f & g) -> ~f"], "query": "d"}
+{"gold": "unknown", "id": "dl-dev-v1-0194", "premises": ["a", "~d", "(~f) -> ~d", "(c & ~a) -> f", "(~a) -> ~c", "(a & f) -> ~c", "(~a) -> a"], "query": "~f"}
+{"gold": "refuted", "id": "dl-dev-v1-0195", "premises": ["~c", "~a", "(c & a) -> f", "(~c & ~d) -> d"], "query": "c"}
+{"gold": "unknown", "id": "dl-dev-v1-0196", "premises": ["d", "(c & ~b) -> ~f", "(~g & c) -> g", "(g) -> e", "(~e) -> ~a", "(a & ~e) -> ~b"], "query": "a"}
+{"gold": "unknown", "id": "dl-dev-v1-0197", "premises": ["~b", "(~a) -> ~a", "(e) -> e", "(~a & c) -> ~f", "(e) -> e"], "query": "a"}
+{"gold": "unknown", "id": "dl-dev-v1-0198", "premises": ["~g", "(c & d) -> ~g", "(~c) -> ~f"], "query": "~d"}
+{"gold": "entailed", "id": "dl-dev-v1-0199", "premises": ["~d", "e", "(~c) -> g", "(~d) -> ~g"], "query": "c"}
