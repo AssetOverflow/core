@@ -264,6 +264,12 @@ def compile_events(events, registry, geometric_product, unitize_versor, versor_c
 
 ## 9. Repo-facing adapter (`sensorium/adapters/vision.py`)
 
+The `ProjectionHead` boundary is tile-first in v1: the surface signal `S` is a
+`VisionTileSignal` (`VisionImage` + `TileCoord`), and `project(S)` returns the
+tile/scale compilation unit's `(32,)` versor. Whole-image ingestion is an
+upstream expansion into tile signals and produces a set of `VisionCompilationUnit`
+deltas; it does not create a second whole-image projection artifact.
+
 ```python
 from __future__ import annotations
 from dataclasses import dataclass
@@ -278,20 +284,22 @@ class VisionProjectionHead:
     def embedding_dim(self) -> int:
         return 32
 
-    def project(self, image: "VisionImage") -> np.ndarray:
-        # One image projects to its merged tile-unit versor (granularity resolution #1):
-        out = self.compiler.compile_image(image).versor
+    def project(self, signal: "VisionTileSignal") -> np.ndarray:
+        out = self.compiler.compile_tile(signal).versor
         if out.shape != (32,):
             raise ValueError(f"expected (32,), got {out.shape}")
         if out.dtype != np.float32:
             raise TypeError(f"expected float32, got {out.dtype}")
         return out
 
-    def project_batch(self, images: list["VisionImage"]) -> np.ndarray:
-        return np.stack([self.project(im) for im in images], axis=0)
+    def project_batch(self, signals: list["VisionTileSignal"]) -> np.ndarray:
+        return np.stack([self.project(signal) for signal in signals], axis=0)
 
-    def verify_unitarity(self, image: "VisionImage") -> bool:
-        return self.compiler.compile_image(image).versor_condition < 1e-6
+    def compile_image(self, image: "VisionImage") -> tuple["VisionCompilationUnit", ...]:
+        return self.compiler.compile_image(image)
+
+    def verify_unitarity(self, signal: "VisionTileSignal") -> bool:
+        return self.compiler.compile_tile(signal).versor_condition < 1e-6
 ```
 
 The adapter is thin and pack-governed; it satisfies the `ProjectionHead` protocol in `sensorium/protocol.py` and is mounted as `ModalityPack(modality_type=Modality.VISION, gate_engaged=False)` until the eval gates pass.

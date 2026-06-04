@@ -27,34 +27,16 @@ deduplicates them by construction.
 
 from __future__ import annotations
 
-import hashlib
-import json
 import threading
 from dataclasses import dataclass
 
+from sensorium.compiler.arena import LocalArena
+from sensorium.compiler.delta import ContentAddressedDelta, merge_deltas
+from sensorium.compiler.trace import merge_trace_hash
 from sensorium.audio.trace import audio_evidence_trace
 from sensorium.audio.types import AudioCompilationUnit
 
 MergeKey = tuple[str, str, str]
-
-
-def _canonicalize(
-    units: tuple[AudioCompilationUnit, ...] | list[AudioCompilationUnit],
-) -> tuple[AudioCompilationUnit, ...]:
-    """Order by content-addressed `merge_key`, drop byte-identical duplicates.
-
-    `merge_key` encodes the canonical bytes, the IR, and the projection (the
-    versor) — so equal keys mean content-identical units; the dedup is exact and
-    arrival-independent, mirroring `core-rs` `Delta::from_entries`.
-    """
-    ordered = sorted(units, key=lambda u: u.merge_key)
-    deduped: list[AudioCompilationUnit] = []
-    last_key: MergeKey | None = None
-    for unit in ordered:
-        if unit.merge_key != last_key:
-            deduped.append(unit)
-            last_key = unit.merge_key
-    return tuple(deduped)
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,26 +48,30 @@ class AudioDelta:
     of insertion order. Mirrors `core-rs` `Delta`.
     """
 
-    units: tuple[AudioCompilationUnit, ...]
+    _inner: ContentAddressedDelta[AudioCompilationUnit]
 
     @classmethod
     def from_units(
         cls,
         units: tuple[AudioCompilationUnit, ...] | list[AudioCompilationUnit],
     ) -> AudioDelta:
-        return cls(_canonicalize(units))
+        return cls(ContentAddressedDelta.from_units(units))
+
+    @property
+    def units(self) -> tuple[AudioCompilationUnit, ...]:
+        return self._inner.units
 
     def join(self, other: AudioDelta) -> AudioDelta:
         """Join semilattice op: commutative, associative, idempotent under
         content-addressed equality (ADR-0180 §2.2)."""
-        return AudioDelta.from_units((*self.units, *other.units))
+        return AudioDelta(self._inner.join(other._inner))
 
     @property
     def merge_keys(self) -> tuple[MergeKey, ...]:
-        return tuple(u.merge_key for u in self.units)
+        return self._inner.merge_keys
 
     def __len__(self) -> int:
-        return len(self.units)
+        return len(self._inner)
 
 
 class AudioArena:
@@ -99,22 +85,22 @@ class AudioArena:
     `core-rs` `LocalArena`.
     """
 
-    __slots__ = ("_units",)
+    __slots__ = ("_arena",)
 
     def __init__(self) -> None:
-        self._units: list[AudioCompilationUnit] = []
+        self._arena: LocalArena[AudioCompilationUnit] = LocalArena()
 
     def push(self, unit: AudioCompilationUnit) -> None:
-        self._units.append(unit)
+        self._arena.push(unit)
 
     def is_empty(self) -> bool:
-        return not self._units
+        return self._arena.is_empty()
 
     def snapshot(self) -> AudioDelta:
-        return AudioDelta.from_units(self._units)
+        return AudioDelta(self._arena.snapshot())
 
     def __len__(self) -> int:
-        return len(self._units)
+        return len(self._arena)
 
 
 _THREAD_LOCAL = threading.local()
@@ -148,10 +134,7 @@ def merge_audio_deltas(deltas: list[AudioDelta] | tuple[AudioDelta, ...]) -> Aud
     fold. Permutation- and duplicate-invariant — the property §4.3's
     `hash(Sequential) == hash(Concurrent)` rides on.
     """
-    units: list[AudioCompilationUnit] = []
-    for delta in deltas:
-        units.extend(delta.units)
-    return AudioDelta.from_units(units)
+    return AudioDelta(merge_deltas(delta._inner for delta in deltas))
 
 
 def audio_merge_trace_hash(merged: AudioDelta) -> str:
@@ -164,6 +147,4 @@ def audio_merge_trace_hash(merged: AudioDelta) -> str:
     order-invariance on a fixed platform; the compiler's A-1 gate owns
     cross-platform float stability of the underlying versors.
     """
-    payload = [audio_evidence_trace(unit) for unit in merged.units]
-    blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(blob).hexdigest()
+    return merge_trace_hash(merged._inner, audio_evidence_trace)

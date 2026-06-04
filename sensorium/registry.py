@@ -14,7 +14,14 @@ from typing import Any
 
 import numpy as np
 
-from sensorium.protocol import CL41_DIM, ModalityPack, Modality
+from sensorium.protocol import (
+    CL41_DIM,
+    AuthorityToken,
+    EfferentGate,
+    EfferentRefusal,
+    EfferentVerdict,
+    ModalityPack,
+)
 
 
 class ModalityRegistry:
@@ -29,8 +36,9 @@ class ModalityRegistry:
     mv   = registry.project("en", "beginning")
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, efferent_gate: EfferentGate | None = None) -> None:
         self._packs: dict[str, ModalityPack] = {}
+        self._efferent_gate = efferent_gate
 
     # ------------------------------------------------------------------
     # Mount
@@ -114,6 +122,68 @@ class ModalityRegistry:
                 f"expected (N, {CL41_DIM})."
             )
         return mvs.astype(np.float32)
+
+    def decode(self, pack_id: str, mv: np.ndarray, *, authority: AuthorityToken) -> Any:
+        """Decode a manifold vector through a governed SurfaceDecoder.
+
+        Efferent emission fails closed: a runtime gate must admit the vector
+        before the decoder sees it.
+        """
+        pack = self.get(pack_id)
+        if not pack.gate_engaged:
+            raise RuntimeError(f"Pack '{pack_id}' gate is not engaged.")
+        if pack.decoder is None:
+            raise RuntimeError(f"Pack '{pack_id}' has no SurfaceDecoder.")
+        vec = np.asarray(mv, dtype=np.float32)
+        if vec.shape != (CL41_DIM,):
+            raise ValueError(
+                f"decode for '{pack_id}' received shape {vec.shape}, expected ({CL41_DIM},)."
+            )
+        if self._efferent_gate is None:
+            verdict = EfferentVerdict(
+                admitted=False,
+                reason="no efferent gate configured",
+                authority_sha256=authority.authority_sha256,
+                policy_sha256="deny-by-default",
+            )
+            raise EfferentRefusal(pack_id, verdict)
+        verdict = self._efferent_gate.admit(pack_id, vec, authority)
+        if not verdict.admitted:
+            raise EfferentRefusal(pack_id, verdict)
+        return pack.decoder.decode(vec)
+
+    def decode_batch(
+        self,
+        pack_id: str,
+        mvs: np.ndarray,
+        *,
+        authority: AuthorityToken,
+    ) -> list[Any]:
+        """Batch decode after every vector is admitted by the efferent gate."""
+        pack = self.get(pack_id)
+        if not pack.gate_engaged:
+            raise RuntimeError(f"Pack '{pack_id}' gate is not engaged.")
+        if pack.decoder is None:
+            raise RuntimeError(f"Pack '{pack_id}' has no SurfaceDecoder.")
+        arr = np.asarray(mvs, dtype=np.float32)
+        if arr.ndim != 2 or arr.shape[1] != CL41_DIM:
+            raise ValueError(
+                f"decode_batch for '{pack_id}' received shape {arr.shape}, "
+                f"expected (N, {CL41_DIM})."
+            )
+        if self._efferent_gate is None:
+            verdict = EfferentVerdict(
+                admitted=False,
+                reason="no efferent gate configured",
+                authority_sha256=authority.authority_sha256,
+                policy_sha256="deny-by-default",
+            )
+            raise EfferentRefusal(pack_id, verdict)
+        for vec in arr:
+            verdict = self._efferent_gate.admit(pack_id, vec, authority)
+            if not verdict.admitted:
+                raise EfferentRefusal(pack_id, verdict)
+        return pack.decoder.decode_batch(arr)
 
     # ------------------------------------------------------------------
     # Introspection

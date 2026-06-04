@@ -1,0 +1,24 @@
+{
+  "pack_id": "vision_core_v1",
+  "modality": "vision",
+  "cl41_dim": 32,
+  "compiler_version": "0.1.0",
+  "basis_version": "vision-basis-v1",
+  "canonical": {
+    "colorspace": "srgb_linear",
+    "resampling": "deterministic_bilinear_v1",
+    "size_px": 32,
+    "tile_px": 16,
+    "scale_levels": 2,
+    "output_dtype": "float32",
+    "internal_dtype": "float64"
+  },
+  "gating": {
+    "gate_engaged": false,
+    "checksum_verified": false,
+    "versor_condition_max": 1e-06
+  },
+  "ordering": {
+    "event_precedence": ["region", "contour", "orient", "texture", "salient", "content_anchor"]
+  }
+}

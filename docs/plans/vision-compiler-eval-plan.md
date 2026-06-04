@@ -69,19 +69,19 @@ This is the vision instance of ADR-0180 §4.3's `hash(Sequential_Ingest) == hash
 ### 3.2 Pytest skeleton
 
 ```python
-def test_vision_projection_is_deterministic(vision_fixture, vision_pack):       # V-1
-    v1 = vision_pack.projection.project(vision_fixture)
-    v2 = vision_pack.projection.project(vision_fixture)
+def test_vision_projection_is_deterministic(vision_tile, vision_pack):          # V-1
+    v1 = vision_pack.projection.project(vision_tile)
+    v2 = vision_pack.projection.project(vision_tile)
     assert v1.shape == (32,)
     assert v1.dtype.name == "float32"
     assert np.array_equal(v1, v2)
 
-def test_vision_pack_gate_blocks_projection(vision_pack_closed, vision_fixture): # gate closure
+def test_vision_pack_gate_blocks_projection(vision_pack_closed, vision_tile):   # gate closure
     with pytest.raises(Exception):
-        _ = vision_pack_closed.projection.project(vision_fixture)
+        _ = vision_pack_closed.projection.project(vision_tile)
 
-def test_vision_ir_replay_matches_original(vision_fixture, compiler):            # IR replay
-    unit = compiler.compile_image(vision_fixture)
+def test_vision_ir_replay_matches_original(vision_tile, compiler):               # IR replay
+    unit = compiler.compile_tile(vision_tile)
     replay = compiler.compile_ir(unit.vision_ir)
     assert np.array_equal(unit.versor, replay.versor)
     assert unit.ir_sha256 == replay.ir_sha256

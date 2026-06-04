@@ -5,7 +5,7 @@
 **Authors:** Joshua M. Shay, Core R&D Engine
 **Domains:** `sensorium/vision/`, `sensorium/adapters/vision.py`, `packs/vision/`, `core-rs/src/vault.rs` (read-only contract), `evals/vision_sensorium/`
 **Depends on:** ADR-0013 (Sensorium Multimodal Protocol), ADR-0180 (Delta-CRDT Sharded Substrate), ADR-0181 (Audio Compiler — structural precedent)
-**Companion docs:** [vision-compiler-spec.md](../plans/vision-compiler-spec.md) *(to be written)*, [vision-compiler-eval-plan.md](../plans/vision-compiler-eval-plan.md) *(to be written)*
+**Companion docs:** [vision-compiler-spec.md](../plans/vision-compiler-spec.md), [vision-compiler-eval-plan.md](../plans/vision-compiler-eval-plan.md)
 
 ---
 
@@ -83,23 +83,17 @@ Same argument as ADR-0181 §2.4. `ProjectionHead.project` is pure on the signal 
 
 `vision_core_v1` mounts with `gate_engaged = false` until the eval gates in the companion plan pass. A closed gate makes `ModalityRegistry.project("vision_core_v1", …)` raise — vision contributes no deltas to any arena until determinism, checksum, unitarity, and mount-validation gates are green. This reuses existing registry enforcement; no new gating machinery is added.
 
-### 2.6 OPEN DESIGN QUESTION — blade semantics for vision (red-line target)
+### 2.6 Blade semantics for vision v1
 
-The `(32,)` output shape and the unitarity check are **rigid contract** and not open. What is open — and what must be settled in the companion spec before PR-2 — is the **geometric meaning of the blades for a visual signal**. Audio used "elliptic bivector rotors only in v1" over an acoustic event vocabulary; vision cannot inherit that assignment because the underlying structure is spatial.
+The `(32,)` output shape and the unitarity check are **rigid contract**. The companion spec resolves the v1 blade semantics as pack-local, versioned, checksummed elliptic bivector aliases over measured visual facts. Audio used "elliptic bivector rotors only in v1" over an acoustic event vocabulary; vision keeps the elliptic law but assigns aliases to spatial/scale structure.
 
 Cl(4,1) gives us (per `algebra/cl41.py`): grade-0 (scalar, idx 0), grade-1 (5 vectors, idx 1–5), grade-2 (10 bivectors, idx 6–15), grade-3 (10 trivectors, idx 16–25), grade-4 (5, idx 26–30), grade-5 (pseudoscalar, idx 31).
 
-Candidate v1 assignment **(to be red-lined, not yet decided):**
-- **grade-1 vectors** → canonical spatial/scale frame (2 image axes + scale axis + 2 CGA null directions for position encoding, reusing the CGA machinery in `algebra/cga.py`).
-- **grade-2 bivectors** → oriented local structure: orientation energy and spatial-frequency bands lowered as elliptic rotors (the closest direct analog to audio's prosody arcs).
-- **grade-3 / grade-4** → compositional/region relationships (contour closure, containment, figure–ground).
-- **scalar / pseudoscalar** → global luminance/saliency magnitude and chirality.
-
-Open sub-questions for review:
-1. Is `S` a whole canonical frame, a single tile, or a region crop? (Affects whether one image is one unit or many.) Proposed: **one tile at one scale = one chunk = one unit**; whole-image versor is their merged contribution.
-2. Should position be carried in CGA null vectors (conformal embedding) or quantized into the operator registry's theta rules, as audio quantizes pitch?
-3. Are elliptic rotors sufficient for v1, or does figure–ground require a hyperbolic/parabolic generator? (Default: elliptic-only in v1, matching ADR-0181.)
-4. What is the resolution-independence guarantee for `morton_code` ordering across canonical grid sizes within one pack version?
+Resolved v1 assignment:
+- **Projection signal `S`** → one `VisionTileSignal` at one scale; a whole image expands to tile units and never becomes a second projection artifact.
+- **Position** → retained in `TileCoord`, canonical spatial order, and theta modulation; CGA translators are deferred.
+- **Operators** → elliptic grade-2 rotors only; figure-ground is a saliency rotor, not a boost.
+- **Ordering** → `(scale_level, morton_code(tile_row, tile_col), event_category_precedence, stable_event_id)` over a fixed canonical grid.
 
 ## 3. Consequences
 
@@ -133,7 +127,7 @@ Open sub-questions for review:
 | **PR-5** | Delta-CRDT wiring: `VisionCompilationUnit` → thread-local arena → merge key, behind ADR-0180's substrate | sequential==concurrent trace-hash proof |
 | **PR-6** | Teacher/shadow lanes (ViT/CLIP/DINOv2/SAM/depth) behind optional extras | teachers admitted only as typed hints |
 
-PR-5 must not start until ADR-0180's §1.5.4 obligations (T-1…T-4) are green on `main`. PR-2 must not start until §2.6 is resolved.
+PR-5 must not start until ADR-0180's §1.5.4 obligations (T-1…T-4) are green on `main`.
 
 ### 4.2 Vision-specific proof obligations (extend ADR-0180 §1.5.4; mirror ADR-0181 §4.2)
 
@@ -179,10 +173,10 @@ same canonical image bytes
 
 ---
 
-### Open questions for red-line (consolidated)
+### Red-line resolutions
 
-1. **§2.6 blade assignment** — confirm or revise the grade→meaning mapping. *Blocks PR-2.*
-2. **§2.1 canonical spatial order** — accept `(scale_level, morton_code, precedence, stable_id)` or propose an alternative deterministic total order. *Blocks V-4.*
-3. **Unit granularity** — is one tile-at-one-scale the chunk (proposed), or the whole frame?
-4. **Position encoding** — CGA null vectors vs. quantized operator theta rules.
-5. **Companion specs** — confirm `vision-compiler-spec.md` + `vision-compiler-eval-plan.md` as the PR-1 deliverables alongside this ADR.
+1. **§2.6 blade assignment** — v1 uses pack-local elliptic bivector aliases.
+2. **§2.1 canonical spatial order** — fixed as `(scale_level, morton_code, precedence, stable_id)`.
+3. **Unit granularity** — one tile-at-one-scale is the chunk and projection unit.
+4. **Position encoding** — `TileCoord` + order + theta modulation in v1; CGA translators deferred.
+5. **Companion specs** — `vision-compiler-spec.md` and `vision-compiler-eval-plan.md` are the implementation companions.
