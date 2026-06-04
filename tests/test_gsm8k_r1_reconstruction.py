@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from core.reasoning import evidence_from_math_solution
 from generate.derivation import reconstruct_r1_total
 from generate.math_candidate_graph import parse_and_solve
 from generate.math_solver import solve
@@ -74,6 +75,23 @@ def test_r1_reconstruction_solves_with_verified_graph(case_id: str) -> None:
     assert verdict.passed is True
     assert trace.answer_value == expected
 
+    evidence = evidence_from_math_solution(
+        graph=result.graph,
+        trace=trace,
+        reader_trace=result.reader_trace,
+        operator="gsm8k_r1_reconstruction",
+    )
+    assert evidence.domain == "mathematics_logic"
+    assert evidence.operator == "gsm8k_r1_reconstruction"
+    assert evidence.outcome == "verified"
+    assert evidence.commitment_key
+    assert evidence.evidence_hash == evidence_from_math_solution(
+        graph=result.graph,
+        trace=trace,
+        reader_trace=result.reader_trace,
+        operator="gsm8k_r1_reconstruction",
+    ).evidence_hash
+
 
 @pytest.mark.parametrize("case_id", sorted(R1_POSITIVES))
 def test_parse_and_solve_wires_r1_only_as_verified_graph(case_id: str) -> None:
@@ -113,4 +131,3 @@ def test_parse_and_solve_wires_r1_only_as_verified_graph(case_id: str) -> None:
 def test_r1_reconstruction_refuses_out_of_scope_shapes(text: str) -> None:
     result = parse_and_solve(text)
     assert not result.is_admitted
-

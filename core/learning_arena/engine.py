@@ -15,14 +15,20 @@ Invariants (the load-bearing ADR-0199 mandates, enforced structurally here):
   never touches a serving path or the active teaching corpus. Promotion is the
   caller's separate ``propose_from_ledger`` step into the reviewed corridor.
 - **L-4 (determinism).** Pure fold over the input order; identical
-  (problems, solver, tether, diagnose) -> identical report.
+  (problems, solver, tether, diagnose, tier2_verifier) -> identical report.
 """
 
 from __future__ import annotations
 
 from typing import Callable, Sequence
 
-from core.learning_arena.protocols import Attempt, DomainProblem, DomainSolver, GoldTether
+from core.learning_arena.protocols import (
+    Attempt,
+    DomainProblem,
+    DomainSolver,
+    GoldTether,
+    Tier2Verifier,
+)
 from core.learning_arena.report import EliminationRecord, PracticeReport
 from core.reliability_gate import ClassTally
 
@@ -43,6 +49,7 @@ def run_practice(
     tether: GoldTether,
     *,
     diagnose: Callable[[str], str] = _default_diagnose,
+    tier2_verifier: Tier2Verifier | None = None,
 ) -> PracticeReport:
     """Sealed practice: attempt -> gold-tether score -> per-class ledger.
 
@@ -60,21 +67,36 @@ def run_practice(
     for problem in problems:
         cls = problem.class_name
         attempt: Attempt = solver.attempt(problem)
+        gold_correct = False
 
         if not attempt.committed:
             verdict = "refused"
-        elif tether.is_correct(attempt, problem):
-            verdict = "correct"
         else:
-            verdict = "wrong"
+            gold_correct = tether.is_correct(attempt, problem)
+            verdict = "correct" if gold_correct else "wrong"
 
         counts[verdict] = counts.get(verdict, 0) + 1
         tally = ledger.get(cls) or ClassTally(cls)
+        t2_verified = 0
+        t2_agrees_gold = 0
+        if attempt.committed and tier2_verifier is not None:
+            t2_verdict = tier2_verifier.verify(attempt, problem)
+            if t2_verdict.verified:
+                t2_verified = 1
+                t2_agrees_gold = 1 if gold_correct else 0
 
         if verdict == "correct":
-            tally = tally.record(correct=1)
+            tally = tally.record(
+                correct=1,
+                t2_verified=t2_verified,
+                t2_agrees_gold=t2_agrees_gold,
+            )
         elif verdict == "wrong":
-            tally = tally.record(wrong=1)
+            tally = tally.record(
+                wrong=1,
+                t2_verified=t2_verified,
+                t2_agrees_gold=t2_agrees_gold,
+            )
             elims.append(
                 EliminationRecord(
                     case_id=attempt.case_id,

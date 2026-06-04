@@ -2,8 +2,8 @@
 
 Proves exactly the PR-2 gate: the extracted engine reuses the single pinned
 floor (L-1), holds the seal (L-3), is a deterministic fold (L-4), and the GSM8K
-math instance behaves byte-identically to before (the committed golden queue).
-Tier-2 scoring / L-5 are deferred to the PR that wires t2 verification.
+math instance preserves its committed golden queue. Tier-2 scoring is optional
+and remains inert unless a domain supplies a verifier.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from core.learning_arena import (
     Problem,
     run_practice,
 )
+from core.reasoning import TIER2_VERIFIED, Tier2Verdict
 from core.reliability_gate import conservative_floor
 
 _REPO = Path(__file__).resolve().parents[1]
@@ -54,6 +55,22 @@ class _StubTether:
         return float(problem.payload["gold"])
 
 
+@dataclass(frozen=True, slots=True)
+class _StubTier2Verifier:
+    domain_id: str = "stub"
+
+    def verify(self, attempt: BaseAttempt, problem: Problem) -> Tier2Verdict:
+        if not problem.payload.get("t2", False):
+            return Tier2Verdict(False, "insufficient_evidence")
+        return Tier2Verdict(
+            True,
+            TIER2_VERIFIED,
+            commitment_key=str(attempt.answer),
+            evidence_hash=f"hash:{attempt.case_id}",
+            structural_signatures=("shape-a", "shape-b"),
+        )
+
+
 def _problems() -> list[Problem]:
     return [
         Problem("c1", "alpha", {"verdict": "correct", "answer": 9.0, "gold": 9.0}),
@@ -77,6 +94,7 @@ def test_engine_counts_ledger_eliminations_diagnoses():
 
     alpha = rep.ledger["alpha"]
     assert (alpha.correct, alpha.wrong, alpha.refused) == (2, 1, 0)
+    assert (alpha.t2_verified, alpha.t2_agrees_gold) == (0, 0)
     beta = rep.ledger["beta"]
     assert (beta.correct, beta.wrong, beta.refused) == (0, 0, 1)
 
@@ -92,6 +110,32 @@ def test_engine_is_deterministic():
     a = run_practice(_problems(), _StubSolver(), _StubTether(), diagnose=_diagnose)
     b = run_practice(_problems(), _StubSolver(), _StubTether(), diagnose=_diagnose)
     assert json.dumps(a.as_dict(), sort_keys=True) == json.dumps(b.as_dict(), sort_keys=True)
+
+
+def test_optional_tier2_verifier_populates_anchor_precision() -> None:
+    problems = [
+        Problem("c1", "alpha", {"verdict": "correct", "answer": 9.0, "gold": 9.0, "t2": True}),
+        Problem("c2", "alpha", {"verdict": "wrong", "answer": 7.0, "gold": 10.0, "t2": True}),
+        Problem("c3", "alpha", {"verdict": "correct", "answer": 4.0, "gold": 4.0, "t2": False}),
+        Problem("c4", "alpha", {"verdict": "refused", "reason": "no graph", "t2": True}),
+    ]
+
+    rep = run_practice(
+        problems,
+        _StubSolver(),
+        _StubTether(),
+        diagnose=_diagnose,
+        tier2_verifier=_StubTier2Verifier(),
+    )
+
+    alpha = rep.ledger["alpha"]
+    assert (alpha.correct, alpha.wrong, alpha.refused) == (2, 1, 1)
+    assert alpha.t2_verified == 2
+    assert alpha.t2_agrees_gold == 1
+    per_class = rep.as_dict()["per_class"]["alpha"]
+    assert per_class["t2_verified"] == 2
+    assert per_class["t2_agrees_gold"] == 1
+    assert per_class["t2_precision"] == alpha.t2_precision
 
 
 # --- L-1: one shared pinned floor; no per-arena pessimism constant ------------

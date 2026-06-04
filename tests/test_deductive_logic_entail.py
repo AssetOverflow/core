@@ -19,6 +19,7 @@ import random
 
 import pytest
 
+from core.reasoning import evidence_from_entailment_trace
 from evals.deductive_logic.generate import _make_case
 from evals.deductive_logic.oracle import oracle_entailment
 from evals.deductive_logic.runner import _ROOT, _load, build_report
@@ -108,6 +109,13 @@ def test_entailment_trace_is_deterministic_evidence() -> None:
     assert t1.refutation_check_key is not None
     assert t1.canonical_json() == t2.canonical_json()
     assert "premise_keys" in t1.canonical_json()
+
+    evidence = evidence_from_entailment_trace(t1)
+    assert evidence.domain == "mathematics_logic"
+    assert evidence.operator == "propositional_entailment"
+    assert evidence.outcome == "entailed"
+    assert evidence.commitment_key.startswith("entailment:entailed:")
+    assert evidence.evidence_hash == evidence_from_entailment_trace(t2).evidence_hash
 
 
 def test_refused_trace_preserves_available_canonical_evidence() -> None:

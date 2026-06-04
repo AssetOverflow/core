@@ -1,9 +1,9 @@
 """ADR-0199 / ADR-0175 — the domain-agnostic practice report.
 
-Extracted verbatim (schema-preserving) from
-``evals/gsm8k_math/practice/v1/runner.py`` so every subject's arena emits the
-same report shape. ``PracticeReport.as_dict`` is byte-stable with the original
-GSM8K report so existing goldens and ``report.json`` are unaffected.
+Extracted from ``evals/gsm8k_math/practice/v1/runner.py`` so every subject's
+arena emits the same report shape. The report now also exposes the existing
+Tier-2 ledger counts when a domain supplies convergent self-verification
+evidence; domains without a Tier-2 verifier report zeros.
 
 The three refusal-diagnosis axes are the universal ADR-0175 §8 router
 (skill / knowledge / ambiguity), not a domain quantity — so they live here.
@@ -59,6 +59,9 @@ class PracticeReport:
                     "committed": t.committed,
                     "reliability": t.reliability,
                     "coverage": t.coverage,
+                    "t2_verified": t.t2_verified,
+                    "t2_agrees_gold": t.t2_agrees_gold,
+                    "t2_precision": t.t2_precision,
                 }
                 for cls, t in sorted(self.ledger.items())
             },
