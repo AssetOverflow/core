@@ -65,6 +65,13 @@ cue word" are almost never 2-operand problems — they are multi-step problems w
 shallow reading is wrong **every single time**. Shallow committing **cannot** be sound on
 real GSM8K. This is measured, not asserted.
 
+**Third leg — the sound path has no headroom either.** The candidate-graph (the
+roundtrip-admissible + disagreement filter that *is* `wrong=0` on held-out) was checked for
+disambiguation headroom: on the 500 it builds **0 admissible candidates** (498/500 enumerate
+zero branches at all). It is `wrong=0` not because it disambiguates well but because **it
+constructs no reading to commit.** There is nothing to soundly tiebreak. All three paths are
+exhausted: the sound one builds nothing; the two that build, confabulate.
+
 ## 3c. The architectural impasse (the load-bearing finding)
 
 CORE has two GSM8K paths, and the held-out data shows **neither can soundly lift capability**:
