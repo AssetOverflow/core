@@ -51,6 +51,37 @@ keeps the 2 would be overfit to those exact cases (the same disease that produce
 breach). The disagreement rule, the substrate's main `wrong=0` defence, fails on the 54
 lone-chain wrongs by construction.
 
+## 3b. Two lift attempts, both empirically falsified (not just diagnosed)
+
+I did not stop at diagnosis — I built and measured two committing readers on held-out:
+
+| Attempt | held-out 500 | result |
+|---|---|---|
+| `resolve_pooled` (the built composer) | 2 correct / **87 wrong** | 17% confabulation |
+| Maximally-narrow forced reader (exactly 2 grounded quantities + one unambiguous op cue, refuse otherwise) | 0 correct / **61 wrong** | **100% confabulation when it fires** |
+
+The narrow reader is the more brutal result: GSM8K problems that *look* like "2 numbers + a
+cue word" are almost never 2-operand problems — they are multi-step problems where the
+shallow reading is wrong **every single time**. Shallow committing **cannot** be sound on
+real GSM8K. This is measured, not asserted.
+
+## 3c. The architectural impasse (the load-bearing finding)
+
+CORE has two GSM8K paths, and the held-out data shows **neither can soundly lift capability**:
+
+- **The candidate-graph / recognizer-injector path is SOUND** (`wrong=0` on held-out) — but
+  it is **frozen** by ADR-0207 §4 to "lexeme-recognition + refusal-only, no new positive
+  capability," and it covers **0** real cases.
+- **The derivation composer is OPEN** (ADR-0207 §5 routes all positive capability here) — but
+  it is **unsound** (17% wrong on held-out, no separating gate).
+
+**This falsifies ADR-0207's central premise.** ADR-0207 froze the regex path and deferred all
+positive capability to the composer *on the belief that the composer is the `wrong=0`-safe
+mechanism*. The first held-out measurement shows the opposite: **the frozen path was the sound
+one; the open path confabulates.** The ratified strategy locked out the only sound mechanism
+in favor of an unsound one. ADR-0207 §5 needs re-opening with this evidence (a follow-up ADR),
+because "feed the composer" is a path to *more confabulation*, not lift.
+
 ## 4. What this means (honest, load-bearing)
 
 1. **The only `wrong=0`-safe policy on real GSM8K is refusal.** Current serving (0/0/500) is
