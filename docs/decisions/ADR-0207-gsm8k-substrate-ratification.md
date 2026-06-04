@@ -126,15 +126,21 @@ not rewriting it.
 > now solves 864 end-to-end through the derivation composer. See
 > [extraction-richness-audit-2026-06-03](../analysis/extraction-richness-audit-2026-06-03.md).
 
-Execute these three levers, in order:
+Execute these three levers — listed by role, not by sequence (lever 1 explains why the
+wire is the *last*, trivial step and composition the real first work):
 
-1. **WIRING — the crux.** Connect the disjoint `generate/derivation/` reader (where the
-   enriched extractor *and* the ADR-0178 composer already live) into the **serving
-   candidate-graph path**, so its output counts toward the live metric. The derivation
-   machinery is built and enriched but disjoint; until it feeds serving, none of its richness
-   moves 6/44/0. `product_bridge` (§2) is the lone existing tendril and the proof the wiring
-   pattern works. **This is wiring, not new design**, and it is the central task — not a
-   preliminary.
+1. **WIRING — trivial, and already done for the safe shapes.** The wire pattern
+   (`product_bridge` at `:530`: `resolve(text) → CandidateGraphResult | fall-through`) is
+   proven, but it generalizes nothing: `product_bridge` promotes only via a two-token target
+   whitelist (`money`+`make/earn`, `weight`+`total/move`), hardcoded to 0003/0021. Extending
+   it is **not** the lowest-risk first step. Verified on the tree (2026-06-03): the general
+   composer (`resolve_pooled`) refuses **all ten** R1/R4/R5/R6 corpus positives — R1/R4 build
+   zero candidates, R5 builds only wrong ones — so wiring it yields **+0 correct**; and it
+   wrong-commits `0016 → 510`, so wiring it wholesale is a live `wrong=0` regression that
+   disagreement does **not** catch. Therefore WIRING and COMPOSITION are the **same task**:
+   the real first work is composer production for each target shape, each behind a structural
+   promotion gate (op-class/target proof via `extract_target` + `target_units`, not
+   disagreement alone). The wire is the last, trivial step once a shape builds-and-certifies.
 2. **COMPOSITION (ADR-0178) — the actual wall.** Complete the derivation composer's
    multi-step assembly: which quantities group, via which ops, in what order (the R4/R5/R6
    lever). This is the genuine research risk; extraction already feeds it.
