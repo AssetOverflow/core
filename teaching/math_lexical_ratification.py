@@ -197,6 +197,7 @@ def apply_lexical_claim(
     category: str,
     reviewer: str,
     pack_root: Path | None = None,
+    ratifier_kind: str = "cli",
 ) -> RatificationReceipt:
     """Apply a reviewed lexical claim to a math source lexicon file.
 
@@ -267,6 +268,7 @@ def apply_lexical_claim(
             )
         aliases.append(lemma)
         parent["aliases"] = sorted(set(aliases))
+        parent["ratifier_kind"] = ratifier_kind
         is_alias = True
         aliased_to = parent_lemma
     else:
@@ -276,6 +278,7 @@ def apply_lexical_claim(
                 "category": category,
                 "aliases": [],
                 "provenance": provenance,
+                "ratifier_kind": ratifier_kind,
             }
         )
 

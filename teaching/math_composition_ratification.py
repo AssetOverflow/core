@@ -236,6 +236,7 @@ def apply_composition_claim(
     surface_pattern: str | None = None,
     pack_root: Path | None = None,
     evidence_source: str = "math_audit",
+    ratifier_kind: str = "cli",
 ) -> CompositionRatificationReceipt:
     """Apply a reviewed composition claim to a math composition source file.
 
@@ -343,6 +344,7 @@ def apply_composition_claim(
             )
         existing_evidence.append(claim.evidence_hash)
         existing["evidence_hashes"] = sorted(set(existing_evidence))
+        existing["ratifier_kind"] = ratifier_kind
         is_duplicate_evidence = True
     else:
         entries.append(
@@ -352,6 +354,7 @@ def apply_composition_claim(
                 "polarity": polarity,
                 "provenance": provenance,
                 "evidence_hashes": [claim.evidence_hash],
+                "ratifier_kind": ratifier_kind,
             }
         )
 

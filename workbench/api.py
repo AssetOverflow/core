@@ -33,6 +33,36 @@ class ApiResponse:
 
 
 class WorkbenchApi:
+    def __init__(self, telemetry_sink: Any | None = None) -> None:
+        self._telemetry_sink = telemetry_sink
+
+    def attach_telemetry_sink(self, sink: Any | None) -> None:
+        self._telemetry_sink = sink
+
+    def _emit_operator_telemetry(
+        self,
+        event_name: str,
+        proposal_id: str,
+        outcome: str | None = None,
+        handler: str | None = None,
+        note: str | None = None,
+    ) -> None:
+        if self._telemetry_sink is None:
+            return
+        payload: dict[str, Any] = {
+            "event": event_name,
+            "proposal_id": proposal_id,
+            "ratifier_kind": "workbench",
+        }
+        if handler is not None:
+            payload["handler"] = handler
+        if outcome is not None:
+            payload["outcome"] = outcome
+        if note is not None:
+            payload["note"] = note
+        line = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        self._telemetry_sink.emit(line)
+
     def handle(self, method: str, raw_path: str, body: bytes = b"") -> ApiResponse:
         parsed = urlparse(raw_path)
         path = parsed.path.rstrip("/") or "/"
@@ -42,7 +72,11 @@ class WorkbenchApi:
         except json.JSONDecodeError as exc:
             return ApiResponse(400, error("bad_request", "invalid JSON body", detail=str(exc)))
         except ValueError as exc:
-            return ApiResponse(400, error("bad_request", str(exc)))
+            status = 400
+            msg = str(exc)
+            if "already ratified" in msg.lower():
+                status = 409
+            return ApiResponse(status, error("bad_request", msg))
         except FileNotFoundError as exc:
             missing = str(exc) or "resource"
             return ApiResponse(404, error("not_found", f"not found: {missing}"))
@@ -79,7 +113,13 @@ class WorkbenchApi:
             return ApiResponse(200, ok({"items": readers.list_math_proposals()}))
         if method == "POST" and path.endswith("/ratify") and path.startswith("/math-proposals/"):
             proposal_id = unquote(path.removeprefix("/math-proposals/").removesuffix("/ratify"))
-            return self._math_ratify(proposal_id)
+            return self._math_ratify(proposal_id, body)
+        if method == "POST" and path.endswith("/reject") and path.startswith("/math-proposals/"):
+            proposal_id = unquote(path.removeprefix("/math-proposals/").removesuffix("/reject"))
+            return self._math_reject(proposal_id, body)
+        if method == "POST" and path.endswith("/defer") and path.startswith("/math-proposals/"):
+            proposal_id = unquote(path.removeprefix("/math-proposals/").removesuffix("/defer"))
+            return self._math_defer(proposal_id)
         if method == "GET" and path.startswith("/math-proposals/"):
             proposal_id = unquote(path.removeprefix("/math-proposals/"))
             return ApiResponse(200, ok(readers.read_math_proposal(proposal_id)))
@@ -111,13 +151,103 @@ class WorkbenchApi:
             return ApiResponse(501, error("unsupported", "route is deferred beyond W-026"))
         return ApiResponse(404, error("not_found", f"route not found: {method} {path}"))
 
-    def _math_ratify(self, proposal_id: str) -> ApiResponse:
-        """Route ratification by change_kind; 501 for unimplemented handlers."""
+    def _math_ratify(self, proposal_id: str, body: bytes) -> ApiResponse:
+        """Route ratification by change_kind; in-process execution with allowlist checks."""
+        category: str | None = None
+        polarity: str | None = None
+        dry_run: bool = False
+
+        if body:
+            try:
+                req = json.loads(body.decode("utf-8") or "{}")
+                if isinstance(req, dict):
+                    category = req.get("category")
+                    polarity = req.get("polarity")
+                    dry_run = bool(req.get("dry_run", False))
+            except Exception as exc:
+                return ApiResponse(400, error("bad_request", "invalid JSON body", detail=str(exc)))
+
+        import getpass
+        reviewer = getpass.getuser()
+
         try:
-            result: MathRatifyResult = readers.ratify_math_proposal(proposal_id)
+            result: MathRatifyResult = readers.ratify_math_proposal(
+                proposal_id,
+                category=category,
+                polarity=polarity,
+                reviewer=reviewer,
+                dry_run=dry_run,
+            )
         except NotImplementedError as exc:
             return ApiResponse(501, error("unsupported", str(exc)))
+        except (ValueError, FileNotFoundError) as exc:
+            msg = str(exc)
+            handler = "unknown"
+            try:
+                prop = readers.read_math_proposal(proposal_id)
+                handler = prop.handler_name or "unknown"
+            except Exception:
+                pass
+            status_code = 400
+            exc_class_name = exc.__class__.__name__
+            if exc_class_name == "AlreadyRatified" or "already ratified" in msg.lower():
+                status_code = 409
+
+            self._emit_operator_telemetry(
+                event_name="operator_ratify",
+                proposal_id=proposal_id,
+                outcome="rejected_precondition",
+                handler=handler,
+            )
+            return ApiResponse(status_code, error("bad_request", msg))
+        except Exception as exc:
+            return ApiResponse(500, error("runtime_unavailable", f"internal error: {exc}"))
+
+        if result.applied:
+            self._emit_operator_telemetry(
+                event_name="operator_ratify",
+                proposal_id=proposal_id,
+                outcome="applied",
+                handler=result.handler_name,
+            )
         return ApiResponse(200, ok(result))
+
+    def _math_reject(self, proposal_id: str, body: bytes) -> ApiResponse:
+        note: str = ""
+        if body:
+            try:
+                req = json.loads(body.decode("utf-8") or "{}")
+                if isinstance(req, dict):
+                    note = str(req.get("note", ""))
+            except Exception as exc:
+                return ApiResponse(400, error("bad_request", "invalid JSON body", detail=str(exc)))
+        try:
+            prop = readers.read_math_proposal(proposal_id)
+            handler = prop.handler_name or "unknown"
+        except FileNotFoundError as exc:
+            return ApiResponse(404, error("not_found", str(exc)))
+
+        self._emit_operator_telemetry(
+            event_name="operator_reject",
+            proposal_id=proposal_id,
+            handler=handler,
+            note=note,
+        )
+        return ApiResponse(200, ok({"proposal_id": proposal_id, "rejected": True}))
+
+    def _math_defer(self, proposal_id: str) -> ApiResponse:
+        try:
+            prop = readers.read_math_proposal(proposal_id)
+            handler = prop.handler_name or "unknown"
+        except FileNotFoundError as exc:
+            return ApiResponse(404, error("not_found", str(exc)))
+
+        self._emit_operator_telemetry(
+            event_name="operator_defer",
+            proposal_id=proposal_id,
+            handler=handler,
+        )
+        return ApiResponse(200, ok({"proposal_id": proposal_id, "deferred": True}))
 
     def _chat_turn(self, body: bytes) -> ApiResponse:
         """Execute one live runtime turn.

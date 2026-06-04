@@ -328,7 +328,8 @@ def _math_proposal_summary(record: dict[str, Any]) -> MathProposalSummary:
 def list_math_proposals(*, jsonl_path: Path | None = None) -> list[MathProposalSummary]:
     path = jsonl_path or MATH_PROPOSALS_JSONL
     records = _load_math_proposals_raw(path)
-    return [_math_proposal_summary(r) for r in records]
+    return [_math_proposal_summary(r) for r in records if r.get("domain") == "math"]
+
 
 
 def _math_trace_steps_from_record(record: dict[str, Any]) -> list[MathReasoningStep]:
@@ -376,6 +377,9 @@ def read_math_proposal(
     record = next((r for r in records if r.get("proposal_id") == proposal_id), None)
     if record is None:
         raise FileNotFoundError(proposal_id)
+    if record.get("domain") != "math":
+        raise ValueError(f"Partition isolation violation: proposal domain must be 'math', got {record.get('domain')!r}")
+
 
     change_kind = str(record.get("proposed_change_kind", ""))
     handler_name = _HANDLER_DISPATCH.get(change_kind)
@@ -435,23 +439,25 @@ def read_math_proposal(
 def ratify_math_proposal(
     proposal_id: str,
     *,
+    category: str | None = None,
+    polarity: str | None = None,
+    reviewer: str | None = None,
+    dry_run: bool = False,
     jsonl_path: Path | None = None,
 ) -> MathRatifyResult:
-    """Dispatch ratification by change_kind; fail loudly for unimplemented handlers.
+    """Dispatch ratification by change_kind.
 
-    ADR-0160 "Proposal before mutation" doctrine: this function validates
-    routing and returns the handler name + suggested CLI without applying
-    the change.  Mutation requires an explicit operator action outside the
-    workbench (e.g. calling apply_lexical_claim() directly).
-
-    Raises FileNotFoundError if proposal_id not found.
-    Raises NotImplementedError with a clear message for unhandled change_kinds.
+    If dry_run is False and category is provided, this applies the ratification mutation in-process.
+    Otherwise, it validates routing and returns the handler name + suggested CLI.
     """
     path = jsonl_path or MATH_PROPOSALS_JSONL
     records = _load_math_proposals_raw(path)
     record = next((r for r in records if r.get("proposal_id") == proposal_id), None)
     if record is None:
         raise FileNotFoundError(proposal_id)
+    if record.get("domain") != "math":
+        raise ValueError(f"Partition isolation violation: proposal domain must be 'math', got {record.get('domain')!r}")
+
 
     change_kind = str(record.get("proposed_change_kind", ""))
     handler_name = _HANDLER_DISPATCH.get(change_kind)
@@ -483,14 +489,95 @@ def ratify_math_proposal(
             f"polarity='affirms', reviewer='<you>')"
         )
 
-    return MathRatifyResult(
-        proposal_id=proposal_id,
-        change_kind=change_kind,
-        handler_name=handler_name,
-        routing_status="routed",
-        message=f"routed to {handler_name} handler",
-        suggested_cli=suggested_cli,
-    )
+    if dry_run or category is None:
+        return MathRatifyResult(
+            proposal_id=proposal_id,
+            change_kind=change_kind,
+            handler_name=handler_name,
+            routing_status="routed",
+            message=f"routed to {handler_name} handler",
+            suggested_cli=suggested_cli,
+            applied=False,
+        )
+
+    # In-process application
+    from teaching.math_contemplation_proposal import from_jsonl_record
+    proposal = from_jsonl_record(record)
+    if not proposal.evidence_pointers:
+        raise ValueError(f"Proposal {proposal_id} has no evidence pointers")
+    claim = proposal.evidence_pointers[0]
+
+    import getpass
+    effective_reviewer = reviewer or getpass.getuser()
+
+    if handler_name == "LexicalClaim":
+        from teaching.math_lexical_ratification import apply_lexical_claim
+        receipt = apply_lexical_claim(
+            claim=claim,
+            category=category,
+            reviewer=effective_reviewer,
+            ratifier_kind="workbench",
+        )
+        return MathRatifyResult(
+            proposal_id=proposal_id,
+            change_kind=change_kind,
+            handler_name=handler_name,
+            routing_status="routed",
+            message=f"Applied LexicalClaim to {receipt.target_file}",
+            suggested_cli=suggested_cli,
+            applied=True,
+            target_path=receipt.target_file,
+            evidence_hash=receipt.evidence_hash,
+        )
+
+    elif handler_name == "FrameClaim":
+        from teaching.math_frame_ratification import apply_frame_claim
+        if not polarity:
+            raise ValueError("Polarity is required for FrameClaim ratification")
+        receipt = apply_frame_claim(
+            claim=claim,
+            frame_category=category,
+            polarity=polarity,
+            reviewer=effective_reviewer,
+            ratifier_kind="workbench",
+        )
+        return MathRatifyResult(
+            proposal_id=proposal_id,
+            change_kind=change_kind,
+            handler_name=handler_name,
+            routing_status="routed",
+            message=f"Applied FrameClaim to {receipt.target_file}",
+            suggested_cli=suggested_cli,
+            applied=True,
+            target_path=receipt.target_file,
+            evidence_hash=receipt.evidence_hash,
+        )
+
+    elif handler_name == "CompositionClaim":
+        from teaching.math_composition_ratification import apply_composition_claim
+        if not polarity:
+            raise ValueError("Polarity is required for CompositionClaim ratification")
+        receipt = apply_composition_claim(
+            claim=claim,
+            composition_category=category,
+            polarity=polarity,
+            reviewer=effective_reviewer,
+            ratifier_kind="workbench",
+        )
+        return MathRatifyResult(
+            proposal_id=proposal_id,
+            change_kind=change_kind,
+            handler_name=handler_name,
+            routing_status="routed",
+            message=f"Applied CompositionClaim to {receipt.target_file}",
+            suggested_cli=suggested_cli,
+            applied=True,
+            target_path=receipt.target_file,
+            evidence_hash=receipt.evidence_hash,
+        )
+
+    else:
+        raise NotImplementedError(f"handler {handler_name} application not implemented")
 
 
 def run_safe_eval_lane(

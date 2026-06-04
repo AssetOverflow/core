@@ -10,6 +10,9 @@ import type {
   ProposalDetail,
   ProposalState,
   ProposalSummary,
+  MathProposalSummary,
+  MathProposalDetail,
+  MathRatifyResult,
 } from "../types/api";
 
 export class WorkbenchApiError extends Error {
@@ -103,3 +106,52 @@ export async function fetchProposals(
 export async function fetchProposalDetail(proposalId: string): Promise<ProposalDetail> {
   return apiFetch<ProposalDetail>(`/proposals/${encodeURIComponent(proposalId)}`);
 }
+
+export async function fetchMathProposals(): Promise<MathProposalSummary[]> {
+  const envelope = await apiFetch<ItemsEnvelope<MathProposalSummary>>("/math-proposals");
+  return envelope.items;
+}
+
+export async function fetchMathProposalDetail(proposalId: string): Promise<MathProposalDetail> {
+  return apiFetch<MathProposalDetail>(`/math-proposals/${encodeURIComponent(proposalId)}`);
+}
+
+export async function ratifyMathProposal(
+  proposalId: string,
+  category?: string,
+  polarity?: string,
+  dryRun?: boolean,
+): Promise<MathRatifyResult> {
+  return apiFetch<MathRatifyResult>(`/math-proposals/${encodeURIComponent(proposalId)}/ratify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category, polarity, dry_run: dryRun }),
+  });
+}
+
+export async function rejectMathProposal(
+  proposalId: string,
+  note?: string,
+): Promise<{ proposal_id: string; rejected: boolean }> {
+  return apiFetch<{ proposal_id: string; rejected: boolean }>(
+    `/math-proposals/${encodeURIComponent(proposalId)}/reject`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note }),
+    },
+  );
+}
+
+export async function deferMathProposal(
+  proposalId: string,
+): Promise<{ proposal_id: string; deferred: boolean }> {
+  return apiFetch<{ proposal_id: string; deferred: boolean }>(
+    `/math-proposals/${encodeURIComponent(proposalId)}/defer`,
+    {
+      method: "POST",
+    },
+  );
+}
+
+

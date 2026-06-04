@@ -104,7 +104,7 @@
         "path": "str",
         "original": "Any",
         "replay": "Any",
-        "severity": "Literal['info', 'warning', 'failure']"
+        "severity": "ReplayDivergenceSeverity"
       }
     },
     "ReplayComparison": {
@@ -114,6 +114,51 @@
         "replay_hash": "str | None",
         "equivalent": "bool",
         "divergences": "list[ReplayDivergence]"
+      }
+    },
+    "MathReasoningStep": {
+      "fields": {
+        "step_index": "int",
+        "step_kind": "str",
+        "claim": "str",
+        "justification": "str",
+        "input_pointers": "list[str]",
+        "output_payload": "Any"
+      }
+    },
+    "MathProposalSummary": {
+      "fields": {
+        "proposal_id": "str",
+        "domain": "Literal['math']",
+        "shape_category": "str",
+        "proposed_change_kind": "str",
+        "structural_commonality": "str",
+        "evidence_count": "int",
+        "replay_equivalence_hash": "str"
+      }
+    },
+    "MathProposalDetail": {
+      "fields": {
+        "wrong_zero_assertion": "str",
+        "proposed_change_payload": "Any",
+        "reasoning_trace_id": "str",
+        "reasoning_trace_steps": "list[MathReasoningStep]",
+        "evidence_hashes": "list[str]",
+        "handler_name": "str | None",
+        "suggested_ratify_cli": "str | None"
+      }
+    },
+    "MathRatifyResult": {
+      "fields": {
+        "proposal_id": "str",
+        "change_kind": "str",
+        "handler_name": "str",
+        "routing_status": "Literal['routed', 'not_implemented']",
+        "message": "str",
+        "suggested_cli": "str | None",
+        "applied": "bool",
+        "target_path": "str | None",
+        "evidence_hash": "str | None"
       }
     }
   }

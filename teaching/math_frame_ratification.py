@@ -223,6 +223,7 @@ def apply_frame_claim(
     reviewer: str,
     pack_root: Path | None = None,
     evidence_source: str = "math_audit",
+    ratifier_kind: str = "cli",
 ) -> FrameRatificationReceipt:
     """Apply a reviewed frame claim to a math frame source file.
 
@@ -320,6 +321,7 @@ def apply_frame_claim(
             )
         existing_evidence.append(claim.evidence_hash)
         existing["evidence_hashes"] = sorted(set(existing_evidence))
+        existing["ratifier_kind"] = ratifier_kind
         is_duplicate_evidence = True
     else:
         entries.append(
@@ -329,6 +331,7 @@ def apply_frame_claim(
                 "polarity": polarity,
                 "provenance": provenance,
                 "evidence_hashes": [claim.evidence_hash],
+                "ratifier_kind": ratifier_kind,
             }
         )
 
