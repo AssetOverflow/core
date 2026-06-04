@@ -52,9 +52,12 @@ _REQUIRED_FIELDS = frozenset(
 )
 
 _EXPECTED_TOTAL = 22
-_EXPECTED_BASELINE_CONTROLS = 4
+# 2026-06-04: product_bridge + goal_residual serving promotions disabled (unsound on
+# the sealed 1,319: 0 correct / 5 wrong). cv-0020 (solved only via product_bridge)
+# reclassified baseline -> 5b-product; cv-0005 (R4) reverts to refusing.
+_EXPECTED_BASELINE_CONTROLS = 3
 _EXPECTED_PERMANENT = 7
-_EXPECTED_FUTURE_POSITIVE = 11
+_EXPECTED_FUTURE_POSITIVE = 12
 
 
 def _load_cases() -> list[dict]:
@@ -155,12 +158,14 @@ def test_frozen_baseline_fields_match_tree(case: dict) -> None:
 
 
 def test_current_baseline_snapshot() -> None:
-    """Current aggregate is 5 solve / 17 refuse / 0 wrong.
+    """Current aggregate is 3 solve / 19 refuse / 0 wrong.
 
     This is the single assertion a Phase 5b slice updates when it flips a
     positive (refuse -> solve); the forever-invariants above do not change.
-    ADR-0207 §5 step 2 landed the first such flip: cv-0005 (R4 goal-residual),
-    moving 4/18 -> 5/17.
+    2026-06-04: the unsound serving promotion bridges (product_bridge,
+    goal_residual) were disabled after the first real sealed measurement showed
+    them 0-correct/5-wrong on held-out — so cv-0005 (R4) and cv-0020 (product)
+    revert to refusing, moving the honest snapshot to 3/19.
     """
     solve = refuse = wrong = 0
     for case in _CASES:
@@ -172,7 +177,7 @@ def test_current_baseline_snapshot() -> None:
         else:
             refuse += 1
     assert wrong == 0
-    assert (solve, refuse) == (5, 17), (
+    assert (solve, refuse) == (3, 19), (
         f"snapshot moved to {solve} solve / {refuse} refuse — if a Phase 5b "
         f"slice landed, update this expectation and the affected rows' "
         f"baseline fields in lockstep"

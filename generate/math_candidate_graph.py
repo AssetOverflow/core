@@ -521,41 +521,19 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_enumerated=0, branches_admissible=0,
         )
 
-    # ADR-0195 — product promotion bridge.  The sealed pooled derivation
-    # reader can solve complete multiplicative aggregates that the
-    # candidate-graph recognizer still refuses at the injector boundary,
-    # but the pooled reader is not safe to promote wholesale.  Expose only
-    # complete pure-product readings whose target/hazard gate proves this
-    # is an aggregate product, not a rate/residual/percentage/equation.
-    from generate.derivation.product_bridge import resolve_promotable_product
-
-    product_resolution = resolve_promotable_product(text)
-    if product_resolution is not None:
-        return CandidateGraphResult(
-            answer=product_resolution.answer,
-            selected_graph=None,
-            refusal_reason=None,
-            branches_enumerated=1,
-            branches_admissible=1,
-        )
-
-    # ADR-0207 §5 step 2 — goal-residual promotion bridge (R4).  The pooled reader
-    # builds `goal - Σprogress` for residual-to-target questions; this gate promotes
-    # only the self-verified single-referent goal-residual reading, which reads the
-    # GOAL (not a possession — proven by the gain-goal divergence firewall).  Narrow
-    # and refuse-preferring (2/455 visible cases, 0 wrong); the sealed 1,319 is the
-    # operator/CI bar (ADR-0207 §6).
-    from generate.derivation.goal_residual import resolve_promotable_goal_residual
-
-    goal_resolution = resolve_promotable_goal_residual(text)
-    if goal_resolution is not None:
-        return CandidateGraphResult(
-            answer=goal_resolution.answer,
-            selected_graph=None,
-            refusal_reason=None,
-            branches_enumerated=1,
-            branches_admissible=1,
-        )
+    # ── DISABLED (2026-06-04): serving promotion bridges removed ──────────────
+    # The FIRST real sealed measurement (1,319 held-out GSM8K, decrypted by the
+    # operator) showed the product-promotion bridge (ADR-0195) commits 0 correct /
+    # 5 WRONG on held-out — a `wrong=0` breach that was invisible because the
+    # working metric was the 50-case train sample the bridges were tuned to.
+    # Bisection: disabling `resolve_promotable_product` restores sealed 0/0/1319.
+    # `resolve_promotable_goal_residual` (ADR-0207 §5 step 2) is 0/0 on held-out
+    # (inert) — removed too, since its only effect was inflating the train proxy.
+    # Both production modules remain in generate/derivation/; only their serving
+    # promotion is unwired, until a gate is built that is proven `wrong=0` on the
+    # SEALED set (not the train sample). Restoring `wrong=0` is the prime directive
+    # and outranks the train-sample "correct" the bridges produced.
+    # ──────────────────────────────────────────────────────────────────────────
 
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.

@@ -45,6 +45,17 @@ material that blurs them is a credibility risk.
   CI-reproducible without the holdout key. Never present A as an accuracy
   achievement — present it as zero-confabulation discipline plus an honest
   coverage gap.
+
+  > **⚠ 2026-06-04 — `wrong=0` breach found and remediated.** The first re-run of
+  > this sealed lane since the original record measured **`0 / 5 / 1314`** — the
+  > `product_bridge` serving promotion (ADR-0195) had been silently committing **5
+  > wrong** on held-out, invisible because the working metric was the 50-case train
+  > sample it was tuned to. Bisection isolated it; both serving promotion bridges
+  > (`product_bridge`, `goal_residual`/ADR-0207 §5 step 2) were **disabled**
+  > (`generate/math_candidate_graph.py`), restoring `0/0/1319`. **The bridges must
+  > not be re-enabled without a gate proven `wrong=0` on this sealed set, not the
+  > train sample.** Lesson: the train_sample number had **zero predictive validity**
+  > for the exam; never treat it as the score again.
 - **(B) A frontier *comparison*, not a benchmark result.** 150/150 is on a split
   **CORE wrote**, designed to exercise its own grammar without data
   contamination. `frontier.json` itself flags the "apples-vs-oranges" caveat:
