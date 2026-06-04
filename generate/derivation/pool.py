@@ -30,6 +30,7 @@ never invoked here).
 from __future__ import annotations
 
 from generate.derivation.accumulate import accumulation_candidates
+from generate.derivation.goal_residual import build_goal_residual
 from generate.derivation.model import GroundedDerivation
 from generate.derivation.multistep import candidate_chains
 from generate.derivation.search import multiplicative_candidates
@@ -42,10 +43,12 @@ def pooled_candidates(problem_text: str) -> list[GroundedDerivation]:
     order (accumulation, then multiplicative, then chain)."""
     seen: set[tuple[object, ...]] = set()
     pooled: list[GroundedDerivation] = []
+    _goal_residual = build_goal_residual(problem_text)
     for derivation in (
         *accumulation_candidates(problem_text),
         *multiplicative_candidates(problem_text),
         *candidate_chains(problem_text),
+        *((_goal_residual,) if _goal_residual is not None else ()),
     ):
         key = (
             round(derivation.answer, 9),

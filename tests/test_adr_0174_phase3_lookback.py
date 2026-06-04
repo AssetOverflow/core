@@ -17,7 +17,7 @@ Acceptance tests:
   4. Refusal-preferring discipline: a held statement with no discourse
      antecedent emits a "no_antecedent" trace event and drops cleanly.
 
-  5. wrong=0 preserved on train_sample/v1 (score unchanged at 6/44/0).
+  5. wrong=0 preserved on train_sample/v1 (score now 7/43/0 after ADR-0207 §5 step 2).
 
 Phase 3a substrate scope: this PR builds the reevaluate operator and
 wires pronoun resolution into the recognizer-injection branch of

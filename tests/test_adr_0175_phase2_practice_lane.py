@@ -160,15 +160,16 @@ class TestRunPractice:
 
 class TestLiveLane:
     def test_live_practice_mirrors_serving_today(self) -> None:
-        # With the refuse-preferring engine, practice == serving (6/44/0).
+        # With the refuse-preferring engine, practice == serving (7/43/0 after
+        # ADR-0207 §5 step 2 lifted cv-0005/0037 via goal-residual).
         # Attempts/eliminations go live in Phase 3.
         rep = build_report()
-        assert rep.counts == {"correct": 6, "wrong": 0, "refused": 44}
+        assert rep.counts == {"correct": 7, "wrong": 0, "refused": 43}
         assert len(rep.elimination_records) == 0  # no wrongs yet
 
     def test_every_refusal_is_diagnosed(self) -> None:
         rep = build_report()
-        assert len(rep.refusal_diagnoses) == 44
+        assert len(rep.refusal_diagnoses) == 43
         assert all(d in REFUSAL_DIAGNOSES for d in rep.refusal_diagnoses.values())
 
 
@@ -185,7 +186,7 @@ class TestSealInvariant:
         )
         build_report()  # run practice
         serving = serving_build_report(_load_cases(_CASES_PATH))
-        assert serving["counts"] == {"correct": 6, "wrong": 0, "refused": 44}
+        assert serving["counts"] == {"correct": 7, "wrong": 0, "refused": 43}
 
     def test_no_serving_module_imports_the_practice_lane(self) -> None:
         import subprocess

@@ -39,7 +39,7 @@ is where the shape is blocked (see §3). Golds are dataset-sourced (corpus invar
 | cv-0007 | R6 | 21 | 3 | None | 0/0/0 | none | **B** target |
 | cv-0008 | R6 | 15 | 1 | None | 0/0/0 | none | **A**+**B** extraction+target |
 | cv-0009 | compare_mult | 60 | 1 | altogether | 0/0/0 | none | **A** extraction |
-| cv-0018 | compare_mult | 28 | 2 | None | 0/0/2 | wrong-only | **C** production |
+| cv-0018 | *(control)* | 28 | 2 | None | 0/0/2 | wrong-only (derivation) | control — `gate=baseline`, **already solves on serving** (not a lift target) |
 | cv-0019 | additive | 1200 | 2 | None | 0/0/0 | none | **B** target |
 | cv-0017 | *(control)* | 438 | 5 | None | 0/0/2 | wrong-only | control — solves on serving |
 | cv-0020 | *(control)* | 450 | 3 | total | 0/1/2 | **GOLD-BUILT** | control — **D** gate exemplar |
