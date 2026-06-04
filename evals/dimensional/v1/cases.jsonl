@@ -1,0 +1,12 @@
+{"gold": "length^2", "id": "dim-v1-0001", "left": "meter", "op": "product", "right": "meter"}
+{"gold": "length/time", "id": "dim-v1-0002", "left": "meter", "op": "quotient", "right": "second"}
+{"gold": "length", "id": "dim-v1-0003", "left": "meter_per_second", "op": "product", "right": "second"}
+{"gold": "money/time", "id": "dim-v1-0004", "left": "dollar", "op": "quotient", "right": "hour"}
+{"gold": "time*money", "id": "dim-v1-0005", "left": "dollar", "op": "product", "right": "hour"}
+{"gold": "mass/length", "id": "dim-v1-0006", "left": "kilogram", "op": "quotient", "right": "meter"}
+{"gold": "length*time", "id": "dim-v1-0007", "left": "meter", "op": "product", "right": "second"}
+{"gold": "length/time", "id": "dim-v1-0008", "left": "mile", "op": "quotient", "right": "hour"}
+{"gold": "dimensionless", "id": "dim-v1-0009", "left": "foot", "op": "quotient", "right": "foot"}
+{"gold": "length^2", "id": "dim-v1-0010", "left": "foot", "op": "product", "right": "foot"}
+{"gold": "refused", "id": "dim-v1-0011", "left": "dollar", "op": "quotient", "right": "apple"}
+{"gold": "refused", "id": "dim-v1-0012", "left": "gravitons", "op": "product", "right": "second"}
