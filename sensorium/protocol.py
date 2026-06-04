@@ -42,6 +42,7 @@ class Modality(str, Enum):
     TEXT   = "text"
     VISION = "vision"
     AUDIO  = "audio"
+    SENSORIMOTOR = "sensorimotor"
     MOTOR  = "motor"
 
 
