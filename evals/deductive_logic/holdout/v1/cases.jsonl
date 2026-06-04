@@ -1,0 +1,500 @@
+{"gold": "unknown", "id": "dl-holdout-v1-0000", "premises": ["b", "a", "~g", "(e) -> a", "(b) -> ~d", "(g & d) -> ~g", "(e) -> ~b", "(g & a) -> b"], "query": "~c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0001", "premises": ["d", "c", "(~b) -> d", "(b) -> ~c", "(~b & d) -> ~b"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0002", "premises": ["d", "(d) -> b", "(d) -> d", "(e) -> d"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0003", "premises": ["e", "~d", "b", "(c & ~f) -> d", "(c) -> c"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0004", "premises": ["g", "(~g) -> d", "(~g & ~f) -> ~a", "(~e & a) -> ~b"], "query": "c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0005", "premises": ["f", "g", "c", "(~a & ~d) -> ~f", "(~d & g) -> ~c", "(~e & f) -> ~a", "(~f & a) -> a", "(b) -> ~a"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0006", "premises": ["a", "(~b & d) -> a", "(e & ~a) -> d", "(g) -> d", "(c) -> ~f", "(~d & ~c) -> ~b"], "query": "~e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0007", "premises": ["~e", "(a & ~e) -> e", "(~g & ~e) -> a"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0008", "premises": ["e", "(~e & ~d) -> d", "(~d) -> ~f", "(c) -> ~c"], "query": "~f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0009", "premises": ["g", "(a) -> ~e", "(a & ~e) -> g", "(g) -> a", "(~g & ~a) -> f"], "query": "~g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0010", "premises": ["~e", "(d) -> e", "(~c & e) -> ~d", "(c & g) -> c"], "query": "~e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0011", "premises": ["e", "~g", "(g) -> d", "(b) -> c", "(~f & ~g) -> ~e"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0012", "premises": ["c", "~a", "(b & g) -> ~c", "(f & d) -> f", "(a) -> a"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0013", "premises": ["c", "(b) -> d", "(e & ~f) -> ~g"], "query": "a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0014", "premises": ["g", "(d) -> ~b", "(~c & f) -> c", "(c) -> ~c", "(c) -> g"], "query": "f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0015", "premises": ["f", "(~d & b) -> ~b", "(e) -> ~f"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0016", "premises": ["~g", "(~a) -> b", "(g & ~a) -> b", "(~g) -> a"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0017", "premises": ["~b", "(~c) -> ~f", "(f) -> ~g"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0018", "premises": ["c", "(d & ~b) -> d", "(f) -> ~c"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0019", "premises": ["~d", "~a", "~g", "(~g) -> ~f", "(g & c) -> ~f"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0020", "premises": ["~b", "~g", "(e & b) -> a", "(~f) -> e", "(~c) -> a", "(c) -> e"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0021", "premises": ["f", "(~a & b) -> f", "(~e) -> b"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0022", "premises": ["f", "a", "g", "(e & g) -> g", "(~a & f) -> d", "(~e) -> g", "(b) -> ~b"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0023", "premises": ["~e", "(d & ~f) -> ~c", "(~a) -> f"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0024", "premises": ["~b", "g", "(a) -> ~a", "(~f & ~b) -> ~f", "(~g) -> e"], "query": "d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0025", "premises": ["f", "(c) -> f", "(b & ~e) -> ~b", "(e) -> ~c", "(f & ~b) -> e"], "query": "f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0026", "premises": ["~c", "~f", "(b & ~c) -> c", "(~d & ~b) -> f", "(~f & ~d) -> c", "(f & ~d) -> ~c"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0027", "premises": ["e", "(e & ~d) -> a", "(d & a) -> d", "(~c) -> ~a", "(f & ~d) -> e"], "query": "c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0028", "premises": ["~b", "~c", "~f", "(f & e) -> f", "(~e) -> a", "(~g) -> ~c", "(d & ~b) -> ~c", "(e) -> ~g"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0029", "premises": ["e", "(~d & a) -> ~d", "(c) -> ~d", "(a & ~g) -> ~b", "(f & g) -> f"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0030", "premises": ["~c", "(~b & g) -> g", "(c & b) -> ~g", "(~a & ~f) -> d", "(d & ~e) -> e"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0031", "premises": ["g", "(c & ~b) -> g", "(~d) -> g", "(e) -> g"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0032", "premises": ["e", "a", "~g", "(~d) -> ~d", "(~c) -> ~b"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0033", "premises": ["g", "f", "(d) -> d", "(~g & ~d) -> a", "(~g) -> ~a", "(~a & ~g) -> ~d"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0034", "premises": ["c", "e", "(~e & ~b) -> ~c", "(c & e) -> e", "(~e) -> c"], "query": "c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0035", "premises": ["~g", "(~e & c) -> c", "(~c & ~g) -> d", "(g) -> ~d", "(e) -> g", "(d) -> e"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0036", "premises": ["~b", "(~b) -> ~d", "(~e & f) -> ~e", "(d) -> ~f", "(~e & ~f) -> f"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0037", "premises": ["f", "~b", "(~d & g) -> b", "(f & g) -> f", "(d & a) -> ~b", "(g & ~a) -> b", "(~a) -> g"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0038", "premises": ["c", "(f & ~d) -> ~d", "(a) -> c", "(e & ~d) -> a", "(~a) -> ~f", "(d) -> ~c"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0039", "premises": ["g", "b", "(g & a) -> a", "(~e) -> a", "(g) -> g", "(a & ~g) -> ~a"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0040", "premises": ["~a", "(f & ~b) -> b", "(d) -> d", "(a) -> ~f", "(f & g) -> a", "(~a & ~g) -> f"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0041", "premises": ["d", "e", "(~c & ~d) -> c", "(~g) -> ~d", "(a & ~d) -> ~g", "(f & ~d) -> f", "(g & ~b) -> a"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0042", "premises": ["c", "(a) -> b", "(~c & a) -> a"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0043", "premises": ["~f", "~d", "(~e) -> ~c", "(b & ~g) -> g", "(d) -> ~d", "(b) -> ~a"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0044", "premises": ["f", "(f & ~d) -> ~e", "(d & e) -> f"], "query": "~b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0045", "premises": ["a", "c", "(f & c) -> ~c", "(b & ~a) -> a", "(a) -> a", "(~b) -> ~b"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0046", "premises": ["c", "b", "(~b & g) -> g", "(f) -> f", "(g & ~d) -> f"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0047", "premises": ["b", "d", "(~a & ~e) -> ~e", "(b & ~d) -> ~d", "(~d & ~b) -> d", "(~d & e) -> ~d"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0048", "premises": ["c", "~e", "d", "(~g) -> a", "(a & ~d) -> ~e", "(~g) -> g", "(~a) -> ~g", "(~c & ~g) -> e"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0049", "premises": ["~g", "a", "(c) -> a", "(~e & a) -> c"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0050", "premises": ["d", "(c) -> g", "(d) -> b", "(g & ~b) -> ~g", "(~g) -> ~g", "(~d & ~c) -> g"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0051", "premises": ["~b", "d", "(a & ~f) -> ~e", "(e & a) -> ~d", "(~f & e) -> e"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0052", "premises": ["~e", "(c) -> ~c", "(~d & ~c) -> ~c", "(e) -> a", "(~d & ~c) -> ~c"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0053", "premises": ["b", "e", "(~b) -> ~e", "(a) -> ~g"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0054", "premises": ["~e", "(~e & ~c) -> ~a", "(~a) -> ~a", "(a & g) -> e", "(~d & ~b) -> a", "(~a & ~g) -> g"], "query": "b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0055", "premises": ["f", "~a", "(~f) -> a", "(~d & ~a) -> ~d", "(d & ~f) -> e"], "query": "~f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0056", "premises": ["~g", "(~d) -> ~d", "(~e & ~g) -> g", "(g & b) -> ~g", "(~g) -> d", "(~b & d) -> e"], "query": "g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0057", "premises": ["d", "f", "(f & ~d) -> ~f", "(b & ~a) -> ~b", "(~a & ~b) -> f"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0058", "premises": ["~e", "(~b) -> b", "(~e & ~b) -> ~d", "(~c) -> d", "(c) -> b", "(~e & d) -> b"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0059", "premises": ["b", "~e", "(~b) -> ~b", "(~d & a) -> ~a"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0060", "premises": ["~c", "(~d) -> ~c", "(b) -> ~d", "(f) -> c", "(~g) -> ~b", "(b) -> ~g"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0061", "premises": ["~e", "~c", "(~a & ~b) -> ~g", "(e & a) -> a"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0062", "premises": ["~c", "~f", "(~f) -> d", "(~c & ~b) -> ~f"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0063", "premises": ["~e", "(b) -> ~e", "(~b) -> ~e"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0064", "premises": ["~d", "(a) -> b", "(d & c) -> ~g", "(d) -> ~g"], "query": "~a"}
+{"gold": "entailed", "id": "dl-holdout-v1-0065", "premises": ["e", "~f", "(~f & ~b) -> b", "(~d & a) -> ~e"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0066", "premises": ["~d", "(~f & ~d) -> ~a", "(~e) -> f", "(g & ~f) -> c", "(~b & a) -> ~f", "(e & ~a) -> b"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0067", "premises": ["b", "(~c & f) -> b", "(~c & ~f) -> b", "(~e) -> ~c", "(~g & ~b) -> f", "(b) -> b"], "query": "~e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0068", "premises": ["a", "(a & b) -> ~c", "(~c & ~f) -> ~c", "(f) -> a", "(~f) -> f"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0069", "premises": ["~a", "(b & f) -> ~d", "(~f) -> f", "(~g) -> a", "(~f) -> d", "(f) -> e"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0070", "premises": ["d", "(f & d) -> ~a", "(a & ~c) -> a"], "query": "~c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0071", "premises": ["~c", "(e) -> b", "(g) -> c", "(b & ~g) -> ~e", "(g) -> c"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0072", "premises": ["~f", "(g & ~a) -> d", "(~b & c) -> ~c", "(e) -> a", "(~d) -> ~b"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0073", "premises": ["d", "(~f & g) -> ~b", "(~b & f) -> e", "(~e & c) -> ~f", "(g) -> ~d", "(e & d) -> ~g"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0074", "premises": ["~c", "(b) -> a", "(~c) -> ~e", "(d & e) -> e"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0075", "premises": ["~g", "(d & ~g) -> c", "(g & b) -> b", "(~f & b) -> c"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0076", "premises": ["d", "e", "(~c) -> e", "(~g) -> a", "(c) -> ~a", "(~e & ~c) -> c"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0077", "premises": ["~d", "(~g) -> c", "(~d & ~g) -> ~d", "(~b) -> ~b", "(~g & b) -> e"], "query": "~c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0078", "premises": ["a", "(~b & d) -> d", "(~a & b) -> ~b", "(g) -> ~a", "(d) -> ~a"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0079", "premises": ["~a", "~b", "(d & e) -> ~b", "(~c) -> f"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0080", "premises": ["f", "a", "(~a & ~b) -> c", "(f & a) -> b", "(c & g) -> c", "(c) -> ~a", "(~a & f) -> ~a"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0081", "premises": ["~a", "c", "(b) -> ~f", "(a & d) -> e", "(~d) -> b"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0082", "premises": ["~b", "(~a & ~b) -> c", "(b & ~d) -> ~c"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0083", "premises": ["d", "(~a & ~d) -> ~e", "(~e & g) -> e", "(g & e) -> g", "(~g) -> a"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0084", "premises": ["f", "e", "(~a) -> f", "(~e) -> ~c", "(b & ~d) -> ~g"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0085", "premises": ["c", "(e) -> e", "(b) -> ~b", "(e) -> ~e", "(a & b) -> f", "(b & ~g) -> a"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0086", "premises": ["b", "(~f) -> d", "(f) -> ~g", "(d & ~b) -> ~f", "(~d & ~g) -> ~d"], "query": "d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0087", "premises": ["e", "~a", "(c & e) -> a", "(~d & ~a) -> a", "(c) -> e", "(e & b) -> ~b", "(~b) -> ~c"], "query": "a"}
+{"gold": "entailed", "id": "dl-holdout-v1-0088", "premises": ["f", "~e", "(c) -> g", "(e) -> ~e", "(f & c) -> ~f"], "query": "~c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0089", "premises": ["~d", "g", "(~c & ~f) -> ~d", "(~d & b) -> ~a"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0090", "premises": ["e", "(~d) -> ~e", "(~d & g) -> g", "(e & d) -> ~b"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0091", "premises": ["e", "c", "(~a) -> b", "(a & e) -> ~b"], "query": "~a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0092", "premises": ["~g", "f", "(~e) -> g", "(~g) -> ~c", "(e & f) -> f"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0093", "premises": ["c", "g", "(c & a) -> ~b", "(a) -> g"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0094", "premises": ["c", "(~b & ~f) -> e", "(~d & ~e) -> e"], "query": "f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0095", "premises": ["~g", "f", "(e) -> ~f", "(e & f) -> g", "(e) -> c", "(~e) -> ~g"], "query": "f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0096", "premises": ["c", "~e", "d", "(a & ~d) -> ~a", "(~g & ~b) -> d"], "query": "d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0097", "premises": ["d", "(~c & ~b) -> a", "(a & ~e) -> ~f"], "query": "d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0098", "premises": ["f", "~d", "(~d) -> ~b", "(d) -> e"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0099", "premises": ["e", "(e) -> g", "(e & g) -> ~b"], "query": "g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0100", "premises": ["g", "~c", "(b) -> ~e", "(e) -> c"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0101", "premises": ["a", "(a) -> a", "(~c & a) -> a", "(d) -> c"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0102", "premises": ["d", "(~b & c) -> ~c", "(d) -> ~f", "(~b & f) -> b"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0103", "premises": ["d", "~a", "(f & ~d) -> ~f", "(a & ~c) -> d"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0104", "premises": ["~g", "e", "~d", "(~b & ~f) -> ~g", "(~d) -> a", "(e) -> a", "(~e & ~f) -> f", "(g & ~d) -> d"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0105", "premises": ["a", "(~d) -> b", "(~b) -> e", "(~a & ~g) -> ~a", "(~a) -> ~g"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0106", "premises": ["d", "g", "f", "(e & f) -> d", "(b & ~c) -> ~g"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0107", "premises": ["~b", "(b) -> ~g", "(a) -> ~e"], "query": "~g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0108", "premises": ["c", "~b", "(c) -> f", "(b & f) -> d", "(c) -> d"], "query": "c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0109", "premises": ["~f", "c", "(~d & c) -> e", "(e) -> ~d"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0110", "premises": ["~e", "~b", "(f) -> g", "(~f & ~e) -> ~g", "(~e) -> ~f", "(g) -> ~e", "(g & ~e) -> ~b"], "query": "g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0111", "premises": ["a", "~f", "~d", "(a & ~c) -> ~e", "(~c) -> ~b", "(~f & a) -> ~d", "(c) -> ~c"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0112", "premises": ["~c", "~b", "(c) -> ~e", "(c) -> c", "(e) -> f", "(~c & ~a) -> b"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0113", "premises": ["g", "a", "(d) -> ~f", "(~a & f) -> ~d"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0114", "premises": ["~f", "d", "(~d) -> ~f", "(f & ~g) -> g"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0115", "premises": ["g", "(~d & e) -> d", "(d) -> ~c", "(~c & f) -> g", "(g & e) -> ~b"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0116", "premises": ["~b", "c", "(e & ~c) -> c", "(~d) -> ~g", "(d & ~e) -> ~d", "(c) -> ~b"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0117", "premises": ["~b", "~f", "(b) -> ~d", "(~f & c) -> ~b", "(~f) -> a"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0118", "premises": ["~a", "(~d & a) -> d", "(~a) -> b", "(~b & ~e) -> ~b"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0119", "premises": ["b", "~g", "(~g & ~d) -> e", "(d & g) -> ~b", "(d & g) -> ~e", "(b) -> ~e"], "query": "d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0120", "premises": ["e", "b", "(b & ~c) -> ~c", "(~f & e) -> ~b"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0121", "premises": ["c", "~g", "(b) -> e", "(g) -> ~f", "(e) -> g"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0122", "premises": ["~b", "d", "(~d & ~a) -> a", "(d & c) -> ~f", "(~d & c) -> ~a", "(b) -> ~f", "(c & ~e) -> ~a"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0123", "premises": ["f", "~e", "(~a) -> ~f", "(~f) -> a"], "query": "~e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0124", "premises": ["~g", "(b) -> e", "(~b) -> ~c", "(~b) -> c", "(~b) -> ~b"], "query": "~b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0125", "premises": ["~d", "g", "(~b & ~g) -> d", "(~b) -> ~g", "(~e & ~f) -> ~e", "(d & ~f) -> e"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0126", "premises": ["d", "(c & ~e) -> e", "(c & d) -> d", "(c & f) -> ~c", "(~d & ~e) -> ~f", "(f & c) -> c"], "query": "~f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0127", "premises": ["~d", "(c & ~d) -> ~f", "(~d & a) -> a", "(b & ~d) -> d", "(f & c) -> b", "(b & ~d) -> ~f"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0128", "premises": ["b", "a", "(b) -> d", "(~c & ~a) -> ~d", "(~b & ~a) -> ~b"], "query": "b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0129", "premises": ["~b", "~f", "(~c & ~b) -> f", "(~a & ~f) -> a", "(b & a) -> ~f"], "query": "~a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0130", "premises": ["~a", "b", "(f & e) -> e", "(~e) -> ~f", "(~g) -> f", "(a & e) -> ~f", "(b) -> b"], "query": "~b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0131", "premises": ["f", "~g", "(~f & ~b) -> f", "(~f & g) -> ~g", "(~b & ~g) -> ~b", "(~f & b) -> ~b", "(b & ~g) -> b"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0132", "premises": ["c", "~b", "(g & b) -> g", "(~e) -> ~f", "(~a & ~b) -> a", "(d) -> ~a"], "query": "~g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0133", "premises": ["~d", "e", "(~f & ~a) -> ~c", "(d) -> c"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0134", "premises": ["~a", "~d", "(f) -> a", "(f) -> ~c", "(e) -> c", "(~d & ~c) -> ~a", "(f) -> f"], "query": "~a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0135", "premises": ["~d", "(a) -> ~d", "(a) -> e", "(c) -> ~d"], "query": "d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0136", "premises": ["~a", "(~c) -> g", "(~f) -> a"], "query": "~f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0137", "premises": ["~f", "~e", "(g & e) -> f", "(~g & ~e) -> ~f", "(~e & ~g) -> ~b", "(~f & g) -> c"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0138", "premises": ["a", "f", "~e", "(~f) -> e", "(~c & e) -> b"], "query": "~c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0139", "premises": ["c", "(g & ~a) -> f", "(~g) -> ~g", "(a) -> ~e", "(c) -> e"], "query": "~a"}
+{"gold": "entailed", "id": "dl-holdout-v1-0140", "premises": ["~d", "(~a) -> c", "(~a) -> ~c", "(~d & ~c) -> a", "(~c & g) -> ~e", "(~e & a) -> ~a"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0141", "premises": ["c", "~b", "e", "(a & f) -> e", "(~f & a) -> ~b", "(e & c) -> c", "(~a) -> f"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0142", "premises": ["e", "~b", "(c & ~g) -> e", "(~g) -> ~g"], "query": "~f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0143", "premises": ["~a", "d", "c", "(a & ~c) -> ~f", "(f) -> ~e", "(a & c) -> a", "(~c & f) -> ~e", "(c) -> ~e"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0144", "premises": ["~b", "(~g & ~d) -> d", "(b & d) -> ~b", "(~d & g) -> ~g"], "query": "~e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0145", "premises": ["~a", "~d", "e", "(d) -> g", "(e & f) -> ~d", "(~f & a) -> ~f", "(~f & ~e) -> ~e", "(~f & a) -> b"], "query": "a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0146", "premises": ["~g", "e", "~f", "(~e & g) -> ~b", "(b) -> ~b", "(g & ~b) -> b", "(~e) -> ~g", "(d) -> ~e"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0147", "premises": ["~g", "~f", "(~b) -> f", "(~c & g) -> ~g"], "query": "~f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0148", "premises": ["b", "d", "f", "(~c & g) -> g", "(~f) -> ~e", "(~d & b) -> c", "(~e & ~b) -> b", "(g & b) -> ~b"], "query": "~g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0149", "premises": ["~a", "f", "(a) -> a", "(b & e) -> ~e", "(a) -> a"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0150", "premises": ["~d", "~b", "f", "(~b & d) -> ~d", "(~f) -> ~e", "(g & ~c) -> ~g"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0151", "premises": ["~a", "(b & ~d) -> ~g", "(e & ~f) -> ~d", "(~d & g) -> ~b"], "query": "~b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0152", "premises": ["d", "(~e & ~g) -> ~d", "(g & ~d) -> ~e"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0153", "premises": ["~f", "(~a) -> a", "(~f) -> c", "(f & g) -> ~c"], "query": "~e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0154", "premises": ["e", "(~a) -> a", "(e) -> g"], "query": "a"}
+{"gold": "entailed", "id": "dl-holdout-v1-0155", "premises": ["~f", "~d", "(~a & f) -> e", "(~g & c) -> a", "(~e) -> ~d"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0156", "premises": ["~f", "(e & ~f) -> c", "(~f & ~c) -> f"], "query": "~g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0157", "premises": ["~c", "a", "(a & ~f) -> ~a", "(~c & ~f) -> ~g", "(~c) -> ~g", "(~c & ~g) -> f", "(f) -> a"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0158", "premises": ["~e", "(~d & ~b) -> b", "(f & a) -> ~b", "(f & g) -> ~a", "(f & ~g) -> ~b"], "query": "g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0159", "premises": ["g", "c", "~e", "(a & e) -> g", "(~c) -> f"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0160", "premises": ["b", "(~g) -> a", "(b & e) -> ~g", "(e) -> g"], "query": "g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0161", "premises": ["~e", "a", "g", "(f & ~g) -> ~g", "(~b) -> b", "(~b & ~g) -> e", "(c & a) -> b", "(g & ~b) -> c"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0162", "premises": ["~e", "(c) -> e", "(b & e) -> ~d"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0163", "premises": ["~a", "~e", "f", "(f & g) -> b", "(~b) -> ~e"], "query": "g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0164", "premises": ["f", "(e & ~b) -> f", "(~e & c) -> f", "(g & ~c) -> e", "(g & ~e) -> e"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0165", "premises": ["g", "~c", "b", "(e) -> ~e", "(~g & b) -> f", "(~b) -> ~b", "(~c & e) -> ~c", "(~f) -> a"], "query": "e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0166", "premises": ["~g", "(~c) -> g", "(c) -> ~d", "(g & ~c) -> a"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0167", "premises": ["e", "(~d & ~b) -> c", "(g & ~b) -> e"], "query": "~b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0168", "premises": ["b", "(g) -> ~b", "(b) -> ~e"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0169", "premises": ["a", "(~e & ~d) -> ~g", "(~a & d) -> ~e", "(g & ~b) -> d", "(a & g) -> b", "(a & ~b) -> d"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0170", "premises": ["~e", "c", "(g & a) -> c", "(g & ~b) -> a"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0171", "premises": ["g", "e", "~d", "(~b) -> ~c", "(e) -> a", "(~d & b) -> g"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0172", "premises": ["~b", "e", "(~e) -> a", "(b) -> d", "(b) -> d", "(a) -> a"], "query": "~b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0173", "premises": ["b", "(a & e) -> b", "(e & a) -> a"], "query": "~b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0174", "premises": ["f", "e", "(~g) -> c", "(~b) -> ~b"], "query": "f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0175", "premises": ["b", "~e", "~f", "(d & ~e) -> e", "(~g) -> f"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0176", "premises": ["d", "(b & e) -> ~b", "(~b) -> e"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0177", "premises": ["~b", "(e) -> e", "(d & ~a) -> ~a", "(~e) -> b", "(~a & ~g) -> ~e", "(~e) -> g"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0178", "premises": ["e", "(~f & ~d) -> e", "(e) -> a"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0179", "premises": ["c", "(~d & ~c) -> ~d", "(~b) -> f", "(b & d) -> ~a"], "query": "a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0180", "premises": ["~c", "a", "(~c) -> g", "(e) -> e", "(a) -> a", "(~d & ~g) -> g", "(~c) -> g"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0181", "premises": ["e", "(c) -> ~e", "(c & ~g) -> ~d", "(d & e) -> ~g", "(e & g) -> ~a"], "query": "g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0182", "premises": ["~c", "~a", "~b", "(c & d) -> a", "(~e & ~b) -> b"], "query": "~b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0183", "premises": ["~c", "(~g & ~a) -> e", "(~a) -> b", "(~e & c) -> ~d"], "query": "~c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0184", "premises": ["b", "f", "(~b) -> d", "(~f & ~b) -> b", "(~f) -> ~a", "(a) -> ~f"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0185", "premises": ["~d", "~f", "(~e & ~c) -> d", "(b & ~c) -> b", "(c) -> ~d"], "query": "b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0186", "premises": ["~e", "(a) -> c", "(a & c) -> e", "(~a) -> c", "(c & ~d) -> ~e", "(~a & e) -> ~e"], "query": "a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0187", "premises": ["f", "c", "(b) -> b", "(e) -> ~c", "(e) -> ~b", "(f) -> f"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0188", "premises": ["f", "e", "(b & ~d) -> d", "(~e) -> ~d"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0189", "premises": ["~d", "(~g & e) -> ~d", "(b & a) -> ~b", "(~d) -> b", "(~g) -> c", "(~a & ~g) -> c"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0190", "premises": ["~b", "e", "c", "(b) -> g", "(e) -> e", "(d & ~e) -> g", "(~c & ~g) -> ~g"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0191", "premises": ["f", "d", "(~f & ~b) -> f", "(d) -> b", "(~c & ~d) -> ~b", "(g & ~f) -> ~d", "(b & ~g) -> ~d"], "query": "d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0192", "premises": ["~g", "~a", "(c) -> ~c", "(~g & c) -> g", "(~d & ~a) -> ~a"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0193", "premises": ["b", "~a", "f", "(~a) -> e", "(~c) -> ~g", "(~f) -> ~f", "(~e & g) -> a", "(e & ~d) -> ~d"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0194", "premises": ["~a", "d", "(c) -> ~b", "(~c) -> ~b"], "query": "b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0195", "premises": ["~d", "~e", "(c & ~g) -> b", "(f) -> f", "(g) -> e", "(e) -> c"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0196", "premises": ["a", "(a) -> ~b", "(~c) -> a", "(~g & ~b) -> b"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0197", "premises": ["~c", "(~d) -> ~a", "(b) -> f"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0198", "premises": ["~b", "a", "(b) -> a", "(~c) -> d", "(d & ~b) -> ~b", "(d) -> a"], "query": "b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0199", "premises": ["b", "(e & g) -> a", "(~e) -> g", "(g & ~b) -> b", "(b) -> c", "(b) -> a"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0200", "premises": ["~e", "a", "g", "(b) -> ~c", "(~a & b) -> ~f"], "query": "d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0201", "premises": ["c", "(c & ~f) -> c", "(~c) -> c"], "query": "c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0202", "premises": ["e", "c", "(e & f) -> ~f", "(~c) -> g", "(b & ~c) -> ~b", "(~g & c) -> ~b"], "query": "e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0203", "premises": ["a", "c", "~e", "(~a & ~e) -> ~c", "(f & ~e) -> c"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0204", "premises": ["g", "(~a) -> g", "(~g & ~f) -> c"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0205", "premises": ["b", "(b & ~f) -> f", "(g & a) -> a", "(~f & ~g) -> b"], "query": "~e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0206", "premises": ["~g", "~e", "f", "(~e) -> ~e", "(b & ~c) -> e", "(~b) -> ~b", "(d) -> ~f"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0207", "premises": ["~d", "(~g) -> f", "(f & e) -> d", "(d) -> f", "(~e & ~g) -> g"], "query": "~f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0208", "premises": ["g", "(~e) -> ~g", "(g) -> ~d", "(~c & e) -> a"], "query": "g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0209", "premises": ["~d", "(~e & ~f) -> d", "(c & e) -> ~e", "(~f & ~c) -> c", "(~e) -> e", "(~e) -> e"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0210", "premises": ["e", "(g) -> ~c", "(~g & ~c) -> ~c", "(c) -> g", "(~b & ~f) -> f", "(b & e) -> ~e"], "query": "~g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0211", "premises": ["~e", "~d", "b", "(~f & e) -> b", "(~d & ~a) -> d", "(~g) -> c", "(f & ~a) -> ~d", "(~a) -> e"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0212", "premises": ["f", "~a", "(c) -> e", "(~b & e) -> ~b", "(~f & e) -> ~e", "(~b) -> b", "(c & b) -> ~a"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0213", "premises": ["~b", "~a", "(~e & g) -> ~b", "(~b) -> ~g"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0214", "premises": ["b", "(b & d) -> d", "(d & b) -> b", "(~b & g) -> ~d", "(d & ~a) -> a", "(a) -> ~a"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0215", "premises": ["~e", "(~g & c) -> ~c", "(d) -> ~e"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0216", "premises": ["d", "a", "~e", "(e) -> ~b", "(g & ~d) -> ~a", "(~g) -> ~a", "(e & ~a) -> ~g"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0217", "premises": ["g", "e", "(~g) -> ~a", "(a) -> c", "(~a) -> ~a"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0218", "premises": ["~b", "(~c & f) -> c", "(f & a) -> e"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0219", "premises": ["f", "(d) -> ~f", "(~f) -> f"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0220", "premises": ["a", "~g", "~e", "(g & ~e) -> b", "(~d) -> d"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0221", "premises": ["g", "d", "(a) -> d", "(d & ~f) -> ~d"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0222", "premises": ["a", "(~f & ~b) -> ~d", "(c & ~f) -> b", "(~b) -> ~d", "(f & ~b) -> c"], "query": "b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0223", "premises": ["c", "~d", "(f) -> ~a", "(~b) -> ~a", "(~d & ~c) -> c"], "query": "d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0224", "premises": ["~a", "g", "(b) -> ~a", "(~a) -> e", "(~f) -> ~c", "(c) -> c"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0225", "premises": ["f", "~g", "(b) -> g", "(a & ~e) -> d", "(d & f) -> ~g", "(~a) -> ~a", "(~c & ~a) -> ~b"], "query": "e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0226", "premises": ["~f", "g", "e", "(b & d) -> ~a", "(e & d) -> a", "(g & ~a) -> f", "(~e) -> ~d", "(d & e) -> ~g"], "query": "~e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0227", "premises": ["a", "~g", "c", "(~a) -> ~c", "(~a & g) -> b", "(~a) -> ~a", "(~e & ~a) -> b"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0228", "premises": ["~b", "f", "(~d & ~a) -> ~a", "(~c & ~e) -> ~c", "(~b & c) -> ~b"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0229", "premises": ["~e", "(a) -> b", "(d) -> ~d"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0230", "premises": ["~g", "(~e) -> ~e", "(~a & b) -> ~e", "(~b) -> e", "(c & e) -> ~d", "(a & ~d) -> c"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0231", "premises": ["~a", "~b", "(~c) -> ~g", "(~a & c) -> ~e"], "query": "~g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0232", "premises": ["a", "(~f & ~d) -> f", "(~a) -> ~g", "(~g & d) -> ~d", "(d) -> ~f"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0233", "premises": ["~g", "(g & ~d) -> g", "(c) -> ~e", "(~c & e) -> a", "(~a) -> c"], "query": "~c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0234", "premises": ["~f", "~d", "g", "(~a) -> e", "(f) -> ~f", "(~a) -> g", "(c) -> ~g"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0235", "premises": ["~b", "g", "(~b) -> ~e", "(~f) -> b", "(~c) -> e"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0236", "premises": ["~c", "a", "(f & ~g) -> ~b", "(b & g) -> ~c", "(c) -> ~b", "(a & f) -> ~b", "(~g) -> e"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0237", "premises": ["d", "f", "(~f & ~g) -> ~b", "(g & ~c) -> f", "(~e) -> d", "(~d) -> d"], "query": "b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0238", "premises": ["~f", "(f & b) -> ~e", "(~c & f) -> ~c", "(b) -> d", "(e) -> ~e"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0239", "premises": ["~f", "(b & f) -> a", "(f) -> f", "(~g & f) -> ~b", "(f & ~b) -> ~b", "(~f) -> ~g"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0240", "premises": ["~f", "e", "(~d & e) -> c", "(~e) -> a", "(~d & f) -> ~a", "(~d) -> ~e", "(~a & ~e) -> a"], "query": "~b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0241", "premises": ["f", "e", "(a) -> ~g", "(~e & g) -> ~a", "(a & ~g) -> g", "(a) -> f"], "query": "a"}
+{"gold": "entailed", "id": "dl-holdout-v1-0242", "premises": ["b", "~e", "(~b) -> ~f", "(~b) -> ~b", "(e & b) -> ~e", "(e) -> g", "(c & f) -> ~b"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0243", "premises": ["~e", "~f", "d", "(g & d) -> ~c", "(~d & e) -> ~e", "(~b) -> g"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0244", "premises": ["e", "(~b & e) -> b", "(a & b) -> ~f", "(~f & ~e) -> ~d", "(b & ~g) -> ~f", "(e & a) -> ~g"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0245", "premises": ["~d", "~f", "(~g & f) -> d", "(~g & b) -> ~g", "(g & ~f) -> b", "(~d & ~g) -> ~f", "(d) -> ~b"], "query": "~g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0246", "premises": ["~c", "g", "~a", "(~d & c) -> e", "(e) -> b", "(~f) -> d", "(~f & ~b) -> d"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0247", "premises": ["e", "(~b) -> e", "(a) -> ~d", "(~c & e) -> ~a", "(c & ~b) -> d"], "query": "a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0248", "premises": ["~a", "(~a) -> ~f", "(~a) -> ~e", "(~a) -> g"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0249", "premises": ["c", "(~g & ~f) -> f", "(~g & f) -> ~d"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0250", "premises": ["c", "~e", "~d", "(d) -> g", "(~b) -> ~e"], "query": "~a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0251", "premises": ["~e", "f", "~d", "(g & c) -> ~b", "(b & e) -> b", "(b) -> d", "(~b) -> c", "(~e) -> a"], "query": "~f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0252", "premises": ["g", "(f & d) -> ~a", "(a & g) -> ~a", "(f) -> ~f"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0253", "premises": ["~f", "(f & e) -> ~a", "(~f & a) -> ~c", "(~f) -> ~c", "(~c) -> ~e"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0254", "premises": ["~c", "(d & ~a) -> ~g", "(c & ~d) -> ~b", "(~a & ~f) -> c"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0255", "premises": ["~d", "a", "f", "(~g) -> ~d", "(b) -> g"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0256", "premises": ["a", "(~c & ~f) -> ~c", "(c & g) -> c", "(~g & c) -> ~g"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0257", "premises": ["~c", "a", "~f", "(~f) -> g", "(e) -> ~c", "(g & c) -> b"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0258", "premises": ["c", "(~g & ~d) -> e", "(~e) -> c", "(~c & g) -> ~c", "(~e) -> ~d", "(e) -> b"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0259", "premises": ["d", "(g & ~a) -> b", "(f) -> ~g", "(f & b) -> d"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0260", "premises": ["~d", "g", "(d & c) -> ~d", "(f & g) -> ~g", "(f & c) -> ~c", "(~b & g) -> ~g", "(~a & ~d) -> b"], "query": "~e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0261", "premises": ["~b", "d", "~c", "(~f) -> f", "(b & c) -> a"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0262", "premises": ["a", "~d", "(e & ~b) -> e", "(c & ~e) -> ~b", "(e) -> a"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0263", "premises": ["~b", "a", "(~a) -> f", "(~e & ~a) -> ~a"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0264", "premises": ["g", "~a", "(~e) -> g", "(~c & ~e) -> f", "(~d & ~g) -> a", "(~e & g) -> d"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0265", "premises": ["b", "(b & d) -> f", "(~f) -> c", "(c & d) -> ~e"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0266", "premises": ["~b", "~a", "~e", "(g & f) -> c", "(~f & ~g) -> e", "(~g & d) -> f", "(d) -> c"], "query": "c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0267", "premises": ["~a", "c", "(d & ~g) -> c", "(d & ~a) -> ~c", "(~f & ~c) -> ~g", "(f & g) -> ~g"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0268", "premises": ["~g", "~a", "(g) -> ~a", "(~b & a) -> ~a", "(~f) -> ~e", "(g & ~b) -> e", "(e) -> ~g"], "query": "~e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0269", "premises": ["a", "(a & ~c) -> ~g", "(b & ~d) -> ~b", "(~c & ~g) -> d"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0270", "premises": ["b", "f", "(g & d) -> ~e", "(b & ~d) -> ~g", "(~e) -> ~f", "(~b & ~e) -> ~a"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0271", "premises": ["~e", "(a & ~b) -> ~b", "(b) -> ~e", "(a & b) -> ~b", "(~e) -> d", "(d & b) -> ~d"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0272", "premises": ["g", "(d) -> f", "(a) -> b"], "query": "a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0273", "premises": ["a", "(~g) -> e", "(a & e) -> d", "(a & ~g) -> ~d", "(d & c) -> e", "(e) -> c"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0274", "premises": ["b", "(~e & a) -> ~b", "(b & ~a) -> ~g"], "query": "f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0275", "premises": ["c", "f", "(d & ~e) -> f", "(e & ~c) -> c", "(~d & ~f) -> g", "(g) -> d"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0276", "premises": ["g", "(c & b) -> ~b", "(~b) -> c", "(g) -> ~f"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0277", "premises": ["b", "(a) -> ~d", "(d & ~c) -> c", "(~f) -> ~b", "(~a & d) -> b"], "query": "d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0278", "premises": ["a", "(g) -> ~f", "(~a) -> ~c", "(c) -> ~e", "(a & c) -> e"], "query": "c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0279", "premises": ["f", "b", "d", "(c) -> f", "(~b) -> b", "(b & ~a) -> a"], "query": "~f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0280", "premises": ["g", "~d", "(e) -> ~g", "(~a) -> e"], "query": "a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0281", "premises": ["d", "~f", "e", "(a) -> d", "(~b & ~a) -> ~e", "(~b) -> ~a", "(a & ~e) -> a"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0282", "premises": ["~d", "f", "b", "(g & c) -> a", "(~d & e) -> ~f", "(a & ~g) -> b"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0283", "premises": ["~f", "~e", "(~g) -> a", "(~b) -> g", "(~g) -> ~b", "(~e) -> ~a", "(a & b) -> f"], "query": "b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0284", "premises": ["~g", "f", "~d", "(d & ~b) -> g", "(b) -> ~d"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0285", "premises": ["e", "(d & ~b) -> ~d", "(~b) -> f", "(f & ~e) -> ~d", "(f & d) -> ~c"], "query": "c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0286", "premises": ["d", "a", "~e", "(b) -> d", "(a & c) -> d", "(~d & f) -> ~e"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0287", "premises": ["c", "~f", "(~f & d) -> ~a", "(e & f) -> e"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0288", "premises": ["f", "~c", "(~d & ~a) -> e", "(~d) -> ~e", "(~a & d) -> ~d", "(a) -> f"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0289", "premises": ["a", "(g & ~d) -> d", "(~f) -> ~b", "(~f & d) -> f", "(a) -> f"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0290", "premises": ["c", "(f & e) -> ~c", "(a) -> ~a", "(a & e) -> c"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0291", "premises": ["~d", "(~a & ~b) -> ~c", "(d & e) -> ~c", "(~e & b) -> b", "(b) -> ~b"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0292", "premises": ["~e", "~d", "(g & a) -> c", "(~g) -> ~g", "(~e & ~f) -> ~g", "(~g & a) -> g", "(~f) -> ~f"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0293", "premises": ["~g", "e", "(a & g) -> ~e", "(~e) -> f", "(~g) -> a"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0294", "premises": ["b", "~f", "e", "(a & ~b) -> c", "(c & a) -> ~f", "(~f) -> ~c", "(~a) -> ~c"], "query": "~e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0295", "premises": ["e", "~c", "f", "(a) -> ~d", "(g & b) -> a"], "query": "~e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0296", "premises": ["f", "~d", "(f) -> e", "(e & ~b) -> ~c", "(g & d) -> c", "(~g & ~b) -> ~d"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0297", "premises": ["g", "(c) -> ~g", "(~c) -> ~a"], "query": "c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0298", "premises": ["~g", "(~c & e) -> e", "(d) -> e", "(e & g) -> c", "(~e) -> ~d", "(~d & ~e) -> e"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0299", "premises": ["~e", "~d", "g", "(~e & ~b) -> c", "(f) -> ~e", "(e & ~d) -> d", "(c) -> ~d", "(e & ~b) -> g"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0300", "premises": ["~a", "(a & d) -> ~b", "(d) -> a", "(d) -> a", "(a & c) -> ~d"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0301", "premises": ["~e", "(f & b) -> ~e", "(f & b) -> e", "(~e) -> ~b"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0302", "premises": ["b", "(b) -> b", "(~g) -> ~g", "(d) -> g", "(f) -> f"], "query": "~e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0303", "premises": ["~a", "(~g) -> g", "(~d) -> ~e", "(~a & e) -> ~g", "(a) -> g", "(g) -> ~d"], "query": "g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0304", "premises": ["~e", "d", "(~c) -> ~d", "(a & c) -> ~c", "(~c & ~d) -> d", "(f & e) -> ~a"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0305", "premises": ["~e", "~a", "~b", "(f & ~c) -> d", "(~b) -> ~a", "(a & ~d) -> b", "(~c) -> ~f", "(d) -> e"], "query": "c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0306", "premises": ["g", "(d & ~g) -> ~f", "(~a & ~f) -> a"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0307", "premises": ["~b", "~e", "f", "(~d & e) -> c", "(d) -> ~c", "(e) -> ~c"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0308", "premises": ["c", "~f", "(a) -> a", "(g) -> f", "(~e & c) -> e", "(~e) -> f"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0309", "premises": ["~f", "(~a & c) -> ~f", "(~c & d) -> d", "(~f & c) -> ~c"], "query": "a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0310", "premises": ["g", "f", "~d", "(a) -> f", "(b & ~g) -> d", "(~a) -> ~b", "(f) -> a", "(~c & ~a) -> e"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0311", "premises": ["~a", "e", "(e & a) -> b", "(b & ~d) -> b", "(d & b) -> d", "(b) -> ~e"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0312", "premises": ["f", "(e & f) -> ~b", "(~e & b) -> ~e"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0313", "premises": ["~g", "e", "(b & e) -> g", "(~e) -> ~d", "(b & ~g) -> ~g"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0314", "premises": ["~d", "~b", "(~f) -> b", "(~f) -> ~g"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0315", "premises": ["c", "a", "(c & ~g) -> ~e", "(~e & ~c) -> ~a", "(a & ~g) -> ~e", "(g & e) -> ~e", "(g & c) -> a"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0316", "premises": ["~b", "~a", "(b) -> ~a", "(f) -> f", "(~e & a) -> ~a"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0317", "premises": ["a", "(f) -> g", "(~e & f) -> a", "(f) -> ~a", "(d) -> ~f", "(g) -> d"], "query": "~g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0318", "premises": ["~e", "~a", "(f) -> c", "(c) -> ~f", "(a) -> ~a", "(b & e) -> a"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0319", "premises": ["f", "(d) -> ~b", "(~b & ~g) -> ~d", "(~b & ~d) -> d"], "query": "g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0320", "premises": ["f", "b", "g", "(~e) -> a", "(d & ~a) -> ~g"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0321", "premises": ["~g", "~f", "e", "(c & ~g) -> b", "(~d) -> ~f"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0322", "premises": ["c", "(d) -> ~d", "(d & c) -> f", "(f & ~d) -> c", "(d) -> ~f", "(~f) -> f"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0323", "premises": ["c", "g", "(~a) -> g", "(c) -> d", "(~g) -> d", "(~c & g) -> ~g"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0324", "premises": ["~a", "(~c & e) -> ~a", "(f & c) -> ~f", "(b & ~f) -> a"], "query": "e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0325", "premises": ["~c", "(~f) -> b", "(f & d) -> f", "(b & g) -> b", "(~c & ~g) -> f"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0326", "premises": ["~f", "~c", "b", "(c) -> d", "(e & ~f) -> d", "(f) -> ~b", "(e) -> e"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0327", "premises": ["~g", "(~f & g) -> f", "(c & ~d) -> ~a", "(a) -> d", "(~f) -> d"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0328", "premises": ["~c", "~b", "(e & a) -> ~c", "(e) -> ~e", "(~e & a) -> ~e", "(b) -> b", "(~g) -> ~g"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0329", "premises": ["~f", "~c", "(~c) -> ~g", "(f & c) -> a"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0330", "premises": ["b", "f", "~c", "(~g) -> ~b", "(~g) -> ~b", "(~g & ~c) -> b", "(b & ~f) -> a", "(~f & ~g) -> f"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0331", "premises": ["d", "~g", "f", "(f & b) -> f", "(~g) -> d", "(g) -> ~d", "(d) -> a"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0332", "premises": ["~g", "(~b) -> g", "(~g & d) -> b", "(~d) -> ~a", "(d & ~f) -> d", "(~e) -> d"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0333", "premises": ["d", "f", "~c", "(~b & g) -> ~g", "(~f) -> ~b", "(~d) -> g"], "query": "e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0334", "premises": ["~e", "f", "(a) -> f", "(~c) -> ~c", "(a & f) -> ~e", "(f) -> ~c"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0335", "premises": ["~a", "(~g & ~a) -> ~f", "(a) -> ~d", "(g & ~f) -> ~d"], "query": "d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0336", "premises": ["d", "b", "~e", "(~a) -> b", "(f & c) -> e", "(~g) -> ~b"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0337", "premises": ["d", "~g", "~f", "(a) -> f", "(c) -> ~f"], "query": "a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0338", "premises": ["d", "b", "(~b) -> ~d", "(~b & e) -> b", "(e & c) -> ~c", "(c) -> c", "(~c) -> c"], "query": "~c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0339", "premises": ["g", "(g) -> g", "(~b & g) -> ~b", "(g) -> ~c", "(~e) -> ~g", "(~b) -> ~g"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0340", "premises": ["~c", "(g) -> ~c", "(f) -> ~a", "(~f & g) -> c"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0341", "premises": ["~c", "e", "(~a) -> d", "(~g) -> d"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0342", "premises": ["d", "f", "(~g & f) -> ~a", "(~a) -> c"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0343", "premises": ["d", "(g) -> d", "(~d & c) -> d", "(~g & ~c) -> ~c", "(~c) -> ~b"], "query": "~g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0344", "premises": ["~c", "~a", "~d", "(~e & ~c) -> ~d", "(d) -> e", "(g) -> e"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0345", "premises": ["~f", "(f & d) -> b", "(f & ~e) -> d"], "query": "~b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0346", "premises": ["~f", "g", "c", "(~d) -> c", "(~c) -> f", "(~a) -> ~e"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0347", "premises": ["~b", "(~d) -> ~b", "(~g) -> ~g", "(~d & ~c) -> ~d", "(~c & ~b) -> ~d"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0348", "premises": ["a", "~c", "~g", "(~f) -> b", "(d) -> a"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0349", "premises": ["b", "~c", "(~f & ~b) -> ~g", "(d) -> ~a", "(~c) -> f", "(~f & e) -> d", "(~c) -> f"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0350", "premises": ["~d", "c", "(~d & a) -> a", "(c & f) -> f", "(~a) -> d"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0351", "premises": ["e", "d", "(c & e) -> e", "(~b & ~a) -> e"], "query": "c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0352", "premises": ["~d", "(~d) -> b", "(~d) -> b", "(~a) -> ~d", "(~a) -> ~a"], "query": "~d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0353", "premises": ["b", "~c", "(~c) -> f", "(~f) -> f", "(~b) -> ~f", "(~f & b) -> ~f", "(c) -> f"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0354", "premises": ["~b", "(~a) -> b", "(e & ~b) -> g", "(~a) -> ~d", "(f) -> ~b"], "query": "~a"}
+{"gold": "entailed", "id": "dl-holdout-v1-0355", "premises": ["~g", "e", "(c) -> a", "(f & c) -> ~c", "(f) -> a", "(e & g) -> ~f", "(c) -> ~f"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0356", "premises": ["g", "(a) -> ~c", "(~c) -> b", "(c & d) -> ~c"], "query": "d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0357", "premises": ["e", "(~b) -> ~f", "(e) -> b", "(~c) -> f"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0358", "premises": ["~d", "(~b) -> ~d", "(~b & c) -> ~a", "(b) -> d"], "query": "f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0359", "premises": ["~f", "b", "(~d) -> b", "(~d & ~g) -> c", "(~d & b) -> ~e", "(~a & ~d) -> ~c", "(a & g) -> ~b"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0360", "premises": ["~f", "(~d) -> g", "(d & b) -> g", "(~d) -> e", "(~f & e) -> ~b"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0361", "premises": ["~d", "b", "~e", "(a & ~g) -> e", "(~g) -> g", "(c) -> ~g", "(~f) -> b"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0362", "premises": ["b", "(a) -> ~b", "(~e & ~f) -> ~b", "(~e) -> ~a", "(e & a) -> ~b"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0363", "premises": ["b", "(~b & ~a) -> d", "(~a) -> ~b", "(~a) -> ~b", "(~f & b) -> g", "(g) -> ~a"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0364", "premises": ["~d", "~e", "~g", "(~d) -> b", "(c) -> a"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0365", "premises": ["e", "d", "(g) -> ~f", "(c & ~d) -> e"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0366", "premises": ["~c", "(~b) -> e", "(f & e) -> b", "(~e & ~g) -> ~c", "(~e) -> ~e", "(g & ~b) -> f"], "query": "~b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0367", "premises": ["~e", "~c", "(f & ~b) -> e", "(~c & ~e) -> ~e", "(f & ~b) -> b"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0368", "premises": ["f", "(c & ~b) -> b", "(~f & e) -> e", "(f & ~e) -> ~e"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0369", "premises": ["~d", "(e) -> c", "(~g) -> c", "(~c) -> b", "(~f) -> g"], "query": "~c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0370", "premises": ["f", "~b", "(e & ~b) -> b", "(~e) -> ~g", "(~e & ~a) -> f", "(~e) -> f"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0371", "premises": ["~a", "(f & ~b) -> a", "(d) -> d", "(~d & ~a) -> b"], "query": "g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0372", "premises": ["~g", "~c", "~a", "(~g) -> ~b", "(d) -> g", "(~e) -> ~f", "(b & a) -> ~e"], "query": "c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0373", "premises": ["~c", "(f & ~d) -> ~d", "(~g & e) -> d", "(~f) -> ~d"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0374", "premises": ["e", "f", "(~e) -> c", "(~d) -> b", "(c & b) -> e", "(~b & g) -> ~c"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0375", "premises": ["~d", "(c & ~b) -> g", "(c) -> b", "(a) -> ~a", "(~e & d) -> b", "(~e & c) -> a"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0376", "premises": ["~e", "(e & c) -> a", "(a & c) -> ~f"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0377", "premises": ["~g", "(~g & c) -> ~f", "(a) -> ~c"], "query": "c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0378", "premises": ["b", "~a", "(~a & e) -> ~a", "(d) -> e", "(~a) -> e", "(a) -> ~b", "(~d) -> ~d"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0379", "premises": ["~a", "(~e & f) -> ~f", "(b) -> ~g", "(b & a) -> ~g"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0380", "premises": ["b", "(~g) -> ~e", "(~e & d) -> ~g", "(d & ~c) -> d", "(~d & ~e) -> c"], "query": "d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0381", "premises": ["c", "(e & ~c) -> ~e", "(~d & a) -> e", "(~d) -> d", "(a & c) -> c"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0382", "premises": ["d", "c", "(a & c) -> ~e", "(c) -> ~e", "(e & f) -> e", "(~a & ~f) -> ~f", "(f) -> ~c"], "query": "~a"}
+{"gold": "entailed", "id": "dl-holdout-v1-0383", "premises": ["e", "f", "(~a) -> ~f", "(~b & g) -> f"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0384", "premises": ["~c", "b", "(b & f) -> f", "(~a) -> ~f", "(b & ~c) -> ~c"], "query": "~f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0385", "premises": ["~f", "~g", "(c & ~b) -> b", "(~a) -> ~f", "(d) -> ~g", "(d) -> ~c"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0386", "premises": ["g", "e", "(~f) -> ~a", "(a & e) -> ~a", "(g & a) -> ~a"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0387", "premises": ["~b", "f", "(a) -> d", "(~f & e) -> d"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0388", "premises": ["~b", "d", "(~d & ~a) -> ~g", "(~c & b) -> ~a", "(~d & c) -> a", "(b & ~a) -> ~b"], "query": "g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0389", "premises": ["~e", "a", "d", "(d & ~f) -> ~f", "(~g & ~d) -> c", "(~c) -> ~f", "(a) -> ~e", "(~f) -> e"], "query": "d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0390", "premises": ["~b", "~e", "(~b & g) -> e", "(~e & b) -> e", "(~f & g) -> e"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0391", "premises": ["~b", "(b) -> ~e", "(b) -> ~f", "(~d) -> ~f", "(~b & ~e) -> e", "(~b & e) -> ~b"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0392", "premises": ["e", "(~g & a) -> e", "(b) -> ~a", "(~b & ~d) -> c", "(g & d) -> b"], "query": "~b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0393", "premises": ["c", "(~g & ~f) -> d", "(c & b) -> ~b", "(~g & ~d) -> f", "(~f) -> c", "(~a) -> ~d"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0394", "premises": ["~b", "(b) -> ~a", "(~d & c) -> a", "(a) -> ~c"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0395", "premises": ["b", "(a & f) -> ~a", "(~g) -> e", "(b) -> ~f", "(~e & ~g) -> g", "(~b) -> ~e"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0396", "premises": ["~b", "~f", "a", "(d & a) -> c", "(f) -> f", "(~d & b) -> ~c", "(~b) -> ~f"], "query": "~b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0397", "premises": ["f", "~b", "(f) -> ~a", "(a) -> ~e"], "query": "~a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0398", "premises": ["d", "e", "(e & b) -> g", "(~g & b) -> ~e"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0399", "premises": ["~g", "~a", "d", "(e) -> c", "(e & g) -> ~g"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0400", "premises": ["b", "d", "e", "(a) -> f", "(~e) -> d", "(b) -> ~a"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0401", "premises": ["e", "(g & ~e) -> b", "(b & e) -> ~b", "(g) -> ~b", "(f & d) -> e"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0402", "premises": ["a", "(a & ~g) -> g", "(g & e) -> ~a", "(~g) -> b", "(a) -> a"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0403", "premises": ["g", "~c", "(f & ~a) -> ~f", "(~e) -> ~c"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0404", "premises": ["~f", "~c", "(~b) -> ~d", "(~c & ~b) -> ~g", "(~c) -> ~d", "(~f) -> ~f", "(~g & b) -> c"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0405", "premises": ["a", "(e & ~a) -> c", "(~a) -> ~e", "(g) -> a", "(~g & ~a) -> ~a"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0406", "premises": ["~d", "~f", "~e", "(d & ~f) -> b", "(g & ~f) -> g", "(~g) -> c", "(c & a) -> ~g"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0407", "premises": ["a", "(d & a) -> ~e", "(d & ~e) -> a", "(d) -> d"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0408", "premises": ["~d", "g", "(c) -> ~c", "(g) -> ~e", "(d) -> a", "(d) -> d"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0409", "premises": ["f", "b", "e", "(~b & f) -> ~e", "(~f) -> ~c", "(d & f) -> e"], "query": "~c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0410", "premises": ["~f", "(a & ~b) -> b", "(a) -> ~f", "(f & c) -> f", "(b) -> a", "(f & e) -> ~c"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0411", "premises": ["~b", "~c", "(~f & ~b) -> b", "(~a & ~d) -> ~e", "(a & g) -> ~f"], "query": "~g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0412", "premises": ["~g", "(c) -> ~d", "(a) -> b", "(~c & ~d) -> ~d", "(a) -> b", "(~a) -> c"], "query": "~g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0413", "premises": ["~d", "~e", "(~g) -> c", "(c) -> e", "(~c & ~g) -> ~d"], "query": "c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0414", "premises": ["a", "c", "(~e & c) -> ~b", "(~f & ~a) -> ~e"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0415", "premises": ["~c", "(~c) -> ~b", "(a & ~d) -> ~c", "(~c & ~d) -> ~a"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0416", "premises": ["b", "(d & b) -> d", "(f & ~b) -> ~f"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0417", "premises": ["~c", "(c) -> ~a", "(d) -> ~c", "(~d & ~c) -> c"], "query": "c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0418", "premises": ["b", "f", "(b) -> e", "(~b) -> ~e", "(~b) -> ~b", "(~f & c) -> ~b", "(c) -> ~e"], "query": "~f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0419", "premises": ["g", "b", "(~c) -> ~g", "(c) -> ~d"], "query": "d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0420", "premises": ["~g", "c", "(f & g) -> ~c", "(c & g) -> ~f", "(f & ~d) -> ~d", "(~a & ~d) -> ~c"], "query": "c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0421", "premises": ["b", "f", "g", "(d & a) -> a", "(f & ~c) -> ~f"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0422", "premises": ["c", "b", "~e", "(~d) -> a", "(~g & b) -> g", "(e & b) -> ~c"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0423", "premises": ["~d", "f", "(~d & ~c) -> e", "(~f) -> ~d", "(~c & d) -> ~a", "(~a & ~b) -> ~a"], "query": "~e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0424", "premises": ["e", "~c", "(b & ~a) -> ~b", "(d) -> b", "(b & f) -> b", "(~b) -> ~c"], "query": "e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0425", "premises": ["c", "~g", "(e & ~g) -> d", "(g) -> ~a", "(c & ~b) -> ~e"], "query": "~c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0426", "premises": ["d", "(c) -> ~c", "(~f & c) -> d", "(d) -> e"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0427", "premises": ["~a", "~b", "g", "(f & ~d) -> ~e", "(~f) -> ~e", "(g) -> ~e", "(a & e) -> ~f", "(~b) -> ~d"], "query": "a"}
+{"gold": "entailed", "id": "dl-holdout-v1-0428", "premises": ["g", "d", "(~b) -> e", "(~b) -> ~e", "(~e) -> b", "(e) -> ~d"], "query": "g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0429", "premises": ["~c", "~a", "g", "(~e) -> a", "(~g) -> d", "(~e) -> ~a"], "query": "~e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0430", "premises": ["d", "~e", "(~d) -> f", "(~g) -> ~d", "(d) -> f", "(~f) -> d"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0431", "premises": ["g", "a", "(d) -> ~c", "(~d & e) -> ~e", "(e) -> ~d", "(a) -> d"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0432", "premises": ["~a", "(e & b) -> ~a", "(g) -> ~d", "(~c) -> ~f"], "query": "~g"}
+{"gold": "refuted", "id": "dl-holdout-v1-0433", "premises": ["a", "g", "(~g & d) -> b", "(~g & e) -> b", "(~g) -> ~g", "(e) -> ~b"], "query": "~a"}
+{"gold": "refuted", "id": "dl-holdout-v1-0434", "premises": ["~b", "(d) -> e", "(d & e) -> ~b", "(~a & ~e) -> d", "(e) -> ~d"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0435", "premises": ["~a", "(~f & ~g) -> b", "(~g & ~d) -> ~b", "(e & f) -> f"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0436", "premises": ["~d", "(~e) -> f", "(~e & g) -> ~f", "(e & ~f) -> e", "(~d & ~e) -> e"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0437", "premises": ["d", "a", "~b", "(~d) -> a", "(b & a) -> ~a"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0438", "premises": ["d", "(f & ~d) -> e", "(~c & b) -> ~e", "(f) -> e", "(b) -> d"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0439", "premises": ["d", "f", "(~c & ~b) -> ~b", "(~f & a) -> a"], "query": "~e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0440", "premises": ["b", "(~g & b) -> ~b", "(f) -> ~g", "(~d & b) -> ~a", "(~d) -> ~a", "(g) -> ~d"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0441", "premises": ["~c", "(e & ~d) -> g", "(g) -> ~e", "(~e & g) -> g"], "query": "e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0442", "premises": ["~d", "g", "(~f) -> d", "(~a) -> e", "(~d) -> ~e", "(~a) -> f", "(~d) -> ~e"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0443", "premises": ["e", "b", "~d", "(~b & d) -> ~b", "(~d & a) -> ~b", "(~a) -> b", "(f & ~d) -> c", "(f & g) -> ~c"], "query": "~c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0444", "premises": ["e", "(e & b) -> b", "(e) -> ~f", "(a & ~f) -> f", "(e) -> ~b", "(~f & b) -> ~b"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0445", "premises": ["b", "f", "e", "(a & ~b) -> ~b", "(c) -> a"], "query": "c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0446", "premises": ["~d", "(b & ~d) -> ~e", "(b) -> ~a", "(~b & d) -> a"], "query": "~d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0447", "premises": ["b", "~a", "(f & d) -> ~b", "(~f & ~a) -> ~d", "(~d) -> ~a", "(~d & ~a) -> ~f", "(a & ~b) -> ~f"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0448", "premises": ["~d", "b", "(~b) -> e", "(~e) -> b"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0449", "premises": ["b", "(d & ~b) -> ~b", "(d) -> g"], "query": "~c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0450", "premises": ["g", "b", "(c) -> ~b", "(f) -> d"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0451", "premises": ["e", "~a", "(~a) -> ~a", "(~g) -> ~c", "(b) -> ~c"], "query": "c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0452", "premises": ["f", "~d", "(~g) -> g", "(~d) -> b", "(f) -> ~e", "(b & ~d) -> a"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0453", "premises": ["~d", "(f & e) -> ~d", "(~b) -> e"], "query": "e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0454", "premises": ["e", "d", "~b", "(~d) -> b", "(~e & g) -> g"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0455", "premises": ["~f", "~e", "(~e) -> b", "(d) -> ~e", "(~a) -> ~d", "(~a) -> b"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0456", "premises": ["~e", "(~e & ~b) -> ~a", "(~a) -> ~b", "(~b) -> ~b"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0457", "premises": ["~e", "~b", "(~g) -> ~g", "(~d & ~b) -> ~c", "(~d & c) -> g", "(g & ~d) -> ~b"], "query": "~g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0458", "premises": ["~g", "(a) -> a", "(b) -> ~a", "(~b) -> f"], "query": "~g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0459", "premises": ["~g", "b", "(a) -> e", "(~b) -> f", "(~c & ~d) -> ~d", "(~d) -> ~b", "(~e & ~g) -> ~e"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0460", "premises": ["~c", "(~d) -> c", "(e) -> ~e", "(~a & ~c) -> ~e"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0461", "premises": ["e", "(c) -> ~b", "(a) -> ~d"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0462", "premises": ["a", "(~f) -> ~g", "(~d & ~e) -> ~a", "(~e) -> ~f", "(g & d) -> a", "(~e) -> f"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0463", "premises": ["~a", "(~f & ~g) -> c", "(f & ~c) -> ~f", "(b & f) -> g", "(~g & c) -> ~a", "(f & b) -> c"], "query": "~f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0464", "premises": ["f", "(~f & ~e) -> e", "(f & c) -> f", "(a & ~e) -> ~e"], "query": "c"}
+{"gold": "entailed", "id": "dl-holdout-v1-0465", "premises": ["f", "e", "(~g) -> ~e", "(g & ~f) -> ~b", "(~g & ~b) -> ~b", "(g & ~f) -> ~e", "(b) -> f"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0466", "premises": ["a", "f", "(~g & ~f) -> ~g", "(g & ~b) -> ~g", "(c & a) -> a"], "query": "a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0467", "premises": ["e", "f", "(b) -> f", "(c) -> ~g", "(b) -> b"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0468", "premises": ["~f", "~b", "(~f & ~b) -> ~c", "(~c & e) -> ~e", "(b) -> c", "(~g & c) -> ~c", "(~g & c) -> ~f"], "query": "~e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0469", "premises": ["~g", "(f) -> ~d", "(~f) -> g", "(~g & d) -> ~d"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0470", "premises": ["~f", "d", "(a) -> c", "(a) -> ~f", "(~c) -> ~c"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0471", "premises": ["~b", "~f", "(d) -> ~e", "(e) -> ~b", "(a & c) -> ~e"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0472", "premises": ["~g", "(g & c) -> b", "(~d & ~b) -> ~d", "(d & ~b) -> d", "(~g) -> b", "(d) -> c"], "query": "c"}
+{"gold": "unknown", "id": "dl-holdout-v1-0473", "premises": ["~e", "(e) -> g", "(a) -> a", "(~g) -> d", "(g) -> ~g"], "query": "a"}
+{"gold": "entailed", "id": "dl-holdout-v1-0474", "premises": ["c", "(f) -> g", "(~f) -> b", "(b & ~c) -> ~g", "(b) -> ~f"], "query": "c"}
+{"gold": "refuted", "id": "dl-holdout-v1-0475", "premises": ["~f", "~e", "(~b & ~f) -> f", "(~b & f) -> e", "(~b) -> ~b", "(~b & f) -> ~f", "(e) -> e"], "query": "f"}
+{"gold": "refuted", "id": "dl-holdout-v1-0476", "premises": ["~g", "(~c & ~e) -> ~d", "(~e) -> c"], "query": "g"}
+{"gold": "entailed", "id": "dl-holdout-v1-0477", "premises": ["~g", "(~d & c) -> f", "(f & e) -> ~e", "(f) -> c", "(g & ~f) -> ~e", "(e) -> g"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0478", "premises": ["~c", "~b", "(~g & c) -> c", "(d & f) -> f", "(c & ~d) -> g", "(g) -> ~d"], "query": "d"}
+{"gold": "entailed", "id": "dl-holdout-v1-0479", "premises": ["g", "c", "~a", "(f) -> d", "(d & g) -> d", "(~a) -> ~b", "(g) -> e"], "query": "e"}
+{"gold": "entailed", "id": "dl-holdout-v1-0480", "premises": ["~a", "(a) -> e", "(c) -> ~f", "(f & g) -> ~a"], "query": "~a"}
+{"gold": "unknown", "id": "dl-holdout-v1-0481", "premises": ["~e", "(~a & ~c) -> ~e", "(e & b) -> c", "(~e) -> b", "(c) -> ~b"], "query": "~a"}
+{"gold": "entailed", "id": "dl-holdout-v1-0482", "premises": ["b", "(g) -> ~b", "(e) -> a"], "query": "b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0483", "premises": ["d", "f", "(b) -> f", "(~f & d) -> g", "(b) -> f", "(~b & ~g) -> ~g", "(~g & ~f) -> ~b"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0484", "premises": ["b", "~g", "(~b & ~d) -> f", "(f) -> d", "(b & a) -> ~f", "(~d & ~f) -> d"], "query": "f"}
+{"gold": "unknown", "id": "dl-holdout-v1-0485", "premises": ["f", "~e", "(~e & ~d) -> b", "(c) -> ~a"], "query": "d"}
+{"gold": "refuted", "id": "dl-holdout-v1-0486", "premises": ["~b", "(d & ~c) -> ~e", "(c) -> ~d", "(b & ~e) -> ~c", "(g) -> ~e"], "query": "b"}
+{"gold": "refuted", "id": "dl-holdout-v1-0487", "premises": ["~g", "(~e & f) -> e", "(b & e) -> e", "(~a) -> ~d", "(~g) -> ~c", "(~c) -> a"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0488", "premises": ["~b", "f", "(b) -> e", "(f & e) -> ~c", "(~d & ~a) -> ~b"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0489", "premises": ["~f", "(~c) -> ~f", "(c & ~f) -> f", "(g) -> g", "(e) -> g", "(c & ~e) -> e"], "query": "~e"}
+{"gold": "refuted", "id": "dl-holdout-v1-0490", "premises": ["~g", "~e", "(~f) -> ~d", "(g) -> ~b", "(~g) -> ~a"], "query": "e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0491", "premises": ["e", "a", "d", "(~a) -> e", "(b) -> g", "(~e & b) -> g"], "query": "g"}
+{"gold": "unknown", "id": "dl-holdout-v1-0492", "premises": ["~b", "(~a) -> ~c", "(f) -> ~c", "(e) -> f", "(b) -> g"], "query": "f"}
+{"gold": "entailed", "id": "dl-holdout-v1-0493", "premises": ["d", "~g", "(~c) -> b", "(~d & ~b) -> d", "(~c & b) -> ~c"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0494", "premises": ["~e", "b", "~f", "(d & ~a) -> d", "(~g & ~e) -> ~c", "(c & a) -> ~g", "(c) -> c", "(d & c) -> b"], "query": "~d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0495", "premises": ["~e", "~a", "(~b) -> d", "(~b) -> f", "(~e) -> ~e"], "query": "d"}
+{"gold": "unknown", "id": "dl-holdout-v1-0496", "premises": ["~g", "~d", "(~e) -> ~a", "(~e) -> ~a", "(a & ~d) -> ~d"], "query": "~e"}
+{"gold": "unknown", "id": "dl-holdout-v1-0497", "premises": ["~c", "(~e & ~d) -> b", "(e) -> c"], "query": "b"}
+{"gold": "entailed", "id": "dl-holdout-v1-0498", "premises": ["~f", "(~g) -> b", "(~d) -> e", "(~e) -> ~d", "(f) -> c", "(~f) -> ~b"], "query": "~b"}
+{"gold": "unknown", "id": "dl-holdout-v1-0499", "premises": ["c", "(~f) -> g", "(b) -> f", "(f) -> ~a", "(~a) -> ~d", "(~f & c) -> g"], "query": "~e"}
