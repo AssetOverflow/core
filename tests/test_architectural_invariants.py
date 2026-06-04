@@ -1095,6 +1095,14 @@ INDEPENDENT_GOLD_LANES: tuple[IndependentGoldLane, ...] = (
             "generate.logic_equivalence",
         ),
     ),
+    # The dimensional-reasoning lane: the interlingua's own unit algebra
+    # (generate.binding_graph.units) is the SUT, so its gold oracle must share no
+    # code with the binding graph.
+    IndependentGoldLane(
+        name="dimensional",
+        oracle_module="evals/dimensional/oracle.py",
+        sut_import_prefixes=("generate.binding_graph",),
+    ),
 )
 
 _DEDUCTIVE_CASE_FILES: tuple[str, ...] = (
