@@ -107,7 +107,14 @@ class EfferentVerdict:
 
 @runtime_checkable
 class EfferentGate(Protocol):
-    """Runtime gate for output actions. Runs before SurfaceDecoder.decode."""
+    """Runtime gate for output actions. Runs before SurfaceDecoder.decode.
+
+    Optional attribute ``enforces_action_verdicts: bool`` (absent ⇒ False):
+    True only for a gate that lowers the decoded action into the safety/ethics
+    pack verdicts required by ADR-0198 §3. ``ModalityRegistry`` fails closed and
+    refuses actuating emission through any gate where this is False, unless an
+    explicit ``allow_unverified_efferent`` sandbox opt-in is set.
+    """
 
     def admit(
         self,

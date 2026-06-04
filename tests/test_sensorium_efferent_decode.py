@@ -80,7 +80,7 @@ def test_decode_denies_by_default_before_decoder_runs():
 def test_decode_requires_admitting_gate_before_surface_decode():
     decoder = _Decoder()
     gate = _Gate(admitted=True)
-    reg = ModalityRegistry(efferent_gate=gate)
+    reg = ModalityRegistry(efferent_gate=gate, allow_unverified_efferent=True)
     reg.mount(_pack(decoder))
     assert reg.decode("motor_test", _mv(), authority=_authority()) == "decoded:1.0"
     assert gate.calls == 1
@@ -89,7 +89,7 @@ def test_decode_requires_admitting_gate_before_surface_decode():
 
 def test_decode_refusal_does_not_call_decoder():
     decoder = _Decoder()
-    reg = ModalityRegistry(efferent_gate=_Gate(admitted=False))
+    reg = ModalityRegistry(efferent_gate=_Gate(admitted=False), allow_unverified_efferent=True)
     reg.mount(_pack(decoder))
     with pytest.raises(EfferentRefusal, match="denied"):
         reg.decode("motor_test", _mv(), authority=_authority())
@@ -99,7 +99,7 @@ def test_decode_refusal_does_not_call_decoder():
 def test_decode_batch_admits_all_before_decoding_any_surface():
     decoder = _Decoder()
     gate = _Gate(admitted=True, deny_after=1)
-    reg = ModalityRegistry(efferent_gate=gate)
+    reg = ModalityRegistry(efferent_gate=gate, allow_unverified_efferent=True)
     reg.mount(_pack(decoder))
     batch = np.stack([_mv(), _mv()])
     with pytest.raises(EfferentRefusal, match="denied"):
