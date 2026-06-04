@@ -1,6 +1,6 @@
 # ADR-0178 — Compositional Structure: Comprehension-Guided Multi-Step Derivation (Gap B)
 
-**Status:** Proposed
+**Status:** Accepted (ratified by ADR-0207, 2026-06-03)
 **Date:** 2026-05-28
 **Author:** Shay
 **Anchor:** [[thesis-decoding-not-generating]]

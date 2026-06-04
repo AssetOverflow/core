@@ -1,6 +1,6 @@
 # ADR-0174 — Held-Hypothesis Comprehension with Lookback and In-Loop Contemplation
 
-**Status:** Proposed
+**Status:** Accepted (ratified by ADR-0207, 2026-06-03)
 **Date:** 2026-05-28
 **Author:** Shay
 **Anchor:** [[thesis-decoding-not-generating]]

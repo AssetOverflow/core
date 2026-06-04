@@ -51,10 +51,10 @@ _REQUIRED_FIELDS = frozenset(
     }
 )
 
-_EXPECTED_TOTAL = 20
+_EXPECTED_TOTAL = 22
 _EXPECTED_BASELINE_CONTROLS = 4
 _EXPECTED_PERMANENT = 7
-_EXPECTED_FUTURE_POSITIVE = 9
+_EXPECTED_FUTURE_POSITIVE = 11
 
 
 def _load_cases() -> list[dict]:
@@ -77,7 +77,7 @@ def _num_eq(a, b) -> bool:
 
 
 def test_corpus_structure() -> None:
-    """20 unique, fully-specified rows with the expected gate partition."""
+    """22 unique, fully-specified rows with the expected gate partition."""
     assert len(_CASES) == _EXPECTED_TOTAL
     assert len(set(_IDS)) == _EXPECTED_TOTAL, "duplicate case_id"
     for c in _CASES:
@@ -155,7 +155,7 @@ def test_frozen_baseline_fields_match_tree(case: dict) -> None:
 
 
 def test_current_baseline_snapshot() -> None:
-    """Current aggregate is 4 solve / 16 refuse / 0 wrong.
+    """Current aggregate is 4 solve / 18 refuse / 0 wrong.
 
     This is the single assertion a Phase 5b slice updates when it flips a
     positive (refuse -> solve); the forever-invariants above do not change.
@@ -170,8 +170,49 @@ def test_current_baseline_snapshot() -> None:
         else:
             refuse += 1
     assert wrong == 0
-    assert (solve, refuse) == (4, 16), (
+    assert (solve, refuse) == (4, 18), (
         f"snapshot moved to {solve} solve / {refuse} refuse — if a Phase 5b "
         f"slice landed, update this expectation and the affected rows' "
         f"baseline fields in lockstep"
     )
+
+
+_TRAIN_SAMPLE_PATH = (
+    _REPO_ROOT / "evals" / "gsm8k_math" / "train_sample" / "v1" / "cases.jsonl"
+)
+
+
+def _load_train_sample_answers() -> dict[str, object]:
+    answers: dict[str, object] = {}
+    for line in _TRAIN_SAMPLE_PATH.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        answers[rec["case_id"]] = rec["answer_numeric"]
+    return answers
+
+
+def test_dataset_golds_match_answer_numeric() -> None:
+    """Contract invariant 6: every ``gsm8k_train_sample:*`` row's ``gold`` equals
+    that case's ``answer_numeric`` verbatim.  A hand-computed (and thus possibly
+    wrong) gold would be a ``wrong=0`` hazard inside the measurement instrument
+    itself, so this is a real proof obligation, not decoration.
+
+    ``guard:*`` / ``analysis:*`` rows are seeded probes, not dataset cases, and
+    are intentionally excluded.
+    """
+    answers = _load_train_sample_answers()
+    checked = 0
+    for case in _CASES:
+        source = case["source"]
+        if not source.startswith("gsm8k_train_sample:"):
+            continue
+        idx = source.split(":", 1)[1]
+        ts_id = f"gsm8k-train-sample-v1-{idx}"
+        assert ts_id in answers, f"{case['case_id']}: unknown train_sample source {source}"
+        assert _num_eq(case["gold"], answers[ts_id]), (
+            f"{case['case_id']}: gold {case['gold']!r} != dataset answer_numeric "
+            f"{answers[ts_id]!r} for {source} — hand-computed gold is a wrong=0 hazard"
+        )
+        checked += 1
+    assert checked >= 8, f"expected ≥8 dataset-sourced rows, checked {checked}"

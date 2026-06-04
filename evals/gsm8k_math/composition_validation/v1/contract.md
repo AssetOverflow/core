@@ -7,7 +7,8 @@ coverage may rise only while `wrong == 0` remains true.
 
 ## Scope
 
-- 20 cases total.
+- 22 cases total (4 baseline controls, 7 permanent hard-negatives, 11 future
+  positives).
 - Positive cases use `target_verdict = solve` and a non-baseline `gate`; they
   refuse today and should flip only when that gate's capability slice lands.
 - Hard-negative cases use `target_verdict = refuse` and `gate = permanent`; they
@@ -46,15 +47,27 @@ Each JSONL row has these fields:
    reviewed ADR explicitly changes its decidable regime.
 5. Progress metric: count rows where `target_verdict = solve` and the current
    answer equals `gold`; this starts at the baseline controls and may increase
-   only when invariants 1-4 still pass.
+   only when invariants 1-4 still pass. The solved-positive count is monotone
+   non-decreasing across Phase 5b slices.
+6. Dataset-sourced golds: every `gsm8k_train_sample:*` row's `gold` equals that
+   case's `answer_numeric` in `evals/gsm8k_math/train_sample/v1/cases.jsonl`,
+   verbatim. Golds are never hand-computed — a wrong gold is a `wrong=0` hazard
+   in the instrument itself. (`guard:*` / `analysis:*` rows are seeded probes,
+   not dataset cases, and carry their stated gold.)
+7. Baseline fields are diagnostic, not asserted targets:
+   `baseline_verdict` / `baseline_answer` / `baseline_branches_enumerated`
+   record the tree state at creation for drift detection on non-positive rows.
+   They are not a pass/fail target for positive rows — a 5b flip updates them in
+   lockstep with the snapshot assertion.
 
 ## Baseline
 
 At creation on `origin/main` lineage after PR #534 plus the docs-only runway
-correction, the intended baseline is:
+correction, and extended with the second R4/R5 positives (cv-0021/cv-0022), the
+intended baseline is:
 
 - 4 solve
-- 16 refuse
+- 18 refuse
 - 0 wrong
 
 The corpus deliberately includes both future positives and permanent

@@ -1,6 +1,6 @@
 # ADR-0164 — Incremental Comprehension Reader (replaces regex sentence-template parsing)
 
-**Status:** Partially implemented (Phase 1 + 2 shipped; eval delta pending lexicon expansion)
+**Status:** Accepted (ratified by ADR-0207, 2026-06-03) — Phase 1+2 shipped; remainder per ADR-0207 §5
 **Date:** 2026-05-26
 **Author:** Shay
 **Anchor:** [[thesis-decoding-not-generating]]
