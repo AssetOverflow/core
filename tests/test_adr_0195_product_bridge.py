@@ -36,13 +36,16 @@ def _case(case_suffix: str) -> dict:
 @pytest.mark.parametrize("case_suffix, expected", [("0003", 864.0), ("0021", 450.0)])
 def test_promotable_product_cases_resolve(case_suffix: str, expected: float) -> None:
     row = _case(case_suffix)
+    # The bridge FUNCTION still resolves these in isolation...
     resolution = resolve_promotable_product(row["question"])
     assert resolution is not None
     assert resolution.answer == expected
 
+    # ...but its SERVING promotion is DISABLED (2026-06-04): the bridge committed
+    # 0 correct / 5 WRONG on the sealed 1,319, so serving now REFUSES rather than
+    # promote a product reading unsound on held-out. wrong=0 over train "correct".
     result = parse_and_solve(row["question"])
-    assert result.refusal_reason is None
-    assert result.answer == expected
+    assert result.answer is None
 
 
 @pytest.mark.parametrize(
@@ -63,12 +66,17 @@ def test_known_pooled_wrong_commits_are_not_promotable(case_suffix: str) -> None
     assert resolve_promotable_product(row["question"]) is None
 
 
-def test_train_sample_lifts_two_products_without_wrong() -> None:
+def test_product_bridge_serving_promotion_is_disabled() -> None:
+    """DISABLED 2026-06-04: the FIRST real sealed measurement showed
+    product_bridge commits 0 correct / 5 WRONG on the held-out 1,319 — a wrong=0
+    breach hidden by the 50-case train proxy it was tuned to. Its serving
+    promotion is unwired (the bridge fired on 0003/0021 *on train only*; it does
+    not generalize). Honest serving is now the main-graph-only 4/46/0; the
+    products 0003/0021 refuse rather than commit a reading unsound on held-out."""
     report = build_report(_load_cases(_CASES_PATH))
-    # ADR-0207 §5 step 2: serving lifted 6/44/0 -> 7/43/0 (cv-0005/0037 goal-residual).
-    assert report["counts"] == {"correct": 7, "wrong": 0, "refused": 43}
+    assert report["counts"] == {"correct": 4, "wrong": 0, "refused": 46}
     by_case = {row["case_id"]: row for row in report["per_case"]}
-    assert by_case["gsm8k-train-sample-v1-0003"]["verdict"] == "correct"
-    assert by_case["gsm8k-train-sample-v1-0021"]["verdict"] == "correct"
-    assert by_case["gsm8k-train-sample-v1-0037"]["verdict"] == "correct"
+    assert by_case["gsm8k-train-sample-v1-0003"]["verdict"] == "refused"
+    assert by_case["gsm8k-train-sample-v1-0021"]["verdict"] == "refused"
+    assert by_case["gsm8k-train-sample-v1-0037"]["verdict"] == "refused"
     assert by_case["gsm8k-train-sample-v1-0050"]["verdict"] == "refused"

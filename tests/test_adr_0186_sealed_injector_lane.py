@@ -94,4 +94,4 @@ def test_frozen_train_sample_byte_identical() -> None:
     report = json.loads(
         Path("evals/gsm8k_math/train_sample/v1/report.json").read_text()
     )
-    assert report["counts"] == {"correct": 7, "refused": 43, "wrong": 0}
+    assert report["counts"] == {"correct": 4, "refused": 46, "wrong": 0}

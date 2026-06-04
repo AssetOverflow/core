@@ -62,12 +62,15 @@ Each JSONL row has these fields:
 
 ## Baseline
 
-At creation the baseline was 4 solve / 18 refuse / 0 wrong. ADR-0207 §5 step 2
-landed the first Phase-5b flip — cv-0005 (R4 goal-residual) now solves on serving
-— moving the snapshot to:
+At creation the baseline was 4 solve / 18 refuse / 0 wrong. **2026-06-04: the
+serving promotion bridges (product_bridge, goal_residual) were disabled** after the
+first real sealed measurement found them 0-correct / 5-wrong on the held-out 1,319
+(a `wrong=0` breach hidden by the train proxy). cv-0005 (R4) reverts to refusing and
+cv-0020 (solved only via product_bridge) was reclassified `baseline -> 5b-product`,
+so the honest snapshot is:
 
-- 5 solve
-- 17 refuse
+- 3 solve
+- 19 refuse
 - 0 wrong
 
 The corpus deliberately includes both future positives and permanent
