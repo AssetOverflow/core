@@ -301,6 +301,15 @@ Current near-term sequence:
 Avoid broad docs-first churn, dashboard work, or large infrastructure unless it
 unlocks one of these steps.
 
+The afferent sensorium/modalities arc (ADR-0013 -> 0181/0197/0208/0209; ADR-0198
+reserves the efferent/motor half) is a **sanctioned parallel track** — not part
+of the near-term sequence above and not licensed to displace it.  It is disjoint
+from the GSM8K serving path (no `generate.derivation` / `core.reliability_gate`
+import), so it cannot regress the serving metric; its efferent half stays gated
+behind ADR-0198's fail-closed boundary and a dedicated motor governance ADR
+(ratified afferent ADRs carry `Accepted (ratified ...)`; ADR-0198 stays a
+partially-implemented spike).
+
 ## Lookback Review Discipline
 
 Multi-PR architectural work accumulates latent defects when each PR

@@ -1,6 +1,6 @@
 # ADR-0208: Environmental Sensorium Loop
 
-**Status:** Accepted — implementation landed (afferent scope)
+**Status:** Accepted (ratified 2026-06-03) — implementation landed (afferent scope)
 **Date:** 2026-06-04
 **Implementation:** `sensorium/environment/frame.py` (PR #540) + `sensorium/environment/harness.py` (PR #541). Proof obligations are covered by falsifiable tests in `tests/test_observation_frame_contract.py` (order-invariant frame trace hash, `merge_key` dedup, `TypeError` on raw-payload units, `ValueError` on efferent units) and `tests/test_observation_frame_harness.py`. Disjoint from the GSM8K serving path (no import of `generate.derivation` / `core.reliability_gate`).
 **Domains:** `sensorium/environment/`, `sensorium/compiler/`, `sensorium/*`, future sensorimotor compilers

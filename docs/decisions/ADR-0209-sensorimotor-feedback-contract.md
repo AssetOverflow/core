@@ -1,6 +1,6 @@
 # ADR-0209: Sensorimotor Feedback Is Afferent
 
-**Status:** Accepted — implementation landed (afferent scope)
+**Status:** Accepted (ratified 2026-06-03) — implementation landed (afferent scope)
 **Date:** 2026-06-04
 **Implementation:** `sensorium/sensorimotor/` (PR #540) + `sensorium/adapters/sensorimotor.py`, `packs/sensorimotor/sensorimotor_core_v1/` (PR #541). Proof obligations are covered by falsifiable tests in `tests/test_sensorimotor_contract.py` (deterministic unit + merge key, IR replay, idempotent delta merge, **no `decode`/`decode_batch` path**, hash-only trace with no command/trajectory payload) and `tests/test_sensorimotor_pack_manifest.py`.
 **Domains:** `sensorium/sensorimotor/`, `sensorium/protocol.py`, future robotics integrations
