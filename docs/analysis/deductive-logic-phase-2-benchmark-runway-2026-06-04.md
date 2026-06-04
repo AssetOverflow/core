@@ -56,7 +56,16 @@ Do not do these in Phase 2 PR-1:
 
 ## 3. Recommended PR stack
 
-### PR-1 — finite-entity grounding contract and tiny mirror fixture
+> **Status (2026-06-04): PR-1 and PR-2 SHIPPED** (PR #556), as Phase 2 of the
+> universal-structure plan
+> (`docs/analysis/universal-structure-and-field-symbol-coherence-gate-2026-06-04.md`).
+> `evals/deductive_logic/grounding.py` is the lowering compiler; the committed
+> `finite_entity/v1/cases.jsonl` carries oracle-derived gold; the test file gates
+> `engine == oracle == gold` (PR-2 parity). PR-3 (published-benchmark mirror) and
+> PR-4 (scale + SHA-pin) remain open. The grounding lane is registered under the
+> deductive oracle's INV-25 independent-gold coverage.
+
+### PR-1 — finite-entity grounding contract and tiny mirror fixture — **✅ SHIPPED (#556)**
 
 Add the deterministic contract before scaling data.
 
@@ -102,7 +111,7 @@ In v1, the accepted grammar should be intentionally narrow:
 
 Refuse any case outside that grammar with a typed reason.
 
-### PR-2 — independent oracle parity for finite-entity cases
+### PR-2 — independent oracle parity for finite-entity cases — **✅ SHIPPED (#556)**
 
 Before adding benchmark data, assert that the finite-entity lowered formulas score identically under:
 
