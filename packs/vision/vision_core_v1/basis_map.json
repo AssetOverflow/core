@@ -1,0 +1,14 @@
+{
+  "comment": "Elliptic grade-2 planes only. Hyperbolic planes touching e5 are excluded from vision_core_v1.",
+  "basis_version": "vision-basis-v1",
+  "aliases": {
+    "B_CONTRAST": 6,
+    "B_ORIENT": 7,
+    "B_TEXTURE": 8,
+    "B_SALIENCE": 10,
+    "B_CHROMA": 11,
+    "B_CORNER": 13,
+    "B_BLOB": 10,
+    "B_CONTOUR": 13
+  }
+}

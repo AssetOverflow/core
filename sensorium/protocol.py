@@ -20,6 +20,8 @@ head recovers it.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
@@ -71,6 +73,56 @@ class SurfaceDecoder(Protocol[S]):
 
     def decode(self, mv: np.ndarray) -> S: ...
     def decode_batch(self, mvs: np.ndarray) -> list[S]: ...
+
+
+@dataclass(frozen=True, slots=True)
+class AuthorityToken:
+    """Capability-scoped authority for efferent decode paths."""
+
+    principal_id: str
+    capabilities: tuple[str, ...]
+    issued_at_revision: str
+
+    @property
+    def authority_sha256(self) -> str:
+        payload = {
+            "principal_id": self.principal_id,
+            "capabilities": list(self.capabilities),
+            "issued_at_revision": self.issued_at_revision,
+        }
+        blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return hashlib.sha256(blob).hexdigest()
+
+
+@dataclass(frozen=True, slots=True)
+class EfferentVerdict:
+    """Runtime admissibility verdict for an efferent decode."""
+
+    admitted: bool
+    reason: str
+    authority_sha256: str
+    policy_sha256: str
+
+
+@runtime_checkable
+class EfferentGate(Protocol):
+    """Runtime gate for output actions. Runs before SurfaceDecoder.decode."""
+
+    def admit(
+        self,
+        pack_id: str,
+        mv: np.ndarray,
+        authority: AuthorityToken,
+    ) -> EfferentVerdict: ...
+
+
+class EfferentRefusal(RuntimeError):
+    """Raised when an efferent decode is refused before surface emission."""
+
+    def __init__(self, pack_id: str, verdict: EfferentVerdict) -> None:
+        self.pack_id = pack_id
+        self.verdict = verdict
+        super().__init__(f"efferent decode refused for '{pack_id}': {verdict.reason}")
 
 
 class ModalityVocabulary(Generic[S]):

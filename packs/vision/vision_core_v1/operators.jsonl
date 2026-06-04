@@ -1,0 +1,9 @@
+{"operator_id":"vision.region.flat.v1","event_type":"region.flat","blade_alias":"B_CONTRAST","blade_index":6,"base_theta_q":24,"gain_rules":{"contrast_q":1},"theta_clip_q":768,"version":"1"}
+{"operator_id":"vision.region.contrast.v1","event_type":"region.contrast","blade_alias":"B_CONTRAST","blade_index":6,"base_theta_q":64,"gain_rules":{"contrast_q":4},"theta_clip_q":768,"version":"1"}
+{"operator_id":"vision.orient.edge_energy.v1","event_type":"orient.edge_energy","blade_alias":"B_ORIENT","blade_index":7,"base_theta_q":48,"gain_rules":{"orient_q":3,"energy_q":4},"theta_clip_q":768,"version":"1"}
+{"operator_id":"vision.texture.regularity.v1","event_type":"texture.regularity","blade_alias":"B_TEXTURE","blade_index":8,"base_theta_q":40,"gain_rules":{"texture_q":5},"theta_clip_q":768,"version":"1"}
+{"operator_id":"vision.salient.figure_ground.v1","event_type":"salient.figure_ground","blade_alias":"B_SALIENCE","blade_index":10,"base_theta_q":56,"gain_rules":{"salience_q":4},"theta_clip_q":768,"version":"1"}
+{"operator_id":"vision.region.chroma.v1","event_type":"region.chroma","blade_alias":"B_CHROMA","blade_index":11,"base_theta_q":36,"gain_rules":{"chroma_q":4},"theta_clip_q":768,"version":"1"}
+{"operator_id":"vision.region.corner.v1","event_type":"region.corner","blade_alias":"B_CORNER","blade_index":13,"base_theta_q":72,"gain_rules":{"corner_q":5},"theta_clip_q":768,"version":"1"}
+{"operator_id":"vision.region.blob.v1","event_type":"region.blob","blade_alias":"B_BLOB","blade_index":10,"base_theta_q":88,"gain_rules":{"blob_q":4},"theta_clip_q":768,"version":"1"}
+{"operator_id":"vision.contour.closure.v1","event_type":"contour.closure","blade_alias":"B_CONTOUR","blade_index":13,"base_theta_q":104,"gain_rules":{"closure_q":3},"theta_clip_q":768,"version":"1"}

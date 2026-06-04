@@ -17,16 +17,24 @@ Adding a modality requires:
 """
 
 from sensorium.protocol import (
+    AuthorityToken,
+    EfferentGate,
+    EfferentRefusal,
+    EfferentVerdict,
     Modality,
+    ModalityPack,
+    ModalityVocabulary,
     ProjectionHead,
     SurfaceDecoder,
-    ModalityVocabulary,
-    ModalityPack,
 )
 from sensorium.registry import ModalityRegistry
 
 __all__ = [
     "Modality",
+    "AuthorityToken",
+    "EfferentGate",
+    "EfferentRefusal",
+    "EfferentVerdict",
     "ProjectionHead",
     "SurfaceDecoder",
     "ModalityVocabulary",
