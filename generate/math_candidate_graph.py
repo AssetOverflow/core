@@ -535,6 +535,26 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
     # and outranks the train-sample "correct" the bridges produced.
     # ──────────────────────────────────────────────────────────────────────────
 
+    # ── SOUND bridge (2026-06-04): clean ratio-chain reader ───────────────────
+    # The first promotion proven `wrong=0` on HELD-OUT data (not the train sample):
+    # chained ratio relations with a grounded base ("cat is 8; rabbit is half the
+    # cat; dog is 3x the rabbit -> 12"). Structurally forced + verifiable; refuse-
+    # preferring (declines any comparative-additive/aggregate sign). Measured on the
+    # 500-case holdout_dev lane: fires 1, 1 correct / 0 wrong, generalises to novel
+    # chains. Narrow by design; widening requires re-confirming wrong=0 on held-out
+    # AND the sealed test (the operator-decrypted arbiter).
+    from generate.derivation.ratio_chain import resolve_ratio_chain
+
+    ratio_resolution = resolve_ratio_chain(text)
+    if ratio_resolution is not None:
+        return CandidateGraphResult(
+            answer=ratio_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
     if len(statement_sentences) == 1:

@@ -28,13 +28,15 @@ def test_wrong_is_zero_the_floor() -> None:
 
 
 def test_current_baseline_snapshot() -> None:
-    """Honest baseline: 0 correct / 500 refused. Real GSM8K capability is zero.
+    """Snapshot: 1 correct / 499 refused, 0 wrong.
 
-    This is the single assertion a genuine capability lift updates — and a lift only
-    counts if it also holds wrong=0 on the sealed test (this lane is the dev signal,
-    the sealed 1,319 is the arbiter). 'Refuse everything' is the baseline to BEAT.
+    2026-06-04: the first **sound** lift off zero — the clean ratio-chain reader
+    (`generate/derivation/ratio_chain.py`) committed cv-0005-class chains correctly,
+    held-out 0/500 -> 1/500, wrong=0. A lift only counts if it also holds wrong=0 on
+    the sealed test (this lane is the dev signal; the sealed 1,319 is the arbiter).
+    'Refuse everything' is the baseline this beat — honestly, by 1.
     """
-    assert (_REPORT["counts"]["correct"], _REPORT["counts"]["refused"]) == (0, 500), (
+    assert (_REPORT["counts"]["correct"], _REPORT["counts"]["refused"]) == (1, 499), (
         f"holdout_dev moved to {_REPORT['counts']} — if a real capability change landed, "
         f"update this snapshot AND confirm wrong=0 on the sealed test before claiming lift"
     )

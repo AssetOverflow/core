@@ -1,7 +1,7 @@
 {
   "counts": {
-    "correct": 0,
-    "refused": 500,
+    "correct": 1,
+    "refused": 499,
     "wrong": 0
   },
   "lane": "gsm8k_math/holdout_dev/v1",
@@ -30,7 +30,7 @@
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0005",
-      "verdict": "refused"
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0006",

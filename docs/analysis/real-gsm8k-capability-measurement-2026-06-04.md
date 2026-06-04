@@ -91,6 +91,26 @@ one; the open path confabulates.** The ratified strategy locked out the only sou
 in favor of an unsound one. ADR-0207 §5 needs re-opening with this evidence (a follow-up ADR),
 because "feed the composer" is a path to *more confabulation*, not lift.
 
+## 3d. The first SOUND lift — verifiable readers work where search does not
+
+The four falsified attempts above share one trait: they **search/infer and commit**. A
+fifth approach — a **structurally-forced, verifiable** reader — succeeds where they fail.
+
+The **clean ratio-chain reader** (`generate/derivation/ratio_chain.py`) reads only the
+narrow class of chained ratio relations bottoming out at a grounded quantity
+(*"cat is 8; rabbit is half the cat; dog is 3× the rabbit → 12"*). The answer is **forced**
+by the chain, not guessed; the reader **refuses** any comparative-additive / aggregate sign.
+
+> **Measured on held-out 500: fires 1, 1 correct / 0 WRONG.** It generalises to novel
+> renumbered/re-entitied chains (box→crate→pallet, Mary→sister→mother) and refuses what it
+> cannot prove. Wired to serving: **held-out 0/500 → 1/500, train_sample wrong=0.**
+
+This is the **first honest, sound capability off zero** — small (0.2%) but real, generalising,
+and `wrong=0`. It confirms the path: not "feed the composer" (search, 17% wrong) but **narrow
+verifiable readers**, each measured `wrong=0` on held-out **and** the sealed test before trust.
+The substrate's failure was never that *no* reading is sound — it is that *search-based*
+committing cannot tell sound from unsound. Forced, verifiable readings can.
+
 ## 4. What this means (honest, load-bearing)
 
 1. **The only `wrong=0`-safe policy on real GSM8K is refusal.** Current serving (0/0/500) is

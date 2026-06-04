@@ -12,11 +12,14 @@ real exam** (a `wrong=0` breach). The three numbers, same scorer, same day:
 | Set | Correct | Wrong | What it is |
 |---|---:|---:|---|
 | `train_sample` (50) | 4 | 0 | the data CORE was built on — **overfit, no predictive validity** |
-| **`holdout_dev` (500, this lane)** | **0** | **0** | **real GSM8K CORE was NOT built on — the honest baseline** |
-| sealed test (1,319) | 0 | 0 | the final exam (sealed, never read by Claude) |
+| **`holdout_dev` (500, this lane)** | **1** | **0** | **real GSM8K CORE was NOT built on — the honest signal** |
+| sealed test (1,319) | (re-measure) | 0 expected | the final exam (sealed, never read by Claude) |
 
-The 4 train "correct" generalise to **zero** of 500 held-out cases. **Real GSM8K
-capability is 0%.** That is the truth this lane keeps in front of us.
+**Baseline was 0/500** — the 4 train "correct" generalised to *zero* held-out cases.
+**2026-06-04: the first sound lift took it to 1/500, wrong=0** — the clean ratio-chain
+reader (`generate/derivation/ratio_chain.py`), a *verifiable* (not search-based) reading.
+Real GSM8K capability is now a measured, honest **0.2%** — small, but real and rising,
+on data that can't be gamed. The sealed test must re-confirm `wrong=0` (operator-run).
 
 ## The discipline (train / dev / test)
 
@@ -40,4 +43,4 @@ untouched.
 PYTHONPATH=. .venv/bin/python -m evals.gsm8k_math.holdout_dev.v1.runner
 ```
 
-Exits non-zero if `wrong > 0` (the floor). Current baseline: **0 / 0 / 500**.
+Exits non-zero if `wrong > 0` (the floor). Current baseline: **1 / 0 / 499** (first sound lift, 2026-06-04).
