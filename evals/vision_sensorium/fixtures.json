@@ -1,0 +1,24 @@
+{
+  "size": 32,
+  "comment": "Deterministic visual synthesis specs. Fixtures are designed with predictable measured facts so the gate grades lexer/parser semantics as well as determinism.",
+  "fixtures": [
+    {"id": "flat_gray", "kind": "flat", "rgb": [0.5, 0.5, 0.5],
+     "expect": "flat low-contrast field"},
+    {"id": "vertical_edge", "kind": "edge", "orientation": "vertical",
+     "expect": "hard oriented edge and contrast"},
+    {"id": "corner_block", "kind": "corner",
+     "expect": "corner/junction response"},
+    {"id": "center_blob", "kind": "blob",
+     "expect": "center blob / region onset"},
+    {"id": "checker_texture", "kind": "checker", "period": 4,
+     "expect": "high-frequency texture"},
+    {"id": "contrast_ramp", "kind": "ramp",
+     "expect": "luminance contrast gradient"},
+    {"id": "chroma_split", "kind": "chroma_split",
+     "expect": "strong chroma regime"},
+    {"id": "salient_spot", "kind": "salient_spot",
+     "expect": "salient figure on ground"},
+    {"id": "contour_box", "kind": "contour_box",
+     "expect": "closed contour-like border"}
+  ]
+}

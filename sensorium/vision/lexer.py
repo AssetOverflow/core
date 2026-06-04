@@ -36,7 +36,7 @@ def lex_tile(signal: VisionTileSignal) -> tuple[VisualEvent, ...]:
         angle = float(np.arctan2(np.mean(gy), np.mean(gx)) + np.pi)
         orient_q = int(np.floor((angle / (2.0 * np.pi)) * 16.0)) % 16
     edge_q = _bin(energy_mean, max_value=0.5)
-    corner_q = _bin(float(np.mean(np.abs(gx * gy))), max_value=0.25)
+    corner_q = _bin(float(np.mean(np.abs(gx * gy))), max_value=0.02)
     center = luma[luma.shape[0] // 4: 3 * luma.shape[0] // 4, luma.shape[1] // 4: 3 * luma.shape[1] // 4]
     blob_q = _bin(abs(float(np.mean(center)) - mean), max_value=0.5)
     texture_q = _bin(float(np.mean(np.abs(energy - energy_mean))), max_value=0.5)
