@@ -2,6 +2,7 @@
 
 **Status:** Accepted (ratified 2026-06-03)
 **Date:** 2026-06-03
+**Current execution state:** R4 goal-residual production landed after ratification; serving train-sample is now `7/43/0`, wrong=0.
 **Author:** Shay
 **Anchor:** [[thesis-decoding-not-generating]]
 **Consolidates (does not replace):** ADR-0164, ADR-0165, ADR-0174,
@@ -28,7 +29,9 @@ against the gates* (§6), not another design.
 
 ## 2. Verified findings (origin/main `2cb0922`)
 
-Every claim below was reproduced read-only against the tree on 2026-06-03.
+Every claim below was reproduced read-only against the tree on 2026-06-03. This section is the
+ratification baseline. Later execution notes may update metrics without rewriting the baseline
+finding.
 
 **252 ADRs.** The relevant design is on the books, not missing. Actual status lines (cited as
 they stand — these are *not* "design of record" labels until this ADR is ratified):
@@ -61,8 +64,8 @@ Held-hypothesis primitives (`lookback.reevaluate`, `contemplate`) are invoked li
    (imported by `math_candidate_graph.py` at lines 663, 685, 1004) and the overfitting vector.
 2. **The held-hypothesis primitives** — bolted into the candidate-graph flow (above).
 3. **The `derivation/` composer** — built and *already enriched* (see §3), but **disjoint
-   from serving**: `chat/` imports zero derivation modules, and the serving candidate-graph
-   path imports **exactly one** derivation symbol —
+   from serving** at the ratification baseline: `chat/` imports zero derivation modules, and
+   the serving candidate-graph path imports **exactly one** derivation symbol —
    `generate.derivation.product_bridge.resolve_promotable_product`
    (`math_candidate_graph.py:530`, the guarded product bridge behind the current lift). The
    composer proper (`extract`/`clauses`/`compose`/`accumulate`/`multistep`/`search`/`verify`)
@@ -74,10 +77,15 @@ ancestor of the prior HEAD `8327c6b`, −1,038 LOC); the primitives survived. So
 intended topology (**reader = the brain; injectors = emitters**) **was never realized — it
 fragmented.**
 
-**Empirical signature of the unfinished state:** train_sample **6/44/0** (reproduced live);
-sealed holdout **0/0/1319** (cited per `docs/claims_ledger.md` / ADR-0119.7 ciphertext — not
-CI-reproducible). The live regex path solves a few train surface forms and transfers to
-~nothing unseen. Safe failure (refuses, never wrong), but narrow-and-non-transferring.
+**Empirical signature of the unfinished baseline:** train_sample **6/44/0** (reproduced live at
+ratification); sealed holdout **0/0/1319** (cited per `docs/claims_ledger.md` / ADR-0119.7
+ciphertext — not CI-reproducible). The live regex path solves a few train surface forms and
+transfers to ~nothing unseen. Safe failure (refuses, never wrong), but narrow-and-non-transferring.
+
+**Current execution note (post-ratification).** ADR-0207 §5 R4 execution added
+`generate/derivation/goal_residual.py` and a guarded promotion bridge for residual-to-goal
+readings. This moves train_sample to **7/43/0**, still wrong=0. The lift is execution of this ADR,
+not a new architecture and not a relaxation of the §4 freeze.
 
 **Root cause of the wasted weeks is process, not architecture:** five `Proposed`/partial ADRs
 never ratified or driven to completion, with the deprecated fallback left live.
@@ -130,17 +138,18 @@ Execute these three levers — listed by role, not by sequence (lever 1 explains
 wire is the *last*, trivial step and composition the real first work):
 
 1. **WIRING — trivial, and already done for the safe shapes.** The wire pattern
-   (`product_bridge` at `:530`: `resolve(text) → CandidateGraphResult | fall-through`) is
-   proven, but it generalizes nothing: `product_bridge` promotes only via a two-token target
-   whitelist (`money`+`make/earn`, `weight`+`total/move`), hardcoded to 0003/0021. Extending
-   it is **not** the lowest-risk first step. Verified on the tree (2026-06-03): the general
-   composer (`resolve_pooled`) refuses **all ten** R1/R4/R5/R6 corpus positives — R1/R4 build
-   zero candidates, R5 builds only wrong ones — so wiring it yields **+0 correct**; and it
-   wrong-commits `0016 → 510`, so wiring it wholesale is a live `wrong=0` regression that
-   disagreement does **not** catch. Therefore WIRING and COMPOSITION are the **same task**:
-   the real first work is composer production for each target shape, each behind a structural
-   promotion gate (op-class/target proof via `extract_target` + `target_units`, not
-   disagreement alone). The wire is the last, trivial step once a shape builds-and-certifies.
+   (`resolve(text) → CandidateGraphResult | fall-through`) is proven, but it generalizes
+   nothing by itself. The initial `product_bridge` promoted only via narrow target proof for
+   0003/0021; the post-ratification `goal_residual` bridge promotes only goal-language +
+   residual-question + same-referent licensed-progress chains. Extending either bridge is
+   **not** the lowest-risk first step. Verified on the tree (2026-06-03): the general composer
+   (`resolve_pooled`) refuses **all ten** R1/R4/R5/R6 corpus positives — R1/R4 build zero
+   candidates, R5 builds only wrong ones — so wiring it wholesale yields **+0 correct** and
+   wrong-commits `0016 → 510`, a live `wrong=0` regression that disagreement does **not** catch.
+   Therefore WIRING and COMPOSITION are the **same task**: the real first work is composer
+   production for each target shape, each behind a structural promotion gate (op-class/target
+   proof via `extract_target` + `target_units`, not disagreement alone). The wire is the last,
+   trivial step once a shape builds-and-certifies.
 2. **COMPOSITION (ADR-0178) — the actual wall.** Complete the derivation composer's
    multi-step assembly: which quantities group, via which ops, in what order (the R4/R5/R6
    lever). This is the genuine research risk; extraction already feeds it.
@@ -159,7 +168,7 @@ generalizing). Never a per-shape branch.
 
 Every step must hold all of:
 
-1. train_sample stays **`wrong=0`** (6/44/0 or better — `correct` may only rise).
+1. train_sample stays **`wrong=0`** (current floor: 7/43/0; `correct` may only rise).
 2. The no-reference `<N> times` hazard (composition-capability-scope §9) stays **refused**.
 3. No partial graph admits while any source quantity is unbound (the completeness leg).
 4. Progress is measured on the composition-typed **validation sub-corpus**

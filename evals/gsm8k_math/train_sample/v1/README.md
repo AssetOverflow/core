@@ -52,20 +52,28 @@ Each case in `cases.jsonl` preserves:
 
 ## Current Report
 
-`report.json` currently records **6 correct / 44 refused / 0 wrong**. The
+`report.json` currently records **7 correct / 43 refused / 0 wrong**. The
 ADR-0126 exit criterion remains unmet (`correct >= 10`, `wrong == 0`), so the
 runner still exits nonzero.
 
-The two most recent lifts are ADR-0195 product-promotion cases:
+The current correct set is:
 
 - `gsm8k-train-sample-v1-0003` — complete revenue product
   (`48 boxes x 24 erasers x $0.75`).
+- `gsm8k-train-sample-v1-0014` — fast-path serving case.
+- `gsm8k-train-sample-v1-0018` — fast-path serving case.
 - `gsm8k-train-sample-v1-0021` — complete total-work product
   (`15 pounds x 10 reps x 3 sets`).
+- `gsm8k-train-sample-v1-0024` — comparative product control retained green.
+- `gsm8k-train-sample-v1-0037` — ADR-0207 R4 goal-residual production
+  (`goal - Σprogress`) promoted through `generate/derivation/goal_residual.py`.
+- `gsm8k-train-sample-v1-0042` — fast-path serving case.
 
-Both are exposed through a guarded product bridge over the pooled derivation
-reader. The bridge does **not** promote the pooled reader wholesale; the eight
-known pooled-reader wrong commits remain refused.
+The product cases are exposed through a guarded product bridge over the pooled
+derivation reader. The R4 case is exposed through the guarded goal-residual
+bridge. Neither bridge promotes the pooled/general composer wholesale; known
+wrong commits remain refused, and the no-reference `<N> times` completeness
+hazard remains a hard refusal control.
 
 ## ADR-0164 Reader — Zero-Delta Diagnosis
 
