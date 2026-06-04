@@ -112,13 +112,28 @@ result is an acceptable, honest outcome: where the field cannot earn agreement, 
 **stays a servant** and the symbolic path carries that domain, refusing where it
 cannot verify. **No unfalsifiable "the field knows" claim ever enters the codebase.**
 
-**The wedge (Phase 1.5):** *Can the field decide propositional entailment
-geometrically and agree with the ROBDD oracle on held-out, `wrong = 0`?* Logic is
-the ideal first test — the ROBDD + independent oracle already give a rock-solid gold
-(500/500). Embed atoms/clauses as geometric objects; decide entailment by
-incidence/coherence; require `field_verdict == ROBDD_verdict == oracle` on a
-held-out set. Agree → the field has earned a reasoning role and we have our first
-genuine second derivation. Cannot → we learned it cheaply and honestly.
+**The wedge (Phase 1.5) — FINDING (2026-06-04): logic is the wrong first domain.**
+The original wedge asked whether the field could decide *propositional entailment*
+geometrically and agree with the ROBDD oracle. A bounded experiment settled it: the
+cleanest geometric/algebraic encoding (the commuting-idempotent *function-algebra*,
+each formula → its function on the `2^n` minterms) **agrees 716/716 with the oracle
+but is `O(2^n)`** — it is truth-table enumeration in algebraic clothing, *not* a
+genuine sub-enumeration reduction the way the ROBDD is. So a geometric decoder for
+logic would either re-encode enumeration (adding no independence the oracle does not
+already provide) or be decoration. **Propositional logic is combinatorial
+(all-assignments), not geometric/metric** — the field engine's native strength
+(distance, incidence, proportion, betweenness) has no purchase there.
+
+**Corrected wedge — quantitative-relational structure.** The field must first earn
+its reasoning role where the structure is genuinely *metric*: quantitative-relational
+problems (`A is twice B`, `A is 3 more than B`, part-whole, ratios) — exactly where
+GSM8K *comprehension* lives. There, the field derivation (solve the linear/metric
+relation system by propagation) and the symbolic derivation (step-by-step arithmetic)
+are two genuinely distinct decodings, and their agreement on the dataset answer is a
+real second derivation. Logic keeps its independent gold (ROBDD ⟂ truth-table oracle)
+as a *symbolic* second derivation; the *field* earns its role in the metric domains.
+This is the plan working as designed: the field earned nothing it did not deserve,
+and we learned the right domain cheaply.
 
 ## 4. Phased plan
 
@@ -126,20 +141,31 @@ genuine second derivation. Cannot → we learned it cheaply and honestly.
   (`tests/test_architectural_invariants.py`): no capability claim without an
   independent gold sharing no code with the SUT; deductive lane SHA-pinned
   (`deductive_logic_v1`). The foundation every later phase rides on.
-- **Phase 1 — canonize the universal structure.** Promote
-  `SemanticSymbolicBindingGraph` to *the* documented problem-structure interlingua;
-  resolve its closed-vocab placeholder (`semantic_role="unknown"`) only when a
-  load-bearing consumer defines it. Add a **hemisphere-role invariant**: servant
-  modules (parsers, metrics, vault) may not bypass the structure's consistency
-  checks. (The taxonomy is a proposal to validate before the enforcing INV lands.)
-- **Phase 1.5 — the keystone wedge.** Field-decides-entailment vs. ROBDD oracle on
-  the deductive lane. Prove (or honestly refute) field-as-reasoner on the safest
-  gold. Gate to everything geometric.
-- **Phase 2 — comprehension compiler → binding graph** (finite-entity grounding
-  first), with **field ⟂ symbol agreement** as the admission gate from the moment
-  Phase 1.5 succeeds. **The diversity panel starts here** (see cross-cutting): the
-  compiler is validated against ≥2 structurally-distinct golded domains from its
-  first commit, so it cannot overfit to math-shaped problems.
+- **Phase 1 — canonize the universal structure. ✅ SHIPPED.**
+  `SemanticSymbolicBindingGraph` is the documented problem-structure interlingua;
+  **INV-26** enforces its neutrality (the interlingua imports no field/eval/runtime,
+  and its core imports no domain reader — only allowlisted bridges may). Deferred:
+  resolving the closed-vocab placeholder (`semantic_role="unknown"`) until a
+  load-bearing consumer defines it; the stronger "servant may not bypass consistency
+  checks" rule (the checkable neutrality half shipped; the rest stays doctrine until
+  a checkable form exists).
+- **Phase 1.5 — the keystone wedge. ✅ RUN (logic ruled out; wedge redirected).**
+  The propositional-logic wedge was settled by experiment (§3): a clean geometric
+  encoding is enumeration-class, so logic cannot prove field-as-reasoner. The wedge
+  is redirected to **quantitative-relational** structure, where the field
+  (metric/proportion propagation) and the symbol (step arithmetic) are genuinely
+  distinct decodings. The dedicated quantitative wedge is the next field-reasoner
+  experiment.
+- **Phase 2 — comprehension compiler → binding graph.** **✅ FIRST SLICE SHIPPED:**
+  the finite-entity grounding compiler (`evals/deductive_logic/grounding.py`) lowers
+  a typed finite-entity problem (entities + unary predicates + single-var universal
+  rules) into the propositional regime, refusal-first, gated by `engine == oracle ==
+  gold` — the first reader proving a *different problem shape* compiles into the same
+  checkable substrate. **The diversity panel starts here** (see cross-cutting):
+  finite-entity is the second golded domain, so the compiler is validated against ≥2
+  structurally-distinct domains from its first commit and cannot overfit to one
+  shape. Remaining Phase 2: target the binding-graph interlingua directly and add
+  **field ⟂ symbol agreement** as the admission gate once the quantitative wedge lands.
 - **Phase 3 — activate `t2_precision`.** The field⟂symbol agreement *is* the t2
   signal; wire the propose-loop consuming `checker="t2_precision"`. No invented
   second derivation needed — it is real now.
