@@ -1,0 +1,2014 @@
+{
+  "counts": {
+    "correct": 0,
+    "refused": 500,
+    "wrong": 0
+  },
+  "lane": "gsm8k_math/holdout_dev/v1",
+  "n": 500,
+  "note": "Open held-out dev metric: cases CORE was NOT built against. Iterate here; the sealed TEST (1,319) is the final arbiter. wrong=0 is the floor; correct rising is the goal (refuse-everything is the failing baseline, not a pass).",
+  "per_case": [
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0000",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0001",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0002",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0003",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0004",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0005",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0006",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0007",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0008",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0009",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0010",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0011",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0012",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0013",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0014",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0015",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0016",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0017",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0018",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0019",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0020",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0021",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0022",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0023",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0024",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0025",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0026",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0027",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0028",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0029",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0030",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0031",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0032",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0033",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0034",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0035",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0036",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0037",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0038",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0039",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0040",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0041",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0042",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0043",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0044",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0045",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0046",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0047",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0048",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0049",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0050",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0051",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0052",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0053",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0054",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0055",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0056",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0057",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0058",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0059",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0060",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0061",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0062",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0063",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0064",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0065",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0066",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0067",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0068",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0069",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0070",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0071",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0072",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0073",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0074",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0075",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0076",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0077",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0078",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0079",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0080",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0081",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0082",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0083",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0084",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0085",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0086",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0087",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0088",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0089",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0090",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0091",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0092",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0093",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0094",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0095",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0096",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0097",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0098",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0099",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0100",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0101",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0102",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0103",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0104",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0105",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0106",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0107",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0108",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0109",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0110",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0111",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0112",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0113",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0114",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0115",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0116",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0117",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0118",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0119",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0120",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0121",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0122",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0123",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0124",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0125",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0126",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0127",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0128",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0129",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0130",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0131",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0132",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0133",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0134",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0135",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0136",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0137",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0138",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0139",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0140",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0141",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0142",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0143",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0144",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0145",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0146",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0147",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0148",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0149",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0150",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0151",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0152",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0153",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0154",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0155",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0156",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0157",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0158",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0159",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0160",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0161",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0162",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0163",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0164",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0165",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0166",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0167",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0168",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0169",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0170",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0171",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0172",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0173",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0174",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0175",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0176",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0177",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0178",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0179",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0180",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0181",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0182",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0183",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0184",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0185",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0186",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0187",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0188",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0189",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0190",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0191",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0192",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0193",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0194",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0195",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0196",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0197",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0198",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0199",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0200",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0201",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0202",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0203",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0204",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0205",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0206",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0207",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0208",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0209",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0210",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0211",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0212",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0213",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0214",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0215",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0216",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0217",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0218",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0219",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0220",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0221",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0222",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0223",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0224",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0225",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0226",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0227",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0228",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0229",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0230",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0231",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0232",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0233",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0234",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0235",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0236",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0237",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0238",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0239",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0240",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0241",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0242",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0243",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0244",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0245",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0246",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0247",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0248",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0249",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0250",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0251",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0252",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0253",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0254",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0255",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0256",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0257",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0258",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0259",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0260",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0261",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0262",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0263",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0264",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0265",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0266",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0267",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0268",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0269",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0270",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0271",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0272",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0273",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0274",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0275",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0276",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0277",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0278",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0279",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0280",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0281",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0282",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0283",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0284",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0285",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0286",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0287",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0288",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0289",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0290",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0291",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0292",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0293",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0294",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0295",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0296",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0297",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0298",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0299",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0300",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0301",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0302",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0303",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0304",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0305",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0306",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0307",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0308",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0309",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0310",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0311",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0312",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0313",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0314",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0315",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0316",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0317",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0318",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0319",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0320",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0321",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0322",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0323",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0324",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0325",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0326",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0327",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0328",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0329",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0330",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0331",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0332",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0333",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0334",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0335",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0336",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0337",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0338",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0339",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0340",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0341",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0342",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0343",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0344",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0345",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0346",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0347",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0348",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0349",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0350",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0351",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0352",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0353",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0354",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0355",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0356",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0357",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0358",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0359",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0360",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0361",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0362",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0363",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0364",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0365",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0366",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0367",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0368",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0369",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0370",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0371",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0372",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0373",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0374",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0375",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0376",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0377",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0378",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0379",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0380",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0381",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0382",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0383",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0384",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0385",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0386",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0387",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0388",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0389",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0390",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0391",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0392",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0393",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0394",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0395",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0396",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0397",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0398",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0399",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0400",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0401",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0402",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0403",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0404",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0405",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0406",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0407",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0408",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0409",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0410",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0411",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0412",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0413",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0414",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0415",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0416",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0417",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0418",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0419",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0420",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0421",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0422",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0423",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0424",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0425",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0426",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0427",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0428",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0429",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0430",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0431",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0432",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0433",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0434",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0435",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0436",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0437",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0438",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0439",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0440",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0441",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0442",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0443",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0444",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0445",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0446",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0447",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0448",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0449",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0450",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0451",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0452",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0453",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0454",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0455",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0456",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0457",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0458",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0459",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0460",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0461",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0462",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0463",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0464",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0465",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0466",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0467",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0468",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0469",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0470",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0471",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0472",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0473",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0474",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0475",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0476",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0477",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0478",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0479",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0480",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0481",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0482",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0483",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0484",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0485",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0486",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0487",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0488",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0489",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0490",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0491",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0492",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0493",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0494",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0495",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0496",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0497",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0498",
+      "verdict": "refused"
+    },
+    {
+      "case_id": "gsm8k-holdout-dev-v1-0499",
+      "verdict": "refused"
+    }
+  ],
+  "schema_version": 1,
+  "source": "openai/gsm8k train split, minus the 50 train_sample, deterministic sha256(question) sort, first 500"
+}
