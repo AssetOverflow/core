@@ -11,13 +11,16 @@ defended.
 > discipline applies to how we describe ourselves, not only to what the engine
 > outputs. Overclaiming to hit a deadline is failure, not success.
 
-- **Base commit:** `c058d96` (origin/main).
-- **Verification date:** 2026-06-02.
+- **Base commit:** `3a72d69` (origin/main before this reconciliation branch).
+- **Verification date:** 2026-06-03 / 2026-06-04 UTC merge window.
 - **Reproduce the machine-derived rows:**
   ```bash
-  uv run core capability ledger          # Tier-1 status (audit-passed ×3; NO expert)
-  uv run python scripts/verify_lane_shas.py   # Tier-2 pinned lane SHAs
-  uv run python scripts/generate_claims.py --check   # CLAIMS.md is current
+  uv run core capability ledger                  # Tier-1 status (audit-passed ×3; NO expert)
+  uv run python scripts/verify_lane_shas.py      # Tier-2 pinned lane SHAs
+  uv run python scripts/generate_claims.py --check   # CLAIMS.md is current, when regenerated from this ledger
+  uv run python -m pytest tests/test_vision_eval_gates.py -q
+  uv run python -m pytest tests/test_audio_compiler.py tests/test_audio_crdt_merge.py tests/test_audio_sensorium_mount.py -q
+  uv run python -m pytest tests/test_observation_frame_contract.py tests/test_sensorimotor_contract.py -q
   ```
 
 ---
@@ -32,7 +35,7 @@ material that blurs them is a credibility risk.
 |---|---|---|---|---|---|
 | **A** | **Sealed real GSM8K test** (1,319 cases, HuggingFace `openai/gsm8k` test split) | **0 correct / 0 wrong / 1,319 refused** | **Yes** | No | `ADR-0119.7`; ciphertext `evals/gsm8k_math/holdouts/v1/cases.jsonl.age` |
 | **B** | **CORE-authored synthetic "public" split** (150 cases, rule-based, written to exercise the grammar) | **150 correct / 0 wrong / 0 refused** (rate 1.0) | **No** | No | `evals/gsm8k_math/baselines/comparison_v1.json`, `frontier.json` |
-| **C** | **Real `train_sample`** (50-case dev sample of real GSM8K) | **6 correct / 44 refused / 0 wrong** | Yes (sample) | No | `evals/gsm8k_math/train_sample/v1/report.json` |
+| **C** | **Real `train_sample`** (50-case dev sample of real GSM8K) | **7 correct / 43 refused / 0 wrong** | Yes (sample) | No | `evals/gsm8k_math/train_sample/v1/report.json` |
 | **D** | **Expert-promotion composite gate** (CORE-authored lanes B1/B2/B3) | **185/185 + 14/14 + 40/40 + 50/50, wrong=0** | **No** | Yes (but reverted — §2) | `ADR-0131.4`; `core/capability/composite_math_gate.py` |
 
 **Per-number honest framing:**
@@ -51,12 +54,12 @@ material that blurs them is a credibility risk.
   frontier LLMs (Claude 3.5 Sonnet 96.4%, GPT-4 92.0%, Gemini 1.5 Pro 90.8%) are
   scored on *real* GSM8K. **Never cite B as "CORE scores 100% on GSM8K."** The
   qualitative differentiator is `wrong=0`, not the rate.
-- **(C) The dev-sample reality.** 6/44/0 on 50 real cases — the lane's
-  `exit_criterion` (`correct_min: 10`) is **NOT met**. A stricter candidate-graph
-  coverage probe reports **4/46/0** on the same 50 cases
-  (`train_sample_coverage_report.json`); both preserve `wrong=0`. The two readers
-  differ on 2 fast-path cases. The probe's movement (`3→4`) is precisely what
-  reverted the expert claim (§2).
+- **(C) The dev-sample reality.** `7/43/0` on 50 real cases — the lane's
+  `exit_criterion` (`correct_min: 10`) is **NOT met**. The latest lift is the
+  ADR-0207 §5 R4 goal-residual production (`generate/derivation/goal_residual.py`),
+  which moves train-sample case `0037` while preserving `wrong=0`. A stricter
+  candidate-graph coverage probe is a separate diagnostic lane and must not be
+  conflated with the serving train-sample report.
 - **(D) CORE-authored, and currently NOT conferring expert.** All four B-lanes are
   written and scored by CORE; none is external GSM8K. ADR-0131.4 replaced the
   original real-GSM8K gate (`correct_rate ≥ 0.60`) with this composite; ADR-0131.5
@@ -119,25 +122,32 @@ claim when its evidence moved.** Full record: `ADR-0200`.
 | **Refuse-rather-than-guess / `wrong = 0`** | typed refusal across all four GSM8K numbers; `verify.py` gate | A/B/C/D all `wrong=0` |
 | Exact CGA recall (no ANN / HNSW / cosine) | `vault/store.py`; `docs/Yellowpaper.md` recall section | `uv run core test --suite algebra` |
 | Safety pack: add-but-never-remove, fail-closed on load | `packs/safety/core_safety_axes_v1.json`; `ADR-0029` | `uv run core test --suite smoke` |
-| On-device, non-LLM, no sampling/gradient/tokenizer | architecture; `README.md` "Third Door" | — |
+| Sensorium compiler law: compiled afferent units are content-addressed, replayable, and merge by deterministic key | `sensorium/compiler/*`; audio/vision/sensorimotor tests | see §4 reproduce commands |
+| On-device, non-LLM, no sampling/gradient/tokenizer in the CORE runtime path | architecture; `README.md` "Third Door" | — |
 
 ---
 
-## 4. Multimodal status — text only is *capability*; the rest is substrate or proposal
+## 4. Multimodal status — distinguish capability from substrate
 
 The patent application's "multimodal" title is broader than what is demonstrated
-in-repo. **External materials must not imply working vision or motor.**
+as end-user capability in-repo. **External materials must not imply working
+open-domain vision, audio understanding, robotics, or autonomous action.** The
+current truth is: text is capability; audio/vision/sensorimotor are deterministic
+afferent substrates with gates and synthetic evals; motor/efferent output is
+fail-closed governance scaffolding only.
 
-| Modality | Status | Evidence |
-|---|---|---|
-| **Text** (English, Hebrew, Koine Greek) | **Active capability** | `sensorium/adapters/text.py`; language packs |
-| **Audio** | **Substrate landed, gate CLOSED (no capability claim)** | `sensorium/audio/*`; `make_audio_pack(gate_engaged=False)`; determinism + order-invariant CRDT merge + no-PCM-in-trace all gate-tested |
-| **Vision** (`ADR-0197`) | **Proposed only** — no code, no pack, no eval | `Modality.VISION` enum exists; no `sensorium/vision/` |
-| **Motor** (`ADR-0198`) | **Proposed only** — "design spike, no implementation" | registry has no `decode()` path; `persona/motor.py` is an *internal CGA screw motion*, not an actuator |
+| Surface | Status | Evidence | Honest claim boundary |
+|---|---|---|---|
+| **Text** (English, Hebrew, Koine Greek) | **Active capability** | `sensorium/adapters/text.py`; language packs | Working textual modality. |
+| **Audio** (`audio_core_v1`) | **Substrate landed, gate CLOSED by default** | `sensorium/audio/*`, `sensorium/adapters/audio.py`, `packs/audio/audio_core_v1/`, `tests/test_audio_*` | Deterministic compiler substrate; no broad audio-understanding capability claim. |
+| **Vision** (`vision_core_v1`) | **Substrate landed, gate CLOSED by default** | `sensorium/vision/*`, `sensorium/adapters/vision.py`, `packs/vision/vision_core_v1/`, `evals/vision_sensorium/`, `tests/test_vision_eval_gates.py` | Tile-first deterministic visual compiler over synthetic fixtures; no open-domain vision claim. |
+| **Environmental loop** (`ADR-0208`) | **Afferent observation-frame contract landed** | `sensorium/environment/frame.py`, `sensorium/environment/harness.py`, `tests/test_observation_frame_*` | Bundles already-compiled afferent units; not late fusion, not a mutable world model. |
+| **Sensorimotor feedback** (`ADR-0209`) | **Afferent substrate landed** | `sensorium/sensorimotor/*`, `sensorium/adapters/sensorimotor.py`, `tests/test_sensorimotor_*` | Proprioception/contact/action-result evidence only; no decoder, actuator driver, trajectory executor, or skill invocation. |
+| **Motor / efferent output** (`ADR-0198`) | **Partially implemented governance spike; action emission still refused unless verdict-governed** | `ModalityRegistry.decode*`, `AuthorityToken`, `DefaultEfferentGate`, `EfferentRefusal` | Registry path exists, but no motor decoder or real actuation capability is claimed. |
 
-Honest line: *text is a working modality; audio is a determinism-proven substrate
-with its capability gate deliberately closed; vision and motor are design
-proposals with no implementation.*
+Honest line: *text is a working modality; audio/vision/sensorimotor are
+replayable afferent compiler substrates with gates and eval fixtures; motor is a
+fail-closed efferent governance surface, not an actuator.*
 
 ---
 
@@ -148,7 +158,7 @@ The reviewer registry has exactly **one** signer: `shay-j`, `domains: ["*"]`,
 `audit_passed_claims` and the (now-quarantined) `math_expert_claims` entry is
 signed by the same identity. This is a real single-point-of-capture a partner may
 probe. The migration toward a multi-reviewer / threshold-signing registry is
-scoped as a Week-4 deliverable (`ADR-02xx`, design-only — no fake signers).
+scoped as a future design deliverable — no fake signers.
 
 ---
 
@@ -159,24 +169,29 @@ scoped as a Week-4 deliverable (`ADR-02xx`, design-only — no fake signers).
 - ❌ "CORE is externally validated on GSM8K." → The expert gate rests on
   **CORE-authored** lanes; the real external number is A = `0/0/1319`.
 - ❌ "CORE scores ~100% on GSM8K." → That is B, a CORE-authored synthetic split.
-- ❌ "CORE has vision / motor / working multimodal perception." → Audio is
-  substrate-only (gate closed); vision/motor are proposals.
+- ❌ "CORE has broad working multimodal perception." → Audio, vision, and
+  sensorimotor are afferent substrates/eval lanes, not demonstrated open-domain
+  capability.
+- ❌ "CORE can perform motor actions / robotics / vehicle control." → Efferent
+  output is fail-closed governance scaffolding only; no motor decoder/actuator
+  path is ratified.
 - ❌ "`audit-passed` means expert-level capability." → It is claim-shape
   compliance, not raw capability (`ADR-0113`).
 
 ---
 
-## 7. Reconciliation log (proposed — pending operator ratification)
+## 7. Reconciliation log
 
 These reconcile stale artifacts to the truth above. **History-describing**
-artifacts keep their content with a dated "valid-at … auto-reverted … current =
-audit-passed" note (keep the receipt; keep the mismatch-refusal firing).
-**Current-machine-state** artifacts reconcile to the truth. Tracked in `ADR-0200`.
+artifacts keep their content with dated context. **Current-machine-state**
+artifacts reconcile to the truth.
 
 | Artifact | Type | Action |
 |---|---|---|
-| `docs/reviewers.yaml` `math_expert_claims` | history (receipt) | keep entry; add quarantine note; do not re-sign |
+| `docs/claims_ledger.md` | current state | reconciled to `7/43/0`, afferent sensorium substrate landed, and fail-closed efferent governance scaffold |
+| `CLAUDE.md` GSM8K substrate header | current operator instruction | reconcile serving metric to `7/43/0`; keep wrong=0 governor |
+| `evals/gsm8k_math/train_sample/v1/README.md` | current eval summary | reconcile current report and note R4 goal-residual lift |
+| `docs/decisions/ADR-0207-gsm8k-substrate-ratification.md` | ratified decision with evolving execution status | keep ratification baseline; add current-state note after R4 lift |
+| `docs/reviewers.yaml` `math_expert_claims` | history (receipt) | keep entry; add quarantine note separately; do not re-sign |
 | `docs/decisions/ADR-0120-math-expert-ledger-flip.md` | history | header note: valid-at 2026-05-23, auto-reverted, current = audit-passed |
-| `evals/math_expert_claims/v1/expert_claims_math_v1_signed.json` | current state | regenerate → `promote_admitted: false` |
-| `README.md` §"Path to expert" + ledger lines | current state | reconcile narrative to built-attempted-reverted; verify test count |
-| `tests/test_mathlogic_expert_ledger_flip.py`, `tests/test_adr_0120_math_expert_promotion.py` | current state | flip 3 red "is-expert" assertions into fail-closed-revert assertions |
+| `evals/math_expert_claims/v1/expert_claims_math_v1_signed.json` | current state | future regeneration should preserve `promote_admitted: false` until a ratified expert path exists |
