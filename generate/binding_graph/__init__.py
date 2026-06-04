@@ -1,5 +1,24 @@
 """ADR-0132/0133/0134/0135 — Semantic-Symbolic Binding Graph.
 
+**The universal problem-structure interlingua** (see
+``docs/analysis/universal-structure-and-field-symbol-coherence-gate-2026-06-04.md``).
+This is the one typed, field-agnostic structure that every reader (math,
+deductive logic, future modalities) compiles *into* and every solver/verifier
+operates *on*: a unit-aware, provenance-carrying (:class:`SourceSpanLink`),
+acyclic, refusal-first DAG. It is the corpus callosum where holistic
+comprehension commits to an inspectable, checkable form and hands off to
+analysis — not the master and not a mere servant.
+
+**Neutrality doctrine (enforced by INV-26).** The interlingua must depend on
+neither the field engine, nor any one domain's reader, nor the eval/runtime: the
+core model imports nothing from ``field`` / ``algebra`` / ``evals`` / ``vault`` /
+``chat``, and only the designated *bridge* modules (:mod:`.adapter`,
+:mod:`.question_target`) may import a domain reader. Servants propose into the
+structure and check it; they never become the structure. Keeping the meeting
+point neutral is what lets two independent decodings (geometric field and
+symbolic ROBDD) agree *here* — the coherence that makes a committed answer
+``wrong == 0``-safe.
+
 Phase 1 (ADR-0132): pure data layer (frozen dataclasses, deterministic
 allocator, refusal-first construction; no I/O, no parser, no algebra,
 no ``Polynomial`` coupling — symbolic expressions held as canonical

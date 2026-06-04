@@ -137,7 +137,9 @@ genuine second derivation. Cannot → we learned it cheaply and honestly.
   gold. Gate to everything geometric.
 - **Phase 2 — comprehension compiler → binding graph** (finite-entity grounding
   first), with **field ⟂ symbol agreement** as the admission gate from the moment
-  Phase 1.5 succeeds.
+  Phase 1.5 succeeds. **The diversity panel starts here** (see cross-cutting): the
+  compiler is validated against ≥2 structurally-distinct golded domains from its
+  first commit, so it cannot overfit to math-shaped problems.
 - **Phase 3 — activate `t2_precision`.** The field⟂symbol agreement *is* the t2
   signal; wire the propose-loop consuming `checker="t2_precision"`. No invented
   second derivation needed — it is real now.
@@ -152,7 +154,35 @@ genuine second derivation. Cannot → we learned it cheaply and honestly.
   modality becomes "just another reader" grounding into the universal structure;
   stays afferent/gated per ADR-0198.
 
-### Cross-cutting (every phase) — checkable budgets, adjoints, phenomenology
+### Cross-cutting (every phase) — diversity panel, checkable budgets, adjoints, phenomenology
+
+- **Structurally-diverse checkable panel (the anti-overfit instrument) — woven in
+  from Phase 2, not deferred to Phase 5.** Multi-domain diversity is not a morale
+  tool bolted onto the plan; it *is* the experiment that confirms or refutes the
+  central thesis (that *different* subjects compile into the *same* universal
+  structure and are handled by the *same* solve/verify machinery). The defining
+  failure of this project was a single gameable ruler (the 50-case train_sample)
+  hiding unsoundness for weeks; the antidote is a panel of **structurally distinct**
+  domains, each with a **genuine independent gold** (the INV-25 bar — a verifier
+  sharing no code with the engine). Adding a domain *without* real independent gold
+  is worse than useless: it is another gameable ruler. The cheap, strong starting
+  panel (logic / grounding / dimensional / execution / constraint, all with real
+  gold):
+  - **deductive logic** (ROBDD vs. truth-table oracle) — shipped.
+  - **finite-entity grounding** (ROBDD/oracle gold; Phase 2).
+  - **units / dimensional analysis** — *nearly free*: the binding graph already
+    carries dimensional algebra, so "does the answer's dimension check out" is an
+    independent structural gold.
+  - **systems/software** (execution = gold; Phase 5) — the strongest verifier.
+  - **a small constraint/scheduling domain** (brute-force/SMT gold).
+
+  **The discipline (adopt now):** *a capability change must move ≥2 structurally-
+  distinct domains, or it is suspected overfitting until proven otherwise.* Make the
+  panel a first-class CI signal alongside GSM8K so progress is never read from one
+  flat number. Honesty note: a domain with no adequate pack yet simply refuses
+  everything — that is a *coverage* signal (a breadth map), not a *capability*
+  signal. Capability credit counts only where there is a real pack **and** a real
+  gold **and** committed (non-refused) agreement.
 
 - **Distortion budgets as first-class CI gates**, but *only checkable ones*:
   grounding completeness %, unit-proof coverage, acyclicity, and **structural

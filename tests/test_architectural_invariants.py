@@ -1242,3 +1242,145 @@ class TestINV25IndependentGold:
             "entailed/refuted signal, so INV-25b cannot catch a soundness break. "
             "Add non-trivial cases before claiming the lane proves capability."
         )
+
+
+# ===========================================================================
+# INV-26  Interlingua neutrality — the universal problem-structure does not
+#         depend on the field engine, any one domain reader, or eval/runtime
+# ===========================================================================
+#
+# Claim (docs/analysis/universal-structure-and-field-symbol-coherence-gate-
+# 2026-06-04.md §2; ADR-0132 "no algebra" rule made structural):
+#
+#   The binding graph is the corpus callosum where two independent decodings
+#   (the geometric field and the symbolic ROBDD) must be able to meet and
+#   AGREE. That is only sound if the meeting point is NEUTRAL: if the
+#   interlingua imported the field engine, a benchmark, or a single domain's
+#   reader, "agreement at the interlingua" would be agreement-with-oneself —
+#   the same blind spot INV-25 guards for gold. So:
+#
+#   26a  No binding-graph module imports the field engine, eval, vault, or the
+#        runtime (``field`` / ``algebra`` / ``evals`` / ``vault`` / ``chat`` /
+#        ``core`` / ``sensorium``). The structure is engine/benchmark/runtime-
+#        neutral.
+#   26b  The binding-graph CORE (everything but the allowlisted bridge modules)
+#        imports nothing outside the standard library and its own package —
+#        in particular no domain reader. Only the bridges (``adapter``,
+#        ``question_target``) may translate a domain reader into the structure.
+#   26c  Non-vacuity: a module that imports a forbidden family is shown to be
+#        flagged, proving 26a/26b can fail.
+#
+# A new bridge (a new domain reader translated into the structure) is allowed,
+# but must be added to BINDING_GRAPH_BRIDGES explicitly — that is the reviewable
+# seam where a domain couples to the universal structure.
+
+_BINDING_GRAPH_DIR = "generate/binding_graph"
+
+# Engine / benchmark / runtime families the interlingua must never import.
+_INTERLINGUA_FORBIDDEN_PREFIXES: tuple[str, ...] = (
+    "field", "algebra", "evals", "vault", "chat", "core", "sensorium",
+)
+
+# The only modules permitted to import a domain reader (they translate one
+# domain's reader output into the neutral structure).
+BINDING_GRAPH_BRIDGES: frozenset[str] = frozenset({
+    "adapter.py",
+    "question_target.py",
+})
+
+
+def _binding_graph_modules() -> list[Path]:
+    return sorted((_REPO_ROOT / _BINDING_GRAPH_DIR).glob("*.py"))
+
+
+def _is_internal_or_stdlib(mod: str) -> bool:
+    """True if an imported module name is the structure's own package."""
+    return mod == "generate.binding_graph" or mod.startswith("generate.binding_graph.")
+
+
+class TestINV26InterlinguaNeutrality:
+    """The universal problem-structure stays neutral to engine, benchmark, and
+    runtime, and its core depends on no single domain reader."""
+
+    def test_binding_graph_dir_exists(self):
+        mods = _binding_graph_modules()
+        assert mods, (
+            f"no binding-graph modules found under {_BINDING_GRAPH_DIR} — "
+            "INV-26 would be vacuous (did the package move?)."
+        )
+
+    def test_no_module_imports_engine_eval_or_runtime(self):
+        """26a — the interlingua never touches field/algebra/eval/vault/chat/
+        core/sensorium. Agreement at a neutral meeting point is real; agreement
+        at a point coupled to one engine is agreement-with-oneself."""
+        offenders: list[str] = []
+        for path in _binding_graph_modules():
+            mods = _module_imports(path)
+            hits = _imports_any_prefix(mods, _INTERLINGUA_FORBIDDEN_PREFIXES)
+            if hits:
+                offenders.append(f"{path.name} imports {hits}")
+        assert not offenders, (
+            "Binding-graph (interlingua) module couples to the engine/eval/"
+            "runtime:\n  " + "\n  ".join(offenders)
+            + "\n\nThe universal structure must stay neutral so two independent "
+            "decodings can meet and agree there (INV-26a). Move the coupling out, "
+            "or it is not an interlingua."
+        )
+
+    def test_core_imports_no_domain_reader(self):
+        """26b — only the allowlisted bridges may import a domain reader; the
+        core imports nothing outside stdlib + its own package."""
+        offenders: list[str] = []
+        for path in _binding_graph_modules():
+            if path.name in BINDING_GRAPH_BRIDGES or path.name == "__init__.py":
+                continue
+            external = [
+                m for m in _module_imports(path)
+                if m.startswith("generate.") and not _is_internal_or_stdlib(m)
+            ]
+            if external:
+                offenders.append(f"{path.name} imports domain module(s) {sorted(external)}")
+        assert not offenders, (
+            "Binding-graph CORE imports a domain reader (couples the universal "
+            "structure to one domain):\n  " + "\n  ".join(offenders)
+            + "\n\nTranslate the domain via a bridge module and add it to "
+            "BINDING_GRAPH_BRIDGES, or keep the core domain-agnostic (INV-26b)."
+        )
+
+    def test_bridges_exist_and_are_used(self):
+        """Drift guard: every allowlisted bridge must exist and actually import a
+        domain reader, else the allowlist is stale and 26b is weakened."""
+        present = {p.name for p in _binding_graph_modules()}
+        missing = BINDING_GRAPH_BRIDGES - present
+        assert not missing, f"BINDING_GRAPH_BRIDGES names non-existent module(s): {missing}"
+        unused: list[str] = []
+        for name in sorted(BINDING_GRAPH_BRIDGES):
+            mods = _module_imports(_REPO_ROOT / _BINDING_GRAPH_DIR / name)
+            if not any(m.startswith("generate.") and not _is_internal_or_stdlib(m) for m in mods):
+                unused.append(name)
+        assert not unused, (
+            f"Allowlisted bridge(s) no longer import a domain reader: {unused}. "
+            "Remove from BINDING_GRAPH_BRIDGES to keep the coupling seam tight."
+        )
+
+    def test_neutrality_check_is_non_vacuous(self):
+        """26c — prove 26a/26b can fail: a real module that imports a forbidden
+        family must be flagged by the same predicate."""
+        # core/cognition/pipeline.py imports field.state (engine) — 26a must flag it.
+        pipeline = _REPO_ROOT / "core" / "cognition" / "pipeline.py"
+        if pipeline.is_file():
+            hits = _imports_any_prefix(_module_imports(pipeline), _INTERLINGUA_FORBIDDEN_PREFIXES)
+            assert hits, (
+                "INV-26a predicate failed to flag a module known to import the "
+                "field engine — the neutrality check is vacuous."
+            )
+        # The bridge adapter imports a domain reader — 26b's predicate must see it.
+        adapter = _REPO_ROOT / _BINDING_GRAPH_DIR / "adapter.py"
+        external = [
+            m for m in _module_imports(adapter)
+            if m.startswith("generate.") and not _is_internal_or_stdlib(m)
+        ]
+        assert external, (
+            "INV-26b predicate failed to detect the adapter's domain-reader "
+            "import — the core-isolation check is vacuous."
+        )
