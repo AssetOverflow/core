@@ -1,0 +1,4 @@
+{"gold":"refused","id":"dl-refusal-v1-0001","premises":["p","~p"],"query":"q"}
+{"gold":"refused","id":"dl-refusal-v1-0002","premises":["forall x. p"],"query":"p"}
+{"gold":"refused","id":"dl-refusal-v1-0003","premises":["rough(x)"],"query":"p"}
+{"gold":"refused","id":"dl-refusal-v1-0004","premises":["p"],"query":"p & & q"}

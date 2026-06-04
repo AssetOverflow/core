@@ -15,6 +15,8 @@ from core.cognition import CognitiveTurnPipeline, CognitiveTurnResult
 from core.cognition.trace import trace_hash_from_result
 from generate.intent import IntentTag
 from generate.graph_planner import RhetoricalMove
+from teaching.source import ProposalSource
+from teaching.store import PackMutationProposal, TeachingStore
 
 
 # ---------------------------------------------------------------------------
@@ -240,3 +242,36 @@ def test_pipeline_chat_response_contract_unchanged(pipeline: CognitiveTurnPipeli
     assert isinstance(result.vault_hits, int)
     assert result.proposition is not None
     assert result.articulation is not None
+
+
+def test_verification_turn_records_entailment_operator_telemetry() -> None:
+    store = TeachingStore()
+    store._proposals.extend([  # noqa: SLF001 - focused operator substrate seed
+        PackMutationProposal(
+            proposal_id="p1",
+            candidate_id="c1",
+            subject="wisdom",
+            correction_text="wisdom precedes knowledge",
+            prior_surface="",
+            source=ProposalSource.operator(emitted_at_revision="test"),
+            triple=("wisdom", "precedes", "knowledge"),
+        ),
+        PackMutationProposal(
+            proposal_id="p2",
+            candidate_id="c2",
+            subject="knowledge",
+            correction_text="knowledge precedes recall",
+            prior_surface="",
+            source=ProposalSource.operator(emitted_at_revision="test"),
+            triple=("knowledge", "precedes", "recall"),
+        ),
+    ])
+    pipeline = CognitiveTurnPipeline(ChatRuntime(), teaching_store=store)
+
+    result = pipeline.run("wisdom precedes recall.", max_tokens=6)
+
+    assert result.intent is not None
+    assert result.intent.tag is IntentTag.VERIFICATION
+    assert "entailment:" in result.operator_invocation
+    assert '"outcome":"entailed"' in result.operator_invocation
+    assert result.trace_hash == trace_hash_from_result(result)

@@ -47,6 +47,7 @@ from generate.operators import (
     multi_relation_walk,
     transitive_walk,
 )
+from generate.proof_chain import EntailmentTrace, evaluate_entailment_with_trace
 from teaching.correction import CorrectionCandidate, extract_correction
 from teaching.epistemic import EpistemicStatus
 from teaching.review import ReviewedTeachingExample, review_correction
@@ -122,7 +123,7 @@ class CognitiveTurnPipeline:
     ) -> None:  # runtime: ChatRuntime (no import cycle)
         self.runtime = runtime
         self._last_node_id: str | None = None
-        self.teaching_store = teaching_store or TeachingStore()
+        self.teaching_store = teaching_store if teaching_store is not None else TeachingStore()
         if recognizer is not None:
             self._recognizer = recognizer
         elif hasattr(runtime, "first_admitted_recognizer"):
@@ -304,6 +305,8 @@ class CognitiveTurnPipeline:
         ):
             compose_surface = CognitiveTurnPipeline._render_compose_surface(compose_result)
 
+        entailment_trace = self._maybe_entailment_trace(intent, triples)
+
         resolved = resolve_surface(
             canonical_surface=canonical,
             pre_decoration_surface=pre_decoration,
@@ -393,13 +396,14 @@ class CognitiveTurnPipeline:
         epistemic_status = proposal.epistemic_status.value if proposal is not None else ""
         walk_serialised = CognitiveTurnPipeline._serialize_operator(walk_result)
         compose_serialised = CognitiveTurnPipeline._serialize_operator(compose_result)
-        # Deterministic concatenation: walk record, then compose record.
-        # Empty strings are dropped so single-operator turns keep their
-        # existing trace_hash byte-for-byte.
-        operator_invocation = (
-            f"{walk_serialised}|{compose_serialised}"
-            if compose_serialised
-            else walk_serialised
+        entailment_serialised = CognitiveTurnPipeline._serialize_entailment_trace(
+            entailment_trace
+        )
+        # Deterministic concatenation: walk, compose, then entailment. Empty
+        # strings are dropped so unaffected turns keep existing trace bytes.
+        operator_invocation = "|".join(
+            s for s in (walk_serialised, compose_serialised, entailment_serialised)
+            if s
         )
         # ADR-0023 — admissibility trace + ratification provenance.
         # Comb pass 2026-05-21 — direct attribute access; the fields
@@ -690,6 +694,39 @@ class CognitiveTurnPipeline:
             relation=intent.relation,
         )
 
+    def _maybe_entailment_trace(
+        self,
+        intent,
+        triples: tuple[tuple[str, str, str], ...],
+    ) -> EntailmentTrace | None:
+        """Compile exact verification triples into propositional entailment.
+
+        Telemetry-only v1: the result is folded into ``operator_invocation`` and
+        never changes the user-facing surface. Runs only when classification
+        exposes a precise positive ``subject relation object`` shape.
+        """
+        if intent.tag is not IntentTag.VERIFICATION:
+            return None
+        if intent.negated or not intent.relation or not intent.object:
+            return None
+        head = self._proof_atom(intent.subject)
+        tail = self._proof_atom(intent.object)
+        if not head or not tail:
+            return None
+
+        relation = intent.relation.strip().lower()
+        premises: list[str] = []
+        for h, r, t in triples:
+            if r.strip().lower() != relation:
+                continue
+            h_atom = self._proof_atom(h)
+            t_atom = self._proof_atom(t)
+            if h_atom and t_atom:
+                premises.append(f"{h_atom} -> {t_atom}")
+        if not premises:
+            return None
+        return evaluate_entailment_with_trace(tuple(premises), f"{head} -> {tail}")
+
     @staticmethod
     def _render_compose_surface(compose: FrameComposeResult) -> str:
         """Render a frame-transfer composition suffix without selecting authority."""
@@ -720,6 +757,19 @@ class CognitiveTurnPipeline:
         if op is None:
             return ""
         return json.dumps(op.as_dict(), sort_keys=True, ensure_ascii=False)
+
+    @staticmethod
+    def _serialize_entailment_trace(trace: EntailmentTrace | None) -> str:
+        if trace is None:
+            return ""
+        return f"entailment:{trace.canonical_json()}"
+
+    @staticmethod
+    def _proof_atom(text: str) -> str:
+        parts = [p for p in _SUBJECT_SPLIT_RE.split(text.lower()) if p]
+        if not parts:
+            return ""
+        return "atom_" + "_".join(parts)
 
     @staticmethod
     def _render_walk_surface(walk: WalkResult) -> str:

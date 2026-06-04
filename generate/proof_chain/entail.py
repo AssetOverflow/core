@@ -30,6 +30,7 @@ propositional and in scope; an ungrounded ``forall x. P(x)`` is not.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from enum import Enum
 from typing import Final
@@ -66,6 +67,33 @@ class EntailmentVerdict:
     reason: str
 
 
+@dataclass(frozen=True, slots=True)
+class EntailmentTrace:
+    """Deterministic proof evidence for a propositional entailment decision."""
+
+    outcome: Entailment
+    reason: str
+    premise_keys: tuple[str, ...]
+    conjunction_key: str | None
+    query_key: str | None
+    entailment_check_key: str | None
+    refutation_check_key: str | None
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "outcome": self.outcome.value,
+            "reason": self.reason,
+            "premise_keys": self.premise_keys,
+            "conjunction_key": self.conjunction_key,
+            "query_key": self.query_key,
+            "entailment_check_key": self.entailment_check_key,
+            "refutation_check_key": self.refutation_check_key,
+        }
+
+    def canonical_json(self) -> str:
+        return json.dumps(self.as_dict(), sort_keys=True, separators=(",", ":"))
+
+
 def _conjoin(premises: tuple[str, ...]) -> str:
     """Fully-parenthesized conjunction of the premise formulas (``true`` if empty).
 
@@ -82,27 +110,83 @@ def evaluate_entailment(premises: tuple[str, ...], query: str) -> EntailmentVerd
     Sound and complete over the propositional regime; refusal-first on anything
     outside it. Never raises on a logic-domain error — every ``LogicError`` (and
     its regime/budget subclasses) maps to a typed ``REFUSED`` verdict."""
+    trace = evaluate_entailment_with_trace(premises, query)
+    return EntailmentVerdict(trace.outcome, trace.reason)
+
+
+def evaluate_entailment_with_trace(
+    premises: tuple[str, ...],
+    query: str,
+) -> EntailmentTrace:
+    """Decide entailment and return deterministic proof evidence.
+
+    This is the evidence-bearing API; :func:`evaluate_entailment` intentionally
+    remains the stable verdict-only wrapper for existing callers."""
+    premise_keys_list: list[str] = []
+    conjunction_key: str | None = None
+    query_key: str | None = None
+    entailment_check_key: str | None = None
+    refutation_check_key: str | None = None
+
     try:
+        for premise in premises:
+            premise_keys_list.append(canonicalize(premise).canonical_key)
         conj = _conjoin(premises)
         conj_canon = canonicalize(conj)
+        conjunction_key = conj_canon.canonical_key
         if conj_canon.is_contradiction:
             # No model satisfies the premises: from a contradiction everything
             # follows. We decline rather than assert a vacuous entailment.
-            return EntailmentVerdict(Entailment.REFUSED, INCONSISTENT_PREMISES)
+            return EntailmentTrace(
+                outcome=Entailment.REFUSED,
+                reason=INCONSISTENT_PREMISES,
+                premise_keys=tuple(premise_keys_list),
+                conjunction_key=conjunction_key,
+                query_key=None,
+                entailment_check_key=None,
+                refutation_check_key=None,
+            )
         # Force the query through the canonicalizer too, so a malformed / out-of-
         # regime query refuses even when the implication check would shortcut.
-        canonicalize(query)
-        entailed = canonicalize(f"({conj}) -> ({query})").is_tautology
-        refuted = canonicalize(f"({conj}) -> (~({query}))").is_tautology
+        query_canon = canonicalize(query)
+        query_key = query_canon.canonical_key
+        entail_canon = canonicalize(f"({conj}) -> ({query})")
+        entailment_check_key = entail_canon.canonical_key
+        refute_canon = canonicalize(f"({conj}) -> (~({query}))")
+        refutation_check_key = refute_canon.canonical_key
+        entailed = entail_canon.is_tautology
+        refuted = refute_canon.is_tautology
     except LogicError:
-        return EntailmentVerdict(Entailment.REFUSED, OUT_OF_REGIME_OR_MALFORMED)
+        return EntailmentTrace(
+            outcome=Entailment.REFUSED,
+            reason=OUT_OF_REGIME_OR_MALFORMED,
+            premise_keys=tuple(premise_keys_list),
+            conjunction_key=conjunction_key,
+            query_key=query_key,
+            entailment_check_key=entailment_check_key,
+            refutation_check_key=refutation_check_key,
+        )
 
     if entailed and refuted:
         # Only possible if the premises are inconsistent, already handled above;
         # defensive — never assert a contradiction-derived answer.
-        return EntailmentVerdict(Entailment.REFUSED, INCONSISTENT_PREMISES)
-    if entailed:
-        return EntailmentVerdict(Entailment.ENTAILED, TAUTOLOGICAL_IMPLICATION)
-    if refuted:
-        return EntailmentVerdict(Entailment.REFUTED, TAUTOLOGICAL_REFUTATION)
-    return EntailmentVerdict(Entailment.UNKNOWN, UNDETERMINED)
+        outcome = Entailment.REFUSED
+        reason = INCONSISTENT_PREMISES
+    elif entailed:
+        outcome = Entailment.ENTAILED
+        reason = TAUTOLOGICAL_IMPLICATION
+    elif refuted:
+        outcome = Entailment.REFUTED
+        reason = TAUTOLOGICAL_REFUTATION
+    else:
+        outcome = Entailment.UNKNOWN
+        reason = UNDETERMINED
+    return EntailmentTrace(
+        outcome=outcome,
+        reason=reason,
+        premise_keys=tuple(premise_keys_list),
+        conjunction_key=conjunction_key,
+        query_key=query_key,
+        entailment_check_key=entailment_check_key,
+        refutation_check_key=refutation_check_key,
+    )

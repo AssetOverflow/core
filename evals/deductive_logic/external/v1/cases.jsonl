@@ -1,0 +1,16 @@
+{"gold":"entailed","id":"dl-external-v1-0001","premises":["cat_furry -> mammal_warm","mammal_warm -> needs_food","cat_furry"],"query":"needs_food"}
+{"gold":"refuted","id":"dl-external-v1-0002","premises":["penguin -> ~flies","penguin"],"query":"flies"}
+{"gold":"unknown","id":"dl-external-v1-0003","premises":["student -> studies"],"query":"graduates"}
+{"gold":"entailed","id":"dl-external-v1-0004","premises":["red | blue","~red"],"query":"blue"}
+{"gold":"entailed","id":"dl-external-v1-0005","premises":["p","q","(p & q) -> r"],"query":"r"}
+{"gold":"unknown","id":"dl-external-v1-0006","premises":["p","(p & q) -> r"],"query":"r"}
+{"gold":"entailed","id":"dl-external-v1-0007","premises":["a -> b","b -> c"],"query":"a -> c"}
+{"gold":"refuted","id":"dl-external-v1-0008","premises":["a -> ~b","a"],"query":"a & b"}
+{"gold":"entailed","id":"dl-external-v1-0009","premises":["~(a | b)"],"query":"~a & ~b"}
+{"gold":"unknown","id":"dl-external-v1-0010","premises":["a | b"],"query":"a"}
+{"gold":"entailed","id":"dl-external-v1-0011","premises":["rough_cat -> animal_cat","animal_cat -> living_cat","rough_cat"],"query":"living_cat"}
+{"gold":"refuted","id":"dl-external-v1-0012","premises":["round_rock -> heavy_rock","heavy_rock -> ~floating_rock","round_rock"],"query":"floating_rock"}
+{"gold":"entailed","id":"dl-external-v1-0013","premises":["green_frog | brown_frog","~green_frog"],"query":"brown_frog"}
+{"gold":"entailed","id":"dl-external-v1-0014","premises":["teaches_lee -> helps_lee","helps_lee -> learns_lee","teaches_lee"],"query":"learns_lee"}
+{"gold":"unknown","id":"dl-external-v1-0015","premises":["kind_ada -> trusted_ada"],"query":"trusted_ada"}
+{"gold":"refuted","id":"dl-external-v1-0016","premises":["open_gate -> safe_room","~safe_room"],"query":"open_gate"}
