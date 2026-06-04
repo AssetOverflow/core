@@ -1,9 +1,9 @@
 {
   "baseline_correct": 0,
-  "capability_pass": false,
+  "capability_pass": true,
   "counts": {
-    "correct": 0,
-    "refused": 500,
+    "correct": 5,
+    "refused": 495,
     "wrong": 0
   },
   "lane": "gsm8k_math/holdout_dev/v1",
@@ -418,7 +418,7 @@
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0101",
-      "verdict": "refused"
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0102",
@@ -446,7 +446,7 @@
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0108",
-      "verdict": "refused"
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0109",
@@ -1086,7 +1086,7 @@
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0268",
-      "verdict": "refused"
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0269",
@@ -1658,7 +1658,7 @@
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0411",
-      "verdict": "refused"
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0412",
@@ -1826,7 +1826,7 @@
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0453",
-      "verdict": "refused"
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-holdout-dev-v1-0454",

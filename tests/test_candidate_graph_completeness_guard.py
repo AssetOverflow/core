@@ -15,9 +15,9 @@ This guard adds the missing leg, mirroring the derivation reader's
 
 The guard is REFUSAL-ONLY: it can never turn a refusal into an answer,
 so it cannot create a wrong answer — it can only remove confabulations.
-Its entire regression surface is the graph-path correct set, which on
-train_sample is exactly {0024} and on real-train is {3343} (the same
-Sidney/Brooke shape).  Both MUST still solve.
+R1 reconstruction now safely admits the Ivan/Jerry comparative case through a
+typed graph and independent verifier, so that case is no longer a permanent
+refusal pin. The remaining confabulations MUST still refuse.
 """
 from __future__ import annotations
 
@@ -25,17 +25,14 @@ import pytest
 
 from generate.math_candidate_graph import parse_and_solve
 
-# The 5 real-GSM8K confabulations (exact corpus strings).  Each MUST now
-# refuse (answer is None) instead of emitting a partial reading.
+# Real-GSM8K confabulations that remain outside the current decidable regime
+# (exact corpus strings).  Each MUST refuse (answer is None) instead of emitting
+# a partial reading.
 CONFABULATIONS = {
     553: (
         "Emma buys 2 containers of milk every school day for lunch. She does "
         "not go to school on the weekends. How many containers of milk does "
         "she buy in 3 weeks?"
-    ),
-    605: (
-        "Ivan has 20 dice. Jerry has twice as many dice as Ivan. How many "
-        "dice do they have altogether?"
     ),
     693: (
         "Ian had twenty roses. He gave six roses to his mother,  nine roses "
@@ -142,8 +139,6 @@ def test_n_times_as_many_with_reference_still_solves() -> None:
         "How many apples do they have together?",
         "Tom has 7 apples. Jerry has double the apples. "
         "How many apples do they have together?",
-        "Ivan has 20 dice. Jerry has twice as many dice as Ivan. "
-        "How many dice do they have altogether?",
     ],
 )
 def test_existing_multiplier_refusals_stay_refused(question: str) -> None:
