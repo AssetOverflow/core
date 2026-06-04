@@ -53,6 +53,15 @@ class DefaultEfferentGate:
             "shape": [CL41_DIM],
         })
 
+    @property
+    def enforces_action_verdicts(self) -> bool:
+        """Capability/shape pre-filter only — does NOT lower the decoded action
+        into the safety/ethics pack verdicts required by ADR-0198 §3. The
+        registry refuses actuating emission through this gate unless an explicit
+        sandbox opt-in is set. A future §3 verdict-enforcing gate returns True.
+        """
+        return False
+
     def admit(
         self,
         pack_id: str,

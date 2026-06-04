@@ -36,9 +36,19 @@ class ModalityRegistry:
     mv   = registry.project("en", "beginning")
     """
 
-    def __init__(self, *, efferent_gate: EfferentGate | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        efferent_gate: EfferentGate | None = None,
+        allow_unverified_efferent: bool = False,
+    ) -> None:
         self._packs: dict[str, ModalityPack] = {}
         self._efferent_gate = efferent_gate
+        # Fail-closed (ADR-0198 §3 / §1.2 Gap B): an efferent gate that does not
+        # lower the decoded action into safety/ethics pack verdicts may not
+        # authorize a real emission. This opt-in exercises the capability
+        # pre-filter in isolation (tests only); never set it on an actuating path.
+        self._allow_unverified_efferent = allow_unverified_efferent
 
     # ------------------------------------------------------------------
     # Mount
@@ -123,6 +133,28 @@ class ModalityRegistry:
             )
         return mvs.astype(np.float32)
 
+    def _refuse_unverified_efferent(self, pack_id: str, authority: AuthorityToken) -> None:
+        """Fail closed unless the gate enforces ADR-0198 §3 action verdicts.
+
+        ``DefaultEfferentGate`` is a capability/shape pre-filter only; it does
+        not lower the decoded action into the safety/ethics pack verdicts that
+        §3 requires. Until a verdict-enforcing gate exists, an actuating
+        emission must be refused — no motor decoder may rely on capability
+        tokens alone. ``allow_unverified_efferent`` is a sandbox/testing escape
+        hatch for exercising the pre-filter in isolation.
+        """
+        if self._allow_unverified_efferent:
+            return
+        if getattr(self._efferent_gate, "enforces_action_verdicts", False):
+            return
+        verdict = EfferentVerdict(
+            admitted=False,
+            reason="efferent gate does not enforce ADR-0198 §3 action verdicts",
+            authority_sha256=authority.authority_sha256,
+            policy_sha256="deny-unverified-efferent",
+        )
+        raise EfferentRefusal(pack_id, verdict)
+
     def decode(self, pack_id: str, mv: np.ndarray, *, authority: AuthorityToken) -> Any:
         """Decode a manifold vector through a governed SurfaceDecoder.
 
@@ -147,6 +179,7 @@ class ModalityRegistry:
                 policy_sha256="deny-by-default",
             )
             raise EfferentRefusal(pack_id, verdict)
+        self._refuse_unverified_efferent(pack_id, authority)
         verdict = self._efferent_gate.admit(pack_id, vec, authority)
         if not verdict.admitted:
             raise EfferentRefusal(pack_id, verdict)
@@ -179,6 +212,7 @@ class ModalityRegistry:
                 policy_sha256="deny-by-default",
             )
             raise EfferentRefusal(pack_id, verdict)
+        self._refuse_unverified_efferent(pack_id, authority)
         for vec in arr:
             verdict = self._efferent_gate.admit(pack_id, vec, authority)
             if not verdict.admitted:

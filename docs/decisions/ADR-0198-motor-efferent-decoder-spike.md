@@ -1,6 +1,6 @@
 # ADR-0198: Motor as Efferent Modality — Protocol Gap & Governance (Design Spike)
 
-**Status:** Proposed (design spike — no implementation)
+**Status:** Accepted (design spike) — Gap A protocol change + a baseline efferent gate have landed; the §3 verdict-lowering and the motor compiler/decoder remain deferred. See **Implementation Status** below.
 **Date:** 2026-05-31
 **Authors:** Joshua M. Shay, Core R&D Engine
 **Domains:** `sensorium/protocol.py`, `sensorium/registry.py`, `packs/motor/` *(future)*, governance packs (ADR-0029/0033/0036/0037)
@@ -8,6 +8,16 @@
 **Relationship to vision:** intentionally runs **in parallel** with `vision_core_v1` implementation (ADR-0197 / vision-compiler-spec) because it may force a `sensorium/` protocol change, and that change is cheaper to land before vision concrete sets.
 
 ---
+
+## Implementation Status (reconciled 2026-06-04)
+
+**Gap A has landed.** `ModalityRegistry.decode(pack_id, mv, *, authority)` with a required, never-optional `AuthorityToken`, plus a baseline `DefaultEfferentGate` (`sensorium/efferent.py`, PR #541). The §1.2 Gap B ordering is **proven**: `tests/test_efferent_gate.py::test_registry_uses_default_efferent_gate_before_decoder` asserts `decoder.calls == 0` on refusal — the gate refuses *in the manifold*, before any command is formed. Traces are hash-only (no `mv`, no ndarray/bytes).
+
+**Deferred — blocking obligations before any motor decoder mounts:**
+
+1. **§3 verdict-lowering is NOT implemented — but is now enforced fail-closed.** `DefaultEfferentGate` admits on capability-token + `(32,)` vector-shape only (`enforces_action_verdicts` is `False`); it does **not** lower the decoded motor versor into the safety/ethics pack verdicts of ADR-0029/0033/0036/0037. To keep §1.2 Gap B from silently degrading, `ModalityRegistry.decode`/`decode_batch` now **refuse fail-closed** any emission through a gate whose `enforces_action_verdicts` is False, unless an explicit `allow_unverified_efferent=True` sandbox opt-in is set (tests only). A real motor decoder therefore *cannot* emit through the capability-only gate — the §3 verdict-lowering gate must be built and installed first. Proven by `tests/test_efferent_gate.py::test_registry_fails_closed_for_actuating_decode_through_capability_only_gate` (the decoder never runs) and `::test_registry_admits_decode_through_verdict_enforcing_gate`. Implementing the §3 lowering itself remains deferred behind the dedicated motor governance ADR (item 3).
+2. **The motor compiler/decoder itself remains out of scope** (per §5).
+3. **A dedicated motor governance ADR** ratifying the §3 lowering against ADR-0029/0033/0036/0037 remains a prerequisite (per §5).
 
 ## 1. Why motor is not "just another modality"
 

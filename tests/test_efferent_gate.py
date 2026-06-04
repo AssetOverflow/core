@@ -4,7 +4,14 @@ import numpy as np
 import pytest
 
 from sensorium.efferent import DefaultEfferentGate
-from sensorium.protocol import AuthorityToken, EfferentRefusal, Modality, ModalityPack, ModalityVocabulary
+from sensorium.protocol import (
+    AuthorityToken,
+    EfferentRefusal,
+    EfferentVerdict,
+    Modality,
+    ModalityPack,
+    ModalityVocabulary,
+)
 from sensorium.registry import ModalityRegistry
 
 
@@ -81,12 +88,47 @@ def test_default_efferent_trace_is_hash_only():
 
 def test_registry_uses_default_efferent_gate_before_decoder():
     decoder = _Decoder()
-    reg = ModalityRegistry(efferent_gate=DefaultEfferentGate())
+    # Exercises the capability pre-filter in isolation: the capability/shape
+    # gate is not verdict-enforcing, so the sandbox opt-in is required here.
+    reg = ModalityRegistry(efferent_gate=DefaultEfferentGate(), allow_unverified_efferent=True)
     reg.mount(_pack(decoder))
 
     with pytest.raises(EfferentRefusal, match="missing capability"):
         reg.decode("motor_test", _mv(), authority=_authority("decode:other"))
     assert decoder.calls == 0
 
+    assert reg.decode("motor_test", _mv(), authority=_authority("decode:motor_test")) == "decoded"
+    assert decoder.calls == 1
+
+
+def test_registry_fails_closed_for_actuating_decode_through_capability_only_gate():
+    """ADR-0198 §3 / §1.2 Gap B: a capability/shape gate must not authorize a
+    real emission. With no sandbox opt-in the decode fails closed and the
+    decoder never runs."""
+    decoder = _Decoder()
+    reg = ModalityRegistry(efferent_gate=DefaultEfferentGate())
+    reg.mount(_pack(decoder))
+    with pytest.raises(EfferentRefusal, match="action verdicts"):
+        reg.decode("motor_test", _mv(), authority=_authority("decode:motor_test"))
+    assert decoder.calls == 0
+
+
+def test_registry_admits_decode_through_verdict_enforcing_gate():
+    """A gate that enforces ADR-0198 §3 action verdicts needs no sandbox opt-in."""
+
+    class _VerdictGate:
+        enforces_action_verdicts = True
+
+        def admit(self, pack_id: str, mv: np.ndarray, authority: AuthorityToken) -> EfferentVerdict:
+            return EfferentVerdict(
+                admitted=True,
+                reason="admitted",
+                authority_sha256=authority.authority_sha256,
+                policy_sha256="verdict-test",
+            )
+
+    decoder = _Decoder()
+    reg = ModalityRegistry(efferent_gate=_VerdictGate())
+    reg.mount(_pack(decoder))
     assert reg.decode("motor_test", _mv(), authority=_authority("decode:motor_test")) == "decoded"
     assert decoder.calls == 1
