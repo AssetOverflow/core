@@ -1,7 +1,8 @@
 # ADR-0181: CORE-native Audio Compiler over the Delta-CRDT Substrate
 
-**Status:** Proposed
+**Status:** Accepted — implementation landed
 **Date:** 2026-05-29
+**Implementation:** `sensorium/audio/` + `evals/audio_sensorium/`. Proof obligations are covered by `tests/test_audio_compiler.py`, `tests/test_audio_crdt_merge.py`, `tests/test_audio_eval_gates.py`, `tests/test_audio_pack_manifest.py`, and `tests/test_audio_sensorium_mount.py`.
 **Authors:** Joshua M. Shay, Core R&D Engine
 **Domains:** `sensorium/audio/`, `sensorium/adapters/audio.py`, `packs/audio/`, `core-rs/src/vault.rs` (read-only contract), `evals/audio_sensorium/`
 **Depends on:** ADR-0013 (Sensorium Multimodal Protocol), ADR-0180 (Delta-CRDT Sharded Substrate)

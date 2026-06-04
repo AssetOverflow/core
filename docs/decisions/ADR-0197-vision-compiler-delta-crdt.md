@@ -1,7 +1,8 @@
 # ADR-0197: CORE-native Vision Compiler over the Delta-CRDT Substrate
 
-**Status:** Proposed
+**Status:** Accepted — implementation landed
 **Date:** 2026-05-31
+**Implementation:** `sensorium/vision/` + `sensorium/adapters/vision.py`, `packs/vision/vision_core_v1/` (PR #537). Proof obligations are covered by `tests/test_vision_compiler.py`, `tests/test_vision_crdt_merge.py`, `tests/test_vision_sensorium_mount.py`, and `tests/test_vision_eval_gates.py`.
 **Authors:** Joshua M. Shay, Core R&D Engine
 **Domains:** `sensorium/vision/`, `sensorium/adapters/vision.py`, `packs/vision/`, `core-rs/src/vault.rs` (read-only contract), `evals/vision_sensorium/`
 **Depends on:** ADR-0013 (Sensorium Multimodal Protocol), ADR-0180 (Delta-CRDT Sharded Substrate), ADR-0181 (Audio Compiler — structural precedent)
