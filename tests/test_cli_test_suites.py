@@ -17,6 +17,7 @@ def test_core_test_lists_curated_suites(capsys) -> None:
     assert "cognition" in captured.out.splitlines()
     assert "teaching" in captured.out.splitlines()
     assert "packs" in captured.out.splitlines()
+    assert "deductive" in captured.out.splitlines()
     assert "full" in captured.out.splitlines()
 
 
@@ -59,6 +60,27 @@ def test_core_test_fast_suite_expands_to_iteration_lane(monkeypatch) -> None:
     assert "tests/test_core_semantic_seed_pack.py" in command
     assert "tests/test_cognitive_eval_harness.py" in command
     assert "tests/" not in command
+
+
+def test_core_test_deductive_suite_expands_to_entailment_lane(monkeypatch) -> None:
+    calls: list[tuple[str, ...]] = []
+
+    def fake_run(*args: str, check: bool = False, cwd=None) -> int:
+        calls.append(args)
+        return 0
+
+    monkeypatch.setattr(cli, "_run", fake_run)
+
+    rc = cli.main(["test", "--suite", "deductive", "-q"])
+
+    assert rc == 0
+    assert calls[0] == (
+        cli.sys.executable,
+        "-m",
+        "pytest",
+        "tests/test_deductive_logic_entail.py",
+        "-q",
+    )
 
 
 def test_core_test_suite_accepts_pytest_flags_without_separator(monkeypatch) -> None:

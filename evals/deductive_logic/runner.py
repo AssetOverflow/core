@@ -9,14 +9,15 @@ Counts:
   ``unknown``).
 * ``wrong``    — engine outcome != gold and engine did not refuse (a confabulated
   deduction — this MUST stay 0).
-* ``refused``  — engine returned ``refused`` (should not happen on these
-  well-formed, consistent, propositional cases; counted separately, never as wrong).
+* ``refused``  — engine returned ``refused`` on a committed in-regime case. This
+  is a capability failure for this lane, not a safety success.
 
 A breakdown by gold class (entailed / refuted / unknown) is reported so the
 "sizeable numbers" are visible: how many non-trivial entailments/refutations the
 engine decides correctly, not just how many ``unknown``s it passes through.
 
-Exits non-zero if ``wrong > 0`` (the floor).
+Exits non-zero unless every committed in-regime case is correct. Refusal-boundary
+cases live in unit tests, not in these dev/holdout formula splits.
 """
 
 from __future__ import annotations
@@ -41,6 +42,7 @@ def build_report(cases: list[dict]) -> dict:
     by_gold: Counter[str] = Counter()
     correct_by_gold: Counter[str] = Counter()
     wrong_examples: list[dict] = []
+    refused_examples: list[dict] = []
 
     for case in cases:
         gold = case["gold"]
@@ -52,6 +54,11 @@ def build_report(cases: list[dict]) -> dict:
             correct_by_gold[gold] += 1
         elif verdict.outcome is Entailment.REFUSED:
             counts["refused"] += 1
+            if len(refused_examples) < 10:
+                refused_examples.append(
+                    {"id": case["id"], "gold": gold, "reason": verdict.reason,
+                     "premises": case["premises"], "query": case["query"]}
+                )
         else:
             counts["wrong"] += 1
             if len(wrong_examples) < 10:
@@ -60,12 +67,15 @@ def build_report(cases: list[dict]) -> dict:
                      "premises": case["premises"], "query": case["query"]}
                 )
 
+    all_cases_correct = counts["correct"] == len(cases)
     return {
         "n": len(cases),
         "counts": dict(counts),
         "by_gold": dict(by_gold),
         "correct_by_gold": dict(correct_by_gold),
+        "all_cases_correct": all_cases_correct,
         "wrong_examples": wrong_examples,
+        "refused_examples": refused_examples,
     }
 
 
@@ -85,6 +95,11 @@ def _run(name: str, path: Path) -> dict:
         for w in report["wrong_examples"]:
             print(f"      {w['id']}: gold={w['gold']} got={w['got']} "
                   f"premises={w['premises']} query={w['query']}")
+    if report["refused_examples"]:
+        print("    REFUSED examples:")
+        for r in report["refused_examples"]:
+            print(f"      {r['id']}: gold={r['gold']} reason={r['reason']} "
+                  f"premises={r['premises']} query={r['query']}")
     return report
 
 
@@ -92,6 +107,9 @@ if __name__ == "__main__":
     reports = {
         "dev": _run("dev", _ROOT / "dev" / "cases.jsonl"),
         "holdout-v1": _run("holdout-v1", _ROOT / "holdout" / "v1" / "cases.jsonl"),
+        "external-v1": _run("external-v1", _ROOT / "external" / "v1" / "cases.jsonl"),
     }
     total_wrong = sum(r["counts"]["wrong"] for r in reports.values())
-    sys.exit(1 if total_wrong > 0 else 0)
+    total_refused = sum(r["counts"]["refused"] for r in reports.values())
+    all_correct = all(r["all_cases_correct"] for r in reports.values())
+    sys.exit(0 if total_wrong == 0 and total_refused == 0 and all_correct else 1)

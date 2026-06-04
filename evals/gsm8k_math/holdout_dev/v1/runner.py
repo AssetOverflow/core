@@ -23,6 +23,7 @@ Deterministic; no network (reads the committed `cases.jsonl`).
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 from typing import Any
@@ -32,6 +33,7 @@ from evals.gsm8k_math.runner import _score_one_candidate_graph
 _HERE = Path(__file__).resolve().parent
 _CASES_PATH = _HERE / "cases.jsonl"
 _REPORT_PATH = _HERE / "report.json"
+BASELINE_CORRECT = 0
 
 
 def _load_cases() -> list[dict[str, Any]]:
@@ -42,7 +44,11 @@ def _load_cases() -> list[dict[str, Any]]:
     ]
 
 
-def build_report(cases: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+def build_report(
+    cases: list[dict[str, Any]] | None = None,
+    *,
+    min_correct: int | None = None,
+) -> dict[str, Any]:
     cases = cases if cases is not None else _load_cases()
     counts = {"correct": 0, "wrong": 0, "refused": 0}
     per_case: list[dict[str, str]] = []
@@ -50,6 +56,9 @@ def build_report(cases: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         outcome = _score_one_candidate_graph(case)
         counts[outcome.outcome] = counts.get(outcome.outcome, 0) + 1
         per_case.append({"case_id": outcome.case_id, "verdict": outcome.outcome})
+    safety_pass = counts["wrong"] == 0
+    capability_pass = counts["correct"] > BASELINE_CORRECT
+    min_correct_pass = True if min_correct is None else counts["correct"] >= min_correct
     return {
         "schema_version": 1,
         "lane": "gsm8k_math/holdout_dev/v1",
@@ -59,6 +68,11 @@ def build_report(cases: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         ),
         "n": len(cases),
         "counts": counts,
+        "baseline_correct": BASELINE_CORRECT,
+        "safety_pass": safety_pass,
+        "capability_pass": capability_pass,
+        "min_correct": min_correct,
+        "min_correct_pass": min_correct_pass,
         "note": (
             "Open held-out dev metric: cases CORE was NOT built against. Iterate here; "
             "the sealed TEST (1,319) is the final arbiter. wrong=0 is the floor; correct "
@@ -72,12 +86,31 @@ def write_report(report: dict[str, Any]) -> None:
     _REPORT_PATH.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def main() -> int:
-    report = build_report()
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--min-correct",
+        type=int,
+        default=None,
+        help=(
+            "Optional promotion gate. Default reports safety only; when set, "
+            "the process also fails unless correct >= MIN_CORRECT."
+        ),
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+    report = build_report(min_correct=args.min_correct)
     write_report(report)
     c = report["counts"]
     print(f"holdout_dev: correct={c['correct']} wrong={c['wrong']} refused={c['refused']} (n={report['n']})")
-    return 0 if c["wrong"] == 0 else 1  # the floor: wrong must be 0
+    if not report["safety_pass"]:
+        return 1
+    if not report["min_correct_pass"]:
+        return 1
+    return 0
 
 
 if __name__ == "__main__":  # pragma: no cover

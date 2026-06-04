@@ -22,11 +22,14 @@ import pytest
 from evals.deductive_logic.generate import _make_case
 from evals.deductive_logic.oracle import oracle_entailment
 from evals.deductive_logic.runner import _ROOT, _load, build_report
+from generate.logic_canonical import LogicBudgetError
 from generate.proof_chain.entail import (
     INCONSISTENT_PREMISES,
     OUT_OF_REGIME_OR_MALFORMED,
+    TAUTOLOGICAL_IMPLICATION,
     Entailment,
     evaluate_entailment,
+    evaluate_entailment_with_trace,
 )
 
 
@@ -81,6 +84,44 @@ def test_malformed_query_refuses() -> None:
     assert evaluate_entailment(("P",), "P & & Q").outcome is Entailment.REFUSED
 
 
+def test_budget_error_refuses_typed(monkeypatch) -> None:
+    def boom(_formula: str):
+        raise LogicBudgetError("too many nodes")
+
+    monkeypatch.setattr("generate.proof_chain.entail.canonicalize", boom)
+
+    v = evaluate_entailment(("P",), "Q")
+    assert v.outcome is Entailment.REFUSED
+    assert v.reason == OUT_OF_REGIME_OR_MALFORMED
+
+
+def test_entailment_trace_is_deterministic_evidence() -> None:
+    t1 = evaluate_entailment_with_trace(("P", "P -> Q"), "Q")
+    t2 = evaluate_entailment_with_trace(("P", "P -> Q"), "Q")
+
+    assert t1.outcome is Entailment.ENTAILED
+    assert t1.reason == TAUTOLOGICAL_IMPLICATION
+    assert t1.premise_keys
+    assert t1.conjunction_key is not None
+    assert t1.query_key is not None
+    assert t1.entailment_check_key == "T"
+    assert t1.refutation_check_key is not None
+    assert t1.canonical_json() == t2.canonical_json()
+    assert "premise_keys" in t1.canonical_json()
+
+
+def test_refused_trace_preserves_available_canonical_evidence() -> None:
+    trace = evaluate_entailment_with_trace(("P",), "P & & Q")
+
+    assert trace.outcome is Entailment.REFUSED
+    assert trace.reason == OUT_OF_REGIME_OR_MALFORMED
+    assert trace.premise_keys
+    assert trace.conjunction_key is not None
+    assert trace.query_key is None
+    assert trace.entailment_check_key is None
+    assert trace.refutation_check_key is None
+
+
 # --- 3a. wrong=0 vs the independent oracle (deterministic fuzz) -------------
 
 def test_engine_matches_independent_oracle_fuzz() -> None:
@@ -128,6 +169,8 @@ def test_holdout_lane_wrong_is_zero() -> None:
     report = build_report(_load(_ROOT / "holdout" / "v1" / "cases.jsonl"))
     assert report["n"] == 500
     assert report["counts"]["wrong"] == 0
+    assert report["counts"]["refused"] == 0
+    assert report["all_cases_correct"] is True
     # the sizeable, honest signal: non-trivial deductions decided correctly
     cbg = report["correct_by_gold"]
     assert cbg.get("entailed", 0) >= 50
@@ -138,3 +181,33 @@ def test_dev_lane_wrong_is_zero() -> None:
     report = build_report(_load(_ROOT / "dev" / "cases.jsonl"))
     assert report["n"] == 200
     assert report["counts"]["wrong"] == 0
+    assert report["counts"]["refused"] == 0
+    assert report["all_cases_correct"] is True
+
+
+def test_external_mirror_lane_matches_independent_oracle() -> None:
+    cases = _load(_ROOT / "external" / "v1" / "cases.jsonl")
+    report = build_report(cases)
+    assert report["n"] == 16
+    assert report["all_cases_correct"] is True
+    assert report["counts"] == {"correct": 16, "wrong": 0, "refused": 0}
+    for case in cases:
+        assert oracle_entailment(tuple(case["premises"]), case["query"]) == case["gold"]
+
+
+def test_refusal_boundary_split_refuses_every_case() -> None:
+    cases = _load(_ROOT / "refusal" / "v1" / "cases.jsonl")
+    assert len(cases) == 4
+    for case in cases:
+        verdict = evaluate_entailment(tuple(case["premises"]), case["query"])
+        assert case["gold"] == "refused"
+        assert verdict.outcome is Entailment.REFUSED
+
+
+def test_runner_treats_committed_refusal_as_capability_failure() -> None:
+    report = build_report([
+        {"id": "bad-refusal", "premises": ["P", "~P"], "query": "Q", "gold": "entailed"}
+    ])
+    assert report["counts"]["wrong"] == 0
+    assert report["counts"]["refused"] == 1
+    assert report["all_cases_correct"] is False

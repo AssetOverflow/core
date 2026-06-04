@@ -1,10 +1,14 @@
 {
+  "baseline_correct": 0,
+  "capability_pass": false,
   "counts": {
     "correct": 0,
     "refused": 500,
     "wrong": 0
   },
   "lane": "gsm8k_math/holdout_dev/v1",
+  "min_correct": null,
+  "min_correct_pass": true,
   "n": 500,
   "note": "Open held-out dev metric: cases CORE was NOT built against. Iterate here; the sealed TEST (1,319) is the final arbiter. wrong=0 is the floor; correct rising is the goal (refuse-everything is the failing baseline, not a pass).",
   "per_case": [
@@ -2009,6 +2013,7 @@
       "verdict": "refused"
     }
   ],
+  "safety_pass": true,
   "schema_version": 1,
   "source": "openai/gsm8k train split, minus the 50 train_sample, deterministic sha256(question) sort, first 500"
 }

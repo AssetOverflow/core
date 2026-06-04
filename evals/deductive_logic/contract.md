@@ -23,14 +23,16 @@ make stochastic.
 
 ## The numbers (2026-06-04)
 
-| Set | n | correct | wrong | of which non-trivial (entailed + refuted) |
-|---|---:|---:|---:|---:|
-| dev | 200 | 200 | **0** | 74 |
-| **holdout v1** | 500 | **500** | **0** | **227** (117 entailed + 110 refuted) |
-| fuzz (fresh random, engine vs oracle) | 7,340 | 7,340 | **0** | 3,360 |
+| Set | n | correct | wrong | refused | of which non-trivial (entailed + refuted) |
+|---|---:|---:|---:|---:|---:|
+| dev | 200 | 200 | **0** | **0** | 74 |
+| **holdout v1** | 500 | **500** | **0** | **0** | **227** (117 entailed + 110 refuted) |
+| external mirror v1 | 16 | **16** | **0** | **0** | 12 |
+| fuzz (fresh random, engine vs oracle) | 7,340 | 7,340 | **0** | **0** | 3,360 |
 
-**100% correct with `wrong = 0`**, and the correct answers include hundreds of
-non-trivial multi-hop entailments and refutations — not just `unknown` pass-throughs.
+**100% correct with `wrong = 0` and `refused = 0` on committed in-regime
+cases**, and the correct answers include hundreds of non-trivial multi-hop
+entailments and refutations — not just `unknown` pass-throughs.
 
 ## Why the gold is trustworthy (the GSM8K lesson applied)
 
@@ -40,7 +42,9 @@ enumeration over all 2^k assignments, sharing **no code** with the ROBDD engine.
 independently-coded sound procedures agreeing on **8,000** fresh random problems with
 **zero disagreements** is real soundness evidence — exactly the property the GSM8K
 composer could never establish (it could not tell its 2 right answers from its 87
-wrong ones). A single engine/oracle disagreement fails the test suite.
+wrong ones). A single engine/oracle disagreement fails the test suite. A refusal
+on a committed in-regime case is also a lane failure; refusal-boundary cases are
+tested separately.
 
 ## Honesty boundary (load-bearing — do not overclaim)
 
@@ -70,7 +74,7 @@ wrong ones). A single engine/oracle disagreement fails the test suite.
 ## Run
 
 ```bash
-PYTHONPATH=. .venv/bin/python -m evals.deductive_logic.runner    # dev + holdout, exits 1 if wrong>0
+PYTHONPATH=. .venv/bin/python -m evals.deductive_logic.runner    # dev + holdout + external; exits 1 unless every in-regime case is correct
 PYTHONPATH=. .venv/bin/python -m evals.deductive_logic.generate  # regenerate committed cases (deterministic)
 PYTHONPATH=. .venv/bin/python -m pytest tests/test_deductive_logic_entail.py -q
 ```
@@ -85,4 +89,6 @@ evals/deductive_logic/
   runner.py            # engine vs gold; correct/wrong/refused + class breakdown
   dev/cases.jsonl      # seed 20260604, 200 cases
   holdout/v1/cases.jsonl  # seed 70260604, 500 cases (disjoint)
+  external/v1/cases.jsonl # frozen finite-entity/proposition mirror cases
+  refusal/v1/cases.jsonl  # refusal-boundary cases, tested separately
 ```

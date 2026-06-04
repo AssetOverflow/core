@@ -25,6 +25,7 @@ def test_wrong_is_zero_the_floor() -> None:
     """FOREVER: never confabulate on held-out data. If this ever fails, a committing
     path is wrong on real GSM8K — exactly the breach class that hid behind train_sample."""
     assert _REPORT["counts"]["wrong"] == 0
+    assert _REPORT["safety_pass"] is True
 
 
 def test_current_baseline_snapshot() -> None:
@@ -38,3 +39,14 @@ def test_current_baseline_snapshot() -> None:
         f"holdout_dev moved to {_REPORT['counts']} — if a real capability change landed, "
         f"update this snapshot AND confirm wrong=0 on the sealed test before claiming lift"
     )
+    assert _REPORT["baseline_correct"] == 0
+    assert _REPORT["capability_pass"] is False
+    assert _REPORT["min_correct"] is None
+    assert _REPORT["min_correct_pass"] is True
+
+
+def test_min_correct_promotion_gate_is_optional() -> None:
+    report = build_report(_load_cases(), min_correct=1)
+    assert report["safety_pass"] is True
+    assert report["min_correct"] == 1
+    assert report["min_correct_pass"] is False

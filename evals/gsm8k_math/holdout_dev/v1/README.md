@@ -40,4 +40,14 @@ untouched.
 PYTHONPATH=. .venv/bin/python -m evals.gsm8k_math.holdout_dev.v1.runner
 ```
 
-Exits non-zero if `wrong > 0` (the floor). Current baseline: **0 / 0 / 500**.
+Default execution exits non-zero only if `wrong > 0` (the safety floor). Current
+baseline: **0 / 0 / 500**.
+
+Capability-promotion runs must opt into a correctness threshold:
+
+```bash
+PYTHONPATH=. .venv/bin/python -m evals.gsm8k_math.holdout_dev.v1.runner --min-correct 1
+```
+
+That command fails today, by design. A GSM8K capability PR updates the threshold only
+when held-out `correct` rises while `wrong == 0` remains true.
