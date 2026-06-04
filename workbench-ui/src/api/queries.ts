@@ -13,6 +13,11 @@ import {
   fetchReplayComparison,
   fetchProposalDetail,
   fetchProposals,
+  fetchMathProposals,
+  fetchMathProposalDetail,
+  ratifyMathProposal,
+  rejectMathProposal,
+  deferMathProposal,
   type ProposalStateFilter,
 } from "./client";
 import type { WorkbenchApiError } from "./client";
@@ -27,6 +32,9 @@ import type {
   ChatTurnResult,
   EvalRunRequest,
   ReplayComparison,
+  MathProposalSummary,
+  MathProposalDetail,
+  MathRatifyResult,
 } from "../types/api";
 
 export { QueryClientProvider };
@@ -135,4 +143,77 @@ export function useChatTurn() {
       }),
   });
 }
+
+export function useMathProposals() {
+  return useQuery<MathProposalSummary[]>({
+    queryKey: ["api", "math-proposals"],
+    queryFn: fetchMathProposals,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useMathProposalDetail(proposalId: string) {
+  return useQuery<MathProposalDetail>({
+    queryKey: ["api", "math-proposal", proposalId],
+    queryFn: () => fetchMathProposalDetail(proposalId),
+    enabled: !!proposalId,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useMathRatify() {
+  return useMutation<
+    MathRatifyResult,
+    WorkbenchApiError,
+    { proposalId: string; category?: string; polarity?: string; dryRun?: boolean }
+  >({
+    mutationKey: ["math-ratify"],
+    mutationFn: ({ proposalId, category, polarity, dryRun }) =>
+      ratifyMathProposal(proposalId, category, polarity, dryRun),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["api", "proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "math-proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "proposal", variables.proposalId] });
+      queryClient.invalidateQueries({ queryKey: ["api", "math-proposal", variables.proposalId] });
+    },
+  });
+}
+
+export function useMathReject() {
+  return useMutation<
+    { proposal_id: string; rejected: boolean },
+    WorkbenchApiError,
+    { proposalId: string; note?: string }
+  >({
+    mutationKey: ["math-reject"],
+    mutationFn: ({ proposalId, note }) => rejectMathProposal(proposalId, note),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["api", "proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "math-proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "proposal", variables.proposalId] });
+      queryClient.invalidateQueries({ queryKey: ["api", "math-proposal", variables.proposalId] });
+    },
+  });
+}
+
+export function useMathDefer() {
+  return useMutation<
+    { proposal_id: string; deferred: boolean },
+    WorkbenchApiError,
+    { proposalId: string }
+  >({
+    mutationKey: ["math-defer"],
+    mutationFn: ({ proposalId }) => deferMathProposal(proposalId),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["api", "proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "math-proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "proposal", variables.proposalId] });
+      queryClient.invalidateQueries({ queryKey: ["api", "math-proposal", variables.proposalId] });
+    },
+  });
+}
+
+
 

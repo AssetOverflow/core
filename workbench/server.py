@@ -34,6 +34,30 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
         )
 
     def _handle(self) -> None:
+        host = self.headers.get("Host", "")
+        origin = self.headers.get("Origin", "")
+
+        host_name = host.split(":")[0] if ":" in host else host
+        if host_name not in {"127.0.0.1", "localhost"}:
+            payload = json.dumps({"ok": False, "error": "CORS check failed: Host is non-local"}).encode("utf-8")
+            self.send_response(400)
+            self._send_common_headers(len(payload))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
+        if origin:
+            import urllib.parse
+            parsed_origin = urllib.parse.urlparse(origin)
+            origin_host = parsed_origin.hostname
+            if origin_host not in {"127.0.0.1", "localhost"}:
+                payload = json.dumps({"ok": False, "error": "CORS check failed: Origin is non-local"}).encode("utf-8")
+                self.send_response(400)
+                self._send_common_headers(len(payload))
+                self.end_headers()
+                self.wfile.write(payload)
+                return
+
         try:
             length = max(0, int(self.headers.get("Content-Length") or "0"))
         except ValueError:

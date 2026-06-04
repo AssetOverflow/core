@@ -183,3 +183,45 @@ export interface ApiError {
 }
 
 export type ApiResponse<T> = ApiOk<T> | ApiError;
+
+export interface MathReasoningStep {
+  step_index: number;
+  step_kind: string;
+  claim: string;
+  justification: string;
+  input_pointers: string[];
+  output_payload: unknown;
+}
+
+export interface MathProposalSummary {
+  proposal_id: string;
+  domain: "math";
+  shape_category: string;
+  proposed_change_kind: string;
+  structural_commonality: string;
+  evidence_count: number;
+  replay_equivalence_hash: string;
+}
+
+export interface MathProposalDetail extends MathProposalSummary {
+  wrong_zero_assertion: string;
+  proposed_change_payload: unknown;
+  reasoning_trace_id: string;
+  reasoning_trace_steps: MathReasoningStep[];
+  evidence_hashes: string[];
+  handler_name: string | null;
+  suggested_ratify_cli: string | null;
+}
+
+export interface MathRatifyResult {
+  proposal_id: string;
+  change_kind: string;
+  handler_name: string;
+  routing_status: "routed" | "not_implemented";
+  message: string;
+  suggested_cli: string | null;
+  applied: boolean;
+  target_path: string | null;
+  evidence_hash: string | null;
+}
+

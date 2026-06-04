@@ -243,3 +243,6 @@ class MathRatifyResult:
     routing_status: Literal["routed", "not_implemented"]
     message: str
     suggested_cli: str | None = None
+    applied: bool = False
+    target_path: str | None = None
+    evidence_hash: str | None = None

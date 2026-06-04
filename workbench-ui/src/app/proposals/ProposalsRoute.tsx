@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { AlertTriangle } from "lucide-react";
 import { WorkbenchApiError, type ProposalStateFilter } from "../../api/client";
-import { useProposalDetail, useProposals } from "../../api/queries";
+import { useProposalDetail, useProposals, useMathProposals, useMathProposalDetail } from "../../api/queries";
+import type { ProposalSummary, MathProposalDetail, ProposalState, DownstreamEffect, MathReasoningStep } from "../../types/api";
 import { Button } from "../../design/components/primitives/Button";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
@@ -11,11 +13,19 @@ import { ProposalProvenanceViewer } from "./ProposalProvenanceViewer";
 import { ProposalSummaryCard } from "./ProposalSummaryCard";
 import { ProposalTable } from "./ProposalTable";
 import { ReplayEvidenceCard } from "./ReplayEvidenceCard";
+import { RatificationCommandPanel } from "./RatificationCommandPanel";
 
 const filters: ProposalStateFilter[] = ["pending", "accepted", "rejected", "all"];
 
 function isProposalFilter(value: string | null): value is ProposalStateFilter {
-  return value === "pending" || value === "accepted" || value === "rejected" || value === "withdrawn" || value === "unknown" || value === "all";
+  return (
+    value === "pending" ||
+    value === "accepted" ||
+    value === "rejected" ||
+    value === "withdrawn" ||
+    value === "unknown" ||
+    value === "all"
+  );
 }
 
 function errorMessage(error: unknown) {
@@ -26,13 +36,32 @@ export function ProposalsRoute() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedFromUrl = searchParams.get("proposal_id");
   const filterFromUrl = searchParams.get("state");
+  const domainFromUrl = searchParams.get("domain");
+
+  const [domain, setDomain] = useState<"math" | "cognition">(
+    domainFromUrl === "math" ? "math" : "cognition"
+  );
+  
   const [filter, setFilter] = useState<ProposalStateFilter>(
     isProposalFilter(filterFromUrl) ? filterFromUrl : "pending",
   );
-  const proposalsQuery = useProposals(filter);
-  const selectedProposalId = selectedFromUrl ?? null;
-  const detailQuery = useProposalDetail(selectedProposalId ?? "");
 
+  const [focusedIndex, setFocusedIndex] = useState<number>(0);
+
+  // Queries
+  const mathProposalsQuery = useMathProposals();
+  const cognitionProposalsQuery = useProposals(filter);
+
+  const selectedProposalId = selectedFromUrl ?? null;
+
+  const mathDetailQuery = useMathProposalDetail(
+    domain === "math" ? (selectedProposalId ?? "") : ""
+  );
+  const cognitionDetailQuery = useProposalDetail(
+    domain === "cognition" ? (selectedProposalId ?? "") : ""
+  );
+
+  // Synchronize state from URL
   useEffect(() => {
     const urlFilter = searchParams.get("state");
     if (isProposalFilter(urlFilter) && urlFilter !== filter) {
@@ -40,12 +69,62 @@ export function ProposalsRoute() {
     }
   }, [filter, searchParams]);
 
-  const proposals = useMemo(() => proposalsQuery.data ?? [], [proposalsQuery.data]);
+  useEffect(() => {
+    const urlDomain = searchParams.get("domain");
+    if ((urlDomain === "math" || urlDomain === "cognition") && urlDomain !== domain) {
+      setDomain(urlDomain as "math" | "cognition");
+    }
+  }, [domain, searchParams]);
 
-  function updateRoute(next: { proposalId?: string | null; state?: ProposalStateFilter }) {
+  // Load appropriate proposals list
+  const rawProposals = useMemo(() => {
+    if (domain === "math") {
+      return mathProposalsQuery.data ?? [];
+    } else {
+      return cognitionProposalsQuery.data ?? [];
+    }
+  }, [domain, mathProposalsQuery.data, cognitionProposalsQuery.data]);
+
+  // Map to unified ProposalSummary structure
+  const proposals: ProposalSummary[] = useMemo(() => {
+    if (domain === "math") {
+      return (rawProposals as any[]).map((mp) => ({
+        proposal_id: mp.proposal_id,
+        state: "pending" as ProposalState,
+        source_kind: `math / ${mp.proposed_change_kind}`,
+        replay_equivalent: true,
+        created_at: null,
+        downstream_effect: "unknown" as DownstreamEffect,
+      }));
+    } else {
+      return (rawProposals as ProposalSummary[]) ?? [];
+    }
+  }, [domain, rawProposals]);
+
+  const focusedProposalId = useMemo(() => {
+    if (proposals.length > 0 && focusedIndex >= 0 && focusedIndex < proposals.length) {
+      return proposals[focusedIndex].proposal_id;
+    }
+    return null;
+  }, [proposals, focusedIndex]);
+
+  // Reset focus when domain or filter changes
+  useEffect(() => {
+    setFocusedIndex(0);
+  }, [domain, filter]);
+
+  function updateRoute(next: { proposalId?: string | null; state?: ProposalStateFilter; domain?: "math" | "cognition" }) {
     const params = new URLSearchParams(searchParams);
+    const nextDomain = next.domain ?? domain;
     const nextState = next.state ?? filter;
+    
+    if (nextDomain === "math") {
+      params.set("domain", "math");
+    } else {
+      params.delete("domain");
+    }
     params.set("state", nextState);
+
     if (next.proposalId === null) {
       params.delete("proposal_id");
     } else if (next.proposalId) {
@@ -59,60 +138,162 @@ export function ProposalsRoute() {
     updateRoute({ state: nextFilter, proposalId: null });
   }
 
+  function changeDomain(nextDomain: "math" | "cognition") {
+    setDomain(nextDomain);
+    updateRoute({ domain: nextDomain, proposalId: null });
+  }
+
   function selectProposal(proposalId: string) {
+    const index = proposals.findIndex((p) => p.proposal_id === proposalId);
+    if (index !== -1) {
+      setFocusedIndex(index);
+    }
     updateRoute({ proposalId });
   }
 
-  if (proposalsQuery.isLoading) {
+  // Keyboard navigation wires
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") {
+        return;
+      }
+
+      if (e.key === "j" || e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedIndex((prev) => Math.min(prev + 1, proposals.length - 1));
+      } else if (e.key === "k" || e.key === "ArrowUp") {
+        e.preventDefault();
+        setFocusedIndex((prev) => Math.max(prev - 1, 0));
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (proposals[focusedIndex]) {
+          selectProposal(proposals[focusedIndex].proposal_id);
+        }
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        updateRoute({ proposalId: null });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [proposals, focusedIndex]);
+
+  // Auto-advance focus on success
+  const autoAdvance = () => {
+    let nextIndex = -1;
+    for (let i = focusedIndex + 1; i < proposals.length; i++) {
+      if (proposals[i].state === "pending" || domain === "math") {
+        nextIndex = i;
+        break;
+      }
+    }
+    if (nextIndex === -1) {
+      for (let i = 0; i < focusedIndex; i++) {
+        if (proposals[i].state === "pending" || domain === "math") {
+          nextIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (nextIndex !== -1) {
+      setFocusedIndex(nextIndex);
+      selectProposal(proposals[nextIndex].proposal_id);
+    } else {
+      updateRoute({ proposalId: null });
+    }
+  };
+
+  const isLoading = domain === "math" ? mathProposalsQuery.isLoading : cognitionProposalsQuery.isLoading;
+  const isError = domain === "math" ? mathProposalsQuery.isError : cognitionProposalsQuery.isError;
+  const error = domain === "math" ? mathProposalsQuery.error : cognitionProposalsQuery.error;
+
+  if (isLoading) {
     return <LoadingState label="Loading proposal queue..." />;
   }
 
-  if (proposalsQuery.isError) {
+  if (isError) {
     return (
       <ErrorState
-        whatFailed={errorMessage(proposalsQuery.error)}
+        whatFailed={errorMessage(error)}
         mutationStatus="No proposal mutation occurred."
-        reproducer="curl /proposals"
+        reproducer={`curl /${domain === "math" ? "math-" : ""}proposals`}
         retrySafety="Retry: safe"
       />
     );
   }
 
+  const detailQuery = domain === "math" ? mathDetailQuery : cognitionDetailQuery;
+
   return (
     <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[minmax(34rem,0.95fr)_minmax(32rem,1.05fr)]">
       <section className="grid min-h-0 content-start gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="m-0 text-base font-semibold text-[var(--color-text-primary)]">Proposal Queue</h1>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Proposal state filter">
-            {filters.map((state) => (
-              <Button
-                aria-pressed={filter === state}
-                key={state}
-                onClick={() => changeFilter(state)}
-                type="button"
-                variant={filter === state ? "primary" : "quiet"}
+          <div className="flex items-center gap-4">
+            <h1 className="m-0 text-base font-semibold text-[var(--color-text-primary)]">Proposal Queue</h1>
+            {/* Domain Selector Tabs */}
+            <div className="flex bg-[var(--color-surface-inset)] p-0.5 rounded border border-[var(--color-border-subtle)]">
+              <button
+                onClick={() => changeDomain("math")}
+                className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                  domain === "math"
+                    ? "bg-[var(--color-surface-raised)] text-[var(--color-text-primary)] shadow-sm"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                }`}
               >
-                {state}
-              </Button>
-            ))}
+                Math Corridor
+              </button>
+              <button
+                onClick={() => changeDomain("cognition")}
+                className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                  domain === "cognition"
+                    ? "bg-[var(--color-surface-raised)] text-[var(--color-text-primary)] shadow-sm"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                }`}
+              >
+                Cognition Queue
+              </button>
+            </div>
           </div>
+          
+          {domain === "cognition" && (
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Proposal state filter">
+              {filters.map((state) => (
+                <Button
+                  aria-pressed={filter === state}
+                  key={state}
+                  onClick={() => changeFilter(state)}
+                  type="button"
+                  variant={filter === state ? "primary" : "quiet"}
+                >
+                  {state}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
 
         {proposals.length === 0 ? (
           <EmptyState
-            statement="No proposals match this queue view."
-            nextAction={{ kind: "cli", command: "core teaching proposals --state pending" }}
+            statement={domain === "math" ? "No math proposals match this queue view." : "No proposals match this queue view."}
+
+            nextAction={{
+              kind: "cli",
+              command: domain === "math" ? "core eval gsm8k_math" : "core teaching proposals --state pending",
+            }}
           />
         ) : (
           <ProposalTable
             proposals={proposals}
             selectedProposalId={selectedProposalId}
+            focusedProposalId={focusedProposalId}
             onSelect={selectProposal}
           />
         )}
       </section>
 
-      <section className="min-h-0 overflow-y-auto">
+      <section className="min-h-0 overflow-y-auto pr-1">
         {!selectedProposalId ? (
           <EmptyState
             statement="Select a proposal to inspect replay evidence, chain records, and provenance."
@@ -124,18 +305,147 @@ export function ProposalsRoute() {
           <ErrorState
             whatFailed={errorMessage(detailQuery.error)}
             mutationStatus="No proposal mutation occurred."
-            reproducer={`curl /proposals/${selectedProposalId}`}
+            reproducer={`curl /${domain === "math" ? "math-" : ""}proposals/${selectedProposalId}`}
             retrySafety="Retry: safe"
           />
         ) : detailQuery.data ? (
-          <div className="grid gap-4">
-            <ProposalSummaryCard proposal={detailQuery.data} />
-            <ReplayEvidenceCard proposal={detailQuery.data} />
-            <ProposalChainViewer proposal={detailQuery.data} />
-            <ProposalProvenanceViewer proposal={detailQuery.data} />
-          </div>
+          domain === "math" ? (
+            <MathProposalDetailView
+              proposal={detailQuery.data as MathProposalDetail}
+              state="pending"
+              replayEquivalent={true}
+              onSuccess={autoAdvance}
+              onDefer={autoAdvance}
+            />
+          ) : (
+            <div className="grid gap-4">
+              <ProposalSummaryCard proposal={detailQuery.data as any} />
+              <ReplayEvidenceCard proposal={detailQuery.data as any} />
+              <ProposalChainViewer proposal={detailQuery.data as any} />
+              <ProposalProvenanceViewer proposal={detailQuery.data as any} />
+            </div>
+          )
         ) : null}
       </section>
+    </div>
+  );
+}
+
+interface MathProposalDetailViewProps {
+  proposal: MathProposalDetail;
+  state: string;
+  replayEquivalent: boolean | null;
+  onSuccess: () => void;
+  onDefer: () => void;
+}
+
+function MathProposalDetailView({
+  proposal,
+  state,
+  replayEquivalent,
+  onSuccess,
+  onDefer,
+}: MathProposalDetailViewProps) {
+  const steps = proposal.reasoning_trace_steps || [];
+  const hashes = proposal.evidence_hashes || [];
+
+  return (
+    <div className="grid gap-4">
+      {/* Summary Card */}
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="m-0 font-mono text-sm font-semibold text-[var(--color-text-primary)]">
+            {proposal.proposal_id}
+          </h2>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[var(--color-state-neutral-bg)] border border-[var(--color-state-neutral-border)] text-[var(--color-state-neutral-text)]">
+            {proposal.shape_category}
+          </span>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[var(--color-state-success-bg)] border border-[var(--color-state-success-border)] text-[var(--color-state-success-text)] font-mono">
+            math_contemplation
+          </span>
+        </div>
+        <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
+          Proposed change: <strong className="text-[var(--color-text-primary)] font-mono">{proposal.proposed_change_kind}</strong>
+        </p>
+        <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <dt className="text-[var(--color-text-muted)]">Structural Commonality</dt>
+            <dd className="m-0 text-[var(--color-text-primary)] font-medium mt-0.5">{proposal.structural_commonality}</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--color-text-muted)]">Replay Equivalence Hash</dt>
+            <dd className="m-0 text-[var(--color-text-primary)] font-mono truncate mt-0.5" title={proposal.replay_equivalence_hash}>
+              {proposal.replay_equivalence_hash}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      {/* Wrong Zero Assertion Card */}
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-4">
+        <h3 className="m-0 text-sm font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+          <AlertTriangle size={15} className="text-[var(--color-state-warning-text)]" />
+          Wrong Zero Assertion
+        </h3>
+        <p className="mt-2.5 text-xs font-mono text-[var(--color-state-warning-text)] bg-[var(--color-surface-inset)] p-3 rounded border border-[var(--color-border-subtle)] whitespace-pre-wrap leading-relaxed">
+          {proposal.wrong_zero_assertion}
+        </p>
+      </section>
+
+      {/* Proposed Change Payload Card */}
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-4">
+        <h3 className="m-0 text-sm font-semibold text-[var(--color-text-primary)] mb-3">Proposed Change Payload</h3>
+        <pre className="p-3 bg-[var(--color-surface-inset)] rounded border border-[var(--color-border-subtle)] font-mono text-xs text-[var(--color-text-primary)] overflow-x-auto">
+          {JSON.stringify(proposal.proposed_change_payload, null, 2)}
+        </pre>
+      </section>
+
+      {/* Reasoning Trace Steps */}
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-4">
+        <h3 className="m-0 text-sm font-semibold text-[var(--color-text-primary)] mb-3">
+          Reasoning Steps ({steps.length})
+        </h3>
+        <div className="grid gap-3 max-h-[30rem] overflow-y-auto pr-1">
+          {steps.map((step: MathReasoningStep) => (
+            <div key={step.step_index} className="p-3 bg-[var(--color-surface-inset)] rounded border border-[var(--color-border-subtle)] text-xs">
+              <div className="flex items-center justify-between mb-1.5 font-medium text-[var(--color-text-primary)]">
+                <span>Step {step.step_index}: <span className="text-[var(--color-link)] font-mono">{step.step_kind}</span></span>
+                <span className="text-[var(--color-text-muted)] font-mono">[{step.input_pointers?.join(", ")}]</span>
+              </div>
+              <p className="m-0 text-[var(--color-text-primary)] font-semibold mb-1">
+                {step.claim}
+              </p>
+              <p className="m-0 text-[var(--color-text-secondary)] italic">
+                {step.justification}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Evidence Hashes */}
+      <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-4">
+        <h3 className="m-0 text-sm font-semibold text-[var(--color-text-primary)] mb-3">Evidence Hashes</h3>
+        <div className="grid gap-1.5">
+          {hashes.map((hash: string, i: number) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="text-xs text-[var(--color-text-muted)] font-mono">#{i + 1}</span>
+              <code className="bg-[var(--color-surface-inset)] px-2 py-1 rounded font-mono text-xs text-[var(--color-text-primary)] truncate flex-1">
+                {hash}
+              </code>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Ratification Command Panel */}
+      <RatificationCommandPanel
+        proposal={proposal}
+        state={state}
+        replayEquivalent={replayEquivalent}
+        onSuccess={onSuccess}
+        onDefer={onDefer}
+      />
     </div>
   );
 }
