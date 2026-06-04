@@ -1,6 +1,6 @@
 # ADR-0179 — Extraction Richness: feeding the comprehension composer real quantities
 
-**Status:** Proposed
+**Status:** Accepted (ratified by ADR-0207, 2026-06-03)
 **Date:** 2026-05-28
 **Author:** Shay
 **Anchor:** [[thesis-decoding-not-generating]]

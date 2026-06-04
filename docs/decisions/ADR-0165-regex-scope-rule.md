@@ -1,6 +1,6 @@
 # ADR-0165 — Regex Scope Rule: Lexemes Only, Never Grammar
 
-**Status:** Proposed
+**Status:** Accepted (ratified by ADR-0207, 2026-06-03)
 **Date:** 2026-05-26
 **Author:** Shay
 **Anchor:** [[thesis-decoding-not-generating]]
