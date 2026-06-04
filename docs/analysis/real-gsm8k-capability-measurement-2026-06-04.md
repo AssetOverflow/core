@@ -58,7 +58,9 @@ I did not stop at diagnosis — I built and measured two committing readers on h
 | Attempt | held-out 500 | result |
 |---|---|---|
 | `resolve_pooled` (the built composer) | 2 correct / **87 wrong** | 17% confabulation |
-| Maximally-narrow forced reader (exactly 2 grounded quantities + one unambiguous op cue, refuse otherwise) | 0 correct / **61 wrong** | **100% confabulation when it fires** |
+| Maximally-narrow forced reader (exactly 2 grounded quantities + one unambiguous op cue) | 0 correct / **61 wrong** | **100% confab when it fires** |
+| Strictest sum-reader (exactly 2 numbers + total-cue in question + every complexity cue blocked → A+B) | 0 correct / **2 wrong** | **100% confab; the 2 "simple" cases were multi-step (a fraction, a "double") hiding behind 2 numbers** |
+| candidate-graph sound filter (roundtrip + disagreement) | **0 admissible candidates built** | sound, but constructs nothing to commit |
 
 The narrow reader is the more brutal result: GSM8K problems that *look* like "2 numbers + a
 cue word" are almost never 2-operand problems — they are multi-step problems where the
