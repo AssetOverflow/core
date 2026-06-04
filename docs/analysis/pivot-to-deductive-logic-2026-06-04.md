@@ -1,4 +1,4 @@
-<!-- CANONICAL | docs/analysis/pivot-to-deductive-logic-2026-06-04.md | 2026-06-04 | strategy/post-mortem | why we left the GSM8K chase, what went wrong, and the deductive-logic path we are now on | verified: holdout 500/500 wrong=0, 8000-case engine-vs-oracle fuzz 0 disagreements -->
+<!-- CANONICAL | docs/analysis/pivot-to-deductive-logic-2026-06-04.md | 2026-06-04 | strategy/post-mortem | why we left the GSM8K chase, what went wrong, and the deductive-logic path we are now on | verified: deductive holdout 500/500 wrong=0, deterministic 3,000-case engine-vs-oracle fuzz (2,796 definite) 0 disagreements -->
 
 # The pivot to deductive logic — what went wrong, and the path now
 
@@ -48,11 +48,20 @@ three sets, same day:
 | Set | correct | wrong | what it is |
 |---|---:|---:|---|
 | `train_sample` (50) | 4 | 0 | the data CORE was **built on** — overfit, no predictive validity |
-| `holdout_dev` (500) | **0** | 0 | real GSM8K **never built-against** — the honest baseline |
+| `holdout_dev` (500) | 5† | 0 | real GSM8K **never built-against** — the composer scored **0**; the 5 are the narrow R1 reconstruction |
 | sealed test (1,319) | 0 | 0 | the final exam |
 
-**Real GSM8K capability was 0%.** The four train "correct" generalised to *zero* of
-500 held-out cases. Serving held `wrong = 0` only because it refused everything real.
+† Committed `evals/gsm8k_math/holdout_dev/v1/report.json` reads **5 correct / 0 wrong
+/ 495 refused**. All 5 come from the narrow, verifier-gated **R1 comparative-total
+reconstruction** (a typed reader, not the composer), which landed the same day; the
+composer (`resolve_pooled`) generalised to **0** of 500. The "0%" below is the
+composer's number — the subject of this post-mortem. (The original snapshot read
+`0/500`; it predated the R1 landing and is corrected here to match the committed
+artifact.)
+
+**The composer's real GSM8K capability was 0%.** Its four train "correct" generalised
+to *zero* of 500 held-out cases (the 5 committed held-out correct are the separate R1
+reconstruction, above). Serving held `wrong = 0` only because it refused everything real.
 
 **The deeper finding — the composer is *unsound*, not just narrow.** The derivation
 composer (`resolve_pooled`), the reader the whole composition program was built around
@@ -116,12 +125,16 @@ by design (propositional regime only).
 |---|---:|---:|---:|---:|
 | dev | 200 | 200 | **0** | 74 |
 | **holdout v1** | 500 | **500** | **0** | **227** |
-| fuzz (fresh random, engine vs **independent** oracle) | 7,340 | 7,340 | **0** | 3,360 |
+| fuzz (seed 424242, engine vs **independent** oracle) | 2,796 | 2,796 | **0** | 1,241 |
 
 The gold is computed by an **independent truth-table oracle**
 (`evals/deductive_logic/oracle.py`) sharing **no code** with the ROBDD engine.
-**8,000 fresh random problems, two independent sound decision procedures, zero
-disagreements** — the soundness evidence the GSM8K composer could never produce.
+The committed gate (`test_engine_matches_independent_oracle_fuzz`) runs a
+deterministic **3,000-case** fuzz of which **2,796** are in-regime/definite, with
+**zero** engine-vs-oracle disagreements (a complementary 4,000-case fuzz exercises
+inconsistent-premise refusal) — the soundness evidence the GSM8K composer could
+never produce. INV-25 (`tests/test_architectural_invariants.py`) ratifies that
+independence structurally.
 
 **Honest caveat (state it plainly):** propositional validity is *decidable*, so 100%
 is the expected ceiling for a correct implementation. The value is not "solved

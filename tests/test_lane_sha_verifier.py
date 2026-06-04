@@ -91,6 +91,7 @@ class TestExpectedLaneCoverage:
             "public_demo",  # ADR-0099
             "curriculum_loop_closure",
             "math_teaching_corpus_v1",  # ADR-0131
+            "deductive_logic_v1",  # ADR-0206 — independent-oracle entailment lane
         }
     )
 

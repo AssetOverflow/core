@@ -1,0 +1,73 @@
+{
+  "adr": "ADR-0206",
+  "aggregate": {
+    "correct": 716,
+    "n": 716,
+    "refused": 0,
+    "wrong": 0
+  },
+  "all_correct": true,
+  "lane": "deductive_logic",
+  "refused_is_zero": true,
+  "schema_version": 1,
+  "splits": {
+    "dev": {
+      "all_cases_correct": true,
+      "by_gold": {
+        "entailed": 37,
+        "refuted": 37,
+        "unknown": 126
+      },
+      "correct_by_gold": {
+        "entailed": 37,
+        "refuted": 37,
+        "unknown": 126
+      },
+      "counts": {
+        "correct": 200,
+        "refused": 0,
+        "wrong": 0
+      },
+      "n": 200
+    },
+    "external_v1": {
+      "all_cases_correct": true,
+      "by_gold": {
+        "entailed": 8,
+        "refuted": 4,
+        "unknown": 4
+      },
+      "correct_by_gold": {
+        "entailed": 8,
+        "refuted": 4,
+        "unknown": 4
+      },
+      "counts": {
+        "correct": 16,
+        "refused": 0,
+        "wrong": 0
+      },
+      "n": 16
+    },
+    "holdout_v1": {
+      "all_cases_correct": true,
+      "by_gold": {
+        "entailed": 117,
+        "refuted": 110,
+        "unknown": 273
+      },
+      "correct_by_gold": {
+        "entailed": 117,
+        "refuted": 110,
+        "unknown": 273
+      },
+      "counts": {
+        "correct": 500,
+        "refused": 0,
+        "wrong": 0
+      },
+      "n": 500
+    }
+  },
+  "wrong_is_zero": true
+}

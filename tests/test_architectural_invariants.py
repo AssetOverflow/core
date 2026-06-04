@@ -1032,3 +1032,213 @@ class TestINV24VaultRecallRegistry:
             f"Registered recall site(s) no longer call vault.recall(): "
             f"{sorted(unused)}\nRemove from VAULT_RECALL_SITES."
         )
+
+
+# ===========================================================================
+# INV-25  Independent gold — a promotable-capability lane scores against an
+#         oracle that shares NO code with the system under test (SUT)
+# ===========================================================================
+#
+# Claim (the GSM8K post-mortem made structural, docs/analysis/
+# pivot-to-deductive-logic-2026-06-04.md §"the GSM8K lesson"):
+#
+#   No capability claim is valid unless the gold it is measured against is
+#   computed by a procedure INDEPENDENT of the engine that produced the
+#   answer.  A "gold" that shares code with the engine only proves the engine
+#   agrees with itself — exactly the blind spot that let the GSM8K composer
+#   serve 87 wrong held-out answers it could not tell from its 2 right ones.
+#
+# The deductive-logic lane is the first lane to earn a real correct number
+# (holdout 500/500, wrong=0), and it earns it honestly because its gold is an
+# independent truth-table oracle (evals/deductive_logic/oracle.py): a separate
+# tokenizer + recursive-descent parser + brute-force 2^k model enumeration
+# that imports NONE of the ROBDD engine under test.  This invariant ratifies
+# that independence as a structural, meaningfully-failing property:
+#
+#   25a (structural).  Each registered oracle module imports none of its SUT's
+#       modules.  Fails the moment an oracle is "simplified" to reuse the
+#       engine — the single change that would turn independent gold into
+#       self-agreement.
+#   25b (behavioral).  Every committed deductive case's gold is reproduced by
+#       the independent oracle AND matched by the engine: engine == oracle ==
+#       committed gold.  This is the anti-overfit firewall — it fails if any
+#       committed gold were ever engine-derived and diverged from the oracle.
+#   25c (non-vacuity).  An unsound engine (entailed<->refuted flipped) is shown
+#       to disagree with the oracle on committed cases, proving 25b can fail.
+#
+# A new lane that claims a promotable/checkable capability MUST register its
+# (oracle, SUT) pair here.  The CI failure is the prompt to do so.
+
+from typing import NamedTuple
+
+_REPO_ROOT = PROJECT_ROOT_FOR_INV21
+
+
+class IndependentGoldLane(NamedTuple):
+    """A lane whose gold must be independent of its system under test."""
+
+    name: str
+    oracle_module: str  # path relative to repo root
+    sut_import_prefixes: tuple[str, ...]  # modules the oracle MUST NOT import
+
+
+# The engine under test for the deductive lane is generate.proof_chain.entail,
+# built on the generate.logic_canonical ROBDD stack.  The oracle must share no
+# code with any of it (it is a stdlib-only truth-table procedure today).
+INDEPENDENT_GOLD_LANES: tuple[IndependentGoldLane, ...] = (
+    IndependentGoldLane(
+        name="deductive_logic",
+        oracle_module="evals/deductive_logic/oracle.py",
+        sut_import_prefixes=(
+            "generate.proof_chain",
+            "generate.logic_canonical",
+            "generate.logic_equivalence",
+        ),
+    ),
+)
+
+_DEDUCTIVE_CASE_FILES: tuple[str, ...] = (
+    "evals/deductive_logic/dev/cases.jsonl",
+    "evals/deductive_logic/holdout/v1/cases.jsonl",
+    "evals/deductive_logic/external/v1/cases.jsonl",
+)
+
+
+def _module_imports(path: Path) -> set[str]:
+    """Every absolute module name imported by ``path``.
+
+    Uses AST so a forbidden module mentioned only in a docstring/comment/string
+    cannot trigger a false positive, and a real ``import generate.proof_chain``
+    cannot hide from a substring grep.
+    """
+    try:
+        tree = ast.parse(path.read_text())
+    except (OSError, SyntaxError):
+        return set()
+    mods: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                mods.add(alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            # Absolute imports only (level == 0); a relative import cannot reach
+            # the SUT package from the evals oracle.
+            if node.module and node.level == 0:
+                mods.add(node.module)
+    return mods
+
+
+def _imports_any_prefix(mods: set[str], prefixes: tuple[str, ...]) -> list[str]:
+    hits: list[str] = []
+    for mod in sorted(mods):
+        for prefix in prefixes:
+            if mod == prefix or mod.startswith(prefix + "."):
+                hits.append(mod)
+                break
+    return hits
+
+
+def _load_deductive_cases() -> list[dict[str, Any]]:
+    cases: list[dict[str, Any]] = []
+    for rel in _DEDUCTIVE_CASE_FILES:
+        path = _REPO_ROOT / rel
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                cases.append(json.loads(line))
+    return cases
+
+
+class TestINV25IndependentGold:
+    """A promotable-capability lane's gold must share no code with its SUT,
+    and its committed gold must be reproducible by that independent oracle."""
+
+    def test_registered_oracle_modules_exist(self):
+        """Drift guard: a registered oracle path that no longer exists means
+        the registry is stale and the structural check below is vacuous."""
+        missing = [
+            lane.oracle_module
+            for lane in INDEPENDENT_GOLD_LANES
+            if not (_REPO_ROOT / lane.oracle_module).is_file()
+        ]
+        assert not missing, (
+            "Registered independent-gold oracle module(s) not found: "
+            f"{missing}\nUpdate INDEPENDENT_GOLD_LANES in "
+            "tests/test_architectural_invariants.py."
+        )
+
+    def test_oracle_shares_no_code_with_sut(self):
+        """25a — the load-bearing structural guarantee. If any registered
+        oracle imports a module of the engine it is supposed to check
+        independently, the gold is not independent and this fails."""
+        offenders: list[str] = []
+        for lane in INDEPENDENT_GOLD_LANES:
+            mods = _module_imports(_REPO_ROOT / lane.oracle_module)
+            hits = _imports_any_prefix(mods, lane.sut_import_prefixes)
+            if hits:
+                offenders.append(f"{lane.oracle_module} imports SUT module(s) {hits}")
+        assert not offenders, (
+            "Independent-gold oracle shares code with its system under test:\n  "
+            + "\n  ".join(offenders)
+            + "\n\nThe oracle must be an independent decision procedure (a 'gold' "
+            "that imports the engine only proves the engine agrees with itself — "
+            "the GSM8K blind spot, INV-25). Re-implement the check independently, "
+            "or — if this import is genuinely unrelated to the decision — narrow "
+            "sut_import_prefixes in INDEPENDENT_GOLD_LANES with a justification."
+        )
+
+    def test_committed_gold_is_independently_reproducible(self):
+        """25b — engine == oracle == committed gold on every committed case.
+        Reproducing the committed gold with the *independent* oracle is the
+        anti-overfit firewall: it fails if any gold were engine-derived and
+        diverged, or if the engine ever confabulated a verdict."""
+        from evals.deductive_logic.oracle import oracle_entailment
+        from generate.proof_chain.entail import evaluate_entailment
+
+        cases = _load_deductive_cases()
+        assert cases, "no committed deductive cases found — INV-25b would be vacuous"
+
+        oracle_mismatch: list[str] = []
+        engine_mismatch: list[str] = []
+        for case in cases:
+            premises = tuple(case["premises"])
+            query = case["query"]
+            gold = case["gold"]
+            if oracle_entailment(premises, query) != gold:
+                oracle_mismatch.append(case["id"])
+            if evaluate_entailment(premises, query).outcome.value != gold:
+                engine_mismatch.append(case["id"])
+
+        assert not oracle_mismatch, (
+            "Committed gold is NOT reproduced by the independent oracle "
+            f"(first few: {oracle_mismatch[:5]}). The gold may be engine-derived "
+            "or the case file drifted — regenerate gold from the oracle."
+        )
+        assert not engine_mismatch, (
+            "Engine disagrees with committed independent gold "
+            f"(first few: {engine_mismatch[:5]}). This is a wrong==0 breach on a "
+            "lane that claims a promotable capability."
+        )
+
+    def test_differential_is_non_vacuous(self):
+        """25c — proves 25b can fail. An unsound engine (entailed<->refuted
+        flipped) MUST disagree with the independent oracle on committed cases;
+        if it did not, 25b would be decoration (CLAUDE.md schema-defined proof
+        obligations)."""
+        from evals.deductive_logic.oracle import oracle_entailment
+
+        flip = {"entailed": "refuted", "refuted": "entailed"}
+        cases = _load_deductive_cases()
+        disagreements = 0
+        for case in cases:
+            premises = tuple(case["premises"])
+            query = case["query"]
+            gold = oracle_entailment(premises, query)
+            unsound = flip.get(gold, gold)
+            if unsound != gold:
+                disagreements += 1
+        assert disagreements > 0, (
+            "A deliberately unsound (entailed<->refuted) engine disagreed with "
+            "the oracle on ZERO committed cases — the committed set has no "
+            "entailed/refuted signal, so INV-25b cannot catch a soundness break. "
+            "Add non-trivial cases before claiming the lane proves capability."
+        )
