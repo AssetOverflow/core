@@ -15,7 +15,7 @@ It enforces two kinds of obligation:
   - frozen baseline snapshot for those non-positive rows matches the live tree.
 
 * **Current snapshot** (the one assertion a Phase 5b slice updates when it
-  flips a positive): the aggregate is ``4 solve / 16 refuse / 0 wrong`` today.
+  flips a positive): the aggregate is ``6 solve / 16 refuse / 0 wrong`` today.
 
 A future positive (``gate`` like ``5b-R1``) is *expected* to flip
 refuse -> solve when its slice lands; that flip must still satisfy the firewall,
@@ -158,7 +158,7 @@ def test_frozen_baseline_fields_match_tree(case: dict) -> None:
 
 
 def test_current_baseline_snapshot() -> None:
-    """Current aggregate is 3 solve / 19 refuse / 0 wrong.
+    """Current aggregate is 6 solve / 16 refuse / 0 wrong.
 
     This is the single assertion a Phase 5b slice updates when it flips a
     positive (refuse -> solve); the forever-invariants above do not change.
@@ -166,6 +166,10 @@ def test_current_baseline_snapshot() -> None:
     goal_residual) were disabled after the first real sealed measurement showed
     them 0-correct/5-wrong on held-out — so cv-0005 (R4) and cv-0020 (product)
     revert to refusing, moving the honest snapshot to 3/19.
+
+    R1 reconstruction then flips cv-0001, cv-0002, and cv-0009 through typed
+    graph reconstruction + solver/verifier replay, moving the honest snapshot
+    to 6/16.
     """
     solve = refuse = wrong = 0
     for case in _CASES:
@@ -177,7 +181,7 @@ def test_current_baseline_snapshot() -> None:
         else:
             refuse += 1
     assert wrong == 0
-    assert (solve, refuse) == (3, 19), (
+    assert (solve, refuse) == (6, 16), (
         f"snapshot moved to {solve} solve / {refuse} refuse — if a Phase 5b "
         f"slice landed, update this expectation and the affected rows' "
         f"baseline fields in lockstep"

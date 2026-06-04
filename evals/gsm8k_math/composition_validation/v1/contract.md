@@ -69,9 +69,13 @@ first real sealed measurement found them 0-correct / 5-wrong on the held-out 1,3
 cv-0020 (solved only via product_bridge) was reclassified `baseline -> 5b-product`,
 so the honest snapshot is:
 
-- 3 solve
-- 19 refuse
+- 6 solve
+- 16 refuse
 - 0 wrong
+
+R1 reconstruction then flipped cv-0001, cv-0002, and cv-0009 through typed
+`MathProblemGraph` reconstruction and solver/verifier replay. Their original
+baseline fields remain diagnostic; the current snapshot is now 6/16/0.
 
 The corpus deliberately includes both future positives and permanent
 hard-negatives. A future Phase 5b slice should update only the measured current

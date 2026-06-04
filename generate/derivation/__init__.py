@@ -23,6 +23,7 @@ from generate.derivation.extract import extract_quantities
 from generate.derivation.model import GroundedDerivation, Quantity, Step, VALID_OPS
 from generate.derivation.multistep import candidate_chains, search_chain
 from generate.derivation.pool import pooled_candidates, resolve_pooled
+from generate.derivation.r1_reconstruction import R1Reconstruction, reconstruct_r1_total
 from generate.derivation.search import (
     MULTIPLICATIVE_CUES,
     multiplicative_candidates,
@@ -44,6 +45,7 @@ __all__ = [
     "MULTIPLICATIVE_CUES",
     "Quantity",
     "Resolution",
+    "R1Reconstruction",
     "SelfVerification",
     "Step",
     "Target",
@@ -62,6 +64,7 @@ __all__ = [
     "multiplicative_candidates",
     "pooled_candidates",
     "resolve_pooled",
+    "reconstruct_r1_total",
     "search_chain",
     "search_multiplicative",
     "segment_clauses",

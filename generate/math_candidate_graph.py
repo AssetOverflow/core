@@ -61,12 +61,48 @@ from generate.math_problem_graph import (
     MathProblemGraph,
 )
 from generate.math_completeness import uncovered_quantities
+from generate.derivation.r1_reconstruction import reconstruct_r1_total
 from generate.math_roundtrip import CandidateOperation, roundtrip_admissible
 from generate.math_solver import SolveError, solve
 
 
 MAX_TOTAL_BRANCHES: Final[int] = 64
 """Hard cap on Cartesian-product branch enumeration; exceeding refuses."""
+
+
+def _try_r1_reconstruction(
+    text: str,
+    *,
+    existing_trace: tuple[str, ...],
+) -> CandidateGraphResult | None:
+    """Attempt the narrow R1 typed reconstruction path.
+
+    Returns None when the text has no R1 signal.  A non-admitted R1 attempt is
+    still returned so its deterministic refusal evidence can be surfaced in the
+    reader trace while preserving the caller's refusal posture.
+    """
+    r1 = reconstruct_r1_total(text)
+    if r1 is None:
+        return None
+    trace = (*existing_trace, *r1.reader_trace)
+    if r1.is_admitted:
+        assert r1.answer is not None
+        return CandidateGraphResult(
+            answer=r1.answer,
+            selected_graph=r1.graph,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+            reader_trace=trace,
+        )
+    return CandidateGraphResult(
+        answer=None,
+        selected_graph=None,
+        refusal_reason=f"r1_reconstruction: {r1.refusal_reason}",
+        branches_enumerated=0,
+        branches_admissible=0,
+        reader_trace=trace,
+    )
 
 
 def _load_ratified_registry_or_empty() -> tuple:
@@ -972,6 +1008,14 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
                     # "I don't know" — i.e. refuse.  When an injector is
                     # added that handles this shape, this branch becomes
                     # dead and can be retired.
+                    r1_result = _try_r1_reconstruction(
+                        text,
+                        existing_trace=tuple(_statement_trace),
+                    )
+                    if r1_result is not None and r1_result.is_admitted:
+                        return r1_result
+                    if r1_result is not None:
+                        _statement_trace = list(r1_result.reader_trace)
                     return CandidateGraphResult(
                         answer=None, selected_graph=None,
                         refusal_reason=(
@@ -986,6 +1030,14 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
                         # constraint_propagation eliminations, etc.).
                         reader_trace=tuple(_statement_trace),
                     )
+            r1_result = _try_r1_reconstruction(
+                text,
+                existing_trace=tuple(_statement_trace),
+            )
+            if r1_result is not None and r1_result.is_admitted:
+                return r1_result
+            if r1_result is not None:
+                _statement_trace = list(r1_result.reader_trace)
             return CandidateGraphResult(
                 answer=None, selected_graph=None,
                 refusal_reason=f"no admissible candidate for statement: {s!r}",
@@ -1100,6 +1152,14 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
         branch=chosen.branch,
     )
     if uncovered:
+        r1_result = _try_r1_reconstruction(
+            text,
+            existing_trace=tuple(reader_trace),
+        )
+        if r1_result is not None and r1_result.is_admitted:
+            return r1_result
+        if r1_result is not None:
+            reader_trace = list(r1_result.reader_trace)
         return CandidateGraphResult(
             answer=None, selected_graph=None,
             refusal_reason=(
