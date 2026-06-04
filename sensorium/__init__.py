@@ -27,6 +27,7 @@ from sensorium.protocol import (
     ProjectionHead,
     SurfaceDecoder,
 )
+from sensorium.efferent import DefaultEfferentGate, EfferentEmissionTrace
 from sensorium.registry import ModalityRegistry
 
 __all__ = [
@@ -35,6 +36,8 @@ __all__ = [
     "EfferentGate",
     "EfferentRefusal",
     "EfferentVerdict",
+    "DefaultEfferentGate",
+    "EfferentEmissionTrace",
     "ProjectionHead",
     "SurfaceDecoder",
     "ModalityVocabulary",

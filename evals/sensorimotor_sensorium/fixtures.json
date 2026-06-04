@@ -1,0 +1,32 @@
+{
+  "comment": "Deterministic quantized proprioceptive fixture specs. These are afferent feedback cases, never motor commands.",
+  "fixtures": [
+    {
+      "id": "resting_pose",
+      "pose_q": [0, 0, 0],
+      "velocity_q": [0, 0, 0],
+      "force_torque_q": [0, 0, 0],
+      "contact_q": [0, 0],
+      "actuator_state_q": [1, 1],
+      "expect": "stationary proprioceptive state"
+    },
+    {
+      "id": "moving_contact",
+      "pose_q": [10, -4, 3],
+      "velocity_q": [2, 0, -1],
+      "force_torque_q": [3, 5, 8],
+      "contact_q": [1, 0, 1],
+      "actuator_state_q": [7, 8],
+      "expect": "moving state with contact"
+    },
+    {
+      "id": "force_spike",
+      "pose_q": [1, 1, 1],
+      "velocity_q": [0, 0, 0],
+      "force_torque_q": [20, -15, 4],
+      "contact_q": [1, 1],
+      "actuator_state_q": [9, 9],
+      "expect": "force torque evidence"
+    }
+  ]
+}

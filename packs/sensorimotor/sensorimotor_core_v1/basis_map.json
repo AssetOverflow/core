@@ -1,0 +1,26 @@
+{
+  "basis_version": "sensorimotor-basis-v1",
+  "comment": "Afferent proprioceptive facts lower to elliptic bivector rotors only; this pack contains no efferent decoder or command surface.",
+  "events": {
+    "proprio.pose": {
+      "blade_index": 6,
+      "base_theta_q": 48
+    },
+    "proprio.velocity": {
+      "blade_index": 7,
+      "base_theta_q": 64
+    },
+    "haptic.force_torque": {
+      "blade_index": 8,
+      "base_theta_q": 80
+    },
+    "haptic.contact": {
+      "blade_index": 10,
+      "base_theta_q": 96
+    },
+    "actuator.state": {
+      "blade_index": 11,
+      "base_theta_q": 112
+    }
+  }
+}

@@ -130,9 +130,14 @@ class SensorimotorCompiler:
 
     modality = "sensorimotor"
 
-    def __init__(self, pack_id: str = "sensorimotor_core_v1") -> None:
+    def __init__(
+        self,
+        pack_id: str = "sensorimotor_core_v1",
+        *,
+        pack_manifest_sha256: str | None = None,
+    ) -> None:
         self._pack_id = pack_id
-        self._manifest_sha256 = sha256_json({
+        self._manifest_sha256 = pack_manifest_sha256 or sha256_json({
             "pack_id": pack_id,
             "basis_version": "sensorimotor-basis-v1",
             "events": list(_EVENT_ORDER),
