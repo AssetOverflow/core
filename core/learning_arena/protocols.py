@@ -21,6 +21,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
+from core.reasoning.evidence import Tier2Verdict
+
 
 @runtime_checkable
 class DomainProblem(Protocol):
@@ -84,6 +86,15 @@ class GoldTether(Protocol):
     def is_correct(self, attempt: Attempt, problem: DomainProblem) -> bool: ...
 
     def gold_answer(self, problem: DomainProblem) -> Any: ...
+
+
+@runtime_checkable
+class Tier2Verifier(Protocol):
+    """Optional convergent self-verifier for a domain attempt."""
+
+    domain_id: str
+
+    def verify(self, attempt: Attempt, problem: DomainProblem) -> Tier2Verdict: ...
 
 
 @dataclass(frozen=True, slots=True)

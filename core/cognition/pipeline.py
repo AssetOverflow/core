@@ -22,6 +22,7 @@ from field.state import FieldState
 from core.cognition.result import CognitiveTurnResult
 from core.cognition.surface_resolution import resolve_surface
 from core.cognition.trace import compute_trace_hash, hash_admissibility_trace
+from core.reasoning.adapters import evidence_from_entailment_trace
 from generate.intent import classify_compound_intent
 from generate.intent_bridge import _is_useful_surface
 from generate.intent_ratifier import (
@@ -762,7 +763,7 @@ class CognitiveTurnPipeline:
     def _serialize_entailment_trace(trace: EntailmentTrace | None) -> str:
         if trace is None:
             return ""
-        return f"entailment:{trace.canonical_json()}"
+        return f"entailment:{evidence_from_entailment_trace(trace).canonical_json()}"
 
     @staticmethod
     def _proof_atom(text: str) -> str:

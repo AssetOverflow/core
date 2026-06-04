@@ -15,6 +15,7 @@ from core.learning_arena.protocols import (
     DomainSolver,
     GoldTether,
     Problem,
+    Tier2Verifier,
 )
 from core.learning_arena.report import (
     REFUSAL_DIAGNOSES,
@@ -31,6 +32,7 @@ __all__ = [
     "DomainSolver",
     "GoldTether",
     "Problem",
+    "Tier2Verifier",
     "REFUSAL_DIAGNOSES",
     "EliminationRecord",
     "PracticeReport",
