@@ -58,6 +58,8 @@ Allowed sites:
 - `ingest/gate.py` for raw input injection.
 - `language_packs/compiler.py` and vocabulary construction.
 - `algebra/versor.py` for algebra-owned sandwich closure.
+- `sensorium/*/canonical.py` and pack-governed modality compiler construction
+  boundaries for pinned signal canonicalization and quantization.
 
 Forbidden sites:
 
@@ -104,13 +106,22 @@ runtime path.  Vault recall is exact and deterministic.
 - `calibration/*` — bounded replay-based calibration.
 - `docs/runtime_contracts.md` — response, telemetry, memory, identity, and testing contracts.
 
-### GSM8K math comprehension substrate (sealed; serving `6/44/0`, wrong=0 — moves only via ratified PRs)
+### GSM8K math comprehension substrate (sealed; serving `7/43/0`, wrong=0 — moves only via ratified PRs)
 
 - `core/reliability_gate/` — calibrated-learning ledger + gate (ADR-0175): `ClassTally` counts, `conservative_floor` (one-sided Wilson, N_MIN=10), θ ceilings.
-- `generate/derivation/` — the comprehension composer: `extract.py` (lexeme quantity extraction, EX-1/4/5 + function-word unit filter), `clauses.py` (GB-1 segmentation), `compose.py` (GB-2a list-sum + GB-3a clause-scoped referent guard), `accumulate.py` (GB-3b.1 single-referent gain/loss chaining), `multistep.py`/`search.py` (bounded search), `verify.py` (the wrong=0 self-verification gate: grounding ∧ cue ∧ unit ∧ completeness ∧ uniqueness).
+- `generate/derivation/` — the comprehension composer: `extract.py` (lexeme quantity extraction, EX-1/4/5 + function-word unit filter), `clauses.py` (GB-1 segmentation), `compose.py` (GB-2a list-sum + GB-3a clause-scoped referent guard), `accumulate.py` (GB-3b.1 single-referent gain/loss chaining), `goal_residual.py` (ADR-0207 R4 goal-residual production), `multistep.py`/`search.py` (bounded search), `verify.py` (the wrong=0 self-verification gate: grounding ∧ cue ∧ unit ∧ completeness ∧ uniqueness).
 - `generate/cue_precision/` — `(cue, op, unit_shape)` reliability ledger + trainer (ADR-0177 CP-1/CP-2a); inert (consulted by no serving/gate path yet).
-- `evals/gsm8k_math/` — `train_sample/` (real GSM8K, the capability metric), `practice/` (sealed attempt-and-eliminate lane + ADR-0163-F additive set), `confusers/` (ADR-0163-F2 discrimination probe — scored by `wrong→0` + pair-consistency, NOT flip-count).
+- `evals/gsm8k_math/` — `train_sample/` (real GSM8K dev sample, currently 7 correct / 43 refused / 0 wrong), `practice/` (sealed attempt-and-eliminate lane + ADR-0163-F additive set), `confusers/` (ADR-0163-F2 discrimination probe — scored by `wrong→0` + pair-consistency, NOT flip-count).
 - `scripts/verify_lane_shas.py`, `scripts/generate_claims.py --check` — the serving-frozen gate (pinned eval-lane SHAs + `CLAIMS.md`).
+
+### Sensorium / modality compiler substrate (parallel, afferent gates; no broad capability claim)
+
+- `sensorium/compiler/` — shared compiler law for content-addressed afferent compilation units, canonical deltas, local arenas, and trace-safe merge hashes.
+- `sensorium/audio/` + `sensorium/adapters/audio.py` — `audio_core_v1`, deterministic audio compiler substrate, gate closed by default.
+- `sensorium/vision/` + `sensorium/adapters/vision.py` — `vision_core_v1`, tile-first deterministic visual compiler substrate over synthetic eval fixtures, gate closed by default.
+- `sensorium/environment/` — ADR-0208 observation-frame contract for bundles of already-compiled afferent units; not late fusion and not a mutable world model.
+- `sensorium/sensorimotor/` + `sensorium/adapters/sensorimotor.py` — ADR-0209 afferent proprioception/contact/action-result evidence substrate; no decode path.
+- `sensorium/registry.py::decode*` + `AuthorityToken` / `EfferentGate` — ADR-0198 fail-closed efferent governance path. This is not a ratified motor decoder or actuator interface; no real action emission is claimed.
 
 ## Efficiency and Performance Doctrine
 
@@ -327,7 +338,7 @@ implicated rather than one.
    things the ADR says that didn't actually ship.
 
 2. **Before merging a stacked PR sequence into main.**  When 2+ PRs
-   stack (PR #420 stacked on #416, #423 stacked on #420), the
+   stack (PR #420 stacked on #416, PR #423 stacked on #420), the
    review-each-PR-individually pattern misses cross-PR consistency
    issues.  Audit the whole stack as one unit before any merge.
 
