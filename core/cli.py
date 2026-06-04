@@ -2349,6 +2349,8 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 def cmd_eval(args: argparse.Namespace) -> int:
     """Run an eval lane by name, or list available lanes."""
+    if getattr(args, "lane", None) == "sensorium":
+        return cmd_eval_sensorium(args)
     if getattr(args, "lane", None) == "math-contemplation":
         return cmd_eval_math_contemplation(args)
 
@@ -2454,6 +2456,39 @@ def cmd_eval(args: argparse.Namespace) -> int:
         print(f"\nreport written: {report_path}", file=sys.stderr)
 
     return 0
+
+
+def cmd_eval_sensorium(args: argparse.Namespace) -> int:
+    """Run deterministic sensorium modality evidence reports."""
+    from evals.sensorium import build_sensorium_report
+
+    modality = getattr(args, "modality", "vision") or "vision"
+    try:
+        report = build_sensorium_report(modality)
+    except ValueError as exc:
+        _die(str(exc), code=2)
+
+    if getattr(args, "json", False):
+        print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(f"lane           : {report['lane']}")
+        print(f"modality       : {report['modality']}")
+        print(f"pack_id        : {report['pack_id']}")
+        print(f"gate_engaged   : {report['gate_engaged']}")
+        print(f"gate_closed    : {report['gate_closed']}")
+        print(f"cases          : {report['total']}")
+        print(f"passed         : {report['passed']}")
+        print(f"failed         : {report['failed']}")
+
+    if getattr(args, "report", None):
+        report_path = Path(args.report)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(
+            json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True)
+        )
+        print(f"\nreport written: {report_path}", file=sys.stderr)
+
+    return 0 if report["failed"] == 0 and report["gate_closed"] else 1
 
 
 # ---------------------------------------------------------------------------
@@ -4889,6 +4924,12 @@ def build_parser() -> argparse.ArgumentParser:
     eval_cmd.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     eval_cmd.add_argument("--save", action="store_true", help="write result to lane results/ directory")
     eval_cmd.add_argument("--report", metavar="PATH", help="write JSON report to file")
+    eval_cmd.add_argument(
+        "--modality",
+        choices=["audio", "vision", "sensorimotor"],
+        default="vision",
+        help="sensorium lane modality to evaluate (default: vision)",
+    )
     eval_cmd.add_argument(
         "--audit",
         metavar="PATH",

@@ -1,0 +1,1 @@
+"""Sensorimotor pack artifacts."""

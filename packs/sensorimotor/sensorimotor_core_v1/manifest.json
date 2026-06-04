@@ -1,0 +1,22 @@
+{
+  "pack_id": "sensorimotor_core_v1",
+  "modality": "sensorimotor",
+  "compiler_version": "sensorimotor-compiler-v1",
+  "basis_version": "sensorimotor-basis-v1",
+  "cl41_dim": 32,
+  "gate_engaged": false,
+  "projection_unit": "quantized_proprioceptive_signal",
+  "efferent": false,
+  "event_order": [
+    "proprio.pose",
+    "proprio.velocity",
+    "haptic.force_torque",
+    "haptic.contact",
+    "actuator.state"
+  ],
+  "rules": [
+    "sensorimotor/proprioception is afferent feedback",
+    "motor commands remain efferent and governed by EfferentGate",
+    "no robot, actuator, trajectory executor, tool invocation, or skill invocation is present"
+  ]
+}
