@@ -39,7 +39,7 @@ solver**, not at the operation layer.
 |---|---|
 | Held-hypothesis reader (P1–P4: state, constraint-propagation, lookback, contemplate) | **Shipped, wired into serving** candidate-graph |
 | `HYPOTHESIS_CAP`, vault>packs>audit precedence | already set/enforced (0174 OQ#1/#3 moot) |
-| `lifecycle.py` GSM8K-scoring dispatch | **inert** (admits 0/50) — retirable in 5a |
+| `lifecycle.py` GSM8K-scoring dispatch | **retired in Phase 5a** (commit `3fd3172`, ancestor of HEAD `8327c6b`) — was inert (admitted 0/50) |
 | `lifecycle.py` / `audit.py` reader surface | **load-bearing** for the ADR-0172 teaching corridor — **keep** |
 | Solver operation kinds | **8 already exist** (verified by discovery): `add`, `subtract`, `transfer`, `multiply`, `divide`, `apply_rate`, `compare_additive`, `compare_multiplicative`. Missing arithmetic op kinds is **not** the blocker. |
 | **Live audit of all 44 refusals (ran `parse_and_solve` on `main`)** | **44/44 refuse at `branches_enumerated = 0`** — i.e. *upstream of the solver*. No branch is built, so the 8 operation kinds are **never reached**. `rate`/`ratio` also exist as first-class `SEMANTIC_ROLES`/`QUESTION_FORMS` (`binding_graph/model.py:42–65`); only `percent`/`accumulate` lack a named op-kind — moot while nothing reaches the solver. |
@@ -47,14 +47,22 @@ solver**, not at the operation layer.
 
 ## 2. The actual remaining work (ADR-0174 amended Phase 5)
 
-### Phase 5a — retire the inert parallel parser (structural, ~0 lift)
-Retire the GSM8K-scoring-only inert dispatch (`_try_comprehension_reader` /
-`_try_reader_for_question`) + adapter + `use_reader` plumbing. Net **−1,038 LOC**
-(code + tests). **Keep** `lifecycle.py`/`audit.py` — their reader *refusals* feed
-the ADR-0172 math-contemplation teaching corridor (`teaching/math_*`,
-`evals/flywheel_demo`, `core/cli.py`). Low-risk; single-path serving.
-Acceptance: 6/44/0 byte-identical, capability-axis lanes 100% `wrong=0`,
-pinned-SHAs pass.
+> **Runway status (2026-06-03):** Phase 5a **SHIPPED** in commit `3fd3172`
+> (ancestor of HEAD `8327c6b`); the §9 completeness-gate precondition **LANDED**
+> in PR #534 (`e1bcdf6`). The live runway now starts at the ≤20-case validation
+> sub-corpus (§4 item 2), then **Phase 5b** (emission/representation) — the only
+> remaining capability work.
+
+### Phase 5a — retire the inert parallel parser (SHIPPED in `3fd3172`)
+**Done.** Commit `3fd3172` (ancestor of HEAD `8327c6b`) retired the
+GSM8K-scoring-only inert dispatch (`_try_comprehension_reader` /
+`_try_reader_for_question`) + adapter (`lifecycle_runtime_adapter.py`) +
+`use_reader` / `comprehension_reader_questions` plumbing. Net **−1,038 LOC**
+(code + tests). `lifecycle.py`/`audit.py` were **kept** — their reader *refusals*
+feed the ADR-0172 math-contemplation teaching corridor (`teaching/math_*`,
+`evals/flywheel_demo`, `core/cli.py`). Single-path serving.
+Acceptance **met and re-verified at HEAD:** train_sample 6/44/0 byte-identical
+(all 44 refusals at `branches_enumerated=0`), completeness-guard suite green.
 
 ### Phase 5b — emission / representation buildout (semantic — the real lift)
 "This is where `correct` climbs toward 25. It is not a refactor." **Verified
@@ -79,8 +87,9 @@ ops behind the same admissibility predicates is lower-risk than new solver math.
 
 **5b first PR (smallest verified-tractable slice):** pick the emission failure mode
 with the highest count whose representation is bounded — and prove it reaches branch
-enumeration on ≥1 case without breaking `wrong=0`. **But the §9 completeness-gate
-precondition lands before any emission PR.**
+enumeration on ≥1 case without breaking `wrong=0`. The §9 completeness-gate
+precondition **landed in PR #534** (`e1bcdf6`); its driver
+(`tests/test_candidate_graph_completeness_guard.py`) is green at HEAD.
 
 ## 3. Test anchors (reusable, relabeled to 5a/5b)
 1. **Serving gate (`gsm8k_math`):** 5a byte-identical 6/44/0; 5b climbs
@@ -94,13 +103,17 @@ precondition lands before any emission PR.**
    hard negatives are the first deposits into it. Author before 5b measurement.
 
 ## 4. Corrected sequencing
-0. **Precondition (§9):** harden the comparative-multiplicative completeness tripwire so a dropped `<N>×` clause refuses (as `twice` does). 5b emission on these shapes is unsafe until this lands. Driver test is FINAL and RED on `main` (see §9).
+
+> **Status (2026-06-03):** items 0, 1, and 3 are **DONE**. The live runway starts
+> at item 2 (the sub-corpus), then item 4 (Phase 5b).
+
+0. **Precondition (§9) — LANDED (PR #534, `e1bcdf6`).** The comparative-multiplicative completeness tripwire now refuses a dropped `<N>×` clause (as `twice` does). The driver `tests/test_candidate_graph_completeness_guard.py` pins the §9 hard-negative matrix (10 no-ref `<N> times` cases + with-ref must-solve + must-still-refuse controls) and is **green** at HEAD `8327c6b`. The "RED on `main`" claim in §9 is the pre-landing measurement.
 1. **5b gating analysis — done (§8):** the **emission/representation** audit ran and the 32 no-injection cases are sub-classified by representation. Highest-count bounded gap = **R1 derived/intermediate symbol (24/44)**.
-2. **Author the ≤20-case multi-step validation sub-corpus** (test anchor for 5b).
-3. **Phase 5a** (optional, can run in parallel — structural, low-risk).
+2. **Author the ≤20-case multi-step validation sub-corpus** (test anchor for 5b) — **next open step.**
+3. **Phase 5a — SHIPPED (`3fd3172`, ancestor of HEAD `8327c6b`):** the inert scoring-path dispatch was retired (−1,038 LOC); `lifecycle.py`/`audit.py` kept for the ADR-0172 corridor.
 4. **Phase 5b** — build the **emitter/representation** for R1 (derived-symbol) on the §8 near-pure exemplars (prove ≥1 case reaches `branches_enumerated > 0` and admits), each behind §3 gates **and the §9 precondition**. Not new operations — the 8 exist and are unreached.
 
-(Do **not** "land Phase 1" — shipped. Do **not** treat P3/P4 as the lever — shipped, metric flat.)
+(Do **not** "land Phase 1" — shipped. Do **not** treat P3/P4 as the lever — shipped, metric flat. Do **not** re-do Phase 5a — shipped in `3fd3172`.)
 
 ## 5. Relation to cross-subject testing
 5b maturing the math `DomainSolver`'s emission/representation is still the precondition
@@ -158,6 +171,13 @@ four near-pure exemplars above — move them from refused to admitted, `wrong=0`
 **But see §9 first — it is a hard precondition.**
 
 ## 9. ⚠ Latent `wrong=0` hazard surfaced by the live audit (gate gap)
+
+> **Status (2026-06-03):** the guard recommended below **LANDED in PR #534**
+> (`e1bcdf6`). Its hard-negative matrix lives in
+> `tests/test_candidate_graph_completeness_guard.py` (10 no-ref `<N> times` cases
+> + with-ref must-solve + must-still-refuse controls) and is **green** at HEAD
+> `8327c6b` (21 passed). The "RED on `main`" statements below are the point-in-time
+> pre-landing measurement, kept for provenance.
 
 Contrastive probes (not in the 50-case sample) surface a reproducible **admitted-wrong**
 path. **Use the parseable aggregate question form `"...do they have together?"`** — the
