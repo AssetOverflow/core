@@ -62,12 +62,12 @@ Each JSONL row has these fields:
 
 ## Baseline
 
-At creation on `origin/main` lineage after PR #534 plus the docs-only runway
-correction, and extended with the second R4/R5 positives (cv-0021/cv-0022), the
-intended baseline is:
+At creation the baseline was 4 solve / 18 refuse / 0 wrong. ADR-0207 §5 step 2
+landed the first Phase-5b flip — cv-0005 (R4 goal-residual) now solves on serving
+— moving the snapshot to:
 
-- 4 solve
-- 18 refuse
+- 5 solve
+- 17 refuse
 - 0 wrong
 
 The corpus deliberately includes both future positives and permanent

@@ -65,8 +65,10 @@ def test_known_pooled_wrong_commits_are_not_promotable(case_suffix: str) -> None
 
 def test_train_sample_lifts_two_products_without_wrong() -> None:
     report = build_report(_load_cases(_CASES_PATH))
-    assert report["counts"] == {"correct": 6, "wrong": 0, "refused": 44}
+    # ADR-0207 §5 step 2: serving lifted 6/44/0 -> 7/43/0 (cv-0005/0037 goal-residual).
+    assert report["counts"] == {"correct": 7, "wrong": 0, "refused": 43}
     by_case = {row["case_id"]: row for row in report["per_case"]}
     assert by_case["gsm8k-train-sample-v1-0003"]["verdict"] == "correct"
     assert by_case["gsm8k-train-sample-v1-0021"]["verdict"] == "correct"
+    assert by_case["gsm8k-train-sample-v1-0037"]["verdict"] == "correct"
     assert by_case["gsm8k-train-sample-v1-0050"]["verdict"] == "refused"

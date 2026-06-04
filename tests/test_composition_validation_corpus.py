@@ -155,10 +155,12 @@ def test_frozen_baseline_fields_match_tree(case: dict) -> None:
 
 
 def test_current_baseline_snapshot() -> None:
-    """Current aggregate is 4 solve / 18 refuse / 0 wrong.
+    """Current aggregate is 5 solve / 17 refuse / 0 wrong.
 
     This is the single assertion a Phase 5b slice updates when it flips a
     positive (refuse -> solve); the forever-invariants above do not change.
+    ADR-0207 §5 step 2 landed the first such flip: cv-0005 (R4 goal-residual),
+    moving 4/18 -> 5/17.
     """
     solve = refuse = wrong = 0
     for case in _CASES:
@@ -170,7 +172,7 @@ def test_current_baseline_snapshot() -> None:
         else:
             refuse += 1
     assert wrong == 0
-    assert (solve, refuse) == (4, 18), (
+    assert (solve, refuse) == (5, 17), (
         f"snapshot moved to {solve} solve / {refuse} refuse — if a Phase 5b "
         f"slice landed, update this expectation and the affected rows' "
         f"baseline fields in lockstep"

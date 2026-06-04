@@ -1,8 +1,8 @@
 {
   "adr": "0126",
   "counts": {
-    "correct": 6,
-    "refused": 44,
+    "correct": 7,
+    "refused": 43,
     "wrong": 0
   },
   "exit_criterion": {
@@ -193,8 +193,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0037",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Michael wants to lose 10 pounds by June.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0038",

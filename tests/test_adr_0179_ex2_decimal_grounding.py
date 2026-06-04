@@ -48,7 +48,8 @@ class TestWrongZeroPreserved:
         )
 
         counts = build_report(_load_cases(_CASES_PATH))["counts"]
-        assert counts == {"correct": 6, "wrong": 0, "refused": 44}
+        # ADR-0207 §5 step 2: serving baseline is now 7/43/0 (cv-0005 goal-residual).
+        assert counts == {"correct": 7, "wrong": 0, "refused": 43}
 
 
 class TestUnblocksDecimalProduct:

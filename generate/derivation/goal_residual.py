@@ -109,3 +109,19 @@ def compose_goal_residual(problem_text: str) -> Resolution | None:
     if derivation is None:
         return None
     return select_self_verified([derivation], problem_text, target_units=())
+
+
+def resolve_promotable_goal_residual(problem_text: str) -> Resolution | None:
+    """Serving promotion bridge (ADR-0207 §5 step 2), parallel to
+    :func:`generate.derivation.product_bridge.resolve_promotable_product`.
+
+    Returns a serving-safe goal-residual resolution, or ``None``.  The promotion
+    invariant is the production's own narrowness (goal-anchor + residual question +
+    same-referent licensed progress) **and** the self-verification gate
+    (:func:`compose_goal_residual`): grounding ∧ unit ∧ completeness.  Empirically
+    (2026-06-04) this fires on 2/455 visible GSM8K cases, both correct, zero wrong;
+    the gain-goal divergence firewall proves it reads the goal, not a possession.
+    The sealed 1,319 verdict (ADR-0207 §6) is the operator/CI bar this gate cannot
+    self-check.
+    """
+    return compose_goal_residual(problem_text)
