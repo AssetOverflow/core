@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from algebra.backend import vault_recall, vault_recall_batch
 from algebra.cga import null_project
+from core.array_codec import decode_array, encode_array
 from core.epistemic_state import EpistemicState
 from core.physics.energy import EnergyClass, EnergyProfile
 from teaching.epistemic import ADMISSIBLE_AS_EVIDENCE, EpistemicStatus
@@ -387,3 +388,49 @@ class VaultStore:
 
     def __len__(self) -> int:
         return len(self._versors)
+
+    def to_dict(self) -> dict:
+        """Serialize the vault to a bit-exact, JSON-safe dict (Shape B+ Phase B).
+
+        Pure (de)serialization, NOT normalization (``vault/store.py`` is a
+        CLAUDE.md forbidden normalization site): the persisted versors are the
+        exact bytes currently in the store — already null-projected at their last
+        reproject boundary during the live session — encoded losslessly via the
+        array codec. The derived ``_exact_index`` and the lazy ``_matrix_cache``
+        are NOT persisted; they are rebuilt deterministically on load. Metadata
+        is assumed JSON-safe (it is, by construction: primitives only).
+        """
+        return {
+            "versors": [encode_array(v) for v in self._versors],
+            "metadata": [dict(m) for m in self._metadata],
+            "store_count": int(self._store_count),
+            "reproject_interval": int(self._reproject_interval),
+            "max_entries": self._max_entries,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> "VaultStore":
+        """Reconstruct a VaultStore from ``to_dict`` output.
+
+        The load path performs NO reprojection / normalization / repair: it
+        restores the exact persisted versors (bit-identical, so exact CGA recall
+        is preserved) and rebuilds only the derived ``_exact_index``. The lazy
+        ``_matrix_cache`` is left None and rebuilt on the first recall. This is
+        the bright line — restoring bytes is not a normalization site.
+        """
+        store = cls(
+            reproject_interval=int(payload["reproject_interval"]),
+            max_entries=payload["max_entries"],
+        )
+        store._versors = deque(
+            (decode_array(v) for v in payload["versors"]),
+            maxlen=store._max_entries,
+        )
+        store._metadata = deque(
+            (dict(m) for m in payload["metadata"]),
+            maxlen=store._max_entries,
+        )
+        store._store_count = int(payload["store_count"])
+        store._rebuild_index()  # pure: key -> indices over the restored exact bytes
+        store._matrix_cache = None  # derived; lazily rebuilt on first recall
+        return store
