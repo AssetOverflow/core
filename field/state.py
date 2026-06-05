@@ -12,14 +12,97 @@ reference to the array passed in and expect coherence.
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 import numpy as np
+
+from core.array_codec import (
+    decode_array,
+    decode_optional_array,
+    encode_array,
+    encode_optional_array,
+)
 
 if TYPE_CHECKING:
     from core.physics.energy import EnergyProfile
     from core.physics.valence import ValenceBundle
 
 _EXPECTED_COMPONENTS = 32
+
+
+def _encode_energy(energy: "EnergyProfile | None") -> dict[str, Any] | None:
+    if energy is None:
+        return None
+    return {
+        "raw": float(energy.raw),
+        "energy_class": energy.energy_class.value,
+        "convergence_density": int(energy.convergence_density),
+        "activation_count": int(energy.activation_count),
+        "last_activation_cycle": int(energy.last_activation_cycle),
+        "coherence_residual": float(energy.coherence_residual),
+        "aspect_weight": float(energy.aspect_weight),
+        "anchor_adjacent": bool(energy.anchor_adjacent),
+    }
+
+
+def _decode_energy(payload: dict[str, Any] | None) -> "EnergyProfile | None":
+    if payload is None:
+        return None
+    from core.physics.energy import EnergyClass, EnergyProfile
+
+    return EnergyProfile(
+        raw=payload["raw"],
+        energy_class=EnergyClass(payload["energy_class"]),
+        convergence_density=payload["convergence_density"],
+        activation_count=payload["activation_count"],
+        last_activation_cycle=payload["last_activation_cycle"],
+        coherence_residual=payload["coherence_residual"],
+        aspect_weight=payload["aspect_weight"],
+        anchor_adjacent=payload["anchor_adjacent"],
+    )
+
+
+def _encode_valence(valence: "ValenceBundle | None") -> dict[str, Any] | None:
+    if valence is None:
+        return None
+    return {
+        # sorted for deterministic serialization of the unordered frozenset
+        "affective": sorted(valence.affective),
+        "force": valence.force.value,
+        "emphasis": {
+            "focus_element": valence.emphasis.focus_element,
+            "mechanism": valence.emphasis.mechanism,
+            "degree": valence.emphasis.degree,
+        },
+        "polarity": {
+            "value": valence.polarity.value,
+            "kind": valence.polarity.kind,
+        },
+        "orientation": {
+            "direction": valence.orientation.direction,
+            "target": valence.orientation.target,
+            "preposition_source": valence.orientation.preposition_source,
+        },
+    }
+
+
+def _decode_valence(payload: dict[str, Any] | None) -> "ValenceBundle | None":
+    if payload is None:
+        return None
+    from core.physics.valence import (
+        EmphasisProfile,
+        ForceClass,
+        OrientationSpec,
+        PolaritySpec,
+        ValenceBundle,
+    )
+
+    return ValenceBundle(
+        affective=frozenset(payload["affective"]),
+        force=ForceClass(payload["force"]),
+        emphasis=EmphasisProfile(**payload["emphasis"]),
+        polarity=PolaritySpec(**payload["polarity"]),
+        orientation=OrientationSpec(**payload["orientation"]),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +151,35 @@ class FieldState:
             holonomy=self.holonomy,
             energy=self.energy,
             valence=self.valence,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a bit-exact, JSON-safe dict (Shape B+ persistence).
+
+        The multivector arrays (``F``, ``holonomy``) go through the byte-exact
+        array codec so ``versor_condition`` and ``trace_hash`` survive a
+        save/load cycle unchanged; scalar floats/strings on the energy/valence
+        side round-trip exactly through JSON.
+        """
+        return {
+            "F": encode_array(self.F),
+            "node": int(self.node),
+            "step": int(self.step),
+            "holonomy": encode_optional_array(self.holonomy),
+            "energy": _encode_energy(self.energy),
+            "valence": _encode_valence(self.valence),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> FieldState:
+        """Reconstruct a FieldState from ``to_dict`` output (exact round-trip)."""
+        return cls(
+            F=decode_array(payload["F"]),
+            node=int(payload["node"]),
+            step=int(payload["step"]),
+            holonomy=decode_optional_array(payload.get("holonomy")),
+            energy=_decode_energy(payload.get("energy")),
+            valence=_decode_valence(payload.get("valence")),
         )
 
 
