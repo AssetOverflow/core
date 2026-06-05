@@ -92,6 +92,37 @@ def test_minimum_engine_loop_is_deterministic_and_stores_generated_state() -> No
     assert not np.array_equal(recalled[0]["versor"], initial.F)
 
 
+def test_generated_final_state_satisfies_versor_condition_by_construction() -> None:
+    """The generation walk closes by construction — no final re-closure needed.
+
+    Persona voicing (``versor_apply``), score-weighted recall transitions
+    (``propagate_step`` = ``versor_apply``), and the walk rotors are all built
+    from ``versor_apply`` / Spin-manifold rotors, so ``versor_condition < 1e-6``
+    holds on the OUTPUT by construction.  This is the regression lock that lets
+    ``generate()`` drop the forbidden-site ``_close_final_state`` re-closure
+    (CLAUDE.md: no hot-path normalizers in ``generate/stream.py``).  Exercises
+    the recall path (seeded vault) and a non-identity voicing motor, not just
+    the bare walk.
+    """
+    vocab = _minimal_vocab()
+    persona = PersonaMotor.identity()
+    persona.M = _positive_unit_reflector(7)  # real M·F·reverse(M) voicing
+
+    vault = VaultStore()
+    vault.store(inject(["pneuma"], vocab).F, metadata={"role": "assistant"})
+    vault.store(inject(["truth"], vocab).F, metadata={"role": "assistant"})
+
+    result = generate(
+        inject(["logos", "arche"], vocab), vocab, persona, max_tokens=6, vault=vault
+    )
+
+    vc = versor_condition(result.final_state.F)
+    assert vc < 1e-6, (
+        f"generated final_state versor_condition {vc:.3e} >= 1e-6 — the walk "
+        "must close by construction without a final re-closure"
+    )
+
+
 def test_session_context_respond_preserves_and_vaults_final_state() -> None:
     session = SessionContext(vocab=_minimal_vocab())
     initial = session.ingest(["logos", "arche"])

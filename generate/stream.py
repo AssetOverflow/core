@@ -18,7 +18,6 @@ import numpy as np
 from field.state import FieldState
 from field.propagate import propagate_step
 from algebra.rotor import rotor_power, word_transition_rotor
-from algebra.versor import unitize_versor
 from generate.admissibility import (
     AdmissibilityRegion,
     AdmissibilityTraceStep,
@@ -129,17 +128,6 @@ def _voiced_state(state: FieldState, persona) -> FieldState:
     )
 
 
-def _close_final_state(state: FieldState) -> FieldState:
-    return FieldState(
-        F=unitize_versor(state.F),
-        node=state.node,
-        step=state.step,
-        holonomy=state.holonomy,
-        energy=state.energy,
-        valence=state.valence,
-    )
-
-
 def _softmax(scores: list[float]) -> list[float]:
     """Numerically stable softmax over a list of floats."""
     if not scores:
@@ -170,16 +158,15 @@ def _recall_state(state: FieldState, vault, top_k: int) -> tuple[FieldState, int
     if not hits:
         return state, 0
 
-    # Drift fix 2: score-weighted vault recall transitions.
+    # Recall-confidence weighting (a selection policy, NOT normalization/repair).
     #
-    # Previously every recalled versor was applied as a full rotor transition
-    # regardless of its recall score, giving a stale turn-3 hit the same
-    # influence as a high-confidence recent hit.
-    #
-    # Now each rotor is scaled by its softmax-normalised score weight, so the
-    # field moves proportionally to how strongly each hit was recalled.
-    # Hits with infinite score (exact self-matches) receive full weight 1.0
-    # and short-circuit the softmax path.
+    # Each recalled versor is applied as a rotor transition on the (telemetry-
+    # only) generation walk, scaled by its softmax-normalised recall score, so a
+    # stale low-confidence hit moves the field less than a high-confidence recent
+    # one (previously every hit applied at full weight). Hits with infinite score
+    # (exact self-matches) get full weight 1.0 and short-circuit the softmax path.
+    # Transitions are word_transition_rotor / propagate_step (closure-preserving
+    # by construction) — recall weighting, not a "drift fix".
     finite_hits = [h for h in hits if h["score"] != float("inf")]
     exact_hits = [h for h in hits if h["score"] == float("inf")]
 
@@ -638,7 +625,7 @@ def generate(
 
     return GenerationResult(
         tokens=tokens,
-        final_state=_close_final_state(current),
+        final_state=current,
         trajectory=trajectory,
         salience_top_k=salience_budget,
         candidates_used=candidates_used,
