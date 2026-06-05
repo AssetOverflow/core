@@ -1103,6 +1103,19 @@ INDEPENDENT_GOLD_LANES: tuple[IndependentGoldLane, ...] = (
         oracle_module="evals/dimensional/oracle.py",
         sut_import_prefixes=("generate.binding_graph",),
     ),
+    # The relational-metric lane (field-reasoner wedge): the geometric field reader
+    # (generate.relational_field_reader, which reads TEXT into conformal points) is
+    # the SUT, so its arithmetic gold oracle must share no code with the reader or
+    # the field engine it rides on.
+    IndependentGoldLane(
+        name="relational_metric",
+        oracle_module="evals/relational_metric/oracle.py",
+        sut_import_prefixes=(
+            "generate.relational_field_reader",
+            "algebra",
+            "field",
+        ),
+    ),
 )
 
 _DEDUCTIVE_CASE_FILES: tuple[str, ...] = (
