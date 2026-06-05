@@ -137,3 +137,60 @@ def test_discovery_candidate_from_dict_round_trips() -> None:
     roundtrip = DiscoveryCandidate.from_dict(candidate.as_dict())
 
     assert roundtrip == candidate
+
+
+# --- ADR-0146 byte-stability + store-path coverage (added 2026-06-05) ----------
+# The round-trip tests above prove OBJECT equality. The cross-reboot identity the
+# telos needs (the shelved EngineIdentity content-hash) additionally requires the
+# on-disk serialization to be IDEMPOTENT (save->load->save reproduces the bytes)
+# and DETERMINISTIC (same logical state -> same bytes across independent stores).
+# These lock that. They are deliberately NOT golden-format pins: a *deterministic*
+# format change is harmless for a content hash (it changes consistently), so the
+# real hazards are non-idempotence, run-to-run nondeterminism, and a broken store
+# path -- not the exact byte layout (which must stay free to evolve under a
+# versioned schema, lest every legitimate field-add become a death-and-rebirth).
+
+
+def test_recognizers_save_load_save_is_idempotent(tmp_path) -> None:
+    store = EngineStateStore(tmp_path)
+    recs = [_recognizer("set-1"), _recognizer("set-2")]
+
+    store.save_recognizers(recs)
+    first = (tmp_path / "recognizers.jsonl").read_bytes()
+    store.save_recognizers(store.load_recognizers())
+
+    assert (tmp_path / "recognizers.jsonl").read_bytes() == first
+
+
+def test_recognizers_save_is_deterministic_across_instances(tmp_path) -> None:
+    recs = [_recognizer("set-1"), _recognizer("set-2")]
+
+    EngineStateStore(tmp_path / "a").save_recognizers(recs)
+    EngineStateStore(tmp_path / "b").save_recognizers(recs)
+
+    assert (
+        (tmp_path / "a" / "recognizers.jsonl").read_bytes()
+        == (tmp_path / "b" / "recognizers.jsonl").read_bytes()
+    )
+
+
+def test_discovery_store_round_trips_nonempty_candidate(tmp_path) -> None:
+    # The only existing non-empty discovery test bypasses EngineStateStore
+    # (as_dict -> from_dict in memory); this exercises the STORE's save+load
+    # path for a non-empty candidate, which was previously untested.
+    store = EngineStateStore(tmp_path)
+    candidate = _candidate()
+
+    store.save_discovery_candidates([candidate])
+
+    assert store.load_discovery_candidates() == [candidate]
+
+
+def test_discovery_store_save_load_save_is_idempotent(tmp_path) -> None:
+    store = EngineStateStore(tmp_path)
+
+    store.save_discovery_candidates([_candidate()])
+    first = (tmp_path / "discovery_candidates.jsonl").read_bytes()
+    store.save_discovery_candidates(store.load_discovery_candidates())
+
+    assert (tmp_path / "discovery_candidates.jsonl").read_bytes() == first
