@@ -60,6 +60,14 @@ Allowed sites:
 - `algebra/versor.py` for algebra-owned sandwich closure.
 - `sensorium/*/canonical.py` and pack-governed modality compiler construction
   boundaries for pinned signal canonicalization and quantization.
+- `session/context.py` for session-scoped **semantic anchoring** of the field
+  toward the session concept-attractor (the anchor pull, hemisphere
+  consistency).  Allowed ONLY because every such op (1) preserves
+  `versor_condition` BY CONSTRUCTION — composed from `rotor_power` /
+  `word_transition_rotor` / `versor_apply` on the Spin manifold, never a
+  post-hoc `unitize`/grade-projection — AND (2) carries semantic meaning in
+  the cognitive model.  An op that needs a post-hoc closure repair (the
+  rejected `_slerp_toward`) fails clause (1) and stays forbidden.
 
 Forbidden sites:
 
@@ -71,6 +79,15 @@ Forbidden sites:
 Do not add drift repair, grade projection, watchdogs, timers, hot-path
 normalizers, or monitoring functions whose only purpose is to repair another
 function.
+
+**The bright line — semantic anchoring vs. drift repair.**  An op is *semantic
+anchoring* (allowed at the sites above) iff it preserves `versor_condition` by
+construction AND expresses a relation in the cognitive model.  It is *drift
+repair* (forbidden) iff its purpose is to restore a numerical invariant a prior
+function should have preserved.  Closure of field transitions is owned solely
+by `algebra/versor.py` (`_close_applied_versor`); no other site may "fix" it.
+Naming must not disguise the distinction: an op that anchors semantically must
+not be named or documented as a "drift fix".
 
 CGA null vectors are not unit versors.  Preserve null vectors as null vectors.
 

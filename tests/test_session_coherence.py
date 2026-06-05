@@ -108,8 +108,8 @@ def test_repeated_prompt_accumulates_field_and_stays_prompt_coherent() -> None:
         assert prompt_score > random_score
 
 
-def test_anchor_pull_output_satisfies_versor_condition() -> None:
-    """_anchor_pull must not break the versor condition (W-015 fix contract).
+def test_session_anchor_pull_output_satisfies_versor_condition() -> None:
+    """_session_anchor_pull must not break the versor condition (W-015 fix contract).
 
     The previous _slerp_toward implementation interpolated on S^31 rather than
     the Spin sub-manifold, producing versor_condition values up to 38.58.
@@ -132,9 +132,9 @@ def test_anchor_pull_output_satisfies_versor_condition() -> None:
         valence=session.state.valence,
     )
 
-    pulled = session._anchor_pull(drifted_state)
+    pulled = session._session_anchor_pull(drifted_state)
     vc = versor_condition(pulled.F)
     assert vc < 1e-6, (
-        f"_anchor_pull output violated versor_condition: {vc:.3e} >= 1e-6. "
+        f"_session_anchor_pull output violated versor_condition: {vc:.3e} >= 1e-6. "
         "The rotor-geodesic path must stay on the Spin sub-manifold by construction."
     )
