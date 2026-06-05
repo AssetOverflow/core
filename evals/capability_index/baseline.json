@@ -1,0 +1,38 @@
+{
+  "capability_score": 0.919641,
+  "coverage_geomean": 0.919641,
+  "coverage_micro": 0.995962,
+  "accuracy_micro": 1.0,
+  "breadth": 3,
+  "min_domain_coverage": 0.833333,
+  "wrong_total": 0,
+  "assert_mode_valid": true,
+  "deterministic_digest": "115389d285babb5980b8b31c40d3a1c58ded1e1f9ae08ec428090bba18d42ed0",
+  "domains": [
+    {
+      "domain": "deductive_logic",
+      "correct": 716,
+      "wrong": 0,
+      "refused": 0,
+      "coverage": 1.0,
+      "accuracy": 1.0
+    },
+    {
+      "domain": "dimensional",
+      "correct": 10,
+      "wrong": 0,
+      "refused": 2,
+      "coverage": 0.833333,
+      "accuracy": 1.0
+    },
+    {
+      "domain": "relational_metric",
+      "correct": 14,
+      "wrong": 0,
+      "refused": 1,
+      "coverage": 0.933333,
+      "accuracy": 1.0
+    }
+  ],
+  "not_covered": []
+}
