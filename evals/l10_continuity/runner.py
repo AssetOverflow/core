@@ -15,18 +15,21 @@ and returns it. It makes NO pass/fail judgement — that is ``predicates.py`` �
 it never repairs, normalizes, or mutates field state (it only reads what the real
 pipeline produced).
 
-What a reboot restores (today, Shape B / ADR-0146): recognizers, discovery
-candidates, and ``turn_count`` — and NOTHING else. The lived field, vault,
-session graph, referents, and session anchor are process-local and discarded on
-exit. The ``booted_segment`` tag on each record exists precisely so the
-reboot-transparency predicate (P2b) can locate where a rebooted run diverges
-from an uninterrupted one.
+What a reboot restores (Shape B+ / engine_state schema v2): recognizers,
+discovery candidates, ``turn_count``, AND the full lived session state — field,
+vault, session graph, referents, session anchor, and dialogue — via
+``SessionContext.snapshot/restore``. So a reboot now resumes the SAME life and
+P2b is transparent. (Under the original Shape B / ADR-0146 only the first three
+survived and the lived field/vault were discarded — "many lives sharing a
+checkpoint".) The ``booted_segment`` tag on each record lets the
+reboot-transparency predicate (P2b) confirm a rebooted run is byte-identical to
+an uninterrupted one.
 """
 
 from __future__ import annotations
 
 import resource
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -91,10 +94,13 @@ def _new_runtime(config: RuntimeConfig, engine_state_dir: Path) -> ChatRuntime:
     """Construct a ChatRuntime bound to the checkpoint dir.
 
     Reconstruction is the reboot: ``ChatRuntime.__init__`` loads the on-disk
-    engine-state checkpoint when one exists (recognizers / candidates /
-    turn_count), so a second instance over the same directory resumes from the
-    last durable checkpoint.
+    engine-state checkpoint when one exists, so a second instance over the same
+    directory resumes from the last durable checkpoint. The continuity lane is
+    the resume-mode lane by definition, so it forces ``persist_session_state`` on
+    (the full lived field/vault/anchor/graph survive reboot — what P2b measures).
     """
+    if not config.persist_session_state:
+        config = replace(config, persist_session_state=True)
     return ChatRuntime(config=config, engine_state_path=engine_state_dir)
 
 

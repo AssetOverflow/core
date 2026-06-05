@@ -85,7 +85,7 @@ def test_engine_state_store_manifest_written(tmp_path) -> None:
     store.save_manifest(turn_count=7)
 
     manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
-    assert manifest["schema_version"] == 1
+    assert manifest["schema_version"] == 2  # Shape B+ (v2 adds session_state.json)
     assert manifest["turn_count"] == 7
     assert isinstance(manifest["written_at_revision"], str)
 

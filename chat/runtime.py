@@ -689,6 +689,15 @@ class ChatRuntime:
         self._recognizer_registry = RecognizerRegistry.from_recognizers(recognizers)
         self._pending_candidates = store.load_discovery_candidates()
         self._turn_count = int(manifest.get("turn_count", 0))
+        # Shape B+ (schema v2): restore the lived session state into the live
+        # context so a reboot resumes the SAME life (field/vault/anchor/graph/
+        # referents/dialogue). Opt-in (config.persist_session_state); None for a
+        # v1 checkpoint -> fresh session (the historical Shape B behavior), so old
+        # checkpoints stay loadable.
+        if self.config.persist_session_state and self._context is not None:
+            session_snapshot = store.load_session_state()
+            if session_snapshot is not None:
+                self._context.restore(session_snapshot)
         # W-024 / ADR-0158 — buffer reboot event for emission when sink attaches.
         from engine_state import _git_revision
         self._pending_reboot_payload = format_reboot_event_jsonl(
@@ -722,6 +731,13 @@ class ChatRuntime:
                 for c in candidates_to_save
             ]
         store.save_discovery_candidates(candidates_to_save)
+        # Shape B+ (schema v2): persist the lived session state (field, vault,
+        # anchor, graph, referents, dialogue) BEFORE the manifest, so the
+        # manifest stays the last durable act — the commit marker for the turn.
+        # Opt-in (config.persist_session_state): a deliberate resume mode, off by
+        # default so one-shot runtimes don't pay the per-turn snapshot cost.
+        if self._context is not None and self.config.persist_session_state:
+            store.save_session_state(self._context.snapshot())
         store.save_manifest(self._turn_count)
 
     def record_recognition_example(

@@ -140,24 +140,28 @@ def test_p2b_pre_reboot_invariant_holds_on_real_soak(tmp_path: Path) -> None:
         assert transparency.first_divergence >= reboot_turn
 
 
-def test_p2b_documents_current_resume_gap(tmp_path: Path) -> None:
-    """Diagnostic: TODAY (Shape B, field/vault not persisted) a reboot is NOT
-    transparent — the first post-reboot turn diverges because the lived field
-    and vault were discarded. This test pins that empirical reality so that if
-    persistence is later built, it flips and we are forced to update the claim.
+def test_p2b_reboot_is_transparent(tmp_path: Path) -> None:
+    """Resume-as-same-life: a reboot is FULLY transparent.
+
+    With Shape B+ persistence wired (SessionContext.snapshot/restore ->
+    engine_state schema v2), the lived field/vault/anchor/graph/referents survive
+    a reboot, so [run K -> reboot -> run M] is byte-identical to the
+    uninterrupted [run K+M]. This is the load-bearing L10 proof — it FLIPPED from
+    the Shape-B 'many lives sharing a checkpoint' gap the moment persistence
+    landed. If this regresses to non-transparent, resume-as-same-life broke.
     """
     reboot_turn = 3
     rebooted = run_soak(
         _SOAK_N, engine_state_dir=tmp_path / "r", reboot_at=(reboot_turn,)
     )
     baseline = run_soak(_SOAK_N, engine_state_dir=tmp_path / "base")
-    _, transparency = evaluate_p2b_reboot_transparency(rebooted, baseline)
-    assert not transparency.post_reboot_transparent, (
-        "Reboot transparency is unexpected under Shape B: if this fails, the "
-        "lived field/vault are now surviving reboot — update the L10 spike doc "
-        "and this assertion to assert transparency."
+    outcome, transparency = evaluate_p2b_reboot_transparency(rebooted, baseline)
+    assert outcome.passed, outcome.detail
+    assert transparency.post_reboot_transparent, (
+        "Reboot is no longer transparent — the lived field/vault stopped "
+        "surviving reboot. Resume-as-same-life regressed."
     )
-    assert transparency.first_divergence == reboot_turn
+    assert transparency.first_divergence is None
 
 
 def test_p2b_bites_on_pre_reboot_divergence() -> None:
