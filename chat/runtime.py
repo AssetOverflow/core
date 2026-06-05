@@ -505,6 +505,15 @@ class ChatResponse:
     dispatch_trace: DispatchTrace | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class IdleTickResult:
+    """Outcome of one ``idle_tick`` — proposal-only learning, never ratification."""
+
+    candidates_contemplated: int
+    proposals_created: int
+    pending_proposals: int
+
+
 class ChatRuntime:
     def __init__(
         self,
@@ -683,6 +692,17 @@ class ChatRuntime:
             self.config, get_git_revision()
         )
         self._loaded_engine_identity: str = ""
+        # CL — the persistent reviewed-learning proposal log. ``idle_tick()``
+        # advances it during idle (proposal-only); it lives alongside the engine
+        # state so the learning backlog survives reboot. None for no_load_state
+        # (ephemeral runtimes don't accumulate a learning lineage).
+        self._proposal_log: Any | None = None
+        if self._engine_state_store is not None:
+            from teaching.proposals import ProposalLog
+
+            self._proposal_log = ProposalLog(
+                path=self._engine_state_store.path / "proposals.jsonl"
+            )
         # L11 — set True on reboot when the stamped checkpoint identity differs
         # from the recomputed identity (the ratified substrate changed while down).
         self.identity_continuity_break: bool = False
@@ -782,6 +802,75 @@ class ChatRuntime:
             parent_engine_identity=self._loaded_engine_identity,
         )
         self._loaded_engine_identity = self._engine_identity
+
+    def _count_pending_proposals(self) -> int:
+        if self._proposal_log is None:
+            return 0
+        return sum(
+            1
+            for entry in self._proposal_log.current_state().values()
+            if entry.get("state") == "pending"
+        )
+
+    def idle_tick(self) -> "IdleTickResult":
+        """Advance the reviewed-learning flywheel during idle (NO user turn).
+
+        This is how the engine "learns while it lives": between turns it turns its
+        lived experience (the pending discovery backlog) into reviewable teaching
+        proposals. It contemplates each pending candidate (enrichment) and runs
+        the replay-gated ``propose_from_candidate``, which leaves a PROPOSAL-ONLY
+        ``pending`` entry in the persistent proposal log.
+
+        Teaching safety (CLAUDE.md): an idle tick NEVER ratifies. Ratification —
+        moving a proposal to ``accepted`` and appending to the corpus — stays
+        HITL via ``teaching/review``. The tick only *proposes*; the reviewed loop
+        is not bypassed or duplicated.
+
+        The proposal log and the candidate backlog both live in the engine-state
+        dir, so this learning progress persists across reboot (CL-2).
+        """
+        if self._proposal_log is None or not self._pending_candidates:
+            return IdleTickResult(0, 0, self._count_pending_proposals())
+
+        from teaching.contemplation import contemplate
+        from teaching.proposals import (
+            ProposalError,
+            TeachingChainProposal,
+            _current_revision,
+            propose_from_candidate,
+        )
+        from teaching.source import ProposalSource
+
+        vault_probe = (
+            _vault_probe_for_context(self._context) if self._context else None
+        )
+        contemplated = [
+            contemplate(candidate, vault_probe=vault_probe)
+            for candidate in self._pending_candidates
+        ]
+        created = 0
+        for candidate in contemplated:
+            source = ProposalSource(
+                kind="contemplation",
+                source_id=candidate.candidate_id,
+                emitted_at_revision=_current_revision(),
+            )
+            try:
+                result = propose_from_candidate(
+                    candidate, log=self._proposal_log, source=source
+                )
+            except ProposalError:
+                continue
+            if isinstance(result, TeachingChainProposal):
+                created += 1
+        # Persist the advanced backlog (candidates + lineage); the proposal log
+        # is already file-backed.
+        self.checkpoint_engine_state()
+        return IdleTickResult(
+            candidates_contemplated=len(contemplated),
+            proposals_created=created,
+            pending_proposals=self._count_pending_proposals(),
+        )
 
     def record_recognition_example(
         self,
