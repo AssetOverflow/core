@@ -42,11 +42,38 @@ def dimensional_result() -> DomainResult:
     return DomainResult("dimensional", correct, wrong, refused)
 
 
-#: The reasoning domains currently composed into the index (self-loading lanes).
+def comprehension_set_membership_result() -> DomainResult:
+    from evals.comprehension.set_membership_runner import run
+
+    r = run()
+    return DomainResult("comprehension_set_membership", r["correct"], r["wrong"], r["refused"])
+
+
+def comprehension_syllogism_result() -> DomainResult:
+    from evals.comprehension.syllogism_runner import run
+
+    r = run()
+    return DomainResult("comprehension_syllogism", r["correct"], r["wrong"], r["refused"])
+
+
+def comprehension_total_ordering_result() -> DomainResult:
+    from evals.comprehension.total_ordering_runner import run
+
+    r = run()
+    return DomainResult("comprehension_total_ordering", r["correct"], r["wrong"], r["refused"])
+
+
+#: Domains composed into the index. The first three score reasoners on structured
+#: input; the comprehension_* lanes score the GENERAL READER on prose end-to-end
+#: (Phase 2a) — wired in only because each has real coverage with wrong=0, so the
+#: geomean stays honest (it reflects partial comprehension coverage, not a fake).
 ADAPTERS = (
     deductive_logic_result,
     relational_metric_result,
     dimensional_result,
+    comprehension_set_membership_result,
+    comprehension_syllogism_result,
+    comprehension_total_ordering_result,
 )
 
 
