@@ -17,9 +17,9 @@ import pytest
 from evals.deductive_logic.grounding import (
     MALFORMED_CASE,
     UNKNOWN_ENTITY,
+    UNSAFE_RULE,
     UNSAFE_SYMBOL,
     UNSUPPORTED_PREDICATE_ARITY,
-    UNSUPPORTED_QUANTIFIER,
     GroundingError,
     atom,
     lower_case,
@@ -125,14 +125,18 @@ def test_binary_relation_refuses_as_unsupported_arity() -> None:
     assert exc.value.reason == UNSUPPORTED_PREDICATE_ARITY
 
 
-def test_multi_variable_rule_refuses() -> None:
+def test_unsafe_rule_unbound_head_var_refuses() -> None:
+    """v1.5 supports multi-variable rules — but a rule whose HEAD variable is not
+    bound in the body is non-range-restricted (unsafe) and still refuses. (Range-
+    restricted multi-var rules like transitivity are exercised in
+    test_deductive_logic_relational_grounding.py.)"""
     case = {"entities": ["a"],
             "rules": [{"if": [{"predicate": "p", "var": "x", "polarity": True}],
                        "then": {"predicate": "q", "var": "y", "polarity": True}}],
             "query": {"predicate": "p", "entity": "a", "polarity": True}}
     with pytest.raises(GroundingError) as exc:
         lower_case(case)
-    assert exc.value.reason == UNSUPPORTED_QUANTIFIER
+    assert exc.value.reason == UNSAFE_RULE
 
 
 def test_empty_case_refuses() -> None:
