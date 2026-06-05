@@ -197,10 +197,8 @@ stand without it, and may later borrow it where it is geometrically honest.
 ```
 NL statement
    │
-   ▼  (1) STRUCTURAL PARSE — keyed on SYNTAX, not domain words
-        en_core_syntax_v1 (definitional layer, reviewed) supplies the
-        general structural skeleton: subject–predicate–object, modifiers,
-        quantifiers, connectives. Domain-agnostic.
+   ▼  (1) STRUCTURAL DECODE — recover subject / relation / object structure
+        (domain-agnostic; HOW this is done is the open fork below)
    │
    ▼  (2) GROUNDING-FILL — content fills the skeleton
         entities/relations resolved against packs + vault (known lemmas) or
@@ -213,11 +211,58 @@ NL statement
    ▼  MeaningGraph  ──projector──▶  reasoner input (binding-graph / proposition / grammar)
 ```
 
-The decisive design commitment: **step (1) keys on structure (syntax), step (2)
-on grounding (packs/vault).** A class of statement comprehends because of its
-*grammar*, which is domain-agnostic; the *content* that fills it varies by
+The decisive design commitment: **step (1) keys on structure, step (2) on
+grounding (packs/vault).** A class of statement comprehends because of its
+*structure*, which is domain-agnostic; the *content* that fills it varies by
 domain. This is what makes the organ general rather than a pile of recognizers —
 and it is exactly the property the overfit trap violates.
+
+### 5a. SPIKE FINDING (2026-06-05) — there is no general structural parser
+
+The original §5 above assumed `en_core_syntax_v1` could supply the structural
+parse. **The spike falsified that.** `en_core_syntax_v1` is a **24-entry lexicon
+of grammatical *terminology*** (`subject`, `predicate`, `agent_role`, `patient`,
+`object`, `modifier` as `NOUN` entries with `semantic_domains`). It is vocabulary
+*about* syntax, **not a grammar/parser for it.** It cannot parse "Alice is the
+mother of Bob" into S-P-O.
+
+What text→structure capability actually exists:
+
+- `generate/derivation` + `generate/math_candidate_parser` — **narrow regex/lexeme**, GSM8K-specific.
+- `generate/relational_field_reader.py` — **narrow regex**, sealed additive grammar (the shelved field-wedge reader).
+- `generate/proposition.py` :: `Proposition` — **field frame-resonance**, and it *does* already carry `subject` / `predicate` / `object_` (+ versors). **But** `FrameRegistry.select` is `max(frames, key=cga_inner)` — it **always** picks a best-match frame and **never refuses**. Structure without an honest refusal floor = a confabulation hazard if used as-is.
+
+So step (1) cannot lean on an existing general parser. **How to do the structural
+decode is now the load-bearing fork (§9 Q3).**
+
+### 5b. The structural-decode fork
+
+- **Path α — field standing-hand (decode).** Harvest S-P-O from the field's frame
+  resonance (`Proposition`), **add a refusal-first floor** (a minimum
+  inner-product / grounding gate, so a non-matching relation REFUSES instead of
+  forcing the argmax frame), then project to the neutral `MeaningGraph`. Keeps the
+  field on the *decode* side and the interlingua neutral. Aligned with the
+  "decoding not generating" thesis and the "field as a standing hand" doctrine,
+  and reuses substrate. *Required new work:* the refusal floor on frame selection
+  (today's `select` cannot refuse) + frame coverage for general relations.
+  *Risk:* frame coverage breadth; calibrating the refusal threshold so it neither
+  confabulates nor refuses everything.
+
+- **Path β — build a minimal deterministic structural parser** in-tree (POS +
+  a small dependency grammar → S-P-O). *Risk:* reinventing NLP; the #503 syntax
+  revert warns against bulk grammar imports; a regex shortcut here **is** the
+  overfit trap. *Pro:* independent of field frame coverage; fully inspectable.
+
+- **Path γ — adopt an external parser library** (spaCy etc.). **Rejected:**
+  violates the deterministic / no-opaque-runtime-dependency doctrine; CORE is a
+  deterministic CGA engine, not an NLP wrapper. (At most an *offline* pack-compile
+  step, never a runtime dependency.)
+
+**Recommendation: Path α**, because the field already decodes S-P-O and the only
+honest-gap is a refusal floor — which is a small, well-scoped, architecturally
+sanctioned addition (a grounding/threshold gate, not field repair). It turns
+Phase 2 from "build a parser" into "harvest the field's structure and refuse when
+it is not really there" — decoding, not generating.
 
 ---
 
@@ -318,9 +363,10 @@ not change their gold).
 2. **First class** — binary relations as 2a's first class, projecting into
    `relational_metric`? (Recommend yes: smallest general structure beyond
    entities, with an existing reasoner + reader to lift from.)
-3. **Syntax-parse depth** — is `en_core_syntax_v1` enough for general structural
-   parsing of declaratives, or does 2a need a minimal structural-parse capability
-   first? (Needs a spike inside 2a before the reader is built.)
+3. **Structural decode (the make-or-break, §5b)** — SPIKE RESOLVED the prior
+   "is the syntax pack enough" question: **no**, it is metalinguistic vocabulary,
+   not a parser. The live decision is now **Path α (field standing-hand + refusal
+   floor) vs Path β (build a minimal deterministic parser)**. Recommend **α**.
 4. **Field standing-hand** — reserve CL(4,1) incidence as the relation-consistency
    checker for a later increment, or leave it out entirely until the wedge
    resolves? (Recommend: note, don't depend.)
