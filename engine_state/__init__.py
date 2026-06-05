@@ -158,12 +158,31 @@ class EngineStateStore:
             if line.strip()
         ]
 
-    def save_manifest(self, turn_count: int) -> None:
-        manifest = {
+    def save_manifest(
+        self,
+        turn_count: int,
+        *,
+        engine_identity: str = "",
+        parent_engine_identity: str = "",
+    ) -> None:
+        """Write the checkpoint manifest.
+
+        ``engine_identity`` (L11) stamps the content-derived identity the engine
+        was running under when this checkpoint was written; ``parent_engine_
+        identity`` links it to the identity of the prior checkpoint, forming a
+        git-like lineage chain (the parent differs only across a ratified
+        substrate change). Both are additive-optional — an empty string omits the
+        key, preserving the manifest bytes for pre-L11 callers.
+        """
+        manifest: dict = {
             "schema_version": _SCHEMA_VERSION,
             "turn_count": turn_count,
             "written_at_revision": get_git_revision(),
         }
+        if engine_identity:
+            manifest["engine_identity"] = engine_identity
+        if parent_engine_identity:
+            manifest["parent_engine_identity"] = parent_engine_identity
         _atomic_write_text(
             self.path / "manifest.json",
             json.dumps(manifest, sort_keys=True, indent=2),

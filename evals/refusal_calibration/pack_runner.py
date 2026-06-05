@@ -97,7 +97,14 @@ def _load_cases(eval_dir: Path) -> list[dict[str, Any]]:
 
 
 def _run_one_case(pack_id: str, case: dict[str, Any]) -> dict[str, Any]:
-    runtime = ChatRuntime(config=RuntimeConfig(identity_pack=pack_id))
+    # Cold-start grounding probe: each (pack, case) is an independent fresh
+    # runtime, so it must NOT resume a prior session — otherwise case N restores
+    # case N-1's checkpoint (a different identity pack), which both pollutes the
+    # grounding gate (ADR-0043 pack-invariance) and raises an L11 identity-
+    # continuity-break warning. Matches run_cognition_eval.py.
+    runtime = ChatRuntime(
+        config=RuntimeConfig(identity_pack=pack_id), no_load_state=True
+    )
     pipeline = CognitiveTurnPipeline(runtime)
     try:
         result = pipeline.run(case["prompt"], max_tokens=8)

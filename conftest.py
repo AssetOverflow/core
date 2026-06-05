@@ -25,6 +25,26 @@ from __future__ import annotations
 
 import pytest
 
+import engine_state
+
+
+@pytest.fixture(autouse=True)
+def _isolate_engine_state_default(tmp_path_factory, monkeypatch):
+    """Isolate the default engine-state checkpoint dir per test.
+
+    A bare ``ChatRuntime()`` (no ``engine_state_path``) falls back to
+    ``engine_state._DEFAULT_DIR`` — the shared repo ``engine_state/`` directory.
+    Tests must not share that mutable dir: one test's checkpoint (recognizers,
+    candidates, the stamped engine-identity, and — under resume mode — the lived
+    session_state) leaks into another test's fresh-state assumptions (and, since
+    L11, raises spurious identity-continuity-break warnings when a later test
+    boots under a different identity over the same dir). Point the default at a
+    fresh per-test temp dir. Tests passing an explicit ``engine_state_path`` are
+    unaffected; within one test, repeated ``ChatRuntime()`` share this dir.
+    """
+    isolated = tmp_path_factory.mktemp("engine_state_default")
+    monkeypatch.setattr(engine_state, "_DEFAULT_DIR", isolated)
+
 
 QUARANTINE: frozenset[str] = frozenset()
 
