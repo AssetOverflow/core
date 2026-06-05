@@ -58,6 +58,37 @@ def _versor_key(F: np.ndarray) -> bytes:
     return np.asarray(F, dtype=np.float32).tobytes()
 
 
+# Metadata values are JSON primitives except for one structured value: a
+# ``Proposition`` stored under the ``"proposition"`` key (generate/proposition.py).
+# It is tagged on encode and reconstructed on decode. The Proposition import is
+# lazy (inside the functions) so vault/store.py stays free of a load-time cycle.
+_PROPOSITION_TAG = "__core_proposition__"
+
+
+def _encode_metadata(metadata: dict) -> dict:
+    from generate.proposition import Proposition
+
+    encoded: dict = {}
+    for key, value in metadata.items():
+        if isinstance(value, Proposition):
+            encoded[key] = {_PROPOSITION_TAG: value.to_dict()}
+        else:
+            encoded[key] = value
+    return encoded
+
+
+def _decode_metadata(metadata: dict) -> dict:
+    decoded: dict = {}
+    for key, value in metadata.items():
+        if isinstance(value, dict) and _PROPOSITION_TAG in value:
+            from generate.proposition import Proposition
+
+            decoded[key] = Proposition.from_dict(value[_PROPOSITION_TAG])
+        else:
+            decoded[key] = value
+    return decoded
+
+
 def epistemic_state_for_vault_status(entry_status: EpistemicStatus) -> EpistemicState:
     """Map legacy vault review statuses onto the ratified state taxonomy."""
     if entry_status is EpistemicStatus.COHERENT:
@@ -398,11 +429,13 @@ class VaultStore:
         reproject boundary during the live session — encoded losslessly via the
         array codec. The derived ``_exact_index`` and the lazy ``_matrix_cache``
         are NOT persisted; they are rebuilt deterministically on load. Metadata
-        is assumed JSON-safe (it is, by construction: primitives only).
+        is mostly primitives, with one structured value — a ``Proposition`` under
+        the ``"proposition"`` key (generate/proposition.py) — handled by
+        ``_encode_metadata`` so the snapshot stays JSON-safe.
         """
         return {
             "versors": [encode_array(v) for v in self._versors],
-            "metadata": [dict(m) for m in self._metadata],
+            "metadata": [_encode_metadata(m) for m in self._metadata],
             "store_count": int(self._store_count),
             "reproject_interval": int(self._reproject_interval),
             "max_entries": self._max_entries,
@@ -427,7 +460,7 @@ class VaultStore:
             maxlen=store._max_entries,
         )
         store._metadata = deque(
-            (dict(m) for m in payload["metadata"]),
+            (_decode_metadata(m) for m in payload["metadata"]),
             maxlen=store._max_entries,
         )
         store._store_count = int(payload["store_count"])

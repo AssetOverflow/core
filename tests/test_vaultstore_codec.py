@@ -83,6 +83,28 @@ def test_vaultstore_restore_rebuilds_exact_match_index() -> None:
     assert hits[0]["score"] == float("inf")  # exact match found via rebuilt index
 
 
+def test_vaultstore_round_trips_proposition_valued_metadata() -> None:
+    # generate/proposition.py stores {"kind":"proposition","proposition":<Proposition>}
+    # into vault metadata — the one structured (non-primitive) metadata value.
+    import json
+
+    from generate.proposition import Proposition
+
+    prop = Proposition(
+        subject="s", predicate="p", object_="o", surface="s p o",
+        frame_id="f", subject_versor=_versors()[0], predicate_versor=_versors()[1],
+        relation=_versors()[2],
+    )
+    store = VaultStore(reproject_interval=0)
+    store.store(_versors()[0], {"kind": "proposition", "proposition": prop})
+
+    restored = VaultStore.from_dict(json.loads(json.dumps(store.to_dict())))
+    recovered = restored._metadata[0]["proposition"]
+    assert isinstance(recovered, Proposition)
+    assert recovered.subject == "s"
+    assert recovered.relation.tobytes() == prop.relation.tobytes()
+
+
 def test_empty_vaultstore_round_trips() -> None:
     store = VaultStore(reproject_interval=50, max_entries=10)
     restored = VaultStore.from_dict(store.to_dict())

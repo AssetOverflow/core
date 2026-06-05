@@ -17,6 +17,12 @@ from typing import Iterable
 import numpy as np
 
 from algebra.cga import cga_inner, outer_product
+from core.array_codec import (
+    decode_array,
+    decode_optional_array,
+    encode_array,
+    encode_optional_array,
+)
 from field.state import FieldState
 from generate.admissibility import AdmissibilityRegion, filter_candidates
 from generate.stream import _articulate
@@ -74,6 +80,35 @@ class Proposition:
             object.__setattr__(self, "object_versor", object_versor)
         object.__setattr__(self, "relation", relation)
         object.__setattr__(self, "relation_norm", float(np.linalg.norm(relation)))
+
+    def to_dict(self) -> dict:
+        # relation_norm is recomputed from `relation` in __post_init__, so it is
+        # derived, not persisted.
+        return {
+            "subject": self.subject,
+            "predicate": self.predicate,
+            "object_": self.object_,
+            "surface": self.surface,
+            "frame_id": self.frame_id,
+            "subject_versor": encode_array(self.subject_versor),
+            "predicate_versor": encode_array(self.predicate_versor),
+            "object_versor": encode_optional_array(self.object_versor),
+            "relation": encode_array(self.relation),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> "Proposition":
+        return cls(
+            subject=payload["subject"],
+            predicate=payload["predicate"],
+            object_=payload["object_"],
+            surface=payload["surface"],
+            frame_id=payload["frame_id"],
+            subject_versor=decode_array(payload["subject_versor"]),
+            predicate_versor=decode_array(payload["predicate_versor"]),
+            object_versor=decode_optional_array(payload["object_versor"]),
+            relation=decode_array(payload["relation"]),
+        )
 
 
 class FrameRegistry:
