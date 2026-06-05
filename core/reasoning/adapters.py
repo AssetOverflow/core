@@ -47,6 +47,7 @@ def evidence_from_entailment_trace(trace: EntailmentTrace) -> OperatorEvidence:
         check_keys=check_keys,
         commitment_key=commitment_key,
         structural_signature=structural_signature,
+        reader_lineage="proof_chain.entail",
         payload={"entailment_trace": trace.as_dict()},
     )
 
@@ -93,6 +94,7 @@ def evidence_from_math_solution(
         check_keys=(trace_hash, trace.graph_canonical_hash),
         commitment_key=commitment_key,
         structural_signature=structural_signature,
+        reader_lineage="math_problem_graph.solve_verify",
         payload={
             "answer_entity": trace.answer_entity,
             "answer_unit": trace.answer_unit,

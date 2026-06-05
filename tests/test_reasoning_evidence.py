@@ -12,6 +12,7 @@ from core.reasoning import (
     COMMITMENT_DISAGREEMENT,
     DUPLICATE_STRUCTURAL_SIGNATURE,
     MISSING_COMMITMENT,
+    SAME_READER_LINEAGE,
     TIER2_VERIFIED,
     EvidenceBundle,
     OperatorEvidence,
@@ -24,6 +25,7 @@ def _ev(
     signature: str = "shape-a",
     commitment: str = "answer:42",
     outcome: str = "verified",
+    lineage: str = "reader-a",
 ) -> OperatorEvidence:
     return OperatorEvidence(
         domain="mathematics_logic",
@@ -34,6 +36,7 @@ def _ev(
         check_keys=("check-a",),
         commitment_key=commitment,
         structural_signature=signature,
+        reader_lineage=lineage,
         payload={"nested": {"values": [1, 2, "x"]}},
     )
 
@@ -64,19 +67,35 @@ def test_evidence_bundle_hash_is_ordered_and_stable() -> None:
 
 def test_tier2_verifies_two_distinct_structures_same_commitment() -> None:
     verdict = verify_tier2_agreement((
-        _ev(signature="shape-a"),
-        _ev(signature="shape-b"),
+        _ev(signature="shape-a", lineage="reader-a"),
+        _ev(signature="shape-b", lineage="reader-b"),
     ))
     assert verdict.verified is True
     assert verdict.reason == TIER2_VERIFIED
     assert verdict.commitment_key == "answer:42"
     assert verdict.structural_signatures == ("shape-a", "shape-b")
+    assert verdict.reader_lineages == ("reader-a", "reader-b")
+
+
+def test_tier2_refuses_same_reader_lineage() -> None:
+    """The decoration firewall: one reader cannot self-verify by relabeling its
+    structural signature. Two evidences from the SAME decoding pathway are refused
+    even when their structural_signatures differ and the commitment agrees.
+
+    Meaningfully-failing guard: under the old label-only check this admitted.
+    """
+    verdict = verify_tier2_agreement((
+        _ev(signature="shape-a", lineage="one-reader"),
+        _ev(signature="shape-b", lineage="one-reader"),
+    ))
+    assert verdict.verified is False
+    assert verdict.reason == SAME_READER_LINEAGE
 
 
 def test_tier2_refuses_duplicate_signature() -> None:
     verdict = verify_tier2_agreement((
-        _ev(signature="same"),
-        _ev(signature="same"),
+        _ev(signature="same", lineage="reader-a"),
+        _ev(signature="same", lineage="reader-b"),
     ))
     assert verdict.verified is False
     assert verdict.reason == DUPLICATE_STRUCTURAL_SIGNATURE
@@ -84,8 +103,8 @@ def test_tier2_refuses_duplicate_signature() -> None:
 
 def test_tier2_refuses_disagreeing_commitments() -> None:
     verdict = verify_tier2_agreement((
-        _ev(signature="shape-a", commitment="answer:42"),
-        _ev(signature="shape-b", commitment="answer:41"),
+        _ev(signature="shape-a", commitment="answer:42", lineage="reader-a"),
+        _ev(signature="shape-b", commitment="answer:41", lineage="reader-b"),
     ))
     assert verdict.verified is False
     assert verdict.reason == COMMITMENT_DISAGREEMENT

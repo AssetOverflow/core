@@ -20,6 +20,7 @@ INSUFFICIENT_EVIDENCE: Final[str] = "insufficient_evidence"
 DUPLICATE_STRUCTURAL_SIGNATURE: Final[str] = "duplicate_structural_signature"
 COMMITMENT_DISAGREEMENT: Final[str] = "commitment_disagreement"
 MISSING_COMMITMENT: Final[str] = "missing_commitment"
+SAME_READER_LINEAGE: Final[str] = "same_reader_lineage"
 
 TIER2_REASONS: Final[frozenset[str]] = frozenset({
     TIER2_VERIFIED,
@@ -27,6 +28,7 @@ TIER2_REASONS: Final[frozenset[str]] = frozenset({
     DUPLICATE_STRUCTURAL_SIGNATURE,
     COMMITMENT_DISAGREEMENT,
     MISSING_COMMITMENT,
+    SAME_READER_LINEAGE,
 })
 
 
@@ -74,6 +76,17 @@ class OperatorEvidence:
     check_keys: tuple[str, ...]
     commitment_key: str
     structural_signature: str
+    # reader_lineage — the mechanistic identity of the decoding PATHWAY that
+    # produced this evidence (e.g. "proof_chain.entail"). The Tier-2 gate keys
+    # independence on this, not on the cosmetic structural_signature string, so a
+    # single reader cannot self-verify by relabeling. Deliberately EXCLUDED from
+    # ``as_dict``/``canonical_json`` (and therefore the evidence/trace hash): it is
+    # gate-routing provenance, not replayable evidence content, and including it
+    # would perturb the entailment trace_hash with no replay benefit. The
+    # static guarantee that distinct lineages are import-disjoint (cannot share a
+    # decoding pathway) is enforced by the architectural reader-disjointness
+    # invariant, not by this string alone.
+    reader_lineage: str = ""
     payload: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -83,6 +96,7 @@ class OperatorEvidence:
             "outcome",
             "reason",
             "structural_signature",
+            "reader_lineage",
         ):
             value = getattr(self, field_name)
             if not isinstance(value, str) or not value.strip():
@@ -146,6 +160,7 @@ class Tier2Verdict:
     commitment_key: str = ""
     evidence_hash: str = ""
     structural_signatures: tuple[str, ...] = ()
+    reader_lineages: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.reason not in TIER2_REASONS:
@@ -155,6 +170,11 @@ class Tier2Verdict:
             "structural_signatures",
             tuple(str(s) for s in self.structural_signatures),
         )
+        object.__setattr__(
+            self,
+            "reader_lineages",
+            tuple(str(s) for s in self.reader_lineages),
+        )
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -163,13 +183,23 @@ class Tier2Verdict:
             "commitment_key": self.commitment_key,
             "evidence_hash": self.evidence_hash,
             "structural_signatures": list(self.structural_signatures),
+            "reader_lineages": list(self.reader_lineages),
         }
 
 
 def verify_tier2_agreement(
     evidences: tuple[OperatorEvidence, ...] | list[OperatorEvidence],
 ) -> Tier2Verdict:
-    """Require two distinct structures converging on one non-empty commitment."""
+    """Require two **independently-read** structures converging on one commitment.
+
+    Independence is keyed on ``reader_lineage`` — the decoding PATHWAY — not on the
+    cosmetic ``structural_signature``. The same reader cannot self-verify by emitting
+    two differently-labeled signatures for one case: that is refused with
+    ``SAME_READER_LINEAGE``. The static guarantee that distinct lineages are
+    import-disjoint (so distinct lineage ⟹ no shared decoding pathway) is enforced
+    by the architectural reader-disjointness invariant; this gate enforces the
+    runtime half (distinct producing pathways + distinct structure + one commitment).
+    """
     bundle = EvidenceBundle(tuple(evidences))
     if len(bundle.evidences) < 2:
         return Tier2Verdict(False, INSUFFICIENT_EVIDENCE)
@@ -177,13 +207,26 @@ def verify_tier2_agreement(
     if any(not ev.commitment_key for ev in bundle.evidences):
         return Tier2Verdict(False, MISSING_COMMITMENT, evidence_hash=bundle.evidence_hash)
 
+    lineages = tuple(ev.reader_lineage for ev in bundle.evidences)
     signatures = tuple(ev.structural_signature for ev in bundle.evidences)
+
+    # Mechanistic independence firewall: at least two DISTINCT decoding pathways.
+    if len(set(lineages)) < 2:
+        return Tier2Verdict(
+            False,
+            SAME_READER_LINEAGE,
+            evidence_hash=bundle.evidence_hash,
+            structural_signatures=tuple(sorted(set(signatures))),
+            reader_lineages=tuple(sorted(set(lineages))),
+        )
+
     if len(set(signatures)) < 2:
         return Tier2Verdict(
             False,
             DUPLICATE_STRUCTURAL_SIGNATURE,
             evidence_hash=bundle.evidence_hash,
             structural_signatures=tuple(sorted(set(signatures))),
+            reader_lineages=tuple(sorted(set(lineages))),
         )
 
     commitments = Counter(ev.commitment_key for ev in bundle.evidences)
@@ -194,6 +237,7 @@ def verify_tier2_agreement(
             COMMITMENT_DISAGREEMENT,
             evidence_hash=bundle.evidence_hash,
             structural_signatures=tuple(sorted(set(signatures))),
+            reader_lineages=tuple(sorted(set(lineages))),
         )
 
     return Tier2Verdict(
@@ -202,4 +246,5 @@ def verify_tier2_agreement(
         commitment_key=shared[0],
         evidence_hash=bundle.evidence_hash,
         structural_signatures=tuple(sorted(set(signatures))),
+        reader_lineages=tuple(sorted(set(lineages))),
     )
