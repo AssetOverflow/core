@@ -93,6 +93,97 @@ def test_definite_np_membership_query() -> None:
 
 
 # --------------------------------------------------------------------------- #
+# Categorical forms (syllogism) — neutral predicates the projector maps to A/E/I/O
+# --------------------------------------------------------------------------- #
+
+
+def test_categorical_no_is_disjoint() -> None:
+    comp = comprehend("No reptiles are mammals.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "disjoint") == (("disjoint", ("reptile", "mammal")),)
+
+
+def test_categorical_some_is_intersects() -> None:
+    comp = comprehend("Some students are poets.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "intersects") == (("intersects", ("student", "poet")),)
+
+
+def test_categorical_some_not_is_some_not() -> None:
+    comp = comprehend("Some pets are not reptiles.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "some_not") == (("some_not", ("pet", "reptile")),)
+
+
+def test_therefore_is_a_conclusion_query() -> None:
+    comp = comprehend("Therefore all whales are animals.")
+    assert isinstance(comp, Comprehension)
+    assert comp.meaning_graph.relations == ()  # a conclusion is a query, not a fact
+    assert comp.queries[0].predicate == "subset"
+    assert comp.queries[0].arguments == ("whale", "animal")
+
+
+def test_full_syllogism_premises_and_conclusion() -> None:
+    comp = comprehend(
+        "All mammals are animals. All whales are mammals. Therefore all whales are animals."
+    )
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "subset") == (
+        ("subset", ("mammal", "animal")),
+        ("subset", ("whale", "mammal")),
+    )
+    assert comp.queries[0].arguments == ("whale", "animal")
+
+
+# --------------------------------------------------------------------------- #
+# Ordering — comparatives carry DIRECTION (wrong direction would flip the sort)
+# --------------------------------------------------------------------------- #
+
+
+def test_comparative_below_is_less() -> None:
+    comp = comprehend("Bronze is below silver.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "less") == (("less", ("bronze", "silver")),)
+    assert _entity_kind(comp, "bronze") == "item"
+
+
+def test_comparative_taller_reverses_direction() -> None:
+    # "Oak is taller than birch" => oak > birch => less(birch, oak).
+    comp = comprehend("Oak is taller than birch.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "less") == (("less", ("birch", "oak")),)
+
+
+def test_comparative_elided_copula() -> None:
+    comp = comprehend("Silver below gold.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "less") == (("less", ("silver", "gold")),)
+
+
+def test_comma_joined_clauses() -> None:
+    comp = comprehend("Bronze is below silver, and silver is below gold.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "less") == (
+        ("less", ("bronze", "silver")),
+        ("less", ("silver", "gold")),
+    )
+
+
+def test_sort_query_from_low_to_high_is_ascending() -> None:
+    comp = comprehend("Sort them from lowest to highest.")
+    assert isinstance(comp, Comprehension)
+    assert comp.queries[0].predicate == "sort"
+    assert comp.queries[0].arguments == ("ascending",)
+
+
+def test_compare_query() -> None:
+    comp = comprehend("Compare alpha with delta.")
+    assert isinstance(comp, Comprehension)
+    assert comp.queries[0].predicate == "compare"
+    assert comp.queries[0].arguments == ("alpha", "delta")
+
+
+# --------------------------------------------------------------------------- #
 # Full multi-clause problem
 # --------------------------------------------------------------------------- #
 

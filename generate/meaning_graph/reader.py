@@ -8,17 +8,20 @@ structure (the holonomy fold is lossy/non-invertible — see the α-falsificatio
 field's honest role is grounding/coherence, not composition.
 
 Refusal-first: a clause that matches no template, a filler that is not a clean
-identifier, an unrecognized plural, or a role conflict all REFUSE — never guess.
-That keeps ``wrong=0`` at the comprehension layer (refusal is success; a fabricated
-reading is the only failure).
+identifier, an unrecognized plural/comparative, or a role conflict all REFUSE —
+never guess. That keeps ``wrong=0`` at the comprehension layer (refusal is
+success; a fabricated reading is the only failure).
 
-Templates (this increment):
-  - ``<X> is a|an <Y>``        -> member(individual=X, class=Y)
-  - ``all <Xs> are <Ys>``      -> subset(subclass=sing(X), superclass=sing(Y))
-  - ``is <X> a|an <Y>?``       -> Query member(X, Y)
+Templates (this increment), each producing NEUTRAL predicates a projector adapts:
+  - ``<X> is a|an <Y>`` / ``the <X> is a|an <Y>``   -> member(individual, class)
+  - ``all/no/some <Xs> are [not] <Ys>``             -> subset/disjoint/intersects/some_not
+  - ``X is <comp> [than] Y``                         -> less(lesser, greater)
+  - ``is <X> a|an <Y>?`` / ``are all <Xs> <Ys>?``    -> membership / subset query
+  - ``Therefore <categorical>``                      -> categorical conclusion query
+  - ``sort/order ... from <low> to <high> ...``      -> sort query
 
 Overfit-trap mitigation: templates key on function words + order (general), never
-on domain content; the same templates read animals, professions, geography, kin.
+on domain content; the same templates read animals, professions, geometry, kin.
 """
 
 from __future__ import annotations
@@ -48,6 +51,27 @@ _IRREGULAR_PLURALS = {
     "mice": "mouse",
     "geese": "goose",
 }
+
+# Comparative surface -> ordering direction. Conservative + closed: a wrong
+# direction would flip the sort (wrong>0), so an UNKNOWN comparative refuses.
+_COMP_LESS = frozenset(
+    {"below", "under", "beneath", "before", "earlier", "shorter", "smaller",
+     "younger", "slower", "lighter", "lower", "less", "weaker", "cheaper",
+     "nearer", "closer"}
+)
+_COMP_GREATER = frozenset(
+    {"above", "over", "after", "later", "taller", "bigger", "larger", "older",
+     "faster", "heavier", "higher", "greater", "stronger", "longer", "farther",
+     "further"}
+)
+_SORT_LOW = frozenset(
+    {"lowest", "shortest", "smallest", "youngest", "slowest", "lightest",
+     "least", "first", "cheapest", "weakest", "nearest"}
+)
+_SORT_HIGH = frozenset(
+    {"highest", "tallest", "largest", "biggest", "oldest", "fastest",
+     "heaviest", "greatest", "last", "longest", "strongest", "farthest"}
+)
 
 _SENTENCE_RE = re.compile(r"\s*([^.?!]+?)\s*([.?!])")
 
@@ -97,6 +121,88 @@ def _singularize(word: str) -> str | None:
     return None
 
 
+def _match_categorical(toks: list[str]) -> tuple[str, str, str] | None:
+    """A categorical clause -> (neutral predicate, raw_subject, raw_object).
+
+    Function-word keyed (all/no/some ... are [not] ...); domain-agnostic. The
+    syllogism projector maps subset/disjoint/intersects/some_not -> A/E/I/O.
+    """
+    if len(toks) == 5 and toks[0] == "some" and toks[2] == "are" and toks[3] == "not":
+        return ("some_not", toks[1], toks[4])
+    if len(toks) == 4 and toks[2] == "are":
+        if toks[0] == "all":
+            return ("subset", toks[1], toks[3])
+        if toks[0] == "no":
+            return ("disjoint", toks[1], toks[3])
+        if toks[0] == "some":
+            return ("intersects", toks[1], toks[3])
+    return None
+
+
+def _match_comparative(toks: list[str]) -> tuple[str, str] | None:
+    """A comparative clause -> (raw_lesser, raw_greater), or None.
+
+    Handles, with optional elided copula:
+      ``X is <comp> than Y`` / ``X <comp> than Y``   (len 5 / len 4)
+      ``X is <prep> Y``      / ``X <prep> Y``         (len 4 / len 3)
+    LESS keeps the order (X < Y); GREATER reverses it (X > Y => Y < X).
+    """
+    if len(toks) == 5 and toks[1] == "is" and toks[3] == "than":
+        comp, x, y = toks[2], toks[0], toks[4]
+    elif len(toks) == 4 and toks[2] == "than":
+        comp, x, y = toks[1], toks[0], toks[3]
+    elif len(toks) == 4 and toks[1] == "is":
+        comp, x, y = toks[2], toks[0], toks[3]
+    elif len(toks) == 3:
+        comp, x, y = toks[1], toks[0], toks[2]
+    else:
+        return None
+    if comp in _COMP_LESS:
+        return (x, y)
+    if comp in _COMP_GREATER:
+        return (y, x)
+    return None
+
+
+def _match_sort_query(toks: list[str]) -> str | None:
+    """A sort request -> 'ascending'/'descending'.
+
+    Bare ``sort ascending|descending`` or ``sort/order ... from <low> to <high>``.
+    """
+    if "sort" not in toks and "order" not in toks:
+        return None
+    if "ascending" in toks and "descending" not in toks:
+        return "ascending"
+    if "descending" in toks and "ascending" not in toks:
+        return "descending"
+    if "from" not in toks or "to" not in toks:
+        return None
+    fi, ti = toks.index("from"), toks.index("to")
+    if not (fi + 1 < ti and ti + 1 < len(toks)):
+        return None
+    low, high = toks[fi + 1], toks[ti + 1]
+    if low in _SORT_LOW and high in _SORT_HIGH:
+        return "ascending"
+    if low in _SORT_HIGH and high in _SORT_LOW:
+        return "descending"
+    return None
+
+
+def _split_clauses(body: str) -> list[str]:
+    """Split a sentence on commas; strip a leading coordinating 'and'/'or'."""
+    parts: list[str] = []
+    for piece in body.split(","):
+        p = piece.strip()
+        low = p.lower()
+        for lead in ("and ", "or "):
+            if low.startswith(lead):
+                p = p[len(lead):].strip()
+                break
+        if p:
+            parts.append(p)
+    return parts
+
+
 def _split_sentences(text: str) -> list[tuple[str, str, int, int]]:
     """Return (body, terminator, start, end) for each sentence in *text*."""
     out: list[tuple[str, str, int, int]] = []
@@ -126,7 +232,8 @@ def comprehend(text: str, source_id: str = "input") -> Comprehension | Refusal:
     role_kind: dict[str, str] = {}
     span_for: dict[str, MeaningSpan] = {}
     members: list[tuple[str, str, MeaningSpan]] = []
-    subsets: list[tuple[str, str, MeaningSpan]] = []
+    class_relations: list[tuple[str, str, str, MeaningSpan]] = []
+    order_relations: list[tuple[str, str, MeaningSpan]] = []
     queries: list[Query] = []
 
     def claim(entity_id: str, kind: str, span: MeaningSpan) -> bool:
@@ -138,81 +245,120 @@ def comprehend(text: str, source_id: str = "input") -> Comprehension | Refusal:
         return True
 
     for body, terminator, start, end in sentences:
-        toks = body.lower().split()
         span = MeaningSpan(source_id=source_id, start=start, end=end, text=text[start:end])
         is_question = terminator == "?"
 
-        # Template: subset query  ``are all <Xs> <Ys>?``
-        if is_question and len(toks) == 4 and toks[0] == "are" and toks[1] == "all":
-            raw_sub, raw_sup = _identifier(toks[2]), _identifier(toks[3])
-            if raw_sub is None or raw_sup is None:
-                return Refusal("non_identifier_filler", body)
-            sub, sup = _singularize(raw_sub), _singularize(raw_sup)
-            if sub is None or sup is None:
-                return Refusal("unknown_morphology", body)
-            if not sub.isidentifier() or not sup.isidentifier():
-                return Refusal("non_identifier_filler", body)
-            if not claim(sub, "class", span) or not claim(sup, "class", span):
-                return Refusal("role_conflict", body)
-            queries.append(Query("subset", (sub, sup), span))
-            continue
+        for clause in _split_clauses(body):
+            toks = clause.lower().split()
+            if not toks:
+                continue
 
-        # Template: definite-NP membership query  ``is the <X> a|an <Y>?``
-        if is_question and len(toks) == 5 and toks[0] == "is" and toks[1] == "the" and toks[3] in _ARTICLES:
-            name, cls = _identifier(toks[2]), _identifier(toks[4])
-            if name is None or cls is None:
-                return Refusal("non_identifier_filler", body)
-            if not claim(name, "individual", span) or not claim(cls, "class", span):
-                return Refusal("role_conflict", body)
-            queries.append(Query("member", (name, cls), span))
-            continue
+            # Template: sort query  ``... sort/order ... from <low> to <high> ...``
+            sort_order = _match_sort_query(toks)
+            if sort_order is not None:
+                queries.append(Query("sort", (sort_order,), span))
+                continue
 
-        # Template: query  ``is <X> a|an <Y>?``
-        if is_question and len(toks) == 4 and toks[0] == "is" and toks[2] in _ARTICLES:
-            name, cls = _identifier(toks[1]), _identifier(toks[3])
-            if name is None or cls is None:
-                return Refusal("non_identifier_filler", body)
-            if not claim(name, "individual", span) or not claim(cls, "class", span):
-                return Refusal("role_conflict", body)
-            queries.append(Query("member", (name, cls), span))
-            continue
+            # Template: compare query  ``compare <X> with <Y>``
+            if len(toks) == 4 and toks[0] == "compare" and toks[2] == "with":
+                left, right = _identifier(toks[1]), _identifier(toks[3])
+                if left is None or right is None:
+                    return Refusal("non_identifier_filler", clause)
+                if not claim(left, "item", span) or not claim(right, "item", span):
+                    return Refusal("role_conflict", clause)
+                queries.append(Query("compare", (left, right), span))
+                continue
 
-        # Template: definite-NP membership  ``the <X> is a|an <Y>``
-        if not is_question and len(toks) == 5 and toks[0] == "the" and toks[2] == "is" and toks[3] in _ARTICLES:
-            name, cls = _identifier(toks[1]), _identifier(toks[4])
-            if name is None or cls is None:
-                return Refusal("non_identifier_filler", body)
-            if not claim(name, "individual", span) or not claim(cls, "class", span):
-                return Refusal("role_conflict", body)
-            members.append((name, cls, span))
-            continue
+            # Template: comparative  ``X is <comp> [than] Y``  -> less(lesser, greater)
+            comparative = _match_comparative(toks)
+            if comparative is not None:
+                raw_lo, raw_hi = comparative
+                lo, hi = _identifier(raw_lo), _identifier(raw_hi)
+                if lo is None or hi is None:
+                    return Refusal("non_identifier_filler", clause)
+                if not claim(lo, "item", span) or not claim(hi, "item", span):
+                    return Refusal("role_conflict", clause)
+                order_relations.append((lo, hi, span))
+                continue
 
-        # Template: membership  ``<X> is a|an <Y>``
-        if not is_question and len(toks) == 4 and toks[1] == "is" and toks[2] in _ARTICLES:
-            name, cls = _identifier(toks[0]), _identifier(toks[3])
-            if name is None or cls is None:
-                return Refusal("non_identifier_filler", body)
-            if not claim(name, "individual", span) or not claim(cls, "class", span):
-                return Refusal("role_conflict", body)
-            members.append((name, cls, span))
-            continue
+            # Template: subset query  ``are all <Xs> <Ys>?``
+            if is_question and len(toks) == 4 and toks[0] == "are" and toks[1] == "all":
+                raw_sub, raw_sup = _identifier(toks[2]), _identifier(toks[3])
+                if raw_sub is None or raw_sup is None:
+                    return Refusal("non_identifier_filler", clause)
+                sub, sup = _singularize(raw_sub), _singularize(raw_sup)
+                if sub is None or sup is None:
+                    return Refusal("unknown_morphology", clause)
+                if not sub.isidentifier() or not sup.isidentifier():
+                    return Refusal("non_identifier_filler", clause)
+                if not claim(sub, "class", span) or not claim(sup, "class", span):
+                    return Refusal("role_conflict", clause)
+                queries.append(Query("subset", (sub, sup), span))
+                continue
 
-        # Template: subsumption  ``all <Xs> are <Ys>``
-        if not is_question and len(toks) == 4 and toks[0] == "all" and toks[2] == "are":
-            raw_sub, raw_sup = _identifier(toks[1]), _identifier(toks[3])
-            if raw_sub is None or raw_sup is None:
-                return Refusal("non_identifier_filler", body)
-            sub, sup = _singularize(raw_sub), _singularize(raw_sup)
-            if sub is None or sup is None:
-                return Refusal("unknown_morphology", body)
-            if not sub.isidentifier() or not sup.isidentifier():
-                return Refusal("non_identifier_filler", body)
-            if not claim(sub, "class", span) or not claim(sup, "class", span):
-                return Refusal("role_conflict", body)
-            subsets.append((sub, sup, span))
-            continue
+            # Template: definite-NP membership query  ``is the <X> a|an <Y>?``
+            if is_question and len(toks) == 5 and toks[0] == "is" and toks[1] == "the" and toks[3] in _ARTICLES:
+                name, cls = _identifier(toks[2]), _identifier(toks[4])
+                if name is None or cls is None:
+                    return Refusal("non_identifier_filler", clause)
+                if not claim(name, "individual", span) or not claim(cls, "class", span):
+                    return Refusal("role_conflict", clause)
+                queries.append(Query("member", (name, cls), span))
+                continue
 
-        return Refusal("no_template_match", body)
+            # Template: membership query  ``is <X> a|an <Y>?``
+            if is_question and len(toks) == 4 and toks[0] == "is" and toks[2] in _ARTICLES:
+                name, cls = _identifier(toks[1]), _identifier(toks[3])
+                if name is None or cls is None:
+                    return Refusal("non_identifier_filler", clause)
+                if not claim(name, "individual", span) or not claim(cls, "class", span):
+                    return Refusal("role_conflict", clause)
+                queries.append(Query("member", (name, cls), span))
+                continue
+
+            # Template: definite-NP membership  ``the <X> is a|an <Y>``
+            if not is_question and len(toks) == 5 and toks[0] == "the" and toks[2] == "is" and toks[3] in _ARTICLES:
+                name, cls = _identifier(toks[1]), _identifier(toks[4])
+                if name is None or cls is None:
+                    return Refusal("non_identifier_filler", clause)
+                if not claim(name, "individual", span) or not claim(cls, "class", span):
+                    return Refusal("role_conflict", clause)
+                members.append((name, cls, span))
+                continue
+
+            # Template: membership  ``<X> is a|an <Y>``
+            if not is_question and len(toks) == 4 and toks[1] == "is" and toks[2] in _ARTICLES:
+                name, cls = _identifier(toks[0]), _identifier(toks[3])
+                if name is None or cls is None:
+                    return Refusal("non_identifier_filler", clause)
+                if not claim(name, "individual", span) or not claim(cls, "class", span):
+                    return Refusal("role_conflict", clause)
+                members.append((name, cls, span))
+                continue
+
+            # Template: categorical (A/E/I/O), premise or 'Therefore' conclusion
+            if not is_question:
+                is_conclusion = bool(toks) and toks[0] == "therefore"
+                cat = _match_categorical(toks[1:] if is_conclusion else toks)
+                if cat is not None:
+                    pred, raw_a, raw_b = cat
+                    a, b = _identifier(raw_a), _identifier(raw_b)
+                    if a is None or b is None:
+                        return Refusal("non_identifier_filler", clause)
+                    sa, sb = _singularize(a), _singularize(b)
+                    if sa is None or sb is None:
+                        return Refusal("unknown_morphology", clause)
+                    if not sa.isidentifier() or not sb.isidentifier():
+                        return Refusal("non_identifier_filler", clause)
+                    if not claim(sa, "class", span) or not claim(sb, "class", span):
+                        return Refusal("role_conflict", clause)
+                    if is_conclusion:
+                        queries.append(Query(pred, (sa, sb), span))
+                    else:
+                        class_relations.append((pred, sa, sb, span))
+                    continue
+
+            return Refusal("no_template_match", clause)
 
     try:
         entities = tuple(
@@ -221,7 +367,8 @@ def comprehend(text: str, source_id: str = "input") -> Comprehension | Refusal:
         )
         relations = tuple(
             [Relation("member", (ind, cls), sp) for ind, cls, sp in members]
-            + [Relation("subset", (sub, sup), sp) for sub, sup, sp in subsets]
+            + [Relation(pred, (a, b), sp) for pred, a, b, sp in class_relations]
+            + [Relation("less", (lo, hi), sp) for lo, hi, sp in order_relations]
         )
         graph = MeaningGraph(entities=entities, relations=relations)
     except MeaningGraphError as exc:  # defensive — construction invariants
