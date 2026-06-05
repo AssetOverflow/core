@@ -1,0 +1,17 @@
+{
+  "checksum": "829efd10d7f5fa74f1189ec6d621f2a12bc5e7a022fd7a3de436655fc8fe5603",
+  "collision_policy": "globally_unique_l10_prefixed_lemmas",
+  "definitional_layer": false,
+  "determinism_class": "D0",
+  "gate_engaged": false,
+  "l10_stateless": true,
+  "language": "en",
+  "normalization_policy": "unitize_versor",
+  "oov_policy": "fail_closed",
+  "pack_id": "l10_grounding_v1",
+  "provenance": "brief-c:l10-grounding:2026-06-05",
+  "role": "operational_base",
+  "script": "Latin",
+  "source_manifest": "l10_grounding_v1.lexicon.jsonl",
+  "version": "0.1.0"
+}
