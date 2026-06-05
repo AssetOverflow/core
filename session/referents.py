@@ -10,9 +10,11 @@ backward edges instead of broad historical guesses.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Any, Sequence
 
 import numpy as np
+
+from core.array_codec import decode_array, encode_array
 
 _PRONOUN_SLOTS: dict[str, str] = {
     "it": "neut_sg",
@@ -41,6 +43,23 @@ class ReferentEntry:
     versor: np.ndarray
     turn: int
     slot: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "surface": self.surface,
+            "versor": encode_array(self.versor),
+            "turn": int(self.turn),
+            "slot": self.slot,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "ReferentEntry":
+        return cls(
+            surface=payload["surface"],
+            versor=decode_array(payload["versor"]),
+            turn=int(payload["turn"]),
+            slot=payload["slot"],
+        )
 
 
 class ReferentRegistry:
@@ -150,3 +169,37 @@ class ReferentRegistry:
     def __repr__(self) -> str:
         active = {k: v.surface for k, v in self._slots.items()}
         return f"ReferentRegistry(active={active})"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize, preserving the _slots <-> _history object aliasing.
+
+        ``register`` puts the SAME ReferentEntry object in both ``_slots[slot]``
+        and ``_history``; ``update_turn_versor`` relies on that identity
+        (``_slots.get(slot) is entry``). We persist ``_history`` as the source of
+        truth and ``_slots`` as slot -> history-index, so restore rebinds the
+        exact same objects rather than independent copies.
+        """
+        slot_to_index: dict[str, int] = {}
+        for slot, entry in self._slots.items():
+            for i, hist_entry in enumerate(self._history):
+                if hist_entry is entry:
+                    slot_to_index[slot] = i
+                    break
+        return {
+            "history": [e.to_dict() for e in self._history],
+            "slot_to_index": slot_to_index,
+            "last_resolved_sources": list(self._last_resolved_sources),
+            "last_resolved_slots": dict(self._last_resolved_slots),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "ReferentRegistry":
+        registry = cls()
+        registry._history = [ReferentEntry.from_dict(e) for e in payload["history"]]
+        registry._slots = {
+            slot: registry._history[i]
+            for slot, i in payload["slot_to_index"].items()
+        }
+        registry._last_resolved_sources = list(payload["last_resolved_sources"])
+        registry._last_resolved_slots = dict(payload["last_resolved_slots"])
+        return registry

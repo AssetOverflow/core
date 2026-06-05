@@ -14,6 +14,7 @@ from typing import Literal
 import numpy as np
 
 from algebra.cga import cga_inner, outer_product
+from core.array_codec import decode_array, encode_array
 from field.state import FieldState
 from generate.proposition import FrameRegistry, Proposition, propose
 
@@ -32,6 +33,19 @@ class DialogueTurn:
     def __post_init__(self) -> None:
         blade = np.asarray(self.outer_product_blade, dtype=np.float32).copy()
         object.__setattr__(self, "outer_product_blade", blade)
+
+    def to_dict(self) -> dict:
+        return {
+            "proposition": self.proposition.to_dict(),
+            "outer_product_blade": encode_array(self.outer_product_blade),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> "DialogueTurn":
+        return cls(
+            proposition=Proposition.from_dict(payload["proposition"]),
+            outer_product_blade=decode_array(payload["outer_product_blade"]),
+        )
 
 
 def blade_alignment(blade: np.ndarray, reference: np.ndarray) -> float:

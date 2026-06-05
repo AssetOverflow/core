@@ -13,6 +13,7 @@ import numpy as np
 from algebra.backend import cga_inner, versor_apply
 from algebra.rotor import rotor_power, word_transition_rotor
 from algebra.versor import versor_condition as _versor_condition
+from core.array_codec import decode_optional_array, encode_optional_array
 from field.state import FieldState
 from generate.dialogue import DialogueTurn
 from generate.proposition import Proposition
@@ -340,3 +341,65 @@ class SessionContext:
     def recall(self, query_tokens: list, top_k: int = 5) -> list:
         query_state = inject(query_tokens, self.vocab)
         return self.vault.recall(query_state.F, top_k=top_k)
+
+    def snapshot(self) -> dict:
+        """Serialize the lived session state for cross-reboot persistence.
+
+        Captures EVERYTHING that accumulates across turns — field, vault, anchor,
+        graph, referents, dialogue blade/history, and the per-turn caches — so a
+        restore continues the same life. ``vocab`` and ``persona`` are NOT
+        serialized: they are shared, ratified surfaces supplied at restore time,
+        not session state. Bit-exact (arrays via the codec); JSON-safe.
+        """
+        return {
+            "state": self.state.to_dict() if self.state is not None else None,
+            "vault": self.vault.to_dict(),
+            "turn": int(self.turn),
+            "graph": self.graph.to_dict(),
+            "referents": self.referents.to_dict(),
+            "anchor_field": encode_optional_array(self._anchor_field),
+            "running_dialogue_blade": encode_optional_array(self.running_dialogue_blade),
+            "dialogue_history": [t.to_dict() for t in self._dialogue_history_compat],
+            "last_input_tokens": list(self._last_input_tokens),
+            "last_resolved_input_tokens": list(self._last_resolved_input_tokens),
+            "last_input_versor": encode_optional_array(self._last_input_versor),
+            "last_response_tokens": (
+                list(self._last_response_tokens)
+                if self._last_response_tokens is not None
+                else None
+            ),
+        }
+
+    def restore(self, payload: dict) -> None:
+        """Load a snapshot into THIS context, replacing all lived state.
+
+        Mutating by design — restoring a checkpoint is inherently a load. The
+        field, vault, graph, and referents are rebuilt from the exact persisted
+        bytes (no normalization / reprojection — that discipline lives in the
+        component codecs); ``vocab`` and ``persona`` already set on this context
+        are kept.
+        """
+        self.state = (
+            FieldState.from_dict(payload["state"])
+            if payload["state"] is not None
+            else None
+        )
+        self.vault = VaultStore.from_dict(payload["vault"])
+        self.turn = int(payload["turn"])
+        self.graph = SessionGraph.from_dict(payload["graph"])
+        self.referents = ReferentRegistry.from_dict(payload["referents"])
+        self._anchor_field = decode_optional_array(payload["anchor_field"])
+        self.running_dialogue_blade = decode_optional_array(
+            payload["running_dialogue_blade"]
+        )
+        self._dialogue_history_compat = [
+            DialogueTurn.from_dict(t) for t in payload["dialogue_history"]
+        ]
+        self._last_input_tokens = tuple(payload["last_input_tokens"])
+        self._last_resolved_input_tokens = tuple(payload["last_resolved_input_tokens"])
+        self._last_input_versor = decode_optional_array(payload["last_input_versor"])
+        self._last_response_tokens = (
+            tuple(payload["last_response_tokens"])
+            if payload["last_response_tokens"] is not None
+            else None
+        )

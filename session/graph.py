@@ -9,9 +9,11 @@ walk those edges with true BFS distance, not traversal ordinal.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Sequence
+from typing import Any, Sequence
 
 import numpy as np
+
+from core.array_codec import decode_array, encode_array
 
 
 @dataclass(slots=True)
@@ -24,6 +26,31 @@ class TurnNode:
     dialogue_role: str
     referent_slots: dict[str, int]
     backward_edges: list[int] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "turn_idx": int(self.turn_idx),
+            "input_versor": encode_array(self.input_versor),
+            "output_versor": encode_array(self.output_versor),
+            "tokens_in": list(self.tokens_in),
+            "tokens_out": list(self.tokens_out),
+            "dialogue_role": self.dialogue_role,
+            "referent_slots": dict(self.referent_slots),
+            "backward_edges": list(self.backward_edges),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "TurnNode":
+        return cls(
+            turn_idx=int(payload["turn_idx"]),
+            input_versor=decode_array(payload["input_versor"]),
+            output_versor=decode_array(payload["output_versor"]),
+            tokens_in=tuple(payload["tokens_in"]),
+            tokens_out=tuple(payload["tokens_out"]),
+            dialogue_role=payload["dialogue_role"],
+            referent_slots=dict(payload["referent_slots"]),
+            backward_edges=list(payload["backward_edges"]),
+        )
 
     def copy_with_output(
         self,
@@ -138,3 +165,12 @@ class SessionGraph:
 
     def __repr__(self) -> str:
         return f"SessionGraph(turns={len(self._nodes)})"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"nodes": [n.to_dict() for n in self._nodes]}
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "SessionGraph":
+        graph = cls()
+        graph._nodes = [TurnNode.from_dict(n) for n in payload["nodes"]]
+        return graph
