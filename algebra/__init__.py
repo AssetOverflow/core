@@ -8,6 +8,12 @@ from .cga import (
     null_project,
     embed_point,
     read_scalar_e1,
+    blade_grade,
+    blade_norm,
+    graded_wedge,
+    is_incident,
+    dual,
+    meet,
 )
 from .holonomy import holonomy_encode, holonomy_similarity
 from .rotor import word_transition_rotor
