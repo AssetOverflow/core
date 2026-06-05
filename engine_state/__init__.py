@@ -106,6 +106,14 @@ def _git_revision() -> str:
     return get_git_revision()
 
 
+class IncompatibleEngineStateError(RuntimeError):
+    """Raised when an engine-state checkpoint was written by a NEWER schema than
+    this build supports (L10 step-2 migration discipline).  Older/equal versions
+    are tolerated via additive-optional defaults; a newer checkpoint is refused
+    rather than silently mis-loaded.
+    """
+
+
 class EngineStateStore:
     def __init__(self, path: Path | None = None) -> None:
         self.path = path or _DEFAULT_DIR
@@ -169,6 +177,17 @@ class EngineStateStore:
         if not content:
             return None
         manifest = json.loads(content)
+        # L10 step-2 migration discipline: tolerate schema_version <= current
+        # (additive-optional fields read via defaults); REFUSE a newer checkpoint
+        # rather than silently mis-load state written by code we don't understand.
+        stored_version = manifest.get("schema_version", 0)
+        if not isinstance(stored_version, int) or stored_version > _SCHEMA_VERSION:
+            raise IncompatibleEngineStateError(
+                f"engine_state manifest schema_version {stored_version!r} is newer "
+                f"than this build supports ({_SCHEMA_VERSION}). Refusing to load: a "
+                "newer checkpoint cannot be safely read by older code. Run the "
+                "matching build, or clear engine_state/ explicitly."
+            )
         # W-023 / ADR-0157 — revision-mismatch warning per ADR-0146 §Risks line 127.
         # Never refuse to load; reboot is recovery, not control flow.
         stored_rev = manifest.get("written_at_revision", "unknown")
@@ -188,4 +207,4 @@ class EngineStateStore:
         return (self.path / "manifest.json").exists()
 
 
-__all__ = ["EngineStateStore", "get_git_revision"]
+__all__ = ["EngineStateStore", "IncompatibleEngineStateError", "get_git_revision"]

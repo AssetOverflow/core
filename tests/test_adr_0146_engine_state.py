@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from chat.runtime import ChatRuntime
 from engine_state import EngineStateStore
 from recognition.anti_unifier import Constant, DerivedRecognizer, TypedSlot
@@ -194,3 +196,41 @@ def test_discovery_store_save_load_save_is_idempotent(tmp_path) -> None:
     store.save_discovery_candidates(store.load_discovery_candidates())
 
     assert (tmp_path / "discovery_candidates.jsonl").read_bytes() == first
+
+
+# --- L10 step-2: schema-version migration discipline (added 2026-06-05) --------
+# Versioned additive-optional migration: tolerate schema_version <= current
+# (older/equal checkpoints read any missing newer fields via defaults), REFUSE
+# schema_version > current (never silently mis-load a checkpoint written by code
+# we don't understand). A version bump is a recorded lineage transition, not a
+# death-and-rebirth.
+
+
+def test_load_manifest_refuses_newer_schema_version(tmp_path) -> None:
+    from engine_state import IncompatibleEngineStateError
+
+    store = EngineStateStore(tmp_path)
+    (tmp_path / "manifest.json").write_text(
+        json.dumps(
+            {"schema_version": 999, "turn_count": 3, "written_at_revision": "deadbeef"}
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(IncompatibleEngineStateError):
+        store.load_manifest()
+
+
+def test_load_manifest_tolerates_older_schema_version(tmp_path) -> None:
+    store = EngineStateStore(tmp_path)
+    (tmp_path / "manifest.json").write_text(
+        json.dumps(
+            {"schema_version": 0, "turn_count": 5, "written_at_revision": "unknown"}
+        ),
+        encoding="utf-8",
+    )
+
+    manifest = store.load_manifest()
+
+    assert manifest is not None
+    assert manifest["turn_count"] == 5

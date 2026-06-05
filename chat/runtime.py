@@ -681,10 +681,13 @@ class ChatRuntime:
         store = self._engine_state_store
         if store is None:
             return
+        # Schema-version compatibility gates the whole load: load_manifest()
+        # refuses (raises) a checkpoint written by newer code BEFORE we read any
+        # recognizers/candidates (L10 step-2 migration discipline).
+        manifest = store.load_manifest() or {}
         recognizers = store.load_recognizers()
         self._recognizer_registry = RecognizerRegistry.from_recognizers(recognizers)
         self._pending_candidates = store.load_discovery_candidates()
-        manifest = store.load_manifest() or {}
         self._turn_count = int(manifest.get("turn_count", 0))
         # W-024 / ADR-0158 — buffer reboot event for emission when sink attaches.
         from engine_state import _git_revision

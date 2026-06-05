@@ -78,6 +78,11 @@ class DerivedRecognizer:
     @classmethod
     def from_json(cls, payload: str) -> "DerivedRecognizer":
         raw = json.loads(payload)
+        # L10 engine_state migration discipline (step-2): the v1 keys below are
+        # required.  Any field ADDED in a later schema_version must be read via
+        # raw.get(name, default) and omitted-when-default in as_dict(), so old
+        # checkpoints load without migration and un-evolved records stay
+        # byte-identical (cf. DiscoveryCandidate's C1 fields for the pattern).
         return cls(
             pattern=tuple(_pattern_element_from_dict(element) for element in raw["pattern"]),
             teaching_set_id=str(raw["teaching_set_id"]),
