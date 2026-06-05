@@ -28,7 +28,9 @@ Sealed: no ``chat`` import, no serving path. Deterministic.
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
+from itertools import product
 from typing import Any, Final
 
 # Closed refusal vocabulary for the grounding layer — distinct from the entailment
@@ -40,6 +42,14 @@ UNKNOWN_ENTITY: Final[str] = "unknown_entity"
 UNKNOWN_VARIABLE: Final[str] = "unknown_variable"
 MALFORMED_CASE: Final[str] = "malformed_case"
 EMPTY_CASE: Final[str] = "empty_case"
+# A rule whose head contains a variable not bound in its body (non-range-restricted /
+# "unsafe" in Datalog terms). It grounds soundly, but it is outside the clean regime
+# real rule benchmarks use; refuse rather than silently widen scope.
+UNSAFE_RULE: Final[str] = "unsafe_rule"
+# The independent gold is a truth-table oracle, O(2^atoms); the grounding refuses a
+# problem whose distinct-atom count (or entity/variable count) would make that gold
+# intractable, rather than emit something the wrong=0 arbiter cannot decide.
+GROUNDING_BOUND_EXCEEDED: Final[str] = "grounding_bound_exceeded"
 
 GROUNDING_REASONS: Final[frozenset[str]] = frozenset({
     UNSUPPORTED_PREDICATE_ARITY,
@@ -49,7 +59,24 @@ GROUNDING_REASONS: Final[frozenset[str]] = frozenset({
     UNKNOWN_VARIABLE,
     MALFORMED_CASE,
     EMPTY_CASE,
+    UNSAFE_RULE,
+    GROUNDING_BOUND_EXCEEDED,
 })
+
+# ---------------------------------------------------------------------------
+# Bounds (v1.5: binary relations + multi-variable rules by finite grounding).
+# ---------------------------------------------------------------------------
+# Arity ceiling — unary + binary only; arity >= 3 refuses (functions never).
+MAX_ARITY: Final[int] = 2
+# A rule grounds over n^k assignments (n entities, k distinct variables). These two
+# bound n and k so n^k cannot blow up before the atom bound below is even checked.
+MAX_ENTITIES: Final[int] = 8
+MAX_VARS_PER_RULE: Final[int] = 3
+# THE binding constraint: the independent truth-table oracle is O(2^atoms). The
+# lowered problem's distinct-atom count must stay small or the gold is intractable.
+# 2^20 ~ 1e6 assignments — decidable; binary relations therefore cap at ~4 entities
+# per predicate. This is the honest coverage ceiling of the binary extension.
+MAX_GROUND_ATOMS: Final[int] = 20
 
 _ATOM_SEPARATOR: Final[str] = "__"
 # A slug component: lowercase ASCII letters/digits/single underscores, no leading
@@ -96,11 +123,21 @@ def atom(predicate: Any, entity: Any) -> str:
     return f"{slug(predicate)}{_ATOM_SEPARATOR}{slug(entity)}"
 
 
-def _literal(predicate: Any, entity: Any, polarity: Any) -> str:
+def atom_n(predicate: Any, entity_slugs: Sequence[str]) -> str:
+    """``predicate(arg1, ..., argk)`` → the canonical propositional atom.
+
+    Arity 1 is byte-identical to :func:`atom` (``predicate__entity``), so every
+    pre-existing unary problem lowers unchanged. The ``__`` separator between args
+    cannot collide with a slug (slugs reject ``__``), so the atom is injective in
+    ``(predicate, args)`` and arity-1 vs arity-2 atoms never alias.
+    """
+    return _ATOM_SEPARATOR.join([slug(predicate), *(slug(e) for e in entity_slugs)])
+
+
+def _lit_str(atom_str: str, polarity: Any) -> str:
     if not isinstance(polarity, bool):
         raise GroundingError(MALFORMED_CASE, f"polarity must be a bool, got {polarity!r}")
-    a = atom(predicate, entity)
-    return a if polarity else f"~{a}"
+    return atom_str if polarity else f"~{atom_str}"
 
 
 def _require(condition: bool, reason: str, detail: str = "") -> None:
@@ -108,94 +145,161 @@ def _require(condition: bool, reason: str, detail: str = "") -> None:
         raise GroundingError(reason, detail)
 
 
-def _check_unary(obj: dict[str, Any], *, allow_var: bool) -> None:
-    """Reject any non-unary / relational / functional shape (v1 is unary only)."""
-    keys = set(obj)
-    # A binary relation / function would carry extra argument keys.
-    extra = keys - {"predicate", "entity", "var", "polarity"}
-    _require(not extra, UNSUPPORTED_PREDICATE_ARITY, f"unexpected keys {sorted(extra)}")
-    has_entity = "entity" in obj
-    has_var = "var" in obj
-    if allow_var:
-        _require(has_entity ^ has_var, MALFORMED_CASE, "literal needs exactly one of entity/var")
+# A term is ("entity", name) or ("var", name) — name is the raw case string.
+_Term = tuple[str, str]
+_NormLiteral = tuple[Any, tuple[_Term, ...], bool]
+
+
+def _normalize_term(arg: Any, *, allow_var: bool) -> _Term:
+    _require(isinstance(arg, dict), MALFORMED_CASE, f"arg not a mapping: {arg!r}")
+    extra = set(arg) - {"entity", "var"}
+    _require(not extra, MALFORMED_CASE, f"unexpected arg keys {sorted(extra)}")
+    has_entity, has_var = "entity" in arg, "var" in arg
+    _require(has_entity ^ has_var, MALFORMED_CASE, "arg needs exactly one of entity/var")
+    if has_var:
+        _require(allow_var, UNKNOWN_VARIABLE, "free variable outside a rule")
+        v = arg["var"]
+        _require(isinstance(v, str) and bool(v.strip()), MALFORMED_CASE, "empty variable")
+        return ("var", v)
+    return ("entity", arg["entity"])
+
+
+def _normalize_literal(obj: Any, *, allow_var: bool) -> _NormLiteral:
+    """Normalize a literal — legacy unary ``{entity|var}`` OR general
+    ``{args:[{entity|var},...]}`` — to ``(predicate, terms, polarity)``. Refuses
+    arity 0 / > :data:`MAX_ARITY` (functions and ternary relations) with a typed reason.
+    """
+    _require(isinstance(obj, dict), MALFORMED_CASE, f"literal not a mapping: {obj!r}")
+    _require("predicate" in obj, MALFORMED_CASE, "literal missing predicate")
+    polarity = obj.get("polarity", True)
+    _require(isinstance(polarity, bool), MALFORMED_CASE, f"polarity must be bool: {polarity!r}")
+
+    if "args" in obj:
+        _require("entity" not in obj and "var" not in obj, MALFORMED_CASE,
+                 "use 'args' OR 'entity'/'var', not both")
+        extra = set(obj) - {"predicate", "args", "polarity"}
+        _require(not extra, UNSUPPORTED_PREDICATE_ARITY, f"unexpected keys {sorted(extra)}")
+        args = obj["args"]
+        _require(isinstance(args, list) and bool(args), MALFORMED_CASE, "args must be a non-empty list")
+        terms = tuple(_normalize_term(a, allow_var=allow_var) for a in args)
     else:
-        _require(has_entity and not has_var, UNKNOWN_VARIABLE, "free variable outside a rule")
+        extra = set(obj) - {"predicate", "entity", "var", "polarity"}
+        _require(not extra, UNSUPPORTED_PREDICATE_ARITY, f"unexpected keys {sorted(extra)}")
+        has_entity, has_var = "entity" in obj, "var" in obj
+        _require(has_entity ^ has_var, MALFORMED_CASE, "unary literal needs exactly one of entity/var")
+        if has_var:
+            _require(allow_var, UNKNOWN_VARIABLE, "free variable outside a rule")
+            v = obj["var"]
+            _require(isinstance(v, str) and bool(v.strip()), MALFORMED_CASE, "empty variable")
+            terms = (("var", v),)
+        else:
+            terms = (("entity", obj["entity"]),)
+
+    _require(1 <= len(terms) <= MAX_ARITY, UNSUPPORTED_PREDICATE_ARITY,
+             f"arity {len(terms)} outside 1..{MAX_ARITY}")
+    if not allow_var:
+        _require(all(k == "entity" for k, _ in terms), UNKNOWN_VARIABLE, "free variable outside a rule")
+    return obj["predicate"], terms, polarity
+
+
+def _collect_vars(literals: Sequence[_NormLiteral]) -> list[str]:
+    """Distinct variable names across a rule's literals, in first-seen order."""
+    names: list[str] = []
+    for _pred, terms, _pol in literals:
+        for kind, name in terms:
+            if kind == "var" and name not in names:
+                names.append(name)
+    return names
 
 
 def lower_case(case: dict[str, Any]) -> GroundedProblem:
     """Lower a finite-entity case to ``(premises, query)``. Refuse-first.
 
-    Schema (v1):
+    Schema (v1.5 — extends v1 with binary relations + multi-variable rules):
         {"entities": [str, ...],
-         "facts": [{"predicate": str, "entity": str, "polarity": bool}, ...],
-         "rules": [{"if": [<unary literal with var>, ...],
-                    "then": <unary literal with var>}, ...],
-         "query": {"predicate": str, "entity": str, "polarity": bool}}
+         "facts":    [<ground literal>, ...],
+         "rules":    [{"if": [<literal-with-vars>, ...], "then": <literal-with-vars>}, ...],
+         "query":    <ground literal>}
+
+    A literal is either legacy unary ``{"predicate","entity"|"var","polarity"}`` or
+    general ``{"predicate","args":[{"entity"|"var": str}, ...],"polarity"}`` of arity
+    1..2. Universal rules are grounded by enumerating every assignment of their
+    variables to named entities (``n^k``). Unary single-var problems lower
+    byte-identically to v1. Anything outside the regime or above the bounds refuses.
     """
-    if not isinstance(case, dict) or not case:
-        raise GroundingError(EMPTY_CASE, "case is empty or not a mapping")
+    _require(isinstance(case, dict) and bool(case), EMPTY_CASE, "case is empty or not a mapping")
 
     entities = case.get("entities")
-    if not (isinstance(entities, list) and entities):
+    if not (isinstance(entities, list) and entities):  # narrows for the type checker
         raise GroundingError(EMPTY_CASE, "no entities")
-    entity_set = {slug(e) for e in entities}  # also validates each entity slug
+    _require(len(entities) <= MAX_ENTITIES, GROUNDING_BOUND_EXCEEDED,
+             f"{len(entities)} entities > {MAX_ENTITIES}")
+    entity_slugs = [slug(e) for e in entities]  # validates each entity slug
+    entity_set = set(entity_slugs)
     _require(len(entity_set) == len(entities), MALFORMED_CASE, "duplicate entities after slugging")
-
-    if "query" not in case:
-        raise GroundingError(MALFORMED_CASE, "no query")
-
-    premises: list[str] = []
+    _require("query" in case, MALFORMED_CASE, "no query")
 
     facts = case.get("facts", []) or []
     rules = case.get("rules", []) or []
     _require(isinstance(facts, list), MALFORMED_CASE, "facts must be a list")
     _require(isinstance(rules, list), MALFORMED_CASE, "rules must be a list")
 
-    # Facts — ground unary literals over named entities.
-    for fact in facts:
-        _require(isinstance(fact, dict), MALFORMED_CASE, f"fact is not a mapping: {fact!r}")
-        _check_unary(fact, allow_var=False)
-        _require(slug(fact["entity"]) in entity_set, UNKNOWN_ENTITY, str(fact.get("entity")))
-        premises.append(_literal(fact["predicate"], fact["entity"], fact.get("polarity", True)))
+    premises: list[str] = []
+    atoms_seen: set[str] = set()
 
-    # Rules — single-variable universal rules, grounded by explicit entity expansion.
+    def emit(predicate: Any, resolved: list[str], polarity: bool) -> str:
+        a = atom_n(predicate, resolved)
+        atoms_seen.add(a)
+        _require(len(atoms_seen) <= MAX_GROUND_ATOMS, GROUNDING_BOUND_EXCEEDED,
+                 f"{len(atoms_seen)} distinct atoms > {MAX_GROUND_ATOMS} "
+                 "(the independent truth-table gold is O(2^atoms))")
+        return _lit_str(a, polarity)
+
+    def resolve(terms: tuple[_Term, ...], sigma: dict[str, str]) -> list[str]:
+        out: list[str] = []
+        for kind, name in terms:
+            if kind == "var":
+                out.append(sigma[name])  # already a validated entity slug
+            else:
+                s = slug(name)
+                _require(s in entity_set, UNKNOWN_ENTITY, str(name))
+                out.append(s)
+        return out
+
+    # Facts — ground literals (no variables).
+    for fact in facts:
+        predicate, terms, polarity = _normalize_literal(fact, allow_var=False)
+        premises.append(emit(predicate, resolve(terms, {}), polarity))
+
+    # Rules — universal, grounded over every assignment of variables to entities.
     for rule in rules:
         _require(isinstance(rule, dict), MALFORMED_CASE, f"rule is not a mapping: {rule!r}")
         _require("quantifier" not in rule and "exists" not in rule,
-                 UNSUPPORTED_QUANTIFIER, "only implicit single-var universal rules in v1")
+                 UNSUPPORTED_QUANTIFIER, "only implicit universal rules are supported")
         body = rule.get("if")
         head = rule.get("then")
-        if not (isinstance(body, list) and body):
-            raise GroundingError(MALFORMED_CASE, "rule body must be a non-empty list")
-        if not isinstance(head, dict):
-            raise GroundingError(MALFORMED_CASE, "rule head must be a literal")
-        var = _rule_variable(body, head)
-        for ent in entities:
-            body_atoms = [_literal(lit["predicate"], ent, lit.get("polarity", True)) for lit in body]
-            head_atom = _literal(head["predicate"], ent, head.get("polarity", True))
-            body_conj = " & ".join(f"({b})" for b in body_atoms)
-            premises.append(f"({body_conj}) -> ({head_atom})")
-        _ = var  # validated; grounding is by explicit entity expansion, not by name
+        _require(isinstance(body, list) and bool(body), MALFORMED_CASE, "rule body must be a non-empty list")
+        _require(isinstance(head, dict), MALFORMED_CASE, "rule head must be a literal")
+        body_norm = [_normalize_literal(lit, allow_var=True) for lit in body]
+        head_norm = _normalize_literal(head, allow_var=True)
+        var_names = _collect_vars([*body_norm, head_norm])
+        _require(bool(var_names), UNSUPPORTED_QUANTIFIER,
+                 "a rule must contain at least one variable (a variable-free rule is just a fact)")
+        _require(len(var_names) <= MAX_VARS_PER_RULE, GROUNDING_BOUND_EXCEEDED,
+                 f"{len(var_names)} variables > {MAX_VARS_PER_RULE}")
+        # Range-restriction (safety): every head variable must be bound in the body.
+        unbound = set(_collect_vars([head_norm])) - set(_collect_vars(body_norm))
+        _require(not unbound, UNSAFE_RULE, f"head variable(s) {sorted(unbound)} not bound in the body")
+        for assignment in product(entity_slugs, repeat=len(var_names)):
+            sigma = dict(zip(var_names, assignment, strict=True))
+            body_lits = [emit(p, resolve(ts, sigma), pol) for (p, ts, pol) in body_norm]
+            hp, hts, hpol = head_norm
+            head_lit = emit(hp, resolve(hts, sigma), hpol)
+            body_conj = " & ".join(f"({b})" for b in body_lits)
+            premises.append(f"({body_conj}) -> ({head_lit})")
 
-    query = case["query"]
-    _require(isinstance(query, dict), MALFORMED_CASE, "query must be a literal")
-    _check_unary(query, allow_var=False)
-    _require(slug(query["entity"]) in entity_set, UNKNOWN_ENTITY, str(query.get("entity")))
-    query_lit = _literal(query["predicate"], query["entity"], query.get("polarity", True))
+    # Query — a ground literal.
+    qpred, qterms, qpol = _normalize_literal(case["query"], allow_var=False)
+    query_lit = emit(qpred, resolve(qterms, {}), qpol)
 
     return GroundedProblem(premises=tuple(premises), query=query_lit)
-
-
-def _rule_variable(body: list[dict[str, Any]], head: dict[str, Any]) -> str:
-    """Confirm the rule is single-variable: every literal uses one shared var,
-    no named entities (those would make it not universal). Returns the var name."""
-    seen: set[str] = set()
-    for lit in (*body, head):
-        _require(isinstance(lit, dict), MALFORMED_CASE, f"rule literal not a mapping: {lit!r}")
-        _check_unary(lit, allow_var=True)
-        _require("var" in lit, MALFORMED_CASE, "rule literals must use a variable, not a named entity")
-        v = lit["var"]
-        _require(isinstance(v, str) and bool(v.strip()), MALFORMED_CASE, "empty variable")
-        seen.add(v)
-    _require(len(seen) == 1, UNSUPPORTED_QUANTIFIER, f"v1 allows one variable per rule, saw {sorted(seen)}")
-    return seen.pop()
