@@ -1,4 +1,4 @@
-# ADR-012-L10-Grounding — L10 finite grounding pack and adversarial wrong=0 fixtures
+# ADR-0210 — L10 finite grounding pack and adversarial wrong=0 fixtures
 
 Status: Proposed  
 Date: 2026-06-05  
@@ -79,7 +79,31 @@ Negative / deferred:
 
 - No runtime loader is added in this PR.
 - No test harness is added in this PR.
-- The filename requested here is `adr-012-l10-grounding.md`; this is a working L10 proposal and should be reconciled with the existing ADR registry before final numbering or merge.
+- Reconciled with the existing ADR registry at merge: numbered `ADR-0210`
+  (the originally requested `adr-012-l10-grounding.md` collided with the
+  existing `ADR-0012-core-ingest-governance-layer.md` and did not follow the
+  `ADR-NNNN` convention).
+
+## Open reconciliation item (must resolve before the fixtures are wired)
+
+The adversarial fixtures encode two different responses to "the query
+subject is in `finite_domain` but the guard relation is unsatisfied":
+
+- `l10-adv-003` resolves to `label: false` / `VERIFIED` (the subject is
+  grounded in the same relation sort — `member(alice, team_red)` — just not
+  the guarded value, so closed-world negation makes the query false).
+- `l10-adv-008` resolves to `label: refuse` / `SCOPE_BOUNDARY` (the subject
+  is grounded only in a *different* sort — `asset(asset_1)`, not
+  `account(...)` — so the rule's range is type-incommensurate and the engine
+  refuses rather than concluding false).
+
+That distinction (same-sort negative ⇒ `false`; cross-sort/type-mismatch ⇒
+`refuse`) is defensible but is not yet stated as a single decision
+procedure. A future symbolic runner (verification-plan item 4) MUST encode
+the discriminating principle explicitly before these labels become a live
+oracle; otherwise the two cases are an inconsistent gold and would not be a
+sound independent check. Until then the fixtures are an inert proposal, not
+a wired wrong=0 lane.
 
 ## Verification plan
 
