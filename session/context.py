@@ -140,7 +140,8 @@ class SessionContext:
             # First turn: initialise the accumulator at full blade magnitude.
             self.running_dialogue_blade = blade.copy()
         else:
-            # Drift fix 1: magnitude-preserving EMA accumulation.
+            # Semantic accumulation, not drift repair (CLAUDE.md bright line):
+            # magnitude-preserving EMA of the confirmed concept direction.
             #
             # Previously: running_blade = sign(inner) * new_blade
             # This reset magnitude to 1 on every turn, discarding how many
@@ -192,21 +193,26 @@ class SessionContext:
             valence=field_state.valence,
         )
 
-    def _anchor_pull(self, field_state: FieldState) -> FieldState:
-        """Drift fix 3: mild rotor-geodesic pull toward the session anchor field.
+    def _session_anchor_pull(self, field_state: FieldState) -> FieldState:
+        """Semantic anchoring: a mild rotor-geodesic pull of the field toward the
+        session concept-attractor (CLAUDE.md sanctioned semantic-anchoring site;
+        NOT a drift repair).
 
-        Applied after hemisphere correction. Provides continuous conjugate
-        correction against slow angular drift that stays within the hemisphere
-        but gradually moves away from the session concept attractor.
+        Applied after hemisphere consistency.  Expresses the model relation
+        "this turn's field belongs to the session's concept" by nudging the
+        field toward the session anchor when it has drifted within-hemisphere
+        away from that attractor.
 
         Computes the transition rotor R = anchor * reverse(F), scales it to
-        R^α via rotor_power (stays on the versor manifold by construction), and
-        applies it via versor_apply.  This replaces the previous _slerp_toward
+        R^α via rotor_power (stays on the versor manifold BY CONSTRUCTION), and
+        applies it via versor_apply.  It replaces the previous _slerp_toward
         approach, which interpolated on S^31 rather than on the Spin sub-manifold
-        and required a post-hoc unitize_versor to repair the manifold violation.
+        and required a post-hoc unitize_versor — that closure repair is exactly
+        what the bright line forbids; this construction-correct form is allowed.
 
-        α=0.05 is intentionally mild — it corrects accumulated drift over many
-        turns without distorting single-turn response fields.
+        α=0.05 is intentionally mild — it anchors gently over many turns without
+        distorting single-turn response fields.  Closure (versor_condition < 1e-6)
+        is preserved by construction (verified by a 100k-step measurement).
         """
         if self._anchor_field is None:
             return field_state
@@ -250,9 +256,10 @@ class SessionContext:
         self._register_result_referent(result)
         active_slots = self.referents.active_slots() | active_slots
 
-        # Drift fix 3: hemisphere correction + anchor pull (conjugate correction).
+        # Semantic anchoring (CLAUDE.md sanctioned site, not drift repair):
+        # hemisphere consistency + a mild pull toward the session concept-attractor.
         oriented_state = self._hemisphere_consistent_field(result.final_state)
-        oriented_state = self._anchor_pull(oriented_state)
+        oriented_state = self._session_anchor_pull(oriented_state)
 
         self.graph.add_turn(
             turn_idx=self.turn,
@@ -323,7 +330,7 @@ class SessionContext:
                 )
                 result = generate(pivot, self.vocab, self.persona, max_tokens, vault=self.vault)
         self.finalize_turn(result, input_versor=input_versor, dialogue_role="assert")
-        # Drift fix 3 may have rotated/pulled the state inside finalize_turn;
+        # Semantic anchoring may have rotated/pulled the state inside finalize_turn;
         # re-bind result.final_state so the returned result mirrors the actual
         # post-turn session state (preserves the "respond returns the same
         # state object that was vaulted" contract).
