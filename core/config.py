@@ -276,6 +276,14 @@ class RuntimeConfig:
     # ADR-0151 — generate TeachingChainProposals from enriched candidates on load.
     auto_proposal_enabled: bool = False
 
+    # Shape B+ (L10 resume-as-same-life) — persist and restore the FULL lived
+    # session state (field, vault, anchor, graph, referents, dialogue) across
+    # reboot, not just recognizers/candidates (Shape B). OFF by default: it is a
+    # deliberate always-on-runtime mode, and per-turn snapshotting has an O(turns)
+    # cost, so demos/evals/one-shot runtimes must not pay for resume they don't
+    # use. Enabled by the L10 continuity lane and the production L10 process.
+    persist_session_state: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"

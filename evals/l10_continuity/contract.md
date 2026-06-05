@@ -37,17 +37,20 @@ fail under the violation it nominally catches is decoration, not proof.
   semantics (the raw recall score is not a clean similarity). Recorded as
   `not_covered` in the report; a follow-up increment.
 
-## The headline diagnostic (P2b)
+## The headline result (P2b) — resume-as-same-life
 
-Today a reboot restores only recognizers / discovery candidates / `turn_count`
-(Shape B, ADR-0146) and discards the lived field / vault / anchor / graph /
-referents. So `post_reboot_transparent == False`: a reboot diverges from the
-uninterrupted run **at the first post-reboot turn**. This is the mechanical
-proof of "many lives sharing a checkpoint" and the precise definition of the
-Shape-B+ persistence work that closes resume-as-same-life. The
-`test_p2b_documents_current_resume_gap` test pins this reality and will **flip**
-if persistence is later added — forcing a doc update so the gap cannot close
-silently.
+A reboot is now **fully transparent**: `post_reboot_transparent == True`,
+`first_divergence is None`. With Shape B+ persistence wired
+(`SessionContext.snapshot/restore` → engine_state schema v2), the lived field /
+vault / anchor / graph / referents / dialogue survive a reboot, so
+`[run K → reboot → run M]` is byte-identical to the uninterrupted `[run K+M]`.
+`test_p2b_reboot_is_transparent` is the load-bearing guard.
+
+This **flipped** from the original Shape B (ADR-0146) behavior, where only
+recognizers / discovery candidates / `turn_count` survived and the lived
+field/vault were discarded — `post_reboot_transparent == False`, divergence at
+the first post-reboot turn ("many lives sharing a checkpoint"). The spike
+measured that gap, defined the persistence work, and now confirms it closed.
 
 ## Thresholds (empirical basis, not arbitrary)
 

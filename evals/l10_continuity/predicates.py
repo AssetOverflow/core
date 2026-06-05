@@ -116,12 +116,14 @@ def evaluate_p2b_reboot_transparency(
 ) -> tuple[PredicateOutcome, RebootTransparency]:
     """P2b — locate where a rebooted run diverges from an uninterrupted one.
 
-    The predicate PASSES on the structural invariant only: a reboot must not
-    change any turn *before* the reboot point (those are the same first
-    segment, so they must be identical — a failure here is a real determinism
-    or state-leak bug). Full post-reboot transparency is the *measured*
-    diagnostic, returned alongside; it is expected to be ``False`` until the
-    lived field/vault are persisted across reboot (the Shape-B+ work).
+    The predicate PASSES on the structural invariant: a reboot must not change
+    any turn *before* the reboot point (those are the same first segment, so they
+    must be identical — a failure here is a real determinism or state-leak bug).
+    Full post-reboot transparency is returned alongside as the *measured*
+    headline. With Shape B+ persistence wired (SessionContext.snapshot/restore ->
+    engine_state schema v2), it is now ``True`` — a reboot is byte-identical to
+    no reboot. It was ``False`` under Shape B (field/vault discarded); the flip is
+    the resume-as-same-life proof.
     """
     if not rebooted.reboot_at:
         raise ValueError("P2b expects a rebooted run (reboot_at non-empty).")

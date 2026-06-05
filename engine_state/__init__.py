@@ -71,7 +71,7 @@ def _atomic_write_text(target: Path, content: str, *, encoding: str = "utf-8") -
                 pass
         raise
 
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2  # v2 adds session_state.json (Shape B+ lived-state persistence)
 _DEFAULT_DIR = (
     Path(os.environ["CORE_ENGINE_STATE_DIR"])
     if os.environ.get("CORE_ENGINE_STATE_DIR")
@@ -202,6 +202,34 @@ class EngineStateStore:
                 stacklevel=2,
             )
         return manifest
+
+    def save_session_state(self, snapshot: dict) -> None:
+        """Persist the lived session state (Shape B+ / schema v2).
+
+        ``snapshot`` is ``SessionContext.snapshot()`` — a bit-exact, JSON-safe
+        dict of the field, vault, anchor, graph, referents, and dialogue. Written
+        atomically (ADR-0156). Save this BEFORE ``save_manifest`` so the manifest
+        stays the last durable act of a checkpoint (the commit marker).
+        """
+        _atomic_write_text(
+            self.path / "session_state.json",
+            json.dumps(snapshot, sort_keys=True, separators=(",", ":")),
+        )
+
+    def load_session_state(self) -> dict | None:
+        """Load the lived session state, or None when absent (v1 checkpoint).
+
+        A v1 checkpoint has no ``session_state.json`` — returning None lets the
+        caller fall back to a fresh session (today's Shape B behavior), so old
+        checkpoints stay loadable.
+        """
+        p = self.path / "session_state.json"
+        if not p.exists():
+            return None
+        content = p.read_text(encoding="utf-8").strip()
+        if not content:
+            return None
+        return json.loads(content)
 
     def exists(self) -> bool:
         return (self.path / "manifest.json").exists()
