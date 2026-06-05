@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 import hashlib
 import json
 import re
+import warnings
 from collections.abc import Sequence
 from typing import Any, List
 
@@ -52,7 +53,8 @@ from teaching.discovery import (
     format_candidate_jsonl,
 )
 from teaching.discovery_sink import DiscoveryCandidateSink
-from engine_state import EngineStateStore
+from engine_state import EngineStateStore, get_git_revision
+from core.engine_identity import engine_identity_for_config
 from recognition.anti_unifier import derive_recognizer
 from recognition.outcome import FeatureBundle
 from recognition.registry import RecognizerRegistry
@@ -674,6 +676,16 @@ class ChatRuntime:
         # checkpoint is loaded, flushed to the sink on attach_telemetry_sink.
         # None means no reboot was detected this session.
         self._pending_reboot_payload: str | None = None
+        # L11 — the engine's content-derived identity (who am I), and the
+        # identity stamped in the loaded checkpoint (the lineage parent for the
+        # next checkpoint). ``_loaded_engine_identity`` stays "" at genesis.
+        self._engine_identity: str = engine_identity_for_config(
+            self.config, get_git_revision()
+        )
+        self._loaded_engine_identity: str = ""
+        # L11 — set True on reboot when the stamped checkpoint identity differs
+        # from the recomputed identity (the ratified substrate changed while down).
+        self.identity_continuity_break: bool = False
         if self._engine_state_store is not None and self._engine_state_store.exists():
             self._load_engine_state()
 
@@ -689,6 +701,29 @@ class ChatRuntime:
         self._recognizer_registry = RecognizerRegistry.from_recognizers(recognizers)
         self._pending_candidates = store.load_discovery_candidates()
         self._turn_count = int(manifest.get("turn_count", 0))
+        # L11 — the identity this checkpoint was written under becomes the lineage
+        # parent of the next checkpoint we write. If it differs from the identity
+        # we recomputed at boot, the ratified substrate changed during downtime:
+        # we would resume the lived state under a DIFFERENT identity. Surface it
+        # (warn + flag); refuse only under strict_identity_continuity.
+        self._loaded_engine_identity = str(manifest.get("engine_identity", ""))
+        if (
+            self._loaded_engine_identity
+            and self._loaded_engine_identity != self._engine_identity
+        ):
+            self.identity_continuity_break = True
+            message = (
+                "engine identity continuity break: checkpoint was written under "
+                f"{self._loaded_engine_identity[:12]}… but this build computes "
+                f"{self._engine_identity[:12]}… — the ratified identity substrate "
+                "changed while the engine was down. Resuming would carry the lived "
+                "state into a different identity."
+            )
+            if self.config.strict_identity_continuity:
+                from core.engine_identity import IdentityContinuityError
+
+                raise IdentityContinuityError(message)
+            warnings.warn(message, RuntimeWarning, stacklevel=2)
         # Shape B+ (schema v2): restore the lived session state into the live
         # context so a reboot resumes the SAME life (field/vault/anchor/graph/
         # referents/dialogue). Opt-in (config.persist_session_state); None for a
@@ -738,7 +773,15 @@ class ChatRuntime:
         # default so one-shot runtimes don't pay the per-turn snapshot cost.
         if self._context is not None and self.config.persist_session_state:
             store.save_session_state(self._context.snapshot())
-        store.save_manifest(self._turn_count)
+        # L11 — stamp the engine's identity and its lineage parent (the identity
+        # of the prior checkpoint). Same substrate -> identity == parent (a stable
+        # life); a ratified substrate change -> identity != parent (the bump).
+        store.save_manifest(
+            self._turn_count,
+            engine_identity=self._engine_identity,
+            parent_engine_identity=self._loaded_engine_identity,
+        )
+        self._loaded_engine_identity = self._engine_identity
 
     def record_recognition_example(
         self,

@@ -284,6 +284,14 @@ class RuntimeConfig:
     # use. Enabled by the L10 continuity lane and the production L10 process.
     persist_session_state: bool = False
 
+    # L11 — on reboot, if the stamped checkpoint identity != the recomputed
+    # engine identity (the ratified substrate changed during downtime), REFUSE to
+    # start (raise IdentityContinuityError) rather than the default warn-and-flag.
+    # OFF by default: reboot is recovery, not control flow (ADR-0157), and the
+    # operator must not be bricked by a benign ratified pack swap. Deployments
+    # wanting a hard identity-continuity guarantee opt in.
+    strict_identity_continuity: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"
