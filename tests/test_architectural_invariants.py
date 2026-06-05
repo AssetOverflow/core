@@ -1103,6 +1103,19 @@ INDEPENDENT_GOLD_LANES: tuple[IndependentGoldLane, ...] = (
         oracle_module="evals/dimensional/oracle.py",
         sut_import_prefixes=("generate.binding_graph",),
     ),
+    # The relational-metric lane (field-reasoner wedge): the geometric field reader
+    # (generate.relational_field_reader, which reads TEXT into conformal points) is
+    # the SUT, so its arithmetic gold oracle must share no code with the reader or
+    # the field engine it rides on.
+    IndependentGoldLane(
+        name="relational_metric",
+        oracle_module="evals/relational_metric/oracle.py",
+        sut_import_prefixes=(
+            "generate.relational_field_reader",
+            "algebra",
+            "field",
+        ),
+    ),
 )
 
 _DEDUCTIVE_CASE_FILES: tuple[str, ...] = (
@@ -1391,4 +1404,196 @@ class TestINV26InterlinguaNeutrality:
         assert external, (
             "INV-26b predicate failed to detect the adapter's domain-reader "
             "import — the core-isolation check is vacuous."
+        )
+
+
+# ===========================================================================
+# INV-27  Tier-2 reader disjointness — the two readers whose AGREEMENT the
+#         Tier-2 gate trusts must share no decoding pathway
+# ===========================================================================
+#
+# Claim (docs/analysis/field-reasoner-wedge-design-and-falsification-2026-06-04
+# .md §3.1; the decoration firewall):
+#
+#   ``verify_tier2_agreement`` keys independence on ``reader_lineage`` — the
+#   decoding PATHWAY — not on the cosmetic ``structural_signature``. That runtime
+#   check is only load-bearing if "distinct lineage" actually means "no shared
+#   decoding pathway." A string alone cannot prove that. This invariant supplies
+#   the static proof: every reader that EMITS a Tier-2 lineage is registered with
+#   its entry module, and any two registered readers' TRANSITIVE first-party
+#   import sets are disjoint (modulo an explicit pure-data neutral allowlist).
+#
+#   The old gate admitted on ``len(set(signatures)) < 2`` — a label test that a
+#   single reader could satisfy by relabeling. The single-level INV-25 import
+#   check would also miss a helper that re-pulls a shared reader transitively;
+#   this check is TRANSITIVE.
+#
+#   27a  Every ``reader_lineage="..."`` literal emitted in core/reasoning/adapters
+#        is registered in TIER2_READER_PATHWAYS (so its disjointness is proven).
+#   27b  Each registered reader module exists (drift guard).
+#   27c  Every pair of registered readers is transitively import-disjoint, except
+#        modules explicitly allowlisted as pure-data neutral meeting points.
+#   27d  Non-vacuity: the disjointness predicate flags a genuinely-shared pair and
+#        the neutral allowlist genuinely clears one — proving 27c can fail.
+
+import dataclasses as _dataclasses
+
+# Top-level first-party package roots. An imported module whose first dotted
+# component is one of these is project code (a potential shared decoding pathway);
+# stdlib and third-party (numpy, ...) are not.
+_FIRST_PARTY_ROOTS: frozenset[str] = frozenset({
+    "generate", "core", "algebra", "field", "language_packs", "vault", "chat",
+    "teaching", "sensorium", "calibration", "evals", "ingest", "recognition",
+    "formation", "morphology", "vocab", "session", "contemplation", "persona",
+    "alignment", "probe", "core_ingest", "core_rs",
+})
+
+
+@_dataclasses.dataclass(frozen=True)
+class Tier2Reader:
+    """A reader whose evidence the Tier-2 gate may treat as an independent vote."""
+
+    lineage: str  # must equal the ``reader_lineage`` this reader emits
+    module: str   # repo-relative path to the reader's entry module
+
+
+# Readers whose agreement the Tier-2 gate is allowed to trust. Adding one is the
+# reviewable seam: it asserts (and INV-27c proves) the new reader shares no
+# decoding pathway with the others.
+TIER2_READER_PATHWAYS: tuple[Tier2Reader, ...] = (
+    Tier2Reader("proof_chain.entail", "generate/proof_chain/entail.py"),
+    Tier2Reader("math_problem_graph.solve_verify", "generate/math_solver.py"),
+)
+
+# Pure-data / contract modules that are a NEUTRAL meeting point, not a shared
+# decoding pathway: two readers may both import these without their agreement
+# becoming common-mode. Every entry must be parser/solver-free (frozen data or
+# pure algebra). EMPTY today — the current readers share nothing; the field
+# reader (Phase W) will add ``generate.binding_graph.model`` here, with review.
+TIER2_NEUTRAL_MODULES: frozenset[str] = frozenset()
+
+
+def _is_first_party(mod: str) -> bool:
+    return mod.split(".")[0] in _FIRST_PARTY_ROOTS
+
+
+def _resolve_module(mod: str) -> Path | None:
+    base = _REPO_ROOT / mod.replace(".", "/")
+    if (f := base.with_suffix(".py")).is_file():
+        return f
+    if (pkg := base / "__init__.py").is_file():
+        return pkg
+    return None
+
+
+def _transitive_first_party_imports(entry_module: str) -> set[str]:
+    """Every first-party module reachable from ``entry_module`` via imports.
+
+    Follows ``import``/``from ... import`` edges through first-party modules only,
+    so a reader that pulls a shared comprehension helper three hops deep is still
+    caught — unlike the single-level :func:`_module_imports`.
+    """
+    seen: set[str] = set()
+    stack = [entry_module]
+    while stack:
+        mod = stack.pop()
+        if mod in seen:
+            continue
+        path = _resolve_module(mod)
+        if path is None:
+            continue
+        seen.add(mod)
+        for imported in _module_imports(path):
+            if _is_first_party(imported) and imported not in seen:
+                stack.append(imported)
+    return seen
+
+
+def _shared_first_party(a: set[str], b: set[str], neutral: frozenset[str]) -> set[str]:
+    """First-party modules both sets import, minus the neutral allowlist."""
+    return (a & b) - set(neutral)
+
+
+def _module_name_of(rel_path: str) -> str:
+    stem = rel_path[:-3] if rel_path.endswith(".py") else rel_path
+    return stem.replace("/", ".")
+
+
+class TestINV27Tier2ReaderDisjointness:
+    """The two readers whose agreement the Tier-2 gate trusts share no decoding
+    pathway — so ``verify_tier2_agreement``'s lineage check is load-bearing."""
+
+    def test_emitted_lineages_are_registered(self):
+        """27a — every reader_lineage a producer emits is registered, so its
+        disjointness is actually proven below (not merely asserted by a string)."""
+        adapters = _REPO_ROOT / "core" / "reasoning" / "adapters.py"
+        tree = ast.parse(adapters.read_text())
+        emitted: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                for kw in node.keywords:
+                    if kw.arg == "reader_lineage" and isinstance(kw.value, ast.Constant):
+                        if isinstance(kw.value.value, str):
+                            emitted.add(kw.value.value)
+        registered = {r.lineage for r in TIER2_READER_PATHWAYS}
+        unregistered = sorted(emitted - registered)
+        assert not unregistered, (
+            f"Reader(s) emit unregistered Tier-2 lineage(s): {unregistered}. "
+            "Register them in TIER2_READER_PATHWAYS so INV-27c proves they share "
+            "no decoding pathway, or the gate's independence check is unbacked."
+        )
+
+    def test_registered_reader_modules_exist(self):
+        """27b — drift guard: a registered module that moved makes 27c vacuous."""
+        missing = [r.module for r in TIER2_READER_PATHWAYS
+                   if not (_REPO_ROOT / r.module).is_file()]
+        assert not missing, (
+            f"Registered Tier-2 reader module(s) not found: {missing}. "
+            "Update TIER2_READER_PATHWAYS."
+        )
+
+    def test_registered_readers_are_pairwise_import_disjoint(self):
+        """27c — the load-bearing static guarantee. Any two readers the gate may
+        treat as independent votes import no first-party module in common (except
+        explicit neutral pure-data modules). Distinct lineage ⟹ disjoint pathway."""
+        transitive = {
+            r.lineage: _transitive_first_party_imports(_module_name_of(r.module))
+            for r in TIER2_READER_PATHWAYS
+        }
+        offenders: list[str] = []
+        readers = list(TIER2_READER_PATHWAYS)
+        for i in range(len(readers)):
+            for j in range(i + 1, len(readers)):
+                a, b = readers[i], readers[j]
+                shared = _shared_first_party(
+                    transitive[a.lineage], transitive[b.lineage], TIER2_NEUTRAL_MODULES
+                )
+                if shared:
+                    offenders.append(
+                        f"{a.lineage} ⟂ {b.lineage} share {sorted(shared)}"
+                    )
+        assert not offenders, (
+            "Tier-2 readers the gate trusts as independent share a decoding "
+            "pathway:\n  " + "\n  ".join(offenders)
+            + "\n\nTheir agreement would be common-mode, not independent (the "
+            "GSM8K blind spot). Re-implement one independently, or — if the shared "
+            "module is genuinely pure data — add it to TIER2_NEUTRAL_MODULES with "
+            "a justification that it is parser/solver-free."
+        )
+
+    def test_disjointness_predicate_is_non_vacuous(self):
+        """27d — prove 27c can fail and that the neutral allowlist genuinely
+        clears a shared module (CLAUDE.md schema-defined proof obligation)."""
+        a = {"generate.reader_a", "generate.shared_parser", "algebra.versor"}
+        b = {"generate.reader_b", "generate.shared_parser"}
+        # A genuinely shared first-party module is flagged.
+        assert _shared_first_party(a, b, frozenset()) == {"generate.shared_parser"}
+        # Allowlisting that module as neutral clears it.
+        assert _shared_first_party(a, b, frozenset({"generate.shared_parser"})) == set()
+        # The transitive walker really follows edges: math_solver reaches the
+        # problem-graph module it is built on (a multi-hop first-party import).
+        ms = _transitive_first_party_imports("generate.math_solver")
+        assert "generate.math_problem_graph" in ms, (
+            "transitive walker did not follow math_solver -> math_problem_graph; "
+            "the disjointness proof would miss deep shared readers."
         )
