@@ -11,12 +11,17 @@ relational set for DIRECT entailment.
 
 Fail-closed (wrong=0 at the comprehension layer):
 
-  - a clause is read ONLY when it matches ``<A> is [the] <connective> <B>`` AND the
-    connective's lemma is present in the LOADED pack (``pack_lemmas``). A non-matching
-    surface, a negated form, a multi-word/reserved filler, or a lemma absent from the
-    pack all REFUSE — never guess, never field-vote. Deterministic.
+  - a clause is read ONLY when it matches ``<A> is [the] <connective> <B>`` with the
+    copula sitting STRUCTURALLY adjacent to the connective, AND the connective's lemma
+    is present in the LOADED pack (``pack_lemmas``), AND neither argument slot carries
+    leftover relational/reserved vocabulary. A non-matching surface, a dangling copula,
+    a negated form, an argument slot holding a connective token (a trailing qualifier
+    like "… of Dan during school" — unparsed structure, NOT an entity), or a lemma
+    absent from the pack all REFUSE — never guess, never field-vote. Deterministic.
   - only the PREDICATE is closed-vocabulary; the two arguments may be OOV (arbitrary
-    identifiers), grounded downstream by the OOV substrate.
+    identifiers), grounded downstream by the OOV substrate. A clean multi-word entity
+    ("north station") canonicalizes per the join contract; an argument that still holds
+    relational structure refuses rather than fabricate a compound entity.
 
 Scope — ground binary relations, DIRECT reading only. NO transitive/symmetric/rule
 inference: a symmetric lemma (``sibling_of``, ``equal_to``, ``adjacent_to`` …) reads
@@ -81,9 +86,19 @@ _CONNECTIVE_TO_LEMMA: dict[tuple[str, ...], str] = {
 #: for direct relational entailment. (The realized fact's predicate is one of these.)
 RELATIONAL_PREDICATES = frozenset(_CONNECTIVE_TO_LEMMA.values())
 
-#: Structural copula/article tokens stripped from an argument slot's edges. They are
-#: scaffolding of the ``<A> is [the] …`` template, never part of an entity id.
-_EDGE_FUNCTION_WORDS = frozenset({"is", "the"})
+#: The article stripped from an argument slot's edges ("the box" -> "box"). The
+#: copula ("is") is NOT stripped here — it is enforced STRUCTURALLY (adjacent to the
+#: connective) so a dangling copula ("Monday before Friday is.") cannot read as a fact.
+_ARTICLE = "the"
+
+#: Every token that participates in a connective. An argument slot must be FREE of
+#: these: leftover relational vocabulary means unparsed structure (a trailing
+#: qualifier like "… of Dan DURING school", a second relation), so the honest output
+#: is a Refusal — not a fabricated compound entity ("dan_during_school"). Without this
+#: the refusal net is accidental (it fires only when the leaked token happens to be in
+#: reader._RESERVED), which is a comprehension-layer wrong=0 hole: "… of Bob during the
+#: trip" refuses (article leaks) while "… of Dan during school" fabricates.
+_CONNECTIVE_TOKENS = frozenset(tok for key in _CONNECTIVE_TO_LEMMA for tok in key)
 
 _MAX_CONNECTIVE_LEN = max(len(k) for k in _CONNECTIVE_TO_LEMMA)
 
@@ -95,12 +110,13 @@ def load_relational_pack_lemmas() -> frozenset[str]:
     return frozenset(entry.lemma for entry in load_pack_entries(RELATIONAL_PACK_ID))
 
 
-def _strip_edges(toks: list[str]) -> list[str]:
-    """Drop leading/trailing structural copula/article tokens from an argument slot."""
+def _strip_article_edges(toks: list[str]) -> list[str]:
+    """Drop a leading/trailing article ("the") from an argument slot — an entity id is
+    never the bare article. (The copula is handled structurally, not stripped here.)"""
     out = list(toks)
-    while out and out[0] in _EDGE_FUNCTION_WORDS:
+    while out and out[0] == _ARTICLE:
         out = out[1:]
-    while out and out[-1] in _EDGE_FUNCTION_WORDS:
+    while out and out[-1] == _ARTICLE:
         out = out[:-1]
     return out
 
@@ -189,9 +205,6 @@ def _read_relational_clause(
     toks = clause.strip().lower().split()
     if not toks:
         raise _Reject("empty_clause", clause)
-    if "is" not in toks:
-        # The relational template is copular; without a copula it is not our shape.
-        raise _Reject("no_relational_template", clause)
 
     split = _split_around_connective(toks)
     if split is None:
@@ -204,10 +217,32 @@ def _read_relational_clause(
     if lemma not in pack_lemmas:
         raise _Reject("relational_lemma_not_in_pack", lemma)
 
-    subject_toks = _strip_edges(left)
-    object_toks = _strip_edges(right)
+    # Structural copula: the template is ``<A> is [the] <connective> <B>``. The copula
+    # must sit ADJACENT to the connective (fact: the tail of the left side; question:
+    # its head) — not merely present somewhere. This refuses a dangling copula
+    # ("Monday before Friday is.") and a question-shaped statement ("Is Monday before
+    # Friday." with a period) rather than fabricating a fact from them.
+    if question:
+        if not left or left[0] != "is":
+            raise _Reject("no_relational_template", clause)
+        subject_toks = left[1:]
+    else:
+        lead = left[:-1] if (left and left[-1] == _ARTICLE) else list(left)
+        if not lead or lead[-1] != "is":
+            raise _Reject("no_relational_template", clause)
+        subject_toks = lead[:-1]
+
+    subject_toks = _strip_article_edges(subject_toks)
+    object_toks = _strip_article_edges(right)
     if not subject_toks or not object_toks:
         raise _Reject("incomplete_relation", clause)
+
+    # Fail-closed on leftover relational structure: an argument slot carrying a
+    # connective token ("… of Dan DURING school", "X is left of Y INSIDE Z") is unparsed
+    # structure, not an entity. Refuse — never chunk it into a fabricated compound
+    # entity. (Without this the net is accidental, firing only on reader._RESERVED.)
+    if any(t in _CONNECTIVE_TOKENS for t in (*subject_toks, *object_toks)):
+        raise _Reject("extra_relational_structure", clause)
 
     # ``_chunk`` canonicalizes each slot to a reserved-free identifier (OOV-friendly)
     # and REFUSES junk / leaked function words (e.g. a negated "is not …" leaves the
