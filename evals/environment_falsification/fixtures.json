@@ -1,0 +1,91 @@
+{
+  "fixtures": [
+    {
+      "id": "supported_exact_multimodal",
+      "expected_verdict": "SUPPORTED",
+      "expected": {
+        "audio:left_tone": {
+          "modality": "audio",
+          "signal": {"id": "left_tone", "kind": "tone", "ms": 240, "hz": 180, "sweep": 0, "amp": 0.4}
+        },
+        "vision:corner": {
+          "modality": "vision",
+          "signal": {"id": "corner", "kind": "corner", "size": 32}
+        },
+        "sensorimotor:contact": {
+          "modality": "sensorimotor",
+          "signal": {
+            "id": "contact",
+            "pose_q": [10, -4, 3],
+            "velocity_q": [1, 0, -1],
+            "force_torque_q": [2, 3, 5],
+            "contact_q": [1, 0, 1, 0],
+            "actuator_state_q": [7, 8]
+          }
+        }
+      },
+      "actual": "same"
+    },
+    {
+      "id": "falsified_changed_contact",
+      "expected_verdict": "FALSIFIED",
+      "expected": {
+        "sensorimotor:contact": {
+          "modality": "sensorimotor",
+          "signal": {
+            "id": "contact_expected",
+            "pose_q": [10, -4, 3],
+            "velocity_q": [1, 0, -1],
+            "force_torque_q": [2, 3, 5],
+            "contact_q": [1, 0, 1, 0],
+            "actuator_state_q": [7, 8]
+          }
+        }
+      },
+      "actual": {
+        "sensorimotor:contact": {
+          "modality": "sensorimotor",
+          "signal": {
+            "id": "contact_actual",
+            "pose_q": [10, -4, 3],
+            "velocity_q": [1, 0, -1],
+            "force_torque_q": [2, 3, 5],
+            "contact_q": [0, 0, 0, 0],
+            "actuator_state_q": [7, 8]
+          }
+        }
+      }
+    },
+    {
+      "id": "falsified_missing_and_unexpected",
+      "expected_verdict": "FALSIFIED",
+      "expected": {
+        "audio:left_tone": {
+          "modality": "audio",
+          "signal": {"id": "left_tone_expected", "kind": "tone", "ms": 240, "hz": 180, "sweep": 0, "amp": 0.4}
+        },
+        "vision:box": {
+          "modality": "vision",
+          "signal": {"id": "box_expected", "kind": "contour_box", "size": 32}
+        }
+      },
+      "actual": {
+        "audio:left_tone": {
+          "modality": "audio",
+          "signal": {"id": "left_tone_actual", "kind": "tone", "ms": 240, "hz": 180, "sweep": 0, "amp": 0.4}
+        },
+        "sensorimotor:unexpected_contact": {
+          "modality": "sensorimotor",
+          "signal": {
+            "id": "unexpected_contact",
+            "pose_q": [0, 0, 1],
+            "velocity_q": [0, 0, 0],
+            "force_torque_q": [1, 1, 1],
+            "contact_q": [1],
+            "actuator_state_q": [2]
+          }
+        }
+      }
+    }
+  ]
+}
