@@ -114,6 +114,29 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_versor_condition_rust_parity.py",
         "tests/test_versor_apply_rust_parity.py",
     ),
+    "sensorium": (
+        "tests/test_sensorium_compiler_delta.py",
+        "tests/test_audio_compiler.py",
+        "tests/test_audio_crdt_merge.py",
+        "tests/test_audio_eval_gates.py",
+        "tests/test_audio_pack_manifest.py",
+        "tests/test_audio_sensorium_mount.py",
+        "tests/test_vision_compiler.py",
+        "tests/test_event_vision_compiler.py",
+        "tests/test_vision_crdt_merge.py",
+        "tests/test_vision_eval_gates.py",
+        "tests/test_vision_sensorium_mount.py",
+        "tests/test_sensorimotor_contract.py",
+        "tests/test_sensorimotor_pack_manifest.py",
+        "tests/test_observation_frame_contract.py",
+        "tests/test_observation_frame_harness.py",
+        "tests/test_environment_falsification.py",
+        "tests/test_environment_falsification_eval_cli.py",
+        "tests/test_witness_log_importer.py",
+        "tests/test_tabletop_lab_protocol.py",
+        "tests/test_sensorium_eval_cli.py",
+        "tests/test_efferent_gate.py",
+    ),
     "pulse": (
         "tests/test_pulse_integration.py",
         "tests/test_graph_diffusion.py",
@@ -2354,6 +2377,8 @@ def cmd_eval(args: argparse.Namespace) -> int:
     """Run an eval lane by name, or list available lanes."""
     if getattr(args, "lane", None) == "sensorium":
         return cmd_eval_sensorium(args)
+    if getattr(args, "lane", None) == "environment-falsification":
+        return cmd_eval_environment_falsification(args)
     if getattr(args, "lane", None) == "math-contemplation":
         return cmd_eval_math_contemplation(args)
 
@@ -2492,6 +2517,33 @@ def cmd_eval_sensorium(args: argparse.Namespace) -> int:
         print(f"\nreport written: {report_path}", file=sys.stderr)
 
     return 0 if report["failed"] == 0 and report["gate_closed"] else 1
+
+
+def cmd_eval_environment_falsification(args: argparse.Namespace) -> int:
+    """Run deterministic environmental falsification replay reports."""
+    from evals.environment_falsification import build_environment_falsification_report
+
+    report = build_environment_falsification_report()
+
+    if getattr(args, "json", False):
+        print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(f"lane           : {report['lane']}")
+        print(f"version        : {report['version']}")
+        print(f"cases          : {report['total']}")
+        print(f"passed         : {report['passed']}")
+        print(f"failed         : {report['failed']}")
+        print(f"report_sha256  : {report['report_sha256']}")
+
+    if getattr(args, "report", None):
+        report_path = Path(args.report)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(
+            json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True)
+        )
+        print(f"\nreport written: {report_path}", file=sys.stderr)
+
+    return 0 if report["failed"] == 0 and report["expected_report_hash_ok"] else 1
 
 
 # ---------------------------------------------------------------------------
@@ -4929,7 +4981,7 @@ def build_parser() -> argparse.ArgumentParser:
     eval_cmd.add_argument("--report", metavar="PATH", help="write JSON report to file")
     eval_cmd.add_argument(
         "--modality",
-        choices=["audio", "vision", "sensorimotor"],
+        choices=["audio", "vision", "event-vision", "sensorimotor"],
         default="vision",
         help="sensorium lane modality to evaluate (default: vision)",
     )

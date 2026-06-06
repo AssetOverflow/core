@@ -1,0 +1,7 @@
+{
+  "files": {
+    "basis_map.json": "sha256:e9402742ad1707ecdeefb26213856d7152eb75b36589f41e44b6816ab8c1cdb9",
+    "manifest.json": "sha256:15775345f2c13905855d1df5ea8aeda67109b12cdb10bbaa794841b46cc0efc2",
+    "operators.jsonl": "sha256:4c77b2610ba00924629e24246d2eefa8606d730c4010bd6f908105c5e9c49447"
+  }
+}
