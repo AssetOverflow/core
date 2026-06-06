@@ -9,14 +9,18 @@ versor — and reboot-stability rests on the Shape B+ snapshot of the exact byte
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from algebra.versor import versor_condition
 from chat.runtime import ChatRuntime
+from generate.meaning_graph.reader import comprehend
 from generate.quantitative_comprehension import comprehend_quantitative
 from generate.realize import (
     NotRealized,
     Realized,
+    realize_comprehension,
     realize_quantitative,
     recall_realized,
 )
@@ -158,3 +162,70 @@ def test_binding_graph_record_not_admitted_as_evidence(vocab_persona) -> None:
     query = ctx.vault._versors[res.record.vault_index]
     coherent = ctx.vault.recall(query, top_k=5, min_status=EpistemicStatus.COHERENT)
     assert not any(h["metadata"].get("kind") == "realized" for h in coherent)
+
+
+# --------------------------------------------------------------------------- #
+# wrong=0 defense — an UNADMITTED equation never enters the held self
+# --------------------------------------------------------------------------- #
+
+
+def test_unadmitted_equation_realizes_nothing(vocab_persona) -> None:
+    # The model permits a structurally-valid graph to carry a 'pending'/'refused'
+    # equation. realize_quantitative RE-ASSERTS admitted-status, so it cannot be
+    # slipped a dimensionally-incoherent equation by a non-reader constructor.
+    ctx = _ctx(vocab_persona)
+    good = comprehend_quantitative(_SUM)  # has admitted equations
+    pending = tuple(replace(e, admissibility_status="pending") for e in good.binding_graph.equations)
+    tampered = replace(good, binding_graph=replace(good.binding_graph, equations=pending))
+    res = realize_quantitative(tampered, ctx)
+    assert isinstance(res, NotRealized) and res.reason == "unadmitted_equation"
+    assert len(ctx.vault._metadata) == 0
+
+
+def test_not_a_quant_comprehension_realizes_nothing(vocab_persona) -> None:
+    ctx = _ctx(vocab_persona)
+    res = realize_quantitative(object(), ctx)  # neither Refusal nor QuantComprehension
+    assert isinstance(res, NotRealized) and res.reason == "not_a_quant_comprehension"
+    assert len(ctx.vault._metadata) == 0
+
+
+def test_factless_binding_graph_realizes_nothing(vocab_persona) -> None:
+    ctx = _ctx(vocab_persona)
+    good = comprehend_quantitative(_FACT)
+    factless = replace(good, binding_graph=replace(good.binding_graph, facts=()))
+    res = realize_quantitative(factless, ctx)
+    assert isinstance(res, NotRealized) and res.reason == "no_bound_fact"
+    assert len(ctx.vault._metadata) == 0
+
+
+def test_grounding_failure_realizes_nothing(vocab_persona) -> None:
+    # A degenerate placement raises inside probe_ingest; it must be caught -> no write.
+    ctx = _ctx(vocab_persona)
+
+    def _boom(_tokens):
+        raise RuntimeError("degenerate grounding")
+
+    ctx.probe_ingest = _boom  # type: ignore[method-assign]
+    res = realize_quantitative(comprehend_quantitative(_FACT), ctx)
+    assert isinstance(res, NotRealized) and res.reason == "grounding_failed"
+    assert len(ctx.vault._metadata) == 0
+
+
+# --------------------------------------------------------------------------- #
+# Cross-substrate coexistence — meaning_graph + binding_graph in ONE vault
+# --------------------------------------------------------------------------- #
+
+
+def test_meaning_graph_and_binding_graph_coexist_and_recall_isolates(vocab_persona) -> None:
+    ctx = _ctx(vocab_persona)
+    realize_comprehension(comprehend("Truth is a concept."), ctx)  # meaning_graph member
+    _realize(_FACT, ctx)  # binding_graph (alice)
+    assert len(ctx.vault._metadata) == 2
+    # structure_kind partitions; subject= (a meaning_graph notion) never matches a
+    # binding_graph record (its relation_arguments is empty).
+    mg = recall_realized(ctx, structure_kind="meaning_graph")
+    bg = recall_realized(ctx, structure_kind="binding_graph")
+    assert len(mg) == 1 and len(bg) == 1
+    assert recall_realized(ctx, subject="truth") == mg
+    assert recall_realized(ctx, subject="alice") == ()  # binding_graph not matched by subject=
+    assert mg[0].structure_key != bg[0].structure_key  # cross-kind collision-free

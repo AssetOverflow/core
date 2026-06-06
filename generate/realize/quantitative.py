@@ -56,11 +56,13 @@ def realize_quantitative(
 ) -> Realized | NotRealized:
     """Realize an arithmetic comprehension's binding_graph into ``ctx``'s vault.
 
-    Eligibility: a ``QuantComprehension`` (not a ``Refusal``). Factless / malformed
-    arithmetic prose is already a ``Refusal`` upstream (``comprehend_quantitative``),
-    so the only wrong=0 guard needed here is the ``Refusal`` type check — every
-    ``QuantComprehension`` carries an admissibility-checked binding graph. SPECULATIVE
-    always (COHERENT is never a default); dedup by the span-free structure_key.
+    Eligibility: a ``QuantComprehension`` (not a ``Refusal``) whose every equation is
+    ``admitted``. Every ``QuantComprehension`` PRODUCED BY ``comprehend_quantitative``
+    carries an admissibility-checked graph (real ``check_admissibility``; a ``Refusal``
+    short-circuits unreadable input) — but the type does NOT enforce it, so this
+    function RE-ASSERTS admitted-status defensively, keeping the wrong=0 floor
+    independent of the caller. SPECULATIVE always (COHERENT is never a default); dedup
+    by the span-free structure_key.
     """
     if isinstance(comprehension, Refusal):
         return NotRealized("refusal")
@@ -70,6 +72,13 @@ def realize_quantitative(
     bg = comprehension.binding_graph
     if not bg.facts:
         return NotRealized("no_bound_fact")  # defensive — the reader guarantees >=1 fact
+    # wrong=0 defense: realize ONLY a fully-admitted binding graph. The model permits a
+    # structurally-valid graph to carry a 'pending'/'refused' equation, so re-assert
+    # admitted-status here — a future non-reader constructor cannot slip a
+    # dimensionally-incoherent equation into the held self (it would otherwise be
+    # surfaced as-told by DETERMINE).
+    if any(e.admissibility_status != "admitted" for e in bg.equations):
+        return NotRealized("unadmitted_equation")
 
     # Placement: the asked entity's field point. Symbolic/OOV, so deterministic-
     # GIVEN-session-state, NOT subject-determined; the structural key carries
@@ -83,8 +92,14 @@ def realize_quantitative(
     versor = np.asarray(field_state.F, dtype=np.float32)
 
     structure_canonical = bg.to_canonical_string()
-    content_hash = sha256_of(structure_canonical)
-    structure_key = _binding_graph_structure_key(bg)
+    # ``sha256_of`` rejects floats (canonical-JSON contract). The binding-graph fields
+    # fed here are str by the model's contract today; wrap defensively so a future
+    # numeric field is a clean refusal, never an uncaught TypeError mid-write.
+    try:
+        content_hash = sha256_of(structure_canonical)
+        structure_key = _binding_graph_structure_key(bg)
+    except (TypeError, ValueError):
+        return NotRealized("unhashable_structure")
     status = EpistemicStatus.SPECULATIVE
     source_spans = [f.source_span.to_canonical_string() for f in bg.facts] or [
         s.source_span.to_canonical_string() for s in bg.symbols

@@ -90,7 +90,7 @@ def test_single_in_vocab_declarative_is_realized(vocab_persona) -> None:
 
 
 # --------------------------------------------------------------------------- #
-# Idempotency — a re-told fact does not grow the vault (dedup by content_hash)
+# Idempotency — a re-told fact does not grow the vault (dedup by structure_key)
 # --------------------------------------------------------------------------- #
 
 
@@ -100,8 +100,33 @@ def test_retold_fact_is_idempotent(vocab_persona) -> None:
     second = _realize("Truth is a concept.", ctx)
     assert isinstance(first, Realized) and first.created is True
     assert isinstance(second, Realized) and second.created is False  # dedup hit
+    # dedup is on the span-free structure_key (content_hash coincides only because the
+    # surface is identical here); name the actual dedup key.
+    assert second.record.structure_key == first.record.structure_key
     assert second.record.content_hash == first.record.content_hash
     assert len(ctx.vault._metadata) == 1  # NOT grown
+
+
+def test_negated_relation_realizes_nothing(vocab_persona) -> None:
+    # The reader encodes declarative negation in the PREDICATE (some_not/disjoint), so
+    # rel.negated=True is reachable only via a hand-built graph — but the defensive
+    # refusal must bite: a negated relation ("X is NOT a Y") must never be realized as
+    # a positive fact.
+    from generate.meaning_graph.model import Entity, MeaningGraph, MeaningSpan, Relation
+    from generate.meaning_graph.reader import Comprehension
+
+    span = MeaningSpan(source_id="input", start=0, end=18, text="truth not concept")
+    graph = MeaningGraph(
+        entities=(
+            Entity(entity_id="truth", name="truth", span=span),
+            Entity(entity_id="concept", name="concept", span=span),
+        ),
+        relations=(Relation(predicate="member", arguments=("truth", "concept"), span=span, negated=True),),
+    )
+    ctx = _ctx(vocab_persona)
+    res = realize_comprehension(Comprehension(meaning_graph=graph, queries=()), ctx)
+    assert isinstance(res, NotRealized) and res.reason == "negated_relation"
+    assert len(ctx.vault._metadata) == 0
 
 
 # --------------------------------------------------------------------------- #
