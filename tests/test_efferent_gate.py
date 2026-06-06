@@ -3,7 +3,14 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from sensorium.efferent import DefaultEfferentGate
+from pathlib import Path
+
+from sensorium.efferent import (
+    ActionVerdictRecord,
+    DefaultEfferentGate,
+    VerdictEnforcingEfferentGate,
+    lower_motor_action_intent,
+)
 from sensorium.protocol import (
     AuthorityToken,
     EfferentRefusal,
@@ -132,3 +139,88 @@ def test_registry_admits_decode_through_verdict_enforcing_gate():
     reg.mount(_pack(decoder))
     assert reg.decode("motor_test", _mv(), authority=_authority("decode:motor_test")) == "decoded"
     assert decoder.calls == 1
+
+
+def _admitted_records(intent_sha256: str) -> tuple[ActionVerdictRecord, ...]:
+    return (
+        ActionVerdictRecord(intent_sha256, "safety", True, "safe", "safety-policy"),
+        ActionVerdictRecord(intent_sha256, "ethics", True, "ethical", "ethics-policy"),
+        ActionVerdictRecord(intent_sha256, "tool_scope", True, "in scope", "tool-policy"),
+    )
+
+
+def test_adr_0216_motor_verdict_lowering_is_documented():
+    root = Path(__file__).resolve().parents[1]
+    adr = root / "docs" / "decisions" / "ADR-0216-motor-verdict-lowering.md"
+    assert adr.exists()
+    text = adr.read_text(encoding="utf-8")
+    assert "MotorActionIntent" in text
+    assert "VerdictEnforcingEfferentGate" in text
+    assert "No physical motor decode is authorized" in text
+
+
+def test_motor_action_intent_is_hash_only_and_stable():
+    intent = lower_motor_action_intent("motor_test", _mv())
+    same = lower_motor_action_intent("motor_test", _mv())
+    payload = intent.as_dict()
+    assert intent.intent_sha256 == same.intent_sha256
+    assert intent.predicate_id.startswith("motor.intent.")
+    assert "decoded" not in str(payload)
+    assert "trajectory" not in str(payload)
+    for value in payload.values():
+        assert not isinstance(value, (np.ndarray, bytes, bytearray))
+
+
+def test_verdict_enforcing_gate_refuses_missing_coverage_before_decoder():
+    decoder = _Decoder()
+    gate = VerdictEnforcingEfferentGate()
+    reg = ModalityRegistry(efferent_gate=gate)
+    reg.mount(_pack(decoder))
+    with pytest.raises(EfferentRefusal, match="missing action verdict coverage"):
+        reg.decode("motor_test", _mv(), authority=_authority("decode:motor_test"))
+    assert decoder.calls == 0
+
+
+def test_verdict_enforcing_gate_refuses_failed_verdict_before_decoder():
+    decoder = _Decoder()
+    intent = lower_motor_action_intent("motor_test", _mv())
+    records = (
+        ActionVerdictRecord(intent.intent_sha256, "safety", True, "safe", "safety-policy"),
+        ActionVerdictRecord(intent.intent_sha256, "ethics", False, "ethical refusal", "ethics-policy"),
+        ActionVerdictRecord(intent.intent_sha256, "tool_scope", True, "in scope", "tool-policy"),
+    )
+    reg = ModalityRegistry(efferent_gate=VerdictEnforcingEfferentGate(records))
+    reg.mount(_pack(decoder))
+    with pytest.raises(EfferentRefusal, match="action verdict refused: ethics"):
+        reg.decode("motor_test", _mv(), authority=_authority("decode:motor_test"))
+    assert decoder.calls == 0
+
+
+def test_verdict_enforcing_gate_admits_only_with_authority_and_verdicts():
+    decoder = _Decoder()
+    intent = lower_motor_action_intent("motor_test", _mv())
+    gate = VerdictEnforcingEfferentGate(_admitted_records(intent.intent_sha256))
+    reg = ModalityRegistry(efferent_gate=gate)
+    reg.mount(_pack(decoder))
+
+    with pytest.raises(EfferentRefusal, match="missing capability"):
+        reg.decode("motor_test", _mv(), authority=_authority("decode:other"))
+    assert decoder.calls == 0
+
+    assert reg.decode("motor_test", _mv(), authority=_authority("decode:motor_test")) == "decoded"
+    assert decoder.calls == 1
+
+
+def test_verdict_enforcing_trace_is_hash_only():
+    intent = lower_motor_action_intent("motor_test", _mv())
+    gate = VerdictEnforcingEfferentGate(_admitted_records(intent.intent_sha256))
+    authority = _authority("decode:motor_test")
+    verdict = gate.admit("motor_test", _mv(), authority)
+    trace = gate.trace("motor_test", _mv(), authority, verdict).as_dict()
+    assert trace["admitted"] is True
+    assert trace["intent_sha256"] == intent.intent_sha256
+    assert "decoded" not in str(trace)
+    assert "trajectory" not in str(trace)
+    assert "action_trace" not in str(trace)
+    for value in trace.values():
+        assert not isinstance(value, (np.ndarray, bytes, bytearray))
