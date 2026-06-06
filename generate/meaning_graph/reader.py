@@ -35,11 +35,15 @@ animals, professions, geography, kin, metals, ranks):
     - ``sort [ascending|descending]`` /
       ``... order from <low> to <high>``      -> Query sort(order)
 
-Multi-word noun phrases are REFUSED on purpose: the staged gold lanes canonicalize
-multi-word NPs three contradictory ways ("North station"->"north", "Level one"->
-"level_one", "metal objects"->"metal"), so no single general rule is wrong=0-safe.
-Until the gold lanes carry a canonicalization contract, the only honest reading of
-a multi-word NP is refusal.
+Multi-word noun phrases chunk by the CANONICALIZATION CONTRACT (see
+``evals/comprehension/CANONICALIZATION.md``): a noun-phrase slot canonicalizes to
+its tokens lowercased and joined with ``_`` ("North station"->"north_station",
+"Level one"->"level_one"); a plural class slot singularizes its head first
+("metal objects"->"metal_object"). Join is information-preserving on purpose —
+head-word-only ("metal objects"->"metal") would collapse distinct phrases
+("metal objects" vs "metal tools") into a false identity, itself a wrong=0 hazard.
+A slot containing a reserved function word, or an adjacent-NP boundary that cannot
+be located (the "are all <Xs> <Ys>?" two-NP case), still REFUSES rather than guess.
 """
 
 from __future__ import annotations
@@ -98,6 +102,23 @@ _SORT_HIGH = frozenset(
     {"highest", "tallest", "largest", "greatest", "most", "latest", "top", "last", "high"}
 )
 
+# Function words that may NEVER appear inside a noun-phrase slot. A slot anchored
+# by templates should hold only content tokens; if a reserved token leaks in, the
+# clause is mis-parsed and we REFUSE rather than chunk junk (e.g. "beta in the
+# same order" -> contains "the"/"order" -> refuse, not "beta_in_the_same_order").
+_RESERVED = (
+    _ARTICLES
+    | _COMP_LESS
+    | _COMP_GREATER
+    | _SORT_LOW
+    | _SORT_HIGH
+    | {
+        "is", "are", "than", "with", "not", "all", "no", "some", "therefore",
+        "compare", "sort", "and", "or", "the", "from", "to", "order",
+        "exist", "exists", "them", "which", "in", "of", "on", "at", "by",
+    }
+)
+
 _SENTENCE_RE = re.compile(r"\s*([^.?!]+?)\s*([.?!])")
 
 
@@ -137,12 +158,6 @@ class _Reject(Exception):
         self.refusal = Refusal(reason, detail)
 
 
-def _identifier(word: str) -> str | None:
-    """Normalize a content token to a clean identifier, or None to refuse."""
-    w = word.strip().lower()
-    return w if w.isidentifier() else None
-
-
 def _singularize(word: str) -> str | None:
     """Conservative plural -> singular. None when not confidently a plural."""
     if word in _IRREGULAR_PLURALS:
@@ -156,25 +171,37 @@ def _singularize(word: str) -> str | None:
     return None
 
 
-def _one(words: list[str], detail: str) -> str:
-    """A single content token -> identifier, or REFUSE (multi-word / non-id)."""
-    if len(words) != 1:
-        raise _Reject("multiword_np", detail)
-    ident = _identifier(words[0])
-    if ident is None:
+def _chunk(words: list[str], detail: str) -> str:
+    """A noun-phrase slot -> a single canonical id by the canonicalization
+    contract: lowercase tokens joined with ``_`` (information-preserving — distinct
+    phrases never collapse). REFUSE if the slot is empty, holds a reserved function
+    word, or yields a non-identifier."""
+    if not words:
+        raise _Reject("empty_np", detail)
+    toks = [w.strip().lower() for w in words]
+    # A reserved word is a parse-leak signal only INSIDE a multi-token slot. A
+    # single-token slot is the whole NP — its token is content even if it spells a
+    # function word (e.g. an item literally named "A", which is also the article).
+    if len(toks) > 1 and any(t in _RESERVED for t in toks):
+        raise _Reject("reserved_word_in_np", detail)
+    canonical = "_".join(toks)
+    if not canonical.isidentifier():
         raise _Reject("non_identifier_filler", detail)
-    return ident
+    return canonical
 
 
-def _one_class(words: list[str], detail: str) -> str:
-    """A single plural content token -> singular class id, or REFUSE."""
-    word = _one(words, detail)
-    singular = _singularize(word)
-    if singular is None:
+def _chunk_class(words: list[str], detail: str) -> str:
+    """A plural class noun-phrase slot -> singular canonical class id. The HEAD
+    (final) token is singularized, then the phrase is chunked: "metal objects" ->
+    "metal_object", "people" -> "person". REFUSE if the head is not a recognizable
+    plural (e.g. the adjectival predicate "trained")."""
+    if not words:
+        raise _Reject("empty_np", detail)
+    *modifiers, head = (w.strip().lower() for w in words)
+    singular_head = _singularize(head)
+    if singular_head is None:
         raise _Reject("unknown_morphology", detail)
-    if not singular.isidentifier():
-        raise _Reject("non_identifier_filler", detail)
-    return singular
+    return _chunk([*modifiers, singular_head], detail)
 
 
 def _split_sentences(text: str) -> list[tuple[str, str, int, int]]:
@@ -221,8 +248,8 @@ def _parse_categorical(toks: list[str], detail: str) -> tuple[str, str, str] | N
         predicate_words = predicate_words[1:]
     if not subject_words or not predicate_words:
         raise _Reject("incomplete_categorical", detail)
-    sub = _one_class(subject_words, detail)
-    sup = _one_class(predicate_words, detail)
+    sub = _chunk_class(subject_words, detail)
+    sup = _chunk_class(predicate_words, detail)
     if quant == "some" and negated:
         predicate = "some_not"
     elif negated:
@@ -249,8 +276,8 @@ def _parse_comparative(toks: list[str], detail: str) -> tuple[str, str] | None:
         right = right[1:]
     if not left or not right:
         raise _Reject("incomplete_comparative", detail)
-    x = _one(left, detail)
-    y = _one(right, detail)
+    x = _chunk(left, detail)
+    y = _chunk(right, detail)
     if toks[comp_idx] in _COMP_LESS:
         return x, y  # X < Y
     return y, x  # X > Y  ->  less(Y, X)
@@ -340,10 +367,11 @@ def _read_clause(
 
     # --- ordering queries (keyword-led; terminator-independent) ------------- #
     if toks[0] == "compare":
-        if len(toks) != 4 or toks[2] != "with":
+        if "with" not in toks[1:]:
             raise _Reject("unreadable_compare", clause)
-        left = _one([toks[1]], clause)
-        right = _one([toks[3]], clause)
+        with_idx = toks.index("with", 1)
+        left = _chunk(toks[1:with_idx], clause)
+        right = _chunk(toks[with_idx + 1:], clause)
         for item in (left, right):
             claim(item, "item", span)
         queries.append(Query("compare", (left, right), span))
@@ -370,19 +398,26 @@ def _read_clause(
         rest = toks[1:]
         if rest and rest[0] == "the":
             rest = rest[1:]
-        if len(rest) == 3 and rest[1] in _ARTICLES:
-            name = _one([rest[0]], clause)
-            cls = _one([rest[2]], clause)
-            claim(name, "individual", span)
-            claim(cls, "class", span)
-            queries.append(Query("member", (name, cls), span))
-            return
-        raise _Reject("unreadable_member_query", clause)
+        art_idx = next((i for i, t in enumerate(rest) if t in _ARTICLES), None)
+        if art_idx is None or art_idx == 0 or art_idx == len(rest) - 1:
+            raise _Reject("unreadable_member_query", clause)
+        name = _chunk(rest[:art_idx], clause)
+        cls = _chunk(rest[art_idx + 1:], clause)
+        claim(name, "individual", span)
+        claim(cls, "class", span)
+        queries.append(Query("member", (name, cls), span))
+        return
 
     # --- subset query: "are all <Xs> <Ys>?" -------------------------------- #
-    if question and len(toks) == 4 and toks[0] == "are" and toks[1] == "all":
-        sub = _one_class([toks[2]], clause)
-        sup = _one_class([toks[3]], clause)
+    # The two class NPs are ADJACENT with no separating function word, so a
+    # multi-word split is ambiguous -> require exactly two single tokens, else
+    # refuse rather than guess the boundary.
+    if question and len(toks) >= 2 and toks[0] == "are" and toks[1] == "all":
+        body = toks[2:]
+        if len(body) != 2:
+            raise _Reject("ambiguous_subset_query", clause)
+        sub = _chunk_class([body[0]], clause)
+        sup = _chunk_class([body[1]], clause)
         claim(sub, "class", span)
         claim(sup, "class", span)
         queries.append(Query("subset", (sub, sup), span))
@@ -399,13 +434,16 @@ def _read_clause(
 
     # --- membership fact: "[the] <X> is a|an <Y>" -------------------------- #
     body_toks = toks[1:] if toks[0] == "the" else toks
-    if len(body_toks) == 4 and body_toks[1] == "is" and body_toks[2] in _ARTICLES:
-        name = _one([body_toks[0]], clause)
-        cls = _one([body_toks[3]], clause)
-        claim(name, "individual", span)
-        claim(cls, "class", span)
-        relations.append(("member", (name, cls), span))
-        return
+    if "is" in body_toks:
+        is_idx = body_toks.index("is")
+        after = body_toks[is_idx + 1:]
+        if is_idx > 0 and len(after) > 1 and after[0] in _ARTICLES:
+            name = _chunk(body_toks[:is_idx], clause)
+            cls = _chunk(after[1:], clause)
+            claim(name, "individual", span)
+            claim(cls, "class", span)
+            relations.append(("member", (name, cls), span))
+            return
 
     # --- ordering fact: "<X> [is] <comp> [than] <Y>" ----------------------- #
     comparative = _parse_comparative(toks, clause)

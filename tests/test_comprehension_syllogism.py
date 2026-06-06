@@ -23,10 +23,12 @@ def test_comprehension_syllogism_has_real_coverage() -> None:
 
 
 def test_comprehension_syllogism_pinned_counts() -> None:
-    # Pins the lane: 6 read end-to-end (Barbara/Celarent/Darii/Ferio/Datisi +
-    # the invalid undistributed-middle, which the oracle correctly rejects);
-    # 2 refused — the existential-import conclusion and the multi-word-NP case.
+    # Pins the lane: 7 read end-to-end (Barbara/Celarent/Darii/Ferio/Datisi, the
+    # invalid undistributed-middle which the oracle correctly rejects, and the
+    # multi-word Ferio "metal objects"/"soft objects" now chunked by the
+    # canonicalization contract); 1 refused — the existential-import conclusion
+    # ("some trained people exist") which is out of the categorical grammar.
     report = run()
-    assert report["correct"] == 6
-    assert report["refused"] == 2
+    assert report["correct"] == 7
+    assert report["refused"] == 1
     assert report["total"] == 8

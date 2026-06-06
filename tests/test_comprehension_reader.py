@@ -290,20 +290,50 @@ def test_comparative_template_generalizes_across_domains() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# Multi-word NP — REFUSE (the wrong=0 guard: no general canonicalization exists)
+# Multi-word NP — CHUNK by the canonicalization contract (join tokens with "_")
 # --------------------------------------------------------------------------- #
 
 
-def test_multiword_np_in_categorical_refuses() -> None:
+def test_multiword_np_in_categorical_chunks() -> None:
     comp = comprehend("No metal objects are soft objects.")
-    assert isinstance(comp, Refusal)
-    assert comp.reason == "multiword_np"
+    assert isinstance(comp, Comprehension)
+    # plural class head singularized, then joined: "metal objects" -> "metal_object"
+    assert _rel(comp, "disjoint") == (("disjoint", ("metal_object", "soft_object")),)
 
 
-def test_multiword_np_in_comparative_refuses() -> None:
-    comp = comprehend("North station comes after central.")
-    assert isinstance(comp, Refusal)
-    assert comp.reason == "multiword_np"
+def test_multiword_np_in_comparative_chunks() -> None:
+    comp = comprehend("North station is below south.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "less") == (("less", ("north_station", "south")),)
+    assert _entity_kind(comp, "north_station") == "item"
+
+
+def test_multiword_item_in_compare_query_chunks() -> None:
+    comp = comprehend("Compare north station with south.")
+    assert isinstance(comp, Comprehension)
+    assert comp.queries[0].predicate == "compare"
+    assert comp.queries[0].arguments == ("north_station", "south")
+
+
+def test_multiword_individual_in_membership_chunks() -> None:
+    comp = comprehend("The red car is a vehicle.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "member") == (("member", ("red_car", "vehicle")),)
+
+
+def test_join_is_information_preserving_distinct_nps_stay_distinct() -> None:
+    # WHY the contract JOINS instead of keeping the head word: distinct phrases must
+    # not collapse into a false identity ("metal objects" vs "metal tools" both ->
+    # "metal" would be a wrong=0 hazard).
+    comp = comprehend("All metal objects are heavy items. All metal tools are sharp items.")
+    assert isinstance(comp, Comprehension)
+    ids = {e.entity_id for e in comp.meaning_graph.entities}
+    assert {"metal_object", "metal_tool"} <= ids  # NOT collapsed to "metal"
+
+
+# --------------------------------------------------------------------------- #
+# Parse-or-refuse — still refuse where no honest reading exists (wrong=0)
+# --------------------------------------------------------------------------- #
 
 
 def test_adjectival_predicate_refuses_via_morphology() -> None:
@@ -313,7 +343,17 @@ def test_adjectival_predicate_refuses_via_morphology() -> None:
     assert comp.reason == "unknown_morphology"
 
 
-def test_trailing_tokens_in_compare_refuses() -> None:
+def test_trailing_prepositional_phrase_in_compare_refuses() -> None:
+    # "...in the same order" leaks reserved words into the NP slot -> refuse, never
+    # chunk "beta_in_the_same_order".
     comp = comprehend("Compare beta with beta in the same order.")
     assert isinstance(comp, Refusal)
-    assert comp.reason == "unreadable_compare"
+    assert comp.reason == "reserved_word_in_np"
+
+
+def test_ambiguous_two_np_subset_query_refuses() -> None:
+    # Two adjacent multi-word class NPs with no separating function word -> the
+    # boundary is unknown, so refuse rather than guess it.
+    comp = comprehend("Are all metal objects soft objects?")
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "ambiguous_subset_query"

@@ -186,3 +186,121 @@ def test_set_membership_reader_is_faithful_or_refuses() -> None:
             committed += 1
             assert got == expected, (prose, got, expected)
     assert committed > 50
+
+
+# --------------------------------------------------------------------------- #
+# Multi-word NP chunking — faithful under the canonicalization contract
+# --------------------------------------------------------------------------- #
+
+
+def _class_term(rng):
+    """Return (canonical_id, plural_surface) for a class NP, sometimes multi-word.
+
+    "t1" -> ("t1", "t1s");  "t1 t2" -> ("t1_t2", "t1 t2s")  (head pluralized).
+    """
+    w1 = rng.choice(_TERMS)
+    if rng.random() < 0.5:
+        head = rng.choice([t for t in _TERMS if t != w1])
+        return f"{w1}_{head}", f"{w1} {head}s"
+    return w1, f"{w1}s"
+
+
+def _item_term(rng, pool):
+    """Return (canonical_id, surface) for an item NP, sometimes multi-word (no
+    pluralization for items): "t1" or "t1 t2" -> "t1_t2"."""
+    w1 = pool.pop()
+    if rng.random() < 0.5 and pool:
+        w2 = pool.pop()
+        return f"{w1}_{w2}", f"{w1} {w2}"
+    return w1, w1
+
+
+_MW_PREMISE = {
+    "A": lambda s, p: f"All {s} are {p}.",
+    "E": lambda s, p: f"No {s} are {p}.",
+    "I": lambda s, p: f"Some {s} are {p}.",
+    "O": lambda s, p: f"Some {s} are not {p}.",
+}
+_MW_CONCLUSION = {
+    "A": lambda s, p: f"Therefore all {s} are {p}.",
+    "E": lambda s, p: f"Therefore no {s} are {p}.",
+    "I": lambda s, p: f"Therefore some {s} are {p}.",
+    "O": lambda s, p: f"Therefore some {s} are not {p}.",
+}
+
+
+def test_multiword_syllogism_is_faithful_or_refuses() -> None:
+    rng = random.Random(31337)
+    committed = 0
+    for _ in range(400):
+        meta = []
+        seen = set()
+        while len(meta) < 3:
+            canon, plural = _class_term(rng)
+            if canon not in seen:
+                seen.add(canon)
+                meta.append((canon, plural))
+        surf = dict(meta)
+        canons = [c for c, _ in meta]
+        (s1, p1), (s2, p2), (sc, pc) = (
+            rng.sample(canons, 2),
+            rng.sample(canons, 2),
+            rng.sample(canons, 2),
+        )
+        f1, f2, fc = rng.choice("AEIO"), rng.choice("AEIO"), rng.choice("AEIO")
+        prose = " ".join(
+            [_MW_PREMISE[f1](surf[s1], surf[p1]), _MW_PREMISE[f2](surf[s2], surf[p2]),
+             _MW_CONCLUSION[fc](surf[sc], surf[pc])]
+        )
+        structure = {
+            "terms": sorted(canons),
+            "domain_size": 3,
+            "premises": [
+                {"form": f1, "subject": s1, "predicate": p1},
+                {"form": f2, "subject": s2, "predicate": p2},
+            ],
+        }
+        query = {"kind": "validity", "conclusion": {"form": fc, "subject": sc, "predicate": pc}}
+        try:
+            expected = syl_oracle(structure, query)
+        except SylError:
+            expected = None
+        got = _committed(comprehend(prose), to_syllogism, syl_oracle, SylError)
+        if got is not None:
+            committed += 1
+            assert got == expected, (prose, got, expected)
+    assert committed > 50
+
+
+def test_multiword_total_ordering_is_faithful_or_refuses() -> None:
+    rng = random.Random(2718)
+    committed = 0
+    for _ in range(300):
+        pool = list(_TERMS)
+        rng.shuffle(pool)
+        n = rng.randint(2, 4)
+        chain, surf = [], {}
+        for _ in range(n):
+            canon, s = _item_term(rng, pool)
+            chain.append(canon)
+            surf[canon] = s
+        rels = [{"less": chain[i], "greater": chain[i + 1]} for i in range(n - 1)]
+        facts = ", and ".join(f"{surf[lo]} is below {surf[hi]}" for lo, hi in zip(chain, chain[1:])) + "."
+        if rng.random() < 0.5:
+            order = rng.choice(["ascending", "descending"])
+            prose = f"{facts} Sort {order}."
+            query = {"kind": "sort", "order": order}
+        else:
+            x, y = rng.sample(chain, 2)
+            prose = f"{facts} Compare {surf[x]} with {surf[y]}."
+            query = {"kind": "compare", "left": x, "right": y}
+        structure = {"items": sorted(chain), "relations": rels}
+        try:
+            expected = ord_oracle(structure, query)
+        except OrdError:
+            expected = None
+        got = _committed(comprehend(prose), to_total_ordering, ord_oracle, OrdError)
+        if got is not None:
+            committed += 1
+            assert got == expected, (prose, got, expected)
+    assert committed > 50

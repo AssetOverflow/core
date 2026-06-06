@@ -1,13 +1,13 @@
 {
-  "capability_score": 0.814356,
-  "coverage_geomean": 0.814356,
-  "coverage_micro": 0.988266,
+  "capability_score": 0.917231,
+  "coverage_geomean": 0.917231,
+  "coverage_micro": 0.993481,
   "accuracy_micro": 1.0,
   "breadth": 6,
-  "min_domain_coverage": 0.5,
+  "min_domain_coverage": 0.833333,
   "wrong_total": 0,
   "assert_mode_valid": true,
-  "deterministic_digest": "0a98b9b41c23f5166d7e23bc194207ead53a89d5316dddc03194bd2739bb9753",
+  "deterministic_digest": "13d7db6c4fc8caed703164cd16c196ecb426a31fb5bcb9658fe630be760179ab",
   "domains": [
     {
       "domain": "comprehension_set_membership",
@@ -19,18 +19,18 @@
     },
     {
       "domain": "comprehension_syllogism",
-      "correct": 6,
+      "correct": 7,
       "wrong": 0,
-      "refused": 2,
-      "coverage": 0.75,
+      "refused": 1,
+      "coverage": 0.875,
       "accuracy": 1.0
     },
     {
       "domain": "comprehension_total_ordering",
-      "correct": 4,
+      "correct": 7,
       "wrong": 0,
-      "refused": 4,
-      "coverage": 0.5,
+      "refused": 1,
+      "coverage": 0.875,
       "accuracy": 1.0
     },
     {
