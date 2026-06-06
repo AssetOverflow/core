@@ -405,6 +405,21 @@ class VaultStore:
             self._matrix_cache = np.asarray(self._versors, dtype=np.float32)
         return self._matrix_cache
 
+    def iter_metadata(self):
+        """Yield ``(index, metadata)`` for every stored entry, in deque order.
+
+        A read-only, non-mutating view over the stored metadata — NOT a
+        normalization site (``vault/store.py`` is forbidden from repairing field
+        state; this only reads). ``index`` is the LIVE deque position, the same
+        integer ``recall``/``recall_batch`` return; it is authoritative in the
+        unbounded session tier and provenance-only under bounded-vault eviction.
+        The yielded dicts are the live metadata objects (not copies) — callers
+        read them; they must not mutate. Lets structured consumers (e.g. realized-
+        knowledge recall) scan by metadata without reaching into ``_metadata``.
+        """
+        for i, meta in enumerate(self._metadata):
+            yield i, meta
+
     @property
     def reproject_interval(self) -> int:
         return self._reproject_interval

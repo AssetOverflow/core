@@ -9,11 +9,16 @@ A realized record is NOT a new store — it is a structured vault entry
 stamping, and bit-exact Shape B+ persistence for free (see
 ``docs/analysis/REALIZE-scope-2026-06-06.md``).
 
-Slice R0 deliberately boring (everything else grows from this without corrupting the
-field): one told fact, SPECULATIVE only, in-vocab subject only, single non-negated
-declarative relation, dedup by content hash. Explicitly OUT of R0: COHERENT
-promotion, teaching-loop proposals, the quantitative ``binding_graph`` path,
-trace-folding, and relation-space recall.
+Slice R0 was deliberately boring (everything else grows from this without corrupting
+the field): one told fact, SPECULATIVE only, in-vocab subject only, single non-negated
+declarative relation. Slice R1 (this module + ``recall.py``) adds the relation-space
+KEY R0 lacked: ordered ``relation_arguments`` + a span-free ``structure_key`` so
+distinct facts about one subject stay distinct (they collide on the field versor), and
+``recall_realized`` retrieves them by exact structural metadata. Dedup is now span-free
+(``structure_key``), guarded by an ambiguous-entity-name refusal (wrong=0). Explicitly
+still OUT: COHERENT promotion, teaching-loop proposals, the quantitative
+``binding_graph`` path (R1c), trace-folding (see
+``docs/analysis/REALIZE-R1-DETERMINE-scope-2026-06-06.md``).
 
 wrong=0 at this layer: a ``Refusal`` (or any ineligible / ungrounded input) realizes
 NOTHING — it is returned as ``NotRealized(reason)``, never coerced into a vault entry.
@@ -47,12 +52,23 @@ class RealizedRecord:
     structure_kind: str
     structure_canonical: str
     relation_predicate: str
+    #: Ordered argument identities (subject first) — the relation-space key R0's
+    #: sorted ``entity_names`` discards. Distinct facts about one subject differ
+    #: here even though they collide on the field versor.
+    relation_arguments: tuple[str, ...]
     entity_names: tuple[str, ...]
     source_span: str
     content_hash: str
+    #: Span-FREE structural identity (predicate + negated + ordered argument
+    #: ids). Idempotency dedups on this, so the same proposition told from a
+    #: different source/offset collapses (which the span-inclusive ``content_hash``
+    #: could not). ``content_hash`` is retained for provenance + ``replay_hash``.
+    structure_key: str
     replay_hash: str
     epistemic_status: str
     tier: str
+    #: LIVE deque position at recall/write time — authoritative in the unbounded
+    #: session tier; provenance-only under bounded-vault eviction.
     vault_index: int
 
 
@@ -97,6 +113,16 @@ def realize_comprehension(
     if not rel.arguments:
         return NotRealized("empty_relation")  # defensive — arity>=1 by construction
 
+    # wrong=0 defense (R1b): the MeaningGraph model permits distinct entities to
+    # share a name (only ``entity_id`` is enforced unique; today the reader sets
+    # entity_id == name, so this is latent, not live). A name-keyed structural
+    # identity would collapse a converse/homonym fact, dropping a genuinely
+    # distinct proposition — so refuse the ambiguous input now, before a future
+    # reader makes it load-bearing.
+    names = [e.name for e in graph.entities]
+    if len(set(names)) != len(names):
+        return NotRealized("ambiguous_entity_names")
+
     subject_id = rel.arguments[0]
     entity = next((e for e in graph.entities if e.entity_id == subject_id), None)
     if entity is None:
@@ -121,9 +147,25 @@ def realize_comprehension(
         return NotRealized("grounding_failed")
     versor = np.asarray(field_state.F, dtype=np.float32)
 
+    # Ordered argument identities (subject first). entity_id == name in today's
+    # reader; the map keeps this correct if a future reader separates them.
+    name_of = {e.entity_id: e.name for e in graph.entities}
+    relation_arguments = tuple(name_of.get(a, a) for a in rel.arguments)
+
     structure_canonical = graph.to_canonical_string()
     source_span = rel.span.to_canonical_string()
-    content_hash = sha256_of(structure_canonical)
+    content_hash = sha256_of(structure_canonical)  # span-INCLUSIVE: provenance
+    # Span-FREE structural identity: the asserted proposition, free of source
+    # offsets. Idempotency dedups on this, so the same fact told from a different
+    # source/offset collapses (the span-inclusive content_hash could not).
+    structure_key = sha256_of(
+        {
+            "structure_kind": _STRUCTURE_KIND_MEANING_GRAPH,
+            "predicate": rel.predicate,
+            "negated": rel.negated,
+            "arguments": list(relation_arguments),
+        }
+    )
     status = EpistemicStatus.SPECULATIVE  # COHERENT is never a default (ADR-0021)
     replay_hash = sha256_of(
         {
@@ -134,14 +176,13 @@ def realize_comprehension(
     )
     entity_names = tuple(sorted(e.name for e in graph.entities))
 
-    # Idempotency: a re-told fact (same content_hash) does not grow the vault. Dedup
-    # is exact-canonical (the content_hash is span-INCLUSIVE), so the SAFE direction
-    # only — it never drops a genuinely distinct fact; it may fail to collapse the
-    # same fact re-stated at a different offset (a span-free key is a later R1 option).
-    # ``vault._metadata`` is read directly here (no public iterator exists yet);
-    # this is the established project pattern and an intentional boundary for R0.
-    for idx, meta in enumerate(ctx.vault._metadata):
-        if meta.get("kind") == "realized" and meta.get("content_hash") == content_hash:
+    # Idempotency: a re-told fact (same span-free structure_key) does not grow the
+    # vault. Refusing duplicate entity names above keeps the name-keyed key
+    # injective, so dedup only ever collapses the genuinely-same proposition —
+    # never drops a distinct one. ``iter_metadata`` is the public read-only
+    # accessor; ``idx`` is the LIVE deque position.
+    for idx, meta in ctx.vault.iter_metadata():
+        if meta.get("kind") == "realized" and meta.get("structure_key") == structure_key:
             return Realized(record=_record_from_metadata(meta, idx), created=False)
 
     metadata = {
@@ -149,9 +190,11 @@ def realize_comprehension(
         "structure_kind": _STRUCTURE_KIND_MEANING_GRAPH,
         "structure_canonical": structure_canonical,
         "relation_predicate": rel.predicate,
+        "relation_arguments": list(relation_arguments),
         "entity_names": list(entity_names),
         "source_span": source_span,
         "content_hash": content_hash,
+        "structure_key": structure_key,
         "replay_hash": replay_hash,
         "tier": "session",
     }
@@ -161,9 +204,11 @@ def realize_comprehension(
             structure_kind=_STRUCTURE_KIND_MEANING_GRAPH,
             structure_canonical=structure_canonical,
             relation_predicate=rel.predicate,
+            relation_arguments=relation_arguments,
             entity_names=entity_names,
             source_span=source_span,
             content_hash=content_hash,
+            structure_key=structure_key,
             replay_hash=replay_hash,
             epistemic_status=status.value,
             tier="session",
@@ -179,9 +224,11 @@ def _record_from_metadata(meta: dict, idx: int) -> RealizedRecord:
         structure_kind=meta.get("structure_kind", _STRUCTURE_KIND_MEANING_GRAPH),
         structure_canonical=meta.get("structure_canonical", ""),
         relation_predicate=meta.get("relation_predicate", ""),
+        relation_arguments=tuple(meta.get("relation_arguments", [])),
         entity_names=tuple(meta.get("entity_names", [])),
         source_span=meta.get("source_span", ""),
         content_hash=meta.get("content_hash", ""),
+        structure_key=meta.get("structure_key", ""),
         replay_hash=meta.get("replay_hash", ""),
         epistemic_status=meta.get("epistemic_status", "speculative"),
         tier=meta.get("tier", "session"),
