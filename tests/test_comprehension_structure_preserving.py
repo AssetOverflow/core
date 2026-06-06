@@ -26,6 +26,7 @@ from generate.meaning_graph.projectors import (
     to_total_ordering,
 )
 from generate.meaning_graph.reader import Refusal, comprehend
+from generate.quantitative_comprehension import comprehend_quantitative, to_relational_metric
 
 _TERMS = [f"t{i}" for i in range(8)]
 
@@ -263,3 +264,42 @@ def test_propositional_invariant_to_premise_reorder() -> None:
     s_base = _struct(base, to_deductive_logic)
     assert s_base is not None
     assert _struct(swapped, to_deductive_logic) == s_base
+
+
+# --------------------------------------------------------------------------- #
+# Arithmetic (binding_graph) — projected relations + query preserved exactly.
+# --------------------------------------------------------------------------- #
+
+
+def test_arithmetic_structure_is_preserved_exactly() -> None:
+    rng = random.Random(55)
+    committed = 0
+    for _ in range(300):
+        ents = rng.sample([f"e{i}" for i in range(6)], rng.randint(2, 4))
+        base, base_val = ents[0], rng.randint(1, 20)
+        relations = [{"kind": "fact", "entity": base, "value": base_val}]
+        lines = [f"{base} has {base_val} things."]
+        prev = base
+        for e in ents[1:]:
+            delta = rng.randint(1, 15)
+            kind = rng.choice(["more_than", "fewer_than"])
+            word = "more" if kind == "more_than" else "fewer"
+            relations.append({"kind": kind, "entity": e, "ref": prev, "delta": delta})
+            lines.append(f"{e} has {delta} {word} things than {prev}.")
+            prev = e
+        ask = rng.choice(ents)
+        lines.append(f"How many things does {ask} have?")
+        prose = " ".join(lines)
+        expected_query = {"entity": ask, "unit": "item"}  # "things" -> item dimension
+
+        comp = comprehend_quantitative(prose)
+        if isinstance(comp, Refusal):
+            continue
+        proj = to_relational_metric(comp)
+        if proj is None:
+            continue
+        committed += 1
+        prelations, pquery = proj
+        assert _canon(prelations) == _canon(relations), (prose, prelations, relations)
+        assert pquery == expected_query, (prose, pquery, expected_query)
+    assert committed > 50

@@ -1144,6 +1144,19 @@ INDEPENDENT_GOLD_LANES: tuple[IndependentGoldLane, ...] = (
         oracle_module="evals/deductive_logic/oracle.py",
         sut_import_prefixes=("generate.meaning_graph",),
     ),
+    # The arithmetic comprehension lane: the SUT is the quantity reader
+    # (generate.quantitative_comprehension) and the binding-graph substrate it
+    # builds. The relational_metric oracle (forward substitution) must share no code
+    # with either — the arithmetic gold stays independent of the reader.
+    IndependentGoldLane(
+        name="comprehension_relational_metric",
+        oracle_module="evals/relational_metric/oracle.py",
+        sut_import_prefixes=(
+            "generate.quantitative_comprehension",
+            "generate.binding_graph",
+            "generate.meaning_graph",
+        ),
+    ),
 )
 
 _DEDUCTIVE_CASE_FILES: tuple[str, ...] = (
