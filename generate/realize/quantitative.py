@@ -22,7 +22,7 @@ import numpy as np
 from formation.hashing import sha256_of
 from generate.binding_graph.model import SemanticSymbolicBindingGraph
 from generate.meaning_graph.reader import Refusal
-from generate.quantitative_comprehension import QuantComprehension
+from generate.quantitative_comprehension import QuantComprehension, single_unknown
 from session.context import SessionContext
 from teaching.epistemic import EpistemicStatus
 
@@ -80,13 +80,18 @@ def realize_quantitative(
     if any(e.admissibility_status != "admitted" for e in bg.equations):
         return NotRealized("unadmitted_equation")
 
+    # The question target is the graph's sole BoundUnknown (PR-1/PR-3); refuse a graph
+    # that does not carry exactly one rather than picking one.
+    target = single_unknown(bg)
+    if target is None:
+        return NotRealized("no_single_question_target")
     # Placement: the asked entity's field point. Symbolic/OOV, so deterministic-
     # GIVEN-session-state, NOT subject-determined; the structural key carries
     # correctness. ``probe_ingest`` of an OOV token mutates the shared vocab via
     # insert_transient (session-scoped, excluded from the snapshot); a non-versor
     # construction raises and is caught → NotRealized.
     try:
-        field_state = ctx.probe_ingest([comprehension.query.entity])
+        field_state = ctx.probe_ingest([target.symbol_id])
     except _GROUNDING_FAILURES:
         return NotRealized("grounding_failed")
     versor = np.asarray(field_state.F, dtype=np.float32)
