@@ -67,20 +67,26 @@ def _resolve_unit(noun: str) -> str:
 
 
 @dataclass(frozen=True, slots=True)
-class QuantQuery:
-    """The question over the comprehended quantities (which entity's count)."""
-
-    entity: str
-    unit: str
-    span: SourceSpanLink
-
-
-@dataclass(frozen=True, slots=True)
 class QuantComprehension:
-    """Successful arithmetic comprehension: a binding_graph + the asked entity."""
+    """Successful arithmetic comprehension.
+
+    The question target is no longer a sidecar field — it lives IN the graph as the
+    sole :class:`BoundUnknown` (PR-1). Consumers read it via :func:`single_unknown`,
+    which refuses (returns ``None``) on a graph that does not carry exactly one
+    target rather than silently picking one.
+    """
 
     binding_graph: SemanticSymbolicBindingGraph
-    query: QuantQuery
+
+
+def single_unknown(graph: SemanticSymbolicBindingGraph) -> BoundUnknown | None:
+    """Return the graph's SOLE question target, or ``None`` if it is not exactly one.
+
+    Zero unknowns (no question) and multiple unknowns (ambiguous target) both REFUSE
+    — the caller must not pick one. ``comprehend_quantitative`` always emits exactly
+    one; this guards every other construction path (wrong=0 at the consumer boundary).
+    """
+    return graph.unknowns[0] if len(graph.unknowns) == 1 else None
 
 
 class _QReject(Exception):
@@ -295,10 +301,7 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
     except Exception as exc:  # noqa: BLE001 — surface construction refusal
         return Refusal("invalid_binding_graph", repr(exc))
 
-    return QuantComprehension(
-        binding_graph=graph,
-        query=QuantQuery(entity=ask_entity, unit=ask_unit, span=_span(ask_entity)),
-    )
+    return QuantComprehension(binding_graph=graph)
 
 
 def to_relational_metric(
@@ -338,4 +341,7 @@ def to_relational_metric(
             return None  # unrecognized equation shape -> refuse
     if not relations:
         return None
-    return relations, {"entity": comp.query.entity, "unit": comp.query.unit}
+    target = single_unknown(graph)
+    if target is None:
+        return None  # no/ambiguous question target -> refuse (never pick one)
+    return relations, {"entity": target.symbol_id, "unit": target.expected_unit}

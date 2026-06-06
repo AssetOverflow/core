@@ -8,11 +8,18 @@ reviewer's "do not stamp admissibility" guard, made executable.
 
 from __future__ import annotations
 
-from generate.binding_graph.model import SemanticSymbolicBindingGraph
+from generate.binding_graph.model import (
+    BoundFact,
+    BoundUnknown,
+    SemanticSymbolicBindingGraph,
+    SourceSpanLink,
+    SymbolBinding,
+)
 from generate.meaning_graph.reader import Refusal
 from generate.quantitative_comprehension import (
     QuantComprehension,
     comprehend_quantitative,
+    single_unknown,
     to_relational_metric,
 )
 
@@ -32,24 +39,21 @@ def test_fact_and_more_than_build_binding_graph() -> None:
     assert eq.operation_kind == "add"
     assert eq.rhs_canonical == "liam + 4"
     assert eq.admissibility_status == "admitted"  # from the REAL check, not stamped
-    assert comp.query.entity == "mia"
+    assert single_unknown(g).symbol_id == "mia"
 
 
 def test_question_target_is_a_bound_unknown_in_the_graph() -> None:
-    # PR-1: the question target lives INSIDE the graph (a BoundUnknown at the terminal
-    # state), not only as the external QuantQuery.
+    # The question target lives INSIDE the graph (a BoundUnknown at the terminal
+    # state) — read via single_unknown, never a sidecar field (PR-3 removed QuantQuery).
     comp = _comp("Liam has 6 stickers. Mia has 4 more stickers than Liam. How many stickers does Mia have?")
-    unknowns = comp.binding_graph.unknowns
-    assert len(unknowns) == 1
-    u = unknowns[0]
+    u = single_unknown(comp.binding_graph)
+    assert u is not None
     assert u.symbol_id == "mia"
     assert u.state_index == "terminal"
     assert u.question_form == "count"
     assert u.expected_unit == "item"
-    # The graph's canonical serialization now carries the target.
+    # The graph's canonical serialization carries the target.
     assert "state=terminal" in comp.binding_graph.to_canonical_string()
-    # Retained convenience stays consistent with the in-graph unknown.
-    assert comp.query.entity == u.symbol_id
 
 
 def test_sum_query_target_is_total_form_unknown() -> None:
@@ -77,9 +81,14 @@ def test_fewer_than_is_subtract() -> None:
     assert eq.operation_kind == "subtract" and eq.rhs_canonical == "noah - 6"
 
 
+def test_sum_query_target_via_single_unknown() -> None:
+    comp = _comp("Dan has 7 coins. Eva has 9 more coins than Dan. How many coins do Dan and Eva have?")
+    assert single_unknown(comp.binding_graph).symbol_id == "total"
+
+
 def test_sum_query_synthesizes_total() -> None:
     comp = _comp("Dan has 7 coins. Eva has 9 more coins than Dan. How many coins do Dan and Eva have?")
-    assert comp.query.entity == "total"
+    assert single_unknown(comp.binding_graph).symbol_id == "total"
     total_eq = next(e for e in comp.binding_graph.equations if e.lhs_symbol_id == "total")
     assert total_eq.operation_kind == "add"
     assert set(total_eq.dependencies) == {"dan", "eva"}
@@ -120,3 +129,43 @@ def test_non_digit_quantity_refuses() -> None:
 def test_unreadable_clause_refuses() -> None:
     comp = comprehend_quantitative("The weather is nice today.")
     assert isinstance(comp, Refusal)
+
+
+# --------------------------------------------------------------------------- #
+# PR-3 — malformed graphs REFUSE (never pick one of several targets)
+# --------------------------------------------------------------------------- #
+
+
+def _sp() -> SourceSpanLink:
+    return SourceSpanLink(source_id="t", start=0, end=1, text="x")
+
+
+def _graph_with_n_unknowns(n: int) -> SemanticSymbolicBindingGraph:
+    symbols = tuple(
+        SymbolBinding(symbol_id=s, name=s, semantic_role="count",
+                      source_span=_sp(), introduced_by="t", entity=s, unit="item")
+        for s in ("a", "b")
+    )
+    unknowns = tuple(
+        BoundUnknown(symbol_id=s, question_span=_sp(), state_index="terminal",
+                     question_form="count", expected_unit="item")
+        for s in ("a", "b")[:n]
+    )
+    return SemanticSymbolicBindingGraph(
+        symbols=symbols,
+        facts=(BoundFact(symbol_id="a", value="1", source_span=_sp(), unit="item"),),
+        equations=(),
+        unknowns=unknowns,
+    )
+
+
+def test_single_unknown_refuses_zero_and_multiple() -> None:
+    assert single_unknown(_graph_with_n_unknowns(0)) is None  # no question target
+    assert single_unknown(_graph_with_n_unknowns(2)) is None  # ambiguous → refuse, not pick
+    assert single_unknown(_graph_with_n_unknowns(1)) is not None
+
+
+def test_to_relational_metric_refuses_malformed_target() -> None:
+    for n in (0, 2):
+        comp = QuantComprehension(binding_graph=_graph_with_n_unknowns(n))
+        assert to_relational_metric(comp) is None  # refuse rather than emit a guessed query
