@@ -76,6 +76,37 @@ selection only: it adds no field op, no normalization, and proposes no learning
 (`accrue_in_turn` writes SESSION memory through the INV-21 vault writer; the HITL
 teaching path is untouched).
 
+### Idle consolidation (Step D — CLOSE)
+
+When `consolidate_determinations` is enabled, `ChatRuntime.idle_tick` runs a
+**consolidation pass** (`generate.determine.consolidate_once`): one semi-naive layer
+of the member/subset deductive closure over the held self.  For every sound one-hop
+inference — `member(s,b) ∧ subset(b,t) → member(s,t)` and `subset(a,b) ∧ subset(b,t)
+→ subset(a,t)`; **never `member ∘ member`** (instance-of is not transitive) — whose
+conclusion is not yet realized, the hop is **verified by the sound+complete
+proof_chain ROBDD** (reusing DETERMINE's single verifier) and written back as a
+realized record via `generate.realize.realize_derived`, so the next `determine`
+reaches it directly.  Across idle ticks the directly-answerable set climbs
+monotonically to the deductive-closure fixed point; a saturated tick consolidates
+nothing (`IdleTickResult.facts_consolidated == 0`).
+
+Contract:
+
+- **SPECULATIVE / as-told.**  A fact derived from SPECULATIVE premises stays
+  SPECULATIVE — a sound inference never upgrades the *standing* of its premises;
+  COHERENT is never minted here.
+- **SESSION memory, not reviewed learning.**  Consolidation is an extension of the
+  `generate.realize` session path — **not** corpus mutation and **not** coupled to
+  proposals.  The teaching/review HITL path is untouched (no parallel learning path).
+- **wrong=0 by proof-gating.**  Only proof_chain-`ENTAILED` conclusions are written;
+  the `member ∘ member` fallacy is structurally unreachable.
+- **Replayable provenance.**  Each derived record carries a `Derivation` (premise
+  `structure_key`s + rule + the `entailed` verdict), so a replay re-derives and
+  re-verifies — the soundness claim can meaningfully fail.
+- **No new normalization, no closure/repair.**  Writes reuse the INV-21 vault writer;
+  `algebra/versor.py` keeps closure.  Off by default; the falsification lane is
+  `evals.determination_closure`.
+
 ### Refusal contract (ADR-0024 Phase 2)
 
 When the inner-loop admissibility check leaves no admissible destination
@@ -246,7 +277,10 @@ it.
 
 ## Memory and teaching contract
 
-Session memory can be immediate and local to the running context.
+Session memory can be immediate and local to the running context.  This includes
+idle consolidation of soundly-derived (proof_chain-verified) facts back into the
+held self (Step D — see *Idle consolidation* above): it is the immediate session
+tier, not reviewed memory, and proposes nothing.
 
 Reviewed memory must be explicit: user corrections or teaching examples become
 reviewed memory only through the reviewed teaching loop.

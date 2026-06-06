@@ -29,6 +29,7 @@ NOTHING — it is returned as ``NotRealized(reason)``, never coerced into a vaul
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -45,6 +46,41 @@ _GROUNDING_FAILURES = (RuntimeError, KeyError, IndexError, ValueError)
 #: R0 realizes only the neutral MeaningGraph substrate. The record shape already
 #: admits a second substrate (the quantitative binding-graph) via ``structure_kind``.
 _STRUCTURE_KIND_MEANING_GRAPH = "meaning_graph"
+
+
+@dataclass(frozen=True, slots=True)
+class Derivation:
+    """Provenance of a DERIVED realized fact (Step D consolidation).
+
+    A derived fact is the conclusion of a SOUND is-a rule (``member_subset`` or
+    ``subset_subset``) over premises that were themselves realized (told or previously
+    consolidated), confirmed by the sound+complete proof_chain ROBDD. ``rule`` names
+    the inference; ``premise_structure_keys`` are the span-free identities of the
+    premise records (so a replay re-fetches them and re-verifies the chain);
+    ``verdict`` is the decider's outcome — always ``"entailed"`` (a non-entailed
+    candidate is never consolidated). This makes the soundness claim MEANINGFULLY FAIL
+    on replay (Schema-Defined Proof Obligations): re-deriving from the recorded
+    premises must still entail the fact.
+    """
+
+    rule: str
+    premise_structure_keys: tuple[str, ...]
+    verdict: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "rule": self.rule,
+            "premise_structure_keys": list(self.premise_structure_keys),
+            "verdict": self.verdict,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "Derivation":
+        return cls(
+            rule=payload["rule"],
+            premise_structure_keys=tuple(payload.get("premise_structure_keys", [])),
+            verdict=payload.get("verdict", ""),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +108,12 @@ class RealizedRecord:
     #: LIVE deque position at recall/write time — authoritative in the unbounded
     #: session tier; provenance-only under bounded-vault eviction.
     vault_index: int
+    #: Step D — a TOLD fact is ``derived=False`` (``derivation=None``). A consolidated
+    #: fact (the conclusion of a sound is-a rule, proof_chain-verified) is
+    #: ``derived=True`` with a :class:`Derivation`. Defaults preserve the told-record
+    #: shape (and bit-exact persistence) for every pre-D caller.
+    derived: bool = False
+    derivation: "Derivation | None" = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,22 +254,25 @@ def _realize_structured(
     replay_hash: str,
     versor: np.ndarray,
     status: EpistemicStatus,
+    derivation: "Derivation | None" = None,
 ) -> Realized:
     """Dedup-or-store a realized record — the single wrong=0 write path shared by
-    every substrate (meaning_graph relations, binding_graph quantities).
+    every substrate (meaning_graph relations, binding_graph quantities, and Step D
+    derived facts).
 
     Idempotency dedups exactly on the span-free ``structure_key`` (callers refuse
     ambiguous identity before getting here, so a hit is always the genuinely-same
     proposition, never a distinct one). The ``vault.store`` call is the only
     mutation; ``iter_metadata`` is the public read-only accessor and ``idx`` is the
     LIVE deque position. The epistemic status is whatever the caller declared —
-    SPECULATIVE, never COHERENT by default (ADR-0021).
+    SPECULATIVE, never COHERENT by default (ADR-0021). A ``derivation`` marks a
+    consolidated (derived) fact; ``None`` is a told fact (the historical shape).
     """
     for idx, meta in ctx.vault.iter_metadata():
         if meta.get("kind") == "realized" and meta.get("structure_key") == structure_key:
             return Realized(record=_record_from_metadata(meta, idx), created=False)
 
-    metadata = {
+    metadata: dict[str, Any] = {
         "kind": "realized",
         "structure_kind": structure_kind,
         "structure_canonical": structure_canonical,
@@ -240,6 +285,11 @@ def _realize_structured(
         "replay_hash": replay_hash,
         "tier": "session",
     }
+    if derivation is not None:
+        # Derived-fact provenance is additive — a told fact omits both keys, so its
+        # on-disk metadata stays byte-identical to the pre-D encoding.
+        metadata["derived"] = True
+        metadata["derivation"] = derivation.as_dict()
     vault_index = ctx.vault.store(versor, metadata, epistemic_status=status)
     return Realized(
         record=RealizedRecord(
@@ -255,13 +305,104 @@ def _realize_structured(
             epistemic_status=status.value,
             tier="session",
             vault_index=vault_index,
+            derived=derivation is not None,
+            derivation=derivation,
         ),
         created=True,
     )
 
 
+def realize_derived(
+    ctx: SessionContext,
+    *,
+    predicate: str,
+    subject: str,
+    obj: str,
+    rule: str,
+    premise_structure_keys: tuple[str, ...],
+) -> Realized | NotRealized:
+    """Consolidate a SOUNDLY-DERIVED fact into the held self (Step D — CLOSE).
+
+    The caller (``generate.determine.consolidate``) has already found and
+    proof_chain-VERIFIED the is-a chain that entails ``predicate(subject, obj)`` — this
+    only writes the conclusion as a realized record so the next ``determine`` reaches it
+    directly. The record is:
+
+      - SPECULATIVE / ``as_told`` — a sound INFERENCE never upgrades the STANDING of its
+        (SPECULATIVE) premises; COHERENT is never minted here (ADR-0021 honesty).
+      - SESSION memory (immediate) — NOT reviewed/corpus learning; nothing is proposed,
+        the teaching/review HITL path is untouched (no parallel learning path).
+      - keyed by the SAME span-free ``structure_key`` a told ``predicate(subject, obj)``
+        would carry, so it dedups against / is found by the told path identically, and
+        is recalled by ``recall_realized`` like any other realized fact.
+      - provenance-rich (``Derivation``): the premise ``structure_key``s + rule + the
+        ENTAILED verdict, so a replay re-derives and re-verifies (the soundness claim
+        can MEANINGFULLY FAIL).
+
+    Idempotent (dedups on ``structure_key``); returns ``NotRealized`` on any ineligible
+    input or grounding failure — never a partial / coerced write (wrong=0).
+    """
+    subject = (subject or "").strip()
+    obj = (obj or "").strip()
+    predicate = (predicate or "").strip()
+    if not subject or not obj or not predicate:
+        return NotRealized("incomplete_derived_fact")
+
+    # The derived fact embeds its subject identically to a told fact about that subject
+    # (same probe_ingest placement). The versor is not the recall key (structural
+    # metadata is), so a degenerate placement is a clean no-op, never a wrong write.
+    try:
+        field_state = ctx.probe_ingest([subject])
+    except _GROUNDING_FAILURES:
+        return NotRealized("grounding_failed")
+    versor = np.asarray(field_state.F, dtype=np.float32)
+
+    relation_arguments = (subject, obj)
+    structure_canonical = f"derived:{predicate}({subject},{obj})"
+    source_span = f"derived:{rule}"
+    content_hash = sha256_of(structure_canonical)  # span-inclusive provenance
+    structure_key = sha256_of(
+        {
+            "structure_kind": _STRUCTURE_KIND_MEANING_GRAPH,
+            "predicate": predicate,
+            "negated": False,
+            "arguments": list(relation_arguments),
+        }
+    )
+    status = EpistemicStatus.SPECULATIVE  # derived from SPECULATIVE premises — as-told
+    replay_hash = sha256_of(
+        {
+            "content_hash": content_hash,
+            "source_span": source_span,
+            "epistemic_status": status.value,
+        }
+    )
+    entity_names = tuple(sorted({subject, obj}))
+    derivation = Derivation(
+        rule=rule,
+        premise_structure_keys=tuple(premise_structure_keys),
+        verdict="entailed",
+    )
+    return _realize_structured(
+        ctx,
+        structure_kind=_STRUCTURE_KIND_MEANING_GRAPH,
+        structure_canonical=structure_canonical,
+        relation_predicate=predicate,
+        relation_arguments=relation_arguments,
+        entity_names=entity_names,
+        source_span=source_span,
+        content_hash=content_hash,
+        structure_key=structure_key,
+        replay_hash=replay_hash,
+        versor=versor,
+        status=status,
+        derivation=derivation,
+    )
+
+
 def _record_from_metadata(meta: dict, idx: int) -> RealizedRecord:
     """Reconstruct a RealizedRecord from a stored vault metadata dict."""
+    derivation_payload = meta.get("derivation")
     return RealizedRecord(
         structure_kind=meta.get("structure_kind", _STRUCTURE_KIND_MEANING_GRAPH),
         structure_canonical=meta.get("structure_canonical", ""),
@@ -275,4 +416,10 @@ def _record_from_metadata(meta: dict, idx: int) -> RealizedRecord:
         epistemic_status=meta.get("epistemic_status", "speculative"),
         tier=meta.get("tier", "session"),
         vault_index=idx,
+        derived=bool(meta.get("derived", False)),
+        derivation=(
+            Derivation.from_dict(derivation_payload)
+            if isinstance(derivation_payload, dict)
+            else None
+        ),
     )

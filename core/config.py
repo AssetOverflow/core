@@ -303,6 +303,19 @@ class RuntimeConfig:
     # teaching/review HITL path is untouched.
     accrue_realized_knowledge: bool = False
 
+    # Step D (CLOSE) — when on, idle_tick consolidates soundly-derived determinations
+    # back into the held self: one semi-naive layer of the member/subset deductive
+    # closure (member∘subset, subset∘subset — NEVER member∘member) per tick, each
+    # derived edge proof_chain-verified, written as a SPECULATIVE realized record with
+    # derived-provenance. This is how the loop "learns from determined facts": derive
+    # once, remember, reach one hop further next tick — the directly answerable set
+    # climbs monotonically to the deductive-closure fixed point. OFF by default; the
+    # production L10 process enables it alongside accrue_realized_knowledge +
+    # persist_session_state. SESSION memory (immediate), NOT reviewed/corpus learning —
+    # no proposal coupling, the teaching/review HITL path is untouched. Bounded by the
+    # same _SUBSUMPTION_SUBSET_FACT_BUDGET; converges (a saturated tick is a no-op).
+    consolidate_determinations: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"

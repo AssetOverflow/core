@@ -241,6 +241,24 @@ def _verify_subsumption(
     true atoms + the sound rule instantiated at each hop), so it scales — unlike the full
     closure grounding. Returns ``None`` if the decider does not confirm entailment
     (defence in depth: a path-construction bug cannot produce a wrong assertion)."""
+    # Soundness-by-construction (belt-and-suspenders): the propositional theory below
+    # labels every ``subset_path`` fact ``S`` and the ``member_fact`` ``M``. Both callers
+    # (``_determine_subsumption`` and ``consolidate``) build these from predicate-filtered
+    # recalls, so the labels match — but the theory would otherwise verify a smuggled
+    # member fact in ``subset_path`` as a (potentially unsound) subset edge. Refuse a
+    # mislabeled or wrong-arity chain here rather than trust two callers' discipline, so
+    # ``member ∘ member`` cannot be laundered through a corrupted path.
+    if member_fact is not None and (
+        member_fact.relation_predicate != "member"
+        or len(member_fact.relation_arguments) != 2
+    ):
+        return None
+    if any(
+        f.relation_predicate != "subset" or len(f.relation_arguments) != 2
+        for f in subset_path
+    ):
+        return None
+
     atoms: dict[tuple[str, str, str], str] = {}
 
     def atom(p: str, a: str, b: str) -> str:
