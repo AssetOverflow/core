@@ -1,0 +1,24 @@
+{
+  "pack_id": "vision_event_core_v1",
+  "modality": "vision",
+  "sensorium_lane": "event-vision",
+  "cl41_dim": 32,
+  "compiler_version": "0.1.0",
+  "basis_version": "vision-event-basis-v1",
+  "canonical": {
+    "sensor_grid": "deterministic_synthetic_event_grid_v1",
+    "event_tuple": ["x", "y", "polarity", "t_q"],
+    "event_order": "canonical_sort_by_x_y_polarity_t",
+    "output_dtype": "float32",
+    "internal_dtype": "float64"
+  },
+  "gating": {
+    "gate_engaged": false,
+    "checksum_verified": false,
+    "versor_condition_max": 1e-06
+  },
+  "ordering": {
+    "event_precedence": ["event.onset", "event.decay", "event.motion_delta"],
+    "fold_scope": "single_packet_serialization_barrier"
+  }
+}

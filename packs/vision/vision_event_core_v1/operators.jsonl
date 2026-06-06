@@ -1,0 +1,3 @@
+{"operator_id":"vision_event.onset.v1","event_type":"event.onset","blade_alias":"B_EVENT_ONSET","blade_index":6,"base_theta_q":36,"gain_rules":{"polarity_q":7,"t_bin":2,"x_q":1,"y_q":1},"theta_clip_q":768,"version":"1"}
+{"operator_id":"vision_event.decay.v1","event_type":"event.decay","blade_alias":"B_EVENT_DECAY","blade_index":7,"base_theta_q":44,"gain_rules":{"polarity_q":-7,"t_bin":2,"x_q":1,"y_q":1},"theta_clip_q":768,"version":"1"}
+{"operator_id":"vision_event.motion_delta.v1","event_type":"event.motion_delta","blade_alias":"B_EVENT_MOTION","blade_index":8,"base_theta_q":72,"gain_rules":{"balance_q":3,"count_q":5,"t_bin":2},"theta_clip_q":768,"version":"1"}

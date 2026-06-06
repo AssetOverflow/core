@@ -1,0 +1,3 @@
+{"event_type_counts": {"event.decay": 2, "event.motion_delta": 2, "event.onset": 4}, "id": "edge_sweep_right", "ir_sha256": "ee71e43dfc0638ad95228dc938df58c24af3571aa67462088cbe8cfdca4310c2"}
+{"event_type_counts": {"event.decay": 3, "event.motion_delta": 2, "event.onset": 4}, "id": "corner_blink", "ir_sha256": "3532d1a81a7d7358e0443f5b87bf2e596938f9fd1894edac6efc521b93291d7c"}
+{"event_type_counts": {"event.decay": 4}, "id": "sparse_decay", "ir_sha256": "c62a2ac5ec3078fa5fdefa117ecbeaff8dec03973e53f2ffba89ebf6effba98a"}
