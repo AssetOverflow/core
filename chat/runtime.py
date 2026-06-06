@@ -950,8 +950,28 @@ class ChatRuntime:
         # not surfaced).
         if self.config.accrue_realized_knowledge:
             self._accrue_in_turn(self._last_input_text)
+            response = self._maybe_surface_determination(response)
         self.checkpoint_engine_state()
         return response
+
+    def _maybe_surface_determination(self, response: ChatResponse) -> ChatResponse:
+        """Step B-2 — when the turn DETERMINED an answer over realized knowledge,
+        select that determination as the user-facing ``surface``. The realizer's
+        ``articulation_surface`` is retained as evidence (the determination does not
+        replace it). An ``Undetermined`` turn keeps the default articulation surface
+        (the honest "I don't know"). Off-flag turns never reach here. See the
+        ChatResponse selection policy in ``docs/runtime_contracts.md``.
+        """
+        accrual = self._last_turn_accrual
+        if accrual is None or accrual.kind != "determined":
+            return response
+        from generate.determine import Determined, render_determination
+
+        if not isinstance(accrual.determination, Determined):
+            return response  # Undetermined → keep the default surface
+        return replace(
+            response, surface=render_determination(accrual.determination)
+        )
 
     def last_turn_accrual(self) -> TurnAccrual | None:
         """The most recent turn's inline-realization outcome (Step B), or None when
