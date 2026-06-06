@@ -62,13 +62,16 @@ def test_multi_relation_realizes_nothing(vocab_persona) -> None:
     assert len(ctx.vault._metadata) == 0
 
 
-def test_oov_subject_realizes_nothing(vocab_persona) -> None:
-    # "rhea" is out-of-vocabulary; OOV grounding is not reproducible across reboots,
-    # so R0 declines rather than realize a non-deterministic point.
+def test_oov_subject_is_realized(vocab_persona) -> None:
+    # The in-vocab gate is LIFTED: OOV grounding is deterministic, reboot-stable, and
+    # injective (#591), and correctness rests on the structural key (not the versor),
+    # so an OOV subject realizes a normal SPECULATIVE record.
     ctx = _ctx(vocab_persona)
     res = _realize("Rhea is a raven.", ctx)
-    assert isinstance(res, NotRealized) and res.reason == "oov_subject"
-    assert len(ctx.vault._metadata) == 0
+    assert isinstance(res, Realized) and res.created is True
+    assert res.record.relation_arguments[0] == "rhea"
+    assert res.record.epistemic_status == "speculative"
+    assert len(ctx.vault._metadata) == 1
 
 
 def test_single_in_vocab_declarative_is_realized(vocab_persona) -> None:
