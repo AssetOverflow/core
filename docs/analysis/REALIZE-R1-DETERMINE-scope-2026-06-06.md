@@ -47,6 +47,14 @@ realized metadata, layered in `generate/realize/`.
 
 ## 1. OOV-grounding: the prior claim is refuted — it is deterministic, not non-deterministic
 
+> **Update (#591 shipped):** the §0/§1 non-injectivity finding below
+> (`zelophehad`/`photosynthesis`/`unbridgeable` → one root-versor; field-metric
+> recall "degenerate") describes the **pre-#591** substrate. #591 (`ingest/gate.py`
+> content-derived `_token_spin_delta`, merged) makes OOV placement **injective by
+> token content** (verified live: those three now produce three distinct versors), so
+> the gate-lift no longer rests only on structural recall — though structural recall
+> remains what *carries* correctness.
+
 R0's recorded finding ("OOV grounding is NON-deterministic across reboots") is
 **wrong** and is corrected here. Evidence (`/tmp/oov_proc.py`, faithful in-tree,
 `no_load_state`):

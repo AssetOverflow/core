@@ -9,10 +9,12 @@ A realized record is NOT a new store — it is a structured vault entry
 stamping, and bit-exact Shape B+ persistence for free (see
 ``docs/analysis/REALIZE-scope-2026-06-06.md``).
 
-Slice R0 was deliberately boring (everything else grows from this without corrupting
-the field): one told fact, SPECULATIVE only, in-vocab subject only, single non-negated
-declarative relation. Slice R1 (this module + ``recall.py``) adds the relation-space
-KEY R0 lacked: ordered ``relation_arguments`` + a span-free ``structure_key`` so
+Slice R0 was deliberately boring: one told fact, SPECULATIVE only, in-vocab subject
+only, single non-negated declarative relation. The in-vocab restriction is now LIFTED
+(OOV subjects realize too): OOV grounding is deterministic, reboot-stable, and injective
+(#591), and correctness rests on the structural key, not the versor. Slice R1 (this
+module + ``recall.py``) adds the relation-space KEY R0 lacked: ordered
+``relation_arguments`` + a span-free ``structure_key`` so
 distinct facts about one subject stay distinct (they collide on the field versor), and
 ``recall_realized`` retrieves them by exact structural metadata. Dedup is now span-free
 (``structure_key``), guarded by an ambiguous-entity-name refusal (wrong=0). Explicitly
@@ -129,18 +131,22 @@ def realize_comprehension(
         return NotRealized("ungrounded_subject")  # defensive — graph invariant
 
     subject_token = entity.name
-    # In-vocab gate: OOV grounding is NOT reproducible across reboots, so an OOV
-    # subject cannot be realized deterministically yet (R0 scope; a substrate gap).
-    try:
-        ctx.vocab.index_of(subject_token)
-    except (KeyError, IndexError):
-        return NotRealized("oov_subject")
-
-    # Side-effect-free embedding (no state/vault/referent mutation). Closure stays
-    # algebra/versor.py's job — REALIZE adds no normalization. NOTE: the field point
-    # composes with the CURRENT session state, so placement is deterministic for a
-    # GIVEN session state (the fact is realized at the held self's current field
-    # position), not purely subject-determined.
+    # OOV subjects ARE realizable (R0's in-vocab gate is lifted). OOV grounding is
+    # deterministic and reboot-stable, and #591 makes it injective (distinct token
+    # content -> distinct field point, closure-by-construction). Correctness does not
+    # rest on the versor anyway: distinct facts stay distinct by their structural key
+    # + structural recall (recall.py), and reboot-stability rests on the Shape B+
+    # snapshot of the exact stored bytes — so even a colliding placement never
+    # confuses recall.
+    #
+    # probe_ingest is side-effect-free for an IN-VOCAB token, but for an OOV token it
+    # mutates the shared vocab via insert_transient — a SESSION-SCOPED transient that
+    # is NOT serialized into the snapshot (session/context.py: vocab is a shared
+    # ratified surface, not session state), so it is re-derived deterministically on
+    # reboot and never affects reboot stability. The field point still composes with
+    # the CURRENT session state (deterministic GIVEN that state, not purely
+    # subject-determined). Closure stays algebra/versor.py's job — REALIZE adds none.
+    # A degenerate construction raises and is caught below -> NotRealized.
     try:
         field_state = ctx.probe_ingest([subject_token])
     except _GROUNDING_FAILURES:
@@ -176,20 +182,56 @@ def realize_comprehension(
     )
     entity_names = tuple(sorted(e.name for e in graph.entities))
 
-    # Idempotency: a re-told fact (same span-free structure_key) does not grow the
-    # vault. Refusing duplicate entity names above keeps the name-keyed key
-    # injective, so dedup only ever collapses the genuinely-same proposition —
-    # never drops a distinct one. ``iter_metadata`` is the public read-only
-    # accessor; ``idx`` is the LIVE deque position.
+    return _realize_structured(
+        ctx,
+        structure_kind=_STRUCTURE_KIND_MEANING_GRAPH,
+        structure_canonical=structure_canonical,
+        relation_predicate=rel.predicate,
+        relation_arguments=relation_arguments,
+        entity_names=entity_names,
+        source_span=source_span,
+        content_hash=content_hash,
+        structure_key=structure_key,
+        replay_hash=replay_hash,
+        versor=versor,
+        status=status,
+    )
+
+
+def _realize_structured(
+    ctx: SessionContext,
+    *,
+    structure_kind: str,
+    structure_canonical: str,
+    relation_predicate: str,
+    relation_arguments: tuple[str, ...],
+    entity_names: tuple[str, ...],
+    source_span: str,
+    content_hash: str,
+    structure_key: str,
+    replay_hash: str,
+    versor: np.ndarray,
+    status: EpistemicStatus,
+) -> Realized:
+    """Dedup-or-store a realized record — the single wrong=0 write path shared by
+    every substrate (meaning_graph relations, binding_graph quantities).
+
+    Idempotency dedups exactly on the span-free ``structure_key`` (callers refuse
+    ambiguous identity before getting here, so a hit is always the genuinely-same
+    proposition, never a distinct one). The ``vault.store`` call is the only
+    mutation; ``iter_metadata`` is the public read-only accessor and ``idx`` is the
+    LIVE deque position. The epistemic status is whatever the caller declared —
+    SPECULATIVE, never COHERENT by default (ADR-0021).
+    """
     for idx, meta in ctx.vault.iter_metadata():
         if meta.get("kind") == "realized" and meta.get("structure_key") == structure_key:
             return Realized(record=_record_from_metadata(meta, idx), created=False)
 
     metadata = {
         "kind": "realized",
-        "structure_kind": _STRUCTURE_KIND_MEANING_GRAPH,
+        "structure_kind": structure_kind,
         "structure_canonical": structure_canonical,
-        "relation_predicate": rel.predicate,
+        "relation_predicate": relation_predicate,
         "relation_arguments": list(relation_arguments),
         "entity_names": list(entity_names),
         "source_span": source_span,
@@ -201,9 +243,9 @@ def realize_comprehension(
     vault_index = ctx.vault.store(versor, metadata, epistemic_status=status)
     return Realized(
         record=RealizedRecord(
-            structure_kind=_STRUCTURE_KIND_MEANING_GRAPH,
+            structure_kind=structure_kind,
             structure_canonical=structure_canonical,
-            relation_predicate=rel.predicate,
+            relation_predicate=relation_predicate,
             relation_arguments=relation_arguments,
             entity_names=entity_names,
             source_span=source_span,
