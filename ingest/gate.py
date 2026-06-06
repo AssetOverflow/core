@@ -24,6 +24,7 @@ Contract:
   Output: FieldState with F satisfying versor_condition(F) < 1e-6
 """
 
+import hashlib
 from dataclasses import dataclass
 
 import numpy as np
@@ -35,7 +36,6 @@ from core.physics.valence import ValenceBundle
 from algebra.holonomy import holonomy_encode
 from field.state import FieldState
 from language_packs.schema import MorphologyEntry
-from language_packs.compiler import _feature_rotor
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +57,10 @@ class _MorphologyIndex:
 _MORPH_INDEX_CACHE: dict[int, _MorphologyIndex] = {}
 _DECOMPOSITION_CACHE: dict[tuple[int, str], tuple[str, tuple[str, ...], tuple[str, ...]]] = {}
 _DECOMPOSITION_CACHE_MAX = 4096
+_SPIN_BIVECTORS: tuple[int, ...] = (6, 7, 8, 10, 11, 13)
+_OOV_TOKEN_DELTA_COUNT = 3
+_OOV_TOKEN_MIN_ANGLE = 0.004
+_OOV_TOKEN_ANGLE_SPAN = 0.012
 
 
 def _compact_root(root: str) -> str:
@@ -126,6 +130,42 @@ def _root_affinity(candidate: str, root: str) -> int:
     shared = len(set(candidate).intersection(root))
     length_penalty = abs(len(candidate) - len(root))
     return (common_prefix * 8) + (shared * 2) - length_penalty
+
+
+def _stable_digest(name: str, salt: str) -> bytes:
+    return hashlib.sha256(
+        salt.encode("utf-8") + b"\0" + name.encode("utf-8", "surrogatepass")
+    ).digest()
+
+
+def _spin_feature_rotor(name: str, salt: str, weight: float) -> np.ndarray:
+    """Return a true Spin rotor over a negative bivector plane."""
+    digest = _stable_digest(name, salt)
+    component = _SPIN_BIVECTORS[int.from_bytes(digest[:2], "big") % len(_SPIN_BIVECTORS)]
+    sign = 1.0 if digest[2] >= 128 else -1.0
+    theta = sign * float(weight)
+    rotor = np.zeros(32, dtype=np.float64)
+    rotor[0] = np.cos(theta)
+    rotor[component] = np.sin(theta)
+    return rotor
+
+
+def _token_spin_delta(token: str) -> tuple[tuple[np.ndarray, ...], tuple[str, ...]]:
+    digest = _stable_digest(token, "oov:token:v1")
+    rotors: list[np.ndarray] = []
+    for idx in range(_OOV_TOKEN_DELTA_COUNT):
+        component = _SPIN_BIVECTORS[digest[idx] % len(_SPIN_BIVECTORS)]
+        sign = 1.0 if digest[_OOV_TOKEN_DELTA_COUNT + idx] >= 128 else -1.0
+        unit = int.from_bytes(
+            digest[6 + (idx * 2): 8 + (idx * 2)],
+            "big",
+        ) / 65535.0
+        theta = sign * (_OOV_TOKEN_MIN_ANGLE + unit * _OOV_TOKEN_ANGLE_SPAN)
+        rotor = np.zeros(32, dtype=np.float64)
+        rotor[0] = np.cos(theta)
+        rotor[component] = np.sin(theta)
+        rotors.append(rotor)
+    return tuple(rotors), (f"token:sha256:{digest.hex()[:16]}",)
 
 
 def _best_decomposition(
@@ -202,24 +242,38 @@ def _best_decomposition(
 
 
 def _compose_delta(root_versor: np.ndarray, prefixes: tuple[str, ...], suffixes: tuple[str, ...]) -> tuple[np.ndarray, tuple[str, ...]]:
-    versor = np.asarray(root_versor, dtype=np.float32).copy()
+    versor = np.asarray(root_versor, dtype=np.float64).copy()
     operators: list[str] = []
 
     for idx, prefix in enumerate(prefixes):
         versor = geometric_product(
             versor,
-            _feature_rotor(f"{idx}:{prefix.lower()}", "morph:prefix", 0.03 / (idx + 1)),
+            _spin_feature_rotor(f"{idx}:{prefix.lower()}", "morph:prefix", 0.03 / (idx + 1)),
         )
         operators.append(f"prefix:{prefix}")
 
     for idx, suffix in enumerate(suffixes):
         versor = geometric_product(
             versor,
-            _feature_rotor(f"{idx}:{suffix.lower()}", "morph:suffix", 0.02 / (idx + 1)),
+            _spin_feature_rotor(f"{idx}:{suffix.lower()}", "morph:suffix", 0.02 / (idx + 1)),
         )
         operators.append(f"suffix:{suffix}")
 
-    return versor.astype(np.float32, copy=False), tuple(operators)
+    return versor, tuple(operators)
+
+
+def _compose_token_delta(versor: np.ndarray, token: str) -> tuple[np.ndarray, tuple[str, ...]]:
+    composed = np.asarray(versor, dtype=np.float64).copy()
+    token_rotors, operators = _token_spin_delta(token)
+    for rotor in token_rotors:
+        composed = geometric_product(composed, rotor)
+    return composed, operators
+
+
+def _identity_versor() -> np.ndarray:
+    versor = np.zeros(32, dtype=np.float64)
+    versor[0] = 1.0
+    return versor
 
 
 def _ground_unknown_token(token: str, vocab) -> np.ndarray:
@@ -228,13 +282,37 @@ def _ground_unknown_token(token: str, vocab) -> np.ndarray:
         if hasattr(vocab, "morphology_entries")
         else ()
     )
-    if not morphology_entries or not hasattr(vocab, "insert_transient"):
+    if not hasattr(vocab, "insert_transient"):
         raise KeyError(f"Word '{token}' not in vocabulary.")
 
-    root_used, prefixes, suffixes = _best_decomposition(token, vocab, morphology_entries)
-    root_versor = vocab.get_versor(root_used)
+    root_used = "<content-derived>"
+    prefixes: tuple[str, ...] = ()
+    suffixes: tuple[str, ...] = ()
+    root_versor = _identity_versor()
+    if morphology_entries:
+        try:
+            candidate_root, candidate_prefixes, candidate_suffixes = _best_decomposition(
+                token,
+                vocab,
+                morphology_entries,
+            )
+        except KeyError:
+            pass
+        else:
+            # Empty-prefix/empty-suffix fallback is only an affinity guess over
+            # mounted morphology. It is not a decomposition of the OOV token, so
+            # the generic token must be grounded from its own bytes instead of
+            # inheriting an arbitrary root point.
+            if candidate_prefixes or candidate_suffixes:
+                root_used = candidate_root
+                prefixes = candidate_prefixes
+                suffixes = candidate_suffixes
+                root_versor = vocab.get_versor(root_used)
+
     versor, operators_applied = _compose_delta(root_versor, prefixes, suffixes)
-    versor = normalize_to_versor(versor)
+    versor, token_operators = _compose_token_delta(versor, token)
+    operators_applied = operators_applied + token_operators
+    versor = versor.astype(np.float32, copy=False)
     condition = versor_condition(versor)
     if condition > 1e-6:
         raise RuntimeError(
