@@ -1,0 +1,17 @@
+{"id": "rel-001", "text": "Alice is the parent of Bob.", "predicate": "parent_of", "subject": "alice", "object": "bob"}
+{"id": "rel-002", "text": "Bob is the child of Alice.", "predicate": "child_of", "subject": "bob", "object": "alice"}
+{"id": "rel-003", "text": "Carol is the sibling of Dan.", "predicate": "sibling_of", "subject": "carol", "object": "dan"}
+{"id": "rel-004", "text": "Eve is the spouse of Frank.", "predicate": "spouse_of", "subject": "eve", "object": "frank"}
+{"id": "rel-005", "text": "Three is less than five.", "predicate": "less_than", "subject": "three", "object": "five"}
+{"id": "rel-006", "text": "Nine is greater than two.", "predicate": "greater_than", "subject": "nine", "object": "two"}
+{"id": "rel-007", "text": "Five is equal to five.", "predicate": "equal_to", "subject": "five", "object": "five"}
+{"id": "rel-008", "text": "Seven is distinct from eight.", "predicate": "distinct_from", "subject": "seven", "object": "eight"}
+{"id": "rel-009", "text": "The box is left of the cup.", "predicate": "left_of", "subject": "box", "object": "cup"}
+{"id": "rel-010", "text": "The lamp is right of the desk.", "predicate": "right_of", "subject": "lamp", "object": "desk"}
+{"id": "rel-011", "text": "The cat is inside of the house.", "predicate": "inside_of", "subject": "cat", "object": "house"}
+{"id": "rel-012", "text": "North station is adjacent to south station.", "predicate": "adjacent_to", "subject": "north_station", "object": "south_station"}
+{"id": "rel-013", "text": "Monday is before Friday.", "predicate": "before_event", "subject": "monday", "object": "friday"}
+{"id": "rel-014", "text": "Lunch is after breakfast.", "predicate": "after_event", "subject": "lunch", "object": "breakfast"}
+{"id": "rel-015", "text": "Recess is during morning.", "predicate": "during_event", "subject": "recess", "object": "morning"}
+{"id": "rel-016", "text": "Zorptak is the parent of Quxley.", "predicate": "parent_of", "subject": "zorptak", "object": "quxley"}
+{"id": "rel-017", "text": "Glarn is less than Brimble.", "predicate": "less_than", "subject": "glarn", "object": "brimble"}

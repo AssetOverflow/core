@@ -87,9 +87,10 @@ def test_empty_index_is_well_defined() -> None:
 
 
 def test_real_lanes_compose_into_the_index_with_wrong_zero() -> None:
-    # The baseline: three structured-input reasoning lanes PLUS the four
+    # The baseline: three structured-input reasoning lanes PLUS the six
     # comprehension lanes (prose -> MeaningGraph -> projection -> independent
-    # oracle) compose into the cross-domain index with zero wrong commits.
+    # oracle / pack-named predicate) compose into the cross-domain index with zero
+    # wrong commits. The relational_predicate lane (#596) is the 9th domain.
     from evals.capability_index.adapters import collect_domain_results
 
     collection = collect_domain_results()
@@ -97,7 +98,7 @@ def test_real_lanes_compose_into_the_index_with_wrong_zero() -> None:
     idx = aggregate(list(collection.results))
     assert idx.wrong_total == 0
     assert idx.assert_mode_valid
-    assert idx.breadth == 8
+    assert idx.breadth == 9
     assert {d.domain for d in idx.domains} == {
         "deductive_logic",
         "dimensional",
@@ -107,6 +108,7 @@ def test_real_lanes_compose_into_the_index_with_wrong_zero() -> None:
         "comprehension_total_ordering",
         "comprehension_propositional",
         "comprehension_relational_metric",
+        "comprehension_relational_predicate",
     }
     assert idx.capability_score > 0.5  # real, non-trivial cross-domain capability
 

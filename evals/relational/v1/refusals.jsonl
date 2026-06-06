@@ -1,0 +1,9 @@
+{"id": "ref-001", "text": "Carol is the sibling of Dan during school.", "why": "trailing temporal qualifier — the #596 fabrication class (sibling_of(carol, dan_during_school))"}
+{"id": "ref-002", "text": "Alice is the parent of Bob during the trip.", "why": "the asymmetric twin of ref-001 — both must refuse identically now"}
+{"id": "ref-003", "text": "Five is equal to ten during testing.", "why": "trailing qualifier on a comparison"}
+{"id": "ref-004", "text": "X is left of Y inside Z.", "why": "two relational structures in one clause"}
+{"id": "ref-005", "text": "Monday before Friday is.", "why": "dangling copula — not a fact"}
+{"id": "ref-006", "text": "Alice is not the parent of Bob.", "why": "negation is out of grammar — never reads as a positive"}
+{"id": "ref-007", "text": "Alice greets Bob.", "why": "no relational connective / no copula"}
+{"id": "ref-008", "text": "The weather is nice today.", "why": "no relational template at all"}
+{"id": "ref-009", "text": "Sunrise overlaps dawn.", "why": "verb-form relation, no copula — the honest overlaps_event coverage gap"}
