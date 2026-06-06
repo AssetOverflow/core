@@ -10,11 +10,13 @@ from typing import Literal
 import numpy as np
 
 from evals.audio_sensorium.synth import synthesize as synthesize_audio
+from evals.event_vision_sensorium.synth import synthesize as synthesize_event_vision
 from evals.sensorimotor_sensorium.synth import synthesize as synthesize_sensorimotor
 from evals.vision_sensorium.synth import synthesize as synthesize_vision
 from sensorium.adapters.audio import make_audio_pack
 from sensorium.adapters.sensorimotor import make_sensorimotor_pack
 from sensorium.adapters.vision import make_vision_pack
+from sensorium.adapters.vision_event import make_event_vision_pack
 from sensorium.audio.canonical import canonicalize as canonicalize_audio
 from sensorium.audio.compiler import AudioCompiler
 from sensorium.audio.trace import audio_evidence_trace
@@ -24,11 +26,13 @@ from sensorium.sensorimotor import SensorimotorCompiler, sensorimotor_evidence_t
 from sensorium.vision import VisionCompiler, canonicalize_image, vision_evidence_trace
 from sensorium.vision.grid import iter_tile_signals
 from sensorium.vision.types import VisionIR
+from sensorium.vision_event import EventIR, EventVisionCompiler, event_vision_evidence_trace
 
-ModalityName = Literal["audio", "vision", "sensorimotor"]
+ModalityName = Literal["audio", "vision", "event-vision", "sensorimotor"]
 _ROOT = Path(__file__).resolve().parents[2]
 _AUDIO_DIR = _ROOT / "evals" / "audio_sensorium"
 _VISION_DIR = _ROOT / "evals" / "vision_sensorium"
+_EVENT_VISION_DIR = _ROOT / "evals" / "event_vision_sensorium"
 _SENSORIMOTOR_DIR = _ROOT / "evals" / "sensorimotor_sensorium"
 _AUDIO_SR = 24_000
 _TOL = 1e-6
@@ -67,6 +71,15 @@ def _vision_counts(ir: VisionIR) -> dict[str, int]:
         *ir.texture_atoms,
         *ir.salient_events,
         *ir.content_anchors,
+    )
+    return dict(sorted(Counter(e.event_type for e in events).items()))
+
+
+def _event_vision_counts(ir: EventIR) -> dict[str, int]:
+    events = (
+        *ir.onset_events,
+        *ir.decay_events,
+        *ir.motion_bins,
     )
     return dict(sorted(Counter(e.event_type for e in events).items()))
 
@@ -155,6 +168,53 @@ def _vision_report() -> dict[str, object]:
     return _report("vision", "vision_core_v1", cases, gate_closed)
 
 
+def _event_vision_report() -> dict[str, object]:
+    fixtures = _json(_EVENT_VISION_DIR / "fixtures.json")["fixtures"]
+    expected_ir = _jsonl_by_id(_EVENT_VISION_DIR / "expected_ir.jsonl")
+    expected_proj = _json(_EVENT_VISION_DIR / "expected_projection.json")
+    compiler = EventVisionCompiler()
+    cases: list[dict[str, object]] = []
+    for fx in fixtures:
+        fid = fx["id"]
+        packet = synthesize_event_vision(fx)
+        unit = compiler.compile_packet(packet)
+        replay = compiler.compile_ir(
+            unit.event_ir,
+            canonical_sha256=packet.canonical_sha256,
+            packet_tick=packet.packet_tick,
+            grid_shape=(packet.grid_h, packet.grid_w),
+        )
+        ref = np.asarray(expected_proj[fid]["reference_versor"], dtype=np.float32)
+        permuted = dict(fx)
+        permuted["events"] = list(reversed(fx["events"]))
+        permuted_unit = compiler.compile_packet(synthesize_event_vision(permuted))
+        cases.append({
+            "id": fid,
+            "canonical_sha256": unit.canonical_sha256,
+            "ir_sha256": unit.ir_sha256,
+            "projection_sha256": unit.projection_sha256,
+            "shape_ok": unit.versor.shape == (32,),
+            "dtype_ok": unit.versor.dtype == np.float32,
+            "replay_ok": bool(np.array_equal(unit.versor, replay.versor)),
+            "expected_ir_ok": unit.ir_sha256 == expected_ir[fid]["ir_sha256"],
+            "expected_projection_ok": bool(np.allclose(unit.versor, ref, atol=_TOL)),
+            "projection_hash_ok": unit.projection_sha256 == expected_proj[fid]["projection_sha256"],
+            "event_counts_ok": _event_vision_counts(unit.event_ir) == expected_ir[fid]["event_type_counts"],
+            "packet_order_invariant_ok": permuted_unit.merge_key == unit.merge_key,
+            "trace_hygiene_ok": _trace_safe(event_vision_evidence_trace(unit)),
+            "versor_condition": unit.versor_condition,
+        })
+    reg = ModalityRegistry()
+    sample = synthesize_event_vision(fixtures[0])
+    reg.mount(make_event_vision_pack("vision_event_core_v1"), sample=sample)
+    gate_closed = False
+    try:
+        reg.project("vision_event_core_v1", sample)
+    except RuntimeError:
+        gate_closed = True
+    return _report("event-vision", "vision_event_core_v1", cases, gate_closed)
+
+
 def _sensorimotor_report() -> dict[str, object]:
     fixtures = _json(_SENSORIMOTOR_DIR / "fixtures.json")["fixtures"]
     expected_ir = _jsonl_by_id(_SENSORIMOTOR_DIR / "expected_ir.jsonl")
@@ -214,6 +274,8 @@ def build_sensorium_report(modality: ModalityName) -> dict[str, object]:
         return _audio_report()
     if modality == "vision":
         return _vision_report()
+    if modality == "event-vision":
+        return _event_vision_report()
     if modality == "sensorimotor":
         return _sensorimotor_report()
     raise ValueError(f"unsupported sensorium modality: {modality!r}")

@@ -1,0 +1,8 @@
+{
+  "basis_version": "vision-event-basis-v1",
+  "elliptic_planes": {
+    "B_EVENT_ONSET": 6,
+    "B_EVENT_DECAY": 7,
+    "B_EVENT_MOTION": 8
+  }
+}

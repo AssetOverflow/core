@@ -122,6 +122,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_audio_pack_manifest.py",
         "tests/test_audio_sensorium_mount.py",
         "tests/test_vision_compiler.py",
+        "tests/test_event_vision_compiler.py",
         "tests/test_vision_crdt_merge.py",
         "tests/test_vision_eval_gates.py",
         "tests/test_vision_sensorium_mount.py",
@@ -4978,7 +4979,7 @@ def build_parser() -> argparse.ArgumentParser:
     eval_cmd.add_argument("--report", metavar="PATH", help="write JSON report to file")
     eval_cmd.add_argument(
         "--modality",
-        choices=["audio", "vision", "sensorimotor"],
+        choices=["audio", "vision", "event-vision", "sensorimotor"],
         default="vision",
         help="sensorium lane modality to evaluate (default: vision)",
     )
