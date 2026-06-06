@@ -290,6 +290,34 @@ not directly rewrite language packs, frames, identity axes, or operator code.
 
 Identity manifold mutation by user prompt or correction is forbidden.
 
+## Environmental falsification contract (ADR-0211)
+
+`sensorium.environment.falsification` compares expected afferent evidence with
+actual `ObservationFrame` evidence. It is a deterministic replay surface, not a
+fusion layer, not reviewed memory, and not a mutable world model.
+
+The v1 verdict set is closed:
+
+```text
+SUPPORTED | FALSIFIED
+```
+
+`SUPPORTED` means every expected slot matched by merge key and no unexpected
+slot appeared. `FALSIFIED` means at least one expected slot was missing,
+changed, or accompanied by unexpected evidence. Neither verdict promotes a
+claim to reviewed memory or mutates packs, Vault state, identity axes, operator
+code, or runtime policy.
+
+Forbidden in the falsification bench:
+
+- raw pixels, PCM, event streams, byte payloads, actuator traces, or decoded
+  action payloads in traces;
+- motor/efferent units in `ExpectedObservationFrame` or `FalsificationRun`;
+- learned latents as substrate;
+- probabilistic confidence, hardware-noise envelopes, or tolerance thresholds in
+  v1 verdicts;
+- `generate/*` dependencies, Vault mutation, or `ModalityRegistry.decode`.
+
 ## Testing policy
 
 Tests should protect load-bearing behavior:
