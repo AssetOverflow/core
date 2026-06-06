@@ -23,6 +23,7 @@ from sensorium.environment import (
     compare_expected_to_observation,
     run_falsification_scenario,
 )
+from sensorium.logs import import_witness_jsonl, import_witness_records
 from sensorium.sensorimotor.compiler import SensorimotorCompiler
 from sensorium.vision import VisionCompiler, canonicalize_image
 from sensorium.vision.grid import iter_tile_signals
@@ -33,6 +34,14 @@ _AUDIO_SR = 24_000
 
 def _load_json(name: str) -> dict[str, Any]:
     return json.loads((_ROOT / name).read_text(encoding="utf-8"))
+
+
+def _load_jsonl(name: str) -> list[dict[str, Any]]:
+    return [
+        json.loads(line)
+        for line in (_ROOT / name).read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def _trace_safe(value: object) -> bool:
@@ -185,6 +194,37 @@ def _scenario_case_report(index: int, scenario: dict[str, Any]) -> dict[str, obj
     return row
 
 
+def _witness_import_report() -> dict[str, object]:
+    payloads = _load_json("witness_payloads.json")["payloads"]
+
+    def resolve(payload_ref: str):
+        return _compile_unit(payloads[payload_ref])
+
+    path = _ROOT / "witness_log.jsonl"
+    imported = import_witness_jsonl(path, resolve_payload_ref=resolve)
+    repeated = import_witness_jsonl(path, resolve_payload_ref=resolve)
+    rows = _load_jsonl("witness_log.jsonl")
+    permuted = import_witness_records(reversed(rows), resolve_payload_ref=resolve)
+    trace = imported.as_dict()
+    frame_trace_hashes = [frame.trace_hash for frame in imported.frames]
+    return {
+        "id": "jsonl_witness_import",
+        "record_count": imported.manifest.record_count,
+        "frame_count": len(imported.frames),
+        "trace_hash": imported.trace_hash,
+        "manifest_sha256": imported.manifest.manifest_sha256,
+        "frame_trace_hashes": frame_trace_hashes,
+        "deterministic_reimport_ok": imported.trace_hash == repeated.trace_hash,
+        "order_stability_ok": imported.trace_hash == permuted.trace_hash,
+        "trace_hygiene_ok": _trace_safe(trace) and "pixels" not in str(trace) and "action_trace" not in str(trace),
+        "no_actuation_ok": all(
+            not unit.pack_id.startswith("motor")
+            for frame in imported.frames
+            for unit in frame.units
+        ),
+    }
+
+
 def build_environment_falsification_report() -> dict[str, object]:
     fixtures = _load_json("fixtures.json")["fixtures"]
     cases = [_case_report(idx, case) for idx, case in enumerate(fixtures)]
@@ -200,19 +240,30 @@ def build_environment_falsification_report() -> dict[str, object]:
         for case in scenario_cases
         if case["verdict_ok"] is True and case["trace_hygiene_ok"] is True
     )
+    witness_import = _witness_import_report()
+    witness_ok = all(
+        witness_import[key] is True
+        for key in (
+            "deterministic_reimport_ok",
+            "order_stability_ok",
+            "trace_hygiene_ok",
+            "no_actuation_ok",
+        )
+    )
     frame_passed = int(frame_report["passed"])
     frame_failed = int(frame_report["failed"])
-    total = len(cases) + len(scenario_cases)
-    passed = frame_passed + scenario_passed
+    total = len(cases) + len(scenario_cases) + 1
+    passed = frame_passed + scenario_passed + (1 if witness_ok else 0)
     report = {
         "lane": "environment-falsification",
         "version": "v1",
         "total": total,
         "passed": passed,
-        "failed": frame_failed + (len(scenario_cases) - scenario_passed),
+        "failed": frame_failed + (len(scenario_cases) - scenario_passed) + (0 if witness_ok else 1),
         "cases": cases,
         "frame_report_sha256": frame_report_sha256,
         "scenario_cases": scenario_cases,
+        "witness_import": witness_import,
     }
     report["report_sha256"] = _report_hash(report)
     expected_hashes = _load_json("expected_hashes.json")
