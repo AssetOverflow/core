@@ -523,11 +523,20 @@ class ChatResponse:
 
 @dataclass(frozen=True, slots=True)
 class IdleTickResult:
-    """Outcome of one ``idle_tick`` — proposal-only learning, never ratification."""
+    """Outcome of one ``idle_tick``.
+
+    The proposal pass is PROPOSAL-ONLY learning, never ratification (HITL ratifies). The
+    Step D consolidation pass is SESSION-memory learning: ``facts_consolidated`` derived
+    facts were written back into the held self so the next ``determine`` reaches them
+    directly — still never corpus mutation, never a proposal.
+    """
 
     candidates_contemplated: int
     proposals_created: int
     pending_proposals: int
+    #: Step D — derived facts consolidated into the held self this tick (0 unless
+    #: ``config.consolidate_determinations`` and the closure had a new layer to add).
+    facts_consolidated: int = 0
 
 
 class ChatRuntime:
@@ -834,63 +843,86 @@ class ChatRuntime:
         )
 
     def idle_tick(self) -> "IdleTickResult":
-        """Advance the reviewed-learning flywheel during idle (NO user turn).
+        """Advance learning during idle (NO user turn). Two disjoint passes:
 
-        This is how the engine "learns while it lives": between turns it turns its
-        lived experience (the pending discovery backlog) into reviewable teaching
-        proposals. It contemplates each pending candidate (enrichment) and runs
-        the replay-gated ``propose_from_candidate``, which leaves a PROPOSAL-ONLY
-        ``pending`` entry in the persistent proposal log.
+        1. PROPOSAL pass (the reviewed-learning flywheel): turn the pending discovery
+           backlog into reviewable teaching proposals. Contemplate each pending
+           candidate (enrichment) and run the replay-gated ``propose_from_candidate``,
+           which leaves a PROPOSAL-ONLY ``pending`` entry in the persistent proposal
+           log. An idle tick NEVER ratifies — ratification (appending to the corpus)
+           stays HITL via ``teaching/review`` (CLAUDE.md teaching safety). The tick only
+           *proposes*; the reviewed loop is not bypassed or duplicated.
 
-        Teaching safety (CLAUDE.md): an idle tick NEVER ratifies. Ratification —
-        moving a proposal to ``accepted`` and appending to the corpus — stays
-        HITL via ``teaching/review``. The tick only *proposes*; the reviewed loop
-        is not bypassed or duplicated.
+        2. CONSOLIDATION pass (Step D — CLOSE): the loop learns from *determined* facts.
+           Run one semi-naive layer of the member/subset deductive closure over the held
+           self (``generate.determine.consolidate_once``); each soundly-derived,
+           proof_chain-verified fact is written back as a SPECULATIVE realized record so
+           the next ``determine`` reaches it directly. SESSION memory (immediate,
+           allowed) — NOT corpus mutation, NOT a proposal; the HITL path is untouched.
+           Gated by ``config.consolidate_determinations``. The closure converges (a
+           saturated tick consolidates nothing — ``at_fixed_point``).
 
-        The proposal log and the candidate backlog both live in the engine-state
-        dir, so this learning progress persists across reboot (CL-2).
+        The proposal log, the candidate backlog, and (with ``persist_session_state``)
+        the consolidated facts all live in the engine-state dir, so this learning
+        progress persists across reboot (CL-2).
         """
-        if self._proposal_log is None or not self._pending_candidates:
-            return IdleTickResult(0, 0, self._count_pending_proposals())
-
-        from teaching.contemplation import contemplate
-        from teaching.proposals import (
-            ProposalError,
-            TeachingChainProposal,
-            _current_revision,
-            propose_from_candidate,
-        )
-        from teaching.source import ProposalSource
-
-        vault_probe = (
-            _vault_probe_for_context(self._context) if self._context else None
-        )
-        contemplated = [
-            contemplate(candidate, vault_probe=vault_probe)
-            for candidate in self._pending_candidates
-        ]
+        contemplated_count = 0
         created = 0
-        for candidate in contemplated:
-            source = ProposalSource(
-                kind="contemplation",
-                source_id=candidate.candidate_id,
-                emitted_at_revision=_current_revision(),
+        facts_consolidated = 0
+        did_work = False
+
+        # 1. Proposal pass — unchanged behavior, runs only with a log + backlog.
+        if self._proposal_log is not None and self._pending_candidates:
+            from teaching.contemplation import contemplate
+            from teaching.proposals import (
+                ProposalError,
+                TeachingChainProposal,
+                _current_revision,
+                propose_from_candidate,
             )
-            try:
-                result = propose_from_candidate(
-                    candidate, log=self._proposal_log, source=source
+            from teaching.source import ProposalSource
+
+            vault_probe = (
+                _vault_probe_for_context(self._context) if self._context else None
+            )
+            contemplated = [
+                contemplate(candidate, vault_probe=vault_probe)
+                for candidate in self._pending_candidates
+            ]
+            contemplated_count = len(contemplated)
+            for candidate in contemplated:
+                source = ProposalSource(
+                    kind="contemplation",
+                    source_id=candidate.candidate_id,
+                    emitted_at_revision=_current_revision(),
                 )
-            except ProposalError:
-                continue
-            if isinstance(result, TeachingChainProposal):
-                created += 1
-        # Persist the advanced backlog (candidates + lineage); the proposal log
-        # is already file-backed.
-        self.checkpoint_engine_state()
+                try:
+                    result = propose_from_candidate(
+                        candidate, log=self._proposal_log, source=source
+                    )
+                except ProposalError:
+                    continue
+                if isinstance(result, TeachingChainProposal):
+                    created += 1
+            did_work = True
+
+        # 2. Consolidation pass (Step D) — runs independently of the backlog.
+        if self.config.consolidate_determinations and self._context is not None:
+            from generate.determine import consolidate_once
+
+            facts_consolidated = consolidate_once(self._context).consolidated
+            did_work = True
+
+        # Persist the advanced state once (backlog + lineage +, with
+        # persist_session_state, the consolidated facts). Skipped on a no-op tick so an
+        # idle engine with nothing to learn does not churn the checkpoint.
+        if did_work:
+            self.checkpoint_engine_state()
         return IdleTickResult(
-            candidates_contemplated=len(contemplated),
+            candidates_contemplated=contemplated_count,
             proposals_created=created,
             pending_proposals=self._count_pending_proposals(),
+            facts_consolidated=facts_consolidated,
         )
 
     def record_recognition_example(
