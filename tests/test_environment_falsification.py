@@ -9,9 +9,12 @@ import pytest
 
 from sensorium.environment import (
     ObservationUnitRef,
+    build_experiment_plan,
     build_expected_observation_frame,
+    build_hypothesis_claim,
     build_observation_frame,
     compare_expected_to_observation,
+    run_falsification_scenario,
 )
 
 
@@ -69,6 +72,46 @@ def test_expected_frame_hash_is_order_invariant_and_duplicate_safe():
     assert f1.expected_sha256 == f2.expected_sha256
     assert f1.expected_id == f2.expected_id
     assert len(f1.unit_refs) == 2
+
+
+def test_hypothesis_claim_is_speculative_and_basis_order_stable():
+    h1 = build_hypothesis_claim(
+        claim_id="claim-a",
+        claim_text="The anchored object repeats its contact evidence.",
+        domain="passive_tabletop",
+        basis_trace_hashes=("b", "a", "b"),
+    )
+    h2 = build_hypothesis_claim(
+        claim_id="claim-a",
+        claim_text="The anchored object repeats its contact evidence.",
+        domain="passive_tabletop",
+        basis_trace_hashes=("a", "b"),
+    )
+    assert h1.epistemic_status == "SPECULATIVE"
+    assert h1.basis_trace_hashes == ("a", "b")
+    assert h1.hypothesis_sha256 == h2.hypothesis_sha256
+
+
+def test_experiment_plan_hash_is_order_invariant_and_duplicate_safe():
+    hypothesis = build_hypothesis_claim(
+        claim_id="claim-plan",
+        claim_text="Expected frames define the evidence envelope.",
+        domain="fixture",
+    )
+    first = build_expected_observation_frame(
+        monotonic_tick=10,
+        source_clock="fixture",
+        unit_refs=(_ref("slot:a", "a"),),
+    )
+    second = build_expected_observation_frame(
+        monotonic_tick=11,
+        source_clock="fixture",
+        unit_refs=(_ref("slot:b", "b"),),
+    )
+    p1 = build_experiment_plan(hypothesis=hypothesis, expected_frames=(first, second, first))
+    p2 = build_experiment_plan(hypothesis=hypothesis, expected_frames=(second, first))
+    assert p1.plan_sha256 == p2.plan_sha256
+    assert len(p1.expected_frames) == 2
 
 
 def test_raw_payloads_are_rejected():
@@ -145,6 +188,68 @@ def test_missing_unexpected_and_changed_slots_are_falsified():
     assert run.residual.unexpected == ("slot:d",)
     assert len(run.residual.changed) == 1
     assert run.residual.changed[0].slot_id == "slot:b"
+
+
+def test_scenario_supported_and_falsified_verdicts():
+    hypothesis = build_hypothesis_claim(
+        claim_id="claim-scenario",
+        claim_text="A scenario binds expected evidence to actual frames.",
+        domain="fixture",
+    )
+    refs = (_ref("slot:a", "a"),)
+    expected = build_expected_observation_frame(
+        monotonic_tick=6,
+        source_clock="fixture",
+        unit_refs=refs,
+    )
+    plan = build_experiment_plan(hypothesis=hypothesis, expected_frames=(expected,))
+    supported_actual = build_observation_frame(
+        monotonic_tick=6,
+        source_clock="fixture",
+        units=[ref.unit for ref in refs],
+    )
+    supported = run_falsification_scenario(
+        plan,
+        actual_frames_by_expected_id={expected.expected_id: supported_actual},
+        actual_refs_by_expected_id={expected.expected_id: refs},
+    )
+    assert supported.verdict == "SUPPORTED"
+    assert supported.total_count == 1
+    assert supported.supported_count == 1
+
+    changed_refs = (_ref("slot:a", "changed"),)
+    changed_actual = build_observation_frame(
+        monotonic_tick=6,
+        source_clock="fixture",
+        units=[ref.unit for ref in changed_refs],
+    )
+    falsified = run_falsification_scenario(
+        plan,
+        actual_frames_by_expected_id={expected.expected_id: changed_actual},
+        actual_refs_by_expected_id={expected.expected_id: changed_refs},
+    )
+    assert falsified.verdict == "FALSIFIED"
+    assert falsified.falsified_count == 1
+    assert falsified.runs[0].residual.changed[0].slot_id == "slot:a"
+
+
+def test_scenario_missing_actual_frame_is_falsified():
+    hypothesis = build_hypothesis_claim(
+        claim_id="claim-missing",
+        claim_text="Missing actual evidence falsifies the scenario.",
+        domain="fixture",
+    )
+    expected = build_expected_observation_frame(
+        monotonic_tick=7,
+        source_clock="fixture",
+        unit_refs=(_ref("slot:a", "a"),),
+    )
+    plan = build_experiment_plan(hypothesis=hypothesis, expected_frames=(expected,))
+    report = run_falsification_scenario(plan, actual_frames_by_expected_id={})
+    assert report.verdict == "FALSIFIED"
+    assert report.falsified_count == 1
+    assert report.runs[0].actual_frame_id == "__missing_observation_frame__"
+    assert report.runs[0].residual.missing == ("slot:a",)
 
 
 def test_run_trace_is_hash_only():
