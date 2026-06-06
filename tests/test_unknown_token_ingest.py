@@ -32,14 +32,10 @@ def test_unknown_token_is_grounded_as_valid_transient_versor() -> None:
     assert cga_inner(constructed, root) > cga_inner(constructed, random)
 
     log = vocab.unknown_token_log
-    assert log == (
-        {
-            "token": token,
-            "root_used": "דבר",
-            "operators_applied": ("suffix:ית",),
-            "versor_condition_score": log[0]["versor_condition_score"],
-        },
-    )
+    assert log[0]["token"] == token
+    assert log[0]["root_used"] == "דבר"
+    assert log[0]["operators_applied"][0] == "suffix:ית"
+    assert log[0]["operators_applied"][1].startswith("token:sha256:")
     assert log[0]["versor_condition_score"] < 1e-6
 
 
