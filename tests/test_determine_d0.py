@@ -145,3 +145,34 @@ def test_unsupported_query_predicate_is_refused(vocab_persona) -> None:
     )
     res = determine(subset_q, ctx)
     assert isinstance(res, Undetermined) and res.reason == "unsupported_query"
+
+
+def test_multi_query_is_refused(vocab_persona) -> None:
+    # A two-question input yields TWO queries (reachable from real input); D0 answers
+    # one question at a time.
+    ctx = _ctx(vocab_persona)
+    _tell("Truth is a concept.", ctx)
+    res = _ask("Is truth a concept? Is knowledge a thought?", ctx)
+    assert isinstance(res, Undetermined) and res.reason == "not_single_query"
+
+
+def test_malformed_member_query_is_refused(vocab_persona) -> None:
+    # `member` is binary; a unary member query is malformed. Hand-built, since the
+    # reader always emits arity-2 member queries — the guard would otherwise be
+    # asserted-but-unproven.
+    from generate.meaning_graph.model import MeaningGraph, MeaningSpan
+    from generate.meaning_graph.reader import Comprehension, Query
+
+    ctx = _ctx(vocab_persona)
+    span = MeaningSpan(source_id="input", start=0, end=5, text="dummy")
+    unary = Comprehension(
+        meaning_graph=MeaningGraph(), queries=(Query("member", ("truth",), span),)
+    )
+    res = determine(unary, ctx)
+    assert isinstance(res, Undetermined) and res.reason == "malformed_query"
+
+
+def test_non_comprehension_input_is_refused(vocab_persona) -> None:
+    ctx = _ctx(vocab_persona)
+    res = determine(object(), ctx)  # neither Comprehension nor Refusal
+    assert isinstance(res, Undetermined) and res.reason == "not_a_comprehension"
