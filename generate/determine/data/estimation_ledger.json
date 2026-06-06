@@ -1,0 +1,22 @@
+{
+  "classes": {
+    "converse:parent_of": {
+      "correct": 0,
+      "refused": 0,
+      "t2_agrees_gold": 0,
+      "t2_verified": 0,
+      "wrong": 660
+    },
+    "converse:sibling_of": {
+      "correct": 660,
+      "refused": 0,
+      "t2_agrees_gold": 0,
+      "t2_verified": 0,
+      "wrong": 0
+    }
+  },
+  "content_sha256": "7978176cf87806df22b4fb26c9914af2b7877ecce8a2d6e73bd5d548f874deac",
+  "note": "HITL-ratified committed ledger. Engine reads, never writes. Ceilings stay at safe defaults (theta_SERVE=0.99).",
+  "provenance": "evals.determination_estimation.build_ledger (sealed run_practice over the gold lane)",
+  "schema": "estimation_ledger_v1"
+}

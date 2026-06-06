@@ -121,7 +121,19 @@ STRICT_POLICY: ReachPolicy = ReachPolicy(
     license_ratio=0.0,
 )
 
-# Disclosure prefixes for the (currently unreachable) widening levels.  Real
+# Step E (ADR-0206 §5) — the first widening rung. APPROXIMATE keeps the SAME admissible
+# set as STRICT ({DECODED}): a fully-grounded surface commits verbatim, but anything less
+# grounded (a converse GUESS is ``UNVERIFIED_POSSIBLE``) is surfaced by ``shape_surface``
+# as a DISCLOSED ``[approximate]`` alternative. So a licensed estimate is never committed
+# silently — admitting its state here would defeat the disclosure the rung exists for.
+APPROXIMATE_POLICY: ReachPolicy = ReachPolicy(
+    level=ReachLevel.APPROXIMATE,
+    admissible_states=_STRICT_ADMISSIBLE,
+    rationale="license-gated widening (ADR-0206 §5 / Step E — SERVE earned on a committed ClassTally)",
+    license_ratio=1.0,
+)
+
+# Disclosure prefixes for the widening levels.  Real
 # code so the higher-level branch of shape_surface is genuinely
 # policy-sensitive, exercised by the live-wiring test.
 _DISCLOSURE_PREFIX: dict[ReachLevel, str] = {
@@ -129,6 +141,25 @@ _DISCLOSURE_PREFIX: dict[ReachLevel, str] = {
     ReachLevel.EXTRAPOLATE: "[extrapolated]",
     ReachLevel.CREATIVE: "[exploratory]",
 }
+
+
+def _serve_licensed(license_decision: object | None) -> bool:
+    """True iff ``license_decision`` is a GENUINE, licensed ``Action.SERVE`` decision.
+
+    Strict by type on purpose: only a real :class:`~core.reliability_gate.LicenseDecision`
+    that the gate marked ``licensed`` for ``Action.SERVE`` widens. A ``None``, a bare
+    object, or a forged dict (``{"licensed": True}``) is NOT a ratified license and stays
+    STRICT — the wrong=0 guard is that widening rests on the gate's verdict over a
+    committed ledger, never on a caller's say-so.
+    """
+    from core.reliability_gate import Action
+    from core.reliability_gate.gate import LicenseDecision
+
+    return (
+        isinstance(license_decision, LicenseDecision)
+        and license_decision.action is Action.SERVE
+        and license_decision.licensed
+    )
 
 
 def govern_response(
@@ -139,17 +170,19 @@ def govern_response(
 ) -> ReachPolicy:
     """Decide the reach policy for a response.
 
-    SCAFFOLD (ADR-0206 §3): returns :data:`STRICT_POLICY` unconditionally.
-    The inputs are accepted now so the call site is the final shape, but
-    the stakes-weighing and license-gated widening they will drive is
-    *designed, not built*.  Every response is therefore governed at STRICT
-    — commit-only-when-grounded, else the existing refuse/disclose path —
-    which is exactly the pre-bridge behavior.
+    Step E (ADR-0206 §5) — the first license-gated widening. Returns
+    :data:`APPROXIMATE_POLICY` IFF ``license_decision`` is a genuine licensed
+    ``Action.SERVE`` decision (a predicate-class that earned SERVE on the committed
+    reliability ledger); otherwise :data:`STRICT_POLICY`. Every current serving call
+    site passes no ``license_decision`` → STRICT → byte-identical to the pre-E path.
 
-    This single return value is the load-bearing line for ``wrong == 0``:
-    the live-wiring tests prove that the *only* thing keeping the response
-    path strict is this STRICT return, not the absence of a consumer.
+    The STRICT default remains the load-bearing line for ``wrong == 0``: nothing
+    widens without a ratified license, and even APPROXIMATE only ever surfaces a
+    DISCLOSED estimate (``shape_surface`` adds ``[approximate]``), never a silent
+    commit. ``stakes``-weighing (SITUATE) stays designed-not-built (ADR-0206 §1).
     """
+    if _serve_licensed(license_decision):
+        return APPROXIMATE_POLICY
     return STRICT_POLICY
 
 

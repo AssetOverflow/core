@@ -316,6 +316,18 @@ class RuntimeConfig:
     # same _SUBSUMPTION_SUBSET_FACT_BUDGET; converges (a saturated tick is a no-op).
     consolidate_determinations: bool = False
 
+    # Step E (ESTIMATION) — when on, a converse query the engine would otherwise REFUSE
+    # (told p(a,b), asked p(b,a)) may be answered with a DISCLOSED [approximate] estimate
+    # IF the predicate-class has earned the SERVE license on the ratified, committed
+    # reliability ledger (ADR-0175 license_for, θ_SERVE=0.99) — routed through the
+    # ADR-0206 govern_response/shape_surface bridge. OFF by default; only meaningful with
+    # accrue_realized_knowledge (the estimate is computed in the accrual path). wrong=0 is
+    # preserved by construction: an estimate is ALWAYS disclosed ([approximate]), never
+    # asserted as fact, and is offered only for a class whose committed track record
+    # clears the Wilson floor. Absent a cleared license -> STRICT refuse (the safe
+    # default); the engine never raises its own ceiling.
+    estimation_enabled: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"

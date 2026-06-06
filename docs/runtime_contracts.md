@@ -36,10 +36,13 @@ Current selection policy:
 ```text
 surface = determination_surface     (when accrue_realized_knowledge AND the turn
                                       DETERMINED an answer over realized knowledge)
+surface = [approximate] estimate     (Step E — when estimation_enabled AND the turn was a
+                                      REFUSED converse query whose predicate-class holds a
+                                      genuine SERVE license; DISCLOSED, never asserted)
 surface = _UNKNOWN_DOMAIN_SURFACE    (when the unknown-domain gate fired)
 surface = articulation_surface       (otherwise — the default)
 walk_surface        = retained telemetry/evidence (always)
-articulation_surface = retained always (the determination surface does not replace it)
+articulation_surface = retained always (neither determination nor estimate replaces it)
 ```
 
 ### Unknown-domain gate honour
@@ -106,6 +109,33 @@ Contract:
 - **No new normalization, no closure/repair.**  Writes reuse the INV-21 vault writer;
   `algebra/versor.py` keeps closure.  Off by default; the falsification lane is
   `evals.determination_closure`.
+
+### Estimation surface (Step E — ESTIMATION)
+
+When `estimation_enabled` and a turn is a **converse query** DETERMINE refused (told
+`p(a,b)`, asked `p(b,a)`), the engine offers a **calibrated, disclosed** estimate
+instead of always refusing — but only through the ADR-0206 reach bridge:
+
+- The blind converse-guesser (`generate.determine.estimate`) proposes `p(b,a)` holds.
+- `govern_response` widens to `APPROXIMATE` **iff** the predicate-class holds a genuine
+  `Action.SERVE` `LicenseDecision` on the **ratified, committed** reliability ledger
+  (`generate/determine/data/estimation_ledger.json`, θ_SERVE=0.99, ADR-0175). An
+  unlicensed class stays `STRICT` — the honest refusal is unchanged.
+- `shape_surface` **discloses** the estimate as `[approximate] …` (a converse guess is
+  `UNVERIFIED_POSSIBLE`, never in APPROXIMATE's fully-grounded admissible set).
+
+Contract:
+
+- **wrong=0 by construction.**  An estimate is *always* disclosed (`[approximate]`),
+  never asserted as fact — a wrong estimate is a disclosed-wrong, not a silent one.
+  And it is offered only for a class whose committed track record clears the Wilson
+  floor (earned by volume: ≥657 perfect commits for SERVE).
+- **Never a designed-in default; never self-authored.**  Absent a cleared license →
+  refuse. Ceilings stay at safe defaults (the engine never raises its own bar); the
+  ledger is sealed-practice output, hash-verified on load (a hand-edited ledger is
+  rejected).
+- **Session/serving only.**  No corpus mutation, no proposal — the HITL teaching path
+  is untouched. Off by default; the falsification lane is `evals.determination_estimation`.
 
 ### Refusal contract (ADR-0024 Phase 2)
 
