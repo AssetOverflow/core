@@ -126,16 +126,64 @@ def test_no_copula_refuses() -> None:
 
 
 def test_negated_form_refuses() -> None:
-    # "not" leaks into the subject slot -> reserved-word refusal; negation never reads
-    # as a positive relation.
+    # "is not the parent of" breaks the structural copula (the copula is not adjacent
+    # to the connective) and "not" is reserved — either way it REFUSES; negation never
+    # reads as a positive relation.
     res = _read("Alice is not the parent of Bob.")
     assert isinstance(res, Refusal)
-    assert res.reason in {"reserved_word_in_np", "incomplete_relation"}
+    assert res.reason in {"no_relational_template", "reserved_word_in_np", "incomplete_relation"}
 
 
 def test_incomplete_relation_refuses() -> None:
     res = _read("Alice is the parent of.")
     assert isinstance(res, Refusal) and res.reason == "incomplete_relation"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Carol is the sibling of Dan during school.",  # trailing temporal qualifier
+        "Alice is the parent of Bob during the trip.",  # (the asymmetric twin — now same verdict)
+        "Five is equal to ten during testing.",
+        "X is left of Y inside Z.",  # two relational structures in one clause
+        "Noon is during overlaps dusk.",
+    ],
+)
+def test_trailing_relational_structure_refuses(text) -> None:
+    # A connective token leaking into an argument slot means unparsed relational
+    # structure -> REFUSE, never fabricate a compound entity ("dan_during_school").
+    # Without the guard the refusal net is accidental (fires only on reader._RESERVED),
+    # so "… during the trip" refuses while "… during school" fabricates — that
+    # comprehension-layer wrong=0 hole is what this bites.
+    res = _read(text)
+    assert isinstance(res, Refusal)
+    assert res.reason in {"extra_relational_structure", "reserved_word_in_np"}
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Monday before Friday is.",  # dangling copula — not a fact
+        "Is Monday before Friday.",  # question-shaped statement (period, not '?')
+    ],
+)
+def test_dangling_copula_refuses(text) -> None:
+    # The copula must sit adjacent to the connective; a stray/dangling "is" must not
+    # let an ungrammatical surface read as a stored fact.
+    res = _read(text)
+    assert isinstance(res, Refusal) and res.reason == "no_relational_template"
+
+
+def test_no_fabricated_entity_enters_realized_memory(vocab_persona) -> None:
+    # The damage the misread caused was a fabricated entity persisted as realized
+    # knowledge. Confirm the hazardous input realizes NOTHING.
+    ctx = _ctx(vocab_persona)
+    told = realize_comprehension(_read("Alice is the parent of Bob during school."), ctx)
+    from generate.realize import NotRealized
+
+    assert isinstance(told, NotRealized) and told.reason == "refusal"
+    # and the fabricated entity is not recallable
+    assert isinstance(_ask("Is Alice the parent of bob_during_school?", ctx), Undetermined)
 
 
 def test_fail_closed_on_pack_membership_bites() -> None:
