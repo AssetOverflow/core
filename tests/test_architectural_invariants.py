@@ -1116,6 +1116,34 @@ INDEPENDENT_GOLD_LANES: tuple[IndependentGoldLane, ...] = (
             "field",
         ),
     ),
+    # The comprehension lanes: the system under test is the GENERAL comprehension
+    # organ (generate.meaning_graph reader + projectors), which reads prose into a
+    # neutral MeaningGraph and projects into each domain's oracle. Each domain's
+    # gold oracle must share NO code with that organ, or the gold the reader is
+    # scored against is not independent of the reader (the anti-overfit firewall).
+    IndependentGoldLane(
+        name="comprehension_set_membership",
+        oracle_module="evals/set_membership/oracle.py",
+        sut_import_prefixes=("generate.meaning_graph",),
+    ),
+    IndependentGoldLane(
+        name="comprehension_syllogism",
+        oracle_module="evals/syllogism/oracle.py",
+        sut_import_prefixes=("generate.meaning_graph",),
+    ),
+    IndependentGoldLane(
+        name="comprehension_total_ordering",
+        oracle_module="evals/total_ordering/oracle.py",
+        sut_import_prefixes=("generate.meaning_graph",),
+    ),
+    # The propositional comprehension lane rides the deductive_logic ROBDD oracle;
+    # for THIS lane the SUT is the comprehension organ (the oracle already carries a
+    # separate firewall above against the proof_chain engine it golds for).
+    IndependentGoldLane(
+        name="comprehension_propositional",
+        oracle_module="evals/deductive_logic/oracle.py",
+        sut_import_prefixes=("generate.meaning_graph",),
+    ),
 )
 
 _DEDUCTIVE_CASE_FILES: tuple[str, ...] = (
@@ -1597,3 +1625,78 @@ class TestINV27Tier2ReaderDisjointness:
             "transitive walker did not follow math_solver -> math_problem_graph; "
             "the disjointness proof would miss deep shared readers."
         )
+
+
+# ===========================================================================
+# INV-28  MeaningGraph neutrality — the general-meaning interlingua and its
+#         symbolic comprehension reader stay neutral to engine / eval / runtime
+#         / numeric backend
+# ===========================================================================
+#
+# Claim (generate/meaning_graph/model.py module docstring): the comprehension
+# organ is the new meeting point where prose-read structure projects into
+# independent domain oracles. The MeaningGraph is the sibling of the binding-graph
+# interlingua (INV-26) and earns the same firewall — a structure coupled to the
+# field engine, a benchmark, the runtime, or a numeric backend is not a neutral
+# meeting point two independent decodings can agree at.
+#
+#   28a  No generate/meaning_graph module imports field / algebra / evals / vault /
+#        chat / core / sensorium or numpy. Path β reads structure SYMBOLICALLY;
+#        quantities are the binding-graph's domain, not the MeaningGraph's.
+#   28b  Non-vacuity: the predicate flags a real module that imports a forbidden
+#        family.
+
+_MEANING_GRAPH_DIR = "generate/meaning_graph"
+
+# Same engine/benchmark/runtime families as INV-26, plus numpy: the MeaningGraph
+# and its symbolic reader carry NO numeric backend (quantities live in the
+# binding-graph, per CLAUDE.md's MeaningGraph-excludes-quantities line).
+_MEANING_GRAPH_FORBIDDEN_PREFIXES: tuple[str, ...] = (
+    _INTERLINGUA_FORBIDDEN_PREFIXES + ("numpy",)
+)
+
+
+def _meaning_graph_modules() -> list[Path]:
+    return sorted((_REPO_ROOT / _MEANING_GRAPH_DIR).glob("*.py"))
+
+
+class TestINV28MeaningGraphNeutrality:
+    """The general-meaning interlingua (and its symbolic comprehension reader)
+    stays neutral to engine, benchmark, runtime, and numeric backend."""
+
+    def test_meaning_graph_dir_exists(self):
+        mods = _meaning_graph_modules()
+        assert mods, (
+            f"no meaning-graph modules found under {_MEANING_GRAPH_DIR} — "
+            "INV-28 would be vacuous (did the package move?)."
+        )
+
+    def test_no_module_imports_engine_eval_runtime_or_numpy(self):
+        """28a — the comprehension interlingua never touches the engine, eval,
+        runtime, or a numeric backend."""
+        offenders: list[str] = []
+        for path in _meaning_graph_modules():
+            mods = _module_imports(path)
+            hits = _imports_any_prefix(mods, _MEANING_GRAPH_FORBIDDEN_PREFIXES)
+            if hits:
+                offenders.append(f"{path.name} imports {hits}")
+        assert not offenders, (
+            "MeaningGraph (comprehension interlingua) module couples to the "
+            "engine/eval/runtime/numeric backend:\n  " + "\n  ".join(offenders)
+            + "\n\nThe comprehension structure must stay neutral so independent "
+            "domain oracles can be projected into and agree there (INV-28a). "
+            "Quantities are the binding-graph's domain, not the MeaningGraph's."
+        )
+
+    def test_neutrality_check_is_non_vacuous(self):
+        """28b — prove 28a can fail: a module known to import a forbidden family is
+        flagged by the same predicate."""
+        pipeline = _REPO_ROOT / "core" / "cognition" / "pipeline.py"
+        if pipeline.is_file():
+            hits = _imports_any_prefix(
+                _module_imports(pipeline), _MEANING_GRAPH_FORBIDDEN_PREFIXES
+            )
+            assert hits, (
+                "INV-28a predicate failed to flag a module known to import the "
+                "field engine — the neutrality check is vacuous."
+            )
