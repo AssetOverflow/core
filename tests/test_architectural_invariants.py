@@ -643,6 +643,11 @@ ALLOWED_VAULT_WRITERS: frozenset[str] = frozenset({
     "session/context.py",
     "vault/store.py",
     "generate/proposition.py",
+    # REALIZE (roadmap Step 3): integrates a comprehended declarative fact into the
+    # held self as a SPECULATIVE, provenance-rich vault entry. A sanctioned writer —
+    # it stores via the same VaultStore.store path (no parallel memory), defaults to
+    # SPECULATIVE (never COHERENT), and writes nothing on a Refusal (wrong=0).
+    "generate/realize/realize.py",
 })
 
 PROJECT_ROOT_FOR_INV21 = Path(__file__).resolve().parent.parent
