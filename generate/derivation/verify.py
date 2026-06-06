@@ -34,6 +34,10 @@ from collections import Counter
 from generate.derivation.extract import extract_quantities
 from generate.derivation.model import GroundedDerivation
 
+# ADR-0206 §5 math-serving seam — the reach policy parameter. STRICT (the default
+# every current caller uses) is byte-identical to the pre-seam gate.
+from core.response_governance import ReachLevel, ReachPolicy, STRICT_POLICY
+
 _SAME_UNIT_REQUIRED: Final[frozenset[str]] = frozenset({"add", "subtract"})
 
 
@@ -181,11 +185,32 @@ def classify_derivation(derivation: GroundedDerivation, problem_text: str) -> st
     return "exempt"
 
 
+def _canonically_verified(
+    verified: list[GroundedDerivation],
+    problem_text: str,
+    policy: "ReachPolicy",
+) -> GroundedDerivation | None:
+    """The ADR-0206 §5 / §4 ``VERIFIED`` gate — the ONLY thing that may license a
+    math answer *past gold* (resolve a disagreement that STRICT refuses).
+
+    Returns the derivation whose answer is **canonically VERIFIED** — proven
+    *correct*, not merely *sound* (the soundness ≠ correctness gap). That capability
+    (a canonical-comparison pass) is **not built**: this returns ``None`` today, so
+    the widening is **structurally inert** — disagreement refuses regardless of
+    ``policy``, preserving the absolute ``wrong == 0`` even if a caller passes a wider
+    reach. It is the precise, tested integration point a future ``VERIFIED`` producer
+    plugs into. A reliability *license* (statistical) must NEVER substitute here: math
+    serving is absolute-wrong=0, not disclosed like the cognition path.
+    """
+    return None
+
+
 def select_self_verified(
     derivations: list[GroundedDerivation],
     problem_text: str,
     *,
     target_units: tuple[str, ...] = (),
+    policy: "ReachPolicy | None" = None,
 ) -> Resolution | None:
     """Among the self-verifying derivations, return the unique answer or refuse.
 
@@ -197,18 +222,36 @@ def select_self_verified(
     dropped — a chain that computes the wrong kind of quantity answered a different
     question. Empty ``target_units`` imposes no constraint (the unit signal may be
     unavailable, e.g. a superordinate the units pack doesn't yet cover).
+
+    ADR-0206 §5 math-serving seam: ``policy`` (default STRICT) parameterizes the
+    reach. STRICT is **byte-identical** to the pre-seam gate — the unique-answer and
+    refuse paths are untouched (every current caller passes STRICT). A wider reach may
+    resolve a *disagreement* ONLY via the ``VERIFIED`` gate (``_canonically_verified``),
+    which is unbuilt and returns ``None`` — so the widening is structurally inert and
+    the absolute ``wrong == 0`` is preserved by construction, not by convention.
     """
+    reach_policy = policy if policy is not None else STRICT_POLICY
     verified = [d for d in derivations if self_verifies(d, problem_text).verified]
     if target_units:
         verified = [d for d in verified if d.answer_unit in target_units]
     if not verified:
         return None
     distinct = {round(d.answer, 9) for d in verified}
-    if len(distinct) != 1:
-        return None  # disagreement -> refuse (wrong=0)
-    chosen = verified[0]
-    return Resolution(
-        answer=chosen.answer,
-        answer_unit=chosen.answer_unit,
-        derivation=chosen,
-    )
+    if len(distinct) == 1:
+        chosen = verified[0]
+        return Resolution(
+            answer=chosen.answer,
+            answer_unit=chosen.answer_unit,
+            derivation=chosen,
+        )
+    # Disagreement. STRICT refuses (wrong=0). A wider reach resolves it ONLY when an
+    # answer is canonically VERIFIED (proven correct) — inert today (no producer).
+    if reach_policy.level is not ReachLevel.STRICT:
+        winner = _canonically_verified(verified, problem_text, reach_policy)
+        if winner is not None:
+            return Resolution(
+                answer=winner.answer,
+                answer_unit=winner.answer_unit,
+                derivation=winner,
+            )
+    return None  # disagreement, no VERIFIED winner -> refuse (wrong=0)
