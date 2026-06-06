@@ -11,7 +11,9 @@ def test_environment_falsification_report_passes_expected_fixtures():
     assert report["lane"] == "environment-falsification"
     assert report["failed"] == 0
     assert report["expected_report_hash_ok"] is True
+    assert report["expected_frame_report_hash_ok"] is True
     assert {case["actual_verdict"] for case in report["cases"]} == {"SUPPORTED", "FALSIFIED"}
+    assert {case["actual_verdict"] for case in report["scenario_cases"]} == {"SUPPORTED", "FALSIFIED"}
 
 
 def test_core_eval_environment_falsification_json(capsys):

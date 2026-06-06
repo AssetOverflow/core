@@ -16,9 +16,12 @@ from sensorium.audio.compiler import AudioCompiler
 from sensorium.audio.checksum import sha256_json
 from sensorium.environment import (
     ObservationUnitRef,
+    build_experiment_plan,
     build_expected_observation_frame,
+    build_hypothesis_claim,
     build_observation_frame,
     compare_expected_to_observation,
+    run_falsification_scenario,
 )
 from sensorium.sensorimotor.compiler import SensorimotorCompiler
 from sensorium.vision import VisionCompiler, canonicalize_image
@@ -107,15 +110,13 @@ def _report_hash(report_without_hash: dict[str, object]) -> str:
     return sha256_json(report_without_hash)
 
 
-def build_environment_falsification_report() -> dict[str, object]:
-    fixtures = _load_json("fixtures.json")["fixtures"]
-    cases = [_case_report(idx, case) for idx, case in enumerate(fixtures)]
+def _frame_report(cases: list[dict[str, object]]) -> dict[str, object]:
     passed = sum(
         1
         for case in cases
         if case["verdict_ok"] is True and case["trace_hygiene_ok"] is True
     )
-    report = {
+    return {
         "lane": "environment-falsification",
         "version": "v1",
         "total": len(cases),
@@ -123,10 +124,108 @@ def build_environment_falsification_report() -> dict[str, object]:
         "failed": len(cases) - passed,
         "cases": cases,
     }
+
+
+def _scenario_case_report(index: int, scenario: dict[str, Any]) -> dict[str, object]:
+    hypothesis_spec = scenario["hypothesis"]
+    hypothesis = build_hypothesis_claim(
+        claim_id=str(hypothesis_spec["claim_id"]),
+        claim_text=str(hypothesis_spec["claim_text"]),
+        domain=str(hypothesis_spec["domain"]),
+        basis_trace_hashes=tuple(hypothesis_spec.get("basis_trace_hashes", ())),
+    )
+    expected_frames = []
+    actual_frames_by_expected_id = {}
+    actual_refs_by_expected_id = {}
+    for offset, frame_spec in enumerate(scenario["frames"]):
+        tick = int(frame_spec.get("tick", index * 100 + offset))
+        expected_refs = _refs(frame_spec["expected"])
+        expected = build_expected_observation_frame(
+            monotonic_tick=tick,
+            source_clock="environment-falsification-scenario-fixture",
+            unit_refs=expected_refs,
+            causal_parent_ids=tuple(frame_spec.get("causal_parent_ids", ())),
+        )
+        expected_frames.append(expected)
+        if frame_spec["actual"] == "missing":
+            continue
+        actual_spec = frame_spec["expected"] if frame_spec["actual"] == "same" else frame_spec["actual"]
+        actual_refs = _refs(actual_spec)
+        actual = build_observation_frame(
+            monotonic_tick=tick,
+            source_clock="environment-falsification-scenario-fixture",
+            units=tuple(ref.unit for ref in actual_refs),
+            causal_parent_ids=(expected.expected_id,),
+        )
+        actual_frames_by_expected_id[expected.expected_id] = actual
+        actual_refs_by_expected_id[expected.expected_id] = actual_refs
+
+    plan = build_experiment_plan(hypothesis=hypothesis, expected_frames=expected_frames)
+    report = run_falsification_scenario(
+        plan,
+        actual_frames_by_expected_id=actual_frames_by_expected_id,
+        actual_refs_by_expected_id=actual_refs_by_expected_id,
+    )
+    expected_verdict = str(scenario["expected_verdict"])
+    row = {
+        "id": scenario["id"],
+        "expected_verdict": expected_verdict,
+        "actual_verdict": report.verdict,
+        "verdict_ok": report.verdict == expected_verdict,
+        "trace_hygiene_ok": _trace_safe(report.as_dict()),
+        "hypothesis_sha256": hypothesis.hypothesis_sha256,
+        "plan_sha256": plan.plan_sha256,
+        "scenario_sha256": report.scenario_sha256,
+        "scenario_report_sha256": report.report_sha256,
+        "total_count": report.total_count,
+        "supported_count": report.supported_count,
+        "falsified_count": report.falsified_count,
+        "run_trace_hashes": [run.trace_hash for run in report.runs],
+    }
+    return row
+
+
+def build_environment_falsification_report() -> dict[str, object]:
+    fixtures = _load_json("fixtures.json")["fixtures"]
+    cases = [_case_report(idx, case) for idx, case in enumerate(fixtures)]
+    frame_report = _frame_report(cases)
+    frame_report_sha256 = _report_hash(frame_report)
+    scenario_fixtures = _load_json("scenario_fixtures.json")["scenarios"]
+    scenario_cases = [
+        _scenario_case_report(idx, scenario)
+        for idx, scenario in enumerate(scenario_fixtures)
+    ]
+    scenario_passed = sum(
+        1
+        for case in scenario_cases
+        if case["verdict_ok"] is True and case["trace_hygiene_ok"] is True
+    )
+    frame_passed = int(frame_report["passed"])
+    frame_failed = int(frame_report["failed"])
+    total = len(cases) + len(scenario_cases)
+    passed = frame_passed + scenario_passed
+    report = {
+        "lane": "environment-falsification",
+        "version": "v1",
+        "total": total,
+        "passed": passed,
+        "failed": frame_failed + (len(scenario_cases) - scenario_passed),
+        "cases": cases,
+        "frame_report_sha256": frame_report_sha256,
+        "scenario_cases": scenario_cases,
+    }
     report["report_sha256"] = _report_hash(report)
     expected_hashes = _load_json("expected_hashes.json")
+    expected_frame_report_sha256 = expected_hashes.get(
+        "frame_report_sha256",
+        expected_hashes["report_sha256"],
+    )
+    report["expected_frame_report_sha256"] = expected_frame_report_sha256
+    report["expected_frame_report_hash_ok"] = frame_report_sha256 == expected_frame_report_sha256
     report["expected_report_sha256"] = expected_hashes["report_sha256"]
     report["expected_report_hash_ok"] = report["report_sha256"] == expected_hashes["report_sha256"]
+    if not report["expected_frame_report_hash_ok"]:
+        report["failed"] = int(report["failed"]) + 1
     if not report["expected_report_hash_ok"]:
         report["failed"] = int(report["failed"]) + 1
     return report
