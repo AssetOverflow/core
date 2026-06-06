@@ -150,9 +150,20 @@ without scoping it fails the build.
 
 ### §5 — Deferred (one kind of change per PR)
 
-- **Math-serving seam** — parameterizing `select_self_verified` with a
-  `ReachPolicy` (STRICT branch byte-identical) + the full math-serving
-  widening test. Its own PR; smaller blast radius on the wrong==0 organ.
+- **Math-serving seam** — **LANDED 2026-06-06 (its own PR, as planned).**
+  `select_self_verified` now takes `policy=STRICT_POLICY`; STRICT is
+  byte-identical (every caller passes it → the pinned serving-lane SHAs are
+  unchanged). A *disagreement* may widen past gold ONLY via
+  `_canonically_verified` — the `VERIFIED` (soundness ≠ correctness) gate, which
+  is **unbuilt and returns `None`**, so the widening is **structurally inert**:
+  even a wider reach refuses, preserving the absolute `wrong == 0` by
+  construction (not convention). A statistical reliability license is
+  deliberately NOT consulted here — math serving is absolute-wrong=0, not
+  disclosed like the cognition path. `test_seam_is_live_wiring` injects the gate
+  to prove the consumer fires (STRICT still refuses even then). **The real
+  widening remains blocked on a `VERIFIED` producer** (a canonical-comparison
+  pass) — scoped in
+  `docs/analysis/VERIFIED-canonical-comparison-scoping-2026-06-06.md`.
 - **`EVIDENCED` reconcile** — map recognition's outcome into
   `EpistemicState.EVIDENCED` at the boundary (or document the two axes). A
   real corrective defect; kept out of this purely-additive scaffold.
