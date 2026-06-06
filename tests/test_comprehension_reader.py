@@ -157,3 +157,163 @@ def test_refuses_non_identifier_filler() -> None:
 def test_empty_input_refuses() -> None:
     assert isinstance(comprehend(""), Refusal)
     assert isinstance(comprehend("   "), Refusal)
+
+
+# --------------------------------------------------------------------------- #
+# Categorical premises — E / I / O forms (syllogism shapes)
+# --------------------------------------------------------------------------- #
+
+
+def test_categorical_no_is_disjoint() -> None:
+    comp = comprehend("No reptiles are mammals.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "disjoint") == (("disjoint", ("reptile", "mammal")),)
+
+
+def test_categorical_some_is_intersects() -> None:
+    comp = comprehend("Some students are poets.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "intersects") == (("intersects", ("student", "poet")),)
+
+
+def test_categorical_some_not_is_some_not() -> None:
+    comp = comprehend("Some pets are not reptiles.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "some_not") == (("some_not", ("pet", "reptile")),)
+
+
+# --------------------------------------------------------------------------- #
+# "Therefore <categorical>" -> conclusion QUERY (same neutral predicates)
+# --------------------------------------------------------------------------- #
+
+
+def test_therefore_conclusion_is_a_query_not_a_fact() -> None:
+    comp = comprehend("All whales are mammals. Therefore all whales are mammals.")
+    assert isinstance(comp, Comprehension)
+    # the premise is a fact; the conclusion is a query of the same predicate.
+    assert _rel(comp, "subset") == (("subset", ("whale", "mammal")),)
+    assert len(comp.queries) == 1
+    assert comp.queries[0].predicate == "subset"
+    assert comp.queries[0].arguments == ("whale", "mammal")
+
+
+def test_therefore_maps_each_quantifier_to_its_predicate() -> None:
+    for tail, predicate in [
+        ("all dogs are animals", "subset"),
+        ("no dogs are cats", "disjoint"),
+        ("some dogs are pets", "intersects"),
+        ("some dogs are not cats", "some_not"),
+    ]:
+        comp = comprehend(f"Therefore {tail}.")
+        assert isinstance(comp, Comprehension), tail
+        assert comp.queries[0].predicate == predicate, tail
+
+
+# --------------------------------------------------------------------------- #
+# Ordering — comparative facts (total_ordering shapes)
+# --------------------------------------------------------------------------- #
+
+
+def test_comparative_less_direction() -> None:
+    comp = comprehend("Bronze is below silver.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "less") == (("less", ("bronze", "silver")),)
+    assert _entity_kind(comp, "bronze") == "item"
+
+
+def test_comparative_greater_direction_reverses() -> None:
+    # "X is taller than Y" means X > Y, i.e. less(Y, X).
+    comp = comprehend("Oak is taller than birch.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "less") == (("less", ("birch", "oak")),)
+
+
+def test_comparative_elided_verb() -> None:
+    # "Venus closer than Earth" (no copula) still reads.
+    comp = comprehend("Venus closer than Earth.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "less") == (("less", ("venus", "earth")),)
+
+
+def test_comparative_clause_splitting_on_comma_and() -> None:
+    comp = comprehend("A is earlier than B, and B is earlier than C.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "less") == (("less", ("a", "b")), ("less", ("b", "c")))
+
+
+# --------------------------------------------------------------------------- #
+# Ordering — sort / compare QUERIES
+# --------------------------------------------------------------------------- #
+
+
+def test_sort_query_lowest_to_highest_is_ascending() -> None:
+    comp = comprehend("Sort them from lowest to highest.")
+    assert isinstance(comp, Comprehension)
+    assert comp.queries[0].predicate == "sort"
+    assert comp.queries[0].arguments == ("ascending",)
+
+
+def test_sort_query_explicit_descending() -> None:
+    comp = comprehend("Sort descending.")
+    assert isinstance(comp, Comprehension)
+    assert comp.queries[0].arguments == ("descending",)
+
+
+def test_sort_query_order_question_form() -> None:
+    comp = comprehend("Which is the height order from shortest to tallest?")
+    assert isinstance(comp, Comprehension)
+    assert comp.queries[0].predicate == "sort"
+    assert comp.queries[0].arguments == ("ascending",)
+
+
+def test_compare_query() -> None:
+    comp = comprehend("Compare north with south.")
+    assert isinstance(comp, Comprehension)
+    assert comp.queries[0].predicate == "compare"
+    assert comp.queries[0].arguments == ("north", "south")
+
+
+# --------------------------------------------------------------------------- #
+# Generality — SAME comparative template, DISTINCT domains (anti-overfit)
+# --------------------------------------------------------------------------- #
+
+
+def test_comparative_template_generalizes_across_domains() -> None:
+    for text, lo, hi in [
+        ("Bronze is below silver.", "bronze", "silver"),   # metals
+        ("Monday is earlier than tuesday.", "monday", "tuesday"),  # time
+        ("Birch is shorter than oak.", "birch", "oak"),    # height
+    ]:
+        comp = comprehend(text)
+        assert isinstance(comp, Comprehension), text
+        assert _rel(comp, "less") == (("less", (lo, hi)),), text
+
+
+# --------------------------------------------------------------------------- #
+# Multi-word NP — REFUSE (the wrong=0 guard: no general canonicalization exists)
+# --------------------------------------------------------------------------- #
+
+
+def test_multiword_np_in_categorical_refuses() -> None:
+    comp = comprehend("No metal objects are soft objects.")
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "multiword_np"
+
+
+def test_multiword_np_in_comparative_refuses() -> None:
+    comp = comprehend("North station comes after central.")
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "multiword_np"
+
+
+def test_adjectival_predicate_refuses_via_morphology() -> None:
+    # "trained" is an adjective, not a pluralizable noun class -> cannot singularize.
+    comp = comprehend("All pilots are trained.")
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "unknown_morphology"
+
+
+def test_trailing_tokens_in_compare_refuses() -> None:
+    comp = comprehend("Compare beta with beta in the same order.")
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "unreadable_compare"

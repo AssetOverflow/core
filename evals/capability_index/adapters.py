@@ -42,11 +42,38 @@ def dimensional_result() -> DomainResult:
     return DomainResult("dimensional", correct, wrong, refused)
 
 
+def comprehension_set_membership_result() -> DomainResult:
+    from evals.comprehension.set_membership_runner import run
+
+    c, w, r = _counts(run())
+    return DomainResult("comprehension_set_membership", c, w, r)
+
+
+def comprehension_syllogism_result() -> DomainResult:
+    from evals.comprehension.syllogism_runner import run
+
+    c, w, r = _counts(run())
+    return DomainResult("comprehension_syllogism", c, w, r)
+
+
+def comprehension_total_ordering_result() -> DomainResult:
+    from evals.comprehension.total_ordering_runner import run
+
+    c, w, r = _counts(run())
+    return DomainResult("comprehension_total_ordering", c, w, r)
+
+
 #: The reasoning domains currently composed into the index (self-loading lanes).
+#: The three ``comprehension_*`` lanes score the GENERAL comprehension reader
+#: (prose -> MeaningGraph -> projection -> independent oracle), so the index now
+#: measures comprehension breadth, not just structured-input reasoning.
 ADAPTERS = (
     deductive_logic_result,
     relational_metric_result,
     dimensional_result,
+    comprehension_set_membership_result,
+    comprehension_syllogism_result,
+    comprehension_total_ordering_result,
 )
 
 
