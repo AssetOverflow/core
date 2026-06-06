@@ -292,6 +292,17 @@ class RuntimeConfig:
     # wanting a hard identity-continuity guarantee opt in.
     strict_identity_continuity: bool = False
 
+    # Step B (inline realization) — when on, each turn ACCRUES knowledge into the
+    # held self: a comprehensible declarative turn is realized into the session vault
+    # (SPECULATIVE, as-told), and a comprehensible question turn is determined over
+    # realized knowledge. This is the "one continuous life" telos made real — a
+    # conversation accumulates knowledge it can recall and reason over. OFF by default
+    # (one-shot/eval runtimes don't accrue); the production L10 process enables it
+    # alongside persist_session_state so accrued facts survive reboot. Realization is
+    # SESSION memory (immediate), NOT ratified learning — it proposes nothing; the
+    # teaching/review HITL path is untouched.
+    accrue_realized_knowledge: bool = False
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"
