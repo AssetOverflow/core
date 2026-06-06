@@ -35,6 +35,29 @@ def test_fact_and_more_than_build_binding_graph() -> None:
     assert comp.query.entity == "mia"
 
 
+def test_question_target_is_a_bound_unknown_in_the_graph() -> None:
+    # PR-1: the question target lives INSIDE the graph (a BoundUnknown at the terminal
+    # state), not only as the external QuantQuery.
+    comp = _comp("Liam has 6 stickers. Mia has 4 more stickers than Liam. How many stickers does Mia have?")
+    unknowns = comp.binding_graph.unknowns
+    assert len(unknowns) == 1
+    u = unknowns[0]
+    assert u.symbol_id == "mia"
+    assert u.state_index == "terminal"
+    assert u.question_form == "count"
+    assert u.expected_unit == "item"
+    # The graph's canonical serialization now carries the target.
+    assert "state=terminal" in comp.binding_graph.to_canonical_string()
+    # Retained convenience stays consistent with the in-graph unknown.
+    assert comp.query.entity == u.symbol_id
+
+
+def test_sum_query_target_is_total_form_unknown() -> None:
+    comp = _comp("Dan has 7 coins. Eva has 9 more coins than Dan. How many coins do Dan and Eva have?")
+    (u,) = comp.binding_graph.unknowns
+    assert u.symbol_id == "total" and u.question_form == "total" and u.state_index == "terminal"
+
+
 def test_count_nouns_resolve_to_item_dimension() -> None:
     # Unknown sortal nouns become the count dimension (item); admissibility admits.
     comp = _comp("Kim has 2 marbles. Leo has 3 more marbles than Kim. How many marbles does Leo have?")

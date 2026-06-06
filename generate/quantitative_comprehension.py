@@ -34,6 +34,7 @@ from generate.binding_graph.admissibility import AdmissibilityError, check_admis
 from generate.binding_graph.model import (
     BoundEquation,
     BoundFact,
+    BoundUnknown,
     SemanticSymbolicBindingGraph,
     SourceSpanLink,
     SymbolBinding,
@@ -271,9 +272,25 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
             )
         )
 
+    # The question target lives INSIDE the graph (ADR-0135): a BoundUnknown bound to
+    # the asked symbol at the terminal state. The form is "total" for an aggregate
+    # query ("how many do X and Y have"), else "count". ``query`` is retained as a
+    # consistent-by-construction convenience for the existing relational_metric
+    # projection + realize path; a follow-up collapses it onto graph.unknowns.
+    unknown = BoundUnknown(
+        symbol_id=ask_entity,
+        question_span=_span(ask_entity),
+        state_index="terminal",
+        question_form="total" if sum_eq is not None else "count",
+        expected_unit=ask_unit,
+    )
+
     try:
         graph = SemanticSymbolicBindingGraph(
-            symbols=tuple(symbols), facts=bound_facts, equations=tuple(equations)
+            symbols=tuple(symbols),
+            facts=bound_facts,
+            equations=tuple(equations),
+            unknowns=(unknown,),
         )
     except Exception as exc:  # noqa: BLE001 — surface construction refusal
         return Refusal("invalid_binding_graph", repr(exc))
