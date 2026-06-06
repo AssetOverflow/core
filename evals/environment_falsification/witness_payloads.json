@@ -1,0 +1,23 @@
+{
+  "payloads": {
+    "audio_left_tone": {
+      "modality": "audio",
+      "signal": {"id": "witness_left_tone", "kind": "tone", "ms": 240, "hz": 180, "sweep": 0, "amp": 0.4}
+    },
+    "vision_corner": {
+      "modality": "vision",
+      "signal": {"id": "witness_corner", "kind": "corner", "size": 32}
+    },
+    "sensorimotor_contact": {
+      "modality": "sensorimotor",
+      "signal": {
+        "id": "witness_contact",
+        "pose_q": [10, -4, 3],
+        "velocity_q": [1, 0, -1],
+        "force_torque_q": [2, 3, 5],
+        "contact_q": [1, 0, 1, 0],
+        "actuator_state_q": [7, 8]
+      }
+    }
+  }
+}

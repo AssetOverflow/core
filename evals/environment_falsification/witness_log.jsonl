@@ -1,0 +1,3 @@
+{"modality":"audio","payload_ref":"audio_left_tone","slot_id":"audio:left_tone","source_clock":"witness-jsonl-fixture","tick":30}
+{"modality":"vision","payload_ref":"vision_corner","slot_id":"vision:corner","source_clock":"witness-jsonl-fixture","tick":30}
+{"modality":"sensorimotor","payload_ref":"sensorimotor_contact","slot_id":"sensorimotor:contact","source_clock":"witness-jsonl-fixture","tick":31}

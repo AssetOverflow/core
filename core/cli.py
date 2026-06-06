@@ -132,6 +132,7 @@ _TEST_SUITES: dict[str, tuple[str, ...]] = {
         "tests/test_observation_frame_harness.py",
         "tests/test_environment_falsification.py",
         "tests/test_environment_falsification_eval_cli.py",
+        "tests/test_witness_log_importer.py",
         "tests/test_sensorium_eval_cli.py",
         "tests/test_efferent_gate.py",
     ),
