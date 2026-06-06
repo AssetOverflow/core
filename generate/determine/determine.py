@@ -15,10 +15,16 @@ is DIRECTLY entailed by a realized fact. Absence of a fact never refutes it
 (``Undetermined``). It asserts only ``answer=True`` on a direct hit; it never asserts
 False.
 
-Slice D0 supports the realized, non-negated ``member`` relation (subsumption /
-"Is X a Y?"). Negated questions and other query predicates are an honest
-``Undetermined`` until their realized form + entailment predicate land — D0 ships no
-entailment path it cannot exercise.
+Supported predicates are a CLOSED set for which DIRECT entailment is sound — a
+realized ground fact ``p(subject, target)`` answers the asked ``p(subject, target)``:
+the ``member`` relation (subsumption / "Is X a Y?") and the binary relational
+predicates of ``en_core_relational_predicates_v1`` (``parent_of``, ``less_than``,
+``left_of``, ``before_event`` …; see ``generate.meaning_graph.relational``). The
+categorical (``subset``/``disjoint`` …) and propositional (``implies``/``or`` …)
+predicates are deliberately EXCLUDED — their truth is not a stored-pair lookup, so
+admitting them would be unsound. Negated questions, symmetric-converse questions, and
+any predicate outside the closed set are an honest ``Undetermined`` — D0 ships no
+entailment path it cannot exercise (no transitive/symmetric/rule inference).
 """
 
 from __future__ import annotations
@@ -26,12 +32,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from generate.meaning_graph.reader import Comprehension, Refusal
+from generate.meaning_graph.relational import RELATIONAL_PREDICATES
 from generate.realize import RealizedRecord, recall_realized
 from session.context import SessionContext
 from teaching.epistemic import ADMISSIBLE_AS_EVIDENCE, EpistemicStatus
 
-#: The only realized relation D0 can reason over in this slice.
-_SUPPORTED_PREDICATE = "member"
+#: The CLOSED set of query predicates D0 has a SOUND direct-entailment path for:
+#: ``member`` plus the ground binary relational predicates. Direct entailment is
+#: "a realized fact ``p(s, t)`` directly answers the asked ``p(s, t)``" — sound for
+#: these ground relations, unsound for categorical/propositional predicates (excluded).
+_SUPPORTED_PREDICATES = frozenset({"member"}) | RELATIONAL_PREDICATES
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,12 +78,13 @@ def _basis(grounds: tuple[RealizedRecord, ...]) -> str:
 def determine(
     question: Comprehension | Refusal, ctx: SessionContext
 ) -> Determined | Undetermined:
-    """Answer a membership question from realized structure, or refuse.
+    """Answer a membership-or-relational question from realized structure, or refuse.
 
-    Eligibility: a query-bearing ``Comprehension`` with exactly one ``member`` query.
-    The answer is asserted ONLY on direct structural entailment by a realized
-    ``member`` fact; everything else is a typed ``Undetermined`` (open-world: absence
-    never asserts a positive answer).
+    Eligibility: a query-bearing ``Comprehension`` with exactly one binary,
+    non-negated query whose predicate is in the closed direct-entailment set
+    (``member`` or a relational pack predicate). The answer is asserted ONLY on direct
+    structural entailment by a realized fact of the SAME predicate; everything else is
+    a typed ``Undetermined`` (open-world: absence never asserts a positive answer).
     """
     if isinstance(question, Refusal):
         return Undetermined("refusal")
@@ -83,8 +94,8 @@ def determine(
         return Undetermined("not_single_query")  # a determination answers one question
 
     query = question.queries[0]
-    if query.predicate != _SUPPORTED_PREDICATE:
-        return Undetermined("unsupported_query")  # honest: only `member` in D0
+    if query.predicate not in _SUPPORTED_PREDICATES:
+        return Undetermined("unsupported_query")  # honest: closed direct-entailment set
     if len(query.arguments) != 2:
         return Undetermined("malformed_query")  # member is binary by construction
     if query.negated:
@@ -94,17 +105,20 @@ def determine(
         # cannot exercise (it refuses negated membership questions upstream anyway).
         return Undetermined("negated_query_unsupported")
 
+    predicate = query.predicate
     subject, target = query.arguments[0], query.arguments[1]
 
-    # Structural recall: the realized member facts about this subject (R1a). Exact,
-    # deterministic, versor-collision-irrelevant — never a metric call.
-    facts = recall_realized(ctx, subject=subject, predicate=_SUPPORTED_PREDICATE)
+    # Structural recall: the realized facts of this predicate about this subject (R1a).
+    # Exact, deterministic, versor-collision-irrelevant — never a metric call.
+    facts = recall_realized(ctx, subject=subject, predicate=predicate)
     if not facts:
         return Undetermined("ungrounded")  # nothing realized about the subject
 
-    # Direct entailment: a realized member(subject, target) holds as-told. Open-world:
-    # member facts about the subject that do NOT match the asked target never refute
-    # it, so a miss is a refusal (``not_entailed``), never an asserted False.
+    # Direct entailment: a realized p(subject, target) holds as-told. Open-world:
+    # facts about the subject that do NOT match the asked target never refute it, so a
+    # miss is a refusal (``not_entailed``), never an asserted False. Symmetric relations
+    # (sibling_of, equal_to …) read only the stored direction here — the converse is a
+    # sound-but-incomplete ``not_entailed``, never a fabricated assertion.
     grounding = next((f for f in facts if f.relation_arguments == (subject, target)), None)
     if grounding is None:
         return Undetermined("not_entailed")
@@ -112,7 +126,7 @@ def determine(
     return Determined(
         answer=True,
         basis=_basis((grounding,)),
-        predicate=_SUPPORTED_PREDICATE,
+        predicate=predicate,
         subject=subject,
         object=target,
         grounds=(grounding,),
