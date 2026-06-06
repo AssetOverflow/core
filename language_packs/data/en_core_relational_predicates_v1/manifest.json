@@ -1,0 +1,15 @@
+{
+  "pack_id": "en_core_relational_predicates_v1",
+  "language": "en",
+  "role": "operational_base",
+  "script": "Latin",
+  "normalization_policy": "unitize_versor",
+  "source_manifest": "en_core_relational_predicates_v1.lexicon.jsonl",
+  "determinism_class": "D0",
+  "checksum": "5f3615c69e583b9e1891afd73b90786e5ec563400b24706dbbccb1b4dccef63a",
+  "version": "0.1.0-proposal",
+  "gate_engaged": false,
+  "oov_policy": "fail_closed",
+  "definitional_layer": false,
+  "provenance": "proposal-only:brief-c-relational-predicate-pack:pending-review"
+}
