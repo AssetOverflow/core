@@ -1,17 +1,25 @@
 {
-  "capability_score": 0.928622,
-  "coverage_geomean": 0.928622,
-  "coverage_micro": 0.993582,
+  "capability_score": 0.937258,
+  "coverage_geomean": 0.937258,
+  "coverage_micro": 0.993703,
   "accuracy_micro": 1.0,
-  "breadth": 7,
+  "breadth": 8,
   "min_domain_coverage": 0.833333,
   "wrong_total": 0,
   "assert_mode_valid": true,
-  "deterministic_digest": "51df7bba62a035c73bdaf289ea20cded05b66b2f7ca5fd8bbcb04f127d60cadf",
+  "deterministic_digest": "50e0675bd69938ce5747b5d47592504b9cf143027dd6c1c5e410da0add25341c",
   "domains": [
     {
       "domain": "comprehension_propositional",
       "correct": 12,
+      "wrong": 0,
+      "refused": 0,
+      "coverage": 1.0,
+      "accuracy": 1.0
+    },
+    {
+      "domain": "comprehension_relational_metric",
+      "correct": 15,
       "wrong": 0,
       "refused": 0,
       "coverage": 1.0,

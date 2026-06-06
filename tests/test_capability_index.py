@@ -97,7 +97,7 @@ def test_real_lanes_compose_into_the_index_with_wrong_zero() -> None:
     idx = aggregate(list(collection.results))
     assert idx.wrong_total == 0
     assert idx.assert_mode_valid
-    assert idx.breadth == 7
+    assert idx.breadth == 8
     assert {d.domain for d in idx.domains} == {
         "deductive_logic",
         "dimensional",
@@ -106,6 +106,7 @@ def test_real_lanes_compose_into_the_index_with_wrong_zero() -> None:
         "comprehension_syllogism",
         "comprehension_total_ordering",
         "comprehension_propositional",
+        "comprehension_relational_metric",
     }
     assert idx.capability_score > 0.5  # real, non-trivial cross-domain capability
 

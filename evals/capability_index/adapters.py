@@ -70,10 +70,19 @@ def comprehension_propositional_result() -> DomainResult:
     return DomainResult("comprehension_propositional", c, w, r)
 
 
+def comprehension_relational_metric_result() -> DomainResult:
+    from evals.comprehension.relational_metric_runner import run
+
+    c, w, r = _counts(run())
+    return DomainResult("comprehension_relational_metric", c, w, r)
+
+
 #: The reasoning domains currently composed into the index (self-loading lanes).
-#: The four ``comprehension_*`` lanes score the GENERAL comprehension reader
-#: (prose -> MeaningGraph -> projection -> independent oracle), so the index now
-#: measures comprehension breadth, not just structured-input reasoning.
+#: The five ``comprehension_*`` lanes score the GENERAL comprehension reader; the
+#: relational_metric one reads arithmetic prose into the binding-graph quantity
+#: substrate (admissibility-checked) and projects to the arithmetic oracle, so the
+#: index now measures comprehension breadth across categorical, ordering,
+#: propositional, AND quantitative reasoning.
 ADAPTERS = (
     deductive_logic_result,
     relational_metric_result,
@@ -82,6 +91,7 @@ ADAPTERS = (
     comprehension_syllogism_result,
     comprehension_total_ordering_result,
     comprehension_propositional_result,
+    comprehension_relational_metric_result,
 )
 
 
