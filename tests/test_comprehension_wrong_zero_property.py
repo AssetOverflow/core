@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import random
 
+from evals.deductive_logic.oracle import REFUSED, oracle_entailment
 from evals.set_membership.oracle import OracleError as SetError
 from evals.set_membership.oracle import oracle_answer as set_oracle
 from evals.syllogism.oracle import OracleError as SylError
@@ -30,6 +31,7 @@ from evals.syllogism.oracle import oracle_answer as syl_oracle
 from evals.total_ordering.oracle import OracleError as OrdError
 from evals.total_ordering.oracle import oracle_answer as ord_oracle
 from generate.meaning_graph.projectors import (
+    to_deductive_logic,
     to_set_membership,
     to_syllogism,
     to_total_ordering,
@@ -303,4 +305,68 @@ def test_multiword_total_ordering_is_faithful_or_refuses() -> None:
         if got is not None:
             committed += 1
             assert got == expected, (prose, got, expected)
+    assert committed > 50
+
+
+# --------------------------------------------------------------------------- #
+# Propositional logic — faithful entailment verdict or refuse (ROBDD oracle)
+# --------------------------------------------------------------------------- #
+
+_ATOMS = [f"p{i}" for i in range(5)]
+
+
+def _prop_fact(rng):
+    """Return (prose_clause, formula) for a random propositional premise."""
+    kind = rng.choice(["implies", "or", "atom", "not_atom"])
+    if kind == "implies":
+        a, b = rng.sample(_ATOMS, 2)
+        return f"If {a} then {b}.", f"{a} implies {b}"
+    if kind == "or":
+        a, b = rng.sample(_ATOMS, 2)
+        return f"{a} or {b}.", f"{a} or {b}"
+    if kind == "not_atom":
+        a = rng.choice(_ATOMS)
+        return f"Not {a}.", f"not {a}"
+    a = rng.choice(_ATOMS)
+    return f"{a}.", a
+
+
+def _prop_query(rng):
+    """Return (conclusion_prose, formula) for a random propositional query."""
+    kind = rng.choice(["atom", "not_atom", "implies"])
+    if kind == "implies":
+        a, b = rng.sample(_ATOMS, 2)
+        return f"Therefore if {a} then {b}.", f"{a} implies {b}"
+    if kind == "not_atom":
+        a = rng.choice(_ATOMS)
+        return f"Therefore not {a}.", f"not {a}"
+    a = rng.choice(_ATOMS)
+    return f"Therefore {a}.", a
+
+
+def test_propositional_reader_is_faithful_or_refuses() -> None:
+    rng = random.Random(161803)
+    committed = 0
+    for _ in range(400):
+        n = rng.randint(1, 3)
+        facts = [_prop_fact(rng) for _ in range(n)]
+        concl_prose, query_formula = _prop_query(rng)
+        prose = " ".join(p for p, _ in facts) + " " + concl_prose
+        premises = tuple(f for _, f in facts)
+        expected = oracle_entailment(premises, query_formula)
+
+        comp = comprehend(prose)
+        if isinstance(comp, Refusal):
+            continue
+        projected = to_deductive_logic(comp)
+        if projected is None:
+            continue
+        got = oracle_entailment(*projected)
+        if got == REFUSED:
+            continue  # oracle could not evaluate -> decline, not a wrong
+        committed += 1
+        # When the reader commits it must agree with the oracle's verdict on the
+        # ground-truth formulas (unless the ground truth itself was inconsistent).
+        if expected != REFUSED:
+            assert got == expected, (prose, got, expected, premises, query_formula)
     assert committed > 50

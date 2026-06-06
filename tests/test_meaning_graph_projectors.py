@@ -8,7 +8,11 @@ silent wrong).
 
 from __future__ import annotations
 
-from generate.meaning_graph.projectors import to_syllogism, to_total_ordering
+from generate.meaning_graph.projectors import (
+    to_deductive_logic,
+    to_syllogism,
+    to_total_ordering,
+)
 from generate.meaning_graph.reader import Comprehension, comprehend
 
 
@@ -108,3 +112,32 @@ def test_one_graph_projects_only_to_its_domain() -> None:
     comp = _comp("All mammals are animals. Therefore all mammals are animals.")
     assert to_syllogism(comp) is not None
     assert to_total_ordering(comp) is None
+    assert to_deductive_logic(comp) is None  # categorical relations -> not propositional
+
+
+# --------------------------------------------------------------------------- #
+# to_deductive_logic
+# --------------------------------------------------------------------------- #
+
+
+def test_to_deductive_logic_serializes_formulas() -> None:
+    comp = _comp("If p then q. p. Therefore q.")
+    projected = to_deductive_logic(comp)
+    assert projected is not None
+    premises, query = projected
+    assert set(premises) == {"p implies q", "p"}
+    assert query == "q"
+
+
+def test_to_deductive_logic_serializes_negation_and_disjunction() -> None:
+    comp = _comp("p or q. Not q. Therefore p.")
+    projected = to_deductive_logic(comp)
+    assert projected is not None
+    premises, query = projected
+    assert set(premises) == {"p or q", "not q"}
+    assert query == "p"
+
+
+def test_to_deductive_logic_none_for_categorical_comprehension() -> None:
+    # No propositional relations / query -> nothing askable of the entailment oracle.
+    assert to_deductive_logic(_comp("All mammals are animals.")) is None

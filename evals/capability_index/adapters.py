@@ -63,8 +63,15 @@ def comprehension_total_ordering_result() -> DomainResult:
     return DomainResult("comprehension_total_ordering", c, w, r)
 
 
+def comprehension_propositional_result() -> DomainResult:
+    from evals.comprehension.propositional_runner import run
+
+    c, w, r = _counts(run())
+    return DomainResult("comprehension_propositional", c, w, r)
+
+
 #: The reasoning domains currently composed into the index (self-loading lanes).
-#: The three ``comprehension_*`` lanes score the GENERAL comprehension reader
+#: The four ``comprehension_*`` lanes score the GENERAL comprehension reader
 #: (prose -> MeaningGraph -> projection -> independent oracle), so the index now
 #: measures comprehension breadth, not just structured-input reasoning.
 ADAPTERS = (
@@ -74,6 +81,7 @@ ADAPTERS = (
     comprehension_set_membership_result,
     comprehension_syllogism_result,
     comprehension_total_ordering_result,
+    comprehension_propositional_result,
 )
 
 
