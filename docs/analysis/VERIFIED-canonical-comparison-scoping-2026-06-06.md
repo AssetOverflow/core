@@ -64,3 +64,31 @@ should target the *narrowest* shape the reader extracts reliably, proving the me
 end-to-end (build → emit VERIFIED → seam widens → wrong=0 holds on holdout) before
 widening the shape coverage. This is the "checkable-conclusion domains" direction
 ([[project-self-check-soundness-not-correctness]]) made concrete for math serving.
+
+## Empirical verdict (2026-06-06) — DO NOT BUILD the fold-reader certifier
+
+A validate-first probe killed the back-substitution / pure-chain-certifier idea on the
+independent holdout, BEFORE any build:
+
+- The serving `verify` (`math_verifier.verify`) is **solver-replay soundness**, not
+  correctness — it proves the solver executed the graph faithfully, NOT that the *parse*
+  (text→graph) is right. wrong=0 holds by the candidate-graph parser's conservative refusal.
+- **No independent second reader helps.** On the refused set the R1 graph reader covers
+  `0/44` (train_sample) — it is *nested* in candidate-graph, not complementary. Cross-reader
+  agreement → 0 flips.
+- The fold-derivation reader IS complementary but **unsafe**: on `holdout_dev` it answers
+  89 of the 495 refused cases at **2 correct / 87 WRONG**. The train_sample looked like
+  3 correct / 7 wrong — **overfit**.
+- A pure-chain certifier (admit when no unhandled-structure cue: profit/per/%/more-than/…)
+  splits the holdout fold-answers into **1 correct / 37 WRONG (admit)** vs 1/50 (refuse).
+  It would **admit 37 wrong answers** — a wrong=0 breach. The mis-reads carry no shallow
+  structural signature; separating the 2 correct from the 87 wrong *is* the comprehension
+  problem. A certifier strict enough to reject all 87 rejects the 2 too.
+
+**Conclusion:** the VERIFIED-for-arithmetic producer via the existing readers is **not
+buildable at wrong=0**. Math serving is **comprehension-bound**: the candidate-graph parser
+refuses what it cannot model, and the only complementary reader is ~98% wrong on those. The
+ADR-0206 §5 math seam correctly stays **inert**; the real lever is the general COMPREHEND
+organ (helps every domain), not a narrow GSM8K certifier. Re-open only if a genuinely
+complementary, independently-validated reader lands. Probe: `resolve_pooled` vs
+`_score_one_candidate_graph` over `evals/gsm8k_math/holdout_dev/v1/cases.jsonl`.
