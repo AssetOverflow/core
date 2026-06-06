@@ -258,11 +258,24 @@ def test_ungrounded_relation_refuses(vocab_persona) -> None:
     assert isinstance(res, Undetermined) and res.reason == "ungrounded"
 
 
-def test_categorical_predicate_stays_excluded(vocab_persona) -> None:
-    # DETERMINE must NOT admit categorical predicates (subset/disjoint/…): their truth
-    # is not a stored-pair lookup, so a direct-entailment answer would be unsound.
+def test_subset_supported_other_categoricals_excluded(vocab_persona) -> None:
+    # C admits `subset` (direct + transitive subsumption is sound); the OTHER
+    # categoricals (disjoint/intersects/some_not) stay EXCLUDED — their truth is not a
+    # stored-pair lookup and there is no sound is-a chain for them.
+    from generate.meaning_graph.model import Entity, MeaningGraph, MeaningSpan
+    from generate.meaning_graph.reader import Query
+
     ctx = _ctx(vocab_persona)
     subset_q = comprehend("Are all men mortals?")
     assert isinstance(subset_q, Comprehension) and subset_q.queries[0].predicate == "subset"
-    res = determine(subset_q, ctx)
-    assert isinstance(res, Undetermined) and res.reason == "unsupported_query"
+    # subset is supported now: nothing realized → ungrounded (NOT unsupported_query)
+    assert determine(subset_q, ctx).reason == "ungrounded"
+
+    # a disjoint query is still refused as out-of-supported-set
+    span = MeaningSpan("input", 0, 3, "x y")
+    graph = MeaningGraph(
+        entities=(Entity("a", "a", span, "class"), Entity("b", "b", span, "class")),
+        relations=(),
+    )
+    disjoint_q = Comprehension(meaning_graph=graph, queries=(Query("disjoint", ("a", "b"), span),))
+    assert determine(disjoint_q, ctx).reason == "unsupported_query"
