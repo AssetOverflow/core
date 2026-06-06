@@ -139,11 +139,13 @@ def test_unsupported_query_predicate_is_refused(vocab_persona) -> None:
     ctx = _ctx(vocab_persona)
     _tell("Truth is a concept.", ctx)
     span = MeaningSpan(source_id="input", start=0, end=5, text="dummy")
-    subset_q = Comprehension(
+    # `subset` is supported from Step C; `disjoint` (a non-subsumption categorical)
+    # stays out of the supported set and is the honest refusal here.
+    disjoint_q = Comprehension(
         meaning_graph=MeaningGraph(),
-        queries=(Query("subset", ("concept", "thought"), span),),
+        queries=(Query("disjoint", ("concept", "thought"), span),),
     )
-    res = determine(subset_q, ctx)
+    res = determine(disjoint_q, ctx)
     assert isinstance(res, Undetermined) and res.reason == "unsupported_query"
 
 
