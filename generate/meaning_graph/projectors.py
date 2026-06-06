@@ -55,3 +55,80 @@ def to_set_membership(comp: Comprehension) -> tuple[dict[str, Any], dict[str, An
         q = subset_queries[0]
         query = {"kind": "subset", "subset": q.arguments[0], "superset": q.arguments[1]}
     return structure, query
+
+
+#: Categorical predicate -> Aristotelian form for the syllogism oracle.
+_PRED_FORM = {"subset": "A", "disjoint": "E", "intersects": "I", "some_not": "O"}
+
+#: Finite-model domain size for syllogism validity (matches the gold lane).
+_SYLLOGISM_DOMAIN_SIZE = 3
+
+
+def to_syllogism(comp: Comprehension) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    """Project into ``(structure, query)`` for ``evals.syllogism.oracle``.
+
+    Premises are the categorical relations (subset/disjoint/intersects/some_not);
+    the single categorical query is the conclusion. Returns ``None`` when the
+    comprehension is not exactly one categorical conclusion over >=1 premise — the
+    caller treats that as a refusal (nothing honestly askable of this oracle).
+    """
+    graph = comp.meaning_graph
+    premises = [
+        {"form": _PRED_FORM[r.predicate], "subject": r.arguments[0], "predicate": r.arguments[1]}
+        for r in graph.relations
+        if r.predicate in _PRED_FORM and not r.negated
+    ]
+    conclusions = [q for q in comp.queries if q.predicate in _PRED_FORM and not q.negated]
+    if not premises or len(comp.queries) != 1 or len(conclusions) != 1:
+        return None
+
+    c = conclusions[0]
+    terms = sorted({e.entity_id for e in graph.entities if e.kind == "class"})
+    if len(terms) < 2:
+        return None
+    structure = {
+        "terms": terms,
+        "domain_size": _SYLLOGISM_DOMAIN_SIZE,
+        "premises": premises,
+    }
+    query = {
+        "kind": "validity",
+        "conclusion": {
+            "form": _PRED_FORM[c.predicate],
+            "subject": c.arguments[0],
+            "predicate": c.arguments[1],
+        },
+    }
+    return structure, query
+
+
+def to_total_ordering(comp: Comprehension) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    """Project into ``(structure, query)`` for ``evals.total_ordering.oracle``.
+
+    Facts are ``less(lo, hi)`` relations; the single query is a sort or compare.
+    Returns ``None`` when the comprehension does not carry exactly one ordering
+    query — the caller treats that as a refusal.
+    """
+    graph = comp.meaning_graph
+    less_facts = [
+        (r.arguments[0], r.arguments[1])
+        for r in graph.relations
+        if r.predicate == "less" and not r.negated
+    ]
+    order_queries = [q for q in comp.queries if q.predicate in ("sort", "compare")]
+    if len(comp.queries) != 1 or len(order_queries) != 1:
+        return None
+
+    q = order_queries[0]
+    item_set = {item for pair in less_facts for item in pair}
+    if q.predicate == "compare":
+        item_set.update(q.arguments)
+    structure = {
+        "items": sorted(item_set),
+        "relations": [{"less": lo, "greater": hi} for lo, hi in less_facts],
+    }
+    if q.predicate == "sort":
+        query = {"kind": "sort", "order": q.arguments[0]}
+    else:
+        query = {"kind": "compare", "left": q.arguments[0], "right": q.arguments[1]}
+    return structure, query
