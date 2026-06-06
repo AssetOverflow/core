@@ -92,6 +92,43 @@ def test_witness_jsonl_repeated_import_is_identical(tmp_path):
     assert first.manifest.manifest_sha256 == second.manifest.manifest_sha256
 
 
+def test_witness_jsonl_rejects_malformed_json_line(tmp_path):
+    path = tmp_path / "witness.jsonl"
+    good = json.dumps(_rows()[0], sort_keys=True)
+    path.write_text(good + "\n{ this is not json\n")
+    with pytest.raises(ValueError, match="line 2: malformed JSON"):
+        import_witness_jsonl(path, resolve_payload_ref=_resolver)
+
+
+def test_witness_record_missing_field_is_clean_value_error():
+    bad = dict(_rows()[0])
+    del bad["payload_ref"]
+    with pytest.raises(ValueError, match="missing required field: payload_ref"):
+        import_witness_records([bad], resolve_payload_ref=_resolver)
+
+
+def test_witness_record_non_object_is_rejected():
+    with pytest.raises(ValueError, match="must be a JSON object"):
+        import_witness_records([[1, 2, 3]], resolve_payload_ref=_resolver)
+
+
+def test_witness_record_non_integer_tick_is_clean_value_error():
+    bad = dict(_rows()[0])
+    bad["tick"] = "not-an-int"
+    with pytest.raises(ValueError, match="tick must be an integer"):
+        import_witness_records([bad], resolve_payload_ref=_resolver)
+
+
+def test_witness_jsonl_rejects_oversized_log(tmp_path, monkeypatch):
+    from sensorium.logs import importer as _importer
+
+    monkeypatch.setattr(_importer, "_MAX_WITNESS_LOG_BYTES", 8)
+    path = tmp_path / "witness.jsonl"
+    path.write_text("\n".join(json.dumps(row, sort_keys=True) for row in _rows()) + "\n")
+    with pytest.raises(ValueError, match="witness log too large"):
+        import_witness_jsonl(path, resolve_payload_ref=_resolver)
+
+
 def test_witness_importer_does_not_import_generate_or_call_decode(monkeypatch):
     original_import = builtins.__import__
 

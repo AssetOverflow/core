@@ -3,6 +3,14 @@
 Witness logs are evidence transport, not truth. The importer accepts only
 payload references and uses a caller-provided resolver to obtain already
 bounded afferent compilation units.
+
+Trust boundary: a witness log is UNTRUSTED, operator-supplied OFFLINE input
+(never a live device or network handle — those fields are rejected). Every
+record is validated at this boundary and a malformed/oversized/ill-typed input
+is rejected with a deterministic ``ValueError`` (or ``FileNotFoundError`` for a
+missing path) BEFORE any frame is built — it never partially imports, mutates no
+runtime/vault/identity state, opens no decode path, and the file is size-capped
+so an oversized log cannot exhaust memory.
 """
 
 from __future__ import annotations
@@ -21,6 +29,17 @@ from sensorium.environment import ObservationFrame, ObservationUnitRef, build_ob
 _RAW_KEYS = {"pixels", "samples", "pcm", "waveform", "raw_bytes", "action_trace", "events"}
 _LIVE_KEYS = {"device", "device_handle", "socket", "url", "network", "ros_node", "mcap_reader"}
 _ALLOWED_MODALITIES = {"audio", "vision", "event-vision", "sensorimotor"}
+
+#: Hard cap on an offline witness log (generous for a lab session; bounds memory
+#: so an oversized/accidental file is rejected deterministically, never read whole).
+_MAX_WITNESS_LOG_BYTES = 8 * 1024 * 1024
+
+
+def _require(row: Mapping[str, Any], key: str) -> Any:
+    """Return ``row[key]`` or raise a deterministic ``ValueError`` (never KeyError)."""
+    if key not in row:
+        raise ValueError(f"witness record missing required field: {key}")
+    return row[key]
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,15 +137,20 @@ def _reject_raw_or_live(value: object) -> None:
 
 
 def _record_from_mapping(row: Mapping[str, Any]) -> WitnessRecord:
+    if not isinstance(row, Mapping):
+        raise ValueError(f"witness record must be a JSON object, got {type(row).__name__}")
     _reject_raw_or_live(row)
-    tick = int(row["tick"])
+    try:
+        tick = int(_require(row, "tick"))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"witness tick must be an integer: {exc}") from exc
     if tick < 0:
         raise ValueError("witness tick must be non-negative")
-    modality = _safe_ref(row["modality"], field="modality")
+    modality = _safe_ref(_require(row, "modality"), field="modality")
     if modality not in _ALLOWED_MODALITIES:
         raise ValueError(f"unsupported witness modality: {modality}")
-    slot_id = _safe_ref(row["slot_id"], field="slot_id")
-    payload_ref = _safe_ref(row["payload_ref"], field="payload_ref")
+    slot_id = _safe_ref(_require(row, "slot_id"), field="slot_id")
+    payload_ref = _safe_ref(_require(row, "payload_ref"), field="payload_ref")
     source_clock = _safe_ref(row.get("source_clock", "witness-jsonl"), field="source_clock")
     payload = {
         "kind": "WitnessRecord",
@@ -232,11 +256,21 @@ def import_witness_records(
 
 
 def _validate_offline_path(path: Path) -> Path:
+    """Resolve an OFFLINE witness-log path, rejecting traversal and oversized files.
+
+    A witness log is untrusted operator input; the size cap bounds memory so an
+    oversized/accidental file is rejected deterministically rather than read whole.
+    """
     if ".." in path.parts:
         raise ValueError("witness log path must not contain path traversal")
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(resolved)
+    size = resolved.stat().st_size
+    if size > _MAX_WITNESS_LOG_BYTES:
+        raise ValueError(
+            f"witness log too large: {size} bytes exceeds cap {_MAX_WITNESS_LOG_BYTES}"
+        )
     return resolved
 
 
@@ -246,12 +280,24 @@ def import_witness_jsonl(
     resolve_payload_ref: Callable[[str], CompilationUnitLike],
     schema_version: str = "1",
 ) -> ImportedObservationSequence:
+    """Import an OFFLINE JSONL witness log (one JSON object per non-blank line).
+
+    Trust boundary (see module docstring): the path is traversal-checked and
+    size-capped; a malformed line is rejected with a deterministic ``ValueError``
+    naming the 1-based line number, BEFORE any frame is built. Valid logs import
+    byte-identically to the equivalent ``import_witness_records`` call.
+    """
     log_path = _validate_offline_path(Path(path))
-    rows = [
-        json.loads(line)
-        for line in log_path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    rows: list[Any] = []
+    for lineno, line in enumerate(
+        log_path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
+        if not line.strip():
+            continue
+        try:
+            rows.append(json.loads(line))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"witness log line {lineno}: malformed JSON: {exc}") from exc
     return import_witness_records(
         rows,
         resolve_payload_ref=resolve_payload_ref,
