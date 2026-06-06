@@ -1,11 +1,25 @@
 # ADR-0206 — Response Governance Bridge (scaffold)
 
-- **Status:** Accepted (scaffold step; widening deferred)
-- **Date:** 2026-06-03
+- **Status:** Accepted (scaffold step) — **cognition-path widening landed 2026-06-06**
+  (Step E: the license-gated APPROXIMATE rung). The math-serving seam (§5) remains deferred.
+- **Date:** 2026-06-03 (amended 2026-06-06)
 - **Supersedes / relates to:** ADR-0175 (calibrated-learning reliability
   gate), the Epistemic-State program (Phase 3, `core/epistemic_state.py`)
 - **Scope of THIS PR:** purely additive — design on record + cognition-path
   seam, STRICT-only, no behavior change.
+
+> **2026-06-06 amendment (Step E — cognition-path widening landed).** The `LICENSE`
+> node is now **called from serving**: `govern_response` returns `APPROXIMATE_POLICY`
+> for a genuine licensed `Action.SERVE` `LicenseDecision` (STRICT for everything else,
+> so every existing call site is byte-identical). The first consumer is the converse-guess
+> estimator (`generate.determine.estimate`): a refused converse query whose predicate-class
+> earned SERVE on the **ratified** reliability ledger
+> (`generate/determine/data/estimation_ledger.json`) is served as a **disclosed**
+> `[approximate]` estimate via `shape_surface`. wrong=0 is preserved by construction
+> (disclosure) + by the gate (θ_SERVE=0.99, earned by volume). **Still deferred:** the
+> math-serving seam (`select_self_verified`, §5), `SITUATE` (stakes), and the live
+> `FEED BACK` loop — E uses an offline, sealed, hash-verified ledger. Lane:
+> `evals.determination_estimation`.
 
 ## Context — the consumption gap
 
@@ -60,9 +74,9 @@ flowchart LR
 | Step | Status |
 |------|--------|
 | SITUATE (stakes/gravity from intent + domain + decode-state) | **designed** — not built |
-| LICENSE (`reliability_gate.license_for`) | **built** — not yet called from serving |
-| GOVERN (`govern_response → ReachPolicy`) | **this PR** — stubbed to STRICT |
-| SHAPE (`shape_surface`, response path reads policy) | **this PR** — STRICT = identity |
+| LICENSE (`reliability_gate.license_for`) | **built + called from serving** (Step E, 2026-06-06) |
+| GOVERN (`govern_response → ReachPolicy`) | **STRICT, + license-gated APPROXIMATE** (Step E) |
+| SHAPE (`shape_surface`, response path reads policy) | **STRICT = identity; APPROXIMATE = disclosed** |
 | DISCLOSE (decode-state label) | **built** |
 | FEED BACK (outcome → reliability ledger) | **designed** — not built |
 

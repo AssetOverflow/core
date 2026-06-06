@@ -390,18 +390,24 @@ def _make_trajectory_from_result(result, turn: int):
 
 @dataclass(frozen=True, slots=True)
 class TurnAccrual:
-    """The inline-realization outcome of one turn (Step B).
+    """The inline-realization outcome of one turn (Step B / E).
 
     ``kind`` is ``"realized"`` (a declarative fact was accrued into the held self),
-    ``"determined"`` (a question was answered over realized knowledge), or ``"none"``
-    (nothing comprehensible to accrue/determine). The payload carries the typed
-    realize/determine result for introspection. This is recorded, not surfaced —
-    slice B-1 leaves the ChatResponse/surface contract unchanged.
+    ``"determined"`` (a question was answered over realized knowledge), ``"estimated"``
+    (Step E — a converse query DETERMINE refused, for which a calibrated converse-guess
+    exists), or ``"none"`` (nothing comprehensible to accrue/determine). The payload
+    carries the typed result for introspection. B-1 records, does not surface; B-2 and E
+    surface only when their flag is on.
     """
 
     kind: str
     realized: Any = None  # generate.realize.Realized | NotRealized | None
     determination: Any = None  # generate.determine.Determined | Undetermined | None
+    # Step E — the converse-guess candidate and its SERVE license, when ``kind`` is
+    # ``"estimated"``. ``estimate`` is a ``ConverseEstimate``; ``license`` a
+    # ``LicenseDecision`` (None if the predicate-class is absent from the ratified ledger).
+    estimate: Any = None
+    license: Any = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -987,23 +993,61 @@ class ChatRuntime:
         return response
 
     def _maybe_surface_determination(self, response: ChatResponse) -> ChatResponse:
-        """Step B-2 — when the turn DETERMINED an answer over realized knowledge,
-        select that determination as the user-facing ``surface``. The realizer's
-        ``articulation_surface`` is retained as evidence (the determination does not
-        replace it). An ``Undetermined`` turn keeps the default articulation surface
-        (the honest "I don't know"). Off-flag turns never reach here. See the
-        ChatResponse selection policy in ``docs/runtime_contracts.md``.
+        """Step B-2 / E — select the user-facing surface from the turn's accrual.
+
+        B-2: when the turn DETERMINED an answer over realized knowledge, select the
+        rendered determination as ``surface`` (the realizer's ``articulation_surface``
+        is retained as evidence). An ``Undetermined`` turn keeps the default surface.
+
+        E: when the turn is ``estimated`` (a refused converse query with a calibrated
+        guess) AND ``estimation_enabled``, route the guess through the ADR-0206 bridge —
+        ``govern_response`` widens to APPROXIMATE iff the predicate-class holds a genuine
+        SERVE license, and ``shape_surface`` DISCLOSES it as ``[approximate] …``. An
+        unlicensed class stays STRICT (the surface is unchanged — the honest refusal).
+        Off-flag turns never reach here. See ``docs/runtime_contracts.md``.
         """
         accrual = self._last_turn_accrual
-        if accrual is None or accrual.kind != "determined":
+        if accrual is None:
             return response
-        from generate.determine import Determined, render_determination
+        if accrual.kind == "determined":
+            from generate.determine import Determined, render_determination
 
-        if not isinstance(accrual.determination, Determined):
-            return response  # Undetermined → keep the default surface
-        return replace(
-            response, surface=render_determination(accrual.determination)
+            if not isinstance(accrual.determination, Determined):
+                return response  # Undetermined → keep the default surface
+            return replace(response, surface=render_determination(accrual.determination))
+        if accrual.kind == "estimated" and self.config.estimation_enabled:
+            return self._surface_estimate(response, accrual)
+        return response
+
+    def _surface_estimate(self, response: ChatResponse, accrual: "TurnAccrual") -> ChatResponse:
+        """Surface a licensed converse-guess as a DISCLOSED ``[approximate]`` estimate.
+
+        The license gates the widening (``govern_response`` returns STRICT for an
+        unlicensed class → surface unchanged); ``shape_surface`` guarantees the
+        disclosure prefix because a converse guess is ``UNVERIFIED_POSSIBLE``, never in
+        APPROXIMATE's admissible (fully-grounded) set. So a wrong estimate is always a
+        DISCLOSED wrong — wrong=0 (silent) is preserved.
+        """
+        from core.epistemic_state import EpistemicState
+        from core.response_governance import ReachLevel, govern_response, shape_surface
+        from generate.determine import ConverseEstimate, render_estimate
+
+        estimate, license_decision = accrual.estimate, accrual.license
+        if not isinstance(estimate, ConverseEstimate):
+            return response
+        policy = govern_response(
+            epistemic_state=EpistemicState.UNVERIFIED_POSSIBLE,
+            license_decision=license_decision,
         )
+        if policy.level is ReachLevel.STRICT:
+            return response  # unlicensed → no widening, honest refusal stands
+        disclosed = shape_surface(
+            policy,
+            committed_surface=response.surface,
+            decode_state=EpistemicState.UNVERIFIED_POSSIBLE,
+            disclosed_alternative=render_estimate(estimate),
+        )
+        return replace(response, surface=disclosed, reach_level=policy.level.value)
 
     def last_turn_accrual(self) -> TurnAccrual | None:
         """The most recent turn's inline-realization outcome (Step B), or None when
@@ -1046,8 +1090,9 @@ class ChatRuntime:
             # A question turn (query-bearing) is DETERMINED over realized knowledge.
             for c in comprehensions:
                 if c.queries:
-                    self._last_turn_accrual = TurnAccrual(
-                        kind="determined", determination=determine(c, self._context)
+                    determination = determine(c, self._context)
+                    self._last_turn_accrual = self._accrue_estimate_if_refused(
+                        c, determination
                     )
                     return
             # A declarative turn (a single told fact) is REALIZED into the held self.
@@ -1060,6 +1105,40 @@ class ChatRuntime:
             self._last_turn_accrual = TurnAccrual(kind="none")
         except Exception:  # additive: accrual must never crash a turn  # noqa: BLE001
             self._last_turn_accrual = None
+
+    def _accrue_estimate_if_refused(self, comprehension: Any, determination: Any) -> "TurnAccrual":
+        """Step E: turn a REFUSED converse query into an ``estimated`` accrual.
+
+        When DETERMINE refused (``Undetermined``) a single non-negated binary query whose
+        converse was told (``p(a,b)`` realized, ``p(b,a)`` asked), produce the calibrated
+        converse-guess + its SERVE license. Off-flag (or any non-converse refusal) returns
+        the plain ``determined`` accrual unchanged — nothing widens. The license is only
+        *attached* here; the surface decision (and the disclosure) is the bridge's, in
+        ``_maybe_surface_determination``.
+        """
+        from generate.determine import Undetermined
+
+        if not (self.config.estimation_enabled and isinstance(determination, Undetermined)):
+            return TurnAccrual(kind="determined", determination=determination)
+        queries = getattr(comprehension, "queries", ())
+        if len(queries) != 1:
+            return TurnAccrual(kind="determined", determination=determination)
+        query = queries[0]
+        if getattr(query, "negated", False) or len(getattr(query, "arguments", ())) != 2:
+            return TurnAccrual(kind="determined", determination=determination)
+
+        from generate.determine import estimate_converse, serve_license
+
+        subject, target = query.arguments[0], query.arguments[1]
+        estimate = estimate_converse(self._context, query.predicate, subject, target)
+        if estimate is None:  # no told converse to generalize from → plain refusal
+            return TurnAccrual(kind="determined", determination=determination)
+        return TurnAccrual(
+            kind="estimated",
+            determination=determination,
+            estimate=estimate,
+            license=serve_license(query.predicate),
+        )
 
     @property
     def session(self) -> SessionContext:

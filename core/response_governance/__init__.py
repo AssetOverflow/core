@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from core.response_governance.policy import (
     ACTIVE_STATES,
+    APPROXIMATE_POLICY,
     RECONCILE_STATES,
     RESERVED_STATES,
     STRICT_POLICY,
@@ -37,6 +38,7 @@ from core.response_governance.policy import (
 
 __all__ = [
     "ACTIVE_STATES",
+    "APPROXIMATE_POLICY",
     "RECONCILE_STATES",
     "RESERVED_STATES",
     "STRICT_POLICY",

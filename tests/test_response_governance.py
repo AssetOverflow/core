@@ -34,31 +34,53 @@ from core.response_governance import (
     shape_surface,
 )
 
-# A small but representative cross-product of governance inputs.  The
-# scaffold must return STRICT for ALL of them.
+# A small but representative cross-product of governance inputs.  None of these
+# license standins is a GENUINE licensed Action.SERVE LicenseDecision, so
+# govern_response must return STRICT for ALL of them — only a ratified license widens
+# (Step E). The forged dict ``{"licensed": True}`` is the load-bearing standin: a
+# caller's say-so must NEVER widen.
 _ALL_STATES = tuple(EpistemicState)
 _LICENSE_STANDINS = (None, object(), {"licensed": True}, {"licensed": False})
 _STAKES_STANDINS = (None, "high", "low", 0.0, 1.0)
 
 
-# --- govern_response: STRICT-only contract ----------------------------------
+# --- govern_response: STRICT unless a genuine SERVE license -------------------
 
 
 @pytest.mark.parametrize("state", _ALL_STATES)
 @pytest.mark.parametrize("license_decision", _LICENSE_STANDINS)
 @pytest.mark.parametrize("stakes", _STAKES_STANDINS)
-def test_govern_response_is_strict_only(state, license_decision, stakes):
-    """The stub governs every input at STRICT — the wrong==0 load-bearing line.
-
-    If this fails, the scaffold has begun widening before the risk-reward
-    loop and its proofs exist; that is the exact regression the STRICT-only
-    contract forbids.
+def test_govern_response_strict_without_a_genuine_license(state, license_decision, stakes):
+    """STRICT for every input that is NOT a genuine licensed SERVE decision — the
+    wrong==0 load-bearing line. A None, a bare object, or a forged ``{"licensed": True}``
+    dict must NOT widen: widening rests on the gate's verdict over a committed ledger,
+    never on a caller's say-so.
     """
     policy = govern_response(
         epistemic_state=state, license_decision=license_decision, stakes=stakes
     )
     assert policy.level is ReachLevel.STRICT
     assert policy is STRICT_POLICY
+
+
+def test_govern_response_widens_only_on_genuine_serve_license():
+    """Step E (ADR-0206 §5): a REAL licensed Action.SERVE LicenseDecision widens to
+    APPROXIMATE; an unlicensed one, or a PROPOSE license, stays STRICT."""
+    from core.reliability_gate import Action, Ceilings, ClassTally, license_for
+    from core.response_governance import APPROXIMATE_POLICY
+
+    licensed = license_for(ClassTally("c", correct=660), Action.SERVE, Ceilings.default())
+    assert licensed.licensed is True
+    assert govern_response(license_decision=licensed) is APPROXIMATE_POLICY
+
+    unlicensed = license_for(ClassTally("c", wrong=660), Action.SERVE, Ceilings.default())
+    assert unlicensed.licensed is False
+    assert govern_response(license_decision=unlicensed) is STRICT_POLICY
+
+    # A PROPOSE license is NOT a SERVE license — it must not widen a served answer.
+    propose = license_for(ClassTally("c", correct=660), Action.PROPOSE, Ceilings.default())
+    assert propose.licensed is True and propose.action is Action.PROPOSE
+    assert govern_response(license_decision=propose) is STRICT_POLICY
 
 
 def test_strict_policy_admits_only_decoded():
