@@ -12,6 +12,16 @@ the encoding is portable, and ``float32`` is never conflated with ``float64``.
 
 This module is a leaf: it imports only numpy + base64, so every layer (field,
 vault, session, engine_state) can use it without an import cycle.
+
+Zig-codec follow-up (tagged — NOT authorized).  This bit-exact codec is the natural
+locked **reference contract** (ADR-0196 decision rule 1) for a future Ring-1 Zig
+byte-exact serialization component: deterministic buffer ownership, stable layout, and
+edge-native build are exactly Zig's profile.  It is gated behind the G0–G8 ladder and
+is **only** worth proposing AFTER (1) persistence becomes incremental/append-only
+(O(Δ)/turn — the algorithmic fix, in Python), and (2) the edge-budget gate
+(``evals/edge_budget/``) proves the bounded per-turn codec is still the device
+bottleneck.  A Zig rewrite of today's O(n) snapshot would only speed up the wrong
+asymptotics.  See ``evals/edge_budget/contract.md``.
 """
 
 from __future__ import annotations
