@@ -303,6 +303,30 @@ def _parse_sort(toks: list[str], detail: str) -> str | None:
     raise _Reject("ambiguous_sort_order", detail)
 
 
+def _parse_propositional(toks: list[str], detail: str) -> tuple[str, tuple[str, ...], bool] | None:
+    """A propositional clause -> (predicate, atom_ids, negated); None if not it.
+
+    Grammar (atoms are single tokens or reserved-free multi-word NPs):
+      ``if <P> then <Q>``  -> ("implies", (P, Q), False)
+      ``not <P>``          -> ("asserted", (P,), True)
+      ``<P> or <Q>``       -> ("or", (P, Q), False)
+      ``<P>`` (one token)  -> ("asserted", (P,), False)
+    Anything else is None (let other templates / refusal handle it)."""
+    if not toks:
+        return None
+    if toks[0] == "if" and "then" in toks:
+        then_idx = toks.index("then")
+        return "implies", (_chunk(toks[1:then_idx], detail), _chunk(toks[then_idx + 1:], detail)), False
+    if toks[0] == "not":
+        return "asserted", (_chunk(toks[1:], detail),), True
+    if "or" in toks:
+        i = toks.index("or")
+        return "or", (_chunk(toks[:i], detail), _chunk(toks[i + 1:], detail)), False
+    if len(toks) == 1:  # bare atomic assertion (single token only — keep the floor)
+        return "asserted", (_chunk(toks, detail),), False
+    return None
+
+
 def comprehend(text: str, source_id: str = "input") -> Comprehension | Refusal:
     """Comprehend *text* into a MeaningGraph + queries, or a typed Refusal."""
     if not text or not text.strip():
@@ -314,7 +338,7 @@ def comprehend(text: str, source_id: str = "input") -> Comprehension | Refusal:
 
     role_kind: dict[str, str] = {}
     span_for: dict[str, MeaningSpan] = {}
-    relations: list[tuple[str, tuple[str, ...], MeaningSpan]] = []
+    relations: list[tuple[str, tuple[str, ...], MeaningSpan, bool]] = []
     queries: list[Query] = []
 
     def claim(entity_id: str, kind: str, span: MeaningSpan) -> None:
@@ -343,7 +367,7 @@ def comprehend(text: str, source_id: str = "input") -> Comprehension | Refusal:
         graph = MeaningGraph(
             entities=entities,
             relations=tuple(
-                Relation(pred, args, sp) for pred, args, sp in relations
+                Relation(pred, args, sp, negated) for pred, args, sp, negated in relations
             ),
         )
     except MeaningGraphError as exc:  # defensive — construction invariants
@@ -357,7 +381,7 @@ def _read_clause(
     question: bool,
     span: MeaningSpan,
     claim,
-    relations: list[tuple[str, tuple[str, ...], MeaningSpan]],
+    relations: list[tuple[str, tuple[str, ...], MeaningSpan, bool]],
     queries: list[Query],
 ) -> None:
     """Match one clause against the templates; mutate accumulators or REFUSE."""
@@ -382,16 +406,24 @@ def _read_clause(
         queries.append(Query("sort", (order,), span))
         return
 
-    # --- syllogism conclusion: "therefore <categorical>" ------------------- #
+    # --- conclusion: "therefore <categorical | propositional>" ------------- #
     if toks[0] == "therefore":
-        parsed = _parse_categorical(toks[1:], clause)
-        if parsed is None:
-            raise _Reject("unreadable_conclusion", clause)
-        predicate, sub, sup = parsed
-        claim(sub, "class", span)
-        claim(sup, "class", span)
-        queries.append(Query(predicate, (sub, sup), span))
-        return
+        rest = toks[1:]
+        categorical = _parse_categorical(rest, clause)
+        if categorical is not None:
+            predicate, sub, sup = categorical
+            claim(sub, "class", span)
+            claim(sup, "class", span)
+            queries.append(Query(predicate, (sub, sup), span))
+            return
+        propositional = _parse_propositional(rest, clause)
+        if propositional is not None:
+            predicate, atoms, negated = propositional
+            for atom in atoms:
+                claim(atom, "proposition", span)
+            queries.append(Query(predicate, atoms, span, negated))
+            return
+        raise _Reject("unreadable_conclusion", clause)
 
     # --- membership query: "is [the] <X> a|an <Y>?" ------------------------ #
     if question and toks[0] == "is":
@@ -429,7 +461,7 @@ def _read_clause(
         predicate, sub, sup = categorical
         claim(sub, "class", span)
         claim(sup, "class", span)
-        relations.append((predicate, (sub, sup), span))
+        relations.append((predicate, (sub, sup), span, False))
         return
 
     # --- membership fact: "[the] <X> is a|an <Y>" -------------------------- #
@@ -442,7 +474,7 @@ def _read_clause(
             cls = _chunk(after[1:], clause)
             claim(name, "individual", span)
             claim(cls, "class", span)
-            relations.append(("member", (name, cls), span))
+            relations.append(("member", (name, cls), span, False))
             return
 
     # --- ordering fact: "<X> [is] <comp> [than] <Y>" ----------------------- #
@@ -451,7 +483,16 @@ def _read_clause(
         lo, hi = comparative
         claim(lo, "item", span)
         claim(hi, "item", span)
-        relations.append(("less", (lo, hi), span))
+        relations.append(("less", (lo, hi), span, False))
+        return
+
+    # --- propositional fact (fallback): if/then, or, not, bare atom -------- #
+    propositional = _parse_propositional(toks, clause)
+    if propositional is not None:
+        predicate, atoms, negated = propositional
+        for atom in atoms:
+            claim(atom, "proposition", span)
+        relations.append((predicate, atoms, span, negated))
         return
 
     raise _Reject("no_template_match", clause)

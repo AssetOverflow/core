@@ -357,3 +357,62 @@ def test_ambiguous_two_np_subset_query_refuses() -> None:
     comp = comprehend("Are all metal objects soft objects?")
     assert isinstance(comp, Refusal)
     assert comp.reason == "ambiguous_subset_query"
+
+
+# --------------------------------------------------------------------------- #
+# Propositional logic — if/then, not, or, bare atom, therefore (deductive_logic)
+# --------------------------------------------------------------------------- #
+
+
+def _qry(comp: Comprehension) -> tuple:
+    return tuple((q.predicate, q.arguments, q.negated) for q in comp.queries)
+
+
+def test_conditional_is_implies() -> None:
+    comp = comprehend("If p then q.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "implies") == (("implies", ("p", "q")),)
+    assert _entity_kind(comp, "p") == "proposition"
+
+
+def test_bare_atom_is_asserted() -> None:
+    comp = comprehend("p.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "asserted") == (("asserted", ("p",)),)
+
+
+def test_not_atom_is_negated_assertion() -> None:
+    comp = comprehend("Not p.")
+    assert isinstance(comp, Comprehension)
+    rel = comp.meaning_graph.relations[0]
+    assert (rel.predicate, rel.arguments, rel.negated) == ("asserted", ("p",), True)
+
+
+def test_disjunction_is_or() -> None:
+    comp = comprehend("p or q.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "or") == (("or", ("p", "q")),)
+
+
+def test_therefore_atom_is_asserted_query() -> None:
+    comp = comprehend("If p then q. p. Therefore q.")
+    assert isinstance(comp, Comprehension)
+    assert _qry(comp) == (("asserted", ("q",), False),)
+
+
+def test_therefore_not_atom_is_negated_query() -> None:
+    comp = comprehend("If p then q. Not q. Therefore not p.")
+    assert isinstance(comp, Comprehension)
+    assert _qry(comp) == (("asserted", ("p",), True),)
+
+
+def test_therefore_conditional_is_implies_query() -> None:
+    comp = comprehend("If p then q. If q then r. Therefore if p then r.")
+    assert isinstance(comp, Comprehension)
+    assert _qry(comp) == (("implies", ("p", "r"), False),)
+
+
+def test_multiword_proposition_chunks_without_reserved_words() -> None:
+    comp = comprehend("If heavy rain then big flood.")
+    assert isinstance(comp, Comprehension)
+    assert _rel(comp, "implies") == (("implies", ("heavy_rain", "big_flood")),)

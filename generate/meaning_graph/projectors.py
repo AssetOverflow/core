@@ -132,3 +132,46 @@ def to_total_ordering(comp: Comprehension) -> tuple[dict[str, Any], dict[str, An
     else:
         query = {"kind": "compare", "left": q.arguments[0], "right": q.arguments[1]}
     return structure, query
+
+
+#: Propositional predicates serialized into formula strings for the ROBDD oracle.
+_PROP_PREDICATES = frozenset({"implies", "or", "asserted"})
+
+
+def _formula(predicate: str, args: tuple[str, ...], negated: bool) -> str | None:
+    """Serialize a propositional relation/query into a deductive_logic formula
+    string (keyword operators the oracle tokenizer accepts)."""
+    if predicate == "asserted":
+        return f"not {args[0]}" if negated else args[0]
+    if predicate == "implies":
+        return f"{args[0]} implies {args[1]}"
+    if predicate == "or":
+        return f"{args[0]} or {args[1]}"
+    return None
+
+
+def to_deductive_logic(comp: Comprehension) -> tuple[tuple[str, ...], str] | None:
+    """Project into ``(premises, query)`` formula strings for
+    ``evals.deductive_logic.oracle.oracle_entailment``.
+
+    Returns ``None`` (treated as a refusal) unless the comprehension is purely
+    propositional with >=1 premise and exactly one propositional query — so a
+    categorical/ordering comprehension never leaks into the entailment oracle.
+    """
+    graph = comp.meaning_graph
+    premises: list[str] = []
+    for r in graph.relations:
+        if r.predicate not in _PROP_PREDICATES:
+            return None  # a non-propositional relation -> not this domain
+        formula = _formula(r.predicate, r.arguments, r.negated)
+        if formula is None:
+            return None
+        premises.append(formula)
+
+    prop_queries = [q for q in comp.queries if q.predicate in _PROP_PREDICATES]
+    if not premises or len(comp.queries) != 1 or len(prop_queries) != 1:
+        return None
+    query = _formula(prop_queries[0].predicate, prop_queries[0].arguments, prop_queries[0].negated)
+    if query is None:
+        return None
+    return tuple(premises), query

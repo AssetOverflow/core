@@ -1,0 +1,12 @@
+{"id":"pl-v1-0001","seed":20260605,"text":"If p then q. p. Therefore q.","premises":["p implies q","p"],"query":"q","gold":"entailed","class":"modus_ponens"}
+{"id":"pl-v1-0002","seed":20260605,"text":"If p then q. Not q. Therefore not p.","premises":["p implies q","not q"],"query":"not p","gold":"entailed","class":"modus_tollens"}
+{"id":"pl-v1-0003","seed":20260605,"text":"If p then q. If q then r. Therefore if p then r.","premises":["p implies q","q implies r"],"query":"p implies r","gold":"entailed","class":"hypothetical_syllogism"}
+{"id":"pl-v1-0004","seed":20260605,"text":"p or q. Not p. Therefore q.","premises":["p or q","not p"],"query":"q","gold":"entailed","class":"disjunctive_syllogism"}
+{"id":"pl-v1-0005","seed":20260605,"text":"p or q. Not q. Therefore p.","premises":["p or q","not q"],"query":"p","gold":"entailed","class":"disjunctive_syllogism"}
+{"id":"pl-v1-0006","seed":20260605,"text":"If p then q. q. Therefore p.","premises":["p implies q","q"],"query":"p","gold":"unknown","class":"affirming_consequent_invalid"}
+{"id":"pl-v1-0007","seed":20260605,"text":"If p then q. Not p. Therefore not q.","premises":["p implies q","not p"],"query":"not q","gold":"unknown","class":"denying_antecedent_invalid"}
+{"id":"pl-v1-0008","seed":20260605,"text":"If p then q. If q then r. p. Therefore r.","premises":["p implies q","q implies r","p"],"query":"r","gold":"entailed","class":"chained_modus_ponens"}
+{"id":"pl-v1-0009","seed":20260605,"text":"If rain then wet. rain. Therefore wet.","premises":["rain implies wet","rain"],"query":"wet","gold":"entailed","class":"modus_ponens_words"}
+{"id":"pl-v1-0010","seed":20260605,"text":"If fire then smoke. Not smoke. Therefore not fire.","premises":["fire implies smoke","not smoke"],"query":"not fire","gold":"entailed","class":"modus_tollens_words"}
+{"id":"pl-v1-0011","seed":20260605,"text":"p or q. p. Therefore not q.","premises":["p or q","p"],"query":"not q","gold":"unknown","class":"inclusive_or_invalid"}
+{"id":"pl-v1-0012","seed":20260605,"text":"sun or moon. Not sun. Therefore moon.","premises":["sun or moon","not sun"],"query":"moon","gold":"entailed","class":"disjunctive_syllogism_words"}
