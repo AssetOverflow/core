@@ -34,9 +34,12 @@ changing tests or silently downgrading the invariant.
 Current selection policy:
 
 ```text
-surface = articulation_surface     (when no unknown-domain gate fired)
-surface = _UNKNOWN_DOMAIN_SURFACE   (when the gate fired)
-walk_surface = retained telemetry/evidence (always)
+surface = determination_surface     (when accrue_realized_knowledge AND the turn
+                                      DETERMINED an answer over realized knowledge)
+surface = _UNKNOWN_DOMAIN_SURFACE    (when the unknown-domain gate fired)
+surface = articulation_surface       (otherwise — the default)
+walk_surface        = retained telemetry/evidence (always)
+articulation_surface = retained always (the determination surface does not replace it)
 ```
 
 ### Unknown-domain gate honour
@@ -52,6 +55,26 @@ gated.  This closes `evals/calibration/gaps.md` Finding 2.
 
 Future realizer work may change the selection policy, but must update this
 document and the contract tests in the same PR.
+
+### Determination surface (Step B-2)
+
+When `accrue_realized_knowledge` is enabled and a question turn is **Determined**
+over realized knowledge (`generate.determine.determine` returns a `Determined`),
+the user-facing `surface` is the rendered determination
+(`generate.determine.render_determination`) — the engine answers *from what it
+accrued in the conversation*.  The basis is rendered **honestly**: SPECULATIVE
+grounds (today's only case) read as "as I was told", never "verified"; D0 only
+asserts `answer=True`, so the surface is an affirmation, never a fabricated or
+asserted-False string.
+
+The realizer's `articulation_surface` is **retained unchanged** as evidence — the
+determination is a user-facing *selection*, exactly like the unknown-domain gate,
+not a rewrite of the realizer output.  An **Undetermined** turn (refused,
+open-world) keeps the default articulation surface — the honest "I don't know".
+With the flag off, this path is never taken and the surface is unchanged.  This is
+selection only: it adds no field op, no normalization, and proposes no learning
+(`accrue_in_turn` writes SESSION memory through the INV-21 vault writer; the HITL
+teaching path is untouched).
 
 ### Refusal contract (ADR-0024 Phase 2)
 
