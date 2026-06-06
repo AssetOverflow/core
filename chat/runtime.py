@@ -389,6 +389,22 @@ def _make_trajectory_from_result(result, turn: int):
 
 
 @dataclass(frozen=True, slots=True)
+class TurnAccrual:
+    """The inline-realization outcome of one turn (Step B).
+
+    ``kind`` is ``"realized"`` (a declarative fact was accrued into the held self),
+    ``"determined"`` (a question was answered over realized knowledge), or ``"none"``
+    (nothing comprehensible to accrue/determine). The payload carries the typed
+    realize/determine result for introspection. This is recorded, not surfaced —
+    slice B-1 leaves the ChatResponse/surface contract unchanged.
+    """
+
+    kind: str
+    realized: Any = None  # generate.realize.Realized | NotRealized | None
+    determination: Any = None  # generate.determine.Determined | Undetermined | None
+
+
+@dataclass(frozen=True, slots=True)
 class ChatResponse:
     surface: str
     proposition: Proposition
@@ -672,6 +688,11 @@ class ChatRuntime:
         # W-013 — last classified intent, updated each turn for /explain REPL use.
         self._last_intent: Any | None = None
         self._last_input_text: str = ""
+        # Step B (inline realization) — the last turn's accrual outcome (what the turn
+        # realized into the held self, or determined over it). Introspectable; the
+        # surface contract is unchanged (slice B-1 records, does not surface).
+        self._last_turn_accrual: TurnAccrual | None = None
+        self._relational_pack_lemmas: frozenset[str] | None = None
         self._engine_state_store: EngineStateStore | None = (
             None if no_load_state else EngineStateStore(engine_state_path)
         )
@@ -923,8 +944,70 @@ class ChatRuntime:
 
     def _checkpointed_response(self, response: ChatResponse) -> ChatResponse:
         self._turn_count += 1
+        # Step B — inline realization, BEFORE the checkpoint so an accrued fact is in
+        # the snapshot this turn (survives reboot with persist_session_state). Gated;
+        # off by default. The surface contract is unchanged (the outcome is recorded,
+        # not surfaced).
+        if self.config.accrue_realized_knowledge:
+            self._accrue_in_turn(self._last_input_text)
         self.checkpoint_engine_state()
         return response
+
+    def last_turn_accrual(self) -> TurnAccrual | None:
+        """The most recent turn's inline-realization outcome (Step B), or None when
+        accrual is off or did not complete. Introspection only — never surfaced."""
+        return self._last_turn_accrual
+
+    def _accrue_in_turn(self, text: str) -> None:
+        """Inline realization (Step B): a comprehensible declarative turn accrues a
+        realized fact into the held self (session vault, SPECULATIVE / as-told); a
+        comprehensible question turn is determined over realized knowledge. Records the
+        typed outcome on ``self._last_turn_accrual``.
+
+        Never raises into the turn — accrual is ADDITIVE, so any failure is a clean
+        no-op (the turn's response is untouched). This is SESSION memory (immediate),
+        NOT ratified learning: it proposes nothing and leaves the teaching/review HITL
+        path untouched. Realization writes go through ``generate.realize`` (the INV-21
+        allowed vault writer); DETERMINE and the readers are total (typed results, no
+        raises), so the broad guard is a defensive backstop, not expected control flow.
+        """
+        self._last_turn_accrual = None
+        if self._context is None or not text or not text.strip():
+            return
+        try:
+            from generate.determine import determine
+            from generate.meaning_graph.reader import Comprehension, comprehend
+            from generate.meaning_graph.relational import comprehend_relational
+            from generate.realize import realize_comprehension
+
+            if self._relational_pack_lemmas is None:
+                from generate.meaning_graph.relational import load_relational_pack_lemmas
+
+                self._relational_pack_lemmas = load_relational_pack_lemmas()
+
+            readings = (
+                comprehend(text),
+                comprehend_relational(text, self._relational_pack_lemmas),
+            )
+            comprehensions = [c for c in readings if isinstance(c, Comprehension)]
+
+            # A question turn (query-bearing) is DETERMINED over realized knowledge.
+            for c in comprehensions:
+                if c.queries:
+                    self._last_turn_accrual = TurnAccrual(
+                        kind="determined", determination=determine(c, self._context)
+                    )
+                    return
+            # A declarative turn (a single told fact) is REALIZED into the held self.
+            for c in comprehensions:
+                if not c.queries and c.meaning_graph.relations:
+                    self._last_turn_accrual = TurnAccrual(
+                        kind="realized", realized=realize_comprehension(c, self._context)
+                    )
+                    return
+            self._last_turn_accrual = TurnAccrual(kind="none")
+        except Exception:  # additive: accrual must never crash a turn  # noqa: BLE001
+            self._last_turn_accrual = None
 
     @property
     def session(self) -> SessionContext:
