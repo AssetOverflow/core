@@ -23,11 +23,11 @@ def test_comprehension_total_ordering_has_real_coverage() -> None:
 
 
 def test_comprehension_total_ordering_pinned_counts() -> None:
-    # Pins the lane: 4 read end-to-end (two sort chains + two transitive
-    # compares); 4 refused — three multi-word-NP cases and one compare with
-    # trailing tokens. No single multi-word-NP rule is wrong=0-safe here because
-    # the gold canonicalizes multi-word NPs three contradictory ways.
+    # Pins the lane: 7 read end-to-end — two sort chains, two transitive compares,
+    # and the three multi-word cases ("North station", "Red rank", "Level one…")
+    # now chunked by the canonicalization contract; 1 refused — the compare with a
+    # trailing prepositional phrase ("…in the same order").
     report = run()
-    assert report["correct"] == 4
-    assert report["refused"] == 4
+    assert report["correct"] == 7
+    assert report["refused"] == 1
     assert report["total"] == 8
