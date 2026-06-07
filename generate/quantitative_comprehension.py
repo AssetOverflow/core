@@ -166,6 +166,34 @@ class _Div:
     unit: str
 
 
+@dataclass(frozen=True, slots=True)
+class _Partition:
+    """Aggregate-then-divide: combine all facts into a ``total`` then split that total
+    equally into ``divisor`` parts (R1, "They combine their X and split them equally
+    into N boxes"). The semantic source is equal PARTITION; the mathematical setup is
+    ``total = sum(facts)`` + ``per_<container> = total / divisor`` — reusing ``SumOf`` +
+    ``Div(Symbol, Literal)``, NO new relation kind (the divisor is exact integer
+    division, the same wrong=0 boundary as PR-6c)."""
+
+    unit: str       # the unit combined and split (hats -> item)
+    divisor: int    # number of equal parts (3 boxes)
+    container: str  # SINGULAR container noun (box) — must match the perquery's
+
+
+def _singular(noun: str) -> str:
+    """Conservative singularization for container nouns (``boxes`` -> ``box``,
+    ``bags`` -> ``bag``); already-singular nouns (``box``) pass through unchanged.
+
+    Used ONLY to canonicalize the partition container so the "split into N boxes"
+    sentence and the "in each box" query name the same ``per_<container>`` symbol.
+    """
+    if noun.endswith("es") and noun[:-2].endswith(("x", "s", "z", "ch", "sh")):
+        return noun[:-2]
+    if noun.endswith("s") and len(noun) > 1:
+        return noun[:-1]
+    return noun
+
+
 #: Word factors for "twice/double/triple ... as many" (a multiply by a dimensionless int).
 _FACTOR_WORDS: dict[str, int] = {"twice": 2, "double": 2, "triple": 3, "quadruple": 4}
 
@@ -218,16 +246,39 @@ def _parse_sentence(body: str, detail: str):
     if not toks:
         return None
 
-    if len(toks) >= 5 and toks[0] == "how" and toks[1] == "many" and toks[-1] == "have":
+    if len(toks) >= 5 and toks[0] == "how" and toks[1] == "many":
         unit = _resolve_unit(_ident(toks[2], detail))
-        rest = toks[3:-1]  # between "<unit>" and "have"
-        if rest and rest[0] == "does" and len(rest) == 2:
-            return ("query", _ident(rest[1], detail), unit)
-        if rest and rest[0] == "do":
-            parts = [_ident(t, detail) for t in rest[1:] if t != "and"]
-            if len(parts) >= 2:
-                return ("sumquery", tuple(parts), unit)
+        # "How many <unit> are in each <container>?" -> the partition per-container target.
+        if len(toks) == 7 and toks[3] == "are" and toks[4] == "in" and toks[5] == "each":
+            return ("perquery", _singular(_ident(toks[6], detail)), unit)
+        if toks[-1] == "have":
+            rest = toks[3:-1]  # between "<unit>" and "have"
+            if rest and rest[0] == "does" and len(rest) == 2:
+                return ("query", _ident(rest[1], detail), unit)
+            if rest and rest[0] == "do":
+                parts = [_ident(t, detail) for t in rest[1:] if t != "and"]
+                if len(parts) >= 2:
+                    return ("sumquery", tuple(parts), unit)
         raise _QReject("unreadable_quantity_query", detail)
+
+    # Partition: "They combine their <unit> and split them equally into <N> <container>."
+    if (
+        len(toks) == 11
+        and toks[0] == "they"
+        and toks[1] == "combine"
+        and toks[2] == "their"
+        and toks[4] == "and"
+        and toks[5] == "split"
+        and toks[6] == "them"
+        and toks[7] == "equally"
+        and toks[8] == "into"
+        and toks[9].isdigit()
+    ):
+        return _Partition(
+            unit=_resolve_unit(_ident(toks[3], detail)),
+            divisor=_int(toks[9], detail),
+            container=_singular(_ident(toks[10], detail)),
+        )
 
     if len(toks) >= 4 and toks[1] == "has":
         entity = _ident(toks[0], detail)
@@ -265,6 +316,7 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
     eqs: list[_Eq] = []
     muls: list[_Mul] = []
     divs: list[_Div] = []
+    partitions: list[_Partition] = []
     queries: list[tuple] = []
 
     try:
@@ -280,6 +332,8 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
                 muls.append(spec)
             elif isinstance(spec, _Div):
                 divs.append(spec)
+            elif isinstance(spec, _Partition):
+                partitions.append(spec)
             else:
                 queries.append(spec)
     except _QReject as rej:
@@ -287,6 +341,9 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
 
     if len(queries) != 1 or not facts:
         return Refusal("no_single_quantity_query")
+    if len(partitions) > 1:
+        return Refusal("multiple_partitions")
+    partition = partitions[0] if partitions else None
 
     unit_of: dict[str, str] = {}
     role_of: dict[str, str] = {}
@@ -300,9 +357,28 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
         unit_of[d.entity], role_of[d.entity] = d.unit, "count"
 
     query = queries[0]
+    # A partition is read ONLY together with its "in each <container>" query, and vice
+    # versa — a partition without that target, or that target without a partition, refuses.
+    if (partition is not None) != (query[0] == "perquery"):
+        return Refusal("partition_query_mismatch")
+
     sum_eq: tuple[str, tuple[str, ...]] | None = None
+    partition_eq: tuple[str, str, int] | None = None  # (per_box, total, divisor)
     if query[0] == "query":
         ask_entity, ask_unit = query[1], query[2]
+    elif query[0] == "perquery":
+        # Aggregate-then-divide: total = sum(all facts); per_<container> = total / divisor.
+        container, ask_unit = query[1], query[2]
+        assert partition is not None  # guaranteed by the mismatch guard above
+        if partition.container != container:
+            return Refusal("partition_container_mismatch")
+        ask_entity = "per_" + container
+        unit_of.setdefault("total", partition.unit)
+        role_of["total"] = "total"
+        unit_of.setdefault(ask_entity, partition.unit)
+        role_of[ask_entity] = "count"
+        sum_eq = ("total", tuple(f.entity for f in facts))
+        partition_eq = (ask_entity, "total", partition.divisor)
     else:  # sumquery -> synthesize a total symbol + sum equation
         parts, ask_unit = query[1], query[2]
         ask_entity = "total"
@@ -322,6 +398,9 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
     if sum_eq is not None:
         referenced.add(sum_eq[0])
         referenced.update(sum_eq[1])
+    if partition_eq is not None:
+        referenced.add(partition_eq[0])
+        referenced.add(partition_eq[1])
     referenced.add(ask_entity)
 
     symbols = [
@@ -358,6 +437,11 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
     if sum_eq is not None:
         lhs, parts = sum_eq
         expr_specs.append((lhs, SumOf(tuple(Symbol(p) for p in parts))))
+    # The partition divide is appended AFTER the sum so ``total`` is forward-resolved
+    # before ``per_<container> = total / divisor`` (the oracle substitutes in this order).
+    if partition_eq is not None:
+        lhs, ref, divisor = partition_eq
+        expr_specs.append((lhs, Div(Symbol(ref), Literal(divisor))))
 
     # equations: shell -> REAL admissibility -> rebuild (NEVER stamp "admitted").
     equations: list[BoundEquation] = []
