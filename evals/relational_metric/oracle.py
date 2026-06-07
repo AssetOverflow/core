@@ -10,15 +10,17 @@ oracle off the STRUCTURE) agreeing is real evidence the field READ the text
 correctly; a shared-code "gold" would only prove the reader agrees with itself
 (INV-25).
 
-Supported relation kinds (the v1 forward-substitutable grammar):
+Supported relation kinds (the v1 + PR-6b forward-substitutable grammar):
 
-- ``fact``       : ``entity = value`` (a given quantity)
-- ``more_than``  : ``entity = ref + delta``
-- ``fewer_than`` : ``entity = ref - delta``
-- ``sum_of``     : ``entity = sum(parts)``  (part-whole / total)
+- ``fact``          : ``entity = value`` (a given quantity)
+- ``more_than``     : ``entity = ref + delta``
+- ``fewer_than``    : ``entity = ref - delta``
+- ``times_as_many`` : ``entity = ref * factor`` (dimensionless integer scalar)
+- ``sum_of``        : ``entity = sum(parts)``  (part-whole / total)
 
 Every relation's references must already be resolved (forward-substitutable /
-triangular). The oracle refuses anything else, never guesses.
+triangular). The oracle refuses anything else, never guesses.  PR-6b keeps this
+off-serving: it lets setup-correct R1 cases compute answers in the eval lane only.
 """
 
 from __future__ import annotations
@@ -30,14 +32,15 @@ class OracleError(ValueError):
     """Malformed or out-of-grammar case — the oracle refuses, never guesses."""
 
 
-_SUPPORTED = frozenset({"fact", "more_than", "fewer_than", "sum_of"})
+_SUPPORTED = frozenset({"fact", "more_than", "fewer_than", "sum_of", "times_as_many"})
 
 
 def oracle_answer(relations: list[dict[str, Any]], query: dict[str, Any]) -> int:
     """Compute the integer answer by forward substitution over the relations.
 
     Raises :class:`OracleError` on an unknown relation kind, a forward reference to
-    an unresolved entity, a duplicate definition, or a missing query entity.
+    an unresolved entity, a duplicate definition, malformed scalar, or a missing
+    query entity.
     """
     values: dict[str, int] = {}
 
@@ -64,6 +67,14 @@ def oracle_answer(relations: list[dict[str, Any]], query: dict[str, Any]) -> int
             if not isinstance(delta, int) or isinstance(delta, bool):
                 raise OracleError(f"delta must be int: {rel!r}")
             values[entity] = values[ref] + (delta if kind == "more_than" else -delta)
+        elif kind == "times_as_many":
+            ref = rel.get("ref")
+            factor = rel.get("factor")
+            if ref not in values:
+                raise OracleError(f"forward reference to unresolved {ref!r}")
+            if not isinstance(factor, int) or isinstance(factor, bool):
+                raise OracleError(f"factor must be int: {rel!r}")
+            values[entity] = values[ref] * factor
         else:  # sum_of
             parts = rel.get("parts")
             if not isinstance(parts, list) or not parts:
