@@ -172,8 +172,11 @@ def test_r1_comparative_supported_rest_refused_wrong_zero() -> None:
     # the existing sum_of; no new arithmetic or relation kind.
     assert by_id["r1-03-more-total"] == "correct"
     assert by_id["r1-04-fewer-total"] == "correct"
-    assert r["setup_correct"] == 6
-    assert r["setup_refused"] == 4
+    # Inverse frame (PR-7b): the base of a more_than whose subject is a known fact and
+    # whose referent is the query target — "Nia has 9 more than Omar. Nia has 15. -> Omar".
+    assert by_id["r1-07-inverse"] == "correct"
+    assert r["setup_correct"] == 7
+    assert r["setup_refused"] == 3
     # No detail is ever WRONG, and every non-correct one is a typed refusal.
     for d in r["details"]:
         assert d["outcome"] in ("correct", "refused")
@@ -218,8 +221,8 @@ def test_r1_answer_lane_scores_only_setup_correct_fixtures() -> None:
     assert r["setup_wrong"] == 0
     assert r["wrong"] == 0
     assert r["gold_error"] == 0
-    assert r["correct"] == 6
-    assert r["refused"] == 4
+    assert r["correct"] == 7
+    assert r["refused"] == 3
     by_id = {d["id"]: d for d in r["details"]}
     assert by_id["r1-01-twice"] == {"id": "r1-01-twice", "outcome": "correct", "answer": 12}
     assert by_id["r1-02-half"] == {"id": "r1-02-half", "outcome": "correct", "answer": 4}
@@ -229,9 +232,11 @@ def test_r1_answer_lane_scores_only_setup_correct_fixtures() -> None:
     # Aggregate-query slice: additive totals via "altogether" / "in total".
     assert by_id["r1-03-more-total"] == {"id": "r1-03-more-total", "outcome": "correct", "answer": 25}
     assert by_id["r1-04-fewer-total"] == {"id": "r1-04-fewer-total", "outcome": "correct", "answer": 34}
+    # Inverse frame (PR-7b): the reverse-solved base — omar = nia(15) - 9 = 6.
+    assert by_id["r1-07-inverse"] == {"id": "r1-07-inverse", "outcome": "correct", "answer": 6}
     _supported = {
         "r1-01-twice", "r1-02-half", "r1-05-chain", "r1-06-subtotal-reused",
-        "r1-03-more-total", "r1-04-fewer-total",
+        "r1-03-more-total", "r1-04-fewer-total", "r1-07-inverse",
     }
     for fixture_id, detail in by_id.items():
         if fixture_id not in _supported:
@@ -310,9 +315,9 @@ def test_oracle_divide_by_one_is_identity() -> None:
 
 # --------------------------------------------------------------------------- #
 # PR-7a — narrow reverse-solve oracle contract (the base of one more/fewer_than).
-# Pins the EXACT semantics before the reader learns the inverse frame (PR-7b). The
-# reader is unchanged here: r1-07 still refuses; these exercise the oracle directly.
-# Each refusal is meaningful-fail — drop its guardrail and the case computes a value.
+# Pins the EXACT semantics the reader's inverse frame (PR-7b) relies on; these exercise
+# the oracle directly (independent of the reader). Each refusal is meaningful-fail — drop
+# its guardrail and the case computes a value.
 # --------------------------------------------------------------------------- #
 
 
@@ -343,7 +348,7 @@ def test_r1_07_gold_relations_reverse_solve_to_six() -> None:
     from evals.setup_oracle.runner import _load_r1_gold
 
     fx = next(f for f in run_r1()["details"] if f["id"] == "r1-07-inverse")
-    assert fx["outcome"] == "refused"  # reader still refuses in PR-7a (contract only)
+    assert fx["outcome"] == "correct"  # reader now reads the inverse frame (PR-7b)
     gold = next(g for g in _load_r1_gold() if g["id"] == "r1-07-inverse")
     assert oracle_answer(gold["relations"], gold["query"]) == gold["gold"] == 6
 
