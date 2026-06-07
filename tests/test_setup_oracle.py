@@ -165,8 +165,10 @@ def test_r1_comparative_supported_rest_refused_wrong_zero() -> None:
     assert by_id["r1-05-chain"] == "correct"
     # Divisive frame (PR-6c): "half as many" (r1-02).
     assert by_id["r1-02-half"] == "correct"
-    assert r["setup_correct"] == 3
-    assert r["setup_refused"] == 7
+    # Partition frame (PR-6d): aggregate-then-divide "split equally into 3 boxes" (r1-06).
+    assert by_id["r1-06-subtotal-reused"] == "correct"
+    assert r["setup_correct"] == 4
+    assert r["setup_refused"] == 6
     # No detail is ever WRONG, and every non-correct one is a typed refusal.
     for d in r["details"]:
         assert d["outcome"] in ("correct", "refused")
@@ -211,14 +213,16 @@ def test_r1_answer_lane_scores_only_setup_correct_fixtures() -> None:
     assert r["setup_wrong"] == 0
     assert r["wrong"] == 0
     assert r["gold_error"] == 0
-    assert r["correct"] == 3
-    assert r["refused"] == 7
+    assert r["correct"] == 4
+    assert r["refused"] == 6
     by_id = {d["id"]: d for d in r["details"]}
     assert by_id["r1-01-twice"] == {"id": "r1-01-twice", "outcome": "correct", "answer": 12}
     assert by_id["r1-02-half"] == {"id": "r1-02-half", "outcome": "correct", "answer": 4}
     assert by_id["r1-05-chain"] == {"id": "r1-05-chain", "outcome": "correct", "answer": 14}
+    # PR-6d: the partition's derived per-box answer (total 12 / 3 boxes = 4).
+    assert by_id["r1-06-subtotal-reused"] == {"id": "r1-06-subtotal-reused", "outcome": "correct", "answer": 4}
     for fixture_id, detail in by_id.items():
-        if fixture_id not in {"r1-01-twice", "r1-02-half", "r1-05-chain"}:
+        if fixture_id not in {"r1-01-twice", "r1-02-half", "r1-05-chain", "r1-06-subtotal-reused"}:
             assert detail["outcome"] == "refused"
             assert detail.get("reason")
 

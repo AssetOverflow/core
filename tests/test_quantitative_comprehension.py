@@ -8,6 +8,8 @@ reviewer's "do not stamp admissibility" guard, made executable.
 
 from __future__ import annotations
 
+import pytest
+
 from generate.binding_graph.model import (
     BoundFact,
     BoundUnknown,
@@ -218,3 +220,73 @@ def test_half_as_many_missing_base_refuses() -> None:
     # "half as many ... as Rod" with no value for Rod -> ungrounded base -> REFUSE.
     comp = comprehend_quantitative("Sue has half as many pears as Rod. How many pears does Sue have?")
     assert isinstance(comp, Refusal)
+
+
+# --------------------------------------------------------------------------- #
+# PR-6d — aggregate-then-divide partition (SumOf + Div, no new relation kind)
+# --------------------------------------------------------------------------- #
+
+_PARTITION_TEXT = (
+    "Lee has 5 hats. Mae has 7 hats. They combine their hats and split them "
+    "equally into 3 boxes. How many hats are in each box?"
+)
+
+
+def test_partition_builds_sum_then_divide() -> None:
+    # PR-6d: one sentence synthesizes TWO derived symbols — total = lee + mae (sum_of)
+    # and per_box = total / 3 (divide_by, the FIRST divide whose ref is itself derived).
+    comp = _comp(_PARTITION_TEXT)
+    by_lhs = {e.lhs_symbol_id: e for e in comp.binding_graph.equations}
+    total = by_lhs["total"]
+    assert total.operation_kind == "add"
+    assert total.rhs_canonical == "lee + mae"
+    assert total.dependencies == frozenset({"lee", "mae"})
+    per_box = by_lhs["per_box"]
+    assert per_box.operation_kind == "divide"
+    assert per_box.rhs_canonical == "total / 3"
+    assert per_box.dependencies == frozenset({"total"})  # ref is a DERIVED symbol
+    assert total.admissibility_status == per_box.admissibility_status == "admitted"
+    assert single_unknown(comp.binding_graph).symbol_id == "per_box"
+    # Only the modelled entities — the partition introduces no proof-machinery symbol.
+    assert {s.symbol_id for s in comp.binding_graph.symbols} == {"lee", "mae", "total", "per_box"}
+
+
+def test_partition_without_its_query_refuses() -> None:
+    # A partition sentence whose question is a plain "does X have" (not "in each box")
+    # is incoherent -> REFUSE, never read a dangling partition.
+    comp = comprehend_quantitative(
+        "Lee has 5 hats. Mae has 7 hats. They combine their hats and split them "
+        "equally into 3 boxes. How many hats does Lee have?"
+    )
+    assert isinstance(comp, Refusal)
+
+
+def test_per_each_query_without_partition_refuses() -> None:
+    # "in each box" with no partition sentence -> no per-box symbol exists -> REFUSE.
+    comp = comprehend_quantitative("Lee has 5 hats. How many hats are in each box?")
+    assert isinstance(comp, Refusal)
+
+
+def test_partition_container_mismatch_refuses() -> None:
+    # Split into boxes but asked "in each jar" -> container mismatch -> REFUSE.
+    comp = comprehend_quantitative(
+        "Lee has 5 hats. Mae has 7 hats. They combine their hats and split them "
+        "equally into 3 boxes. How many hats are in each jar?"
+    )
+    assert isinstance(comp, Refusal)
+
+
+def test_partition_setup_correct_but_non_exact_answer_refuses() -> None:
+    # The reading is correct (total = 5 + 6, per_box = total / 3), but 11 % 3 != 0, so
+    # the answer oracle REFUSES — exact-divisibility still gates the partition's answer.
+    from evals.relational_metric.oracle import OracleError, oracle_answer
+
+    comp = _comp(
+        "Lee has 5 hats. Mae has 6 hats. They combine their hats and split them "
+        "equally into 3 boxes. How many hats are in each box?"
+    )
+    projected = to_relational_metric(comp)
+    assert projected is not None  # the SETUP is readable
+    relations, query = projected
+    with pytest.raises(OracleError):  # but 11 / 3 is non-exact -> the answer refuses
+        oracle_answer(relations, query)
