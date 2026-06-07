@@ -9,11 +9,11 @@ closes that gap: it compares the reader's comprehended STRUCTURE (the relations 
 binding-graph reader). A wrong setup is a first-class failure even when its answer is right.
 
 `setup_wrong` is the load-bearing, wrong=0-critical count: a reading that misrepresents
-the problem. v1 grades structure (facts + equations + question target/state/form); unit
-modelling stays covered by the admissibility tests (a documented signature extension).
+the problem. The R1 answer lane (PR-6b) runs only after setup is correct; unsupported
+fixtures remain refusals and setup-wrong fixtures are never answer-scored.
 """
 
-from evals.setup_oracle.runner import run, run_r1
+from evals.setup_oracle.runner import run, run_r1, run_r1_answers
 from evals.setup_oracle.signature import (
     gold_unknown_signature,
     reader_symbol_units,
@@ -29,5 +29,6 @@ __all__ = [
     "relation_signature",
     "run",
     "run_r1",
+    "run_r1_answers",
     "symbol_unit_signature",
 ]
