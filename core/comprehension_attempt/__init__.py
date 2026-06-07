@@ -7,16 +7,28 @@ over — uniform across the R1 and R2 setup compilers. Off-serving; imports no `
 from __future__ import annotations
 
 from core.comprehension_attempt.classify import classify_r1, classify_r2
+from core.comprehension_attempt.failure_family import (
+    REGISTRY,
+    FailureFamily,
+    enrich_family,
+    family_by_name,
+    family_for_reason,
+)
 from core.comprehension_attempt.model import ComprehensionAttempt, Organ, Outcome
 from core.comprehension_attempt.router import RouteResult, RouteStatus, route_setup
 
 __all__ = [
+    "REGISTRY",
     "ComprehensionAttempt",
+    "FailureFamily",
     "Organ",
     "Outcome",
     "RouteResult",
     "RouteStatus",
     "classify_r1",
     "classify_r2",
+    "enrich_family",
+    "family_by_name",
+    "family_for_reason",
     "route_setup",
 ]
