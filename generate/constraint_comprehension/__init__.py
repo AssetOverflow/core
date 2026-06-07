@@ -24,6 +24,12 @@ from generate.constraint_comprehension.model import (
     Domain,
     Unknown,
 )
+from generate.constraint_comprehension.solver import (
+    answer_constraint_problem,
+    solve_constraint_problem,
+    solve_two_var_count_weight,
+    solve_two_var_linear,
+)
 
 __all__ = [
     "AttributeFact",
@@ -34,4 +40,8 @@ __all__ = [
     "LinearExpr",
     "Relation",
     "Unknown",
+    "answer_constraint_problem",
+    "solve_constraint_problem",
+    "solve_two_var_count_weight",
+    "solve_two_var_linear",
 ]
