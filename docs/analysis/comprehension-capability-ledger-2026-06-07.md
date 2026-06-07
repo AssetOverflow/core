@@ -73,7 +73,7 @@ N4 turns this into the executable registry; N5 emits proposals **only** for `pro
 | `unsupported_distractor_clause` | R1 `r1-10` `unreadable_quantity_clause` | r1 | **yes** | no (until same-unit target isolation) |
 | `unit_incompatible` | R1 `unit_mismatch`, R2 `coefficient_unit_mismatch` | cross | **yes** | no |
 | `unsupported_system_size` | R2 `too_many_categories` | r2 | **yes** | no (until ≥3-var solver, R3) |
-| `missing_category_pair` | R2 `category_pair_not_found` | r2 | no | **yes** (propose category-pair fixture) |
+| `missing_category_pair` | *(reserved — `category_pair_not_found` is too broad; see note)* | r2 | no | **yes** (reserved) |
 | `missing_attribute_coefficient` | *(reserved — no emitter yet)* | r2 | no | **yes** |
 | `missing_total_count` | R2 `missing_total_count` | r2 | no | **yes** (propose count-constraint fixture) |
 | `missing_weighted_total` | R2 `missing_weighted_total` | r2 | no | **yes** (propose weighted-total fixture) |
@@ -81,11 +81,20 @@ N4 turns this into the executable registry; N5 emits proposals **only** for `pro
 | `non_integer_solution` | R2 solver | r2 | **yes** | no |
 | `negative_solution` | R2 solver | r2 | **yes** | no |
 | `answer_key_contradiction` | R2 answer-choice `contradiction` verdict | r2 | n/a | no — **action: report contradiction** |
-| `input_shape` | R1 `non_digit_quantity`/`non_identifier_name`/`no_quantity_template`; R2 `query_target_not_a_category` | cross | **yes** | no |
+| `input_shape` | R1 `non_digit_quantity`/`non_identifier_name`/`no_quantity_template`/`unprojectable`; R2 `query_target_not_a_category`/`category_pair_not_found` | cross | **yes** | no |
 
-**Reserved (forward-declared, no current emitter):** `missing_attribute_coefficient`,
-`unsupported_rate_duration`, `unsupported_temporal_state` — named so the registry is complete,
-but not reachable until R3 introduces rate/temporal frames.
+> **N6 correction (boundary-first + precise growth).** `category_pair_not_found` fires on *any*
+> non-R2 text (0 or 1 categories), so it is **not** a safe growth trigger — it maps to
+> `input_shape` ("R2 does not recognize this"), and `missing_category_pair` is reserved until the
+> reader distinguishes a partial one-category R2 problem from non-R2 prose. Only the **precise**
+> R2 gaps (`missing_total_count`, `missing_weighted_total` — reachable only after two categories +
+> matching coefficients are read) remain reachable growth surfaces. The contemplation pass (N6)
+> classifies **boundary-first** and treats `input_shape` as non-blocking, so a problem one organ
+> recognizes as a substantive boundary never proposes against the other organ's broad refusal.
+
+**Reserved (forward-declared, no current emitter):** `missing_category_pair`,
+`missing_attribute_coefficient`, `unsupported_rate_duration`, `unsupported_temporal_state` — named
+so the registry is complete, but not reachable until the reader/R3 supplies a precise signal.
 
 ## 7. Next contemplation batch (N2–N6)
 

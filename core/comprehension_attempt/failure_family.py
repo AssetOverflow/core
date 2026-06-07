@@ -54,7 +54,7 @@ REGISTRY: tuple[FailureFamily, ...] = (
         refusal_reasons=(
             "empty", "no_quantity_template", "non_digit_quantity", "non_identifier_name",
             "unreadable_quantity_query", "invalid_binding_graph", "query_target_not_a_category",
-            "unprojectable",
+            "unprojectable", "category_pair_not_found",
         ),
     ),
     FailureFamily(
@@ -111,11 +111,6 @@ REGISTRY: tuple[FailureFamily, ...] = (
     ),
     # --- growth surfaces (proposal allowed) ---------------------------------------------- #
     FailureFamily(
-        "missing_category_pair", "r2", False, True,
-        "propose a category-pair gold fixture for review",
-        proposal_target="r2_gold_fixture", refusal_reasons=("category_pair_not_found",),
-    ),
-    FailureFamily(
         "missing_total_count", "r2", False, True,
         "propose a total-count-constraint gold fixture for review",
         proposal_target="r2_gold_fixture", refusal_reasons=("missing_total_count",),
@@ -132,6 +127,14 @@ REGISTRY: tuple[FailureFamily, ...] = (
         refusal_reasons=(),
     ),
     # --- reserved / forward-declared for R3 (no current emitter) ------------------------- #
+    FailureFamily(
+        "missing_category_pair", "r2", False, True,
+        "RESERVED — propose a category-pair fixture once the reader distinguishes a partial "
+        "(one-category) R2 problem from non-R2 text; the raw category_pair_not_found reason is "
+        "too broad to propose against safely (it fires on any non-R2 text), so it maps to "
+        "input_shape until that split exists",
+        proposal_target="r2_gold_fixture",
+    ),
     FailureFamily(
         "missing_attribute_coefficient", "r2", False, True,
         "RESERVED — propose an attribute-coefficient fixture (no emitter yet)",
