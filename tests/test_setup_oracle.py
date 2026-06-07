@@ -10,12 +10,17 @@ Two obligations:
 
 from __future__ import annotations
 
+import pytest
+
+from evals.relational_metric.oracle import OracleError, oracle_answer
 from evals.setup_oracle import (
     gold_unknown_signature,
     reader_symbol_units,
     reader_unknown_signature,
     relation_signature,
     run,
+    run_r1,
+    run_r1_answers,
     symbol_unit_signature,
 )
 from generate.binding_graph.model import (
@@ -148,8 +153,6 @@ def test_reader_units_read_from_the_binding_graph() -> None:
 
 
 def test_r1_multiplicative_supported_rest_refused_wrong_zero() -> None:
-    from evals.setup_oracle import run_r1
-
     r = run_r1()
     assert r["total"] == 10
     # THE invariant through the first capability slice: NO R1 case is misread. Adding the
@@ -167,3 +170,51 @@ def test_r1_multiplicative_supported_rest_refused_wrong_zero() -> None:
         assert d["outcome"] in ("correct", "refused")
         if d["outcome"] == "refused":
             assert d.get("reason")
+
+
+# --------------------------------------------------------------------------- #
+# PR-6b — off-serving answer oracle support for times_as_many
+# --------------------------------------------------------------------------- #
+
+
+def test_oracle_computes_times_as_many_forward_only() -> None:
+    assert oracle_answer(
+        [
+            {"kind": "fact", "entity": "anna", "value": 6},
+            {"kind": "times_as_many", "entity": "bella", "ref": "anna", "factor": 2},
+        ],
+        {"entity": "bella"},
+    ) == 12
+
+
+def test_oracle_rejects_invalid_times_factor_and_forward_ref() -> None:
+    with pytest.raises(OracleError):
+        oracle_answer(
+            [
+                {"kind": "fact", "entity": "anna", "value": 6},
+                {"kind": "times_as_many", "entity": "bella", "ref": "anna", "factor": 2.5},
+            ],
+            {"entity": "bella"},
+        )
+    with pytest.raises(OracleError):
+        oracle_answer(
+            [{"kind": "times_as_many", "entity": "bella", "ref": "anna", "factor": 2}],
+            {"entity": "bella"},
+        )
+
+
+def test_r1_answer_lane_scores_only_setup_correct_fixtures() -> None:
+    r = run_r1_answers()
+    assert r["total"] == 10
+    assert r["setup_wrong"] == 0
+    assert r["wrong"] == 0
+    assert r["gold_error"] == 0
+    assert r["correct"] == 2
+    assert r["refused"] == 8
+    by_id = {d["id"]: d for d in r["details"]}
+    assert by_id["r1-01-twice"] == {"id": "r1-01-twice", "outcome": "correct", "answer": 12}
+    assert by_id["r1-05-chain"] == {"id": "r1-05-chain", "outcome": "correct", "answer": 14}
+    for fixture_id, detail in by_id.items():
+        if fixture_id not in {"r1-01-twice", "r1-05-chain"}:
+            assert detail["outcome"] == "refused"
+            assert detail.get("reason")
