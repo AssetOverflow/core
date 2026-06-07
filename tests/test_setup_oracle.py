@@ -167,8 +167,13 @@ def test_r1_comparative_supported_rest_refused_wrong_zero() -> None:
     assert by_id["r1-02-half"] == "correct"
     # Partition frame (PR-6d): aggregate-then-divide "split equally into 3 boxes" (r1-06).
     assert by_id["r1-06-subtotal-reused"] == "correct"
-    assert r["setup_correct"] == 4
-    assert r["setup_refused"] == 6
+    # Aggregate-query frame (aggregate-query slice): additive total asked via a trailing
+    # qualifier — "altogether" (r1-03) and "in total" (r1-04). Phrasing-only widening of
+    # the existing sum_of; no new arithmetic or relation kind.
+    assert by_id["r1-03-more-total"] == "correct"
+    assert by_id["r1-04-fewer-total"] == "correct"
+    assert r["setup_correct"] == 6
+    assert r["setup_refused"] == 4
     # No detail is ever WRONG, and every non-correct one is a typed refusal.
     for d in r["details"]:
         assert d["outcome"] in ("correct", "refused")
@@ -213,16 +218,23 @@ def test_r1_answer_lane_scores_only_setup_correct_fixtures() -> None:
     assert r["setup_wrong"] == 0
     assert r["wrong"] == 0
     assert r["gold_error"] == 0
-    assert r["correct"] == 4
-    assert r["refused"] == 6
+    assert r["correct"] == 6
+    assert r["refused"] == 4
     by_id = {d["id"]: d for d in r["details"]}
     assert by_id["r1-01-twice"] == {"id": "r1-01-twice", "outcome": "correct", "answer": 12}
     assert by_id["r1-02-half"] == {"id": "r1-02-half", "outcome": "correct", "answer": 4}
     assert by_id["r1-05-chain"] == {"id": "r1-05-chain", "outcome": "correct", "answer": 14}
     # PR-6d: the partition's derived per-box answer (total 12 / 3 boxes = 4).
     assert by_id["r1-06-subtotal-reused"] == {"id": "r1-06-subtotal-reused", "outcome": "correct", "answer": 4}
+    # Aggregate-query slice: additive totals via "altogether" / "in total".
+    assert by_id["r1-03-more-total"] == {"id": "r1-03-more-total", "outcome": "correct", "answer": 25}
+    assert by_id["r1-04-fewer-total"] == {"id": "r1-04-fewer-total", "outcome": "correct", "answer": 34}
+    _supported = {
+        "r1-01-twice", "r1-02-half", "r1-05-chain", "r1-06-subtotal-reused",
+        "r1-03-more-total", "r1-04-fewer-total",
+    }
     for fixture_id, detail in by_id.items():
-        if fixture_id not in {"r1-01-twice", "r1-02-half", "r1-05-chain", "r1-06-subtotal-reused"}:
+        if fixture_id not in _supported:
             assert detail["outcome"] == "refused"
             assert detail.get("reason")
 

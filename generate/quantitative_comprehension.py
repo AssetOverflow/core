@@ -18,7 +18,7 @@ Templates (function-word + order; digits only — a non-digit quantity REFUSES):
   - ``<Y> has <N> more <unit> than <X>``   -> BoundEquation(Y = X + N)   op=add
   - ``<Y> has <N> fewer <unit> than <X>``  -> BoundEquation(Y = X - N)   op=subtract
   - query ``How many <unit> does <Y> have``       -> ask Y
-  - query ``How many <unit> do <X> and <Y> have`` -> total = X + Y; ask total
+  - query ``How many <unit> do <X> and <Y> have [altogether|in total]`` -> total = X + Y; ask total
 
 Refusal-first: an unparseable clause, a non-digit quantity, a non-identifier name,
 a missing/duplicated query, or an admissibility refusal all return a typed
@@ -251,9 +251,22 @@ def _parse_sentence(body: str, detail: str):
         # "How many <unit> are in each <container>?" -> the partition per-container target.
         if len(toks) == 7 and toks[3] == "are" and toks[4] == "in" and toks[5] == "each":
             return ("perquery", _singular(_ident(toks[6], detail)), unit)
-        if toks[-1] == "have":
-            rest = toks[3:-1]  # between "<unit>" and "have"
-            if rest and rest[0] == "does" and len(rest) == 2:
+        # An aggregate query may close with a qualifier AFTER "have":
+        # "... have altogether?" or "... have in total?". Strip it so the
+        # "have"-terminal templates apply; the qualifier is honored ONLY for the
+        # multi-part aggregate (sumquery) form, never the single-entity query
+        # ("does X have altogether?" is nonsensical -> refuses). It adds no new
+        # relation kind: the parts still flow through sum_of, and an ungrounded or
+        # unit-incompatible part is refused downstream by admissibility
+        # (unit_unbound / unit_mismatch), so the recognizer cannot over-read.
+        core, aggregate = toks, False
+        if toks[-1] == "altogether":
+            core, aggregate = toks[:-1], True
+        elif toks[-1] == "total" and toks[-2] == "in":
+            core, aggregate = toks[:-2], True
+        if core[-1] == "have":
+            rest = core[3:-1]  # between "<unit>" and "have"
+            if not aggregate and rest and rest[0] == "does" and len(rest) == 2:
                 return ("query", _ident(rest[1], detail), unit)
             if rest and rest[0] == "do":
                 parts = [_ident(t, detail) for t in rest[1:] if t != "and"]
