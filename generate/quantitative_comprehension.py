@@ -41,6 +41,18 @@ from generate.binding_graph.model import (
 )
 from generate.binding_graph.units import UnitAlgebraError, parse_unit
 from generate.meaning_graph.reader import Refusal, _split_sentences
+from generate.quantitative_expr import (
+    Add,
+    Expr,
+    Literal,
+    Sub,
+    SumOf,
+    Symbol,
+    dependencies,
+    operation_kind,
+    to_canonical_string,
+    to_relation,
+)
 
 _INTRODUCED_BY = "comprehend_quantitative"
 
@@ -74,9 +86,14 @@ class QuantComprehension:
     sole :class:`BoundUnknown` (PR-1). Consumers read it via :func:`single_unknown`,
     which refuses (returns ``None``) on a graph that does not carry exactly one
     target rather than silently picking one.
+
+    ``equation_exprs`` is the typed expression IR (PR-4) — the reader's SOURCE OF MEANING
+    for each equation, as ``(lhs_symbol_id, Expr)`` pairs. ``BoundEquation.rhs_canonical``
+    is the serialization of these; the projection reads the IR, never the string.
     """
 
     binding_graph: SemanticSymbolicBindingGraph
+    equation_exprs: tuple[tuple[str, Expr], ...] = ()
 
 
 def single_unknown(graph: SemanticSymbolicBindingGraph) -> BoundUnknown | None:
@@ -163,10 +180,6 @@ def _span(text: str) -> SourceSpanLink:
     return SourceSpanLink(source_id="input", start=0, end=max(1, len(text)), text=text or " ")
 
 
-def _rhs(op: str, ref: str, delta: int) -> str:
-    return f"{ref} + {delta}" if op == "add" else f"{ref} - {delta}"
-
-
 def comprehend_quantitative(text: str, source_id: str = "input") -> QuantComprehension | Refusal:
     """Comprehend arithmetic prose into a binding_graph + asked entity, or refuse."""
     if not text or not text.strip():
@@ -243,16 +256,22 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
         for f in facts
     )
 
-    # equations: shell -> REAL admissibility -> rebuild (NEVER stamp "admitted").
-    eq_specs: list[tuple[str, str, frozenset[str], str]] = [
-        (e.entity, _rhs(e.op, e.ref, e.delta), frozenset({e.ref}), e.op) for e in eqs
+    # The typed expression IR (PR-4) is the SOURCE OF MEANING; rhs_canonical / dependencies
+    # / operation_kind are all derived from it, never recovered by re-parsing the string.
+    expr_specs: list[tuple[str, Expr]] = [
+        (e.entity, (Add if e.op == "add" else Sub)(Symbol(e.ref), Literal(e.delta)))
+        for e in eqs
     ]
     if sum_eq is not None:
         lhs, parts = sum_eq
-        eq_specs.append((lhs, " + ".join(parts), frozenset(parts), "add"))
+        expr_specs.append((lhs, SumOf(tuple(Symbol(p) for p in parts))))
 
+    # equations: shell -> REAL admissibility -> rebuild (NEVER stamp "admitted").
     equations: list[BoundEquation] = []
-    for lhs, rhs, deps, op in eq_specs:
+    for lhs, expr in expr_specs:
+        rhs = to_canonical_string(expr)
+        deps = dependencies(expr)
+        op = operation_kind(expr)
         shell = BoundEquation(
             lhs_symbol_id=lhs,
             rhs_canonical=rhs,
@@ -301,44 +320,29 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
     except Exception as exc:  # noqa: BLE001 — surface construction refusal
         return Refusal("invalid_binding_graph", repr(exc))
 
-    return QuantComprehension(binding_graph=graph)
+    return QuantComprehension(binding_graph=graph, equation_exprs=tuple(expr_specs))
 
 
 def to_relational_metric(
     comp: QuantComprehension,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]] | None:
-    """Project the comprehended binding_graph into ``(relations, query)`` for
+    """Project the comprehension into ``(relations, query)`` for
     ``evals.relational_metric.oracle.oracle_answer``.
 
-    Reads the binding-graph itself (facts + admitted equations) — the equation's
-    own ``rhs_canonical`` is parsed back (a controlled round-trip of the format this
-    module emits) and operands are classified as symbol (a known entity) vs literal.
-    Facts are emitted before equations and equations in dependency order, so the
-    oracle's forward substitution never hits an unresolved reference.
+    Reads the typed expression IR (``comp.equation_exprs``) directly — meaning is NEVER
+    recovered by re-parsing ``rhs_canonical`` (PR-4). Facts are emitted before equations
+    and equations in dependency order, so the oracle's forward substitution never hits an
+    unresolved reference. A relation shape the projection does not handle REFUSES.
     """
     graph = comp.binding_graph
-    symbol_ids = {s.symbol_id for s in graph.symbols}
     relations: list[dict[str, Any]] = [
         {"kind": "fact", "entity": f.symbol_id, "value": int(f.value)} for f in graph.facts
     ]
-    for eq in graph.equations:
-        rhs = eq.rhs_canonical
-        if " + " in rhs:
-            operands = rhs.split(" + ")
-            if all(op in symbol_ids for op in operands):
-                relations.append({"kind": "sum_of", "entity": eq.lhs_symbol_id, "parts": list(operands)})
-                continue
-            ref, literal = operands[0], operands[1]
-            relations.append(
-                {"kind": "more_than", "entity": eq.lhs_symbol_id, "ref": ref, "delta": int(literal)}
-            )
-        elif " - " in rhs:
-            ref, literal = rhs.split(" - ")
-            relations.append(
-                {"kind": "fewer_than", "entity": eq.lhs_symbol_id, "ref": ref, "delta": int(literal)}
-            )
-        else:
-            return None  # unrecognized equation shape -> refuse
+    for lhs, expr in comp.equation_exprs:
+        rel = to_relation(lhs, expr)
+        if rel is None:
+            return None  # unhandled equation shape -> refuse
+        relations.append(rel)
     if not relations:
         return None
     target = single_unknown(graph)
