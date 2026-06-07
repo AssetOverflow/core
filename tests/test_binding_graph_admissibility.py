@@ -247,6 +247,63 @@ def test_divide_refuses_three_deps() -> None:
     assert ei.value.reason == "operand_arity"
 
 
+# --------------------------------------------------------------------------- #
+# ADR-0134 amendment 2026-06-07 — single-dep divide (divide by a dimensionless literal)
+# --------------------------------------------------------------------------- #
+
+
+def test_divide_single_dep_dimensionless_keeps_unit() -> None:
+    """A single-dep divide (the reader's "half as many") divides by an implicit
+    dimensionless literal and keeps the dividend's unit — symmetric with single-dep
+    multiply.
+
+    Meaningful-fail: if the ``len == 1`` branch were removed (reverting to ``!= 2``
+    refuse), this admission turns into an ``operand_arity`` refusal and the assert fails.
+    """
+    symbols = {"carl": _sym("carl", unit="item")}
+    proof = check_admissibility(
+        _eq(kind="divide", deps=frozenset({"carl"})), symbols=symbols
+    )
+    assert proof.operation_kind == "divide"
+    assert proof.lhs_unit == parse_unit("item")  # item / dimensionless = item
+    assert proof.operand_units == (parse_unit("item"),)
+
+
+def test_divide_refuses_zero_or_three_deps() -> None:
+    """The single-dep extension is narrow: zero deps and three deps still refuse with
+    ``operand_arity`` — only one (dimensionless divide) or two (rate divide) are admitted.
+    """
+    with pytest.raises(AdmissibilityError) as ei0:
+        check_admissibility(_eq(kind="divide", deps=frozenset()), symbols={})
+    assert ei0.value.reason == "operand_arity"
+
+    symbols = {
+        "a": _sym("a", unit="foot"),
+        "b": _sym("b", unit="hour"),
+        "op_000__divisor": _sym("op_000__divisor", unit="hour"),
+    }
+    with pytest.raises(AdmissibilityError) as ei3:
+        check_admissibility(
+            _eq(kind="divide", deps=frozenset({"a", "b", "op_000__divisor"})),
+            symbols=symbols,
+        )
+    assert ei3.value.reason == "operand_arity"
+
+
+def test_divide_two_dep_rate_path_unchanged_by_amendment() -> None:
+    """The original two-dep rate divide (dividend + ``*__divisor``) is untouched — the
+    amendment only ADDED the single-dep form."""
+    symbols = {
+        "q_actor_foot_t0": _sym("q_actor_foot_t0", unit="foot"),
+        "op_000__divisor": _sym("op_000__divisor", unit="hour"),
+    }
+    proof = check_admissibility(
+        _eq(kind="divide", deps=frozenset({"q_actor_foot_t0", "op_000__divisor"})),
+        symbols=symbols,
+    )
+    assert proof.lhs_unit.exponents == (1, -1, 0, 0, 0, 0)  # foot / hour = speed
+
+
 # ---------------------------------------------------------------------------
 # apply_rate
 # ---------------------------------------------------------------------------

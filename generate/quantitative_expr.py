@@ -66,13 +66,34 @@ class Mul:
 
 
 @dataclass(frozen=True, slots=True)
+class Div:
+    """Exact integer division of a symbol by a dimensionless literal divisor — the
+    fractional comparative ("half/a third as many"). ``left`` is the referenced symbol,
+    ``right`` a dimensionless literal divisor; the quotient keeps the symbol's unit
+    (``count / scalar = count``).
+
+    "half as many" is modelled as ``Div(Symbol, Literal(2))``, NOT ``Mul`` by a rational:
+    the system is integer-exact end to end (``oracle_answer -> int``) and :class:`Literal`
+    is a dimensionless *integer* (the contract PR-6a proved load-bearing), so a fractional
+    factor is not representable. Division by an integer divisor keeps everything integral.
+
+    Divisor-only contract (the wrong=0 boundary). The only admitted shape is
+    ``Div(Symbol, Literal)`` — see :func:`to_relation`, which refuses every other shape.
+    Exactness is enforced downstream: the answer oracle admits the quotient ONLY when
+    ``base % divisor == 0`` (an odd base over 2 refuses, never floors to a wrong integer)."""
+
+    left: "Expr"
+    right: "Expr"
+
+
+@dataclass(frozen=True, slots=True)
 class SumOf:
     """An aggregate over ≥2 symbols (the part-whole total)."""
 
     parts: tuple[Symbol, ...]
 
 
-Expr = Union[Literal, Symbol, Add, Sub, Mul, SumOf]
+Expr = Union[Literal, Symbol, Add, Sub, Mul, Div, SumOf]
 
 
 def to_canonical_string(expr: Expr) -> str:
@@ -88,6 +109,8 @@ def to_canonical_string(expr: Expr) -> str:
             return f"{to_canonical_string(left)} - {to_canonical_string(right)}"
         case Mul(left, right):
             return f"{to_canonical_string(left)} * {to_canonical_string(right)}"
+        case Div(left, right):
+            return f"{to_canonical_string(left)} / {to_canonical_string(right)}"
         case SumOf(parts):
             return " + ".join(to_canonical_string(p) for p in parts)
     raise TypeError(f"not an Expr: {expr!r}")  # pragma: no cover - exhaustive above
@@ -100,7 +123,7 @@ def dependencies(expr: Expr) -> frozenset[str]:
             return frozenset()
         case Symbol(symbol_id):
             return frozenset({symbol_id})
-        case Add(left, right) | Sub(left, right) | Mul(left, right):
+        case Add(left, right) | Sub(left, right) | Mul(left, right) | Div(left, right):
             return dependencies(left) | dependencies(right)
         case SumOf(parts):
             out: frozenset[str] = frozenset()
@@ -119,6 +142,8 @@ def operation_kind(expr: Expr) -> str:
             return "subtract"
         case Mul(_, _):
             return "multiply"
+        case Div(_, _):
+            return "divide"
         case _:
             raise TypeError(f"expression has no operation_kind: {expr!r}")
 
@@ -129,9 +154,11 @@ def to_relation(lhs: str, expr: Expr) -> dict[str, Any] | None:
     ``None`` for a shape the projection does not handle — the caller refuses rather than
     emit a guessed relation (wrong=0 boundary). Each ``case`` is intentionally a *narrow*
     structural pattern, not a kind tag: ``Mul(Symbol, Literal)`` is the only multiplicative
-    shape projected (the scalar-only contract — a ``count × count`` ``Mul(Symbol, Symbol)``
-    or a compound factor falls through to ``None``). The dimensional checker would not catch
-    such a masquerade (it products units happily), so this boundary is load-bearing.
+    shape projected and ``Div(Symbol, Literal)`` the only divisive one (the scalar/divisor
+    contracts — a ``count × count`` ``Mul(Symbol, Symbol)``, a compound factor, or a
+    symbol-over-symbol ``Div`` falls through to ``None``). The dimensional checker would not
+    catch such a masquerade (it products/quotients units happily), so this boundary is
+    load-bearing.
     """
     match expr:
         case Add(Symbol(ref), Literal(delta)):
@@ -140,6 +167,8 @@ def to_relation(lhs: str, expr: Expr) -> dict[str, Any] | None:
             return {"kind": "fewer_than", "entity": lhs, "ref": ref, "delta": delta}
         case Mul(Symbol(ref), Literal(factor)):
             return {"kind": "times_as_many", "entity": lhs, "ref": ref, "factor": factor}
+        case Div(Symbol(ref), Literal(divisor)):
+            return {"kind": "divide_by", "entity": lhs, "ref": ref, "divisor": divisor}
         case SumOf(parts):
             return {"kind": "sum_of", "entity": lhs, "parts": [p.symbol_id for p in parts]}
         case _:
@@ -148,6 +177,7 @@ def to_relation(lhs: str, expr: Expr) -> dict[str, Any] | None:
 
 __all__ = [
     "Add",
+    "Div",
     "Expr",
     "Literal",
     "Mul",

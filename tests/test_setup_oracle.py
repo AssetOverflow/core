@@ -152,19 +152,21 @@ def test_reader_units_read_from_the_binding_graph() -> None:
 # --------------------------------------------------------------------------- #
 
 
-def test_r1_multiplicative_supported_rest_refused_wrong_zero() -> None:
+def test_r1_comparative_supported_rest_refused_wrong_zero() -> None:
     r = run_r1()
     assert r["total"] == 10
-    # THE invariant through the first capability slice: NO R1 case is misread. Adding the
-    # multiplicative frame turned refusals into correct readings without any setup_wrong.
+    # THE invariant through every capability slice: NO R1 case is misread. Each frame
+    # turns refusals into correct readings without ever producing a setup_wrong.
     assert r["setup_wrong"] == 0
-    # The multiplicative frame (PR-5c) reads "twice as many" (r1-01) and the multi-step
-    # chain whose middle step is "N times as many" (r1-05); the rest stay safe refusals.
     by_id = {d["id"]: d["outcome"] for d in r["details"]}
+    # Multiplicative frame (PR-5c): "twice as many" (r1-01) + the multi-step chain whose
+    # middle step is "N times as many" (r1-05).
     assert by_id["r1-01-twice"] == "correct"
     assert by_id["r1-05-chain"] == "correct"
-    assert r["setup_correct"] == 2
-    assert r["setup_refused"] == 8
+    # Divisive frame (PR-6c): "half as many" (r1-02).
+    assert by_id["r1-02-half"] == "correct"
+    assert r["setup_correct"] == 3
+    assert r["setup_refused"] == 7
     # No detail is ever WRONG, and every non-correct one is a typed refusal.
     for d in r["details"]:
         assert d["outcome"] in ("correct", "refused")
@@ -209,12 +211,82 @@ def test_r1_answer_lane_scores_only_setup_correct_fixtures() -> None:
     assert r["setup_wrong"] == 0
     assert r["wrong"] == 0
     assert r["gold_error"] == 0
-    assert r["correct"] == 2
-    assert r["refused"] == 8
+    assert r["correct"] == 3
+    assert r["refused"] == 7
     by_id = {d["id"]: d for d in r["details"]}
     assert by_id["r1-01-twice"] == {"id": "r1-01-twice", "outcome": "correct", "answer": 12}
+    assert by_id["r1-02-half"] == {"id": "r1-02-half", "outcome": "correct", "answer": 4}
     assert by_id["r1-05-chain"] == {"id": "r1-05-chain", "outcome": "correct", "answer": 14}
     for fixture_id, detail in by_id.items():
-        if fixture_id not in {"r1-01-twice", "r1-05-chain"}:
+        if fixture_id not in {"r1-01-twice", "r1-02-half", "r1-05-chain"}:
             assert detail["outcome"] == "refused"
             assert detail.get("reason")
+
+
+# --------------------------------------------------------------------------- #
+# PR-6c — off-serving answer oracle support for divide_by ("half as many")
+# --------------------------------------------------------------------------- #
+
+
+def test_oracle_computes_divide_by_exact() -> None:
+    assert oracle_answer(
+        [
+            {"kind": "fact", "entity": "carl", "value": 8},
+            {"kind": "divide_by", "entity": "dora", "ref": "carl", "divisor": 2},
+        ],
+        {"entity": "dora"},
+    ) == 4
+
+
+def test_oracle_refuses_non_exact_division() -> None:
+    """The wrong=0 boundary of the divisive frame: a non-exact division REFUSES rather
+    than flooring to a wrong integer. ``7 // 2 == 3`` would be WRONG; the oracle raises.
+
+    Meaningful-fail: if the ``base % divisor != 0`` guard were dropped, this would return
+    3 (a fabricated answer) instead of raising — the assert flips from pass to fail.
+    """
+    with pytest.raises(OracleError):
+        oracle_answer(
+            [
+                {"kind": "fact", "entity": "xio", "value": 7},
+                {"kind": "divide_by", "entity": "yon", "ref": "xio", "divisor": 2},
+            ],
+            {"entity": "yon"},
+        )
+
+
+def test_oracle_rejects_bad_divisor_and_forward_ref() -> None:
+    """The full ``divide_by`` refusal contract — every bad-divisor / unresolved-base class
+    raises ``OracleError`` (never a ZeroDivisionError, never a silent float/floor)."""
+    base = {"kind": "fact", "entity": "carl", "value": 8}
+
+    def _bad_divisor(divisor: object) -> None:
+        with pytest.raises(OracleError):
+            oracle_answer(
+                [base, {"kind": "divide_by", "entity": "dora", "ref": "carl", "divisor": divisor}],
+                {"entity": "dora"},
+            )
+
+    _bad_divisor(0.5)   # non-integer (fractional < 1)
+    _bad_divisor(1.5)   # non-integer (fractional > 1)
+    _bad_divisor(0)     # zero divisor — never ZeroDivisionError
+    _bad_divisor(True)  # bool is not an admissible int divisor (isinstance(True, int) is True)
+    # Forward reference to an unresolved base → refuse.
+    with pytest.raises(OracleError):
+        oracle_answer(
+            [{"kind": "divide_by", "entity": "dora", "ref": "carl", "divisor": 2}],
+            {"entity": "dora"},
+        )
+
+
+def test_oracle_divide_by_one_is_identity() -> None:
+    """``divisor=1`` is intentionally ALLOWED: base / 1 = base, exact. The reader never
+    constructs it (``_DIVISOR_WORDS`` only maps 'half'→2), but the oracle's grammar admits
+    it mathematically. Pinned so the choice stays deliberate, not accidental."""
+    assert oracle_answer(
+        [
+            {"kind": "fact", "entity": "carl", "value": 8},
+            {"kind": "divide_by", "entity": "dora", "ref": "carl", "divisor": 1},
+        ],
+        {"entity": "dora"},
+    ) == 8

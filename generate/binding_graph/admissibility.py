@@ -218,14 +218,30 @@ def _check_multiply(
 def _check_divide(
     dep_units: list[tuple[SymbolBinding, UnitVector]],
 ) -> UnitProof:
-    """Dividend / divisor. Divisor identified by ``__divisor`` suffix.
+    """Dividend / divisor. Two admissible forms:
 
-    Refuses with ``operand_arity`` if dep set is not exactly one dividend
-    + one ``*__divisor`` literal. The adapter is responsible for naming.
+    - **single dep** — divide by an implicit *dimensionless literal* (the reader's
+      "half as many"). The divisor is carried in the reader's typed IR as a
+      dimensionless :class:`~generate.quantitative_expr.Literal`, NOT as a graph
+      symbol, exactly as the multiplicative factor is. This is symmetric with
+      :func:`_check_multiply`'s single-dep dimensionless scaling: the quotient keeps
+      the dividend's unit (``x / dimensionless = x``).
+    - **two deps** — dividend + a ``*__divisor`` literal (the rate-adapter convention).
+      lhs == quotient of the two units. The adapter is responsible for naming.
+
+    Refuses with ``operand_arity`` for any other arity.
     """
+    if len(dep_units) == 1:
+        # Divide by an implicit dimensionless literal — symmetric with single-dep
+        # multiply. No graph divisor symbol exists, so there is nothing to quotient
+        # against; the quotient keeps the dividend's unit by construction.
+        only = dep_units[0][1]
+        return UnitProof(
+            operation_kind="divide", lhs_unit=only, operand_units=(only,)
+        )
     if len(dep_units) != 2:
         raise AdmissibilityError(
-            "operand_arity", f"divide requires exactly 2 deps; got {len(dep_units)}"
+            "operand_arity", f"divide requires 1 or 2 deps; got {len(dep_units)}"
         )
     dividend: UnitVector | None = None
     divisor: UnitVector | None = None
