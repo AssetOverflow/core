@@ -8,5 +8,15 @@ from __future__ import annotations
 
 from core.comprehension_attempt.classify import classify_r1, classify_r2
 from core.comprehension_attempt.model import ComprehensionAttempt, Organ, Outcome
+from core.comprehension_attempt.router import RouteResult, RouteStatus, route_setup
 
-__all__ = ["ComprehensionAttempt", "Organ", "Outcome", "classify_r1", "classify_r2"]
+__all__ = [
+    "ComprehensionAttempt",
+    "Organ",
+    "Outcome",
+    "RouteResult",
+    "RouteStatus",
+    "classify_r1",
+    "classify_r2",
+    "route_setup",
+]
