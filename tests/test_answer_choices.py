@@ -68,6 +68,13 @@ def test_no_matching_option_refuses() -> None:
     assert isinstance(out, Refusal) and out.reason == "no_matching_option"
 
 
+def test_exact_match_only_never_nearest() -> None:
+    # Hazard: a proven value with no exact option REFUSES — it never snaps to the nearest
+    # (10 or 12). Exact-or-refuse is the wrong=0 boundary for answer-choice tie-in.
+    out = verify_answer_choice(11, {"A": 10, "B": 12, "C": 13, "D": 14}, "B")
+    assert isinstance(out, Refusal) and out.reason == "no_matching_option"
+
+
 def test_ambiguous_duplicate_options_refuse() -> None:
     out = verify_answer_choice(4, {"A": 4, "B": 4}, None)
     assert isinstance(out, Refusal) and out.reason == "ambiguous_options"
