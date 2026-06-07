@@ -44,13 +44,23 @@ class Sub:
 
 
 @dataclass(frozen=True, slots=True)
+class Mul:
+    """A scalar multiple of a symbol — the multiplicative comparative ("twice/N times
+    as many"). ``left`` is the referenced symbol, ``right`` a dimensionless literal
+    factor; the product keeps the symbol's unit (``count × scalar = count``)."""
+
+    left: "Expr"
+    right: "Expr"
+
+
+@dataclass(frozen=True, slots=True)
 class SumOf:
     """An aggregate over ≥2 symbols (the part-whole total)."""
 
     parts: tuple[Symbol, ...]
 
 
-Expr = Union[Literal, Symbol, Add, Sub, SumOf]
+Expr = Union[Literal, Symbol, Add, Sub, Mul, SumOf]
 
 
 def to_canonical_string(expr: Expr) -> str:
@@ -64,6 +74,8 @@ def to_canonical_string(expr: Expr) -> str:
             return f"{to_canonical_string(left)} + {to_canonical_string(right)}"
         case Sub(left, right):
             return f"{to_canonical_string(left)} - {to_canonical_string(right)}"
+        case Mul(left, right):
+            return f"{to_canonical_string(left)} * {to_canonical_string(right)}"
         case SumOf(parts):
             return " + ".join(to_canonical_string(p) for p in parts)
     raise TypeError(f"not an Expr: {expr!r}")  # pragma: no cover - exhaustive above
@@ -76,7 +88,7 @@ def dependencies(expr: Expr) -> frozenset[str]:
             return frozenset()
         case Symbol(symbol_id):
             return frozenset({symbol_id})
-        case Add(left, right) | Sub(left, right):
+        case Add(left, right) | Sub(left, right) | Mul(left, right):
             return dependencies(left) | dependencies(right)
         case SumOf(parts):
             out: frozenset[str] = frozenset()
@@ -93,6 +105,8 @@ def operation_kind(expr: Expr) -> str:
             return "add"
         case Sub(_, _):
             return "subtract"
+        case Mul(_, _):
+            return "multiply"
         case _:
             raise TypeError(f"expression has no operation_kind: {expr!r}")
 
@@ -108,6 +122,8 @@ def to_relation(lhs: str, expr: Expr) -> dict[str, Any] | None:
             return {"kind": "more_than", "entity": lhs, "ref": ref, "delta": delta}
         case Sub(Symbol(ref), Literal(delta)):
             return {"kind": "fewer_than", "entity": lhs, "ref": ref, "delta": delta}
+        case Mul(Symbol(ref), Literal(factor)):
+            return {"kind": "times_as_many", "entity": lhs, "ref": ref, "factor": factor}
         case SumOf(parts):
             return {"kind": "sum_of", "entity": lhs, "parts": [p.symbol_id for p in parts]}
         case _:
@@ -118,6 +134,7 @@ __all__ = [
     "Add",
     "Expr",
     "Literal",
+    "Mul",
     "Sub",
     "SumOf",
     "Symbol",

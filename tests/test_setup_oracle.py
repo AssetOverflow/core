@@ -147,17 +147,23 @@ def test_reader_units_read_from_the_binding_graph() -> None:
 # --------------------------------------------------------------------------- #
 
 
-def test_r1_reader_refuses_never_misreads() -> None:
+def test_r1_multiplicative_supported_rest_refused_wrong_zero() -> None:
     from evals.setup_oracle import run_r1
 
     r = run_r1()
     assert r["total"] == 10
-    # THE success criterion: the reader misreads NO unsupported R1 case. A wrong setup
-    # here would be a pre-existing hazard to fix before the R1 frame (PR-5c).
+    # THE invariant through the first capability slice: NO R1 case is misread. Adding the
+    # multiplicative frame turned refusals into correct readings without any setup_wrong.
     assert r["setup_wrong"] == 0
-    # The reader cannot read these shapes yet -> every one is a safe (typed) refusal.
-    assert r["setup_refused"] == 10
-    assert r["setup_correct"] == 0
+    # The multiplicative frame (PR-5c) reads "twice as many" (r1-01) and the multi-step
+    # chain whose middle step is "N times as many" (r1-05); the rest stay safe refusals.
+    by_id = {d["id"]: d["outcome"] for d in r["details"]}
+    assert by_id["r1-01-twice"] == "correct"
+    assert by_id["r1-05-chain"] == "correct"
+    assert r["setup_correct"] == 2
+    assert r["setup_refused"] == 8
+    # No detail is ever WRONG, and every non-correct one is a typed refusal.
     for d in r["details"]:
-        assert d["outcome"] == "refused"
-        assert d.get("reason")  # a typed refusal reason, never a silent drop
+        assert d["outcome"] in ("correct", "refused")
+        if d["outcome"] == "refused":
+            assert d.get("reason")

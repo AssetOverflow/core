@@ -43,6 +43,8 @@ def relation_signature(relations: list[dict[str, Any]]) -> tuple[tuple, ...]:
             out.append(("fact", r["entity"], int(r["value"])))
         elif kind in ("more_than", "fewer_than"):
             out.append((kind, r["entity"], r["ref"], int(r["delta"])))
+        elif kind == "times_as_many":
+            out.append(("times_as_many", r["entity"], r["ref"], r["factor"]))
         elif kind == "sum_of":
             out.append(("sum_of", r["entity"], tuple(sorted(r["parts"]))))
         else:  # an unknown relation kind is itself a structural difference, not a crash
