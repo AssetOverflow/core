@@ -1,0 +1,18 @@
+{
+  "_doc": "Independent expected MODELING unit per entity for the setup-oracle (PR-5a). Hand-authored from the PROBLEM, not copied from the reader: a discrete sortal count (stickers, cards, coins, ...) is dimensionally a count -> the generic count unit 'item'; money ('dollars') stays 'dollars'. The 'total' of same-unit parts inherits that unit. The setup-oracle fails (setup_wrong) if the reader's per-symbol unit diverges from this.",
+  "rm-v1-0001": {"liam": "item", "mia": "item"},
+  "rm-v1-0002": {"noah": "item", "olivia": "item"},
+  "rm-v1-0003": {"ava": "item", "ben": "item", "cara": "item"},
+  "rm-v1-0004": {"dan": "item", "eva": "item", "total": "item"},
+  "rm-v1-0005": {"finn": "item"},
+  "rm-v1-0006": {"gabe": "item", "hana": "item"},
+  "rm-v1-0007": {"iris": "dollars", "jack": "dollars"},
+  "rm-v1-0008": {"kim": "item", "leo": "item", "total": "item"},
+  "rm-v1-0009": {"maya": "item", "nico": "item"},
+  "rm-v1-0010": {"omar": "item", "pia": "item", "quinn": "item"},
+  "rm-v1-0011": {"rosa": "item", "sam": "item", "total": "item"},
+  "rm-v1-0012": {"tara": "item", "uma": "item"},
+  "rm-v1-0013": {"vera": "item", "will": "item"},
+  "rm-v1-0014": {"xena": "item", "yara": "item", "zane": "item"},
+  "rm-v1-0015": {"gus": "item"}
+}

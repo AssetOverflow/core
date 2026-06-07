@@ -12,12 +12,15 @@ from __future__ import annotations
 
 from evals.setup_oracle import (
     gold_unknown_signature,
+    reader_symbol_units,
     reader_unknown_signature,
     relation_signature,
     run,
+    symbol_unit_signature,
 )
 from generate.binding_graph.model import (
     BoundFact,
+    BoundUnknown,
     SemanticSymbolicBindingGraph,
     SourceSpanLink,
     SymbolBinding,
@@ -79,8 +82,9 @@ def test_wrong_question_target_is_caught() -> None:
         {"kind": "sum_of", "entity": "total", "parts": ["dan", "eva"]},
     ]
     # Gold asks the total; a reader that targeted "eva" instead is a different reading.
-    assert gold_unknown_signature(rels, {"entity": "total"}) == ("total", "terminal", "total")
-    assert gold_unknown_signature(rels, {"entity": "total"}) != ("eva", "terminal", "count")
+    units = {"total": "item"}
+    assert gold_unknown_signature(rels, {"entity": "total"}, units) == ("total", "terminal", "total", "item")
+    assert gold_unknown_signature(rels, {"entity": "total"}, units) != ("eva", "terminal", "count", "item")
 
 
 def test_malformed_graph_target_never_matches_gold() -> None:
@@ -95,4 +99,44 @@ def test_malformed_graph_target_never_matches_gold() -> None:
     )
     sig = reader_unknown_signature(graph)
     assert sig[0] == "MALFORMED"
-    assert sig != ("x", "terminal", "count")
+    assert sig != ("x", "terminal", "count", "item")
+
+
+# --------------------------------------------------------------------------- #
+# PR-5a — the ruler is now UNIT-AWARE (structure can match while units diverge)
+# --------------------------------------------------------------------------- #
+
+
+def test_unit_mismatch_is_caught_even_when_structure_matches() -> None:
+    # Same structure (a single fact about x), but the reader modelled a different unit.
+    # The setup-oracle must FAIL — a unit-wrong reading is not a correct setup.
+    gold_units = symbol_unit_signature({"x": "item"})
+    reader_units_wrong = symbol_unit_signature({"x": "meter"})
+    assert gold_units != reader_units_wrong
+    assert symbol_unit_signature({"x": "item"}) == symbol_unit_signature({"x": "item"})
+
+
+def test_target_unit_mismatch_is_caught() -> None:
+    # Structure + symbol + state + form all agree, but the target's expected unit differs.
+    rels = [{"kind": "fact", "entity": "x", "value": 1}]
+    assert gold_unknown_signature(rels, {"entity": "x"}, {"x": "item"}) != gold_unknown_signature(
+        rels, {"entity": "x"}, {"x": "dollars"}
+    )
+
+
+def test_reader_units_read_from_the_binding_graph() -> None:
+    # The reader's unit signature comes from the GRAPH's symbols, not the answer projection.
+    graph = SemanticSymbolicBindingGraph(
+        symbols=(
+            SymbolBinding(symbol_id="iris", name="iris", semantic_role="count",
+                          source_span=_span(), introduced_by="t", entity="iris", unit="dollars"),
+            SymbolBinding(symbol_id="jack", name="jack", semantic_role="count",
+                          source_span=_span(), introduced_by="t", entity="jack", unit="dollars"),
+        ),
+        facts=(BoundFact(symbol_id="iris", value="100", source_span=_span(), unit="dollars"),),
+        equations=(),
+        unknowns=(BoundUnknown(symbol_id="jack", question_span=_span(), state_index="terminal",
+                               question_form="count", expected_unit="dollars"),),
+    )
+    assert reader_symbol_units(graph) == (("iris", "dollars"), ("jack", "dollars"))
+    assert reader_unknown_signature(graph) == ("jack", "terminal", "count", "dollars")
