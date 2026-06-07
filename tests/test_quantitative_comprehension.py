@@ -290,3 +290,74 @@ def test_partition_setup_correct_but_non_exact_answer_refuses() -> None:
     relations, query = projected
     with pytest.raises(OracleError):  # but 11 / 3 is non-exact -> the answer refuses
         oracle_answer(relations, query)
+
+
+# --------------------------------------------------------------------------- #
+# Additive aggregate query variants: "... have altogether?" / "... have in total?"
+# A trailing qualifier after "have" is stripped and honored ONLY for the multi-part
+# aggregate (sumquery) form. No new arithmetic, no new relation kind: the parts flow
+# through sum_of, and admissibility still gates grounding + unit-compatibility.
+# --------------------------------------------------------------------------- #
+
+
+def test_aggregate_query_altogether_reads_and_sums() -> None:
+    from evals.relational_metric.oracle import oracle_answer
+
+    comp = _comp(
+        "Finn has 10 books. Evan has 5 more books than Finn. "
+        "How many books do Evan and Finn have altogether?"
+    )
+    assert single_unknown(comp.binding_graph).symbol_id == "total"
+    total_eq = next(e for e in comp.binding_graph.equations if e.lhs_symbol_id == "total")
+    assert total_eq.operation_kind == "add"
+    assert set(total_eq.dependencies) == {"evan", "finn"}
+    relations, query = to_relational_metric(comp)
+    assert oracle_answer(relations, query) == 25  # evan=15, finn=10
+
+
+def test_aggregate_query_in_total_reads_and_sums() -> None:
+    from evals.relational_metric.oracle import oracle_answer
+
+    comp = _comp(
+        "Gail has 20 cards. Hank has 6 fewer cards than Gail. "
+        "How many cards do Gail and Hank have in total?"
+    )
+    assert single_unknown(comp.binding_graph).symbol_id == "total"
+    relations, query = to_relational_metric(comp)
+    assert oracle_answer(relations, query) == 34  # gail=20, hank=14
+
+
+def test_aggregate_qualifier_on_single_entity_refuses() -> None:
+    # The qualifier is honored ONLY for the multi-part form. A single-entity query
+    # carrying "altogether" is nonsensical and must REFUSE. This is load-bearing: the
+    # ``not aggregate`` guard is what blocks the "does X have" template from firing on
+    # an aggregate-qualified question and silently reading a single grounded fact.
+    comp = comprehend_quantitative("Anna has 6 apples. How many apples does Anna have altogether?")
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "unreadable_quantity_query"
+
+
+def test_aggregate_query_ungrounded_part_refuses() -> None:
+    # Widening the recognizer cannot admit an UNGROUNDED part: "zoe" has no fact or
+    # derivation, so its unit is unbound and the sum's admissibility REFUSES rather than
+    # fabricating a partial total. (wrong=0 boundary — the recognizer over-reads the
+    # surface, admissibility refuses to ground it.)
+    comp = comprehend_quantitative(
+        "Finn has 10 books. Evan has 5 more books than Finn. "
+        "How many books do Evan and Zoe have altogether?"
+    )
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "admissibility_refused"
+    assert "unit_unbound" in comp.detail
+
+
+def test_aggregate_query_unit_incompatible_part_refuses() -> None:
+    # ... and cannot admit UNIT-INCOMPATIBLE parts: dollars (currency) + books (item)
+    # is a mixed-dimension sum, refused by the REAL additive unit check.
+    comp = comprehend_quantitative(
+        "Anna has 5 dollars. Bella has 3 books. "
+        "How many books do Anna and Bella have altogether?"
+    )
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "admissibility_refused"
+    assert "unit_mismatch" in comp.detail
