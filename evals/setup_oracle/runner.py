@@ -28,11 +28,20 @@ from generate.meaning_graph.reader import Refusal
 from generate.quantitative_comprehension import comprehend_quantitative, to_relational_metric
 
 _EXPECTED_UNITS_PATH = Path(__file__).resolve().parent / "expected_units.json"
+_R1_GOLD_PATH = Path(__file__).resolve().parent / "r1_gold.jsonl"
 
 
 def _load_expected_units() -> dict[str, dict[str, str]]:
     raw = json.loads(_EXPECTED_UNITS_PATH.read_text(encoding="utf-8"))
     return {k: v for k, v in raw.items() if not k.startswith("_")}
+
+
+def _load_r1_gold() -> list[dict[str, Any]]:
+    return [
+        json.loads(line)
+        for line in _R1_GOLD_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def run() -> dict[str, Any]:
@@ -94,4 +103,72 @@ def run() -> dict[str, Any]:
     }
 
 
-__all__ = ["run"]
+def run_r1() -> dict[str, Any]:
+    """Score the CURRENT reader against the independent, self-contained R1 gold.
+
+    The reader cannot read most R1 shapes (multiplicative, multi-step, partition) yet.
+    The SUCCESS CRITERION is **``setup_wrong == 0``**: it must REFUSE every unsupported
+    shape, NEVER misread it as a simpler form. ``setup_refused`` is the unsupported count;
+    ``setup_correct`` is any shape already faithfully supported. A ``setup_wrong`` is a
+    pre-existing wrong-reading hazard to fix BEFORE building the R1 frame (PR-5c).
+    """
+    fixtures = _load_r1_gold()
+    setup_correct = setup_wrong = setup_refused = 0
+    details: list[dict[str, Any]] = []
+
+    for fx in fixtures:
+        comp = comprehend_quantitative(fx["text"])
+        if isinstance(comp, Refusal):
+            setup_refused += 1
+            details.append({"id": fx["id"], "outcome": "refused", "reason": comp.reason})
+            continue
+        projected = to_relational_metric(comp)
+        if projected is None:
+            setup_refused += 1
+            details.append({"id": fx["id"], "outcome": "refused", "reason": "unprojectable"})
+            continue
+        reader_relations, _ = projected
+        units = fx["expected_units"]
+
+        reader_rel = relation_signature(reader_relations)
+        gold_rel = relation_signature(fx["relations"])
+        reader_units = reader_symbol_units(comp.binding_graph)
+        gold_units = symbol_unit_signature(units)
+        reader_unk = reader_unknown_signature(comp.binding_graph)
+        gold_unk = gold_unknown_signature(fx["relations"], fx["query"], units)
+
+        if reader_rel == gold_rel and reader_units == gold_units and reader_unk == gold_unk:
+            setup_correct += 1
+            details.append({"id": fx["id"], "outcome": "correct"})
+        else:
+            setup_wrong += 1
+            details.append(
+                {
+                    "id": fx["id"],
+                    "outcome": "WRONG",
+                    "relations_match": reader_rel == gold_rel,
+                    "units_match": reader_units == gold_units,
+                    "target_match": reader_unk == gold_unk,
+                    "reader_relations": reader_rel,
+                    "gold_relations": gold_rel,
+                    "reader_target": reader_unk,
+                    "gold_target": gold_unk,
+                }
+            )
+
+    return {
+        "lane": "setup_oracle_r1",
+        "total": len(fixtures),
+        "setup_correct": setup_correct,
+        "setup_wrong": setup_wrong,
+        "setup_refused": setup_refused,
+        "details": details,
+        "counts": {
+            "setup_correct": setup_correct,
+            "setup_wrong": setup_wrong,
+            "setup_refused": setup_refused,
+        },
+    }
+
+
+__all__ = ["run", "run_r1"]

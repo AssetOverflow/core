@@ -69,3 +69,20 @@ def test_reader_carries_ir_consistent_with_rhs_canonical() -> None:
     for eq in comp.binding_graph.equations:
         assert to_canonical_string(by_lhs[eq.lhs_symbol_id]) == eq.rhs_canonical
         assert dependencies(by_lhs[eq.lhs_symbol_id]) == eq.dependencies
+
+
+# --------------------------------------------------------------------------- #
+# PR-5c — the multiplicative comparative (Mul)
+# --------------------------------------------------------------------------- #
+
+
+def test_mul_serialization_and_derivations() -> None:
+    from generate.quantitative_expr import Mul
+
+    m = Mul(Symbol("anna"), Literal(2))
+    assert to_canonical_string(m) == "anna * 2"
+    assert dependencies(m) == frozenset({"anna"})
+    assert operation_kind(m) == "multiply"
+    assert to_relation("bella", m) == {
+        "kind": "times_as_many", "entity": "bella", "ref": "anna", "factor": 2,
+    }

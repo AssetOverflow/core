@@ -13,7 +13,7 @@ the problem. v1 grades structure (facts + equations + question target/state/form
 modelling stays covered by the admissibility tests (a documented signature extension).
 """
 
-from evals.setup_oracle.runner import run
+from evals.setup_oracle.runner import run, run_r1
 from evals.setup_oracle.signature import (
     gold_unknown_signature,
     reader_symbol_units,
@@ -28,5 +28,6 @@ __all__ = [
     "reader_unknown_signature",
     "relation_signature",
     "run",
+    "run_r1",
     "symbol_unit_signature",
 ]

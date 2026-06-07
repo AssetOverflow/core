@@ -45,6 +45,7 @@ from generate.quantitative_expr import (
     Add,
     Expr,
     Literal,
+    Mul,
     Sub,
     SumOf,
     Symbol,
@@ -143,8 +144,51 @@ class _Eq:
     unit: str
 
 
+@dataclass(frozen=True, slots=True)
+class _Mul:
+    """Multiplicative comparative: entity = factor * ref (R1)."""
+
+    entity: str
+    ref: str
+    factor: int
+    unit: str
+
+
+#: Word factors for "twice/double/triple ... as many". 'half' (a /2, the divide path)
+#: is deliberately ABSENT — divide-by-literal is a separate admissibility path, deferred.
+_FACTOR_WORDS: dict[str, int] = {"twice": 2, "double": 2, "triple": 3, "quadruple": 4}
+
+
+def _try_multiplicative(entity: str, toks: list[str], detail: str) -> "_Mul | None":
+    """Match "Y has <factor-word> as many <unit> as X" or "Y has <N> times as many
+    <unit> as X" → ``_Mul``. Returns None if the clause is not multiplicative (the
+    caller then tries the digit-led fact/additive templates)."""
+    # [Y, has, FACTORWORD, as, many, UNIT, as, X]
+    if (
+        len(toks) == 8
+        and toks[2] in _FACTOR_WORDS
+        and toks[3] == "as"
+        and toks[4] == "many"
+        and toks[6] == "as"
+    ):
+        return _Mul(entity, _ident(toks[7], detail), _FACTOR_WORDS[toks[2]],
+                    _resolve_unit(_ident(toks[5], detail)))
+    # [Y, has, N, times, as, many, UNIT, as, X]
+    if (
+        len(toks) == 9
+        and toks[2].isdigit()
+        and toks[3] == "times"
+        and toks[4] == "as"
+        and toks[5] == "many"
+        and toks[7] == "as"
+    ):
+        return _Mul(entity, _ident(toks[8], detail), int(toks[2]),
+                    _resolve_unit(_ident(toks[6], detail)))
+    return None
+
+
 def _parse_sentence(body: str, detail: str):
-    """Return a (_Fact | _Eq | ('query', entity, unit) | ('sumquery', parts, unit))
+    """Return a (_Fact | _Eq | _Mul | ('query', entity, unit) | ('sumquery', parts, unit))
     spec, or None if the sentence matches no arithmetic template."""
     toks = body.strip().lower().rstrip("?.!").split()
     if not toks:
@@ -163,6 +207,11 @@ def _parse_sentence(body: str, detail: str):
 
     if len(toks) >= 4 and toks[1] == "has":
         entity = _ident(toks[0], detail)
+        # Multiplicative comparative is checked BEFORE the digit gate (its factor may be
+        # a word like "twice", which is not a digit).
+        mul = _try_multiplicative(entity, toks, detail)
+        if mul is not None:
+            return mul
         value = _int(toks[2], detail)
         if len(toks) == 4:
             return _Fact(entity, value, _resolve_unit(_ident(toks[3], detail)))
@@ -190,6 +239,7 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
 
     facts: list[_Fact] = []
     eqs: list[_Eq] = []
+    muls: list[_Mul] = []
     queries: list[tuple] = []
 
     try:
@@ -201,6 +251,8 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
                 facts.append(spec)
             elif isinstance(spec, _Eq):
                 eqs.append(spec)
+            elif isinstance(spec, _Mul):
+                muls.append(spec)
             else:
                 queries.append(spec)
     except _QReject as rej:
@@ -215,6 +267,8 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
         unit_of[f.entity], role_of[f.entity] = f.unit, "count"
     for e in eqs:
         unit_of[e.entity], role_of[e.entity] = e.unit, "count"
+    for m in muls:
+        unit_of[m.entity], role_of[m.entity] = m.unit, "count"
 
     query = queries[0]
     sum_eq: tuple[str, tuple[str, ...]] | None = None
@@ -232,6 +286,8 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
         referenced.add(f.entity)
     for e in eqs:
         referenced.update((e.entity, e.ref))
+    for m in muls:
+        referenced.update((m.entity, m.ref))
     if sum_eq is not None:
         referenced.add(sum_eq[0])
         referenced.update(sum_eq[1])
@@ -262,6 +318,9 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
         (e.entity, (Add if e.op == "add" else Sub)(Symbol(e.ref), Literal(e.delta)))
         for e in eqs
     ]
+    expr_specs.extend(
+        (m.entity, Mul(Symbol(m.ref), Literal(m.factor))) for m in muls
+    )
     if sum_eq is not None:
         lhs, parts = sum_eq
         expr_specs.append((lhs, SumOf(tuple(Symbol(p) for p in parts))))

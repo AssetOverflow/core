@@ -169,3 +169,30 @@ def test_to_relational_metric_refuses_malformed_target() -> None:
     for n in (0, 2):
         comp = QuantComprehension(binding_graph=_graph_with_n_unknowns(n))
         assert to_relational_metric(comp) is None  # refuse rather than emit a guessed query
+
+
+# --------------------------------------------------------------------------- #
+# PR-5c — the multiplicative comparative frame ("twice / N times as many")
+# --------------------------------------------------------------------------- #
+
+
+def test_twice_as_many_builds_multiply_equation() -> None:
+    comp = _comp("Anna has 6 apples. Bella has twice as many apples as Anna. How many apples does Bella have?")
+    eq = next(e for e in comp.binding_graph.equations if e.lhs_symbol_id == "bella")
+    assert eq.operation_kind == "multiply"
+    assert eq.rhs_canonical == "anna * 2"
+    assert eq.admissibility_status == "admitted"  # count * scalar = count, REAL check
+    assert single_unknown(comp.binding_graph).symbol_id == "bella"
+
+
+def test_n_times_as_many_builds_multiply_equation() -> None:
+    comp = _comp("Ivy has 4 pens. Jon has 3 times as many pens as Ivy. How many pens does Jon have?")
+    eq = next(e for e in comp.binding_graph.equations if e.lhs_symbol_id == "jon")
+    assert eq.operation_kind == "multiply" and eq.rhs_canonical == "ivy * 3"
+
+
+def test_multiplicative_missing_base_refuses() -> None:
+    # "twice as many as Rosa" with no value for Rosa -> Rosa is ungrounded -> REFUSE,
+    # never fabricate a base quantity.
+    comp = comprehend_quantitative("Quinn has twice as many toys as Rosa. How many toys does Quinn have?")
+    assert isinstance(comp, Refusal)
