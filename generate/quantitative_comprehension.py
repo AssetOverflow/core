@@ -20,6 +20,13 @@ Templates (function-word + order; digits only — a non-digit quantity REFUSES):
   - query ``How many <unit> does <Y> have``       -> ask Y
   - query ``How many <unit> do <X> and <Y> have [altogether|in total]`` -> total = X + Y; ask total
 
+Inverse frame (PR-7b): when a ``more/fewer than`` clause's SUBJECT is grounded by a fact
+and its REFERENT is the otherwise-ungrounded query target, the referent is the unknown
+base. Its unit is bound FROM the relation (same unit) so the equation is admissible, and
+the answer oracle reverse-solves the value (``Nia has 9 more beads than Omar. Nia has 15.
+-> Omar = 6``). Bounded: a single base that IS the query target (no chains), a known
+subject value (a fact), a base not otherwise grounded, ≤1 inverse, never over times/divide.
+
 Refusal-first: an unparseable clause, a non-digit quantity, a non-identifier name,
 a missing/duplicated query, or an admissibility refusal all return a typed
 ``Refusal`` — never a fabricated quantity (wrong=0 at the comprehension layer).
@@ -398,6 +405,28 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
         unit_of.setdefault(ask_entity, ask_unit)
         role_of[ask_entity] = "total"
         sum_eq = (ask_entity, parts)
+
+    # Narrow inverse frame (PR-7b): a more/fewer-than whose SUBJECT is grounded by a fact
+    # and whose REFERENT is the otherwise-ungrounded query target is an inverse constraint
+    # pinning the unknown base. Bind the base's unit FROM the relation (same unit) so the
+    # equation is admissible and the base carries a unit; the answer oracle reverse-solves
+    # the value (PR-7a). Strictly bounded — the base must BE the single query target (no
+    # chains), the subject value must be known (a fact), the base must not be otherwise
+    # grounded, and at most one such constraint may exist. Only an _Eq (add/subtract) is
+    # ever an inverse here: a _Mul/_Div with an ungrounded ref stays unbound and refuses,
+    # so the contract never reverse-solves over times/divide. Non-negativity of the solved
+    # base is the oracle's boundary (PR-7a), not the reader's — the reader admits the SETUP.
+    fact_entities = {f.entity for f in facts}
+    inverse_eqs = [
+        e for e in eqs
+        if e.entity in fact_entities and e.ref not in unit_of and e.ref == ask_entity
+    ]
+    if len(inverse_eqs) > 1:
+        return Refusal("multiple_inverse_bases")
+    if inverse_eqs:
+        base = inverse_eqs[0]
+        unit_of[base.ref] = base.unit
+        role_of[base.ref] = "count"
 
     referenced: set[str] = set()
     for f in facts:

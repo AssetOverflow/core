@@ -361,3 +361,71 @@ def test_aggregate_query_unit_incompatible_part_refuses() -> None:
     assert isinstance(comp, Refusal)
     assert comp.reason == "admissibility_refused"
     assert "unit_mismatch" in comp.detail
+
+
+# --------------------------------------------------------------------------- #
+# Inverse frame (PR-7b): a more/fewer-than whose SUBJECT is a known fact and whose
+# REFERENT is the otherwise-ungrounded query target pins the unknown base. The base's
+# unit is bound FROM the relation so the equation is admissible; the answer oracle
+# reverse-solves the value (PR-7a). Bounded — single base == query target, known subject,
+# base not otherwise grounded, <=1 inverse, never over times/divide.
+# --------------------------------------------------------------------------- #
+
+
+def test_inverse_more_than_reads_base_with_bound_unit() -> None:
+    from evals.relational_metric.oracle import oracle_answer
+
+    # Nia has 9 more beads than Omar. Nia has 15 beads. How many beads does Omar have?
+    comp = _comp("Nia has 9 more beads than Omar. Nia has 15 beads. How many beads does Omar have?")
+    # The base (omar) carries the relation's unit even though it has no fact of its own.
+    units = {s.symbol_id: s.unit for s in comp.binding_graph.symbols}
+    assert units == {"nia": "item", "omar": "item"}
+    assert single_unknown(comp.binding_graph).symbol_id == "omar"
+    relations, query = to_relational_metric(comp)
+    assert query == {"entity": "omar", "unit": "item"}
+    assert {"kind": "fact", "entity": "nia", "value": 15} in relations
+    assert {"kind": "more_than", "entity": "nia", "ref": "omar", "delta": 9} in relations
+    assert oracle_answer(relations, query) == 6  # omar = 15 - 9
+
+
+def test_inverse_fewer_than_reads_base() -> None:
+    from evals.relational_metric.oracle import oracle_answer
+
+    # Quinn has 4 fewer beads than Pat. Quinn has 10 beads. How many beads does Pat have?
+    comp = _comp("Quinn has 4 fewer beads than Pat. Quinn has 10 beads. How many beads does Pat have?")
+    assert single_unknown(comp.binding_graph).symbol_id == "pat"
+    relations, query = to_relational_metric(comp)
+    assert oracle_answer(relations, query) == 14  # pat = 10 + 4
+
+
+def test_inverse_base_must_be_query_target_refuses() -> None:
+    # The unknown base (omar) is NOT what's asked — the question asks the grounded subject
+    # while the base stays unbound. No inverse fires (ref != query target); the equation's
+    # ungrounded operand makes admissibility REFUSE rather than guess. (no chains)
+    comp = comprehend_quantitative(
+        "Nia has 9 more beads than Omar. Nia has 15 beads. How many beads does Nia have?"
+    )
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "admissibility_refused"
+
+
+def test_multiple_inverse_bases_refuses() -> None:
+    # Two known subjects each pin the SAME unknown base -> an over-determined inverse, not a
+    # single base. The reader REFUSES rather than bind from one and drop the other. Without
+    # the len>1 guard this would emit a setup the oracle then chokes on; refusing is honest.
+    comp = comprehend_quantitative(
+        "Nia has 9 more beads than Omar. Pam has 5 more beads than Omar. "
+        "Nia has 15 beads. Pam has 11 beads. How many beads does Omar have?"
+    )
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "multiple_inverse_bases"
+
+
+def test_inverse_over_times_as_many_refuses() -> None:
+    # The inverse frame is add/subtract ONLY. A times-as-many with an ungrounded ref is
+    # never reverse-solved: the ref stays unit-unbound and admissibility REFUSES.
+    comp = comprehend_quantitative(
+        "Nia has twice as many beads as Omar. Nia has 14 beads. How many beads does Omar have?"
+    )
+    assert isinstance(comp, Refusal)
+    assert comp.reason == "admissibility_refused"
