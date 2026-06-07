@@ -86,3 +86,86 @@ def test_mul_serialization_and_derivations() -> None:
     assert to_relation("bella", m) == {
         "kind": "times_as_many", "entity": "bella", "ref": "anna", "factor": 2,
     }
+
+
+# --------------------------------------------------------------------------- #
+# PR-6a — the scalar-only contract is PROVEN, not held by omission
+# --------------------------------------------------------------------------- #
+
+
+def test_mul_projection_admits_only_symbol_times_literal() -> None:
+    """``Mul(Symbol, Literal)`` is the ONLY shape that projects to ``times_as_many``;
+    every other ``Mul`` shape REFUSES (``to_relation`` → None).
+
+    Meaningful-fail (CLAUDE.md Schema-Defined Proof Obligations): each assert below
+    fails loudly the moment the scalar-only guard is loosened — e.g. if a
+    ``case Mul(Symbol(ref), Symbol(other))`` arm were added, a ``count × count`` product
+    would masquerade as "N times as many". The dimensional checker does NOT catch this
+    (``test_scalar_only_guard_is_load_bearing`` shows why), so this projection arm is the
+    sole boundary.
+    """
+    from generate.quantitative_expr import Mul
+
+    # The one admitted shape — the contrast case.
+    assert to_relation("y", Mul(Symbol("x"), Literal(3))) == {
+        "kind": "times_as_many", "entity": "y", "ref": "x", "factor": 3,
+    }
+    # Two unit-bearing symbols: a count×count product, NOT a scalar multiple → refuse.
+    assert to_relation("y", Mul(Symbol("a"), Symbol("b"))) is None
+    # Commuted (factor on the left): the reader only ever builds Symbol*Literal → refuse.
+    assert to_relation("y", Mul(Literal(2), Symbol("a"))) is None
+    # A compound (non-literal) factor → refuse.
+    assert to_relation("y", Mul(Symbol("a"), Add(Symbol("b"), Literal(1)))) is None
+    assert to_relation("y", Mul(Symbol("a"), SumOf((Symbol("b"), Symbol("c"))))) is None
+    # A bare literal product carries no symbol to reference → refuse.
+    assert to_relation("y", Mul(Literal(2), Literal(3))) is None
+
+
+def test_literal_factor_is_dimensionless_by_construction() -> None:
+    """A literal factor cannot carry a unit: ``Literal`` has exactly one field, ``value``.
+
+    "Unit-bearing literal multiplication" is structurally unrepresentable — not merely
+    unchecked. ``count × scalar = count`` holds because the scalar is an ``int`` with no
+    unit, so the product keeps exactly the referenced symbol's unit. If a ``unit`` field
+    were ever added to ``Literal``, this test fails and forces the contract to be revisited.
+    """
+    import dataclasses
+
+    assert [f.name for f in dataclasses.fields(Literal)] == ["value"]
+    assert not hasattr(Literal(2), "unit")
+
+
+def test_scalar_only_guard_is_load_bearing() -> None:
+    """WHY the projection arm (not the dimensional checker) owns the scalar-only contract.
+
+    ``check_admissibility``'s ``multiply`` dispatch products operand units with no equality
+    requirement, so a ``count × count`` equation is dimensionally ADMISSIBLE (it yields
+    ``count²``). It would never refuse a two-symbol multiply. Hence the refusal in
+    :func:`to_relation` is load-bearing — it is the only thing standing between a
+    ``Mul(Symbol, Symbol)`` and a fabricated ``times_as_many`` relation.
+    """
+    from generate.binding_graph import (
+        BoundEquation,
+        SourceSpanLink,
+        SymbolBinding,
+        check_admissibility,
+    )
+    from generate.quantitative_expr import Mul
+
+    span = SourceSpanLink(source_id="t", start=0, end=1, text="x")
+    symbols = {
+        "a": SymbolBinding(symbol_id="a", name="a", semantic_role="quantity",
+                           source_span=span, introduced_by="t", entity="a", unit="item"),
+        "b": SymbolBinding(symbol_id="b", name="b", semantic_role="quantity",
+                           source_span=span, introduced_by="t", entity="b", unit="item"),
+    }
+    eq = BoundEquation(
+        lhs_symbol_id="c", rhs_canonical="a * b", operation_kind="multiply",
+        dependencies=frozenset({"a", "b"}), unit_proof="placeholder",
+        admissibility_status="pending", source_span=span,
+    )
+    # The dimensional checker ADMITS count×count (→ item²) — it does not refuse it.
+    proof = check_admissibility(eq, symbols=symbols)
+    assert proof.operation_kind == "multiply"
+    # But the projection REFUSES the same shape — the boundary that keeps wrong=0.
+    assert to_relation("c", Mul(Symbol("a"), Symbol("b"))) is None
