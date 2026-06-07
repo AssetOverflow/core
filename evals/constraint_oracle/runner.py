@@ -162,11 +162,73 @@ def run() -> dict[str, Any]:
     }
 
 
+def run_reader() -> dict[str, Any]:
+    """Grade the R2 reader against the gold (C5–C9).
+
+    Well-formed fixtures (``solved`` / ``solver_refuses``) must read to a setup whose canonical
+    signature equals the gold's — ``setup_correct``; a refusal is a miss (``setup_refused``); a
+    mismatch is ``setup_wrong`` (the wrong=0-critical count). ``reader_refuses`` fixtures must
+    refuse with EXACTLY the gold's ``reader_reason`` (``refused_correct``); a refusal with the
+    wrong reason is ``reason_mismatch``; producing a setup at all is ``setup_wrong`` (over-read).
+    Exit-0 criterion: ``setup_wrong == 0 and reason_mismatch == 0`` (and, once C9 lands, the
+    well-formed fixtures are all correct, so ``setup_refused == 0``).
+    """
+    from generate.constraint_comprehension.reader import read_constraint_problem
+    from generate.meaning_graph.reader import Refusal
+
+    fixtures = _load_r2_gold()
+    setup_correct = setup_wrong = setup_refused = refused_correct = reason_mismatch = 0
+    details: list[dict[str, Any]] = []
+    for fx in fixtures:
+        out = read_constraint_problem(fx["text"])
+        fid = fx.get("id")
+        if fx["expect"] in ("solved", "solver_refuses"):
+            if isinstance(out, Refusal):
+                setup_refused += 1
+                details.append({"id": fid, "outcome": "setup_refused", "reason": out.reason})
+            elif constraint_setup_signature(out) == constraint_setup_signature(gold_to_problem(fx)):
+                setup_correct += 1
+                details.append({"id": fid, "outcome": "setup_correct"})
+            else:
+                setup_wrong += 1
+                details.append(
+                    {
+                        "id": fid,
+                        "outcome": "setup_WRONG",
+                        "reader": constraint_setup_signature(out),
+                        "gold": constraint_setup_signature(gold_to_problem(fx)),
+                    }
+                )
+        else:  # reader_refuses
+            if isinstance(out, Refusal) and out.reason == fx["reader_reason"]:
+                refused_correct += 1
+                details.append({"id": fid, "outcome": "refused_correct", "reason": out.reason})
+            elif isinstance(out, Refusal):
+                reason_mismatch += 1
+                details.append(
+                    {"id": fid, "outcome": "reason_mismatch", "got": out.reason, "want": fx["reader_reason"]}
+                )
+            else:
+                setup_wrong += 1
+                details.append({"id": fid, "outcome": "setup_WRONG_over_read"})
+    return {
+        "lane": "constraint_oracle_reader",
+        "total": len(fixtures),
+        "setup_correct": setup_correct,
+        "setup_wrong": setup_wrong,
+        "setup_refused": setup_refused,
+        "refused_correct": refused_correct,
+        "reason_mismatch": reason_mismatch,
+        "details": details,
+    }
+
+
 __all__ = [
     "EXPECTATIONS",
     "READER_REASONS",
     "SOLVER_REASONS",
     "gold_to_problem",
     "run",
+    "run_reader",
     "validate_fixture",
 ]
