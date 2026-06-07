@@ -59,9 +59,12 @@ def test_every_gold_refusal_reason_maps_to_a_family() -> None:
             assert family_for_reason(att.refusal_reason) is not None, att.refusal_reason
 
 
-def test_only_three_missing_families_are_growth_surfaces() -> None:
+def test_only_precise_missing_totals_are_reachable_growth_surfaces() -> None:
+    # Only the PRECISE R2 gaps are reachable growth surfaces. category_pair_not_found is too broad
+    # (fires on any non-R2 text), so it maps to input_shape, and missing_category_pair is reserved.
     growth = {f.name for f in REGISTRY if f.proposal_allowed and f.refusal_reasons}
-    assert growth == {"missing_category_pair", "missing_total_count", "missing_weighted_total"}
+    assert growth == {"missing_total_count", "missing_weighted_total"}
+    assert family_for_reason("category_pair_not_found").name == "input_shape"
     for f in REGISTRY:
         if f.proposal_allowed:
             assert not f.must_remain_refused  # a growth surface is never a hard boundary
@@ -76,7 +79,7 @@ def test_correct_boundaries_stay_refused_with_no_proposal() -> None:
 
 
 def test_growth_reasons_allow_proposals() -> None:
-    for reason in ("missing_total_count", "missing_weighted_total", "category_pair_not_found"):
+    for reason in ("missing_total_count", "missing_weighted_total"):
         fam = family_for_reason(reason)
         assert fam is not None and fam.proposal_allowed and not fam.must_remain_refused
         assert fam.proposal_target == "r2_gold_fixture"
