@@ -15,12 +15,20 @@ from core.comprehension_attempt.failure_family import (
     family_for_reason,
 )
 from core.comprehension_attempt.model import ComprehensionAttempt, Organ, Outcome
+from core.comprehension_attempt.proposal import (
+    FailureProposal,
+    build_proposal,
+    emit_proposal,
+)
 from core.comprehension_attempt.router import RouteResult, RouteStatus, route_setup
 
 __all__ = [
     "REGISTRY",
     "ComprehensionAttempt",
     "FailureFamily",
+    "FailureProposal",
+    "build_proposal",
+    "emit_proposal",
     "Organ",
     "Outcome",
     "RouteResult",
