@@ -306,3 +306,99 @@ def test_oracle_divide_by_one_is_identity() -> None:
         ],
         {"entity": "dora"},
     ) == 8
+
+
+# --------------------------------------------------------------------------- #
+# PR-7a — narrow reverse-solve oracle contract (the base of one more/fewer_than).
+# Pins the EXACT semantics before the reader learns the inverse frame (PR-7b). The
+# reader is unchanged here: r1-07 still refuses; these exercise the oracle directly.
+# Each refusal is meaningful-fail — drop its guardrail and the case computes a value.
+# --------------------------------------------------------------------------- #
+
+
+def _F(e, v):
+    return {"kind": "fact", "entity": e, "value": v}
+
+
+def _M(e, r, d):
+    return {"kind": "more_than", "entity": e, "ref": r, "delta": d}
+
+
+def _W(e, r, d):
+    return {"kind": "fewer_than", "entity": e, "ref": r, "delta": d}
+
+
+def test_oracle_reverse_solves_more_than_base() -> None:
+    # Nia has 9 more beads than Omar. Nia has 15. -> omar = 15 - 9 = 6.  (r1-07 gold)
+    assert oracle_answer([_F("nia", 15), _M("nia", "omar", 9)], {"entity": "omar"}) == 6
+
+
+def test_oracle_reverse_solves_fewer_than_base() -> None:
+    # Pat has 3 fewer than Quinn. Pat has 4. -> quinn = 4 + 3 = 7.
+    assert oracle_answer([_F("pat", 4), _W("pat", "quinn", 3)], {"entity": "quinn"}) == 7
+
+
+def test_r1_07_gold_relations_reverse_solve_to_six() -> None:
+    # The exact gold relations the PR-7b answer lane will feed the oracle compute gold=6.
+    from evals.setup_oracle.runner import _load_r1_gold
+
+    fx = next(f for f in run_r1()["details"] if f["id"] == "r1-07-inverse")
+    assert fx["outcome"] == "refused"  # reader still refuses in PR-7a (contract only)
+    gold = next(g for g in _load_r1_gold() if g["id"] == "r1-07-inverse")
+    assert oracle_answer(gold["relations"], gold["query"]) == gold["gold"] == 6
+
+
+def test_oracle_reverse_solve_refuses_negative_count() -> None:
+    # Nia has 9 more than Omar. Nia has 5. -> omar = -4 < 0: refuse, never a negative count.
+    with pytest.raises(OracleError):
+        oracle_answer([_F("nia", 5), _M("nia", "omar", 9)], {"entity": "omar"})
+
+
+def test_oracle_reverse_solve_refuses_multiple_bases() -> None:
+    # Two inverse constraints -> not a single base: refuse (no multi-inverse / no system).
+    with pytest.raises(OracleError):
+        oracle_answer(
+            [_F("a", 10), _F("b", 8), _M("a", "x", 2), _M("b", "x", 1)], {"entity": "x"}
+        )
+
+
+def test_oracle_reverse_solve_refuses_grounded_base() -> None:
+    # The base is otherwise grounded -> over-determined: refuse rather than ignore a side.
+    with pytest.raises(OracleError):
+        oracle_answer(
+            [_F("nia", 15), _F("omar", 6), _M("nia", "omar", 9)], {"entity": "omar"}
+        )
+
+
+def test_oracle_reverse_solve_refuses_base_not_target() -> None:
+    # The inverse base is not the asked entity (a chain): refuse, never solve through.
+    with pytest.raises(OracleError):
+        oracle_answer([_F("nia", 15), _M("nia", "omar", 9)], {"entity": "zed"})
+
+
+def test_oracle_reverse_solve_refuses_over_times_as_many() -> None:
+    # No reverse-solve over times_as_many: Nia has twice as many as Omar; Nia has 14 -> refuse.
+    with pytest.raises(OracleError):
+        oracle_answer(
+            [_F("nia", 14), {"kind": "times_as_many", "entity": "nia", "ref": "omar", "factor": 2}],
+            {"entity": "omar"},
+        )
+
+
+def test_oracle_forward_paths_unchanged_by_reverse_solve() -> None:
+    # Regression guard: every forward path still computes (the duplicate-check refactor
+    # must not perturb forward more/fewer/times/divide/sum).
+    assert oracle_answer([_F("a", 6), _M("b", "a", 4)], {"entity": "b"}) == 10
+    assert oracle_answer([_F("a", 6), _W("b", "a", 4)], {"entity": "b"}) == 2
+    assert oracle_answer(
+        [_F("a", 6), {"kind": "times_as_many", "entity": "b", "ref": "a", "factor": 3}],
+        {"entity": "b"},
+    ) == 18
+    assert oracle_answer(
+        [_F("a", 8), {"kind": "divide_by", "entity": "b", "ref": "a", "divisor": 2}],
+        {"entity": "b"},
+    ) == 4
+    assert oracle_answer(
+        [_F("a", 6), _F("b", 4), {"kind": "sum_of", "entity": "t", "parts": ["a", "b"]}],
+        {"entity": "t"},
+    ) == 10
