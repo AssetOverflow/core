@@ -169,3 +169,61 @@ def test_scalar_only_guard_is_load_bearing() -> None:
     assert proof.operation_kind == "multiply"
     # But the projection REFUSES the same shape — the boundary that keeps wrong=0.
     assert to_relation("c", Mul(Symbol("a"), Symbol("b"))) is None
+
+
+# --------------------------------------------------------------------------- #
+# PR-6c — the divisive comparative (Div), the divisor twin of Mul
+# --------------------------------------------------------------------------- #
+
+
+def test_div_serialization_and_derivations() -> None:
+    from generate.quantitative_expr import Div
+
+    d = Div(Symbol("carl"), Literal(2))
+    assert to_canonical_string(d) == "carl / 2"
+    assert dependencies(d) == frozenset({"carl"})  # the literal divisor is NOT a dep
+    assert operation_kind(d) == "divide"
+    assert to_relation("dora", d) == {
+        "kind": "divide_by", "entity": "dora", "ref": "carl", "divisor": 2,
+    }
+
+
+def test_div_projection_admits_only_symbol_over_literal() -> None:
+    """``Div(Symbol, Literal)`` is the ONLY shape that projects to ``divide_by``; every
+    other ``Div`` shape REFUSES (``to_relation`` → None) — the divisor-only twin of the
+    scalar-only Mul contract.
+
+    Meaningful-fail: a ``Div(Symbol, Symbol)`` is a quantity-over-quantity ratio (the
+    rate-divide family), NOT a divide-by-dimensionless-literal; projecting it as
+    ``divide_by`` would fabricate a divisor. These asserts fail the moment that guard is
+    loosened.
+    """
+    from generate.quantitative_expr import Div
+
+    # The one admitted shape.
+    assert to_relation("dora", Div(Symbol("carl"), Literal(2))) == {
+        "kind": "divide_by", "entity": "dora", "ref": "carl", "divisor": 2,
+    }
+    # Quantity over quantity (a ratio), not a dimensionless divide → refuse.
+    assert to_relation("dora", Div(Symbol("a"), Symbol("b"))) is None
+    # Commuted (literal dividend) → refuse.
+    assert to_relation("dora", Div(Literal(8), Symbol("a"))) is None
+    # Compound divisor → refuse.
+    assert to_relation("dora", Div(Symbol("a"), Add(Symbol("b"), Literal(1)))) is None
+    # A bare literal quotient carries no symbol to reference → refuse.
+    assert to_relation("dora", Div(Literal(8), Literal(2))) is None
+
+
+def test_div_is_symmetric_with_mul_in_the_ir() -> None:
+    """``Div`` and ``Mul`` are structural twins: single-symbol dep, dimensionless literal
+    operand, the operand is never a dependency. This symmetry is what lets the reader
+    build BOTH uniformly (``deps = dependencies(expr)``) without a per-op special case.
+    """
+    from generate.quantitative_expr import Div, Mul
+
+    mul = Mul(Symbol("anna"), Literal(2))
+    div = Div(Symbol("carl"), Literal(2))
+    assert dependencies(mul) == frozenset({"anna"})
+    assert dependencies(div) == frozenset({"carl"})  # identical shape: literal not a dep
+    assert operation_kind(mul) == "multiply"
+    assert operation_kind(div) == "divide"

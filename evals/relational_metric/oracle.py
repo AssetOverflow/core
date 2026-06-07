@@ -16,11 +16,16 @@ Supported relation kinds (the v1 + PR-6b forward-substitutable grammar):
 - ``more_than``     : ``entity = ref + delta``
 - ``fewer_than``    : ``entity = ref - delta``
 - ``times_as_many`` : ``entity = ref * factor`` (dimensionless integer scalar)
+- ``divide_by``     : ``entity = ref // divisor`` (exact integer division only)
 - ``sum_of``        : ``entity = sum(parts)``  (part-whole / total)
 
 Every relation's references must already be resolved (forward-substitutable /
-triangular). The oracle refuses anything else, never guesses.  PR-6b keeps this
-off-serving: it lets setup-correct R1 cases compute answers in the eval lane only.
+triangular). The oracle refuses anything else, never guesses.  PR-6b/6c keep this
+off-serving: they let setup-correct R1 cases compute answers in the eval lane only.
+
+``divide_by`` is exact-only: a non-exact division (``base % divisor != 0``, e.g. an
+odd base halved) REFUSES rather than flooring to a wrong integer — the wrong=0 boundary
+for the "half as many" frame (PR-6c).
 """
 
 from __future__ import annotations
@@ -32,7 +37,9 @@ class OracleError(ValueError):
     """Malformed or out-of-grammar case — the oracle refuses, never guesses."""
 
 
-_SUPPORTED = frozenset({"fact", "more_than", "fewer_than", "sum_of", "times_as_many"})
+_SUPPORTED = frozenset(
+    {"fact", "more_than", "fewer_than", "sum_of", "times_as_many", "divide_by"}
+)
 
 
 def oracle_answer(relations: list[dict[str, Any]], query: dict[str, Any]) -> int:
@@ -75,6 +82,17 @@ def oracle_answer(relations: list[dict[str, Any]], query: dict[str, Any]) -> int
             if not isinstance(factor, int) or isinstance(factor, bool):
                 raise OracleError(f"factor must be int: {rel!r}")
             values[entity] = values[ref] * factor
+        elif kind == "divide_by":
+            ref = rel.get("ref")
+            divisor = rel.get("divisor")
+            if ref not in values:
+                raise OracleError(f"forward reference to unresolved {ref!r}")
+            if not isinstance(divisor, int) or isinstance(divisor, bool) or divisor == 0:
+                raise OracleError(f"divisor must be a nonzero int: {rel!r}")
+            if values[ref] % divisor != 0:
+                # Exact-only: refuse rather than floor to a wrong integer (wrong=0).
+                raise OracleError(f"non-exact division {values[ref]}/{divisor}: {rel!r}")
+            values[entity] = values[ref] // divisor
         else:  # sum_of
             parts = rel.get("parts")
             if not isinstance(parts, list) or not parts:

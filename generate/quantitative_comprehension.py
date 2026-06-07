@@ -43,6 +43,7 @@ from generate.binding_graph.units import UnitAlgebraError, parse_unit
 from generate.meaning_graph.reader import Refusal, _split_sentences
 from generate.quantitative_expr import (
     Add,
+    Div,
     Expr,
     Literal,
     Mul,
@@ -154,25 +155,48 @@ class _Mul:
     unit: str
 
 
-#: Word factors for "twice/double/triple ... as many". 'half' (a /2, the divide path)
-#: is deliberately ABSENT — divide-by-literal is a separate admissibility path, deferred.
+@dataclass(frozen=True, slots=True)
+class _Div:
+    """Divisive comparative: entity = ref / divisor (R1, "half as many"). The
+    divisor is a dimensionless integer literal; the quotient keeps ref's unit."""
+
+    entity: str
+    ref: str
+    divisor: int
+    unit: str
+
+
+#: Word factors for "twice/double/triple ... as many" (a multiply by a dimensionless int).
 _FACTOR_WORDS: dict[str, int] = {"twice": 2, "double": 2, "triple": 3, "quadruple": 4}
 
+#: Word divisors for "half ... as many" (a divide by a dimensionless int). The divisive
+#: twin of ``_FACTOR_WORDS``; both slot into the same 8-token "<WORD> as many" template.
+#: 'third'/'quarter' (non-power-of-two surface forms with an article) are deferred.
+_DIVISOR_WORDS: dict[str, int] = {"half": 2}
 
-def _try_multiplicative(entity: str, toks: list[str], detail: str) -> "_Mul | None":
-    """Match "Y has <factor-word> as many <unit> as X" or "Y has <N> times as many
-    <unit> as X" → ``_Mul``. Returns None if the clause is not multiplicative (the
-    caller then tries the digit-led fact/additive templates)."""
-    # [Y, has, FACTORWORD, as, many, UNIT, as, X]
+
+def _try_multiplicative(entity: str, toks: list[str], detail: str) -> "_Mul | _Div | None":
+    """Match the comparative templates → ``_Mul`` (multiply) or ``_Div`` (divide).
+
+    - "Y has <factor-word> as many <unit> as X"  → ``_Mul`` (twice/double/triple/quadruple)
+    - "Y has <divisor-word> as many <unit> as X" → ``_Div`` (half)
+    - "Y has <N> times as many <unit> as X"      → ``_Mul``
+
+    Returns None if the clause is not comparative (the caller then tries the digit-led
+    fact/additive templates)."""
+    # [Y, has, WORD, as, many, UNIT, as, X] — factor and divisor words share this shape.
     if (
         len(toks) == 8
-        and toks[2] in _FACTOR_WORDS
         and toks[3] == "as"
         and toks[4] == "many"
         and toks[6] == "as"
     ):
-        return _Mul(entity, _ident(toks[7], detail), _FACTOR_WORDS[toks[2]],
-                    _resolve_unit(_ident(toks[5], detail)))
+        ref = _ident(toks[7], detail)
+        unit = _resolve_unit(_ident(toks[5], detail))
+        if toks[2] in _FACTOR_WORDS:
+            return _Mul(entity, ref, _FACTOR_WORDS[toks[2]], unit)
+        if toks[2] in _DIVISOR_WORDS:
+            return _Div(entity, ref, _DIVISOR_WORDS[toks[2]], unit)
     # [Y, has, N, times, as, many, UNIT, as, X]
     if (
         len(toks) == 9
@@ -240,6 +264,7 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
     facts: list[_Fact] = []
     eqs: list[_Eq] = []
     muls: list[_Mul] = []
+    divs: list[_Div] = []
     queries: list[tuple] = []
 
     try:
@@ -253,6 +278,8 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
                 eqs.append(spec)
             elif isinstance(spec, _Mul):
                 muls.append(spec)
+            elif isinstance(spec, _Div):
+                divs.append(spec)
             else:
                 queries.append(spec)
     except _QReject as rej:
@@ -269,6 +296,8 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
         unit_of[e.entity], role_of[e.entity] = e.unit, "count"
     for m in muls:
         unit_of[m.entity], role_of[m.entity] = m.unit, "count"
+    for d in divs:
+        unit_of[d.entity], role_of[d.entity] = d.unit, "count"
 
     query = queries[0]
     sum_eq: tuple[str, tuple[str, ...]] | None = None
@@ -288,6 +317,8 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
         referenced.update((e.entity, e.ref))
     for m in muls:
         referenced.update((m.entity, m.ref))
+    for d in divs:
+        referenced.update((d.entity, d.ref))
     if sum_eq is not None:
         referenced.add(sum_eq[0])
         referenced.update(sum_eq[1])
@@ -320,6 +351,9 @@ def comprehend_quantitative(text: str, source_id: str = "input") -> QuantCompreh
     ]
     expr_specs.extend(
         (m.entity, Mul(Symbol(m.ref), Literal(m.factor))) for m in muls
+    )
+    expr_specs.extend(
+        (d.entity, Div(Symbol(d.ref), Literal(d.divisor))) for d in divs
     )
     if sum_eq is not None:
         lhs, parts = sum_eq

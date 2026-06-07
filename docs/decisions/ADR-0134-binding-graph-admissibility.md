@@ -48,7 +48,7 @@ Add three deliverables under `generate/binding_graph/`:
    | `add` / `subtract` / `compare_additive` / `transfer` | all dep units equal; lhs == that unit |
    | `compare_multiplicative` | dep units cancel; lhs dimensionless |
    | `multiply` | lhs == product of dep units |
-   | `divide` | requires one dividend + one `*__divisor` literal; lhs == quotient |
+   | `divide` | **single dep**: divide by an implicit dimensionless literal, lhs == dividend unit (`x / dimensionless = x`); **two deps**: one dividend + one `*__divisor` literal, lhs == quotient |
    | `apply_rate` | dep with `semantic_role='rate'` carries `X/Y`; other dep carries `Y`; lhs == `X` |
 
    Refusal is typed: every `AdmissibilityError` carries a `reason` from
@@ -170,3 +170,36 @@ None. The binding graph still has no runtime wiring outside
 `generate/binding_graph/`. `chat/runtime.py`, the cognition eval lane,
 the field invariant, the algebra backend, and every other production
 hot path are unaffected. Cognition eval lane byte-equal to main.
+
+## Amendment 2026-06-07 — single-dep `divide` (divide by a dimensionless literal)
+
+**What changed.** `_check_divide` now admits a **single-dep** form in addition
+to the original two-dep `dividend + *__divisor` form: a quantity divided by an
+implicit *dimensionless literal*, with `lhs == dividend unit`.
+
+**Why.** The off-serving comprehension reader's typed expression IR
+(`generate/quantitative_expr.py`, PR-4/5c/6a) carries literal operands *inside*
+the IR and deliberately does **not** make them dependencies — a `Mul(Symbol,
+Literal)` ("twice as many") has `dependencies = {ref}`, and `_check_multiply`
+already admits that single dep (`item × dimensionless = item`). "half as many"
+(`Div(Symbol, Literal(2))`) is the exact divisive twin: same shape, same single
+dep, the divisor is a dimensionless `Literal` in the IR. The original two-dep
+convention (a synthesized `*__divisor` *symbol*) collides with that IR design and
+would force a per-op special case in the reader plus an extra graph symbol. The
+single-dep form makes `divide` **symmetric with `multiply`** so the IR's
+"literal operands are not deps" invariant holds uniformly for both.
+
+**Safety.**
+- The two-dep rate-adapter path (`*__divisor`) is unchanged.
+- Soundness: dividing a unit-bearing quantity by a dimensionless constant
+  preserves the unit by construction — identical to the multiply twin.
+- Exactness (the *value*, not the unit) is the answer oracle's responsibility:
+  `evals.relational_metric.oracle` admits `divide_by` only when
+  `base % divisor == 0`, refusing a non-exact division (an odd base over 2)
+  rather than flooring to a wrong integer. Admissibility proves *dimension*; the
+  oracle proves *exact integral value*.
+- Off-serving: `admissibility.py` has no `generate.derivation` /
+  `core.reliability_gate` consumer; the frozen GSM8K serving metric cannot move.
+- Pinned by `tests/test_binding_graph_admissibility.py`
+  (`test_divide_single_dep_dimensionless_keeps_unit`,
+  `test_divide_refuses_zero_or_three_deps`).

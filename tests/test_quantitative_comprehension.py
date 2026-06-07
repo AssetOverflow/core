@@ -196,3 +196,25 @@ def test_multiplicative_missing_base_refuses() -> None:
     # never fabricate a base quantity.
     comp = comprehend_quantitative("Quinn has twice as many toys as Rosa. How many toys does Quinn have?")
     assert isinstance(comp, Refusal)
+
+
+def test_half_as_many_builds_divide_equation() -> None:
+    # PR-6c: "half as many" is the divisive twin of "twice as many" — operation_kind
+    # "divide", a single symbol dep (the divisor literal is in the IR, not a graph symbol),
+    # and the REAL single-dep admissibility check (item / dimensionless = item) admits it.
+    comp = _comp("Carl has 8 coins. Dora has half as many coins as Carl. How many coins does Dora have?")
+    eq = next(e for e in comp.binding_graph.equations if e.lhs_symbol_id == "dora")
+    assert eq.operation_kind == "divide"
+    assert eq.rhs_canonical == "carl / 2"
+    assert eq.dependencies == frozenset({"carl"})  # uniform with Mul: literal not a dep
+    assert eq.admissibility_status == "admitted"
+    assert single_unknown(comp.binding_graph).symbol_id == "dora"
+    # The graph carries ONLY the two entities — no synthesized __divisor symbol pollutes
+    # it (that is why the symmetric single-dep divide was chosen over divisor synthesis).
+    assert {s.symbol_id for s in comp.binding_graph.symbols} == {"carl", "dora"}
+
+
+def test_half_as_many_missing_base_refuses() -> None:
+    # "half as many ... as Rod" with no value for Rod -> ungrounded base -> REFUSE.
+    comp = comprehend_quantitative("Sue has half as many pears as Rod. How many pears does Sue have?")
+    assert isinstance(comp, Refusal)
