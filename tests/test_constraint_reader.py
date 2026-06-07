@@ -76,6 +76,17 @@ def test_coefficient_unit_mismatch_refuses() -> None:
     assert isinstance(out, Refusal) and out.reason == "coefficient_unit_mismatch"
 
 
+def test_weighted_total_in_wrong_unit_refuses() -> None:
+    # Hazard: the weighted total's unit must match the coefficient unit. Coefficients are in
+    # students; a total in DOLLARS matches no coefficient unit, so the weighted equation is
+    # never assembled -> missing_weighted_total. The reader never sums across units.
+    out = read_constraint_problem(
+        "A school rents 6 buses. Each large bus holds 50 students and each small bus holds "
+        "30 students. The buses cost 260 dollars in total. How many large buses are there?"
+    )
+    assert isinstance(out, Refusal) and out.reason == "missing_weighted_total"
+
+
 def test_off_category_query_refuses() -> None:
     out = read_constraint_problem(
         "A school rents 6 buses for a trip. Each large bus holds 50 students and each small bus "
