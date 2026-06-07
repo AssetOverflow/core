@@ -16,13 +16,17 @@ modelling stays covered by the admissibility tests (a documented signature exten
 from evals.setup_oracle.runner import run
 from evals.setup_oracle.signature import (
     gold_unknown_signature,
+    reader_symbol_units,
     reader_unknown_signature,
     relation_signature,
+    symbol_unit_signature,
 )
 
 __all__ = [
     "gold_unknown_signature",
+    "reader_symbol_units",
     "reader_unknown_signature",
     "relation_signature",
     "run",
+    "symbol_unit_signature",
 ]
