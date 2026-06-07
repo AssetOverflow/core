@@ -47,7 +47,19 @@ class Sub:
 class Mul:
     """A scalar multiple of a symbol — the multiplicative comparative ("twice/N times
     as many"). ``left`` is the referenced symbol, ``right`` a dimensionless literal
-    factor; the product keeps the symbol's unit (``count × scalar = count``)."""
+    factor; the product keeps the symbol's unit (``count × scalar = count``).
+
+    Scalar-only contract (the wrong=0 boundary). The *only* admitted shape is
+    ``Mul(Symbol, Literal)`` — a unit-bearing symbol times a dimensionless integer.
+    ``right`` being a :class:`Literal` (an ``int`` with no unit field) is what makes the
+    factor dimensionless *by construction*: a unit-bearing literal multiplication is not
+    representable, not merely unchecked. ``Mul(Symbol, Symbol)`` (a ``count × count``
+    product) and any compound factor are deliberately NOT projected — see
+    :func:`to_relation`, which refuses them. This refusal lives at the projection
+    boundary, NOT in the dimensional admissibility checker: ``check_admissibility``'s
+    ``multiply`` dispatch products operand units generally (``foot × pound → length·mass``,
+    no refusal), so it would happily admit a ``count × count`` product as ``count²``. The
+    scalar-only guarantee is therefore enforced HERE, by what we project, not there."""
 
     left: "Expr"
     right: "Expr"
@@ -115,7 +127,11 @@ def to_relation(lhs: str, expr: Expr) -> dict[str, Any] | None:
     """Project to a relational_metric relation, read from STRUCTURE (no string parse).
 
     ``None`` for a shape the projection does not handle — the caller refuses rather than
-    emit a guessed relation (wrong=0 boundary).
+    emit a guessed relation (wrong=0 boundary). Each ``case`` is intentionally a *narrow*
+    structural pattern, not a kind tag: ``Mul(Symbol, Literal)`` is the only multiplicative
+    shape projected (the scalar-only contract — a ``count × count`` ``Mul(Symbol, Symbol)``
+    or a compound factor falls through to ``None``). The dimensional checker would not catch
+    such a masquerade (it products units happily), so this boundary is load-bearing.
     """
     match expr:
         case Add(Symbol(ref), Literal(delta)):
