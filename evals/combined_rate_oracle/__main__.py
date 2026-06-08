@@ -1,9 +1,9 @@
-"""CLI: validate the combined-rate gold ruler, or grade the CMB solver against it.
+"""CLI: validate the combined-rate gold ruler, or grade the CMB solver / reader against it.
 
     python -m evals.combined_rate_oracle           # validate combined_rate_gold.jsonl; exit 0 iff invalid == 0
     python -m evals.combined_rate_oracle solver    # grade the solver (CMB-b); exit 0 iff no wrong
-
-The reader grading lane (``reader`` arg) lands with the reader (CMB-c).
+    python -m evals.combined_rate_oracle reader    # grade the reader (CMB-c); exit 0 iff setup_wrong == 0
+                                                   #   and reason_mismatch == 0
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import sys
 
-from evals.combined_rate_oracle.runner import run, run_solver
+from evals.combined_rate_oracle.runner import run, run_reader, run_solver
 
 
 def main() -> int:
@@ -19,6 +19,9 @@ def main() -> int:
     if lane == "solver":
         report = run_solver()
         ok = report["solved_wrong"] == 0 and report["refuse_wrong"] == 0
+    elif lane == "reader":
+        report = run_reader()
+        ok = report["setup_wrong"] == 0 and report["reason_mismatch"] == 0
     else:
         report = run()
         ok = report["invalid"] == 0
