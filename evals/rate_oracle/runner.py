@@ -2,8 +2,12 @@
 
 Validates that the independent rate gold is internally coherent and deserializes into the typed
 ``RateProblem`` IR: every fixture matches its closed ``expect`` taxonomy, well-formed setups
-construct (exactly one unknown == the query), and — for ``solved`` fixtures — the multiple-choice
-key agrees with the gold value. No reader yet (lands R3d); this proves the ruler. The R3 twin of
+construct (exactly one unknown == the query), and the label is **cross-checked against the canonical
+arithmetic** (``_canonical_outcome``): a ``solved`` gold must equal the computed answer and agree
+with its multiple-choice key, and a ``solver_refuses`` reason must be the genuine reason the setup
+refuses. This makes the ruler *meaningfully fail* on a mislabelled fixture (CLAUDE.md
+proof-obligation rule) rather than asserting it. ``_canonical_outcome`` validates gold coherence
+only; it is not a runtime solver (that is ``generate.rate_comprehension.solver``). The R3 twin of
 ``evals.constraint_oracle.runner``.
 
 Exit 0 iff ``invalid == 0``.
@@ -18,10 +22,12 @@ Exit 0 iff ``invalid == 0``.
 from __future__ import annotations
 
 import json
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
 from evals.rate_oracle.signature import rate_setup_signature
+from generate.rate_comprehension.conversion import ConversionError, convert_time
 from generate.rate_comprehension.model import RateProblem
 from generate.rate_comprehension.units import RateUnit, UnitError
 
@@ -64,6 +70,34 @@ def gold_to_problem(fx: dict[str, Any]) -> RateProblem:
     )
 
 
+def _canonical_outcome(problem: RateProblem) -> tuple[str, int | None, str | None]:
+    """The canonical answer/refusal for a well-formed single-rate setup, used ONLY to validate gold
+    coherence — **not** a runtime solver (that is ``generate.rate_comprehension.solver``). An
+    independent reimplementation of the rate algebra (``rate × convert(time)`` and its inverses) so
+    the oracle's ``solved`` / ``solver_refuses`` labels can *meaningfully fail* (CLAUDE.md
+    proof-obligation rule) rather than being asserted. Returns ``("solved", value, None)`` or
+    ``("refused", None, reason)``.
+    """
+    ru = problem.rate_unit
+    try:
+        if problem.query == "quantity":
+            assert problem.rate is not None and problem.time is not None
+            value = Fraction(problem.rate) * convert_time(problem.time, problem.time_unit, ru.denominator)
+        elif problem.query == "rate":
+            assert problem.quantity is not None and problem.time is not None
+            value = Fraction(problem.quantity) / convert_time(problem.time, problem.time_unit, ru.denominator)
+        else:  # time — answered in the rate's denominator unit
+            assert problem.quantity is not None and problem.rate is not None
+            value = Fraction(problem.quantity) / Fraction(problem.rate)
+    except ConversionError:
+        # A non-convertible duration in a solved/solver_refuses setup is incoherent gold — the
+        # convertibility refusal (``rate_unit_mismatch``) is the reader's boundary, not the solver's.
+        return "refused", None, "rate_unit_mismatch"
+    if value.denominator != 1:
+        return "refused", None, "non_integer_solution"
+    return "solved", int(value), None
+
+
 def validate_fixture(fx: dict[str, Any]) -> tuple[str, str | None]:
     """Validate one gold fixture's coherence. Returns ``(outcome, reason)``."""
     expect = fx.get("expect")
@@ -77,22 +111,28 @@ def validate_fixture(fx: dict[str, Any]) -> tuple[str, str | None]:
             return "invalid", "reader_refuses_has_gold"
         return "valid", None
 
-    # solved | solver_refuses require a well-formed single-rate setup.
+    # solved | solver_refuses require a well-formed single-rate setup. (Signature determinism is
+    # proven by the model being a pure function over a frozen dataclass — see the oracle tests — not
+    # by a runtime self-comparison.)
     try:
         problem = gold_to_problem(fx)
     except (KeyError, TypeError, ValueError, UnitError) as exc:
         return "invalid", f"malformed_setup:{exc}"
-    if rate_setup_signature(problem) != rate_setup_signature(problem):
-        return "invalid", "nondeterministic_signature"  # pragma: no cover - determinism guard
+    kind, value, reason = _canonical_outcome(problem)
 
     if expect == "solver_refuses":
         if fx.get("solver_reason") not in SOLVER_REASONS:
             return "invalid", f"unknown_solver_reason:{fx.get('solver_reason')!r}"
         if fx.get("gold") is not None:
             return "invalid", "solver_refuses_has_gold"
+        # The label must be the GENUINE reason this setup refuses — not asserted.
+        if kind != "refused":
+            return "invalid", "solver_refuses_is_actually_solvable"
+        if reason != fx["solver_reason"]:
+            return "invalid", f"solver_reason_mismatch:expected_{reason}"
         return "valid", None
 
-    # solved: integer gold + coherent multiple-choice key.
+    # solved: integer gold + coherent multiple-choice key + gold == the canonical computed answer.
     gold = fx.get("gold")
     if not isinstance(gold, int) or isinstance(gold, bool):
         return "invalid", "solved_needs_int_gold"
@@ -101,6 +141,10 @@ def validate_fixture(fx: dict[str, Any]) -> tuple[str, str | None]:
         return "invalid", "missing_or_unlabeled_answer"
     if options[answer] != gold:
         return "invalid", "answer_key_incoherent"
+    if kind != "solved":
+        return "invalid", "solved_is_not_canonically_solvable"
+    if value != gold:
+        return "invalid", "gold_does_not_match_computed_answer"
     return "valid", None
 
 
@@ -184,6 +228,7 @@ __all__ = [
     "EXPECTATIONS",
     "READER_REASONS",
     "SOLVER_REASONS",
+    "_canonical_outcome",
     "gold_to_problem",
     "run",
     "run_reader",
