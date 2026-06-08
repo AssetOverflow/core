@@ -89,7 +89,7 @@ class LimitationAssessment:
 #: ``SCOPE_BOUNDARY`` state with a real producer; ``contradiction`` / ``ambiguous``
 #: reuse the ACTIVE states. The refuse/propose kinds share ``UNDETERMINED`` — the
 #: *kind* carries the distinction, the *state* only says "no answer determined".
-_KIND_TO_STATE: dict[str, EpistemicState] = {
+_KIND_TO_STATE: dict[LimitationKind, EpistemicState] = {
     "missing_information": EpistemicState.UNDETERMINED,
     "ambiguous_structure": EpistemicState.AMBIGUOUS,
     "scope_boundary": EpistemicState.SCOPE_BOUNDARY,
@@ -104,7 +104,7 @@ _KIND_TO_STATE: dict[str, EpistemicState] = {
 #: is ``None`` — it is the ONE action the spine adds that has no terminal yet (Q1/ASK).
 #: This map is the proof that the limitation pass is a consolidating view, not a new
 #: universe: five of six actions already exist as terminals.
-_ACTION_TO_TERMINAL: dict[str, Terminal | None] = {
+_ACTION_TO_TERMINAL: dict[ResolutionAction, Terminal | None] = {
     "answer": Terminal.SOLVED_VERIFIED,
     "emit_proposal": Terminal.PROPOSAL_EMITTED,
     "refuse_known_boundary": Terminal.REFUSED_KNOWN_BOUNDARY,

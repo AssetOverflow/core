@@ -14,6 +14,10 @@ imports ``generate.derivation`` / ``core.reliability_gate``.
 
 from __future__ import annotations
 
+from core.epistemic_disclosure.disclosure_claim import (
+    DEFAULT_DISCLOSURE_CLAIM,
+    DisclosureClaim,
+)
 from core.epistemic_disclosure.limitation import (
     PENDING_Q1B_RECLASSIFICATION,
     LimitationAssessment,
@@ -25,7 +29,9 @@ from core.epistemic_disclosure.limitation import (
 )
 
 __all__ = [
+    "DEFAULT_DISCLOSURE_CLAIM",
     "PENDING_Q1B_RECLASSIFICATION",
+    "DisclosureClaim",
     "LimitationAssessment",
     "LimitationKind",
     "ResolutionAction",
