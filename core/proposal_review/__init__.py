@@ -17,6 +17,7 @@ from core.proposal_review.report import (
     report_json,
     report_text,
 )
+from core.proposal_review.safety import SafetyVerdict, dry_check
 from core.proposal_review.scan import DEFAULT_SINK, default_sink, scan
 
 __all__ = [
@@ -24,8 +25,10 @@ __all__ = [
     "MalformedArtifact",
     "PendingProposal",
     "ProposalReviewReport",
+    "SafetyVerdict",
     "build_report",
     "default_sink",
+    "dry_check",
     "report_json",
     "report_text",
     "scan",
