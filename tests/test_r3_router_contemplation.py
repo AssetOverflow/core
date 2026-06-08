@@ -30,7 +30,7 @@ def test_router_routes_rate_to_r3_and_stays_exclusive() -> None:
     routed = 0
     for fx in _load_rate_gold():
         r = route_setup(fx["text"])
-        assert len(r.attempts) == 3 and r.status != "ambiguous"
+        assert len(r.attempts) == 4 and r.status != "ambiguous"
         if r.selected is not None:
             assert r.selected.organ == "r3_rate"
             routed += 1

@@ -18,6 +18,7 @@ to ``_GOLD`` and its classifier to ``_ORGANS``, and this test enforces the rule 
 from __future__ import annotations
 
 from core.comprehension_attempt import (
+    classify_cmb,
     classify_r1,
     classify_r2,
     classify_r3,
@@ -27,10 +28,17 @@ from evals.constraint_oracle.runner import _load_r2_gold
 from evals.rate_oracle.runner import _load_rate_gold
 from evals.setup_oracle.runner import _load_r1_gold
 
+# CMB (r4) is tested as an ORGAN against R1/R2/R3 foreign gold — it MUST step aside as input_shape.
+# It is deliberately NOT added to _GOLD: a CMB problem is not *foreign* to R3 — R3 genuinely
+# co-recognizes the rate clauses (refusing `combined_rates`, a growth surface), so the strict
+# "must be input_shape" rule does not apply in that direction. That asymmetry is governed instead by
+# the CMB-over-R3 domain-precedence rule (`cmb_is_authoritative`), verified end-to-end in
+# tests/test_cmb_router_contemplation.py.
 _ORGANS = {
     "r1_quantitative": classify_r1,
     "r2_constraints": classify_r2,
     "r3_rate": classify_r3,
+    "r4_combined_rate": classify_cmb,
 }
 _GOLD = {
     "r1_quantitative": _load_r1_gold,

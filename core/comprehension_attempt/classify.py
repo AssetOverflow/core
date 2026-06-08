@@ -12,12 +12,27 @@ from __future__ import annotations
 from typing import Any
 
 from core.comprehension_attempt.model import ComprehensionAttempt
+from generate.combined_rate_comprehension.model import CombinedRateProblem
+from generate.combined_rate_comprehension.reader import read_combined_rate_problem
 from generate.constraint_comprehension.model import ConstraintProblem
 from generate.constraint_comprehension.reader import read_constraint_problem
 from generate.meaning_graph.reader import Refusal
 from generate.quantitative_comprehension import comprehend_quantitative, to_relational_metric
 from generate.rate_comprehension.model import RateProblem
 from generate.rate_comprehension.reader import read_rate_problem
+
+#: CMB reader/solver reasons that are namespaced ``cmb_*`` before the (reason-string-keyed) failure
+#: registry sees them, so a CMB boundary never inherits R2/R3's family for the SAME bare string
+#: (R3 ``rate_unit_mismatch`` is a growth surface; R2/R3 ``non_integer_solution`` carry other
+#: owners). The two ``input_shape`` reasons stay bare so they map to the cross ``input_shape``
+#: family (router hygiene). A ``cmb_``-prefixed attempt reason is also the signal that CMB
+#: *substantively* recognized the text (used by the CMB-over-R3 precedence rule in the router).
+_CMB_BARE_REASONS = frozenset({"not_combined_rate_shaped", "empty"})
+
+
+def cmb_reason(reason: str) -> str:
+    """Namespace a CMB refusal reason for the failure registry (see :data:`_CMB_BARE_REASONS`)."""
+    return reason if reason in _CMB_BARE_REASONS else f"cmb_{reason}"
 
 
 def _r1_signature(relations: list[dict[str, Any]]) -> str:
@@ -109,4 +124,36 @@ def classify_r3(text: str, *, case_id: str | None = None) -> ComprehensionAttemp
     )
 
 
-__all__ = ["classify_r1", "classify_r2", "classify_r3"]
+def _cmb_signature(problem: CombinedRateProblem) -> str:
+    """Deterministic string signature of an R4 combined-rate setup. The leading ``"cmb"`` tag
+    guarantees it never coincides with an R1/R2/R3 signature (cross-organ distinctness). ``sum`` is
+    commutative, so its two rates are sorted; ``difference`` keeps order (which rate is the drain)."""
+    rates = (problem.rate_a, problem.rate_b)
+    if problem.combine_mode == "sum":
+        rates = tuple(sorted(rates))
+    return repr(
+        (
+            "cmb",
+            problem.combine_mode,
+            (problem.rate_unit.numerator, problem.rate_unit.denominator),
+            rates,
+            ("time", problem.time),
+            ("quantity", problem.quantity),
+            problem.query,
+        )
+    )
+
+
+def classify_cmb(text: str, *, case_id: str | None = None) -> ComprehensionAttempt:
+    """Attempt the R4 combined-rate setup compiler on *text* (refusal reasons namespaced ``cmb_*``)."""
+    problem = read_combined_rate_problem(text)
+    if isinstance(problem, Refusal):
+        return ComprehensionAttempt(
+            "r4_combined_rate", "setup_refused", case_id=case_id, refusal_reason=cmb_reason(problem.reason)
+        )
+    return ComprehensionAttempt(
+        "r4_combined_rate", "setup_correct", case_id=case_id, setup_signature=_cmb_signature(problem)
+    )
+
+
+__all__ = ["classify_cmb", "classify_r1", "classify_r2", "classify_r3", "cmb_reason"]

@@ -38,6 +38,12 @@ ALL_REASONS = {
     # R3 rate reader
     "rate_unit_mismatch", "combined_rates", "missing_rate", "missing_time", "missing_quantity",
     "temporal_state", "query_target_unrecognized", "no_query", "not_rate_shaped",
+    # R4 combined-rate (reader + solver reasons namespaced cmb_*; not_combined_rate_shaped is the
+    # bare step-aside reason -> the cross input_shape family).
+    "not_combined_rate_shaped",
+    "cmb_rate_unit_mismatch", "cmb_combine_mode_ambiguous", "cmb_missing_second_rate",
+    "cmb_three_or_more_rates", "cmb_reciprocal_work_rate_deferred", "cmb_clock_interval_deferred",
+    "cmb_non_positive_net_rate", "cmb_non_integer_solution",
 }
 
 
@@ -66,7 +72,10 @@ def test_only_precise_missing_totals_are_reachable_growth_surfaces() -> None:
     # Only the PRECISE R2 gaps are reachable growth surfaces. category_pair_not_found is too broad
     # (fires on any non-R2 text), so it maps to input_shape, and missing_category_pair is reserved.
     growth = {f.name for f in REGISTRY if f.proposal_allowed and f.refusal_reasons}
-    assert growth == {"missing_total_count", "missing_weighted_total", "unsupported_rate_duration"}
+    assert growth == {
+        "missing_total_count", "missing_weighted_total", "unsupported_rate_duration",
+        "cmb_unsupported_rate_count", "cmb_unsupported_reciprocal", "cmb_unsupported_clock_interval",
+    }
     assert family_for_reason("category_pair_not_found").name == "input_shape"
     for f in REGISTRY:
         if f.proposal_allowed:

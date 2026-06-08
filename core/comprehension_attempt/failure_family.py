@@ -29,7 +29,7 @@ from typing import Literal
 
 from core.comprehension_attempt.model import ComprehensionAttempt
 
-Owner = Literal["r1", "r2", "r3", "cross"]
+Owner = Literal["r1", "r2", "r3", "r4", "cross"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,7 +55,7 @@ REGISTRY: tuple[FailureFamily, ...] = (
             "empty", "no_quantity_template", "non_digit_quantity", "non_identifier_name",
             "unreadable_quantity_query", "invalid_binding_graph", "query_target_not_a_category",
             "unprojectable", "category_pair_not_found", "query_target_unrecognized", "no_query",
-            "not_rate_shaped",
+            "not_rate_shaped", "not_combined_rate_shaped",
         ),
     ),
     FailureFamily(
@@ -160,6 +160,54 @@ REGISTRY: tuple[FailureFamily, ...] = (
         "refuse — elapsed clock-time is R3.x. NOT a growth surface: the clock-marker detector can "
         "fire on non-rate text, so temporal_state is not reliably rate-like.",
         refusal_reasons=("temporal_state",),
+    ),
+    # --- R4 combined-rate organ (reasons namespaced cmb_*; CMB owns them over R3's same-string ---- #
+    #     reasons via the CMB-over-R3 precedence rule in the router) ------------------------------ #
+    FailureFamily(
+        "cmb_unit_mismatch", "r4", True, False,
+        "refuse — the two rates' units are incompatible. must_remain_refused UNTIL a dimension "
+        "registry exists: CMB v1 cannot distinguish a convertible pair (gallons/min vs gallons/hour) "
+        "from a dimensionally-incompatible one (rooms/hour vs liters/minute), so a 'try conversion' "
+        "proposal would be wrong=0-unsafe. NOT 'forever impossible' — a convertible split is future work.",
+        refusal_reasons=("cmb_rate_unit_mismatch",),
+    ),
+    FailureFamily(
+        "cmb_combine_ambiguous", "r4", True, False,
+        "refuse — two same-unit rates but no licensed sum/difference cue. An ambiguity, not a "
+        "coverage gap: no fixture can teach which mode the text intends.",
+        refusal_reasons=("cmb_combine_mode_ambiguous",),
+    ),
+    FailureFamily(
+        "cmb_underdetermined", "r4", True, False,
+        "refuse — combined-shaped but a contributing rate is unstated (under-specified input); no "
+        "reader enhancement can infer the missing rate.",
+        refusal_reasons=("cmb_missing_second_rate",),
+    ),
+    FailureFamily(
+        "cmb_non_positive_net", "r4", True, False,
+        "refuse — non-positive net rate; a quantity/time query cannot make progress (solver boundary).",
+        refusal_reasons=("cmb_non_positive_net_rate",),
+    ),
+    FailureFamily(
+        "cmb_non_integer", "r4", True, False,
+        "refuse — no exact integer answer; never round (solver boundary, exact-integer v1).",
+        refusal_reasons=("cmb_non_integer_solution",),
+    ),
+    # --- R4 growth surfaces (proposal allowed) — emitted ONLY after positive combined recognition -- #
+    FailureFamily(
+        "cmb_unsupported_rate_count", "r4", False, True,
+        "propose a combined-rate fixture for ≥3 contributing rates (future capability)",
+        proposal_target="cmb_gold_fixture", refusal_reasons=("cmb_three_or_more_rates",),
+    ),
+    FailureFamily(
+        "cmb_unsupported_reciprocal", "r4", False, True,
+        "propose a reciprocal work-rate fixture (1/(1/a+1/b); reciprocal rates + rational arithmetic)",
+        proposal_target="cmb_gold_fixture", refusal_reasons=("cmb_reciprocal_work_rate_deferred",),
+    ),
+    FailureFamily(
+        "cmb_unsupported_clock_interval", "r4", False, True,
+        "propose a clock-interval fixture (elapsed-clock-time duration in a combined-rate problem)",
+        proposal_target="cmb_gold_fixture", refusal_reasons=("cmb_clock_interval_deferred",),
     ),
 )
 
