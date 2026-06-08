@@ -48,7 +48,7 @@ admitting any would breach wrong=0. None is a coverage gap.
 
 Two-category finite-integer count/weight systems: read → exact Cramer solve → answer-choice
 verify (with contradiction flagging). **6 families:** buses/seats, animals/legs, tickets/price,
-coins/value, boxes/capacity, vehicles/wheels. Detail: `r2-inventory-ledger-2026-06-07.md`, ADR-0211.
+coins/value, boxes/capacity, vehicles/wheels. Detail: `r2-inventory-ledger-2026-06-07.md`, ADR-0217.
 
 ## 5. R2 remaining refusals
 

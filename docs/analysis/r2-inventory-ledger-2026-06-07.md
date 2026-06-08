@@ -11,7 +11,7 @@ This is the R2 twin of the R1 ledger: a decision artifact recording exactly whic
 families the off-serving organ now *reads, solves, and verifies*, which it *refuses*, and the
 gate protecting each. R2 is disjoint from the GSM8K serving path (imports no
 `generate.derivation` / `core.reliability_gate`), so none of this moves the sealed serving
-metric. See ADR-0211 for the contract.
+metric. See ADR-0217 for the contract (renumbered from 0211 — see that ADR's header).
 
 ## Reproduce
 
@@ -73,7 +73,7 @@ bus / seat        chicken / leg      ticket / price
 coin / value      box / capacity     vehicle / wheel   (+ tool / price)
 ```
 
-## Deferred to R3 (NOT in this batch — see ADR-0211 §2)
+## Deferred to R3 (NOT in this batch — see ADR-0217 §2)
 
 - ≥3 categories, inequalities, multi-step / mixed constraints, distractor exclusion,
   rates / unit conversion.

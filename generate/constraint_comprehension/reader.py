@@ -22,7 +22,7 @@ Recognizers and their wrong=0 guards:
                       else ``query_target_not_a_category``).
 
 ``too_many_categories`` / ``missing_total_count`` / ``missing_weighted_total`` are the gold's
-closed ``reader_reason`` set (ADR-0211). ``coefficient_unit_mismatch`` / ``category_pair_not_found``
+closed ``reader_reason`` set (ADR-0217). ``coefficient_unit_mismatch`` / ``category_pair_not_found``
 / ``query_target_not_a_category`` are defensive guards with no gold fixture (tested by
 construction); they never fire on the gold corpus.
 """
