@@ -19,6 +19,10 @@ Shipped so far (all off-serving — nothing here imports ``generate.derivation``
     ``EpistemicState × LimitationAssessment × DisclosureClaim → ServedDisposition``.
     Mapping scaffold only — no rendering, no bus, no ``verify.py``; nothing consumes
     it yet.
+  * :mod:`~core.epistemic_disclosure.verified_contract` (P1-A) — the VERIFIED contract:
+    the obligation, the proof shape, the validator, and the single sanctioned route to
+    ``EpistemicState.VERIFIED`` / ``DisclosureClaim.VERIFIED``. Contract only — no
+    producer; a faithful solve of a WRONG read must not verify.
 """
 
 from __future__ import annotations
@@ -40,17 +44,33 @@ from core.epistemic_disclosure.limitation import (
     assess_from_family,
     terminal_for_action,
 )
+from core.epistemic_disclosure.verified_contract import (
+    VERIFICATION_OBLIGATION,
+    VerificationObligation,
+    VerificationProof,
+    VerificationResult,
+    VerificationVerdict,
+    disclosure_for_verification,
+    evaluate_verification,
+)
 
 __all__ = [
     "DEFAULT_DISCLOSURE_CLAIM",
     "PENDING_Q1B_RECLASSIFICATION",
+    "VERIFICATION_OBLIGATION",
     "DisclosureClaim",
     "LimitationAssessment",
     "LimitationKind",
     "ResolutionAction",
     "ServedDisposition",
+    "VerificationObligation",
+    "VerificationProof",
+    "VerificationResult",
+    "VerificationVerdict",
     "assess_from_attempt",
     "assess_from_family",
     "choose_served_disposition",
+    "disclosure_for_verification",
+    "evaluate_verification",
     "terminal_for_action",
 ]
