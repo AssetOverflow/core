@@ -15,6 +15,8 @@ truthfully-labeled output modes).
 `No serving path, algebra, versor, recall, or gate touched. This is the research`
 `trail — what we decided and how the conversation arrived there.`
 
+> **Amended 2026-06-08 (see [§ Amendment](#amendment-2026-06-08--reconcile-with-adr-0206--epistemic_state-do-not-build-parallel-substrate) below).** The doctrine here stands, but the original draft **under-referenced substrate that already ships the serving half of this design.** `ServabilityDecision` / `ServabilityBlade` must be built as the **activation of the already-shipped ADR-0206 response-governance bridge** (`ReachPolicy` / `govern_response` / `shape_surface`, gated STRICT-only today, already disclosing `[approximate]`), and the `epistemic_state` Literal must **reuse `core/epistemic_state.py`** — *not* a parallel object or a smaller renamed enum. Read the Amendment before building.
+
 > **Why this doc exists, and why now.** CORE is open-source research in a largely
 > uncharted corner of AI — a deterministic cognitive engine, not a transformer
 > wrapper. The *reasoning behind* a design is as load-bearing as the design.
@@ -173,6 +175,12 @@ records its disqualification. This is the "typed" half of §2 made concrete.
 The serving-lane policy object. It consumes a `ProblemAttemptSession` plus risk
 and user intent, and selects a *truthfully-labeled* output mode.
 
+> **Reuse, don't reinvent (Amendment 2026-06-08):** this *is* the ADR-0206
+> `ReachPolicy` / `govern_response` decision, gated STRICT today — not a new object.
+> The `mode` values below map onto `ReachLevel` (`STRICT < APPROXIMATE < EXTRAPOLATE
+> < CREATIVE`); the `epistemic_state` field must be `core.epistemic_state.EpistemicState`,
+> not the Literal sketched here. Build SRV as the *activation* of that seam. See the Amendment.
+
 ```python
 @dataclass(frozen=True)
 class ServabilityDecision:
@@ -310,12 +318,56 @@ thought honestly, not only ratified conclusions.
 
 ---
 
+## Amendment 2026-06-08 — reconcile with ADR-0206 + `epistemic_state` (do NOT build parallel substrate)
+
+A review of this note against the tree at `main` found it **under-references the substrate that
+already ships the serving half of this design.** The *doctrine* above stands; the *naming and the
+build plan* must reuse existing organs, not fork parallel ones (CLAUDE.md: reuse over reinvention;
+[[feedback-adr-cross-reference-discipline]]). Three bindings:
+
+1. **`ServabilityDecision` / `ServabilityBlade` ⇒ advance ADR-0206 `core/response_governance/`, not
+   a new object.** [ADR-0206](../decisions/ADR-0206-response-governance-bridge.md) (the
+   Response-Governance Bridge) already ships `ReachPolicy`, `govern_response`, and `shape_surface`,
+   with `ReachLevel = STRICT < APPROXIMATE < EXTRAPOLATE < CREATIVE` and disclosure prefixes
+   (`shape_surface` already emits `[approximate]`). It is gated **STRICT-only** today
+   (`govern_response` returns `STRICT_POLICY`; `shape_surface` is the identity at STRICT) — which is
+   *precisely* "the answer/refuse binary is the strict end of a spectrum" (§5). The SRV modes map
+   onto `ReachLevel`; the SRV `risk → strictness` table is the policy ADR-0206 explicitly left as the
+   future bridge. **Build SRV as the activation of that seam** — produce a widening `ReachLevel`
+   under the reliability-gate license — not as a parallel `ServabilityDecision`.
+
+2. **The `epistemic_state` Literals (§4/§5) ⇒ reuse `core.epistemic_state.EpistemicState`.** That
+   ratified enum already carries the richer taxonomy (`DECODED`, `EVIDENCED_INCOMPLETE`, `INFERRED`,
+   `UNVERIFIED_POSSIBLE`/`NOVEL`, `CONTRADICTED`, `AMBIGUOUS`, `UNDETERMINED`, … + reserved
+   `VERIFIED`, `SCOPE_BOUNDARY`, `COMPUTATIONALLY_BOUNDED`, …), and `response_governance/policy.py`
+   already partitions it into ACTIVE / RESERVED / RECONCILE. The six-value Literal drafted in §4/§5
+   is a parallel, smaller rename — **drop it and import the enum**; do not commit a new closed vocab
+   ([[feedback-defer-substrate-vocab-commitment]]).
+
+3. **`ProblemAttemptSession` ⇒ extend `core/comprehension_attempt/`, don't fork.** §4 already names
+   this as the home; make it **binding**: firm up `ComprehensionAttempt`'s evidence shape rather than
+   adding a parallel dataclass — and only extend the existing type, never shadow it.
+
+**First activation, already scoped.** The natural first widening past STRICT is the reserved
+`VERIFIED` state via a canonical-comparison pass —
+[`VERIFIED-canonical-comparison-scoping-2026-06-06`](../analysis/VERIFIED-canonical-comparison-scoping-2026-06-06.md)
++ ADR-0206 (`VERIFIED` is the only state that licenses widening past gold). The disciplined loop:
+**produce one reserved state → consume it through `govern_response`/`shape_surface` → prove the
+served mode on the capability-index yardstick → keep `sealed_eval` verified/refuse → repeat.** One
+state at a time, no bulk taxonomy expansion, no parallel policy object.
+
+> **Why the amendment, not a rewrite:** this is a session/research-trail doc; the original reasoning
+> is preserved intact above. The fault was a *missing cross-reference*, not a wrong idea — the
+> bindings here are what keep the next agent from building `ServabilityDecision`/`PRA` beside
+> ADR-0206 instead of inside it.
+
 ## Decision & sequencing
 
 - **Decided (doctrine, not yet ADR):** `wrong=0` ≡ **no false presentation of
   epistemic status** — a disclosure discipline. Serving becomes graded controlled
   disclosure; the answer/refuse binary is retained verbatim only at the strict end
-  (`sealed_eval` / `safety_critical`).
+  (`sealed_eval` / `safety_critical`). **This is the ADR-0206 `ReachLevel` spectrum,
+  gated STRICT today** — see the Amendment.
 - **Decided:** typed + isolated candidate guesses are admissible at **practice
   time** (they already are, via the sealed lane + CMB; we are naming the law).
 - **Proposed:** `ProblemAttemptSession` (PRA) as the practice-lane evidence
@@ -332,13 +384,29 @@ thought honestly, not only ratified conclusions.
 
 ## Open / next
 
-- **PRA** — firm the `ProblemAttemptSession` evidence shape on the existing
-  `core/comprehension_attempt/` substrate (verified + eliminated candidates +
-  residual ambiguity, explicit).
-- **REL** — relevance / distractor grounding, so `confidence_basis` and
-  `servable_claims` are grounded, not asserted.
-- **SRV** — implement the blade against `ServabilityDecision`; wire as the
-  realizer's input; unify the refusal taxonomy under its `refuse_*` /
-  `contradiction_report` branches.
-- **ADR** — promote this doctrine to an ADR *only* once SRV has a concrete
-  consumer and the risk-tier mapping is a closed, tested contract.
+**Immediate (capability rung, unrelated to this doctrine — finish first):** the CMB ladder —
+**CMB-b** (exact solver, landed), **CMB-c** (reader), **CMB-d** (router/contemplation wiring),
+**CMB-e** (ledger) — plus the **R3-vac** oracle patch (port `_canonical_outcome` non-vacuous
+validation to `evals/rate_oracle`). None of these touch serving or this doctrine.
+
+**Then (this doctrine, as ADR-0206 activation — per the Amendment, reuse don't reinvent):**
+
+- **PRA** — firm the attempt evidence shape **on `core/comprehension_attempt/`** (extend
+  `ComprehensionAttempt`: verified + eliminated candidates + residual ambiguity), reusing
+  `core.epistemic_state.EpistemicState`. Not a new parallel dataclass.
+- **REL** — relevance / distractor grounding so `confidence_basis` is grounded, not asserted —
+  consolidating the grounding that already exists (R2 referent guard, R1 distractor refusal,
+  derivation `verify.py`, `epistemic_state_for_grounding_source`), not a greenfield organ.
+- **SRV** — **activate the ADR-0206 seam**: produce the reserved `VERIFIED` state (canonical
+  comparison, scoping doc above) and let `govern_response`/`shape_surface` emit one widened
+  `ReachLevel` for one measured case. Wire through the existing `shape_surface` (already the
+  realizer-facing seam); unify `refuse_*` / `contradiction_report` under the existing refusal
+  taxonomy. **Not** a parallel `ServabilityDecision`/blade.
+- **Yardstick gate (non-negotiable):** every widening shows a capability-index delta before it
+  counts ([[milestone-agi-spine-A-to-E-complete]] discipline); `sealed_eval` stays verified/refuse.
+- **(Optional) second scorecard** — measure `over_refusal` / `mode_misclassification` as truthful-
+  but-suboptimal, distinct from `wrong`, so over-refusal becomes visible debt. Must never alter
+  sealed-eval scoring.
+- **ADR** — promote to an ADR (likely an **ADR-0206 amendment**, not a new ADR) *only* once a
+  reserved state is produced, consumed through `govern_response`, and the `risk → ReachLevel`
+  mapping is a closed, tested contract.
