@@ -38,6 +38,7 @@ from core.epistemic_state import (
     epistemic_state_for_grounding_source,
     normative_detail_from_verdicts,
 )
+from core.proposal_review.summary import ProposalReviewIdleSummary, idle_summary
 from core.response_governance import govern_response, shape_surface
 from chat.telemetry import (
     TurnEventSink,
@@ -534,7 +535,9 @@ class IdleTickResult:
     The proposal pass is PROPOSAL-ONLY learning, never ratification (HITL ratifies). The
     Step D consolidation pass is SESSION-memory learning: ``facts_consolidated`` derived
     facts were written back into the held self so the next ``determine`` reaches them
-    directly — still never corpus mutation, never a proposal.
+    directly — still never corpus mutation, never a proposal.  The proposal-review sub-pass
+    (``proposal_review``) is READ-ONLY: it surfaces pending comprehension-failure proposals for
+    review and mutates nothing.
     """
 
     candidates_contemplated: int
@@ -543,6 +546,9 @@ class IdleTickResult:
     #: Step D — derived facts consolidated into the held self this tick (0 unless
     #: ``config.consolidate_determinations`` and the closure had a new layer to add).
     facts_consolidated: int = 0
+    #: IT — read-only proposal-review summary (None unless ``config.review_pending_proposals``).
+    #: Surfaces pending comprehension-failure proposals for review; mutates nothing.
+    proposal_review: ProposalReviewIdleSummary | None = None
 
 
 class ChatRuntime:
@@ -919,6 +925,21 @@ class ChatRuntime:
             facts_consolidated = consolidate_once(self._context).consolidated
             did_work = True
 
+        # 3. Proposal-review sub-pass (IT) — READ-ONLY. Surfaces pending comprehension-failure
+        #    proposals (the contemplation pass's N5 artifacts) for review. It NEVER mutates an
+        #    artifact, NEVER sets ``did_work`` (no state change → no checkpoint), NEVER ratifies
+        #    or mounts. A reporter failure is CAPTURED, not propagated, so it cannot corrupt the
+        #    tick. Gated off by default.
+        proposal_review = None
+        if self.config.review_pending_proposals:
+            try:
+                proposal_review = idle_summary()
+            except Exception as exc:  # noqa: BLE001 — a reporter failure must not corrupt the tick
+                proposal_review = ProposalReviewIdleSummary(
+                    safe=False, total=0, review_needed=0, malformed=0, by_family=(),
+                    errors=(f"proposal_review_failed:{type(exc).__name__}",),
+                )
+
         # Persist the advanced state once (backlog + lineage +, with
         # persist_session_state, the consolidated facts). Skipped on a no-op tick so an
         # idle engine with nothing to learn does not churn the checkpoint.
@@ -929,6 +950,7 @@ class ChatRuntime:
             proposals_created=created,
             pending_proposals=self._count_pending_proposals(),
             facts_consolidated=facts_consolidated,
+            proposal_review=proposal_review,
         )
 
     def record_recognition_example(

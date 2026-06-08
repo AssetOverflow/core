@@ -316,6 +316,13 @@ class RuntimeConfig:
     # same _SUBSUMPTION_SUBSET_FACT_BUDGET; converges (a saturated tick is a no-op).
     consolidate_determinations: bool = False
 
+    # IT (proposal-review surface) — when on, idle_tick runs a READ-ONLY sub-pass that scans
+    # the comprehension-failure proposal sink and surfaces a summary in
+    # IdleTickResult.proposal_review. It NEVER mutates an artifact, sets did_work, checkpoints,
+    # ratifies, mounts, or modifies readers; a reporter failure is captured, not propagated.
+    # OFF by default — idle ticks don't pay for the scan unless a deployment wants the surface.
+    review_pending_proposals: bool = False
+
     # Step E (ESTIMATION) — when on, a converse query the engine would otherwise REFUSE
     # (told p(a,b), asked p(b,a)) may be answered with a DISCLOSED [approximate] estimate
     # IF the predicate-class has earned the SERVE license on the ratified, committed

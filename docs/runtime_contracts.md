@@ -110,6 +110,26 @@ Contract:
   `algebra/versor.py` keeps closure.  Off by default; the falsification lane is
   `evals.determination_closure`.
 
+### Idle proposal review (read-only)
+
+When `review_pending_proposals` is enabled, `ChatRuntime.idle_tick` runs a **read-only**
+sub-pass (after the consolidation pass) that scans the comprehension-failure proposal sink
+(`teaching/proposals/comprehension_failures/`, the contemplation pass's proposal-only
+artifacts) and surfaces a summary in `IdleTickResult.proposal_review` (`safe`, `total`,
+`review_needed`, `malformed`, `by_family`, `errors`).
+
+Contract:
+
+- **Read-only, no mutation.**  The sub-pass scans, reports, and dry-checks; it writes, moves,
+  and deletes nothing.  It does **not** set `did_work`, so it never triggers a checkpoint, and
+  it never advances learning, ratifies, mounts, or modifies a reader.
+- **Failure-isolated.**  A reporter exception is **captured, not propagated** — surfaced as
+  `proposal_review.safe == False` with `errors == ("proposal_review_failed:<type>",)` — so a
+  malformed sink or filesystem error can never corrupt the idle tick's state or return.
+- **Default off, additive.**  Disabled, `proposal_review` is `None` and `IdleTickResult` is
+  unchanged for existing callers.  This is **not** a second idle loop and **not** the L10
+  always-on heartbeat — it only surfaces existing review obligations.
+
 ### Estimation surface (Step E — ESTIMATION)
 
 When `estimation_enabled` and a turn is a **converse query** DETERMINE refused (told
