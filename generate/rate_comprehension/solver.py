@@ -1,64 +1,63 @@
-"""Exact integer single-rate solver (R3c).
+"""Exact integer single-rate solver (R3c) with exact-rational unit conversion (R3.2c).
 
 Solves the one unknown of a ``RateProblem`` — ``quantity = rate × time`` and its two inverses —
-with **exact integer arithmetic** and a **unit-composition** confirmation:
+normalizing the duration to the rate's denominator unit by **exact rational conversion** (R3.2):
 
 ```text
-query quantity:  quantity = rate × time              (always integer)
-query rate:      rate = quantity ÷ time              (exact division or REFUSE)
-query time:      time = quantity ÷ rate              (exact division or REFUSE)
+query quantity:  quantity = rate × convert(time)                 (exact int or REFUSE)
+query rate:      rate = quantity ÷ convert(time)                 (exact int or REFUSE)
+query time:      time = quantity ÷ rate  (in the rate denominator unit)  (exact int or REFUSE)
 ```
 
-No floats, no rounding. A non-exact inverse REFUSES (``non_integer_solution``) rather than
-flooring to a wrong integer — the wrong=0 boundary. The compound-unit composition is confirmed via
-the unit algebra (R3a); since a ``RateProblem``'s units are consistent by construction, that check
-is defensive (a non-composing unit is caught earlier, at the reader). Off-serving; deterministic.
+``Fraction`` is confined here: ``convert_time`` returns an exact rational, the arithmetic is
+exact, and a non-whole result REFUSES (``non_integer_solution``) — **no float, no rounding**. A
+duration unit that does not convert to the rate denominator (``…/hour`` for ``3 gallons``) raises
+``ConversionError`` and REFUSES (``rate_unit_mismatch``). Off-serving; deterministic.
 """
 
 from __future__ import annotations
 
+from fractions import Fraction
+
 from generate.meaning_graph.reader import Refusal
+from generate.rate_comprehension.conversion import ConversionError, convert_time
 from generate.rate_comprehension.model import RateProblem
-from generate.rate_comprehension.units import (
-    BaseUnit,
-    RateUnit,
-    UnitError,
-    rate_from_quantity_over_time,
-    rate_times_time,
-    time_from_quantity_over_rate,
-)
+from generate.rate_comprehension.units import RateUnit
+
+
+def _exact_int(value: Fraction) -> int | Refusal:
+    """An exact integer, or a typed refusal — never a rounded/floored approximation."""
+    if value.denominator != 1:
+        return Refusal("non_integer_solution", str(value))
+    return int(value)
 
 
 def solve_rate(problem: RateProblem) -> int | Refusal:
-    """Solve the unknown slot exactly, or refuse a non-integer inverse."""
+    """Solve the unknown slot exactly (converting the duration as needed), or refuse."""
     ru = problem.rate_unit
     try:
         if problem.query == "quantity":
-            rate_times_time(ru, BaseUnit(problem.time_unit))  # confirm mile/hour × hour = mile
             assert problem.rate is not None and problem.time is not None
-            return problem.rate * problem.time
+            time = convert_time(problem.time, problem.time_unit, ru.denominator)
+            return _exact_int(Fraction(problem.rate) * time)
         if problem.query == "rate":
-            rate_from_quantity_over_time(BaseUnit(problem.quantity_unit), BaseUnit(problem.time_unit))
             assert problem.quantity is not None and problem.time is not None
-            if problem.quantity % problem.time != 0:
-                return Refusal("non_integer_solution", f"{problem.quantity} ÷ {problem.time} (rate)")
-            return problem.quantity // problem.time
-        # query == "time"
-        time_from_quantity_over_rate(BaseUnit(problem.quantity_unit), ru)
+            time = convert_time(problem.time, problem.time_unit, ru.denominator)
+            return _exact_int(Fraction(problem.quantity) / time)
+        # query == "time" — answered in the rate's denominator unit; the duration is the unknown.
         assert problem.quantity is not None and problem.rate is not None
-        if problem.quantity % problem.rate != 0:
-            return Refusal("non_integer_solution", f"{problem.quantity} ÷ {problem.rate} (time)")
-        return problem.quantity // problem.rate
-    except UnitError as exc:  # pragma: no cover - a RateProblem's units compose by construction
+        return _exact_int(Fraction(problem.quantity) / Fraction(problem.rate))
+    except ConversionError as exc:
         return Refusal("rate_unit_mismatch", str(exc))
 
 
 def answer_unit(problem: RateProblem) -> str | RateUnit:
-    """The unit of the answer to *problem* — a base unit string, or a ``RateUnit`` when asking rate."""
+    """The unit of the answer — the rate numerator (quantity), the rate denominator (time), or the
+    full ``RateUnit`` (rate)."""
     if problem.query == "quantity":
         return problem.quantity_unit
     if problem.query == "time":
-        return problem.time_unit
+        return problem.rate_unit.denominator
     return problem.rate_unit
 
 

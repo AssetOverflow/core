@@ -60,6 +60,7 @@ def gold_to_problem(fx: dict[str, Any]) -> RateProblem:
         time=fx.get("time"),
         quantity=fx.get("quantity"),
         query=fx["query"],
+        time_unit=fx.get("time_unit"),
     )
 
 

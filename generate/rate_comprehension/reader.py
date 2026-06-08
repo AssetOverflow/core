@@ -21,6 +21,7 @@ from __future__ import annotations
 import re
 
 from generate.meaning_graph.reader import Refusal
+from generate.rate_comprehension.conversion import is_convertible
 from generate.rate_comprehension.model import RateProblem
 from generate.rate_comprehension.units import RateUnit
 
@@ -99,31 +100,34 @@ def read_rate_problem(text: str) -> RateProblem | Refusal:
     else:
         return Refusal("no_query")
 
-    # compound-unit consistency (the wrong=0 gate)
-    if time_value is not None and time_unit != rate_unit.denominator:
-        return Refusal("rate_unit_mismatch", f"duration {time_unit!r} ≠ rate denominator {rate_unit.denominator!r}")
+    # compound-unit consistency (the wrong=0 gate). R3.2: a duration whose unit CONVERTS to the
+    # rate denominator (minute↔hour) is accepted — the reader keeps the original time_unit and the
+    # SOLVER converts exactly. A non-convertible duration (e.g. gallons) still refuses.
+    if time_value is not None and not is_convertible(time_unit, rate_unit.denominator):
+        return Refusal("rate_unit_mismatch", f"duration {time_unit!r} does not convert to {rate_unit.denominator!r}")
     if quantity_value is not None and quantity_unit != rate_unit.numerator:
         return Refusal("rate_unit_mismatch", f"quantity {quantity_unit!r} ≠ rate numerator {rate_unit.numerator!r}")
 
-    # assemble by query (refusing an underdetermined setup)
+    # assemble by query (refusing an underdetermined setup); time_unit is the duration's ORIGINAL
+    # unit (the solver converts), or the rate denominator when the time is the unknown.
     if query == "quantity":
         if rate_value is None:
             return Refusal("missing_rate")
         if time_value is None:
             return Refusal("missing_time")
-        return RateProblem(rate_unit, rate_value, time_value, None, "quantity")
+        return RateProblem(rate_unit, rate_value, time_value, None, "quantity", time_unit=time_unit)
     if query == "rate":
         if quantity_value is None:
             return Refusal("missing_quantity")
         if time_value is None:
             return Refusal("missing_time")
-        return RateProblem(rate_unit, None, time_value, quantity_value, "rate")
+        return RateProblem(rate_unit, None, time_value, quantity_value, "rate", time_unit=time_unit)
     # query == "time"
     if rate_value is None:
         return Refusal("missing_rate")
     if quantity_value is None:
         return Refusal("missing_quantity")
-    return RateProblem(rate_unit, rate_value, None, quantity_value, "time")
+    return RateProblem(rate_unit, rate_value, None, quantity_value, "time", time_unit=rate_unit.denominator)
 
 
 __all__ = ["read_rate_problem"]

@@ -29,8 +29,8 @@ def _solved() -> dict:
 
 def test_run_validates_all_gold() -> None:
     r = run()
-    assert r["invalid"] == 0 and r["valid"] == r["total"] == 12
-    assert r["by_expect"] == {"solved": 6, "solver_refuses": 2, "reader_refuses": 4}
+    assert r["invalid"] == 0 and r["valid"] == r["total"] == 13
+    assert r["by_expect"] == {"solved": 7, "solver_refuses": 2, "reader_refuses": 4}
 
 
 def test_gold_to_problem_roundtrips() -> None:
