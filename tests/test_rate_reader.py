@@ -23,7 +23,7 @@ def test_reader_lane_is_wrong_zero_and_complete() -> None:
     r = run_reader()
     assert r["setup_wrong"] == 0 and r["reason_mismatch"] == 0
     assert r["setup_refused"] == 0
-    assert r["setup_correct"] == 8  # 6 solved + 2 solver_refuses (both have valid setups)
+    assert r["setup_correct"] == 9  # 7 solved (incl. the convertible r3-09) + 2 solver_refuses
     assert r["refused_correct"] == 4
 
 

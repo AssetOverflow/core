@@ -30,6 +30,9 @@ def rate_setup_signature(problem: RateProblem) -> dict[str, Any]:
         "rate_unit": (problem.rate_unit.numerator, problem.rate_unit.denominator),
         "knowns": knowns,
         "query": problem.query,
+        # The duration's ORIGINAL unit is part of the setup: "30 minutes" and "30 hours" are
+        # different problems even at the same rate, so the signature must distinguish them (R3.2).
+        "time_unit": problem.time_unit,
     }
 
 

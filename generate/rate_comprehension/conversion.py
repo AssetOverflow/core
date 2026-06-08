@@ -35,13 +35,16 @@ _TIME_IN_HOURS: dict[str, Fraction] = {
 
 
 def is_convertible(from_unit: str, to_unit: str) -> bool:
-    """Whether *from_unit* and *to_unit* are both known time units (so a conversion exists)."""
-    return from_unit in _TIME_IN_HOURS and to_unit in _TIME_IN_HOURS
+    """Whether a conversion exists — the identity (same unit, any kind) or a known time-unit pair."""
+    return from_unit == to_unit or (from_unit in _TIME_IN_HOURS and to_unit in _TIME_IN_HOURS)
 
 
 def convert_time(value: int, from_unit: str, to_unit: str) -> Fraction:
-    """Exact rational conversion of *value* ``from_unit`` into *to_unit*. Refuses unknown units."""
-    if not is_convertible(from_unit, to_unit):
+    """Exact rational conversion of *value* ``from_unit`` into *to_unit*. Identity for the same unit
+    (any kind, e.g. ``box``); a known time-unit pair otherwise; refuses anything else."""
+    if from_unit == to_unit:
+        return Fraction(value)
+    if from_unit not in _TIME_IN_HOURS or to_unit not in _TIME_IN_HOURS:
         raise ConversionError(f"no exact conversion {from_unit!r} -> {to_unit!r}")
     return Fraction(value) * _TIME_IN_HOURS[from_unit] / _TIME_IN_HOURS[to_unit]
 

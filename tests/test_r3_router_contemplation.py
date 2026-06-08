@@ -34,7 +34,7 @@ def test_router_routes_rate_to_r3_and_stays_exclusive() -> None:
         if r.selected is not None:
             assert r.selected.organ == "r3_rate"
             routed += 1
-    assert routed == 8  # 6 solved + 2 solver_refuses
+    assert routed == 9  # 7 solved (incl. convertible r3-09) + 2 solver_refuses
     # adding R3 does not make any R1/R2 problem ambiguous, nor route it to r3
     for fx in _load_r1_gold() + _load_r2_gold():
         r = route_setup(fx["text"])

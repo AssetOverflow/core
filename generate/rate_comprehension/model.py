@@ -29,8 +29,14 @@ class RateProblem:
     time: int | None
     quantity: int | None
     query: RateRole
+    #: The duration's ORIGINAL time unit from the text (R3.2). Defaults to the rate's denominator
+    #: (the non-converting case); a convertible duration (e.g. ``minute`` vs a ``/hour`` rate)
+    #: keeps its original unit here and the SOLVER converts it. ``time`` stays the original int.
+    time_unit: str | None = None
 
     def __post_init__(self) -> None:
+        if self.time_unit is None:
+            object.__setattr__(self, "time_unit", self.rate_unit.denominator)
         slots: dict[str, int | None] = {"rate": self.rate, "time": self.time, "quantity": self.quantity}
         unknown = [role for role, value in slots.items() if value is None]
         if unknown != [self.query]:
@@ -44,10 +50,6 @@ class RateProblem:
     @property
     def quantity_unit(self) -> str:
         return self.rate_unit.numerator
-
-    @property
-    def time_unit(self) -> str:
-        return self.rate_unit.denominator
 
 
 __all__ = ["RateProblem", "RateRole"]
