@@ -1,4 +1,9 @@
-# ADR-0211 — R2: Finite-Integer Linear-Constraint Setup Compiler (off-serving)
+# ADR-0217 — R2: Finite-Integer Linear-Constraint Setup Compiler (off-serving)
+
+> **Renumbered 2026-06-08:** originally landed as ADR-0211, which collided with
+> ADR-0211 (Conformal Falsification Bench, 2026-06-06). The conformal ADR is the
+> incumbent (earlier, test-pinned, depended on by ADR-0216); this R2 ADR moves to
+> the next free number 0217. The ratified decision content is unchanged.
 
 **Status:** Accepted (ratified 2026-06-07)
 **Date:** 2026-06-07
