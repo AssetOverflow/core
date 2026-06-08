@@ -36,9 +36,10 @@ from core.epistemic_disclosure.disposition import (
     choose_served_disposition,
 )
 from core.epistemic_disclosure.limitation import (
-    PENDING_Q1B_RECLASSIFICATION,
+    Q1B_ASK_CARVE_OUT,
     LimitationAssessment,
     LimitationKind,
+    MissingSlot,
     ResolutionAction,
     assess_from_attempt,
     assess_from_family,
@@ -56,11 +57,12 @@ from core.epistemic_disclosure.verified_contract import (
 
 __all__ = [
     "DEFAULT_DISCLOSURE_CLAIM",
-    "PENDING_Q1B_RECLASSIFICATION",
+    "Q1B_ASK_CARVE_OUT",
     "VERIFICATION_OBLIGATION",
     "DisclosureClaim",
     "LimitationAssessment",
     "LimitationKind",
+    "MissingSlot",
     "ResolutionAction",
     "ServedDisposition",
     "VerificationObligation",
