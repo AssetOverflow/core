@@ -32,6 +32,8 @@ solve, not a guess.
 ```text
 A question is not language.  A question is a typed request for missing state.
 The first skill of contemplation is: ask the smallest question that unblocks the proof.
+But the FIRST move is upstream of the question: a limitation pass classifies the gap —
+  only missing/ambiguous information becomes a question (the intake gate; see §1.5).
 question  ≠  proposal  (missing information in the world vs missing capability in CORE)
 Question generation must be deterministic, slot-directed, template-driven — never vibes.
 ```
@@ -112,6 +114,221 @@ it, or propose capability additions for problems it could solve if it just asked
 The blocking reason from the failure family is the gate: if the failure family
 signals *missing input*, route to `QUESTION_NEEDED`; if it signals *missing
 solver*, route to `PROPOSAL_EMITTED`.
+
+---
+
+## 1.5 — The pre-question limitation pass (session refinement)
+
+A refinement raised later in the same session. The trigger question:
+
+> Do we have anything, in the process of contemplation and asking the question,
+> about identifying the **limitations** of what the contemplation is *about*?
+
+Yes — and it must be explicit, and it must come **first**. Before contemplation
+asks anything, it must identify *the limits of the contemplated situation*. A
+question is only one of several dispositions, and asking is wrong unless the
+limitation is specifically the kind a question resolves. Otherwise CORE can ask
+something grammatical but epistemically wrong — too broad, out of scope, aimed at
+the wrong gap, or naming what it never grounded.
+
+So the first contemplative move is **not** *"what question do I ask?"* It is:
+
+```text
+What is preventing resolution — and what KIND of limitation is it?
+```
+
+### 1.5.1 Why this is load-bearing — it is CORE's intake gate
+
+This is bigger than asking tidy questions. **Limitation assessment is the gate on
+CORE's ability to receive necessary information at all.** Get the classification
+wrong and the intake path blocks in one of two dangerous ways:
+
+| Failure | What goes wrong | Cost |
+|---|---|---|
+| **Refuse when it should ask** (`missing_information → terminal refusal`) | CORE never receives the one fact that would make the problem solvable | a *structural* inability to take in the unlocking datum — not a clumsy answer, a lost capability |
+| **Ask when it should propose** (`capability_gap → question`) | CORE asks for something the user already supplied / cannot supply | the intake channel is wasted and the user is misled about what's missing |
+
+Example of the first (must ask, not refuse):
+
+```text
+Anna and Ben work together. Anna paints 3 rooms/hour. How many rooms in 4 hours?
+  bad:     "I cannot solve this."         (refuses → never receives Ben's rate)
+  correct: "What is the second person's painting rate in rooms per hour?"
+```
+
+Example of the second (must propose, not ask):
+
+```text
+Anna can finish in 3 hours. Ben can finish in 6 hours. How long together?
+  bad:     "What is Anna's rate?"          (the info is present; asking is wrong in KIND)
+  correct: deferred-capability proposal (reciprocal work-rate); no question
+```
+
+**The key phrase to pin in the Q1 scope:**
+
+> Question-asking is the intake mechanism for resolvable missing state.
+> Limitation assessment is the gate that determines whether intake is appropriate.
+
+That is what keeps a CORE question from collapsing into generic clarification, and
+makes intake part of the deterministic reasoning loop rather than a chat reflex.
+
+### 1.5.2 The flow
+
+The question organ is **downstream** of limitation assessment — not
+`failure → question`, but `failure → limitation assessment → question only when appropriate`:
+
+```text
+problem / situation
+  → contemplate (organ attempts + domain-precedence adjudication)
+  → identify the terminal limitation          ← the new pass
+  → classify the limitation kind
+  → choose a resolution action (answer / ask / propose / refuse / report / step aside)
+  → if ask:  derive missing slot → check renderability → render minimal sufficient question
+     else:   refuse / propose / report / narrow scope / step aside
+```
+
+### 1.5.3 The limitation inventory
+
+Only one of these kinds becomes a question. The rest are *not* questions by default.
+
+| Limitation kind | Meaning | Disposition | Example |
+|---|---|---|---|
+| `missing_information` | a needed datum is absent from the input | **ask** | only one of two rates given → "What is the second rate?" |
+| `ambiguous_structure` | the data is present but the relationship is unclear | **ask** | two rates, no cue → "together, opposing, or separate?" |
+| `scope_boundary` | the ask exceeds current capability/evidence | **explain (scope)** | "solve *all* combined-rate problems?" → state the v1 envelope |
+| `capability_gap` | the info is present; CORE lacks the transform | **propose** | reciprocal work-rate → proposal, not question |
+| `hard_boundary` | mathematically/logically impossible or undefined | **refuse** | net rate 0 → refuse, no question |
+| `contradiction` | evidence conflicts with a claimed answer | **report** | derived 20 vs key 18 → report (ask only via a later source-authority lane) |
+| `renderability_gap` | asking is right, but terms aren't grounded enough to ask safely | **ask generic / refuse-to-name** | unnamed 2nd painter → "the second person's rate", never "Ben's" |
+| `input_shape` | not this organ's domain | **step aside** | single-rate text reaching CMB → cede to R3 |
+
+### 1.5.4 The model
+
+```python
+LimitationKind = Literal[
+    "missing_information", "ambiguous_structure", "scope_boundary",
+    "capability_gap", "hard_boundary", "contradiction",
+    "renderability_gap", "input_shape",
+]
+
+ResolutionAction = Literal[
+    "answer", "ask_question", "emit_proposal",
+    "refuse_known_boundary", "report_contradiction", "step_aside",
+]
+
+@dataclass(frozen=True)
+class LimitationAssessment:
+    limitation_kind: LimitationKind
+    epistemic_state: EpistemicState           # reuse core/epistemic_state.py — not a new enum
+    resolution_action: ResolutionAction
+    owner_organ: str | None
+    blocking_reason: str                       # the failure-family key (the partition key)
+    grounded_terms: tuple[str, ...]            # what the trace actually grounded (renderability source)
+    missing_slots: tuple[MissingSlot, ...]
+    unsupported_capabilities: tuple[str, ...]
+    contradictions: tuple[str, ...]
+    scope_boundary: str | None
+```
+
+The `epistemic_state` / `resolution_action` split keeps state ("I do not have
+enough information" = `UNDETERMINED`) distinct from action ("ask the minimal
+sufficient question" = `ask_question`).
+
+### 1.5.5 The intake rule — ask only when ALL of these hold
+
+```text
+1. The limitation is missing or ambiguous external/problem information.
+2. The missing slot is typed.
+3. The expected answer form is known.
+4. The question can be rendered from grounded terms only.
+5. The answer, if provided, would re-enter the gate and could unblock solving.
+```
+
+If any fail: refuse, report, propose, narrow scope, or step aside — do **not** ask.
+
+### 1.5.6 This is bigger than math (lived / agentic intake)
+
+The same gate governs intake for any goal-directed situation:
+
+```text
+No goal        → ask for the goal.
+No constraint  → ask for the constraint.
+No observation → ask what happened.
+No source      → ask which source to trust.
+No metric      → ask what success means.
+Capability gap → do NOT ask; propose / build capability.
+Hard boundary  → do NOT ask; refuse / report the boundary.
+```
+
+Without limitation assessment, CORE cannot properly *receive* information, because
+it does not know what kind of information is admissible or useful. This is why the
+organ lives in `core/` — intake discipline is general-intelligence infrastructure,
+not a math feature.
+
+### 1.5.7 Implementation discipline (notes added in review)
+
+Three sharp edges to honour when this is built, so the refinement does not create
+new hazards:
+
+- **`LimitationAssessment` is a *consolidating view*, not a fourth taxonomy.** We
+  already encode disposition in three overlapping places: the **failure-family
+  registry** (`must_remain_refused` / `proposal_allowed` / `input_shape` /
+  `owner`), the **contemplation terminals** (`SOLVED_VERIFIED` /
+  `REFUSED_KNOWN_BOUNDARY` / `PROPOSAL_EMITTED` / `CONTRADICTION_DETECTED` / …),
+  and now `LimitationKind` / `ResolutionAction`. `ResolutionAction` ≈ the terminal
+  set we already ship; `LimitationKind` ≈ the *why* the failure family half-encodes.
+  The pass must **derive** disposition from those and *unify* them — adding only the
+  genuinely new `ask_question` and the `renderability_gap` guard — never stack a
+  parallel fourth source of truth (CLAUDE.md: no parallel correction/decision paths).
+  Concrete mapping to the shipped registry:
+
+  ```text
+  hard_boundary    ← must_remain_refused math/logic families (cmb_non_positive_net, cmb_non_integer, …)
+  ambiguous_struct ← must_remain_refused ambiguity families  (cmb_combine_ambiguous)
+  missing_info     ← must_remain_refused underdetermined      (cmb_underdetermined, rate_underdetermined)
+                     AND (see next note) the proposal_allowed missing_* families
+  capability_gap   ← proposal_allowed capability families     (cmb_unsupported_*, unsupported_rate_duration)
+  contradiction    ← answer_key_contradiction
+  input_shape      ← input_shape (step_aside)
+  ```
+
+- **Introducing `ask` re-audits the *shipped* failure families, and it cuts both
+  ways.** It splits `must_remain_refused` (the math/contradiction families stay
+  hard-refuse; the ambiguous/underdetermined-*input* families become **ask** — and
+  per the intake argument above, a refuse-when-should-ask there is a real loss, not
+  a label quibble). It also pulls from `proposal_allowed`: `missing_total_count` /
+  `missing_weighted_total` are *missing-information* (the user could state the
+  total), not *capability gaps* — once `ask` exists they look mis-classified and
+  should ask, not propose. This is a real change to shipped behaviour, so it is
+  **scope-it-don't-silently-re-key** territory, decided in the Q1 derivation slice
+  with tests, not edited into the registry in passing.
+
+- **`renderability_gap` is a first-class limitation, and the guard is the
+  question-equivalent of "no fabricated source":** *a question may not name an
+  entity, slot, unit, or relation that was not grounded in the attempted
+  comprehension trace.* When `grounded_terms` lacks the field a template needs,
+  degrade to a generic question or emit `question_unrenderable` — never a named
+  guess. This is exactly the surface where the CMB reader's adversarial passes kept
+  catching real wrong=0 bugs; the same discipline applies to asking.
+
+### 1.5.8 Where this meets Stage 2 (the disclosure bus)
+
+This is the off-serving mirror of the Stage 2 served-surface bus. The bus maps:
+
+```text
+EpistemicState + LimitationAssessment → ServedDisposition
+
+  VERIFIED                          → disclose answer (widened reach)   ← Stage 2 v1 (only one implemented)
+  UNDETERMINED + missing_information → ASK_QUESTION                      ← reserved (Q1 tenant)
+  UNDETERMINED + capability_gap      → PROPOSAL                         ← reserved
+  UNDETERMINED + scope_boundary      → SCOPE_BOUNDARY disclosure        ← reserved (RESERVED EpistemicState)
+  CONTRADICTED                       → REPORT_CONTRADICTION             ← reserved
+```
+
+So Stage 2 should be scoped *generally* enough to reserve these dispositions (so a
+question is governed for the surface exactly as an answer is), while implementing
+only `VERIFIED` first. `QUESTION_NEEDED` then becomes the second tenant on the same
+bus: `LimitationAssessment(missing_information) → QUESTION_NEEDED → render → bus`.
 
 ---
 
