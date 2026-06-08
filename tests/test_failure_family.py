@@ -35,6 +35,9 @@ ALL_REASONS = {
     # R2 answer-choice
     "no_matching_option", "ambiguous_options", "no_options", "unknown_provided_label",
     "unparseable_option",
+    # R3 rate reader
+    "rate_unit_mismatch", "combined_rates", "missing_rate", "missing_time", "missing_quantity",
+    "temporal_state", "query_target_unrecognized", "no_query",
 }
 
 
@@ -63,7 +66,7 @@ def test_only_precise_missing_totals_are_reachable_growth_surfaces() -> None:
     # Only the PRECISE R2 gaps are reachable growth surfaces. category_pair_not_found is too broad
     # (fires on any non-R2 text), so it maps to input_shape, and missing_category_pair is reserved.
     growth = {f.name for f in REGISTRY if f.proposal_allowed and f.refusal_reasons}
-    assert growth == {"missing_total_count", "missing_weighted_total"}
+    assert growth == {"missing_total_count", "missing_weighted_total", "unsupported_rate_duration"}
     assert family_for_reason("category_pair_not_found").name == "input_shape"
     for f in REGISTRY:
         if f.proposal_allowed:

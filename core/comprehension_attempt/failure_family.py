@@ -29,7 +29,7 @@ from typing import Literal
 
 from core.comprehension_attempt.model import ComprehensionAttempt
 
-Owner = Literal["r1", "r2", "cross"]
+Owner = Literal["r1", "r2", "r3", "cross"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,7 +54,7 @@ REGISTRY: tuple[FailureFamily, ...] = (
         refusal_reasons=(
             "empty", "no_quantity_template", "non_digit_quantity", "non_identifier_name",
             "unreadable_quantity_query", "invalid_binding_graph", "query_target_not_a_category",
-            "unprojectable", "category_pair_not_found",
+            "unprojectable", "category_pair_not_found", "query_target_unrecognized", "no_query",
         ),
     ),
     FailureFamily(
@@ -140,13 +140,25 @@ REGISTRY: tuple[FailureFamily, ...] = (
         "RESERVED — propose an attribute-coefficient fixture (no emitter yet)",
         proposal_target="r2_gold_fixture",
     ),
+    # --- R3 single-rate organ (reachable; growth vs boundary by the anti-over-propose rule) -- #
     FailureFamily(
-        "unsupported_rate_duration", "cross", True, False,
-        "RESERVED — rate/duration frames are R3 (no emitter yet)",
+        "unsupported_rate_duration", "r3", False, True,
+        "propose a rate fixture for a recognized-but-unsupported rate feature (unit conversion / "
+        "multi-rate). GROWTH surface: rate_unit_mismatch + combined_rates are emitted ONLY after a "
+        "rate clause is recognized, so they are always rate-like — never arbitrary text.",
+        proposal_target="r3_gold_fixture",
+        refusal_reasons=("rate_unit_mismatch", "combined_rates"),
     ),
     FailureFamily(
-        "unsupported_temporal_state", "cross", True, False,
-        "RESERVED — temporal-state frames are R3 (no emitter yet)",
+        "rate_underdetermined", "r3", True, False,
+        "refuse — a single-rate problem missing a needed value (underdetermined), like ungrounded_base",
+        refusal_reasons=("missing_rate", "missing_time", "missing_quantity"),
+    ),
+    FailureFamily(
+        "unsupported_temporal_state", "r3", True, False,
+        "refuse — elapsed clock-time is R3.x. NOT a growth surface: the clock-marker detector can "
+        "fire on non-rate text, so temporal_state is not reliably rate-like.",
+        refusal_reasons=("temporal_state",),
     ),
 )
 
