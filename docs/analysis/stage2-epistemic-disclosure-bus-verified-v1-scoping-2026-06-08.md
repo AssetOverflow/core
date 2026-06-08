@@ -72,10 +72,42 @@ A `ServedDisposition` is a point in a 2-D space, both axes already present in co
 | **explain** | — | — | SCOPE_BOUNDARY disclosure *(reserved)* |
 | **refuse** | typed refusal | typed refusal | typed refusal |
 
-VERIFIED v1 occupies exactly one new cell: **disclose, at a reach wider than
-STRICT, an answer a comprehension organ produced and an independent canonical
-comparison confirmed.** Everything else in the table is either already shipped
-(STRICT commit/refuse/report; APPROXIMATE cognition estimate) or reserved.
+VERIFIED v1 occupies exactly one new cell: **disclose — under a distinct
+`[verified]` mode — an answer a comprehension organ produced and an independent
+canonical comparison confirmed.** Everything else in the table is either already
+shipped (STRICT commit/refuse/report; APPROXIMATE cognition estimate) or reserved.
+
+### A caution on the REACH axis — VERIFIED is a disclosure *claim*, not an approximation
+
+The `DISPOSITION × REACH` framing is right for scoping, but VERIFIED **stretches**
+the REACH axis and the design must not paper over it. `ReachLevel` orders responses
+by *how far past fully-grounded fact* they speculate (`STRICT < APPROXIMATE <
+EXTRAPOLATE < CREATIVE`). VERIFIED is **not more speculative than STRICT** — it is
+*more **licensed***: an answer past the strict/gold line that an independent
+canonical comparison has confirmed. It is therefore a **disclosed-surface license /
+verification claim**, not a point further out on the speculation scale.
+
+> **Decision (locks S2-1 in principle).** VERIFIED is a disclosed-surface license,
+> not an approximation. If it is implemented as a `ReachLevel` value for
+> compatibility with the existing seam, it **must** carry distinct semantics **and
+> distinct disclosure text** from `APPROXIMATE` — never the `[approximate]` prefix.
+
+The principled decomposition separates the two ideas onto their own axes:
+
+```text
+Disposition     = commit | disclose | ask | report | explain | refuse
+DisclosureClaim = verified | approximate | scope_boundary | question_needed   ← the claim a disclosure makes
+ReachLevel      = strict | approximate | extrapolate | creative               ← how far past fact it reaches
+```
+
+`DisclosureClaim` is the new idea VERIFIED really introduces; "verified" is a claim
+about *verification status*, not a reach. For **v1 the smallest coherent
+implementation** may collapse this into a distinct `ReachLevel.VERIFIED` (so the
+existing `policy.py` / `shape_surface` seam carries it without a new axis) — that is
+acceptable **provided** it gets its own admissible-set, rationale, and `[verified]`
+prefix. The exact enum shape (distinct `ReachLevel.VERIFIED` vs. a separate
+`DisclosureClaim` axis) is the one remaining S2-A choice; the *principle* —
+distinct from APPROXIMATE — is settled here.
 
 ---
 
@@ -100,9 +132,10 @@ eight for VERIFIED v1; the reserved tenants answer them later, on the same bus.
   in the **reading**, not the solving (§3.2). This is the lesson that killed the
   fold-reader path and the reason R1–R4 organs are the unblock.
 - **SQ-5. How is a widened answer presented?** Via the existing `shape_surface`:
-  STRICT is identity (verbatim commit); a wider reach surfaces a **disclosed**
-  alternative with a prefix. VERIFIED v1 discloses — it never silently overwrites
-  the STRICT surface (§4).
+  STRICT is identity (verbatim commit); a wider mode surfaces a **disclosed**
+  alternative with a prefix. VERIFIED v1 discloses under its **own distinct
+  `[verified]` mode** — never the `[approximate]` prefix, and never a silent
+  overwrite of the STRICT surface (§0 caution, §4).
 - **SQ-6. What is the blast radius / kill-switch?** A new default-`False`
   `RuntimeConfig.verified_serving_enabled`, sibling to `estimation_enabled`
   (§5). Off ⇒ byte-identical to today.
@@ -258,16 +291,27 @@ The bus contract for v1:
 
 ```text
 govern_response(epistemic_state=VERIFIED, verification=<canonical-comparison evidence>)
-    → ReachPolicy(level=APPROXIMATE-or-new VERIFIED reach, admissible_states={DECODED, VERIFIED})
+    → ReachPolicy(level=<distinct VERIFIED mode>, admissible_states={DECODED, VERIFIED})
 shape_surface(policy, committed_surface=<organ answer>, decode_state=VERIFIED, ...)
-    → disclosed surface
+    → "[verified] <answer>"        # distinct mode + distinct prefix — NEVER [approximate]
 ```
 
-Open S2-A question: reuse `ReachLevel.APPROXIMATE` for the VERIFIED reach, or add a
-distinct level? APPROXIMATE's semantics are "disclosed best-estimate from incomplete
-evidence" — VERIFIED is the opposite (proven, not estimated). Leaning: a distinct
-reach or at minimum a distinct admissible-set/rationale, decided in S2-A. Do **not**
-overload APPROXIMATE's `[approximate]` prefix onto a proven answer.
+**S2-1 decision (settled in this doc, not deferred):**
+
+> **VERIFIED must not reuse `ReachLevel.APPROXIMATE` or the `[approximate]`
+> disclosure prefix. VERIFIED receives a distinct disclosed-surface mode/level with
+> its own deterministic prefix, e.g. `[verified]`. APPROXIMATE is for bounded
+> estimates; VERIFIED is for independently confirmed answers under the
+> canonical-comparison contract.**
+
+The two are not neighbours on one scale: `APPROXIMATE` means *"useful but less
+certain — disclosed as approximate"*; `VERIFIED` means *"independently confirmed
+under the canonical-comparison contract."* Reusing APPROXIMATE's prefix would put a
+proven answer behind an "I'm not sure" label — semantically wrong. The only choice
+left to S2-A is the **enum shape** (a distinct `ReachLevel.VERIFIED` value, or a
+separate `DisclosureClaim` axis per §0); both honour the decision above. A distinct
+`ReachLevel.VERIFIED` is the acceptable smallest-coherent v1 **iff** it carries its
+own admissible-set, rationale, and `[verified]` prefix.
 
 ---
 
@@ -377,8 +421,11 @@ To be answered by the S2-A..D PRs, not here:
 
 - **S2-0. Contract.** Exact `ServedDisposition` dataclass + the VERIFIED predicate
   signature, with the meaningful-fail test (rejects sound-but-wrong) written first.
-- **S2-1. Reach.** Reuse `APPROXIMATE` or add a distinct VERIFIED reach? (§4) —
-  must not overload the `[approximate]` disclosure prefix onto a proven answer.
+- **S2-1. Reach. (SETTLED in §0/§4 — distinct from APPROXIMATE.)** VERIFIED gets a
+  distinct disclosed-surface mode and a distinct `[verified]` prefix, never
+  `[approximate]`. The only S2-A choice left is the **enum shape**: a distinct
+  `ReachLevel.VERIFIED` value vs. a separate `DisclosureClaim` axis — both must carry
+  their own admissible-set, rationale, and prefix.
 - **S2-2. Producer class order.** R2 constraint-satisfaction first; R4 second;
   nothing else in v1.
 - **S2-3. Independence proof.** How the canonical re-derivation is made provably
@@ -419,6 +466,9 @@ R4 repeats S2-B..D as a follow-on once R2 is proven end-to-end.
 - **Not** a statistical/Wilson license substituting for proof — math serving is
   absolute wrong=0, not disclosed-estimate like the cognition path (the
   `_canonically_verified` docstring forbids this explicitly).
+- **Not** a reuse of `APPROXIMATE` — VERIFIED carries its own distinct disclosure
+  mode and `[verified]` prefix; a proven answer never wears the `[approximate]`
+  label (§0 caution, §4 S2-1 decision).
 - **Not** the ASK / PROPOSE / REPORT / SCOPE tenants — those are **reserved** seats
   on the bus, built later (Doc 2 is the ASK scope). The intake-gate excitement
   (session-doc §1.5) must **not** widen v1: ASK is a future tenant, not Stage 2 v1.
