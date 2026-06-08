@@ -187,6 +187,56 @@ def run() -> dict[str, Any]:
     }
 
 
+def run_solver() -> dict[str, Any]:
+    """Grade the CMB solver against the gold setups (CMB-b).
+
+    For every fixture with a setup (``solved`` / ``solver_refuses``), solve the gold setup and
+    compare to the gold label: a ``solved`` fixture must produce the gold int; a ``solver_refuses``
+    fixture must produce a ``Refusal`` carrying the gold ``solver_reason``. ``reader_refuses``
+    fixtures have no setup and are skipped (the reader's lane, CMB-c). This grades the runtime
+    solver against the *committed* gold values (not against ``_canonical_outcome``). Note both the
+    solver and ``_canonical_outcome`` delegate net-rate arithmetic to ``model.effective_rate``, so
+    the hand-computed literal tests — not path-independence — are the anchor against a shared
+    ``effective_rate`` bug. Exit-0 criterion: ``solved_wrong == 0 and refuse_wrong == 0``.
+    """
+    from generate.combined_rate_comprehension.solver import solve_combined_rate
+    from generate.meaning_graph.reader import Refusal
+
+    fixtures = _load_combined_rate_gold()
+    solved_correct = solved_wrong = refuse_correct = refuse_wrong = skipped = 0
+    details: list[dict[str, Any]] = []
+    for fx in fixtures:
+        fid = fx.get("id")
+        if fx["expect"] == "reader_refuses":
+            skipped += 1
+            continue
+        out = solve_combined_rate(gold_to_problem(fx))
+        if fx["expect"] == "solved":
+            if not isinstance(out, Refusal) and out == fx["gold"]:
+                solved_correct += 1
+                details.append({"id": fid, "outcome": "solved_correct"})
+            else:
+                solved_wrong += 1
+                details.append({"id": fid, "outcome": "solved_WRONG", "got": str(out), "want": fx["gold"]})
+        else:  # solver_refuses
+            if isinstance(out, Refusal) and out.reason == fx["solver_reason"]:
+                refuse_correct += 1
+                details.append({"id": fid, "outcome": "refuse_correct", "reason": out.reason})
+            else:
+                refuse_wrong += 1
+                details.append({"id": fid, "outcome": "refuse_WRONG", "got": str(out), "want": fx["solver_reason"]})
+    return {
+        "lane": "combined_rate_oracle_solver",
+        "total": len(fixtures),
+        "solved_correct": solved_correct,
+        "solved_wrong": solved_wrong,
+        "refuse_correct": refuse_correct,
+        "refuse_wrong": refuse_wrong,
+        "skipped_reader_refuses": skipped,
+        "details": details,
+    }
+
+
 __all__ = [
     "COMBINE_MODES",
     "EXPECTATIONS",
@@ -197,5 +247,6 @@ __all__ = [
     "_load_combined_rate_gold",
     "gold_to_problem",
     "run",
+    "run_solver",
     "validate_fixture",
 ]

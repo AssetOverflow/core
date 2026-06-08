@@ -43,8 +43,8 @@ def _solved() -> dict:
 
 def test_run_validates_all_gold() -> None:
     r = run()
-    assert r["invalid"] == 0 and r["valid"] == r["total"] == 17
-    assert r["by_expect"] == {"solved": 6, "solver_refuses": 4, "reader_refuses": 7}
+    assert r["invalid"] == 0 and r["valid"] == r["total"] == 18
+    assert r["by_expect"] == {"solved": 6, "solver_refuses": 5, "reader_refuses": 7}
 
 
 def test_solved_grid_covers_every_mode_query_cell() -> None:
@@ -112,6 +112,22 @@ def test_non_positive_net_rate_is_a_well_formed_setup_not_a_model_error() -> Non
     # 4 - 4 = 0: the model MUST construct it (the solver, not the model, refuses non_positive_net_rate).
     p = CombinedRateProblem(4, 4, _ROOM_HOUR, "difference", 5, None, "quantity")
     assert p.effective_rate == 0
+
+
+def test_model_rejects_non_positive_rates_and_known_slots() -> None:
+    # Negative/zero INPUTS are nonsensical and must be unrepresentable (a non-positive NET rate is
+    # the solver's call, but a non-positive rate magnitude or duration/quantity is a malformed setup)
+    # — otherwise the solver could emit a negative answer (wrong=0 breach).
+    with pytest.raises(ValueError):  # negative rate magnitude
+        CombinedRateProblem(-3, 2, _ROOM_HOUR, "sum", 4, None, "quantity")
+    with pytest.raises(ValueError):  # zero rate magnitude
+        CombinedRateProblem(3, 0, _ROOM_HOUR, "sum", 4, None, "quantity")
+    with pytest.raises(ValueError):  # negative known duration
+        CombinedRateProblem(3, 2, _ROOM_HOUR, "sum", -3, None, "quantity")
+    with pytest.raises(ValueError):  # negative known quantity
+        CombinedRateProblem(3, 2, _ROOM_HOUR, "sum", None, -5, "time")
+    with pytest.raises(ValueError):  # zero known duration
+        CombinedRateProblem(3, 2, _ROOM_HOUR, "sum", 0, None, "quantity")
 
 
 # --- signature ------------------------------------------------------------------------- #
