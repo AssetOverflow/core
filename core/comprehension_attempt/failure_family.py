@@ -55,6 +55,7 @@ REGISTRY: tuple[FailureFamily, ...] = (
             "empty", "no_quantity_template", "non_digit_quantity", "non_identifier_name",
             "unreadable_quantity_query", "invalid_binding_graph", "query_target_not_a_category",
             "unprojectable", "category_pair_not_found", "query_target_unrecognized", "no_query",
+            "not_rate_shaped",
         ),
     ),
     FailureFamily(

@@ -16,6 +16,8 @@ from generate.constraint_comprehension.model import ConstraintProblem
 from generate.constraint_comprehension.reader import read_constraint_problem
 from generate.meaning_graph.reader import Refusal
 from generate.quantitative_comprehension import comprehend_quantitative, to_relational_metric
+from generate.rate_comprehension.model import RateProblem
+from generate.rate_comprehension.reader import read_rate_problem
 
 
 def _r1_signature(relations: list[dict[str, Any]]) -> str:
@@ -82,4 +84,29 @@ def classify_r2(text: str, *, case_id: str | None = None) -> ComprehensionAttemp
     )
 
 
-__all__ = ["classify_r1", "classify_r2"]
+def _r3_signature(problem: RateProblem) -> str:
+    """Deterministic string signature of an R3 single-rate setup."""
+    return repr(
+        (
+            (problem.rate_unit.numerator, problem.rate_unit.denominator),
+            ("rate", problem.rate),
+            ("time", problem.time),
+            ("quantity", problem.quantity),
+            problem.query,
+        )
+    )
+
+
+def classify_r3(text: str, *, case_id: str | None = None) -> ComprehensionAttempt:
+    """Attempt the R3 single-rate setup compiler on *text*."""
+    problem = read_rate_problem(text)
+    if isinstance(problem, Refusal):
+        return ComprehensionAttempt(
+            "r3_rate", "setup_refused", case_id=case_id, refusal_reason=problem.reason
+        )
+    return ComprehensionAttempt(
+        "r3_rate", "setup_correct", case_id=case_id, setup_signature=_r3_signature(problem)
+    )
+
+
+__all__ = ["classify_r1", "classify_r2", "classify_r3"]

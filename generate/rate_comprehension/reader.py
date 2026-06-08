@@ -83,7 +83,12 @@ def read_rate_problem(text: str) -> RateProblem | Refusal:
     elif how_many:
         asked = _singular(how_many.group(1))
         if rate_value is None:
-            return Refusal("missing_rate", "no rate given and rate is not the question")
+            # No rate clause. This is a rate-underdetermined problem ONLY if rate-like structure
+            # (a duration) is present; otherwise it simply is not a rate problem and must refuse as
+            # not-my-domain (so R3 never claims a substantive boundary on R1/R2 text).
+            if dur is not None:
+                return Refusal("missing_rate", "a duration but no rate clause")
+            return Refusal("not_rate_shaped", "no rate structure")
         rate_unit = RateUnit(num_unit, denom_unit)
         if asked == num_unit:
             query = "quantity"

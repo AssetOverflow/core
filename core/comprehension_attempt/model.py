@@ -22,7 +22,7 @@ from typing import Literal
 
 from generate.binding_graph.model import SourceSpanLink
 
-Organ = Literal["r1_quantitative", "r2_constraints"]
+Organ = Literal["r1_quantitative", "r2_constraints", "r3_rate"]
 
 Outcome = Literal[
     "setup_correct",   # an admissible setup was produced (produce-mode) / matches gold (eval-mode)
