@@ -23,9 +23,12 @@ Pure data with a structural guard: the two rates must be present, and exactly th
 licenses are known/unknown (illegal states — a missing rate, the wrong slot unknown, an
 over-specified ``effective_rate`` query — cannot be represented).
 
-``effective_rate`` is derived (a property), and for ``difference`` mode it MAY be ``<= 0``
-(``rate_a <= rate_b``). The model does NOT refuse that — a non-positive net rate is the *solver's*
-boundary (``non_positive_net_rate``, CMB-b), not a malformed setup. Off-serving; deterministic.
+The two rates and the known time/quantity are **positive ints** — a non-positive rate or a
+non-positive duration/quantity is nonsensical and cannot be represented (so the solver can never
+receive a path that yields a negative answer). The *net* rate, by contrast, MAY be ``<= 0``:
+``effective_rate`` is derived (a property), and for ``difference`` mode with ``rate_a <= rate_b``
+it is ``<= 0``. The model does NOT refuse that — a non-positive net rate is the *solver's* boundary
+(``non_positive_net_rate``, CMB-b), not a malformed setup. Off-serving; deterministic.
 No unit conversion in v1 (``time_unit`` defaults to the rate denominator and the v1 gold never
 crosses units).
 """
@@ -68,8 +71,8 @@ class CombinedRateProblem:
         if self.time_unit is None:
             object.__setattr__(self, "time_unit", self.rate_unit.denominator)
         for role, value in (("rate_a", self.rate_a), ("rate_b", self.rate_b)):
-            if not isinstance(value, int) or isinstance(value, bool):
-                raise ValueError(f"{role} must be a known int (two explicit rates); got {value!r}")
+            if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+                raise ValueError(f"{role} must be a positive int (two explicit rates); got {value!r}")
         if self.combine_mode not in ("sum", "difference"):
             raise ValueError(f"combine_mode must be 'sum' or 'difference'; got {self.combine_mode!r}")
         if self.query not in _QUERY_SLOTS:
@@ -86,8 +89,8 @@ class CombinedRateProblem:
                 raise ValueError(f"query={self.query!r}: slot {role!r} must be the unknown (None)")
         for role in known_slots:
             value = slots[role]
-            if not isinstance(value, int) or isinstance(value, bool):
-                raise ValueError(f"{role} value must be int; got {value!r}")
+            if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+                raise ValueError(f"{role} value must be a positive int; got {value!r}")
 
     @property
     def effective_rate(self) -> int:
