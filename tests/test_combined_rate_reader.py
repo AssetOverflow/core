@@ -37,7 +37,7 @@ def test_reader_lane_is_wrong_zero_and_complete() -> None:
     assert r["setup_wrong"] == 0 and r["reason_mismatch"] == 0
     assert r["setup_refused"] == 0
     assert r["setup_correct"] == 11  # 6 solved + 5 solver_refuses (all parse)
-    assert r["refused_correct"] == 7
+    assert r["refused_correct"] == 8
 
 
 def test_reads_every_well_formed_fixture_to_gold_signature() -> None:
@@ -310,6 +310,24 @@ def test_sequential_segments_with_loose_connector_step_aside() -> None:
         "also for 2 hours. Both machines work together. How many units total?"
     )
     assert isinstance(out, Refusal) and out.reason == "not_combined_rate_shaped"
+
+
+def test_single_agent_attribution_steps_aside() -> None:
+    # Two same-unit rates, but the query attributes the answer to ONE agent ("how many words does
+    # Alice type") -> single-rate question with a distractor, NOT a combined query. Must step aside,
+    # never claim the substantive combine_mode_ambiguous (CMB-lookback hazard H3). The genuinely
+    # combined cases ("are produced", "do they") still yield combine_mode_ambiguous.
+    for text in (
+        "Alice types 5 words per minute and Bob types 3 words per minute. How many words does Alice type in 3 minutes?",
+        "Pump A fills 5 liters per minute and pump B fills 3 liters per minute. How many liters does pump A add in 4 minutes?",
+    ):
+        out = read_combined_rate_problem(text)
+        assert isinstance(out, Refusal) and out.reason == "not_combined_rate_shaped", text
+    # control: passive / combined attribution stays substantive
+    amb = read_combined_rate_problem(
+        "One machine runs at 3 widgets per minute. Another machine runs at 5 widgets per minute. How many widgets are produced in 4 minutes?"
+    )
+    assert isinstance(amb, Refusal) and amb.reason == "combine_mode_ambiguous"
 
 
 def test_compared_rates_with_no_combined_query_step_aside() -> None:

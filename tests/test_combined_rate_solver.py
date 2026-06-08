@@ -28,7 +28,7 @@ def test_solver_lane_is_wrong_zero_and_complete() -> None:
     assert r["solved_wrong"] == 0 and r["refuse_wrong"] == 0
     assert r["solved_correct"] == 6
     assert r["refuse_correct"] == 5
-    assert r["skipped_reader_refuses"] == 7
+    assert r["skipped_reader_refuses"] == 8
 
 
 def test_solves_every_solved_fixture_to_gold() -> None:

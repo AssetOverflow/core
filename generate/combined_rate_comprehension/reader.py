@@ -54,6 +54,10 @@ _EFF_RATE_QUERY = re.compile(r"\bwhat\b[^.?!]*\b(?:net|combined)\b[^.?!]*\brate\
 _CLOCK = re.compile(r"\b\d+\s*(?:am|pm)\b|\bo'?clock\b")
 # Two conjoined agents in the premise ("Anna and Ben …") — the strong signal for missing_second_rate.
 _AGENT_CONJ = re.compile(r"\b[a-z]+\s+and\s+[a-z]+\b")
+# A query that attributes the answer to a SINGLE agent ("how many words does Alice type") rather
+# than the combination ("how many … do they …" / "… are produced"). "does it/this/that" is the
+# combined process, not a single agent, so it is excluded.
+_SINGLE_AGENT_QUERY = re.compile(r"\bdoes\s+(?!it\b|this\b|that\b|they\b)[a-z]")
 
 #: Whole-word fill / drain verbs. Detected PER RATE CLAUSE (in the clause's own lead-in), never
 #: globally — an incidental "the drain stays closed" or a "draining" that governs a different clause
@@ -159,7 +163,11 @@ def read_combined_rate_problem(text: str) -> CombinedRateProblem | Refusal:
         if u0 == u1:
             hm = _HOW_MANY.search(t)
             asked0 = _singular(hm.group(1)) if hm else None
-            if asked0 in u0 or _EFF_RATE_QUERY.search(t, rate_spans[-1][1]) is not None:
+            combined_q = asked0 in u0 or _EFF_RATE_QUERY.search(t, rate_spans[-1][1]) is not None
+            # A query attributing the answer to a SINGLE agent ("how many words does Alice type") is a
+            # single-rate question with a distractor rate, NOT a combined query -> step aside, never
+            # claim the substantive combine_mode_ambiguous on it (router hygiene).
+            if combined_q and _SINGLE_AGENT_QUERY.search(t, rate_spans[-1][1]) is None:
                 return Refusal("combine_mode_ambiguous", "two same-unit rates and a combined query but no mode cue")
         return Refusal("not_combined_rate_shaped", "two rates that are not a clean combined-rate problem")
     # A combination cue IS present — now substantive combined-rate refusals are legitimate.
