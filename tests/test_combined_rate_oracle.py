@@ -43,8 +43,8 @@ def _solved() -> dict:
 
 def test_run_validates_all_gold() -> None:
     r = run()
-    assert r["invalid"] == 0 and r["valid"] == r["total"] == 18
-    assert r["by_expect"] == {"solved": 6, "solver_refuses": 5, "reader_refuses": 7}
+    assert r["invalid"] == 0 and r["valid"] == r["total"] == 19
+    assert r["by_expect"] == {"solved": 6, "solver_refuses": 5, "reader_refuses": 8}
 
 
 def test_solved_grid_covers_every_mode_query_cell() -> None:
