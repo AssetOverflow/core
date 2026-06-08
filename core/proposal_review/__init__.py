@@ -11,6 +11,22 @@ from ``idle_tick`` as a read-only sub-pass.
 from __future__ import annotations
 
 from core.proposal_review.model import MalformedArtifact, PendingProposal
+from core.proposal_review.report import (
+    ProposalReviewReport,
+    build_report,
+    report_json,
+    report_text,
+)
 from core.proposal_review.scan import DEFAULT_SINK, default_sink, scan
 
-__all__ = ["DEFAULT_SINK", "MalformedArtifact", "PendingProposal", "default_sink", "scan"]
+__all__ = [
+    "DEFAULT_SINK",
+    "MalformedArtifact",
+    "PendingProposal",
+    "ProposalReviewReport",
+    "build_report",
+    "default_sink",
+    "report_json",
+    "report_text",
+    "scan",
+]
