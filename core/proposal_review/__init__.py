@@ -19,16 +19,19 @@ from core.proposal_review.report import (
 )
 from core.proposal_review.safety import SafetyVerdict, dry_check
 from core.proposal_review.scan import DEFAULT_SINK, default_sink, scan
+from core.proposal_review.summary import ProposalReviewIdleSummary, idle_summary
 
 __all__ = [
     "DEFAULT_SINK",
     "MalformedArtifact",
     "PendingProposal",
+    "ProposalReviewIdleSummary",
     "ProposalReviewReport",
     "SafetyVerdict",
     "build_report",
     "default_sink",
     "dry_check",
+    "idle_summary",
     "report_json",
     "report_text",
     "scan",
