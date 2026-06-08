@@ -92,3 +92,50 @@ def test_validator_rejects_two_unknown_setup() -> None:
     fx = _solved()
     fx["time"] = None  # now both time and quantity unknown -> model __post_init__ raises
     assert validate_fixture(fx)[0] == "invalid"
+
+
+# --- R3-vac: the canonical-outcome cross-check makes solver_refuses / solved non-vacuous --------- #
+
+
+def test_validator_rejects_solver_refuse_that_is_actually_solvable() -> None:
+    # r3-01 solves exactly to 180; mislabelling it solver_refuses must be rejected, not blessed.
+    fx = _solved()
+    fx["expect"] = "solver_refuses"
+    fx["solver_reason"] = "non_integer_solution"
+    for k in ("gold", "options", "answer"):
+        fx.pop(k, None)
+    assert validate_fixture(fx) == ("invalid", "solver_refuses_is_actually_solvable")
+
+
+def test_validator_rejects_solver_reason_mismatch() -> None:
+    # A non-convertible duration genuinely refuses, but for rate_unit_mismatch (reader's boundary),
+    # not the labelled non_integer_solution.
+    fx = _solved()
+    fx["expect"] = "solver_refuses"
+    fx["solver_reason"] = "non_integer_solution"
+    fx["time_unit"] = "gallon"  # does not convert to the rate denominator (hour)
+    for k in ("gold", "options", "answer"):
+        fx.pop(k, None)
+    assert validate_fixture(fx) == ("invalid", "solver_reason_mismatch:expected_rate_unit_mismatch")
+
+
+def test_validator_rejects_wrong_gold_even_with_coherent_answer_key() -> None:
+    fx = _solved()  # r3-01: 60 mile/hour x 3 hour = 180
+    fx["gold"] = 181
+    fx["options"] = {**fx["options"], fx["answer"]: 181}  # keep options[answer] == gold
+    assert validate_fixture(fx) == ("invalid", "gold_does_not_match_computed_answer")
+
+
+def test_canonical_outcome_matrix() -> None:
+    from evals.rate_oracle.runner import _canonical_outcome
+
+    mph = RateUnit("mile", "hour")
+    wpm = RateUnit("widget", "minute")
+    # forward, no conversion: 60 x 3 = 180
+    assert _canonical_outcome(RateProblem(mph, 60, 3, None, "quantity", time_unit="hour")) == ("solved", 180, None)
+    # R3.2 conversion: 60 mile/hour for 30 minutes -> 30
+    assert _canonical_outcome(RateProblem(mph, 60, 30, None, "quantity", time_unit="minute")) == ("solved", 30, None)
+    # inverse rate, non-integer (100 / 3) -> refuse
+    assert _canonical_outcome(RateProblem(mph, None, 3, 100, "rate", time_unit="hour")) == ("refused", None, "non_integer_solution")
+    # inverse time, exact: 60 / 12 = 5
+    assert _canonical_outcome(RateProblem(wpm, 12, None, 60, "time", time_unit="minute")) == ("solved", 5, None)
