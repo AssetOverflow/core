@@ -16,20 +16,31 @@ DERIVES each from the already-shipped failure-family registry
 **Hard invariant (no fourth taxonomy).** Every assessment is mechanically derived
 from an existing ``FailureFamily``; the *only* genuinely new resolution action is
 ``ask_question`` (the future Q1/ASK tenant — it is the one action with no shipped
-terminal, see :func:`terminal_for_action`). The *only* family reclassification this
-design calls for — ``missing_total_count`` / ``missing_weighted_total`` from
-``capability_gap`` to ``missing_information`` — is **deferred** to Q1-B and decided
-there with tests, NOT made here (see :data:`PENDING_Q1B_RECLASSIFICATION`). This
-slice maps them to their *current* shipped classification.
+terminal, see :func:`terminal_for_action`).
+
+**Q1-B transitional carve-out (this slice).** Two shipped families —
+``missing_total_count`` and ``missing_weighted_total`` — are classified here as
+``missing_information`` / ``ask_question``: the user *could state the total* and
+unblock solving, so they are missing data, not capability gaps. The shipped
+:data:`REGISTRY` still flags them ``proposal_allowed = True`` so that existing
+consumers (:mod:`core.comprehension_attempt.proposal` /
+:mod:`generate.contemplation.pass_manager`) keep emitting proposal-only artifacts
+to the pile — until Q1-C/Q1-D wire ASK delivery to a served surface there is
+nowhere for an ``ask_question`` to go, and silently dropping the proposal signal
+would be a capability regression with no compensating intake. Once ASK is serving,
+the REGISTRY flag flips to ``False`` and the carve-out
+(:data:`Q1B_ASK_CARVE_OUT`) retires. The carve-out is named, enumerated, and
+covered by an explicit test (``tests/test_limitation_assessment.py``) so its
+removal is a conscious act, not a silent re-key.
 
 **Off-serving.** Imports no ``generate.derivation`` / ``core.reliability_gate``; it
 cannot move the sealed GSM8K metric. Nothing consumes ``resolution_action`` to change
-serving yet — this slice only *classifies*.
+serving yet — this slice only *classifies* and *describes residue*.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 from core.comprehension_attempt.failure_family import (
@@ -67,6 +78,26 @@ ResolutionAction = Literal[
 
 
 @dataclass(frozen=True, slots=True)
+class MissingSlot:
+    """One typed slot the ASK limitation identifies as missing.
+
+    A *structural* description (NOT user-renderable prose): ``slot_name`` is the
+    family-defined slot identifier (e.g. ``"total_count"``); ``expected_unit_or_type``
+    is the family-typed expectation a future bound answer must satisfy (e.g.
+    ``"count_int"``); ``binding_target`` is the structural role the slot fills in
+    the organ's setup (e.g. ``"collective_unit_total"``), which Q2 answer-binding
+    re-enters the gate against (scoping §4). Renderable, user-facing strings come
+    later from grounded text spans (:attr:`LimitationAssessment.grounded_terms`),
+    NEVER from these snake_case identifiers — that split is what keeps the renderer
+    wrong=0-safe (scoping §2).
+    """
+
+    slot_name: str
+    expected_unit_or_type: str
+    binding_target: str
+
+
+@dataclass(frozen=True, slots=True)
 class LimitationAssessment:
     """One typed classification of the limitation blocking a comprehension attempt.
 
@@ -74,6 +105,13 @@ class LimitationAssessment:
     deliberately distinct: e.g. ``UNDETERMINED`` + ``ask_question`` for a missing
     datum. ``blocking_reason`` is the failure-family key (the partition key), so the
     assessment is back-traceable to the shipped registry.
+
+    ``missing_slots`` and ``grounded_terms`` are the ASK *typed residue* — populated
+    only for ``ask_question`` resolutions by :func:`assess_from_attempt`. Both
+    default to empty so existing P0-1 callers using :func:`assess_from_family`
+    continue to work unchanged. The wrong=0 invariant (scoping §2): a slot here
+    carries family-typed structural identifiers only; renderable prose must come
+    from ``grounded_terms`` (verbatim text spans), never fabricated.
     """
 
     limitation_kind: LimitationKind
@@ -81,6 +119,8 @@ class LimitationAssessment:
     epistemic_state: EpistemicState
     owner_organ: str | None
     blocking_reason: str
+    missing_slots: tuple[MissingSlot, ...] = field(default_factory=tuple)
+    grounded_terms: tuple[str, ...] = field(default_factory=tuple)
 
 
 # --- The consolidating mapping (derived from the shipped registry, not invented) ---
@@ -113,17 +153,23 @@ _ACTION_TO_TERMINAL: dict[ResolutionAction, Terminal | None] = {
     "ask_question": None,
 }
 
-#: Families Q1-B will reclassify (``capability_gap`` → ``missing_information``): the
-#: user CAN supply the total, so it is missing information, not a capability gap. NOT
-#: changed here — this slice keeps the current classification; Q1-B flips it with its
-#: own tests. Listed so the deferral is explicit and greppable.
-PENDING_Q1B_RECLASSIFICATION: frozenset[str] = frozenset(
+#: **Transitional carve-out (Q1-B).** Families this slice classifies as
+#: ``ask_question`` in the limitation layer while their shipped
+#: :data:`REGISTRY` entries keep ``proposal_allowed = True`` so the contemplation
+#: pass and proposal pile keep working unchanged. This is an honest migration seam:
+#: the disclosure layer speaks the truthful classification now; the operational
+#: layer keeps the current signal so nothing regresses before Q1-C/Q1-D wires ASK
+#: delivery. Retirement: once ASK is serving, flip ``proposal_allowed = False`` on
+#: these two families in :mod:`core.comprehension_attempt.failure_family`, drop
+#: this set, and amend the ``proposal_allowed`` invariant in tests.
+Q1B_ASK_CARVE_OUT: frozenset[str] = frozenset(
     {"missing_total_count", "missing_weighted_total"}
 )
 
 #: family name → (LimitationKind, ResolutionAction). Keys must equal the REGISTRY's
 #: family names exactly (asserted total by test). Classification rationale per family:
 #:  - growth surfaces (``proposal_allowed``) → ``capability_gap`` / ``emit_proposal``
+#:    EXCEPT :data:`Q1B_ASK_CARVE_OUT` — see that constant's docstring
 #:  - underdetermined / missing-datum refusals → ``missing_information`` / ``ask_question``
 #:  - same-unit-but-no-cue ambiguity the user could resolve → ``ambiguous_structure`` / ask
 #:  - math/logic impossibility, incoherence, coarse-signal parse gaps → ``hard_boundary`` / refuse
@@ -144,9 +190,10 @@ _FAMILY_TO_LIMITATION: dict[str, tuple[LimitationKind, ResolutionAction]] = {
     "non_integer_solution": ("hard_boundary", "refuse_known_boundary"),
     "negative_solution": ("hard_boundary", "refuse_known_boundary"),
     "answer_choice_unresolved": ("ambiguous_structure", "refuse_known_boundary"),
-    # R2 growth surfaces
-    "missing_total_count": ("capability_gap", "emit_proposal"),  # PENDING_Q1B → missing_information/ask
-    "missing_weighted_total": ("capability_gap", "emit_proposal"),  # PENDING_Q1B → missing_information/ask
+    # R2 growth surfaces — Q1-B reclassification (see Q1B_ASK_CARVE_OUT):
+    # disclosure says ask; REGISTRY still emits proposals to the pile.
+    "missing_total_count": ("missing_information", "ask_question"),
+    "missing_weighted_total": ("missing_information", "ask_question"),
     "missing_category_pair": ("capability_gap", "emit_proposal"),
     "missing_attribute_coefficient": ("capability_gap", "emit_proposal"),
     # R2 verdict
@@ -167,6 +214,34 @@ _FAMILY_TO_LIMITATION: dict[str, tuple[LimitationKind, ResolutionAction]] = {
     "cmb_unsupported_clock_interval": ("capability_gap", "emit_proposal"),
 }
 
+#: family name → typed slots an ASK assessment for that family identifies as missing.
+#: Only families with a *known* slot structure appear here; an ask-mapped family without
+#: an entry yields an empty residue (the "minimal" stance — never fabricate a slot the
+#: family's contract has not pinned down yet). Slot semantics, per family:
+#:  - ``missing_total_count``  : the collective-unit total count (R2 constraint C7);
+#:    ``binding_target`` matches the equation slot the augmented input would fill
+#:    (Q2 re-entry, scoping §4).
+#:  - ``missing_weighted_total``: the measured-unit weighted total (R2 constraint C8).
+#: Other ask-mapped families (``ungrounded_base``, ``rate_underdetermined``,
+#: ``cmb_underdetermined``, ``cmb_combine_ambiguous``) get slots in later Q1 sub-PRs
+#: once their per-family slot signatures are pinned with tests.
+_FAMILY_TO_MISSING_SLOTS: dict[str, tuple[MissingSlot, ...]] = {
+    "missing_total_count": (
+        MissingSlot(
+            slot_name="total_count",
+            expected_unit_or_type="count_int",
+            binding_target="collective_unit_total",
+        ),
+    ),
+    "missing_weighted_total": (
+        MissingSlot(
+            slot_name="weighted_total",
+            expected_unit_or_type="measured_unit_int",
+            binding_target="weighted_total_value",
+        ),
+    ),
+}
+
 # A conservative refusal for any family/reason that is not in the mapping. The total
 # mapping (asserted by test against REGISTRY) means this is dead in practice; if a new
 # family ever lands unmapped, it refuses — it NEVER silently becomes an answerable
@@ -181,7 +256,9 @@ def assess_from_family(family: FailureFamily) -> LimitationAssessment:
     """The limitation a failure family expresses, as a typed assessment.
 
     Total over :data:`REGISTRY` (asserted by test). An unmapped family falls to the
-    conservative refuse default — never ``ask_question``.
+    conservative refuse default — never ``ask_question``. Residue defaults to empty;
+    populating typed slots / grounded terms requires a specific attempt (use
+    :func:`assess_from_attempt`).
     """
     kind, action = _FAMILY_TO_LIMITATION.get(family.name, _CONSERVATIVE_DEFAULT)
     return LimitationAssessment(
@@ -193,6 +270,29 @@ def assess_from_family(family: FailureFamily) -> LimitationAssessment:
     )
 
 
+def _residue_from_attempt(
+    attempt: ComprehensionAttempt,
+    family: FailureFamily,
+    action: ResolutionAction,
+) -> tuple[tuple[MissingSlot, ...], tuple[str, ...]]:
+    """Typed ASK residue for an ask-mapped attempt — empty for any other action.
+
+    Wrong=0 invariant (scoping §2): ``grounded_terms`` carries only verbatim text from
+    :attr:`ComprehensionAttempt.evidence` SourceSpanLinks. If the attempt carries no
+    evidence (today: every refused attempt — :mod:`core.comprehension_attempt.classify`
+    leaves ``evidence = ()``), ``grounded_terms`` is empty, NEVER fabricated from the
+    family or the refusal reason. ``missing_slots`` is family-derived (snake_case
+    structural identifiers, not renderable prose) so it is always safe to emit; absent
+    from :data:`_FAMILY_TO_MISSING_SLOTS` ⇒ no slots (minimal stance — never invent a
+    slot the family contract has not pinned down).
+    """
+    if action != "ask_question":
+        return ((), ())
+    slots = _FAMILY_TO_MISSING_SLOTS.get(family.name, ())
+    grounded = tuple(link.text for link in attempt.evidence)
+    return (slots, grounded)
+
+
 def assess_from_attempt(attempt: ComprehensionAttempt) -> LimitationAssessment | None:
     """Classify the limitation a comprehension attempt expresses, or ``None``.
 
@@ -202,6 +302,10 @@ def assess_from_attempt(attempt: ComprehensionAttempt) -> LimitationAssessment |
       falls to the conservative refuse default (never ``ask_question``).
     - any non-limitation outcome (solved/admissible setup, or eval-only ``*_wrong``)
       → ``None``: there is no resolvable limitation to act on.
+
+    For ask-mapped refusals, the returned assessment carries typed residue
+    (:attr:`~LimitationAssessment.missing_slots` / ``grounded_terms``) per
+    :func:`_residue_from_attempt`'s wrong=0 invariant.
     """
     if attempt.outcome == "contradiction":
         return LimitationAssessment(
@@ -223,7 +327,21 @@ def assess_from_attempt(attempt: ComprehensionAttempt) -> LimitationAssessment |
             owner_organ=attempt.organ,
             blocking_reason=attempt.refusal_reason or "unclassified",
         )
-    return assess_from_family(family)
+    base = assess_from_family(family)
+    missing_slots, grounded_terms = _residue_from_attempt(
+        attempt, family, base.resolution_action
+    )
+    if not missing_slots and not grounded_terms:
+        return base
+    return LimitationAssessment(
+        limitation_kind=base.limitation_kind,
+        resolution_action=base.resolution_action,
+        epistemic_state=base.epistemic_state,
+        owner_organ=attempt.organ,
+        blocking_reason=base.blocking_reason,
+        missing_slots=missing_slots,
+        grounded_terms=grounded_terms,
+    )
 
 
 def terminal_for_action(action: ResolutionAction) -> Terminal | None:
@@ -237,9 +355,10 @@ def terminal_for_action(action: ResolutionAction) -> Terminal | None:
 
 
 __all__ = [
-    "PENDING_Q1B_RECLASSIFICATION",
+    "Q1B_ASK_CARVE_OUT",
     "LimitationAssessment",
     "LimitationKind",
+    "MissingSlot",
     "ResolutionAction",
     "assess_from_attempt",
     "assess_from_family",
