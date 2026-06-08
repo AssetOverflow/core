@@ -32,12 +32,16 @@ from typing import Any
 
 from core.comprehension_attempt import (
     ComprehensionAttempt,
+    cmb_is_authoritative,
+    cmb_reason,
     emit_proposal,
     enrich_family,
     family_for_reason,
     route_setup,
 )
 from generate.answer_choices.verify import verify_answer_choice
+from generate.combined_rate_comprehension.reader import read_combined_rate_problem
+from generate.combined_rate_comprehension.solver import solve_combined_rate
 from generate.constraint_comprehension.reader import read_constraint_problem
 from generate.constraint_comprehension.solver import answer_constraint_problem
 from generate.rate_comprehension.reader import read_rate_problem
@@ -110,6 +114,8 @@ def contemplate(
             return _solve_and_verify_r2(text, options, answer_key, findings, attempts)
         if route.selected.organ == "r3_rate":
             return _solve_and_verify_r3(text, options, answer_key, findings, attempts)
+        if route.selected.organ == "r4_combined_rate":
+            return _solve_and_verify_cmb(text, options, answer_key, findings, attempts)
         findings.append(Finding("solve", "r1 admissible setup (numeric answer is the eval lane in v0)"))
         findings.append(Finding("terminal", Terminal.SOLVED_VERIFIED.value))
         return ContemplationResult(
@@ -206,13 +212,65 @@ def _solve_and_verify_r3(
     )
 
 
+def _solve_and_verify_cmb(
+    text: str,
+    options: dict[str, Any] | None,
+    answer_key: str | None,
+    findings: list[Finding],
+    attempts: tuple[ComprehensionAttempt, ...],
+) -> ContemplationResult:
+    problem = read_combined_rate_problem(text)
+    assert not isinstance(problem, Refusal)  # routed => the reader admitted a setup
+    value = solve_combined_rate(problem)
+    if isinstance(value, Refusal):
+        # The prose WAS understood (reader setup_correct); the resulting math is outside v1's
+        # answerable boundary. A solver refusal is a terminal boundary, never a proposal — and the
+        # reason is namespaced cmb_* so it resolves to the CMB solver family, not R2/R3's.
+        findings.append(Finding("solve", f"solver refused: {value.reason}"))
+        findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
+        return ContemplationResult(
+            Terminal.REFUSED_KNOWN_BOUNDARY, tuple(findings), attempts,
+            selected_organ="r4_combined_rate", family=_family_name(cmb_reason(value.reason)),
+        )
+    if options is not None:
+        verdict = verify_answer_choice(value, options, answer_key)
+        if isinstance(verdict, Refusal):
+            findings.append(Finding("verify", f"answer-choice refused: {verdict.reason}"))
+            findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
+            return ContemplationResult(
+                Terminal.REFUSED_KNOWN_BOUNDARY, tuple(findings), attempts,
+                selected_organ="r4_combined_rate", answer=value,
+            )
+        if verdict.status == "contradiction":
+            findings.append(Finding("verify", verdict.message))
+            findings.append(Finding("terminal", Terminal.CONTRADICTION_DETECTED.value))
+            return ContemplationResult(
+                Terminal.CONTRADICTION_DETECTED, tuple(findings), attempts,
+                selected_organ="r4_combined_rate", answer=value,
+                family="answer_key_contradiction", message=verdict.message,
+            )
+        findings.append(Finding("verify", verdict.message))
+    findings.append(Finding("solve", f"value={value}"))
+    findings.append(Finding("terminal", Terminal.SOLVED_VERIFIED.value))
+    return ContemplationResult(
+        Terminal.SOLVED_VERIFIED, tuple(findings), attempts,
+        selected_organ="r4_combined_rate", answer=value,
+    )
+
+
 def _classify_all_refused(
     text: str,
     attempts: tuple[ComprehensionAttempt, ...],
     findings: list[Finding],
     proposal_root: Path | None,
 ) -> ContemplationResult:
-    families = [(a, family_for_reason(a.refusal_reason)) for a in attempts]
+    # CMB-over-R3 precedence (family side): when CMB substantively recognized the text, R3's broader
+    # partial classification is suppressed, so CMB's sharper diagnosis owns the terminal/proposal
+    # (e.g. a reciprocal combined-rate text proposes a CMB fixture, not R3's rate_underdetermined).
+    considered = attempts
+    if cmb_is_authoritative(attempts):
+        considered = tuple(a for a in attempts if a.organ != "r3_rate")
+    families = [(a, family_for_reason(a.refusal_reason)) for a in considered]
 
     # Boundary-first: a substantive recognized boundary blocks any proposal.
     for _attempt, family in families:

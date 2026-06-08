@@ -49,4 +49,4 @@ def test_router_never_selects_a_refusal() -> None:
         result = route_setup(fx["text"])
         if result.selected is not None:
             assert result.selected.outcome == "setup_correct"
-        assert len(result.attempts) == 3  # always one R1 + one R2 + one R3 attempt
+        assert len(result.attempts) == 4  # always one R1 + R2 + R3 + R4(combined-rate) attempt
