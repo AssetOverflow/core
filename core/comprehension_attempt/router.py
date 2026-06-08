@@ -22,7 +22,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from core.comprehension_attempt.classify import classify_r1, classify_r2
+from core.comprehension_attempt.classify import classify_r1, classify_r2, classify_r3
 from core.comprehension_attempt.model import ComprehensionAttempt
 
 RouteStatus = Literal["routed", "all_refused", "ambiguous"]
@@ -40,7 +40,11 @@ class RouteResult:
 
 def route_setup(text: str, *, case_id: str | None = None) -> RouteResult:
     """Route *text* to the single organ that admits an honest setup, or refuse."""
-    attempts = (classify_r1(text, case_id=case_id), classify_r2(text, case_id=case_id))
+    attempts = (
+        classify_r1(text, case_id=case_id),
+        classify_r2(text, case_id=case_id),
+        classify_r3(text, case_id=case_id),
+    )
     correct = tuple(a for a in attempts if a.is_setup_correct)
     if len(correct) == 1:
         return RouteResult(attempts, correct[0], "routed")

@@ -40,6 +40,8 @@ from core.comprehension_attempt import (
 from generate.answer_choices.verify import verify_answer_choice
 from generate.constraint_comprehension.reader import read_constraint_problem
 from generate.constraint_comprehension.solver import answer_constraint_problem
+from generate.rate_comprehension.reader import read_rate_problem
+from generate.rate_comprehension.solver import solve_rate
 from generate.contemplation.findings import Finding, Terminal
 from generate.meaning_graph.reader import Refusal
 
@@ -49,9 +51,10 @@ _UNSUPPORTED_FAMILIES = frozenset(
         "unsupported_system_size",
         "unsupported_clause_shape",
         "unsupported_rate_duration",
-        "unsupported_temporal_state",
     }
 )
+# Note: ``unsupported_temporal_state`` is deliberately NOT here — its clock-marker detector can
+# fire on non-rate text, so it is a generic REFUSED_KNOWN_BOUNDARY, not a recognized-rate-capability.
 #: The non-substantive "this organ does not recognize the shape" family — never blocks a proposal.
 _NOT_MY_DOMAIN = "input_shape"
 
@@ -105,6 +108,8 @@ def contemplate(
         assert route.selected is not None
         if route.selected.organ == "r2_constraints":
             return _solve_and_verify_r2(text, options, answer_key, findings, attempts)
+        if route.selected.organ == "r3_rate":
+            return _solve_and_verify_r3(text, options, answer_key, findings, attempts)
         findings.append(Finding("solve", "r1 admissible setup (numeric answer is the eval lane in v0)"))
         findings.append(Finding("terminal", Terminal.SOLVED_VERIFIED.value))
         return ContemplationResult(
@@ -155,6 +160,49 @@ def _solve_and_verify_r2(
     return ContemplationResult(
         Terminal.SOLVED_VERIFIED, tuple(findings), attempts,
         selected_organ="r2_constraints", answer=value,
+    )
+
+
+def _solve_and_verify_r3(
+    text: str,
+    options: dict[str, Any] | None,
+    answer_key: str | None,
+    findings: list[Finding],
+    attempts: tuple[ComprehensionAttempt, ...],
+) -> ContemplationResult:
+    problem = read_rate_problem(text)
+    assert not isinstance(problem, Refusal)  # routed => the reader admitted a setup
+    value = solve_rate(problem)
+    if isinstance(value, Refusal):
+        findings.append(Finding("solve", f"solver refused: {value.reason}"))
+        findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
+        return ContemplationResult(
+            Terminal.REFUSED_KNOWN_BOUNDARY, tuple(findings), attempts,
+            selected_organ="r3_rate", family=_family_name(value.reason),
+        )
+    if options is not None:
+        verdict = verify_answer_choice(value, options, answer_key)
+        if isinstance(verdict, Refusal):
+            findings.append(Finding("verify", f"answer-choice refused: {verdict.reason}"))
+            findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
+            return ContemplationResult(
+                Terminal.REFUSED_KNOWN_BOUNDARY, tuple(findings), attempts,
+                selected_organ="r3_rate", answer=value,
+            )
+        if verdict.status == "contradiction":
+            findings.append(Finding("verify", verdict.message))
+            findings.append(Finding("terminal", Terminal.CONTRADICTION_DETECTED.value))
+            return ContemplationResult(
+                Terminal.CONTRADICTION_DETECTED, tuple(findings), attempts,
+                selected_organ="r3_rate", answer=value,
+                family="answer_key_contradiction", message=verdict.message,
+            )
+        findings.append(Finding("verify", verdict.message))
+    findings.append(Finding("solve", f"value={value}"))
+    findings.append(Finding("terminal", Terminal.SOLVED_VERIFIED.value))
+    return ContemplationResult(
+        Terminal.SOLVED_VERIFIED, tuple(findings), attempts,
+        selected_organ="r3_rate", answer=value,
     )
 
 

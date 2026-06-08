@@ -6,7 +6,7 @@ over — uniform across the R1 and R2 setup compilers. Off-serving; imports no `
 
 from __future__ import annotations
 
-from core.comprehension_attempt.classify import classify_r1, classify_r2
+from core.comprehension_attempt.classify import classify_r1, classify_r2, classify_r3
 from core.comprehension_attempt.failure_family import (
     REGISTRY,
     FailureFamily,
@@ -35,6 +35,7 @@ __all__ = [
     "RouteStatus",
     "classify_r1",
     "classify_r2",
+    "classify_r3",
     "enrich_family",
     "family_by_name",
     "family_for_reason",

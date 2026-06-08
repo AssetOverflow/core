@@ -37,7 +37,7 @@ ALL_REASONS = {
     "unparseable_option",
     # R3 rate reader
     "rate_unit_mismatch", "combined_rates", "missing_rate", "missing_time", "missing_quantity",
-    "temporal_state", "query_target_unrecognized", "no_query",
+    "temporal_state", "query_target_unrecognized", "no_query", "not_rate_shaped",
 }
 
 
