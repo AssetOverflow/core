@@ -12,6 +12,7 @@ conversion, no multi-equation systems. Those are later R3 slices.
 
 from __future__ import annotations
 
+from generate.rate_comprehension.model import RateProblem, RateRole
 from generate.rate_comprehension.units import (
     BaseUnit,
     RateUnit,
@@ -23,6 +24,8 @@ from generate.rate_comprehension.units import (
 
 __all__ = [
     "BaseUnit",
+    "RateProblem",
+    "RateRole",
     "RateUnit",
     "UnitError",
     "rate_from_quantity_over_time",
