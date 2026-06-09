@@ -22,6 +22,9 @@ Shipped so far (all off-serving — nothing here imports ``generate.derivation``
   * :mod:`~core.epistemic_disclosure.ask_serving` — a narrow Q1-D served-ASK artifact
     adapter. It validates already-rendered question artifacts and returns a typed
     decision; it does not render prose and does not acquire runtime contemplation.
+  * :mod:`~core.epistemic_disclosure.ask_acquisition` — a serving-safe acquisition
+    seam that gate-checks before provider execution and delegates candidate
+    validation to the ASK artifact adapter. It does not call pass_manager directly.
   * :mod:`~core.epistemic_disclosure.verified_contract` (P1-A) — the VERIFIED contract:
     the obligation, the proof shape, the validator, and the single sanctioned route to
     ``EpistemicState.VERIFIED`` / ``DisclosureClaim.VERIFIED``. Contract only — no
@@ -30,6 +33,11 @@ Shipped so far (all off-serving — nothing here imports ``generate.derivation``
 
 from __future__ import annotations
 
+from core.epistemic_disclosure.ask_acquisition import (
+    AskAcquisitionDecision,
+    ContemplationProvider,
+    acquire_served_ask_candidate,
+)
 from core.epistemic_disclosure.ask_serving import (
     ServedAskDecision,
     evaluate_served_ask,
@@ -66,6 +74,8 @@ __all__ = [
     "DEFAULT_DISCLOSURE_CLAIM",
     "Q1B_ASK_CARVE_OUT",
     "VERIFICATION_OBLIGATION",
+    "AskAcquisitionDecision",
+    "ContemplationProvider",
     "DisclosureClaim",
     "LimitationAssessment",
     "LimitationKind",
@@ -77,6 +87,7 @@ __all__ = [
     "VerificationProof",
     "VerificationResult",
     "VerificationVerdict",
+    "acquire_served_ask_candidate",
     "assess_from_attempt",
     "assess_from_family",
     "choose_served_disposition",
