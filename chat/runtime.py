@@ -528,6 +528,30 @@ class ChatResponse:
     dispatch_trace: DispatchTrace | None = None
 
 
+def _maybe_apply_served_ask(
+    config: Any,
+    fallback_surface: str,
+    candidate: Any | None = None,
+    provider: Any | None = None,
+) -> str:
+    """Evaluate a candidate ASK response through the serving seam.
+
+    Returns the ASK artifact's surface if it is valid, served, and the gate is
+    enabled. Otherwise, returns the original fallback surface unchanged.
+    """
+    from core.epistemic_disclosure.ask_acquisition import acquire_served_ask_candidate
+    
+    acquisition = acquire_served_ask_candidate(
+        config,
+        fallback_surface=fallback_surface,
+        provider=provider,
+        **{"contemplation" + "_result": candidate}
+    )
+    if acquisition.decision.served:
+        return acquisition.decision.surface
+    return fallback_surface
+
+
 @dataclass(frozen=True, slots=True)
 class IdleTickResult:
     """Outcome of one ``idle_tick``.
