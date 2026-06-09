@@ -23,6 +23,7 @@ from core.epistemic_disclosure.verified_contract import (
     REASON_CONTRADICTION_PRESENT,
     REASON_INCOMPLETE_PROOF,
     REASON_NO_BACK_SUBSTITUTION,
+    REASON_NO_BOUND_SLOTS,
     REASON_READS_DISAGREE,
     REASON_READS_NOT_INDEPENDENT,
     REASON_UNRESOLVED_LIMITATION,
@@ -46,6 +47,7 @@ def _valid_proof(**overrides) -> VerificationProof:
         primary_read_digest="canonical_structure_C",
         independent_read_digest="canonical_structure_C",
         derivation_digest="deriv#1",
+        bound_slots_digest="bound#1",
         back_substitution_digest="backsub#1",
         boundary_clear=True,
         contradiction_clear=True,
@@ -96,6 +98,27 @@ def test_verified_requires_back_substitution():
     assert REASON_NO_BACK_SUBSTITUTION in result.failed_checks
 
 
+def test_verified_requires_bound_slots():
+    result = evaluate_verification(_valid_proof(bound_slots_digest=""), limitation=None)
+    assert result.verdict is VerificationVerdict.NOT_VERIFIED
+    assert REASON_NO_BOUND_SLOTS in result.failed_checks
+
+
+def test_derivation_digest_alone_is_insufficient_without_bound_slots():
+    """P1-C hardening: a complete derivation does NOT imply the answer bound to a STATED
+    slot — they are SEPARATE obligations. A proof with a derivation but no bound-slots must
+    not verify; and relaxing exactly the bound-slots obligation stops that check firing
+    (so the obligation is load-bearing, not decoration)."""
+    proof = _valid_proof(derivation_digest="deriv#1", bound_slots_digest="")
+    canonical = evaluate_verification(proof, limitation=None)
+    assert canonical.verdict is VerificationVerdict.NOT_VERIFIED
+    assert REASON_NO_BOUND_SLOTS in canonical.failed_checks
+
+    relaxed = replace(VERIFICATION_OBLIGATION, requires_bound_slots=False)
+    relaxed_result = evaluate_verification(proof, limitation=None, obligation=relaxed)
+    assert REASON_NO_BOUND_SLOTS not in relaxed_result.failed_checks
+
+
 def test_verified_requires_boundary_clear():
     result = evaluate_verification(_valid_proof(boundary_clear=False), limitation=None)
     assert result.verdict is VerificationVerdict.NOT_VERIFIED
@@ -133,6 +156,7 @@ def test_verified_rejects_any_limitation_assessment():
 def test_canonical_obligation_is_fully_strict():
     assert VERIFICATION_OBLIGATION.requires_independent_read
     assert VERIFICATION_OBLIGATION.rejects_wrong_read_even_if_solved
+    assert VERIFICATION_OBLIGATION.requires_bound_slots
     assert VERIFICATION_OBLIGATION.requires_back_substitution
     assert VERIFICATION_OBLIGATION.requires_boundary_clear
 

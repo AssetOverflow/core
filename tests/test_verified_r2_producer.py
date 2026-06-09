@@ -173,6 +173,7 @@ def test_all_proof_digests_populated_on_verified():
         p.primary_read_digest,
         p.independent_read_digest,
         p.derivation_digest,
+        p.bound_slots_digest,
         p.back_substitution_digest,
     ):
         assert digest, "every replay-critical digest must be populated on a VERIFIED proof"

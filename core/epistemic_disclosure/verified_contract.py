@@ -64,6 +64,7 @@ class VerificationObligation:
 
     requires_independent_read: bool  # two DISTINCT reader lineages — not the same read twice
     rejects_wrong_read_even_if_solved: bool  # the two reads must CONVERGE — catches a wrong read
+    requires_bound_slots: bool  # the answer binds to the STATED slots (query/unknowns), not phantom ones
     requires_back_substitution: bool  # the answer back-substitutes into the canonical structure
     requires_boundary_clear: bool  # no organ boundary fired in the chain
 
@@ -72,6 +73,7 @@ class VerificationObligation:
 VERIFICATION_OBLIGATION: VerificationObligation = VerificationObligation(
     requires_independent_read=True,
     rejects_wrong_read_even_if_solved=True,
+    requires_bound_slots=True,
     requires_back_substitution=True,
     requires_boundary_clear=True,
 )
@@ -86,6 +88,14 @@ class VerificationProof:
     ``independent_reader_lineage`` must DIFFER (independence), and ``primary_read_digest``
     / ``independent_read_digest`` must MATCH (convergence on one canonical structure).
     Independence + convergence together are what reject a faithful solve of a wrong read.
+
+    The "from the stated quantities" obligation is split into THREE separable digests
+    (P1-C hardening — for replay, audit, and failure localization):
+    ``derivation_digest`` (a solve happened from the structure), ``bound_slots_digest``
+    (the answer binds to a STATED slot — the asked unknown — not a phantom), and
+    ``back_substitution_digest`` (the answer satisfies the constraints). A complete
+    derivation does NOT imply the answer bound to a declared slot, so the two are
+    distinct obligations (``test_derivation_digest_alone_is_insufficient_without_bound_slots``).
     """
 
     source_problem_digest: str  # provenance: hash of the problem text
@@ -93,7 +103,8 @@ class VerificationProof:
     independent_reader_lineage: str  # identity of the independent cross-check reader
     primary_read_digest: str  # canonical structure the primary read produced
     independent_read_digest: str  # canonical structure the independent read produced
-    derivation_digest: str  # the derivation from the STATED quantities
+    derivation_digest: str  # the derivation (solve) from the STATED quantities
+    bound_slots_digest: str  # the answer binds to the STATED slots (asked unknown), not a phantom
     back_substitution_digest: str  # back-substitution into the canonical structure
     boundary_clear: bool  # no organ boundary fired
     contradiction_clear: bool  # no contradiction family fired
@@ -102,6 +113,7 @@ class VerificationProof:
 # Reason codes for a failed obligation — each names exactly one violated rule.
 REASON_READS_NOT_INDEPENDENT = "reads_not_independent"  # same reader lineage twice
 REASON_READS_DISAGREE = "reads_disagree"  # the wrong-read catcher
+REASON_NO_BOUND_SLOTS = "no_bound_slots"  # answer did not bind to a stated slot
 REASON_NO_BACK_SUBSTITUTION = "no_back_substitution"
 REASON_BOUNDARY_FIRED = "boundary_fired"
 REASON_CONTRADICTION_PRESENT = "contradiction_present"
@@ -142,6 +154,9 @@ def evaluate_verification(
         proof.primary_read_digest != proof.independent_read_digest
     ):
         failed.append(REASON_READS_DISAGREE)
+
+    if obligation.requires_bound_slots and not proof.bound_slots_digest:
+        failed.append(REASON_NO_BOUND_SLOTS)
 
     if obligation.requires_back_substitution and not proof.back_substitution_digest:
         failed.append(REASON_NO_BACK_SUBSTITUTION)
