@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from core.comprehension_attempt import (
     ComprehensionAttempt,
@@ -48,6 +48,10 @@ from generate.rate_comprehension.reader import read_rate_problem
 from generate.rate_comprehension.solver import solve_rate
 from generate.contemplation.findings import Finding, Terminal
 from generate.meaning_graph.reader import Refusal
+
+if TYPE_CHECKING:
+    from core.epistemic_disclosure.limitation import LimitationAssessment
+    from core.epistemic_questions.delivery import DeliveryOutcome
 
 #: Substantive boundaries that are *recognized-but-unsupported* capabilities (not hard errors).
 _UNSUPPORTED_FAMILIES = frozenset(
@@ -77,6 +81,49 @@ class ContemplationResult:
     message: str | None = None
 
 
+def _delivery_outcome_for_limitation(assessment: LimitationAssessment) -> DeliveryOutcome:
+    """Helper to delegate to deliver_ask, pure and testable."""
+    from core.epistemic_questions.delivery import deliver_ask
+    return deliver_ask(assessment)
+
+
+def _handle_ask_delivery(
+    assessment: LimitationAssessment,
+    family_obj: Any,
+    findings: list[Finding],
+    attempts: tuple[ComprehensionAttempt, ...],
+    text: str,
+    proposal_root: Path | None,
+    exercise_ask: bool,
+    selected_organ: str | None = None,
+) -> ContemplationResult:
+    outcome = _delivery_outcome_for_limitation(assessment)
+    if outcome.terminal == Terminal.QUESTION_NEEDED:
+        from core.epistemic_questions.delivery import emit_question
+        path = emit_question(assessment, root=proposal_root)
+        findings.append(Finding("ask", f"emitted question-only {assessment.blocking_reason}"))
+        findings.append(Finding("terminal", Terminal.QUESTION_NEEDED.value))
+        return ContemplationResult(
+            Terminal.QUESTION_NEEDED, tuple(findings), attempts,
+            selected_organ=selected_organ, family=family_obj.name,
+            proposal_path=str(path) if path else None,
+        )
+    else:
+        findings.append(Finding("ask", f"unrenderable ask: {outcome.fallback_reason}"))
+        findings.append(Finding("terminal", outcome.terminal.value))
+        if outcome.terminal == Terminal.PROPOSAL_EMITTED:
+            path = emit_proposal(text, family_obj, attempts, root=proposal_root)
+            return ContemplationResult(
+                Terminal.PROPOSAL_EMITTED, tuple(findings), attempts,
+                selected_organ=selected_organ, family=family_obj.name,
+                proposal_path=str(path) if path else None,
+            )
+        return ContemplationResult(
+            outcome.terminal, tuple(findings), attempts,
+            selected_organ=selected_organ, family=family_obj.name,
+        )
+
+
 def contemplate(
     text: str,
     *,
@@ -84,6 +131,7 @@ def contemplate(
     answer_key: str | None = None,
     proposal_root: Path | None = None,
     case_id: str | None = None,
+    exercise_ask: bool = False,
 ) -> ContemplationResult:
     """Run one bounded contemplation pass over *text*."""
     findings: list[Finding] = []
@@ -111,11 +159,11 @@ def contemplate(
     if route.status == "routed":
         assert route.selected is not None
         if route.selected.organ == "r2_constraints":
-            return _solve_and_verify_r2(text, options, answer_key, findings, attempts)
+            return _solve_and_verify_r2(text, options, answer_key, findings, attempts, proposal_root, exercise_ask)
         if route.selected.organ == "r3_rate":
-            return _solve_and_verify_r3(text, options, answer_key, findings, attempts)
+            return _solve_and_verify_r3(text, options, answer_key, findings, attempts, proposal_root, exercise_ask)
         if route.selected.organ == "r4_combined_rate":
-            return _solve_and_verify_cmb(text, options, answer_key, findings, attempts)
+            return _solve_and_verify_cmb(text, options, answer_key, findings, attempts, proposal_root, exercise_ask)
         findings.append(Finding("solve", "r1 admissible setup (numeric answer is the eval lane in v0)"))
         findings.append(Finding("terminal", Terminal.SOLVED_VERIFIED.value))
         return ContemplationResult(
@@ -123,7 +171,7 @@ def contemplate(
         )
 
     # route.status == "all_refused"
-    return _classify_all_refused(text, attempts, findings, proposal_root)
+    return _classify_all_refused(text, attempts, findings, proposal_root, exercise_ask)
 
 
 def _solve_and_verify_r2(
@@ -132,12 +180,25 @@ def _solve_and_verify_r2(
     answer_key: str | None,
     findings: list[Finding],
     attempts: tuple[ComprehensionAttempt, ...],
+    proposal_root: Path | None,
+    exercise_ask: bool,
 ) -> ContemplationResult:
     problem = read_constraint_problem(text)
     assert not isinstance(problem, Refusal)  # routed => the reader admitted a setup
     value = answer_constraint_problem(problem)
     if isinstance(value, Refusal):
         findings.append(Finding("solve", f"solver refused: {value.reason}"))
+        from core.comprehension_attempt.failure_family import family_by_name
+        from core.epistemic_disclosure.limitation import assess_from_family, Q1B_ASK_CARVE_OUT
+        family_obj = family_by_name(value.reason)
+        if family_obj is not None:
+            assessment = assess_from_family(family_obj)
+            if assessment.resolution_action == "ask_question":
+                if exercise_ask:
+                    return _handle_ask_delivery(
+                        assessment, family_obj, findings, attempts, text, proposal_root, exercise_ask,
+                        selected_organ="r2_constraints"
+                    )
         findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
         return ContemplationResult(
             Terminal.REFUSED_KNOWN_BOUNDARY, tuple(findings), attempts,
@@ -175,12 +236,25 @@ def _solve_and_verify_r3(
     answer_key: str | None,
     findings: list[Finding],
     attempts: tuple[ComprehensionAttempt, ...],
+    proposal_root: Path | None,
+    exercise_ask: bool,
 ) -> ContemplationResult:
     problem = read_rate_problem(text)
     assert not isinstance(problem, Refusal)  # routed => the reader admitted a setup
     value = solve_rate(problem)
     if isinstance(value, Refusal):
         findings.append(Finding("solve", f"solver refused: {value.reason}"))
+        from core.comprehension_attempt.failure_family import family_by_name
+        from core.epistemic_disclosure.limitation import assess_from_family, Q1B_ASK_CARVE_OUT
+        family_obj = family_by_name(value.reason)
+        if family_obj is not None:
+            assessment = assess_from_family(family_obj)
+            if assessment.resolution_action == "ask_question":
+                if exercise_ask:
+                    return _handle_ask_delivery(
+                        assessment, family_obj, findings, attempts, text, proposal_root, exercise_ask,
+                        selected_organ="r3_rate"
+                    )
         findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
         return ContemplationResult(
             Terminal.REFUSED_KNOWN_BOUNDARY, tuple(findings), attempts,
@@ -218,6 +292,8 @@ def _solve_and_verify_cmb(
     answer_key: str | None,
     findings: list[Finding],
     attempts: tuple[ComprehensionAttempt, ...],
+    proposal_root: Path | None,
+    exercise_ask: bool,
 ) -> ContemplationResult:
     problem = read_combined_rate_problem(text)
     assert not isinstance(problem, Refusal)  # routed => the reader admitted a setup
@@ -227,6 +303,18 @@ def _solve_and_verify_cmb(
         # answerable boundary. A solver refusal is a terminal boundary, never a proposal — and the
         # reason is namespaced cmb_* so it resolves to the CMB solver family, not R2/R3's.
         findings.append(Finding("solve", f"solver refused: {value.reason}"))
+        from core.comprehension_attempt.failure_family import family_by_name
+        from core.epistemic_disclosure.limitation import assess_from_family, Q1B_ASK_CARVE_OUT
+        reason = cmb_reason(value.reason)
+        family_obj = family_by_name(reason)
+        if family_obj is not None:
+            assessment = assess_from_family(family_obj)
+            if assessment.resolution_action == "ask_question":
+                if exercise_ask:
+                    return _handle_ask_delivery(
+                        assessment, family_obj, findings, attempts, text, proposal_root, exercise_ask,
+                        selected_organ="r4_combined_rate"
+                    )
         findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
         return ContemplationResult(
             Terminal.REFUSED_KNOWN_BOUNDARY, tuple(findings), attempts,
@@ -263,6 +351,7 @@ def _classify_all_refused(
     attempts: tuple[ComprehensionAttempt, ...],
     findings: list[Finding],
     proposal_root: Path | None,
+    exercise_ask: bool,
 ) -> ContemplationResult:
     # CMB-over-R3 precedence (family side): when CMB substantively recognized the text, R3's broader
     # partial classification is suppressed, so CMB's sharper diagnosis owns the terminal/proposal
@@ -270,6 +359,19 @@ def _classify_all_refused(
     considered = attempts
     if cmb_is_authoritative(attempts):
         considered = tuple(a for a in attempts if a.organ != "r3_rate")
+
+    # Check for ASK delivery.
+    for attempt in considered:
+        from core.epistemic_disclosure.limitation import assess_from_attempt, Q1B_ASK_CARVE_OUT
+        assessment = assess_from_attempt(attempt)
+        if assessment is not None and assessment.resolution_action == "ask_question":
+            if exercise_ask:
+                from core.comprehension_attempt.failure_family import family_by_name
+                family_obj = family_by_name(assessment.blocking_reason)
+                return _handle_ask_delivery(
+                    assessment, family_obj, findings, attempts, text, proposal_root, exercise_ask
+                )
+
     families = [(a, family_for_reason(a.refusal_reason)) for a in considered]
 
     # Boundary-first: a substantive recognized boundary blocks any proposal.
