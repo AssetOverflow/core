@@ -270,12 +270,25 @@ def test_acquisition_module_does_not_import_renderer_or_pass_manager() -> None:
             assert node.func.id != "render_question"
 
 
-def test_runtime_and_telemetry_schemas_are_not_changed_by_this_slice() -> None:
+def test_runtime_and_telemetry_public_schemas_are_not_changed_by_acquisition_slice() -> None:
     runtime_path = Path(__file__).resolve().parents[1] / "chat" / "runtime.py"
     telemetry_path = Path(__file__).resolve().parents[1] / "chat" / "telemetry.py"
     identity_path = Path(__file__).resolve().parents[1] / "core" / "physics" / "identity.py"
 
-    assert "contemplation_result" not in runtime_path.read_text(encoding="utf-8")
+    runtime_tree = ast.parse(runtime_path.read_text(encoding="utf-8"), filename=str(runtime_path))
+
+    for node in ast.walk(runtime_tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "chat":
+            arg_names = [arg.arg for arg in node.args.args + node.args.kwonlyargs]
+            assert "contemplation_result" not in arg_names
+        if isinstance(node, ast.ClassDef) and node.name == "ChatResponse":
+            field_names = [
+                stmt.target.id
+                for stmt in node.body
+                if isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)
+            ]
+            assert "disposition" not in field_names
+
     assert "disposition" not in telemetry_path.read_text(encoding="utf-8")
 
     identity_source = identity_path.read_text(encoding="utf-8")
