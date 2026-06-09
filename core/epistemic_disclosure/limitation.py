@@ -15,8 +15,10 @@ DERIVES each from the already-shipped failure-family registry
 
 **Hard invariant (no fourth taxonomy).** Every assessment is mechanically derived
 from an existing ``FailureFamily``; the *only* genuinely new resolution action is
-``ask_question`` (the future Q1/ASK tenant — it is the one action with no shipped
-terminal, see :func:`terminal_for_action`).
+``ask_question`` (the Q1/ASK tenant). Through Q1-C it was the one action with no
+shipped terminal; Q1-D adds :attr:`~generate.contemplation.findings.Terminal.QUESTION_NEEDED`
+(sibling of ``PROPOSAL_EMITTED``), so :func:`terminal_for_action` is now total — every
+action maps onto a shipped terminal, which is what makes this a consolidating view.
 
 **Q1-B transitional carve-out (this slice).** Two shipped families —
 ``missing_total_count`` and ``missing_weighted_total`` — are classified here as
@@ -140,17 +142,24 @@ _KIND_TO_STATE: dict[LimitationKind, EpistemicState] = {
     "input_shape": EpistemicState.UNDETERMINED,
 }
 
-#: The shipped contemplation ``Terminal`` each action corresponds to. ``ask_question``
-#: is ``None`` — it is the ONE action the spine adds that has no terminal yet (Q1/ASK).
-#: This map is the proof that the limitation pass is a consolidating view, not a new
-#: universe: five of six actions already exist as terminals.
-_ACTION_TO_TERMINAL: dict[ResolutionAction, Terminal | None] = {
+#: The shipped contemplation ``Terminal`` each action corresponds to. Through Q1-C
+#: ``ask_question`` mapped to ``None`` (the one action the spine added with no terminal
+#: yet); Q1-D ships ``QUESTION_NEEDED`` (sibling of ``PROPOSAL_EMITTED``), so the map is
+#: now TOTAL — all six actions correspond to shipped terminals. This totality is the
+#: proof the limitation pass is a consolidating view, not a new universe.
+#:
+#: NOTE: this is the action's *home* terminal "in principle". The terminal a Q1-D
+#: *delivery* actually emits depends on renderability — an unrenderable ``ask_question``
+#: falls back to the family's standing disposition (the D2 guard in
+#: :mod:`core.epistemic_questions.delivery`), it does NOT emit a contentless
+#: ``QUESTION_NEEDED``.
+_ACTION_TO_TERMINAL: dict[ResolutionAction, Terminal] = {
     "answer": Terminal.SOLVED_VERIFIED,
     "emit_proposal": Terminal.PROPOSAL_EMITTED,
     "refuse_known_boundary": Terminal.REFUSED_KNOWN_BOUNDARY,
     "report_contradiction": Terminal.CONTRADICTION_DETECTED,
     "step_aside": Terminal.NO_PROGRESS,
-    "ask_question": None,
+    "ask_question": Terminal.QUESTION_NEEDED,
 }
 
 #: **Transitional carve-out (Q1-B).** Families this slice classifies as
@@ -344,12 +353,15 @@ def assess_from_attempt(attempt: ComprehensionAttempt) -> LimitationAssessment |
     )
 
 
-def terminal_for_action(action: ResolutionAction) -> Terminal | None:
-    """The shipped contemplation ``Terminal`` an action corresponds to.
+def terminal_for_action(action: ResolutionAction) -> Terminal:
+    """The shipped contemplation ``Terminal`` an action corresponds to — total.
 
-    ``None`` only for ``ask_question`` — the one action this spine adds that has no
-    shipped terminal yet (the Q1/ASK tenant). Every other action maps to an existing
-    terminal, which is what makes this a consolidating view rather than a new taxonomy.
+    Every action maps to a shipped terminal; ``ask_question`` resolves to
+    ``QUESTION_NEEDED`` (added by Q1-D, sibling of ``PROPOSAL_EMITTED``). That totality
+    is what makes this a consolidating view rather than a new taxonomy. This is the
+    action's *home* terminal; the terminal a Q1-D delivery actually emits may differ
+    when the question is unrenderable (the D2 fallback — see
+    :mod:`core.epistemic_questions.delivery`).
     """
     return _ACTION_TO_TERMINAL[action]
 

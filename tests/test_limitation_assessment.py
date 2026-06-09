@@ -368,22 +368,22 @@ def test_epistemic_state_axis():
     assert by_name["cmb_underdetermined"].epistemic_state == EpistemicState.UNDETERMINED
 
 
-# --- the consolidation proof: actions live on shipped terminals (except ask) --------- #
+# --- the consolidation proof: every action lives on a shipped terminal --------------- #
 
-def test_actions_consolidate_onto_terminals_except_ask():
+def test_actions_consolidate_onto_terminals():
     """The proof of 'consolidating view, not a fourth taxonomy': every action maps to a
-    shipped Terminal except ask_question (the one genuinely new action / Q1 tenant)."""
+    shipped Terminal. Through Q1-C ask_question was the lone exception (no terminal yet);
+    Q1-D ships QUESTION_NEEDED, so the map is now total — no action lacks a terminal."""
     for action in VALID_ACTIONS:
-        terminal = terminal_for_action(action)
-        if action == "ask_question":
-            assert terminal is None
-        else:
-            assert isinstance(terminal, Terminal), action
+        assert isinstance(terminal_for_action(action), Terminal), action
 
 
-def test_only_ask_question_is_new():
-    new_actions = sorted(a for a in VALID_ACTIONS if terminal_for_action(a) is None)
-    assert new_actions == ["ask_question"]
+def test_ask_question_resolves_to_question_needed():
+    """Q1-D: ask_question's home terminal is QUESTION_NEEDED (the ASK tenant), the one
+    terminal the spine added to complete the consolidation."""
+    assert terminal_for_action("ask_question") == Terminal.QUESTION_NEEDED
+    # And no action is left without a terminal.
+    assert [a for a in VALID_ACTIONS if terminal_for_action(a) is None] == []
 
 
 # --- attempt-level classification ---------------------------------------------------- #

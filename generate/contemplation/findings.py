@@ -19,6 +19,12 @@ class Terminal(str, Enum):
     REFUSED_UNSUPPORTED_FAMILY = "REFUSED_UNSUPPORTED_FAMILY"
     CONTRADICTION_DETECTED = "CONTRADICTION_DETECTED"
     PROPOSAL_EMITTED = "PROPOSAL_EMITTED"
+    # The ASK tenant (Q1-D): a solvable attempt blocked on missing/ambiguous *input*
+    # that a grounded question can intake. A SIBLING of PROPOSAL_EMITTED, never a
+    # subtype — a proposal offers a capability for review; a question requests a datum
+    # from the user. Off-serving: produced by the Q1-D delivery layer into the
+    # teaching/questions sink, never served until a future ask_serving_enabled gate.
+    QUESTION_NEEDED = "QUESTION_NEEDED"
     AMBIGUOUS_ORGAN = "AMBIGUOUS_ORGAN"
     NO_PROGRESS = "NO_PROGRESS"
 
