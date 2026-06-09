@@ -12,6 +12,4 @@ def maybe_apply_served_ask(
     fallback_surface: str,
     *,
     contemplation_result: Any | None = None,
-    provider: Provider | None = None,
-) -> str:
-    acquisition
+    provider: Provider | None =
