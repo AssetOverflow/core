@@ -4,20 +4,20 @@
 
 Currently, the ASK capability exists strictly off-serving.
 
-- **Residue Capture (Q1-B):** The [limitation.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_disclosure/limitation.py) module captures [LimitationAssessment](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_disclosure/limitation.py) with typed ASK residue including [MissingSlot](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_disclosure/limitation.py) and `grounded_terms`. Specifically, `missing_total_count` and `missing_weighted_total` are classified as ask-oriented inside the disclosure layer.
-- **Carve-Out Safety (Q1-B):** The transitional carve-out constant `Q1B_ASK_CARVE_OUT` is defined in [limitation.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_disclosure/limitation.py). The registry in [failure_family.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/comprehension_attempt/failure_family.py) preserves `proposal_allowed=True` for these carve-out families. This guarantees that the proposal-pile signal remains active and uninterrupted until served ASK is fully wired and verified.
-- **Grounded Rendering (Q1-C):** The [render.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/render.py) module safely renders [EpistemicQuestion](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/render.py) structures. It enforces structural rendering, ensuring no ungrounded problem-entity names or internal `snake_case` tokens escape to the user. Multi-slot, unmapped, or unsafe cases fall back to `question_unrenderable`.
-- **Off-serving Delivery (Q1-D):** The delivery infrastructure in [delivery.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/delivery.py) defines [DeliveredQuestion](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/delivery.py) and ships the [Terminal.QUESTION_NEEDED](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/generate/contemplation/findings.py) tenant. The resulting off-serving artifacts are written directly to the `teaching/questions/` sink. No served/user-facing surfaces are exposed.
-- **Default-Dark Gate (Helper):** The helper function [ask_serving_enabled](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/serving_gate.py) is implemented in [serving_gate.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/serving_gate.py). It operates in a fail-closed, default-dark manner. If the config field `ask_serving_enabled` is absent, it returns `False`. An explicit, truthy configuration is required to allow served ASK.
-- **Integration gaps:** Currently, [pass_manager.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/generate/contemplation/pass_manager.py) does not emit served ASK, [runtime.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/chat/runtime.py) does not expose ASK, and the `Q1B_ASK_CARVE_OUT` remains active (unretired).
+- **Residue Capture (Q1-B):** The `core/epistemic_disclosure/limitation.py` module captures `LimitationAssessment` with typed ASK residue including `MissingSlot` and `grounded_terms`. Specifically, `missing_total_count` and `missing_weighted_total` are classified as ask-oriented inside the disclosure layer.
+- **Carve-Out Safety (Q1-B):** The transitional carve-out constant `Q1B_ASK_CARVE_OUT` is defined in `core/epistemic_disclosure/limitation.py`. The registry in `core/comprehension_attempt/failure_family.py` preserves `proposal_allowed=True` for these carve-out families. This guarantees that the proposal-pile signal remains active and uninterrupted until served ASK is fully wired and verified.
+- **Grounded Rendering (Q1-C):** The `core/epistemic_questions/render.py` module safely renders `EpistemicQuestion` structures. It enforces structural rendering, ensuring no ungrounded problem-entity names or internal `snake_case` tokens escape to the user. Multi-slot, unmapped, or unsafe cases fall back to `question_unrenderable`.
+- **Off-serving Delivery (Q1-D):** The delivery infrastructure in `core/epistemic_questions/delivery.py` defines `DeliveredQuestion` and ships the `Terminal.QUESTION_NEEDED` tenant. The resulting off-serving artifacts are written directly to the `teaching/questions/` sink. No served/user-facing surfaces are exposed.
+- **Default-Dark Gate (Helper):** The helper function `ask_serving_enabled` is implemented in `core/epistemic_questions/serving_gate.py`. It operates in a fail-closed, default-dark manner. If the config field `ask_serving_enabled` is absent, it returns `False`. An explicit, truthy configuration is required to allow served ASK.
+- **Integration gaps:** Currently, `generate/contemplation/pass_manager.py` does not emit served ASK, `chat/runtime.py` does not expose ASK, and the `Q1B_ASK_CARVE_OUT` remains active (unretired).
 
 ## 2. Non-Negotiable Boundary
 
 Before ASK can be delivered to any user-facing surface, the following boundaries must be strictly enforced:
 
 - **Strict Gate Guard:** No served question may be shown without an explicit, active `ask_serving_enabled` configuration check.
-- **Fail-Closed Default:** The [ask_serving_enabled](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/serving_gate.py) helper must default to `False`. A missing or `None` config attribute must evaluate to `False`.
-- **Prose Encapsulation:** The serving layer must not construct or mutate question prose directly. It may only consume pre-rendered [EpistemicQuestion](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/render.py) / [DeliveredQuestion](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/delivery.py) structures produced by Q1-C/Q1-D.
+- **Fail-Closed Default:** The `ask_serving_enabled` helper must default to `False`. A missing or `None` config attribute must evaluate to `False`.
+- **Prose Encapsulation:** The serving layer must not construct or mutate question prose directly. It may only consume pre-rendered `EpistemicQuestion` / `DeliveredQuestion` structures produced by Q1-C/Q1-D.
 - **No Contentless Delivery:** An unrenderable ASK must never be promoted to `QUESTION_NEEDED`. Contentless `QUESTION_NEEDED` outcomes are strictly forbidden.
 - **Carve-Out Preservation:** The `Q1B_ASK_CARVE_OUT` must remain active and unchanged until served ASK is fully verified. No proposal signal may be lost before a served `QUESTION_NEEDED` is verified live.
 - **Sink Distinction:** The `question_only` (teaching/questions) sink must remain logically and physically distinct from the `proposal_only` (teaching/proposals) sink.
@@ -25,9 +25,9 @@ Before ASK can be delivered to any user-facing surface, the following boundaries
 
 ## 3. Proposed Served Gate: ask_serving_enabled
 
-The serving gate helper exists under [core/epistemic_questions/serving_gate.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/serving_gate.py). This document scoping defines how future served-surface code must interact with the gate:
+The serving gate helper exists under `core/epistemic_questions/serving_gate.py`. This document scoping defines how future served-surface code must interact with the gate:
 
-- **Helper Invariant:** Future code in the served-surface layer (e.g., [runtime.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/chat/runtime.py)) must verify `ask_serving_enabled(config)` before delivering any `QUESTION_NEEDED` response to a user.
+- **Helper Invariant:** Future code in the served-surface layer (e.g., `chat/runtime.py`) must verify `ask_serving_enabled(config)` before delivering any `QUESTION_NEEDED` response to a user.
 - **Off-Serving Isolation:** The gate controls served (user-visible) output only. It must not disable or interfere with off-serving artifacts written to the `teaching/questions/` directory.
 
 ### Serving Gate Policy
@@ -41,22 +41,22 @@ The serving gate helper exists under [core/epistemic_questions/serving_gate.py](
 
 ## 4. pass_manager Integration Boundary
 
-This section defines the future integration interface for [pass_manager.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/generate/contemplation/pass_manager.py). This is scoping only; no execution is performed here.
+This section defines the future integration interface for `generate/contemplation/pass_manager.py`. This is scoping only; no execution is performed here.
 
 1. **Evaluation:** The refusal/comprehension flow yields a `ComprehensionAttempt`.
-2. **Assessment:** A [LimitationAssessment](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_disclosure/limitation.py) is derived from the attempt.
+2. **Assessment:** A `LimitationAssessment` is derived from the attempt.
 3. **Resolution Action:** If `resolution_action == "ask_question"`:
    - The pipeline invokes `deliver_ask(assessment)`.
    - `deliver_ask` calls `render_question` exactly once.
    - If the question is renderable, the final `DeliveryOutcome` terminal becomes `QUESTION_NEEDED`.
    - If the question is unrenderable, the outcome falls back to the standing disposition (e.g., proposal or refusal).
-4. **Gate Enforced downstream:** [pass_manager.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/generate/contemplation/pass_manager.py) emits the terminal; the downstream serving loop (e.g., in [runtime.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/chat/runtime.py)) inspects the gate before rendering the question to the user.
+4. **Gate Enforced downstream:** `generate/contemplation/pass_manager.py` may produce/record ASK delivery outcomes later, but user-visible exposure remains gated downstream by `ask_serving_enabled` (e.g., in `chat/runtime.py`).
 
 - **Constraints:**
-  - [pass_manager.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/generate/contemplation/pass_manager.py) must not contain prose templates or formatting rules.
-  - [pass_manager.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/generate/contemplation/pass_manager.py) must not construct [DeliveredQuestion](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/delivery.py) manually (it must delegate to `deliver_ask`).
-  - [pass_manager.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/generate/contemplation/pass_manager.py) must never bypass `deliver_ask`.
-  - [pass_manager.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/generate/contemplation/pass_manager.py) must never emit a contentless `QUESTION_NEEDED`.
+  - `pass_manager` must not contain prose templates or formatting rules.
+  - `pass_manager` must not construct `DeliveredQuestion` manually (it must delegate to `deliver_ask`).
+  - `pass_manager` must never bypass `deliver_ask`.
+  - `pass_manager` must never emit a contentless `QUESTION_NEEDED`.
 
 ## 5. Served Behavior Matrix
 
@@ -72,15 +72,15 @@ This section defines the future integration interface for [pass_manager.py](file
 
 ## 6. Q1B_ASK_CARVE_OUT Retirement Conditions
 
-The transitional carve-out constant `Q1B_ASK_CARVE_OUT` can only be retired and removed from [limitation.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_disclosure/limitation.py) when the following milestones are met and verified:
+The transitional carve-out constant `Q1B_ASK_CARVE_OUT` can only be retired and removed from `core/epistemic_disclosure/limitation.py` when the following milestones are met and verified:
 
-1. The [ask_serving_enabled](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/epistemic_questions/serving_gate.py) helper is tested and confirmed default-dark.
-2. The [pass_manager.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/generate/contemplation/pass_manager.py) ASK integration is fully implemented behind the gate.
+1. The `ask_serving_enabled` helper is tested and confirmed default-dark.
+2. The `pass_manager.py` ASK integration is fully implemented behind the gate.
 3. Served `QUESTION_NEEDED` terminal behavior is successfully tested using renderable `EpistemicQuestion` instances.
 4. Unrenderable ASK paths are verified to fall back correctly, never emitting `QUESTION_NEEDED`.
 5. Carve-out keys `missing_total_count` and `missing_weighted_total` are proven to yield safe renderable questions (or safe standing fallbacks).
 6. A dedicated no-question/no-proposal dead-zone validation test is introduced and passes.
-7. The registry in [failure_family.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/core/comprehension_attempt/failure_family.py) flips `proposal_allowed=False` for the carve-out families without dropping signal.
+7. The registry in `core/comprehension_attempt/failure_family.py` flips `proposal_allowed=False` for the carve-out families without dropping signal.
 8. The `teaching/questions/` (`question_only`) sink remains physically distinct from the `teaching/proposals/` (`proposal_only`) sink.
 9. Smoke, contemplation, proposal, and disclosure test suites remain fully green.
 
@@ -125,7 +125,7 @@ The implementation PR must include tests asserting the following behaviors:
 This scoping document establishes architectural boundaries only:
 
 - **No Implementation:** It does not implement served ASK.
-- **No Wiring:** It does not wire [pass_manager.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/generate/contemplation/pass_manager.py) or [runtime.py](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-ask-serving-scope/chat/runtime.py).
+- **No Wiring:** It does not wire `generate/contemplation/pass_manager.py` or `chat/runtime.py`.
 - **No Retirement:** It does not retire `Q1B_ASK_CARVE_OUT` or flip any registry `proposal_allowed` flags.
 - **No Metric Changes:** It does not alter GSM8K benchmark claims or refusal behaviors.
 - **No General Intelligence:** It does not make ASK generally intelligent; it simply bounds the served-surface gate.
@@ -141,6 +141,4 @@ To safely approach the implementation, the next sequential slices are recommende
 - Do not wire `pass_manager` or modify runtime loops.
 
 ### Slice 2: pass_manager Integration
-- Wire the `pass_manager` to evaluate `ask_question` and invoke `deliver_ask`.
-- Ensure all terminals and artifacts are generated behind the configuration gate for served outcomes.
-- Keep the transitional carve-out `Q1B_ASK_CARVE_OUT` and its registry settings intact.
+- Wire `pass_manager` to call `deliver_ask` without constructing prose; any user-visible ASK exposure remains behind `ask_serving_enabled`; preserve `Q1B_ASK_CARVE_OUT`.
