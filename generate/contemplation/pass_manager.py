@@ -89,7 +89,7 @@ def _delivery_outcome_for_limitation(assessment: LimitationAssessment) -> Delive
 
 def _handle_ask_delivery(
     assessment: LimitationAssessment,
-    family_obj: Any,
+    family_name: str,
     findings: list[Finding],
     attempts: tuple[ComprehensionAttempt, ...],
     text: str,
@@ -99,28 +99,40 @@ def _handle_ask_delivery(
 ) -> ContemplationResult:
     outcome = _delivery_outcome_for_limitation(assessment)
     if outcome.terminal == Terminal.QUESTION_NEEDED:
-        from core.epistemic_questions.delivery import emit_question
-        path = emit_question(assessment, root=proposal_root)
+        assert outcome.question is not None
+        import json
+        from core.epistemic_questions.delivery import question_path
+
+        path = question_path(outcome.question, None)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(outcome.question.to_json_dict(), indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+
         findings.append(Finding("ask", f"emitted question-only {assessment.blocking_reason}"))
         findings.append(Finding("terminal", Terminal.QUESTION_NEEDED.value))
         return ContemplationResult(
             Terminal.QUESTION_NEEDED, tuple(findings), attempts,
-            selected_organ=selected_organ, family=family_obj.name,
-            proposal_path=str(path) if path else None,
+            selected_organ=selected_organ, family=family_name,
+            proposal_path=str(path),
         )
     else:
         findings.append(Finding("ask", f"unrenderable ask: {outcome.fallback_reason}"))
         findings.append(Finding("terminal", outcome.terminal.value))
         if outcome.terminal == Terminal.PROPOSAL_EMITTED:
-            path = emit_proposal(text, family_obj, attempts, root=proposal_root)
-            return ContemplationResult(
-                Terminal.PROPOSAL_EMITTED, tuple(findings), attempts,
-                selected_organ=selected_organ, family=family_obj.name,
-                proposal_path=str(path) if path else None,
-            )
+            from core.comprehension_attempt.failure_family import family_by_name
+            family_obj = family_by_name(family_name)
+            if family_obj is not None:
+                path = emit_proposal(text, family_obj, attempts, root=proposal_root)
+                return ContemplationResult(
+                    Terminal.PROPOSAL_EMITTED, tuple(findings), attempts,
+                    selected_organ=selected_organ, family=family_name,
+                    proposal_path=str(path) if path else None,
+                )
         return ContemplationResult(
             outcome.terminal, tuple(findings), attempts,
-            selected_organ=selected_organ, family=family_obj.name,
+            selected_organ=selected_organ, family=family_name,
         )
 
 
@@ -189,14 +201,14 @@ def _solve_and_verify_r2(
     if isinstance(value, Refusal):
         findings.append(Finding("solve", f"solver refused: {value.reason}"))
         from core.comprehension_attempt.failure_family import family_by_name
-        from core.epistemic_disclosure.limitation import assess_from_family, Q1B_ASK_CARVE_OUT
+        from core.epistemic_disclosure.limitation import assess_from_family
         family_obj = family_by_name(value.reason)
         if family_obj is not None:
             assessment = assess_from_family(family_obj)
             if assessment.resolution_action == "ask_question":
                 if exercise_ask:
                     return _handle_ask_delivery(
-                        assessment, family_obj, findings, attempts, text, proposal_root, exercise_ask,
+                        assessment, family_obj.name, findings, attempts, text, proposal_root, exercise_ask,
                         selected_organ="r2_constraints"
                     )
         findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
@@ -245,14 +257,14 @@ def _solve_and_verify_r3(
     if isinstance(value, Refusal):
         findings.append(Finding("solve", f"solver refused: {value.reason}"))
         from core.comprehension_attempt.failure_family import family_by_name
-        from core.epistemic_disclosure.limitation import assess_from_family, Q1B_ASK_CARVE_OUT
+        from core.epistemic_disclosure.limitation import assess_from_family
         family_obj = family_by_name(value.reason)
         if family_obj is not None:
             assessment = assess_from_family(family_obj)
             if assessment.resolution_action == "ask_question":
                 if exercise_ask:
                     return _handle_ask_delivery(
-                        assessment, family_obj, findings, attempts, text, proposal_root, exercise_ask,
+                        assessment, family_obj.name, findings, attempts, text, proposal_root, exercise_ask,
                         selected_organ="r3_rate"
                     )
         findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
@@ -304,7 +316,7 @@ def _solve_and_verify_cmb(
         # reason is namespaced cmb_* so it resolves to the CMB solver family, not R2/R3's.
         findings.append(Finding("solve", f"solver refused: {value.reason}"))
         from core.comprehension_attempt.failure_family import family_by_name
-        from core.epistemic_disclosure.limitation import assess_from_family, Q1B_ASK_CARVE_OUT
+        from core.epistemic_disclosure.limitation import assess_from_family
         reason = cmb_reason(value.reason)
         family_obj = family_by_name(reason)
         if family_obj is not None:
@@ -312,7 +324,7 @@ def _solve_and_verify_cmb(
             if assessment.resolution_action == "ask_question":
                 if exercise_ask:
                     return _handle_ask_delivery(
-                        assessment, family_obj, findings, attempts, text, proposal_root, exercise_ask,
+                        assessment, family_obj.name, findings, attempts, text, proposal_root, exercise_ask,
                         selected_organ="r4_combined_rate"
                     )
         findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
@@ -362,14 +374,12 @@ def _classify_all_refused(
 
     # Check for ASK delivery.
     for attempt in considered:
-        from core.epistemic_disclosure.limitation import assess_from_attempt, Q1B_ASK_CARVE_OUT
+        from core.epistemic_disclosure.limitation import assess_from_attempt
         assessment = assess_from_attempt(attempt)
         if assessment is not None and assessment.resolution_action == "ask_question":
             if exercise_ask:
-                from core.comprehension_attempt.failure_family import family_by_name
-                family_obj = family_by_name(assessment.blocking_reason)
                 return _handle_ask_delivery(
-                    assessment, family_obj, findings, attempts, text, proposal_root, exercise_ask
+                    assessment, assessment.blocking_reason, findings, attempts, text, proposal_root, exercise_ask
                 )
 
     families = [(a, family_for_reason(a.refusal_reason)) for a in considered]

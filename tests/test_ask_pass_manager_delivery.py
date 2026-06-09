@@ -122,3 +122,95 @@ def test_q1b_carveout_preserved_during_pass_manager_ask_integration() -> None:
         family = family_by_name(name)
         assert family is not None
         assert family.proposal_allowed is True
+
+
+def test_renderable_ask_path_returns_question_needed_under_exercise_ask(monkeypatch, tmp_path) -> None:
+    from core.comprehension_attempt import ComprehensionAttempt, RouteResult
+    import generate.contemplation.pass_manager as pm
+    from generate.binding_graph.model import SourceSpanLink
+
+    span = SourceSpanLink(source_id="src", start=0, end=8, text="chickens")
+    attempt = ComprehensionAttempt(
+        organ="r2_constraints",
+        outcome="setup_refused",
+        refusal_reason="missing_total_count",
+        evidence=(span,),
+    )
+
+    monkeypatch.setattr(pm, "route_setup", lambda text, case_id=None: RouteResult((attempt,), None, "all_refused"))
+
+    # 1. Assert that without exercise_ask, it falls back to PROPOSAL_EMITTED (due to carve-out)
+    res_normal = contemplate("chickens", proposal_root=tmp_path)
+    assert res_normal.terminal == Terminal.PROPOSAL_EMITTED
+
+    # 2. Assert that with exercise_ask=True, it returns QUESTION_NEEDED
+    calls = []
+    orig = pm._delivery_outcome_for_limitation
+    def wrapped(assessment):
+        calls.append(assessment)
+        return orig(assessment)
+    monkeypatch.setattr(pm, "_delivery_outcome_for_limitation", wrapped)
+
+    res_ask = contemplate("chickens", proposal_root=tmp_path, exercise_ask=True)
+    assert res_ask.terminal == Terminal.QUESTION_NEEDED
+    assert len(calls) == 1  # Verify it is called exactly once! No double delivery / double render!
+
+    # Verify the question artifact path
+    assert res_ask.proposal_path is not None
+    artifact_path = Path(res_ask.proposal_path)
+    assert artifact_path.exists()
+    # Confirm it is NOT written under proposal_root / teaching/proposals
+    assert "teaching/questions" in res_ask.proposal_path
+    assert str(tmp_path) not in res_ask.proposal_path
+
+
+def test_unrenderable_ask_falls_back_in_pass_manager(monkeypatch, tmp_path) -> None:
+    from core.comprehension_attempt import ComprehensionAttempt, RouteResult
+    import generate.contemplation.pass_manager as pm
+    from core.epistemic_questions.delivery import DeliveryOutcome
+
+    attempt = ComprehensionAttempt(
+        organ="r2_constraints",
+        outcome="setup_refused",
+        refusal_reason="missing_total_count",
+    )
+
+    monkeypatch.setattr(pm, "route_setup", lambda text, case_id=None: RouteResult((attempt,), None, "all_refused"))
+    monkeypatch.setattr(
+        pm,
+        "_delivery_outcome_for_limitation",
+        lambda assessment: DeliveryOutcome(Terminal.PROPOSAL_EMITTED, None, "multi_slot_not_supported")
+    )
+
+    res = contemplate("chickens", proposal_root=tmp_path, exercise_ask=True)
+    assert res.terminal == Terminal.PROPOSAL_EMITTED
+    assert res.terminal is not Terminal.QUESTION_NEEDED
+    assert res.proposal_path is not None
+    assert Path(res.proposal_path).exists()
+
+
+def test_family_none_does_not_crash_ask_branch(monkeypatch, tmp_path) -> None:
+    from core.comprehension_attempt import ComprehensionAttempt, RouteResult
+    import generate.contemplation.pass_manager as pm
+    from core.epistemic_disclosure.limitation import LimitationAssessment
+    import core.epistemic_disclosure.limitation as lim_mod
+
+    fake_assessment = LimitationAssessment(
+        limitation_kind="missing_information",
+        resolution_action="ask_question",
+        epistemic_state=EpistemicState.UNDETERMINED,
+        owner_organ="r2_constraint",
+        blocking_reason="nonexistent_family_name",
+    )
+
+    attempt = ComprehensionAttempt(
+        organ="r2_constraints",
+        outcome="setup_refused",
+        refusal_reason="nonexistent_family_name",
+    )
+
+    monkeypatch.setattr(pm, "route_setup", lambda text, case_id=None: RouteResult((attempt,), None, "all_refused"))
+    monkeypatch.setattr(lim_mod, "assess_from_attempt", lambda att: fake_assessment)
+
+    res = contemplate("chickens", proposal_root=tmp_path, exercise_ask=True)
+    assert res.terminal == Terminal.NO_PROGRESS
