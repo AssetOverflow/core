@@ -1,15 +1,25 @@
-# Q1-D — ASK bus delivery (`QUESTION_NEEDED` tenant) — scoping brief
+# Q1-D — ASK bus delivery (`QUESTION_NEEDED` tenant) — decision record
 
-**Date:** 2026-06-08 · **Status:** scoping (NO CODE) · **HOLD for review** ·
-**Branch:** `docs/q1-d-ask-bus-delivery-scoping`
+**Date:** 2026-06-08 · **Status:** ACCEPTED + IMPLEMENTED (PR #668, merge commit
+`07149c20`) · **Branch:** `docs/q1-d-ask-bus-delivery-scoping`
 
-**What this brief is.** The companion scope for the **fourth and last Q1 rung** —
-*delivery*. Q1-A (limitation pass), Q1-B (typed residue + `missing_*`
-reclassification, `Q1B_ASK_CARVE_OUT`), and Q1-C (the grounded-only renderer,
-strictly single-slot) all shipped **off-serving**. Q1-D is the rung that takes the
-rendered question and routes it onto Doc 1's Epistemic Disclosure Bus as the
-**second tenant** (`QUESTION_NEEDED`), behind the first (`VERIFIED`). It pins the
-delivery-specific decisions against shipped code so the rung lands without surprise.
+> **Decision record, not an open brief.** All five decisions below (D1–D5) were
+> ruled and are implemented in PR #668. This doc is retained as the durable record of
+> *what was decided and why*; the implementation lives in
+> `core/epistemic_questions/delivery.py`, `generate/contemplation/findings.py`
+> (`Terminal.QUESTION_NEEDED`), `core/epistemic_disclosure/limitation.py` (the now-total
+> `terminal_for_action`), and `tests/test_question_delivery.py`. Where this doc and the
+> code disagree, the code is authoritative. Two *served-surface* decisions remain open
+> and are deferred to dedicated scoping docs (see §7): `ask_serving_enabled` and the
+> registry/carve-out flip.
+
+**What this records.** The decisions for the **fourth and last Q1 rung** — *delivery*.
+Q1-A (limitation pass), Q1-B (typed residue + `missing_*` reclassification,
+`Q1B_ASK_CARVE_OUT`), and Q1-C (the grounded-only renderer, strictly single-slot) all
+shipped **off-serving**; Q1-D (also off-serving) takes the rendered question and routes
+it onto Doc 1's Epistemic Disclosure Bus as the **second tenant** (`QUESTION_NEEDED`),
+behind the first (`VERIFIED`). Each decision is pinned against the shipped code it
+landed on.
 
 > Design of record: the session doc
 > `docs/sessions/2026-06-08-epistemic-question-articulation-first-skill-of-contemplation.md`
@@ -69,11 +79,15 @@ Two facts set the altitude:
 
 ---
 
-## 2. What Q1-D ships (off-serving) — the recommendation
+## 2. What Q1-D shipped (off-serving) — ACCEPTED
 
-**Build the off-serving delivery layer; defer served-surface wiring to a named gate.**
-This mirrors the VERIFIED lane exactly (P1-B produced proof objects off-serving;
-serving wiring is a separate, gated decision).
+**Decision: build the off-serving delivery layer; defer served-surface wiring to a
+named gate.** Implemented in #668. This mirrors the VERIFIED lane exactly (P1-B
+produced proof objects off-serving; serving wiring is a separate, gated decision).
+One scope refinement landed with the code: the delivery layer ships **standalone** —
+`deliver_ask`/`emit_question` are tested but **not yet called from `pass_manager`**
+(mirrors P1-B shipping the producer without wiring `verify.py`); pass-manager wiring is
+a deliberate follow-up, folded into the §7 ASK serving-integration scope.
 
 ### 2.1 `Terminal.QUESTION_NEEDED` — the off-serving sink
 
@@ -114,12 +128,12 @@ wiring, no `CLAIMS.md` change.**
 
 ---
 
-## 3. The decisions that need a ruling
+## 3. The decisions — ALL ACCEPTED + IMPLEMENTED (#668)
 
-These are the load-bearing choices Q1-D forces. Each has a recommendation; none
-should be edited into code without your call.
+These were the load-bearing choices Q1-D forced. Each was ruled as its recommendation
+and is implemented in #668; the rulings are recorded inline (**Ruling:**) under each.
 
-### D1 — Off-serving delivery now, or wait for the bus to be served?
+### D1 — Off-serving delivery now, or wait for the bus to be served? — **ACCEPTED: now**
 
 The Q1 scoping doc (§7.4) said *"Q1-D requires the bus to be live (Stage 2 S2-A..C)."*
 But Stage 2 shipped its first tenant **off-serving** (P1 is a proof-object producer;
@@ -134,7 +148,7 @@ as *served* — it materialised as *off-serving infrastructure*.
   off-serving proof object that the VERIFIED lane found valuable; gains nothing the
   gate doesn't already protect.
 
-### D2 — The unrenderable fallback (the wrong=0-adjacent decision)
+### D2 — The unrenderable fallback (the wrong=0-adjacent decision) — **ACCEPTED**
 
 When Q1-C returns `unrenderable` (`renderability_gap`, `multi_slot_not_supported`,
 `fabrication_guard`, `no_missing_slot`), Q1-D must **not** terminate `QUESTION_NEEDED`
@@ -150,7 +164,7 @@ fabricated answer.
   assessment ever reaches `QUESTION_NEEDED`.
 - This is why the carve-out (D3) must not flip yet — see below.
 
-### D3 — Does Q1-D resolve the `Q1B_ASK_CARVE_OUT`?
+### D3 — Does Q1-D resolve the `Q1B_ASK_CARVE_OUT`? — **ACCEPTED: no, carve-out stays**
 
 Q1-B deliberately **kept** `REGISTRY` `proposal_allowed=True` for `missing_total_count`
 / `missing_weighted_total` and added the disclosure-layer `Q1B_ASK_CARVE_OUT`, with the
@@ -169,7 +183,7 @@ lands."* Q1-D **is** ASK delivery landing — so does the registry flip now?
   while the carve-out stands, the registry's `proposal_allowed=True` remains the
   truthful fallback target.
 
-### D4 — Where does the off-serving sink write?
+### D4 — Where does the off-serving sink write? — **ACCEPTED: `teaching/questions/`**
 
 `PROPOSAL_EMITTED` writes to `teaching/proposals/`. The question sink is a sibling.
 
@@ -178,7 +192,7 @@ lands."* Q1-D **is** ASK delivery landing — so does the registry flip now?
   artifact is the `DeliveredQuestion` serialized deterministically (frozen → hashable →
   replayable). Confirm the path/name; it is a one-line decision, not architecture.
 
-### D5 — Single-slot carries through (no fan-out in Q1-D)
+### D5 — Single-slot carries through (no fan-out in Q1-D) — **ACCEPTED**
 
 Q1-C is **strictly single-slot** (the `multi_slot_not_supported` refusal shipped in
 this same review). Q1-D therefore delivers **at most one** `DeliveredQuestion` per
@@ -205,45 +219,56 @@ Q2+). Stated here so delivery does not silently grow a fan-out.
 
 ---
 
-## 5. Verification lanes (when built)
+## 5. Verification lanes (as shipped in #668)
 
-- `tests/test_question_delivery.py` (new) — `ask_question` + renderable assessment →
-  `Terminal.QUESTION_NEEDED` + a `DeliveredQuestion` wrapping the *exact* Q1-C
-  `EpistemicQuestion`; the **D2 guard test** (unrenderable assessment never reaches
-  `QUESTION_NEEDED`, always falls back to the standing disposition); the off-serving
-  AST test; an `AnswerBinding is None` reservation test.
-- `tests/test_contemplation_terminals.py` — `QUESTION_NEEDED` is a sibling of
-  `PROPOSAL_EMITTED`, not a subtype; the pass routes it deterministically.
-- `core test --suite full -q` — must stay green (the 7/0/x serving metric and pinned
-  lane SHAs are structurally untouched).
-- Schema-obligation discipline (CLAUDE.md): the D2 guard test must **fail** if an
-  unrenderable assessment is allowed to terminate `QUESTION_NEEDED`; the off-serving
-  test must **fail** if a forbidden import is added.
+- `tests/test_question_delivery.py` (14 tests) — `ask_question` + renderable assessment
+  → `Terminal.QUESTION_NEEDED` + a `DeliveredQuestion` wrapping the *exact* Q1-C
+  `EpistemicQuestion`; both **D2 fallback branches** (proposing → `PROPOSAL_EMITTED`,
+  non-proposing → `NO_PROGRESS`); the structural guards (a `DeliveredQuestion` cannot
+  wrap an unrenderable question / be served / carry an `AnswerBinding`); the idempotent
+  content-addressed sink + no-artifact-on-fallback; the off-serving AST test.
+- `tests/test_limitation_assessment.py` — the two consolidation tests updated for the
+  now-total `terminal_for_action` (`ask_question → QUESTION_NEEDED`).
+- Schema-obligation discipline (CLAUDE.md): the D2 guard is enforced **twice** — in
+  `deliver_ask` and structurally in `DeliveredQuestion.__post_init__` — so an
+  unrenderable assessment can never terminate `QUESTION_NEEDED`; the off-serving test
+  fails if a forbidden import is added. Results: smoke 90/0, affected suites 128/0.
 
 ---
 
-## 6. Build order (Q1-D, off-serving, one PR — scoping only here)
+## 6. Build order (Q1-D, off-serving, one PR — as shipped in #668)
 
-1. `Terminal.QUESTION_NEEDED` added; sibling-not-subtype test.
+1. `Terminal.QUESTION_NEEDED` added (sibling of `PROPOSAL_EMITTED`).
 2. `DeliveredQuestion` dataclass (+ reserved `AnswerBinding`); wraps `EpistemicQuestion`.
-3. The delivery function: `ask_question` assessment → render (consume Q1-C) → on
-   renderable, `QUESTION_NEEDED` + artifact; on unrenderable, the **D2 fallback**.
-4. Off-serving AST test + the D2 guard test + the sink-write test.
+3. The delivery function `deliver_ask`: `ask_question` assessment → render (consume
+   Q1-C) → on renderable, `QUESTION_NEEDED` + artifact; on unrenderable, the **D2
+   fallback**. Plus the `emit_question` sink writer.
+4. Off-serving AST test + the D2 guard tests + the sink-write tests.
 
-The served-surface wiring (`ask_serving_enabled`) and the registry flip (D3) are a
-**separate, later, ruling-gated** step — not this PR. Q2 answer-binding is a separate
-batch.
+The served-surface wiring (`ask_serving_enabled`), the `pass_manager` call site, and the
+registry flip (D3) are a **separate, later, ruling-gated** step — deferred to the §7
+ASK serving-integration scoping doc, NOT this PR. Q2 answer-binding is a separate batch.
 
 ---
 
-## 7. The single question for the ruling
+## 7. Outcome — RESOLVED, and what remains open
 
-> Build Q1-D's **off-serving** delivery layer now (`Terminal.QUESTION_NEEDED` +
-> `DeliveredQuestion`, consuming Q1-C, with the D2 unrenderable-fallback guard and the
-> D3 carve-out left standing), deferring served delivery to a named
-> `ask_serving_enabled` gate — **or** hold Q1-D entirely until the bus has a served
-> surface?
+**Resolved (#668):** Q1-D's **off-serving** delivery layer was built —
+`Terminal.QUESTION_NEEDED` + `DeliveredQuestion`, consuming Q1-C, with the D2
+unrenderable-fallback guard and the D3 carve-out left standing — matching the VERIFIED
+precedent, keeping wrong=0 honest, moving no metric. The off-serving ASK lane (residue →
+renderability → delivery) is now complete.
 
-Recommendation: **build off-serving now** (D1), with D2–D5 as specified. It matches
-the VERIFIED precedent, keeps wrong=0 honest, moves no metric, and leaves the one
-genuinely served-surface decision (`ask_serving_enabled`) for a deliberate ruling.
+**Open — deferred to dedicated scoping docs (no served-surface code until both are
+reviewed):**
+
+1. **ASK serving-integration** (`ask_serving_enabled`): the `pass_manager` integration
+   point (where `deliver_ask` is actually called), the served-surface behaviour for a
+   `QUESTION_NEEDED` reaching a user, the `Q1B_ASK_CARVE_OUT` retirement gate + registry
+   flip (`proposal_allowed → ask`), and the no-question/no-proposal **dead-zone proof**
+   (a family must never lose both signals across the flip).
+2. **VERIFIED serving-wiring** (`verified_serving_enabled`): the gold-free independent
+   reader requirement, holdout gates, proof-producer eligibility, and the explicit ban
+   on eval-gold-backed serving.
+
+Both are the VERIFIED/ASK halves of the same "this is where off-serving stops" line.
