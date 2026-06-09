@@ -176,7 +176,7 @@ def test_deliver_ask_rejects_non_ask_assessment() -> None:
 # --- the sink: proposal-only, idempotent, no artifact on fallback ---------------------- #
 
 
-def test_emit_question_writes_proposal_only_artifact_idempotently(tmp_path: Path) -> None:
+def test_emit_question_writes_question_only_artifact_idempotently(tmp_path: Path) -> None:
     assessment = _ask(blocking_reason="missing_total_count", slots=(_TOTAL_COUNT_SLOT,))
     path1 = emit_question(assessment, root=tmp_path)
 

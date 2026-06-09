@@ -4,9 +4,11 @@ The fourth and final Q1 rung. Given an ``ask_question``
 :class:`~core.epistemic_disclosure.limitation.LimitationAssessment`, decide the
 contemplation :class:`~generate.contemplation.findings.Terminal` and, when a question
 can honestly be asked, produce a :class:`DeliveredQuestion` artifact for the
-proposal-only ``teaching/questions`` sink. This is the ASK analogue of the
-proposal-only :mod:`core.comprehension_attempt.proposal` emitter — and just as
-toothless: it never serves, never mounts, always requires review.
+review-gated, **question-only** ``teaching/questions`` sink. A question is an *intake
+request*, NOT a capability proposal — ``question_only`` is its own lane, distinct from
+the ``proposal_only`` lane of :mod:`core.comprehension_attempt.proposal`. This is the
+ASK *analogue* of that emitter (and just as toothless: it never serves, never mounts,
+always requires review), but the artifacts must never be conflated.
 
 **The rung separation (the steer).** Q1-D *consumes* the Q1-C
 :class:`~core.epistemic_questions.render.EpistemicQuestion` — it does NOT render.
@@ -89,7 +91,11 @@ class AnswerBinding:
 
 @dataclass(frozen=True, slots=True)
 class DeliveredQuestion:
-    """A proposal-only ASK artifact wrapping a rendered Q1-C question.
+    """A review-gated, question-only ASK artifact wrapping a rendered Q1-C question.
+
+    ``question_only`` is its OWN lane (an intake request), not the ``proposal_only``
+    lane — the analogy to :class:`~core.comprehension_attempt.proposal.FailureProposal`
+    is structural (toothless, review-gated, never served), never semantic.
 
     The invariant fields are enforced in ``__post_init__`` so even a hand-constructed
     instance cannot become a contentless question, a served question, or an
