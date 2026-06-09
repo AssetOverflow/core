@@ -139,8 +139,18 @@ def test_renderable_ask_path_returns_question_needed_under_exercise_ask(monkeypa
 
     monkeypatch.setattr(pm, "route_setup", lambda text, case_id=None: RouteResult((attempt,), None, "all_refused"))
 
+    question_root = tmp_path / "teaching" / "questions"
+    proposal_root = tmp_path / "teaching" / "proposals"
+
+    repo_questions_dir = Path(__file__).resolve().parents[1] / "teaching" / "questions"
+    before_files = set(repo_questions_dir.glob("**/*")) if repo_questions_dir.exists() else set()
+
     # 1. Assert that without exercise_ask, it falls back to PROPOSAL_EMITTED (due to carve-out)
-    res_normal = contemplate("chickens", proposal_root=tmp_path)
+    res_normal = contemplate(
+        "chickens",
+        proposal_root=proposal_root,
+        question_root=question_root,
+    )
     assert res_normal.terminal == Terminal.PROPOSAL_EMITTED
 
     # 2. Assert that with exercise_ask=True, it returns QUESTION_NEEDED
@@ -151,7 +161,12 @@ def test_renderable_ask_path_returns_question_needed_under_exercise_ask(monkeypa
         return orig(assessment)
     monkeypatch.setattr(pm, "_delivery_outcome_for_limitation", wrapped)
 
-    res_ask = contemplate("chickens", proposal_root=tmp_path, exercise_ask=True)
+    res_ask = contemplate(
+        "chickens",
+        proposal_root=proposal_root,
+        question_root=question_root,
+        exercise_ask=True,
+    )
     assert res_ask.terminal == Terminal.QUESTION_NEEDED
     assert len(calls) == 1  # Verify it is called exactly once! No double delivery / double render!
 
@@ -159,9 +174,15 @@ def test_renderable_ask_path_returns_question_needed_under_exercise_ask(monkeypa
     assert res_ask.proposal_path is not None
     artifact_path = Path(res_ask.proposal_path)
     assert artifact_path.exists()
-    # Confirm it is NOT written under proposal_root / teaching/proposals
-    assert "teaching/questions" in res_ask.proposal_path
-    assert str(tmp_path) not in res_ask.proposal_path
+
+    # Assert question artifact is under question_root
+    assert question_root in artifact_path.parents
+    # Assert question artifact is not under proposal_root
+    assert proposal_root not in artifact_path.parents
+
+    # Assert no repo-local teaching/questions artifact is created during tests
+    after_files = set(repo_questions_dir.glob("**/*")) if repo_questions_dir.exists() else set()
+    assert before_files == after_files
 
 
 def test_unrenderable_ask_falls_back_in_pass_manager(monkeypatch, tmp_path) -> None:
@@ -182,7 +203,15 @@ def test_unrenderable_ask_falls_back_in_pass_manager(monkeypatch, tmp_path) -> N
         lambda assessment: DeliveryOutcome(Terminal.PROPOSAL_EMITTED, None, "multi_slot_not_supported")
     )
 
-    res = contemplate("chickens", proposal_root=tmp_path, exercise_ask=True)
+    question_root = tmp_path / "teaching" / "questions"
+    proposal_root = tmp_path / "teaching" / "proposals"
+
+    res = contemplate(
+        "chickens",
+        proposal_root=proposal_root,
+        question_root=question_root,
+        exercise_ask=True,
+    )
     assert res.terminal == Terminal.PROPOSAL_EMITTED
     assert res.terminal is not Terminal.QUESTION_NEEDED
     assert res.proposal_path is not None
@@ -212,5 +241,53 @@ def test_family_none_does_not_crash_ask_branch(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr(pm, "route_setup", lambda text, case_id=None: RouteResult((attempt,), None, "all_refused"))
     monkeypatch.setattr(lim_mod, "assess_from_attempt", lambda att: fake_assessment)
 
-    res = contemplate("chickens", proposal_root=tmp_path, exercise_ask=True)
+    question_root = tmp_path / "teaching" / "questions"
+    proposal_root = tmp_path / "teaching" / "proposals"
+
+    res = contemplate(
+        "chickens",
+        proposal_root=proposal_root,
+        question_root=question_root,
+        exercise_ask=True,
+    )
     assert res.terminal == Terminal.NO_PROGRESS
+
+
+def test_boundary_wins_over_ask_in_pass_manager(monkeypatch, tmp_path) -> None:
+    from core.comprehension_attempt import ComprehensionAttempt, RouteResult
+    import generate.contemplation.pass_manager as pm
+    from generate.binding_graph.model import SourceSpanLink
+
+    span = SourceSpanLink(source_id="src", start=0, end=8, text="chickens")
+    attempt_boundary = ComprehensionAttempt(
+        organ="r2_constraints",
+        outcome="setup_refused",
+        refusal_reason="too_many_categories",  # maps to unsupported_system_size (must_remain_refused = True)
+        evidence=(span,),
+    )
+    attempt_ask = ComprehensionAttempt(
+        organ="r2_constraints",
+        outcome="setup_refused",
+        refusal_reason="missing_total_count",  # ask carve-out
+        evidence=(span,),
+    )
+
+    monkeypatch.setattr(
+        pm,
+        "route_setup",
+        lambda text, case_id=None: RouteResult((attempt_boundary, attempt_ask), None, "all_refused"),
+    )
+
+    question_root = tmp_path / "teaching" / "questions"
+    proposal_root = tmp_path / "teaching" / "proposals"
+
+    res = contemplate(
+        "chickens",
+        proposal_root=proposal_root,
+        question_root=question_root,
+        exercise_ask=True,
+    )
+    # Assert terminal remains REFUSED_UNSUPPORTED_FAMILY or REFUSED_KNOWN_BOUNDARY, not QUESTION_NEEDED
+    assert res.terminal == Terminal.REFUSED_UNSUPPORTED_FAMILY
+    # Ensure no question is written under question_root
+    assert not question_root.exists() or len(list(question_root.glob("**/*"))) == 0

@@ -94,6 +94,7 @@ def _handle_ask_delivery(
     attempts: tuple[ComprehensionAttempt, ...],
     text: str,
     proposal_root: Path | None,
+    question_root: Path | None,
     exercise_ask: bool,
     selected_organ: str | None = None,
 ) -> ContemplationResult:
@@ -103,7 +104,7 @@ def _handle_ask_delivery(
         import json
         from core.epistemic_questions.delivery import question_path
 
-        path = question_path(outcome.question, None)
+        path = question_path(outcome.question, question_root)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             json.dumps(outcome.question.to_json_dict(), indent=2, sort_keys=True),
@@ -142,6 +143,7 @@ def contemplate(
     options: dict[str, Any] | None = None,
     answer_key: str | None = None,
     proposal_root: Path | None = None,
+    question_root: Path | None = None,
     case_id: str | None = None,
     exercise_ask: bool = False,
 ) -> ContemplationResult:
@@ -171,11 +173,11 @@ def contemplate(
     if route.status == "routed":
         assert route.selected is not None
         if route.selected.organ == "r2_constraints":
-            return _solve_and_verify_r2(text, options, answer_key, findings, attempts, proposal_root, exercise_ask)
+            return _solve_and_verify_r2(text, options, answer_key, findings, attempts, proposal_root, question_root, exercise_ask)
         if route.selected.organ == "r3_rate":
-            return _solve_and_verify_r3(text, options, answer_key, findings, attempts, proposal_root, exercise_ask)
+            return _solve_and_verify_r3(text, options, answer_key, findings, attempts, proposal_root, question_root, exercise_ask)
         if route.selected.organ == "r4_combined_rate":
-            return _solve_and_verify_cmb(text, options, answer_key, findings, attempts, proposal_root, exercise_ask)
+            return _solve_and_verify_cmb(text, options, answer_key, findings, attempts, proposal_root, question_root, exercise_ask)
         findings.append(Finding("solve", "r1 admissible setup (numeric answer is the eval lane in v0)"))
         findings.append(Finding("terminal", Terminal.SOLVED_VERIFIED.value))
         return ContemplationResult(
@@ -183,7 +185,7 @@ def contemplate(
         )
 
     # route.status == "all_refused"
-    return _classify_all_refused(text, attempts, findings, proposal_root, exercise_ask)
+    return _classify_all_refused(text, attempts, findings, proposal_root, question_root, exercise_ask)
 
 
 def _solve_and_verify_r2(
@@ -193,6 +195,7 @@ def _solve_and_verify_r2(
     findings: list[Finding],
     attempts: tuple[ComprehensionAttempt, ...],
     proposal_root: Path | None,
+    question_root: Path | None,
     exercise_ask: bool,
 ) -> ContemplationResult:
     problem = read_constraint_problem(text)
@@ -208,7 +211,7 @@ def _solve_and_verify_r2(
             if assessment.resolution_action == "ask_question":
                 if exercise_ask:
                     return _handle_ask_delivery(
-                        assessment, family_obj.name, findings, attempts, text, proposal_root, exercise_ask,
+                        assessment, family_obj.name, findings, attempts, text, proposal_root, question_root, exercise_ask,
                         selected_organ="r2_constraints"
                     )
         findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
@@ -249,6 +252,7 @@ def _solve_and_verify_r3(
     findings: list[Finding],
     attempts: tuple[ComprehensionAttempt, ...],
     proposal_root: Path | None,
+    question_root: Path | None,
     exercise_ask: bool,
 ) -> ContemplationResult:
     problem = read_rate_problem(text)
@@ -264,7 +268,7 @@ def _solve_and_verify_r3(
             if assessment.resolution_action == "ask_question":
                 if exercise_ask:
                     return _handle_ask_delivery(
-                        assessment, family_obj.name, findings, attempts, text, proposal_root, exercise_ask,
+                        assessment, family_obj.name, findings, attempts, text, proposal_root, question_root, exercise_ask,
                         selected_organ="r3_rate"
                     )
         findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
@@ -305,6 +309,7 @@ def _solve_and_verify_cmb(
     findings: list[Finding],
     attempts: tuple[ComprehensionAttempt, ...],
     proposal_root: Path | None,
+    question_root: Path | None,
     exercise_ask: bool,
 ) -> ContemplationResult:
     problem = read_combined_rate_problem(text)
@@ -324,7 +329,7 @@ def _solve_and_verify_cmb(
             if assessment.resolution_action == "ask_question":
                 if exercise_ask:
                     return _handle_ask_delivery(
-                        assessment, family_obj.name, findings, attempts, text, proposal_root, exercise_ask,
+                        assessment, family_obj.name, findings, attempts, text, proposal_root, question_root, exercise_ask,
                         selected_organ="r4_combined_rate"
                     )
         findings.append(Finding("terminal", Terminal.REFUSED_KNOWN_BOUNDARY.value))
@@ -363,6 +368,7 @@ def _classify_all_refused(
     attempts: tuple[ComprehensionAttempt, ...],
     findings: list[Finding],
     proposal_root: Path | None,
+    question_root: Path | None,
     exercise_ask: bool,
 ) -> ContemplationResult:
     # CMB-over-R3 precedence (family side): when CMB substantively recognized the text, R3's broader
@@ -372,19 +378,9 @@ def _classify_all_refused(
     if cmb_is_authoritative(attempts):
         considered = tuple(a for a in attempts if a.organ != "r3_rate")
 
-    # Check for ASK delivery.
-    for attempt in considered:
-        from core.epistemic_disclosure.limitation import assess_from_attempt
-        assessment = assess_from_attempt(attempt)
-        if assessment is not None and assessment.resolution_action == "ask_question":
-            if exercise_ask:
-                return _handle_ask_delivery(
-                    assessment, assessment.blocking_reason, findings, attempts, text, proposal_root, exercise_ask
-                )
-
     families = [(a, family_for_reason(a.refusal_reason)) for a in considered]
 
-    # Boundary-first: a substantive recognized boundary blocks any proposal.
+    # Boundary-first: a substantive recognized boundary blocks any proposal or ASK.
     for _attempt, family in families:
         if family is not None and family.must_remain_refused and family.name != _NOT_MY_DOMAIN:
             terminal = (
@@ -394,6 +390,16 @@ def _classify_all_refused(
             )
             findings.append(Finding("terminal", f"{terminal.value} via {family.name}"))
             return ContemplationResult(terminal, tuple(findings), attempts, family=family.name)
+
+    # Check for ASK delivery only after substantive boundaries are ruled out.
+    for attempt in considered:
+        from core.epistemic_disclosure.limitation import assess_from_attempt
+        assessment = assess_from_attempt(attempt)
+        if assessment is not None and assessment.resolution_action == "ask_question":
+            if exercise_ask:
+                return _handle_ask_delivery(
+                    assessment, assessment.blocking_reason, findings, attempts, text, proposal_root, question_root, exercise_ask
+                )
 
     # No substantive boundary: a genuine growth surface may emit a proposal-only artifact.
     for _attempt, family in families:
