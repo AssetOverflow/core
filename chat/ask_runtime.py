@@ -1,8 +1,17 @@
-"""Runtime-facing ASK helper.
+from __future__ import annotations
 
-This module is the connector-safe bridge toward ``chat.runtime``: it exposes the
-small default-dark helper that runtime can import/use in a later checkout-based
-slice without editing the large runtime file through the GitHub connector.
+from typing import Any, Callable
 
-The helper consumes the Stage 2 ASK acquisition seam honestly via the typed
-``contemplation_result`` keyword. It does not render
+from core.epistemic_disclosure.ask_acquisition import acquire_served_ask_candidate
+
+Provider = Callable[[], Any | None]
+
+
+def maybe_apply_served_ask(
+    config: Any,
+    fallback_surface: str,
+    *,
+    contemplation_result: Any | None = None,
+    provider: Provider | None = None,
+) -> str:
+    acquisition
