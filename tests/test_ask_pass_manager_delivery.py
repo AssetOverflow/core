@@ -84,15 +84,19 @@ def test_pass_manager_does_not_import_or_call_render_question_directly() -> None
     )
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     for node in ast.walk(tree):
-        # Ensure render_question is not imported
+        # Ensure render_question is not imported, and chat/chat.runtime is not imported
         if isinstance(node, ast.ImportFrom):
             assert node.module != "core.epistemic_questions.render"
+            assert node.module != "chat.runtime"
+            assert node.module != "chat"
             if node.names:
                 for alias in node.names:
                     assert alias.name != "render_question"
         elif isinstance(node, ast.Import):
             for alias in node.names:
                 assert alias.name != "core.epistemic_questions.render"
+                assert alias.name != "chat.runtime"
+                assert alias.name != "chat"
 
         # Ensure render_question is not called directly
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
@@ -152,6 +156,9 @@ def test_renderable_ask_path_returns_question_needed_under_exercise_ask(monkeypa
         question_root=question_root,
     )
     assert res_normal.terminal == Terminal.PROPOSAL_EMITTED
+    assert res_normal.proposal_path is not None
+    assert res_normal.question_path is None
+    assert proposal_root in Path(res_normal.proposal_path).parents
 
     # 2. Assert that with exercise_ask=True, it returns QUESTION_NEEDED
     calls = []
@@ -171,8 +178,9 @@ def test_renderable_ask_path_returns_question_needed_under_exercise_ask(monkeypa
     assert len(calls) == 1  # Verify it is called exactly once! No double delivery / double render!
 
     # Verify the question artifact path
-    assert res_ask.proposal_path is not None
-    artifact_path = Path(res_ask.proposal_path)
+    assert res_ask.proposal_path is None
+    assert res_ask.question_path is not None
+    artifact_path = Path(res_ask.question_path)
     assert artifact_path.exists()
 
     # Assert question artifact is under question_root
@@ -216,6 +224,7 @@ def test_unrenderable_ask_falls_back_in_pass_manager(monkeypatch, tmp_path) -> N
     assert res.terminal is not Terminal.QUESTION_NEEDED
     assert res.proposal_path is not None
     assert Path(res.proposal_path).exists()
+    assert res.question_path is None
 
 
 def test_family_none_does_not_crash_ask_branch(monkeypatch, tmp_path) -> None:
@@ -289,5 +298,39 @@ def test_boundary_wins_over_ask_in_pass_manager(monkeypatch, tmp_path) -> None:
     )
     # Assert terminal remains REFUSED_UNSUPPORTED_FAMILY or REFUSED_KNOWN_BOUNDARY, not QUESTION_NEEDED
     assert res.terminal == Terminal.REFUSED_UNSUPPORTED_FAMILY
+    assert res.question_path is None
+    assert res.proposal_path is None
     # Ensure no question is written under question_root
     assert not question_root.exists() or len(list(question_root.glob("**/*"))) == 0
+
+
+def test_unrenderable_ask_falls_back_to_no_progress_in_pass_manager(monkeypatch, tmp_path) -> None:
+    from core.comprehension_attempt import ComprehensionAttempt, RouteResult
+    import generate.contemplation.pass_manager as pm
+    from core.epistemic_questions.delivery import DeliveryOutcome
+
+    attempt = ComprehensionAttempt(
+        organ="r2_constraints",
+        outcome="setup_refused",
+        refusal_reason="missing_total_count",
+    )
+
+    monkeypatch.setattr(pm, "route_setup", lambda text, case_id=None: RouteResult((attempt,), None, "all_refused"))
+    monkeypatch.setattr(
+        pm,
+        "_delivery_outcome_for_limitation",
+        lambda assessment: DeliveryOutcome(Terminal.NO_PROGRESS, None, "some_fallback_reason")
+    )
+
+    question_root = tmp_path / "teaching" / "questions"
+    proposal_root = tmp_path / "teaching" / "proposals"
+
+    res = contemplate(
+        "chickens",
+        proposal_root=proposal_root,
+        question_root=question_root,
+        exercise_ask=True,
+    )
+    assert res.terminal == Terminal.NO_PROGRESS
+    assert res.proposal_path is None
+    assert res.question_path is None

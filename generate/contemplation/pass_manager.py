@@ -78,6 +78,7 @@ class ContemplationResult:
     answer: int | None = None
     family: str | None = None
     proposal_path: str | None = None
+    question_path: str | None = None
     message: str | None = None
 
 
@@ -116,7 +117,8 @@ def _handle_ask_delivery(
         return ContemplationResult(
             Terminal.QUESTION_NEEDED, tuple(findings), attempts,
             selected_organ=selected_organ, family=family_name,
-            proposal_path=str(path),
+            proposal_path=None,
+            question_path=str(path),
         )
     else:
         findings.append(Finding("ask", f"unrenderable ask: {outcome.fallback_reason}"))
