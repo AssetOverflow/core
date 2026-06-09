@@ -19,6 +19,9 @@ Shipped so far (all off-serving — nothing here imports ``generate.derivation``
     ``EpistemicState × LimitationAssessment × DisclosureClaim → ServedDisposition``.
     Mapping scaffold only — no rendering, no bus, no ``verify.py``; nothing consumes
     it yet.
+  * :mod:`~core.epistemic_disclosure.ask_serving` — a narrow Q1-D served-ASK artifact
+    adapter. It validates already-rendered question artifacts and returns a typed
+    decision; it does not render prose and does not acquire runtime contemplation.
   * :mod:`~core.epistemic_disclosure.verified_contract` (P1-A) — the VERIFIED contract:
     the obligation, the proof shape, the validator, and the single sanctioned route to
     ``EpistemicState.VERIFIED`` / ``DisclosureClaim.VERIFIED``. Contract only — no
@@ -27,6 +30,10 @@ Shipped so far (all off-serving — nothing here imports ``generate.derivation``
 
 from __future__ import annotations
 
+from core.epistemic_disclosure.ask_serving import (
+    ServedAskDecision,
+    evaluate_served_ask,
+)
 from core.epistemic_disclosure.disclosure_claim import (
     DEFAULT_DISCLOSURE_CLAIM,
     DisclosureClaim,
@@ -64,6 +71,7 @@ __all__ = [
     "LimitationKind",
     "MissingSlot",
     "ResolutionAction",
+    "ServedAskDecision",
     "ServedDisposition",
     "VerificationObligation",
     "VerificationProof",
@@ -73,6 +81,7 @@ __all__ = [
     "assess_from_family",
     "choose_served_disposition",
     "disclosure_for_verification",
+    "evaluate_served_ask",
     "evaluate_verification",
     "terminal_for_action",
 ]
