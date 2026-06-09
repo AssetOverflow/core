@@ -335,6 +335,15 @@ class RuntimeConfig:
     # default); the engine never raises its own ceiling.
     estimation_enabled: bool = False
 
+    # ASK serving gate enable flag. When True, ASK serving is allowed.
+    # Default False (dark).
+    ask_serving_enabled: bool = False
+
+    # VERIFIED serving gate enable flag. When True, VERIFIED serving is allowed.
+    # Default False (dark).
+    verified_serving_enabled: bool = False
+
+
 
 DEFAULT_IDENTITY_PACK: str = "default_general_v1"
 DEFAULT_ETHICS_PACK: str = "default_general_ethics_v1"

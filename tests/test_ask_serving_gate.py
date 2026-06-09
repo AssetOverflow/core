@@ -26,8 +26,12 @@ class _OptInConfig:
 
 
 def test_default_runtime_config_keeps_ask_serving_dark() -> None:
+    assert hasattr(RuntimeConfig(), "ask_serving_enabled")
+    assert RuntimeConfig().ask_serving_enabled is False
+    assert DEFAULT_CONFIG.ask_serving_enabled is False
     assert ask_serving_enabled(DEFAULT_CONFIG) is False
     assert ask_serving_enabled(RuntimeConfig()) is False
+
 
 
 def test_missing_flag_is_dark_for_legacy_config_shape() -> None:

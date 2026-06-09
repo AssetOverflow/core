@@ -30,8 +30,12 @@ class _OptInConfig:
 
 
 def test_default_runtime_config_keeps_verified_serving_dark() -> None:
+    assert hasattr(RuntimeConfig(), "verified_serving_enabled")
+    assert RuntimeConfig().verified_serving_enabled is False
+    assert DEFAULT_CONFIG.verified_serving_enabled is False
     assert verified_serving_enabled(DEFAULT_CONFIG) is False
     assert verified_serving_enabled(RuntimeConfig()) is False
+
 
 
 def test_missing_flag_is_dark_for_legacy_config_shape() -> None:
