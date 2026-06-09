@@ -52,6 +52,8 @@ from core.epistemic_state import EpistemicState
 from evals.constraint_oracle.signature import (
     constraint_setup_signature,
     constraints_signature,
+    query_signature,
+    unknowns_signature,
 )
 from generate.constraint_comprehension.model import ConstraintProblem
 from generate.constraint_comprehension.reader import read_constraint_problem
@@ -139,12 +141,30 @@ def verify_r2(text: str, gold_setup: ConstraintProblem) -> R2VerificationOutcome
     if isinstance(solution, Refusal):
         boundary_clear = False
         derivation_digest = ""
+        bound_slots_digest = ""
         back_substitution_digest = ""
     else:
         boundary_clear = True
         bound = tuple(sorted(solution.items()))
         derivation_digest = _sha(
             repr(("derivation", constraints_signature(primary.constraints), bound))
+        )
+        # bound_slots: the answer binds to a STATED slot — the asked unknown — among the
+        # declared unknowns. Empty if the asked unknown was not solved (a phantom answer);
+        # a complete derivation does NOT by itself prove this (P1-C: separable obligation).
+        bound_slots_digest = (
+            _sha(
+                repr(
+                    (
+                        "bound_slots",
+                        unknowns_signature(primary.unknowns),
+                        query_signature(primary.query),
+                        bound,
+                    )
+                )
+            )
+            if primary.query.symbol in solution
+            else ""
         )
         back_substitution_digest = (
             _sha(repr(("back_substitution", bound)))
@@ -159,6 +179,7 @@ def verify_r2(text: str, gold_setup: ConstraintProblem) -> R2VerificationOutcome
         primary_read_digest=_sha(repr(constraint_setup_signature(primary))),
         independent_read_digest=_sha(repr(constraint_setup_signature(gold_setup))),
         derivation_digest=derivation_digest,
+        bound_slots_digest=bound_slots_digest,
         back_substitution_digest=back_substitution_digest,
         boundary_clear=boundary_clear,
         # Setup-only verification has no answer-key path, so no contradiction can arise
