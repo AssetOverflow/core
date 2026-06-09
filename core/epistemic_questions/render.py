@@ -92,6 +92,7 @@ _TEMPLATE = (
 _REASON_RENDERED = "rendered"
 _REASON_NOT_ASK = "not_ask"
 _REASON_NO_SLOT = "no_missing_slot"
+_REASON_MULTI_SLOT = "multi_slot_not_supported"
 _REASON_RENDERABILITY_GAP = "renderability_gap"
 _REASON_FABRICATION_GUARD = "fabrication_guard"
 
@@ -148,17 +149,29 @@ def _names_only_grounded(text: str, grounded_terms: tuple[str, ...]) -> bool:
 def render_question(assessment: LimitationAssessment) -> EpistemicQuestion:
     """Render a single-slot generic ASK question, or refuse to render.
 
-    Single-slot only: the *first* missing slot is rendered; any others are
-    ignored (later rungs may emit one question per slot). The renderer refuses
-    (``question_unrenderable``) when the assessment is not an ASK, carries no
-    slot, or the slot's structural type is outside the closed phrase map. It
-    NEVER fabricates a natural-language entity name — see the module docstring
-    for the policy and the wrong=0 rationale.
+    Strictly single-slot: Q1-C renders only when the assessment carries
+    *exactly one* missing slot. The fixed template asserts "one more value is
+    still needed" — a globally-quantified claim that exactly one value is
+    missing — so rendering the first of several slots and ignoring the rest
+    would make that sentence subtly false (it would imply the single rendered
+    value closes the gap when others remain). Rather than weaken the template to
+    an honest-but-vaguer plural, a multi-slot assessment refuses with
+    ``multi_slot_not_supported`` (slot ``None``); one-question-per-slot fan-out
+    is a later rung. The renderer also refuses (``question_unrenderable``) when
+    the assessment is not an ASK, carries no slot, or the slot's structural type
+    is outside the closed phrase map. It NEVER fabricates a natural-language
+    entity name — see the module docstring for the policy and the wrong=0
+    rationale.
     """
     if assessment.resolution_action != "ask_question":
         return _unrenderable(_REASON_NOT_ASK)
     if not assessment.missing_slots:
         return _unrenderable(_REASON_NO_SLOT)
+    if len(assessment.missing_slots) > 1:
+        # Strictly single-slot: the template claims exactly one value is
+        # missing, which is false when several slots remain. Refuse rather than
+        # render the first and silently drop the rest.
+        return _unrenderable(_REASON_MULTI_SLOT, slot=None)
 
     slot = assessment.missing_slots[0]
     phrase = _CLOSED_TYPE_PHRASES.get(slot.expected_unit_or_type)

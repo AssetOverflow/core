@@ -19,6 +19,7 @@ from core.epistemic_disclosure.limitation import (
 )
 from core.epistemic_questions import EpistemicQuestion, render_question
 from core.epistemic_questions.render import (
+    _REASON_MULTI_SLOT,
     _REASON_NO_SLOT,
     _REASON_NOT_ASK,
     _REASON_RENDERABILITY_GAP,
@@ -138,7 +139,14 @@ def test_ask_with_zero_slots_is_unrenderable() -> None:
     assert q.reason == _REASON_NO_SLOT
 
 
-def test_multi_slot_renders_exactly_the_first_slot() -> None:
+def test_multi_slot_does_not_claim_all_missing_information_was_asked() -> None:
+    """Two missing slots → refuse with ``multi_slot_not_supported``.
+
+    The template asserts "one more value is still needed" (exactly one). With two
+    slots that claim is false, so the renderer must NOT render the first and drop
+    the second — it refuses outright, naming no slot. This is the wrong=0-honest
+    choice: Q1-C is strictly single-slot, not first-of-many.
+    """
     second = MissingSlot(
         slot_name="weighted_total",
         expected_unit_or_type="measured_unit_int",
@@ -146,11 +154,10 @@ def test_multi_slot_renders_exactly_the_first_slot() -> None:
     )
     q = render_question(_ask_assessment((_TOTAL_COUNT_SLOT, second)))
 
-    # Single-slot result: bound to the first slot only.
-    assert q.slot == _TOTAL_COUNT_SLOT
-    assert not q.unrenderable
-    assert q.text is not None
-    assert "whole-number count" in q.text  # first slot's type, not the second's
+    assert q.unrenderable
+    assert q.text is None
+    assert q.slot is None
+    assert q.reason == _REASON_MULTI_SLOT
 
 
 def test_unmapped_structural_type_degrades_to_renderability_gap() -> None:
