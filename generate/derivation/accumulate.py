@@ -19,9 +19,13 @@ Reading:
    gate (grounding ∧ unit ∧ completeness ∧ uniqueness). The gate keeps
    wrong=0; this only proposes a structurally-licensed candidate.
 
-ADR-0184 S1 extracts the reusable referent and change-cue helpers into
-``generate.derivation.state``. This module remains the public accumulation
-composer surface; behavior is intentionally unchanged.
+ADR-0184 S1 extracted the reusable referent and change-cue helpers into
+``generate.derivation.state``. S2 routes both accumulation readings through a
+minimal semantic ledger (SET/GAIN/LOSS over one entity/unit key) and replays it to
+``GroundedDerivation`` — the transition construction now lives in ``state.ledger``
+and ``state.replay``, not as inline arithmetic here. This module remains the public
+accumulation composer surface; behavior is intentionally unchanged, and the replayed
+``GroundedDerivation`` still faces the unchanged verifier/pool.
 
 Sealed (no ``chat/`` import); deterministic; refuse-preferring.
 """
@@ -33,16 +37,16 @@ from typing import Final
 
 from generate.derivation.clauses import segment_clauses
 from generate.derivation.extract import extract_quantities
-from generate.derivation.model import GroundedDerivation, Quantity, Step
-from generate.derivation.state.bind import (
-    continues_anchor_referent,
-    leading_subject_token,
-)
-from generate.derivation.state.change import (
-    classify_change_polarity,
-    select_change_cue,
-)
+from generate.derivation.model import GroundedDerivation
+from generate.derivation.state.ledger import build_accumulation_ledger
+from generate.derivation.state.replay import replay_accumulation_ledger
 from generate.derivation.verify import Resolution, select_self_verified
+
+
+def _quantity_clauses(problem_text: str) -> list[str]:
+    """Sentence-level clauses that carry extracted quantities (the ledger anchor +
+    change-clause sequence)."""
+    return [c for c in segment_clauses(problem_text) if extract_quantities(c)]
 
 
 def _build_accumulation(
@@ -58,42 +62,16 @@ def _build_accumulation(
     :func:`compose_accumulation` is byte-identical to its pre-ADR-0182 behavior.
     The distractor-skip reading is **never committed alone** — it only ever enters
     the pool to force a disagreement refusal (see :mod:`generate.derivation.pool`).
+
+    ADR-0184 S2: the SET/GAIN/LOSS reading is built as a semantic ledger and replayed
+    to ``GroundedDerivation``; the construction is unchanged in behavior.
     """
-    clauses = segment_clauses(problem_text)
-    quantity_clauses = [c for c in clauses if extract_quantities(c)]
-    if len(quantity_clauses) < 2:
+    ledger = build_accumulation_ledger(
+        _quantity_clauses(problem_text), drop_isolated_foreign=drop_isolated_foreign
+    )
+    if ledger is None:
         return None
-
-    anchor_clause, *change_clauses = quantity_clauses
-    anchor_quantities = extract_quantities(anchor_clause)
-    if len(anchor_quantities) != 1:
-        return None  # the anchor must establish exactly one quantity (GB-3b.1 scope)
-    start = anchor_quantities[0]
-    anchor_subject = leading_subject_token(anchor_clause)
-
-    steps: list[Step] = []
-    for clause in change_clauses:
-        if not continues_anchor_referent(clause, anchor_subject):
-            return None  # new named actor -> referent hazard -> refuse
-        change_quantities = list(extract_quantities(clause))
-        if drop_isolated_foreign and len(change_quantities) > 1:
-            change_quantities = [
-                q for q in change_quantities if not (q.unit and q.unit != start.unit)
-            ]
-        if len(change_quantities) != 1:
-            return None  # one change per clause (multi-change is GB-3b.2)
-        polarity = classify_change_polarity(clause)
-        if polarity is None:
-            return None  # no unambiguous licensed change cue -> refuse
-        change = change_quantities[0]
-        # The change is in the running total's dimension ("9 more" = 9 more apples).
-        operand = Quantity(value=change.value, unit=start.unit, source_token=change.source_token)
-        op = "add" if polarity > 0 else "subtract"
-        steps.append(Step(op=op, operand=operand, cue=select_change_cue(clause, polarity)))
-
-    if not steps:
-        return None
-    return GroundedDerivation(start=start, steps=tuple(steps))
+    return replay_accumulation_ledger(ledger)
 
 
 # ADR-0182 anchor-skip: sub-clause split on conjunctions. A single sentence can pack
@@ -130,31 +108,19 @@ def _build_accumulation_anchor_skip(problem_text: str) -> GroundedDerivation | N
         return None
 
     # Anchor = first single-quantity sub-clause; leading non-anchorable (≠1
-    # quantity) sub-clauses are skipped (candidate distractor blocks).
+    # quantity) sub-clauses are skipped (candidate distractor blocks). The anchor and
+    # its trailing change sub-clauses are then read by the same semantic ledger as the
+    # sentence-level path (ADR-0184 S2): same referent guard, same one-change-per-clause
+    # rule, same polarity gate. drop_isolated_foreign stays off here — the anchor-skip
+    # reading drops a whole leading block, not an in-clause foreign quantity.
     anchor_idx = next((i for i, (_, qs) in enumerate(quantity_subs) if len(qs) == 1), None)
     if anchor_idx is None:
         return None
-    anchor_sub, anchor_qs = quantity_subs[anchor_idx]
-    start = anchor_qs[0]
-    anchor_subject = leading_subject_token(anchor_sub)
-
-    steps: list[Step] = []
-    for sub, qs in quantity_subs[anchor_idx + 1:]:
-        if not continues_anchor_referent(sub, anchor_subject):
-            return None  # new named actor -> referent hazard -> refuse
-        if len(qs) != 1:
-            return None  # one change per sub-clause (multi-change is GB-3b.2)
-        polarity = classify_change_polarity(sub)
-        if polarity is None:
-            return None  # no unambiguous licensed change cue -> refuse
-        change = qs[0]
-        operand = Quantity(value=change.value, unit=start.unit, source_token=change.source_token)
-        op = "add" if polarity > 0 else "subtract"
-        steps.append(Step(op=op, operand=operand, cue=select_change_cue(sub, polarity)))
-
-    if not steps:
+    selected = [sub for sub, _ in quantity_subs[anchor_idx:]]
+    ledger = build_accumulation_ledger(selected, drop_isolated_foreign=False)
+    if ledger is None:
         return None
-    return GroundedDerivation(start=start, steps=tuple(steps))
+    return replay_accumulation_ledger(ledger)
 
 
 def compose_accumulation(problem_text: str) -> Resolution | None:
