@@ -103,6 +103,11 @@ a:hover{color:var(--pri-h);text-decoration:underline}
 .al.lens   .al-tag{border-left:3px solid var(--pri)}
 .al.sub    .al-tag{border-left:3px solid var(--grn)}
 
+/* ── GUARANTEE BOX ── */
+.guarantee{border:1px solid var(--pri);border-left:3px solid var(--pri);background:var(--pri-l);border-radius:0 var(--r) var(--r) 0;padding:.9375rem 1.25rem;margin:1.375rem 0}
+.guarantee-lbl{font-family:'IBM Plex Mono',monospace;font-size:.625rem;letter-spacing:.14em;text-transform:uppercase;color:var(--pri);margin-bottom:.45rem;font-weight:600}
+.guarantee p{font-size:.9375rem;color:var(--tx);max-width:none;line-height:1.7}
+
 /* ── KEY CLAIM ── */
 .kclaim{border:1px solid var(--bdr);border-top:2px solid var(--pri);border-radius:0 0 var(--r) var(--r);background:var(--surface);padding:.875rem 1.125rem;margin:1.375rem 0}
 .kclaim-lbl{font-family:'IBM Plex Mono',monospace;font-size:.625rem;letter-spacing:.12em;text-transform:uppercase;color:var(--pri);margin-bottom:.35rem}
@@ -131,6 +136,12 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
 .limits{list-style:none;display:flex;flex-direction:column;gap:.5rem;margin:.875rem 0}
 .limits li{font-size:.9rem;color:var(--tx-m);padding-left:1.125rem;position:relative;line-height:1.6}
 .limits li::before{content:"·";position:absolute;left:.1rem;color:var(--acc);font-size:1.2em;line-height:1.2}
+
+/* ── ASK BLOCK ── */
+.ask-block{border:1px solid var(--pri);border-radius:var(--r);padding:1.375rem 1.5rem;margin:1.375rem 0;background:var(--pri-l)}
+.ask-block p{font-size:.9375rem;color:var(--tx);max-width:none;margin-bottom:.75rem}
+.ask-block p:last-child{margin-bottom:0}
+.ask-block strong{color:var(--pri)}
 
 /* ── APPENDIX ── */
 .appendix{margin-top:3rem;padding-top:1.5rem;border-top:2px solid var(--div)}
@@ -167,7 +178,7 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
     </svg>
     <span class="logo-lbl">CORE</span>
   </div>
-  <button class="toggle" onclick="(function(){var h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')==='dark'?'light':'dark')})()">LIGHT / DARK</button>
+  <button class="toggle">LIGHT / DARK</button>
 </header>
 
 <!-- MEMO HEAD -->
@@ -177,7 +188,8 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
 
   <div class="thesis">
     <div class="thesis-lbl">Thesis</div>
-    <p>Current safety wrappers for frontier agents place stochastic controls in front of stochastic executors. CORE proposes a bounded execution substrate in which the neural model is reduced to schema induction, and all operational agency is relocated into a deterministic state machine whose admissible transition set is defined by first-class domain constraints — not by language classifiers.</p>
+    <p>Current safety wrappers for frontier agents place stochastic controls in front of stochastic executors. CORE proposes a bounded execution substrate in which the neural model is reduced to <strong>schema induction</strong> — a System&nbsp;1 sensory and translation layer — and all operational agency is relocated into a deterministic state machine whose admissible transition set is defined by first-class domain constraints, not by language classifiers.</p>
+    <p style="margin-top:.625rem;font-style:italic;color:var(--tx-m);font-size:.9rem">The model proposes. The substrate decides.</p>
   </div>
 
   <div class="meta">
@@ -196,11 +208,11 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
     <div class="sec-n">§ 0</div>
     <h2 class="sec-h">Context: The Fable 5 Release Signal</h2>
     <p>On June 9, 2026, Anthropic publicly released Claude Fable 5 — a Mythos-class model — alongside an unusually candid public warning about the risks of increasingly capable AI. The simultaneous release and warning is not a contradiction; it is a product surface problem made legible.</p>
-    <p>Public behavior and the Fable 5 system card indicate that requests touching high-risk domains — cybersecurity, certain biology workflows, and adjacent surfaces — trigger classifier-driven blocking or fallback to Opus 4.8. Public reporting describes this as an intentional design: strong guardrails layered on top of strong capability. This memo argues that the layering itself is the bottleneck, and that there is an architectural alternative worth examining.</p>
+    <p>Public behavior and the Fable 5 system card indicate that requests touching high-risk domains — cybersecurity, certain biology workflows, and adjacent surfaces — trigger classifier-driven blocking or fallback to Opus 4.8. This is intentional design: strong guardrails layered on top of strong capability. This memo argues the <em>layering itself</em> is the bottleneck, and that there is an architectural alternative worth examining.</p>
 
     <div class="co pri">
       <div class="co-lbl">Scope</div>
-      <p>For <strong>long-horizon agentic workflows</strong> — the domain Fable 5 is explicitly positioned for — this primitive choice between classifier walls and bounded substrates determines how reliability degrades with task length. That is the specific engineering problem this memo addresses.</p>
+      <p>For <strong>long-horizon agentic workflows</strong> — the domain Fable 5 is explicitly positioned for — the primitive choice between classifier walls and bounded substrates determines how reliability degrades with task length. That is the specific engineering problem this memo addresses.</p>
     </div>
   </div>
 
@@ -221,11 +233,11 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
       <div class="cb-cell good">
         <div class="cb-label">Bounded Substrate</div>
         <div class="cb-q">"Does this state transition satisfy the domain guard?"</div>
-        <div class="cb-note">Deterministic. Semantics-sensitive. False-positive rate is structurally zero for in-domain requests. Harmful transitions are algebraically unreachable, not statistically suppressed.</div>
+        <div class="cb-note">Deterministic. Semantics-sensitive. For a correctly specified Anchor domain model, false-positive rate is <em>structurally zero</em> for in-domain requests: admissible transitions are algebraically reachable; inadmissible transitions are algebraically unreachable — not statistically suppressed.</div>
       </div>
     </div>
 
-    <p>For a single-turn assistant this distinction is manageable. For long-horizon agents it compounds: each false-positive refusal interrupts a stateful workflow whose accumulated context is not recoverable from the refusal event. The reliability degradation is superlinear in task length.</p>
+    <p>For a single-turn assistant this distinction is manageable. For long-horizon agents it compounds: each false-positive refusal interrupts a stateful workflow whose accumulated context is not recoverable from the refusal event. The reliability degradation is <strong>superlinear in task length</strong>.</p>
 
     <div class="co acc">
       <div class="co-lbl">Root Cause</div>
@@ -244,7 +256,12 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
   <div class="sec">
     <div class="sec-n">§ 2</div>
     <h2 class="sec-h">The CORE Architecture</h2>
-    <p>CORE is structured as three composable layers. State and transitions are algebraically constrained throughout; coherence is enforced by construction rather than by post-hoc monitoring or repair. The key property is that the neural model never touches execution — it proposes; the substrate decides.</p>
+    <p>CORE implements the System&nbsp;1 / System&nbsp;2 split at the architectural level, not the prompt level. In <strong>Hybrid Mode</strong>, a Claude/Fable model acts as System&nbsp;1: it parses intent and proposes a structured payload. CORE acts as System&nbsp;2: it verifies, refuses, asks, or executes — deterministically, with replayable traces. The neural model never touches execution.</p>
+
+    <div class="guarantee">
+      <div class="guarantee-lbl">Bounded Transition Guarantee (v2.1)</div>
+      <p>Given a correctly specified Anchor domain model, CORE can only execute transitions admitted by typed guards under the current state. The model proposes; the substrate decides. This is not a prompt-level constraint — the model's output is structurally typed through the Lens before it reaches any execution surface.</p>
+    </div>
 
     <div class="arch">
       <div class="al anchor">
@@ -254,7 +271,7 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
         </div>
         <div class="al-body">
           <div class="al-title">First-class domain constraints</div>
-          <div class="al-desc">The Anchor holds the ratified domain model: typed state, admissible transitions, guard predicates, and an <code>AuthorityToken</code> over a ratified transition. It is the only layer that can authorize execution.</div>
+          <div class="al-desc">The Anchor holds the ratified domain model: typed state, admissible transitions, guard predicates, and an <code>AuthorityToken</code> over each ratified transition. It is the only layer that can authorize execution. What counts as admissible is a <em>policy question requiring human ratification</em> per domain — the architecture enforces the boundary; humans define it.</div>
           <ul>
             <li>State is a CGA versor field over Cl(4,1)</li>
             <li>Guard predicates are pure functions of (state, payload) → bool</li>
@@ -268,10 +285,10 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
           <div class="al-role">schema gate</div>
         </div>
         <div class="al-body">
-          <div class="al-title">Projection and structural typing</div>
-          <div class="al-desc">The Lens maps model output to a typed payload schema. If the output does not project to a valid schema, no payload is produced and no transition fires. There is no natural-language shortcut through the gate.</div>
+          <div class="al-title">Type-Safe Local Closure — projection and structural typing</div>
+          <div class="al-desc">The Lens maps model output to a typed payload schema via the <strong>Type-Safe Local Closure security model</strong>: execution logic and sensitive targets live inside local closures that only typed payloads can reach. If the output does not project to a valid schema, no payload is produced and no transition fires. There is no natural-language shortcut through the gate.</div>
           <ul>
-            <li>Model output → typed payload or ∅</li>
+            <li>Model output → TypedPayload or ∅</li>
             <li>No untyped strings reach the execution surface</li>
             <li>Surface area for harm is bounded upstream of execution</li>
           </ul>
@@ -284,17 +301,15 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
         </div>
         <div class="al-body">
           <div class="al-title">Deterministic finite automaton</div>
-          <div class="al-desc">The Substrate is the execution engine. It receives a typed payload from the Lens, evaluates the guard predicate against current state, and — only if the guard passes — fires the transition and records a SHA-256 trace hash.</div>
+          <div class="al-desc">The Substrate is the execution engine. It receives a typed payload from the Lens, evaluates the guard predicate against current state, and — only if the guard passes — fires the transition and records a SHA-256 trace hash. Every trace is deterministic and fully reproducible.</div>
           <ul>
-            <li>Model can propose; only the Substrate can enact</li>
+            <li>Model proposes; only the Substrate can enact</li>
             <li>Every transition produces a deterministic, reproducible audit trace</li>
             <li>No stochastic path to side effects outside the admissible transition system</li>
           </ul>
         </div>
       </div>
     </div>
-
-    <p>The model can propose transitions, but it cannot enact them. Only the bounded substrate can do that. This is not a prompt-level constraint — the model's output is structurally typed through the Lens before it reaches any execution surface.</p>
   </div>
 
   <hr class="divider">
@@ -354,8 +369,8 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
           </tr>
           <tr>
             <td>Harmful variant</td>
-            <td><span class="bad">May or may not block — depends on linguistic surface shift, not on whether the action is admissible.</span></td>
-            <td><span class="good">Guard fails: target subnet outside licensed scope. State remains at qₜ. Transition structurally impossible. No policy text needed.</span></td>
+            <td><span class="bad">May or may not block — depends on linguistic surface shift, not on whether the action is admissible within licensed scope.</span></td>
+            <td><span class="good">Guard fails: target subnet outside licensed scope. State remains at qₜ. Transition structurally impossible. What counts as "licensed" scope is a ratified human policy decision encoded in the Anchor — the architecture enforces it; a human defined it.</span></td>
           </tr>
           <tr>
             <td>Audit trail</td>
@@ -377,17 +392,17 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
 
     <div class="co pri">
       <div class="co-lbl">Signal 1 · Cognitive Spine</div>
-      <p>The cognitive spine (<code>CognitiveTurnPipeline</code>) executes the full <code>listen → ingest → understand → recall → think → articulate → learn_proposal → trace</code> sequence deterministically. Every turn produces a SHA-256 trace hash. The <code>UnknownDomainGate</code> fires before any reasoning path for out-of-domain inputs — returning a deterministic stub, not a stochastic fallback.</p>
+      <p>The cognitive spine (<code>CognitiveTurnPipeline</code>) executes the full <code>listen → ingest → understand → recall → think → articulate → learn_proposal → trace</code> sequence deterministically. Every turn produces a SHA-256 trace hash. The <code>UnknownDomainGate</code> fires before any reasoning path for out-of-domain inputs — returning a deterministic stub, not a stochastic fallback. The same <strong>Type-Safe Local Closure security model</strong> governs these gates: execution logic and sensitive targets live inside local closures that only typed payloads can reach.</p>
     </div>
 
     <div class="co pri">
-      <div class="co-lbl">Signal 2 · GSM8K Math Gate</div>
-      <p>The GSM8K math verification gate (<code>generate/derivation/verify.py</code>) evaluates <em>grounding ∧ cue ∧ unit ∧ completeness ∧ uniqueness</em> as typed structural predicates — not "does this look like a correct answer." Current result: <strong>7 correct / 43 refused / 0 wrong</strong>. The zero-wrong count is architectural, not statistical. The same predicate structure applies to the execution gate.</p>
+      <div class="co-lbl">Signal 2 · GSM8K Math Gate — Bounded Transition Guarantee in practice</div>
+      <p>The GSM8K math verification gate (<code>generate/derivation/verify.py</code>) evaluates <em>grounding ∧ cue ∧ unit ∧ completeness ∧ uniqueness</em> as typed structural predicates — not "does this look like a correct answer." Current result: <strong>7 correct / 43 refused / 0 wrong</strong>. The zero-wrong count is a direct downstream consequence of the Bounded Transition Guarantee — not of tuning or sampling. Inadmissible answers are structurally unreachable, not probabilistically suppressed.</p>
     </div>
 
     <div class="co">
-      <div class="co-lbl">CI Verification</div>
-      <p>Domain capability is ratified and CI-pinned. Five domains currently hold ratified status; nine eval lanes have SHA-256 pinned reports where any regression breaks the build. The deductive logic lane reports <strong>716/716 correct, wrong=0, refused=0</strong>.</p>
+      <div class="co-lbl">CI Verification — Bounded Transition Guarantee at scale</div>
+      <p>Domain capability is ratified and CI-pinned. Five domains currently hold ratified status; nine eval lanes have SHA-256 pinned reports where any regression breaks the build. The deductive logic lane reports <strong>716/716 correct, wrong=0, refused=0</strong>. These numbers are a direct downstream consequence of the Bounded Transition Guarantee — not of tuning or sampling.</p>
     </div>
   </div>
 
@@ -401,8 +416,9 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
     <ul class="limits">
       <li>Integrating with a Mythos-class model is an open engineering question, not a solved one</li>
       <li>Domain coverage is non-trivial but not exhaustive — five ratified domains, ongoing expansion</li>
-      <li>The CGA field algebra (Cl(4,1)) provides formal coherence guarantees within-domain; cross-domain composition is an active research area</li>
+      <li>The CGA field algebra Cl(4,1) provides formal coherence guarantees within-domain; cross-domain composition is an active research area</li>
       <li>The substrate enforces admissibility; what counts as admissible is a policy question that requires human ratification per domain</li>
+      <li>In governance terms, the present work concerns <strong>Hybrid Mode</strong> — CORE as a deterministic System&nbsp;2 substrate for Claude-class agents. The Native Mode thesis (LLM-free, edge-native cognitive execution) remains a long-term research trajectory</li>
     </ul>
   </div>
 
@@ -411,15 +427,20 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
   <!-- §7 THE ASK -->
   <div class="sec">
     <div class="sec-n">§ 7</div>
-    <h2 class="sec-h">The Ask</h2>
-    <p>If the architectural contrast in §2 resonates — if <em>"does this state transition satisfy the domain guard?"</em> is a more useful safety primitive than <em>"does this text look risky?"</em> for the agentic systems you are building — a 10–15 minute sanity check on whether the substrate approach is complementary to or in tension with Anthropic's internal agent architecture would be genuinely useful.</p>
-    <p>The full implementation is public at <a href="https://github.com/AssetOverflow/core">github.com/AssetOverflow/core</a>. No NDA, no setup required.</p>
+    <h2 class="sec-h">The Ask — Hybrid Mode Wedge</h2>
+    <p>If the architectural contrast in §2 resonates — if <em>"does this state transition satisfy the domain guard?"</em> is a more useful safety primitive than <em>"does this text look risky?"</em> for the agentic systems you are building — the question worth a short conversation is this:</p>
+
+    <div class="ask-block">
+      <p><strong>Can CORE slot in front of Claude/Fable as a deterministic System&nbsp;2 verifier substrate through an MCP-shaped interface — and what does that change about refusal quality, trace quality, and operator trust for high-risk tool-use?</strong></p>
+      <p>This is a narrow, testable experiment with minimal surface area: Claude/Fable acts as System&nbsp;1 semantic proposer; CORE acts as System&nbsp;2 bounded executor; deterministic answer/refusal/ask behavior and replayable trace artifacts feed back into safety evaluation. No NDA. No adoption commitment. A bounded technical sanity check on whether the substrate approach is complementary to or in tension with Anthropic's internal agent architecture.</p>
+      <p>The full implementation is public at <a href="https://github.com/AssetOverflow/core">github.com/AssetOverflow/core →</a></p>
+    </div>
   </div>
 
   <!-- APPENDIX -->
   <div class="appendix">
     <div class="app-lbl">Appendix — Optional Deep Dive · Algebraic Foundations</div>
-    <p style="font-size:.8125rem;color:var(--tx-f);margin-bottom:1.25rem">The following section is for readers interested in the formal underpinning. It is not required to evaluate the architectural argument above.</p>
+    <p style="font-size:.8125rem;color:var(--tx-f);margin-bottom:1.25rem">The following section is for readers interested in the formal underpinning. Not required to evaluate the architectural argument above.</p>
 
     <div class="app-sec">
       <h3 class="app-h">A.1 · CGA Field Structure</h3>
@@ -460,7 +481,6 @@ td code,p code{font-family:'IBM Plex Mono',monospace;font-size:.8125em;backgroun
 
 </div><!-- /shell -->
 <script>
-// Persist theme across page loads
 (function(){
   var saved = localStorage.getItem('core-theme');
   if(saved) document.documentElement.setAttribute('data-theme', saved);
