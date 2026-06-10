@@ -25,6 +25,11 @@ Shipped so far (all off-serving — nothing here imports ``generate.derivation``
   * :mod:`~core.epistemic_disclosure.ask_acquisition` — a serving-safe acquisition
     seam that gate-checks before provider execution and delegates candidate
     validation to the ASK artifact adapter. It does not call pass_manager directly.
+  * :mod:`~core.epistemic_disclosure.ask_handle` — the carried-handle acquisition
+    seam: resolves an explicit, content-addressed reference to one already-produced
+    Q1-D artifact into an acquisition-compatible candidate. It never produces,
+    renders, or scans; identity checks only — artifact policy stays delegated to
+    the adapter.
   * :mod:`~core.epistemic_disclosure.verified_contract` (P1-A) — the VERIFIED contract:
     the obligation, the proof shape, the validator, and the single sanctioned route to
     ``EpistemicState.VERIFIED`` / ``DisclosureClaim.VERIFIED``. Contract only — no
@@ -37,6 +42,13 @@ from core.epistemic_disclosure.ask_acquisition import (
     AskAcquisitionDecision,
     ContemplationProvider,
     acquire_served_ask_candidate,
+)
+from core.epistemic_disclosure.ask_handle import (
+    AskArtifactHandle,
+    AskHandleResolution,
+    ResolvedAskCandidate,
+    acquire_served_ask_from_handle,
+    resolve_served_ask_handle,
 )
 from core.epistemic_disclosure.ask_serving import (
     ServedAskDecision,
@@ -75,8 +87,11 @@ __all__ = [
     "Q1B_ASK_CARVE_OUT",
     "VERIFICATION_OBLIGATION",
     "AskAcquisitionDecision",
+    "AskArtifactHandle",
+    "AskHandleResolution",
     "ContemplationProvider",
     "DisclosureClaim",
+    "ResolvedAskCandidate",
     "LimitationAssessment",
     "LimitationKind",
     "MissingSlot",
@@ -88,11 +103,13 @@ __all__ = [
     "VerificationResult",
     "VerificationVerdict",
     "acquire_served_ask_candidate",
+    "acquire_served_ask_from_handle",
     "assess_from_attempt",
     "assess_from_family",
     "choose_served_disposition",
     "disclosure_for_verification",
     "evaluate_served_ask",
     "evaluate_verification",
+    "resolve_served_ask_handle",
     "terminal_for_action",
 ]
