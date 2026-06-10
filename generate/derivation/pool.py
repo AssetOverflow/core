@@ -29,23 +29,24 @@ never invoked here).
 
 from __future__ import annotations
 
-from generate.derivation.accumulate import accumulation_candidates
 from generate.derivation.goal_residual import build_goal_residual
 from generate.derivation.model import GroundedDerivation
 from generate.derivation.multistep import candidate_chains
 from generate.derivation.search import multiplicative_candidates
+from generate.derivation.state.source import semantic_state_candidates
 from generate.derivation.target import asks_prior_state
 from generate.derivation.verify import Resolution, classify_derivation
 
 
 def pooled_candidates(problem_text: str) -> list[GroundedDerivation]:
     """Every composer's ungated candidate readings, de-duplicated. Deterministic
-    order (accumulation, then multiplicative, then chain)."""
+    order (semantic-state accumulation worlds via the ADR-0184 §7-S4 candidate-source
+    boundary, then multiplicative, then chain)."""
     seen: set[tuple[object, ...]] = set()
     pooled: list[GroundedDerivation] = []
     _goal_residual = build_goal_residual(problem_text)
     for derivation in (
-        *accumulation_candidates(problem_text),
+        *semantic_state_candidates(problem_text),
         *multiplicative_candidates(problem_text),
         *candidate_chains(problem_text),
         *((_goal_residual,) if _goal_residual is not None else ()),

@@ -126,7 +126,7 @@ _GREATER_THAN_RE: Final[re.Pattern[str]] = re.compile(
     re.IGNORECASE,
 )
 _DOUBLE_WHAT_RE: Final[re.Pattern[str]] = re.compile(
-    rf"(?P<prefix>.+?)\b(?P<factor>twice|double)\s+what\s+(?P<ref>[^,.?]+)",
+    r"(?P<prefix>.+?)\b(?P<factor>twice|double)\s+what\s+(?P<ref>[^,.?]+)",
     re.IGNORECASE,
 )
 _THAT_MANY_RE: Final[re.Pattern[str]] = re.compile(

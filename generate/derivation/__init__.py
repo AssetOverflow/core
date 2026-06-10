@@ -29,6 +29,7 @@ from generate.derivation.search import (
     multiplicative_candidates,
     search_multiplicative,
 )
+from generate.derivation.state.source import semantic_state_candidates
 from generate.derivation.target import Target, asks_prior_state, extract_target
 from generate.derivation.verify import (
     Resolution,
@@ -70,4 +71,5 @@ __all__ = [
     "segment_clauses",
     "select_self_verified",
     "self_verifies",
+    "semantic_state_candidates",
 ]
