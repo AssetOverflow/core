@@ -14,6 +14,7 @@ import ast
 import dataclasses
 import hashlib
 import json
+import os
 from pathlib import Path
 
 from core.config import RuntimeConfig
@@ -261,6 +262,36 @@ def test_question_path_equal_to_proposal_path_fails_closed(tmp_path: Path) -> No
 
     resolution = resolve_served_ask_handle(
         RuntimeConfig(ask_serving_enabled=True), _handle(path, digest, proposal_path=path)
+    )
+
+    assert resolution.resolved is False
+    assert resolution.reason == "path_collision"
+
+
+def test_relative_proposal_path_same_file_as_absolute_question_path_fails_closed(
+    tmp_path: Path,
+) -> None:
+    """A relative ``proposal_path`` and an absolute ``question_path`` that name the
+    same file must collide and fail closed — the check compares canonical paths,
+    not raw string spellings, so differing spellings of one file cannot slip past.
+    """
+    payload = _valid_payload()
+    path, digest = _write_addressed_artifact(tmp_path / "questions", payload)
+    assert path.is_absolute()
+
+    # A genuinely relative spelling (from cwd) of the very same artifact file.
+    relative_proposal = Path(os.path.relpath(path, Path.cwd()))
+    assert not relative_proposal.is_absolute()
+    assert relative_proposal.resolve(strict=False) == path.resolve(strict=False)
+    assert str(relative_proposal) != str(path)
+
+    handle = AskArtifactHandle(
+        question_path=str(path),
+        content_hash=digest,
+        proposal_path=str(relative_proposal),
+    )
+    resolution = resolve_served_ask_handle(
+        RuntimeConfig(ask_serving_enabled=True), handle
     )
 
     assert resolution.resolved is False

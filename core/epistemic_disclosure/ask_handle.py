@@ -124,6 +124,24 @@ def _rejected(reason: str) -> AskHandleResolution:
     return AskHandleResolution(resolved=False, reason=reason, candidate=None)
 
 
+def _paths_name_same_file(question_path: Path, proposal_path_value: str) -> bool:
+    """Canonical-path collision check for the question/proposal pair.
+
+    Compares *resolved* canonical paths, not raw string spellings, so an absolute
+    ``question_path`` and a relative ``proposal_path`` (or any two differently
+    spelled paths) that name the same file collide and fail closed. Resolution is
+    best-effort (``strict=False``); if a path cannot be canonicalized (e.g. a
+    symlink loop), fall back to the raw-spelling comparison, which still catches
+    the exact-string collision.
+    """
+    try:
+        return question_path.resolve(strict=False) == Path(proposal_path_value).resolve(
+            strict=False
+        )
+    except (OSError, RuntimeError, ValueError):
+        return str(question_path) == str(proposal_path_value)
+
+
 def _recompute_content_hash(payload: Any) -> str | None:
     """Recompute the producer's content address from the artifact body.
 
@@ -190,7 +208,9 @@ def resolve_served_ask_handle(config: Any, handle: Any) -> AskHandleResolution:
         # Not the producer's content-addressed filename for this hash — the
         # handle does not name a producer-written artifact identity.
         return _rejected("handle_address_mismatch")
-    if proposal_path_value is not None and str(question_path) == str(proposal_path_value):
+    if proposal_path_value is not None and _paths_name_same_file(
+        question_path, proposal_path_value
+    ):
         return _rejected("path_collision")
 
     if not question_path.is_file():
