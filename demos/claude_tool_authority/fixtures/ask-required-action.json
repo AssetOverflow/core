@@ -5,8 +5,8 @@
     "request_id": "demo-tool-s2",
     "scenario_id": "ask-required-action",
     "proposer": {
-      "lane": "xai",
-      "model_family": "grok",
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
       "proposal_id": "proposal-s2"
     },
     "action_request": {
