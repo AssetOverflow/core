@@ -154,12 +154,19 @@ the certificate, not just the status.
 - **PR A (this PR).** This proposal + strict-xfail obligations + INV-29.
   No runtime change. Obligation tests xfail today; INV-29 and the honesty
   pins pass today.
-- **PR B.** `PromotionCertificate` + builder + replay verifier as a pure,
-  side-effect-free module with its own tests. No promotion, no vault method,
-  no status transition anywhere. Retires the certificate-shaped xfails only.
+- **PR B (landed: `generate/proof_chain/certificate.py`).**
+  `PromotionCertificate` + builder + replay verifier as a pure,
+  side-effect-free module with its own tests
+  (`tests/test_proof_chain_certificate.py`). No promotion, no vault method,
+  no status transition anywhere. Reconciliation against the PR-A wording
+  ("retires the certificate-shaped xfails only"): every PR-A xfail marker
+  binds to the P3 promoter (`teaching.proof_promotion`), which must not
+  exist before ratification — so PR B retires **no** markers; the
+  certificate-shaped halves of O1/O7 are instead proven for real in the
+  dedicated test file.
 - **PR C (requires this ADR ratified).** `certify_promotion` +
   `VaultStore.apply_certified_promotion` behind the existing mutation owner.
-  Retires the remaining xfails (strict-xpass forces it); INV-21 allowlist
+  Retires all the xfails (strict-xpass forces it); INV-21 allowlist
   unchanged; INV-29 allowlist unchanged; full + deductive lanes wrong=0.
 - **PR D.** Local deterministic demo (`demos/` pattern): proposer submits
   claim + proof candidate; CORE ignores the candidate, recomputes, promotes

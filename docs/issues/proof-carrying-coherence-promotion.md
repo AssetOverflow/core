@@ -4,7 +4,10 @@
 (2026-06-11, awaiting ratification); runtime code remains unauthorized.
 Executable proof obligations shipped as strict-xfail in
 `tests/test_proof_carrying_promotion_obligations.py`; INV-29 now pins the
-status-transition-site allowlist.
+status-transition-site allowlist.  PR B landed the pure evidence substrate:
+`generate/proof_chain/certificate.py` (`PromotionCertificate` +
+`build_certificate` / `verify_certificate` replay verifier) — no promotion,
+no vault import, no status transition; promoter obligations remain xfail.
 **Raised:** 2026-06-11
 **Surface:** `teaching/epistemic.py`, `teaching/review.py`, the deductive
 engine (`deductive_logic_v1`), `vault/store.py`, INV-21 one-mutation-path
