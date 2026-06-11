@@ -3,7 +3,7 @@
 
 ---
 
-This document outlines key technical and philosophical objections regarding the integration of CORE with SpaceXAI [VERIFY BEFORE OUTREACH] and Tesla platforms, followed by our objective answers.
+This document outlines key technical and philosophical objections regarding the integration of CORE with xAI / Tesla / SpaceX-adjacent [VERIFY BEFORE OUTREACH] platforms, followed by our objective answers.
 
 ---
 
@@ -16,13 +16,13 @@ CORE does not interfere with the model's output generation or token distribution
 No. CORE is entirely complementary to Grok. Grok is designed to be a curious, truth-seeking semantic engine. CORE provides Grok with a formal boundary to verify its claims and safely license its agentic actions (e.g., in Grok-class agentic environments [VERIFY BEFORE OUTREACH] or in-car assistants), preventing semantic curiosity from causing execution errors.
 
 ### 3. Does CORE compete with xAI?
-No. xAI (now part of SpaceXAI [VERIFY BEFORE OUTREACH]) focuses on building frontier foundation models with massive parameters. CORE does not build general-purpose foundation models. Instead, CORE is a deterministic, lightweight authority substrate that runs locally to govern model outputs. 
+No. xAI focuses on building frontier foundation models with massive parameters. CORE does not build general-purpose foundation models. Instead, CORE is a deterministic, lightweight authority substrate that runs locally to govern model outputs. 
 
 ### 4. Does CORE slow down the model?
 No. CORE is designed to be extremely lightweight, utilizing a deterministic, compile-time semantic representation and local algebraic checks (CGA recall and versor transitions). Unlike model-based safety guardrails (which require additional high-latency LLM calls to evaluate safety), CORE's evaluations execute in milliseconds, running orders of magnitude faster than the proposer's generation step.
 
 ### 5. Does CORE work at X/Tesla scale?
-Yes. Because CORE relies on exact local recall and compact semantic packs rather than heavy vector databases or neural network evaluations, it scales efficiently. A single compiled policy pack can process millions of proposals per second on minimal local compute, making it suitable for high-throughput social feeds or local automotive nodes.
+Yes. Because CORE relies on exact local recall and compact semantic packs rather than heavy vector databases or neural network evaluations, it scales efficiently. A single compiled policy pack is designed for high-throughput local evaluation; benchmark claims require separate measurement, making it suitable for high-throughput social feeds or local automotive nodes.
 
 ### 6. Does CORE require cloud trust?
 No. CORE enforces local execution authority. All policy evaluation, state checks, and detailed trace logging occur entirely on-premise or on the local device. The cloud control plane is only used to distribute policies and receive redacted proof summaries, ensuring no sensitive operational data leaves the customer's secure environment.

@@ -21,8 +21,8 @@ We would appreciate your thoughts on:
 3.  The integration boundaries between stochastic planning engines and low-level deterministic safety filters (like Control Barrier Functions).
 
 Our project positioning and specs are detailed in these summaries:
-*   [xai-core-one-pager](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-outreach-xai-tesla/docs/outreach/xai-core-one-pager-2026-06-11.md)
-*   [tesla-embodied-authority-one-pager](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-outreach-xai-tesla/docs/outreach/tesla-embodied-authority-one-pager-2026-06-11.md)
+*   See: docs/outreach/xai-core-one-pager-2026-06-11.md
+*   See: docs/outreach/tesla-embodied-authority-one-pager-2026-06-11.md
 
 If you are open to a brief async thread or review, please let me know. 
 

@@ -19,7 +19,7 @@ This memo defines the core positioning of the xAI / Tesla / SpaceX-adjacent outr
 When communicating within the xAI / Tesla / SpaceX-adjacent lane, outreach materials must maintain a highly technical, objective, and complementary tone. We do not position CORE as a critique of existing systems, but rather as an architectural necessity for high-consequence operations.
 
 ### Do Not Propose:
-* ❌ *"SpaceXAI [VERIFY BEFORE OUTREACH] or xAI needs CORE."*
+* ❌ *"xAI / Tesla / SpaceX-adjacent systems need CORE."*
 * ❌ *"Tesla's safety or FSD architecture is broken."*
 * ❌ *"Elon Musk or xAI failed to build truth-seeking AI."*
 * ❌ *"CORE is what Grok or OpenAI should have been."*

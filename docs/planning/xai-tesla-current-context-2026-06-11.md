@@ -1,12 +1,10 @@
-# Current-Facts Audit: SpaceXAI / Tesla / SpaceX-Adjacent Lane
+# Current-Facts Audit: xAI / Tesla / SpaceX-Adjacent Lane
 **Date: 2026-06-11**
 
 ---
 
-## 1. SpaceXAI (xAI / SpaceX Merger) Status [VERIFY BEFORE OUTREACH]
-* **Corporate Merger:** On February 2, 2026, SpaceX officially acquired and merged with xAI in an all-stock transaction [VERIFY BEFORE OUTREACH]. xAI was dissolved as a standalone corporate entity and integrated directly into SpaceX as a specialized division under the brand name **SpaceXAI [VERIFY BEFORE OUTREACH]**.
-* **Trademarks & Entity Status:** SpaceX has filed trademark applications for the name **SpaceXAI [VERIFY BEFORE OUTREACH]** to cover its expanded artificial intelligence and computing infrastructure operations.
-* **Infrastructure Initiatives:** SpaceXAI [VERIFY BEFORE OUTREACH] operates the Colossus supercomputer and is building orbital, solar-powered AI data centers [VERIFY BEFORE OUTREACH] using SpaceX's Starlink satellite network and Starship launch capabilities to address terrestrial energy and cooling limitations. The division also provides compute power and data services to external partners (including infrastructure agreements with Google and Anthropic) [VERIFY BEFORE OUTREACH].
+## 1. Corporate Alignment and Shared Infrastructure Context [VERIFY BEFORE OUTREACH]
+xAI and SpaceX/Tesla are strategically adjacent through Elon Musk’s companies, shared infrastructure ambitions, high-consequence engineering culture, and public AI/autonomy/robotics ambitions. This document does not assume a formal corporate merger or official SpaceXAI entity unless verified by primary sources.
 
 ## 2. Grok's Stated Mission and Role in X / xAI Products
 * **Stated Mission:** The mission remains "to understand the true nature of the universe," emphasizing first-principles reasoning and scientific inquiry.
@@ -16,9 +14,9 @@
 * **Regulatory Context:** The Privacy Commissioner of Canada launched investigations in early 2026 regarding consent protocols and deepfake generation on X, leading to tighter internal compliance frameworks.
 
 ## 3. Tesla Robotaxi & FSD Safety Context
-* **NHTSA [VERIFY BEFORE OUTREACH] Engineering Analysis (EA25012 / PE25012):** In March 2026, the National Highway Traffic Safety Administration (NHTSA [VERIFY BEFORE OUTREACH]) upgraded its preliminary evaluation into Tesla FSD to a formal Engineering Analysis, covering approximately 3.2 million vehicles. The focus is FSD performance in low-visibility conditions (fog, glare, low light), following nine reported crashes with injuries and one fatality [VERIFY BEFORE OUTREACH].
-* **Data Scrutiny:** Regulators are auditing Tesla for potential under-reporting of Autopilot/FSD crashes [VERIFY BEFORE OUTREACH].
-* **Austin Robotaxi Operations:** Tesla launched driverless Robotaxi operations in Austin, Texas, in June 2025 and transitioned to fully driverless rides in January 2026 [VERIFY BEFORE OUTREACH]. As of June 2026, the fleet recorded 17 incidents across 800,000 miles [VERIFY BEFORE OUTREACH].
+* **Regulatory Safety Inquiries:** The National Highway Traffic Safety Administration (NHTSA [VERIFY BEFORE OUTREACH]) maintains public regulatory scrutiny and safety-review context [VERIFY BEFORE OUTREACH] regarding driver-assist features in various visibility conditions.
+* **Data Scrutiny:** Regulators are auditing Tesla for potential safety and crash reporting compliance [VERIFY BEFORE OUTREACH].
+* **Austin Robotaxi Operations:** Tesla launched driverless Robotaxi operations in Austin, Texas, in June 2025 and transitioned to fully driverless rides in January 2026 [VERIFY BEFORE OUTREACH], subject to reported safety scrutiny [VERIFY BEFORE OUTREACH].
 * **Safety Discrepancies:** Critics and independent safety researchers point out that comparing Tesla's airbag-deployment crash rate to general national crash data (which includes minor fender-benders) presents an incomplete picture, particularly when compared to lidar-based autonomous fleets operating in similar urban settings.
 
 ## 4. Tesla Optimus / Humanoid Robotics Deployment Status

@@ -16,7 +16,7 @@ To maintain a safe, inspectable, and reproducible environment, this demo operate
 * **No Network Calls:** All evaluations are local. No external API requests are made.
 * **No Shell Execution:** No shell commands, terminal invocations, or process spawns.
 * **No Real Mail:** Mock email tools do not transmit network packets or send messages.
-* **No Live Model API:** Uses static, pre-recorded proposer fixtures instead of querying OpenAI, Anthropic, or SpaceXAI [VERIFY BEFORE OUTREACH] servers.
+* **No Live Model API:** Uses static, pre-recorded proposer fixtures instead of querying OpenAI, Anthropic, or xAI / frontier model providers.
 * **No Production MCP Claim:** Demonstrates the conceptual boundary pattern, not a production-grade Model Context Protocol server.
 * **Deterministic Artifacts:** The output is fully predictable, producing byte-identical traces on repeat runs.
 

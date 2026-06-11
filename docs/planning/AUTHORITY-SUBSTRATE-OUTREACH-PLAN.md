@@ -185,6 +185,29 @@ Planned:
 6. xAI packet
 7. Embodied authority memo
 
+# xAI / Tesla Lane Deliverables (Branch)
+
+All 13 drafted files for this lane are available on the branch `docs/xai-tesla-lane-first-pass-2026-06-11`:
+
+### Planning & Context
+1.  Current Context Audit: [docs/planning/xai-tesla-current-context-2026-06-11.md](docs/planning/xai-tesla-current-context-2026-06-11.md)
+2.  CORE Positioning Memo: [docs/planning/xai-tesla-core-positioning-2026-06-11.md](docs/planning/xai-tesla-core-positioning-2026-06-11.md)
+3.  Three Pillars of Authority: [docs/planning/xai-tesla-three-authority-pillars-2026-06-11.md](docs/planning/xai-tesla-three-authority-pillars-2026-06-11.md)
+4.  SaaS / On-Prem Boundary Memo: [docs/planning/saas-onprem-authority-boundary-2026-06-11.md](docs/planning/saas-onprem-authority-boundary-2026-06-11.md)
+5.  Objection / Answer Sheet: [docs/planning/xai-tesla-objections-and-answers-2026-06-11.md](docs/planning/xai-tesla-objections-and-answers-2026-06-11.md)
+6.  Red-Team Report: [docs/planning/xai-tesla-red-team-report-2026-06-11.md](docs/planning/xai-tesla-red-team-report-2026-06-11.md)
+
+### Outreach Materials
+7.  xAI / Grok One-Pager: [docs/outreach/xai-core-one-pager-2026-06-11.md](docs/outreach/xai-core-one-pager-2026-06-11.md)
+8.  Tesla / Embodied One-Pager: [docs/outreach/tesla-embodied-authority-one-pager-2026-06-11.md](docs/outreach/tesla-embodied-authority-one-pager-2026-06-11.md)
+9.  xAI Short-Note Draft: [docs/outreach/xai-short-note-draft-2026-06-11.md](docs/outreach/xai-short-note-draft-2026-06-11.md)
+10. Tesla Robotics Short-Note Draft: [docs/outreach/tesla-robotics-short-note-draft-2026-06-11.md](docs/outreach/tesla-robotics-short-note-draft-2026-06-11.md)
+11. Technical Reviewer Short-Note Draft: [docs/outreach/technical-reviewer-short-note-draft-2026-06-11.md](docs/outreach/technical-reviewer-short-note-draft-2026-06-11.md)
+
+### Demo Specifications
+12. Embodied Authority Simulation Demo Spec: [docs/demo/embodied-authority-simulation-demo-spec-2026-06-11.md](docs/demo/embodied-authority-simulation-demo-spec-2026-06-11.md)
+13. Tool Authority Demo Spec: [docs/demo/tool-authority-demo-spec-2026-06-11.md](docs/demo/tool-authority-demo-spec-2026-06-11.md)
+
 ---
 
 # Model Allocation Strategy

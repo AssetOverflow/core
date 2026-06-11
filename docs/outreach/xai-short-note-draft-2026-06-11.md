@@ -17,7 +17,7 @@ We’ve recently demonstrated this boundary pattern in a hybrid verification dem
 
 We are not looking for fundraising or pitching a product. We would simply value a technical sanity check from engineers thinking seriously about truth-seeking AI, agent reliability, and high-consequence autonomy. 
 
-If you have 10 minutes, I’d appreciate your feedback on our positioning: [xai-core-one-pager](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-outreach-xai-tesla/docs/outreach/xai-core-one-pager-2026-06-11.md).
+If you have 10 minutes, I’d appreciate your feedback on our positioning (See: docs/outreach/xai-core-one-pager-2026-06-11.md).
 
 Best regards,
 

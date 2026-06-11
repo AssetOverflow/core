@@ -9,11 +9,11 @@ This report documents a self-directed red-team audit of the draft materials prep
 
 ## 1. Persona Reviews
 
-### Reviewer 1: xAI (SpaceXAI [VERIFY BEFORE OUTREACH]) Technical Reviewer
+### Reviewer 1: xAI / Tesla / SpaceX-adjacent Technical Reviewer
 *   **Perspective:** Focused on state-of-the-art foundation models, first-principles reasoning, and Colossus scale. Highly skeptical of any external wrapper claiming to "solve" reasoning alignment.
 *   **Audit Feedback:** 
     *   *Curiosity Gating:* If the materials implied CORE limits *what* Grok can think or generate, they would be immediately rejected. The distinction in the one-pager ("CORE is not a speech-policing layer. It is an authority-boundary layer.") successfully addresses this, but we must ensure we never refer to CORE as a "filter" or "guardrail" in conversations.
-    *   *Terminology:* Since the February 2026 merger, referring to "xAI" without acknowledging the **SpaceXAI [VERIFY BEFORE OUTREACH]** brand or the integration into SpaceX [VERIFY BEFORE OUTREACH] could signal outdated context. The current context audit is accurate on this point, but outreach must use "SpaceXAI [VERIFY BEFORE OUTREACH]" or "xAI / Tesla / SpaceX-adjacent" consistently.
+    *   *Terminology:* Keep references focused on Grok-class systems and xAI / Tesla / SpaceX-adjacent context, avoiding unverified corporate structures.
 
 ### Reviewer 2: Tesla Autonomy Safety Reviewer
 *   **Perspective:** Focused on automotive functional safety (ISO 26262), real-time low-latency constraints, and vision-only path planning. Extremely defensive about safety critiques.
@@ -36,7 +36,7 @@ This report documents a self-directed red-team audit of the draft materials prep
 ### Reviewer 5: Legal / Reputation-Risk Reviewer
 *   **Perspective:** Protecting intellectual property and avoiding unauthorized association with trademarked entities.
 *   **Audit Feedback:**
-    *   *Entity Association:* Materials must make it clear that CORE is an independent, open-source project and is not affiliated with, endorsed by, or partnering with Tesla, SpaceX, or SpaceXAI [VERIFY BEFORE OUTREACH].
+    *   *Entity Association:* Materials must make it clear that CORE is an independent, open-source project and is not affiliated with, endorsed by, or partnering with Tesla, SpaceX, or xAI.
     *   *Fundraising:* We must not include any investment or fundraising asks in outreach to these teams, to prevent any appearance of exploiting corporate brands for capital generation.
 
 ---
@@ -47,7 +47,7 @@ This report documents a self-directed red-team audit of the draft materials prep
 | :--- | :--- | :--- |
 | **Overclaims of Robotics Control:** Implication that CORE can directly control actuators or drive vehicles. | 🔴 Critical | Added explicit caveats to the Tesla One-Pager and Embodied Demo Spec: *"CORE is not a robotics controller... CORE is not a vehicle autonomy stack."* |
 | **Implied Censorship:** Appearing to restrict the model's creative or logical reasoning outputs. | 🟡 High | Added dedicated "Censorship" sections in the One-Pager and QA sheet: *"CORE is not a speech-policing layer... A model can still reason, propose, argue..."* |
-| **Stale Context / SpaceXAI Name:** Using outdated naming or missing the SpaceX merger facts. | 🟢 Medium | Documented the February 2026 merger [VERIFY BEFORE OUTREACH] in the Context Audit and updated naming guidelines to reference the consolidated "SpaceXAI [VERIFY BEFORE OUTREACH]" division. |
+| **Naming Strategy:** Using unverified corporate structures or brand names. | 🟢 Medium | Audited and updated naming guidelines to use safe preferred terminology like "xAI / Tesla / SpaceX-adjacent". |
 | **Citing Rumors or Social Media:** Using unverified tweets or rumors regarding FSD/Optimus. | 🟡 High | Exclusively cited primary sources (NHTSA [VERIFY BEFORE OUTREACH] Engineering Analysis records, official Tesla production updates, peer-reviewed robotics literature). |
 | **Replacing Certified Safety:** Implication that CORE replaces ISO 26262/13849 safety mechanisms. | 🔴 Critical | Added clear warnings: *"CORE does not replace perception, control theory, redundancy... or regulatory certification."* |
 | **Pretending to Solve Multimodal Safety:** Claiming CORE handles raw sensor inputs. | 🟢 Medium | Clarified in QA sheet that perception and object classification are out of scope; CORE evaluates parsed schemas. |

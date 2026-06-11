@@ -17,7 +17,7 @@ We do not write robotics controllers or vehicle autonomy software, and we do not
 
 We would value a hard technical critique of this authority-boundary design pattern from engineers working on the front lines of robotics and autonomy.
 
-If you have a moment, our short technical memo is here: [tesla-embodied-authority-one-pager](file:///Users/kaizenpro/.gemini/antigravity/worktrees/core/core-outreach-xai-tesla/docs/outreach/tesla-embodied-authority-one-pager-2026-06-11.md).
+If you have a moment, our short technical memo is here (See: docs/outreach/tesla-embodied-authority-one-pager-2026-06-11.md).
 
 Best regards,
 

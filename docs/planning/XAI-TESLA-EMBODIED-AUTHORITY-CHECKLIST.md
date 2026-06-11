@@ -22,7 +22,7 @@ Prepare a second outreach lane focused on:
 
 [ ] Create truth-seeking memo
 
-[ ] Create local-authority memo
+[ ] Create local/on-prem authority memo
 
 [ ] Create embodied-authority memo
 
@@ -90,6 +90,13 @@ No deployment claims.
 
 ---
 
+# Phase 5.5 — Red Team
+
+[ ] Perform red-team review of outreach materials
+[ ] Resolve overclaims and unverified claims
+
+---
+
 # Phase 6 — Outreach
 
 [ ] xAI outreach draft
@@ -111,5 +118,7 @@ Ready when:
 [ ] Demo complete
 
 [ ] Evidence packet complete
+
+[ ] Red-team review complete
 
 [ ] Outreach package complete

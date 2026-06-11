@@ -55,7 +55,7 @@ To preserve privacy and prevent the leakage of proprietary operational data (e.g
 ---
 
 ## 3. Why Customer-Local Authority Matters
-For organizations like Tesla, SpaceX, or SpaceXAI [VERIFY BEFORE OUTREACH], operational data is highly proprietary and subject to strict security classifications. 
+For organizations operating in xAI / Tesla / SpaceX-adjacent [VERIFY BEFORE OUTREACH] contexts, operational data is highly proprietary and subject to strict security classifications. 
 *   **No Data Surrender:** CORE does not require customers to upload raw operational sensor data, camera feeds, or internal source code to a centralized cloud.
 *   **High Availability:** If a Starlink terminal or internet connection drops, the local factory or spacecraft system must continue to enforce safety gates. A cloud-first authority model would brick operations during outages.
 *   **Clear Compliance Boundaries:** Regulated entities can prove compliance to external auditors by demonstrating that their safety policies are enforced locally by an immutable, deterministic engine, with trace hashes verifying that no tampering occurred.

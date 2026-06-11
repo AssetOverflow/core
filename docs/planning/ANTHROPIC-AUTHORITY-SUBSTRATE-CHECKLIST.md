@@ -112,6 +112,17 @@ Status: Active
 
 ---
 
+# Phase 8 — Objections / Answers
+
+[ ] Confirm objections sheet exists and is up to date
+[ ] Verify Anthropic-specific objections answered
+[ ] Ensure no overclaim language in objections and answers
+[ ] Audit to ensure no "solves alignment" claims exist
+[ ] Audit to ensure no "production MCP" claims exist
+[ ] Audit to ensure no "absolute safety guarantee" claims exist
+
+---
+
 # Exit Criteria
 
 Ready when:
