@@ -131,15 +131,36 @@ probabilistic suggestion.
 Knowledge enters the runtime field through one path: the reviewed teaching loop.
 Every new correction enters at `EpistemicStatus.SPECULATIVE`. Promotion to
 `COHERENT` — the only status admissible as evidence in downstream inference —
-requires a curator-mediated coherence judgment against the existing reviewed
-field. Source authority, institutional credentials, and the system's own prior
-output have no standing. Only coherence with reviewed claims counts.
+requires a **coherence judgment** against the existing reviewed field. The
+admission signal is coherence and only coherence: source authority, institutional
+credentials, and the system's own *asserted* output carry no standing. Provenance
+is retained for audit and revision, never as a promotion signal.
+
+That judgment is curator-mediated today, and for most corrections it must be. The
+fallible step is not the logic but the *reading* — translating a natural-language
+claim into the field's propositional form, and selecting which reviewed facts it
+bears on. A sound inference over a misread premise is a sound proof of the wrong
+thing, so a human certifies the reading before a correction enters the reviewed
+structure.
+
+One subclass is different in principle. A claim that is *deductively entailed* by
+facts already marked `COHERENT` is not new information and is not the system's own
+opinion — it makes explicit what the reviewed field already contains. For that
+subclass the entailment proof *is* the coherence judgment, and CORE's sound,
+independently-checked deductive engine (`deductive_logic_v1`, §4) can certify it
+deterministically, with the proof chain as the audit artifact — the logical form
+of the *"structural coherence metric"* ADR-0021 names as the successor to curator
+mediation. What review still gates there is the faithfulness of the reading, not
+the deduction. This proof-carrying promotion path is **specified but not yet
+wired** (see
+[`docs/issues/proof-carrying-coherence-promotion.md`](issues/proof-carrying-coherence-promotion.md));
+until it lands, all promotion is curator-mediated.
 
 This is not a safety overlay. It is a consequence of the decoding thesis: if the
-system decodes a reality that already is, then inputs that contradict reviewed
-structure need review before they enter that structure. A system that accepts any
-confident-sounding correction without review is a generative system in different
-clothing.
+system decodes a reality that already is, then inputs that contradict — or merely
+fail to follow from — reviewed structure need review before they enter that
+structure. A system that accepts any confident-sounding correction without review
+is a generative system in different clothing.
 
 Two invariants enforce this at the architecture level, not the policy level.
 
