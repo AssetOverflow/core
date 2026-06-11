@@ -10,9 +10,9 @@
   "scenario_id": "ask-required-action",
   "status": "ask",
   "tool": "core.tool_authority.review",
-  "trace_hash": "f0abef9eb99a1fd5a260ebea856012ef4c0bf566cf521d615e620afbf26d7338",
+  "trace_hash": "eeb8ed87e83ed410b852c0e5340a203c0c0445a9001449896cb3026e5332f728",
   "trace_summary": {
-    "action_fingerprint": "e014f41362f5a6aed19e28bd11d925cdf07d1b046fbea14df1b6be2a068c4f28",
+    "action_fingerprint": "ab384a8903bb4ec28d9ecb410fbe086a9708f7124347eda655c0b9b68e124f7f",
     "authority_evaluated": true,
     "envelope_version": "local-v1",
     "execution_performed": false,
