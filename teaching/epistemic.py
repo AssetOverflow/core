@@ -20,9 +20,19 @@ from enum import Enum, unique
 class EpistemicStatus(Enum):
     """Position of a claim in the reviewed revision graph.
 
-    Coherence is the only admission signal (ADR-0021 §3).  Transitions
-    between statuses are *computed from coherence with the existing
-    reviewed field*, not asserted by source authority.
+    Coherence is the only admission signal (ADR-0021 §3): a status is a
+    function of coherence with the existing reviewed field, never of
+    source authority, credentials, or the system's own asserted output.
+
+    The *judgment behind* a transition is curator-mediated today —
+    ``review_correction`` carries the resulting status as an input, it does
+    not yet compute it.  ADR-0021's "Named gap (v2 work)" commits to
+    replacing curator mediation with a structural coherence metric; one
+    arm of that successor (proof-carrying promotion for the deductively
+    *entailed* subclass, via the sound ``deductive_logic_v1`` engine) is
+    specified but not yet wired — see
+    ``docs/issues/proof-carrying-coherence-promotion.md``.  Until it lands,
+    do not read this enum as evidence of an automated coherence computation.
     """
 
     COHERENT = "coherent"
