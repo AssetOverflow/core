@@ -1734,11 +1734,12 @@ class TestINV28MeaningGraphNeutrality:
 # could flip stored claims to admissible-as-evidence without tripping any
 # structural check.
 #
-# This test AST-asserts the assignment-site set: every production assignment
-# whose target is an `epistemic_status` subscript key or attribute must live
-# in an allowlisted module. Adding a new transition site is allowed but must
-# be intentional — edit the allowlist and document the justification here in
-# the same commit.
+# This test AST-asserts the write-site set: every production write of an
+# `epistemic_status` key/attribute — direct assignment (incl. tuple-unpacking
+# and the recall-reference backdoor) or mutation call (.update / .setdefault /
+# __setitem__ / setattr) — must live in an allowlisted module. Adding a new
+# transition site is allowed but must be intentional — edit the allowlist and
+# document the justification here in the same commit.
 #
 # Allowlist rationale per site:
 #   vault/store.py — the single mutation owner. Two sites today:
@@ -1754,33 +1755,116 @@ ALLOWED_STATUS_TRANSITION_SITES: frozenset[str] = frozenset({
 })
 
 
-def _status_assignment_targets(tree: ast.AST) -> int:
-    """Count assignment targets that write an `epistemic_status` key/attr.
+_STATUS_KEY = "epistemic_status"
 
-    Catches both shapes that can flip a stored entry's tier:
+
+def _flatten_assign_targets(target: ast.expr) -> list[ast.expr]:
+    """Recurse through tuple/list/starred unpacking to the leaf targets,
+    so `meta["epistemic_status"], x = a, b` cannot hide a write."""
+    if isinstance(target, (ast.Tuple, ast.List)):
+        out: list[ast.expr] = []
+        for elt in target.elts:
+            out.extend(_flatten_assign_targets(elt))
+        return out
+    if isinstance(target, ast.Starred):
+        return _flatten_assign_targets(target.value)
+    return [target]
+
+
+def _dict_literal_has_status_key(expr: ast.expr) -> bool:
+    return isinstance(expr, ast.Dict) and any(
+        isinstance(k, ast.Constant) and k.value == _STATUS_KEY for k in expr.keys
+    )
+
+
+def _dict_ctor_has_status_kwarg(expr: ast.expr) -> bool:
+    return (
+        isinstance(expr, ast.Call)
+        and isinstance(expr.func, ast.Name)
+        and expr.func.id == "dict"
+        and any(kw.arg == _STATUS_KEY for kw in expr.keywords)
+    )
+
+
+def _call_writes_status_key(node: ast.Call) -> bool:
+    """True iff this call shape can write the `epistemic_status` key/attr.
+
+    Mutation-call shapes covered (the indirections an assignment scan misses):
+      m.update({"epistemic_status": ...})            dict-literal positional
+      m.update(epistemic_status=...)                 keyword
+      m.update(**{"epistemic_status": ...})          **-unpacked literal dict
+      m.update(dict(epistemic_status=...))           dict() ctor positional
+      m.setdefault("epistemic_status", ...)          write-if-absent
+      m.__setitem__("epistemic_status", ...)         bound __setitem__
+      dict.__setitem__(m, "epistemic_status", ...)   unbound __setitem__
+      setattr(entry, "epistemic_status", ...)        attribute write by name
+    """
+    func = node.func
+    func_attr = func.attr if isinstance(func, ast.Attribute) else ""
+    func_name = func.id if isinstance(func, ast.Name) else ""
+
+    if func_attr == "update":
+        if any(
+            _dict_literal_has_status_key(arg) or _dict_ctor_has_status_kwarg(arg)
+            for arg in node.args
+        ):
+            return True
+        for kw in node.keywords:
+            if kw.arg == _STATUS_KEY:
+                return True
+            if kw.arg is None and _dict_literal_has_status_key(kw.value):
+                return True
+        return False
+
+    # Key arrives as a positional constant: setdefault(key, v),
+    # m.__setitem__(key, v), dict.__setitem__(m, key, v), setattr(o, key, v).
+    # "Any positional constant equals the key" covers every arity without
+    # per-shape position logic; a literal "epistemic_status" positional in
+    # one of these writers is a transition write by definition.
+    if func_attr in ("setdefault", "__setitem__") or func_name == "setattr":
+        return any(
+            isinstance(arg, ast.Constant) and arg.value == _STATUS_KEY
+            for arg in node.args
+        )
+    return False
+
+
+def _status_transition_writes(tree: ast.AST) -> int:
+    """Count sites that write an `epistemic_status` key/attr.
+
+    Direct-assignment shapes:
       meta["epistemic_status"] = ...        (subscript with constant key)
       entry.epistemic_status = ...          (attribute assignment)
-    including the mutate-via-recall-reference backdoor
-      hit["metadata"]["epistemic_status"] = ...
+      hit["metadata"]["epistemic_status"] = ...   (recall-reference backdoor)
+    plus the mutation-call shapes in `_call_writes_status_key` and writes
+    hidden inside tuple-unpacking targets.
+
     Uses AST so comments/docstrings/strings cannot trigger false positives.
+    Honest scope note: a *variable* key (`meta[k] = ...` where k happens to
+    equal "epistemic_status" at runtime), exec/eval, and C-level aliasing are
+    statically undetectable — those belong to review, not this scan. The scan
+    pins every plain-code write surface.
     """
     count = 0
     for node in ast.walk(tree):
         targets: list[ast.expr] = []
         if isinstance(node, ast.Assign):
-            targets = list(node.targets)
+            for t in node.targets:
+                targets.extend(_flatten_assign_targets(t))
         elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
-            targets = [node.target]
+            targets = _flatten_assign_targets(node.target)
+        elif isinstance(node, ast.Call) and _call_writes_status_key(node):
+            count += 1
         for target in targets:
             if (
                 isinstance(target, ast.Subscript)
                 and isinstance(target.slice, ast.Constant)
-                and target.slice.value == "epistemic_status"
+                and target.slice.value == _STATUS_KEY
             ):
                 count += 1
             elif (
                 isinstance(target, ast.Attribute)
-                and target.attr == "epistemic_status"
+                and target.attr == _STATUS_KEY
             ):
                 count += 1
     return count
@@ -1791,7 +1875,7 @@ def _file_status_transition_count(path: Path) -> int:
         tree = ast.parse(path.read_text())
     except (OSError, SyntaxError):
         return 0
-    return _status_assignment_targets(tree)
+    return _status_transition_writes(tree)
 
 
 class TestINV29EpistemicStatusTransitionSites:
@@ -1838,16 +1922,48 @@ class TestINV29EpistemicStatusTransitionSites:
         )
 
     def test_detector_is_non_vacuous(self):
-        """29b — prove 29a can fail: the predicate flags every known
-        assignment shape, including the recall-reference backdoor."""
-        snippet = (
-            "meta['epistemic_status'] = 'coherent'\n"
-            "entry.epistemic_status = STATUS\n"
-            "hit['metadata']['epistemic_status'] = 'coherent'\n"
+        """29b — prove 29a can fail: the predicate flags every covered write
+        shape — direct assignments (incl. the recall-reference backdoor and
+        tuple-unpacking) AND mutation-call indirections."""
+        shapes = (
+            # direct assignment
+            "meta['epistemic_status'] = 'coherent'",
+            "entry.epistemic_status = STATUS",
+            "hit['metadata']['epistemic_status'] = 'coherent'",
+            "meta['epistemic_status'], x = 'coherent', 1",
+            # mutation calls
+            "metadata.update({'epistemic_status': 'coherent'})",
+            "entry.metadata.update(epistemic_status='coherent')",
+            "metadata.update(**{'epistemic_status': 'coherent'})",
+            "metadata.update(dict(epistemic_status='coherent'))",
+            "hit['metadata'].update({'epistemic_status': 'coherent'})",
+            "metadata.setdefault('epistemic_status', 'coherent')",
+            "metadata.__setitem__('epistemic_status', 'coherent')",
+            "dict.__setitem__(metadata, 'epistemic_status', 'coherent')",
+            "setattr(entry, 'epistemic_status', status)",
         )
-        assert _status_assignment_targets(ast.parse(snippet)) == 3, (
-            "INV-29 predicate failed to flag known status-assignment shapes "
-            "— the transition-site scan is vacuous."
+        missed = [
+            s for s in shapes if _status_transition_writes(ast.parse(s)) != 1
+        ]
+        assert not missed, (
+            "INV-29 predicate failed to flag known status-write shape(s):\n  "
+            + "\n  ".join(missed)
+            + "\n— the transition-site scan has gone partially blind."
+        )
+
+    def test_detector_ignores_reads_and_unrelated_writes(self):
+        """29b' — the widened predicate must not cry wolf: reads, other keys,
+        and dict-literal *construction* (serialization builders) stay clean."""
+        clean = (
+            "x = meta['epistemic_status']\n"
+            "meta['energy_class'] = 'E0'\n"
+            "meta.update({'energy_raw': 0.5})\n"
+            "d = {'epistemic_status': self.epistemic_status.value}\n"
+            "getattr(entry, 'epistemic_status')\n"
+        )
+        assert _status_transition_writes(ast.parse(clean)) == 0, (
+            "INV-29 predicate flagged a read/unrelated write — false "
+            "positives would train people to allowlist reflexively."
         )
 
     def test_vault_store_sites_are_visible(self):
