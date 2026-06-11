@@ -1718,3 +1718,260 @@ class TestINV28MeaningGraphNeutrality:
                 "INV-28a predicate failed to flag a module known to import the "
                 "field engine — the neutrality check is vacuous."
             )
+
+
+# ===========================================================================
+# INV-29  Epistemic-status transition sites are allowlisted
+# ===========================================================================
+#
+# Claim (ADR-0021 §3 + ADR-0218 §Context):
+# INV-21 polices `VaultStore.store(...)` callers, but a SPECULATIVE→COHERENT
+# *transition* on an already-stored entry is not a store() call — it is an
+# in-place assignment to the entry's `epistemic_status` metadata key.
+# ADR-0148's `promote_eligible_entries` proved this shape exists and that
+# INV-21's AST scan cannot see it. Without this invariant, a new promoter
+# (including the ADR-0218 proof-carrying promoter, or any future fast-path)
+# could flip stored claims to admissible-as-evidence without tripping any
+# structural check.
+#
+# This test AST-asserts the write-site set: every production write of an
+# `epistemic_status` key/attribute — direct assignment (incl. tuple-unpacking
+# and the recall-reference backdoor) or mutation call (.update / .setdefault /
+# __setitem__ / setattr) — must live in an allowlisted module. Adding a new
+# transition site is allowed but must be intentional — edit the allowlist and
+# document the justification here in the same commit.
+#
+# Allowlist rationale per site:
+#   vault/store.py — the single mutation owner. Two sites today:
+#                    store() stamping at write time (param-only; callers
+#                    cannot smuggle status via the metadata dict), and
+#                    ADR-0148 promote_eligible_entries (energy-policy
+#                    promotion, opt-in flag, default off). ADR-0218 proposes
+#                    its proof-carrying transition land HERE too
+#                    (apply_certified_promotion), keeping this list unchanged.
+
+ALLOWED_STATUS_TRANSITION_SITES: frozenset[str] = frozenset({
+    "vault/store.py",
+})
+
+
+_STATUS_KEY = "epistemic_status"
+
+
+def _flatten_assign_targets(target: ast.expr) -> list[ast.expr]:
+    """Recurse through tuple/list/starred unpacking to the leaf targets,
+    so `meta["epistemic_status"], x = a, b` cannot hide a write."""
+    if isinstance(target, (ast.Tuple, ast.List)):
+        out: list[ast.expr] = []
+        for elt in target.elts:
+            out.extend(_flatten_assign_targets(elt))
+        return out
+    if isinstance(target, ast.Starred):
+        return _flatten_assign_targets(target.value)
+    return [target]
+
+
+def _dict_literal_has_status_key(expr: ast.expr) -> bool:
+    return isinstance(expr, ast.Dict) and any(
+        isinstance(k, ast.Constant) and k.value == _STATUS_KEY for k in expr.keys
+    )
+
+
+def _dict_ctor_has_status_kwarg(expr: ast.expr) -> bool:
+    return (
+        isinstance(expr, ast.Call)
+        and isinstance(expr.func, ast.Name)
+        and expr.func.id == "dict"
+        and any(kw.arg == _STATUS_KEY for kw in expr.keywords)
+    )
+
+
+def _call_writes_status_key(node: ast.Call) -> bool:
+    """True iff this call shape can write the `epistemic_status` key/attr.
+
+    Mutation-call shapes covered (the indirections an assignment scan misses):
+      m.update({"epistemic_status": ...})            dict-literal positional
+      m.update(epistemic_status=...)                 keyword
+      m.update(**{"epistemic_status": ...})          **-unpacked literal dict
+      m.update(dict(epistemic_status=...))           dict() ctor positional
+      m.setdefault("epistemic_status", ...)          write-if-absent
+      m.__setitem__("epistemic_status", ...)         bound __setitem__
+      dict.__setitem__(m, "epistemic_status", ...)   unbound __setitem__
+      setattr(entry, "epistemic_status", ...)        attribute write by name
+    """
+    func = node.func
+    func_attr = func.attr if isinstance(func, ast.Attribute) else ""
+    func_name = func.id if isinstance(func, ast.Name) else ""
+
+    if func_attr == "update":
+        if any(
+            _dict_literal_has_status_key(arg) or _dict_ctor_has_status_kwarg(arg)
+            for arg in node.args
+        ):
+            return True
+        for kw in node.keywords:
+            if kw.arg == _STATUS_KEY:
+                return True
+            if kw.arg is None and _dict_literal_has_status_key(kw.value):
+                return True
+        return False
+
+    # Key arrives as a positional constant: setdefault(key, v),
+    # m.__setitem__(key, v), dict.__setitem__(m, key, v), setattr(o, key, v).
+    # "Any positional constant equals the key" covers every arity without
+    # per-shape position logic; a literal "epistemic_status" positional in
+    # one of these writers is a transition write by definition.
+    if func_attr in ("setdefault", "__setitem__") or func_name == "setattr":
+        return any(
+            isinstance(arg, ast.Constant) and arg.value == _STATUS_KEY
+            for arg in node.args
+        )
+    return False
+
+
+def _status_transition_writes(tree: ast.AST) -> int:
+    """Count sites that write an `epistemic_status` key/attr.
+
+    Direct-assignment shapes:
+      meta["epistemic_status"] = ...        (subscript with constant key)
+      entry.epistemic_status = ...          (attribute assignment)
+      hit["metadata"]["epistemic_status"] = ...   (recall-reference backdoor)
+    plus the mutation-call shapes in `_call_writes_status_key` and writes
+    hidden inside tuple-unpacking targets.
+
+    Uses AST so comments/docstrings/strings cannot trigger false positives.
+    Honest scope note: a *variable* key (`meta[k] = ...` where k happens to
+    equal "epistemic_status" at runtime), exec/eval, and C-level aliasing are
+    statically undetectable — those belong to review, not this scan. The scan
+    pins every plain-code write surface.
+    """
+    count = 0
+    for node in ast.walk(tree):
+        targets: list[ast.expr] = []
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                targets.extend(_flatten_assign_targets(t))
+        elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
+            targets = _flatten_assign_targets(node.target)
+        elif isinstance(node, ast.Call) and _call_writes_status_key(node):
+            count += 1
+        for target in targets:
+            if (
+                isinstance(target, ast.Subscript)
+                and isinstance(target.slice, ast.Constant)
+                and target.slice.value == _STATUS_KEY
+            ):
+                count += 1
+            elif (
+                isinstance(target, ast.Attribute)
+                and target.attr == _STATUS_KEY
+            ):
+                count += 1
+    return count
+
+
+def _file_status_transition_count(path: Path) -> int:
+    try:
+        tree = ast.parse(path.read_text())
+    except (OSError, SyntaxError):
+        return 0
+    return _status_transition_writes(tree)
+
+
+class TestINV29EpistemicStatusTransitionSites:
+    """
+    Claim: Only modules in ALLOWED_STATUS_TRANSITION_SITES may assign to an
+    `epistemic_status` key or attribute. A new assignment site is a new
+    promotion/demotion authority over the revision graph and must be
+    reviewed — coherence stops being the only admission signal the moment an
+    unreviewed site can flip a claim to COHERENT (ADR-0021 §3, ADR-0218).
+    """
+
+    def test_no_unallowlisted_status_transition_sites(self):
+        offenders: list[str] = []
+        for path in _enumerate_project_py_files():
+            if _file_status_transition_count(path) == 0:
+                continue
+            rel = str(path.relative_to(PROJECT_ROOT_FOR_INV21))
+            if rel not in ALLOWED_STATUS_TRANSITION_SITES:
+                offenders.append(rel)
+        assert not offenders, (
+            "New epistemic-status transition site(s) detected outside the "
+            "allowlist:\n  " + "\n  ".join(offenders)
+            + "\n\nIf this is intentional, add the path to "
+            "ALLOWED_STATUS_TRANSITION_SITES in "
+            "tests/test_architectural_invariants.py with a one-line "
+            "justification in the comment block above the set. Every "
+            "additional transition site is a new promotion authority over "
+            "the epistemic schema (ADR-0021 §3, ADR-0218)."
+        )
+
+    def test_allowlist_is_actually_used(self):
+        """Drift guard — if an allowlisted module no longer assigns status,
+        remove it to keep the trust surface tight."""
+        used: set[str] = set()
+        for path in _enumerate_project_py_files():
+            if _file_status_transition_count(path) > 0:
+                rel = str(path.relative_to(PROJECT_ROOT_FOR_INV21))
+                if rel in ALLOWED_STATUS_TRANSITION_SITES:
+                    used.add(rel)
+        unused = ALLOWED_STATUS_TRANSITION_SITES - used
+        assert not unused, (
+            f"Allowlisted site(s) no longer assign epistemic_status: "
+            f"{sorted(unused)}\nRemove from ALLOWED_STATUS_TRANSITION_SITES."
+        )
+
+    def test_detector_is_non_vacuous(self):
+        """29b — prove 29a can fail: the predicate flags every covered write
+        shape — direct assignments (incl. the recall-reference backdoor and
+        tuple-unpacking) AND mutation-call indirections."""
+        shapes = (
+            # direct assignment
+            "meta['epistemic_status'] = 'coherent'",
+            "entry.epistemic_status = STATUS",
+            "hit['metadata']['epistemic_status'] = 'coherent'",
+            "meta['epistemic_status'], x = 'coherent', 1",
+            # mutation calls
+            "metadata.update({'epistemic_status': 'coherent'})",
+            "entry.metadata.update(epistemic_status='coherent')",
+            "metadata.update(**{'epistemic_status': 'coherent'})",
+            "metadata.update(dict(epistemic_status='coherent'))",
+            "hit['metadata'].update({'epistemic_status': 'coherent'})",
+            "metadata.setdefault('epistemic_status', 'coherent')",
+            "metadata.__setitem__('epistemic_status', 'coherent')",
+            "dict.__setitem__(metadata, 'epistemic_status', 'coherent')",
+            "setattr(entry, 'epistemic_status', status)",
+        )
+        missed = [
+            s for s in shapes if _status_transition_writes(ast.parse(s)) != 1
+        ]
+        assert not missed, (
+            "INV-29 predicate failed to flag known status-write shape(s):\n  "
+            + "\n  ".join(missed)
+            + "\n— the transition-site scan has gone partially blind."
+        )
+
+    def test_detector_ignores_reads_and_unrelated_writes(self):
+        """29b' — the widened predicate must not cry wolf: reads, other keys,
+        and dict-literal *construction* (serialization builders) stay clean."""
+        clean = (
+            "x = meta['epistemic_status']\n"
+            "meta['energy_class'] = 'E0'\n"
+            "meta.update({'energy_raw': 0.5})\n"
+            "d = {'epistemic_status': self.epistemic_status.value}\n"
+            "getattr(entry, 'epistemic_status')\n"
+        )
+        assert _status_transition_writes(ast.parse(clean)) == 0, (
+            "INV-29 predicate flagged a read/unrelated write — false "
+            "positives would train people to allowlist reflexively."
+        )
+
+    def test_vault_store_sites_are_visible(self):
+        """29c — the scan actually sees the two known vault/store.py sites
+        (store-time stamp + ADR-0148 promotion). If this drops to zero the
+        scan went blind, not clean."""
+        vault_path = PROJECT_ROOT_FOR_INV21 / "vault" / "store.py"
+        assert _file_status_transition_count(vault_path) >= 2, (
+            "Expected the store() stamp and the ADR-0148 promotion site in "
+            "vault/store.py to be visible to the INV-29 scan."
+        )
