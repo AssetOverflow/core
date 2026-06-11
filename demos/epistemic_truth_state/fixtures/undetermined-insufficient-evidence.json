@@ -1,0 +1,31 @@
+{
+  "tool": "core.epistemic_truth_state.review",
+  "expected_status": "assigned",
+  "arguments": {
+    "request_id": "demo-eps-d1",
+    "scenario_id": "undetermined-insufficient-evidence",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-d1",
+      "proposed_state": "verified",
+      "trace_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    "claim": {
+      "text": "The nightly benchmark improved over last week.",
+      "domain": "demo.local_factual",
+      "subject": "nightly_benchmark",
+      "predicate": "improved_over_last_week"
+    },
+    "evidence": [
+      {
+        "evidence_id": "ev-d1-unrelated",
+        "subject": "documentation_pass",
+        "predicate": "merged_to_main",
+        "supports": true,
+        "independent": true,
+        "source_kind": "observation"
+      }
+    ]
+  }
+}

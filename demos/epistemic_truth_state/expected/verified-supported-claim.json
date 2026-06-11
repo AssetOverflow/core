@@ -1,0 +1,29 @@
+{
+  "assigned_state": "verified",
+  "authority_path": [
+    "demos.epistemic_truth_state.authority.validate_payload",
+    "demos.epistemic_truth_state.authority.assign_epistemic_state",
+    "demo_epistemic_truth_state_envelope(local-v1)",
+    "core.epistemic_state.coerce_epistemic_state"
+  ],
+  "decision_reason": "verified_by_matching_evidence",
+  "evidence_ledger": [
+    "ev-a1-replay",
+    "ev-a1-trace"
+  ],
+  "normative_clearance": "cleared",
+  "request_id": "demo-eps-a1",
+  "scenario_id": "verified-supported-claim",
+  "status": "assigned",
+  "tool": "core.epistemic_truth_state.review",
+  "trace_hash": "4307277a0f8d8276f29574d934228cc6c74c60fd43c46dba84bffd22d6cdb181",
+  "trace_summary": {
+    "authority_evaluated": true,
+    "claim_fingerprint": "cef9198360d02ce3133c1095e776ae86a714fd1c9718aa3576616f935eccdf98",
+    "envelope_version": "local-v1",
+    "evidence_considered": 2,
+    "independent_support_count": 2,
+    "proposer_state_ignored": true,
+    "proposer_trace_hash_ignored": true
+  }
+}

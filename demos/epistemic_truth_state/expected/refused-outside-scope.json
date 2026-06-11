@@ -1,0 +1,26 @@
+{
+  "assigned_state": "scope_boundary",
+  "authority_path": [
+    "demos.epistemic_truth_state.authority.validate_payload",
+    "demos.epistemic_truth_state.authority.assign_epistemic_state",
+    "demo_epistemic_truth_state_envelope(local-v1)"
+  ],
+  "decision_reason": "outside_epistemic_envelope",
+  "evidence_ledger": [],
+  "normative_clearance": "unassessable",
+  "refusal_reason": "outside_epistemic_envelope",
+  "request_id": "demo-eps-e1",
+  "scenario_id": "refused-outside-scope",
+  "status": "refused",
+  "tool": "core.epistemic_truth_state.review",
+  "trace_hash": "c9ef9560bcf71052f9e4f323d5f6c49dc23113dcaa6a63048cfdffafec6dd024",
+  "trace_summary": {
+    "authority_evaluated": true,
+    "claim_fingerprint": "ef9317e405906823799755113ccb216ab39dd7b055c9f9883ada6480b80ef98c",
+    "envelope_version": "local-v1",
+    "evidence_considered": 1,
+    "independent_support_count": 1,
+    "proposer_state_ignored": true,
+    "proposer_trace_hash_ignored": true
+  }
+}

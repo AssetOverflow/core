@@ -1,0 +1,28 @@
+{
+  "assigned_state": "evidenced",
+  "authority_path": [
+    "demos.epistemic_truth_state.authority.validate_payload",
+    "demos.epistemic_truth_state.authority.assign_epistemic_state",
+    "demo_epistemic_truth_state_envelope(local-v1)",
+    "core.epistemic_state.coerce_epistemic_state"
+  ],
+  "decision_reason": "evidence_present_but_not_verifying",
+  "evidence_ledger": [
+    "ev-b1-log"
+  ],
+  "normative_clearance": "unassessable",
+  "request_id": "demo-eps-b1",
+  "scenario_id": "evidenced-but-not-verified-claim",
+  "status": "assigned",
+  "tool": "core.epistemic_truth_state.review",
+  "trace_hash": "f9f2e153e66aaba9dcb1d7e57bb30947cb7f4dd9b09de3625b12c21b55d80b3c",
+  "trace_summary": {
+    "authority_evaluated": true,
+    "claim_fingerprint": "289e494aa06b8bd26b9cd26d61e08b966f78dcfc0f211db250ccf0ec7539a744",
+    "envelope_version": "local-v1",
+    "evidence_considered": 1,
+    "independent_support_count": 1,
+    "proposer_state_ignored": true,
+    "proposer_trace_hash_ignored": true
+  }
+}

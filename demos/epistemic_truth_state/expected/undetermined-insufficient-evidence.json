@@ -1,0 +1,27 @@
+{
+  "assigned_state": "undetermined",
+  "authority_path": [
+    "demos.epistemic_truth_state.authority.validate_payload",
+    "demos.epistemic_truth_state.authority.assign_epistemic_state",
+    "demo_epistemic_truth_state_envelope(local-v1)",
+    "core.epistemic_state.coerce_epistemic_state"
+  ],
+  "decision_reason": "insufficient_evidence",
+  "evidence_ledger": [],
+  "normative_clearance": "unassessable",
+  "question": "CORE has insufficient grounded evidence to assign a determined epistemic state to this claim. Provide supporting, refuting, or premise evidence.",
+  "request_id": "demo-eps-d1",
+  "scenario_id": "undetermined-insufficient-evidence",
+  "status": "assigned",
+  "tool": "core.epistemic_truth_state.review",
+  "trace_hash": "35b319eb0186be2d9bedf65263d5acb8f397f747e7efe1ea01960655deafc7d2",
+  "trace_summary": {
+    "authority_evaluated": true,
+    "claim_fingerprint": "dc8720472531486a19edbb82c2accd279d291afe2a797c23d2745469c4f91662",
+    "envelope_version": "local-v1",
+    "evidence_considered": 1,
+    "independent_support_count": 0,
+    "proposer_state_ignored": true,
+    "proposer_trace_hash_ignored": true
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "tool": "core.epistemic_truth_state.review",
+  "expected_status": "refused",
+  "arguments": {
+    "request_id": "demo-eps-e1",
+    "scenario_id": "refused-outside-scope",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-e1",
+      "proposed_state": "verified",
+      "trace_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    "claim": {
+      "text": "A named public stock will close higher tomorrow.",
+      "domain": "external.realtime_market_forecast",
+      "subject": "named_public_stock",
+      "predicate": "closes_higher_tomorrow"
+    },
+    "evidence": [
+      {
+        "evidence_id": "ev-e1-rumor",
+        "subject": "named_public_stock",
+        "predicate": "closes_higher_tomorrow",
+        "supports": true,
+        "independent": true,
+        "source_kind": "observation"
+      }
+    ]
+  }
+}
