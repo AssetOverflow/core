@@ -24,11 +24,13 @@ Public repository docs must not include:
 
 ## Demonstrated
 
-### Hybrid Verification Demo
+### Hybrid Verification Demo (#687 — authority over claims)
 
-Status: merged.
+Status: merged (PR #687).
 
-Purpose: demonstrate a bounded proposer-to-substrate verification path with typed outcomes.
+Purpose: demonstrate a bounded proposer-to-substrate verification path with typed outcomes. A model-style proposer submits a claim; the substrate, not the proposer, decides the typed outcome.
+
+Hard finding recorded by this demo: agreement between reasoning paths is not reliable safety. Multiple paths can agree and still be wrong. Authority must live at the typed boundary, not merely in multiple model outputs.
 
 Public outcome vocabulary:
 
@@ -45,13 +47,11 @@ Public safety boundary:
 - deterministic trace artifacts;
 - honesty ledger included.
 
-## In progress
+### Tool Authority Demo (#688 — authority over proposed tool actions)
 
-### Tool Authority Demo
+Status: merged (PR #688, merge commit `c55f7dfb`).
 
-Status: draft PR / in review.
-
-Purpose: demonstrate that a model-style proposer may submit a typed action proposal, while CORE alone may authorize, ask, refuse, or invalidate.
+Purpose: demonstrate that a model-style proposer may submit a typed action proposal, while CORE alone may authorize, ask, refuse, or invalidate. The authorized output is an inert `licensed_action` artifact only; no external side effect executes and the proposer holds no execution authority.
 
 Public outcome vocabulary:
 
@@ -71,22 +71,41 @@ Public safety boundary:
 
 ## Proposed
 
-### Epistemic Truth-State Demo
+Recommended order of next public evidence:
+
+1. Epistemic Truth-State Demo (next target);
+2. Embodied Authority Simulation Demo (simulation-only);
+3. SaaS / On-Prem Boundary Demo.
+
+Merged evidence so far establishes two authority boundaries: authority over claims (#687) and authority over proposed tool actions (#688). The next target extends the same pattern to epistemic state.
+
+### Epistemic Truth-State Demo (next public evidence target)
 
 Status: proposed.
 
-Purpose: make epistemic state transitions visible and replayable in a public-safe demo.
+Purpose: show that a model-style proposer can submit a claim, answer, or state proposal, but CORE assigns the typed epistemic state and emits deterministic, replayable evidence. The proposer controls neither the assigned state nor the trace.
 
-Possible states include:
+Possible states (illustrative; the implementing PR fixes the closed set):
 
-- perceived;
-- evidenced;
-- verified;
-- inferred;
-- contradicted;
-- undetermined;
-- refused;
-- ask.
+- `perceived`;
+- `evidenced`;
+- `verified`;
+- `decoded`;
+- `inferred`;
+- `refused`;
+- `undetermined`;
+- `scope_boundary`;
+- `invalid`.
+
+Possible outputs:
+
+- state ledger entry;
+- evidence / provenance spans;
+- deterministic trace hash;
+- `ask` or refusal when evidence is insufficient;
+- no proposer-controlled state;
+- no proposer-controlled trace;
+- `invalid` rejected before state evaluation.
 
 No claim is made here that the full demo is implemented until a PR lands.
 
