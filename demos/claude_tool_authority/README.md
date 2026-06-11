@@ -1,9 +1,9 @@
-# Claude-to-CORE Tool Authority Demo
+# Frontier-Proposer-to-CORE Tool Authority Demo
 
 This demo proves one narrow boundary:
 
 ```text
-Claude/Grok-style proposer suggests a digital action.
+A model-style proposer suggests a digital action.
 CORE alone decides authorized | ask | refused | invalid.
 The output is a deterministic authority artifact.
 Nothing executes.
@@ -34,17 +34,17 @@ network access, subprocess launch, `eval`, or `exec` path exists in the demo.
 
 ## Why this is MCP-shaped, not production MCP
 
-The payload is structured like a tool invocation so Anthropic and xAI/Tesla
-lanes can hand the same kind of typed request to CORE.  This remains a local
-demo contract: no server transport, session handling, production adapter, or
-real side-effecting tool substrate is present.
+The payload is structured like a tool invocation so future proposer lanes can
+hand the same kind of typed request to CORE.  This remains a local demo
+contract: no server transport, session handling, production adapter, or real
+side-effecting tool substrate is present.
 
 ## Relation to #687
 
 #687 proved the earlier reasoning boundary:
 
 ```text
-Claude/Fable-style System 1 proposal
+System 1-style proposal
 -> CORE deterministic System 2 verification/refusal/ask/invalid
 -> audited envelope
 -> deterministic trace artifacts
@@ -54,7 +54,7 @@ Claude/Fable-style System 1 proposal
 This demo advances the same doctrine one layer outward:
 
 ```text
-Claude/Grok-style proposer
+model-style proposer
 -> proposes digital actions
 -> CORE authorizes/refuses/asks/invalidates
 -> inert licensed action artifact only when authorized
@@ -73,7 +73,7 @@ It therefore proves digital tool/action authority before any embodied-authority 
 ## Honesty ledger
 
 * Real: closed schema validation, local authority evaluation, deterministic trace hashing, expected artifact pinning, double-run determinism.
-* Simulated: the proposer side is static fixture data standing in for Claude or Grok.
+* Simulated: the proposer side is static fixture data standing in for a model-style proposer.
 * Not claimed: production MCP, runtime authority integration, external side effects, or any broader guarantee than this fail-closed local envelope.
 
 ## Example commands
