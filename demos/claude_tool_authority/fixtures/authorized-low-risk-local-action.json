@@ -5,8 +5,8 @@
     "request_id": "demo-tool-s1",
     "scenario_id": "authorized-low-risk-local-action",
     "proposer": {
-      "lane": "anthropic",
-      "model_family": "claude",
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
       "proposal_id": "proposal-s1",
       "trace_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     },
