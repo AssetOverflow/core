@@ -41,9 +41,10 @@ state is typed
 
 * It is not the runtime epistemic-state tagger; it is a local demo over fixed
   fixtures.
-* It does not run the safety/ethics verdict pass, so `normative_clearance` here
-  reflects only whether CORE positively established the claim (`cleared`) versus
-  did not assess it (`unassessable`).  It is **not** a safety guarantee.
+* It assigns epistemic truth-state only.  It runs **no** normative / safety /
+  ethics clearance pass, so `normative_clearance` is `unassessable` on every
+  non-invalid output — including `verified`.  This demo never positively clears
+  a claim and makes no safety guarantee.
 * It does not call a network, a model API, a subprocess, or any side-effecting
   tool.  It evaluates JSON and returns JSON.
 * It does not claim broader epistemic coverage than the small local envelope and
@@ -76,7 +77,7 @@ with no proposer-held authority and no execution path.
 ## The six scenarios
 
 * `verified-supported-claim` — two independent matching records → `verified`,
-  `cleared`, `verified_by_matching_evidence`.
+  `verified_by_matching_evidence` (clearance `unassessable`).
 * `evidenced-but-not-verified-claim` — one supporting record → `evidenced`,
   `evidence_present_but_not_verifying`.
 * `inferred-from-bounded-evidence` — claim follows from resolved premises →
@@ -99,9 +100,9 @@ with no proposer-held authority and no execution path.
 * Simulated: the proposer side is static fixture data standing in for a
   model-style proposer; the evidence bundle is hand-authored, not retrieved from
   the live vault.
-* Coarse: `normative_clearance` is a two-state stand-in (`cleared` only for a
-  verified claim, else `unassessable`) because this demo runs no safety/ethics
-  verdict pass.
+* Honest non-claim: `normative_clearance` is `unassessable` on every
+  non-invalid output, including `verified`, because this demo runs no
+  safety/ethics verdict pass and therefore has no basis to clear anything.
 * Not claimed: runtime integration, serving integration, real evidence
   retrieval, a safety guarantee, or any coverage beyond this local envelope.
 

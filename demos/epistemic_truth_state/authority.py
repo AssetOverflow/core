@@ -351,11 +351,14 @@ def assign_epistemic_state(payload: dict[str, Any]) -> dict[str, Any]:
         )
 
     # Verified: two or more independent records that match subject and predicate.
+    # Clearance stays UNASSESSABLE even here: this demo assigns epistemic
+    # truth-state only and runs no normative/safety/ethics clearance pass, so it
+    # has no basis to positively clear anything.
     if len(independent) >= 2:
         return _assigned(
             payload,
             state=EpistemicState.VERIFIED,
-            clearance=NormativeClearance.CLEARED,
+            clearance=NormativeClearance.UNASSESSABLE,
             decision_reason="verified_by_matching_evidence",
             evidence_ledger=sorted(record["evidence_id"] for record in independent),
             trace_summary=trace_summary,

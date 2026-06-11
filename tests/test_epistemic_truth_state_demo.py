@@ -98,7 +98,9 @@ def test_uses_canonical_epistemic_state_enum():
 def test_verified_requires_matching_evidence():
     response = _run("verified-supported-claim")
     assert response["assigned_state"] == "verified"
-    assert response["normative_clearance"] == "cleared"
+    # This demo runs no normative/safety/ethics clearance pass, so even a
+    # verified claim stays UNASSESSABLE rather than positively cleared.
+    assert response["normative_clearance"] == "unassessable"
     assert response["evidence_ledger"] == ["ev-a1-replay", "ev-a1-trace"]
 
     # Drop one independent record: a single supporting record cannot verify.
@@ -115,6 +117,17 @@ def test_verified_requires_matching_evidence():
     none_match = authority.run_authority(mismatched)
     assert none_match["assigned_state"] == "undetermined"
     assert none_match["decision_reason"] == "insufficient_evidence"
+
+
+def test_clearance_is_unassessable_for_all_non_invalid_outputs():
+    # The demo assigns epistemic truth-state only; it runs no normative/safety/
+    # ethics clearance pass, so it must never positively clear anything.
+    for name in SCENARIOS:
+        response = _run(name)
+        if response["status"] == "invalid":
+            assert response["normative_clearance"] is None, name
+        else:
+            assert response["normative_clearance"] == "unassessable", name
 
 
 def test_evidenced_state_for_single_support():
