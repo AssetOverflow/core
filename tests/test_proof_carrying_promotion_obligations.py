@@ -23,6 +23,13 @@ O6 (no new mutation path) is enforced continuously by INV-21 + INV-29 in
 tests/test_architectural_invariants.py, not here.  O8 (wrong=0 lanes) is
 enforced by the existing lane gates + scripts/verify_lane_shas.py.
 
+PR B note: the certificate-substrate halves of O1/O7 (replay re-verification,
+byte-stable determinism) are now proven for real in
+tests/test_proof_chain_certificate.py against
+generate/proof_chain/certificate.py.  NO xfail marker retires here — every
+obligation below binds to the P3 promoter (`teaching.proof_promotion`), which
+must not exist before ADR-0218 is ratified.
+
 API surface used in the xfail bodies is PROVISIONAL per ADR-0218 §D3/§D4 —
 P3 may adjust signatures, but must preserve each obligation's semantics.
 """
@@ -124,7 +131,8 @@ def test_pin_review_correction_carries_status_it_does_not_compute() -> None:
 def test_pin_entailment_trace_substrate_is_replay_stable() -> None:
     """O7's substrate half, testable today: the engine's proof evidence is
     deterministic and re-verifies by recomputation — the property the
-    PromotionCertificate replay verifier (PR B) will rely on."""
+    PromotionCertificate replay verifier (PR B,
+    generate/proof_chain/certificate.py — landed) relies on."""
     premises = ("p", "p -> q")
     first = evaluate_entailment_with_trace(premises, "q")
     second = evaluate_entailment_with_trace(premises, "q")

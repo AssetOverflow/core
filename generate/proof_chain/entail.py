@@ -1,4 +1,12 @@
-"""ADR-0206 — Propositional entailment operator (proof_chain phase 2.4).
+"""Propositional entailment operator (proof_chain phase 2.4) — the
+proof-certificate substrate of ADR-0218 (Proof-Carrying Coherence Promotion).
+
+Numbering note: this module originally carried an "ADR-0206" attribution —
+a three-way numbering collision.  Committed ADR-0206 is the
+response-governance bridge; the old phase-2 plan's 2.4 referred to carrier
+grounding (still unbuilt).  This operator's committed home is ADR-0218
+(§Context documents the collision; §D3–D4 specify how its
+``EntailmentTrace`` evidence is consumed by ``certificate.py``).
 
 The multi-hop inference operator ``gaps.md`` asked for and ADR-0205 deferred. Where
 :func:`generate.proof_chain.rules.evaluate_modus_ponens` is **single-step** ("unique
