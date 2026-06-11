@@ -381,6 +381,81 @@ behavioral testing of a black-box sampler.
 
 ---
 
+## Concrete Evidence — Merged Demos (2026-06-11)
+
+The claims in §4 are abstract without pointers to reproducible artifacts. This
+section ties each abstract property to a specific merged demo, trace hash, and
+runnable command. All three demos are in the public repository under `demos/`.
+
+### Authority over claims — PR #687, merge `3ba65d51`
+
+`demos/claude_hybrid_verification/` demonstrates the full authority boundary for
+claim verification across five typed outcomes. A frontier-style proposer submits a
+math problem as a typed tool call. CORE re-derives from the problem text and holds
+sole accept/refuse/ask/invalid authority. The proposer appears nowhere in
+`authority_path`.
+
+Representative trace hashes (SHA-256 of response envelope):
+- Verified: `c9b26b346d9539bd…` (Sara problem, 26 dollars, faithful 3-step derivation)
+- Refused / disagreement: `c73e264092bb6940…` (two "complete" paths that disagree — CORE refuses rather than guessing)
+- Ask / under-specified: `3c751beda82ca08c…` (grounded clarifying question, not fabricated answer)
+- Refused / envelope: `48d5b24a135bb855…` (correct derivation but outside committed serving envelope)
+- Invalid / smuggling: `22748265a24cc919…` (schema rejects `proposed_answer` field before evaluation)
+
+Run: `python demos/claude_hybrid_verification/run_demo.py`
+
+The hard finding — that reasoning-path agreement is not reliable safety — is
+demonstrated concretely by the refused-disagreement scenario. Two derivation paths
+independently agree the problem is solvable, produce well-formed arithmetic, and
+disagree on the answer. The authority boundary catches this; a consensus-of-outputs
+architecture would not.
+
+### Authority over proposed tool actions — PR #688, merge `c55f7dfb`
+
+`demos/claude_tool_authority/` demonstrates the same authority boundary for
+proposed digital actions across four typed outcomes. A model-style proposer submits
+action proposals; CORE alone authorizes, asks, refuses, or invalidates. Authorized
+outputs are inert `licensed_action` artifacts; `execution_performed: false` on every
+scenario.
+
+Representative trace hashes:
+- Authorized (inert): `9e797710ed34dfa5…` (`write_local_note`, `proposer_trace_hash_ignored: true`)
+- Ask (confirmation required): `eeb8ed87e83ed410…` (`send_external_email`, confirmation gate)
+- Refused: `fa1d2511f953306f…` (`delete_system_file`, not in envelope)
+- Invalid / smuggling: `a336294778c1f496…` (`authorization_status` field rejected before evaluation)
+
+Run: `python demos/claude_tool_authority/run_demo.py`
+
+### Authority over epistemic state assignment — PR #690, merge `e80c8eae`
+
+`demos/epistemic_truth_state/` demonstrates the same authority boundary for
+epistemic state assignment across six typed outcomes. A model-style proposer
+submits a claim with evidence and a `proposed_state`; CORE assigns the canonical
+state from the evidence. `proposer_state_ignored: true` on every output.
+
+Typed state vocabulary: `verified`, `evidenced`, `inferred`, `undetermined`,
+`scope_boundary`. A proposer that injects `assigned_state` or `authority_path` into
+the request payload is rejected at the typed schema boundary before evaluation.
+
+Representative trace hashes:
+- Verified: `1341c27c5906ae52…` (2 independent evidence items, `normative_clearance: unassessable`)
+- Evidenced: `f9f2e153e66aaba9…` (1 item, below threshold — proposer proposed `verified`)
+- Inferred: `bc11e858ece14081…` (premise-only evidence — proposer proposed `verified`)
+- Undetermined: `35b319eb0186be2d…` (off-topic evidence)
+- Refused: `c9ef9560bcf71052…` (outside epistemic envelope)
+- Invalid: `18dda5b4017b223b…` (5 smuggled output fields rejected)
+
+Run: `python demos/epistemic_truth_state/run_demo.py`
+
+**Honesty note:** `normative_clearance` is `"unassessable"` on every non-invalid
+scenario; the invalid scenario has `null` (no evaluation reached). The demos do not
+perform a normative, safety, or ethics clearance pass for any scenario. The
+`deterministic replay` and `identity protection` claims in §4 are substrate
+properties; the epistemic state demos extend them to claim/action/state authority
+surfaces not covered in the original paper.
+
+---
+
 ## Conclusion
 
 The question is not how to make generative AI safer. The question is whether
@@ -388,8 +463,10 @@ generation is the right substrate for cognition in the first place.
 
 CORE is a running argument that it is not. The argument is not in this paper. It
 is in the versor invariant, the zero-wrong eval gate, the deterministic trace
-hash, the reviewed teaching path, and the two-layer identity firewall — each of
-which would fail visibly if the thesis were wrong.
+hash, the reviewed teaching path, the two-layer identity firewall, and now in three
+public demos where a deterministic substrate holds exclusive authority over claims,
+proposed actions, and epistemic state — each of which would fail visibly if the
+thesis were wrong.
 
 The code is open source under the CORE Non-Commercial License.
 All commercial licensing inquiries: shayj292@gmail.com
