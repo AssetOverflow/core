@@ -1,0 +1,262 @@
+{
+  "answer": null,
+  "answer_unit": null,
+  "authority_path": [
+    "demos.claude_hybrid_verification.schema.validate_payload",
+    "generate.derivation.state.source.semantic_state_candidates",
+    "generate.derivation.pool.pooled_candidates",
+    "generate.derivation.verify.classify_derivation",
+    "generate.derivation.pool.resolve_pooled",
+    "generate.derivation.state.provenance.faithfulness_violations",
+    "evals.gsm8k_math.equivalence.trace.authority_violations",
+    "adr0184_pinned_corpus(evals/gsm8k_math/equivalence/v1)",
+    "demo_serving_envelope(envelope.json)"
+  ],
+  "question": null,
+  "refusal_reason": "outside_demo_serving_envelope",
+  "replay_equivalence_status": "equivalent_to_adr0184_pin",
+  "request_id": "demo-s4",
+  "status": "refused",
+  "surface": "CORE refuses to serve an answer: outside_demo_serving_envelope.",
+  "tool": "core.semantic_derivation.verify",
+  "trace": {
+    "adr0184_pin": {
+      "corpus_sha": "58c2b219530e817e5eb4d0eda83b552767415139379b75b5aed1f76cb20ab5af",
+      "status": "equivalent_to_adr0184_pin"
+    },
+    "ask": {
+      "attempted": false,
+      "blocking_reason": null,
+      "content_hash": null,
+      "detail": "not_attempted",
+      "owner_organ": null,
+      "question": null,
+      "question_ref": null,
+      "served": false
+    },
+    "commit_law_violations": [],
+    "derivation": {
+      "classifications": [
+        "complete"
+      ],
+      "compose": {
+        "answer": 25.0,
+        "answer_unit": "toy",
+        "derivation": {
+          "answer": 25.0,
+          "answer_unit": "toy",
+          "start": [
+            17.0,
+            "toy",
+            "17"
+          ],
+          "steps": [
+            [
+              "add",
+              8.0,
+              "toy",
+              "8",
+              "more",
+              false
+            ]
+          ]
+        }
+      },
+      "pooled": [
+        {
+          "answer": 25.0,
+          "answer_unit": "toy",
+          "start": [
+            17.0,
+            "toy",
+            "17"
+          ],
+          "steps": [
+            [
+              "add",
+              8.0,
+              "toy",
+              "8",
+              "more",
+              false
+            ]
+          ]
+        }
+      ],
+      "preview": "Jack has 17 toy cars. His dad buys him 8 more. How many toy cars",
+      "problem_sha": "01012b9e7188752f5c7e1b5ba7b14c24efa8d4bb63b8657f6e8c4abff568d682",
+      "resolution": {
+        "answer": 25.0,
+        "answer_unit": "toy",
+        "derivation": {
+          "answer": 25.0,
+          "answer_unit": "toy",
+          "start": [
+            17.0,
+            "toy",
+            "17"
+          ],
+          "steps": [
+            [
+              "add",
+              8.0,
+              "toy",
+              "8",
+              "more",
+              false
+            ]
+          ]
+        }
+      },
+      "semantic": [
+        {
+          "answer": 25.0,
+          "answer_unit": "toy",
+          "start": [
+            17.0,
+            "toy",
+            "17"
+          ],
+          "steps": [
+            [
+              "add",
+              8.0,
+              "toy",
+              "8",
+              "more",
+              false
+            ]
+          ]
+        },
+        {
+          "answer": 25.0,
+          "answer_unit": "toy",
+          "start": [
+            17.0,
+            "toy",
+            "17"
+          ],
+          "steps": [
+            [
+              "add",
+              8.0,
+              "toy",
+              "8",
+              "more",
+              false
+            ]
+          ]
+        },
+        {
+          "answer": 25.0,
+          "answer_unit": "toy",
+          "start": [
+            17.0,
+            "toy",
+            "17"
+          ],
+          "steps": [
+            [
+              "add",
+              8.0,
+              "toy",
+              "8",
+              "more",
+              false
+            ]
+          ]
+        }
+      ],
+      "worlds": [
+        [
+          [
+            "set",
+            "Jack",
+            "toy",
+            17.0,
+            "toy",
+            "17",
+            "set",
+            0
+          ],
+          [
+            "gain",
+            "Jack",
+            "toy",
+            8.0,
+            "",
+            "8",
+            "more",
+            1
+          ]
+        ],
+        [
+          [
+            "set",
+            "Jack",
+            "toy",
+            17.0,
+            "toy",
+            "17",
+            "set",
+            0
+          ],
+          [
+            "gain",
+            "Jack",
+            "toy",
+            8.0,
+            "",
+            "8",
+            "more",
+            1
+          ]
+        ],
+        [
+          [
+            "set",
+            "Jack",
+            "toy",
+            17.0,
+            "toy",
+            "17",
+            "set",
+            0
+          ],
+          [
+            "gain",
+            "Jack",
+            "toy",
+            8.0,
+            "",
+            "8",
+            "more",
+            1
+          ]
+        ]
+      ],
+      "wrapper_equal": true
+    },
+    "derivation_trace_sha": "17eb9f1a0d9b46b6f26341257b533ec916cb530466994af8ebc23e18cdc29b2d",
+    "faithfulness_violations": []
+  },
+  "trace_hash": "48d5b24a135bb8556d8d8185a939f417b21aebeb2f6a135edda3d1473a5871c7",
+  "trace_summary": {
+    "ask": {
+      "attempted": false,
+      "detail": "not_attempted",
+      "served": false
+    },
+    "classifications": [
+      "complete"
+    ],
+    "commit_law_violations": 0,
+    "demo_envelope": "absent",
+    "faithfulness_violations": 0,
+    "pool_committed": true,
+    "pooled_candidates": 1,
+    "problem_sha": "01012b9e7188752f5c7e1b5ba7b14c24efa8d4bb63b8657f6e8c4abff568d682",
+    "semantic_candidates": 3,
+    "semantic_worlds": 3
+  }
+}

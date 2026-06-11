@@ -1,0 +1,132 @@
+{
+  "answer": null,
+  "answer_unit": null,
+  "authority_path": [
+    "demos.claude_hybrid_verification.schema.validate_payload",
+    "generate.derivation.state.source.semantic_state_candidates",
+    "generate.derivation.pool.pooled_candidates",
+    "generate.derivation.verify.classify_derivation",
+    "generate.derivation.pool.resolve_pooled",
+    "generate.derivation.state.provenance.faithfulness_violations",
+    "evals.gsm8k_math.equivalence.trace.authority_violations",
+    "adr0184_pinned_corpus(evals/gsm8k_math/equivalence/v1)",
+    "demo_serving_envelope(envelope.json)",
+    "core.comprehension_attempt.router.route_setup",
+    "core.epistemic_disclosure.limitation.assess_from_attempt"
+  ],
+  "question": null,
+  "refusal_reason": "candidate_disagreement",
+  "replay_equivalence_status": "equivalent_to_adr0184_pin",
+  "request_id": "demo-s2",
+  "status": "refused",
+  "surface": "CORE refuses to serve an answer: candidate_disagreement.",
+  "tool": "core.semantic_derivation.verify",
+  "trace": {
+    "adr0184_pin": {
+      "corpus_sha": "58c2b219530e817e5eb4d0eda83b552767415139379b75b5aed1f76cb20ab5af",
+      "status": "equivalent_to_adr0184_pin"
+    },
+    "ask": {
+      "attempted": true,
+      "blocking_reason": null,
+      "content_hash": null,
+      "detail": "no_ask_mapped_attempt",
+      "owner_organ": null,
+      "question": null,
+      "question_ref": null,
+      "served": false
+    },
+    "commit_law_violations": [],
+    "derivation": {
+      "classifications": [
+        "complete",
+        "complete"
+      ],
+      "compose": null,
+      "pooled": [
+        {
+          "answer": 24.0,
+          "answer_unit": "years",
+          "start": [
+            8.0,
+            "years",
+            "8"
+          ],
+          "steps": [
+            [
+              "multiply",
+              3.0,
+              "times",
+              "three",
+              "times",
+              false
+            ]
+          ]
+        },
+        {
+          "answer": 36.0,
+          "answer_unit": "years",
+          "start": [
+            8.0,
+            "years",
+            "8"
+          ],
+          "steps": [
+            [
+              "multiply",
+              3.0,
+              "times",
+              "three",
+              "times",
+              false
+            ],
+            [
+              "multiply",
+              0.5,
+              "",
+              "half",
+              "half",
+              true
+            ],
+            [
+              "multiply",
+              3.0,
+              "",
+              "three",
+              "times",
+              true
+            ]
+          ]
+        }
+      ],
+      "preview": "Tom\u2019s cat is 8 years old.  His rabbit is half the age of his cat",
+      "problem_sha": "001b8d49564428c71da082b214a3ae411fdc2a2ab7ee30701feb01dbbc5b26a2",
+      "resolution": null,
+      "semantic": [],
+      "worlds": [],
+      "wrapper_equal": true
+    },
+    "derivation_trace_sha": "7a507a346d45642c6a53a0a00c03c679ad503ef918176287ef0622dda389950e",
+    "faithfulness_violations": []
+  },
+  "trace_hash": "c73e264092bb69406c0fa4d44c258ef88c669c6a0a7830bd2dac9b53d851c92b",
+  "trace_summary": {
+    "ask": {
+      "attempted": true,
+      "detail": "no_ask_mapped_attempt",
+      "served": false
+    },
+    "classifications": [
+      "complete",
+      "complete"
+    ],
+    "commit_law_violations": 0,
+    "demo_envelope": "not_applicable",
+    "faithfulness_violations": 0,
+    "pool_committed": false,
+    "pooled_candidates": 2,
+    "problem_sha": "001b8d49564428c71da082b214a3ae411fdc2a2ab7ee30701feb01dbbc5b26a2",
+    "semantic_candidates": 0,
+    "semantic_worlds": 0
+  }
+}

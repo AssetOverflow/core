@@ -1,0 +1,22 @@
+{
+  "answer": null,
+  "answer_unit": null,
+  "authority_path": [
+    "demos.claude_hybrid_verification.schema.validate_payload"
+  ],
+  "question": null,
+  "refusal_reason": null,
+  "replay_equivalence_status": "not_evaluated",
+  "request_id": "demo-s5",
+  "status": "invalid",
+  "surface": "Invalid tool payload: unexpected property 'confidence' (additionalProperties is false; the proposer cannot smuggle answers, derivations, or directives); unexpected property 'proposed_answer' (additionalProperties is false; the proposer cannot smuggle answers, derivations, or directives)",
+  "tool": "core.semantic_derivation.verify",
+  "trace": null,
+  "trace_hash": "22748265a24cc919f95dff87e18aa3a00228d97417d0c39001631d9795c65be4",
+  "trace_summary": {
+    "validation_errors": [
+      "unexpected property 'confidence' (additionalProperties is false; the proposer cannot smuggle answers, derivations, or directives)",
+      "unexpected property 'proposed_answer' (additionalProperties is false; the proposer cannot smuggle answers, derivations, or directives)"
+    ]
+  }
+}

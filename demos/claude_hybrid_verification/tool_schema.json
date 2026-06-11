@@ -1,0 +1,76 @@
+{
+  "name": "core.semantic_derivation.verify",
+  "title": "CORE semantic derivation verifier (deterministic System 2)",
+  "description": "Submit one bounded natural-language arithmetic word problem to CORE's deterministic derivation lane. CORE re-derives the answer itself from the problem text (ADR-0184 semantic-state worlds -> replay -> candidate pool -> self-verification gates) and returns verified | refused | ask | invalid plus a deterministic, replayable trace. The caller proposes a problem; it cannot propose an answer, a derivation, or an acceptance decision -- the input schema has no field through which any of those could travel, and unknown fields are rejected. This schema is MCP-shaped for perimeter compatibility (ADR-0140, proposed: ecosystem protocols stay at the perimeter); it is a local demo contract, not a production MCP server.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "problem_text": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000,
+        "description": "The bounded reasoning task, verbatim natural language. This is the ONLY semantic content the proposer contributes."
+      },
+      "domain_hint": {
+        "type": "string",
+        "enum": ["gsm8k_math"],
+        "description": "Optional advisory routing hint. Grants no authority and changes no acceptance decision."
+      },
+      "request_id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._-]{1,64}$",
+        "description": "Optional caller-chosen correlation id, echoed verbatim in the response."
+      },
+      "return_trace": {
+        "type": "boolean",
+        "default": true,
+        "description": "When false, the full trace body is omitted from the response; trace_hash is still computed over the full trace envelope."
+      }
+    },
+    "required": ["problem_text"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "tool": { "const": "core.semantic_derivation.verify" },
+      "request_id": { "type": ["string", "null"] },
+      "status": {
+        "type": "string",
+        "enum": ["verified", "refused", "ask", "invalid"],
+        "description": "verified: CORE's pool committed AND the demo serving envelope authorizes it. refused: fail-closed, with a typed reason. ask: CORE asks for the one missing datum (Q1 epistemic-disclosure stack). invalid: the payload failed typed validation; nothing was executed."
+      },
+      "surface": { "type": "string" },
+      "answer": { "type": ["number", "null"] },
+      "answer_unit": { "type": ["string", "null"] },
+      "refusal_reason": { "type": ["string", "null"] },
+      "question": { "type": ["string", "null"] },
+      "authority_path": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "The CORE authorities consulted, in order. The proposer appears nowhere in this list."
+      },
+      "replay_equivalence_status": {
+        "type": "string",
+        "enum": [
+          "equivalent_to_adr0184_pin",
+          "drift_from_adr0184_pin",
+          "not_in_adr0184_corpus",
+          "not_evaluated"
+        ]
+      },
+      "trace_summary": { "type": "object" },
+      "trace": { "type": ["object", "null"] },
+      "trace_hash": {
+        "type": "string",
+        "description": "SHA-256 over the canonical JSON of this response with trace included and trace_hash excluded."
+      }
+    },
+    "required": ["tool", "status", "surface", "authority_path", "trace_hash"]
+  },
+  "x_demo_notes": {
+    "posture": "MCP-shaped local demo contract; proof of a boundary, not a polished product and not production MCP.",
+    "system1": "The caller is a Claude/Fable-style System 1 proposer. Demo invocations use clearly-labeled static fixture payloads; no model API is called and no network is used.",
+    "guarantee_language": "Bounded transition / verification guarantee over the audited demo envelope; no absolute safety guarantee is claimed."
+  }
+}

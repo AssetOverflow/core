@@ -1,0 +1,157 @@
+{
+  "answer": null,
+  "answer_unit": null,
+  "authority_path": [
+    "demos.claude_hybrid_verification.schema.validate_payload",
+    "generate.derivation.state.source.semantic_state_candidates",
+    "generate.derivation.pool.pooled_candidates",
+    "generate.derivation.verify.classify_derivation",
+    "generate.derivation.pool.resolve_pooled",
+    "generate.derivation.state.provenance.faithfulness_violations",
+    "evals.gsm8k_math.equivalence.trace.authority_violations",
+    "adr0184_pinned_corpus(evals/gsm8k_math/equivalence/v1)",
+    "demo_serving_envelope(envelope.json)",
+    "core.comprehension_attempt.router.route_setup",
+    "core.epistemic_disclosure.limitation.assess_from_attempt",
+    "core.epistemic_questions.delivery.emit_question",
+    "core.epistemic_disclosure.ask_handle.resolve_served_ask_handle",
+    "core.epistemic_disclosure.ask_acquisition.acquire_served_ask_candidate",
+    "core.epistemic_disclosure.ask_serving.evaluate_served_ask"
+  ],
+  "question": "To answer this, one more value is still needed \u2014 a whole-number count \u2014 that the problem does not state. What is it?",
+  "refusal_reason": null,
+  "replay_equivalence_status": "not_in_adr0184_corpus",
+  "request_id": "demo-s3",
+  "status": "ask",
+  "surface": "To answer this, one more value is still needed \u2014 a whole-number count \u2014 that the problem does not state. What is it?",
+  "tool": "core.semantic_derivation.verify",
+  "trace": {
+    "adr0184_pin": {
+      "corpus_sha": "58c2b219530e817e5eb4d0eda83b552767415139379b75b5aed1f76cb20ab5af",
+      "status": "not_in_adr0184_corpus"
+    },
+    "ask": {
+      "attempted": true,
+      "blocking_reason": "missing_total_count",
+      "content_hash": "f5f89caf473c040db84bb173dcb05459df661da67a5484aa428d239b3b06bee6",
+      "detail": "served",
+      "owner_organ": "r2_constraints",
+      "question": "To answer this, one more value is still needed \u2014 a whole-number count \u2014 that the problem does not state. What is it?",
+      "question_ref": "questions/f5f89caf473c040db84bb173dcb05459df661da67a5484aa428d239b3b06bee6.json",
+      "served": true
+    },
+    "commit_law_violations": [],
+    "derivation": {
+      "classifications": [
+        null,
+        "exempt",
+        "complete"
+      ],
+      "compose": null,
+      "pooled": [
+        {
+          "answer": 1500.0,
+          "answer_unit": "students",
+          "start": [
+            50.0,
+            "students",
+            "50"
+          ],
+          "steps": [
+            [
+              "multiply",
+              30.0,
+              "students",
+              "30",
+              "each",
+              false
+            ]
+          ]
+        },
+        {
+          "answer": 390000.0,
+          "answer_unit": "students",
+          "start": [
+            50.0,
+            "students",
+            "50"
+          ],
+          "steps": [
+            [
+              "multiply",
+              30.0,
+              "students",
+              "30",
+              "each",
+              false
+            ],
+            [
+              "multiply",
+              260.0,
+              "students",
+              "260",
+              "each",
+              false
+            ]
+          ]
+        },
+        {
+          "answer": 340.0,
+          "answer_unit": "students",
+          "start": [
+            50.0,
+            "students",
+            "50"
+          ],
+          "steps": [
+            [
+              "add",
+              30.0,
+              "students",
+              "30",
+              "total",
+              false
+            ],
+            [
+              "add",
+              260.0,
+              "students",
+              "260",
+              "total",
+              false
+            ]
+          ]
+        }
+      ],
+      "preview": "Each large bus holds 50 students and each small bus holds 30 stu",
+      "problem_sha": "6b6fba986355b30be9e548687f44ed69e987c94c1c97527197c1988ef984e1a0",
+      "resolution": null,
+      "semantic": [],
+      "worlds": [],
+      "wrapper_equal": true
+    },
+    "derivation_trace_sha": "368abca1932f3f61a566a5a4aae1d5f5dac61e525c7237595665eca5bd48b88d",
+    "faithfulness_violations": []
+  },
+  "trace_hash": "3c751beda82ca08cbafdc0932e0e868bc744507500b08dfd7f624dc017b5e5fc",
+  "trace_summary": {
+    "ask": {
+      "attempted": true,
+      "detail": "served",
+      "served": true
+    },
+    "classifications": [
+      null,
+      "exempt",
+      "complete"
+    ],
+    "commit_law_violations": 0,
+    "demo_envelope": "not_applicable",
+    "faithfulness_violations": 0,
+    "pool_committed": false,
+    "pooled_candidates": 3,
+    "problem_sha": "6b6fba986355b30be9e548687f44ed69e987c94c1c97527197c1988ef984e1a0",
+    "semantic_candidates": 0,
+    "semantic_worlds": 0
+  }
+}

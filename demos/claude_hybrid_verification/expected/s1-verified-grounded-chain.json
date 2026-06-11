@@ -1,0 +1,340 @@
+{
+  "answer": 26.0,
+  "answer_unit": "dollars",
+  "authority_path": [
+    "demos.claude_hybrid_verification.schema.validate_payload",
+    "generate.derivation.state.source.semantic_state_candidates",
+    "generate.derivation.pool.pooled_candidates",
+    "generate.derivation.verify.classify_derivation",
+    "generate.derivation.pool.resolve_pooled",
+    "generate.derivation.state.provenance.faithfulness_violations",
+    "evals.gsm8k_math.equivalence.trace.authority_violations",
+    "adr0184_pinned_corpus(evals/gsm8k_math/equivalence/v1)",
+    "demo_serving_envelope(envelope.json)"
+  ],
+  "question": null,
+  "refusal_reason": null,
+  "replay_equivalence_status": "equivalent_to_adr0184_pin",
+  "request_id": "demo-s1",
+  "status": "verified",
+  "surface": "26 dollars",
+  "tool": "core.semantic_derivation.verify",
+  "trace": {
+    "adr0184_pin": {
+      "corpus_sha": "58c2b219530e817e5eb4d0eda83b552767415139379b75b5aed1f76cb20ab5af",
+      "status": "equivalent_to_adr0184_pin"
+    },
+    "ask": {
+      "attempted": false,
+      "blocking_reason": null,
+      "content_hash": null,
+      "detail": "not_attempted",
+      "owner_organ": null,
+      "question": null,
+      "question_ref": null,
+      "served": false
+    },
+    "commit_law_violations": [],
+    "derivation": {
+      "classifications": [
+        "complete"
+      ],
+      "compose": {
+        "answer": 26.0,
+        "answer_unit": "dollars",
+        "derivation": {
+          "answer": 26.0,
+          "answer_unit": "dollars",
+          "start": [
+            32.0,
+            "dollars",
+            "32"
+          ],
+          "steps": [
+            [
+              "add",
+              15.0,
+              "dollars",
+              "15",
+              "earns",
+              false
+            ],
+            [
+              "subtract",
+              21.0,
+              "dollars",
+              "21",
+              "uses",
+              false
+            ]
+          ]
+        }
+      },
+      "pooled": [
+        {
+          "answer": 26.0,
+          "answer_unit": "dollars",
+          "start": [
+            32.0,
+            "dollars",
+            "32"
+          ],
+          "steps": [
+            [
+              "add",
+              15.0,
+              "dollars",
+              "15",
+              "earns",
+              false
+            ],
+            [
+              "subtract",
+              21.0,
+              "dollars",
+              "21",
+              "uses",
+              false
+            ]
+          ]
+        }
+      ],
+      "preview": "Sara has 32 dollars. Sara earns 15 dollars. She uses 21 dollars.",
+      "problem_sha": "05c04e82e9d39fb57f1d9581e61968ff4410a65f999638b69145d9cadc76f4d6",
+      "resolution": {
+        "answer": 26.0,
+        "answer_unit": "dollars",
+        "derivation": {
+          "answer": 26.0,
+          "answer_unit": "dollars",
+          "start": [
+            32.0,
+            "dollars",
+            "32"
+          ],
+          "steps": [
+            [
+              "add",
+              15.0,
+              "dollars",
+              "15",
+              "earns",
+              false
+            ],
+            [
+              "subtract",
+              21.0,
+              "dollars",
+              "21",
+              "uses",
+              false
+            ]
+          ]
+        }
+      },
+      "semantic": [
+        {
+          "answer": 26.0,
+          "answer_unit": "dollars",
+          "start": [
+            32.0,
+            "dollars",
+            "32"
+          ],
+          "steps": [
+            [
+              "add",
+              15.0,
+              "dollars",
+              "15",
+              "earns",
+              false
+            ],
+            [
+              "subtract",
+              21.0,
+              "dollars",
+              "21",
+              "uses",
+              false
+            ]
+          ]
+        },
+        {
+          "answer": 26.0,
+          "answer_unit": "dollars",
+          "start": [
+            32.0,
+            "dollars",
+            "32"
+          ],
+          "steps": [
+            [
+              "add",
+              15.0,
+              "dollars",
+              "15",
+              "earns",
+              false
+            ],
+            [
+              "subtract",
+              21.0,
+              "dollars",
+              "21",
+              "uses",
+              false
+            ]
+          ]
+        },
+        {
+          "answer": 26.0,
+          "answer_unit": "dollars",
+          "start": [
+            32.0,
+            "dollars",
+            "32"
+          ],
+          "steps": [
+            [
+              "add",
+              15.0,
+              "dollars",
+              "15",
+              "earns",
+              false
+            ],
+            [
+              "subtract",
+              21.0,
+              "dollars",
+              "21",
+              "uses",
+              false
+            ]
+          ]
+        }
+      ],
+      "worlds": [
+        [
+          [
+            "set",
+            "Sara",
+            "dollars",
+            32.0,
+            "dollars",
+            "32",
+            "set",
+            0
+          ],
+          [
+            "gain",
+            "Sara",
+            "dollars",
+            15.0,
+            "dollars",
+            "15",
+            "earns",
+            1
+          ],
+          [
+            "loss",
+            "Sara",
+            "dollars",
+            21.0,
+            "dollars",
+            "21",
+            "uses",
+            2
+          ]
+        ],
+        [
+          [
+            "set",
+            "Sara",
+            "dollars",
+            32.0,
+            "dollars",
+            "32",
+            "set",
+            0
+          ],
+          [
+            "gain",
+            "Sara",
+            "dollars",
+            15.0,
+            "dollars",
+            "15",
+            "earns",
+            1
+          ],
+          [
+            "loss",
+            "Sara",
+            "dollars",
+            21.0,
+            "dollars",
+            "21",
+            "uses",
+            2
+          ]
+        ],
+        [
+          [
+            "set",
+            "Sara",
+            "dollars",
+            32.0,
+            "dollars",
+            "32",
+            "set",
+            0
+          ],
+          [
+            "gain",
+            "Sara",
+            "dollars",
+            15.0,
+            "dollars",
+            "15",
+            "earns",
+            1
+          ],
+          [
+            "loss",
+            "Sara",
+            "dollars",
+            21.0,
+            "dollars",
+            "21",
+            "uses",
+            2
+          ]
+        ]
+      ],
+      "wrapper_equal": true
+    },
+    "derivation_trace_sha": "093816f1c077ad63e3e5c4648c5f721875b126bbba6aaa41173fa5c2643798ea",
+    "faithfulness_violations": []
+  },
+  "trace_hash": "c9b26b346d9539bd0e920c6114abfb15205e2535ee3887ba278de4a327b0b785",
+  "trace_summary": {
+    "ask": {
+      "attempted": false,
+      "detail": "not_attempted",
+      "served": false
+    },
+    "classifications": [
+      "complete"
+    ],
+    "commit_law_violations": 0,
+    "demo_envelope": "authorized",
+    "faithfulness_violations": 0,
+    "pool_committed": true,
+    "pooled_candidates": 1,
+    "problem_sha": "05c04e82e9d39fb57f1d9581e61968ff4410a65f999638b69145d9cadc76f4d6",
+    "semantic_candidates": 3,
+    "semantic_worlds": 3
+  }
+}
