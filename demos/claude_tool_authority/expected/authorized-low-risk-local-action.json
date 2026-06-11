@@ -17,9 +17,9 @@
   "scenario_id": "authorized-low-risk-local-action",
   "status": "authorized",
   "tool": "core.tool_authority.review",
-  "trace_hash": "5a47255bc3d9342bd9356b49f96920a889d7b496215769daf0d7ec90a51a9b83",
+  "trace_hash": "9e797710ed34dfa547fb9a2ac18421054071a7cb000baf9667d3962937e13f16",
   "trace_summary": {
-    "action_fingerprint": "1abeb09a164d316fd2a1923f4adfa75a1efd812d95a749f8760db0dd3a2869f1",
+    "action_fingerprint": "22b26058c4f227dc17a91223dde60911ccf3e801558b6aee598ff4b1d4f47559",
     "authority_evaluated": true,
     "envelope_version": "local-v1",
     "execution_performed": false,
