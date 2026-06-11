@@ -1,7 +1,7 @@
 {
   "name": "core.tool_authority.review",
   "title": "CORE tool authority review demo",
-  "description": "Submit one Claude/Grok-style proposed digital action to CORE's local deterministic authority substrate. CORE validates a closed MCP-shaped payload, ignores any proposer trace hash, evaluates the proposal against a local authority envelope, and returns authorized | ask | refused | invalid plus a deterministic trace artifact. The proposer cannot set authorization status, cannot provide a licensed action, and cannot execute anything through this contract.",
+  "description": "Submit one model-style proposed digital action to CORE's local deterministic authority substrate. CORE validates a closed MCP-shaped payload, ignores any proposer trace hash, evaluates the proposal against a local authority envelope, and returns authorized | ask | refused | invalid plus a deterministic trace artifact. The proposer cannot set authorization status, cannot provide a licensed action, and cannot execute anything through this contract.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -18,11 +18,11 @@
         "properties": {
           "lane": {
             "type": "string",
-            "enum": ["anthropic", "xai"]
+            "enum": ["frontier_fixture", "local_fixture"]
           },
           "model_family": {
             "type": "string",
-            "enum": ["claude", "grok"]
+            "enum": ["model_style_proposer"]
           },
           "proposal_id": {
             "type": "string",
