@@ -1,0 +1,192 @@
+{
+  "name": "core.epistemic_truth_state.review",
+  "title": "CORE epistemic truth-state authority demo",
+  "description": "Submit one model-style claim proposal to CORE's local deterministic epistemic-state authority. CORE validates a closed payload, ignores any proposer-supplied proposed_state and trace hash, assigns a typed epistemic state drawn from the canonical core.epistemic_state taxonomy, derives normative clearance, builds an evidence ledger, and returns assigned | refused | invalid plus a deterministic trace artifact. The proposer cannot set the assigned state, status, clearance, evidence ledger, authority path, or trace hash.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "request_id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._-]{1,64}$"
+      },
+      "scenario_id": {
+        "type": "string",
+        "pattern": "^[a-z0-9._-]{1,64}$"
+      },
+      "proposer": {
+        "type": "object",
+        "properties": {
+          "lane": {
+            "type": "string",
+            "enum": ["frontier_fixture", "local_fixture"]
+          },
+          "model_family": {
+            "type": "string",
+            "enum": ["model_style_proposer"]
+          },
+          "proposal_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]{1,64}$"
+          },
+          "proposed_state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "trace_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": ["lane", "model_family", "proposal_id"],
+        "additionalProperties": false
+      },
+      "claim": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "domain": {
+            "type": "string",
+            "pattern": "^[a-z0-9._-]{1,64}$"
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "predicate": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": ["text", "domain", "subject", "predicate"],
+        "additionalProperties": false
+      },
+      "evidence": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "evidence_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]{1,64}$"
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "predicate": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "supports": {
+              "type": "boolean"
+            },
+            "independent": {
+              "type": "boolean"
+            },
+            "source_kind": {
+              "type": "string",
+              "enum": ["pack", "teaching", "vault", "observation", "premise"]
+            }
+          },
+          "required": ["evidence_id", "subject", "predicate", "supports"],
+          "additionalProperties": false
+        }
+      },
+      "inference": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": ["bounded_deductive", "bounded_arithmetic"]
+          },
+          "premise_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]{1,64}$"
+            }
+          }
+        },
+        "required": ["premise_ids"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["request_id", "scenario_id", "proposer", "claim"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "enum": ["assigned", "refused", "invalid"]
+      },
+      "request_id": {
+        "type": ["string", "null"]
+      },
+      "scenario_id": {
+        "type": ["string", "null"]
+      },
+      "authority_path": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "decision_reason": {
+        "type": "string"
+      },
+      "assigned_state": {
+        "type": ["string", "null"]
+      },
+      "normative_clearance": {
+        "type": ["string", "null"]
+      },
+      "evidence_ledger": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "trace_hash": {
+        "type": "string"
+      },
+      "trace_summary": {
+        "type": "object"
+      },
+      "inference_basis": {
+        "type": ["array", "null"]
+      },
+      "question": {
+        "type": ["string", "null"]
+      },
+      "refusal_reason": {
+        "type": ["string", "null"]
+      },
+      "invalid_reason": {
+        "type": ["string", "null"]
+      }
+    },
+    "required": [
+      "status",
+      "request_id",
+      "scenario_id",
+      "authority_path",
+      "decision_reason",
+      "assigned_state",
+      "normative_clearance",
+      "evidence_ledger",
+      "trace_hash",
+      "trace_summary"
+    ]
+  }
+}

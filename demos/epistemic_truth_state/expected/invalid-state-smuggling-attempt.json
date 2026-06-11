@@ -1,0 +1,27 @@
+{
+  "assigned_state": null,
+  "authority_path": [
+    "demos.epistemic_truth_state.authority.validate_payload"
+  ],
+  "decision_reason": "invalid_payload",
+  "evidence_ledger": [],
+  "invalid_reason": "payload unexpected property 'assigned_state' (additionalProperties is false); payload unexpected property 'authority_path' (additionalProperties is false); payload unexpected property 'evidence_ledger' (additionalProperties is false); payload unexpected property 'status' (additionalProperties is false); payload unexpected property 'trace_hash' (additionalProperties is false)",
+  "normative_clearance": null,
+  "request_id": "demo-eps-f1",
+  "scenario_id": "invalid-state-smuggling-attempt",
+  "status": "invalid",
+  "tool": "core.epistemic_truth_state.review",
+  "trace_hash": "18dda5b4017b223be8eb7272eab1b8c6f1dc7a69d0326e3d1869ee95c8cf5352",
+  "trace_summary": {
+    "authority_evaluated": false,
+    "proposer_state_ignored": true,
+    "proposer_trace_hash_ignored": true,
+    "validation_errors": [
+      "payload unexpected property 'assigned_state' (additionalProperties is false)",
+      "payload unexpected property 'authority_path' (additionalProperties is false)",
+      "payload unexpected property 'evidence_ledger' (additionalProperties is false)",
+      "payload unexpected property 'status' (additionalProperties is false)",
+      "payload unexpected property 'trace_hash' (additionalProperties is false)"
+    ]
+  }
+}

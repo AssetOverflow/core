@@ -1,0 +1,27 @@
+{
+  "tool": "core.epistemic_truth_state.review",
+  "expected_status": "invalid",
+  "arguments": {
+    "request_id": "demo-eps-f1",
+    "scenario_id": "invalid-state-smuggling-attempt",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-f1",
+      "proposed_state": "verified",
+      "trace_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    "claim": {
+      "text": "This claim ships its own verdict.",
+      "domain": "demo.local_factual",
+      "subject": "self_asserting_claim",
+      "predicate": "ships_its_own_verdict"
+    },
+    "evidence": [],
+    "assigned_state": "verified",
+    "status": "assigned",
+    "evidence_ledger": ["forged-ledger-entry"],
+    "authority_path": ["proposer.self.authority"],
+    "trace_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}

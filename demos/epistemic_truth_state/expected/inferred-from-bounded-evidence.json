@@ -1,0 +1,33 @@
+{
+  "assigned_state": "inferred",
+  "authority_path": [
+    "demos.epistemic_truth_state.authority.validate_payload",
+    "demos.epistemic_truth_state.authority.assign_epistemic_state",
+    "demo_epistemic_truth_state_envelope(local-v1)",
+    "core.epistemic_state.coerce_epistemic_state"
+  ],
+  "decision_reason": "bounded_inference_from_evidence",
+  "evidence_ledger": [
+    "ev-c1-branch-from-main",
+    "ev-c1-tag-on-main"
+  ],
+  "inference_basis": [
+    "ev-c1-branch-from-main",
+    "ev-c1-tag-on-main"
+  ],
+  "normative_clearance": "unassessable",
+  "request_id": "demo-eps-c1",
+  "scenario_id": "inferred-from-bounded-evidence",
+  "status": "assigned",
+  "tool": "core.epistemic_truth_state.review",
+  "trace_hash": "bc11e858ece140813c2307aa9c6c602650a4cec63972f520f29ba6863f437949",
+  "trace_summary": {
+    "authority_evaluated": true,
+    "claim_fingerprint": "12e38c11f88615b1afb8e035e6e942eedd434ea0c6e3b4b25fbb7ff06695204a",
+    "envelope_version": "local-v1",
+    "evidence_considered": 2,
+    "independent_support_count": 0,
+    "proposer_state_ignored": true,
+    "proposer_trace_hash_ignored": true
+  }
+}

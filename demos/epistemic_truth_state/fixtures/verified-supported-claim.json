@@ -1,0 +1,39 @@
+{
+  "tool": "core.epistemic_truth_state.review",
+  "expected_status": "assigned",
+  "arguments": {
+    "request_id": "demo-eps-a1",
+    "scenario_id": "verified-supported-claim",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-a1",
+      "proposed_state": "verified",
+      "trace_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "claim": {
+      "text": "The reviewed teaching loop ran on the pinned cognition pack.",
+      "domain": "demo.local_factual",
+      "subject": "reviewed_teaching_loop",
+      "predicate": "ran_on_pinned_cognition_pack"
+    },
+    "evidence": [
+      {
+        "evidence_id": "ev-a1-trace",
+        "subject": "reviewed_teaching_loop",
+        "predicate": "ran_on_pinned_cognition_pack",
+        "supports": true,
+        "independent": true,
+        "source_kind": "vault"
+      },
+      {
+        "evidence_id": "ev-a1-replay",
+        "subject": "reviewed_teaching_loop",
+        "predicate": "ran_on_pinned_cognition_pack",
+        "supports": true,
+        "independent": true,
+        "source_kind": "teaching"
+      }
+    ]
+  }
+}

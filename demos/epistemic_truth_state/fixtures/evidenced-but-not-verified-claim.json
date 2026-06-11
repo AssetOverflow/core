@@ -1,0 +1,31 @@
+{
+  "tool": "core.epistemic_truth_state.review",
+  "expected_status": "assigned",
+  "arguments": {
+    "request_id": "demo-eps-b1",
+    "scenario_id": "evidenced-but-not-verified-claim",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-b1",
+      "proposed_state": "verified",
+      "trace_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "claim": {
+      "text": "The smoke suite passed on the current branch.",
+      "domain": "demo.local_factual",
+      "subject": "smoke_suite",
+      "predicate": "passed_on_current_branch"
+    },
+    "evidence": [
+      {
+        "evidence_id": "ev-b1-log",
+        "subject": "smoke_suite",
+        "predicate": "passed_on_current_branch",
+        "supports": true,
+        "independent": true,
+        "source_kind": "observation"
+      }
+    ]
+  }
+}
