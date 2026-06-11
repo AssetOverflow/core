@@ -1,0 +1,28 @@
+{
+  "authority_path": [
+    "demos.claude_tool_authority.authority.validate_payload",
+    "demos.claude_tool_authority.authority.evaluate_authority",
+    "demo_tool_authority_envelope(local-v1)",
+    "demos.claude_tool_authority.authority.build_license"
+  ],
+  "decision_reason": "inside_low_risk_envelope",
+  "licensed_action": {
+    "action_type": "write_local_note",
+    "authority_scope": "demo.local.low_risk_workspace_note",
+    "content_sha256": "385d436778e0dd08056a957b10a7acc088dac77ccc2b742f006bfff9d90833dc",
+    "effect": "inert_license_only",
+    "target_path": "workspace/demo_notes/meeting-summary.txt"
+  },
+  "request_id": "demo-tool-s1",
+  "scenario_id": "authorized-low-risk-local-action",
+  "status": "authorized",
+  "tool": "core.tool_authority.review",
+  "trace_hash": "9e797710ed34dfa547fb9a2ac18421054071a7cb000baf9667d3962937e13f16",
+  "trace_summary": {
+    "action_fingerprint": "22b26058c4f227dc17a91223dde60911ccf3e801558b6aee598ff4b1d4f47559",
+    "authority_evaluated": true,
+    "envelope_version": "local-v1",
+    "execution_performed": false,
+    "proposer_trace_hash_ignored": true
+  }
+}

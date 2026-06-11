@@ -1,0 +1,21 @@
+{
+  "tool": "core.tool_authority.review",
+  "expected_status": "refused",
+  "arguments": {
+    "request_id": "demo-tool-s3",
+    "scenario_id": "refused-outside-envelope-action",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-s3"
+    },
+    "action_request": {
+      "action_type": "shell_command",
+      "target": {
+        "kind": "shell",
+        "command": "rm -rf /tmp/demo"
+      },
+      "payload": {}
+    }
+  }
+}

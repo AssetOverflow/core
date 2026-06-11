@@ -1,0 +1,168 @@
+{
+  "name": "core.tool_authority.review",
+  "title": "CORE tool authority review demo",
+  "description": "Submit one model-style proposed digital action to CORE's local deterministic authority substrate. CORE validates a closed MCP-shaped payload, ignores any proposer trace hash, evaluates the proposal against a local authority envelope, and returns authorized | ask | refused | invalid plus a deterministic trace artifact. The proposer cannot set authorization status, cannot provide a licensed action, and cannot execute anything through this contract.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "request_id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._-]{1,64}$"
+      },
+      "scenario_id": {
+        "type": "string",
+        "pattern": "^[a-z0-9._-]{1,64}$"
+      },
+      "proposer": {
+        "type": "object",
+        "properties": {
+          "lane": {
+            "type": "string",
+            "enum": ["frontier_fixture", "local_fixture"]
+          },
+          "model_family": {
+            "type": "string",
+            "enum": ["model_style_proposer"]
+          },
+          "proposal_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]{1,64}$"
+          },
+          "trace_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": ["lane", "model_family", "proposal_id"],
+        "additionalProperties": false
+      },
+      "action_request": {
+        "type": "object",
+        "properties": {
+          "action_type": {
+            "type": "string",
+            "enum": ["write_local_note", "prepare_email_draft", "shell_command"]
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": ["workspace_path", "email_recipient", "shell"]
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "recipient": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 160
+              },
+              "command": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "content": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "subject": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "confirmation": {
+            "type": "object",
+            "properties": {
+              "user_confirmed": {
+                "type": "boolean"
+              }
+            },
+            "required": ["user_confirmed"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["action_type", "target", "payload"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["request_id", "scenario_id", "proposer", "action_request"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "enum": ["authorized", "ask", "refused", "invalid"]
+      },
+      "request_id": {
+        "type": ["string", "null"]
+      },
+      "scenario_id": {
+        "type": ["string", "null"]
+      },
+      "authority_path": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "decision_reason": {
+        "type": "string"
+      },
+      "trace_hash": {
+        "type": "string"
+      },
+      "trace_summary": {
+        "type": "object"
+      },
+      "licensed_action": {
+        "type": ["object", "null"]
+      },
+      "question": {
+        "type": ["string", "null"]
+      },
+      "refusal_reason": {
+        "type": ["string", "null"]
+      },
+      "invalid_reason": {
+        "type": ["string", "null"]
+      }
+    },
+    "required": [
+      "status",
+      "request_id",
+      "scenario_id",
+      "authority_path",
+      "decision_reason",
+      "trace_hash",
+      "trace_summary"
+    ]
+  }
+}

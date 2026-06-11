@@ -1,0 +1,21 @@
+{
+  "authority_path": [
+    "demos.claude_tool_authority.authority.validate_payload",
+    "demos.claude_tool_authority.authority.evaluate_authority",
+    "demo_tool_authority_envelope(local-v1)"
+  ],
+  "decision_reason": "unauthorized_tool",
+  "refusal_reason": "unauthorized_tool",
+  "request_id": "demo-tool-s3",
+  "scenario_id": "refused-outside-envelope-action",
+  "status": "refused",
+  "tool": "core.tool_authority.review",
+  "trace_hash": "fa1d2511f953306f9b0e73dc623aa1a832f408b2a80feae48252b76df2adb90f",
+  "trace_summary": {
+    "action_fingerprint": "08b61128a081cd3f9f028c89f7f6fcb2a6579efddf407c6c10f588f73704b64e",
+    "authority_evaluated": true,
+    "envelope_version": "local-v1",
+    "execution_performed": false,
+    "proposer_trace_hash_ignored": false
+  }
+}

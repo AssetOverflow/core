@@ -1,0 +1,21 @@
+{
+  "authority_path": [
+    "demos.claude_tool_authority.authority.validate_payload",
+    "demos.claude_tool_authority.authority.evaluate_authority",
+    "demo_tool_authority_envelope(local-v1)"
+  ],
+  "decision_reason": "missing_explicit_confirmation",
+  "question": "CORE requires explicit user confirmation before licensing an external email draft. Confirm the recipient and intent.",
+  "request_id": "demo-tool-s2",
+  "scenario_id": "ask-required-action",
+  "status": "ask",
+  "tool": "core.tool_authority.review",
+  "trace_hash": "eeb8ed87e83ed410b852c0e5340a203c0c0445a9001449896cb3026e5332f728",
+  "trace_summary": {
+    "action_fingerprint": "ab384a8903bb4ec28d9ecb410fbe086a9708f7124347eda655c0b9b68e124f7f",
+    "authority_evaluated": true,
+    "envelope_version": "local-v1",
+    "execution_performed": false,
+    "proposer_trace_hash_ignored": false
+  }
+}
