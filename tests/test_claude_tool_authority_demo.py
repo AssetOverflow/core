@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -94,6 +95,28 @@ def test_authorized_only_inside_envelope():
     refused = authority.run_authority(payload)
     assert refused["status"] == "refused"
     assert refused["refusal_reason"] == "protected_path"
+
+
+@pytest.mark.parametrize(
+    ("target_path", "expected_reason"),
+    [
+        ("workspace/demo_notes/../../core/authority.py", "path_traversal_detected"),
+        ("workspace/demo_notes/../demo_notes/allowed.md", "path_traversal_detected"),
+        ("/absolute/path.md", "absolute_target_path"),
+        ("workspace/demo_notes/subdir/../../../README.md", "path_traversal_detected"),
+    ],
+)
+def test_traversal_and_absolute_paths_are_refused(target_path: str, expected_reason: str):
+    payload = _fixture("authorized-low-risk-local-action.json")["arguments"]
+    original = copy.deepcopy(payload)
+    payload["action_request"]["target"]["path"] = target_path
+    response = authority.run_authority(payload)
+    assert response["status"] == "refused"
+    assert response["refusal_reason"] == expected_reason
+    assert response["decision_reason"] == expected_reason
+    assert response["trace_summary"]["authority_evaluated"] is True
+    assert original["action_request"]["target"]["path"] == "workspace/demo_notes/meeting-summary.txt"
+    assert payload["action_request"]["target"]["path"] == target_path
 
 
 def test_invalid_payload_fails_before_authority_evaluation(monkeypatch):

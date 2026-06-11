@@ -7,11 +7,12 @@ the returned ``licensed_action`` is a data artifact, not an execution path.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import re
 from functools import lru_cache
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Final
 
 TOOL_NAME: Final[str] = "core.tool_authority.review"
@@ -38,6 +39,7 @@ _ENVELOPE_AUTHORITY: Final[str] = "demo_tool_authority_envelope(local-v1)"
 _LICENSE_AUTHORITY: Final[str] = "demos.claude_tool_authority.authority.build_license"
 
 _ALLOWED_NOTE_PREFIX: Final[str] = "workspace/demo_notes/"
+_ALLOWED_NOTE_ROOT: Final[PurePosixPath] = PurePosixPath("workspace/demo_notes")
 _PROTECTED_PATH_PREFIXES: Final[tuple[str, ...]] = (
     ".git/",
     "chat/",
@@ -229,6 +231,60 @@ def _protected_target(path: str | None) -> bool:
     return any(path.startswith(prefix) for prefix in _PROTECTED_PATH_PREFIXES)
 
 
+def _normalize_note_target_path(raw_path: Any) -> tuple[str | None, str | None]:
+    """Canonicalize demo note paths under deterministic POSIX semantics.
+
+    The input is JSON/demo artifact data, not a host filesystem path.  Be
+    conservative: any absolute path, empty path, or ``..`` segment is refused.
+    """
+    if not isinstance(raw_path, str):
+        return None, "malformed_target_path"
+    if raw_path == "":
+        return None, "empty_target_path"
+
+    normalized = PurePosixPath(raw_path)
+    if normalized.is_absolute():
+        return None, "absolute_target_path"
+
+    parts = normalized.parts
+    if not parts:
+        return None, "malformed_target_path"
+    if any(part == ".." for part in parts):
+        return None, "path_traversal_detected"
+
+    cleaned_parts = tuple(part for part in parts if part not in ("", "."))
+    if not cleaned_parts:
+        return None, "malformed_target_path"
+
+    cleaned = PurePosixPath(*cleaned_parts)
+    cleaned_text = cleaned.as_posix()
+    if _protected_target(cleaned_text):
+        return None, "protected_path"
+    if not cleaned_text.startswith(_ALLOWED_NOTE_PREFIX):
+        return None, "outside_authority_envelope"
+    if cleaned == _ALLOWED_NOTE_ROOT:
+        return None, "malformed_target_path"
+    if not cleaned.is_relative_to(_ALLOWED_NOTE_ROOT):
+        return None, "outside_authority_envelope"
+    return cleaned_text, None
+
+
+def _normalized_payload(payload: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
+    """Copy and canonicalize caller payload before authority evaluation."""
+    normalized = copy.deepcopy(payload)
+    action_request = normalized["action_request"]
+    if action_request["action_type"] != "write_local_note":
+        return normalized, None
+
+    target = action_request["target"]
+    normalized_path, refusal_reason = _normalize_note_target_path(target.get("path"))
+    if refusal_reason is not None:
+        return normalized, refusal_reason
+    assert normalized_path is not None
+    target["path"] = normalized_path
+    return normalized, None
+
+
 def build_license(payload: dict[str, Any]) -> dict[str, Any]:
     target_path = payload["action_request"]["target"]["path"]
     content = payload["action_request"]["payload"]["content"]
@@ -322,7 +378,29 @@ def run_authority(payload: Any) -> dict[str, Any]:
     if errors:
         return _invalid_response(payload, errors)
     assert isinstance(payload, dict)
-    return evaluate_authority(payload)
+    normalized_payload, refusal_reason = _normalized_payload(payload)
+    if refusal_reason is not None:
+        return _finalize(
+            {
+                "tool": TOOL_NAME,
+                "status": "refused",
+                "request_id": normalized_payload["request_id"],
+                "scenario_id": normalized_payload["scenario_id"],
+                "authority_path": [_ROOT_AUTHORITY, _DECIDE_AUTHORITY, _ENVELOPE_AUTHORITY],
+                "decision_reason": refusal_reason,
+                "trace_summary": {
+                    "authority_evaluated": True,
+                    "envelope_version": "local-v1",
+                    "action_fingerprint": _action_fingerprint(normalized_payload),
+                    "proposer_trace_hash_ignored": "trace_hash"
+                    in normalized_payload["proposer"],
+                    "execution_performed": False,
+                    "path_normalized": False,
+                },
+                "refusal_reason": refusal_reason,
+            }
+        )
+    return evaluate_authority(normalized_payload)
 
 
 __all__ = [
