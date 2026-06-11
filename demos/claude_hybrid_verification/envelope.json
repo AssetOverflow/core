@@ -1,0 +1,17 @@
+{
+  "_doc": "Demo serving envelope (ADR-0184 hybrid verification demo). The ONLY problems the demo may serve as verified: each entry was audited against its lane gold at pin time, and a live run must reproduce the pinned derivation trace byte-for-byte (derivation_trace_sha) before the answer is served. A pool commit without an authorized entry is refused (outside_demo_serving_envelope): measured on the 937-problem ADR-0184 equivalence corpus, 118 of the off-serving pool's 231 commits disagree with lane gold, so a bare pool commit is not a serving license. Adding an entry requires: lane gold provenance, a reviewed diff, and tests/test_claude_hybrid_verification_demo.py green (it re-audits every entry against the named lane file).",
+  "entries": {
+    "05c04e82e9d39fb57f1d9581e61968ff4410a65f999638b69145d9cadc76f4d6": {
+      "answer": 26.0,
+      "answer_unit": "dollars",
+      "derivation_trace_sha": "093816f1c077ad63e3e5c4648c5f721875b126bbba6aaa41173fa5c2643798ea",
+      "gold": {
+        "case_id": "gma-141",
+        "expected_answer": 26.0,
+        "expected_unit": "dollars",
+        "lane": "evals/gsm8k_math/public/v1/cases.jsonl"
+      },
+      "preview": "Sara has 32 dollars. Sara earns 15 dollars. She uses 21 dollars."
+    }
+  }
+}
