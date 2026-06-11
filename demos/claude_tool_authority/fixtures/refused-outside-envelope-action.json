@@ -5,8 +5,8 @@
     "request_id": "demo-tool-s3",
     "scenario_id": "refused-outside-envelope-action",
     "proposer": {
-      "lane": "anthropic",
-      "model_family": "claude",
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
       "proposal_id": "proposal-s3"
     },
     "action_request": {
