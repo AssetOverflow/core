@@ -10,6 +10,7 @@ import argparse
 import json
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,7 @@ _HERE = Path(__file__).resolve().parent
 FIXTURES_DIR = _HERE / "fixtures"
 EXPECTED_DIR = _HERE / "expected"
 DEFAULT_OUT_DIR = _HERE / "out"
+_TMP_ROOT = Path(tempfile.gettempdir()).resolve()
 
 
 def _render(payload: dict[str, Any]) -> str:
@@ -36,35 +38,6 @@ def expected_path(scenario_id: str) -> Path:
     return EXPECTED_DIR / f"{scenario_id}.json"
 
 
-def _unsafe_clear_target(path: Path) -> bool:
-    resolved = path.resolve()
-    blocked = {
-        REPO_ROOT.resolve(),
-        _HERE.resolve(),
-        Path.home().resolve(),
-        Path("/").resolve(),
-    }
-    return resolved in blocked or resolved == resolved.parent
-
-
-def _prepare_out_dir(out_dir: Path, *, allow_custom_out: bool) -> bool:
-    resolved_out = out_dir.resolve()
-    default_out = DEFAULT_OUT_DIR.resolve()
-    if _unsafe_clear_target(out_dir):
-        print(f"refusing unsafe output directory {out_dir}", file=sys.stderr)
-        return False
-    if resolved_out != default_out and not allow_custom_out:
-        print(
-            f"refusing custom output directory {out_dir}; pass --allow-custom-out to clear it",
-            file=sys.stderr,
-        )
-        return False
-    if out_dir.exists():
-        shutil.rmtree(out_dir)
-    out_dir.mkdir(parents=True)
-    return True
-
-
 def run_fixture(path: Path, out_dir: Path) -> dict[str, Any]:
     fixture = json.loads(path.read_text(encoding="utf-8"))
     if fixture["tool"] != TOOL_NAME:
@@ -76,6 +49,47 @@ def run_fixture(path: Path, out_dir: Path) -> dict[str, Any]:
     return run_a
 
 
+def _is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _custom_out_allowed(out_dir: Path) -> bool:
+    resolved = out_dir.resolve()
+    if resolved in {
+        Path("/"),
+        REPO_ROOT.resolve(),
+        _HERE.resolve(),
+        _HERE.parent.resolve(),
+        Path.home().resolve(),
+        Path.cwd().resolve(),
+    }:
+        return False
+    return _is_relative_to(resolved, _HERE.resolve()) or _is_relative_to(
+        resolved, _TMP_ROOT
+    )
+
+
+def _clearable_out_dir(out_dir: Path) -> tuple[bool, str | None]:
+    resolved = out_dir.resolve()
+    default_resolved = DEFAULT_OUT_DIR.resolve()
+    if resolved == default_resolved:
+        return True, None
+    if not _custom_out_allowed(out_dir):
+        return False, (
+            f"refusing to clear {out_dir}: custom out dir must resolve under "
+            f"{_HERE} or {_TMP_ROOT}"
+        )
+    if not (out_dir / "summary.json").exists():
+        return False, (
+            f"refusing to clear {out_dir}: custom out dir requires demo summary.json marker"
+        )
+    return True, None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
@@ -85,8 +99,19 @@ def main() -> int:
     args = parser.parse_args()
 
     out_dir = args.out
-    if not _prepare_out_dir(out_dir, allow_custom_out=bool(args.allow_custom_out)):
-        return 2
+    if out_dir.resolve() != DEFAULT_OUT_DIR.resolve() and args.allow_custom_out:
+        print(
+            "--allow-custom-out is deprecated; this demo now enforces the output-root policy directly",
+            file=sys.stderr,
+        )
+    if out_dir.exists():
+        allowed, reason = _clearable_out_dir(out_dir)
+        if not allowed:
+            assert reason is not None
+            print(reason, file=sys.stderr)
+            return 2
+        shutil.rmtree(out_dir)
+    out_dir.mkdir(parents=True)
 
     schema_doc = load_schema()
     results: list[dict[str, Any]] = []

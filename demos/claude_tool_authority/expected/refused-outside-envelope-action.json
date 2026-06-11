@@ -10,9 +10,9 @@
   "scenario_id": "refused-outside-envelope-action",
   "status": "refused",
   "tool": "core.tool_authority.review",
-  "trace_hash": "ddb06249e74daf9ffd9e75214ce7662861c3c4bb0b11340b8c27fcd9e0951f74",
+  "trace_hash": "fa1d2511f953306f9b0e73dc623aa1a832f408b2a80feae48252b76df2adb90f",
   "trace_summary": {
-    "action_fingerprint": "b68a5d5246e9d43d4525de90b5b1373bce613807b439f1b49b23e321deb60ca0",
+    "action_fingerprint": "08b61128a081cd3f9f028c89f7f6fcb2a6579efddf407c6c10f588f73704b64e",
     "authority_evaluated": true,
     "envelope_version": "local-v1",
     "execution_performed": false,

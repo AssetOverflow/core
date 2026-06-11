@@ -155,6 +155,41 @@ def test_run_demo_all_passes_against_expected(tmp_path, monkeypatch):
     assert demo_runner.main() == 0
 
 
+def test_run_demo_refuses_non_default_dir_without_marker(tmp_path, monkeypatch):
+    out_dir = tmp_path / "missing-marker"
+    out_dir.mkdir()
+    monkeypatch.setattr("sys.argv", ["run_demo.py", "--out", str(out_dir)])
+    assert demo_runner.main() == 2
+
+
+@pytest.mark.parametrize("target", [".", ".."])
+def test_run_demo_refuses_parent_like_paths(target: str, monkeypatch):
+    monkeypatch.setattr("sys.argv", ["run_demo.py", "--out", target])
+    assert demo_runner.main() == 2
+
+
+def test_run_demo_refuses_arbitrary_external_dir_even_with_marker(tmp_path, monkeypatch):
+    external_root = DEMO_DIR.parent / "external-run-demo-root"
+    external_root.mkdir(exist_ok=True)
+    out_dir = external_root / "out"
+    out_dir.mkdir(parents=True)
+    (out_dir / "summary.json").write_text("{}", encoding="utf-8")
+    with pytest.MonkeyPatch.context() as patch:
+        patch.chdir(external_root)
+        patch.setattr("sys.argv", ["run_demo.py", "--out", str(out_dir)])
+        try:
+            assert demo_runner.main() == 2
+        finally:
+            (out_dir / "summary.json").unlink(missing_ok=True)
+            out_dir.rmdir()
+            external_root.rmdir()
+
+
+def test_run_demo_default_out_still_works(monkeypatch):
+    monkeypatch.setattr("sys.argv", ["run_demo.py"])
+    assert demo_runner.main() == 0
+
+
 def test_no_network_subprocess_eval_or_exec_imports_or_calls():
     forbidden_imports = {"subprocess", "socket", "requests", "httpx", "urllib", "urllib.request"}
     forbidden_calls = {"eval", "exec", "compile", "open_connection", "create_connection", "Popen", "run"}
