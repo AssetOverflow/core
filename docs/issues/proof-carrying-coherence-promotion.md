@@ -20,10 +20,10 @@ the same change that raised this issue:
 1. **Doctrine precision (paper §3.4).** "Promotion requires a *curator-mediated*
    coherence judgment" over-states a *necessity*. The doctrine (ADR-0021 §3) only
    requires that promotion be a function of **coherence with the reviewed field**.
-   For the subclass of claims that are *deductively entailed* by already-`COHERENT`
-   facts, the entailment proof **is** that coherence judgment and can be
-   machine-certified by CORE's sound deductive engine — no human re-deciding
-   settled logic.
+   For the subclass of claims that are *deductively entailed* by an
+   already-`COHERENT` premise set, the entailment proof **is** that coherence
+   judgment and can be machine-certified by CORE's sound deductive engine — no
+   human re-deciding settled logic.
 2. **Code honesty (`teaching/epistemic.py`).** The enum docstring claimed
    transitions are *"computed from coherence with the existing reviewed field."*
    They are not computed; `review_correction` carries the status as a
@@ -106,7 +106,7 @@ reading**, and the design must put the whole defensive burden there:
    `COHERENT` in the vault — verified by status, not assumed. A premise that is
    `SPECULATIVE`/`CONTESTED` must make the proof inadmissible for promotion.
 3. **Premise selection / closure.** The premise set must be explicit and
-   bounded; the proof must not silently pull in unreviewed facts.
+   bounded; the proof must not silently pull in unreviewed claims.
 
 **Design consequence:** proof-carrying promotion does **not** remove human
 review — it *relocates* it. The human (or a separately-ratified structural

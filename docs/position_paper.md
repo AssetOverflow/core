@@ -138,13 +138,13 @@ is retained for audit and revision, never as a promotion signal.
 
 That judgment is curator-mediated today, and for most corrections it must be. The
 fallible step is not the logic but the *reading* — translating a natural-language
-claim into the field's propositional form, and selecting which reviewed facts it
+claim into the field's propositional form, and selecting which reviewed claims it
 bears on. A sound inference over a misread premise is a sound proof of the wrong
 thing, so a human certifies the reading before a correction enters the reviewed
 structure.
 
 One subclass is different in principle. A claim that is *deductively entailed* by
-facts already marked `COHERENT` is not new information and is not the system's own
+claims already marked `COHERENT` is not new information and is not the system's own
 opinion — it makes explicit what the reviewed field already contains. For that
 subclass the entailment proof *is* the coherence judgment, and CORE's sound,
 independently-checked deductive engine (`deductive_logic_v1`, §4) can certify it
