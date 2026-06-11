@@ -5,8 +5,8 @@
     "request_id": "demo-tool-s4",
     "scenario_id": "invalid-smuggling-attempt",
     "proposer": {
-      "lane": "xai",
-      "model_family": "grok",
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
       "proposal_id": "proposal-s4",
       "trace_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
     },
