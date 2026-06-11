@@ -1,4 +1,4 @@
-"""Run the Claude-to-CORE tool-authority demo.
+"""Run the frontier-proposer-to-CORE tool-authority demo.
 
 Each fixture is evaluated twice.  The run fails if any scenario drifts from its
 committed expected artifact or if the two executions differ byte-for-byte.
@@ -36,6 +36,35 @@ def expected_path(scenario_id: str) -> Path:
     return EXPECTED_DIR / f"{scenario_id}.json"
 
 
+def _unsafe_clear_target(path: Path) -> bool:
+    resolved = path.resolve()
+    blocked = {
+        REPO_ROOT.resolve(),
+        _HERE.resolve(),
+        Path.home().resolve(),
+        Path("/").resolve(),
+    }
+    return resolved in blocked or resolved == resolved.parent
+
+
+def _prepare_out_dir(out_dir: Path, *, allow_custom_out: bool) -> bool:
+    resolved_out = out_dir.resolve()
+    default_out = DEFAULT_OUT_DIR.resolve()
+    if _unsafe_clear_target(out_dir):
+        print(f"refusing unsafe output directory {out_dir}", file=sys.stderr)
+        return False
+    if resolved_out != default_out and not allow_custom_out:
+        print(
+            f"refusing custom output directory {out_dir}; pass --allow-custom-out to clear it",
+            file=sys.stderr,
+        )
+        return False
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
+    out_dir.mkdir(parents=True)
+    return True
+
+
 def run_fixture(path: Path, out_dir: Path) -> dict[str, Any]:
     fixture = json.loads(path.read_text(encoding="utf-8"))
     if fixture["tool"] != TOOL_NAME:
@@ -50,20 +79,14 @@ def run_fixture(path: Path, out_dir: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
+    parser.add_argument("--allow-custom-out", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--update-expected", action="store_true")
     args = parser.parse_args()
 
     out_dir = args.out
-    if out_dir.exists():
-        if out_dir.resolve() != DEFAULT_OUT_DIR.resolve() and not (out_dir / "summary.json").exists():
-            print(
-                f"refusing to clear {out_dir}: not the default out dir and no summary.json marker",
-                file=sys.stderr,
-            )
-            return 2
-        shutil.rmtree(out_dir)
-    out_dir.mkdir(parents=True)
+    if not _prepare_out_dir(out_dir, allow_custom_out=bool(args.allow_custom_out)):
+        return 2
 
     schema_doc = load_schema()
     results: list[dict[str, Any]] = []
