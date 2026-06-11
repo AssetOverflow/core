@@ -438,7 +438,7 @@ Typed state vocabulary: `verified`, `evidenced`, `inferred`, `undetermined`,
 the request payload is rejected at the typed schema boundary before evaluation.
 
 Representative trace hashes:
-- Verified: `4307277a0f8d8276…` (2 independent evidence items, `normative_clearance: cleared`)
+- Verified: `1341c27c5906ae52…` (2 independent evidence items, `normative_clearance: unassessable`)
 - Evidenced: `f9f2e153e66aaba9…` (1 item, below threshold — proposer proposed `verified`)
 - Inferred: `bc11e858ece14081…` (premise-only evidence — proposer proposed `verified`)
 - Undetermined: `35b319eb0186be2d…` (off-topic evidence)
@@ -447,11 +447,12 @@ Representative trace hashes:
 
 Run: `python demos/epistemic_truth_state/run_demo.py`
 
-**Honesty note:** `normative_clearance` is `"unassessable"` on five of six
-scenarios. The demos do not perform a normative, safety, or ethics clearance pass.
-This is recorded explicitly in the output. The `deterministic replay` and `identity
-protection` claims in §4 are substrate properties; the epistemic state demos extend
-them to claim/action/state authority surfaces not covered in the original paper.
+**Honesty note:** `normative_clearance` is `"unassessable"` on every non-invalid
+scenario; the invalid scenario has `null` (no evaluation reached). The demos do not
+perform a normative, safety, or ethics clearance pass for any scenario. The
+`deterministic replay` and `identity protection` claims in §4 are substrate
+properties; the epistemic state demos extend them to claim/action/state authority
+surfaces not covered in the original paper.
 
 ---
 
