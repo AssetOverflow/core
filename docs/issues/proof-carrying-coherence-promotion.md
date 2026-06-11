@@ -1,6 +1,10 @@
 # Issue — Proof-carrying coherence promotion (the logical arm of ADR-0021's v2 gap)
 
-**Status:** Open — specification only, no code authorized
+**Status:** Open — [ADR-0218 proposed](../decisions/ADR-0218-proof-carrying-coherence-promotion.md)
+(2026-06-11, awaiting ratification); runtime code remains unauthorized.
+Executable proof obligations shipped as strict-xfail in
+`tests/test_proof_carrying_promotion_obligations.py`; INV-29 now pins the
+status-transition-site allowlist.
 **Raised:** 2026-06-11
 **Surface:** `teaching/epistemic.py`, `teaching/review.py`, the deductive
 engine (`deductive_logic_v1`), `vault/store.py`, INV-21 one-mutation-path

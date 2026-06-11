@@ -1718,3 +1718,144 @@ class TestINV28MeaningGraphNeutrality:
                 "INV-28a predicate failed to flag a module known to import the "
                 "field engine — the neutrality check is vacuous."
             )
+
+
+# ===========================================================================
+# INV-29  Epistemic-status transition sites are allowlisted
+# ===========================================================================
+#
+# Claim (ADR-0021 §3 + ADR-0218 §Context):
+# INV-21 polices `VaultStore.store(...)` callers, but a SPECULATIVE→COHERENT
+# *transition* on an already-stored entry is not a store() call — it is an
+# in-place assignment to the entry's `epistemic_status` metadata key.
+# ADR-0148's `promote_eligible_entries` proved this shape exists and that
+# INV-21's AST scan cannot see it. Without this invariant, a new promoter
+# (including the ADR-0218 proof-carrying promoter, or any future fast-path)
+# could flip stored claims to admissible-as-evidence without tripping any
+# structural check.
+#
+# This test AST-asserts the assignment-site set: every production assignment
+# whose target is an `epistemic_status` subscript key or attribute must live
+# in an allowlisted module. Adding a new transition site is allowed but must
+# be intentional — edit the allowlist and document the justification here in
+# the same commit.
+#
+# Allowlist rationale per site:
+#   vault/store.py — the single mutation owner. Two sites today:
+#                    store() stamping at write time (param-only; callers
+#                    cannot smuggle status via the metadata dict), and
+#                    ADR-0148 promote_eligible_entries (energy-policy
+#                    promotion, opt-in flag, default off). ADR-0218 proposes
+#                    its proof-carrying transition land HERE too
+#                    (apply_certified_promotion), keeping this list unchanged.
+
+ALLOWED_STATUS_TRANSITION_SITES: frozenset[str] = frozenset({
+    "vault/store.py",
+})
+
+
+def _status_assignment_targets(tree: ast.AST) -> int:
+    """Count assignment targets that write an `epistemic_status` key/attr.
+
+    Catches both shapes that can flip a stored entry's tier:
+      meta["epistemic_status"] = ...        (subscript with constant key)
+      entry.epistemic_status = ...          (attribute assignment)
+    including the mutate-via-recall-reference backdoor
+      hit["metadata"]["epistemic_status"] = ...
+    Uses AST so comments/docstrings/strings cannot trigger false positives.
+    """
+    count = 0
+    for node in ast.walk(tree):
+        targets: list[ast.expr] = []
+        if isinstance(node, ast.Assign):
+            targets = list(node.targets)
+        elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
+            targets = [node.target]
+        for target in targets:
+            if (
+                isinstance(target, ast.Subscript)
+                and isinstance(target.slice, ast.Constant)
+                and target.slice.value == "epistemic_status"
+            ):
+                count += 1
+            elif (
+                isinstance(target, ast.Attribute)
+                and target.attr == "epistemic_status"
+            ):
+                count += 1
+    return count
+
+
+def _file_status_transition_count(path: Path) -> int:
+    try:
+        tree = ast.parse(path.read_text())
+    except (OSError, SyntaxError):
+        return 0
+    return _status_assignment_targets(tree)
+
+
+class TestINV29EpistemicStatusTransitionSites:
+    """
+    Claim: Only modules in ALLOWED_STATUS_TRANSITION_SITES may assign to an
+    `epistemic_status` key or attribute. A new assignment site is a new
+    promotion/demotion authority over the revision graph and must be
+    reviewed — coherence stops being the only admission signal the moment an
+    unreviewed site can flip a claim to COHERENT (ADR-0021 §3, ADR-0218).
+    """
+
+    def test_no_unallowlisted_status_transition_sites(self):
+        offenders: list[str] = []
+        for path in _enumerate_project_py_files():
+            if _file_status_transition_count(path) == 0:
+                continue
+            rel = str(path.relative_to(PROJECT_ROOT_FOR_INV21))
+            if rel not in ALLOWED_STATUS_TRANSITION_SITES:
+                offenders.append(rel)
+        assert not offenders, (
+            "New epistemic-status transition site(s) detected outside the "
+            "allowlist:\n  " + "\n  ".join(offenders)
+            + "\n\nIf this is intentional, add the path to "
+            "ALLOWED_STATUS_TRANSITION_SITES in "
+            "tests/test_architectural_invariants.py with a one-line "
+            "justification in the comment block above the set. Every "
+            "additional transition site is a new promotion authority over "
+            "the epistemic schema (ADR-0021 §3, ADR-0218)."
+        )
+
+    def test_allowlist_is_actually_used(self):
+        """Drift guard — if an allowlisted module no longer assigns status,
+        remove it to keep the trust surface tight."""
+        used: set[str] = set()
+        for path in _enumerate_project_py_files():
+            if _file_status_transition_count(path) > 0:
+                rel = str(path.relative_to(PROJECT_ROOT_FOR_INV21))
+                if rel in ALLOWED_STATUS_TRANSITION_SITES:
+                    used.add(rel)
+        unused = ALLOWED_STATUS_TRANSITION_SITES - used
+        assert not unused, (
+            f"Allowlisted site(s) no longer assign epistemic_status: "
+            f"{sorted(unused)}\nRemove from ALLOWED_STATUS_TRANSITION_SITES."
+        )
+
+    def test_detector_is_non_vacuous(self):
+        """29b — prove 29a can fail: the predicate flags every known
+        assignment shape, including the recall-reference backdoor."""
+        snippet = (
+            "meta['epistemic_status'] = 'coherent'\n"
+            "entry.epistemic_status = STATUS\n"
+            "hit['metadata']['epistemic_status'] = 'coherent'\n"
+        )
+        assert _status_assignment_targets(ast.parse(snippet)) == 3, (
+            "INV-29 predicate failed to flag known status-assignment shapes "
+            "— the transition-site scan is vacuous."
+        )
+
+    def test_vault_store_sites_are_visible(self):
+        """29c — the scan actually sees the two known vault/store.py sites
+        (store-time stamp + ADR-0148 promotion). If this drops to zero the
+        scan went blind, not clean."""
+        vault_path = PROJECT_ROOT_FOR_INV21 / "vault" / "store.py"
+        assert _file_status_transition_count(vault_path) >= 2, (
+            "Expected the store() stamp and the ADR-0148 promotion site in "
+            "vault/store.py to be visible to the INV-29 scan."
+        )
