@@ -1,0 +1,25 @@
+{
+  "tool": "core.tool_authority.review",
+  "expected_status": "authorized",
+  "arguments": {
+    "request_id": "demo-tool-s1",
+    "scenario_id": "authorized-low-risk-local-action",
+    "proposer": {
+      "lane": "anthropic",
+      "model_family": "claude",
+      "proposal_id": "proposal-s1",
+      "trace_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "action_request": {
+      "action_type": "write_local_note",
+      "target": {
+        "kind": "workspace_path",
+        "path": "workspace/demo_notes/meeting-summary.txt"
+      },
+      "payload": {
+        "title": "Meeting summary",
+        "content": "Summarize the reviewed action plan in a local note."
+      }
+    }
+  }
+}

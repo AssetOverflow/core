@@ -1,0 +1,24 @@
+{
+  "tool": "core.tool_authority.review",
+  "expected_status": "ask",
+  "arguments": {
+    "request_id": "demo-tool-s2",
+    "scenario_id": "ask-required-action",
+    "proposer": {
+      "lane": "xai",
+      "model_family": "grok",
+      "proposal_id": "proposal-s2"
+    },
+    "action_request": {
+      "action_type": "prepare_email_draft",
+      "target": {
+        "kind": "email_recipient",
+        "recipient": "finance@example.com"
+      },
+      "payload": {
+        "subject": "Budget update",
+        "body": "Draft a budget update email for review."
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "tool": "core.tool_authority.review",
+  "expected_status": "invalid",
+  "arguments": {
+    "request_id": "demo-tool-s4",
+    "scenario_id": "invalid-smuggling-attempt",
+    "proposer": {
+      "lane": "xai",
+      "model_family": "grok",
+      "proposal_id": "proposal-s4",
+      "trace_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "action_request": {
+      "action_type": "write_local_note",
+      "target": {
+        "kind": "workspace_path",
+        "path": "workspace/demo_notes/should-not-run.txt"
+      },
+      "payload": {
+        "title": "Smuggling attempt",
+        "content": "This should be rejected."
+      }
+    },
+    "licensed_action": {
+      "action_type": "shell_command"
+    },
+    "authorization_status": "authorized"
+  }
+}
