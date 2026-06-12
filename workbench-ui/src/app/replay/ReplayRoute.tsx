@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEvidenceSubject } from "../evidenceContext";
 import { subjectToUrl } from "../evidenceAddress";
@@ -8,6 +8,7 @@ import { ReplayComparisonPanel } from "./ReplayComparisonPanel";
 import { LoadingState } from "../../design/components/states/LoadingState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { EmptyState } from "../../design/components/states/EmptyState";
+import { SearchInput } from "../../design/components/SearchInput/SearchInput";
 import { WorkbenchApiError } from "../../api/client";
 import { ReplayStatus } from "../../design/components/badges";
 
@@ -17,6 +18,7 @@ export function ReplayRoute() {
   const [searchParams] = useSearchParams();
   const { setSubject } = useEvidenceSubject();
   const selectedId = artifactId ?? null;
+  const [search, setSearch] = useState("");
 
   const artifactsQuery = useArtifacts();
   const detailQuery = useArtifactDetail(selectedId || "");
@@ -97,6 +99,13 @@ export function ReplayRoute() {
     >
       {/* Left Pane: Artifact list */}
       <div className="border-r border-[var(--color-border-subtle)] overflow-y-auto pr-2">
+        <div className="mb-2">
+          <SearchInput
+            placeholder="Filter by artifact id or kind"
+            value={search}
+            onChange={setSearch}
+          />
+        </div>
         {isLoadingArtifacts ? (
           <LoadingState label="Loading artifacts..." />
         ) : artifactsQuery.isError ? (
@@ -112,7 +121,14 @@ export function ReplayRoute() {
           />
         ) : (
           <ArtifactList
-            artifacts={artifactsQuery.data || []}
+            artifacts={(artifactsQuery.data || []).filter((a) => {
+              const q = search.trim().toLowerCase();
+              if (!q) return true;
+              return (
+                a.artifact_id.toLowerCase().includes(q) ||
+                a.kind.toLowerCase().includes(q)
+              );
+            })}
             selectedId={selectedId}
             onSelect={handleSelect}
           />

@@ -1,13 +1,16 @@
 import * as Dialog from "@radix-ui/react-dialog";
+import { Kbd } from "../design/components/primitives/Kbd";
+import { useShortcuts } from "./shortcutRegistry";
 
-const SHORTCUTS = [
-  { keys: "⌘K", action: "Command palette" },
-  { keys: "⌘I", action: "Toggle inspector" },
-  { keys: "⌘1–0", action: "Navigate to route 1–10" },
-  { keys: "Esc", action: "Close overlay" },
-  { keys: "?", action: "This help" },
-] as const;
-
+/**
+ * Keyboard help overlay — registry-driven (Wave R brief R0d).
+ *
+ * Rows render from the live shortcut registry, where binding sites register
+ * exactly what they handle while mounted. Advertising an unimplemented
+ * shortcut is structurally impossible: there is no hand-maintained list to
+ * drift. (R0a removed three false rows by hand; this removes the failure
+ * mode itself.)
+ */
 export function KeyboardHelp({
   open,
   onOpenChange,
@@ -15,6 +18,8 @@ export function KeyboardHelp({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const shortcuts = useShortcuts();
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -27,18 +32,16 @@ export function KeyboardHelp({
             Keyboard Shortcuts
           </Dialog.Title>
           <Dialog.Description className="sr-only">
-            Available keyboard shortcuts for the workbench.
+            Keyboard shortcuts currently active in the workbench.
           </Dialog.Description>
           <dl className="m-0 grid gap-0">
-            {SHORTCUTS.map((s) => (
+            {shortcuts.map((s) => (
               <div
-                key={s.keys}
+                key={s.id}
                 className="flex items-center gap-3 border-b border-[var(--color-border-subtle)] py-2 last:border-b-0"
               >
                 <dt className="m-0 w-20 shrink-0">
-                  <kbd className="rounded border border-[var(--color-border-subtle)] px-1.5 py-0.5 font-mono text-xs text-[var(--color-text-mono)]">
-                    {s.keys}
-                  </kbd>
+                  <Kbd>{s.keys}</Kbd>
                 </dt>
                 <dd className="m-0 text-sm text-[var(--color-text-secondary)]">
                   {s.action}

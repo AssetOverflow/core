@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useRegisterShortcuts, type ShortcutEntry } from "./shortcutRegistry";
 
 const ROUTE_KEYS: Record<string, string> = {
   "1": "/chat",
@@ -21,6 +22,18 @@ interface GlobalKeyboardOptions {
   onCopyEvidenceLink: () => void;
 }
 
+// The binder registers exactly what it binds: KeyboardHelp renders from the
+// shortcut registry, so an overlay row exists iff a handler exists.
+const GLOBAL_SHORTCUTS: readonly ShortcutEntry[] = [
+  { id: "global-palette", keys: "\u2318K", action: "Command palette", order: 10 },
+  { id: "global-inspector", keys: "\u2318I", action: "Toggle inspector", order: 11 },
+  { id: "global-routes", keys: "\u23181\u20130", action: "Navigate to route 1\u201310", order: 12 },
+  { id: "global-copy-link", keys: "\u2318\u21E7C", action: "Copy evidence link", order: 13 },
+  // Esc is bound by every Radix overlay (palette, help, drawers).
+  { id: "global-escape", keys: "Esc", action: "Close overlay", order: 50 },
+  { id: "global-help", keys: "?", action: "This help", order: 60 },
+];
+
 function isInputFocused(): boolean {
   const el = document.activeElement;
   if (!el) return false;
@@ -35,6 +48,8 @@ export function useGlobalKeyboard({
   onCopyEvidenceLink,
 }: GlobalKeyboardOptions) {
   const navigate = useNavigate();
+
+  useRegisterShortcuts(GLOBAL_SHORTCUTS);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
