@@ -1,0 +1,47 @@
+{
+  "authority_path": [
+    "demos.deductive_entailment_authority.authority.validate_payload",
+    "demos.deductive_entailment_authority.authority.enforce_atom_budget",
+    "generate.proof_chain.entail.evaluate_entailment_with_trace",
+    "evals.deductive_logic.oracle.oracle_entailment"
+  ],
+  "decision": null,
+  "decision_reason": "inconsistent_premises",
+  "engine_pin": "97a230949016e38d5e3f37a69e4245b320575ee70e5af92ff7607f7b05f74b5f",
+  "entailment_trace": {
+    "conjunction_key": "F",
+    "entailment_check_key": null,
+    "outcome": "refused",
+    "premise_keys": [
+      "0:valve_open?F:T;1:tank_fills?T:@0",
+      "0:valve_open?T:F",
+      "0:tank_fills?F:T"
+    ],
+    "query_key": null,
+    "reason": "inconsistent_premises",
+    "refutation_check_key": null
+  },
+  "invalid_reason": null,
+  "oracle_agreement": true,
+  "oracle_verdict": "refused",
+  "proposer_ignored_fields": [],
+  "refusal_reason": "inconsistent_premises",
+  "request_id": "demo-dea-e4",
+  "scenario_id": "refused-inconsistent-premises",
+  "status": "refused",
+  "tool": "deductive_entailment_authority",
+  "trace_hash": "effa57750fd76c310d33c41668e1c035c23e923c1f4ba90a82cfc57d2237ad4c",
+  "trace_summary": {
+    "authority_evaluated": true,
+    "defensive_refusal": false,
+    "distinct_atom_budget": 12,
+    "distinct_atom_estimate": 3,
+    "engine_outcome": "refused",
+    "engine_reason": "inconsistent_premises",
+    "oracle_agreement": true,
+    "oracle_verdict": "refused",
+    "premise_count": 3,
+    "proposer_fields_ignored": [],
+    "regime_gate": null
+  }
+}

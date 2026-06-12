@@ -1,0 +1,20 @@
+{
+  "tool": "deductive_entailment_authority",
+  "expected_status": "decided",
+  "arguments": {
+    "request_id": "demo-dea-e6",
+    "scenario_id": "proposer-wrong-unknown",
+    "premises": [
+      "door_open | window_open"
+    ],
+    "claim": "door_open",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-e6",
+      "verdict": "entailed",
+      "confidence": "0.99",
+      "proof": "premise one plainly states the door is open"
+    }
+  }
+}

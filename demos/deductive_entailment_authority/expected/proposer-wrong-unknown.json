@@ -1,0 +1,53 @@
+{
+  "authority_path": [
+    "demos.deductive_entailment_authority.authority.validate_payload",
+    "demos.deductive_entailment_authority.authority.enforce_atom_budget",
+    "generate.proof_chain.entail.evaluate_entailment_with_trace",
+    "evals.deductive_logic.oracle.oracle_entailment"
+  ],
+  "decision": "unknown",
+  "decision_reason": "undetermined",
+  "engine_pin": "97a230949016e38d5e3f37a69e4245b320575ee70e5af92ff7607f7b05f74b5f",
+  "entailment_trace": {
+    "conjunction_key": "0:window_open?T:F;1:door_open?T:@0",
+    "entailment_check_key": "0:window_open?F:T;1:door_open?T:@0",
+    "outcome": "unknown",
+    "premise_keys": [
+      "0:window_open?T:F;1:door_open?T:@0"
+    ],
+    "query_key": "0:door_open?T:F",
+    "reason": "undetermined",
+    "refutation_check_key": "0:door_open?F:T"
+  },
+  "invalid_reason": null,
+  "oracle_agreement": true,
+  "oracle_verdict": "unknown",
+  "proposer_ignored_fields": [
+    "confidence",
+    "proof",
+    "verdict"
+  ],
+  "refusal_reason": null,
+  "request_id": "demo-dea-e6",
+  "scenario_id": "proposer-wrong-unknown",
+  "status": "decided",
+  "tool": "deductive_entailment_authority",
+  "trace_hash": "e6e6a77a64674b4d99a9a6bf4ce761c6c4642f05a98ed0d6e8246fa7419dba23",
+  "trace_summary": {
+    "authority_evaluated": true,
+    "defensive_refusal": false,
+    "distinct_atom_budget": 12,
+    "distinct_atom_estimate": 2,
+    "engine_outcome": "unknown",
+    "engine_reason": "undetermined",
+    "oracle_agreement": true,
+    "oracle_verdict": "unknown",
+    "premise_count": 1,
+    "proposer_fields_ignored": [
+      "confidence",
+      "proof",
+      "verdict"
+    ],
+    "regime_gate": null
+  }
+}

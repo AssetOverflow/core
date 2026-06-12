@@ -1,0 +1,20 @@
+{
+  "tool": "deductive_entailment_authority",
+  "expected_status": "decided",
+  "arguments": {
+    "request_id": "demo-dea-e2",
+    "scenario_id": "refuted-negation",
+    "premises": [
+      "breaker_open",
+      "breaker_open -> ~current_flows"
+    ],
+    "claim": "current_flows",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-e2",
+      "verdict": "entailed",
+      "confidence": "0.97"
+    }
+  }
+}
