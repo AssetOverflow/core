@@ -6,12 +6,12 @@ import { PreviewPage } from "../preview/PreviewPage";
 import { ChatRoute } from "../routes/ChatRoute";
 import { ProposalsRoute } from "./proposals/ProposalsRoute";
 import { TraceRoute } from "./trace/TraceRoute";
+import { AuditRoute } from "./audit/AuditRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { RunsRoutePlaceholder } from "../routes/RunsRoutePlaceholder";
 import { PacksRoutePlaceholder } from "../routes/PacksRoutePlaceholder";
 import { VaultRoutePlaceholder } from "../routes/VaultRoutePlaceholder";
-import { AuditRoutePlaceholder } from "../routes/AuditRoutePlaceholder";
 import { SettingsRoutePlaceholder } from "../routes/SettingsRoutePlaceholder";
 
 export function App() {
@@ -29,7 +29,7 @@ export function App() {
             <Route path="runs" element={<RunsRoutePlaceholder />} />
             <Route path="packs" element={<PacksRoutePlaceholder />} />
             <Route path="vault" element={<VaultRoutePlaceholder />} />
-            <Route path="audit" element={<AuditRoutePlaceholder />} />
+            <Route path="audit" element={<AuditRoute />} />
             <Route path="settings" element={<SettingsRoutePlaceholder />} />
           </Route>
           <Route path="/preview" element={<PreviewPage />} />

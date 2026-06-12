@@ -32,6 +32,12 @@ export type EpistemicState =
   | "epistemic_state_needed";
 export type NormativeClearance = "cleared" | "violated" | "unassessable" | "suppressed";
 export type TurnVerdictOutcome = "cleared" | "violated" | "unassessable";
+export type AuditSource =
+  | "engine_state_manifest"
+  | "math_proposal_log"
+  | "operator_telemetry"
+  | "reboot_telemetry"
+  | "teaching_proposal_log";
 
 export interface RuntimeStatus {
   backend: Backend;
@@ -106,6 +112,19 @@ export interface TurnJournalEntry {
 }
 
 export type TurnEvidence = ChatTurnResult | TurnJournalEntry;
+
+export interface AuditEvent {
+  event_id: string;
+  source: AuditSource;
+  source_path: string;
+  timestamp: string | null;
+  event_type: string;
+  mutation_boundary: boolean;
+  summary: string;
+  ref_id: string | null;
+  payload_digest: string;
+  payload: unknown;
+}
 
 export type ArtifactKind =
   | "trace"

@@ -23,7 +23,6 @@ const NOT_YET_MIRRORED = new Set([
   // R2-B backend read substrate (#712) — TS mirrors land with each R2 route:
   "PackSummary",
   "PackDetail",
-  "AuditEvent",
   "RunSummary",
   "RunTurnRef",
   "RunDetail",

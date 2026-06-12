@@ -9,6 +9,7 @@ import { EvidenceProvider } from "./evidenceContext";
 import { ChatRoute } from "../routes/ChatRoute";
 import { ProposalsRoute } from "./proposals/ProposalsRoute";
 import { TraceRoute } from "./trace/TraceRoute";
+import { AuditRoute } from "./audit/AuditRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
 
@@ -105,6 +106,15 @@ interface MountRouteSpec {
 }
 
 const MOUNT_ROUTES: MountRouteSpec[] = [
+  {
+    name: "Audit",
+    element: <AuditRoute />,
+    path: "/audit",
+    initialEntry: "/audit",
+    loadingLabel: "Loading audit events...",
+    emptyStatement: "No audit events recorded.",
+    emptyCommand: "core audit events",
+  },
   {
     name: "Trace",
     element: <TraceRoute />,
