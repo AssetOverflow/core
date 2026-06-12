@@ -156,24 +156,11 @@ fixture-driven local store arena. It does not prove runtime integration,
 open-world autonomous learning, arbitrary evidence ingestion, or normative
 clearance.
 
-## Proposed
+### Standalone Deductive Entailment Authority Demo (#700 — authority over formal entailment)
 
-Recommended order of next public evidence:
+Status: merged (PR #700).
 
-1. Standalone Deductive Entailment Authority Demo (formal entailment showcase);
-2. Embodied Authority Simulation Demo (simulation-only);
-3. SaaS / On-Prem Boundary Demo.
-
-Merged evidence establishes four authority boundaries: authority over claims
-(#687), proposed tool actions (#688), epistemic state assignment (#690), and
-vault-owned proof-carrying promotion (#696). The next public target should isolate
-formal entailment itself as a standalone showcase: a proposer supplies premises,
-conclusion, and claimed verdict; CORE decides through the existing deductive/proof
-surface and emits replayable proof evidence.
-
-### Standalone Deductive Entailment Authority Demo
-
-Status: proposed.
+Evidence class: substrate-capability demo.
 
 Purpose: demonstrate a non-trivial authority boundary over formal entailment. The
 proposer submits premises, a conclusion, and a claimed verdict. CORE decides via
@@ -181,7 +168,7 @@ the existing proof-chain / deductive-logic substrate, with trace evidence that c
 be checked against the independent truth-table oracle discipline already used by
 the deductive lane.
 
-Required outcomes:
+Public outcome vocabulary:
 
 - `entailed`;
 - `refuted`;
@@ -189,7 +176,7 @@ Required outcomes:
 - `refused`;
 - `invalid`.
 
-Required proof obligations:
+Proof obligations met:
 
 - proposer verdict ignored;
 - malformed or out-of-regime logic refused;
@@ -197,6 +184,25 @@ Required proof obligations:
 - at least one scenario where the proposer is wrong and CORE's verdict differs;
 - deterministic trace includes canonical proof keys or certificate evidence;
 - no shared-code oracle is presented as independent evidence.
+
+Evidence caveat: the demo operates in the propositional regime only, over opaque
+atoms. It does not demonstrate NLU, learning, proof-carrying promotion, or
+normative clearance. The authority boundary is real within the stated envelope; it
+must not be described as general formal-reasoning capability beyond propositional
+entailment.
+
+## Proposed
+
+Recommended order of next public evidence:
+
+1. Embodied Authority Simulation Demo (next target; simulation-only);
+2. SaaS / On-Prem Boundary Demo.
+
+Merged evidence now establishes five authority boundaries: authority over claims
+(#687), proposed tool actions (#688), epistemic state assignment (#690),
+vault-owned proof-carrying promotion (#696), and formal entailment (#700). The
+next public target should extend the authority pattern to a simulated physical
+domain.
 
 ### Embodied Authority Simulation Demo
 
