@@ -1,6 +1,8 @@
 # Wave 1 — Evidence Spine
 
-Status: approved plan
+Status: approved plan (Wave 1 shipped: PRs #702, #703, #704, #706);
+Wave 2 / Wave 3 sequencing below is superseded by
+[wave-R-mastery-revamp.md](./wave-R-mastery-revamp.md)
 Date: 2026-06-12
 Supersedes: implementation-plan.md phases W-032+
 Peer-reviewed by: Codex (architectural path selection), GPT5.5-Thinking (trace
