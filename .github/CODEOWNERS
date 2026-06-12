@@ -1,0 +1,7 @@
+# Global code ownership for AssetOverflow/core.
+#
+# This repository is public, but changes to protected branches must remain
+# review-gated by the repository owner. Pair this file with GitHub branch
+# protection requiring CODEOWNERS review on `main`.
+
+* @AssetOverflow
