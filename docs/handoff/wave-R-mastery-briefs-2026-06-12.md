@@ -82,7 +82,8 @@ workbench-ui at all** (`smoke.yml` / `full-pytest.yml` are Python-only).
    Record wall-clock in the PR body.
 4. New `.github/workflows/workbench-ui.yml`:
    - `on: pull_request` + `push: branches: [main]`, both with
-     `paths: ['workbench-ui/**']`
+     `paths: ['workbench-ui/**', '.github/workflows/workbench-ui.yml']`
+     (the workflow validates changes to itself)
    - single job, `timeout-minutes: 15`: pnpm setup (frozen lockfile) →
      `pnpm build` → `pnpm test`
    - Node 20, pnpm via `corepack` or `pnpm/action-setup`

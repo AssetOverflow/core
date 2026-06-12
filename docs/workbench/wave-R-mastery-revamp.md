@@ -95,7 +95,8 @@ Trace is the first consumer of this substrate and building it twice is waste.
       fake timers
 - [ ] Full multi-file `pnpm test` completes and **exits** locally
 - [ ] New `.github/workflows/workbench-ui.yml`: path-filtered to
-      `workbench-ui/**`, runs `pnpm install --frozen-lockfile && pnpm build
+      `workbench-ui/**` **and the workflow file itself** (it validates its
+      own changes), runs `pnpm install --frozen-lockfile && pnpm build
       && pnpm test`, `timeout-minutes: 15`
 - [ ] Remove the `j/k`, `/`, and `Enter — Open selected item` rows from
       `KeyboardHelp.tsx` **unconditionally** — the overlay must not advertise
