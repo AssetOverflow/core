@@ -76,6 +76,37 @@ export interface ChatTurnResult {
   checkpoint_emitted: boolean;
 }
 
+export interface TurnJournalSummary {
+  turn_id: number;
+  timestamp: string;
+  prompt_excerpt: string;
+  surface_excerpt: string;
+  trace_hash: string | null;
+  grounding_source: GroundingSource;
+}
+
+export interface TurnJournalEntry {
+  turn_id: number;
+  timestamp: string;
+  trace_hash: string | null;
+  prompt: string;
+  surface: string;
+  articulation_surface: string | null;
+  walk_surface: string | null;
+  grounding_source: GroundingSource;
+  epistemic_state: EpistemicState;
+  normative_clearance: NormativeClearance;
+  verdicts: Record<string, unknown>;
+  refusal_emitted: boolean;
+  hedge_injected: boolean;
+  proposal_candidates: Record<string, unknown>[];
+  turn_cost_ms: number;
+  checkpoint_emitted: boolean;
+  journal_digest: string;
+}
+
+export type TurnEvidence = ChatTurnResult | TurnJournalEntry;
+
 export type ArtifactKind =
   | "trace"
   | "eval_result"
@@ -226,4 +257,3 @@ export interface MathRatifyResult {
   target_path: string | null;
   evidence_hash: string | null;
 }
-

@@ -10,6 +10,8 @@ import type {
   ProposalDetail,
   ProposalState,
   ProposalSummary,
+  TurnJournalEntry,
+  TurnJournalSummary,
   MathProposalSummary,
   MathProposalDetail,
   MathRatifyResult,
@@ -107,6 +109,24 @@ export async function fetchProposalDetail(proposalId: string): Promise<ProposalD
   return apiFetch<ProposalDetail>(`/proposals/${encodeURIComponent(proposalId)}`);
 }
 
+export async function fetchTraceTurns(
+  limit?: number,
+  offset?: number,
+): Promise<TurnJournalSummary[]> {
+  const params = new URLSearchParams();
+  if (limit !== undefined) params.set("limit", String(limit));
+  if (offset !== undefined) params.set("offset", String(offset));
+  const query = params.toString();
+  const envelope = await apiFetch<ItemsEnvelope<TurnJournalSummary>>(
+    query ? `/trace/turns?${query}` : "/trace/turns",
+  );
+  return envelope.items;
+}
+
+export async function fetchTraceTurn(turnId: number): Promise<TurnJournalEntry> {
+  return apiFetch<TurnJournalEntry>(`/trace/${encodeURIComponent(String(turnId))}`);
+}
+
 export async function fetchMathProposals(): Promise<MathProposalSummary[]> {
   const envelope = await apiFetch<ItemsEnvelope<MathProposalSummary>>("/math-proposals");
   return envelope.items;
@@ -153,5 +173,4 @@ export async function deferMathProposal(
     },
   );
 }
-
 
