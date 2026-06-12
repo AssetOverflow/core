@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useEvidenceSubject } from "../evidenceContext";
+import { subjectToUrl } from "../evidenceAddress";
 import { useEvalLanes } from "../../api/queries";
 import { EvalLaneCard } from "./EvalLaneCard";
 import { EvalRunButton } from "./EvalRunButton";
@@ -14,8 +16,11 @@ import { WorkbenchApiError } from "../../api/client";
 
 export function EvalsRoute() {
   const { data: lanes, isLoading, isError, error } = useEvalLanes();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const selectedLaneName = searchParams.get("lane") || "";
+  const { laneId } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { setSubject } = useEvidenceSubject();
+  const selectedLaneName = laneId ?? "";
 
   // Maintain per-lane run states (pending, result, error)
   const [runStates, setRunStates] = useState<
@@ -28,6 +33,28 @@ export function EvalsRoute() {
       }
     >
   >({});
+
+  const selectedRunResult = selectedLaneName
+    ? runStates[selectedLaneName]?.result
+    : undefined;
+
+  // Publish the selected lane as the evidence subject: identity immediately,
+  // run-result data once a run completes in this session.
+  useEffect(() => {
+    if (!selectedLaneName) return;
+    setSubject({
+      kind: "eval_result",
+      lane: selectedLaneName,
+      data: selectedRunResult,
+    });
+  }, [selectedLaneName, selectedRunResult, setSubject]);
+
+  function selectLane(lane: string) {
+    const search = searchParams.toString();
+    const path = subjectToUrl({ kind: "eval_result", lane });
+    // Selection churn must not pollute history: replace, never push.
+    navigate(search ? `${path}?${search}` : path, { replace: true });
+  }
 
   if (isLoading) {
     return <LoadingState label="Loading eval lanes..." />;
@@ -59,7 +86,7 @@ export function EvalsRoute() {
                 key={lane.lane}
                 lane={lane}
                 isSelected={lane.lane === selectedLaneName}
-                onSelect={() => setSearchParams({ lane: lane.lane })}
+                onSelect={() => selectLane(lane.lane)}
               />
             ))
           ) : (

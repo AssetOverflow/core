@@ -18,6 +18,7 @@ interface GlobalKeyboardOptions {
   onTogglePalette: () => void;
   onToggleInspector: () => void;
   onShowHelp: () => void;
+  onCopyEvidenceLink: () => void;
 }
 
 function isInputFocused(): boolean {
@@ -31,12 +32,20 @@ export function useGlobalKeyboard({
   onTogglePalette,
   onToggleInspector,
   onShowHelp,
+  onCopyEvidenceLink,
 }: GlobalKeyboardOptions) {
   const navigate = useNavigate();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const meta = e.metaKey || e.ctrlKey;
+
+      if (meta && e.shiftKey && e.key.toLowerCase() === "c") {
+        if (isInputFocused()) return;
+        e.preventDefault();
+        onCopyEvidenceLink();
+        return;
+      }
 
       if (meta && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -67,5 +76,5 @@ export function useGlobalKeyboard({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [navigate, onTogglePalette, onToggleInspector, onShowHelp]);
+  }, [navigate, onTogglePalette, onToggleInspector, onShowHelp, onCopyEvidenceLink]);
 }

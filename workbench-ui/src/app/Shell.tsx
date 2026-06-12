@@ -6,11 +6,14 @@ import { StatusFooter } from "./StatusFooter";
 import { RightInspector } from "./RightInspector";
 import { ApiErrorBoundary } from "./ApiErrorBoundary";
 import { EvidenceProvider, useEvidenceSubject } from "./evidenceContext";
+import { EvidenceUrlSync } from "./evidenceUrlSync";
+import { isAddressable, subjectToUrl } from "./evidenceAddress";
 import { KeyboardHelp } from "./KeyboardHelp";
 import { useGlobalKeyboard } from "./useGlobalKeyboard";
 
 function ShellInner() {
-  const { inspectorOpen, toggleInspector } = useEvidenceSubject();
+  const { subject, inspectorOpen, toggleInspector, notifyAddressCopied } =
+    useEvidenceSubject();
   const [helpOpen, setHelpOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
@@ -22,10 +25,21 @@ function ShellInner() {
     setHelpOpen(true);
   }, []);
 
+  const onCopyEvidenceLink = useCallback(() => {
+    if (!isAddressable(subject)) return;
+    if (!navigator.clipboard?.writeText) return;
+    const url = window.location.origin + subjectToUrl(subject);
+    navigator.clipboard.writeText(url).then(
+      () => notifyAddressCopied(),
+      (err) => console.error("Evidence link copy failed:", err),
+    );
+  }, [subject, notifyAddressCopied]);
+
   useGlobalKeyboard({
     onTogglePalette,
     onToggleInspector: toggleInspector,
     onShowHelp,
+    onCopyEvidenceLink,
   });
 
   return (
@@ -75,6 +89,7 @@ function ShellInner() {
 export function Shell() {
   return (
     <EvidenceProvider>
+      <EvidenceUrlSync />
       <ShellInner />
     </EvidenceProvider>
   );

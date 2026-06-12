@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
 import { EvidenceProvider, useEvidenceSubject } from "./evidenceContext";
 import { RightInspector } from "./RightInspector";
@@ -70,5 +70,55 @@ describe("RightInspector", () => {
   it("shows keyboard shortcut hint", () => {
     renderInspector();
     expect(screen.getByText("⌘I")).toBeInTheDocument();
+  });
+
+  it("renders an honest not-loaded state for an identity-only subject", () => {
+    function SetIdentityOnly() {
+      const { setSubject } = useEvidenceSubject();
+      useEffect(() => {
+        setSubject({ kind: "proposal", proposalId: "proposal-xyz" });
+      }, [setSubject]);
+      return <RightInspector />;
+    }
+    render(
+      <EvidenceProvider>
+        <SetIdentityOnly />
+      </EvidenceProvider>,
+    );
+    expect(screen.getByText("proposal-xyz")).toBeInTheDocument();
+    expect(screen.getByText(/Detail not loaded in this session/)).toBeInTheDocument();
+  });
+
+  it("shows a transient Copied confirmation after an address copy", () => {
+    vi.useFakeTimers();
+    try {
+      function CopySignal() {
+        const { notifyAddressCopied } = useEvidenceSubject();
+        return (
+          <>
+            <button type="button" onClick={notifyAddressCopied}>
+              signal-copy
+            </button>
+            <RightInspector />
+          </>
+        );
+      }
+      render(
+        <EvidenceProvider>
+          <CopySignal />
+        </EvidenceProvider>,
+      );
+
+      expect(screen.queryByTestId("address-copied")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByText("signal-copy"));
+      expect(screen.getByTestId("address-copied")).toHaveTextContent("Copied");
+
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(screen.queryByTestId("address-copied")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

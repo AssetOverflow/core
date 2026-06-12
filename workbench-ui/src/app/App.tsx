@@ -22,10 +22,10 @@ export function App() {
           <Route path="/" element={<Shell />}>
             <Route index element={<Navigate to="/chat" replace />} />
             <Route path="chat" element={<ChatRoute />} />
-            <Route path="trace" element={<TraceRoutePlaceholder />} />
-            <Route path="replay" element={<ReplayRoute />} />
-            <Route path="proposals" element={<ProposalsRoute />} />
-            <Route path="evals" element={<EvalsRoute />} />
+            <Route path="trace/:turnId?" element={<TraceRoutePlaceholder />} />
+            <Route path="replay/:artifactId?" element={<ReplayRoute />} />
+            <Route path="proposals/:proposalId?" element={<ProposalsRoute />} />
+            <Route path="evals/:laneId?" element={<EvalsRoute />} />
             <Route path="runs" element={<RunsRoutePlaceholder />} />
             <Route path="packs" element={<PacksRoutePlaceholder />} />
             <Route path="vault" element={<VaultRoutePlaceholder />} />

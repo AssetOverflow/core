@@ -2,10 +2,17 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { createTestQueryClient } from "../../test/createTestQueryClient";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { proposalDetail, proposalSummaries } from "../../api/__fixtures__/proposals";
+import { EvidenceProvider } from "../evidenceContext";
 import { SuggestedCLIBox } from "./SuggestedCLIBox";
 import { ProposalTable } from "./ProposalTable";
 import { ProposalsRoute } from "./ProposalsRoute";
@@ -17,7 +24,13 @@ function queryWrapper({ children }: { children: ReactNode }) {
 
 function LocationProbe() {
   const location = useLocation();
-  return <span data-testid="location">{location.search}</span>;
+  const navigationType = useNavigationType();
+  return (
+    <>
+      <span data-testid="location">{`${location.pathname}${location.search}`}</span>
+      <span data-testid="nav-type">{navigationType}</span>
+    </>
+  );
 }
 
 function renderRoute(initialEntry = "/proposals") {
@@ -26,9 +39,14 @@ function renderRoute(initialEntry = "/proposals") {
       client={createTestQueryClient()}
     >
       <MemoryRouter initialEntries={[initialEntry]}>
-        <Routes>
-          <Route path="/proposals" element={<><ProposalsRoute /><LocationProbe /></>} />
-        </Routes>
+        <EvidenceProvider>
+          <Routes>
+            <Route
+              path="/proposals/:proposalId?"
+              element={<><ProposalsRoute /><LocationProbe /></>}
+            />
+          </Routes>
+        </EvidenceProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -87,7 +105,7 @@ describe("ProposalsRoute", () => {
     expect(screen.queryByTitle("proposal-pending-001abcdef")).not.toBeInTheDocument();
   });
 
-  it("selecting a row updates the URL query param and renders detail", async () => {
+  it("selecting a row writes the path param (replace) and renders detail", async () => {
     stubProposalFetch();
     const user = userEvent.setup();
     renderRoute("/proposals?state=pending");
@@ -96,10 +114,20 @@ describe("ProposalsRoute", () => {
 
     await waitFor(() =>
       expect(screen.getByTestId("location")).toHaveTextContent(
-        `?state=pending&proposal_id=${proposalDetail.proposal_id}`,
+        `/proposals/${proposalDetail.proposal_id}?state=pending`,
       ),
     );
+    expect(screen.getByTestId("nav-type")).toHaveTextContent("REPLACE");
     expect(await screen.findByText("Contemplation proposed a coherence relation.")).toBeInTheDocument();
+  });
+
+  it("restores selection from a deep-linked path param", async () => {
+    stubProposalFetch();
+    renderRoute(`/proposals/${proposalDetail.proposal_id}?state=pending`);
+
+    expect(
+      await screen.findByText("Contemplation proposed a coherence relation."),
+    ).toBeInTheDocument();
   });
 
   it("shows LoadingState during fetch", () => {
