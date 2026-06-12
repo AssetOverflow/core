@@ -81,11 +81,18 @@ export function ReplayRoute() {
       {/* Left Pane: Artifact list */}
       <div className="border-r border-[var(--color-border-subtle)] overflow-y-auto pr-2">
         {isLoadingArtifacts ? (
-          <LoadingState label="Comparing artifacts..." />
+          <LoadingState label="Loading artifacts..." />
         ) : artifactsQuery.isError ? (
-          <div className="p-2 text-xs text-[var(--color-state-danger-text)]">
-            Failed to load artifacts.
-          </div>
+          <ErrorState
+            whatFailed={
+              artifactsError instanceof WorkbenchApiError
+                ? artifactsError.message
+                : "Failed to load artifacts."
+            }
+            mutationStatus="No corpus mutation occurred."
+            reproducer="curl http://127.0.0.1:8765/artifacts"
+            retrySafety="Retry: safe"
+          />
         ) : (
           <ArtifactList
             artifacts={artifactsQuery.data || []}

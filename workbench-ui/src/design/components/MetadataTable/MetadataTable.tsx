@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { copyText } from "../../lib";
+import { useManagedTimeout } from "../../hooks/useManagedTimeout";
 
 export interface MetadataRow {
   key: string;
@@ -15,6 +16,7 @@ export interface MetadataTableProps {
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const scheduleReset = useManagedTimeout();
 
   return (
     <button
@@ -33,7 +35,7 @@ function CopyButton({ text }: { text: string }) {
       onClick={() => {
         void copyText(text).then(() => {
           setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
+          scheduleReset(() => setCopied(false), 1500);
         });
       }}
     >

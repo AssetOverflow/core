@@ -4,9 +4,6 @@ const SHORTCUTS = [
   { keys: "⌘K", action: "Command palette" },
   { keys: "⌘I", action: "Toggle inspector" },
   { keys: "⌘1–0", action: "Navigate to route 1–10" },
-  { keys: "/", action: "Focus search input" },
-  { keys: "j / k", action: "Navigate lists" },
-  { keys: "Enter", action: "Open selected item" },
   { keys: "Esc", action: "Close overlay" },
   { keys: "?", action: "This help" },
 ] as const;

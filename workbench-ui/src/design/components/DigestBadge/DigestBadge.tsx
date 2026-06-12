@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { copyText } from "../../lib";
+import { useManagedTimeout } from "../../hooks/useManagedTimeout";
 
 export interface DigestBadgeProps {
   digest: string;
@@ -39,6 +40,7 @@ export function DigestBadge({
   truncate = 16,
 }: DigestBadgeProps) {
   const [copied, setCopied] = useState(false);
+  const scheduleReset = useManagedTimeout();
 
   const display = digest.length > truncate
     ? `${digest.slice(0, truncate)}...`
@@ -64,7 +66,7 @@ export function DigestBadge({
       onClick={() => {
         void copyText(`${algorithm}:${digest}`).then(() => {
           setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
+          scheduleReset(() => setCopied(false), 1500);
         });
       }}
       data-testid="digest-badge"
