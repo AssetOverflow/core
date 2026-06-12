@@ -137,6 +137,14 @@ class TurnJournal:
         entries = self._read_entries()
         return [entry.summary() for entry in entries[offset : offset + limit]]
 
+    def list_entries(self, *, limit: int = 50, offset: int = 0) -> list[TurnJournalEntry]:
+        if limit < 0:
+            raise ValueError("limit must be non-negative")
+        if offset < 0:
+            raise ValueError("offset must be non-negative")
+        entries = self._read_entries()
+        return entries[offset : offset + limit]
+
     def get_entry(self, turn_id: int) -> TurnJournalEntry:
         for entry in self._read_entries():
             if entry.turn_id == turn_id:

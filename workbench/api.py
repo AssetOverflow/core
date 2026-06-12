@@ -19,13 +19,27 @@ from core.epistemic_state import (
 )
 from workbench import readers
 from workbench.journal import DEFAULT_JOURNAL_DIR, TurnJournal, TurnJournalEntry
-from workbench.readers import ArtifactTooLargeError
+from workbench.readers import ArtifactTooLargeError, EvidenceUnavailableError
 from workbench.schemas import ChatTurnResult, MathRatifyResult, ProposalRef, TurnVerdict, error, ok
 
 
 MAX_CHAT_BODY_BYTES = 64 * 1024
 MAX_CHAT_PROMPT_CHARS = 4096
 _CHAT_TURN_LOCK = threading.Lock()
+
+
+def _pagination(
+    query: dict[str, list[str]],
+    *,
+    default_limit: int = 100,
+) -> tuple[int, int]:
+    limit = int(query.get("limit", [str(default_limit)])[0])
+    offset = int(query.get("offset", ["0"])[0])
+    if limit < 0:
+        raise ValueError("limit must be non-negative")
+    if offset < 0:
+        raise ValueError("offset must be non-negative")
+    return limit, offset
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +105,8 @@ class WorkbenchApi:
         except FileNotFoundError as exc:
             missing = str(exc) or "resource"
             return ApiResponse(404, error("not_found", f"not found: {missing}"))
+        except EvidenceUnavailableError as exc:
+            return ApiResponse(501, error("evidence_unavailable", str(exc)))
         except ArtifactTooLargeError as exc:
             return ApiResponse(413, error("read_error", str(exc)))
         except OSError as exc:
@@ -134,6 +150,73 @@ class WorkbenchApi:
         if method == "GET" and path.startswith("/math-proposals/"):
             proposal_id = unquote(path.removeprefix("/math-proposals/"))
             return ApiResponse(200, ok(readers.read_math_proposal(proposal_id)))
+        if method == "GET" and path == "/packs":
+            limit, offset = _pagination(query)
+            return ApiResponse(
+                200,
+                ok(
+                    {
+                        "items": readers.list_packs(limit=limit, offset=offset),
+                        "limit": limit,
+                        "offset": offset,
+                    }
+                ),
+            )
+        if method == "GET" and path.startswith("/packs/"):
+            pack_id = unquote(path.removeprefix("/packs/"))
+            return ApiResponse(200, ok(readers.read_pack(pack_id)))
+        if method == "GET" and path == "/audit/events":
+            limit, offset = _pagination(query)
+            return ApiResponse(
+                200,
+                ok(
+                    {
+                        "items": readers.list_audit_events(limit=limit, offset=offset),
+                        "limit": limit,
+                        "offset": offset,
+                    }
+                ),
+            )
+        if method == "GET" and path == "/runs":
+            limit, offset = _pagination(query)
+            return ApiResponse(
+                200,
+                ok(
+                    {
+                        "items": readers.list_runs(self._journal, limit=limit, offset=offset),
+                        "limit": limit,
+                        "offset": offset,
+                    }
+                ),
+            )
+        if method == "GET" and path.startswith("/runs/"):
+            session_id = unquote(path.removeprefix("/runs/"))
+            turn_limit, turn_offset = _pagination(query)
+            return ApiResponse(
+                200,
+                ok(
+                    readers.read_run(
+                        session_id,
+                        self._journal,
+                        turn_limit=turn_limit,
+                        turn_offset=turn_offset,
+                    )
+                ),
+            )
+        if method == "GET" and path == "/vault/summary":
+            return ApiResponse(200, ok(readers.read_vault_summary()))
+        if method == "GET" and path == "/vault/entries":
+            limit, offset = _pagination(query)
+            return ApiResponse(
+                200,
+                ok(
+                    {
+                        "items": readers.list_vault_entries(limit=limit, offset=offset),
+                        "limit": limit,
+                        "offset": offset,
+                    }
+                ),
+            )
         if method == "GET" and path == "/evals":
             return ApiResponse(200, ok({"lanes": readers.list_eval_lanes()}))
         if method == "GET" and path.startswith("/evals/"):

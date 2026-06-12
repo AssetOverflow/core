@@ -9,6 +9,7 @@ from typing import Any, Literal
 
 ErrorCode = Literal[
     "bad_request",
+    "evidence_unavailable",
     "not_found",
     "unsupported",
     "read_error",
@@ -278,3 +279,98 @@ class MathRatifyResult:
     applied: bool = False
     target_path: str | None = None
     evidence_hash: str | None = None
+
+
+PackSource = Literal["language_pack", "runtime_pack"]
+
+
+@dataclass(frozen=True, slots=True)
+class PackSummary:
+    pack_id: str
+    source: PackSource
+    manifest_path: str
+    version: str | None
+    language: str | None
+    modality: str | None
+    determinism_class: str | None
+    checksum: str | None
+    checksums: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class PackDetail(PackSummary):
+    manifest_digest: str = ""
+    manifest: dict[str, Any] = field(default_factory=dict)
+
+
+AuditSource = Literal[
+    "engine_state_manifest",
+    "math_proposal_log",
+    "operator_telemetry",
+    "reboot_telemetry",
+    "teaching_proposal_log",
+]
+
+
+@dataclass(frozen=True, slots=True)
+class AuditEvent:
+    event_id: str
+    source: AuditSource
+    source_path: str
+    timestamp: str | None
+    event_type: str
+    mutation_boundary: bool
+    summary: str
+    ref_id: str | None
+    payload_digest: str
+    payload: Any
+
+
+RunSource = Literal["engine_state_manifest", "turn_journal"]
+
+
+@dataclass(frozen=True, slots=True)
+class RunSummary:
+    session_id: str
+    source: RunSource
+    turn_count: int
+    started_at: str | None
+    updated_at: str | None
+    checkpoint_present: bool
+    checkpoint_revision: str | None
+    artifact_refs: list[ArtifactRef] = field(default_factory=list)
+    evidence_gap: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RunTurnRef:
+    turn_id: int
+    trace_hash: str | None
+    timestamp: str
+    trace_path: str
+    surface_excerpt: str
+
+
+@dataclass(frozen=True, slots=True)
+class RunDetail(RunSummary):
+    turns: list[RunTurnRef] = field(default_factory=list)
+    manifest: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class VaultSummary:
+    source_path: str
+    entry_count: int
+    store_count: int
+    reproject_interval: int
+    max_entries: int | None
+    persisted: bool
+
+
+@dataclass(frozen=True, slots=True)
+class VaultEntry:
+    entry_index: int
+    epistemic_status: str
+    epistemic_state: str
+    metadata: dict[str, Any]
+    versor_digest: str | None
