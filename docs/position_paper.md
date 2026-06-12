@@ -151,8 +151,11 @@ independently-checked deductive engine (`deductive_logic_v1`, §4) can certify i
 deterministically, with the proof chain as the audit artifact — the logical form
 of the *"structural coherence metric"* ADR-0021 names as the successor to curator
 mediation. What review still gates there is the faithfulness of the reading, not
-the deduction. This proof-carrying promotion path is **specified but not yet
-wired**; until it lands, all promotion is curator-mediated.
+the deduction. This proof-carrying promotion path is now ratified and implemented
+for the narrow deductively entailed subclass: curator-certified readings,
+already-COHERENT premises, replay-verified proof, and vault-owned mutation.
+Runtime turn integration remains separate; no open-world autonomous learning
+claim follows from this path.
 
 This is not a safety overlay. It is a consequence of the decoding thesis: if the
 system decodes a reality that already is, then inputs that contradict — or merely
@@ -438,21 +441,23 @@ small local envelope.
 ### Authority over epistemic state assignment — PR #690, merge `e80c8eae`
 
 `demos/epistemic_truth_state/` demonstrates the same typed boundary for epistemic
-state assignment across six outcomes. A model-style proposer submits a claim,
+state assignment across seven outcomes. A model-style proposer submits a claim,
 sealed evidence references, and a `proposed_state`; the demo assigns a canonical
 state from committed corpus records whose content hashes must match.
 `proposer_state_ignored: true` on every non-invalid output.
 
-Typed state vocabulary: `verified`, `evidenced`, `inferred`, `undetermined`,
-`scope_boundary`. A proposer that injects `assigned_state` or `authority_path` into
-the request payload is rejected at the typed schema boundary before evaluation.
+Typed state vocabulary: `verified`, `evidenced`, `inferred`, `contradicted`,
+`undetermined`, `scope_boundary`. A proposer that injects `assigned_state` or
+`authority_path` into the request payload is rejected at the typed schema boundary
+before evaluation.
 
 Representative trace hashes:
-- Verified: `1341c27c5906ae52…` (2 sealed corpus records with distinct provenance roots, `normative_clearance: unassessable`)
-- Evidenced: `f9f2e153e66aaba9…` (1 item, below threshold — proposer proposed `verified`)
-- Inferred: `bc11e858ece14081…` (premise-only evidence — proposer proposed `verified`)
-- Undetermined: `35b319eb0186be2d…` (off-topic evidence)
-- Refused: `c9ef9560bcf71052…` (outside epistemic envelope)
+- Verified: `fd0042f5f2bea77d…` (2 sealed corpus records with distinct provenance roots, `normative_clearance: unassessable`)
+- Evidenced: `c4fcd4ae033cad4f…` (1 item, below threshold — proposer proposed `verified`)
+- Inferred: `3d7e92fceeba3281…` (entailment-decided premise evidence — proposer proposed `verified`)
+- Unrelated premise: `48c9932a5dd99f1a…` (resolvable but unrelated premise, engine returns `unknown`)
+- Undetermined: `80559d4b02668e36…` (off-topic evidence)
+- Refused: `f1d8936f7616d273…` (outside epistemic envelope)
 - Invalid: `18dda5b4017b223b…` (5 smuggled output fields rejected)
 
 Run: `python demos/epistemic_truth_state/run_demo.py`
@@ -462,8 +467,9 @@ scenario; the invalid scenario has `null` because evaluation never reached the
 authority path. The demo runs no normative, safety, or ethics clearance pass. The
 evidence corpus is local fixture evidence, so #690 should be read as a
 state-authority demo over a sealed local corpus, not as proof that CORE evaluates
-arbitrary evidence sources. The next proof obligation is proof-carrying entailment
-evidence for claims that should move from stated premises to promoted knowledge.
+arbitrary evidence sources. Proof-carrying promotion is demonstrated separately by
+#696 for the narrow, curator-certified, deductively entailed subclass; it is not
+runtime turn integration or open-world autonomous learning.
 
 ---
 
