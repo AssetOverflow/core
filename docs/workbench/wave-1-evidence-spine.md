@@ -104,17 +104,16 @@ route proves it requires the component.
 
 For each component:
 
-- [ ] Built with design tokens only (no raw hex/rgb)
-- [ ] Motion via `--motion-duration-*` and `--motion-ease-*` tokens
-- [ ] `prefers-reduced-motion` collapses to instant
-- [ ] `:focus-visible` ring via `--color-focus-ring`
-- [ ] Renders in PreviewPage (`/preview`)
-- [ ] Unit test
+- [x] Built with design tokens only (no raw hex/rgb)
+- [x] Motion via `--motion-duration-*` and `--motion-ease-*` tokens
+- [x] `prefers-reduced-motion` collapses to instant (global rule in tokens.css)
+- [x] `:focus-visible` ring via `--color-focus-ring`
+- [x] Renders in PreviewPage (`/preview`)
+- [x] Unit test
 
-**TabBar dependency note:** `@radix-ui/react-tabs` is not currently in
-`package.json` (only `react-dialog` and `react-popover` are). Either add the
-dependency explicitly with lockfile update, or implement TabBar with native
-ARIA tab semantics without Radix. Decide at implementation time.
+**TabBar dependency decision:** Implemented with native ARIA tab semantics
+(no `@radix-ui/react-tabs` added). Full `role="tablist"`/`role="tab"`/
+`role="tabpanel"` with `ArrowLeft`/`ArrowRight`/`Home`/`End` keyboard nav.
 
 **Deferred primitives** (build when a route needs them):
 - DataTable, TreeView, Timeline, CodeViewer, Drawer, Toast, SkeletonLoader, Kbd
