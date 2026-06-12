@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEvidenceSubject } from "../evidenceContext";
+import { useCommandRegistry } from "../commandRegistry";
 import { subjectToUrl } from "../evidenceAddress";
-import { useEvalLanes } from "../../api/queries";
+import { useEvalLanes, useEvalRun } from "../../api/queries";
 import { EvalLaneCard } from "./EvalLaneCard";
 import { EvalRunButton } from "./EvalRunButton";
 import { EvalMetricGrid } from "./EvalMetricGrid";
@@ -37,6 +38,46 @@ export function EvalsRoute() {
   const selectedRunResult = selectedLaneName
     ? runStates[selectedLaneName]?.result
     : undefined;
+
+  // Palette verbs (Wave R brief R0d): one "Run eval lane <lane>" command per
+  // read-only lane, registered while this route is mounted. Executes the
+  // same read-only POST /evals/run as EvalRunButton's defaults (first
+  // version, public split) and navigates here to show the run state.
+  const paletteRun = useEvalRun();
+  const paletteMutate = paletteRun.mutate;
+  const { register, unregister } = useCommandRegistry();
+  useEffect(() => {
+    const runnable = (lanes ?? []).filter((l) => l.read_only);
+    if (runnable.length === 0) return;
+    register(
+      runnable.map((l) => ({
+        id: `action-run-eval-${l.lane}`,
+        label: `Run eval lane ${l.lane}`,
+        section: "Actions",
+        kind: "action" as const,
+        action: () => {
+          navigate(`/evals/${encodeURIComponent(l.lane)}`);
+          setRunStates((prev) => ({ ...prev, [l.lane]: { isPending: true } }));
+          paletteMutate(
+            { lane: l.lane, version: l.versions[0] || "v1", split: "public" },
+            {
+              onSuccess: (result) =>
+                setRunStates((prev) => ({
+                  ...prev,
+                  [l.lane]: { isPending: false, result },
+                })),
+              onError: (err) =>
+                setRunStates((prev) => ({
+                  ...prev,
+                  [l.lane]: { isPending: false, error: err },
+                })),
+            },
+          );
+        },
+      })),
+    );
+    return () => unregister(runnable.map((l) => `action-run-eval-${l.lane}`));
+  }, [lanes, register, unregister, navigate, paletteMutate]);
 
   // Publish the selected lane as the evidence subject: identity immediately,
   // run-result data once a run completes in this session.

@@ -4,6 +4,8 @@ export interface Command {
   id: string;
   label: string;
   section: string;
+  /** "navigate" routes somewhere; "action" performs a verb. */
+  kind: "navigate" | "action";
   shortcut?: string;
   action: () => void;
 }

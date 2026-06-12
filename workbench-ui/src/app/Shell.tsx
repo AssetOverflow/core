@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Outlet } from "react-router-dom";
 import { TopBar } from "./TopBar";
 import { LeftNav } from "./LeftNav";
@@ -10,6 +10,8 @@ import { EvidenceUrlSync } from "./evidenceUrlSync";
 import { isAddressable, subjectToUrl } from "./evidenceAddress";
 import { KeyboardHelp } from "./KeyboardHelp";
 import { useGlobalKeyboard } from "./useGlobalKeyboard";
+import { useCommandRegistry } from "./commandRegistry";
+import { SplitPane } from "../design/components/SplitPane/SplitPane";
 
 function ShellInner() {
   const { subject, inspectorOpen, toggleInspector, notifyAddressCopied } =
@@ -42,15 +44,50 @@ function ShellInner() {
     onCopyEvidenceLink,
   });
 
+  // Action verbs in the palette (Wave R brief R0d): registered by the
+  // component that owns the behavior, unregistered on unmount.
+  const { register, unregister } = useCommandRegistry();
+  useEffect(() => {
+    register([
+      {
+        id: "action-toggle-inspector",
+        label: "Toggle inspector",
+        section: "Actions",
+        kind: "action",
+        shortcut: "\u2318I",
+        action: toggleInspector,
+      },
+      {
+        id: "action-copy-evidence-link",
+        label: "Copy evidence link",
+        section: "Actions",
+        kind: "action",
+        shortcut: "\u2318\u21E7C",
+        action: onCopyEvidenceLink,
+      },
+    ]);
+    return () => unregister(["action-toggle-inspector", "action-copy-evidence-link"]);
+  }, [register, unregister, toggleInspector, onCopyEvidenceLink]);
+
+  const mainSurface = (
+    <main
+      data-region="main"
+      className="h-full overflow-y-auto bg-[var(--color-surface-base)] p-4"
+    >
+      <ApiErrorBoundary>
+        <Outlet />
+      </ApiErrorBoundary>
+    </main>
+  );
+
   return (
     <div
       className="grid h-screen"
       style={{
-        gridTemplateAreas: inspectorOpen
-          ? '"topbar topbar topbar" "leftnav main inspector" "footer footer footer"'
-          : '"topbar topbar" "leftnav main" "footer footer"',
+        gridTemplateAreas:
+          '"topbar topbar" "leftnav center" "footer footer"',
         gridTemplateRows: "auto 1fr auto",
-        gridTemplateColumns: inspectorOpen ? "12rem 1fr 20rem" : "12rem 1fr",
+        gridTemplateColumns: "12rem 1fr",
       }}
     >
       <div style={{ gridArea: "topbar" }}>
@@ -61,21 +98,18 @@ function ShellInner() {
         <LeftNav />
       </div>
 
-      <main
-        data-region="main"
-        style={{ gridArea: "main" }}
-        className="overflow-y-auto bg-[var(--color-surface-base)] p-4"
-      >
-        <ApiErrorBoundary>
-          <Outlet />
-        </ApiErrorBoundary>
-      </main>
-
-      {inspectorOpen && (
-        <div style={{ gridArea: "inspector" }}>
-          <RightInspector />
-        </div>
-      )}
+      <div style={{ gridArea: "center" }} className="min-h-0">
+        {inspectorOpen ? (
+          // Resizable main/inspector split; width persists via the
+          // SplitPane id (guarded storage access inside SplitPane).
+          <SplitPane direction="horizontal" id="inspector" defaultSplit={72} minSize={240}>
+            {mainSurface}
+            <RightInspector />
+          </SplitPane>
+        ) : (
+          mainSurface
+        )}
+      </div>
 
       <div style={{ gridArea: "footer" }}>
         <StatusFooter />

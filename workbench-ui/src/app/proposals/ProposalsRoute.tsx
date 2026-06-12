@@ -8,6 +8,8 @@ import { useProposalDetail, useProposals, useMathProposals, useMathProposalDetai
 import type { ProposalSummary, MathProposalDetail, ProposalState, DownstreamEffect, MathReasoningStep } from "../../types/api";
 import { Button } from "../../design/components/primitives/Button";
 import { EmptyState } from "../../design/components/states/EmptyState";
+import { SearchInput } from "../../design/components/SearchInput/SearchInput";
+import { useListNavigation } from "../../design/hooks/useListNavigation";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
 import { ProposalChainViewer } from "./ProposalChainViewer";
@@ -49,8 +51,8 @@ export function ProposalsRoute() {
   const [filter, setFilter] = useState<ProposalStateFilter>(
     isProposalFilter(filterFromUrl) ? filterFromUrl : "pending",
   );
+  const [search, setSearch] = useState("");
 
-  const [focusedIndex, setFocusedIndex] = useState<number>(0);
 
   // Queries
   const mathProposalsQuery = useMathProposals();
@@ -90,7 +92,7 @@ export function ProposalsRoute() {
   }, [domain, mathProposalsQuery.data, cognitionProposalsQuery.data]);
 
   // Map to unified ProposalSummary structure
-  const proposals: ProposalSummary[] = useMemo(() => {
+  const allProposals: ProposalSummary[] = useMemo(() => {
     if (domain === "math") {
       return (rawProposals as any[]).map((mp) => ({
         proposal_id: mp.proposal_id,
@@ -104,6 +106,29 @@ export function ProposalsRoute() {
       return (rawProposals as ProposalSummary[]) ?? [];
     }
   }, [domain, rawProposals]);
+
+  // Client-side narrowing via SearchInput ("/" focuses it while mounted).
+  const proposals: ProposalSummary[] = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return allProposals;
+    return allProposals.filter(
+      (p) =>
+        p.proposal_id.toLowerCase().includes(q) ||
+        p.source_kind.toLowerCase().includes(q),
+    );
+  }, [allProposals, search]);
+
+  // Shared list navigation (window scope — the queue IS the route's primary
+  // surface). Replaces the bespoke window keydown listener this route
+  // carried since W-029; one pattern app-wide (Wave R brief R0d).
+  const { focusedIndex, setFocusedIndex } = useListNavigation({
+    itemCount: proposals.length,
+    scope: "window",
+    onActivate: (index) => {
+      if (proposals[index]) selectProposal(proposals[index].proposal_id);
+    },
+    onEscape: () => updateRoute({ proposalId: null }),
+  });
 
   const focusedProposalId = useMemo(() => {
     if (proposals.length > 0 && focusedIndex >= 0 && focusedIndex < proposals.length) {
@@ -169,34 +194,6 @@ export function ProposalsRoute() {
     }
     updateRoute({ proposalId });
   }
-
-  // Keyboard navigation wires
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") {
-        return;
-      }
-
-      if (e.key === "j" || e.key === "ArrowDown") {
-        e.preventDefault();
-        setFocusedIndex((prev) => Math.min(prev + 1, proposals.length - 1));
-      } else if (e.key === "k" || e.key === "ArrowUp") {
-        e.preventDefault();
-        setFocusedIndex((prev) => Math.max(prev - 1, 0));
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        if (proposals[focusedIndex]) {
-          selectProposal(proposals[focusedIndex].proposal_id);
-        }
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        updateRoute({ proposalId: null });
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [proposals, focusedIndex]);
 
   // Auto-advance focus on success
   const autoAdvance = () => {
@@ -292,6 +289,12 @@ export function ProposalsRoute() {
             </div>
           )}
         </div>
+
+        <SearchInput
+          placeholder="Filter by proposal id or source kind"
+          value={search}
+          onChange={setSearch}
+        />
 
         {proposals.length === 0 ? (
           <EmptyState

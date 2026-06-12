@@ -1,5 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { Search } from "lucide-react";
+import { Kbd } from "./Kbd";
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useInRouterContext } from "react-router-dom";
 import {
@@ -11,16 +12,16 @@ import {
 } from "../../../app/commandRegistry";
 
 const NAV_COMMANDS: Command[] = [
-  { id: "nav-chat", label: "Open Chat", section: "Navigate", shortcut: "⌘1", action: () => {} },
-  { id: "nav-trace", label: "Open Trace", section: "Navigate", shortcut: "⌘2", action: () => {} },
-  { id: "nav-replay", label: "Open Replay", section: "Navigate", shortcut: "⌘3", action: () => {} },
-  { id: "nav-proposals", label: "Open Proposals", section: "Navigate", shortcut: "⌘4", action: () => {} },
-  { id: "nav-evals", label: "Open Evals", section: "Navigate", shortcut: "⌘5", action: () => {} },
-  { id: "nav-runs", label: "Open Runs", section: "Navigate", shortcut: "⌘6", action: () => {} },
-  { id: "nav-packs", label: "Open Packs", section: "Navigate", shortcut: "⌘7", action: () => {} },
-  { id: "nav-vault", label: "Open Vault", section: "Navigate", shortcut: "⌘8", action: () => {} },
-  { id: "nav-audit", label: "Open Audit", section: "Navigate", shortcut: "⌘9", action: () => {} },
-  { id: "nav-settings", label: "Open Settings", section: "Navigate", shortcut: "⌘0", action: () => {} },
+  { id: "nav-chat", label: "Open Chat", section: "Navigate", kind: "navigate", shortcut: "⌘1", action: () => {} },
+  { id: "nav-trace", label: "Open Trace", section: "Navigate", kind: "navigate", shortcut: "⌘2", action: () => {} },
+  { id: "nav-replay", label: "Open Replay", section: "Navigate", kind: "navigate", shortcut: "⌘3", action: () => {} },
+  { id: "nav-proposals", label: "Open Proposals", section: "Navigate", kind: "navigate", shortcut: "⌘4", action: () => {} },
+  { id: "nav-evals", label: "Open Evals", section: "Navigate", kind: "navigate", shortcut: "⌘5", action: () => {} },
+  { id: "nav-runs", label: "Open Runs", section: "Navigate", kind: "navigate", shortcut: "⌘6", action: () => {} },
+  { id: "nav-packs", label: "Open Packs", section: "Navigate", kind: "navigate", shortcut: "⌘7", action: () => {} },
+  { id: "nav-vault", label: "Open Vault", section: "Navigate", kind: "navigate", shortcut: "⌘8", action: () => {} },
+  { id: "nav-audit", label: "Open Audit", section: "Navigate", kind: "navigate", shortcut: "⌘9", action: () => {} },
+  { id: "nav-settings", label: "Open Settings", section: "Navigate", kind: "navigate", shortcut: "⌘0", action: () => {} },
 ];
 
 const NAV_PATHS: Record<string, string> = {
@@ -234,9 +235,9 @@ function CommandPaletteContent({
                         >
                           <span>{item.label}</span>
                           {item.shortcut && (
-                            <kbd className="ml-2 rounded border border-[var(--color-border-subtle)] px-1 font-mono text-[10px] text-[var(--color-text-muted)]">
-                              {item.shortcut}
-                            </kbd>
+                            <span className="ml-2">
+                              <Kbd>{item.shortcut}</Kbd>
+                            </span>
                           )}
                         </button>
                       </li>

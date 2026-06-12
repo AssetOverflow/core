@@ -22,6 +22,9 @@ import { MetadataTable } from "../design/components/MetadataTable/MetadataTable"
 import { DigestBadge } from "../design/components/DigestBadge/DigestBadge";
 import { Timestamp } from "../design/components/Timestamp/Timestamp";
 import { SearchInput } from "../design/components/SearchInput/SearchInput";
+import { Kbd } from "../design/components/primitives/Kbd";
+import { Panel } from "../design/components/Panel/Panel";
+import { VirtualizedList } from "../design/components/VirtualizedList/VirtualizedList";
 
 export function PreviewPage() {
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -204,6 +207,36 @@ export function PreviewPage() {
       <section aria-labelledby="json-heading" className="grid gap-3">
         <h2 id="json-heading" className="text-sm font-semibold text-[var(--color-text-secondary)]">Stable JSON Viewer</h2>
         <StableJsonViewer source='{"trace_hash":"4f80f7e12c7e","scenes":[{"detail":{"object":"lens","epsilon":1e-6}}],"state":"decoded"}' />
+      </section>
+
+      <section aria-labelledby="kbd-heading" className="grid gap-3">
+        <h2 id="kbd-heading" className="text-sm font-semibold text-[var(--color-text-secondary)]">Kbd</h2>
+        <p className="text-sm text-[var(--color-text-secondary)]">
+          Press <Kbd>\u2318K</Kbd> for the palette, <Kbd>j / k</Kbd> to move, <Kbd>Enter</Kbd> to open.
+        </p>
+      </section>
+
+      <section aria-labelledby="panel-heading" className="grid gap-3">
+        <h2 id="panel-heading" className="text-sm font-semibold text-[var(--color-text-secondary)]">Panel</h2>
+        <Panel title="Evidence" toolbar={<Kbd>/</Kbd>}>
+          <p className="m-0 text-sm text-[var(--color-text-secondary)]">Panel body content.</p>
+        </Panel>
+      </section>
+
+      <section aria-labelledby="vlist-heading" className="grid gap-3">
+        <h2 id="vlist-heading" className="text-sm font-semibold text-[var(--color-text-secondary)]">VirtualizedList (1,000 rows)</h2>
+        <VirtualizedList
+          items={Array.from({ length: 1000 }, (_, i) => `turn-${i}`)}
+          getKey={(item) => item}
+          renderItem={(item, _i, focused) => (
+            <div className={focused ? "bg-[var(--color-surface-raised)] px-2 py-1 text-sm" : "px-2 py-1 text-sm text-[var(--color-text-secondary)]"}>
+              {item}
+            </div>
+          )}
+          estimateSize={28}
+          height={160}
+          ariaLabel="Preview virtual list"
+        />
       </section>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />

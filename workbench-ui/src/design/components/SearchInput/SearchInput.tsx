@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
+import { useRegisterShortcuts, type ShortcutEntry } from "../../../app/shortcutRegistry";
 import { Search, X } from "lucide-react";
 
 export interface SearchInputProps {
@@ -8,6 +9,10 @@ export interface SearchInputProps {
   shortcut?: string;
 }
 
+const SEARCH_SHORTCUT: readonly ShortcutEntry[] = [
+  { id: "search-focus", keys: "/", action: "Focus search input", order: 42 },
+];
+
 export function SearchInput({
   placeholder,
   value,
@@ -16,6 +21,7 @@ export function SearchInput({
 }: SearchInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  useRegisterShortcuts(SEARCH_SHORTCUT);
 
   const handleChange = useCallback(
     (raw: string) => {

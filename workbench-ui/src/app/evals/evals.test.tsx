@@ -51,6 +51,13 @@ describe("W-030 Component Tests", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    // EvalsRoute now calls useEvalRun unconditionally (palette run verbs,
+    // Wave R R0d); give it a safe default so tests that never run a lane
+    // don't need their own mock.
+    vi.mocked(useEvalRun).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    } as any);
     fetchMock.mockImplementation((url: any) => {
       const urlStr = typeof url === "string" ? url : String(url?.url || url || "");
       if (urlStr.endsWith("/evals")) {
