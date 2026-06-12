@@ -1,22 +1,14 @@
-import { useState } from "react";
 import { CommandPalette } from "../design/components/primitives/CommandPalette";
 import { useRuntimeStatus } from "../api/queries";
 
-export function TopBar() {
-  const [paletteOpen, setPaletteOpen] = useState(false);
+export function TopBar({
+  paletteOpen,
+  onPaletteOpenChange,
+}: {
+  paletteOpen: boolean;
+  onPaletteOpenChange: (open: boolean) => void;
+}) {
   const { isLoading, isError } = useRuntimeStatus();
-
-  function openPalette() {
-    setPaletteOpen(true);
-  }
-
-  // ⌘K global shortcut
-  function handleKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      openPalette();
-    }
-  }
 
   const connectionPill = (() => {
     if (isLoading) {
@@ -54,18 +46,15 @@ export function TopBar() {
       data-region="topbar"
       className="flex items-center gap-4 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-4 py-2"
     >
-      {/* Wordmark */}
       <span className="shrink-0 font-mono text-sm font-semibold text-[var(--color-text-primary)]">
         CORE Workbench
       </span>
 
-      {/* Search / Command Palette trigger */}
       <div className="flex flex-1 justify-center">
         <button
           type="button"
           className="flex items-center gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-surface-sunken)] px-3 py-1 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]"
-          onClick={openPalette}
-          onKeyDown={handleKeyDown}
+          onClick={() => onPaletteOpenChange(true)}
           aria-label="Open command palette (⌘K)"
         >
           <span>Search commands…</span>
@@ -75,10 +64,9 @@ export function TopBar() {
         </button>
       </div>
 
-      {/* Connection pill */}
       <div className="shrink-0">{connectionPill}</div>
 
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <CommandPalette open={paletteOpen} onOpenChange={onPaletteOpenChange} />
     </header>
   );
 }

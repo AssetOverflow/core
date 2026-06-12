@@ -1,27 +1,46 @@
+import { useState, useCallback } from "react";
 import { Outlet } from "react-router-dom";
 import { TopBar } from "./TopBar";
 import { LeftNav } from "./LeftNav";
 import { StatusFooter } from "./StatusFooter";
 import { RightInspector } from "./RightInspector";
 import { ApiErrorBoundary } from "./ApiErrorBoundary";
+import { EvidenceProvider, useEvidenceSubject } from "./evidenceContext";
+import { KeyboardHelp } from "./KeyboardHelp";
+import { useGlobalKeyboard } from "./useGlobalKeyboard";
 
-export function Shell() {
-  // RightInspector defaults to collapsed in W-027
-  const inspectorCollapsed = true;
+function ShellInner() {
+  const { inspectorOpen, toggleInspector } = useEvidenceSubject();
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  const onTogglePalette = useCallback(() => {
+    setPaletteOpen((v) => !v);
+  }, []);
+
+  const onShowHelp = useCallback(() => {
+    setHelpOpen(true);
+  }, []);
+
+  useGlobalKeyboard({
+    onTogglePalette,
+    onToggleInspector: toggleInspector,
+    onShowHelp,
+  });
 
   return (
     <div
       className="grid h-screen"
       style={{
-        gridTemplateAreas: inspectorCollapsed
-          ? '"topbar topbar" "leftnav main" "footer footer"'
-          : '"topbar topbar topbar" "leftnav main inspector" "footer footer footer"',
+        gridTemplateAreas: inspectorOpen
+          ? '"topbar topbar topbar" "leftnav main inspector" "footer footer footer"'
+          : '"topbar topbar" "leftnav main" "footer footer"',
         gridTemplateRows: "auto 1fr auto",
-        gridTemplateColumns: inspectorCollapsed ? "12rem 1fr" : "12rem 1fr 20rem",
+        gridTemplateColumns: inspectorOpen ? "12rem 1fr 20rem" : "12rem 1fr",
       }}
     >
       <div style={{ gridArea: "topbar" }}>
-        <TopBar />
+        <TopBar paletteOpen={paletteOpen} onPaletteOpenChange={setPaletteOpen} />
       </div>
 
       <div style={{ gridArea: "leftnav" }}>
@@ -38,15 +57,25 @@ export function Shell() {
         </ApiErrorBoundary>
       </main>
 
-      {!inspectorCollapsed && (
+      {inspectorOpen && (
         <div style={{ gridArea: "inspector" }}>
-          <RightInspector collapsed={false} />
+          <RightInspector />
         </div>
       )}
 
       <div style={{ gridArea: "footer" }}>
         <StatusFooter />
       </div>
+
+      <KeyboardHelp open={helpOpen} onOpenChange={setHelpOpen} />
     </div>
+  );
+}
+
+export function Shell() {
+  return (
+    <EvidenceProvider>
+      <ShellInner />
+    </EvidenceProvider>
   );
 }
