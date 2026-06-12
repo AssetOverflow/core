@@ -167,10 +167,12 @@ the certificate, not just the status.
   exist before ratification — so PR B retires **no** markers; the
   certificate-shaped halves of O1/O7 are instead proven for real in the
   dedicated test file.
-- **PR C (requires this ADR ratified).** `certify_promotion` +
-  `VaultStore.apply_certified_promotion` behind the existing mutation owner.
-  Retires all the xfails (strict-xpass forces it); INV-21 allowlist
-  unchanged; INV-29 allowlist unchanged; full + deductive lanes wrong=0.
+- **PR C (landed with ratification, same PR).** `certify_promotion`
+  (`teaching/proof_promotion.py`) + `VaultStore.apply_certified_promotion`
+  behind the existing mutation owner. All xfails retired (strict-xpass
+  forced it); INV-21 allowlist unchanged; INV-29 allowlist unchanged; full +
+  deductive lanes wrong=0. The engine pin lives in
+  `generate/proof_chain/engine_pin.py`, sync-pinned to the lane registry.
 - **PR D.** Local deterministic demo (`demos/` pattern): proposer submits
   claim + proof candidate; CORE ignores the candidate, recomputes, promotes
   or refuses on pinned verification only. No network, no model API, no side

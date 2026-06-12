@@ -1,13 +1,14 @@
 # Issue — Proof-carrying coherence promotion (the logical arm of ADR-0021's v2 gap)
 
-**Status:** Open — [ADR-0218 proposed](../decisions/ADR-0218-proof-carrying-coherence-promotion.md)
-(2026-06-11, awaiting ratification); runtime code remains unauthorized.
-Executable proof obligations shipped as strict-xfail in
-`tests/test_proof_carrying_promotion_obligations.py`; INV-29 now pins the
-status-transition-site allowlist.  PR B landed the pure evidence substrate:
-`generate/proof_chain/certificate.py` (`PromotionCertificate` +
-`build_certificate` / `verify_certificate` replay verifier) — no promotion,
-no vault import, no status transition; promoter obligations remain xfail.
+**Status:** Capability landed — [ADR-0218 ratified 2026-06-11](../decisions/ADR-0218-proof-carrying-coherence-promotion.md).
+PR A shipped the obligations + INV-29; PR B the pure evidence substrate
+(`generate/proof_chain/certificate.py`); PR C (post-ratification) the P3
+promoter: `teaching/proof_promotion.py` (pure decider, fresh-read store
+state, proposer payload provably unread) +
+`VaultStore.apply_certified_promotion` (independent re-verification, the
+only transition site — INV-21/INV-29 allowlists unchanged).  All strict-xfail
+obligations are retired and pass live.  No runtime turn path calls promotion
+yet; the deterministic demo is PR D.
 **Raised:** 2026-06-11
 **Surface:** `teaching/epistemic.py`, `teaching/review.py`, the deductive
 engine (`deductive_logic_v1`), `vault/store.py`, INV-21 one-mutation-path

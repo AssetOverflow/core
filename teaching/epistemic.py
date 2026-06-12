@@ -24,15 +24,17 @@ class EpistemicStatus(Enum):
     function of coherence with the existing reviewed field, never of
     source authority, credentials, or the system's own asserted output.
 
-    The *judgment behind* a transition is curator-mediated today —
+    The *judgment behind* a transition is curator-mediated by default —
     ``review_correction`` carries the resulting status as an input, it does
-    not yet compute it.  ADR-0021's "Named gap (v2 work)" commits to
-    replacing curator mediation with a structural coherence metric; one
-    arm of that successor (proof-carrying promotion for the deductively
-    *entailed* subclass, via the sound ``deductive_logic_v1`` engine) is
-    specified but not yet wired — see
-    ``docs/issues/proof-carrying-coherence-promotion.md``.  Until it lands,
-    do not read this enum as evidence of an automated coherence computation.
+    not compute it.  One arm of ADR-0021's "Named gap (v2 work)" is now
+    wired (ADR-0218, ratified 2026-06-11): for the deductively *entailed*
+    subclass, ``teaching/proof_promotion.py`` certifies entailment over an
+    all-COHERENT, curator-certified premise set via the sound
+    ``deductive_logic_v1`` engine, and
+    ``VaultStore.apply_certified_promotion`` owns the SPECULATIVE→COHERENT
+    transition after independent re-verification.  No runtime turn path
+    invokes it yet.  Every other transition remains curator-mediated — see
+    ``docs/issues/proof-carrying-coherence-promotion.md``.
     """
 
     COHERENT = "coherent"

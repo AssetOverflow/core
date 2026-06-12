@@ -1742,13 +1742,14 @@ class TestINV28MeaningGraphNeutrality:
 # document the justification here in the same commit.
 #
 # Allowlist rationale per site:
-#   vault/store.py — the single mutation owner. Two sites today:
+#   vault/store.py — the single mutation owner. Three sites today:
 #                    store() stamping at write time (param-only; callers
-#                    cannot smuggle status via the metadata dict), and
-#                    ADR-0148 promote_eligible_entries (energy-policy
-#                    promotion, opt-in flag, default off). ADR-0218 proposes
-#                    its proof-carrying transition land HERE too
-#                    (apply_certified_promotion), keeping this list unchanged.
+#                    cannot smuggle status via the metadata dict), ADR-0148
+#                    promote_eligible_entries (energy-policy promotion,
+#                    opt-in flag, default off), and ADR-0218 (ratified
+#                    2026-06-11) apply_certified_promotion (proof-carrying
+#                    promotion, independent re-verification before the flip).
+#                    The list stays unchanged: all three live HERE.
 
 ALLOWED_STATUS_TRANSITION_SITES: frozenset[str] = frozenset({
     "vault/store.py",
@@ -1967,11 +1968,13 @@ class TestINV29EpistemicStatusTransitionSites:
         )
 
     def test_vault_store_sites_are_visible(self):
-        """29c — the scan actually sees the two known vault/store.py sites
-        (store-time stamp + ADR-0148 promotion). If this drops to zero the
-        scan went blind, not clean."""
+        """29c — the scan actually sees the three known vault/store.py sites
+        (store-time stamp + ADR-0148 promotion + ADR-0218 certified
+        promotion). If this drops below three the scan went blind, not
+        clean."""
         vault_path = PROJECT_ROOT_FOR_INV21 / "vault" / "store.py"
-        assert _file_status_transition_count(vault_path) >= 2, (
-            "Expected the store() stamp and the ADR-0148 promotion site in "
+        assert _file_status_transition_count(vault_path) >= 3, (
+            "Expected the store() stamp, the ADR-0148 promotion site, and "
+            "the ADR-0218 apply_certified_promotion site in "
             "vault/store.py to be visible to the INV-29 scan."
         )

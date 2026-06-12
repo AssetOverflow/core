@@ -11,6 +11,11 @@
 - ADR-0218 PR B: `PromotionCertificate` + pure replay verifier
   (`build_certificate` / `verify_certificate`), in `certificate.py`.  Evidence
   substrate only — no promotion, no vault import, no status transition.
+- ADR-0218 P3 (ratified): `engine_pin.py` carries `DEDUCTIVE_ENGINE_PIN`, the
+  deductive-lane SHA the promoter stamps into certificates and the vault
+  demands back at apply time.  The promoter itself lives in
+  `teaching/proof_promotion.py`; the transition owner is
+  `VaultStore.apply_certified_promotion`.
 
 Honesty boundary (load-bearing through 2.3): sound over declared atoms, not grounded
 in recognized input; the disagreement rule guarantees a unique conclusion among
@@ -26,6 +31,7 @@ from .builder import (
     ProofGraph,
     build_proof_graph,
 )
+from .engine_pin import DEDUCTIVE_ENGINE_PIN
 from .certificate import (
     CERTIFICATE_VERSION,
     ENGINE_PIN_MISMATCH,
@@ -72,6 +78,7 @@ __all__ = (
     "CONCLUSION_DISAGREEMENT",
     "CONCLUSION_MISMATCH",
     "CertificateVerification",
+    "DEDUCTIVE_ENGINE_PIN",
     "ENGINE_PIN_MISMATCH",
     "MALFORMED_CERTIFICATE",
     "MISSING_IMPLICATION",
