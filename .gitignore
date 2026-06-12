@@ -8,6 +8,10 @@ __pycache__/
 traces/
 .formation_cache/
 
+workbench_data/*
+!workbench_data/
+!workbench_data/README.md
+
 core-rs/target/
 core-rs/Cargo.lock
 

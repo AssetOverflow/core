@@ -6,6 +6,7 @@ import json
 import threading
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
@@ -17,6 +18,7 @@ from core.epistemic_state import (
     normative_detail_from_verdicts,
 )
 from workbench import readers
+from workbench.journal import DEFAULT_JOURNAL_DIR, TurnJournal, TurnJournalEntry
 from workbench.readers import ArtifactTooLargeError
 from workbench.schemas import ChatTurnResult, MathRatifyResult, ProposalRef, TurnVerdict, error, ok
 
@@ -33,8 +35,17 @@ class ApiResponse:
 
 
 class WorkbenchApi:
-    def __init__(self, telemetry_sink: Any | None = None) -> None:
+    def __init__(
+        self,
+        telemetry_sink: Any | None = None,
+        *,
+        journal: TurnJournal | None = None,
+        journal_dir: Any | None = None,
+    ) -> None:
         self._telemetry_sink = telemetry_sink
+        self._journal = journal or TurnJournal(
+            DEFAULT_JOURNAL_DIR if journal_dir is None else Path(journal_dir)
+        )
 
     def attach_telemetry_sink(self, sink: Any | None) -> None:
         self._telemetry_sink = sink
@@ -145,8 +156,21 @@ class WorkbenchApi:
             return ApiResponse(200, ok(result))
         if method == "POST" and path == "/chat/turn":
             return self._chat_turn(body)
+        if method == "GET" and path == "/trace/turns":
+            limit = int(query.get("limit", ["50"])[0])
+            offset = int(query.get("offset", ["0"])[0])
+            items = self._journal.list_summaries(limit=limit, offset=offset)
+            return ApiResponse(200, ok({"items": items}))
         if method == "GET" and path.startswith("/trace/"):
-            return ApiResponse(404, error("not_found", "trace storage is not wired in W-026"))
+            raw_turn_id = unquote(path.removeprefix("/trace/"))
+            try:
+                turn_id = int(raw_turn_id)
+            except ValueError:
+                return ApiResponse(404, error("not_found", f"trace turn not found: {raw_turn_id}"))
+            try:
+                return ApiResponse(200, ok(self._journal.get_entry(turn_id)))
+            except FileNotFoundError:
+                return ApiResponse(404, error("not_found", f"trace turn not found: {turn_id}"))
         if method == "GET" and path.startswith("/replay/"):
             return ApiResponse(501, error("unsupported", "route is deferred beyond W-026"))
         return ApiResponse(404, error("not_found", f"route not found: {method} {path}"))
@@ -278,13 +302,21 @@ class WorkbenchApi:
             started = time.perf_counter()
             result = _run_chat_turn(prompt)
             elapsed_ms = max(0, int(round((time.perf_counter() - started) * 1000)))
-            return ApiResponse(200, ok(_with_turn_cost(result, elapsed_ms)))
+            turn_id = self._journal.next_turn_id()
+            result_with_cost = _with_turn_cost_and_id(result, elapsed_ms, turn_id)
+            entry = TurnJournalEntry.from_chat_turn(result_with_cost, turn_id=turn_id)
+            self._journal.append(entry)
+            return ApiResponse(200, ok(result_with_cost))
 
 
-def _with_turn_cost(result: ChatTurnResult, turn_cost_ms: int) -> ChatTurnResult:
+def _with_turn_cost_and_id(
+    result: ChatTurnResult,
+    turn_cost_ms: int,
+    turn_id: int,
+) -> ChatTurnResult:
     from dataclasses import replace
 
-    return replace(result, turn_cost_ms=turn_cost_ms)
+    return replace(result, turn_cost_ms=turn_cost_ms, turn_id=turn_id)
 
 
 def _coerce_grounding_source(value: object) -> str:

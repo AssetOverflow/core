@@ -113,6 +113,38 @@ class ChatTurnResult:
     proposal_candidates: list[ProposalRef]
     turn_cost_ms: int
     checkpoint_emitted: bool
+    turn_id: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class TurnJournalSummarySchema:
+    turn_id: int
+    timestamp: str
+    prompt_excerpt: str
+    surface_excerpt: str
+    trace_hash: str | None
+    grounding_source: GroundingSource
+
+
+@dataclass(frozen=True, slots=True)
+class TurnJournalEntrySchema:
+    turn_id: int
+    timestamp: str
+    trace_hash: str | None
+    prompt: str
+    surface: str
+    articulation_surface: str | None
+    walk_surface: str | None
+    grounding_source: GroundingSource
+    epistemic_state: EpistemicStateValue
+    normative_clearance: NormativeClearanceValue
+    verdicts: dict[str, Any]
+    refusal_emitted: bool
+    hedge_injected: bool
+    proposal_candidates: list[dict[str, Any]]
+    turn_cost_ms: int
+    checkpoint_emitted: bool
+    journal_digest: str
 
 
 @dataclass(frozen=True, slots=True)
