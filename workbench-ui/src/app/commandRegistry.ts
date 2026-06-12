@@ -88,5 +88,10 @@ export function pushRecentItem(item: Omit<RecentItem, "timestamp">) {
   const items = getRecentItems().filter((r) => r.path !== item.path);
   items.unshift({ ...item, timestamp: Date.now() });
   if (items.length > MAX_RECENT) items.length = MAX_RECENT;
-  localStorage.setItem(RECENT_KEY, JSON.stringify(items));
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify(items));
+  } catch {
+    // Recent-item persistence is best-effort. Restricted/private storage
+    // contexts must not break command activation.
+  }
 }
