@@ -10,7 +10,7 @@ import {
 } from "../../design/components/badges";
 import type { KeyboardEvent, ReactNode } from "react";
 import type { ChatTurnResult } from "../../types/api";
-import { CopyableHash } from "./CopyableHash";
+import { DigestBadge } from "../../design/components/DigestBadge/DigestBadge";
 
 export type TraceFocus =
   | "metadata"
@@ -98,7 +98,7 @@ export function EvidenceStrip({
       ) : null}
       {result.trace_hash ? (
         <span onClick={() => onOpen("trace")}>
-          <CopyableHash value={result.trace_hash} />
+          <DigestBadge digest={result.trace_hash.replace("sha256:", "")} />
         </span>
       ) : null}
     </div>

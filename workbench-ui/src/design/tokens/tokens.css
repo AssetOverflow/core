@@ -29,6 +29,10 @@
   --color-text-mono: #d8e2ef;
   --color-text-muted: #788395;
   --color-focus-ring: #7dd3fc;
+  /* Selection is a persistent state; focus is a transient position.
+     Distinct tokens keep the two visually separable in lists. */
+  --color-selected-bg: #18222f;
+  --color-selected-border: #4d9fd6;
   --color-link: #8bd3ff;
 
   --color-state-decoded: #4fc3b4;

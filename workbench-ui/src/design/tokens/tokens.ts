@@ -13,6 +13,8 @@ export const tokens = {
   "color-text-mono": "#d8e2ef",
   "color-text-muted": "#788395",
   "color-focus-ring": "#7dd3fc",
+  "color-selected-bg": "#18222f",
+  "color-selected-border": "#4d9fd6",
   "color-link": "#8bd3ff",
   "color-state-decoded": "#4fc3b4",
   "color-state-decoded-muted": "#3d8f86",

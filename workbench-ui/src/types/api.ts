@@ -55,6 +55,8 @@ export interface ProposalRef {
 
 export interface ChatTurnResult {
   prompt: string;
+  /** Journal id stamped by the workbench API; null if journaling failed. */
+  turn_id?: number | null;
   surface: string;
   articulation_surface: string | null;
   walk_surface: string | null;

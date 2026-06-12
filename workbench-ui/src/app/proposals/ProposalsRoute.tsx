@@ -16,6 +16,7 @@ import { ProposalChainViewer } from "./ProposalChainViewer";
 import { ProposalProvenanceViewer } from "./ProposalProvenanceViewer";
 import { ProposalSummaryCard } from "./ProposalSummaryCard";
 import { ProposalTable } from "./ProposalTable";
+import { Panel } from "../../design/components/Panel/Panel";
 import { ReplayEvidenceCard } from "./ReplayEvidenceCard";
 import { RatificationCommandPanel } from "./RatificationCommandPanel";
 
@@ -244,12 +245,10 @@ export function ProposalsRoute() {
 
   return (
     <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[minmax(34rem,0.95fr)_minmax(32rem,1.05fr)]">
-      <section className="grid min-h-0 content-start gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <h1 className="m-0 text-base font-semibold text-[var(--color-text-primary)]">Proposal Queue</h1>
-            {/* Domain Selector Tabs */}
-            <div className="flex bg-[var(--color-surface-inset)] p-0.5 rounded border border-[var(--color-border-subtle)]">
+      <Panel
+        title="Proposal Queue"
+        toolbar={
+          <div className="flex bg-[var(--color-surface-inset)] p-0.5 rounded border border-[var(--color-border-subtle)]">
               <button
                 onClick={() => changeDomain("math")}
                 className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
@@ -270,9 +269,10 @@ export function ProposalsRoute() {
               >
                 Cognition Queue
               </button>
-            </div>
           </div>
-          
+        }
+      >
+        <div className="grid content-start gap-3">
           {domain === "cognition" && (
             <div className="flex flex-wrap gap-2" role="group" aria-label="Proposal state filter">
               {filters.map((state) => (
@@ -288,7 +288,6 @@ export function ProposalsRoute() {
               ))}
             </div>
           )}
-        </div>
 
         <SearchInput
           placeholder="Filter by proposal id or source kind"
@@ -313,7 +312,8 @@ export function ProposalsRoute() {
             onSelect={selectProposal}
           />
         )}
-      </section>
+        </div>
+      </Panel>
 
       <section className="min-h-0 overflow-y-auto pr-1">
         {!selectedProposalId ? (

@@ -106,7 +106,7 @@ export function ArtifactList({ artifacts, selectedId, onSelect }: ArtifactListPr
                     className={cn(
                       "w-full rounded px-2 py-1.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]",
                       isSelected
-                        ? "bg-[var(--color-surface-raised)] text-[var(--color-text-primary)] border-l-2 border-[var(--color-focus-ring)] pl-1.5"
+                        ? "bg-[var(--color-selected-bg)] text-[var(--color-text-primary)] border-l-2 border-[var(--color-selected-border)] pl-1.5"
                         : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-text-primary)]"
                     )}
                     aria-current={isSelected ? "true" : undefined}

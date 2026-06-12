@@ -37,7 +37,8 @@ export function DigestBadge({
   digest,
   algorithm = "sha256",
   verified,
-  truncate = 16,
+  // Wave R hash display standard: 12 visible chars + copy, everywhere.
+  truncate = 12,
 }: DigestBadgeProps) {
   const [copied, setCopied] = useState(false);
   const scheduleReset = useManagedTimeout();

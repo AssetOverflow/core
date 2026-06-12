@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useEvidenceSubject, type EvidenceSubject } from "./evidenceContext";
+import { EvidenceChainRail } from "./EvidenceChainRail";
 import { MetadataTable } from "../design/components/MetadataTable/MetadataTable";
 import { DigestBadge } from "../design/components/DigestBadge/DigestBadge";
 import { Timestamp } from "../design/components/Timestamp/Timestamp";
@@ -161,6 +162,15 @@ function NoneInspector() {
 function InspectorContent() {
   const { subject } = useEvidenceSubject();
 
+  return (
+    <div className="grid content-start gap-2">
+      <EvidenceChainRail subject={subject} />
+      <InspectorProjection subject={subject} />
+    </div>
+  );
+}
+
+function InspectorProjection({ subject }: { subject: EvidenceSubject }) {
   switch (subject.kind) {
     case "turn":
       return <TurnInspector subject={subject} />;

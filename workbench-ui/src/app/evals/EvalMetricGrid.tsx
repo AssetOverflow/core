@@ -84,7 +84,7 @@ export function EvalMetricGrid({
               <div className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider truncate" title={key}>
                 {key.replaceAll("_", " ")}
               </div>
-              <div className={`mt-1 font-mono text-sm font-semibold text-[var(--color-text-primary)] ${isObj ? "whitespace-pre overflow-x-auto text-[10px] bg-[var(--color-surface-inset)] p-1.5 rounded" : ""}`}>
+              <div className={`mt-1 font-mono tabular-nums text-sm font-semibold text-[var(--color-text-primary)] ${isObj ? "whitespace-pre overflow-x-auto text-[10px] bg-[var(--color-surface-inset)] p-1.5 rounded" : ""}`}>
                 {formatted}
                 {unit && <span className="ml-1 text-xs text-[var(--color-text-muted)] font-sans font-normal">{unit}</span>}
               </div>

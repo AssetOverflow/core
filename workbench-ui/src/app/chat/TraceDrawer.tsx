@@ -6,7 +6,7 @@ import { Button } from "../../design/components/primitives/Button";
 import { StableJsonViewer } from "../../design/components/StableJsonViewer";
 import { copyText } from "../../design/lib";
 import type { ChatTurnResult, TurnVerdict } from "../../types/api";
-import { CopyableHash } from "./CopyableHash";
+import { DigestBadge } from "../../design/components/DigestBadge/DigestBadge";
 import type { TraceFocus } from "./EvidenceStrip";
 
 function Panel({
@@ -159,7 +159,7 @@ export function TraceDrawer({
               )}
             </Panel>
             <Panel id="trace" title="Trace hash + replay">
-              {result.trace_hash ? <CopyableHash value={result.trace_hash} /> : <p className="m-0 text-sm">No trace hash recorded.</p>}
+              {result.trace_hash ? <DigestBadge digest={result.trace_hash.replace("sha256:", "")} /> : <p className="m-0 text-sm">No trace hash recorded.</p>}
               <button
                 type="button"
                 className="mt-2 rounded border border-[var(--color-border-subtle)] px-2 py-1 font-mono text-xs text-[var(--color-text-secondary)]"
