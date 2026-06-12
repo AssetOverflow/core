@@ -1,4 +1,7 @@
-import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useEvidenceSubject } from "../evidenceContext";
+import { subjectToUrl } from "../evidenceAddress";
 import { useArtifacts, useArtifactDetail, useReplayComparison } from "../../api/queries";
 import { ArtifactList } from "./ArtifactList";
 import { ReplayComparisonPanel } from "./ReplayComparisonPanel";
@@ -9,15 +12,29 @@ import { WorkbenchApiError } from "../../api/client";
 import { ReplayStatus } from "../../design/components/badges";
 
 export function ReplayRoute() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const selectedId = searchParams.get("artifactId");
+  const { artifactId } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { setSubject } = useEvidenceSubject();
+  const selectedId = artifactId ?? null;
 
   const artifactsQuery = useArtifacts();
   const detailQuery = useArtifactDetail(selectedId || "");
   const comparisonQuery = useReplayComparison(selectedId || "");
 
+  // Publish the selected artifact as the evidence subject: identity
+  // immediately, detail once the query resolves.
+  const detailData = detailQuery.data;
+  useEffect(() => {
+    if (!selectedId) return;
+    setSubject({ kind: "artifact", artifactId: selectedId, data: detailData });
+  }, [selectedId, detailData, setSubject]);
+
   function handleSelect(id: string) {
-    setSearchParams({ artifactId: id });
+    const search = searchParams.toString();
+    const path = subjectToUrl({ kind: "artifact", artifactId: id });
+    // Selection churn must not pollute history: replace, never push.
+    navigate(search ? `${path}?${search}` : path, { replace: true });
   }
 
   // Handle loading states

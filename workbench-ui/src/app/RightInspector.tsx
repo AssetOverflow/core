@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useEvidenceSubject, type EvidenceSubject } from "./evidenceContext";
 import { MetadataTable } from "../design/components/MetadataTable/MetadataTable";
 import { DigestBadge } from "../design/components/DigestBadge/DigestBadge";
@@ -11,8 +12,27 @@ import {
   type NormativeClearance,
 } from "../design/components/badges";
 
+// Rendered when a subject was restored from a URL but its detail has not
+// loaded in this session yet.  An honest absence state, not a guess.
+function DetailNotLoaded() {
+  return (
+    <p className="m-0 text-xs text-[var(--color-text-muted)]">
+      Detail not loaded in this session. Open the subject&apos;s route to load
+      its evidence.
+    </p>
+  );
+}
+
 function TurnInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "turn" }> }) {
   const { data } = subject;
+  if (!data) {
+    return (
+      <div className="grid gap-3">
+        <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Turn #{subject.turnId}</h3>
+        <DetailNotLoaded />
+      </div>
+    );
+  }
   return (
     <div className="grid gap-3">
       <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Turn #{subject.turnId}</h3>
@@ -48,6 +68,15 @@ function TurnInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: 
 
 function ProposalInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "proposal" }> }) {
   const { data } = subject;
+  if (!data) {
+    return (
+      <div className="grid gap-3">
+        <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Proposal</h3>
+        <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">{subject.proposalId}</p>
+        <DetailNotLoaded />
+      </div>
+    );
+  }
   return (
     <div className="grid gap-3">
       <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Proposal</h3>
@@ -66,6 +95,15 @@ function ProposalInspector({ subject }: { subject: Extract<EvidenceSubject, { ki
 
 function ArtifactInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "artifact" }> }) {
   const { data } = subject;
+  if (!data) {
+    return (
+      <div className="grid gap-3">
+        <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Artifact</h3>
+        <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">{subject.artifactId}</p>
+        <DetailNotLoaded />
+      </div>
+    );
+  }
   return (
     <div className="grid gap-3">
       <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Artifact</h3>
@@ -85,6 +123,14 @@ function ArtifactInspector({ subject }: { subject: Extract<EvidenceSubject, { ki
 
 function EvalInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "eval_result" }> }) {
   const { data } = subject;
+  if (!data) {
+    return (
+      <div className="grid gap-3">
+        <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Eval: {subject.lane}</h3>
+        <DetailNotLoaded />
+      </div>
+    );
+  }
   return (
     <div className="grid gap-3">
       <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Eval: {data.lane}</h3>
@@ -129,7 +175,21 @@ function InspectorContent() {
   }
 }
 
+const COPY_FEEDBACK_MS = 2000;
+
 export function RightInspector() {
+  const { addressCopyCount } = useEvidenceSubject();
+  const [showCopied, setShowCopied] = useState(false);
+
+  // Transient inline confirmation for Cmd+Shift+C; confirmation only, never
+  // audit context (per ADR-0162 no auto-dismissing audit events).
+  useEffect(() => {
+    if (addressCopyCount === 0) return;
+    setShowCopied(true);
+    const timer = setTimeout(() => setShowCopied(false), COPY_FEEDBACK_MS);
+    return () => clearTimeout(timer);
+  }, [addressCopyCount]);
+
   return (
     <aside
       data-region="inspector"
@@ -139,9 +199,19 @@ export function RightInspector() {
         <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
           Inspector
         </span>
-        <kbd className="rounded border border-[var(--color-border-subtle)] px-1 text-[10px] text-[var(--color-text-muted)]">
-          ⌘I
-        </kbd>
+        <span className="flex items-center gap-2">
+          {showCopied && (
+            <span
+              data-testid="address-copied"
+              className="text-[10px] font-semibold text-[var(--color-state-success-text)]"
+            >
+              Copied
+            </span>
+          )}
+          <kbd className="rounded border border-[var(--color-border-subtle)] px-1 text-[10px] text-[var(--color-text-muted)]">
+            ⌘I
+          </kbd>
+        </span>
       </div>
       <InspectorContent />
     </aside>

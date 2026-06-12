@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
+import { useEvidenceSubject } from "../evidenceContext";
+import { subjectToUrl } from "../evidenceAddress";
 import { WorkbenchApiError, type ProposalStateFilter } from "../../api/client";
 import { useProposalDetail, useProposals, useMathProposals, useMathProposalDetail } from "../../api/queries";
 import type { ProposalSummary, MathProposalDetail, ProposalState, DownstreamEffect, MathReasoningStep } from "../../types/api";
@@ -33,8 +35,10 @@ function errorMessage(error: unknown) {
 }
 
 export function ProposalsRoute() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const selectedFromUrl = searchParams.get("proposal_id");
+  const { proposalId: selectedFromUrl } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { setSubject } = useEvidenceSubject();
   const filterFromUrl = searchParams.get("state");
   const domainFromUrl = searchParams.get("domain");
 
@@ -113,11 +117,24 @@ export function ProposalsRoute() {
     setFocusedIndex(0);
   }, [domain, filter]);
 
+  // Publish the selected proposal as the evidence subject: identity
+  // immediately, detail once the query resolves.  Math proposals have a
+  // distinct detail shape not carried by EvidenceSubject; they stay
+  // route-local.
+  useEffect(() => {
+    if (!selectedProposalId || domain !== "cognition") return;
+    setSubject({
+      kind: "proposal",
+      proposalId: selectedProposalId,
+      data: cognitionDetailQuery.data,
+    });
+  }, [selectedProposalId, domain, cognitionDetailQuery.data, setSubject]);
+
   function updateRoute(next: { proposalId?: string | null; state?: ProposalStateFilter; domain?: "math" | "cognition" }) {
     const params = new URLSearchParams(searchParams);
     const nextDomain = next.domain ?? domain;
     const nextState = next.state ?? filter;
-    
+
     if (nextDomain === "math") {
       params.set("domain", "math");
     } else {
@@ -125,12 +142,14 @@ export function ProposalsRoute() {
     }
     params.set("state", nextState);
 
-    if (next.proposalId === null) {
-      params.delete("proposal_id");
-    } else if (next.proposalId) {
-      params.set("proposal_id", next.proposalId);
-    }
-    setSearchParams(params, { replace: false });
+    const nextProposalId =
+      next.proposalId === null ? null : (next.proposalId ?? selectedProposalId);
+    const path = nextProposalId
+      ? subjectToUrl({ kind: "proposal", proposalId: nextProposalId })
+      : "/proposals";
+    const search = params.toString();
+    // Selection churn must not pollute history: replace, never push.
+    navigate(search ? `${path}?${search}` : path, { replace: true });
   }
 
   function changeFilter(nextFilter: ProposalStateFilter) {

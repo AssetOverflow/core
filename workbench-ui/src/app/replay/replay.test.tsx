@@ -1,8 +1,9 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createTestQueryClient } from "../../test/createTestQueryClient";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { MemoryRouter, Route, Routes, useSearchParams } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi, afterEach } from "vitest";
+import { EvidenceProvider } from "../evidenceContext";
 import { ArtifactList } from "./ArtifactList";
 import { ReplayStatusBadge, ReplayStatus } from "../../design/components/badges";
 import { ReplayComparisonPanel } from "./ReplayComparisonPanel";
@@ -103,6 +104,20 @@ function renderWithProviders(ui: React.ReactElement, initialEntries = ["/"]) {
   );
 }
 
+// ReplayRoute reads its selection from the :artifactId path param and
+// publishes the selected artifact as the evidence subject, so it needs the
+// real route declaration and an EvidenceProvider.
+function renderReplayRoute(initialEntry: string) {
+  return renderWithProviders(
+    <EvidenceProvider>
+      <Routes>
+        <Route path="/replay/:artifactId?" element={<ReplayRoute />} />
+      </Routes>
+    </EvidenceProvider>,
+    [initialEntry],
+  );
+}
+
 describe("W-031 Replay Theater Tests", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -141,39 +156,20 @@ describe("W-031 Replay Theater Tests", () => {
       });
     });
 
-    it("selecting a row updates the URL query param", async () => {
-      function HelperRoute() {
-        const [searchParams] = useSearchParams();
-        const artifactsQuery = mockArtifacts;
-        return (
-          <div>
-            <div data-testid="url-param">{searchParams.get("artifactId")}</div>
-            <ArtifactList
-              artifacts={artifactsQuery}
-              selectedId={searchParams.get("artifactId")}
-              onSelect={(id) => {
-                window.history.replaceState(
-                  {},
-                  "",
-                  `?artifactId=${encodeURIComponent(id)}`
-                );
-                // Trigger popstate so react-router notices change in this test environment
-                window.dispatchEvent(new PopStateEvent("popstate"));
-              }}
-            />
-          </div>
-        );
-      }
+    it("selecting a row invokes onSelect with the artifact id", () => {
+      // URL writing is ReplayRoute's job (path param, replace) — covered by
+      // the route tests below.  ArtifactList only reports the selection.
+      const onSelect = vi.fn();
+      render(
+        <ArtifactList
+          artifacts={mockArtifacts}
+          selectedId={null}
+          onSelect={onSelect}
+        />
+      );
 
-      renderWithProviders(<HelperRoute />, ["/"]);
-      const btn = screen.getByTestId("artifact-art-trace-1");
-      fireEvent.click(btn);
-
-      // Verify that the query parameter was updated
-      await waitFor(() => {
-        const url = new URL(window.location.href);
-        expect(url.searchParams.get("artifactId")).toBe("art-trace-1");
-      });
+      fireEvent.click(screen.getByTestId("artifact-art-trace-1"));
+      expect(onSelect).toHaveBeenCalledWith("art-trace-1");
     });
   });
 
@@ -318,7 +314,7 @@ describe("W-031 Replay Theater Tests", () => {
       });
       vi.stubGlobal("fetch", fetchMock);
 
-      renderWithProviders(<ReplayRoute />, ["/replay?artifactId=art-trace-1"]);
+      renderReplayRoute("/replay/art-trace-1");
 
       // Should load list, detail, and comparison
       expect(await screen.findByText("Replay Evidence")).toBeInTheDocument();
@@ -352,7 +348,7 @@ describe("W-031 Replay Theater Tests", () => {
       });
       vi.stubGlobal("fetch", fetchMock);
 
-      renderWithProviders(<ReplayRoute />, ["/replay?artifactId=art-trace-1"]);
+      renderReplayRoute("/replay/art-trace-1");
 
       expect(await screen.findByText("evidence_unavailable")).toBeInTheDocument();
       expect(screen.getByText("Replay evidence is not available on the backend for this artifact kind.")).toBeInTheDocument();
@@ -384,7 +380,7 @@ describe("W-031 Replay Theater Tests", () => {
       });
       vi.stubGlobal("fetch", fetchMock);
 
-      renderWithProviders(<ReplayRoute />, ["/replay?artifactId=art-trace-1"]);
+      renderReplayRoute("/replay/art-trace-1");
 
       expect(await screen.findByText("What failed")).toBeInTheDocument();
       expect(screen.getByText("disk read error")).toBeInTheDocument();

@@ -1,8 +1,9 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createTestQueryClient } from "../../test/createTestQueryClient";
+import { EvidenceProvider } from "../evidenceContext";
 import { EvalLaneCard } from "./EvalLaneCard";
 import { EvalRunButton } from "./EvalRunButton";
 import { EvalMetricGrid } from "./EvalMetricGrid";
@@ -226,8 +227,12 @@ describe("W-030 Component Tests", () => {
       const client = makeClient();
       render(
         <QueryClientProvider client={client}>
-          <MemoryRouter initialEntries={["/evals?lane=contemplation_quality"]}>
-            <EvalsRoute />
+          <MemoryRouter initialEntries={["/evals/contemplation_quality"]}>
+            <EvidenceProvider>
+              <Routes>
+                <Route path="/evals/:laneId?" element={<EvalsRoute />} />
+              </Routes>
+            </EvidenceProvider>
           </MemoryRouter>
         </QueryClientProvider>
       );
@@ -241,7 +246,9 @@ describe("W-030 Component Tests", () => {
       
       // Simulate success
       expect(mutateCallback).toBeDefined();
-      mutateCallback.onSuccess(mockResult);
+      act(() => {
+        mutateCallback.onSuccess(mockResult);
+      });
 
       // Result should be visible
       await waitFor(() => {
@@ -263,7 +270,11 @@ describe("W-030 Component Tests", () => {
       render(
         <QueryClientProvider client={client}>
           <MemoryRouter initialEntries={["/evals"]}>
-            <EvalsRoute />
+            <EvidenceProvider>
+              <Routes>
+                <Route path="/evals/:laneId?" element={<EvalsRoute />} />
+              </Routes>
+            </EvidenceProvider>
           </MemoryRouter>
         </QueryClientProvider>
       );
