@@ -131,21 +131,47 @@ citing records that merely exist yields `undetermined` (the committed
 must not be described as production epistemic evaluation across arbitrary evidence
 sources.
 
+### Proof-Carrying Coherence Promotion Demo (#696 — vault-owned certified promotion)
+
+Status: merged (PR #696).
+
+Evidence class: substrate-capability demo within a local deterministic envelope.
+
+Purpose: demonstrate deterministic knowledge-admission authority by
+replay-verified proof and vault-owned promotion. A model-style proposer can attach
+status, confidence, proof, certificate, and trace-hash garbage, but CORE fresh-reads
+store state, recomputes the proof under the pinned deductive engine, replay-verifies
+the certificate, and promotes or refuses only through
+`VaultStore.apply_certified_promotion`.
+
+Public outcome vocabulary:
+
+- `promoted`;
+- `refused`;
+- `invalid`.
+
+Evidence caveat: this proves proof-carrying `SPECULATIVE -> COHERENT` promotion
+only for curator-certified readings over already-`COHERENT` premises in a
+fixture-driven local store arena. It does not prove runtime integration,
+open-world autonomous learning, arbitrary evidence ingestion, or normative
+clearance.
+
 ## Proposed
 
 Recommended order of next public evidence:
 
-1. Deductive Entailment / Proof-Carrying Authority Demo (next substrate-capability target);
+1. Standalone Deductive Entailment Authority Demo (formal entailment showcase);
 2. Embodied Authority Simulation Demo (simulation-only);
 3. SaaS / On-Prem Boundary Demo.
 
-Merged evidence establishes three authority boundaries: authority over claims
-(#687), proposed tool actions (#688), and epistemic state assignment (#690). The
-next public target should make the non-trivial substrate decision visible: a
-proposer supplies premises, conclusion, and claimed verdict; CORE decides through
-the existing deductive/proof surface and emits replayable proof evidence.
+Merged evidence establishes four authority boundaries: authority over claims
+(#687), proposed tool actions (#688), epistemic state assignment (#690), and
+vault-owned proof-carrying promotion (#696). The next public target should isolate
+formal entailment itself as a standalone showcase: a proposer supplies premises,
+conclusion, and claimed verdict; CORE decides through the existing deductive/proof
+surface and emits replayable proof evidence.
 
-### Deductive Entailment / Proof-Carrying Authority Demo
+### Standalone Deductive Entailment Authority Demo
 
 Status: proposed.
 
