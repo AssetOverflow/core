@@ -7,10 +7,16 @@ governing spec; this pack is the per-operator cut).
 ## Dispatch order
 
 ```
-Echelon 1 (parallel):  R0a  ∥  R0b  ∥  R0c
-Echelon 2:             R0d  (after R0c merges)
-Echelon 3:             R1   (after all R0 merges)
+Echelon 1 (parallel dispatch):  R0a  ∥  R0b  ∥  R0c
+Echelon 2:                      R0d  (after R0c merges)
+Echelon 3:                      R1   (after all R0 merges)
 ```
+
+**Merge order is a strict train even though dispatch is parallel:**
+R0a merges FIRST (smallest PR; carries the honesty fix; lands the CI lane
+that then verifies R0b/R0c).  R0b and R0c merge next, either order, each
+rebased on merged main before push if R0a landed meanwhile.  R0d after R0c.
+Never combine R0 briefs into one PR.
 
 Brief 5 (Trace route, `wave-1-evidence-spine-briefs-2026-06-12.md`) **stays
 on hold** until R0 lands; it gets re-issued upgraded as the first R2 brief.
@@ -80,9 +86,20 @@ workbench-ui at all** (`smoke.yml` / `full-pytest.yml` are Python-only).
    - single job, `timeout-minutes: 15`: pnpm setup (frozen lockfile) →
      `pnpm build` → `pnpm test`
    - Node 20, pnpm via `corepack` or `pnpm/action-setup`
-5. Honesty fix (skip if R0d already merged): remove the `j/k` and `/` rows
-   from `KeyboardHelp.tsx` and its test expectations — the overlay must not
-   advertise shortcuts that do not exist.
+5. Honesty fix, **unconditional**: remove the `j/k`, `/`, and
+   `Enter — Open selected item` rows from `KeyboardHelp.tsx` and its test
+   expectations — the overlay must not advertise shortcuts that do not
+   exist.  (`Enter` is real only inside the palette, which carries its own
+   hint; as a global list affordance it is false until R0d.)  R0d restores
+   these rows as real, registry-backed entries.
+6. Minimal route conformance test (front-loaded from R1):
+   `src/app/routeConformance.test.tsx`, parametrized over the implemented
+   routes (Chat, Proposals, Evals, Replay).  For each route, under mocked
+   query states, assert: empty state renders a one-line absence statement +
+   a next action; error state renders what-failed + mutation status +
+   reproducer + retry-safety; loading state renders a specific label (never
+   "Thinking…").  Per ADR-0162 §6.  Fix routes that fail; no expected-fail
+   lists (a test that tolerates violations is decoration).
 
 ### Verification before push
 
@@ -247,9 +264,14 @@ ls src/app/evidenceAddress.ts || echo "STOP: R0c not merged"
 6. Wire it for real: Proposals list and Replay artifact list adopt
    `useListNavigation` + `SearchInput` (the `/` shortcut becomes real where
    mounted).
-7. `KeyboardHelp.tsx`: advertise exactly the shortcuts that now work — and
-   only those.  (If R0a removed `j/k` and `/` rows, restore them — they are
-   real now.)
+7. `Kbd` primitive (front-loaded from R1): a small token-only component for
+   rendering key chords; `KeyboardHelp` and palette shortcut hints adopt it.
+8. `KeyboardHelp.tsx` becomes **registry-driven**: the overlay renders its
+   rows from the shortcut/command registry instead of a hand-maintained
+   array, so advertising an unimplemented shortcut is structurally
+   impossible.  The rows R0a removed (`j/k`, `/`, `Enter`) return here as
+   real registry entries.  Test: every row in the rendered overlay
+   corresponds to a registered, handled shortcut.
 
 ### Verification before push
 
@@ -279,27 +301,24 @@ ls src/design/components/Panel || echo "STOP: R0d not merged"
 
 ### Deliverables
 
-1. `Kbd` primitive; adopt in `KeyboardHelp` and palette shortcut hints.
-2. Typography precision: `tabular-nums` on every metric cell
+1. Typography precision: `tabular-nums` on every metric cell
    (`MetadataTable` values, eval metrics, `turn_cost_ms`); type-scale audit
    against ADR-0162 §2; `text-wrap: balance` on headings.
-3. Selection-state unification: one tokenized treatment for selected vs
+2. Selection-state unification: one tokenized treatment for selected vs
    focused rows, applied across Proposals / Evals / Replay lists.
-4. Hash display standard: 12-char truncation + copy + mono everywhere;
+3. Hash display standard: 12-char truncation + copy + mono everywhere;
    consolidate `src/app/chat/CopyableHash.tsx` into `DigestBadge` and delete
    the duplicate (cleanup-as-you-find: imports, tests, preview entries).
-5. `EvidenceChainRail` in `RightInspector`: the seven spine stages (intent →
+4. `EvidenceChainRail` in `RightInspector`: the seven spine stages (intent →
    subject → provenance → admissibility → replay → authority → action), each
    rendered lit (evidence present) / dim (not applicable) / hollow (not
    recorded).  Status derives ONLY from fields the subject carries — never
    inferred, never faked.  "Not recorded" is an honest, visible state.
-6. Empty-state glyphs: small static deterministic monochrome SVGs (inline,
+5. Empty-state glyphs: small static deterministic monochrome SVGs (inline,
    no asset fetches).
-7. `Panel` adoption in Proposals + Evals routes (Chat/Replay opportunistic).
-8. **Doctrine-as-tests:**
-   - Route conformance test parametrized over implemented routes: empty /
-     error / loading each render with next-action / reproducer /
-     specific-label content (ADR-0162 §6, executable).
+6. `Panel` adoption in Proposals + Evals routes (Chat/Replay opportunistic).
+7. **Doctrine-as-tests** (route conformance shipped in R0a; extend it to any
+   surface this PR touches, then add):
    - Raw-hex scan: vitest node test walking `src/**` asserting no
      hex/rgb literals outside `tokens.css`.
    - Schema-drift gate: `scripts/dump-schemas.py` (read-only AST walk over

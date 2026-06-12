@@ -7,6 +7,14 @@ Refines: `wave-1-evidence-spine.md` — keeps its spine and Wave-1 deliverables
 sequencing with the upgraded specs below.
 Reviewed by: Claude Fable 5 (full re-audit of ADR-0160, ADR-0162, the shipped
 `origin/main` code, and the Wave 1 plan), approved by Shay.
+Execution-shape review (external, via Shay, 2026-06-12): R0 confirmed as a
+strict PR train, never one PR; honesty fix made unconditional in R0a; route
+conformance test front-loaded R1 → R0a; `Kbd` front-loaded R1 → R0d;
+KeyboardHelp made registry-driven in R0d; merge order pinned R0a-first.
+Declined with reasons: full serialization of echelon-1 dispatch (file
+surfaces verified disjoint; parallel dispatch retained with serial merge),
+and folding the Playwright lane into R0a (ADR-0162 acceptance 5–7 needs a
+dedicated, parallel-safe brief).
 
 ## Why a revamp before Wave 2
 
@@ -89,9 +97,18 @@ Trace is the first consumer of this substrate and building it twice is waste.
 - [ ] New `.github/workflows/workbench-ui.yml`: path-filtered to
       `workbench-ui/**`, runs `pnpm install --frozen-lockfile && pnpm build
       && pnpm test`, `timeout-minutes: 15`
-- [ ] Remove the `j/k` and `/` rows from `KeyboardHelp.tsx` **iff** R0d has
-      not yet made them real at merge time (honesty gap closes from whichever
-      side lands first)
+- [ ] Remove the `j/k`, `/`, and `Enter — Open selected item` rows from
+      `KeyboardHelp.tsx` **unconditionally** — the overlay must not advertise
+      shortcuts that do not exist.  R0d restores them when they become real
+      (and makes the overlay registry-driven so this class of dishonesty is
+      structurally impossible)
+- [ ] Minimal route conformance test (front-loaded from R1 on
+      execution-shape review): parametrized over the implemented routes
+      (Chat, Proposals, Evals, Replay), asserts empty / error / loading each
+      render with next-action / reproducer / specific-label content
+      (ADR-0162 §6).  Minimal means existing routes only — the harness is
+      the contract every later route must pass; fix what fails, no
+      expected-fail lists
 
 ### R0b — Playwright smoke lane (pays ADR-0162 acceptance debt 5/6/7)
 
@@ -144,15 +161,17 @@ Trace is the first consumer of this substrate and building it twice is waste.
 - [ ] Wire `useListNavigation` + `SearchInput` into the Proposals list and
       Replay artifact list now (at least two real consumers; `/` becomes real
       where a `SearchInput` is mounted)
-- [ ] `KeyboardHelp.tsx` updated to advertise exactly the shortcuts that are
-      now real — and only those
+- [ ] `Kbd` primitive (front-loaded from R1 — KeyboardHelp and palette
+      shortcut hints consume it)
+- [ ] `KeyboardHelp.tsx` becomes **registry-driven**: the overlay renders
+      from the shortcut/command registry instead of a hand-maintained list,
+      so advertising an unimplemented shortcut is structurally impossible.
+      The rows R0a removed return here as real, registry-backed entries
 
 ---
 
 ## Wave R1 — Design mastery pass (one PR, after R0)
 
-- [ ] `Kbd` primitive (promoted from the deferred list — KeyboardHelp and
-      palette hints consume it)
 - [ ] Typography precision: `tabular-nums` for every metric cell
       (`MetadataTable` values, eval metrics, turn costs); type-scale audit;
       `text-wrap: balance` on headings
@@ -167,10 +186,7 @@ Trace is the first consumer of this substrate and building it twice is waste.
       with no data renders "not recorded", never a guess
 - [ ] Empty-state glyphs: small static deterministic monochrome SVGs
 - [ ] `Panel` adoption in Proposals + Evals (Chat/Replay opportunistic)
-- [ ] **Doctrine-as-tests:**
-      - [ ] Route conformance test, parametrized over implemented routes:
-            empty / error / loading all render with next-action / reproducer /
-            specific-label content (ADR-0162 §6 becomes executable)
+- [ ] **Doctrine-as-tests** (route conformance moved to R0a; the rest here):
       - [ ] Raw-hex scan test: no hex/rgb literals in `src/**` outside
             `tokens.css`
       - [ ] Schema-drift gate: `scripts/dump-schemas.py` (read-only AST walk
@@ -241,10 +257,14 @@ R0b ─┼─(R0c)──→ R0d ──→ R1 ──→ R2 (Trace ∥ Runs ∥ Au
 R0c ─┘
 ```
 
-R0a / R0b / R0c are parallel-safe (disjoint files; trivial `package.json`
-merge between R0b and R0d is sequenced away).  R0d follows R0c (shares
+R0a / R0b / R0c are parallel-safe to **dispatch** (disjoint files; trivial
+`package.json` merge between R0b and R0d is sequenced away).  **Merge order
+is a strict train: R0a merges first** — it is the smallest PR, carries the
+honesty fix, and lands the CI lane that then verifies R0b and R0c; R0b/R0c
+merge next in either order; R0d follows R0c (shares
 `evidenceContext`/`Shell`).  R1 is one PR after all of R0.  R2 routes are
-mutually independent.  R3 follows the R2 routes it draws data from.
+mutually independent.  R3 follows the R2 routes it draws data from — no
+theater work starts before R0/R1 are merged and tested.
 
 ## Keyboard map after R0
 
