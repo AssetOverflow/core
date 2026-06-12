@@ -152,9 +152,7 @@ deterministically, with the proof chain as the audit artifact — the logical fo
 of the *"structural coherence metric"* ADR-0021 names as the successor to curator
 mediation. What review still gates there is the faithfulness of the reading, not
 the deduction. This proof-carrying promotion path is **specified but not yet
-wired** (see
-[`docs/issues/proof-carrying-coherence-promotion.md`](issues/proof-carrying-coherence-promotion.md));
-until it lands, all promotion is curator-mediated.
+wired**; until it lands, all promotion is curator-mediated.
 
 This is not a safety overlay. It is a consequence of the decoding thesis: if the
 system decodes a reality that already is, then inputs that contradict — or merely
@@ -384,8 +382,13 @@ behavioral testing of a black-box sampler.
 ## Concrete Evidence — Merged Demos (2026-06-11)
 
 The claims in §4 are abstract without pointers to reproducible artifacts. This
-section ties each abstract property to a specific merged demo, trace hash, and
-runnable command. All three demos are in the public repository under `demos/`.
+section ties those properties to merged demos, trace hashes, and runnable
+commands. The demos are not all the same kind of evidence. #687 routes through the
+real derivation and ASK machinery and is the substrate-capability anchor. #688 is
+an interface-contract demo. #690 is a local epistemic-state authority demo using a
+sealed fixture corpus. They prove that proposer-held status cannot cross the typed
+boundary, but they must not be mistaken for production tool safety or arbitrary
+evidence evaluation.
 
 ### Authority over claims — PR #687, merge `3ba65d51`
 
@@ -412,11 +415,11 @@ architecture would not.
 
 ### Authority over proposed tool actions — PR #688, merge `c55f7dfb`
 
-`demos/claude_tool_authority/` demonstrates the same authority boundary for
-proposed digital actions across four typed outcomes. A model-style proposer submits
-action proposals; CORE alone authorizes, asks, refuses, or invalidates. Authorized
-outputs are inert `licensed_action` artifacts; `execution_performed: false` on every
-scenario.
+`demos/claude_tool_authority/` demonstrates the same typed boundary for proposed
+digital actions across four outcomes. A model-style proposer submits action
+proposals; the local authority envelope authorizes, asks, refuses, or invalidates.
+Authorized outputs are inert `licensed_action` artifacts; `execution_performed:
+false` on every scenario.
 
 Representative trace hashes:
 - Authorized (inert): `9e797710ed34dfa5…` (`write_local_note`, `proposer_trace_hash_ignored: true`)
@@ -426,19 +429,26 @@ Representative trace hashes:
 
 Run: `python demos/claude_tool_authority/run_demo.py`
 
+Evidence caveat: #688 is an interface-contract demo. It proves no proposer can
+self-authorize, smuggle a license, provide a trusted trace hash, or cause a side
+effect through this boundary. It does not prove production MCP integration or
+general autonomous tool-safety reasoning; its decision core is intentionally a
+small local envelope.
+
 ### Authority over epistemic state assignment — PR #690, merge `e80c8eae`
 
-`demos/epistemic_truth_state/` demonstrates the same authority boundary for
-epistemic state assignment across six typed outcomes. A model-style proposer
-submits a claim with evidence and a `proposed_state`; CORE assigns the canonical
-state from the evidence. `proposer_state_ignored: true` on every output.
+`demos/epistemic_truth_state/` demonstrates the same typed boundary for epistemic
+state assignment across six outcomes. A model-style proposer submits a claim,
+sealed evidence references, and a `proposed_state`; the demo assigns a canonical
+state from committed corpus records whose content hashes must match.
+`proposer_state_ignored: true` on every non-invalid output.
 
 Typed state vocabulary: `verified`, `evidenced`, `inferred`, `undetermined`,
 `scope_boundary`. A proposer that injects `assigned_state` or `authority_path` into
 the request payload is rejected at the typed schema boundary before evaluation.
 
 Representative trace hashes:
-- Verified: `1341c27c5906ae52…` (2 independent evidence items, `normative_clearance: unassessable`)
+- Verified: `1341c27c5906ae52…` (2 sealed corpus records with distinct provenance roots, `normative_clearance: unassessable`)
 - Evidenced: `f9f2e153e66aaba9…` (1 item, below threshold — proposer proposed `verified`)
 - Inferred: `bc11e858ece14081…` (premise-only evidence — proposer proposed `verified`)
 - Undetermined: `35b319eb0186be2d…` (off-topic evidence)
@@ -448,11 +458,12 @@ Representative trace hashes:
 Run: `python demos/epistemic_truth_state/run_demo.py`
 
 **Honesty note:** `normative_clearance` is `"unassessable"` on every non-invalid
-scenario; the invalid scenario has `null` (no evaluation reached). The demos do not
-perform a normative, safety, or ethics clearance pass for any scenario. The
-`deterministic replay` and `identity protection` claims in §4 are substrate
-properties; the epistemic state demos extend them to claim/action/state authority
-surfaces not covered in the original paper.
+scenario; the invalid scenario has `null` because evaluation never reached the
+authority path. The demo runs no normative, safety, or ethics clearance pass. The
+evidence corpus is local fixture evidence, so #690 should be read as a
+state-authority demo over a sealed local corpus, not as proof that CORE evaluates
+arbitrary evidence sources. The next proof obligation is proof-carrying entailment
+evidence for claims that should move from stated premises to promoted knowledge.
 
 ---
 
@@ -463,10 +474,10 @@ generation is the right substrate for cognition in the first place.
 
 CORE is a running argument that it is not. The argument is not in this paper. It
 is in the versor invariant, the zero-wrong eval gate, the deterministic trace
-hash, the reviewed teaching path, the two-layer identity firewall, and now in three
-public demos where a deterministic substrate holds exclusive authority over claims,
-proposed actions, and epistemic state — each of which would fail visibly if the
-thesis were wrong.
+hash, the reviewed teaching path, the two-layer identity firewall, and the public
+authority-demo stack. The strongest current demo proves substrate authority over
+claims; the surrounding boundary demos expose the exact places where broader
+action and epistemic authority still need harder evidence.
 
 The code is open source under the CORE Non-Commercial License.
 All commercial licensing inquiries: shayj292@gmail.com

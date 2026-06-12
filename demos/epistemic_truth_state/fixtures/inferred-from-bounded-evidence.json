@@ -20,24 +20,24 @@
     "evidence": [
       {
         "evidence_id": "ev-c1-tag-on-main",
-        "subject": "release_tag",
-        "predicate": "points_at_main",
-        "supports": true,
-        "independent": true,
-        "source_kind": "premise"
+        "content_sha256": "83dbbf3ff366458233ed71e153d3608a643ea6d6646958148c8746c181e00be2"
       },
       {
         "evidence_id": "ev-c1-branch-from-main",
-        "subject": "current_branch",
-        "predicate": "branched_from_main",
-        "supports": true,
-        "independent": true,
-        "source_kind": "premise"
+        "content_sha256": "bb792e8ff12a6a29f5dc50e988aa9012ae68a010cbe42096c7727266ee1b9444"
+      },
+      {
+        "evidence_id": "ev-c1-rule-reachability",
+        "content_sha256": "b9a51ca7d9d596b1ac91a85b11420c92c1bbdb989a7739621200a3590e591573"
       }
     ],
     "inference": {
       "mode": "bounded_deductive",
-      "premise_ids": ["ev-c1-tag-on-main", "ev-c1-branch-from-main"]
+      "premise_ids": [
+        "ev-c1-tag-on-main",
+        "ev-c1-branch-from-main",
+        "ev-c1-rule-reachability"
+      ]
     }
   }
 }

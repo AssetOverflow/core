@@ -1,7 +1,7 @@
 {
   "name": "core.epistemic_truth_state.review",
   "title": "CORE epistemic truth-state authority demo",
-  "description": "Submit one model-style claim proposal to CORE's local deterministic epistemic-state authority. CORE validates a closed payload, ignores any proposer-supplied proposed_state and trace hash, assigns a typed epistemic state drawn from the canonical core.epistemic_state taxonomy, derives normative clearance, builds an evidence ledger, and returns assigned | refused | invalid plus a deterministic trace artifact. The proposer cannot set the assigned state, status, clearance, evidence ledger, authority path, or trace hash.",
+  "description": "Submit one model-style claim proposal to CORE's local deterministic epistemic-state authority. CORE validates a closed payload, resolves sealed evidence references by content hash, ignores any proposer-supplied proposed_state and trace hash, decides the bounded-inference leg with the sound-and-complete ROBDD entailment engine cross-checked against an independent truth-table oracle, assigns a typed epistemic state drawn from the canonical core.epistemic_state taxonomy, derives normative clearance, builds an evidence ledger, and returns assigned | refused | invalid plus a deterministic trace artifact. The proposer cannot set the assigned state, status, clearance, evidence ledger, authority path, trace hash, support labels, or independence labels — and cannot mint inferred by citing records that merely exist, because inferred requires an actual entailment proof.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -56,12 +56,14 @@
           "subject": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 120
+            "maxLength": 120,
+            "pattern": "^[a-z][a-z0-9_]*$"
           },
           "predicate": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 120
+            "maxLength": 120,
+            "pattern": "^[a-z][a-z0-9_]*$"
           }
         },
         "required": ["text", "domain", "subject", "predicate"],
@@ -76,28 +78,12 @@
               "type": "string",
               "pattern": "^[A-Za-z0-9._-]{1,64}$"
             },
-            "subject": {
+            "content_sha256": {
               "type": "string",
-              "minLength": 1,
-              "maxLength": 120
-            },
-            "predicate": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 120
-            },
-            "supports": {
-              "type": "boolean"
-            },
-            "independent": {
-              "type": "boolean"
-            },
-            "source_kind": {
-              "type": "string",
-              "enum": ["pack", "teaching", "vault", "observation", "premise"]
+              "pattern": "^[a-f0-9]{64}$"
             }
           },
-          "required": ["evidence_id", "subject", "predicate", "supports"],
+          "required": ["evidence_id", "content_sha256"],
           "additionalProperties": false
         }
       },

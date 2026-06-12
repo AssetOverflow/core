@@ -1,0 +1,31 @@
+{
+  "tool": "core.epistemic_truth_state.review",
+  "expected_status": "assigned",
+  "arguments": {
+    "request_id": "demo-eps-g1",
+    "scenario_id": "unrelated-premise-still-undetermined",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-g1",
+      "proposed_state": "inferred",
+      "trace_hash": "9999999999999999999999999999999999999999999999999999999999999999"
+    },
+    "claim": {
+      "text": "Vault recall is approximate.",
+      "domain": "demo.local_factual",
+      "subject": "vault_recall",
+      "predicate": "is_approximate"
+    },
+    "evidence": [
+      {
+        "evidence_id": "ev-d1-unrelated",
+        "content_sha256": "d47df7dc3a7d7e51dcac951de2981777f612af4c40924b7f8d9e8abca3b98af2"
+      }
+    ],
+    "inference": {
+      "mode": "bounded_deductive",
+      "premise_ids": ["ev-d1-unrelated"]
+    }
+  }
+}

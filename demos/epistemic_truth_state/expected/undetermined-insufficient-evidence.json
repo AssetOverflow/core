@@ -4,6 +4,7 @@
     "demos.epistemic_truth_state.authority.validate_payload",
     "demos.epistemic_truth_state.authority.assign_epistemic_state",
     "demo_epistemic_truth_state_envelope(local-v1)",
+    "demos.epistemic_truth_state.authority.resolve_evidence_refs",
     "core.epistemic_state.coerce_epistemic_state"
   ],
   "decision_reason": "insufficient_evidence",
@@ -14,13 +15,19 @@
   "scenario_id": "undetermined-insufficient-evidence",
   "status": "assigned",
   "tool": "core.epistemic_truth_state.review",
-  "trace_hash": "35b319eb0186be2d9bedf65263d5acb8f397f747e7efe1ea01960655deafc7d2",
+  "trace_hash": "80559d4b02668e36d7858097c09eac3e6e4e10c20615fdc2c9b5f3c4afa09cdf",
   "trace_summary": {
     "authority_evaluated": true,
     "claim_fingerprint": "dc8720472531486a19edbb82c2accd279d291afe2a797c23d2745469c4f91662",
+    "corpus_id": "demo.epistemic_truth_state.evidence_corpus.v1",
+    "corpus_sha256": "62e03b4ac981eaeebdeed64bb2ff9ab1bcfef8cb521ec4029acdbe3b9f120b2e",
     "envelope_version": "local-v1",
     "evidence_considered": 1,
     "independent_support_count": 0,
+    "inference": {
+      "consulted": false,
+      "detail": "no_inference_block"
+    },
     "proposer_state_ignored": true,
     "proposer_trace_hash_ignored": true
   }

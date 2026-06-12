@@ -20,19 +20,11 @@
     "evidence": [
       {
         "evidence_id": "ev-a1-trace",
-        "subject": "reviewed_teaching_loop",
-        "predicate": "ran_on_pinned_cognition_pack",
-        "supports": true,
-        "independent": true,
-        "source_kind": "vault"
+        "content_sha256": "a507b19de0860fafdfc00e7d581a4c1b5ded7f1510e052ba92f7325abfebbaf5"
       },
       {
         "evidence_id": "ev-a1-replay",
-        "subject": "reviewed_teaching_loop",
-        "predicate": "ran_on_pinned_cognition_pack",
-        "supports": true,
-        "independent": true,
-        "source_kind": "teaching"
+        "content_sha256": "a8564c2daa27c7fe851711f068b682ffa87f769014a13a7d5b5625e44ebb9679"
       }
     ]
   }

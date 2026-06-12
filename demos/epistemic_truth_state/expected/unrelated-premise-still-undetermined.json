@@ -1,0 +1,54 @@
+{
+  "assigned_state": "undetermined",
+  "authority_path": [
+    "demos.epistemic_truth_state.authority.validate_payload",
+    "demos.epistemic_truth_state.authority.assign_epistemic_state",
+    "demo_epistemic_truth_state_envelope(local-v1)",
+    "demos.epistemic_truth_state.authority.resolve_evidence_refs",
+    "generate.proof_chain.entail.evaluate_entailment_with_trace",
+    "evals.deductive_logic.oracle.oracle_entailment",
+    "core.epistemic_state.coerce_epistemic_state"
+  ],
+  "decision_reason": "insufficient_evidence",
+  "evidence_ledger": [],
+  "normative_clearance": "unassessable",
+  "question": "CORE has insufficient grounded evidence to assign a determined epistemic state to this claim. Provide supporting, refuting, or premise evidence.",
+  "request_id": "demo-eps-g1",
+  "scenario_id": "unrelated-premise-still-undetermined",
+  "status": "assigned",
+  "tool": "core.epistemic_truth_state.review",
+  "trace_hash": "48c9932a5dd99f1a41ee879f1f39f6de5e365162797129c23f339054a5e92d1b",
+  "trace_summary": {
+    "authority_evaluated": true,
+    "claim_fingerprint": "9f381a36a05cb5c0f98ce7339522abb36be89f142f7668aae4359e8a0367537b",
+    "corpus_id": "demo.epistemic_truth_state.evidence_corpus.v1",
+    "corpus_sha256": "62e03b4ac981eaeebdeed64bb2ff9ab1bcfef8cb521ec4029acdbe3b9f120b2e",
+    "envelope_version": "local-v1",
+    "evidence_considered": 1,
+    "independent_support_count": 0,
+    "inference": {
+      "consulted": true,
+      "detail": "evaluated",
+      "engine_oracle_agreement": true,
+      "entailment_trace": {
+        "conjunction_key": "0:documentation_pass__merged_to_main?T:F",
+        "entailment_check_key": "0:vault_recall__is_approximate?T:F;1:documentation_pass__merged_to_main?@0:T",
+        "outcome": "unknown",
+        "premise_keys": [
+          "0:documentation_pass__merged_to_main?T:F"
+        ],
+        "query_key": "0:vault_recall__is_approximate?T:F",
+        "reason": "undetermined",
+        "refutation_check_key": "0:vault_recall__is_approximate?F:T;1:documentation_pass__merged_to_main?@0:T"
+      },
+      "oracle_verdict": "unknown",
+      "outcome": "unknown",
+      "premise_ids": [
+        "ev-d1-unrelated"
+      ],
+      "reason": "undetermined"
+    },
+    "proposer_state_ignored": true,
+    "proposer_trace_hash_ignored": true
+  }
+}

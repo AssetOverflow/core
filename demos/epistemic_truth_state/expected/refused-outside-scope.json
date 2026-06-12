@@ -13,13 +13,13 @@
   "scenario_id": "refused-outside-scope",
   "status": "refused",
   "tool": "core.epistemic_truth_state.review",
-  "trace_hash": "c9ef9560bcf71052f9e4f323d5f6c49dc23113dcaa6a63048cfdffafec6dd024",
+  "trace_hash": "f1d8936f7616d2739041edd1b7e2c85b4355e39665d94c21b9a4d2e6e0c802f8",
   "trace_summary": {
     "authority_evaluated": true,
     "claim_fingerprint": "ef9317e405906823799755113ccb216ab39dd7b055c9f9883ada6480b80ef98c",
     "envelope_version": "local-v1",
     "evidence_considered": 1,
-    "independent_support_count": 1,
+    "evidence_resolution": "not_consulted",
     "proposer_state_ignored": true,
     "proposer_trace_hash_ignored": true
   }
