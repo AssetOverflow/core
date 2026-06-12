@@ -1,5 +1,14 @@
 import "@testing-library/jest-dom/vitest";
 
+// Node-environment test files (doctrine/*) have no global navigator on
+// Node 20 (Node >=21 added one — which is why this only fails in CI).
+if (typeof globalThis.navigator === "undefined") {
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {},
+  });
+}
+
 Object.defineProperty(navigator, "clipboard", {
   configurable: true,
   value: {

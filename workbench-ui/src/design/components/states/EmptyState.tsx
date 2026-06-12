@@ -18,7 +18,20 @@ export function EmptyState({
 
   return (
     <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-4">
-      <p className="m-0 text-sm text-[var(--color-text-primary)]">{statement}</p>
+      {/* Deterministic monochrome glyph: an empty evidence slot. Static
+          inline SVG — same bytes every render, no asset fetch. */}
+      <svg
+        aria-hidden
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
+        fill="none"
+        className="mb-2 text-[var(--color-text-muted)]"
+      >
+        <rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" strokeDasharray="3 3" />
+        <circle cx="10" cy="10" r="1.5" fill="currentColor" />
+      </svg>
+      <p className="m-0 text-sm text-[var(--color-text-primary)] [text-wrap:balance]">{statement}</p>
       {typeof nextAction === "string" ? (
         <Button className="mt-3" variant="quiet" type="button">
           {nextAction}

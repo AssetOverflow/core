@@ -26,7 +26,7 @@ export function Panel({ title, toolbar, children }: PanelProps) {
         style={{ borderColor: "var(--color-border-subtle)" }}
       >
         <h2
-          className="m-0 text-sm font-semibold"
+          className="m-0 text-sm font-semibold [text-wrap:balance]"
           style={{ color: "var(--color-text-primary)" }}
         >
           {title}

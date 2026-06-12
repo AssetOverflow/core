@@ -66,7 +66,7 @@ export function MetadataTable({ rows }: MetadataTableProps) {
             {row.key}
           </dt>
           <dd
-            className="m-0 flex items-center text-sm text-[var(--color-text-primary)]"
+            className="m-0 flex items-center text-sm text-[var(--color-text-primary)] tabular-nums"
             style={{
               fontSize: "var(--text-sm)",
               fontFamily: row.mono ? "var(--font-mono)" : undefined,

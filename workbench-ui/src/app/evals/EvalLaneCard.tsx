@@ -26,7 +26,7 @@ export function EvalLaneCard({
       onClick={onSelect}
       className={`w-full text-left p-3 rounded-lg border transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)] ${
         isSelected
-          ? "border-[var(--color-border-strong)] bg-[var(--color-surface-raised)] shadow-[var(--shadow-panel)]"
+          ? "border-[var(--color-selected-border)] bg-[var(--color-selected-bg)] shadow-[var(--shadow-panel)]"
           : "border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-raised)]"
       }`}
       type="button"

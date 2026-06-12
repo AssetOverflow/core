@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "test:enum-coverage": "pnpm enum:snapshot && vitest run src/design/components/badges/enumCoverage.test.ts",
     "generate:tokens": "tsx scripts/generate-tokens.ts",
-    "enum:snapshot": "cd .. && uv run python scripts/dump-enums.py > workbench-ui/enum-snapshot.json"
+    "enum:snapshot": "cd .. && uv run python scripts/dump-enums.py > workbench-ui/enum-snapshot.json",
+    "schema:snapshot": "cd .. && uv run python scripts/dump-schemas.py > workbench-ui/schema-snapshot.json"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.15",

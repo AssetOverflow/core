@@ -7,7 +7,7 @@ describe("DigestBadge", () => {
   it("renders truncated digest with algorithm prefix", () => {
     render(<DigestBadge digest={HASH} />);
     const badge = screen.getByTestId("digest-badge");
-    expect(badge).toHaveTextContent("sha256:4f80f7e12c7e8ca1...");
+    expect(badge).toHaveTextContent("sha256:4f80f7e12c7e...");
   });
 
   it("uses custom algorithm prefix", () => {

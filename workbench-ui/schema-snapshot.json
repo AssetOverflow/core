@@ -1,0 +1,223 @@
+{
+  "ArtifactDetail": [
+    "content_type",
+    "content"
+  ],
+  "ArtifactRef": [
+    "artifact_id",
+    "kind",
+    "path",
+    "digest",
+    "created_at"
+  ],
+  "AuditEvent": [
+    "event_id",
+    "source",
+    "source_path",
+    "timestamp",
+    "event_type",
+    "mutation_boundary",
+    "summary",
+    "ref_id",
+    "payload_digest",
+    "payload"
+  ],
+  "ChatTurnResult": [
+    "prompt",
+    "surface",
+    "articulation_surface",
+    "walk_surface",
+    "grounding_source",
+    "epistemic_state",
+    "normative_clearance",
+    "normative_detail",
+    "trace_hash",
+    "refusal_emitted",
+    "hedge_injected",
+    "mutation_mode",
+    "identity_verdict",
+    "safety_verdict",
+    "ethics_verdict",
+    "proposal_candidates",
+    "turn_cost_ms",
+    "checkpoint_emitted",
+    "turn_id"
+  ],
+  "EvalLaneSummary": [
+    "lane",
+    "versions",
+    "read_only",
+    "description"
+  ],
+  "EvalRunResult": [
+    "lane",
+    "version",
+    "split",
+    "passed",
+    "metrics",
+    "cases",
+    "source_digest"
+  ],
+  "MathProposalDetail": [
+    "wrong_zero_assertion",
+    "proposed_change_payload",
+    "reasoning_trace_id",
+    "reasoning_trace_steps",
+    "evidence_hashes",
+    "handler_name",
+    "suggested_ratify_cli"
+  ],
+  "MathProposalSummary": [
+    "proposal_id",
+    "domain",
+    "shape_category",
+    "proposed_change_kind",
+    "structural_commonality",
+    "evidence_count",
+    "replay_equivalence_hash"
+  ],
+  "MathRatifyResult": [
+    "proposal_id",
+    "change_kind",
+    "handler_name",
+    "routing_status",
+    "message",
+    "suggested_cli",
+    "applied",
+    "target_path",
+    "evidence_hash"
+  ],
+  "MathReasoningStep": [
+    "step_index",
+    "step_kind",
+    "claim",
+    "justification",
+    "input_pointers",
+    "output_payload"
+  ],
+  "PackDetail": [
+    "manifest_digest",
+    "manifest"
+  ],
+  "PackSummary": [
+    "pack_id",
+    "source",
+    "manifest_path",
+    "version",
+    "language",
+    "modality",
+    "determinism_class",
+    "checksum",
+    "checksums"
+  ],
+  "ProposalDetail": [
+    "proposed_chain",
+    "replay_evidence",
+    "source",
+    "evidence",
+    "artifact_refs",
+    "suggested_cli"
+  ],
+  "ProposalRef": [
+    "candidate_id",
+    "source_kind"
+  ],
+  "ProposalSummary": [
+    "proposal_id",
+    "state",
+    "source_kind",
+    "replay_equivalent",
+    "created_at",
+    "downstream_effect"
+  ],
+  "ReplayComparison": [
+    "artifact_id",
+    "original_hash",
+    "replay_hash",
+    "equivalent",
+    "divergences"
+  ],
+  "ReplayDivergence": [
+    "path",
+    "original",
+    "replay",
+    "severity"
+  ],
+  "RunDetail": [
+    "turns",
+    "manifest"
+  ],
+  "RunSummary": [
+    "session_id",
+    "source",
+    "turn_count",
+    "started_at",
+    "updated_at",
+    "checkpoint_present",
+    "checkpoint_revision",
+    "artifact_refs",
+    "evidence_gap"
+  ],
+  "RunTurnRef": [
+    "turn_id",
+    "trace_hash",
+    "timestamp",
+    "trace_path",
+    "surface_excerpt"
+  ],
+  "RuntimeStatus": [
+    "backend",
+    "git_revision",
+    "engine_state_present",
+    "checkpoint_revision",
+    "revision_warning",
+    "active_session_id",
+    "mutation_mode"
+  ],
+  "TurnJournalEntrySchema": [
+    "turn_id",
+    "timestamp",
+    "trace_hash",
+    "prompt",
+    "surface",
+    "articulation_surface",
+    "walk_surface",
+    "grounding_source",
+    "epistemic_state",
+    "normative_clearance",
+    "verdicts",
+    "refusal_emitted",
+    "hedge_injected",
+    "proposal_candidates",
+    "turn_cost_ms",
+    "checkpoint_emitted",
+    "journal_digest"
+  ],
+  "TurnJournalSummarySchema": [
+    "turn_id",
+    "timestamp",
+    "prompt_excerpt",
+    "surface_excerpt",
+    "trace_hash",
+    "grounding_source"
+  ],
+  "TurnVerdict": [
+    "outcome",
+    "runtime_detail"
+  ],
+  "VaultEntry": [
+    "entry_index",
+    "epistemic_status",
+    "epistemic_state",
+    "metadata",
+    "versor_digest"
+  ],
+  "VaultSummary": [
+    "source_path",
+    "entry_count",
+    "store_count",
+    "reproject_interval",
+    "max_entries",
+    "persisted"
+  ]
+}

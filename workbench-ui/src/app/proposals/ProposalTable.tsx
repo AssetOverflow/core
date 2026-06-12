@@ -53,11 +53,13 @@ export function ProposalTable({
               role="button"
               tabIndex={0}
               className={`grid w-full grid-cols-[minmax(7rem,1fr)_auto_auto_minmax(7rem,1fr)_minmax(9rem,1fr)] items-center gap-3 border-b border-[var(--color-border-subtle)] px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-inset)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[var(--color-focus-ring)] transition-all ${
-                selected ? "bg-[var(--color-surface-inset)]" : ""
+                selected ? "bg-[var(--color-selected-bg)]" : ""
               } ${
-                focused
-                  ? "bg-[var(--color-surface-inset)] border-l-2 border-[var(--color-focus-ring)] pl-[10px]"
-                  : "border-l-2 border-transparent pl-[10px]"
+                selected
+                  ? "border-l-2 border-l-[var(--color-selected-border)] pl-[10px]"
+                  : focused
+                    ? "border-l-2 border-l-[var(--color-focus-ring)] pl-[10px]"
+                    : "border-l-2 border-l-transparent pl-[10px]"
               }`}
               key={proposal.proposal_id}
               onClick={() => onSelect(proposal.proposal_id)}

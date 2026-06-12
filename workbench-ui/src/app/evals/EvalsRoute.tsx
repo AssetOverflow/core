@@ -5,6 +5,7 @@ import { useCommandRegistry } from "../commandRegistry";
 import { subjectToUrl } from "../evidenceAddress";
 import { useEvalLanes, useEvalRun } from "../../api/queries";
 import { EvalLaneCard } from "./EvalLaneCard";
+import { Panel } from "../../design/components/Panel/Panel";
 import { EvalRunButton } from "./EvalRunButton";
 import { EvalMetricGrid } from "./EvalMetricGrid";
 import { EvalFailureViewer } from "./EvalFailureViewer";
@@ -118,8 +119,7 @@ export function EvalsRoute() {
   return (
     <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-[18rem_1fr]" data-testid="evals-route">
       {/* Left Pane: Lane List */}
-      <div className="flex flex-col gap-3 border-r border-[var(--color-border-subtle)] pr-4 overflow-y-auto">
-        <h2 className="text-md font-semibold text-[var(--color-text-primary)]">Eval Lanes</h2>
+      <Panel title="Eval Lanes">
         <div className="flex flex-col gap-2">
           {lanes && lanes.length > 0 ? (
             lanes.map((lane) => (
@@ -137,7 +137,7 @@ export function EvalsRoute() {
             />
           )}
         </div>
-      </div>
+      </Panel>
 
       {/* Right Pane: Results / Form */}
       <div className="flex flex-col gap-4 overflow-y-auto pl-2">
