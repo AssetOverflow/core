@@ -1,0 +1,51 @@
+{
+  "after_status": "coherent",
+  "authority_path": [
+    "demos.proof_carrying_promotion.authority.validate_payload",
+    "teaching.proof_promotion.certify_promotion",
+    "vault.store.VaultStore.apply_certified_promotion",
+    "generate.proof_chain.certificate.verify_certificate(expected_engine_pin)"
+  ],
+  "before_status": "speculative",
+  "certificate_digest": "1dfd9a393bd4fc32e6d62835f284c6c56e64c3ced87062df23471dc7a0a5305a",
+  "claim_entry_id": "claim-q",
+  "claim_entry_index": 2,
+  "decision_reason": "promoted_entailed_from_coherent_premises",
+  "engine_pin": "97a230949016e38d5e3f37a69e4245b320575ee70e5af92ff7607f7b05f74b5f",
+  "premise_entry_ids": [
+    "premise-p",
+    "premise-p-implies-q"
+  ],
+  "premise_entry_indices": [
+    0,
+    1
+  ],
+  "promoted": true,
+  "proposer_ignored_fields": [
+    "confidence",
+    "proof",
+    "status"
+  ],
+  "request_id": "demo-pccp-a1",
+  "scenario_id": "entailed-promotes",
+  "status": "promoted",
+  "tool": "proof_carrying_coherence_promotion",
+  "trace_hash": "c5c9cd35258f4ba42a4a3a1a3a2d6bff43945b0f4739fa56c72fa299a323116a",
+  "trace_summary": {
+    "apply_attempted": true,
+    "apply_reason": "applied",
+    "arena_entry_count": 3,
+    "authority_evaluated": true,
+    "certify_certificate_digest": "1dfd9a393bd4fc32e6d62835f284c6c56e64c3ced87062df23471dc7a0a5305a",
+    "certify_promoted": true,
+    "certify_reason": "promoted_entailed_from_coherent_premises",
+    "engine_decision": "entailed",
+    "engine_reason": "tautological_implication",
+    "proposer_fields_ignored": [
+      "confidence",
+      "proof",
+      "status"
+    ],
+    "sabotage_applied": []
+  }
+}

@@ -1,0 +1,231 @@
+{
+  "name": "proof_carrying_coherence_promotion",
+  "title": "CORE proof-carrying coherence promotion demo",
+  "description": "Submit one model-style promotion proposal to CORE's local deterministic proof-carrying promotion authority (ADR-0218). The proposer contributes data only: any attached proof, status, confidence, or certificate text is recorded as ignored and never read by the decision path. CORE builds a local store arena from the fixture's curator-declared entries, fresh-reads certified readings and epistemic statuses, recomputes the entailment proof under the pinned deductive engine via teaching.proof_promotion.certify_promotion, and mutates only through VaultStore.apply_certified_promotion after independent replay re-verification. Output is promoted | refused | invalid plus a deterministic trace artifact whose hash covers the certificate digest.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "request_id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._-]{1,64}$"
+      },
+      "scenario_id": {
+        "type": "string",
+        "pattern": "^[a-z0-9._-]{1,64}$"
+      },
+      "proposer": {
+        "type": "object",
+        "properties": {
+          "lane": {
+            "type": "string",
+            "enum": ["frontier_fixture", "local_fixture"]
+          },
+          "model_family": {
+            "type": "string",
+            "enum": ["model_style_proposer"]
+          },
+          "proposal_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]{1,64}$"
+          },
+          "proof": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "confidence": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "certificate": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "trace_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": ["lane", "model_family", "proposal_id"],
+        "additionalProperties": false
+      },
+      "store": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "entry_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._-]{1,64}$"
+                },
+                "propositional_form": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "epistemic_status": {
+                  "type": "string",
+                  "enum": ["coherent", "contested", "speculative", "falsified"]
+                },
+                "reading_certified": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "entry_id",
+                "propositional_form",
+                "epistemic_status",
+                "reading_certified"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "claim_entry": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]{1,64}$"
+          },
+          "premise_entries": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]{1,64}$"
+            }
+          }
+        },
+        "required": ["entries", "claim_entry", "premise_entries"],
+        "additionalProperties": false
+      },
+      "sabotage": {
+        "type": "object",
+        "properties": {
+          "tamper_claim_form": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "restate": {
+            "type": "object",
+            "properties": {
+              "entry_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._-]{1,64}$"
+              },
+              "epistemic_status": {
+                "type": "string",
+                "enum": ["coherent", "contested", "speculative", "falsified"]
+              }
+            },
+            "required": ["entry_id", "epistemic_status"],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    "required": ["request_id", "scenario_id", "proposer", "store"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "tool": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["promoted", "refused", "invalid"]
+      },
+      "request_id": {
+        "type": ["string", "null"]
+      },
+      "scenario_id": {
+        "type": ["string", "null"]
+      },
+      "authority_path": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "decision_reason": {
+        "type": "string"
+      },
+      "promoted": {
+        "type": "boolean"
+      },
+      "claim_entry_id": {
+        "type": ["string", "null"]
+      },
+      "claim_entry_index": {
+        "type": ["integer", "null"]
+      },
+      "before_status": {
+        "type": ["string", "null"]
+      },
+      "after_status": {
+        "type": ["string", "null"]
+      },
+      "premise_entry_ids": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "premise_entry_indices": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "certificate_digest": {
+        "type": ["string", "null"]
+      },
+      "engine_pin": {
+        "type": ["string", "null"]
+      },
+      "trace_hash": {
+        "type": "string"
+      },
+      "trace_summary": {
+        "type": "object"
+      },
+      "proposer_ignored_fields": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "refusal_reason": {
+        "type": ["string", "null"]
+      },
+      "invalid_reason": {
+        "type": ["string", "null"]
+      }
+    },
+    "required": [
+      "tool",
+      "status",
+      "request_id",
+      "scenario_id",
+      "authority_path",
+      "decision_reason",
+      "promoted",
+      "certificate_digest",
+      "engine_pin",
+      "trace_hash",
+      "trace_summary",
+      "proposer_ignored_fields"
+    ]
+  }
+}

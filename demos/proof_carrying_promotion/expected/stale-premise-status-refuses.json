@@ -1,0 +1,46 @@
+{
+  "after_status": "speculative",
+  "authority_path": [
+    "demos.proof_carrying_promotion.authority.validate_payload",
+    "teaching.proof_promotion.certify_promotion",
+    "vault.store.VaultStore.apply_certified_promotion",
+    "generate.proof_chain.certificate.verify_certificate(expected_engine_pin)"
+  ],
+  "before_status": "speculative",
+  "certificate_digest": "1dfd9a393bd4fc32e6d62835f284c6c56e64c3ced87062df23471dc7a0a5305a",
+  "claim_entry_id": "claim-q",
+  "claim_entry_index": 2,
+  "decision_reason": "premise_not_coherent",
+  "engine_pin": "97a230949016e38d5e3f37a69e4245b320575ee70e5af92ff7607f7b05f74b5f",
+  "premise_entry_ids": [
+    "premise-p",
+    "premise-p-implies-q"
+  ],
+  "premise_entry_indices": [
+    0,
+    1
+  ],
+  "promoted": false,
+  "proposer_ignored_fields": [],
+  "refusal_reason": "premise_not_coherent",
+  "request_id": "demo-pccp-f1",
+  "scenario_id": "stale-premise-status-refuses",
+  "status": "refused",
+  "tool": "proof_carrying_coherence_promotion",
+  "trace_hash": "46c010f9605489af35db9f4b70517e8e71a610e2b307943317c64784eaaab862",
+  "trace_summary": {
+    "apply_attempted": true,
+    "apply_reason": "premise_not_coherent",
+    "arena_entry_count": 3,
+    "authority_evaluated": true,
+    "certify_certificate_digest": "1dfd9a393bd4fc32e6d62835f284c6c56e64c3ced87062df23471dc7a0a5305a",
+    "certify_promoted": true,
+    "certify_reason": "promoted_entailed_from_coherent_premises",
+    "engine_decision": "entailed",
+    "engine_reason": "tautological_implication",
+    "proposer_fields_ignored": [],
+    "sabotage_applied": [
+      "restate"
+    ]
+  }
+}

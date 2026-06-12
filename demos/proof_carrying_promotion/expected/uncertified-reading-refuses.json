@@ -1,0 +1,42 @@
+{
+  "after_status": "speculative",
+  "authority_path": [
+    "demos.proof_carrying_promotion.authority.validate_payload",
+    "teaching.proof_promotion.certify_promotion"
+  ],
+  "before_status": "speculative",
+  "certificate_digest": null,
+  "claim_entry_id": "claim-q",
+  "claim_entry_index": 2,
+  "decision_reason": "refused_premise_reading_uncertified",
+  "engine_pin": "97a230949016e38d5e3f37a69e4245b320575ee70e5af92ff7607f7b05f74b5f",
+  "premise_entry_ids": [
+    "premise-p",
+    "premise-p-implies-q"
+  ],
+  "premise_entry_indices": [
+    0,
+    1
+  ],
+  "promoted": false,
+  "proposer_ignored_fields": [],
+  "refusal_reason": "refused_premise_reading_uncertified",
+  "request_id": "demo-pccp-d1",
+  "scenario_id": "uncertified-reading-refuses",
+  "status": "refused",
+  "tool": "proof_carrying_coherence_promotion",
+  "trace_hash": "71869947e742d524e7115c68ab06620f33ad72cc16a0f5eafabda59a09c7e451",
+  "trace_summary": {
+    "apply_attempted": false,
+    "apply_reason": null,
+    "arena_entry_count": 3,
+    "authority_evaluated": true,
+    "certify_certificate_digest": null,
+    "certify_promoted": false,
+    "certify_reason": "refused_premise_reading_uncertified",
+    "engine_decision": null,
+    "engine_reason": null,
+    "proposer_fields_ignored": [],
+    "sabotage_applied": []
+  }
+}

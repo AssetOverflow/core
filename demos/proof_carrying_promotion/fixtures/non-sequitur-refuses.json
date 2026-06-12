@@ -1,0 +1,37 @@
+{
+  "tool": "proof_carrying_coherence_promotion",
+  "expected_status": "refused",
+  "arguments": {
+    "request_id": "demo-pccp-g1",
+    "scenario_id": "non-sequitur-refuses",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-g1"
+    },
+    "store": {
+      "entries": [
+        {
+          "entry_id": "premise-p",
+          "propositional_form": "p",
+          "epistemic_status": "coherent",
+          "reading_certified": true
+        },
+        {
+          "entry_id": "premise-p-implies-q",
+          "propositional_form": "p -> q",
+          "epistemic_status": "coherent",
+          "reading_certified": true
+        },
+        {
+          "entry_id": "claim-r",
+          "propositional_form": "r",
+          "epistemic_status": "speculative",
+          "reading_certified": true
+        }
+      ],
+      "claim_entry": "claim-r",
+      "premise_entries": ["premise-p", "premise-p-implies-q"]
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "after_status": null,
+  "authority_path": [
+    "demos.proof_carrying_promotion.authority.validate_payload"
+  ],
+  "before_status": null,
+  "certificate_digest": null,
+  "claim_entry_id": null,
+  "claim_entry_index": null,
+  "decision_reason": "invalid_payload",
+  "engine_pin": null,
+  "invalid_reason": "payload unexpected property 'authority_path' (additionalProperties is false); payload unexpected property 'certificate_digest' (additionalProperties is false); payload unexpected property 'evidence_ledger' (additionalProperties is false); payload unexpected property 'final_status' (additionalProperties is false); payload unexpected property 'promoted' (additionalProperties is false); payload unexpected property 'trace_hash' (additionalProperties is false)",
+  "premise_entry_ids": [],
+  "premise_entry_indices": [],
+  "promoted": false,
+  "proposer_ignored_fields": [
+    "confidence",
+    "status",
+    "trace_hash"
+  ],
+  "request_id": "demo-pccp-h1",
+  "scenario_id": "invalid-state-smuggling-attempt",
+  "status": "invalid",
+  "tool": "proof_carrying_coherence_promotion",
+  "trace_hash": "ceee9f1fd24bc0b0c6d0efac1ef72ce20715d1e1e9e4b38a5a6e6cdb902001b1",
+  "trace_summary": {
+    "authority_evaluated": false,
+    "proposer_fields_ignored": [
+      "confidence",
+      "status",
+      "trace_hash"
+    ],
+    "validation_errors": [
+      "payload unexpected property 'authority_path' (additionalProperties is false)",
+      "payload unexpected property 'certificate_digest' (additionalProperties is false)",
+      "payload unexpected property 'evidence_ledger' (additionalProperties is false)",
+      "payload unexpected property 'final_status' (additionalProperties is false)",
+      "payload unexpected property 'promoted' (additionalProperties is false)",
+      "payload unexpected property 'trace_hash' (additionalProperties is false)"
+    ]
+  }
+}

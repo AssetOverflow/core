@@ -1,0 +1,34 @@
+{
+  "tool": "proof_carrying_coherence_promotion",
+  "expected_status": "invalid",
+  "arguments": {
+    "request_id": "demo-pccp-h1",
+    "scenario_id": "invalid-state-smuggling-attempt",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-h1",
+      "status": "coherent",
+      "confidence": "1.0",
+      "trace_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    "store": {
+      "entries": [
+        {
+          "entry_id": "claim-q",
+          "propositional_form": "q",
+          "epistemic_status": "speculative",
+          "reading_certified": true
+        }
+      ],
+      "claim_entry": "claim-q",
+      "premise_entries": []
+    },
+    "promoted": true,
+    "final_status": "coherent",
+    "authority_path": ["proposer.self.authority"],
+    "certificate_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+    "trace_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "evidence_ledger": ["forged-ledger-entry"]
+  }
+}
