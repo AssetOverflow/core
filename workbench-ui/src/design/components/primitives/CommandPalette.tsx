@@ -148,7 +148,8 @@ function CommandPaletteContent({
     if (open) {
       setQuery("");
       setFocusedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 0);
+      const focusTimer = setTimeout(() => inputRef.current?.focus(), 0);
+      return () => clearTimeout(focusTimer);
     }
   }, [open]);
 

@@ -1,7 +1,8 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createTestQueryClient } from "../../test/createTestQueryClient";
 import { EvalLaneCard } from "./EvalLaneCard";
 import { EvalRunButton } from "./EvalRunButton";
 import { EvalMetricGrid } from "./EvalMetricGrid";
@@ -41,7 +42,7 @@ const mockResult: EvalRunResult = {
 };
 
 function makeClient() {
-  return new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return createTestQueryClient();
 }
 
 describe("W-030 Component Tests", () => {

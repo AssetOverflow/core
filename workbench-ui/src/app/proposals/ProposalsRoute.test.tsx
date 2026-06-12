@@ -1,4 +1,5 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createTestQueryClient } from "../../test/createTestQueryClient";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
@@ -10,9 +11,7 @@ import { ProposalTable } from "./ProposalTable";
 import { ProposalsRoute } from "./ProposalsRoute";
 
 function queryWrapper({ children }: { children: ReactNode }) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
+  const client = createTestQueryClient();
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
 
@@ -24,7 +23,7 @@ function LocationProbe() {
 function renderRoute(initialEntry = "/proposals") {
   return render(
     <QueryClientProvider
-      client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}
+      client={createTestQueryClient()}
     >
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>

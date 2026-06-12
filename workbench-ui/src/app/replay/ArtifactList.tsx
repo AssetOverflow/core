@@ -1,5 +1,6 @@
 import type { ArtifactRef } from "../../types/api";
 import { cn } from "../../design/lib";
+import { EmptyState } from "../../design/components/states/EmptyState";
 
 interface ArtifactListProps {
   artifacts: ArtifactRef[];
@@ -22,8 +23,11 @@ type ArtifactKind = (typeof KINDS)[number];
 export function ArtifactList({ artifacts, selectedId, onSelect }: ArtifactListProps) {
   if (artifacts.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center p-8 text-center" data-testid="artifact-list-empty">
-        <p className="text-sm text-[var(--color-text-muted)]">No artifacts available.</p>
+      <div className="p-2" data-testid="artifact-list-empty">
+        <EmptyState
+          statement="No artifacts available."
+          nextAction={{ kind: "cli", command: "core eval cognition" }}
+        />
       </div>
     );
   }

@@ -2,7 +2,8 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createTestQueryClient } from "../test/createTestQueryClient";
 import { Shell } from "./Shell";
 import { ChatRoute } from "../routes/ChatRoute";
 import { WorkbenchApiError } from "../api/client";
@@ -19,7 +20,7 @@ vi.mock("../api/queries", async (importOriginal) => {
 import { useRuntimeStatus } from "../api/queries";
 
 function makeClient() {
-  return new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return createTestQueryClient();
 }
 
 function renderShell() {

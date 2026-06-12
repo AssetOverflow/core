@@ -1,0 +1,171 @@
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router-dom";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ReactElement } from "react";
+import { createTestQueryClient } from "../test/createTestQueryClient";
+import { ChatRoute } from "../routes/ChatRoute";
+import { ProposalsRoute } from "./proposals/ProposalsRoute";
+import { EvalsRoute } from "./evals/EvalsRoute";
+import { ReplayRoute } from "./replay/ReplayRoute";
+
+/**
+ * ADR-0162 §6 route conformance — executable, not aspirational.
+ *
+ * Every implemented route must ship all three states:
+ *  - empty:   a one-line absence statement + a next action
+ *  - error:   what failed + mutation status + reproducer + retry safety
+ *  - loading: a specific label (never "Thinking...")
+ *
+ * New routes (Wave R2+) add themselves to the tables below; a route that
+ * cannot pass this test does not ship.
+ */
+
+const GENERATED_AT = "2026-06-12T00:00:00Z";
+
+function okEnvelope(data: unknown) {
+  return { ok: true, generated_at: GENERATED_AT, data };
+}
+
+const ERROR_ENVELOPE = {
+  ok: false,
+  generated_at: GENERATED_AT,
+  error: { code: "read_error", message: "synthetic read failure" },
+};
+
+function emptyDataFor(path: string): unknown {
+  // GET /evals returns a bare array; list endpoints return ItemsEnvelope.
+  return path === "/evals" ? [] : { items: [] };
+}
+
+type FetchPlan = "pending" | "error" | "empty";
+
+function installFetch(plan: FetchPlan) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: unknown) => {
+      if (plan === "pending") {
+        return new Promise<never>(() => {});
+      }
+      const path = new URL(String(input)).pathname;
+      const body = plan === "error" ? ERROR_ENVELOPE : okEnvelope(emptyDataFor(path));
+      return Promise.resolve({ json: async () => body });
+    }),
+  );
+}
+
+function renderRoute(element: ReactElement) {
+  return render(
+    <QueryClientProvider client={createTestQueryClient()}>
+      <MemoryRouter>{element}</MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+// Routes may render a contract-bearing state in more than one pane
+// (list + detail), so assert "at least one", never "exactly one".
+async function expectErrorContract() {
+  expect((await screen.findAllByText("What failed")).length).toBeGreaterThan(0);
+  expect(screen.getAllByText("Mutation status").length).toBeGreaterThan(0);
+  expect(screen.getAllByText("Reproducer").length).toBeGreaterThan(0);
+  expect(screen.getAllByText("Retry safety").length).toBeGreaterThan(0);
+  // The mutation-status line is load-bearing (ADR-0162 §6 / CLAUDE.md).
+  expect(screen.getAllByText(/No .*mutation occurred\./).length).toBeGreaterThan(0);
+}
+
+function expectEmptyContract(statement: string, command: string) {
+  expect(screen.getAllByText(statement).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(command).length).toBeGreaterThan(0);
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+interface MountRouteSpec {
+  name: string;
+  element: ReactElement;
+  loadingLabel: string;
+  emptyStatement: string;
+  emptyCommand: string;
+}
+
+const MOUNT_ROUTES: MountRouteSpec[] = [
+  {
+    name: "Proposals",
+    element: <ProposalsRoute />,
+    loadingLabel: "Loading proposal queue...",
+    emptyStatement: "No proposals match this queue view.",
+    emptyCommand: "core teaching proposals --state pending",
+  },
+  {
+    name: "Evals",
+    element: <EvalsRoute />,
+    loadingLabel: "Loading eval lanes...",
+    emptyStatement: "No eval lanes discovered.",
+    emptyCommand: "core eval --list",
+  },
+  {
+    name: "Replay",
+    element: <ReplayRoute />,
+    loadingLabel: "Loading artifacts...",
+    emptyStatement: "No artifacts available.",
+    emptyCommand: "core eval cognition",
+  },
+];
+
+describe.each(MOUNT_ROUTES)("route conformance: $name", (spec) => {
+  it("loading: shows a specific label, never 'Thinking...'", async () => {
+    installFetch("pending");
+    renderRoute(spec.element);
+    expect(await screen.findByText(spec.loadingLabel)).toBeInTheDocument();
+    expect(screen.queryByText(/thinking/i)).not.toBeInTheDocument();
+  });
+
+  it("error: surfaces what failed, mutation status, reproducer, retry safety", async () => {
+    installFetch("error");
+    renderRoute(spec.element);
+    await expectErrorContract();
+  });
+
+  it("empty: states what is absent and offers a next action", async () => {
+    installFetch("empty");
+    renderRoute(spec.element);
+    expect((await screen.findAllByText(spec.emptyStatement)).length).toBeGreaterThan(0);
+    expectEmptyContract(spec.emptyStatement, spec.emptyCommand);
+  });
+});
+
+describe("route conformance: Chat (interaction-driven states)", () => {
+  async function submitPrompt() {
+    const user = userEvent.setup();
+    await user.type(
+      screen.getByPlaceholderText("Ask CORE a question..."),
+      "hello",
+    );
+    await user.click(screen.getByRole("button", { name: /submit/i }));
+    return user;
+  }
+
+  it("empty (initial): states what is absent and offers a next action", () => {
+    installFetch("empty");
+    renderRoute(<ChatRoute />);
+    expectEmptyContract("Ask CORE a question.", "core chat");
+  });
+
+  it("loading: shows a specific label after submit, never 'Thinking...'", async () => {
+    installFetch("pending");
+    renderRoute(<ChatRoute />);
+    await submitPrompt();
+    expect(await screen.findByText("Awaiting turn...")).toBeInTheDocument();
+    expect(screen.queryByText(/thinking/i)).not.toBeInTheDocument();
+  });
+
+  it("error: surfaces what failed, mutation status, reproducer, retry safety", async () => {
+    installFetch("error");
+    renderRoute(<ChatRoute />);
+    await submitPrompt();
+    await expectErrorContract();
+  });
+});

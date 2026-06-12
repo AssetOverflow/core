@@ -4,6 +4,7 @@ import { useMathRatify, useMathReject, useMathDefer } from "../../api/queries";
 import type { MathProposalDetail } from "../../types/api";
 import { Button } from "../../design/components/primitives/Button";
 import { copyText } from "../../design/lib";
+import { useManagedTimeout } from "../../design/hooks/useManagedTimeout";
 
 interface RatificationCommandPanelProps {
   proposal: MathProposalDetail;
@@ -44,6 +45,10 @@ export function RatificationCommandPanel({
   const ratifyMutation = useMathRatify();
   const rejectMutation = useMathReject();
   const deferMutation = useMathDefer();
+  // Two independent slots: a pending success/defer callback must not be
+  // cancelled by an unrelated status-message clear (and vice versa).
+  const scheduleCallback = useManagedTimeout();
+  const scheduleMessageClear = useManagedTimeout();
 
   // Reset states when proposal changes
   useEffect(() => {
@@ -89,7 +94,7 @@ export function RatificationCommandPanel({
           if (result.applied) {
             setStatusMessage(`Ratification succeeded: ${result.message}`);
             setStatusType("success");
-            setTimeout(() => {
+            scheduleCallback(() => {
               if (onSuccess) onSuccess();
             }, 800);
           } else {
@@ -120,7 +125,7 @@ export function RatificationCommandPanel({
           setStatusType("success");
           setShowNoteInput(false);
           setNote("");
-          setTimeout(() => {
+          scheduleCallback(() => {
             if (onSuccess) onSuccess();
           }, 800);
         },
@@ -144,7 +149,7 @@ export function RatificationCommandPanel({
         onSuccess: () => {
           setStatusMessage("Proposal deferred successfully");
           setStatusType("success");
-          setTimeout(() => {
+          scheduleCallback(() => {
             if (onDefer) onDefer();
           }, 800);
         },
@@ -161,7 +166,7 @@ export function RatificationCommandPanel({
       await copyText(proposal.suggested_ratify_cli);
       setStatusMessage("Suggested CLI command copied to clipboard");
       setStatusType("success");
-      setTimeout(() => {
+      scheduleMessageClear(() => {
         setStatusMessage(null);
         setStatusType(null);
       }, 3000);

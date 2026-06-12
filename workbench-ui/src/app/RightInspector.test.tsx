@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { useEffect } from "react";
 import { EvidenceProvider, useEvidenceSubject } from "./evidenceContext";
 import { RightInspector } from "./RightInspector";
 import type { ChatTurnResult, ProposalDetail } from "../types/api";
@@ -30,9 +31,14 @@ function SetSubjectAndRender({
   kind: "turn" | "none";
 }) {
   const { setSubject } = useEvidenceSubject();
-  if (kind === "turn") {
-    setSubject({ kind: "turn", turnId: 1, data: MOCK_TURN });
-  }
+  // Render-phase setSubject created an infinite synchronous render loop
+  // (new subject object every pass) — the 100%-CPU spin previously
+  // misdiagnosed as a teardown hang. State updates belong in effects.
+  useEffect(() => {
+    if (kind === "turn") {
+      setSubject({ kind: "turn", turnId: 1, data: MOCK_TURN });
+    }
+  }, [kind, setSubject]);
   return <RightInspector />;
 }
 

@@ -1,0 +1,58 @@
+name: workbench-ui
+
+# Frontend verification lane (Wave R brief R0a). Before this workflow,
+# workbench-ui changes merged with no frontend CI at all — smoke.yml and
+# full-pytest.yml are Python-only.
+#
+# The path filter includes this workflow file itself so changes to the
+# lane are validated by the lane.
+
+on:
+  pull_request:
+    paths:
+      - "workbench-ui/**"
+      - ".github/workflows/workbench-ui.yml"
+  push:
+    branches: [main]
+    paths:
+      - "workbench-ui/**"
+      - ".github/workflows/workbench-ui.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workbench-ui-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: build + vitest
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: workbench-ui
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: set up pnpm
+        uses: pnpm/action-setup@v4
+        # version comes from package.json "packageManager" (pnpm@9.15.0)
+
+      - name: set up node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: workbench-ui/pnpm-lock.yaml
+
+      - name: install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: build (tsc + vite)
+        run: pnpm build
+
+      - name: vitest (full suite must pass AND exit)
+        run: pnpm test
