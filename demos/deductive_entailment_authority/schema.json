@@ -1,0 +1,156 @@
+{
+  "name": "deductive_entailment_authority",
+  "title": "CORE deductive entailment authority demo",
+  "description": "Submit one model-style entailment proposal to CORE's local deterministic entailment authority. The proposer contributes data only: any attached verdict, confidence, proof, trace hash, or engine pin is recorded as ignored and never read by the decision path. CORE recomputes formal propositional entailment through the pinned deductive engine (generate.proof_chain.entail.evaluate_entailment_with_trace, the sound and complete ROBDD operator) and independently cross-checks the verdict with the deductive lane's gold oracle (evals.deductive_logic.oracle.oracle_entailment, a code-disjoint brute-force truth-table procedure). A decision (entailed | refuted | unknown) is served only when both independent procedures agree; inconsistent premises and out-of-regime input refuse with the engine's typed reasons. Output is decided | refused | invalid plus a deterministic trace artifact whose hash covers the entailment trace and the oracle verdict.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "request_id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._-]{1,64}$"
+      },
+      "scenario_id": {
+        "type": "string",
+        "pattern": "^[a-z0-9._-]{1,64}$"
+      },
+      "premises": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "minItems": 1,
+        "maxItems": 8
+      },
+      "claim": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120
+      },
+      "proposer": {
+        "type": "object",
+        "properties": {
+          "lane": {
+            "type": "string",
+            "enum": ["frontier_fixture", "local_fixture"]
+          },
+          "model_family": {
+            "type": "string",
+            "enum": ["model_style_proposer"]
+          },
+          "proposal_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]{1,64}$"
+          },
+          "verdict": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "confidence": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "proof": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "trace_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "engine_pin": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": ["lane", "model_family", "proposal_id"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["request_id", "scenario_id", "premises", "claim", "proposer"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "tool": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["decided", "refused", "invalid"]
+      },
+      "decision": {
+        "type": ["string", "null"],
+        "enum": ["entailed", "refuted", "unknown", null]
+      },
+      "request_id": {
+        "type": ["string", "null"]
+      },
+      "scenario_id": {
+        "type": ["string", "null"]
+      },
+      "authority_path": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "decision_reason": {
+        "type": "string"
+      },
+      "engine_pin": {
+        "type": ["string", "null"]
+      },
+      "entailment_trace": {
+        "type": ["object", "null"]
+      },
+      "oracle_verdict": {
+        "type": ["string", "null"]
+      },
+      "oracle_agreement": {
+        "type": ["boolean", "null"]
+      },
+      "proposer_ignored_fields": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "trace_hash": {
+        "type": "string"
+      },
+      "trace_summary": {
+        "type": "object"
+      },
+      "refusal_reason": {
+        "type": ["string", "null"]
+      },
+      "invalid_reason": {
+        "type": ["string", "null"]
+      }
+    },
+    "required": [
+      "tool",
+      "status",
+      "decision",
+      "request_id",
+      "scenario_id",
+      "authority_path",
+      "decision_reason",
+      "engine_pin",
+      "entailment_trace",
+      "oracle_verdict",
+      "oracle_agreement",
+      "proposer_ignored_fields",
+      "trace_hash",
+      "trace_summary",
+      "refusal_reason",
+      "invalid_reason"
+    ]
+  }
+}

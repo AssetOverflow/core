@@ -1,0 +1,19 @@
+{
+  "tool": "deductive_entailment_authority",
+  "expected_status": "refused",
+  "arguments": {
+    "request_id": "demo-dea-e4",
+    "scenario_id": "refused-inconsistent-premises",
+    "premises": [
+      "valve_open -> tank_fills",
+      "valve_open",
+      "~tank_fills"
+    ],
+    "claim": "pump_on",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-e4"
+    }
+  }
+}

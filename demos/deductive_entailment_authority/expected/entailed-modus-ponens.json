@@ -1,0 +1,46 @@
+{
+  "authority_path": [
+    "demos.deductive_entailment_authority.authority.validate_payload",
+    "demos.deductive_entailment_authority.authority.enforce_atom_budget",
+    "generate.proof_chain.entail.evaluate_entailment_with_trace",
+    "evals.deductive_logic.oracle.oracle_entailment"
+  ],
+  "decision": "entailed",
+  "decision_reason": "tautological_implication",
+  "engine_pin": "97a230949016e38d5e3f37a69e4245b320575ee70e5af92ff7607f7b05f74b5f",
+  "entailment_trace": {
+    "conjunction_key": "0:socrates_is_mortal?T:F;1:socrates_is_human?@0:F",
+    "entailment_check_key": "T",
+    "outcome": "entailed",
+    "premise_keys": [
+      "0:socrates_is_human?T:F",
+      "0:socrates_is_mortal?T:F;1:socrates_is_human?@0:T"
+    ],
+    "query_key": "0:socrates_is_mortal?T:F",
+    "reason": "tautological_implication",
+    "refutation_check_key": "0:socrates_is_mortal?F:T;1:socrates_is_human?@0:T"
+  },
+  "invalid_reason": null,
+  "oracle_agreement": true,
+  "oracle_verdict": "entailed",
+  "proposer_ignored_fields": [],
+  "refusal_reason": null,
+  "request_id": "demo-dea-e1",
+  "scenario_id": "entailed-modus-ponens",
+  "status": "decided",
+  "tool": "deductive_entailment_authority",
+  "trace_hash": "96977332c7eb35f68679e12f2faba00ba246281fe2b1cf60050ed1909634885c",
+  "trace_summary": {
+    "authority_evaluated": true,
+    "defensive_refusal": false,
+    "distinct_atom_budget": 12,
+    "distinct_atom_estimate": 2,
+    "engine_outcome": "entailed",
+    "engine_reason": "tautological_implication",
+    "oracle_agreement": true,
+    "oracle_verdict": "entailed",
+    "premise_count": 2,
+    "proposer_fields_ignored": [],
+    "regime_gate": null
+  }
+}

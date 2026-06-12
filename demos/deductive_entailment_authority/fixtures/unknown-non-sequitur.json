@@ -1,0 +1,18 @@
+{
+  "tool": "deductive_entailment_authority",
+  "expected_status": "decided",
+  "arguments": {
+    "request_id": "demo-dea-e3",
+    "scenario_id": "unknown-non-sequitur",
+    "premises": [
+      "rain -> wet_street",
+      "wet_street"
+    ],
+    "claim": "rain",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-e3"
+    }
+  }
+}
