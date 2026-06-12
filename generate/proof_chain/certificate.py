@@ -1,8 +1,10 @@
 """ADR-0218 PR B — ``PromotionCertificate`` + pure replay verifier.
 
-THE PROMOTION FEATURE IS NOT LIVE.  ADR-0218 is Proposed, not ratified; this
-module is the side-effect-free *evidence substrate* the future P3 promoter
-(``teaching/proof_promotion.py``, which does not exist) will consume.  It
+ADR-0218 is ratified (2026-06-11) and the P3 promoter exists
+(``teaching/proof_promotion.py``; the transition owner is
+``VaultStore.apply_certified_promotion``).  THE FEATURE HAS NO RUNTIME CALLER
+YET — no chat/runtime turn path invokes promotion (the deterministic demo is
+PR D).  This module remains the side-effect-free *evidence substrate*: it
 decides nothing about the vault and mutates nothing anywhere:
 
 - no vault / teaching / session import — premises arrive as already-read

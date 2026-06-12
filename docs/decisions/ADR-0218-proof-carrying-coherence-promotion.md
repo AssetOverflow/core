@@ -1,12 +1,15 @@
 # ADR-0218 — Proof-Carrying Coherence Promotion (logical arm of ADR-0021 v2)
 
-**Status:** Proposed — NOT ratified. No runtime mutation-path code is
-authorized by this document. The PR that introduces this ADR ships only
-(a) this proposal and (b) executable proof obligations
-(`tests/test_proof_carrying_promotion_obligations.py`, strict-xfail) plus a
-new structural invariant (INV-29) that pins the *current* promotion-site
-surface before any new promoter exists.
-**Date:** 2026-06-11
+**Status:** Accepted (ratified 2026-06-11) — D1–D4 accepted as proposed; the
+completed ratification checklist at the bottom of this document records the
+per-decision acceptance notes, including two fail-closed realizations
+confirmed under D3. Ratification authorizes the P3 implementation (PR C)
+through the existing mutation owner only: `teaching/proof_promotion.py` as a
+pure decider plus `VaultStore.apply_certified_promotion` with independent
+re-verification. INV-29 is confirmed as the permanent transition-site
+boundary; its allowlist stays `{vault/store.py}` and INV-21's allowlist is
+unchanged.
+**Date:** 2026-06-11 (proposed and ratified)
 **Authors:** drafted by agent for architect review (Joshua Shay ratifies)
 **Governing issue:** [docs/issues/proof-carrying-coherence-promotion.md](../issues/proof-carrying-coherence-promotion.md)
 **Depends on:** ADR-0021 (Epistemic Grade Policy), ADR-0201/0202 (ROBDD
@@ -71,7 +74,7 @@ energy/coherence-residual policy, called from `chat/runtime.py` behind
    sites are allowlisted), in the same PR as this document, so the boundary
    exists *before* any promoter does.
 
-## Decision (proposed — each item requires ratification)
+## Decision (ratified 2026-06-11 — see the completed checklist below)
 
 ### D1. Extend the existing mutation owner; do not add a write path
 
@@ -164,10 +167,12 @@ the certificate, not just the status.
   exist before ratification — so PR B retires **no** markers; the
   certificate-shaped halves of O1/O7 are instead proven for real in the
   dedicated test file.
-- **PR C (requires this ADR ratified).** `certify_promotion` +
-  `VaultStore.apply_certified_promotion` behind the existing mutation owner.
-  Retires all the xfails (strict-xpass forces it); INV-21 allowlist
-  unchanged; INV-29 allowlist unchanged; full + deductive lanes wrong=0.
+- **PR C (landed with ratification, same PR).** `certify_promotion`
+  (`teaching/proof_promotion.py`) + `VaultStore.apply_certified_promotion`
+  behind the existing mutation owner. All xfails retired (strict-xpass
+  forced it); INV-21 allowlist unchanged; INV-29 allowlist unchanged; full +
+  deductive lanes wrong=0. The engine pin lives in
+  `generate/proof_chain/engine_pin.py`, sync-pinned to the lane registry.
 - **PR D.** Local deterministic demo (`demos/` pattern): proposer submits
   claim + proof candidate; CORE ignores the candidate, recomputes, promotes
   or refuses on pinned verification only. No network, no model API, no side
@@ -207,12 +212,39 @@ explicit hazard surface and refuses on any gap.
 - Auto-demotion on REFUTED — open item, not in scope.
 - Any structural (non-curator) reading certification — future ADR.
 
-## Ratification checklist (architect)
+## Ratification checklist (architect) — completed 2026-06-11
 
-- [ ] D1 split (pure decider / vault-owned mutation) over the alternative
-      (new INV-21 allowlist entry).
-- [ ] D2 first cut: reading stays curator-certified; entailment automated.
-- [ ] D3 predicate exact as stated (including REFUTED → no transition).
-- [ ] D4 certificate fields + trace-hash folding.
-- [ ] INV-29 as the permanent transition-site boundary (already shipped in
-      the proposing PR as a passing invariant; ratification confirms it).
+- [x] D1 ACCEPTED: split (pure decider / vault-owned mutation) over the
+      alternative (new INV-21 allowlist entry). `teaching/proof_promotion.py`
+      decides and never mutates; `vault/store.py` independently re-verifies
+      and owns the flip. No INV-21 allowlist change.
+- [x] D2 ACCEPTED: reading stays curator-certified in the first cut
+      (`reading_certified: true` + the certified `propositional_form` stored
+      on the entry); the entailment is automated. A structural (non-curator)
+      reading certifier remains future work under its own ADR.
+- [x] D3 ACCEPTED: predicate exact as stated, including REFUTED → no
+      transition (and no auto-demotion — open item stays open). Two
+      fail-closed realizations are confirmed with it:
+      (a) clause 2's "forms are taken from the store, never from the
+      proposer" applies to the **claim** as well — the P3 surface takes a
+      `claim_entry_index` and fresh-reads the claim's certified form from
+      its stored entry, adjusting the PR-A provisional API (sanctioned by
+      the obligations file's provisional-API note) in the strengthening
+      direction; and
+      (b) zero-premise (tautology) certificates do not promote in v1 —
+      D3.1 is vacuous over an empty premise set, so the empty set is
+      refused rather than waved through (matches PR B's fail-closed
+      `promotion_positive`).
+- [x] D4 ACCEPTED: certificate fields as landed in PR B
+      (`generate/proof_chain/certificate.py`; plus `certificate_version`,
+      additive). Reconciliation per this section's "provisional fields"
+      note: the certificate's `decision`/`reason` carry the engine's closed
+      vocabulary (`entailed`/`refuted`/`unknown`/`refused`), and the
+      promoted-vs-refused decision lives on the P3 decision object.
+      Trace-hash folding: P3 emits the certificate's canonical-JSON SHA-256
+      on the decision object; folding into a turn `trace_hash` binds on the
+      first runtime caller (PR D or later) — no runtime turn path performs
+      promotion at P3.
+- [x] INV-29 ACCEPTED as the permanent transition-site boundary; allowlist
+      stays `{vault/store.py}` (shipped passing in the proposing PR;
+      ratification confirms it).

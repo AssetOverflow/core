@@ -13,6 +13,7 @@ O(N) np.array_equal scans.
 from __future__ import annotations
 
 from collections import deque
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -25,6 +26,7 @@ from teaching.epistemic import ADMISSIBLE_AS_EVIDENCE, EpistemicStatus
 
 if TYPE_CHECKING:
     from core.physics.learning import VaultPromotionPolicy
+    from generate.proof_chain.certificate import PromotionCertificate
 
 
 # ADR-0006 §"Integration Points":
@@ -121,6 +123,36 @@ def _status_admits(entry_status: EpistemicStatus, min_status: EpistemicStatus) -
     if min_status is EpistemicStatus.COHERENT:
         return entry_status in ADMISSIBLE_AS_EVIDENCE
     return entry_status is min_status
+
+
+# ADR-0218 — closed reason vocabulary for apply_certified_promotion.  Each
+# refusal names the exact gate that fired; "applied" is the only positive.
+CERTIFIED_PROMOTION_REASONS: frozenset[str] = frozenset({
+    "applied",
+    "not_a_certificate",
+    "certificate_replay_failed",
+    "certificate_not_promotion_positive",
+    "claim_entry_missing",
+    "claim_form_mismatch",
+    "claim_reading_uncertified",
+    "claim_not_speculative",
+    "premise_entry_missing",
+    "premise_form_mismatch",
+    "premise_reading_uncertified",
+    "premise_not_coherent",
+})
+
+
+@dataclass(frozen=True, slots=True)
+class CertifiedPromotionResult:
+    """Outcome of one ``apply_certified_promotion`` call.
+
+    ``applied`` is True iff the entry's status was flipped; ``reason`` is
+    drawn from ``CERTIFIED_PROMOTION_REASONS``.  A refusal mutates nothing.
+    """
+
+    applied: bool
+    reason: str
 
 
 def _parse_entry_status(raw_status: object) -> EpistemicStatus:
@@ -373,8 +405,115 @@ class VaultStore:
             decision = policy.decide(energy)
             if decision.promote:
                 meta["epistemic_status"] = EpistemicStatus.COHERENT.value
+                # Keep the stored state tag consistent with the status it was
+                # stamped beside at store() time (recall recomputes it on the
+                # fly, but the stored key must not go stale).
+                meta["epistemic_state"] = epistemic_state_for_vault_status(
+                    EpistemicStatus.COHERENT
+                ).value
                 promoted += 1
         return promoted
+
+    def apply_certified_promotion(
+        self,
+        entry_index: int,
+        certificate: "PromotionCertificate",
+    ) -> CertifiedPromotionResult:
+        """Flip one SPECULATIVE entry to COHERENT iff its promotion
+        certificate independently re-verifies against the live store.
+
+        ADR-0218 §D1: this is the proof-carrying transition's single mutation
+        site — the pure decider (``teaching/proof_promotion.py``) recommends,
+        this method **re-verifies everything itself** and trusts neither the
+        decider nor the certificate's provenance:
+
+        1. The certificate replay-verifies under the pinned engine
+           (byte-for-byte recomputation + ``DEDUCTIVE_ENGINE_PIN`` check) and
+           is promotion-positive (ENTAILED over a non-empty all-COHERENT
+           recorded premise set).
+        2. The target entry's stored, curator-certified ``propositional_form``
+           equals the certificate's claim form, and the entry is currently
+           SPECULATIVE (strict string compare — stale or already-transitioned
+           claims refuse).
+        3. Every certificate premise re-resolves fresh: stored certified form
+           byte-equal to the certificate's, ``reading_certified is True``, and
+           current status COHERENT (a premise contested/falsified since
+           certification refuses — staleness is a refusal, not a race).
+
+        Authority comes from live store state plus recomputation — a
+        fabricated certificate over forms the store does not actually hold as
+        certified COHERENT premises cannot flip anything.  Any refusal
+        mutates nothing.
+
+        Entry indices are live deque positions (see ``iter_metadata``); on a
+        bounded vault, eviction shifts indices, and the form/status
+        cross-checks above are what keep a shifted index from flipping a
+        different claim.  Certified promotion is intended for the unbounded
+        tier (``max_entries=None``).
+        """
+        # Lazy import, matching this module's Proposition/EnergyProfile
+        # precedent: keeps vault load time lean and load-order acyclic.
+        from generate.proof_chain.certificate import (
+            PromotionCertificate as _Certificate,
+            verify_certificate as _verify_certificate,
+        )
+        from generate.proof_chain.engine_pin import DEDUCTIVE_ENGINE_PIN
+        import hashlib as _hashlib
+
+        if not isinstance(certificate, _Certificate):
+            return CertifiedPromotionResult(False, "not_a_certificate")
+        verification = _verify_certificate(
+            certificate, expected_engine_pin=DEDUCTIVE_ENGINE_PIN
+        )
+        if not verification.verified:
+            return CertifiedPromotionResult(False, "certificate_replay_failed")
+        if not certificate.promotion_positive:
+            return CertifiedPromotionResult(
+                False, "certificate_not_promotion_positive"
+            )
+
+        if (
+            isinstance(entry_index, bool)
+            or not isinstance(entry_index, int)
+            or not (0 <= entry_index < len(self._metadata))
+        ):
+            return CertifiedPromotionResult(False, "claim_entry_missing")
+        claim_meta = self._metadata[entry_index]
+        if claim_meta.get("reading_certified") is not True:
+            return CertifiedPromotionResult(False, "claim_reading_uncertified")
+        if claim_meta.get("propositional_form") != certificate.claim_form:
+            return CertifiedPromotionResult(False, "claim_form_mismatch")
+        if claim_meta.get("epistemic_status") != EpistemicStatus.SPECULATIVE.value:
+            return CertifiedPromotionResult(False, "claim_not_speculative")
+
+        for premise_id, premise_form in zip(
+            certificate.premise_entry_ids, certificate.premise_forms
+        ):
+            if not (0 <= premise_id < len(self._metadata)):
+                return CertifiedPromotionResult(False, "premise_entry_missing")
+            premise_meta = self._metadata[premise_id]
+            if premise_meta.get("reading_certified") is not True:
+                return CertifiedPromotionResult(
+                    False, "premise_reading_uncertified"
+                )
+            if premise_meta.get("propositional_form") != premise_form:
+                return CertifiedPromotionResult(False, "premise_form_mismatch")
+            if (
+                premise_meta.get("epistemic_status")
+                != EpistemicStatus.COHERENT.value
+            ):
+                return CertifiedPromotionResult(False, "premise_not_coherent")
+
+        claim_meta["epistemic_status"] = EpistemicStatus.COHERENT.value
+        claim_meta["epistemic_state"] = epistemic_state_for_vault_status(
+            EpistemicStatus.COHERENT
+        ).value
+        # D4 audit trail: the digest replay re-verifies (and, once a runtime
+        # caller exists, folds into the turn trace_hash).
+        claim_meta["promotion_certificate_digest"] = _hashlib.sha256(
+            certificate.canonical_json().encode("utf-8")
+        ).hexdigest()
+        return CertifiedPromotionResult(True, "applied")
 
     def reproject(self) -> None:
         """

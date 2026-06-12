@@ -97,6 +97,9 @@ def test_promote_eligible_entries_promotes_coherent_entry() -> None:
     assert vault._metadata[0]["epistemic_status"] == EpistemicStatus.COHERENT.value, (
         "Entry should be promoted to COHERENT"
     )
+    # Consistency fix shipped with ADR-0218 PR C: the stored state tag is
+    # updated alongside the status, so the stamped pair never goes stale.
+    assert vault._metadata[0]["epistemic_state"] == "decoded"
 
 
 # ---------------------------------------------------------------------------
