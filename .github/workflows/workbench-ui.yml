@@ -4,6 +4,10 @@ name: workbench-ui
 # workbench-ui changes merged with no frontend CI at all — smoke.yml and
 # full-pytest.yml are Python-only.
 #
+# The e2e job is the Playwright smoke lane (Wave R brief R0b) — ADR-0162
+# acceptance criteria 5-7. Separate job so vitest results are not hostage
+# to browser install.
+#
 # The path filter includes this workflow file itself so changes to the
 # lane are validated by the lane.
 
@@ -59,3 +63,44 @@ jobs:
 
       - name: vitest (full suite must pass AND exit)
         run: pnpm test
+
+  e2e:
+    name: playwright smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: workbench-ui
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: workbench-ui/package.json
+
+      - name: set up node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: workbench-ui/pnpm-lock.yaml
+
+      - name: install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: cache playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('workbench-ui/pnpm-lock.yaml') }}
+
+      - name: install chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: build (tsc + vite)
+        run: pnpm build
+
+      - name: playwright smoke (ADR-0162 acceptance 5-7)
+        run: pnpm test:e2e
