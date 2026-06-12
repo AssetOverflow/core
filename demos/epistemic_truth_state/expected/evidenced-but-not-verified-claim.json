@@ -4,6 +4,7 @@
     "demos.epistemic_truth_state.authority.validate_payload",
     "demos.epistemic_truth_state.authority.assign_epistemic_state",
     "demo_epistemic_truth_state_envelope(local-v1)",
+    "demos.epistemic_truth_state.authority.resolve_evidence_refs",
     "core.epistemic_state.coerce_epistemic_state"
   ],
   "decision_reason": "evidence_present_but_not_verifying",
@@ -15,13 +16,19 @@
   "scenario_id": "evidenced-but-not-verified-claim",
   "status": "assigned",
   "tool": "core.epistemic_truth_state.review",
-  "trace_hash": "f9f2e153e66aaba9dcb1d7e57bb30947cb7f4dd9b09de3625b12c21b55d80b3c",
+  "trace_hash": "c4fcd4ae033cad4f609ef2e1bcc4a3c1d36647feb4e1931301ce48110cf20c6c",
   "trace_summary": {
     "authority_evaluated": true,
     "claim_fingerprint": "289e494aa06b8bd26b9cd26d61e08b966f78dcfc0f211db250ccf0ec7539a744",
+    "corpus_id": "demo.epistemic_truth_state.evidence_corpus.v1",
+    "corpus_sha256": "62e03b4ac981eaeebdeed64bb2ff9ab1bcfef8cb521ec4029acdbe3b9f120b2e",
     "envelope_version": "local-v1",
     "evidence_considered": 1,
     "independent_support_count": 1,
+    "inference": {
+      "consulted": false,
+      "detail": "no_inference_block"
+    },
     "proposer_state_ignored": true,
     "proposer_trace_hash_ignored": true
   }

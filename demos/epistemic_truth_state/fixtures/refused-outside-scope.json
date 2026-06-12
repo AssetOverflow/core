@@ -20,11 +20,7 @@
     "evidence": [
       {
         "evidence_id": "ev-e1-rumor",
-        "subject": "named_public_stock",
-        "predicate": "closes_higher_tomorrow",
-        "supports": true,
-        "independent": true,
-        "source_kind": "observation"
+        "content_sha256": "5c41a3b6b0e1ca53e688c470be67740b628f689b304247cb72ce7fc382d56e1a"
       }
     ]
   }

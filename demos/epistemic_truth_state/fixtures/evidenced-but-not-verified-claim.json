@@ -20,11 +20,7 @@
     "evidence": [
       {
         "evidence_id": "ev-b1-log",
-        "subject": "smoke_suite",
-        "predicate": "passed_on_current_branch",
-        "supports": true,
-        "independent": true,
-        "source_kind": "observation"
+        "content_sha256": "22049f3356d6e5398f80ad58683ba94ee559296b85ee009b02cf04dd453aa773"
       }
     ]
   }

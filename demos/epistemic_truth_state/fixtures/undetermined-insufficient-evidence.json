@@ -20,11 +20,7 @@
     "evidence": [
       {
         "evidence_id": "ev-d1-unrelated",
-        "subject": "documentation_pass",
-        "predicate": "merged_to_main",
-        "supports": true,
-        "independent": true,
-        "source_kind": "observation"
+        "content_sha256": "d47df7dc3a7d7e51dcac951de2981777f612af4c40924b7f8d9e8abca3b98af2"
       }
     ]
   }

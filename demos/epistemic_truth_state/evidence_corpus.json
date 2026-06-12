@@ -1,0 +1,68 @@
+{
+  "corpus_id": "demo.epistemic_truth_state.evidence_corpus.v1",
+  "records": [
+    {
+      "evidence_id": "ev-a1-trace",
+      "subject": "reviewed_teaching_loop",
+      "predicate": "ran_on_pinned_cognition_pack",
+      "source_kind": "vault",
+      "provenance_root": "vault:pinned-cognition-trace",
+      "assertion": "The vault trace records that the reviewed teaching loop ran on the pinned cognition pack."
+    },
+    {
+      "evidence_id": "ev-a1-replay",
+      "subject": "reviewed_teaching_loop",
+      "predicate": "ran_on_pinned_cognition_pack",
+      "source_kind": "teaching",
+      "provenance_root": "teaching:pinned-cognition-replay",
+      "assertion": "The teaching replay report records that the reviewed teaching loop ran on the pinned cognition pack."
+    },
+    {
+      "evidence_id": "ev-b1-log",
+      "subject": "smoke_suite",
+      "predicate": "passed_on_current_branch",
+      "source_kind": "observation",
+      "provenance_root": "observation:smoke-log",
+      "assertion": "The local smoke log records that the smoke suite passed on the current branch."
+    },
+    {
+      "evidence_id": "ev-c1-tag-on-main",
+      "subject": "release_tag",
+      "predicate": "points_at_main",
+      "source_kind": "premise",
+      "provenance_root": "premise:release-tag",
+      "assertion": "The release tag points at main."
+    },
+    {
+      "evidence_id": "ev-c1-branch-from-main",
+      "subject": "current_branch",
+      "predicate": "branched_from_main",
+      "source_kind": "premise",
+      "provenance_root": "premise:current-branch",
+      "assertion": "The current branch was created from main."
+    },
+    {
+      "evidence_id": "ev-c1-rule-reachability",
+      "source_kind": "premise",
+      "provenance_root": "premise:reachability-rule",
+      "formula": "release_tag__points_at_main & current_branch__branched_from_main -> release_tag__reachable_from_current_branch",
+      "assertion": "Ratified rule: a release tag that points at main is reachable from any branch created from main."
+    },
+    {
+      "evidence_id": "ev-d1-unrelated",
+      "subject": "documentation_pass",
+      "predicate": "merged_to_main",
+      "source_kind": "observation",
+      "provenance_root": "observation:documentation-pass",
+      "assertion": "The documentation pass merged to main."
+    },
+    {
+      "evidence_id": "ev-e1-rumor",
+      "subject": "named_public_stock",
+      "predicate": "closes_higher_tomorrow",
+      "source_kind": "observation",
+      "provenance_root": "observation:market-rumor",
+      "assertion": "A rumor-style observation claims that the named public stock will close higher tomorrow."
+    }
+  ]
+}

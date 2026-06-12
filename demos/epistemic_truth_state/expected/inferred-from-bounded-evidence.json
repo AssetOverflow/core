@@ -4,15 +4,20 @@
     "demos.epistemic_truth_state.authority.validate_payload",
     "demos.epistemic_truth_state.authority.assign_epistemic_state",
     "demo_epistemic_truth_state_envelope(local-v1)",
+    "demos.epistemic_truth_state.authority.resolve_evidence_refs",
+    "generate.proof_chain.entail.evaluate_entailment_with_trace",
+    "evals.deductive_logic.oracle.oracle_entailment",
     "core.epistemic_state.coerce_epistemic_state"
   ],
-  "decision_reason": "bounded_inference_from_evidence",
+  "decision_reason": "entailed_from_resolved_premises",
   "evidence_ledger": [
     "ev-c1-branch-from-main",
+    "ev-c1-rule-reachability",
     "ev-c1-tag-on-main"
   ],
   "inference_basis": [
     "ev-c1-branch-from-main",
+    "ev-c1-rule-reachability",
     "ev-c1-tag-on-main"
   ],
   "normative_clearance": "unassessable",
@@ -20,13 +25,41 @@
   "scenario_id": "inferred-from-bounded-evidence",
   "status": "assigned",
   "tool": "core.epistemic_truth_state.review",
-  "trace_hash": "bc11e858ece140813c2307aa9c6c602650a4cec63972f520f29ba6863f437949",
+  "trace_hash": "3d7e92fceeba328186721e9e4dd33338eff50a72f547988f88f27cbc9cc2526a",
   "trace_summary": {
     "authority_evaluated": true,
     "claim_fingerprint": "12e38c11f88615b1afb8e035e6e942eedd434ea0c6e3b4b25fbb7ff06695204a",
+    "corpus_id": "demo.epistemic_truth_state.evidence_corpus.v1",
+    "corpus_sha256": "62e03b4ac981eaeebdeed64bb2ff9ab1bcfef8cb521ec4029acdbe3b9f120b2e",
     "envelope_version": "local-v1",
-    "evidence_considered": 2,
+    "evidence_considered": 3,
     "independent_support_count": 0,
+    "inference": {
+      "consulted": true,
+      "detail": "evaluated",
+      "engine_oracle_agreement": true,
+      "entailment_trace": {
+        "conjunction_key": "0:release_tag__reachable_from_current_branch?T:F;1:release_tag__points_at_main?@0:F;2:current_branch__branched_from_main?@1:F",
+        "entailment_check_key": "T",
+        "outcome": "entailed",
+        "premise_keys": [
+          "0:release_tag__points_at_main?T:F",
+          "0:current_branch__branched_from_main?T:F",
+          "0:release_tag__reachable_from_current_branch?T:F;1:release_tag__points_at_main?@0:T;2:current_branch__branched_from_main?@1:T"
+        ],
+        "query_key": "0:release_tag__reachable_from_current_branch?T:F",
+        "reason": "tautological_implication",
+        "refutation_check_key": "0:release_tag__reachable_from_current_branch?F:T;1:release_tag__points_at_main?@0:T;2:current_branch__branched_from_main?@1:T"
+      },
+      "oracle_verdict": "entailed",
+      "outcome": "entailed",
+      "premise_ids": [
+        "ev-c1-branch-from-main",
+        "ev-c1-rule-reachability",
+        "ev-c1-tag-on-main"
+      ],
+      "reason": "tautological_implication"
+    },
     "proposer_state_ignored": true,
     "proposer_trace_hash_ignored": true
   }
