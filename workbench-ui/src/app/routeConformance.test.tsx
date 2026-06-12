@@ -1,10 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactElement } from "react";
 import { createTestQueryClient } from "../test/createTestQueryClient";
+import { EvidenceProvider } from "./evidenceContext";
 import { ChatRoute } from "../routes/ChatRoute";
 import { ProposalsRoute } from "./proposals/ProposalsRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
@@ -55,10 +56,19 @@ function installFetch(plan: FetchPlan) {
   );
 }
 
-function renderRoute(element: ReactElement) {
+// Routes mount the way App.tsx declares them: under their (param) path and
+// inside EvidenceProvider, since routes publish their selection as the
+// evidence subject (R0c).
+function renderRoute(element: ReactElement, path = "/", initialEntry = "/") {
   return render(
     <QueryClientProvider client={createTestQueryClient()}>
-      <MemoryRouter>{element}</MemoryRouter>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <EvidenceProvider>
+          <Routes>
+            <Route path={path} element={element} />
+          </Routes>
+        </EvidenceProvider>
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -86,6 +96,8 @@ afterEach(() => {
 interface MountRouteSpec {
   name: string;
   element: ReactElement;
+  path: string;
+  initialEntry: string;
   loadingLabel: string;
   emptyStatement: string;
   emptyCommand: string;
@@ -95,6 +107,8 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
   {
     name: "Proposals",
     element: <ProposalsRoute />,
+    path: "/proposals/:proposalId?",
+    initialEntry: "/proposals",
     loadingLabel: "Loading proposal queue...",
     emptyStatement: "No proposals match this queue view.",
     emptyCommand: "core teaching proposals --state pending",
@@ -102,6 +116,8 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
   {
     name: "Evals",
     element: <EvalsRoute />,
+    path: "/evals/:laneId?",
+    initialEntry: "/evals",
     loadingLabel: "Loading eval lanes...",
     emptyStatement: "No eval lanes discovered.",
     emptyCommand: "core eval --list",
@@ -109,6 +125,8 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
   {
     name: "Replay",
     element: <ReplayRoute />,
+    path: "/replay/:artifactId?",
+    initialEntry: "/replay",
     loadingLabel: "Loading artifacts...",
     emptyStatement: "No artifacts available.",
     emptyCommand: "core eval cognition",
@@ -118,20 +136,20 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
 describe.each(MOUNT_ROUTES)("route conformance: $name", (spec) => {
   it("loading: shows a specific label, never 'Thinking...'", async () => {
     installFetch("pending");
-    renderRoute(spec.element);
+    renderRoute(spec.element, spec.path, spec.initialEntry);
     expect(await screen.findByText(spec.loadingLabel)).toBeInTheDocument();
     expect(screen.queryByText(/thinking/i)).not.toBeInTheDocument();
   });
 
   it("error: surfaces what failed, mutation status, reproducer, retry safety", async () => {
     installFetch("error");
-    renderRoute(spec.element);
+    renderRoute(spec.element, spec.path, spec.initialEntry);
     await expectErrorContract();
   });
 
   it("empty: states what is absent and offers a next action", async () => {
     installFetch("empty");
-    renderRoute(spec.element);
+    renderRoute(spec.element, spec.path, spec.initialEntry);
     expect((await screen.findAllByText(spec.emptyStatement)).length).toBeGreaterThan(0);
     expectEmptyContract(spec.emptyStatement, spec.emptyCommand);
   });
