@@ -52,6 +52,7 @@ Errors:
 W-026 error codes:
 
 - `bad_request`
+- `evidence_unavailable`
 - `not_found`
 - `unsupported`
 - `read_error`
@@ -68,6 +69,7 @@ Exception mapping:
 | malformed request, invalid path, unsafe traversal | 400 | `bad_request` |
 | well-formed missing artifact/proposal/lane/trace | 404 | `not_found` |
 | artifact exceeds the W-026 read size limit | 413 | `read_error` |
+| deterministic evidence source absent | 501 | `evidence_unavailable` |
 | deferred W-027+ route | 501 | `unsupported` |
 | filesystem read failure | 500 | `read_error` |
 | unexpected runtime failure | 500 | `runtime_unavailable` |
@@ -375,6 +377,177 @@ Forbidden:
 - accept endpoint
 - reject endpoint
 - mutation endpoint
+
+---
+
+# R2 Read Projections
+
+These endpoints are read-only projections over existing artifacts. They do not
+create event stores, run stores, pack stores, or vault persistence.
+
+## GET /packs
+
+Purpose:
+
+List readable pack manifests from `language_packs/data/*/manifest.json` and
+cleanly readable JSON manifests under `packs/*/*/manifest.json`.
+
+Query:
+
+- `limit`: non-negative integer, default `100`
+- `offset`: non-negative integer, default `0`
+
+Trust boundary:
+
+Pack list reads only fixed repository roots. `GET /packs/{pack_id}` validates
+`pack_id` against the safe pattern `[A-Za-z0-9][A-Za-z0-9_.-]{0,127}` before
+any filesystem access. Path traversal and encoded slashes return
+`400 bad_request`.
+
+Response:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "items": [
+      {
+        "pack_id": "en_core_cognition_v1",
+        "source": "language_pack",
+        "manifest_path": "language_packs/data/en_core_cognition_v1/manifest.json",
+        "version": "1.2.0",
+        "language": "en",
+        "modality": null,
+        "determinism_class": "D0",
+        "checksum": "82d5...",
+        "checksums": {
+          "checksum": "82d5..."
+        }
+      }
+    ],
+    "limit": 100,
+    "offset": 0
+  }
+}
+```
+
+Manifest checksum fields are surfaced verbatim from the manifest. The API also
+returns a separate `manifest_digest` on detail, computed from the manifest file
+bytes, so byte integrity and manifest-authored checksums remain distinct.
+
+## GET /packs/{pack_id}
+
+Purpose:
+
+Return one pack manifest projection. Unknown safe ids return `404 not_found`;
+unsafe ids return `400 bad_request`.
+
+Response includes the summary fields plus:
+
+```json
+{
+  "manifest_digest": "sha256:...",
+  "manifest": {}
+}
+```
+
+---
+
+## GET /audit/events
+
+Purpose:
+
+Return a merged audit timeline over existing deterministic artifacts:
+
+- `engine_state/manifest.json` when present,
+- `teaching/proposals/proposals.jsonl`,
+- `teaching/math_proposals/proposals.jsonl`,
+- persisted Workbench telemetry JSONL files under `workbench_data/`.
+
+The route does not invent or append an event store. Events are sorted by
+`timestamp`, then source/path/type/id tiebreakers.
+
+Query:
+
+- `limit`: non-negative integer, default `100`
+- `offset`: non-negative integer, default `0`
+
+Each event includes `source` and `mutation_boundary`. Mutation-boundary events
+identify review transitions, accepted corpus appends, operator telemetry, or
+engine checkpoint boundaries.
+
+---
+
+## GET /runs
+
+Purpose:
+
+List deterministic run/session projections that can be derived from existing
+artifacts.
+
+Current evidence sources:
+
+- `workbench_data/turn_journal.jsonl` as `workbench_turn_journal` when turn
+  entries exist.
+- `engine_state/manifest.json` as `engine_state_checkpoint` when a checkpoint
+  manifest exists.
+
+Known gap:
+
+The current persisted artifacts do not record a separate durable user-facing
+session id. The API exposes the artifact boundary and includes `evidence_gap`
+instead of synthesizing a false session identity.
+
+---
+
+## GET /runs/{session_id}
+
+Purpose:
+
+Return detail for a deterministic run projection. Unknown ids return
+`404 not_found`. Turn journal details include paginated `turns`, where each turn
+links to `/trace/{turn_id}`.
+
+Query:
+
+- `limit`: non-negative integer for turn refs, default `100`
+- `offset`: non-negative integer for turn refs, default `0`
+
+---
+
+## GET /vault/summary
+
+Purpose:
+
+Return a cold summary of persisted vault evidence only when
+`engine_state/session_state.json` contains a Shape B+ `vault` snapshot.
+
+If the persisted snapshot is absent, the route returns:
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "evidence_unavailable",
+    "message": "vault evidence unavailable: engine_state/session_state.json is absent"
+  }
+}
+```
+
+The route never reaches into live runtime memory.
+
+## GET /vault/entries
+
+Purpose:
+
+Return metadata for persisted vault entries. The endpoint surfaces metadata and
+a digest of each persisted versor encoding; it does not emit raw versor
+coordinates or approximate recall scores.
+
+Query:
+
+- `limit`: non-negative integer, default `100`
+- `offset`: non-negative integer, default `0`
 
 ---
 

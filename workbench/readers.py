@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import threading
 from pathlib import Path, PurePosixPath
 from typing import Any, get_args
@@ -13,6 +14,7 @@ from engine_state import EngineStateStore, get_git_revision
 from evals.framework import discover_lanes, get_lane, run_lane
 from teaching.proposals import DEFAULT_PROPOSAL_LOG_PATH, ProposalLog, ReviewState
 from workbench.schemas import (
+    AuditEvent,
     ArtifactDetail,
     ArtifactRef,
     EvalLaneSummary,
@@ -21,15 +23,25 @@ from workbench.schemas import (
     MathProposalSummary,
     MathRatifyResult,
     MathReasoningStep,
+    PackDetail,
+    PackSummary,
     ProposalDetail,
     ProposalSummary,
+    RunDetail,
+    RunSummary,
+    RunTurnRef,
     RuntimeStatus,
+    VaultEntry,
+    VaultSummary,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SAFE_EVAL_LANES = frozenset({"contemplation_quality"})
 MAX_ARTIFACT_BYTES = 16 * 1024 * 1024
 READ_CHUNK_BYTES = 64 * 1024
+SAFE_PACK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
+JOURNAL_RUN_ID = "workbench_turn_journal"
+ENGINE_STATE_RUN_ID = "engine_state_checkpoint"
 _EVAL_RUN_LOCK = threading.Lock()
 _REVIEW_STATES = frozenset(get_args(ReviewState))
 ALLOWED_ARTIFACT_ROOTS = (
@@ -41,6 +53,10 @@ ALLOWED_ARTIFACT_ROOTS = (
 )
 
 MATH_PROPOSALS_JSONL = REPO_ROOT / "teaching" / "math_proposals" / "proposals.jsonl"
+LANGUAGE_PACK_ROOT = REPO_ROOT / "language_packs" / "data"
+RUNTIME_PACK_ROOT = REPO_ROOT / "packs"
+WORKBENCH_TELEMETRY_ROOT = REPO_ROOT / "workbench_data"
+ENGINE_STATE_ROOT = REPO_ROOT / "engine_state"
 _DEFAULT_MATH_AUDIT_PATH = (
     REPO_ROOT
     / "evals"
@@ -63,6 +79,10 @@ class ArtifactTooLargeError(OSError):
     """Raised when an artifact is too large for direct Workbench reads."""
 
 
+class EvidenceUnavailableError(OSError):
+    """Raised when a read route has no persisted evidence source to project."""
+
+
 def _sha256_bytes(content: bytes) -> str:
     return "sha256:" + hashlib.sha256(content).hexdigest()
 
@@ -77,6 +97,61 @@ def _sha256_file(path: Path) -> str:
 
 def _relative(path: Path) -> str:
     return path.resolve().relative_to(REPO_ROOT.resolve()).as_posix()
+
+
+def _display_path(path: Path) -> str:
+    try:
+        return _relative(path)
+    except ValueError:
+        return path.resolve().as_posix()
+
+
+def _check_read_size(path: Path, artifact_id: str | None = None) -> None:
+    if path.stat().st_size > MAX_ARTIFACT_BYTES:
+        label = artifact_id or _display_path(path)
+        raise ArtifactTooLargeError(
+            f"artifact exceeds {MAX_ARTIFACT_BYTES} byte read limit: {label}"
+        )
+
+
+def _canonical_json_bytes(payload: Any) -> bytes:
+    return json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def _read_json_object(path: Path) -> dict[str, Any]:
+    _check_read_size(path)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"expected JSON object in {_display_path(path)}")
+    return payload
+
+
+def _read_jsonl_records(path: Path) -> list[tuple[int, dict[str, Any]]]:
+    if not path.exists():
+        return []
+    _check_read_size(path)
+    records: list[tuple[int, dict[str, Any]]] = []
+    for line_no, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        stripped = raw_line.strip()
+        if not stripped:
+            continue
+        payload = json.loads(stripped)
+        if isinstance(payload, dict):
+            records.append((line_no, payload))
+    return records
+
+
+def _page(items: list[Any], *, limit: int, offset: int) -> list[Any]:
+    if limit < 0:
+        raise ValueError("limit must be non-negative")
+    if offset < 0:
+        raise ValueError("offset must be non-negative")
+    return items[offset : offset + limit]
 
 
 def _validate_artifact_id(artifact_id: str) -> PurePosixPath:
@@ -174,10 +249,7 @@ def read_artifact(artifact_id: str) -> ArtifactDetail:
     path = _resolve_artifact(artifact_id)
     if not path.exists() or not path.is_file():
         raise FileNotFoundError(artifact_id)
-    if path.stat().st_size > MAX_ARTIFACT_BYTES:
-        raise ArtifactTooLargeError(
-            f"artifact exceeds {MAX_ARTIFACT_BYTES} byte read limit: {artifact_id}"
-        )
+    _check_read_size(path, artifact_id)
     raw = path.read_bytes()
     text = raw.decode("utf-8")
     content_type = "text"
@@ -202,6 +274,103 @@ def read_artifact(artifact_id: str) -> ArtifactDetail:
         content_type=content_type,  # type: ignore[arg-type]
         content=content,
     )
+
+
+def _validate_pack_id(pack_id: str) -> str:
+    if not SAFE_PACK_ID_RE.fullmatch(pack_id):
+        raise ValueError("pack id contains unsafe characters")
+    return pack_id
+
+
+def _manifest_checksum_fields(manifest: dict[str, Any]) -> dict[str, str]:
+    checksums: dict[str, str] = {}
+    for key in sorted(manifest):
+        value = manifest[key]
+        if not isinstance(value, str):
+            continue
+        lowered = key.lower()
+        if "checksum" in lowered or lowered.endswith("_sha256") or lowered == "sha256":
+            checksums[key] = value
+    return checksums
+
+
+def _pack_source(path: Path) -> str:
+    resolved = path.resolve()
+    language_root = LANGUAGE_PACK_ROOT.resolve()
+    runtime_root = RUNTIME_PACK_ROOT.resolve()
+    if language_root == resolved or language_root in resolved.parents:
+        return "language_pack"
+    if runtime_root == resolved or runtime_root in resolved.parents:
+        return "runtime_pack"
+    return "runtime_pack"
+
+
+def _pack_manifest_paths() -> list[Path]:
+    paths: list[Path] = []
+    if LANGUAGE_PACK_ROOT.exists():
+        paths.extend(sorted(LANGUAGE_PACK_ROOT.glob("*/manifest.json")))
+    if RUNTIME_PACK_ROOT.exists():
+        paths.extend(sorted(RUNTIME_PACK_ROOT.glob("*/*/manifest.json")))
+    return paths
+
+
+def _pack_detail_from_manifest(path: Path) -> PackDetail | None:
+    manifest = _read_json_object(path)
+    pack_id = str(manifest.get("pack_id") or manifest.get("register_id") or path.parent.name)
+    if not SAFE_PACK_ID_RE.fullmatch(pack_id):
+        return None
+    checksums = _manifest_checksum_fields(manifest)
+    return PackDetail(
+        pack_id=pack_id,
+        source=_pack_source(path),  # type: ignore[arg-type]
+        manifest_path=_display_path(path),
+        version=(str(manifest["version"]) if "version" in manifest else None),
+        language=(str(manifest["language"]) if "language" in manifest else None),
+        modality=(str(manifest["modality"]) if "modality" in manifest else None),
+        determinism_class=(
+            str(manifest["determinism_class"])
+            if "determinism_class" in manifest
+            else None
+        ),
+        checksum=(str(manifest["checksum"]) if "checksum" in manifest else None),
+        checksums=checksums,
+        manifest_digest=_sha256_file(path),
+        manifest=manifest,
+    )
+
+
+def _all_pack_details() -> list[PackDetail]:
+    details: list[PackDetail] = []
+    for path in _pack_manifest_paths():
+        detail = _pack_detail_from_manifest(path)
+        if detail is not None:
+            details.append(detail)
+    return sorted(details, key=lambda item: (item.pack_id, item.source, item.manifest_path))
+
+
+def list_packs(*, limit: int = 100, offset: int = 0) -> list[PackSummary]:
+    return [
+        PackSummary(
+            pack_id=detail.pack_id,
+            source=detail.source,
+            manifest_path=detail.manifest_path,
+            version=detail.version,
+            language=detail.language,
+            modality=detail.modality,
+            determinism_class=detail.determinism_class,
+            checksum=detail.checksum,
+            checksums=detail.checksums,
+        )
+        for detail in _page(_all_pack_details(), limit=limit, offset=offset)
+    ]
+
+
+def read_pack(pack_id: str) -> PackDetail:
+    safe_id = _validate_pack_id(pack_id)
+    for detail in _all_pack_details():
+        if detail.pack_id == safe_id:
+            return detail
+    raise FileNotFoundError(pack_id)
 
 
 def _state_value(value: Any) -> str:
@@ -578,6 +747,397 @@ def ratify_math_proposal(
 
     else:
         raise NotImplementedError(f"handler {handler_name} application not implemented")
+
+
+def _payload_digest(payload: Any) -> str:
+    return _sha256_bytes(_canonical_json_bytes(payload))
+
+
+def _event_timestamp(payload: dict[str, Any]) -> str | None:
+    for key in ("timestamp", "created_at", "emitted_at", "reviewed_at", "review_date"):
+        value = payload.get(key)
+        if isinstance(value, str) and value:
+            return value
+    proposal = payload.get("proposal")
+    if isinstance(proposal, dict):
+        source = proposal.get("source")
+        if isinstance(source, dict):
+            value = source.get("emitted_at")
+            if isinstance(value, str) and value:
+                return value
+    return None
+
+
+def _proposal_ref_id(payload: dict[str, Any]) -> str | None:
+    value = payload.get("proposal_id")
+    if isinstance(value, str) and value:
+        return value
+    proposal = payload.get("proposal")
+    if isinstance(proposal, dict):
+        value = proposal.get("proposal_id")
+        if isinstance(value, str) and value:
+            return value
+    return None
+
+
+def _audit_event(
+    *,
+    source: str,
+    source_path: Path,
+    line_no: int,
+    event_type: str,
+    payload: dict[str, Any],
+    mutation_boundary: bool,
+    ref_id: str | None = None,
+    summary: str | None = None,
+) -> AuditEvent:
+    display_path = _display_path(source_path)
+    digest = _payload_digest(payload)
+    event_id = _sha256_bytes(
+        _canonical_json_bytes(
+            {
+                "digest": digest,
+                "event_type": event_type,
+                "line_no": line_no,
+                "source": source,
+                "source_path": display_path,
+            }
+        )
+    )
+    label = summary or event_type
+    if ref_id:
+        label = f"{label}: {ref_id}"
+    return AuditEvent(
+        event_id=event_id,
+        source=source,  # type: ignore[arg-type]
+        source_path=display_path,
+        timestamp=_event_timestamp(payload),
+        event_type=event_type,
+        mutation_boundary=mutation_boundary,
+        summary=label,
+        ref_id=ref_id,
+        payload_digest=digest,
+        payload=payload,
+    )
+
+
+def _teaching_proposal_audit_events() -> list[AuditEvent]:
+    path = DEFAULT_PROPOSAL_LOG_PATH
+    events: list[AuditEvent] = []
+    for line_no, payload in _read_jsonl_records(path):
+        event_type = str(payload.get("event") or "proposal_event")
+        ref_id = _proposal_ref_id(payload)
+        events.append(
+            _audit_event(
+                source="teaching_proposal_log",
+                source_path=path,
+                line_no=line_no,
+                event_type=event_type,
+                payload=payload,
+                mutation_boundary=event_type in {"transition", "accepted_corpus_append"},
+                ref_id=ref_id,
+                summary="teaching proposal event",
+            )
+        )
+    return events
+
+
+def _math_proposal_audit_events() -> list[AuditEvent]:
+    path = MATH_PROPOSALS_JSONL
+    events: list[AuditEvent] = []
+    for line_no, payload in _read_jsonl_records(path):
+        ref_id = (
+            str(payload.get("proposal_id"))
+            if isinstance(payload.get("proposal_id"), str)
+            else None
+        )
+        events.append(
+            _audit_event(
+                source="math_proposal_log",
+                source_path=path,
+                line_no=line_no,
+                event_type="math_proposal_record",
+                payload=payload,
+                mutation_boundary=False,
+                ref_id=ref_id,
+                summary="math proposal record",
+            )
+        )
+    return events
+
+
+def _telemetry_audit_events() -> list[AuditEvent]:
+    if not WORKBENCH_TELEMETRY_ROOT.exists():
+        return []
+    events: list[AuditEvent] = []
+    for path in sorted(WORKBENCH_TELEMETRY_ROOT.rglob("*.jsonl")):
+        if not path.is_file():
+            continue
+        for line_no, payload in _read_jsonl_records(path):
+            event_name = str(payload.get("event") or "")
+            event_type = str(payload.get("type") or event_name or "telemetry_event")
+            if event_type == "reboot":
+                source = "reboot_telemetry"
+                mutation_boundary = False
+                summary = "reboot telemetry"
+            elif event_name.startswith("operator_"):
+                source = "operator_telemetry"
+                mutation_boundary = True
+                summary = "workbench operator telemetry"
+            else:
+                continue
+            ref_id = (
+                str(payload.get("proposal_id"))
+                if isinstance(payload.get("proposal_id"), str)
+                else None
+            )
+            events.append(
+                _audit_event(
+                    source=source,
+                    source_path=path,
+                    line_no=line_no,
+                    event_type=event_type,
+                    payload=payload,
+                    mutation_boundary=mutation_boundary,
+                    ref_id=ref_id,
+                    summary=summary,
+                )
+            )
+    return events
+
+
+def _engine_state_manifest_audit_event() -> list[AuditEvent]:
+    path = ENGINE_STATE_ROOT / "manifest.json"
+    if not path.exists():
+        return []
+    manifest = _read_json_object(path)
+    return [
+        _audit_event(
+            source="engine_state_manifest",
+            source_path=path,
+            line_no=1,
+            event_type="engine_state_checkpoint",
+            payload=manifest,
+            mutation_boundary=True,
+            ref_id=str(manifest.get("written_at_revision") or "unknown"),
+            summary="engine state checkpoint",
+        )
+    ]
+
+
+def list_audit_events(*, limit: int = 100, offset: int = 0) -> list[AuditEvent]:
+    events: list[AuditEvent] = []
+    events.extend(_engine_state_manifest_audit_event())
+    events.extend(_teaching_proposal_audit_events())
+    events.extend(_math_proposal_audit_events())
+    events.extend(_telemetry_audit_events())
+    events.sort(
+        key=lambda event: (
+            event.timestamp or "",
+            event.source,
+            event.source_path,
+            event.event_type,
+            event.event_id,
+        )
+    )
+    return _page(events, limit=limit, offset=offset)
+
+
+def _artifact_ref_for_path(path: Path, kind: str) -> ArtifactRef | None:
+    if not path.exists() or not path.is_file():
+        return None
+    _check_read_size(path)
+    return ArtifactRef(
+        artifact_id=_display_path(path),
+        kind=kind,  # type: ignore[arg-type]
+        path=_display_path(path),
+        digest=_sha256_file(path),
+        created_at=None,
+    )
+
+
+def _load_engine_manifest() -> tuple[Path, dict[str, Any]] | None:
+    path = ENGINE_STATE_ROOT / "manifest.json"
+    if not path.exists():
+        return None
+    return path, _read_json_object(path)
+
+
+def _journal_entries(journal: Any) -> list[Any]:
+    path = getattr(journal, "path", None)
+    if isinstance(path, Path) and path.exists():
+        _check_read_size(path)
+    return list(journal.list_entries(limit=1_000_000, offset=0))
+
+
+def _engine_run_summary(manifest_item: tuple[Path, dict[str, Any]] | None) -> RunSummary | None:
+    if manifest_item is None:
+        return None
+    path, manifest = manifest_item
+    artifact = _artifact_ref_for_path(path, "engine_state_manifest")
+    return RunSummary(
+        session_id=ENGINE_STATE_RUN_ID,
+        source="engine_state_manifest",
+        turn_count=int(manifest.get("turn_count") or 0),
+        started_at=None,
+        updated_at=None,
+        checkpoint_present=True,
+        checkpoint_revision=str(manifest.get("written_at_revision") or "unknown"),
+        artifact_refs=[artifact] if artifact is not None else [],
+        evidence_gap="engine_state manifest has no durable per-session id",
+    )
+
+
+def _journal_run_summary(journal: Any, manifest: dict[str, Any] | None) -> RunSummary | None:
+    entries = _journal_entries(journal)
+    if not entries:
+        return None
+    path = getattr(journal, "path", None)
+    artifact = _artifact_ref_for_path(path, "trace") if isinstance(path, Path) else None
+    return RunSummary(
+        session_id=JOURNAL_RUN_ID,
+        source="turn_journal",
+        turn_count=len(entries),
+        started_at=str(entries[0].timestamp),
+        updated_at=str(entries[-1].timestamp),
+        checkpoint_present=manifest is not None,
+        checkpoint_revision=(
+            str(manifest.get("written_at_revision") or "unknown")
+            if manifest is not None
+            else None
+        ),
+        artifact_refs=[artifact] if artifact is not None else [],
+        evidence_gap="turn journal is one local grouping; no separate durable session id is recorded",
+    )
+
+
+def list_runs(journal: Any, *, limit: int = 100, offset: int = 0) -> list[RunSummary]:
+    manifest_item = _load_engine_manifest()
+    manifest = manifest_item[1] if manifest_item is not None else None
+    runs = [
+        item
+        for item in (
+            _journal_run_summary(journal, manifest),
+            _engine_run_summary(manifest_item),
+        )
+        if item is not None
+    ]
+    runs.sort(key=lambda run: (run.updated_at or "", run.session_id))
+    return _page(runs, limit=limit, offset=offset)
+
+
+def _run_detail_from_summary(
+    summary: RunSummary,
+    *,
+    turns: list[RunTurnRef],
+    manifest: dict[str, Any] | None,
+) -> RunDetail:
+    return RunDetail(
+        session_id=summary.session_id,
+        source=summary.source,
+        turn_count=summary.turn_count,
+        started_at=summary.started_at,
+        updated_at=summary.updated_at,
+        checkpoint_present=summary.checkpoint_present,
+        checkpoint_revision=summary.checkpoint_revision,
+        artifact_refs=summary.artifact_refs,
+        evidence_gap=summary.evidence_gap,
+        turns=turns,
+        manifest=manifest,
+    )
+
+
+def read_run(
+    session_id: str,
+    journal: Any,
+    *,
+    turn_limit: int = 100,
+    turn_offset: int = 0,
+) -> RunDetail:
+    manifest_item = _load_engine_manifest()
+    manifest = manifest_item[1] if manifest_item is not None else None
+    if session_id == JOURNAL_RUN_ID:
+        summary = _journal_run_summary(journal, manifest)
+        if summary is None:
+            raise FileNotFoundError(session_id)
+        entries = _journal_entries(journal)
+        turns = [
+            RunTurnRef(
+                turn_id=int(entry.turn_id),
+                trace_hash=entry.trace_hash,
+                timestamp=str(entry.timestamp),
+                trace_path=f"/trace/{entry.turn_id}",
+                surface_excerpt=str(entry.surface)[:120],
+            )
+            for entry in _page(entries, limit=turn_limit, offset=turn_offset)
+        ]
+        return _run_detail_from_summary(summary, turns=turns, manifest=manifest)
+    if session_id == ENGINE_STATE_RUN_ID:
+        summary = _engine_run_summary(manifest_item)
+        if summary is None:
+            raise FileNotFoundError(session_id)
+        return _run_detail_from_summary(summary, turns=[], manifest=manifest)
+    raise FileNotFoundError(session_id)
+
+
+def _load_vault_snapshot() -> tuple[Path, dict[str, Any]]:
+    path = ENGINE_STATE_ROOT / "session_state.json"
+    if not path.exists():
+        raise EvidenceUnavailableError(
+            "vault evidence unavailable: engine_state/session_state.json is absent"
+        )
+    payload = _read_json_object(path)
+    vault = payload.get("vault")
+    if not isinstance(vault, dict):
+        raise EvidenceUnavailableError(
+            "vault evidence unavailable: engine_state/session_state.json has no vault snapshot"
+        )
+    return path, vault
+
+
+def read_vault_summary() -> VaultSummary:
+    path, vault = _load_vault_snapshot()
+    metadata = vault.get("metadata")
+    entries = metadata if isinstance(metadata, list) else []
+    return VaultSummary(
+        source_path=_display_path(path),
+        entry_count=len(entries),
+        store_count=int(vault.get("store_count") or 0),
+        reproject_interval=int(vault.get("reproject_interval") or 0),
+        max_entries=(
+            int(vault["max_entries"])
+            if isinstance(vault.get("max_entries"), int)
+            else None
+        ),
+        persisted=True,
+    )
+
+
+def list_vault_entries(*, limit: int = 100, offset: int = 0) -> list[VaultEntry]:
+    _path, vault = _load_vault_snapshot()
+    metadata_raw = vault.get("metadata")
+    versors_raw = vault.get("versors")
+    if not isinstance(metadata_raw, list):
+        raise ValueError("vault snapshot metadata must be a list")
+    versors = versors_raw if isinstance(versors_raw, list) else []
+    entries: list[VaultEntry] = []
+    for index, metadata_item in enumerate(metadata_raw):
+        metadata = metadata_item if isinstance(metadata_item, dict) else {}
+        versor = versors[index] if index < len(versors) else None
+        entries.append(
+            VaultEntry(
+                entry_index=index,
+                epistemic_status=str(metadata.get("epistemic_status") or "unknown"),
+                epistemic_state=str(metadata.get("epistemic_state") or "unknown"),
+                metadata=metadata,
+                versor_digest=(
+                    _sha256_bytes(_canonical_json_bytes(versor))
+                    if versor is not None
+                    else None
+                ),
+            )
+        )
+    return _page(entries, limit=limit, offset=offset)
 
 
 def run_safe_eval_lane(

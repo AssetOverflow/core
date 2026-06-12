@@ -36,6 +36,7 @@ export type WorkbenchResponse<T> =
 export type WorkbenchError = {
   code:
     | "bad_request"
+    | "evidence_unavailable"
     | "not_found"
     | "unsupported"
     | "read_error"
@@ -222,6 +223,110 @@ export type ArtifactDetail = ArtifactRef & {
 
 Artifact paths must be repo-root constrained.  The backend must never honor an
 arbitrary user-supplied filesystem path.
+
+---
+
+# R2 Read Projections
+
+```ts
+export type PackSummary = {
+  pack_id: string;
+  source: "language_pack" | "runtime_pack";
+  manifest_path: string;
+  version: string | null;
+  language: string | null;
+  modality: string | null;
+  determinism_class: string | null;
+  checksum: string | null;
+  checksums: Record<string, string>;
+};
+
+export type PackDetail = PackSummary & {
+  manifest_digest: string;
+  manifest: Record<string, unknown>;
+};
+```
+
+`checksum` and `checksums` are manifest-authored values and must remain
+verbatim. `manifest_digest` is the backend-computed digest of the manifest file
+bytes.
+
+```ts
+export type AuditEvent = {
+  event_id: string;
+  source:
+    | "engine_state_manifest"
+    | "math_proposal_log"
+    | "operator_telemetry"
+    | "reboot_telemetry"
+    | "teaching_proposal_log";
+  source_path: string;
+  timestamp: string | null;
+  event_type: string;
+  mutation_boundary: boolean;
+  summary: string;
+  ref_id: string | null;
+  payload_digest: string;
+  payload: unknown;
+};
+```
+
+Audit events are projections over existing artifacts. `event_id` and
+`payload_digest` are deterministic backend digests; they are not new stored
+identifiers.
+
+```ts
+export type RunSummary = {
+  session_id: string;
+  source: "engine_state_manifest" | "turn_journal";
+  turn_count: number;
+  started_at: string | null;
+  updated_at: string | null;
+  checkpoint_present: boolean;
+  checkpoint_revision: string | null;
+  artifact_refs: ArtifactRef[];
+  evidence_gap: string | null;
+};
+
+export type RunTurnRef = {
+  turn_id: number;
+  trace_hash: string | null;
+  timestamp: string;
+  trace_path: string;
+  surface_excerpt: string;
+};
+
+export type RunDetail = RunSummary & {
+  turns: RunTurnRef[];
+  manifest: Record<string, unknown> | null;
+};
+```
+
+When no durable per-session id exists, `session_id` names the artifact boundary
+(`workbench_turn_journal` or `engine_state_checkpoint`) and `evidence_gap`
+states the missing persisted fact.
+
+```ts
+export type VaultSummary = {
+  source_path: string;
+  entry_count: number;
+  store_count: number;
+  reproject_interval: number;
+  max_entries: number | null;
+  persisted: boolean;
+};
+
+export type VaultEntry = {
+  entry_index: number;
+  epistemic_status: string;
+  epistemic_state: string;
+  metadata: Record<string, unknown>;
+  versor_digest: string | null;
+};
+```
+
+Vault shapes are available only from persisted `engine_state/session_state.json`
+evidence. If absent, the API returns `501 evidence_unavailable`.
 
 ---
 
