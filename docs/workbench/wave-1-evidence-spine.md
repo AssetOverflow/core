@@ -251,10 +251,10 @@ envelope.
 
 ### 1F. Mutation Doctrine Reconciliation
 
-- [ ] Update `docs/workbench/implementation-plan.md` mutation section to match
+- [x] Update `docs/workbench/implementation-plan.md` mutation section to match
       reality
-- [ ] Update `docs/workbench/acceptance-gates.md` to reflect admitted corridors
-- [ ] Document the honest rule:
+- [x] Update `docs/workbench/acceptance-gates.md` to reflect admitted corridors
+- [x] Document the honest rule:
 
 **The mutation rule is not "no buttons ever." It is:**
 
@@ -270,10 +270,10 @@ envelope.
 proposals. This is the template for future mutation surfaces, not an exception
 to a "no mutation" rule.
 
-- [ ] Record what already exists: `ratify_math_proposal`, `reject`, `defer`
+- [x] Record what already exists: `ratify_math_proposal`, `reject`, `defer`
       in `workbench/api.py` lines 112+; `RatificationCommandPanel.tsx` with
       precondition gates
-- [ ] No new mutation endpoints in Wave 1 beyond what exists
+- [x] No new mutation endpoints in Wave 1 beyond what exists
 
 ---
 

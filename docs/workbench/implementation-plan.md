@@ -1,8 +1,10 @@
 # CORE Workbench v1 — Implementation Plan
 
 This plan intentionally starts with planning and read-only observability before
-any mutating workflow.  The purpose is to preserve CORE's existing ADR trust
+any mutating workflow. The purpose is to preserve CORE's existing ADR trust
 boundaries while making the system legible to operators, engineers, and auditors.
+When mutation is admitted, it must pass through an explicit corridor rather than
+appearing as an ambient UI capability.
 
 ## Work queue
 
@@ -11,7 +13,7 @@ boundaries while making the system legible to operators, engineers, and auditors
 | W-026 | Read-only API contract | endpoint schemas + stdlib local server surface only | No |
 | W-027 | Frontend shell | navigation, layout, design tokens, empty states | No |
 | W-028 | Chat + trace drawer | basic chat, turn metadata, trace drawer | Runtime turn only |
-| W-029 | Proposal queue | proposal-log read model, detail view, CLI-copy affordance | No |
+| W-029 | Proposal queue | proposal-log read model, detail view, CLI-copy affordance, admitted math ratification corridor | Math ratification only |
 | W-030 | Eval center | lane discovery, run/read evals, result viewer | Eval result writes only if CLI already supports it |
 | W-031 | Replay theater | artifact selection, digest compare, replay status UI | No |
 
@@ -32,7 +34,8 @@ No code beyond docs.
 
 ### Phase 1 — Read-only API skeleton
 
-Goal: expose a narrow local workbench API without introducing new mutation paths.
+Goal: expose a narrow local workbench API without introducing unadmitted
+mutation paths.
 
 Deliverables:
 
@@ -61,7 +64,8 @@ Strict rules:
   live chat endpoint, or replay theater.
 - Use the Python standard-library HTTP server for W-026. Defer FastAPI or any
   other web framework unless a later ADR admits the dependency.
-- No proposal accept/reject endpoints.
+- No proposal accept/reject endpoints unless a later ADR admits the specific
+  corridor and its preconditions.
 - No synthetic trace/replay evidence. Routes for later phases must return
   `unsupported` or `not_found` until a real evidence path exists.
 
@@ -113,6 +117,31 @@ A live chat turn may use the existing runtime path.  The workbench must label
 any runtime checkpointing clearly and must not add hidden persistence beyond
 runtime behavior already governed by ADR-0146/0150.
 
+## Mutation doctrine
+
+The Workbench mutation rule is not "no mutation ever." It is: no mutation
+without an admitted corridor, explicit preconditions, auditable telemetry, and
+replay evidence.
+
+An admitted corridor must satisfy all four requirements:
+
+1. **ADR-governed path.** The path is named and bounded by an accepted ADR or
+   follow-on work item. Chat turns use the existing runtime checkpoint path
+   governed by ADR-0146/0150. Math ratification is the first proposal corridor,
+   governed by the ADR-0172 math proposal path.
+2. **Visible preconditions.** The UI shows what must be true before action is
+   enabled. The math corridor requires pending state, replay equivalence, and an
+   admitted handler before ratification is available.
+3. **Auditable telemetry.** Every action emits an operator event with enough
+   information to reconstruct what happened.
+4. **Replay evidence before action.** The operator sees replay-equivalence
+   status and provenance before committing a change.
+
+Everything outside an admitted corridor remains forbidden. In particular,
+corpus mutation, pack mutation, arbitrary file writes, arbitrary workflow
+dispatch, hidden background workers, and unreviewed proposal mutation remain
+out of bounds for v1.
+
 ### Phase 4 — Proposal Queue
 
 Goal: make proposal lifecycle visible.
@@ -128,10 +157,11 @@ Deliverables:
 
 Forbidden in v1:
 
-- accept button
-- reject button
+- unadmitted accept/reject buttons
 - workflow dispatch
 - direct corpus mutation
+- pack mutation
+- arbitrary file writes
 
 ### Phase 5 — Eval Center
 
@@ -170,7 +200,7 @@ Deliverables:
 - Artifact readers must be rooted under known repo directories.
 - Every response should contain enough metadata to audit source path, digest,
   and timestamp when available.
-- Mutation endpoints are forbidden in v1.
+- Unadmitted mutation endpoints are forbidden in v1.
 - Proposal reads must derive state from `ProposalLog.current_state()`, not by
   treating append-only JSONL events as proposal rows.
 
@@ -191,7 +221,7 @@ Each implementation PR must include:
 - schema serialization tests
 - permission/path traversal tests for artifact readers
 - frontend smoke/build check once UI exists
-- no-mutation regression checks for read-only routes
+- no-unadmitted-mutation regression checks for read-only routes
 
 ## Release criteria for v1
 
@@ -201,10 +231,10 @@ The v1 workbench is accepted when an operator can:
 2. open the UI,
 3. inspect runtime status,
 4. run or view contemplation-quality,
-5. inspect a proposal without accepting it,
+5. inspect a proposal and see whether any admitted corridor applies,
 6. inspect a trace/replay artifact,
 7. perform a basic chat turn,
-8. verify no hidden mutation path exists.
+8. verify no unadmitted mutation path exists.
 
 ## Explicit deferrals
 
@@ -213,8 +243,10 @@ The v1 workbench is accepted when an operator can:
 - mobile UI
 - auth, unless a separate ADR admits it after the local read-only boundary is
   proven
-- proposal accept/reject buttons
+- unadmitted proposal accept/reject buttons
 - workflow dispatch
+- corpus or pack mutation
+- arbitrary file writes
 - packaged desktop app
 - public marketing site
 - arbitrary plugin/tool execution
