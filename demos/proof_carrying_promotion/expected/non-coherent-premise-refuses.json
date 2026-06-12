@@ -1,0 +1,46 @@
+{
+  "after_status": "speculative",
+  "authority_path": [
+    "demos.proof_carrying_promotion.authority.validate_payload",
+    "teaching.proof_promotion.certify_promotion"
+  ],
+  "before_status": "speculative",
+  "certificate_digest": null,
+  "claim_entry_id": "claim-q",
+  "claim_entry_index": 2,
+  "decision_reason": "refused_premise_not_coherent",
+  "engine_pin": "97a230949016e38d5e3f37a69e4245b320575ee70e5af92ff7607f7b05f74b5f",
+  "premise_entry_ids": [
+    "premise-p",
+    "premise-p-implies-q"
+  ],
+  "premise_entry_indices": [
+    0,
+    1
+  ],
+  "promoted": false,
+  "proposer_ignored_fields": [
+    "proof"
+  ],
+  "refusal_reason": "refused_premise_not_coherent",
+  "request_id": "demo-pccp-c1",
+  "scenario_id": "non-coherent-premise-refuses",
+  "status": "refused",
+  "tool": "proof_carrying_coherence_promotion",
+  "trace_hash": "65ad530c4338a768fd7e867dbafe1e5bf9b9ba95692462572ef5b54b027bd87c",
+  "trace_summary": {
+    "apply_attempted": false,
+    "apply_reason": null,
+    "arena_entry_count": 3,
+    "authority_evaluated": true,
+    "certify_certificate_digest": null,
+    "certify_promoted": false,
+    "certify_reason": "refused_premise_not_coherent",
+    "engine_decision": null,
+    "engine_reason": null,
+    "proposer_fields_ignored": [
+      "proof"
+    ],
+    "sabotage_applied": []
+  }
+}

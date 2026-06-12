@@ -1,0 +1,37 @@
+{
+  "tool": "proof_carrying_coherence_promotion",
+  "expected_status": "refused",
+  "arguments": {
+    "request_id": "demo-pccp-d1",
+    "scenario_id": "uncertified-reading-refuses",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-d1"
+    },
+    "store": {
+      "entries": [
+        {
+          "entry_id": "premise-p",
+          "propositional_form": "p",
+          "epistemic_status": "coherent",
+          "reading_certified": true
+        },
+        {
+          "entry_id": "premise-p-implies-q",
+          "propositional_form": "p -> q",
+          "epistemic_status": "coherent",
+          "reading_certified": false
+        },
+        {
+          "entry_id": "claim-q",
+          "propositional_form": "q",
+          "epistemic_status": "speculative",
+          "reading_certified": true
+        }
+      ],
+      "claim_entry": "claim-q",
+      "premise_entries": ["premise-p", "premise-p-implies-q"]
+    }
+  }
+}

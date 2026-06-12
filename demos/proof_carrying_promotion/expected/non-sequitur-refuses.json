@@ -1,0 +1,44 @@
+{
+  "after_status": "speculative",
+  "authority_path": [
+    "demos.proof_carrying_promotion.authority.validate_payload",
+    "teaching.proof_promotion.certify_promotion",
+    "vault.store.VaultStore.apply_certified_promotion",
+    "generate.proof_chain.certificate.verify_certificate(expected_engine_pin)"
+  ],
+  "before_status": "speculative",
+  "certificate_digest": "4d965d2049a2e59a29dfd81a68e2b6e934d80fbb810111c80c29a21e7c74355e",
+  "claim_entry_id": "claim-r",
+  "claim_entry_index": 2,
+  "decision_reason": "refused_not_entailed",
+  "engine_pin": "97a230949016e38d5e3f37a69e4245b320575ee70e5af92ff7607f7b05f74b5f",
+  "premise_entry_ids": [
+    "premise-p",
+    "premise-p-implies-q"
+  ],
+  "premise_entry_indices": [
+    0,
+    1
+  ],
+  "promoted": false,
+  "proposer_ignored_fields": [],
+  "refusal_reason": "refused_not_entailed",
+  "request_id": "demo-pccp-g1",
+  "scenario_id": "non-sequitur-refuses",
+  "status": "refused",
+  "tool": "proof_carrying_coherence_promotion",
+  "trace_hash": "db8b722052826ae5486e63a3641f82bd0c096819b0a15024434e3adb8621fc30",
+  "trace_summary": {
+    "apply_attempted": true,
+    "apply_reason": "certificate_not_promotion_positive",
+    "arena_entry_count": 3,
+    "authority_evaluated": true,
+    "certify_certificate_digest": "4d965d2049a2e59a29dfd81a68e2b6e934d80fbb810111c80c29a21e7c74355e",
+    "certify_promoted": false,
+    "certify_reason": "refused_not_entailed",
+    "engine_decision": "unknown",
+    "engine_reason": "undetermined",
+    "proposer_fields_ignored": [],
+    "sabotage_applied": []
+  }
+}

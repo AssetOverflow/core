@@ -1,0 +1,40 @@
+{
+  "tool": "proof_carrying_coherence_promotion",
+  "expected_status": "promoted",
+  "arguments": {
+    "request_id": "demo-pccp-a1",
+    "scenario_id": "entailed-promotes",
+    "proposer": {
+      "lane": "frontier_fixture",
+      "model_family": "model_style_proposer",
+      "proposal_id": "proposal-a1",
+      "proof": "trust me: q follows from p and p -> q",
+      "status": "coherent",
+      "confidence": "0.99"
+    },
+    "store": {
+      "entries": [
+        {
+          "entry_id": "premise-p",
+          "propositional_form": "p",
+          "epistemic_status": "coherent",
+          "reading_certified": true
+        },
+        {
+          "entry_id": "premise-p-implies-q",
+          "propositional_form": "p -> q",
+          "epistemic_status": "coherent",
+          "reading_certified": true
+        },
+        {
+          "entry_id": "claim-q",
+          "propositional_form": "q",
+          "epistemic_status": "speculative",
+          "reading_certified": true
+        }
+      ],
+      "claim_entry": "claim-q",
+      "premise_entries": ["premise-p", "premise-p-implies-q"]
+    }
+  }
+}
