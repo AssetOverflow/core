@@ -15,7 +15,7 @@ The planning branch is acceptable when it includes:
 - data-shape contract
 - UI component map
 - explicit non-goals
-- explicit mutation boundaries
+- explicit mutation boundaries and admitted-corridor requirements
 - work queue for W-026 through W-031
 
 ## W-026 — Read-only API gates
@@ -29,7 +29,7 @@ Required:
 - path traversal tests for artifact readers
 - proposal event-log read-model tests using `ProposalLog.current_state()`
 - unknown trace ids return `404`, not placeholder success payloads
-- no proposal accept/reject route
+- no proposal accept/reject route outside an admitted corridor
 - no corpus mutation route
 - no pack mutation route
 - no workflow dispatch route
@@ -64,7 +64,7 @@ Required:
 - top runtime bar
 - empty states for all modules
 - API client shape aligned to `data-shapes-v1.md`
-- no mutation buttons
+- no mutation buttons outside an admitted corridor
 - no fake/mock runtime as permanent architecture
 
 Acceptance command candidates:
@@ -103,13 +103,18 @@ Required:
 - display replay evidence
 - display proposed chain
 - display suggested CLI copy command
+- mutation only through admitted corridors:
+  ADR-governed path, visible preconditions, auditable telemetry, and replay
+  evidence before action
 
 Forbidden:
 
-- accept button
-- reject button
+- unadmitted accept/reject button
 - workflow dispatch
-- direct proposal mutation
+- direct proposal mutation outside an admitted corridor
+- corpus mutation
+- pack mutation
+- arbitrary file writes
 
 ## W-030 — Eval Center gates
 
@@ -150,17 +155,18 @@ The v1 workbench is releasable when an operator can:
 1. start the local API,
 2. open the UI,
 3. see runtime status,
-4. inspect a proposal without mutating it,
+4. inspect a proposal and see whether an admitted corridor applies,
 5. run/view contemplation-quality,
 6. inspect trace/replay metadata,
 7. perform a basic chat turn,
-8. verify from UI copy and docs that no hidden ratification/mutation path exists.
+8. verify from UI copy and docs that no unadmitted ratification/mutation path exists.
 
 ## Red flags
 
 Any of these should block merge:
 
-- UI can accept/reject proposals in v1
+- UI can accept/reject proposals without an admitted corridor, visible
+  preconditions, auditable telemetry, and replay evidence
 - API exposes arbitrary path reads
 - API invokes shell from user input
 - frontend hardcodes fake eval/proposal data as product path
