@@ -26,6 +26,10 @@ uv.lock
 reports/
 frontier_wave1.json
 
+# Workbench UI browser-test artifacts
+workbench-ui/test-results/
+workbench-ui/playwright-report/
+
 # Claude Code local session artifacts (per-developer, never tracked)
 .claude/
 
