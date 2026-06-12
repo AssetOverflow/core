@@ -44,6 +44,11 @@ interface DisplayItem {
   type: "command" | "recent";
 }
 
+interface SectionItem {
+  item: DisplayItem;
+  globalIndex: number;
+}
+
 function RouterCommandPalette(props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -166,17 +171,16 @@ function CommandPaletteContent({
   }
 
   const sections = useMemo(() => {
-    const map = new Map<string, { items: DisplayItem[]; startIndex: number }>();
-    let idx = 0;
-    for (const item of filtered) {
+    const map = new Map<string, SectionItem[]>();
+    filtered.forEach((item, globalIndex) => {
       const existing = map.get(item.section);
+      const sectionItem = { item, globalIndex };
       if (existing) {
-        existing.items.push(item);
+        existing.push(sectionItem);
       } else {
-        map.set(item.section, { items: [item], startIndex: idx });
+        map.set(item.section, [sectionItem]);
       }
-      idx++;
-    }
+    });
     return map;
   }, [filtered]);
 
@@ -207,38 +211,35 @@ function CommandPaletteContent({
             <p className="text-sm text-[var(--color-text-secondary)]">No commands match.</p>
           ) : (
             <ul className="m-0 max-h-72 list-none overflow-y-auto p-0" role="listbox" aria-label="Commands">
-              {Array.from(sections.entries()).map(([section, { items, startIndex }]) => (
+              {Array.from(sections.entries()).map(([section, items]) => (
                 <li key={section} className="mb-1">
                   <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
                     {section}
                   </div>
                   <ul className="m-0 list-none p-0">
-                    {items.map((item, i) => {
-                      const globalIndex = startIndex + i;
-                      return (
-                        <li key={item.id} role="option" aria-selected={globalIndex === focusedIndex}>
-                          <button
-                            className={[
-                              "flex w-full items-center justify-between rounded px-3 py-2 text-left text-sm transition-colors",
-                              globalIndex === focusedIndex
-                                ? "bg-[var(--color-surface-raised)] text-[var(--color-text-primary)]"
-                                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-text-primary)]",
-                            ].join(" ")}
-                            type="button"
-                            onClick={() => onActivate(item)}
-                            onMouseEnter={() => setFocusedIndex(globalIndex)}
-                            aria-label={item.label}
-                          >
-                            <span>{item.label}</span>
-                            {item.shortcut && (
-                              <kbd className="ml-2 rounded border border-[var(--color-border-subtle)] px-1 font-mono text-[10px] text-[var(--color-text-muted)]">
-                                {item.shortcut}
-                              </kbd>
-                            )}
-                          </button>
-                        </li>
-                      );
-                    })}
+                    {items.map(({ item, globalIndex }) => (
+                      <li key={item.id} role="option" aria-selected={globalIndex === focusedIndex}>
+                        <button
+                          className={[
+                            "flex w-full items-center justify-between rounded px-3 py-2 text-left text-sm transition-colors",
+                            globalIndex === focusedIndex
+                              ? "bg-[var(--color-surface-raised)] text-[var(--color-text-primary)]"
+                              : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-text-primary)]",
+                          ].join(" ")}
+                          type="button"
+                          onClick={() => onActivate(item)}
+                          onMouseEnter={() => setFocusedIndex(globalIndex)}
+                          aria-label={item.label}
+                        >
+                          <span>{item.label}</span>
+                          {item.shortcut && (
+                            <kbd className="ml-2 rounded border border-[var(--color-border-subtle)] px-1 font-mono text-[10px] text-[var(--color-text-muted)]">
+                              {item.shortcut}
+                            </kbd>
+                          )}
+                        </button>
+                      </li>
+                    ))}
                   </ul>
                 </li>
               ))}
