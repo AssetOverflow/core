@@ -7,6 +7,7 @@ import {
 } from "react";
 import type {
   ChatTurnResult,
+  TurnJournalEntry,
   ProposalDetail,
   ArtifactDetail,
   EvalRunResult,
@@ -16,7 +17,7 @@ import type {
 // until the owning route's query loads its detail.  Inspectors must render
 // an honest "detail not loaded" state when data is absent.
 export type EvidenceSubject =
-  | { kind: "turn"; turnId: number; data?: ChatTurnResult }
+  | { kind: "turn"; turnId: number; data?: ChatTurnResult | TurnJournalEntry }
   | { kind: "proposal"; proposalId: string; data?: ProposalDetail }
   | { kind: "artifact"; artifactId: string; data?: ArtifactDetail }
   | { kind: "eval_result"; lane: string; data?: EvalRunResult }

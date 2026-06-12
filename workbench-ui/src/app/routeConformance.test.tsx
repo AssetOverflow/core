@@ -8,6 +8,7 @@ import { createTestQueryClient } from "../test/createTestQueryClient";
 import { EvidenceProvider } from "./evidenceContext";
 import { ChatRoute } from "../routes/ChatRoute";
 import { ProposalsRoute } from "./proposals/ProposalsRoute";
+import { TraceRoute } from "./trace/TraceRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
 
@@ -104,6 +105,15 @@ interface MountRouteSpec {
 }
 
 const MOUNT_ROUTES: MountRouteSpec[] = [
+  {
+    name: "Trace",
+    element: <TraceRoute />,
+    path: "/trace/:turnId?",
+    initialEntry: "/trace",
+    loadingLabel: "Loading trace...",
+    emptyStatement: "No turns recorded yet. Use Chat to create evidence.",
+    emptyCommand: "core chat",
+  },
   {
     name: "Proposals",
     element: <ProposalsRoute />,

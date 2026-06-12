@@ -20,9 +20,6 @@ import { describe, expect, it } from "vitest";
  */
 
 const NOT_YET_MIRRORED = new Set([
-  // Turn journal (R0 brief 1) — TS mirrors land with the R2 Trace route:
-  "TurnJournalEntrySchema",
-  "TurnJournalSummarySchema",
   // R2-B backend read substrate (#712) — TS mirrors land with each R2 route:
   "PackSummary",
   "PackDetail",

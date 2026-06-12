@@ -65,7 +65,13 @@ export function deriveStages(subject: EvidenceSubject): RailStage[] | null {
           "epistemic_state + normative_clearance",
         ),
         stage("replay", d ? evidenceOf(d.trace_hash) : "hollow", "trace_hash recorded (not a verification claim)"),
-        stage("authority", d ? evidenceOf(d.mutation_mode) : "hollow", "mutation_mode"),
+        stage(
+          "authority",
+          d
+            ? evidenceOf("mutation_mode" in d ? d.mutation_mode : d.checkpoint_emitted)
+            : "hollow",
+          "mutation_mode / checkpoint_emitted",
+        ),
         stage("action", "dim", "not applicable to a completed turn"),
       ];
     }
