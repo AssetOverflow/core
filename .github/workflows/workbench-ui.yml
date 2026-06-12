@@ -39,7 +39,10 @@ jobs:
 
       - name: set up pnpm
         uses: pnpm/action-setup@v4
-        # version comes from package.json "packageManager" (pnpm@9.15.0)
+        with:
+          # actions ignore working-directory; point at the pinned
+          # "packageManager" field explicitly (single source of truth)
+          package_json_file: workbench-ui/package.json
 
       - name: set up node
         uses: actions/setup-node@v4
