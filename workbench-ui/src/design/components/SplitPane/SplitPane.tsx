@@ -23,6 +23,11 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+function getLocalStorage(): Storage | null {
+  if (typeof globalThis.localStorage === "undefined") return null;
+  return globalThis.localStorage;
+}
+
 export function SplitPane({
   direction,
   defaultSplit = 50,
@@ -32,7 +37,7 @@ export function SplitPane({
 }: SplitPaneProps) {
   const [split, setSplit] = useState(() => {
     if (id) {
-      const stored = localStorage.getItem(storageKey(id));
+      const stored = getLocalStorage()?.getItem(storageKey(id));
       if (stored !== null) {
         const parsed = Number(stored);
         if (!Number.isNaN(parsed)) return parsed;
@@ -44,7 +49,7 @@ export function SplitPane({
   const dragging = useRef(false);
 
   useEffect(() => {
-    if (id) localStorage.setItem(storageKey(id), String(split));
+    if (id) getLocalStorage()?.setItem(storageKey(id), String(split));
   }, [split, id]);
 
   const onPointerDown = useCallback(
