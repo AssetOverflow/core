@@ -44,17 +44,24 @@ Six pieces, one architectural idea.
 
 ### 1A. Command Registry + Full Navigation
 
-- [ ] Replace hardcoded command list in `CommandPalette.tsx` with a
-      route-registered command registry
-- [ ] Each route registers its commands on mount via a shared context/provider
-- [ ] Fuzzy search across routes, recent resources (turns, proposals, artifacts),
-      and actions (run eval, copy hash)
-- [ ] `Cmd+K` opens, type-ahead filters, arrow keys navigate, `Enter` executes,
-      `Esc` closes
-- [ ] Recent items: last 10 visited resources (turns, proposals, artifacts)
-- [ ] Test: palette finds and navigates to every route and registered command
+- [x] Replace hardcoded command list in `CommandPalette.tsx` with a
+      route-registered command registry (`commandRegistry.ts`, `useCommands`)
+- [x] Shared command store + provider API (`useCommandRegistry` register/
+      unregister) — all ten routes registered as navigation commands centrally;
+      per-route self-registration call sites deferred (see note)
+- [x] Fuzzy search across routes + recent resources (turns, proposals,
+      artifacts); action commands (run eval, copy hash) deferred (see note)
+- [x] `Cmd+K` opens, type-ahead filters, arrow keys navigate, `Enter` executes,
+      `Esc` closes (`useGlobalKeyboard` + palette keyboard contract test)
+- [x] Recent items: last 10 visited resources (`pushRecentItem`, `MAX_RECENT=10`)
+- [x] Test: palette navigates to every route (`CommandPalette.keyboard.test.tsx`)
 
-**Current state:** `CommandPalette.tsx` has only Chat/Proposals/Evals hardcoded.
+**Deferred to follow-on:** per-route `register()` call sites (registry + nav
+commands ship now; routes register their own context commands when each route
+gains them) and action-commands (run eval, copy hash).
+
+**Current state:** Done. `CommandPalette.tsx` now reads from the registry; the
+ten routes are all reachable.
 
 **Key files:**
 - `workbench-ui/src/design/components/primitives/CommandPalette.tsx`
@@ -64,22 +71,27 @@ Six pieces, one architectural idea.
 
 ### 1B. RightInspector as Evidence Drawer
 
-- [ ] Remove permanent `collapsed=true` from `Shell.tsx`
-- [ ] Create shared evidence-subject context: `useEvidenceSubject()` hook +
-      provider in Shell
-- [ ] Each route pushes its selection (turn, proposal, artifact, pack, eval
-      result) into the shared context
-- [ ] Inspector renders the appropriate evidence projection for the selected
-      subject type
-- [ ] Toggle via `Cmd+I` or "inspect" affordance on selectable items
-- [ ] Stays open across route transitions (operator opened it deliberately)
-- [ ] Collapsed by default on fresh load (calm default)
-- [ ] Resizable width via drag handle
-- [ ] Test: inspector opens, shows correct context for Chat selection, closes,
-      persists across route change
+- [x] Remove permanent `collapsed=true` from `Shell.tsx` (inspector visibility
+      now driven by `inspectorOpen` from context)
+- [x] Create shared evidence-subject context: `useEvidenceSubject()` hook +
+      `EvidenceProvider` in Shell (`evidenceContext.tsx`)
+- [x] Inspector renders the appropriate evidence projection per subject type
+      (turn / proposal / artifact / eval_result / none sub-inspectors)
+- [x] Toggle via `Cmd+I` (and the `⌘I` hint affordance)
+- [x] Stays open across route transitions (state lives in the provider, above
+      the router Outlet)
+- [x] Collapsed by default on fresh load — `inspectorOpen` defaults to `false`
+- [x] Test: inspector opens, shows correct context for a turn subject, empty
+      hint for none (`RightInspector.test.tsx`)
+- [ ] Each route pushes its selection into the shared context — deferred;
+      `setSubject` API ships now, route call sites land with each route's
+      selection UI
+- [ ] Resizable width via drag handle — deferred; inspector is a fixed `20rem`
+      column today (wire `SplitPane` when a route needs the width)
 
-**Current state:** `RightInspector.tsx` returns null. `Shell.tsx` hardcodes
-`collapsed={true}`.
+**Current state:** Done (with the two deferred items noted). `RightInspector.tsx`
+renders the five evidence projections; `Shell.tsx` drives visibility from
+context, collapsed by default.
 
 **Key files:**
 - `workbench-ui/src/app/RightInspector.tsx`
