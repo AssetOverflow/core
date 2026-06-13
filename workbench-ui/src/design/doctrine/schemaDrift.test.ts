@@ -28,6 +28,11 @@ const NOT_YET_MIRRORED = new Set([
   "RunDetail",
   "VaultSummary",
   "VaultEntry",
+  // Wave R3 sealed turn replay backend — TS mirrors land with the frontend
+  // Replay Moment PR (which also retires the W-026 artifact-keyed
+  // ReplayComparison/ReplayDivergence pair on both sides):
+  "TurnReplayComparison",
+  "TurnReplayDivergence",
 ]);
 
 const UI_ROOT = join(__dirname, "..", "..", "..");

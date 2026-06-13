@@ -202,11 +202,14 @@ def test_unknown_trace_returns_404_not_placeholder_success() -> None:
     assert response.payload["error"]["code"] == "not_found"
 
 
-def test_replay_is_explicitly_unsupported_in_w026() -> None:
+def test_replay_path_style_ids_refuse_not_found() -> None:
+    # Wave R3 wired GET /replay/{turn_id} (tests/test_workbench_replay.py owns
+    # its obligations); the W-026 path-style artifact id is not a turn id and
+    # must refuse cleanly rather than 500 or fabricate a comparison.
     replay = _request("GET", "/replay/evals/cognition/results/example.json")
 
-    assert replay.status == 501
-    assert replay.payload["error"]["code"] == "unsupported"
+    assert replay.status == 404
+    assert replay.payload["error"]["code"] == "not_found"
 
 
 def test_unexpected_dispatch_error_stays_json(monkeypatch) -> None:

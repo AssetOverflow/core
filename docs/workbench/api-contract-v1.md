@@ -276,18 +276,41 @@ Response:
 
 # Replay
 
-## GET /replay/{artifact_id}
+## GET /replay/{turn_id}
+
+(Wave R3 — supersedes the unwired W-026 `{artifact_id}` placeholder.
+Design record: `docs/analysis/replay-moment-backend-scoping-2026-06-12.md`.)
 
 Purpose:
 
-Return replay comparison information.
+Re-execute a journaled turn's prompt in a **sealed fresh runtime**
+(`ChatRuntime(no_load_state=True)` — no checkpoint load, no checkpoint
+write, no proposal lineage) and compare the resulting envelope leaf-by-leaf
+against the recorded `TurnJournalEntry`.
 
 Important:
 
-The API must not claim `"equivalent": true` unless a real replay/compare path
-has run. Comparing an artifact digest to itself is not replay evidence. Until
-the replay theater is wired, this route should return `unsupported` or a
-non-equivalent comparison with explicit divergence evidence.
+The API must not claim `"equivalent": true` unless a real re-execution has
+run. Comparing a digest to itself is not replay evidence; if the replay
+runtime fails, the route returns `runtime_unavailable` (500) and no
+comparison object exists.
+
+Honesty envelope: the claim demonstrated is *same prompt, same genesis
+substrate → bit-identical envelope*. The original turn ran in its own fresh
+runtime that may have loaded an engine-state checkpoint present at the
+time; the journal does not record whether one existed, so `origin_state` is
+`"unrecorded"` and a divergence means nondeterminism **or** origin-state
+influence — the API never claims to distinguish them, and the frontend must
+not render a divergence as a determinism-failure verdict.
+
+Severity classes: every `TurnJournalEntry` field is classified exactly once
+(enforced by test). `critical` divergences break equivalence; wall-clock
+fields (`timestamp`, `turn_cost_ms`, `journal_digest`) are `informational`
+and never do.
+
+Errors: unknown or malformed `turn_id` → 404 `not_found`; replay runtime
+failure → 500 `runtime_unavailable`. The route is read-only: it appends no
+journal entry and writes no engine state.
 
 Response:
 
@@ -295,16 +318,19 @@ Response:
 {
   "ok": true,
   "data": {
-    "artifact_id": "artifact-001",
-    "original_hash": "sha256:...",
-    "replay_hash": null,
-    "equivalent": false,
+    "turn_id": 7,
+    "comparison_basis": "sealed_fresh_runtime_single_turn",
+    "origin_state": "unrecorded",
+    "original_trace_hash": "sha256:...",
+    "replay_trace_hash": "sha256:...",
+    "equivalent": true,
+    "replay_turn_cost_ms": 412,
     "divergences": [
       {
-        "path": "$",
-        "original": "artifact digest",
-        "replay": null,
-        "severity": "info"
+        "path": "timestamp",
+        "original": "2026-06-12T18:00:00+00:00",
+        "replay": "2026-06-12T23:55:01+00:00",
+        "severity": "informational"
       }
     ]
   }
