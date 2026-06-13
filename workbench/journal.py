@@ -12,6 +12,7 @@ from typing import Any
 from workbench.schemas import (
     ChatTurnResult,
     CognitivePipelineRecord,
+    FieldEvidence,
     TraceIntegrity,
     to_data,
     utc_now,
@@ -56,6 +57,7 @@ class TurnJournalEntry:
     checkpoint_emitted: bool
     leeway_evidence: dict[str, Any] | None = None
     pipeline_record: CognitivePipelineRecord | dict[str, Any] | None = None
+    field_evidence: FieldEvidence | dict[str, Any] | None = None
     trace_integrity: TraceIntegrity | None = None
     journal_digest: str = ""
 
@@ -96,6 +98,7 @@ class TurnJournalEntry:
             checkpoint_emitted=result.checkpoint_emitted,
             leeway_evidence=to_data(result.leeway_evidence),
             pipeline_record=to_data(result.pipeline_record),
+            field_evidence=to_data(result.field_evidence),
             trace_integrity=_trace_integrity_for_hash(result.trace_hash),
         )
 

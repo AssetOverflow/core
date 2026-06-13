@@ -38,10 +38,10 @@ the Replay Moment makes hash-equality felt. But it is blind to the two most
    it is invisible.
 2. **It shows outputs and evidence but not cognition itself.** The
    `CognitiveTurnPipeline` stages, the contemplation *process*, the CL(4,1)
-   field substrate, `versor_condition`, identity continuity. C1 and a first
-   C4 run-level identity projection now exist; C2/C3 remain the major blind
-   spots. For an audience that lives inside opaque models, *legible
-   deterministic cognition* is the wow.
+   field substrate, `versor_condition`, identity continuity. C1 (pipeline),
+   C2-a (contemplation), C3-a (field substrate), and a first C4 run-level
+   identity projection now exist. For an audience that lives inside opaque
+   models, *legible deterministic cognition* is the wow.
 
 Everything below closes those two gaps on top of a mastery polish.
 
@@ -160,13 +160,24 @@ Detailed brief pack: `docs/handoff/wave-M-phaseB-calibration-briefs-2026-06-13.m
   ratification boundary, and grounded-after scenes remain report-authored
   evidence. This is the first process trace; the fuller Calibration/Proposal
   integrated loop is still open.
-- **C3 — Field substrate (honest, read-only, hard):** `GET /field/state`
-  over real `FieldState` + `versor_condition` for a turn, rendered as
-  **inspectable exact numbers and invariant status** — `versor_condition <
-  1e-6` as a live "field is valid" assertion, `cga_inner` coherence as exact
-  values. **NOT** a decorative 3D blob; no force-directed/nondeterministic
-  motion. The honesty is the impressiveness: "this is the geometry, it's
-  exact, it can't fake coherence."
+- **C3 — Field substrate (honest, read-only, hard):** real `FieldState` +
+  `versor_condition` for a turn, rendered as **inspectable exact numbers and
+  invariant status** — `versor_condition < 1e-6` as a live "field is valid"
+  assertion, `cga_inner` as an exact transition value. **NOT** a decorative 3D
+  blob; no force-directed/nondeterministic motion. The honesty is the
+  impressiveness: "this is the geometry, it's exact, it can't fake coherence."
+  **C3-a implementation note (2026-06-13):** BUILT persist-first. Per-turn
+  `FieldEvidence` (exact `versor_condition`, `field_valid` vs the `1e-6`
+  ceiling, a content-addressed `field_digest`, and `cga_inner(before, after)`)
+  is computed in `workbench/field_evidence.py` from the engine result and
+  persisted on the journal entry at `from_chat_turn` — the raw multivector
+  never crosses the boundary, only scalars + digests. The read endpoint is a
+  trace facet (`GET /trace/{turn_id}/field`, consistent with `/pipeline`) and
+  the surface is the Trace route's **Field** tab. `field_valid` is
+  consistency-checked against the ceiling at construction, so it can never claim
+  validity while `versor_condition` breaches `1e-6` (the wrong=0 analogue).
+  Honest `missing_evidence` for pre-widening journal rows. Deferred: cross-turn
+  field-coherence trends and session-level field persistence.
 - **C4 — Identity continuity (L10/L11):** surface the engine-identity hash,
   lineage chain, reboot-verification status — "the same continuous life
   across restart," the deepest telos.

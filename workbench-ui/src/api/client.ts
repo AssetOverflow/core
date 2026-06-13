@@ -22,6 +22,7 @@ import type {
   CalibrationClass,
   ServingMetrics,
   CognitivePipelineRecord,
+  FieldEvidence,
   TurnJournalEntry,
   TurnJournalSummary,
   ContemplationRunDetail,
@@ -183,6 +184,12 @@ export async function fetchTraceTurn(turnId: number): Promise<TurnJournalEntry> 
 export async function fetchTracePipeline(turnId: number): Promise<CognitivePipelineRecord> {
   return apiFetch<CognitivePipelineRecord>(
     `/trace/${encodeURIComponent(String(turnId))}/pipeline`,
+  );
+}
+
+export async function fetchTraceField(turnId: number): Promise<FieldEvidence> {
+  return apiFetch<FieldEvidence>(
+    `/trace/${encodeURIComponent(String(turnId))}/field`,
   );
 }
 

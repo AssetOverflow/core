@@ -26,6 +26,7 @@ import {
   fetchServingMetrics,
   fetchTraceTurn,
   fetchTracePipeline,
+  fetchTraceField,
   fetchTraceTurns,
   fetchContemplationRun,
   fetchContemplationRuns,
@@ -55,6 +56,7 @@ import type {
   CalibrationClass,
   ServingMetrics,
   CognitivePipelineRecord,
+  FieldEvidence,
   TurnJournalEntry,
   TurnJournalSummary,
   EvalLaneSummary,
@@ -204,6 +206,16 @@ export function useTracePipeline(turnId?: number | null) {
   return useQuery<CognitivePipelineRecord, WorkbenchApiError>({
     queryKey: ["api", "trace", "pipeline", turnId ?? null],
     queryFn: () => fetchTracePipeline(turnId as number),
+    enabled: typeof turnId === "number",
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useTraceField(turnId?: number | null) {
+  return useQuery<FieldEvidence, WorkbenchApiError>({
+    queryKey: ["api", "trace", "field", turnId ?? null],
+    queryFn: () => fetchTraceField(turnId as number),
     enabled: typeof turnId === "number",
     staleTime: 30_000,
     refetchOnWindowFocus: false,
