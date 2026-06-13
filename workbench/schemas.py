@@ -146,6 +146,31 @@ class CognitivePipelineRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class FieldEvidence:
+    """C3 field-substrate evidence: exact scalar invariants for a turn's field.
+
+    Honest, read-only geometry: the engine owns the CL(4,1) field; this record
+    surfaces only the EXACT scalars it computes (``versor_condition``, the
+    ``cga_inner`` transition value) plus a content-addressed ``field_digest`` —
+    NEVER the raw multivector (the geometry can't fake coherence, so we show the
+    numbers, not a decorative blob).  ``field_valid`` is the live
+    ``versor_condition < 1e-6`` assertion; it is consistency-checked against the
+    ceiling at construction (see ``workbench.field_evidence.validate``).
+    """
+
+    schema_version: Literal["field_evidence_v1"]
+    status: PipelineEvidenceStatus
+    missing_reason: str | None
+    trace_hash: str | None
+    versor_condition: float | None
+    versor_condition_ceiling: float
+    field_valid: bool | None
+    field_digest: str | None
+    parent_field_digest: str | None
+    transition_inner_product: float | None
+
+
+@dataclass(frozen=True, slots=True)
 class ChatTurnResult:
     prompt: str
     surface: str
@@ -167,6 +192,7 @@ class ChatTurnResult:
     checkpoint_emitted: bool
     leeway_evidence: LeewayEvidence | None = None
     pipeline_record: CognitivePipelineRecord | None = None
+    field_evidence: FieldEvidence | None = None
     turn_id: int | None = None
 
 
@@ -203,6 +229,7 @@ class TurnJournalEntrySchema:
     journal_digest: str
     leeway_evidence: LeewayEvidence | None = None
     pipeline_record: CognitivePipelineRecord | None = None
+    field_evidence: FieldEvidence | None = None
 
 
 @dataclass(frozen=True, slots=True)

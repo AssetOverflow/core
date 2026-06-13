@@ -52,6 +52,7 @@ CRITICAL_FIELDS = frozenset(
         "proposal_candidates",
         "leeway_evidence",
         "pipeline_record",
+        "field_evidence",
         "checkpoint_emitted",
         "trace_integrity",
     }

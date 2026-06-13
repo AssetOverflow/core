@@ -20,6 +20,10 @@ from core.epistemic_state import (
 )
 from workbench import calibration, readers
 from workbench.journal import DEFAULT_JOURNAL_DIR, TurnJournal, TurnJournalEntry
+from workbench.field_evidence import (
+    field_evidence_from_journal_entry,
+    field_evidence_from_result,
+)
 from workbench.pipeline_record import (
     cognitive_pipeline_record_from_result,
     pipeline_record_from_journal_entry,
@@ -338,6 +342,24 @@ class WorkbenchApi:
                     404, error("not_found", f"trace pipeline not found: {turn_id}")
                 )
             return ApiResponse(200, ok(pipeline_record_from_journal_entry(entry)))
+        if method == "GET" and path.startswith("/trace/") and path.endswith("/field"):
+            raw_turn_id = unquote(
+                path.removeprefix("/trace/").removesuffix("/field").strip("/")
+            )
+            try:
+                turn_id = int(raw_turn_id)
+            except ValueError:
+                return ApiResponse(
+                    404,
+                    error("not_found", f"trace field not found: {raw_turn_id}"),
+                )
+            try:
+                entry = self._journal.get_entry(turn_id)
+            except FileNotFoundError:
+                return ApiResponse(
+                    404, error("not_found", f"trace field not found: {turn_id}")
+                )
+            return ApiResponse(200, ok(field_evidence_from_journal_entry(entry)))
         if method == "GET" and path.startswith("/trace/"):
             raw_turn_id = unquote(path.removeprefix("/trace/"))
             try:
@@ -696,4 +718,5 @@ def _run_chat_turn(prompt: str, runtime: ChatRuntime | None = None) -> ChatTurnR
         turn_cost_ms=0,
         checkpoint_emitted=checkpoint_emitted,
         pipeline_record=cognitive_pipeline_record_from_result(result),
+        field_evidence=field_evidence_from_result(result),
     )

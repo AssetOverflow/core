@@ -58,6 +58,7 @@
     "checkpoint_emitted",
     "leeway_evidence",
     "pipeline_record",
+    "field_evidence",
     "turn_id"
   ],
   "CognitivePipelineEdge": [
@@ -174,6 +175,18 @@
     "metrics",
     "cases",
     "source_digest"
+  ],
+  "FieldEvidence": [
+    "schema_version",
+    "status",
+    "missing_reason",
+    "trace_hash",
+    "versor_condition",
+    "versor_condition_ceiling",
+    "field_valid",
+    "field_digest",
+    "parent_field_digest",
+    "transition_inner_product"
   ],
   "IdentityContinuity": [
     "status",
@@ -330,7 +343,8 @@
     "trace_integrity",
     "journal_digest",
     "leeway_evidence",
-    "pipeline_record"
+    "pipeline_record",
+    "field_evidence"
   ],
   "TurnJournalSummarySchema": [
     "turn_id",

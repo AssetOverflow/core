@@ -95,6 +95,25 @@ export interface CognitivePipelineRecord {
   edges: CognitivePipelineEdge[];
 }
 
+/**
+ * C3 field-substrate evidence — exact scalar invariants for a turn's CL(4,1)
+ * field. Geometry that can't fake coherence: only scalars + a content-addressed
+ * digest cross the boundary, never the raw multivector. `field_valid` is the
+ * live `versor_condition < versor_condition_ceiling` (1e-6) assertion.
+ */
+export interface FieldEvidence {
+  schema_version: "field_evidence_v1";
+  status: PipelineEvidenceStatus;
+  missing_reason: string | null;
+  trace_hash: string | null;
+  versor_condition: number | null;
+  versor_condition_ceiling: number;
+  field_valid: boolean | null;
+  field_digest: string | null;
+  parent_field_digest: string | null;
+  transition_inner_product: number | null;
+}
+
 export type LeewayLicense = "PROPOSE" | "SERVE" | "blocked" | "unknown";
 export type ClaimDisclosure = "approximate" | "verified" | "proposal_only" | "none";
 
@@ -130,6 +149,7 @@ export interface ChatTurnResult {
   checkpoint_emitted: boolean;
   leeway_evidence?: LeewayEvidence | null;
   pipeline_record?: CognitivePipelineRecord | null;
+  field_evidence?: FieldEvidence | null;
 }
 
 export interface TurnJournalSummary {
@@ -163,6 +183,7 @@ export interface TurnJournalEntry {
   journal_digest: string;
   leeway_evidence?: LeewayEvidence | null;
   pipeline_record?: CognitivePipelineRecord | null;
+  field_evidence?: FieldEvidence | null;
 }
 
 export type TurnEvidence = ChatTurnResult | TurnJournalEntry;

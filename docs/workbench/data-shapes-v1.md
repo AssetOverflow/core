@@ -86,6 +86,7 @@ export type ChatTurnSummary = {
   mutation_state: "none" | "transient" | "proposal_only" | "ratified";
   leeway_evidence?: LeewayEvidence | null;
   pipeline_record?: CognitivePipelineRecord | null;
+  field_evidence?: FieldEvidence | null;
 };
 ```
 
@@ -112,6 +113,7 @@ export type TraceDetail = {
     exhausted: boolean | null;
   };
   pipeline_record?: CognitivePipelineRecord | null;
+  field_evidence?: FieldEvidence | null;
   raw?: unknown;
 };
 ```
@@ -158,6 +160,35 @@ The first-class read endpoint is `GET /trace/{turn_id}/pipeline`; it returns a
 pre-widening rows.  The Trace route renders the record as a deterministic stage
 rail, DAG, and selected-stage detail inspector; those views are projections of
 `stages` and `edges` only, not replay-derived cognition.
+
+## FieldEvidence (C3 field substrate)
+
+```ts
+export type FieldEvidence = {
+  schema_version: "field_evidence_v1";
+  status: "recorded" | "missing_evidence";
+  missing_reason: string | null;
+  trace_hash: string | null;
+  versor_condition: number | null;       // exact, measured over field_state_after
+  versor_condition_ceiling: number;      // 1e-6 — the CLAUDE.md invariant bound
+  field_valid: boolean | null;           // versor_condition < ceiling
+  field_digest: string | null;           // sha256 of the canonical field bytes
+  parent_field_digest: string | null;    // sha256 of field_state_before, or null
+  transition_inner_product: number | null; // cga_inner(before, after), or null
+};
+```
+
+`field_evidence` is the geometry under a turn: only the engine's EXACT scalar
+invariants and a content-addressed digest cross the boundary — never the raw
+CL(4,1) multivector.  It is required for newly journaled turns and nullable for
+pre-widening rows; the UI renders `missing_evidence` when absent and never
+reconstructs the field.  `field_valid` is consistency-checked against the
+ceiling at construction, so the Field tab can never claim a valid field while
+`versor_condition` breaches `1e-6` (the wrong=0 analogue for the geometry).  The
+first-class read endpoint is `GET /trace/{turn_id}/field`; it returns a
+`FieldEvidence` directly.  The Trace route's **Field** tab renders it as the
+measured value against the ceiling, the `cga_inner` transition, and the digests
+— inspectable exact numbers and invariant status, no decorative geometry.
 
 ---
 

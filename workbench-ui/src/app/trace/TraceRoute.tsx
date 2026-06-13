@@ -2,8 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Eye } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { WorkbenchApiError } from "../../api/client";
-import { useTracePipeline, useTraceTurn, useTraceTurns } from "../../api/queries";
+import {
+  useTraceField,
+  useTracePipeline,
+  useTraceTurn,
+  useTraceTurns,
+} from "../../api/queries";
 import { DigestBadge } from "../../design/components/DigestBadge/DigestBadge";
+import { FieldInvariantCard } from "../../design/components/FieldInvariantCard/FieldInvariantCard";
 import { DagViewer, type DagEdgeInput, type DagNodeInput } from "../../design/components/Dag";
 import { MetadataTable } from "../../design/components/MetadataTable/MetadataTable";
 import { Panel } from "../../design/components/Panel/Panel";
@@ -28,6 +34,7 @@ import { LoadingState } from "../../design/components/states/LoadingState";
 import type {
   CognitivePipelineRecord,
   CognitivePipelineStage,
+  FieldEvidence,
   TraceIntegrity,
   TurnJournalEntry,
   TurnJournalSummary,
@@ -38,6 +45,7 @@ import { useEvidenceSubject } from "../evidenceContext";
 
 const TRACE_TABS: readonly Tab[] = [
   { id: "pipeline", label: "Pipeline" },
+  { id: "field", label: "Field" },
   { id: "surfaces", label: "Surfaces" },
   { id: "grounding", label: "Grounding" },
   { id: "verdicts", label: "Verdicts" },
@@ -404,6 +412,36 @@ function PipelineTab({
   );
 }
 
+function FieldTab({
+  record,
+  isLoading,
+  error,
+  turnId,
+}: {
+  record?: FieldEvidence | null;
+  isLoading: boolean;
+  error: unknown;
+  turnId: number;
+}) {
+  if (isLoading) {
+    return <LoadingState label="Loading field invariant..." />;
+  }
+  if (error) {
+    return (
+      <ErrorState
+        whatFailed={errorMessage(error)}
+        mutationStatus="No trace mutation occurred."
+        reproducer={`curl /trace/${turnId}/field`}
+        retrySafety="Retry: safe"
+      />
+    );
+  }
+  if (!record) {
+    return <LoadingState label="Loading field invariant..." />;
+  }
+  return <FieldInvariantCard record={record} />;
+}
+
 function TraceRow({
   turn,
   selected,
@@ -561,11 +599,17 @@ function TraceDetail({
   pipelineRecord,
   pipelineLoading,
   pipelineError,
+  fieldEvidence,
+  fieldLoading,
+  fieldError,
 }: {
   turn: TurnJournalEntry;
   pipelineRecord?: CognitivePipelineRecord | null;
   pipelineLoading: boolean;
   pipelineError: unknown;
+  fieldEvidence?: FieldEvidence | null;
+  fieldLoading: boolean;
+  fieldError: unknown;
 }) {
   const [activeTab, setActiveTab] = useState("pipeline");
   return (
@@ -585,6 +629,14 @@ function TraceDetail({
             record={pipelineRecord}
             isLoading={pipelineLoading}
             error={pipelineError}
+            turnId={turn.turn_id}
+          />
+        ) : null}
+        {activeTab === "field" ? (
+          <FieldTab
+            record={fieldEvidence}
+            isLoading={fieldLoading}
+            error={fieldError}
             turnId={turn.turn_id}
           />
         ) : null}
@@ -608,6 +660,7 @@ export function TraceRoute() {
   const turnsQuery = useTraceTurns();
   const turnQuery = useTraceTurn(selectedTurnId);
   const pipelineQuery = useTracePipeline(selectedTurnId);
+  const fieldQuery = useTraceField(selectedTurnId);
 
   const turns = turnsQuery.data ?? [];
   const filteredTurns = useMemo(() => {
@@ -718,6 +771,9 @@ export function TraceRoute() {
               pipelineRecord={pipelineQuery.data}
               pipelineLoading={pipelineQuery.isLoading}
               pipelineError={pipelineQuery.isError ? pipelineQuery.error : null}
+              fieldEvidence={fieldQuery.data}
+              fieldLoading={fieldQuery.isLoading}
+              fieldError={fieldQuery.isError ? fieldQuery.error : null}
             />
           ) : null}
         </section>
