@@ -81,6 +81,53 @@ pytest tests/test_versor_closure.py        # the core invariant — must pass fi
 pytest tests/                              # full suite (~8,337 tests; some pre-existing reds — see docs/test-debt-quarantine.md)
 ```
 
+### CORE Workbench — the visual operator console (one command)
+
+The Workbench is the audit-native UI over the engine: every screen is
+read-only evidence you can deep-link, replay, and verify — *determinism made
+felt*, not animated cognition. Bring it up with a single command that runs
+its own preflight, installs everything it needs, and only reports "up" once
+both servers are actually healthy:
+
+```bash
+scripts/workbench          # preflight → setup (idempotent) → start API + UI
+```
+
+It prints a single URL — open **http://127.0.0.1:5173** — and `Ctrl+C` stops
+both servers cleanly. Two sub-commands help when you want to be deliberate:
+
+```bash
+scripts/workbench doctor   # check tools only (uv, node ≥20, pnpm, curl) — changes nothing
+scripts/workbench setup    # check + install deps (venv, editable CORE, pnpm) — no servers
+```
+
+What it guarantees so it works the *first* time, not *sometimes*:
+
+- **Pure-Python backend** — the API and the full `CognitiveTurnPipeline`
+  import on the numpy backend; **no Rust build is required** to run the
+  Workbench.
+- **Fail-loud preflight** — a missing tool stops with the exact fix
+  (e.g. how to install `uv` or enable `pnpm` via corepack), never a
+  half-started UI.
+- **Idempotent setup** — creates a `uv` venv, installs CORE editable, and
+  runs `pnpm install --frozen-lockfile` only when something is actually
+  missing; re-runs are instant.
+- **Health-gated start** — waits for the API's `/health` and the UI port
+  before declaring success; surfaces logs (`/tmp/core-workbench-*.log`) if
+  either fails. Ports are configurable via `API_PORT` / `UI_PORT` and reused
+  if already healthy.
+
+Prerequisites the preflight checks for you: [`uv`](https://docs.astral.sh/uv/),
+Node ≥ 20, and `pnpm` (`corepack enable pnpm`). The UI is React 18 + Vite;
+the API is a stdlib HTTP server. Both bind to localhost only.
+
+Inside, eleven routes project one evidence model — Chat, **Trace** (the
+canonical turn record), **Replay** (re-run a turn, hash-for-hash), Demos,
+Proposals (human ratification), Evals (the `wrong=0` ledger), Runs, Packs,
+Vault, Audit, Settings — stitched by the Evidence Chain Rail and addressable
+by URL. See [`docs/workbench/`](docs/workbench/) for the design system,
+route map, and the mastery roadmap.
+
 ### Watch the flywheel turn — one command
 
 For a public-facing reproduction of the core thesis, in **four
