@@ -9,7 +9,7 @@ import { TraceRoute } from "./trace/TraceRoute";
 import { AuditRoute } from "./audit/AuditRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
-import { RunsRoutePlaceholder } from "../routes/RunsRoutePlaceholder";
+import { RunsRoute } from "./runs/RunsRoute";
 import { PacksRoutePlaceholder } from "../routes/PacksRoutePlaceholder";
 import { VaultRoutePlaceholder } from "../routes/VaultRoutePlaceholder";
 import { SettingsRoutePlaceholder } from "../routes/SettingsRoutePlaceholder";
@@ -26,7 +26,7 @@ export function App() {
             <Route path="replay/:artifactId?" element={<ReplayRoute />} />
             <Route path="proposals/:proposalId?" element={<ProposalsRoute />} />
             <Route path="evals/:laneId?" element={<EvalsRoute />} />
-            <Route path="runs/:sessionId?" element={<RunsRoutePlaceholder />} />
+            <Route path="runs/:sessionId?" element={<RunsRoute />} />
             <Route path="packs/:packId?" element={<PacksRoutePlaceholder />} />
             <Route path="vault" element={<VaultRoutePlaceholder />} />
             <Route path="audit" element={<AuditRoute />} />

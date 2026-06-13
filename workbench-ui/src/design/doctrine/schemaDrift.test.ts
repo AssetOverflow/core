@@ -23,9 +23,6 @@ const NOT_YET_MIRRORED = new Set([
   // R2-B backend read substrate (#712) — TS mirrors land with each R2 route:
   "PackSummary",
   "PackDetail",
-  "RunSummary",
-  "RunTurnRef",
-  "RunDetail",
   "VaultSummary",
   "VaultEntry",
   // Wave R3 sealed turn replay backend — TS mirrors land with the frontend

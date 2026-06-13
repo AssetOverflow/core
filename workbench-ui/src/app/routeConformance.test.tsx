@@ -12,6 +12,7 @@ import { TraceRoute } from "./trace/TraceRoute";
 import { AuditRoute } from "./audit/AuditRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
+import { RunsRoute } from "./runs/RunsRoute";
 
 /**
  * ADR-0162 §6 route conformance — executable, not aspirational.
@@ -141,6 +142,15 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
     loadingLabel: "Loading eval lanes...",
     emptyStatement: "No eval lanes discovered.",
     emptyCommand: "core eval --list",
+  },
+  {
+    name: "Runs",
+    element: <RunsRoute />,
+    path: "/runs/:sessionId?",
+    initialEntry: "/runs",
+    loadingLabel: "Loading runs...",
+    emptyStatement: "No runs recorded yet. Use Chat to create evidence.",
+    emptyCommand: "core chat",
   },
   {
     name: "Replay",

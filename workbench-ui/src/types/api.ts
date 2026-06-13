@@ -113,6 +113,33 @@ export interface TurnJournalEntry {
 
 export type TurnEvidence = ChatTurnResult | TurnJournalEntry;
 
+export type RunSource = "engine_state_manifest" | "turn_journal";
+
+export interface RunSummary {
+  session_id: string;
+  source: RunSource;
+  turn_count: number;
+  started_at: string | null;
+  updated_at: string | null;
+  checkpoint_present: boolean;
+  checkpoint_revision: string | null;
+  artifact_refs: ArtifactRef[];
+  evidence_gap: string | null;
+}
+
+export interface RunTurnRef {
+  turn_id: number;
+  trace_hash: string | null;
+  timestamp: string;
+  trace_path: string;
+  surface_excerpt: string;
+}
+
+export interface RunDetail extends RunSummary {
+  turns: RunTurnRef[];
+  manifest: Record<string, unknown> | null;
+}
+
 export interface AuditEvent {
   event_id: string;
   source: AuditSource;
