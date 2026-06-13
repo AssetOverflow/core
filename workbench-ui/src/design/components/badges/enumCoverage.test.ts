@@ -5,8 +5,6 @@ import {
   groundingSourceMeta,
   normativeClearanceMeta,
   reviewStateMeta,
-  replayDivergenceSeverityMeta,
-  replayStatusMeta,
 } from "./mappings";
 
 function expectExactCoverage(name: string, engineValues: string[], uiValues: string[]) {
@@ -43,22 +41,6 @@ describe("build-time enum coverage", () => {
       "GroundingSource",
       snapshot.GroundingSource,
       Object.keys(groundingSourceMeta),
-    );
-  });
-
-  it("tracks every ratified ReplayDivergenceSeverity value exactly once", () => {
-    expectExactCoverage(
-      "ReplayDivergenceSeverity",
-      snapshot.ReplayDivergenceSeverity,
-      Object.keys(replayDivergenceSeverityMeta),
-    );
-  });
-
-  it("tracks every ratified ReplayStatus value exactly once", () => {
-    expectExactCoverage(
-      "ReplayStatus",
-      snapshot.ReplayStatus,
-      Object.keys(replayStatusMeta),
     );
   });
 });

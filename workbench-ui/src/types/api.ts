@@ -247,21 +247,28 @@ export interface EvalRunResult {
   source_digest: string | null;
 }
 
-export type ReplayDivergenceSeverity = "info" | "warning" | "failure";
+// Wave R3 — sealed single-turn replay (turn-keyed; supersedes the W-026
+// artifact-keyed ReplayComparison, now retired on both sides).
+export type TurnReplayDivergenceSeverity = "critical" | "informational";
+export type TurnReplayBasis = "sealed_fresh_runtime_single_turn";
+export type TurnReplayOriginState = "unrecorded";
 
-export interface ReplayDivergence {
+export interface TurnReplayDivergence {
   path: string;
   original: unknown;
   replay: unknown;
-  severity: ReplayDivergenceSeverity;
+  severity: TurnReplayDivergenceSeverity;
 }
 
-export interface ReplayComparison {
-  artifact_id: string;
-  original_hash: string | null;
-  replay_hash: string | null;
+export interface TurnReplayComparison {
+  turn_id: number;
+  comparison_basis: TurnReplayBasis;
+  origin_state: TurnReplayOriginState;
+  original_trace_hash: string | null;
+  replay_trace_hash: string | null;
   equivalent: boolean;
-  divergences: ReplayDivergence[];
+  replay_turn_cost_ms: number;
+  divergences: TurnReplayDivergence[];
 }
 
 export interface VaultSummary {

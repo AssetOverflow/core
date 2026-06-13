@@ -30,17 +30,6 @@
     "unassessable",
     "suppressed"
   ],
-  "ReplayDivergenceSeverity": [
-    "info",
-    "warning",
-    "failure"
-  ],
-  "ReplayStatus": [
-    "equivalent",
-    "not_yet_replayed",
-    "diverged",
-    "evidence_unavailable"
-  ],
   "ReviewState": [
     "pending",
     "accepted",

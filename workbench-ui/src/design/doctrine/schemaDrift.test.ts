@@ -19,13 +19,10 @@ import { describe, expect, it } from "vitest";
  * only shrink.
  */
 
-const NOT_YET_MIRRORED = new Set([
-  // Wave R3 sealed turn replay backend — TS mirrors land with the frontend
-  // Replay Moment PR (which also retires the W-026 artifact-keyed
-  // ReplayComparison/ReplayDivergence pair on both sides):
-  "TurnReplayComparison",
-  "TurnReplayDivergence",
-]);
+// Empty: every engine schema is now mirrored. New unmirrored schemas may be
+// allowlisted here as shrink-only debt (a class gaining a mirror while listed
+// fails the gate).
+const NOT_YET_MIRRORED = new Set<string>([]);
 
 const UI_ROOT = join(__dirname, "..", "..", "..");
 const snapshot: Record<string, string[]> = JSON.parse(

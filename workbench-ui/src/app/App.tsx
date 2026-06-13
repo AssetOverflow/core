@@ -24,7 +24,7 @@ export function App() {
             <Route index element={<Navigate to={`/${getWorkbenchPrefs().landingRoute}`} replace />} />
             <Route path="chat" element={<ChatRoute />} />
             <Route path="trace/:turnId?" element={<TraceRoute />} />
-            <Route path="replay/:artifactId?" element={<ReplayRoute />} />
+            <Route path="replay/:turnId?" element={<ReplayRoute />} />
             <Route path="proposals/:proposalId?" element={<ProposalsRoute />} />
             <Route path="evals/:laneId?" element={<EvalsRoute />} />
             <Route path="runs/:sessionId?" element={<RunsRoute />} />
