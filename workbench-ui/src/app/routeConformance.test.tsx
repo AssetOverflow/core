@@ -15,6 +15,7 @@ import { ReplayRoute } from "./replay/ReplayRoute";
 import { RunsRoute } from "./runs/RunsRoute";
 import { PacksRoute } from "./packs/PacksRoute";
 import { VaultRoute } from "./vault/VaultRoute";
+import { SettingsRoute } from "./settings/SettingsRoute";
 
 /**
  * ADR-0162 §6 route conformance — executable, not aspirational.
@@ -236,6 +237,28 @@ describe("route conformance: Chat (interaction-driven states)", () => {
     installFetch("error");
     renderRoute(<ChatRoute />);
     await submitPrompt();
+    await expectErrorContract();
+  });
+});
+
+// Settings has no empty state — the preferences panel always renders — so it
+// carries a bespoke loading/error contract over its read-only status fetch.
+describe("route conformance: Settings (no empty state — prefs always render)", () => {
+  it("loading: shows a specific label and the CLI-only statement, never 'Thinking...'", async () => {
+    installFetch("pending");
+    renderRoute(<SettingsRoute />);
+    expect(await screen.findByText("Loading runtime status...")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Engine configuration is CLI-only. This page mutates nothing on the server.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/thinking/i)).not.toBeInTheDocument();
+  });
+
+  it("error: surfaces what failed, mutation status, reproducer, retry safety", async () => {
+    installFetch("error");
+    renderRoute(<SettingsRoute />);
     await expectErrorContract();
   });
 });

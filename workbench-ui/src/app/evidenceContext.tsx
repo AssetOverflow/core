@@ -5,6 +5,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { getWorkbenchPrefs } from "./workbenchPrefs";
 import type {
   ChatTurnResult,
   TurnJournalEntry,
@@ -79,7 +80,11 @@ const EvidenceContext = createContext<EvidenceContextValue | null>(null);
 
 export function EvidenceProvider({ children }: { children: ReactNode }) {
   const [subject, setSubjectState] = useState<EvidenceSubject>(NONE_SUBJECT);
-  const [inspectorOpen, setInspectorOpen] = useState(false);
+  // Initial visibility follows the workbench pref; EvidenceUrlSync still
+  // force-opens on a `?inspect=` deep link.
+  const [inspectorOpen, setInspectorOpen] = useState(
+    () => getWorkbenchPrefs().inspectorDefaultOpen,
+  );
   const [addressCopyCount, setAddressCopyCount] = useState(0);
 
   const setSubject = useCallback((s: EvidenceSubject) => {
