@@ -46,6 +46,14 @@ function comparisonFor(turnId: number): TurnReplayComparison {
       replay_trace_hash: "sha256:111111111111aaaa",
       equivalent: true,
       replay_turn_cost_ms: 412,
+      leeway_evidence: {
+        class_name: "additive",
+        license: "PROPOSE",
+        theta: 0.85,
+        claim_disclosure: "approximate",
+        source_digest: "sha256:practice",
+        calibration_evidence_ref: "calibration:additive",
+      },
       divergences: [
         {
           path: "timestamp",
@@ -208,6 +216,8 @@ describe("ReplayRoute", () => {
     // honesty fields are surfaced, not hidden
     expect(screen.getByText("sealed_fresh_runtime_single_turn")).toBeInTheDocument();
     expect(screen.getByText("unrecorded")).toBeInTheDocument();
+    expect(screen.getByText(/PROPOSE · θ 85\.0%/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "calibration:additive" })).toBeInTheDocument();
     // an equivalent replay with only wall-clock drift is labeled as such
     expect(screen.getByText(/all informational/)).toBeInTheDocument();
   });
@@ -221,6 +231,7 @@ describe("ReplayRoute", () => {
     expect(screen.getByText("surface")).toBeInTheDocument();
     expect(screen.getByText("Beauty is symmetry.")).toBeInTheDocument();
     expect(screen.getAllByText("critical").length).toBeGreaterThan(0);
+    expect(screen.getByText("No leeway evidence recorded.")).toBeInTheDocument();
   });
 
   it("selecting a turn writes /replay/<turnId> with replace", async () => {

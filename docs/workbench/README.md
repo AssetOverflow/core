@@ -110,6 +110,15 @@ Defines:
 - the UI/UX guide requirement
 - the Phase A residue ledger before further complexity
 
+Supporting B3.5 deliverables:
+
+- `UI-UX-GUIDE.md` — operator/evaluator route map, evidence grammar, route
+  proofs, boundaries, and absences.
+- `b4-leeway-feasibility-gate.md` — B4 source-tuple audit and B4a nullable
+  read model.
+- `phase-a-residue-ledger.md` — implemented/deferred/blocked residue before
+  Phase C.
+
 ---
 
 ## CORE-Logos Studio

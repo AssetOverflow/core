@@ -5,6 +5,9 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "../../test/createTestQueryClient";
 import type { CalibrationClass, ServingMetrics } from "../../types/api";
+import { EvidenceProvider } from "../evidenceContext";
+import { EvidenceUrlSync } from "../evidenceUrlSync";
+import { RightInspector } from "../RightInspector";
 import { CalibrationRoute } from "./CalibrationRoute";
 
 const classes: CalibrationClass[] = [
@@ -20,6 +23,8 @@ const classes: CalibrationClass[] = [
     propose_licensed: false,
     serve_required: 0.99,
     serve_licensed: false,
+    source_path: "evals/gsm8k_math/practice/v1/report.json",
+    source_digest: "sha256:practice",
   },
   {
     class_name: "additive",
@@ -33,6 +38,8 @@ const classes: CalibrationClass[] = [
     propose_licensed: true,
     serve_required: 0.99,
     serve_licensed: false,
+    source_path: "evals/gsm8k_math/practice/v1/report.json",
+    source_digest: "sha256:practice",
   },
 ];
 
@@ -48,11 +55,15 @@ const metrics: ServingMetrics[] = [
   },
 ];
 
-function renderRoute() {
+function renderRoute(initialEntry = "/calibration", withInspector = false) {
   return render(
     <QueryClientProvider client={createTestQueryClient()}>
-      <MemoryRouter initialEntries={["/calibration"]}>
-        <CalibrationRoute />
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <EvidenceProvider>
+          <EvidenceUrlSync />
+          <CalibrationRoute />
+          {withInspector ? <RightInspector /> : null}
+        </EvidenceProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -139,6 +150,23 @@ describe("CalibrationRoute", () => {
     // PROPOSE licensed (>= 0.85), SERVE not (< 0.99)
     expect(screen.getAllByText(/licensed/).length).toBeGreaterThan(0);
     expect(screen.getByText(/core\.reliability_gate/)).toBeInTheDocument();
+  });
+
+  it("publishes the selected class as calibration evidence for the inspector", async () => {
+    stub();
+    const user = userEvent.setup();
+    renderRoute("/calibration", true);
+    await user.click(await screen.findByText("additive"));
+    expect(screen.getByText("Calibration Class")).toBeInTheDocument();
+    expect(screen.getByText(/licensed at θ 85\.0%/)).toBeInTheDocument();
+    expect(screen.getAllByText("sha256:practice").length).toBeGreaterThan(0);
+  });
+
+  it("restores a selected calibration class from a deep link", async () => {
+    stub();
+    renderRoute("/calibration?inspect=calibration:additive", true);
+    expect(await screen.findByText("Calibration Class")).toBeInTheDocument();
+    expect(await screen.findByText(/licensed at θ 85\.0%/)).toBeInTheDocument();
   });
 
   it("fail-closed: an empty arena ledger renders the honest absence card, not an error", async () => {

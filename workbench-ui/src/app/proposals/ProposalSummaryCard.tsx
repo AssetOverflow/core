@@ -1,4 +1,5 @@
 import type { ProposalDetail } from "../../types/api";
+import { LeewayEvidenceCard } from "../LeewayEvidenceCard";
 import { ProposalReplayBadge } from "./ProposalReplayBadge";
 import { ProposalStateBadge } from "./ProposalStateBadge";
 import { formatTimestamp, proposalSummaryText } from "./proposalView";
@@ -26,6 +27,9 @@ export function ProposalSummaryCard({ proposal }: { proposal: ProposalDetail }) 
           <dd className="m-0 text-[var(--color-text-primary)]">{proposal.downstream_effect}</dd>
         </div>
       </dl>
+      <div className="mt-4">
+        <LeewayEvidenceCard evidence={proposal.leeway_evidence} />
+      </div>
     </section>
   );
 }

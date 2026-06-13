@@ -12,6 +12,7 @@ import type { EvidenceSubject } from "./evidenceContext";
 //   pack        -> /packs/<packId>
 //   vault_entry -> /vault?inspect=vault:<entryIndex>
 //   audit_event -> /audit?inspect=audit:<eventId>
+//   calibration_class -> /calibration?inspect=calibration:<className>
 //
 // The `inspect` query param carries the inspector's subject as `<kind>:<id>`;
 // its presence means the inspector is open on that subject.
@@ -48,6 +49,8 @@ export function sameIdentity(a: EvidenceSubject, b: EvidenceSubject): boolean {
       return b.kind === "vault_entry" && b.entryIndex === a.entryIndex;
     case "audit_event":
       return b.kind === "audit_event" && b.eventId === a.eventId;
+    case "calibration_class":
+      return b.kind === "calibration_class" && b.className === a.className;
     case "none":
       return b.kind === "none";
   }
@@ -95,6 +98,12 @@ function subjectAddress(subject: AddressableSubject): SubjectAddress {
         params.set(INSPECT_PARAM, subjectToInspectValue(subject));
         return { path: "/audit", params };
       }
+    case "calibration_class":
+      {
+        const params = emptyParams();
+        params.set(INSPECT_PARAM, subjectToInspectValue(subject));
+        return { path: "/calibration", params };
+      }
   }
 }
 
@@ -116,6 +125,8 @@ export function subjectToInspectValue(subject: AddressableSubject): string {
       return `vault:${subject.entryIndex}`;
     case "audit_event":
       return `audit:${subject.eventId}`;
+    case "calibration_class":
+      return `calibration:${subject.className}`;
   }
 }
 
@@ -167,6 +178,8 @@ export function inspectValueToSubject(
     }
     case "audit":
       return { kind: "audit_event", eventId: id };
+    case "calibration":
+      return { kind: "calibration_class", className: id };
     default:
       return null;
   }

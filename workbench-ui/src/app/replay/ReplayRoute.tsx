@@ -18,6 +18,7 @@ import type {
 } from "../../types/api";
 import { pushRecentItem } from "../commandRegistry";
 import { useEvidenceSubject } from "../evidenceContext";
+import { LeewayEvidenceCard } from "../LeewayEvidenceCard";
 
 function parseTurnId(raw: string | undefined): number | null {
   if (!raw || !/^\d+$/.test(raw)) return null;
@@ -185,6 +186,8 @@ function ReplayHero({ comparison }: { comparison: TurnReplayComparison }) {
             failure.
           </p>
         </section>
+
+        <LeewayEvidenceCard evidence={comparison.leeway_evidence} />
 
         {comparison.divergences.length === 0 ? (
           <p className="m-0 text-sm text-[var(--color-text-secondary)]">

@@ -89,6 +89,43 @@ describe("RightInspector", () => {
     expect(screen.getByText(/Detail not loaded in this session/)).toBeInTheDocument();
   });
 
+  it("renders calibration class evidence instead of raw unknown", () => {
+    function SetCalibrationClass() {
+      const { setSubject } = useEvidenceSubject();
+      useEffect(() => {
+        setSubject({
+          kind: "calibration_class",
+          className: "additive",
+          data: {
+            class_name: "additive",
+            correct: 95,
+            wrong: 5,
+            refused: 50,
+            committed: 100,
+            reliability_floor: 0.86084162,
+            coverage: 0.666666667,
+            propose_required: 0.85,
+            propose_licensed: true,
+            serve_required: 0.99,
+            serve_licensed: false,
+            source_path: "evals/gsm8k_math/practice/v1/report.json",
+            source_digest: "sha256:practice",
+          },
+        });
+      }, [setSubject]);
+      return <RightInspector />;
+    }
+    render(
+      <EvidenceProvider>
+        <SetCalibrationClass />
+      </EvidenceProvider>,
+    );
+    expect(screen.getByText("Calibration Class")).toBeInTheDocument();
+    expect(screen.getByText("additive")).toBeInTheDocument();
+    expect(screen.getByText(/licensed at θ 85\.0%/)).toBeInTheDocument();
+    expect(screen.getByText("sha256:practice")).toBeInTheDocument();
+  });
+
   it("shows a transient Copied confirmation after an address copy", () => {
     vi.useFakeTimers();
     try {

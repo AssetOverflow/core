@@ -213,7 +213,8 @@ Response:
       }
     ],
     "turn_cost_ms": 17,
-    "checkpoint_emitted": true
+    "checkpoint_emitted": true,
+    "leeway_evidence": null
   }
 }
 ```
@@ -633,6 +634,93 @@ Constraints:
 
 - only lanes explicitly marked safe/read-only may run through the API
 - mutation-capable workflows are forbidden in v1
+
+---
+
+# Calibration / Serving Discipline
+
+## GET /calibration/classes
+
+Purpose:
+
+Read committed practice evidence and expose per-class reliability/license rows.
+The reader imports `core.reliability_gate` for Wilson floors and license
+decisions. It does not re-run a lane and does not mutate a license.
+
+Response:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "items": [
+      {
+        "class_name": "additive",
+        "correct": 95,
+        "wrong": 5,
+        "refused": 50,
+        "committed": 100,
+        "reliability_floor": 0.86084162,
+        "coverage": 0.666666667,
+        "propose_required": 0.85,
+        "propose_licensed": true,
+        "serve_required": 0.99,
+        "serve_licensed": false,
+        "source_path": "evals/gsm8k_math/practice/v1/report.json",
+        "source_digest": "sha256:..."
+      }
+    ]
+  }
+}
+```
+
+## GET /serving/metrics
+
+Purpose:
+
+Read committed serving reports and expose correct/refused/wrong counts. This is
+the source for the global wrong=0 frame. The route mirrors non-zero wrong counts
+honestly if a committed report contains them.
+
+Response:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "items": [
+      {
+        "lane": "train_sample",
+        "correct": 4,
+        "refused": 46,
+        "wrong": 0,
+        "sample_count": 50,
+        "source_path": "evals/gsm8k_math/train_sample/v1/report.json",
+        "source_digest": "sha256:..."
+      }
+    ]
+  }
+}
+```
+
+## Leeway Evidence Tuple
+
+B4 annotations must use the nullable `leeway_evidence` field rather than
+frontend inference:
+
+```json
+{
+  "class_name": "additive",
+  "license": "PROPOSE",
+  "theta": 0.85,
+  "claim_disclosure": "approximate",
+  "source_digest": "sha256:...",
+  "calibration_evidence_ref": "calibration:additive"
+}
+```
+
+When absent, the UI renders explicit absence. It must not infer this tuple from
+route-local calibration data.
 
 ---
 

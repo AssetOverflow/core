@@ -61,6 +61,18 @@ export interface ProposalRef {
   source_kind: string;
 }
 
+export type LeewayLicense = "PROPOSE" | "SERVE" | "blocked" | "unknown";
+export type ClaimDisclosure = "approximate" | "verified" | "proposal_only" | "none";
+
+export interface LeewayEvidence {
+  class_name: string;
+  license: LeewayLicense;
+  theta: number | null;
+  claim_disclosure: ClaimDisclosure;
+  source_digest: string | null;
+  calibration_evidence_ref: string | null;
+}
+
 export interface ChatTurnResult {
   prompt: string;
   /** Journal id stamped by the workbench API; null if journaling failed. */
@@ -82,6 +94,7 @@ export interface ChatTurnResult {
   proposal_candidates: ProposalRef[];
   turn_cost_ms: number;
   checkpoint_emitted: boolean;
+  leeway_evidence?: LeewayEvidence | null;
 }
 
 export interface TurnJournalSummary {
@@ -113,6 +126,7 @@ export interface TurnJournalEntry {
   checkpoint_emitted: boolean;
   trace_integrity: TraceIntegrity;
   journal_digest: string;
+  leeway_evidence?: LeewayEvidence | null;
 }
 
 export type TurnEvidence = ChatTurnResult | TurnJournalEntry;
@@ -226,6 +240,7 @@ export interface ProposalDetail extends ProposalSummary {
   evidence: unknown[];
   artifact_refs: ArtifactRef[];
   suggested_cli: string | null;
+  leeway_evidence?: LeewayEvidence | null;
 }
 
 export interface EvalLaneSummary {
@@ -319,6 +334,7 @@ export interface TurnReplayComparison {
   equivalent: boolean;
   replay_turn_cost_ms: number;
   divergences: TurnReplayDivergence[];
+  leeway_evidence?: LeewayEvidence | null;
 }
 
 export interface VaultSummary {
@@ -353,6 +369,8 @@ export interface CalibrationClass {
   propose_licensed: boolean;
   serve_required: number;
   serve_licensed: boolean;
+  source_path: string;
+  source_digest: string;
 }
 
 export interface ServingMetrics {
@@ -411,6 +429,7 @@ export interface MathProposalDetail extends MathProposalSummary {
   evidence_hashes: string[];
   handler_name: string | null;
   suggested_ratify_cli: string | null;
+  leeway_evidence?: LeewayEvidence | null;
 }
 
 export interface MathRatifyResult {
