@@ -13,6 +13,7 @@ import {
   fetchReplayComparison,
   fetchProposalDetail,
   fetchProposals,
+  fetchAuditEvents,
   fetchTraceTurn,
   fetchTraceTurns,
   fetchMathProposals,
@@ -29,6 +30,7 @@ import type {
   ArtifactDetail,
   ProposalSummary,
   ProposalDetail,
+  AuditEvent,
   TurnJournalEntry,
   TurnJournalSummary,
   EvalLaneSummary,
@@ -126,6 +128,15 @@ export function useTraceTurn(turnId?: number | null) {
     queryKey: ["api", "trace", "turn", turnId ?? null],
     queryFn: () => fetchTraceTurn(turnId as number),
     enabled: typeof turnId === "number",
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useAuditEvents(limit?: number, offset?: number) {
+  return useQuery<{ items: AuditEvent[] }, WorkbenchApiError>({
+    queryKey: ["api", "audit", "events", limit ?? null, offset ?? null],
+    queryFn: () => fetchAuditEvents(limit, offset),
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });
@@ -237,5 +248,4 @@ export function useMathDefer() {
     },
   });
 }
-
 
