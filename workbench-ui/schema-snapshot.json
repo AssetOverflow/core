@@ -22,6 +22,19 @@
     "payload_digest",
     "payload"
   ],
+  "CalibrationClass": [
+    "class_name",
+    "correct",
+    "wrong",
+    "refused",
+    "committed",
+    "reliability_floor",
+    "coverage",
+    "propose_required",
+    "propose_licensed",
+    "serve_required",
+    "serve_licensed"
+  ],
   "ChatTurnResult": [
     "prompt",
     "surface",
@@ -186,7 +199,8 @@
     "trace_hash",
     "timestamp",
     "trace_path",
-    "surface_excerpt"
+    "surface_excerpt",
+    "trace_integrity"
   ],
   "RuntimeStatus": [
     "backend",
@@ -196,6 +210,15 @@
     "revision_warning",
     "active_session_id",
     "mutation_mode"
+  ],
+  "ServingMetrics": [
+    "lane",
+    "correct",
+    "refused",
+    "wrong",
+    "sample_count",
+    "source_path",
+    "source_digest"
   ],
   "TurnJournalEntrySchema": [
     "turn_id",
@@ -214,6 +237,7 @@
     "proposal_candidates",
     "turn_cost_ms",
     "checkpoint_emitted",
+    "trace_integrity",
     "journal_digest"
   ],
   "TurnJournalSummarySchema": [
@@ -222,7 +246,8 @@
     "prompt_excerpt",
     "surface_excerpt",
     "trace_hash",
-    "grounding_source"
+    "grounding_source",
+    "trace_integrity"
   ],
   "TurnReplayComparison": [
     "turn_id",

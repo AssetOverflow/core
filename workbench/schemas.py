@@ -448,3 +448,39 @@ class VaultEntry:
     epistemic_state: str
     metadata: dict[str, Any]
     versor_digest: str | None
+
+
+# ---------------------------------------------------------------------------
+# Wave M Phase B — calibrated-learning / serving-discipline read views.
+# The workbench computes none of these numbers: reliability_floor and the
+# license verdicts come from core.reliability_gate's own conservative_floor /
+# license_for; serving counts come from committed eval report.json artifacts.
+# Read-only — no lane is re-run, no license is changed.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class CalibrationClass:
+    class_name: str
+    correct: int
+    wrong: int
+    refused: int
+    committed: int
+    # One-sided Wilson conservative floor (0.0 below N_MIN committed trials).
+    reliability_floor: float
+    coverage: float
+    propose_required: float  # θ for PROPOSE (0.85)
+    propose_licensed: bool
+    serve_required: float  # θ for SERVE (0.99)
+    serve_licensed: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ServingMetrics:
+    lane: str
+    correct: int
+    refused: int
+    wrong: int
+    sample_count: int
+    source_path: str
+    source_digest: str

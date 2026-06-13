@@ -322,6 +322,32 @@
         "metadata": "dict[str, Any]",
         "versor_digest": "str | None"
       }
+    },
+    "CalibrationClass": {
+      "fields": {
+        "class_name": "str",
+        "correct": "int",
+        "wrong": "int",
+        "refused": "int",
+        "committed": "int",
+        "reliability_floor": "float",
+        "coverage": "float",
+        "propose_required": "float",
+        "propose_licensed": "bool",
+        "serve_required": "float",
+        "serve_licensed": "bool"
+      }
+    },
+    "ServingMetrics": {
+      "fields": {
+        "lane": "str",
+        "correct": "int",
+        "refused": "int",
+        "wrong": "int",
+        "sample_count": "int",
+        "source_path": "str",
+        "source_digest": "str"
+      }
     }
   }
 }
