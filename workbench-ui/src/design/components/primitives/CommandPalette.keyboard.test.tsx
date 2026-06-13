@@ -52,8 +52,11 @@ describe("CommandPalette keyboard contract", () => {
     expect(screen.getByRole("button", { name: "Open Trace" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open Replay" })).toBeInTheDocument();
 
+    // One Navigate command per palette-visible route (12), derived from the
+    // route registry — Demos and Calibration are now included (the prior
+    // hand-maintained list of 10 dropped them).
     const items = dialog.querySelectorAll('[role="option"]');
-    expect(items.length).toBe(10);
+    expect(items.length).toBe(12);
     const lastIndex = items.length - 1;
 
     // Initially first item (index 0) is focused — check aria-selected

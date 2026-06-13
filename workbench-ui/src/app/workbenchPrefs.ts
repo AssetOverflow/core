@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { LANDING_ROUTE_IDS } from "./routes";
 
 // Local, single-operator workbench preferences (ADR-0160: local-only, no
 // cloud, no accounts). Persisted in localStorage; every pref here is read
@@ -7,20 +8,12 @@ import { useCallback, useEffect, useState } from "react";
 const PREFS_KEY = "core-workbench-prefs";
 const PREFS_EVENT = "core-workbench-prefs-change";
 
-export const LANDING_ROUTES = [
-  "chat",
-  "trace",
-  "demos",
-  "proposals",
-  "evals",
-  "runs",
-  "packs",
-  "vault",
-  "audit",
-  "settings",
-] as const;
+// Landing-eligible routes derive from the single route registry (routes.ts),
+// so the Settings dropdown can never drift from the real route set. The prior
+// hand-maintained tuple was missing Replay and Calibration.
+export const LANDING_ROUTES: readonly string[] = LANDING_ROUTE_IDS;
 
-export type LandingRoute = (typeof LANDING_ROUTES)[number];
+export type LandingRoute = string;
 
 export interface WorkbenchPrefs {
   /** Route the workbench opens to (consumed by the App index redirect). */
@@ -35,7 +28,7 @@ export const DEFAULT_PREFS: WorkbenchPrefs = {
 };
 
 function isLandingRoute(value: unknown): value is LandingRoute {
-  return typeof value === "string" && (LANDING_ROUTES as readonly string[]).includes(value);
+  return typeof value === "string" && LANDING_ROUTES.includes(value);
 }
 
 export function getWorkbenchPrefs(): WorkbenchPrefs {

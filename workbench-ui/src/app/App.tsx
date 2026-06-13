@@ -16,6 +16,26 @@ import { VaultRoute } from "./vault/VaultRoute";
 import { CalibrationRoute } from "./calibration/CalibrationRoute";
 import { SettingsRoute } from "./settings/SettingsRoute";
 import { getWorkbenchPrefs } from "./workbenchPrefs";
+import { WORKBENCH_ROUTES, type RouteElementMap } from "./routes";
+
+// The one place route id → element is bound (App owns the route-component
+// imports). Every WORKBENCH_ROUTES id must have an entry here; routes.test
+// asserts it, so a registry route without an element fails the suite instead
+// of rendering `undefined`.
+export const ROUTE_ELEMENTS: RouteElementMap = {
+  chat: <ChatRoute />,
+  trace: <TraceRoute />,
+  replay: <ReplayRoute />,
+  demos: <DemoTheaterRoute />,
+  proposals: <ProposalsRoute />,
+  runs: <RunsRoute />,
+  vault: <VaultRoute />,
+  audit: <AuditRoute />,
+  evals: <EvalsRoute />,
+  calibration: <CalibrationRoute />,
+  packs: <PacksRoute />,
+  settings: <SettingsRoute />,
+};
 
 export function App() {
   return (
@@ -24,18 +44,13 @@ export function App() {
         <Routes>
           <Route path="/" element={<Shell />}>
             <Route index element={<Navigate to={`/${getWorkbenchPrefs().landingRoute}`} replace />} />
-            <Route path="chat" element={<ChatRoute />} />
-            <Route path="trace/:turnId?" element={<TraceRoute />} />
-            <Route path="replay/:turnId?" element={<ReplayRoute />} />
-            <Route path="demos/:demoId?" element={<DemoTheaterRoute />} />
-            <Route path="proposals/:proposalId?" element={<ProposalsRoute />} />
-            <Route path="evals/:laneId?" element={<EvalsRoute />} />
-            <Route path="runs/:sessionId?" element={<RunsRoute />} />
-            <Route path="packs/:packId?" element={<PacksRoute />} />
-            <Route path="vault" element={<VaultRoute />} />
-            <Route path="calibration" element={<CalibrationRoute />} />
-            <Route path="audit" element={<AuditRoute />} />
-            <Route path="settings" element={<SettingsRoute />} />
+            {WORKBENCH_ROUTES.map((route) => (
+              <Route
+                key={route.id}
+                path={route.routePattern}
+                element={ROUTE_ELEMENTS[route.id]}
+              />
+            ))}
           </Route>
           <Route path="/preview" element={<PreviewPage />} />
         </Routes>
