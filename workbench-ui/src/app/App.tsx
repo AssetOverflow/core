@@ -10,7 +10,7 @@ import { AuditRoute } from "./audit/AuditRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { RunsRoute } from "./runs/RunsRoute";
-import { PacksRoutePlaceholder } from "../routes/PacksRoutePlaceholder";
+import { PacksRoute } from "./packs/PacksRoute";
 import { VaultRoutePlaceholder } from "../routes/VaultRoutePlaceholder";
 import { SettingsRoutePlaceholder } from "../routes/SettingsRoutePlaceholder";
 
@@ -27,7 +27,7 @@ export function App() {
             <Route path="proposals/:proposalId?" element={<ProposalsRoute />} />
             <Route path="evals/:laneId?" element={<EvalsRoute />} />
             <Route path="runs/:sessionId?" element={<RunsRoute />} />
-            <Route path="packs/:packId?" element={<PacksRoutePlaceholder />} />
+            <Route path="packs/:packId?" element={<PacksRoute />} />
             <Route path="vault" element={<VaultRoutePlaceholder />} />
             <Route path="audit" element={<AuditRoute />} />
             <Route path="settings" element={<SettingsRoutePlaceholder />} />

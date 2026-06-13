@@ -13,6 +13,7 @@ import { AuditRoute } from "./audit/AuditRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
 import { RunsRoute } from "./runs/RunsRoute";
+import { PacksRoute } from "./packs/PacksRoute";
 
 /**
  * ADR-0162 §6 route conformance — executable, not aspirational.
@@ -160,6 +161,15 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
     loadingLabel: "Loading artifacts...",
     emptyStatement: "No artifacts available.",
     emptyCommand: "core eval cognition",
+  },
+  {
+    name: "Packs",
+    element: <PacksRoute />,
+    path: "/packs/:packId?",
+    initialEntry: "/packs",
+    loadingLabel: "Loading packs...",
+    emptyStatement: "No packs discovered.",
+    emptyCommand: "core pack validate <path>",
   },
 ];
 

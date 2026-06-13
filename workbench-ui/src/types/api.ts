@@ -153,6 +153,25 @@ export interface AuditEvent {
   payload: unknown;
 }
 
+export type PackSource = "language_pack" | "runtime_pack";
+
+export interface PackSummary {
+  pack_id: string;
+  source: PackSource;
+  manifest_path: string;
+  version: string | null;
+  language: string | null;
+  modality: string | null;
+  determinism_class: string | null;
+  checksum: string | null;
+  checksums: Record<string, string>;
+}
+
+export interface PackDetail extends PackSummary {
+  manifest_digest: string;
+  manifest: Record<string, unknown>;
+}
+
 export type ArtifactKind =
   | "trace"
   | "eval_result"

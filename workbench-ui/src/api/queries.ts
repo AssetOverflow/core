@@ -16,6 +16,8 @@ import {
   fetchAuditEvents,
   fetchRuns,
   fetchRun,
+  fetchPacks,
+  fetchPack,
   fetchTraceTurn,
   fetchTraceTurns,
   fetchMathProposals,
@@ -35,6 +37,8 @@ import type {
   AuditEvent,
   RunSummary,
   RunDetail,
+  PackSummary,
+  PackDetail,
   TurnJournalEntry,
   TurnJournalSummary,
   EvalLaneSummary,
@@ -269,6 +273,25 @@ export function useMathDefer() {
       queryClient.invalidateQueries({ queryKey: ["api", "proposal", variables.proposalId] });
       queryClient.invalidateQueries({ queryKey: ["api", "math-proposal", variables.proposalId] });
     },
+  });
+}
+
+export function usePacks(limit?: number, offset?: number) {
+  return useQuery<PackSummary[], WorkbenchApiError>({
+    queryKey: ["api", "packs", limit ?? null, offset ?? null],
+    queryFn: () => fetchPacks(limit, offset),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function usePack(packId?: string | null) {
+  return useQuery<PackDetail, WorkbenchApiError>({
+    queryKey: ["api", "pack", packId ?? null],
+    queryFn: () => fetchPack(packId as string),
+    enabled: typeof packId === "string" && packId.length > 0,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 }
 
