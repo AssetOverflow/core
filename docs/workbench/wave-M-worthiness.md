@@ -172,8 +172,88 @@ Detailed brief pack: `docs/handoff/wave-M-phaseB-calibration-briefs-2026-06-13.m
 - No timelines — phases/priorities/scope-sizes; sequencing is the dependency
   DAG, not a clock.
 
-## Execution order
+## Consolidated re-sequencing (amended 2026-06-13, after Phase B heart landed)
 
-**B → C → D**, with **A in parallel**. The worthiness gap is widest at B; the
-tour (D) lands hardest once B and C exist to show off. Phase B brief pack is
-authored first (this commit); subsequent phase packs follow as each lands.
+Phase B's heart is **done** — B1 (#724 readers), B2 (#725 Calibration route),
+B3 (#726 wrong=0 frame) make the serving-discipline loop visible. A design
+review of that work + an information-architecture decision now fold into a
+single **Phase A (Structure & Polish) that runs BEFORE we resume Phase C** —
+because two of them are structural prerequisites the Cognition cluster (C)
+should land *into*, not extend a flat list past.
+
+The governing insight: **the command-palette drift bug and the
+grouped-navigation idea are the same fix.** Navigation must derive from one
+registry that also encodes structure; build that once.
+
+### Standing IA constraint (binds everything below)
+
+**One workbench, one address space, one Chain Rail.** Grouping is a wayfinding
+skin, never an architectural fork. A calibration class and the trace it
+relates to stay co-addressable. We do **not** split into separate workbenches
+— the single evidence model is the thesis. "Levels" are expressed as *depth
+within a surface* (calm default / infinite depth), not as top-level
+categories.
+
+### Phase A — Structure & Polish (NEXT; runs before resuming C)
+
+- **A1 — Navigation registry (one source of truth) + grouped nav + palette
+  fix.** Today `LeftNav.NAV_ITEMS` and `CommandPalette.NAV_COMMANDS`/`NAV_PATHS`
+  are two hardcoded lists that have **already drifted** — Demos (#723) and
+  Calibration (#725) are in the nav but unreachable via `⌘K`, and the `⌘1–0`
+  map is stale. Replace both with one `routes` registry `{ id, label, path,
+  section, shortcut? }`; LeftNav renders it **grouped by section**;
+  CommandPalette derives its nav commands and the `⌘` map from it (drift
+  becomes structurally impossible — the same registry-driven move that made
+  KeyboardHelp honest). Sections follow the organism's loop:
+  **Converse · Cognition (core-logos) · Evidence · Determinism · Discipline ·
+  Substrate · Settings.** Current routes group as: Chat→Converse;
+  Trace/Runs/Audit/Vault→Evidence; Replay/Demos→Determinism;
+  Evals/Calibration/Proposals→Discipline; Packs→Substrate; Settings→Settings.
+  The **Cognition** group is created now (empty or near-empty) so Phase C's
+  surfaces slot into a home rather than a flat tail.
+- **A2 — Calibration earned-state (the centerpiece must show its thesis).**
+  On committed data the Calibration route shows three classes all "not yet
+  licensed" with empty bars — it never shows a class crossing θ, because the
+  reader reads `practice/v1/report.json` `per_class`, whose committed copy is
+  a sub-`N_MIN` baseline, while the *earned* state (`additive` committed=100,
+  measured 0.86, **PROPOSE-licensed**) lives in the separately-committed
+  `ratification_queue.json` — and the two artifacts disagree (correct:3 vs 95,
+  different commits). **Primary fix:** regenerate the committed practice
+  artifacts from one coherent run via the sealed practice runner so
+  `report.json` per_class and the queue agree and the reader (unchanged) shows
+  the earned class — deterministic regen, reviewed, no metric weakening.
+  **Fallback** if regen is out of scope: the reader honestly surfaces *both*
+  artifacts with provenance (the per_class ledger AND an "earned licenses"
+  panel from the queue), each labeled by source. Either way the disagreement
+  is resolved and the route shows its moment.
+- **A3 — Doctrine station ("how this UI can't lie").** Elevate the
+  "contracts/checks" instinct into a *surface*, not a folder: a read-only
+  station that lists the doctrine gates (hexScan, schemaDrift across both
+  snapshots, enumCoverage, route conformance, golden-file layout) and the
+  load-bearing invariants (`wrong=0`, `versor_condition < 1e-6`), each with
+  *what it proves* and a pointer to its executable check. Every other AI UI
+  asks for trust; this one shows the proofs. Larger scope than A1/A2 — may
+  trail into/after C, but it is the single most novel "worthy of the model"
+  surface and belongs in the Cognition/meta neighborhood.
+- Remaining Phase-A polish (density pref wiring, DAG's other two consumers,
+  accessibility pass, tabular-nums/balance sweep) continues as before,
+  parallel-safe.
+
+Brief pack: `docs/handoff/wave-M-phaseA-briefs-2026-06-13.md`.
+
+### Parked / deferred
+
+- **B4 (per-turn leeway attribution)** is **blocked**: a served turn carries
+  no calibration-class/license/θ. It needs an **engine-side** change to stamp
+  ReachLevel/class/θ onto served results (its own ADR) — then B4 is a trivial
+  display. Do not re-derive in the workbench (theater).
+- **Calibration EvidenceSubject kind** (the route uses local selection today)
+  — a conscious deferral, not an accident; revisit if a calibration class
+  needs to thread the Chain Rail.
+
+### Order
+
+**A (A1 → A2 in parallel; A3 trails) → resume C (Cognition / core-logos
+cluster) → D (tour) → E (continuous).** A1+A2 land before C so the Cognition
+surfaces arrive into a grouped structure that already shows discipline
+honestly.
