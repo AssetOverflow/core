@@ -1,5 +1,6 @@
 import { CommandPalette } from "../design/components/primitives/CommandPalette";
 import { useRuntimeStatus } from "../api/queries";
+import { WrongZeroFrame } from "./WrongZeroFrame";
 
 export function TopBar({
   paletteOpen,
@@ -63,6 +64,8 @@ export function TopBar({
           </kbd>
         </button>
       </div>
+
+      <WrongZeroFrame />
 
       <div className="shrink-0">{connectionPill}</div>
 
