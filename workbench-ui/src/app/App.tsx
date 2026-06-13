@@ -26,8 +26,8 @@ export function App() {
             <Route path="replay/:artifactId?" element={<ReplayRoute />} />
             <Route path="proposals/:proposalId?" element={<ProposalsRoute />} />
             <Route path="evals/:laneId?" element={<EvalsRoute />} />
-            <Route path="runs" element={<RunsRoutePlaceholder />} />
-            <Route path="packs" element={<PacksRoutePlaceholder />} />
+            <Route path="runs/:sessionId?" element={<RunsRoutePlaceholder />} />
+            <Route path="packs/:packId?" element={<PacksRoutePlaceholder />} />
             <Route path="vault" element={<VaultRoutePlaceholder />} />
             <Route path="audit" element={<AuditRoute />} />
             <Route path="settings" element={<SettingsRoutePlaceholder />} />

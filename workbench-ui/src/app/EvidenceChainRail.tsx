@@ -48,6 +48,10 @@ function evidenceOf(value: unknown): "lit" | "hollow" {
   return "lit";
 }
 
+function evidenceAny(...values: unknown[]): "lit" | "hollow" {
+  return values.some((value) => evidenceOf(value) === "lit") ? "lit" : "hollow";
+}
+
 /** Pure derivation — exported for the meaningfully-fail tests. */
 export function deriveStages(subject: EvidenceSubject): RailStage[] | null {
   switch (subject.kind) {
@@ -77,22 +81,106 @@ export function deriveStages(subject: EvidenceSubject): RailStage[] | null {
     }
     case "proposal": {
       const d = subject.data;
+      const provenance = d
+        ? "source_kind" in d
+          ? d.source_kind
+          : d.proposed_change_kind
+        : undefined;
+      const replayEvidence = d
+        ? "replay_equivalent" in d
+          ? d.replay_equivalent
+          : d.replay_equivalence_hash
+        : undefined;
+      const authority = d ? ("state" in d ? d.state : d.handler_name) : undefined;
+      const action = d
+        ? "suggested_cli" in d
+          ? d.suggested_cli
+          : d.suggested_ratify_cli
+        : undefined;
       return [
         stage("intent", "dim", "not applicable — proposals originate in contemplation"),
         stage("subject", "lit", "selected proposal"),
-        stage("provenance", d ? evidenceOf(d.source_kind) : "hollow", "source_kind"),
+        stage("provenance", evidenceOf(provenance), "source_kind / proposed_change_kind"),
         stage(
           "admissibility",
-          d ? (d.replay_equivalent === null ? "hollow" : "lit") : "hollow",
-          "replay_equivalent recorded",
+          replayEvidence === null ? "hollow" : evidenceOf(replayEvidence),
+          "replay_equivalent / replay_equivalence_hash recorded",
         ),
         stage(
           "replay",
-          d ? (d.replay_equivalent === null ? "hollow" : "lit") : "hollow",
-          "replay_equivalent value (true and false are both evidence)",
+          replayEvidence === null ? "hollow" : evidenceOf(replayEvidence),
+          "replay evidence value (false is recorded evidence)",
         ),
-        stage("authority", d ? evidenceOf(d.state) : "hollow", "review state (ADR-0057 machine)"),
-        stage("action", d ? evidenceOf(d.suggested_cli) : "hollow", "suggested_cli"),
+        stage("authority", evidenceOf(authority), "review state / handler_name"),
+        stage("action", evidenceOf(action), "suggested_cli / suggested_ratify_cli"),
+      ];
+    }
+    case "run": {
+      const d = subject.data;
+      const hasGapField = !!d && Object.prototype.hasOwnProperty.call(d, "evidence_gap");
+      const gapped = evidenceOf(d?.evidence_gap) === "lit";
+      return [
+        stage("intent", "dim", "not applicable to recorded runs"),
+        stage("subject", "lit", "selected run"),
+        stage("provenance", gapped ? "dim" : d ? evidenceOf(d.source) : "hollow", "source / evidence_gap"),
+        stage(
+          "admissibility",
+          !d || !hasGapField ? "hollow" : gapped ? "dim" : "lit",
+          "evidence_gap absent means no gap recorded",
+        ),
+        stage(
+          "replay",
+          !d
+            ? "hollow"
+            : gapped
+            ? "dim"
+            : d?.checkpoint_present
+              ? evidenceOf(d.checkpoint_revision)
+              : "hollow",
+          "checkpoint_present + checkpoint_revision",
+        ),
+        stage("authority", "dim", "not applicable to read-only run evidence"),
+        stage("action", "dim", "not applicable to recorded runs"),
+      ];
+    }
+    case "pack": {
+      const d = subject.data;
+      return [
+        stage("intent", "dim", "not applicable to semantic packs"),
+        stage("subject", "lit", "selected pack"),
+        stage(
+          "provenance",
+          d ? evidenceAny(d.checksum, d.manifest_digest) : "hollow",
+          "checksum / manifest_digest",
+        ),
+        stage("admissibility", d ? evidenceOf(d.determinism_class) : "hollow", "determinism_class"),
+        stage("replay", "dim", "not applicable to pack metadata"),
+        stage("authority", "dim", "not applicable to pack metadata"),
+        stage("action", "dim", "not applicable to pack metadata"),
+      ];
+    }
+    case "vault_entry": {
+      const d = subject.data;
+      return [
+        stage("intent", "dim", "not applicable to vault entries"),
+        stage("subject", "lit", "selected vault entry"),
+        stage("provenance", d ? evidenceOf(d.versor_digest) : "hollow", "versor_digest"),
+        stage("admissibility", d ? evidenceOf(d.epistemic_state) : "hollow", "epistemic_state"),
+        stage("replay", "dim", "not applicable to vault entries"),
+        stage("authority", "dim", "not applicable to vault entries"),
+        stage("action", "dim", "not applicable to vault entries"),
+      ];
+    }
+    case "audit_event": {
+      const d = subject.data;
+      return [
+        stage("intent", "dim", "not applicable to audit events"),
+        stage("subject", "lit", "selected audit event"),
+        stage("provenance", d ? evidenceOf(d.payload_digest) : "hollow", "payload_digest"),
+        stage("admissibility", "dim", "not applicable to audit events"),
+        stage("replay", "dim", "not applicable to audit events"),
+        stage("authority", "dim", "not applicable to audit events"),
+        stage("action", d ? evidenceOf(d.mutation_boundary) : "hollow", "mutation_boundary"),
       ];
     }
     case "artifact": {

@@ -92,6 +92,117 @@ describe("EvidenceChainRail honesty contract", () => {
     expect(statusOf(unrecorded, "replay")).toBe("hollow");
   });
 
+  it("MEANINGFULLY FAILS run: removing checkpoint_revision hollows exactly replay", () => {
+    const full: EvidenceSubject = {
+      kind: "run",
+      sessionId: "session-1",
+      data: {
+        session_id: "session-1",
+        source: "engine_state_manifest",
+        checkpoint_present: true,
+        checkpoint_revision: "rev-1",
+        evidence_gap: null,
+      },
+    };
+    expect(statusOf(full, "provenance")).toBe("lit");
+    expect(statusOf(full, "admissibility")).toBe("lit");
+    expect(statusOf(full, "replay")).toBe("lit");
+
+    const missingRevision: EvidenceSubject = {
+      ...full,
+      data: { ...full.data, checkpoint_revision: null },
+    };
+    expect(statusOf(missingRevision, "replay")).toBe("hollow");
+    expect(statusOf(missingRevision, "provenance")).toBe("lit");
+  });
+
+  it("run: evidence_gap dims the replay chain instead of pretending replay is available", () => {
+    const gapped: EvidenceSubject = {
+      kind: "run",
+      sessionId: "session-gap",
+      data: {
+        source: "turn_journal",
+        checkpoint_present: true,
+        checkpoint_revision: "rev-gap",
+        evidence_gap: "checkpoint missing from manifest",
+      },
+    };
+    expect(statusOf(gapped, "provenance")).toBe("dim");
+    expect(statusOf(gapped, "admissibility")).toBe("dim");
+    expect(statusOf(gapped, "replay")).toBe("dim");
+  });
+
+  it("run: identity-only subject hollows field-derived stages", () => {
+    const identityOnly: EvidenceSubject = { kind: "run", sessionId: "session-identity" };
+    expect(statusOf(identityOnly, "provenance")).toBe("hollow");
+    expect(statusOf(identityOnly, "admissibility")).toBe("hollow");
+    expect(statusOf(identityOnly, "replay")).toBe("hollow");
+  });
+
+  it("MEANINGFULLY FAILS pack: removing determinism_class hollows exactly admissibility", () => {
+    const full: EvidenceSubject = {
+      kind: "pack",
+      packId: "en_core",
+      data: {
+        pack_id: "en_core",
+        checksum: "sha256:pack",
+        manifest_digest: "sha256:manifest",
+        determinism_class: "deterministic",
+      },
+    };
+    expect(statusOf(full, "provenance")).toBe("lit");
+    expect(statusOf(full, "admissibility")).toBe("lit");
+
+    const missingDeterminism: EvidenceSubject = {
+      ...full,
+      data: { ...full.data, determinism_class: null },
+    };
+    expect(statusOf(missingDeterminism, "admissibility")).toBe("hollow");
+    expect(statusOf(missingDeterminism, "provenance")).toBe("lit");
+  });
+
+  it("MEANINGFULLY FAILS vault_entry: removing versor_digest hollows exactly provenance", () => {
+    const full: EvidenceSubject = {
+      kind: "vault_entry",
+      entryIndex: 3,
+      data: {
+        entry_index: 3,
+        epistemic_state: "verified",
+        versor_digest: "sha256:versor",
+      },
+    };
+    expect(statusOf(full, "provenance")).toBe("lit");
+    expect(statusOf(full, "admissibility")).toBe("lit");
+
+    const missingVersor: EvidenceSubject = {
+      ...full,
+      data: { ...full.data, versor_digest: null },
+    };
+    expect(statusOf(missingVersor, "provenance")).toBe("hollow");
+    expect(statusOf(missingVersor, "admissibility")).toBe("lit");
+  });
+
+  it("MEANINGFULLY FAILS audit_event: removing payload_digest hollows exactly provenance", () => {
+    const full: EvidenceSubject = {
+      kind: "audit_event",
+      eventId: "audit-1",
+      data: {
+        event_id: "audit-1",
+        mutation_boundary: true,
+        payload_digest: "sha256:audit",
+      },
+    };
+    expect(statusOf(full, "provenance")).toBe("lit");
+    expect(statusOf(full, "action")).toBe("lit");
+
+    const missingPayload: EvidenceSubject = {
+      ...full,
+      data: { ...full.data, payload_digest: null },
+    };
+    expect(statusOf(missingPayload, "provenance")).toBe("hollow");
+    expect(statusOf(missingPayload, "action")).toBe("lit");
+  });
+
   it("renders no rail for kind=none", () => {
     const { container } = render(<EvidenceChainRail subject={{ kind: "none" }} />);
     expect(container.querySelector('[data-testid="evidence-chain-rail"]')).toBeNull();
