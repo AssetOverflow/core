@@ -12,7 +12,8 @@ import { EvalsRoute } from "./evals/EvalsRoute";
 import { RunsRoute } from "./runs/RunsRoute";
 import { PacksRoute } from "./packs/PacksRoute";
 import { VaultRoute } from "./vault/VaultRoute";
-import { SettingsRoutePlaceholder } from "../routes/SettingsRoutePlaceholder";
+import { SettingsRoute } from "./settings/SettingsRoute";
+import { getWorkbenchPrefs } from "./workbenchPrefs";
 
 export function App() {
   return (
@@ -20,7 +21,7 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Shell />}>
-            <Route index element={<Navigate to="/chat" replace />} />
+            <Route index element={<Navigate to={`/${getWorkbenchPrefs().landingRoute}`} replace />} />
             <Route path="chat" element={<ChatRoute />} />
             <Route path="trace/:turnId?" element={<TraceRoute />} />
             <Route path="replay/:artifactId?" element={<ReplayRoute />} />
@@ -30,7 +31,7 @@ export function App() {
             <Route path="packs/:packId?" element={<PacksRoute />} />
             <Route path="vault" element={<VaultRoute />} />
             <Route path="audit" element={<AuditRoute />} />
-            <Route path="settings" element={<SettingsRoutePlaceholder />} />
+            <Route path="settings" element={<SettingsRoute />} />
           </Route>
           <Route path="/preview" element={<PreviewPage />} />
         </Routes>
