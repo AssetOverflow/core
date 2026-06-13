@@ -107,12 +107,16 @@ jobs:
           git add \
             teaching/cognition_chains/cognition_chains_v1.jsonl \
             teaching/proposals/proposals.jsonl
-          git commit -m "ratify(teaching): accept proposal ${{ inputs.proposal_id }}
-
-chain_id: ${{ steps.accept.outputs.chain_id }}
-review_date: ${{ steps.date.outputs.date }}
-operator: ${{ github.actor }}
-ADR-0057 / ADR-0155"
+          # Paragraph-style -m flags: a multi-line -m string here had body
+          # lines at column 1, which terminated the YAML literal block and
+          # made the workflow file unloadable (a path-named failure run on
+          # every push since #283).
+          git commit \
+            -m "ratify(teaching): accept proposal ${{ inputs.proposal_id }}" \
+            -m "chain_id: ${{ steps.accept.outputs.chain_id }}" \
+            -m "review_date: ${{ steps.date.outputs.date }}" \
+            -m "operator: ${{ github.actor }}" \
+            -m "ADR-0057 / ADR-0155"
           git push origin main
 
       - name: job summary
