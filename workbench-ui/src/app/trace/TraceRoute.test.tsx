@@ -1,5 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   MemoryRouter,
@@ -10,7 +10,7 @@ import {
 } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "../../test/createTestQueryClient";
-import type { TurnJournalEntry, TurnJournalSummary } from "../../types/api";
+import type { CognitivePipelineRecord, TurnJournalEntry, TurnJournalSummary } from "../../types/api";
 import { EvidenceProvider } from "../evidenceContext";
 import { TraceRoute } from "./TraceRoute";
 
@@ -44,6 +44,59 @@ const summaries: TurnJournalSummary[] = [
   },
 ];
 
+function pipelineRecord(traceHash: string | null): CognitivePipelineRecord {
+  const stages = [
+    "input",
+    "intent",
+    "proposition_graph",
+    "articulation_target",
+    "realizer",
+    "walk_telemetry",
+    "trace_hash",
+  ] as const;
+  return {
+    schema_version: "cognitive_pipeline_record_v1",
+    status: "recorded",
+    missing_reason: null,
+    trace_hash: traceHash,
+    versor_condition: 0,
+    field_digest: null,
+    stages: stages.map((stage) => ({
+      stage_id: stage,
+      label: stage === "proposition_graph" ? "PropositionGraph" : stage,
+      status: "recorded",
+      summary: stage,
+      detail:
+        stage === "input"
+          ? { stage, input_text: "fixture prompt" }
+          : stage === "realizer"
+            ? { stage, surface: "fixture realization" }
+            : { stage },
+    })),
+    edges: [
+      { from_stage: "input", to_stage: "intent", label: "classify" },
+      { from_stage: "intent", to_stage: "proposition_graph", label: "plan graph" },
+      { from_stage: "proposition_graph", to_stage: "articulation_target", label: "topology" },
+      { from_stage: "articulation_target", to_stage: "realizer", label: "realize" },
+      { from_stage: "realizer", to_stage: "walk_telemetry", label: "retain evidence" },
+      { from_stage: "walk_telemetry", to_stage: "trace_hash", label: "seal" },
+    ],
+  };
+}
+
+function missingPipelineRecord(traceHash: string | null): CognitivePipelineRecord {
+  return {
+    schema_version: "cognitive_pipeline_record_v1",
+    status: "missing_evidence",
+    missing_reason: "pipeline_record_not_persisted",
+    trace_hash: traceHash,
+    versor_condition: null,
+    field_digest: null,
+    stages: [],
+    edges: [],
+  };
+}
+
 function entry(id: number): TurnJournalEntry {
   const summary = summaries.find((item) => item.turn_id === id) ?? summaries[0];
   return {
@@ -69,6 +122,7 @@ function entry(id: number): TurnJournalEntry {
     checkpoint_emitted: true,
     trace_integrity: summary.trace_integrity,
     journal_digest: `sha256:journal${summary.turn_id}abcdef`,
+    pipeline_record: pipelineRecord(summary.trace_hash),
   };
 }
 
@@ -105,7 +159,12 @@ function renderRoute(initialEntry = "/trace") {
   );
 }
 
-function stubTraceFetch(items: TurnJournalSummary[] = summaries) {
+function stubTraceFetch(
+  items: TurnJournalSummary[] = summaries,
+  entryFactory: (id: number) => TurnJournalEntry = entry,
+  pipelineFactory: (id: number) => CognitivePipelineRecord = (id) =>
+    pipelineRecord(entry(id).trace_hash),
+) {
   const fetchMock = vi.fn((input: unknown) => {
     const path = new URL(String(input)).pathname;
     if (path === "/trace/turns") {
@@ -113,11 +172,22 @@ function stubTraceFetch(items: TurnJournalSummary[] = summaries) {
         json: () => Promise.resolve({ ok: true, generated_at: "now", data: { items } }),
       });
     }
+    const pipelineMatch = path.match(/^\/trace\/(\d+)\/pipeline$/);
+    if (pipelineMatch) {
+      return Promise.resolve({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            generated_at: "now",
+            data: pipelineFactory(Number(pipelineMatch[1])),
+          }),
+      });
+    }
     const match = path.match(/^\/trace\/(\d+)$/);
     if (match) {
       return Promise.resolve({
         json: () =>
-          Promise.resolve({ ok: true, generated_at: "now", data: entry(Number(match[1])) }),
+          Promise.resolve({ ok: true, generated_at: "now", data: entryFactory(Number(match[1])) }),
       });
     }
     return Promise.resolve({
@@ -196,16 +266,58 @@ describe("TraceRoute", () => {
 
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/trace/1"));
     expect(screen.getByTestId("nav-type")).toHaveTextContent("REPLACE");
+    await user.click(await screen.findByRole("tab", { name: "Surfaces" }));
     expect(await screen.findByText("User response for turn 1")).toBeInTheDocument();
   });
 
   it("renders the three surface labels distinctly", async () => {
     stubTraceFetch();
+    const user = userEvent.setup();
     renderRoute("/trace/2");
 
+    await user.click(await screen.findByRole("tab", { name: "Surfaces" }));
     expect(await screen.findByText("User Surface (response)")).toBeInTheDocument();
     expect(screen.getByText("Articulation Surface (realizer)")).toBeInTheDocument();
     expect(screen.getByText("Walk Surface (telemetry/evidence)")).toBeInTheDocument();
+  });
+
+  it("renders the persisted cognitive pipeline as a deterministic DAG", async () => {
+    stubTraceFetch();
+    renderRoute("/trace/2");
+
+    expect(await screen.findByRole("img", { name: "Cognitive pipeline DAG" })).toBeInTheDocument();
+    expect(screen.getByText("cognitive_pipeline_record_v1")).toBeInTheDocument();
+    expect(screen.getAllByText("PropositionGraph").length).toBeGreaterThan(0);
+    expect(screen.getByText("valid")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Selected pipeline stage detail" })).toBeInTheDocument();
+    expect(screen.getByText(/fixture prompt/)).toBeInTheDocument();
+  });
+
+  it("selects pipeline stages from the deterministic stage rail", async () => {
+    stubTraceFetch();
+    const user = userEvent.setup();
+    renderRoute("/trace/2");
+
+    const rail = await screen.findByRole("region", { name: "Pipeline stages" });
+    await user.click(within(rail).getByRole("button", { name: /realizer/i }));
+
+    expect(screen.getByText(/fixture realization/)).toBeInTheDocument();
+    expect(within(rail).getByRole("button", { name: /realizer/i })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("shows missing evidence for pre-widening turns without a pipeline record", async () => {
+    stubTraceFetch(
+      summaries,
+      (id) => ({ ...entry(id), pipeline_record: null }),
+      (id) => missingPipelineRecord(entry(id).trace_hash),
+    );
+    renderRoute("/trace/2");
+
+    expect(await screen.findByText("missing_evidence")).toBeInTheDocument();
+    expect(screen.getByText("Pipeline stage evidence was not persisted for this turn.")).toBeInTheDocument();
   });
 
   it("keeps raw JSON collapsed by default", async () => {
@@ -223,7 +335,7 @@ describe("TraceRoute", () => {
     stubTraceFetch();
     renderRoute("/trace/3");
 
-    expect(await screen.findByText("User response for turn 3")).toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: "Cognitive pipeline DAG" })).toBeInTheDocument();
     expect(screen.getByText("Third prompt").closest('[aria-current="true"]')).not.toBeNull();
   });
 

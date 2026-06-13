@@ -11,7 +11,7 @@ export function StatusFooter() {
     return (
       <footer
         data-region="statusfooter"
-        className="flex items-center border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-4 py-1 text-xs"
+        className="flex items-center border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-[var(--density-shell-padding-x)] py-[var(--density-footer-padding-y)] text-xs"
       >
         <span className="text-[var(--color-state-danger-text)]">Status unavailable</span>
       </footer>
@@ -47,7 +47,7 @@ export function StatusFooter() {
   return (
     <footer
       data-region="statusfooter"
-      className="flex items-center gap-4 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-4 py-1 text-xs"
+      className="flex items-center gap-[var(--density-shell-gap)] border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-[var(--density-shell-padding-x)] py-[var(--density-footer-padding-y)] text-xs"
     >
       {mutationModeEl}
 

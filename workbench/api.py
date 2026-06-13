@@ -20,9 +20,20 @@ from core.epistemic_state import (
 )
 from workbench import calibration, readers
 from workbench.journal import DEFAULT_JOURNAL_DIR, TurnJournal, TurnJournalEntry
+from workbench.pipeline_record import (
+    cognitive_pipeline_record_from_result,
+    pipeline_record_from_journal_entry,
+)
 from workbench.readers import ArtifactTooLargeError, EvidenceUnavailableError
 from workbench.replay import replay_turn
-from workbench.schemas import ChatTurnResult, MathRatifyResult, ProposalRef, TurnVerdict, error, ok
+from workbench.schemas import (
+    ChatTurnResult,
+    MathRatifyResult,
+    ProposalRef,
+    TurnVerdict,
+    error,
+    ok,
+)
 
 
 MAX_CHAT_BODY_BYTES = 64 * 1024
@@ -97,7 +108,9 @@ class WorkbenchApi:
         try:
             return self._dispatch(method.upper(), path, query, body)
         except json.JSONDecodeError as exc:
-            return ApiResponse(400, error("bad_request", "invalid JSON body", detail=str(exc)))
+            return ApiResponse(
+                400, error("bad_request", "invalid JSON body", detail=str(exc))
+            )
         except ValueError as exc:
             status = 400
             msg = str(exc)
@@ -114,7 +127,9 @@ class WorkbenchApi:
         except OSError as exc:
             return ApiResponse(500, error("read_error", str(exc)))
         except Exception as exc:  # noqa: BLE001 - API contract requires JSON errors.
-            return ApiResponse(500, error("runtime_unavailable", f"internal error: {exc}"))
+            return ApiResponse(
+                500, error("runtime_unavailable", f"internal error: {exc}")
+            )
 
     def _dispatch(
         self,
@@ -140,14 +155,32 @@ class WorkbenchApi:
             return ApiResponse(200, ok(readers.read_proposal(proposal_id)))
         if method == "GET" and path == "/math-proposals":
             return ApiResponse(200, ok({"items": readers.list_math_proposals()}))
-        if method == "POST" and path.endswith("/ratify") and path.startswith("/math-proposals/"):
-            proposal_id = unquote(path.removeprefix("/math-proposals/").removesuffix("/ratify"))
+        if (
+            method == "POST"
+            and path.endswith("/ratify")
+            and path.startswith("/math-proposals/")
+        ):
+            proposal_id = unquote(
+                path.removeprefix("/math-proposals/").removesuffix("/ratify")
+            )
             return self._math_ratify(proposal_id, body)
-        if method == "POST" and path.endswith("/reject") and path.startswith("/math-proposals/"):
-            proposal_id = unquote(path.removeprefix("/math-proposals/").removesuffix("/reject"))
+        if (
+            method == "POST"
+            and path.endswith("/reject")
+            and path.startswith("/math-proposals/")
+        ):
+            proposal_id = unquote(
+                path.removeprefix("/math-proposals/").removesuffix("/reject")
+            )
             return self._math_reject(proposal_id, body)
-        if method == "POST" and path.endswith("/defer") and path.startswith("/math-proposals/"):
-            proposal_id = unquote(path.removeprefix("/math-proposals/").removesuffix("/defer"))
+        if (
+            method == "POST"
+            and path.endswith("/defer")
+            and path.startswith("/math-proposals/")
+        ):
+            proposal_id = unquote(
+                path.removeprefix("/math-proposals/").removesuffix("/defer")
+            )
             return self._math_defer(proposal_id)
         if method == "GET" and path.startswith("/math-proposals/"):
             proposal_id = unquote(path.removeprefix("/math-proposals/"))
@@ -185,7 +218,9 @@ class WorkbenchApi:
                 200,
                 ok(
                     {
-                        "items": readers.list_runs(self._journal, limit=limit, offset=offset),
+                        "items": readers.list_runs(
+                            self._journal, limit=limit, offset=offset
+                        ),
                         "limit": limit,
                         "offset": offset,
                     }
@@ -205,8 +240,27 @@ class WorkbenchApi:
                     )
                 ),
             )
+        if method == "GET" and path == "/contemplation/runs":
+            limit, offset = _pagination(query)
+            return ApiResponse(
+                200,
+                ok(
+                    {
+                        "items": readers.list_contemplation_runs(
+                            limit=limit, offset=offset
+                        ),
+                        "limit": limit,
+                        "offset": offset,
+                    }
+                ),
+            )
+        if method == "GET" and path.startswith("/contemplation/runs/"):
+            run_id = unquote(path.removeprefix("/contemplation/runs/"))
+            return ApiResponse(200, ok(readers.read_contemplation_run(run_id)))
         if method == "GET" and path == "/calibration/classes":
-            return ApiResponse(200, ok({"items": calibration.read_calibration_classes()}))
+            return ApiResponse(
+                200, ok({"items": calibration.read_calibration_classes()})
+            )
         if method == "GET" and path == "/serving/metrics":
             return ApiResponse(200, ok({"items": calibration.read_serving_metrics()}))
         if method == "GET" and path == "/vault/summary":
@@ -241,7 +295,9 @@ class WorkbenchApi:
         if method == "POST" and path == "/evals/run":
             request = json.loads(body.decode("utf-8") or "{}")
             if not isinstance(request, dict):
-                return ApiResponse(400, error("bad_request", "eval request must be an object"))
+                return ApiResponse(
+                    400, error("bad_request", "eval request must be an object")
+                )
             try:
                 result = readers.run_safe_eval_lane(
                     str(request.get("lane") or ""),
@@ -260,26 +316,56 @@ class WorkbenchApi:
             offset = int(query.get("offset", ["0"])[0])
             items = self._journal.list_summaries(limit=limit, offset=offset)
             return ApiResponse(200, ok({"items": items}))
+        if (
+            method == "GET"
+            and path.startswith("/trace/")
+            and path.endswith("/pipeline")
+        ):
+            raw_turn_id = unquote(
+                path.removeprefix("/trace/").removesuffix("/pipeline").strip("/")
+            )
+            try:
+                turn_id = int(raw_turn_id)
+            except ValueError:
+                return ApiResponse(
+                    404,
+                    error("not_found", f"trace pipeline not found: {raw_turn_id}"),
+                )
+            try:
+                entry = self._journal.get_entry(turn_id)
+            except FileNotFoundError:
+                return ApiResponse(
+                    404, error("not_found", f"trace pipeline not found: {turn_id}")
+                )
+            return ApiResponse(200, ok(pipeline_record_from_journal_entry(entry)))
         if method == "GET" and path.startswith("/trace/"):
             raw_turn_id = unquote(path.removeprefix("/trace/"))
             try:
                 turn_id = int(raw_turn_id)
             except ValueError:
-                return ApiResponse(404, error("not_found", f"trace turn not found: {raw_turn_id}"))
+                return ApiResponse(
+                    404, error("not_found", f"trace turn not found: {raw_turn_id}")
+                )
             try:
                 return ApiResponse(200, ok(self._journal.get_entry(turn_id)))
             except FileNotFoundError:
-                return ApiResponse(404, error("not_found", f"trace turn not found: {turn_id}"))
+                return ApiResponse(
+                    404, error("not_found", f"trace turn not found: {turn_id}")
+                )
         if method == "GET" and path.startswith("/replay/"):
             raw_turn_id = unquote(path.removeprefix("/replay/"))
             try:
                 turn_id = int(raw_turn_id)
             except ValueError:
-                return ApiResponse(404, error("not_found", f"replay turn not found: {raw_turn_id}"))
+                return ApiResponse(
+                    404, error("not_found", f"replay turn not found: {raw_turn_id}")
+                )
             try:
                 entry = self._journal.get_entry(turn_id)
             except FileNotFoundError:
-                return ApiResponse(404, error("not_found", f"replay turn not found: {turn_id}"))
+                return ApiResponse(
+                    404, error("not_found", f"replay turn not found: {turn_id}")
+                )
             if entry.trace_integrity != "pipeline_trace":
                 return ApiResponse(
                     501,
@@ -314,9 +400,12 @@ class WorkbenchApi:
                     polarity = req.get("polarity")
                     dry_run = bool(req.get("dry_run", False))
             except Exception as exc:
-                return ApiResponse(400, error("bad_request", "invalid JSON body", detail=str(exc)))
+                return ApiResponse(
+                    400, error("bad_request", "invalid JSON body", detail=str(exc))
+                )
 
         import getpass
+
         reviewer = getpass.getuser()
 
         try:
@@ -350,7 +439,9 @@ class WorkbenchApi:
             )
             return ApiResponse(status_code, error("bad_request", msg))
         except Exception as exc:
-            return ApiResponse(500, error("runtime_unavailable", f"internal error: {exc}"))
+            return ApiResponse(
+                500, error("runtime_unavailable", f"internal error: {exc}")
+            )
 
         if result.applied:
             self._emit_operator_telemetry(
@@ -369,7 +460,9 @@ class WorkbenchApi:
                 if isinstance(req, dict):
                     note = str(req.get("note", ""))
             except Exception as exc:
-                return ApiResponse(400, error("bad_request", "invalid JSON body", detail=str(exc)))
+                return ApiResponse(
+                    400, error("bad_request", "invalid JSON body", detail=str(exc))
+                )
         try:
             prop = readers.read_math_proposal(proposal_id)
             handler = prop.handler_name or "unknown"
@@ -407,11 +500,16 @@ class WorkbenchApi:
         if len(body) > MAX_CHAT_BODY_BYTES:
             return ApiResponse(
                 413,
-                error("read_error", f"chat request exceeds {MAX_CHAT_BODY_BYTES} byte limit"),
+                error(
+                    "read_error",
+                    f"chat request exceeds {MAX_CHAT_BODY_BYTES} byte limit",
+                ),
             )
         request = json.loads(body.decode("utf-8") or "{}")
         if not isinstance(request, dict):
-            return ApiResponse(400, error("bad_request", "chat request must be an object"))
+            return ApiResponse(
+                400, error("bad_request", "chat request must be an object")
+            )
         prompt = request.get("prompt")
         if not isinstance(prompt, str):
             return ApiResponse(400, error("bad_request", "prompt must be a string"))
@@ -421,7 +519,10 @@ class WorkbenchApi:
         if len(prompt) > MAX_CHAT_PROMPT_CHARS:
             return ApiResponse(
                 400,
-                error("bad_request", f"prompt exceeds {MAX_CHAT_PROMPT_CHARS} character limit"),
+                error(
+                    "bad_request",
+                    f"prompt exceeds {MAX_CHAT_PROMPT_CHARS} character limit",
+                ),
             )
         with _CHAT_TURN_LOCK:
             started = time.perf_counter()
@@ -432,6 +533,17 @@ class WorkbenchApi:
                     error(
                         "runtime_unavailable",
                         "chat turn did not produce a canonical pipeline trace hash",
+                    ),
+                )
+            if (
+                result.pipeline_record is None
+                or result.pipeline_record.status != "recorded"
+            ):
+                return ApiResponse(
+                    500,
+                    error(
+                        "runtime_unavailable",
+                        "chat turn did not produce a recorded cognitive pipeline record",
                     ),
                 )
             elapsed_ms = max(0, int(round((time.perf_counter() - started) * 1000)))
@@ -454,7 +566,11 @@ def _with_turn_cost_and_id(
 
 def _coerce_grounding_source(value: object) -> str:
     text = str(value or "none").strip().lower()
-    return text if text in {"pack", "teaching", "vault", "partial", "oov", "none"} else "none"
+    return (
+        text
+        if text in {"pack", "teaching", "vault", "partial", "oov", "none"}
+        else "none"
+    )
 
 
 def _identity_verdict(identity_score: object | None) -> TurnVerdict | None:
@@ -527,7 +643,9 @@ def _run_chat_turn(prompt: str, runtime: ChatRuntime | None = None) -> ChatTurnR
         runtime.checkpoint_engine_state = original_checkpoint  # type: ignore[method-assign]
     turn_event = runtime.turn_log[-1] if runtime.turn_log else None
     verdicts = getattr(turn_event, "verdicts", None)
-    grounding_source = _coerce_grounding_source(getattr(turn_event, "grounding_source", "none"))
+    grounding_source = _coerce_grounding_source(
+        getattr(turn_event, "grounding_source", "none")
+    )
     normative_clearance = coerce_normative_clearance(
         getattr(turn_event, "normative_clearance", None)
         or clearance_from_verdicts(verdicts)
@@ -577,4 +695,5 @@ def _run_chat_turn(prompt: str, runtime: ChatRuntime | None = None) -> ChatTurnR
         proposal_candidates=_proposal_refs(runtime, before_candidate_ids),
         turn_cost_ms=0,
         checkpoint_emitted=checkpoint_emitted,
+        pipeline_record=cognitive_pipeline_record_from_result(result),
     )

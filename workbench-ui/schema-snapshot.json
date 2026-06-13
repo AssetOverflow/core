@@ -57,7 +57,71 @@
     "turn_cost_ms",
     "checkpoint_emitted",
     "leeway_evidence",
+    "pipeline_record",
     "turn_id"
+  ],
+  "CognitivePipelineEdge": [
+    "from_stage",
+    "to_stage",
+    "label"
+  ],
+  "CognitivePipelineRecord": [
+    "schema_version",
+    "status",
+    "missing_reason",
+    "trace_hash",
+    "versor_condition",
+    "field_digest",
+    "stages",
+    "edges"
+  ],
+  "CognitivePipelineStage": [
+    "stage_id",
+    "label",
+    "status",
+    "summary",
+    "detail"
+  ],
+  "ContemplationRunDetail": [
+    "before",
+    "after",
+    "engine_chain",
+    "scenes"
+  ],
+  "ContemplationRunSummary": [
+    "run_id",
+    "source_path",
+    "source_digest",
+    "prompt",
+    "cold_subject",
+    "scene_count",
+    "learning_arc_closed",
+    "all_claims_supported",
+    "active_corpus_byte_identical"
+  ],
+  "ContemplationScene": [
+    "scene_id",
+    "claim",
+    "detail"
+  ],
+  "DemoDagEdge": [
+    "from_node",
+    "to_node",
+    "label"
+  ],
+  "DemoDagNode": [
+    "node_id",
+    "label",
+    "summary",
+    "detail"
+  ],
+  "DemoEvidenceDag": [
+    "graph_id",
+    "graph_kind",
+    "title",
+    "source_digest",
+    "nodes",
+    "edges"
   ],
   "DemoRunResult": [
     "demo_id",
@@ -75,7 +139,8 @@
     "decision_reason",
     "trace_hash",
     "problems",
-    "response"
+    "response",
+    "evidence_dag"
   ],
   "DemoScenarioSummary": [
     "scenario_id",
@@ -109,6 +174,17 @@
     "metrics",
     "cases",
     "source_digest"
+  ],
+  "IdentityContinuity": [
+    "status",
+    "engine_identity",
+    "parent_engine_identity",
+    "current_engine_identity",
+    "written_at_revision",
+    "current_revision",
+    "lineage_relation",
+    "verification_summary",
+    "evidence_gap"
   ],
   "LeewayEvidence": [
     "class_name",
@@ -194,7 +270,8 @@
   ],
   "RunDetail": [
     "turns",
-    "manifest"
+    "manifest",
+    "identity_continuity"
   ],
   "RunSummary": [
     "session_id",
@@ -252,7 +329,8 @@
     "checkpoint_emitted",
     "trace_integrity",
     "journal_digest",
-    "leeway_evidence"
+    "leeway_evidence",
+    "pipeline_record"
   ],
   "TurnJournalSummarySchema": [
     "turn_id",

@@ -11,6 +11,17 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from workbench.api import MAX_CHAT_BODY_BYTES, WorkbenchApi
 
 
+def _local_origin_or_default(origin: str) -> str:
+    if not origin:
+        return "http://127.0.0.1:5173"
+    import urllib.parse
+
+    parsed_origin = urllib.parse.urlparse(origin)
+    if parsed_origin.hostname in {"127.0.0.1", "localhost"}:
+        return origin
+    return "http://127.0.0.1:5173"
+
+
 class WorkbenchRequestHandler(BaseHTTPRequestHandler):
     api = WorkbenchApi()
 
@@ -80,7 +91,10 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
     def _send_common_headers(self, content_length: int) -> None:
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(content_length))
-        self.send_header("Access-Control-Allow-Origin", "http://127.0.0.1:5173")
+        self.send_header(
+            "Access-Control-Allow-Origin",
+            _local_origin_or_default(self.headers.get("Origin", "")),
+        )
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 

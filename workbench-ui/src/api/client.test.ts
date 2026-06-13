@@ -5,6 +5,7 @@ import {
   fetchEvalLanes,
   fetchProposalDetail,
   fetchProposals,
+  fetchTracePipeline,
   fetchTraceTurn,
   fetchTraceTurns,
   runDemo,
@@ -167,6 +168,28 @@ describe("trace fetchers", () => {
 
     await expect(fetchTraceTurn(7)).resolves.toEqual(turn);
     expect(fetchMock.mock.calls[0][0]).toBe("http://127.0.0.1:8765/trace/7");
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.method).toBeUndefined();
+  });
+
+  it("fetches a trace pipeline projection without mutation options", async () => {
+    const pipeline = {
+      schema_version: "cognitive_pipeline_record_v1",
+      status: "missing_evidence",
+      missing_reason: "pipeline_record_not_persisted",
+      trace_hash: "sha256:abc",
+      versor_condition: null,
+      field_digest: null,
+      stages: [],
+      edges: [],
+    };
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ ok: true, generated_at: "now", data: pipeline }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchTracePipeline(7)).resolves.toEqual(pipeline);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://127.0.0.1:8765/trace/7/pipeline");
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     expect(init.method).toBeUndefined();
   });

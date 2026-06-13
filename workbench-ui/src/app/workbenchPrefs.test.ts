@@ -19,17 +19,23 @@ describe("workbenchPrefs", () => {
   it("persists a pref and reads it back (survives reload)", () => {
     setWorkbenchPref("landingRoute", "vault");
     setWorkbenchPref("inspectorDefaultOpen", true);
+    setWorkbenchPref("densityMode", "compact");
     // a fresh read models a page reload — values survive
     expect(getWorkbenchPrefs()).toEqual({
       landingRoute: "vault",
       inspectorDefaultOpen: true,
+      densityMode: "compact",
     });
   });
 
-  it("falls back to defaults for an invalid stored landing route", () => {
+  it("falls back to defaults for invalid stored pref values", () => {
     localStorage.setItem(
       PREFS_KEY,
-      JSON.stringify({ landingRoute: "not-a-route", inspectorDefaultOpen: "yes" }),
+      JSON.stringify({
+        landingRoute: "not-a-route",
+        inspectorDefaultOpen: "yes",
+        densityMode: "wide",
+      }),
     );
     expect(getWorkbenchPrefs()).toEqual(DEFAULT_PREFS);
   });
@@ -45,6 +51,7 @@ describe("workbenchPrefs", () => {
     expect(getWorkbenchPrefs()).toEqual({
       landingRoute: "packs",
       inspectorDefaultOpen: true,
+      densityMode: "comfortable",
     });
   });
 });

@@ -3,6 +3,8 @@ import { Play } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { WorkbenchApiError } from "../../api/client";
 import { useDemoRun, useDemos } from "../../api/queries";
+import { DagViewer, type DagEdgeInput, type DagNodeInput } from "../../design/components/Dag";
+import { DigestBadge } from "../../design/components/DigestBadge/DigestBadge";
 import { Button } from "../../design/components/primitives/Button";
 import { Panel } from "../../design/components/Panel/Panel";
 import { SearchInput } from "../../design/components/SearchInput/SearchInput";
@@ -10,7 +12,13 @@ import { VirtualizedList } from "../../design/components/VirtualizedList/Virtual
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
-import type { DemoRunResult, DemoScenarioRunResult, DemoSummary, EvidenceClass } from "../../types/api";
+import type {
+  DemoEvidenceDag,
+  DemoRunResult,
+  DemoScenarioRunResult,
+  DemoSummary,
+  EvidenceClass,
+} from "../../types/api";
 
 function errorMessage(error: unknown) {
   return error instanceof WorkbenchApiError ? error.message : "Demo API request failed.";
@@ -126,6 +134,55 @@ function ScenarioCatalog({ demo }: { demo: DemoSummary }) {
   );
 }
 
+function digestPayload(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return value.replace(/^sha256:/, "");
+}
+
+function graphInputs(dag: DemoEvidenceDag): { nodes: DagNodeInput[]; edges: DagEdgeInput[] } {
+  return {
+    nodes: dag.nodes.map((node) => ({
+      id: node.node_id,
+      label: node.label,
+      detail: {
+        summary: node.summary,
+        ...node.detail,
+      },
+    })),
+    edges: dag.edges.map((edge) => ({
+      from: edge.from_node,
+      to: edge.to_node,
+      label: edge.label ?? undefined,
+    })),
+  };
+}
+
+function EvidenceDagPanel({ dag }: { dag: DemoEvidenceDag }) {
+  const graph = graphInputs(dag);
+  const digest = digestPayload(dag.source_digest);
+  return (
+    <section className="grid gap-2 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="m-0 text-xs font-semibold text-[var(--color-text-secondary)]">
+            {dag.title}
+          </h3>
+          <p className="m-0 mt-1 font-mono text-[10px] text-[var(--color-text-muted)]">
+            {dag.graph_kind}
+          </p>
+        </div>
+        {digest ? <DigestBadge digest={digest} truncate={12} /> : null}
+      </div>
+      <DagViewer
+        nodes={graph.nodes}
+        edges={graph.edges}
+        ariaLabel={dag.title}
+        height={300}
+      />
+    </section>
+  );
+}
+
 function ResultRow({ scenario }: { scenario: DemoScenarioRunResult }) {
   return (
     <article
@@ -181,6 +238,7 @@ function ResultRow({ scenario }: { scenario: DemoScenarioRunResult }) {
           ))}
         </ul>
       ) : null}
+      {scenario.evidence_dag ? <EvidenceDagPanel dag={scenario.evidence_dag} /> : null}
     </article>
   );
 }

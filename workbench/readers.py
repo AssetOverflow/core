@@ -9,8 +9,10 @@ import re
 import threading
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, Callable, get_args
+from typing import Any, Callable, cast, get_args
 
+from core.config import RuntimeConfig
+from core.engine_identity import EngineIdentityError, engine_identity_for_config
 from engine_state import EngineStateStore, get_git_revision
 from evals.framework import discover_lanes, get_lane, run_lane
 from teaching.proposals import DEFAULT_PROPOSAL_LOG_PATH, ProposalLog, ReviewState
@@ -18,12 +20,21 @@ from workbench.schemas import (
     AuditEvent,
     ArtifactDetail,
     ArtifactRef,
+    ContemplationRunDetail,
+    ContemplationRunSummary,
+    ContemplationScene,
+    DemoDagEdge,
+    DemoDagNode,
+    DemoEvidenceDag,
     DemoRunResult,
     DemoScenarioRunResult,
     DemoScenarioSummary,
     DemoSummary,
     EvalLaneSummary,
     EvalRunResult,
+    IdentityContinuity,
+    IdentityContinuityStatus,
+    IdentityLineageRelation,
     MathProposalDetail,
     MathProposalSummary,
     MathRatifyResult,
@@ -63,6 +74,7 @@ RUNTIME_PACK_ROOT = REPO_ROOT / "packs"
 WORKBENCH_TELEMETRY_ROOT = REPO_ROOT / "workbench_data"
 ENGINE_STATE_ROOT = REPO_ROOT / "engine_state"
 DEMOS_ROOT = REPO_ROOT / "demos"
+CONTEMPLATION_RUNS_ROOT = REPO_ROOT / "contemplation" / "runs"
 _DEFAULT_MATH_AUDIT_PATH = (
     REPO_ROOT
     / "evals"
@@ -639,6 +651,253 @@ def _render_demo_payload(payload: dict[str, Any]) -> str:
     return json.dumps(payload, sort_keys=True, indent=2) + "\n"
 
 
+def _safe_node_text(value: Any) -> str:
+    if value is None:
+        return "missing_evidence"
+    text = str(value)
+    return text if len(text) <= 96 else text[:95] + "…"
+
+
+def _demo_source_digest(response: dict[str, Any]) -> str:
+    return _sha256_bytes(_render_demo_payload(response).encode("utf-8"))
+
+
+def _proof_promotion_dag(response: dict[str, Any]) -> DemoEvidenceDag:
+    scenario_id = str(response.get("scenario_id") or "unknown")
+    nodes: list[DemoDagNode] = [
+        DemoDagNode(
+            node_id="request",
+            label="Request",
+            summary=_safe_node_text(response.get("request_id")),
+            detail={
+                "request_id": response.get("request_id"),
+                "tool": response.get("tool"),
+                "scenario_id": scenario_id,
+            },
+        ),
+        DemoDagNode(
+            node_id="validate",
+            label="Closed Payload",
+            summary="schema validated" if response.get("status") != "invalid" else "invalid payload",
+            detail={"authority_path": response.get("authority_path", [])[:1]},
+        ),
+    ]
+
+    premise_ids = list(response.get("premise_entry_ids") or [])
+    premise_indices = list(response.get("premise_entry_indices") or [])
+    for index, entry_id in enumerate(premise_ids):
+        nodes.append(
+            DemoDagNode(
+                node_id=f"premise_{index}",
+                label=f"Premise {index + 1}",
+                summary=_safe_node_text(entry_id),
+                detail={
+                    "entry_id": entry_id,
+                    "entry_index": premise_indices[index]
+                    if index < len(premise_indices)
+                    else None,
+                },
+            )
+        )
+
+    nodes.extend(
+        [
+            DemoDagNode(
+                node_id="claim",
+                label="Claim",
+                summary=_safe_node_text(response.get("claim_entry_id")),
+                detail={
+                    "entry_id": response.get("claim_entry_id"),
+                    "entry_index": response.get("claim_entry_index"),
+                    "before_status": response.get("before_status"),
+                    "after_status": response.get("after_status"),
+                },
+            ),
+            DemoDagNode(
+                node_id="certify",
+                label="CORE Certifies",
+                summary=_safe_node_text(response.get("decision_reason")),
+                detail={
+                    "decision_reason": response.get("decision_reason"),
+                    "certificate_digest": response.get("certificate_digest"),
+                    "engine_pin": response.get("engine_pin"),
+                    "trace_summary": response.get("trace_summary"),
+                },
+            ),
+            DemoDagNode(
+                node_id="apply",
+                label="Vault Owner Applies",
+                summary=_safe_node_text(
+                    (response.get("trace_summary") or {}).get("apply_reason")
+                    if isinstance(response.get("trace_summary"), dict)
+                    else None
+                ),
+                detail={
+                    "promoted": response.get("promoted"),
+                    "authority_path": response.get("authority_path", []),
+                },
+            ),
+            DemoDagNode(
+                node_id="outcome",
+                label="Outcome",
+                summary=_safe_node_text(response.get("status")),
+                detail={
+                    "status": response.get("status"),
+                    "promoted": response.get("promoted"),
+                    "trace_hash": response.get("trace_hash"),
+                    "refusal_reason": response.get("refusal_reason"),
+                    "invalid_reason": response.get("invalid_reason"),
+                },
+            ),
+        ]
+    )
+
+    edges: list[DemoDagEdge] = [
+        DemoDagEdge(from_node="request", to_node="validate", label="validate"),
+        DemoDagEdge(from_node="validate", to_node="claim", label="select claim"),
+    ]
+    for index, _entry_id in enumerate(premise_ids):
+        edges.extend(
+            [
+                DemoDagEdge(
+                    from_node="validate",
+                    to_node=f"premise_{index}",
+                    label="fresh read",
+                ),
+                DemoDagEdge(
+                    from_node=f"premise_{index}",
+                    to_node="certify",
+                    label="premise",
+                ),
+            ]
+        )
+    edges.extend(
+        [
+            DemoDagEdge(from_node="claim", to_node="certify", label="claim"),
+            DemoDagEdge(from_node="certify", to_node="apply", label="certificate"),
+            DemoDagEdge(from_node="apply", to_node="outcome", label="status transition"),
+        ]
+    )
+    return DemoEvidenceDag(
+        graph_id=f"{scenario_id}:proof-carrying-promotion",
+        graph_kind="proof_carrying_promotion",
+        title="Proof-carrying promotion DAG",
+        source_digest=_demo_source_digest(response),
+        nodes=nodes,
+        edges=edges,
+    )
+
+
+def _deductive_entailment_dag(response: dict[str, Any]) -> DemoEvidenceDag | None:
+    trace = response.get("entailment_trace")
+    if not isinstance(trace, dict):
+        return None
+    scenario_id = str(response.get("scenario_id") or "unknown")
+    nodes: list[DemoDagNode] = [
+        DemoDagNode(
+            node_id="request",
+            label="Request",
+            summary=_safe_node_text(response.get("request_id")),
+            detail={
+                "request_id": response.get("request_id"),
+                "tool": response.get("tool"),
+                "scenario_id": scenario_id,
+            },
+        )
+    ]
+    premise_keys = list(trace.get("premise_keys") or [])
+    for index, premise_key in enumerate(premise_keys):
+        nodes.append(
+            DemoDagNode(
+                node_id=f"premise_{index}",
+                label=f"Premise {index + 1}",
+                summary=_safe_node_text(premise_key),
+                detail={"canonical_key": premise_key},
+            )
+        )
+    nodes.extend(
+        [
+            DemoDagNode(
+                node_id="conjunction",
+                label="Conjunction",
+                summary=_safe_node_text(trace.get("conjunction_key")),
+                detail={"canonical_key": trace.get("conjunction_key")},
+            ),
+            DemoDagNode(
+                node_id="query",
+                label="Query",
+                summary=_safe_node_text(trace.get("query_key")),
+                detail={"canonical_key": trace.get("query_key")},
+            ),
+            DemoDagNode(
+                node_id="engine_check",
+                label="ROBDD Engine",
+                summary=_safe_node_text(trace.get("outcome")),
+                detail={
+                    "outcome": trace.get("outcome"),
+                    "reason": trace.get("reason"),
+                    "entailment_check_key": trace.get("entailment_check_key"),
+                    "refutation_check_key": trace.get("refutation_check_key"),
+                    "engine_pin": response.get("engine_pin"),
+                },
+            ),
+            DemoDagNode(
+                node_id="oracle_check",
+                label="Independent Oracle",
+                summary=_safe_node_text(response.get("oracle_verdict")),
+                detail={
+                    "oracle_verdict": response.get("oracle_verdict"),
+                    "oracle_agreement": response.get("oracle_agreement"),
+                },
+            ),
+            DemoDagNode(
+                node_id="decision",
+                label="Served Decision",
+                summary=_safe_node_text(response.get("decision") or response.get("status")),
+                detail={
+                    "status": response.get("status"),
+                    "decision": response.get("decision"),
+                    "decision_reason": response.get("decision_reason"),
+                    "trace_hash": response.get("trace_hash"),
+                    "refusal_reason": response.get("refusal_reason"),
+                },
+            ),
+        ]
+    )
+    edges: list[DemoDagEdge] = [DemoDagEdge(from_node="request", to_node="query", label="claim")]
+    for index, _premise_key in enumerate(premise_keys):
+        edges.extend(
+            [
+                DemoDagEdge(from_node="request", to_node=f"premise_{index}", label="premise"),
+                DemoDagEdge(from_node=f"premise_{index}", to_node="conjunction", label="conjoin"),
+            ]
+        )
+    edges.extend(
+        [
+            DemoDagEdge(from_node="conjunction", to_node="engine_check", label="evaluate"),
+            DemoDagEdge(from_node="query", to_node="engine_check", label="query"),
+            DemoDagEdge(from_node="engine_check", to_node="oracle_check", label="cross-check"),
+            DemoDagEdge(from_node="oracle_check", to_node="decision", label="agreement"),
+        ]
+    )
+    return DemoEvidenceDag(
+        graph_id=f"{scenario_id}:deductive-entailment",
+        graph_kind="deductive_entailment",
+        title="Deductive entailment DAG",
+        source_digest=_demo_source_digest(response),
+        nodes=nodes,
+        edges=edges,
+    )
+
+
+def _demo_evidence_dag(demo_id: str, response: dict[str, Any]) -> DemoEvidenceDag | None:
+    if demo_id == "proof_carrying_promotion":
+        return _proof_promotion_dag(response)
+    if demo_id == "deductive_entailment_authority":
+        return _deductive_entailment_dag(response)
+    return None
+
+
 def _demo_spec(demo_id: str) -> _DemoSpec:
     safe_id = _validate_demo_id(demo_id)
     spec = DEMO_SPECS.get(safe_id)
@@ -725,6 +984,9 @@ def run_demo(demo_id: str) -> DemoRunResult:
                 ),
                 problems=problems,
                 response=response,
+                evidence_dag=_demo_evidence_dag(spec.demo_id, response)
+                if isinstance(response, dict)
+                else None,
             )
         )
     results.sort(key=lambda item: (item.passed, not item.proposer_wrong, item.scenario_id))
@@ -735,6 +997,118 @@ def run_demo(demo_id: str) -> DemoRunResult:
         what_this_does_not_prove=spec.what_this_does_not_prove,
         scenarios=results,
     )
+
+
+def _optional_bool(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    return None
+
+
+def _contemplation_run_paths() -> list[Path]:
+    if not CONTEMPLATION_RUNS_ROOT.exists():
+        return []
+    return sorted(
+        path
+        for path in CONTEMPLATION_RUNS_ROOT.glob("*.json")
+        if path.is_file() and path.name != ".gitkeep"
+    )
+
+
+def _contemplation_scenes(report: dict[str, Any]) -> list[ContemplationScene]:
+    scenes = report.get("scenes")
+    if not isinstance(scenes, list):
+        return []
+    out: list[ContemplationScene] = []
+    for index, scene in enumerate(scenes):
+        if not isinstance(scene, dict):
+            continue
+        detail = scene.get("detail")
+        out.append(
+            ContemplationScene(
+                scene_id=str(scene.get("scene") or f"scene_{index + 1}"),
+                claim=str(scene.get("claim") or ""),
+                detail=detail if isinstance(detail, dict) else {},
+            )
+        )
+    return out
+
+
+def _engine_chain_from_scenes(scenes: list[ContemplationScene]) -> dict[str, Any] | None:
+    for scene in scenes:
+        chain = scene.detail.get("engine_chain")
+        if isinstance(chain, dict):
+            return chain
+        chain = scene.detail.get("proposed_chain")
+        if isinstance(chain, dict):
+            return chain
+    return None
+
+
+def _contemplation_summary_from_report(
+    path: Path, report: dict[str, Any], scenes: list[ContemplationScene] | None = None
+) -> ContemplationRunSummary:
+    scene_items = _contemplation_scenes(report) if scenes is None else scenes
+    return ContemplationRunSummary(
+        run_id=path.stem,
+        source_path=_display_path(path),
+        source_digest=_sha256_file(path),
+        prompt=str(report["prompt"]) if isinstance(report.get("prompt"), str) else None,
+        cold_subject=(
+            str(report["cold_subject"])
+            if isinstance(report.get("cold_subject"), str)
+            else None
+        ),
+        scene_count=len(scene_items),
+        learning_arc_closed=_optional_bool(report.get("learning_arc_closed")),
+        all_claims_supported=_optional_bool(report.get("all_claims_supported")),
+        active_corpus_byte_identical=_optional_bool(
+            report.get("active_corpus_byte_identical")
+        ),
+    )
+
+
+def _contemplation_detail_from_report(
+    path: Path, report: dict[str, Any]
+) -> ContemplationRunDetail:
+    scenes = _contemplation_scenes(report)
+    summary = _contemplation_summary_from_report(path, report, scenes)
+    before = report.get("before")
+    after = report.get("after")
+    return ContemplationRunDetail(
+        run_id=summary.run_id,
+        source_path=summary.source_path,
+        source_digest=summary.source_digest,
+        prompt=summary.prompt,
+        cold_subject=summary.cold_subject,
+        scene_count=summary.scene_count,
+        learning_arc_closed=summary.learning_arc_closed,
+        all_claims_supported=summary.all_claims_supported,
+        active_corpus_byte_identical=summary.active_corpus_byte_identical,
+        before=before if isinstance(before, dict) else None,
+        after=after if isinstance(after, dict) else None,
+        engine_chain=_engine_chain_from_scenes(scenes),
+        scenes=scenes,
+    )
+
+
+def list_contemplation_runs(
+    *, limit: int = 100, offset: int = 0
+) -> list[ContemplationRunSummary]:
+    runs: list[ContemplationRunSummary] = []
+    for path in _contemplation_run_paths():
+        runs.append(_contemplation_summary_from_report(path, _read_json_object(path)))
+    runs.sort(key=lambda item: item.run_id, reverse=True)
+    return _page(runs, limit=limit, offset=offset)
+
+
+def read_contemplation_run(run_id: str) -> ContemplationRunDetail:
+    if not SAFE_PACK_ID_RE.fullmatch(run_id):
+        raise FileNotFoundError(run_id)
+    for path in _contemplation_run_paths():
+        if path.stem == run_id:
+            return _contemplation_detail_from_report(path, _read_json_object(path))
+    raise FileNotFoundError(run_id)
 
 
 def _load_math_proposals_raw(jsonl_path: Path) -> list[dict[str, Any]]:
@@ -1240,6 +1614,96 @@ def _load_engine_manifest() -> tuple[Path, dict[str, Any]] | None:
     return path, _read_json_object(path)
 
 
+def _string_field(manifest: dict[str, Any], key: str) -> str | None:
+    value = manifest.get(key)
+    if isinstance(value, str) and value:
+        return value
+    return None
+
+
+def _identity_lineage_relation(
+    engine_identity: str | None, parent_engine_identity: str | None
+) -> IdentityLineageRelation:
+    if not engine_identity:
+        return "unavailable"
+    if not parent_engine_identity:
+        return "missing_parent"
+    if parent_engine_identity == engine_identity:
+        return "self_parent"
+    return "descends_from_parent"
+
+
+def _identity_continuity_from_manifest(
+    manifest: dict[str, Any] | None,
+) -> IdentityContinuity | None:
+    if manifest is None:
+        return None
+
+    engine_identity = _string_field(manifest, "engine_identity")
+    parent_engine_identity = _string_field(manifest, "parent_engine_identity")
+    written_at_revision = _string_field(manifest, "written_at_revision")
+    current_revision = get_git_revision()
+    lineage_relation = _identity_lineage_relation(
+        engine_identity, parent_engine_identity
+    )
+    evidence_gap = None
+
+    try:
+        current_engine_identity = engine_identity_for_config(
+            RuntimeConfig(), current_revision
+        )
+    except EngineIdentityError as exc:
+        current_engine_identity = None
+        evidence_gap = f"current engine identity unavailable: {exc}"
+
+    if not engine_identity:
+        return IdentityContinuity(
+            status="missing_evidence",
+            engine_identity=None,
+            parent_engine_identity=parent_engine_identity,
+            current_engine_identity=current_engine_identity,
+            written_at_revision=written_at_revision,
+            current_revision=current_revision,
+            lineage_relation=lineage_relation,
+            verification_summary="checkpoint manifest does not stamp engine_identity",
+            evidence_gap="checkpoint manifest predates L11 identity stamping",
+        )
+
+    if current_engine_identity is None:
+        return IdentityContinuity(
+            status="missing_evidence",
+            engine_identity=engine_identity,
+            parent_engine_identity=parent_engine_identity,
+            current_engine_identity=None,
+            written_at_revision=written_at_revision,
+            current_revision=current_revision,
+            lineage_relation=lineage_relation,
+            verification_summary="current engine identity could not be recomputed",
+            evidence_gap=evidence_gap,
+        )
+
+    if engine_identity == current_engine_identity:
+        summary = "checkpoint identity matches the current ratified substrate"
+        status = cast(IdentityContinuityStatus, "verified")
+        gap = None
+    else:
+        summary = "checkpoint identity differs from the current ratified substrate"
+        status = cast(IdentityContinuityStatus, "break")
+        gap = "runtime would surface identity_continuity_break on reboot"
+
+    return IdentityContinuity(
+        status=status,
+        engine_identity=engine_identity,
+        parent_engine_identity=parent_engine_identity,
+        current_engine_identity=current_engine_identity,
+        written_at_revision=written_at_revision,
+        current_revision=current_revision,
+        lineage_relation=lineage_relation,
+        verification_summary=summary,
+        evidence_gap=gap,
+    )
+
+
 def _journal_entries(journal: Any) -> list[Any]:
     path = getattr(journal, "path", None)
     if isinstance(path, Path) and path.exists():
@@ -1309,6 +1773,7 @@ def _run_detail_from_summary(
     turns: list[RunTurnRef],
     manifest: dict[str, Any] | None,
 ) -> RunDetail:
+    identity_continuity = _identity_continuity_from_manifest(manifest)
     return RunDetail(
         session_id=summary.session_id,
         source=summary.source,
@@ -1321,6 +1786,7 @@ def _run_detail_from_summary(
         evidence_gap=summary.evidence_gap,
         turns=turns,
         manifest=manifest,
+        identity_continuity=identity_continuity,
     )
 
 

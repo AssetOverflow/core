@@ -1,40 +1,91 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { Suspense, lazy, type ReactElement } from "react";
 import { queryClient } from "../api/queries";
 import { Shell } from "./Shell";
-import { PreviewPage } from "../preview/PreviewPage";
-import { ChatRoute } from "../routes/ChatRoute";
-import { ProposalsRoute } from "./proposals/ProposalsRoute";
-import { TraceRoute } from "./trace/TraceRoute";
-import { AuditRoute } from "./audit/AuditRoute";
-import { ReplayRoute } from "./replay/ReplayRoute";
-import { DemoTheaterRoute } from "./demos/DemoTheaterRoute";
-import { EvalsRoute } from "./evals/EvalsRoute";
-import { RunsRoute } from "./runs/RunsRoute";
-import { PacksRoute } from "./packs/PacksRoute";
-import { VaultRoute } from "./vault/VaultRoute";
-import { CalibrationRoute } from "./calibration/CalibrationRoute";
-import { SettingsRoute } from "./settings/SettingsRoute";
+import { LoadingState } from "../design/components/states/LoadingState";
 import { getWorkbenchPrefs } from "./workbenchPrefs";
 import { WORKBENCH_ROUTES, type RouteElementMap } from "./routes";
+
+const ChatRoute = lazy(() =>
+  import("../routes/ChatRoute").then((module) => ({ default: module.ChatRoute })),
+);
+const TraceRoute = lazy(() =>
+  import("./trace/TraceRoute").then((module) => ({ default: module.TraceRoute })),
+);
+const ContemplationRoute = lazy(() =>
+  import("./contemplation/ContemplationRoute").then((module) => ({
+    default: module.ContemplationRoute,
+  })),
+);
+const ReplayRoute = lazy(() =>
+  import("./replay/ReplayRoute").then((module) => ({ default: module.ReplayRoute })),
+);
+const DemoTheaterRoute = lazy(() =>
+  import("./demos/DemoTheaterRoute").then((module) => ({
+    default: module.DemoTheaterRoute,
+  })),
+);
+const ProposalsRoute = lazy(() =>
+  import("./proposals/ProposalsRoute").then((module) => ({
+    default: module.ProposalsRoute,
+  })),
+);
+const RunsRoute = lazy(() =>
+  import("./runs/RunsRoute").then((module) => ({ default: module.RunsRoute })),
+);
+const VaultRoute = lazy(() =>
+  import("./vault/VaultRoute").then((module) => ({ default: module.VaultRoute })),
+);
+const AuditRoute = lazy(() =>
+  import("./audit/AuditRoute").then((module) => ({ default: module.AuditRoute })),
+);
+const EvalsRoute = lazy(() =>
+  import("./evals/EvalsRoute").then((module) => ({ default: module.EvalsRoute })),
+);
+const CalibrationRoute = lazy(() =>
+  import("./calibration/CalibrationRoute").then((module) => ({
+    default: module.CalibrationRoute,
+  })),
+);
+const PacksRoute = lazy(() =>
+  import("./packs/PacksRoute").then((module) => ({ default: module.PacksRoute })),
+);
+const SettingsRoute = lazy(() =>
+  import("./settings/SettingsRoute").then((module) => ({
+    default: module.SettingsRoute,
+  })),
+);
+const PreviewPage = lazy(() =>
+  import("../preview/PreviewPage").then((module) => ({ default: module.PreviewPage })),
+);
+
+function lazyRoute(element: ReactElement): ReactElement {
+  return (
+    <Suspense fallback={<LoadingState label="Loading route..." />}>
+      {element}
+    </Suspense>
+  );
+}
 
 // The one place route id → element is bound (App owns the route-component
 // imports). Every WORKBENCH_ROUTES id must have an entry here; routes.test
 // asserts it, so a registry route without an element fails the suite instead
 // of rendering `undefined`.
 export const ROUTE_ELEMENTS: RouteElementMap = {
-  chat: <ChatRoute />,
-  trace: <TraceRoute />,
-  replay: <ReplayRoute />,
-  demos: <DemoTheaterRoute />,
-  proposals: <ProposalsRoute />,
-  runs: <RunsRoute />,
-  vault: <VaultRoute />,
-  audit: <AuditRoute />,
-  evals: <EvalsRoute />,
-  calibration: <CalibrationRoute />,
-  packs: <PacksRoute />,
-  settings: <SettingsRoute />,
+  chat: lazyRoute(<ChatRoute />),
+  trace: lazyRoute(<TraceRoute />),
+  contemplation: lazyRoute(<ContemplationRoute />),
+  replay: lazyRoute(<ReplayRoute />),
+  demos: lazyRoute(<DemoTheaterRoute />),
+  proposals: lazyRoute(<ProposalsRoute />),
+  runs: lazyRoute(<RunsRoute />),
+  vault: lazyRoute(<VaultRoute />),
+  audit: lazyRoute(<AuditRoute />),
+  evals: lazyRoute(<EvalsRoute />),
+  calibration: lazyRoute(<CalibrationRoute />),
+  packs: lazyRoute(<PacksRoute />),
+  settings: lazyRoute(<SettingsRoute />),
 };
 
 export function App() {
@@ -52,7 +103,7 @@ export function App() {
               />
             ))}
           </Route>
-          <Route path="/preview" element={<PreviewPage />} />
+          <Route path="/preview" element={lazyRoute(<PreviewPage />)} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

@@ -11,12 +11,17 @@ export function LeftNav() {
   return (
     <nav
       data-region="leftnav"
-      className="flex h-full flex-col gap-1 overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] p-2"
+      className="flex h-full flex-col gap-[var(--density-nav-gap)] overflow-y-auto border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] p-[var(--density-nav-padding)]"
       aria-label="Main navigation"
     >
       {NAV_SECTIONS.map(({ section, routes }) => (
-        <div key={section} role="group" aria-label={section} className="flex flex-col gap-1">
-          <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+        <div
+          key={section}
+          role="group"
+          aria-label={section}
+          className="flex flex-col gap-[var(--density-nav-gap)]"
+        >
+          <div className="px-[var(--density-nav-item-padding-x)] pb-0.5 pt-[var(--density-nav-section-padding-top)] text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
             {section}
           </div>
           {routes.map((route) => (
@@ -26,10 +31,10 @@ export function LeftNav() {
               title={route.description}
               className={({ isActive }) =>
                 [
-                  "block rounded px-3 py-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]",
+                  "block rounded px-[var(--density-nav-item-padding-x)] py-[var(--density-nav-item-padding-y)] text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]",
                   isActive
-                    ? "border-l-2 border-[var(--color-focus-ring)] pl-[10px] text-[var(--color-text-primary)] bg-[var(--color-surface-raised)]"
-                    : "border-l-2 border-transparent pl-[10px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-raised)]",
+                    ? "border-l-2 border-[var(--color-focus-ring)] pl-[calc(var(--density-nav-item-padding-x)-2px)] text-[var(--color-text-primary)] bg-[var(--color-surface-raised)]"
+                    : "border-l-2 border-transparent pl-[calc(var(--density-nav-item-padding-x)-2px)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-raised)]",
                 ].join(" ")
               }
             >

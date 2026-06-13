@@ -21,8 +21,11 @@ import type {
   VaultEntry,
   CalibrationClass,
   ServingMetrics,
+  CognitivePipelineRecord,
   TurnJournalEntry,
   TurnJournalSummary,
+  ContemplationRunDetail,
+  ContemplationRunSummary,
   MathProposalSummary,
   MathProposalDetail,
   MathRatifyResult,
@@ -117,6 +120,28 @@ export async function runDemo(demoId: string): Promise<DemoRunResult> {
   });
 }
 
+export async function fetchContemplationRuns(
+  limit?: number,
+  offset?: number,
+): Promise<ContemplationRunSummary[]> {
+  const params = new URLSearchParams();
+  if (limit !== undefined) params.set("limit", String(limit));
+  if (offset !== undefined) params.set("offset", String(offset));
+  const query = params.toString();
+  const envelope = await apiFetch<ItemsEnvelope<ContemplationRunSummary>>(
+    query ? `/contemplation/runs?${query}` : "/contemplation/runs",
+  );
+  return envelope.items;
+}
+
+export async function fetchContemplationRun(
+  runId: string,
+): Promise<ContemplationRunDetail> {
+  return apiFetch<ContemplationRunDetail>(
+    `/contemplation/runs/${encodeURIComponent(runId)}`,
+  );
+}
+
 export type ProposalStateFilter = ProposalState | "all";
 
 interface ItemsEnvelope<T> {
@@ -153,6 +178,12 @@ export async function fetchTraceTurns(
 
 export async function fetchTraceTurn(turnId: number): Promise<TurnJournalEntry> {
   return apiFetch<TurnJournalEntry>(`/trace/${encodeURIComponent(String(turnId))}`);
+}
+
+export async function fetchTracePipeline(turnId: number): Promise<CognitivePipelineRecord> {
+  return apiFetch<CognitivePipelineRecord>(
+    `/trace/${encodeURIComponent(String(turnId))}/pipeline`,
+  );
 }
 
 export async function fetchAuditEvents(

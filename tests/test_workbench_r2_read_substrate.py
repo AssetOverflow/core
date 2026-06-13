@@ -9,7 +9,55 @@ import pytest
 from workbench import readers
 from workbench.api import WorkbenchApi
 from workbench.journal import TurnJournal, TurnJournalEntry
-from workbench.schemas import ChatTurnResult, TurnVerdict
+from workbench.schemas import (
+    ChatTurnResult,
+    CognitivePipelineEdge,
+    CognitivePipelineRecord,
+    CognitivePipelineStage,
+    TurnVerdict,
+)
+
+
+def _pipeline_record(trace_hash: str = "sha256:trace") -> CognitivePipelineRecord:
+    stage_ids = (
+        "input",
+        "intent",
+        "proposition_graph",
+        "articulation_target",
+        "realizer",
+        "walk_telemetry",
+        "trace_hash",
+    )
+    return CognitivePipelineRecord(
+        schema_version="cognitive_pipeline_record_v1",
+        status="recorded",
+        missing_reason=None,
+        trace_hash=trace_hash,
+        versor_condition=0.0,
+        field_digest=None,
+        stages=[
+            CognitivePipelineStage(
+                stage_id=stage_id,
+                label=stage_id,
+                status="recorded",
+                summary=stage_id,
+                detail={},
+            )
+            for stage_id in stage_ids
+        ],
+        edges=[
+            CognitivePipelineEdge(from_stage="input", to_stage="intent"),
+            CognitivePipelineEdge(from_stage="intent", to_stage="proposition_graph"),
+            CognitivePipelineEdge(
+                from_stage="proposition_graph", to_stage="articulation_target"
+            ),
+            CognitivePipelineEdge(
+                from_stage="articulation_target", to_stage="realizer"
+            ),
+            CognitivePipelineEdge(from_stage="realizer", to_stage="walk_telemetry"),
+            CognitivePipelineEdge(from_stage="walk_telemetry", to_stage="trace_hash"),
+        ],
+    )
 
 
 def _request(api: WorkbenchApi, method: str, path: str):
@@ -50,6 +98,7 @@ def _chat_result(prompt: str = "What is truth?") -> ChatTurnResult:
         proposal_candidates=[],
         turn_cost_ms=7,
         checkpoint_emitted=False,
+        pipeline_record=_pipeline_record(),
     )
 
 
@@ -70,11 +119,20 @@ def test_packs_list_get_pagination_and_checksum_verbatim() -> None:
     assert first.payload["generated_at"]
     assert len(first.payload["data"]["items"]) == 1
     assert len(second.payload["data"]["items"]) == 1
-    assert first.payload["data"]["items"][0]["pack_id"] <= second.payload["data"]["items"][0]["pack_id"]
+    assert (
+        first.payload["data"]["items"][0]["pack_id"]
+        <= second.payload["data"]["items"][0]["pack_id"]
+    )
     assert detail.status == 200
     assert detail.payload["data"]["pack_id"] == "en_core_cognition_v1"
-    assert detail.payload["data"]["checksum"] == detail.payload["data"]["manifest"]["checksum"]
-    assert detail.payload["data"]["checksums"]["checksum"] == detail.payload["data"]["manifest"]["checksum"]
+    assert (
+        detail.payload["data"]["checksum"]
+        == detail.payload["data"]["manifest"]["checksum"]
+    )
+    assert (
+        detail.payload["data"]["checksums"]["checksum"]
+        == detail.payload["data"]["manifest"]["checksum"]
+    )
 
 
 def test_pack_id_path_traversal_rejected_before_filesystem_access() -> None:
@@ -153,8 +211,13 @@ def test_audit_events_merge_existing_artifacts_with_stable_order(
 
     assert page.status == 200
     items = page.payload["data"]["items"]
-    assert [item["source"] for item in items] == ["math_proposal_log", "teaching_proposal_log"]
-    assert [item["timestamp"] for item in items] == sorted(item["timestamp"] for item in items)
+    assert [item["source"] for item in items] == [
+        "math_proposal_log",
+        "teaching_proposal_log",
+    ]
+    assert [item["timestamp"] for item in items] == sorted(
+        item["timestamp"] for item in items
+    )
     assert items[1]["mutation_boundary"] is True
     assert next_page.payload["data"]["items"][0]["source"] == "operator_telemetry"
     assert page.payload["data"] == again.payload["data"]
@@ -235,6 +298,79 @@ def test_vault_summary_and_entries_read_persisted_session_state_only(
     assert entries.status == 200
     assert entries.payload["data"]["items"][0]["metadata"]["id"] == "entry-1"
     assert entries.payload["data"]["items"][0]["versor_digest"].startswith("sha256:")
+
+
+def test_contemplation_runs_project_persisted_process_reports(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runs_root = tmp_path / "contemplation" / "runs"
+    runs_root.mkdir(parents=True)
+    (runs_root / "2026-06-13T010203Z.json").write_text(
+        json.dumps(
+            {
+                "prompt": "Why does narrative exist?",
+                "cold_subject": "narrative",
+                "learning_arc_closed": True,
+                "all_claims_supported": True,
+                "active_corpus_byte_identical": True,
+                "before": {"grounding_source": "none"},
+                "after": {"grounding_source": "teaching"},
+                "scenes": [
+                    {
+                        "scene": "S1_cold_session",
+                        "claim": "cold session refused",
+                        "detail": {"grounding_source": "none"},
+                    },
+                    {
+                        "scene": "S3_engine_authored_proposal",
+                        "claim": "proposal remains pending",
+                        "detail": {
+                            "proposed_chain": {
+                                "subject": "narrative",
+                                "connective": "reveals",
+                                "object": "meaning",
+                            },
+                            "state": "pending",
+                        },
+                    },
+                ],
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(readers, "CONTEMPLATION_RUNS_ROOT", runs_root)
+    api = WorkbenchApi()
+
+    listing = _request(api, "GET", "/contemplation/runs")
+    detail = _request(api, "GET", "/contemplation/runs/2026-06-13T010203Z")
+
+    assert listing.status == 200
+    assert listing.payload["data"]["items"][0]["run_id"] == "2026-06-13T010203Z"
+    assert listing.payload["data"]["items"][0]["scene_count"] == 2
+    assert detail.status == 200
+    assert detail.payload["data"]["engine_chain"]["connective"] == "reveals"
+    assert [scene["scene_id"] for scene in detail.payload["data"]["scenes"]] == [
+        "S1_cold_session",
+        "S3_engine_authored_proposal",
+    ]
+
+
+def test_contemplation_run_detail_rejects_unknown_or_unsafe_ids(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runs_root = tmp_path / "contemplation" / "runs"
+    runs_root.mkdir(parents=True)
+    monkeypatch.setattr(readers, "CONTEMPLATION_RUNS_ROOT", runs_root)
+    api = WorkbenchApi()
+
+    missing = _request(api, "GET", "/contemplation/runs/not-found")
+    traversal = _request(api, "GET", "/contemplation/runs/../secret")
+
+    assert missing.status == 404
+    assert traversal.status == 404
 
 
 def test_r2_read_routes_do_not_mutate_guarded_roots() -> None:

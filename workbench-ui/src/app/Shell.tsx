@@ -11,11 +11,13 @@ import { isAddressable, subjectToUrl } from "./evidenceAddress";
 import { KeyboardHelp } from "./KeyboardHelp";
 import { useGlobalKeyboard } from "./useGlobalKeyboard";
 import { useCommandRegistry } from "./commandRegistry";
+import { useWorkbenchPrefs } from "./workbenchPrefs";
 import { SplitPane } from "../design/components/SplitPane/SplitPane";
 
 function ShellInner() {
   const { subject, inspectorOpen, toggleInspector, notifyAddressCopied } =
     useEvidenceSubject();
+  const prefs = useWorkbenchPrefs();
   const [helpOpen, setHelpOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
@@ -72,7 +74,7 @@ function ShellInner() {
   const mainSurface = (
     <main
       data-region="main"
-      className="h-full overflow-y-auto bg-[var(--color-surface-base)] p-4"
+      className="h-full overflow-y-auto bg-[var(--color-surface-base)] p-[var(--density-main-padding)]"
     >
       <ApiErrorBoundary>
         <Outlet />
@@ -83,6 +85,7 @@ function ShellInner() {
   return (
     <div
       className="grid h-screen"
+      data-density={prefs.densityMode}
       style={{
         gridTemplateAreas:
           '"topbar topbar" "leftnav center" "footer footer"',

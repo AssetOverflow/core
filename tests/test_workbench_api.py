@@ -296,6 +296,50 @@ def test_server_allows_nonlocal_bind_with_explicit_flag(monkeypatch) -> None:
     assert seen == {"host": "0.0.0.0", "port": 9000}
 
 
+def test_local_cors_origin_helper_accepts_vite_fallback_ports() -> None:
+    assert (
+        server._local_origin_or_default("http://127.0.0.1:5175")  # noqa: SLF001
+        == "http://127.0.0.1:5175"
+    )
+    assert (
+        server._local_origin_or_default("http://localhost:5174")  # noqa: SLF001
+        == "http://localhost:5174"
+    )
+    assert (
+        server._local_origin_or_default("https://example.com")  # noqa: SLF001
+        == "http://127.0.0.1:5173"
+    )
+
+
+def test_server_echoes_valid_local_cors_origin_for_vite_fallback_port() -> None:
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), WorkbenchRequestHandler)
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    host, port = httpd.server_address
+    try:
+        with socket.create_connection((host, port), timeout=5) as sock:
+            sock.sendall(
+                b"GET /health HTTP/1.1\r\n"
+                b"Host: 127.0.0.1\r\n"
+                b"Origin: http://127.0.0.1:5175\r\n"
+                b"Connection: close\r\n\r\n"
+            )
+            chunks: list[bytes] = []
+            while True:
+                chunk = sock.recv(4096)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+            data = b"".join(chunks)
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+        thread.join(timeout=5)
+
+    assert b"HTTP/1.0 200" in data or b"HTTP/1.1 200" in data
+    assert b"Access-Control-Allow-Origin: http://127.0.0.1:5175" in data
+
+
 def test_invalid_content_length_does_not_crash_server() -> None:
     httpd = ThreadingHTTPServer(("127.0.0.1", 0), WorkbenchRequestHandler)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)

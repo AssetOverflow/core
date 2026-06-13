@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Eye } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { WorkbenchApiError } from "../../api/client";
-import { useTraceTurn, useTraceTurns } from "../../api/queries";
+import { useTracePipeline, useTraceTurn, useTraceTurns } from "../../api/queries";
 import { DigestBadge } from "../../design/components/DigestBadge/DigestBadge";
+import { DagViewer, type DagEdgeInput, type DagNodeInput } from "../../design/components/Dag";
 import { MetadataTable } from "../../design/components/MetadataTable/MetadataTable";
 import { Panel } from "../../design/components/Panel/Panel";
 import { SearchInput } from "../../design/components/SearchInput/SearchInput";
@@ -24,12 +25,19 @@ import { Button } from "../../design/components/primitives/Button";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
-import type { TraceIntegrity, TurnJournalEntry, TurnJournalSummary } from "../../types/api";
+import type {
+  CognitivePipelineRecord,
+  CognitivePipelineStage,
+  TraceIntegrity,
+  TurnJournalEntry,
+  TurnJournalSummary,
+} from "../../types/api";
 import { pushRecentItem } from "../commandRegistry";
 import { subjectToUrl } from "../evidenceAddress";
 import { useEvidenceSubject } from "../evidenceContext";
 
 const TRACE_TABS: readonly Tab[] = [
+  { id: "pipeline", label: "Pipeline" },
   { id: "surfaces", label: "Surfaces" },
   { id: "grounding", label: "Grounding" },
   { id: "verdicts", label: "Verdicts" },
@@ -129,6 +137,270 @@ function SurfaceCard({
         {surfaceText(value)}
       </pre>
     </section>
+  );
+}
+
+function pipelineDag(record: CognitivePipelineRecord): {
+  nodes: DagNodeInput[];
+  edges: DagEdgeInput[];
+} {
+  return {
+    nodes: record.stages.map((stage) => ({
+      id: stage.stage_id,
+      label: stage.label,
+      detail: {
+        status: stage.status,
+        summary: stage.summary,
+        detail: stage.detail,
+      },
+    })),
+    edges: record.edges.map((edge) => ({
+      from: edge.from_stage,
+      to: edge.to_stage,
+      label: edge.label ?? undefined,
+    })),
+  };
+}
+
+type PipelineStageId = CognitivePipelineStage["stage_id"];
+
+function versorStatus(value: number | null): string {
+  if (typeof value !== "number") return "missing_evidence";
+  return value < 1e-6 ? "valid" : "invalid";
+}
+
+function PipelineStageStatus({ status }: { status: CognitivePipelineStage["status"] }) {
+  const recorded = status === "recorded";
+  return (
+    <span
+      className={`inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase ${
+        recorded
+          ? "border-[var(--color-state-success-border)] bg-[var(--color-state-success-bg)] text-[var(--color-state-success-text)]"
+          : "border-[var(--color-state-warning-border)] bg-[var(--color-state-warning-bg)] text-[var(--color-state-warning-text)]"
+      }`}
+    >
+      {status}
+    </span>
+  );
+}
+
+function PipelineStageRail({
+  stages,
+  selectedStageId,
+  onSelect,
+}: {
+  stages: readonly CognitivePipelineStage[];
+  selectedStageId: PipelineStageId;
+  onSelect: (stageId: PipelineStageId) => void;
+}) {
+  return (
+    <section
+      aria-label="Pipeline stages"
+      className="grid gap-2 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2"
+    >
+      {stages.map((stage, index) => {
+        const selected = stage.stage_id === selectedStageId;
+        return (
+          <button
+            aria-pressed={selected}
+            className={`grid min-h-16 grid-cols-[2rem_minmax(0,1fr)] gap-2 rounded border px-2 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)] ${
+              selected
+                ? "border-[var(--color-selected-border)] bg-[var(--color-selected-bg)]"
+                : "border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] hover:bg-[var(--color-surface-inset)]"
+            }`}
+            key={stage.stage_id}
+            onClick={() => onSelect(stage.stage_id)}
+            type="button"
+          >
+            <span className="font-mono text-xs text-[var(--color-text-muted)]">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <span className="min-w-0">
+              <span className="flex items-center justify-between gap-2">
+                <span className="truncate font-mono text-xs font-semibold text-[var(--color-text-primary)]">
+                  {stage.label}
+                </span>
+                <PipelineStageStatus status={stage.status} />
+              </span>
+              <span className="mt-1 block truncate text-xs text-[var(--color-text-secondary)]">
+                {stage.summary}
+              </span>
+            </span>
+          </button>
+        );
+      })}
+    </section>
+  );
+}
+
+function PipelineTransitionList({ record }: { record: CognitivePipelineRecord }) {
+  return (
+    <section
+      aria-label="Pipeline propagation edges"
+      className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3"
+    >
+      <h3 className="m-0 text-xs font-semibold text-[var(--color-text-secondary)]">
+        Propagation
+      </h3>
+      <ol className="m-0 mt-2 grid gap-1 p-0">
+        {record.edges.map((edge) => (
+          <li
+            className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] px-2 py-1 font-mono text-[11px]"
+            key={`${edge.from_stage}:${edge.to_stage}`}
+          >
+            <span className="truncate text-[var(--color-text-secondary)]">{edge.from_stage}</span>
+            <span className="text-[var(--color-text-muted)]">{edge.label ?? "propagate"}</span>
+            <span className="truncate text-right text-[var(--color-text-primary)]">
+              {edge.to_stage}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function PipelineStageDetail({ stage }: { stage: CognitivePipelineStage }) {
+  return (
+    <section
+      aria-label="Selected pipeline stage detail"
+      className="grid gap-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="m-0 truncate text-sm font-semibold text-[var(--color-text-primary)]">
+            {stage.label}
+          </h3>
+          <p className="m-0 mt-1 font-mono text-xs text-[var(--color-text-muted)]">
+            {stage.stage_id}
+          </p>
+        </div>
+        <PipelineStageStatus status={stage.status} />
+      </div>
+      <MetadataTable
+        rows={[
+          { key: "stage_id", value: stage.stage_id, mono: true, copyable: true },
+          { key: "status", value: stage.status, mono: true },
+          { key: "summary", value: stage.summary },
+        ]}
+      />
+      <StableJsonViewer source={JSON.stringify(stage.detail, null, 2)} />
+    </section>
+  );
+}
+
+function PipelineTab({
+  record,
+  isLoading,
+  error,
+  turnId,
+}: {
+  record?: CognitivePipelineRecord | null;
+  isLoading: boolean;
+  error: unknown;
+  turnId: number;
+}) {
+  const [selectedStageId, setSelectedStageId] = useState<PipelineStageId>("input");
+
+  useEffect(() => {
+    if (!record || record.status !== "recorded") return;
+    if (!record.stages.some((stage) => stage.stage_id === selectedStageId)) {
+      setSelectedStageId(record.stages[0]?.stage_id ?? "input");
+    }
+  }, [record, selectedStageId]);
+
+  if (isLoading) {
+    return <LoadingState label="Loading pipeline..." />;
+  }
+  if (error) {
+    return (
+      <ErrorState
+        whatFailed={errorMessage(error)}
+        mutationStatus="No trace mutation occurred."
+        reproducer={`curl /trace/${turnId}/pipeline`}
+        retrySafety="Retry: safe"
+      />
+    );
+  }
+  if (!record || record.status !== "recorded") {
+    return (
+      <section className="rounded-md border border-[var(--color-state-warning-border)] bg-[var(--color-state-warning-bg)] p-3 text-sm text-[var(--color-state-warning-text)]">
+        <h3 className="m-0 text-xs font-semibold uppercase">missing_evidence</h3>
+        <p className="m-0 mt-2">
+          Pipeline stage evidence was not persisted for this turn.
+        </p>
+      </section>
+    );
+  }
+
+  const dag = pipelineDag(record);
+  const selectedStage =
+    record.stages.find((stage) => stage.stage_id === selectedStageId) ?? record.stages[0];
+  if (!selectedStage) {
+    return (
+      <ErrorState
+        whatFailed="Recorded pipeline has no stage evidence."
+        mutationStatus="No trace mutation occurred."
+        reproducer={`curl /trace/${turnId}/pipeline`}
+        retrySafety="Retry: safe"
+      />
+    );
+  }
+  return (
+    <div className="grid gap-3">
+      <MetadataTable
+        rows={[
+          { key: "schema_version", value: record.schema_version, mono: true },
+          { key: "status", value: record.status, mono: true },
+          { key: "stage_count", value: String(record.stages.length), mono: true },
+          {
+            key: "versor_condition",
+            value:
+              typeof record.versor_condition === "number"
+                ? record.versor_condition.toExponential(3)
+                : "missing_evidence",
+            mono: true,
+          },
+          { key: "versor_status", value: versorStatus(record.versor_condition), mono: true },
+          {
+            key: "trace_hash",
+            value: record.trace_hash ? (
+              <DigestBadge digest={digestPayload(record.trace_hash) ?? ""} truncate={12} />
+            ) : (
+              "missing_evidence"
+            ),
+          },
+          {
+            key: "field_digest",
+            value: record.field_digest ? (
+              <DigestBadge digest={digestPayload(record.field_digest) ?? ""} truncate={12} />
+            ) : (
+              "not persisted"
+            ),
+          },
+        ]}
+      />
+      <div className="grid gap-3 xl:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.4fr)]">
+        <PipelineStageRail
+          stages={record.stages}
+          selectedStageId={selectedStage.stage_id}
+          onSelect={setSelectedStageId}
+        />
+        <div className="grid min-w-0 gap-3">
+          <DagViewer
+            nodes={dag.nodes}
+            edges={dag.edges}
+            ariaLabel="Cognitive pipeline DAG"
+            height={340}
+            selectedNodeId={selectedStage.stage_id}
+            showInspector={false}
+            onInspectNode={(node) => setSelectedStageId(node.id as PipelineStageId)}
+          />
+          <PipelineTransitionList record={record} />
+          <PipelineStageDetail stage={selectedStage} />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -284,8 +556,18 @@ function RawTab({ turn }: { turn: TurnJournalEntry }) {
   );
 }
 
-function TraceDetail({ turn }: { turn: TurnJournalEntry }) {
-  const [activeTab, setActiveTab] = useState("surfaces");
+function TraceDetail({
+  turn,
+  pipelineRecord,
+  pipelineLoading,
+  pipelineError,
+}: {
+  turn: TurnJournalEntry;
+  pipelineRecord?: CognitivePipelineRecord | null;
+  pipelineLoading: boolean;
+  pipelineError: unknown;
+}) {
+  const [activeTab, setActiveTab] = useState("pipeline");
   return (
     <Panel
       title={`Turn #${turn.turn_id}`}
@@ -298,6 +580,14 @@ function TraceDetail({ turn }: { turn: TurnJournalEntry }) {
       }
     >
       <TabBar tabs={TRACE_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
+        {activeTab === "pipeline" ? (
+          <PipelineTab
+            record={pipelineRecord}
+            isLoading={pipelineLoading}
+            error={pipelineError}
+            turnId={turn.turn_id}
+          />
+        ) : null}
         {activeTab === "surfaces" ? <SurfacesTab turn={turn} /> : null}
         {activeTab === "grounding" ? <GroundingTab turn={turn} /> : null}
         {activeTab === "verdicts" ? <VerdictsTab turn={turn} /> : null}
@@ -317,6 +607,7 @@ export function TraceRoute() {
 
   const turnsQuery = useTraceTurns();
   const turnQuery = useTraceTurn(selectedTurnId);
+  const pipelineQuery = useTracePipeline(selectedTurnId);
 
   const turns = turnsQuery.data ?? [];
   const filteredTurns = useMemo(() => {
@@ -422,7 +713,12 @@ export function TraceRoute() {
               retrySafety="Retry: safe"
             />
           ) : turnQuery.data ? (
-            <TraceDetail turn={turnQuery.data} />
+            <TraceDetail
+              turn={turnQuery.data}
+              pipelineRecord={pipelineQuery.data}
+              pipelineLoading={pipelineQuery.isLoading}
+              pipelineError={pipelineQuery.isError ? pipelineQuery.error : null}
+            />
           ) : null}
         </section>
       </SplitPane>

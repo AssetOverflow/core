@@ -16,6 +16,15 @@ export type Backend = "numpy" | "mlx" | "rust" | "unknown";
 export type MutationMode = "read_only" | "runtime_turn";
 export type GroundingSource = "pack" | "teaching" | "vault" | "partial" | "oov" | "none";
 export type TraceIntegrity = "pipeline_trace" | "legacy_unhashed";
+export type PipelineEvidenceStatus = "recorded" | "missing_evidence";
+export type CognitivePipelineStageKind =
+  | "input"
+  | "intent"
+  | "proposition_graph"
+  | "articulation_target"
+  | "realizer"
+  | "walk_telemetry"
+  | "trace_hash";
 export type EpistemicState =
   | "perceived"
   | "evidenced"
@@ -61,6 +70,31 @@ export interface ProposalRef {
   source_kind: string;
 }
 
+export interface CognitivePipelineStage {
+  stage_id: CognitivePipelineStageKind;
+  label: string;
+  status: PipelineEvidenceStatus;
+  summary: string;
+  detail: Record<string, unknown>;
+}
+
+export interface CognitivePipelineEdge {
+  from_stage: CognitivePipelineStageKind;
+  to_stage: CognitivePipelineStageKind;
+  label: string | null;
+}
+
+export interface CognitivePipelineRecord {
+  schema_version: "cognitive_pipeline_record_v1";
+  status: PipelineEvidenceStatus;
+  missing_reason: string | null;
+  trace_hash: string | null;
+  versor_condition: number | null;
+  field_digest: string | null;
+  stages: CognitivePipelineStage[];
+  edges: CognitivePipelineEdge[];
+}
+
 export type LeewayLicense = "PROPOSE" | "SERVE" | "blocked" | "unknown";
 export type ClaimDisclosure = "approximate" | "verified" | "proposal_only" | "none";
 
@@ -95,6 +129,7 @@ export interface ChatTurnResult {
   turn_cost_ms: number;
   checkpoint_emitted: boolean;
   leeway_evidence?: LeewayEvidence | null;
+  pipeline_record?: CognitivePipelineRecord | null;
 }
 
 export interface TurnJournalSummary {
@@ -127,11 +162,30 @@ export interface TurnJournalEntry {
   trace_integrity: TraceIntegrity;
   journal_digest: string;
   leeway_evidence?: LeewayEvidence | null;
+  pipeline_record?: CognitivePipelineRecord | null;
 }
 
 export type TurnEvidence = ChatTurnResult | TurnJournalEntry;
 
 export type RunSource = "engine_state_manifest" | "turn_journal";
+export type IdentityContinuityStatus = "verified" | "break" | "missing_evidence";
+export type IdentityLineageRelation =
+  | "self_parent"
+  | "descends_from_parent"
+  | "missing_parent"
+  | "unavailable";
+
+export interface IdentityContinuity {
+  status: IdentityContinuityStatus;
+  engine_identity: string | null;
+  parent_engine_identity: string | null;
+  current_engine_identity: string | null;
+  written_at_revision: string | null;
+  current_revision: string;
+  lineage_relation: IdentityLineageRelation;
+  verification_summary: string;
+  evidence_gap: string | null;
+}
 
 export interface RunSummary {
   session_id: string;
@@ -157,6 +211,7 @@ export interface RunTurnRef {
 export interface RunDetail extends RunSummary {
   turns: RunTurnRef[];
   manifest: Record<string, unknown> | null;
+  identity_continuity: IdentityContinuity | null;
 }
 
 export interface AuditEvent {
@@ -271,6 +326,29 @@ export type EvidenceClass =
   | "interface_contract"
   | "simulation_only"
   | "proposed";
+export type DemoEvidenceDagKind = "proof_carrying_promotion" | "deductive_entailment";
+
+export interface DemoDagNode {
+  node_id: string;
+  label: string;
+  summary: string;
+  detail: Record<string, unknown>;
+}
+
+export interface DemoDagEdge {
+  from_node: string;
+  to_node: string;
+  label: string | null;
+}
+
+export interface DemoEvidenceDag {
+  graph_id: string;
+  graph_kind: DemoEvidenceDagKind;
+  title: string;
+  source_digest: string | null;
+  nodes: DemoDagNode[];
+  edges: DemoDagEdge[];
+}
 
 export interface DemoScenarioSummary {
   scenario_id: string;
@@ -302,6 +380,7 @@ export interface DemoScenarioRunResult {
   trace_hash: string | null;
   problems: string[];
   response: unknown;
+  evidence_dag?: DemoEvidenceDag | null;
 }
 
 export interface DemoRunResult {
@@ -310,6 +389,31 @@ export interface DemoRunResult {
   what_this_proves: string;
   what_this_does_not_prove: string;
   scenarios: DemoScenarioRunResult[];
+}
+
+export interface ContemplationScene {
+  scene_id: string;
+  claim: string;
+  detail: Record<string, unknown>;
+}
+
+export interface ContemplationRunSummary {
+  run_id: string;
+  source_path: string;
+  source_digest: string | null;
+  prompt: string | null;
+  cold_subject: string | null;
+  scene_count: number;
+  learning_arc_closed: boolean | null;
+  all_claims_supported: boolean | null;
+  active_corpus_byte_identical: boolean | null;
+}
+
+export interface ContemplationRunDetail extends ContemplationRunSummary {
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+  engine_chain: Record<string, unknown> | null;
+  scenes: ContemplationScene[];
 }
 
 // Wave R3 — sealed single-turn replay (turn-keyed; supersedes the W-026

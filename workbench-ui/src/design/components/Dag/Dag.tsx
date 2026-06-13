@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
 import { layoutDag, type DagEdgeInput, type DagLayoutNode, type DagNodeInput } from "./layout";
 
@@ -8,6 +8,8 @@ export interface DagViewerProps {
   ariaLabel: string;
   height?: number;
   onInspectNode?: (node: DagLayoutNode) => void;
+  selectedNodeId?: string | null;
+  showInspector?: boolean;
 }
 
 function clippedLabel(label: string) {
@@ -25,16 +27,30 @@ export function DagViewer({
   ariaLabel,
   height = 320,
   onInspectNode,
+  selectedNodeId,
+  showInspector = true,
 }: DagViewerProps) {
   const layout = useMemo(() => layoutDag(nodes, edges), [nodes, edges]);
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [selectedId, setSelectedId] = useState<string | null>(layout.nodes[0]?.id ?? null);
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(
+    layout.nodes[0]?.id ?? null,
+  );
   const drag = useRef<{ x: number; y: number } | null>(null);
+  const selectedId = selectedNodeId === undefined ? internalSelectedId : selectedNodeId;
   const selected = layout.nodes.find((node) => node.id === selectedId) ?? null;
 
+  useEffect(() => {
+    if (selectedNodeId !== undefined) return;
+    if (internalSelectedId === null || !layout.nodes.some((node) => node.id === internalSelectedId)) {
+      setInternalSelectedId(layout.nodes[0]?.id ?? null);
+    }
+  }, [internalSelectedId, layout.nodes, selectedNodeId]);
+
   function selectNode(node: DagLayoutNode) {
-    setSelectedId(node.id);
+    if (selectedNodeId === undefined) {
+      setInternalSelectedId(node.id);
+    }
     onInspectNode?.(node);
   }
 
@@ -171,25 +187,29 @@ export function DagViewer({
         </g>
       </svg>
 
-      <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3">
-        {selected ? (
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-mono text-xs font-semibold text-[var(--color-text-primary)]">
-                {selected.label}
-              </span>
-              <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
-                {selected.id}
-              </span>
+      {showInspector ? (
+        <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3">
+          {selected ? (
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-xs font-semibold text-[var(--color-text-primary)]">
+                  {selected.label}
+                </span>
+                <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
+                  {selected.id}
+                </span>
+              </div>
+              <pre className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-xs text-[var(--color-text-secondary)]">
+                {JSON.stringify(selected.detail ?? { id: selected.id }, null, 2)}
+              </pre>
             </div>
-            <pre className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-xs text-[var(--color-text-secondary)]">
-              {JSON.stringify(selected.detail ?? { id: selected.id }, null, 2)}
-            </pre>
-          </div>
-        ) : (
-          <p className="m-0 text-xs text-[var(--color-text-muted)]">Select a node to inspect it.</p>
-        )}
-      </div>
+          ) : (
+            <p className="m-0 text-xs text-[var(--color-text-muted)]">
+              Select a node to inspect it.
+            </p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

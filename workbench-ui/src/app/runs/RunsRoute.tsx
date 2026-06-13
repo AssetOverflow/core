@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { WorkbenchApiError } from "../../api/client";
 import { useRun, useRuns } from "../../api/queries";
 import { DigestBadge } from "../../design/components/DigestBadge/DigestBadge";
+import { MetadataTable } from "../../design/components/MetadataTable/MetadataTable";
 import { Panel } from "../../design/components/Panel/Panel";
 import { SearchInput } from "../../design/components/SearchInput/SearchInput";
 import { SplitPane } from "../../design/components/SplitPane/SplitPane";
@@ -15,13 +16,21 @@ import { Button } from "../../design/components/primitives/Button";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
-import type { RunDetail, RunSummary, RunTurnRef } from "../../types/api";
+import type {
+  IdentityContinuity,
+  IdentityContinuityStatus,
+  IdentityLineageRelation,
+  RunDetail,
+  RunSummary,
+  RunTurnRef,
+} from "../../types/api";
 import { pushRecentItem } from "../commandRegistry";
 import { subjectToUrl } from "../evidenceAddress";
 import { useEvidenceSubject } from "../evidenceContext";
 
 const RUN_TABS: readonly Tab[] = [
   { id: "turns", label: "Turns" },
+  { id: "identity", label: "Identity" },
   { id: "manifest", label: "Manifest" },
   { id: "raw", label: "Raw" },
 ];
@@ -45,6 +54,50 @@ function errorMessage(error: unknown) {
 function digestPayload(value: string | null | undefined): string | null {
   if (!value) return null;
   return value.replace(/^sha256:/, "");
+}
+
+const CONTINUITY_LABEL: Record<IdentityContinuityStatus, string> = {
+  verified: "verified",
+  break: "break",
+  missing_evidence: "missing evidence",
+};
+
+const LINEAGE_LABEL: Record<IdentityLineageRelation, string> = {
+  self_parent: "self-parent",
+  descends_from_parent: "descends from parent",
+  missing_parent: "missing parent",
+  unavailable: "unavailable",
+};
+
+function ContinuityBadge({ status }: { status: IdentityContinuityStatus }) {
+  const color =
+    status === "verified"
+      ? "var(--color-state-verified)"
+      : status === "break"
+        ? "var(--color-state-contradicted)"
+        : "var(--color-state-warning-text)";
+  return (
+    <span
+      className="inline-flex h-6 items-center rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] px-2 text-xs"
+      style={{ color }}
+    >
+      {CONTINUITY_LABEL[status]}
+    </span>
+  );
+}
+
+function IdentityDigest({
+  digest,
+  verified,
+}: {
+  digest: string | null;
+  verified?: boolean | null;
+}) {
+  const payload = digestPayload(digest);
+  if (!payload) {
+    return <span className="text-[var(--color-text-muted)]">not recorded</span>;
+  }
+  return <DigestBadge digest={payload} truncate={16} verified={verified} />;
 }
 
 function CheckpointBadge({
@@ -199,6 +252,64 @@ function ManifestTab({ detail }: { detail: RunDetail }) {
   return <StableJsonViewer source={JSON.stringify(detail.manifest, null, 2)} />;
 }
 
+function IdentityTab({ continuity }: { continuity: IdentityContinuity | null }) {
+  if (!continuity) {
+    return (
+      <p className="m-0 text-sm text-[var(--color-text-secondary)]">
+        No engine-state manifest recorded for this run.
+      </p>
+    );
+  }
+  const verified = continuity.status === "verified";
+  const broken = continuity.status === "break";
+  return (
+    <div className="grid gap-4">
+      <MetadataTable
+        rows={[
+          { key: "status", value: <ContinuityBadge status={continuity.status} /> },
+          { key: "summary", value: continuity.verification_summary },
+          {
+            key: "engine",
+            value: <IdentityDigest digest={continuity.engine_identity} verified={verified} />,
+          },
+          {
+            key: "current",
+            value: (
+              <IdentityDigest
+                digest={continuity.current_engine_identity}
+                verified={broken ? false : continuity.current_engine_identity ? verified : null}
+              />
+            ),
+          },
+          {
+            key: "parent",
+            value: <IdentityDigest digest={continuity.parent_engine_identity} />,
+          },
+          {
+            key: "lineage",
+            value: LINEAGE_LABEL[continuity.lineage_relation],
+          },
+          {
+            key: "written_rev",
+            value: continuity.written_at_revision ?? "not recorded",
+            mono: true,
+          },
+          {
+            key: "current_rev",
+            value: continuity.current_revision,
+            mono: true,
+          },
+        ]}
+      />
+      {continuity.evidence_gap ? (
+        <p className="m-0 border-l-2 border-[var(--color-state-warning-border)] pl-3 text-sm text-[var(--color-state-warning-text)]">
+          evidence gap: {continuity.evidence_gap}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function RawTab({ detail }: { detail: RunDetail }) {
   const [expanded, setExpanded] = useState(false);
   return expanded ? (
@@ -239,6 +350,9 @@ function RunDetailPanel({
       <TabBar tabs={RUN_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
         {activeTab === "turns" ? (
           <TurnsTab detail={detail} onLoadMore={onLoadMore} canLoadMore={canLoadMore} />
+        ) : null}
+        {activeTab === "identity" ? (
+          <IdentityTab continuity={detail.identity_continuity} />
         ) : null}
         {activeTab === "manifest" ? <ManifestTab detail={detail} /> : null}
         {activeTab === "raw" ? <RawTab detail={detail} /> : null}

@@ -66,12 +66,24 @@ function detailFor(sessionId: string): RunDetail {
         },
       ],
       manifest: null,
+      identity_continuity: null,
     };
   }
   return {
     ...summary,
     turns: [],
     manifest: { schema_version: 2, checkpoint_revision: "rev-abc123" },
+    identity_continuity: {
+      status: "verified",
+      engine_identity: "engine1111111111111111",
+      parent_engine_identity: "engine1111111111111111",
+      current_engine_identity: "engine1111111111111111",
+      written_at_revision: "rev-abc123",
+      current_revision: "rev-abc123",
+      lineage_relation: "self_parent",
+      verification_summary: "checkpoint identity matches the current ratified substrate",
+      evidence_gap: null,
+    },
   };
 }
 
@@ -228,6 +240,21 @@ describe("RunsRoute", () => {
 
     await user.click(screen.getByRole("tab", { name: "Manifest" }));
     expect(await screen.findByText(/schema_version/)).toBeInTheDocument();
+  });
+
+  it("shows backend-projected identity continuity under the Identity tab", async () => {
+    stubRunsFetch();
+    const user = userEvent.setup();
+    renderRoute(`/runs/${ENGINE_RUN}`);
+
+    await user.click(await screen.findByRole("tab", { name: "Identity" }));
+
+    expect(await screen.findByText("verified")).toBeInTheDocument();
+    expect(
+      screen.getByText("checkpoint identity matches the current ratified substrate"),
+    ).toBeInTheDocument();
+    expect(screen.getAllByTestId("digest-badge")).toHaveLength(3);
+    expect(screen.getByText("self-parent")).toBeInTheDocument();
   });
 
   it("moves the session list focus with j/k through the VirtualizedList spine", async () => {

@@ -59,6 +59,40 @@ gated.  This closes `evals/calibration/gaps.md` Finding 2.
 Future realizer work may change the selection policy, but must update this
 document and the contract tests in the same PR.
 
+## Workbench cognitive pipeline record
+
+`CognitiveTurnResult` is the complete in-memory turn record.  Workbench
+journaling persists a narrower `CognitivePipelineRecord` alongside each new
+`ChatTurnResult` / `TurnJournalEntry`.  The canonical read projection is
+`GET /trace/{turn_id}/pipeline`; `/trace/{turn_id}` may embed the same record
+for envelope inspection, but the visualizer reads the projection.
+
+Persisted stages are:
+
+```text
+input -> intent -> PropositionGraph -> ArticulationTarget -> realizer
+      -> walk_telemetry -> trace_hash
+```
+
+Contract:
+
+- The record is curated stage evidence, not raw runtime state.  It persists
+  structured stage summaries/details, `trace_hash`, and scalar
+  `versor_condition`; it must not persist `field_state_before`,
+  `field_state_after`, `FieldState.F`, holonomy, or proposition versor arrays.
+- A live `/chat/turn` with a trace hash but no `status="recorded"`
+  `CognitivePipelineRecord` fails before journal append.  A future required
+  stage added to the record contract must fail loudly until the producer is
+  widened.
+- Pre-widening journal rows are lawful evidence gaps: `/trace/{turn_id}` must
+  show `missing_evidence`, not a synthesized green pipeline.
+- The Trace visualizer may derive a stage rail, deterministic DAG, propagation
+  list, and selected-stage inspector from the persisted record.  It must not
+  infer unrecorded stage internals by replaying the turn in the browser.
+- Replay treats `pipeline_record` as critical evidence.  Divergence in the
+  persisted pipeline record is evidence against equivalence, not wall-clock
+  noise.
+
 ### Determination surface (Step B-2)
 
 When `accrue_realized_knowledge` is enabled and a question turn is **Determined**

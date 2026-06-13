@@ -25,7 +25,10 @@ import {
   fetchCalibrationClasses,
   fetchServingMetrics,
   fetchTraceTurn,
+  fetchTracePipeline,
   fetchTraceTurns,
+  fetchContemplationRun,
+  fetchContemplationRuns,
   fetchMathProposals,
   fetchMathProposalDetail,
   ratifyMathProposal,
@@ -51,6 +54,7 @@ import type {
   VaultEntry,
   CalibrationClass,
   ServingMetrics,
+  CognitivePipelineRecord,
   TurnJournalEntry,
   TurnJournalSummary,
   EvalLaneSummary,
@@ -58,6 +62,8 @@ import type {
   ChatTurnResult,
   EvalRunRequest,
   TurnReplayComparison,
+  ContemplationRunDetail,
+  ContemplationRunSummary,
   MathProposalSummary,
   MathProposalDetail,
   MathRatifyResult,
@@ -137,6 +143,25 @@ export function useDemoRun() {
   });
 }
 
+export function useContemplationRuns(limit?: number, offset?: number) {
+  return useQuery<ContemplationRunSummary[], WorkbenchApiError>({
+    queryKey: ["api", "contemplation", "runs", limit ?? null, offset ?? null],
+    queryFn: () => fetchContemplationRuns(limit, offset),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useContemplationRun(runId?: string | null) {
+  return useQuery<ContemplationRunDetail, WorkbenchApiError>({
+    queryKey: ["api", "contemplation", "run", runId ?? null],
+    queryFn: () => fetchContemplationRun(runId as string),
+    enabled: typeof runId === "string" && runId.length > 0,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
 export function useProposals(filter: ProposalStateFilter = "all") {
   return useQuery<ProposalSummary[]>({
     queryKey: ["api", "proposals", filter],
@@ -169,6 +194,16 @@ export function useTraceTurn(turnId?: number | null) {
   return useQuery<TurnJournalEntry, WorkbenchApiError>({
     queryKey: ["api", "trace", "turn", turnId ?? null],
     queryFn: () => fetchTraceTurn(turnId as number),
+    enabled: typeof turnId === "number",
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useTracePipeline(turnId?: number | null) {
+  return useQuery<CognitivePipelineRecord, WorkbenchApiError>({
+    queryKey: ["api", "trace", "pipeline", turnId ?? null],
+    queryFn: () => fetchTracePipeline(turnId as number),
     enabled: typeof turnId === "number",
     staleTime: 30_000,
     refetchOnWindowFocus: false,

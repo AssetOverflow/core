@@ -14,21 +14,30 @@ const PREFS_EVENT = "core-workbench-prefs-change";
 export const LANDING_ROUTES: readonly string[] = LANDING_ROUTE_IDS;
 
 export type LandingRoute = string;
+export const DENSITY_MODES = ["comfortable", "compact"] as const;
+export type DensityMode = (typeof DENSITY_MODES)[number];
 
 export interface WorkbenchPrefs {
   /** Route the workbench opens to (consumed by the App index redirect). */
   landingRoute: LandingRoute;
   /** Whether the evidence inspector starts open (consumed by EvidenceProvider). */
   inspectorDefaultOpen: boolean;
+  /** UI spacing density (consumed by Shell data-density + CSS variables). */
+  densityMode: DensityMode;
 }
 
 export const DEFAULT_PREFS: WorkbenchPrefs = {
   landingRoute: "chat",
   inspectorDefaultOpen: false,
+  densityMode: "comfortable",
 };
 
 function isLandingRoute(value: unknown): value is LandingRoute {
   return typeof value === "string" && LANDING_ROUTES.includes(value);
+}
+
+function isDensityMode(value: unknown): value is DensityMode {
+  return typeof value === "string" && DENSITY_MODES.includes(value as DensityMode);
 }
 
 export function getWorkbenchPrefs(): WorkbenchPrefs {
@@ -44,6 +53,9 @@ export function getWorkbenchPrefs(): WorkbenchPrefs {
         typeof parsed.inspectorDefaultOpen === "boolean"
           ? parsed.inspectorDefaultOpen
           : DEFAULT_PREFS.inspectorDefaultOpen,
+      densityMode: isDensityMode(parsed.densityMode)
+        ? parsed.densityMode
+        : DEFAULT_PREFS.densityMode,
     };
   } catch {
     return DEFAULT_PREFS;

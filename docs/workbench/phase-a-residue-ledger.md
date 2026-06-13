@@ -5,10 +5,10 @@ Status: active consolidation ledger
 
 | Item | Status | Reason | Next PR |
 |---|---|---|---|
-| Density preferences | deferred | Settings currently owns landing route and inspector-open preferences, but no density mode is wired through the shell/design tokens. | Phase A polish follow-up. |
+| Density preferences | implemented | Settings owns a `comfortable` / `compact` mode; Shell publishes `data-density`, and shared chrome/primitives consume density variables for shell, panel, row, nav, footer, metadata, and button spacing. | None. |
 | Command palette route drift | implemented | Navigate commands derive from `WORKBENCH_ROUTES`; Demos and Calibration are palette-visible. | None. |
 | Landing route drift | implemented | Landing route ids derive from `WORKBENCH_ROUTES`; Replay and Calibration are eligible. | None. |
-| Deterministic DAG consumers beyond proposal chain | deferred | Proposal chain uses the primitive; PCCP proof-promotion and entailment traces still need real reader wiring. | Phase A follow-up before Phase C visualizer expansion. |
+| Deterministic DAG consumers beyond proposal chain | implemented | Demo runs now expose backend-projected `DemoEvidenceDag` records for all PCCP proof-promotion scenarios and deductive-entailment traces, rendered by Demo Theater with the shared deterministic DAG primitive. | None. |
 | Calibration evidence subject | implemented | `calibration_class` is addressable via `/calibration?inspect=calibration:<className>` and renders in RightInspector/EvidenceChainRail. | None. |
 | UI/UX guide | implemented | `docs/workbench/UI-UX-GUIDE.md` now records the current 12-route map, evidence grammar, route proofs, and absences. | Keep updated when route registry changes. |
 | Route registry | implemented | `workbench-ui/src/app/routes.ts` is the route source for App, LeftNav, palette, shortcuts, landing prefs, and route tests. | None. |
