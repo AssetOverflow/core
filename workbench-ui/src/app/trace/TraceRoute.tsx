@@ -24,7 +24,7 @@ import { Button } from "../../design/components/primitives/Button";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
-import type { TurnJournalEntry, TurnJournalSummary } from "../../types/api";
+import type { TraceIntegrity, TurnJournalEntry, TurnJournalSummary } from "../../types/api";
 import { pushRecentItem } from "../commandRegistry";
 import { subjectToUrl } from "../evidenceAddress";
 import { useEvidenceSubject } from "../evidenceContext";
@@ -50,6 +50,42 @@ function errorMessage(error: unknown) {
 function digestPayload(value: string | null | undefined): string | null {
   if (!value) return null;
   return value.replace(/^sha256:/, "");
+}
+
+function isPipelineTrace(turn: Pick<TurnJournalSummary, "trace_hash" | "trace_integrity">) {
+  return turn.trace_integrity === "pipeline_trace" && Boolean(digestPayload(turn.trace_hash));
+}
+
+function TraceIntegrityBadge({ value }: { value: TraceIntegrity }) {
+  const pipeline = value === "pipeline_trace";
+  return (
+    <span
+      className={`inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase ${
+        pipeline
+          ? "border-[var(--color-state-success-border)] bg-[var(--color-state-success-bg)] text-[var(--color-state-success-text)]"
+          : "border-[var(--color-state-warning-border)] bg-[var(--color-state-warning-bg)] text-[var(--color-state-warning-text)]"
+      }`}
+    >
+      {value}
+    </span>
+  );
+}
+
+function TraceCoverage({ turns }: { turns: TurnJournalSummary[] }) {
+  const pipelineCount = turns.filter(isPipelineTrace).length;
+  const legacyCount = turns.length - pipelineCount;
+  return (
+    <div className="grid grid-cols-2 gap-2 text-xs">
+      <div className="rounded-md border border-[var(--color-state-success-border)] bg-[var(--color-state-success-bg)] px-3 py-2 text-[var(--color-state-success-text)]">
+        <span className="block font-mono text-sm">{pipelineCount}/{turns.length}</span>
+        <span className="block uppercase tracking-wide">pipeline hashes</span>
+      </div>
+      <div className="rounded-md border border-[var(--color-state-warning-border)] bg-[var(--color-state-warning-bg)] px-3 py-2 text-[var(--color-state-warning-text)]">
+        <span className="block font-mono text-sm">{legacyCount}</span>
+        <span className="block uppercase tracking-wide">legacy_unhashed</span>
+      </div>
+    </div>
+  );
 }
 
 function firstLine(value: string): string {
@@ -136,10 +172,10 @@ function TraceRow({
         </span>
       </span>
       <span className="justify-self-end">
-        {digest ? (
+        {digest && isPipelineTrace(turn) ? (
           <DigestBadge digest={digest} truncate={12} />
         ) : (
-          <span className="font-mono text-xs text-[var(--color-text-muted)]">no hash</span>
+          <TraceIntegrityBadge value={turn.trace_integrity} />
         )}
       </span>
     </div>
@@ -208,6 +244,10 @@ function MetadataTab({ turn }: { turn: TurnJournalEntry }) {
         { key: "turn_cost_ms", value: `${turn.turn_cost_ms}ms`, mono: true },
         { key: "checkpoint_emitted", value: turn.checkpoint_emitted ? "yes" : "no" },
         {
+          key: "trace_integrity",
+          value: <TraceIntegrityBadge value={turn.trace_integrity} />,
+        },
+        {
           key: "trace_hash",
           value: traceDigest ? <DigestBadge digest={traceDigest} truncate={12} /> : "not recorded",
         },
@@ -252,7 +292,9 @@ function TraceDetail({ turn }: { turn: TurnJournalEntry }) {
       toolbar={
         turn.trace_hash ? (
           <DigestBadge digest={digestPayload(turn.trace_hash) ?? ""} truncate={12} />
-        ) : null
+        ) : (
+          <TraceIntegrityBadge value={turn.trace_integrity} />
+        )
       }
     >
       <TabBar tabs={TRACE_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
@@ -331,6 +373,7 @@ export function TraceRoute() {
       <SplitPane direction="horizontal" id="trace" defaultSplit={38} minSize={320}>
         <Panel title="Turn Timeline">
           <div className="grid min-h-0 gap-3">
+            <TraceCoverage turns={turns} />
             <SearchInput
               placeholder="Filter by prompt or trace hash"
               value={search}

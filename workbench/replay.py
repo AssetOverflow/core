@@ -51,6 +51,7 @@ CRITICAL_FIELDS = frozenset(
         "hedge_injected",
         "proposal_candidates",
         "checkpoint_emitted",
+        "trace_integrity",
     }
 )
 # Wall-clock by nature, or derived over wall-clock bytes (journal_digest

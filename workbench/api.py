@@ -11,6 +11,7 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 from chat.runtime import ChatRuntime
+from core.cognition.pipeline import CognitiveTurnPipeline
 from core.epistemic_state import (
     clearance_from_verdicts,
     coerce_normative_clearance,
@@ -218,6 +219,16 @@ class WorkbenchApi:
                     }
                 ),
             )
+        if method == "GET" and path == "/demos":
+            return ApiResponse(200, ok({"items": readers.list_demos()}))
+        if method == "POST" and path.endswith("/run") and path.startswith("/demos/"):
+            demo_id = unquote(path.removeprefix("/demos/").removesuffix("/run"))
+            try:
+                return ApiResponse(200, ok(readers.run_demo(demo_id)))
+            except FileNotFoundError as exc:
+                return ApiResponse(404, error("not_found", str(exc) or demo_id))
+            except ValueError as exc:
+                return ApiResponse(400, error("bad_request", str(exc)))
         if method == "GET" and path == "/evals":
             return ApiResponse(200, ok({"lanes": readers.list_eval_lanes()}))
         if method == "GET" and path.startswith("/evals/"):
@@ -265,6 +276,14 @@ class WorkbenchApi:
                 entry = self._journal.get_entry(turn_id)
             except FileNotFoundError:
                 return ApiResponse(404, error("not_found", f"replay turn not found: {turn_id}"))
+            if entry.trace_integrity != "pipeline_trace":
+                return ApiResponse(
+                    501,
+                    error(
+                        "evidence_unavailable",
+                        "replay unavailable: turn has no canonical pipeline trace hash",
+                    ),
+                )
             # Replay executes a real runtime turn; serialize with live chat
             # turns the same way POST /chat/turn does.
             with _CHAT_TURN_LOCK:
@@ -403,6 +422,14 @@ class WorkbenchApi:
         with _CHAT_TURN_LOCK:
             started = time.perf_counter()
             result = _run_chat_turn(prompt)
+            if not result.trace_hash:
+                return ApiResponse(
+                    500,
+                    error(
+                        "runtime_unavailable",
+                        "chat turn did not produce a canonical pipeline trace hash",
+                    ),
+                )
             elapsed_ms = max(0, int(round((time.perf_counter() - started) * 1000)))
             turn_id = self._journal.next_turn_id()
             result_with_cost = _with_turn_cost_and_id(result, elapsed_ms, turn_id)
@@ -490,16 +517,19 @@ def _run_chat_turn(prompt: str, runtime: ChatRuntime | None = None) -> ChatTurnR
         original_checkpoint()
 
     runtime.checkpoint_engine_state = tracked_checkpoint  # type: ignore[method-assign]
-    response = runtime.chat(prompt)
+    try:
+        result = CognitiveTurnPipeline(runtime).run(prompt)
+    finally:
+        runtime.checkpoint_engine_state = original_checkpoint  # type: ignore[method-assign]
     turn_event = runtime.turn_log[-1] if runtime.turn_log else None
-    verdicts = getattr(response, "verdicts", None)
-    grounding_source = _coerce_grounding_source(getattr(response, "grounding_source", "none"))
+    verdicts = getattr(turn_event, "verdicts", None)
+    grounding_source = _coerce_grounding_source(getattr(turn_event, "grounding_source", "none"))
     normative_clearance = coerce_normative_clearance(
-        getattr(response, "normative_clearance", None)
+        getattr(turn_event, "normative_clearance", None)
         or clearance_from_verdicts(verdicts)
     ).value
     normative_detail = str(
-        getattr(response, "normative_detail", None)
+        getattr(turn_event, "normative_detail", None)
         or normative_detail_from_verdicts(verdicts)
         or ""
     )
@@ -507,31 +537,37 @@ def _run_chat_turn(prompt: str, runtime: ChatRuntime | None = None) -> ChatTurnR
     if (
         not refusal_emitted
         and normative_clearance == "violated"
-        and response.surface.startswith("I don't know")
+        and result.surface.startswith("I don't know")
     ):
         refusal_emitted = True
         normative_clearance = "suppressed"
-    trace_hash = str(getattr(turn_event, "trace_hash", "") or "") if turn_event else ""
+    trace_hash = result.trace_hash or (
+        str(getattr(turn_event, "trace_hash", "") or "") if turn_event else ""
+    )
+    epistemic_state = str(
+        getattr(turn_event, "epistemic_state", "")
+        or epistemic_state_for_grounding_source(grounding_source).value
+    )
     return ChatTurnResult(
         prompt=prompt,
-        surface=response.surface,
-        articulation_surface=response.articulation_surface or None,
-        walk_surface=response.walk_surface or None,
+        surface=result.surface,
+        articulation_surface=result.articulation_surface or None,
+        walk_surface=result.walk_surface or None,
         grounding_source=grounding_source,  # type: ignore[arg-type]
-        epistemic_state=epistemic_state_for_grounding_source(grounding_source).value,  # type: ignore[arg-type]
+        epistemic_state=epistemic_state,  # type: ignore[arg-type]
         normative_clearance=normative_clearance,  # type: ignore[arg-type]
         normative_detail=normative_detail,
         trace_hash=trace_hash or None,
         refusal_emitted=refusal_emitted,
         hedge_injected=bool(getattr(verdicts, "hedge_injected", False)),
         mutation_mode="runtime_turn",
-        identity_verdict=_identity_verdict(getattr(response, "identity_score", None)),
+        identity_verdict=_identity_verdict(result.identity_score),
         safety_verdict=_normative_verdict(
-            getattr(response, "safety_verdict", None),
+            getattr(turn_event, "safety_verdict", None),
             ids_attr="violated_boundaries",
         ),
         ethics_verdict=_normative_verdict(
-            getattr(response, "ethics_verdict", None),
+            getattr(turn_event, "ethics_verdict", None),
             ids_attr="violated_commitments",
         ),
         proposal_candidates=_proposal_refs(runtime, before_candidate_ids),

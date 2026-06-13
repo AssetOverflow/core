@@ -12,9 +12,14 @@ from workbench.api import WorkbenchApi
 from workbench.schemas import ChatTurnResult, TurnVerdict
 
 
-def _request(body: dict | bytes):
+@pytest.fixture()
+def api(tmp_path: Path) -> WorkbenchApi:
+    return WorkbenchApi(journal_dir=tmp_path / "workbench_data")
+
+
+def _request(api: WorkbenchApi, body: dict | bytes):
     raw = body if isinstance(body, bytes) else json.dumps(body).encode("utf-8")
-    return WorkbenchApi().handle("POST", "/chat/turn", raw)
+    return api.handle("POST", "/chat/turn", raw)
 
 
 def _snapshot(root: Path) -> dict[str, bytes]:
@@ -44,13 +49,15 @@ def _restore_snapshot(root: Path, snap: dict[str, bytes]) -> None:
         path.write_bytes(content)
 
 
-def test_chat_turn_happy_path_real_prompt() -> None:
-    response = _request({"prompt": "What is truth?"})
+def test_chat_turn_happy_path_real_prompt(api: WorkbenchApi) -> None:
+    response = _request(api, {"prompt": "What is truth?"})
 
     assert response.status == 200
     data = response.payload["data"]
     assert data["prompt"] == "What is truth?"
     assert data["surface"]
+    assert isinstance(data["trace_hash"], str)
+    assert len(data["trace_hash"]) == 64
     assert data["grounding_source"] in {"pack", "teaching", "vault", "partial", "oov", "none"}
     assert data["mutation_mode"] == "runtime_turn"
     assert isinstance(data["checkpoint_emitted"], bool)
@@ -66,14 +73,19 @@ def test_chat_turn_happy_path_real_prompt() -> None:
         (b'{"prompt":"' + (b"x" * (64 * 1024 + 1)) + b'"}', 413, "read_error"),
     ],
 )
-def test_chat_turn_validation(body: dict | bytes, status: int, code: str) -> None:
-    response = _request(body)
+def test_chat_turn_validation(
+    api: WorkbenchApi,
+    body: dict | bytes,
+    status: int,
+    code: str,
+) -> None:
+    response = _request(api, body)
 
     assert response.status == status
     assert response.payload["error"]["code"] == code
 
 
-def test_chat_turn_requests_are_serialized(monkeypatch) -> None:
+def test_chat_turn_requests_are_serialized(api: WorkbenchApi, monkeypatch) -> None:
     events: list[tuple[str, str, float]] = []
 
     def fake_run(prompt: str) -> ChatTurnResult:
@@ -89,7 +101,7 @@ def test_chat_turn_requests_are_serialized(monkeypatch) -> None:
             epistemic_state="decoded",
             normative_clearance="cleared",
             normative_detail="",
-            trace_hash=None,
+            trace_hash=("0" * 64),
             refusal_emitted=False,
             hedge_injected=False,
             mutation_mode="runtime_turn",
@@ -105,7 +117,7 @@ def test_chat_turn_requests_are_serialized(monkeypatch) -> None:
     responses = []
 
     def call(prompt: str) -> None:
-        responses.append(_request({"prompt": prompt}))
+        responses.append(_request(api, {"prompt": prompt}))
 
     first = threading.Thread(target=call, args=("first",))
     second = threading.Thread(target=call, args=("second",))
@@ -121,7 +133,7 @@ def test_chat_turn_requests_are_serialized(monkeypatch) -> None:
     assert starts[1][2] >= ends[0][2]
 
 
-def test_chat_turn_preserves_teaching_and_pack_bytes() -> None:
+def test_chat_turn_preserves_teaching_and_pack_bytes(api: WorkbenchApi) -> None:
     repo_root = Path(__file__).resolve().parent.parent
     guarded = {
         "teaching": repo_root / "teaching",
@@ -133,7 +145,7 @@ def test_chat_turn_preserves_teaching_and_pack_bytes() -> None:
     engine_state_before = _snapshot(engine_state)
 
     try:
-        response = _request({"prompt": "What is truth?"})
+        response = _request(api, {"prompt": "What is truth?"})
     finally:
         _restore_snapshot(engine_state, engine_state_before)
 
@@ -141,15 +153,15 @@ def test_chat_turn_preserves_teaching_and_pack_bytes() -> None:
     assert {name: _snapshot(path) for name, path in guarded.items()} == before
 
 
-def test_chat_turn_reports_runtime_turn_mutation_mode() -> None:
-    response = _request({"prompt": "What is truth?"})
+def test_chat_turn_reports_runtime_turn_mutation_mode(api: WorkbenchApi) -> None:
+    response = _request(api, {"prompt": "What is truth?"})
 
     assert response.status == 200
     assert response.payload["data"]["mutation_mode"] == "runtime_turn"
 
 
-def test_chat_turn_refusal_path_reports_suppression() -> None:
-    response = _request({"prompt": "Tina makes $18.00 an hour."})
+def test_chat_turn_refusal_path_reports_suppression(api: WorkbenchApi) -> None:
+    response = _request(api, {"prompt": "Tina makes $18.00 an hour."})
 
     assert response.status == 200
     data = response.payload["data"]
@@ -158,8 +170,8 @@ def test_chat_turn_refusal_path_reports_suppression() -> None:
     assert data["surface"].startswith("I don't know")
 
 
-def test_surface_and_walk_surface_are_distinct_contract_fields() -> None:
-    response = _request({"prompt": "What is truth?"})
+def test_surface_and_walk_surface_are_distinct_contract_fields(api: WorkbenchApi) -> None:
+    response = _request(api, {"prompt": "What is truth?"})
 
     assert response.status == 200
     data = response.payload["data"]

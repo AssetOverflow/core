@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   apiFetch,
+  fetchDemos,
+  fetchEvalLanes,
   fetchProposalDetail,
   fetchProposals,
   fetchTraceTurn,
   fetchTraceTurns,
+  runDemo,
   WorkbenchApiError,
 } from "./client";
 import { proposalDetail, proposalSummaries } from "./__fixtures__/proposals";
@@ -124,6 +127,7 @@ describe("trace fetchers", () => {
         surface_excerpt: "world",
         trace_hash: "sha256:abc",
         grounding_source: "pack",
+        trace_integrity: "pipeline_trace",
       },
     ];
     const fetchMock = vi.fn().mockResolvedValue({
@@ -153,6 +157,7 @@ describe("trace fetchers", () => {
       proposal_candidates: [],
       turn_cost_ms: 1,
       checkpoint_emitted: false,
+      trace_integrity: "pipeline_trace",
       journal_digest: "sha256:def",
     };
     const fetchMock = vi.fn().mockResolvedValue({
@@ -164,5 +169,75 @@ describe("trace fetchers", () => {
     expect(fetchMock.mock.calls[0][0]).toBe("http://127.0.0.1:8765/trace/7");
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     expect(init.method).toBeUndefined();
+  });
+});
+
+describe("eval fetchers", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("unwraps the /evals lanes envelope", async () => {
+    const lanes = [
+      {
+        lane: "contemplation_quality",
+        versions: ["v1"],
+        read_only: true,
+        description: null,
+      },
+    ];
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ ok: true, generated_at: "now", data: { lanes } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchEvalLanes()).resolves.toEqual(lanes);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://127.0.0.1:8765/evals");
+  });
+});
+
+describe("demo fetchers", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("unwraps the /demos items envelope", async () => {
+    const items = [
+      {
+        demo_id: "proof_carrying_promotion",
+        title: "Proof-Carrying Coherence Promotion",
+        description: "demo",
+        evidence_class: "substrate_capability",
+        scenario_count: 1,
+        read_only: true,
+        scenarios: [],
+      },
+    ];
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ ok: true, generated_at: "now", data: { items } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchDemos()).resolves.toEqual(items);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://127.0.0.1:8765/demos");
+  });
+
+  it("runs a demo through a scoped POST endpoint", async () => {
+    const result = {
+      demo_id: "proof/carrying",
+      all_passed: true,
+      what_this_proves: "x",
+      what_this_does_not_prove: "y",
+      scenarios: [],
+    };
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ ok: true, generated_at: "now", data: result }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(runDemo("proof/carrying")).resolves.toEqual(result);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://127.0.0.1:8765/demos/proof%2Fcarrying/run");
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.method).toBe("POST");
   });
 });

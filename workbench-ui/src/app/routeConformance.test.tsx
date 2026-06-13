@@ -12,6 +12,7 @@ import { TraceRoute } from "./trace/TraceRoute";
 import { AuditRoute } from "./audit/AuditRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
+import { DemoTheaterRoute } from "./demos/DemoTheaterRoute";
 import { RunsRoute } from "./runs/RunsRoute";
 import { PacksRoute } from "./packs/PacksRoute";
 import { VaultRoute } from "./vault/VaultRoute";
@@ -42,8 +43,8 @@ const ERROR_ENVELOPE = {
 };
 
 function emptyDataFor(path: string): unknown {
-  // GET /evals returns a bare array; list endpoints return ItemsEnvelope.
-  return path === "/evals" ? [] : { items: [] };
+  if (path === "/evals") return { lanes: [] };
+  return { items: [] };
 }
 
 type FetchPlan = "pending" | "error" | "empty";
@@ -163,6 +164,15 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
     loadingLabel: "Loading turns...",
     emptyStatement: "No turns recorded yet. Use Chat to create evidence.",
     emptyCommand: "core chat",
+  },
+  {
+    name: "Demos",
+    element: <DemoTheaterRoute />,
+    path: "/demos/:demoId?",
+    initialEntry: "/demos",
+    loadingLabel: "Loading demos...",
+    emptyStatement: "No demos registered.",
+    emptyCommand: "core demo --list",
   },
   {
     name: "Packs",

@@ -43,6 +43,42 @@
     "checkpoint_emitted",
     "turn_id"
   ],
+  "DemoRunResult": [
+    "demo_id",
+    "all_passed",
+    "what_this_proves",
+    "what_this_does_not_prove",
+    "scenarios"
+  ],
+  "DemoScenarioRunResult": [
+    "scenario_id",
+    "status",
+    "passed",
+    "proposer_wrong",
+    "evidence_class",
+    "decision_reason",
+    "trace_hash",
+    "problems",
+    "response"
+  ],
+  "DemoScenarioSummary": [
+    "scenario_id",
+    "title",
+    "expected_status",
+    "evidence_class",
+    "proposer_wrong",
+    "what_this_proves",
+    "what_this_does_not_prove"
+  ],
+  "DemoSummary": [
+    "demo_id",
+    "title",
+    "description",
+    "evidence_class",
+    "scenario_count",
+    "read_only",
+    "scenarios"
+  ],
   "EvalLaneSummary": [
     "lane",
     "versions",

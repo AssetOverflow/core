@@ -10,11 +10,17 @@ import { EvalRunButton } from "./EvalRunButton";
 import { EvalMetricGrid } from "./EvalMetricGrid";
 import { EvalFailureViewer } from "./EvalFailureViewer";
 import { EvalArtifactLink } from "./EvalArtifactLink";
+import { EvalWrongZeroLedger } from "./EvalWrongZeroLedger";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
 import type { EvalRunResult } from "../../types/api";
 import { WorkbenchApiError } from "../../api/client";
+
+function resolvedRunPassed(result: EvalRunResult) {
+  if (typeof result.passed === "boolean") return result.passed;
+  return result.metrics.all_passed === true;
+}
 
 export function EvalsRoute() {
   const { data: lanes, isLoading, isError, error } = useEvalLanes();
@@ -115,6 +121,9 @@ export function EvalsRoute() {
 
   const selectedLane = lanes?.find((l) => l.lane === selectedLaneName) || null;
   const currentRunState = selectedLaneName ? runStates[selectedLaneName] : null;
+  const currentRunPassed = currentRunState?.result
+    ? resolvedRunPassed(currentRunState.result)
+    : false;
 
   return (
     <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-[18rem_1fr]" data-testid="evals-route">
@@ -207,12 +216,12 @@ export function EvalsRoute() {
                   </span>
                   <span
                     className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
-                      currentRunState.result.passed
+                      currentRunPassed
                         ? "bg-[var(--color-state-success-bg)] text-[var(--color-state-success-text)] border border-[var(--color-state-success-border)]"
                         : "bg-[var(--color-state-danger-bg)] text-[var(--color-state-danger-text)] border border-[var(--color-state-danger-border)]"
                     }`}
                   >
-                    {currentRunState.result.passed ? "Passed" : "Failed"}
+                    {currentRunPassed ? "Passed" : "Failed"}
                   </span>
                   {currentRunState.result.source_digest && (
                     <EvalArtifactLink
@@ -222,6 +231,8 @@ export function EvalsRoute() {
                   )}
                 </div>
 
+                <EvalWrongZeroLedger result={currentRunState.result} />
+
                 <div className="flex flex-col gap-2">
                   <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Metrics</h3>
                   <EvalMetricGrid metrics={currentRunState.result.metrics} />
@@ -229,7 +240,7 @@ export function EvalsRoute() {
 
                 <EvalFailureViewer
                   cases={currentRunState.result.cases}
-                  passed={currentRunState.result.passed}
+                  passed={currentRunPassed}
                   laneName={selectedLane.lane}
                 />
               </div>

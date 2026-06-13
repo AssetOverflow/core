@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import pytest
@@ -81,6 +81,25 @@ def test_journal_ordering_and_pagination_are_sequential(tmp_path: Path) -> None:
     assert journal.next_turn_id() == 5
     page = journal.list_summaries(limit=2, offset=1)
     assert [item.turn_id for item in page] == [2, 3]
+    assert {item.trace_integrity for item in page} == {"pipeline_trace"}
+
+
+def test_journal_classifies_old_hashless_rows_as_legacy(tmp_path: Path) -> None:
+    journal = TurnJournal(tmp_path / "workbench_data")
+    legacy = TurnJournalEntry.from_chat_turn(
+        replace(_chat_result(), trace_hash=None),
+        turn_id=1,
+        timestamp="2026-06-12T00:00:00+00:00",
+    )
+    payload = {key: value for key, value in asdict(legacy).items() if key != "trace_integrity"}
+    journal.journal_dir.mkdir(parents=True, exist_ok=True)
+    journal.path.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
+
+    entry = journal.get_entry(1)
+    summary = journal.list_summaries()[0]
+
+    assert entry.trace_integrity == "legacy_unhashed"
+    assert summary.trace_integrity == "legacy_unhashed"
 
 
 def test_trace_turns_offset_beyond_journal_length_returns_empty_items(
@@ -113,6 +132,23 @@ def test_prompt_size_limit_is_enforced_before_journaling(tmp_path: Path) -> None
 
     assert response.status == 400
     assert not (tmp_path / "workbench_data" / "turn_journal.jsonl").exists()
+
+
+def test_hashless_chat_result_is_not_journaled(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_run(prompt: str) -> ChatTurnResult:
+        return replace(_chat_result(prompt), trace_hash=None)
+
+    monkeypatch.setattr(workbench_api, "_run_chat_turn", fake_run)
+    api = WorkbenchApi(journal_dir=tmp_path / "workbench_data")
+
+    response = _request(api, "POST", "/chat/turn", {"prompt": "What is truth?"})
+
+    assert response.status == 500
+    assert response.payload["error"]["code"] == "runtime_unavailable"
+    assert not api._journal.path.exists()  # noqa: SLF001 - verifies fail-closed journaling.
 
 
 def test_journal_rejects_paths_outside_workbench_data(tmp_path: Path) -> None:
@@ -172,6 +208,7 @@ def test_chat_turn_round_trips_through_trace_endpoint(
 
     assert chat.status == 200
     assert trace.status == 200
+    assert trace.payload["data"]["trace_integrity"] == "pipeline_trace"
     for field in [
         "turn_id",
         "prompt",

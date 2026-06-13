@@ -42,7 +42,41 @@
         "ethics_verdict": "TurnVerdict | None",
         "proposal_candidates": "list[ProposalRef]",
         "turn_cost_ms": "int",
-        "checkpoint_emitted": "bool"
+        "checkpoint_emitted": "bool",
+        "turn_id": "int | None"
+      }
+    },
+    "TurnJournalSummarySchema": {
+      "fields": {
+        "turn_id": "int",
+        "timestamp": "str",
+        "prompt_excerpt": "str",
+        "surface_excerpt": "str",
+        "trace_hash": "str | None",
+        "grounding_source": "GroundingSource",
+        "trace_integrity": "TraceIntegrity"
+      }
+    },
+    "TurnJournalEntrySchema": {
+      "fields": {
+        "turn_id": "int",
+        "timestamp": "str",
+        "trace_hash": "str | None",
+        "prompt": "str",
+        "surface": "str",
+        "articulation_surface": "str | None",
+        "walk_surface": "str | None",
+        "grounding_source": "GroundingSource",
+        "epistemic_state": "EpistemicStateValue",
+        "normative_clearance": "NormativeClearanceValue",
+        "verdicts": "dict[str, Any]",
+        "refusal_emitted": "bool",
+        "hedge_injected": "bool",
+        "proposal_candidates": "list[dict[str, Any]]",
+        "turn_cost_ms": "int",
+        "checkpoint_emitted": "bool",
+        "trace_integrity": "TraceIntegrity",
+        "journal_digest": "str"
       }
     },
     "ArtifactRef": {
@@ -99,21 +133,68 @@
         "source_digest": "str | None"
       }
     },
-    "ReplayDivergence": {
+    "DemoScenarioSummary": {
+      "fields": {
+        "scenario_id": "str",
+        "title": "str",
+        "expected_status": "str",
+        "evidence_class": "EvidenceClass",
+        "proposer_wrong": "bool",
+        "what_this_proves": "str",
+        "what_this_does_not_prove": "str"
+      }
+    },
+    "DemoSummary": {
+      "fields": {
+        "demo_id": "str",
+        "title": "str",
+        "description": "str",
+        "evidence_class": "EvidenceClass",
+        "scenario_count": "int",
+        "read_only": "bool",
+        "scenarios": "list[DemoScenarioSummary]"
+      }
+    },
+    "DemoScenarioRunResult": {
+      "fields": {
+        "scenario_id": "str",
+        "status": "str",
+        "passed": "bool",
+        "proposer_wrong": "bool",
+        "evidence_class": "EvidenceClass",
+        "decision_reason": "str | None",
+        "trace_hash": "str | None",
+        "problems": "list[str]",
+        "response": "Any"
+      }
+    },
+    "DemoRunResult": {
+      "fields": {
+        "demo_id": "str",
+        "all_passed": "bool",
+        "what_this_proves": "str",
+        "what_this_does_not_prove": "str",
+        "scenarios": "list[DemoScenarioRunResult]"
+      }
+    },
+    "TurnReplayDivergence": {
       "fields": {
         "path": "str",
         "original": "Any",
         "replay": "Any",
-        "severity": "ReplayDivergenceSeverity"
+        "severity": "TurnReplayDivergenceSeverity"
       }
     },
-    "ReplayComparison": {
+    "TurnReplayComparison": {
       "fields": {
-        "artifact_id": "str",
-        "original_hash": "str | None",
-        "replay_hash": "str | None",
+        "turn_id": "int",
+        "comparison_basis": "TurnReplayBasis",
+        "origin_state": "TurnReplayOriginState",
+        "original_trace_hash": "str | None",
+        "replay_trace_hash": "str | None",
         "equivalent": "bool",
-        "divergences": "list[ReplayDivergence]"
+        "replay_turn_cost_ms": "int",
+        "divergences": "list[TurnReplayDivergence]"
       }
     },
     "MathReasoningStep": {
@@ -159,6 +240,87 @@
         "applied": "bool",
         "target_path": "str | None",
         "evidence_hash": "str | None"
+      }
+    },
+    "PackSummary": {
+      "fields": {
+        "pack_id": "str",
+        "source": "PackSource",
+        "manifest_path": "str",
+        "version": "str | None",
+        "language": "str | None",
+        "modality": "str | None",
+        "determinism_class": "str | None",
+        "checksum": "str | None",
+        "checksums": "dict[str, str]"
+      }
+    },
+    "PackDetail": {
+      "fields": {
+        "manifest_digest": "str",
+        "manifest": "dict[str, Any]"
+      }
+    },
+    "AuditEvent": {
+      "fields": {
+        "event_id": "str",
+        "source": "AuditSource",
+        "source_path": "str",
+        "timestamp": "str | None",
+        "event_type": "str",
+        "mutation_boundary": "bool",
+        "summary": "str",
+        "ref_id": "str | None",
+        "payload_digest": "str",
+        "payload": "Any"
+      }
+    },
+    "RunSummary": {
+      "fields": {
+        "session_id": "str",
+        "source": "RunSource",
+        "turn_count": "int",
+        "started_at": "str | None",
+        "updated_at": "str | None",
+        "checkpoint_present": "bool",
+        "checkpoint_revision": "str | None",
+        "artifact_refs": "list[ArtifactRef]",
+        "evidence_gap": "str | None"
+      }
+    },
+    "RunTurnRef": {
+      "fields": {
+        "turn_id": "int",
+        "trace_hash": "str | None",
+        "timestamp": "str",
+        "trace_path": "str",
+        "surface_excerpt": "str",
+        "trace_integrity": "TraceIntegrity"
+      }
+    },
+    "RunDetail": {
+      "fields": {
+        "turns": "list[RunTurnRef]",
+        "manifest": "dict[str, Any] | None"
+      }
+    },
+    "VaultSummary": {
+      "fields": {
+        "source_path": "str",
+        "entry_count": "int",
+        "store_count": "int",
+        "reproject_interval": "int",
+        "max_entries": "int | None",
+        "persisted": "bool"
+      }
+    },
+    "VaultEntry": {
+      "fields": {
+        "entry_index": "int",
+        "epistemic_status": "str",
+        "epistemic_state": "str",
+        "metadata": "dict[str, Any]",
+        "versor_digest": "str | None"
       }
     }
   }

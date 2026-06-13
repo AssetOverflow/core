@@ -1,6 +1,8 @@
 import type {
   ApiResponse,
   ErrorCode,
+  DemoRunResult,
+  DemoSummary,
   EvalLaneSummary,
   EvalRunRequest,
   EvalRunResult,
@@ -37,11 +39,15 @@ export class WorkbenchApiError extends Error {
 export const API_URL: string =
   import.meta.env.VITE_WORKBENCH_API_URL ?? "http://127.0.0.1:8765";
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  init?: RequestInit & { timeoutMs?: number },
+): Promise<T> {
+  const { timeoutMs = 5000, ...requestInit } = init ?? {};
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${API_URL}${path}`, { ...init, signal: controller.signal });
+    const res = await fetch(`${API_URL}${path}`, { ...requestInit, signal: controller.signal });
     const json: ApiResponse<T> = await res.json();
     if (!json.ok) {
       throw new WorkbenchApiError(json.error.code, json.error.message);
@@ -53,7 +59,8 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 }
 
 export async function fetchEvalLanes(): Promise<EvalLaneSummary[]> {
-  return apiFetch<EvalLaneSummary[]>("/evals");
+  const envelope = await apiFetch<{ lanes: EvalLaneSummary[] }>("/evals");
+  return envelope.lanes;
 }
 
 export async function runEvalLane(req: EvalRunRequest): Promise<EvalRunResult> {
@@ -80,6 +87,7 @@ export async function runEvalLane(req: EvalRunRequest): Promise<EvalRunResult> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
+    timeoutMs: 120000,
   });
 }
 
@@ -94,6 +102,17 @@ export async function fetchArtifactDetail(artifactId: string): Promise<ArtifactD
 
 export async function fetchTurnReplay(turnId: number): Promise<TurnReplayComparison> {
   return apiFetch<TurnReplayComparison>(`/replay/${encodeURIComponent(String(turnId))}`);
+}
+
+export async function fetchDemos(): Promise<DemoSummary[]> {
+  const envelope = await apiFetch<ItemsEnvelope<DemoSummary>>("/demos");
+  return envelope.items;
+}
+
+export async function runDemo(demoId: string): Promise<DemoRunResult> {
+  return apiFetch<DemoRunResult>(`/demos/${encodeURIComponent(demoId)}/run`, {
+    method: "POST",
+  });
 }
 
 export type ProposalStateFilter = ProposalState | "all";

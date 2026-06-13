@@ -54,6 +54,7 @@ function detailFor(sessionId: string): RunDetail {
           timestamp: "2026-06-12T18:00:00Z",
           trace_path: "/trace/1",
           surface_excerpt: "First response",
+          trace_integrity: "pipeline_trace",
         },
         {
           turn_id: 2,
@@ -61,6 +62,7 @@ function detailFor(sessionId: string): RunDetail {
           timestamp: "2026-06-12T18:05:00Z",
           trace_path: "/trace/2",
           surface_excerpt: "Second response",
+          trace_integrity: "pipeline_trace",
         },
       ],
       manifest: null,

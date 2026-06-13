@@ -76,16 +76,17 @@ describe("Shell", () => {
     expect(document.querySelector('[data-region="statusfooter"]')).toBeInTheDocument();
   });
 
-  it("LeftNav has exactly 10 items in order", () => {
+  it("LeftNav has exactly 11 items in order", () => {
     renderShell();
     const nav = document.querySelector('[data-region="leftnav"]')!;
     const links = nav.querySelectorAll("a");
-    expect(links).toHaveLength(10);
+    expect(links).toHaveLength(11);
     const labels = Array.from(links).map((l) => l.textContent);
     expect(labels).toEqual([
       "Chat",
       "Trace",
       "Replay",
+      "Demos",
       "Proposals",
       "Evals",
       "Runs",
