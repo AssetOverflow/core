@@ -84,12 +84,122 @@ function ProposalInspector({ subject }: { subject: Extract<EvidenceSubject, { ki
       <MetadataTable
         rows={[
           { key: "id", value: data.proposal_id, copyable: true, mono: true },
-          { key: "state", value: data.state },
-          { key: "source", value: data.source_kind },
-          { key: "replay_eq", value: data.replay_equivalent === null ? "unknown" : data.replay_equivalent ? "yes" : "no" },
-          ...(data.suggested_cli ? [{ key: "CLI", value: data.suggested_cli, copyable: true, mono: true }] : []),
+          ...("state" in data ? [{ key: "state", value: data.state }] : []),
+          ...("source_kind" in data
+            ? [{ key: "source", value: data.source_kind }]
+            : [{ key: "source", value: `math / ${data.proposed_change_kind}` }]),
+          ...("replay_equivalent" in data
+            ? [
+                {
+                  key: "replay_eq",
+                  value:
+                    data.replay_equivalent === null
+                      ? "unknown"
+                      : data.replay_equivalent
+                        ? "yes"
+                        : "no",
+                },
+              ]
+            : [{ key: "replay_hash", value: data.replay_equivalence_hash, mono: true }]),
+          ...("suggested_cli" in data && data.suggested_cli
+            ? [{ key: "CLI", value: data.suggested_cli, copyable: true, mono: true }]
+            : []),
+          ...("suggested_ratify_cli" in data && data.suggested_ratify_cli
+            ? [{ key: "CLI", value: data.suggested_ratify_cli, copyable: true, mono: true }]
+            : []),
         ]}
       />
+    </div>
+  );
+}
+
+function RunInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "run" }> }) {
+  const { data } = subject;
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Run</h3>
+      <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">{subject.sessionId}</p>
+      {data ? (
+        <MetadataTable
+          rows={[
+            ...(data.source ? [{ key: "source", value: data.source }] : []),
+            { key: "checkpoint", value: data.checkpoint_present ? "present" : "not recorded" },
+            ...(data.checkpoint_revision
+              ? [{ key: "revision", value: data.checkpoint_revision, mono: true }]
+              : []),
+            ...(data.evidence_gap ? [{ key: "gap", value: data.evidence_gap }] : []),
+          ]}
+        />
+      ) : (
+        <DetailNotLoaded />
+      )}
+    </div>
+  );
+}
+
+function PackInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "pack" }> }) {
+  const { data } = subject;
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Pack</h3>
+      <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">{subject.packId}</p>
+      {data ? (
+        <MetadataTable
+          rows={[
+            ...(data.checksum ? [{ key: "checksum", value: data.checksum, mono: true, copyable: true }] : []),
+            ...(data.manifest_digest
+              ? [{ key: "manifest", value: data.manifest_digest, mono: true, copyable: true }]
+              : []),
+            ...(data.determinism_class ? [{ key: "determinism", value: data.determinism_class }] : []),
+          ]}
+        />
+      ) : (
+        <DetailNotLoaded />
+      )}
+    </div>
+  );
+}
+
+function VaultEntryInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "vault_entry" }> }) {
+  const { data } = subject;
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Vault Entry</h3>
+      <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">#{subject.entryIndex}</p>
+      {data ? (
+        <MetadataTable
+          rows={[
+            ...(data.epistemic_state ? [{ key: "epistemic", value: data.epistemic_state }] : []),
+            ...(data.versor_digest
+              ? [{ key: "versor", value: data.versor_digest, mono: true, copyable: true }]
+              : []),
+          ]}
+        />
+      ) : (
+        <DetailNotLoaded />
+      )}
+    </div>
+  );
+}
+
+function AuditEventInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "audit_event" }> }) {
+  const { data } = subject;
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Audit Event</h3>
+      <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">{subject.eventId}</p>
+      {data ? (
+        <MetadataTable
+          rows={[
+            { key: "mutation_boundary", value: data.mutation_boundary ? "yes" : "no" },
+            ...(data.payload_digest
+              ? [{ key: "payload", value: data.payload_digest, mono: true, copyable: true }]
+              : []),
+          ]}
+        />
+      ) : (
+        <DetailNotLoaded />
+      )}
     </div>
   );
 }
@@ -180,6 +290,14 @@ function InspectorProjection({ subject }: { subject: EvidenceSubject }) {
       return <ArtifactInspector subject={subject} />;
     case "eval_result":
       return <EvalInspector subject={subject} />;
+    case "run":
+      return <RunInspector subject={subject} />;
+    case "pack":
+      return <PackInspector subject={subject} />;
+    case "vault_entry":
+      return <VaultEntryInspector subject={subject} />;
+    case "audit_event":
+      return <AuditEventInspector subject={subject} />;
     case "none":
       return <NoneInspector />;
   }

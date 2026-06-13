@@ -22,6 +22,10 @@ function routerParamsFor(url: string): Record<string, string | undefined> {
       return segment === undefined ? {} : { turnId: segment };
     case "proposals":
       return segment === undefined ? {} : { proposalId: segment };
+    case "runs":
+      return segment === undefined ? {} : { sessionId: segment };
+    case "packs":
+      return segment === undefined ? {} : { packId: segment };
     case "evals":
       return segment === undefined ? {} : { laneId: segment };
     case "replay":
@@ -54,6 +58,29 @@ const KINDS: Array<{ name: string; subject: AddressableSubject; path: string }> 
     subject: { kind: "artifact", artifactId: "art-trace-1" },
     path: "/replay/art-trace-1",
   },
+  {
+    name: "run",
+    subject: { kind: "run", sessionId: "session-1" },
+    path: "/runs/session-1",
+  },
+  {
+    name: "pack",
+    subject: { kind: "pack", packId: "en/core pack" },
+    path: "/packs/en%2Fcore%20pack",
+  },
+];
+
+const INSPECT_ONLY_KINDS: Array<{ name: string; subject: AddressableSubject; path: string }> = [
+  {
+    name: "vault_entry",
+    subject: { kind: "vault_entry", entryIndex: 7 },
+    path: "/vault?inspect=vault%3A7",
+  },
+  {
+    name: "audit_event",
+    subject: { kind: "audit_event", eventId: "audit:event/1" },
+    path: "/audit?inspect=audit%3Aaudit%3Aevent%2F1",
+  },
 ];
 
 describe("subjectToUrl", () => {
@@ -61,9 +88,25 @@ describe("subjectToUrl", () => {
     expect(subjectToUrl(subject)).toBe(path);
   });
 
+  it.each(INSPECT_ONLY_KINDS)(
+    "addresses inspect-only $name subject through ?inspect=",
+    ({ subject, path }) => {
+      expect(subjectToUrl(subject)).toBe(path);
+    },
+  );
+
   it("percent-encodes ids containing reserved characters", () => {
     const url = subjectToUrl({ kind: "proposal", proposalId: "a/b c?d" });
     expect(url).toBe("/proposals/a%2Fb%20c%3Fd");
+  });
+
+  it("preserves math proposal corridor in canonical addresses", () => {
+    const url = subjectToUrl({
+      kind: "proposal",
+      proposalId: "math-proposal-1",
+      domain: "math",
+    });
+    expect(url).toBe("/proposals/math-proposal-1?domain=math");
   });
 
   it("appends ?inspect= when the inspector holds a different subject", () => {
@@ -90,6 +133,28 @@ describe("urlToSubject round-trip", () => {
     expect(route).not.toBeNull();
     expect(sameIdentity(route!, subject)).toBe(true);
     expect(inspect).toBeNull();
+  });
+
+  it.each(INSPECT_ONLY_KINDS)(
+    "recovers an inspect-only $name subject from its URL",
+    ({ subject }) => {
+      const url = subjectToUrl(subject);
+      const search = new URL(url, "http://localhost").searchParams;
+      const { route, inspect } = urlToSubject(routerParamsFor(url), search);
+      expect(route).toBeNull();
+      expect(inspect).not.toBeNull();
+      expect(sameIdentity(inspect!, subject)).toBe(true);
+    },
+  );
+
+  it("recovers math proposal domain from the route query", () => {
+    const subject: AddressableSubject = {
+      kind: "proposal",
+      proposalId: "math-proposal-1",
+      domain: "math",
+    };
+    const { route } = roundTrip(subject);
+    expect(route).toEqual(subject);
   });
 
   it("recovers ids containing reserved characters", () => {
@@ -120,6 +185,8 @@ describe("urlToSubject malformed input", () => {
     ["fractional turn id", { turnId: "1.5" }],
     ["overflowing turn id", { turnId: "99999999999999999999" }],
     ["empty proposal id", { proposalId: "" }],
+    ["empty session id", { sessionId: "" }],
+    ["empty pack id", { packId: "" }],
     ["empty lane id", { laneId: "" }],
     ["empty artifact id", { artifactId: "" }],
     ["no params at all", {}],
@@ -137,6 +204,7 @@ describe("urlToSubject malformed input", () => {
     ["empty id", "proposal:"],
     ["empty kind", ":abc"],
     ["non-numeric turn", "turn:abc"],
+    ["non-numeric vault entry", "vault:abc"],
     ["empty value", ""],
   ])("returns inspect null for %s", (_label, value) => {
     const params = new URLSearchParams();
@@ -157,6 +225,12 @@ describe("urlToSubject malformed input", () => {
 
 describe("inspect value codec", () => {
   it.each(KINDS)("round-trips a $name inspect value", ({ subject }) => {
+    const recovered = inspectValueToSubject(subjectToInspectValue(subject));
+    expect(recovered).not.toBeNull();
+    expect(sameIdentity(recovered!, subject)).toBe(true);
+  });
+
+  it.each(INSPECT_ONLY_KINDS)("round-trips a $name inspect value", ({ subject }) => {
     const recovered = inspectValueToSubject(subjectToInspectValue(subject));
     expect(recovered).not.toBeNull();
     expect(sameIdentity(recovered!, subject)).toBe(true);
@@ -187,6 +261,12 @@ describe("isAddressable / sameIdentity", () => {
     expect(sameIdentity(a, b)).toBe(true);
     expect(sameIdentity(a, c)).toBe(false);
     expect(sameIdentity(a, { kind: "proposal", proposalId: "1" })).toBe(false);
+    expect(
+      sameIdentity(
+        { kind: "proposal", proposalId: "same", domain: "math" },
+        { kind: "proposal", proposalId: "same" },
+      ),
+    ).toBe(false);
     expect(sameIdentity({ kind: "none" }, { kind: "none" })).toBe(true);
   });
 });

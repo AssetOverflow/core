@@ -8,6 +8,10 @@ import type { EvidenceSubject } from "./evidenceContext";
 //   proposal    -> /proposals/<proposalId>
 //   eval_result -> /evals/<laneId>
 //   artifact    -> /replay/<artifactId>
+//   run         -> /runs/<sessionId>
+//   pack        -> /packs/<packId>
+//   vault_entry -> /vault?inspect=vault:<entryIndex>
+//   audit_event -> /audit?inspect=audit:<eventId>
 //
 // The `inspect` query param carries the inspector's subject as `<kind>:<id>`;
 // its presence means the inspector is open on that subject.
@@ -27,26 +31,70 @@ export function sameIdentity(a: EvidenceSubject, b: EvidenceSubject): boolean {
     case "turn":
       return b.kind === "turn" && b.turnId === a.turnId;
     case "proposal":
-      return b.kind === "proposal" && b.proposalId === a.proposalId;
+      return (
+        b.kind === "proposal" &&
+        b.proposalId === a.proposalId &&
+        (b.domain ?? "cognition") === (a.domain ?? "cognition")
+      );
     case "eval_result":
       return b.kind === "eval_result" && b.lane === a.lane;
     case "artifact":
       return b.kind === "artifact" && b.artifactId === a.artifactId;
+    case "run":
+      return b.kind === "run" && b.sessionId === a.sessionId;
+    case "pack":
+      return b.kind === "pack" && b.packId === a.packId;
+    case "vault_entry":
+      return b.kind === "vault_entry" && b.entryIndex === a.entryIndex;
+    case "audit_event":
+      return b.kind === "audit_event" && b.eventId === a.eventId;
     case "none":
       return b.kind === "none";
   }
 }
 
-function subjectPath(subject: AddressableSubject): string {
+interface SubjectAddress {
+  path: string;
+  params: URLSearchParams;
+}
+
+function emptyParams(): URLSearchParams {
+  return new URLSearchParams();
+}
+
+function subjectAddress(subject: AddressableSubject): SubjectAddress {
   switch (subject.kind) {
     case "turn":
-      return `/trace/${subject.turnId}`;
+      return { path: `/trace/${subject.turnId}`, params: emptyParams() };
     case "proposal":
-      return `/proposals/${encodeURIComponent(subject.proposalId)}`;
+      {
+        const params = emptyParams();
+        if (subject.domain === "math") params.set("domain", "math");
+        return {
+          path: `/proposals/${encodeURIComponent(subject.proposalId)}`,
+          params,
+        };
+      }
     case "eval_result":
-      return `/evals/${encodeURIComponent(subject.lane)}`;
+      return { path: `/evals/${encodeURIComponent(subject.lane)}`, params: emptyParams() };
     case "artifact":
-      return `/replay/${encodeURIComponent(subject.artifactId)}`;
+      return { path: `/replay/${encodeURIComponent(subject.artifactId)}`, params: emptyParams() };
+    case "run":
+      return { path: `/runs/${encodeURIComponent(subject.sessionId)}`, params: emptyParams() };
+    case "pack":
+      return { path: `/packs/${encodeURIComponent(subject.packId)}`, params: emptyParams() };
+    case "vault_entry":
+      {
+        const params = emptyParams();
+        params.set(INSPECT_PARAM, subjectToInspectValue(subject));
+        return { path: "/vault", params };
+      }
+    case "audit_event":
+      {
+        const params = emptyParams();
+        params.set(INSPECT_PARAM, subjectToInspectValue(subject));
+        return { path: "/audit", params };
+      }
   }
 }
 
@@ -60,6 +108,14 @@ export function subjectToInspectValue(subject: AddressableSubject): string {
       return `eval_result:${subject.lane}`;
     case "artifact":
       return `artifact:${subject.artifactId}`;
+    case "run":
+      return `run:${subject.sessionId}`;
+    case "pack":
+      return `pack:${subject.packId}`;
+    case "vault_entry":
+      return `vault:${subject.entryIndex}`;
+    case "audit_event":
+      return `audit:${subject.eventId}`;
   }
 }
 
@@ -67,13 +123,13 @@ export function subjectToUrl(
   subject: AddressableSubject,
   inspect?: EvidenceSubject | null,
 ): string {
-  const path = subjectPath(subject);
-  if (!inspect || !isAddressable(inspect) || sameIdentity(subject, inspect)) {
-    return path;
+  const address = subjectAddress(subject);
+  const params = new URLSearchParams(address.params);
+  if (inspect && isAddressable(inspect) && !sameIdentity(subject, inspect)) {
+    params.set(INSPECT_PARAM, subjectToInspectValue(inspect));
   }
-  const params = new URLSearchParams();
-  params.set(INSPECT_PARAM, subjectToInspectValue(inspect));
-  return `${path}?${params.toString()}`;
+  const query = params.toString();
+  return query ? `${address.path}?${query}` : address.path;
 }
 
 function parseTurnId(raw: string): number | null {
@@ -101,6 +157,16 @@ export function inspectValueToSubject(
       return { kind: "eval_result", lane: id };
     case "artifact":
       return { kind: "artifact", artifactId: id };
+    case "run":
+      return { kind: "run", sessionId: id };
+    case "pack":
+      return { kind: "pack", packId: id };
+    case "vault": {
+      const entryIndex = parseTurnId(id);
+      return entryIndex === null ? null : { kind: "vault_entry", entryIndex };
+    }
+    case "audit":
+      return { kind: "audit_event", eventId: id };
     default:
       return null;
   }
@@ -108,6 +174,7 @@ export function inspectValueToSubject(
 
 function routeParamsToSubject(
   params: Readonly<Record<string, string | undefined>>,
+  searchParams: URLSearchParams,
 ): AddressableSubject | null {
   // React Router populates exactly one of these keys per matched route;
   // precedence below only matters for hand-built (malformed) inputs.
@@ -116,9 +183,20 @@ function routeParamsToSubject(
     return turnId === null ? null : { kind: "turn", turnId };
   }
   if (params.proposalId !== undefined) {
-    return params.proposalId === ""
-      ? null
+    if (params.proposalId === "") return null;
+    return searchParams.get("domain") === "math"
+      ? { kind: "proposal", proposalId: params.proposalId, domain: "math" }
       : { kind: "proposal", proposalId: params.proposalId };
+  }
+  if (params.sessionId !== undefined) {
+    return params.sessionId === ""
+      ? null
+      : { kind: "run", sessionId: params.sessionId };
+  }
+  if (params.packId !== undefined) {
+    return params.packId === ""
+      ? null
+      : { kind: "pack", packId: params.packId };
   }
   if (params.laneId !== undefined) {
     return params.laneId === ""
@@ -145,7 +223,7 @@ export function urlToSubject(
   searchParams: URLSearchParams,
 ): UrlSubjects {
   return {
-    route: routeParamsToSubject(params),
+    route: routeParamsToSubject(params, searchParams),
     inspect: inspectValueToSubject(searchParams.get(INSPECT_PARAM)),
   };
 }

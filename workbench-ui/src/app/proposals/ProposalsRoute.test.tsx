@@ -12,10 +12,12 @@ import {
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { proposalDetail, proposalSummaries } from "../../api/__fixtures__/proposals";
-import { EvidenceProvider } from "../evidenceContext";
+import { EvidenceProvider, useEvidenceSubject } from "../evidenceContext";
+import { isAddressable, subjectToUrl } from "../evidenceAddress";
 import { SuggestedCLIBox } from "./SuggestedCLIBox";
 import { ProposalTable } from "./ProposalTable";
 import { ProposalsRoute } from "./ProposalsRoute";
+import type { MathProposalDetail, MathProposalSummary } from "../../types/api";
 
 function queryWrapper({ children }: { children: ReactNode }) {
   const client = createTestQueryClient();
@@ -33,6 +35,21 @@ function LocationProbe() {
   );
 }
 
+function SubjectProbe() {
+  const { subject } = useEvidenceSubject();
+  const path = isAddressable(subject) ? subjectToUrl(subject) : "none";
+  const label =
+    subject.kind === "proposal"
+      ? `${subject.kind}:${subject.domain ?? "cognition"}:${subject.proposalId}`
+      : subject.kind;
+  return (
+    <>
+      <span data-testid="subject">{label}</span>
+      <span data-testid="subject-url">{path}</span>
+    </>
+  );
+}
+
 function renderRoute(initialEntry = "/proposals") {
   return render(
     <QueryClientProvider
@@ -43,13 +60,79 @@ function renderRoute(initialEntry = "/proposals") {
           <Routes>
             <Route
               path="/proposals/:proposalId?"
-              element={<><ProposalsRoute /><LocationProbe /></>}
+              element={<><ProposalsRoute /><LocationProbe /><SubjectProbe /></>}
             />
           </Routes>
         </EvidenceProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
+}
+
+const mathSummary: MathProposalSummary = {
+  proposal_id: "math-proposal-1",
+  domain: "math",
+  shape_category: "numeric_reasoning",
+  proposed_change_kind: "handler_route",
+  structural_commonality: "arithmetic transfer",
+  evidence_count: 2,
+  replay_equivalence_hash: "sha256:math-replay",
+};
+
+const mathDetail: MathProposalDetail = {
+  ...mathSummary,
+  wrong_zero_assertion: "wrong=0 for sampled arithmetic corridor",
+  proposed_change_payload: { route: "math" },
+  reasoning_trace_id: "math-trace-1",
+  reasoning_trace_steps: [
+    {
+      step_index: 1,
+      step_kind: "compare",
+      claim: "addition and subtraction share quantity state",
+      justification: "same parse corridor",
+      input_pointers: ["case-1"],
+      output_payload: { ok: true },
+    },
+  ],
+  evidence_hashes: ["sha256:evidence-1"],
+  handler_name: null,
+  suggested_ratify_cli: "core math proposal ratify math-proposal-1",
+};
+
+function stubMixedProposalFetch() {
+  const fetchMock = vi.fn((rawUrl: string) => {
+    const url = new URL(rawUrl);
+    if (url.pathname === "/math-proposals") {
+      return Promise.resolve({
+        json: () => Promise.resolve({ ok: true, generated_at: "now", data: { items: [mathSummary] } }),
+      });
+    }
+    if (url.pathname === `/math-proposals/${mathDetail.proposal_id}`) {
+      return Promise.resolve({
+        json: () => Promise.resolve({ ok: true, generated_at: "now", data: mathDetail }),
+      });
+    }
+    if (url.pathname === `/proposals/${proposalDetail.proposal_id}`) {
+      return Promise.resolve({
+        json: () => Promise.resolve({ ok: true, generated_at: "now", data: proposalDetail }),
+      });
+    }
+    if (url.pathname === "/proposals") {
+      return Promise.resolve({
+        json: () => Promise.resolve({ ok: true, generated_at: "now", data: { items: proposalSummaries } }),
+      });
+    }
+    return Promise.resolve({
+      json: () =>
+        Promise.resolve({
+          ok: false,
+          generated_at: "now",
+          error: { code: "not_found", message: `unexpected path ${url.pathname}` },
+        }),
+    });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
 }
 
 function stubProposalFetch(items = proposalSummaries) {
@@ -160,6 +243,40 @@ describe("ProposalsRoute", () => {
     renderRoute();
 
     expect(await screen.findByText("No proposals match this queue view.")).toBeInTheDocument();
+  });
+
+  it("publishes math-domain selections as proposal inspector subjects", async () => {
+    stubMixedProposalFetch();
+    const user = userEvent.setup();
+    renderRoute("/proposals?domain=math&state=pending");
+
+    const row = (await screen.findByTitle("math-proposal-1")).closest('[role="button"]');
+    expect(row).not.toBeNull();
+    await user.click(row!);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).toHaveTextContent(
+        "/proposals/math-proposal-1?domain=math&state=pending",
+      ),
+    );
+    expect(screen.getByTestId("subject")).toHaveTextContent("proposal:math:math-proposal-1");
+    expect(await screen.findByText("wrong=0 for sampled arithmetic corridor")).toBeInTheDocument();
+  });
+
+  it("keeps domain=math in the selected proposal evidence address", async () => {
+    stubMixedProposalFetch();
+    const user = userEvent.setup();
+    renderRoute("/proposals?domain=math&state=pending");
+
+    const row = (await screen.findByTitle("math-proposal-1")).closest('[role="button"]');
+    expect(row).not.toBeNull();
+    await user.click(row!);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("subject-url")).toHaveTextContent(
+        "/proposals/math-proposal-1?domain=math",
+      ),
+    );
   });
 });
 

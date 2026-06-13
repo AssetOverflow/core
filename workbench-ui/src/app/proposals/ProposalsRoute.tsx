@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { useEvidenceSubject } from "../evidenceContext";
-import { subjectToUrl } from "../evidenceAddress";
 import { WorkbenchApiError, type ProposalStateFilter } from "../../api/client";
 import { useProposalDetail, useProposals, useMathProposals, useMathProposalDetail } from "../../api/queries";
 import type { ProposalSummary, MathProposalDetail, ProposalState, DownstreamEffect, MathReasoningStep } from "../../types/api";
@@ -144,17 +143,17 @@ export function ProposalsRoute() {
   }, [domain, filter]);
 
   // Publish the selected proposal as the evidence subject: identity
-  // immediately, detail once the query resolves.  Math proposals have a
-  // distinct detail shape not carried by EvidenceSubject; they stay
-  // route-local.
+  // immediately, detail once the query resolves. Math proposal subjects carry
+  // domain="math" so copied evidence links round-trip to the same corridor.
   useEffect(() => {
-    if (!selectedProposalId || domain !== "cognition") return;
+    if (!selectedProposalId) return;
     setSubject({
       kind: "proposal",
       proposalId: selectedProposalId,
-      data: cognitionDetailQuery.data,
+      domain,
+      data: domain === "math" ? mathDetailQuery.data : cognitionDetailQuery.data,
     });
-  }, [selectedProposalId, domain, cognitionDetailQuery.data, setSubject]);
+  }, [selectedProposalId, domain, mathDetailQuery.data, cognitionDetailQuery.data, setSubject]);
 
   function updateRoute(next: { proposalId?: string | null; state?: ProposalStateFilter; domain?: "math" | "cognition" }) {
     const params = new URLSearchParams(searchParams);
@@ -171,7 +170,7 @@ export function ProposalsRoute() {
     const nextProposalId =
       next.proposalId === null ? null : (next.proposalId ?? selectedProposalId);
     const path = nextProposalId
-      ? subjectToUrl({ kind: "proposal", proposalId: nextProposalId })
+      ? `/proposals/${encodeURIComponent(nextProposalId)}`
       : "/proposals";
     const search = params.toString();
     // Selection churn must not pollute history: replace, never push.
