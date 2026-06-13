@@ -43,6 +43,8 @@ Calibration classes and serving metrics are visible, and wrong=0 is now a felt g
 
 That means calibration is still partly a page-local experience, not fully part of the Evidence Chain Rail.
 
+**Addendum (review, 2026-06-13): the centerpiece currently undersells its own thesis.** The reader reads `evals/gsm8k_math/practice/v1/report.json` `per_class`, whose committed copy is a sub-`N_MIN` baseline (`additive` committed=0) — so on live data the route shows three classes, all "not yet licensed", with empty reliability bars. It never shows a class *crossing θ*, which is the entire point. Meanwhile the *earned* state (`additive` committed=100, measured 0.861, **PROPOSE-licensed**) lives in the separately-committed `ratification_queue.json`, and the two artifacts disagree (correct 3 vs 95, committed in different commits). An evaluator opening Calibration today sees the discipline's scaffolding but not its moment. The fix is data-side, not a re-derivation: make the committed practice artifacts coherent (regenerate from one deterministic practice run via the runner) so `report.json` `per_class` shows ≥1 earned class and matches the queue; the reader stays unchanged. Sealed-practice may carry wrong>0 (attempt-and-eliminate) — that is *not* the serving wrong=0; do not conflate. Folds into Deliverable 2.
+
 ### 3. B4 is conceptually right but data-shape risky
 
 B4 wants the Replay/Proposals evidence rails to explain why approximation/leeway was granted: class, license, theta, disclosure, and relation to HITL ratification.
@@ -94,12 +96,22 @@ id
 path
 label
 description
+section            # wayfinding group; see note below
 left_nav_visible
 command_palette_visible
 landing_route_allowed
 keyboard_shortcut
 route_conformance_required
 ```
+
+**Grouped navigation (review, 2026-06-13).** As the route count grows past a
+flat list, LeftNav should render grouped by `section`, by the organism's loop
+rather than by abstraction level: `Converse · Cognition · Evidence ·
+Determinism · Discipline · Substrate · Settings`. This is a wayfinding skin
+only — one workbench, one address space, one Chain Rail; never a split into
+separate apps. (Note: "core-logos" is the *language/manifold* Studio surface
+per `core-logos-studio-plan.md` — the Substrate neighborhood — not the
+cognition cluster.)
 
 ### Critical rule
 
@@ -174,6 +186,10 @@ Show only fields carried by the backend read model:
 - RightInspector handles the subject without falling to raw unknown.
 - Evidence Chain Rail names calibration as serving-discipline evidence, not runtime truth.
 - Missing data renders as missing/unknown, not as green.
+- The committed practice artifacts are coherent (`report.json` `per_class`
+  agrees with `ratification_queue.json`) and the route shows ≥1 earned
+  (licensed) class — the centerpiece demonstrates "earns the right to guess",
+  not only the un-earned floor.
 
 ---
 
