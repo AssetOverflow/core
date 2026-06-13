@@ -14,6 +14,8 @@ import {
   fetchProposalDetail,
   fetchProposals,
   fetchAuditEvents,
+  fetchRuns,
+  fetchRun,
   fetchTraceTurn,
   fetchTraceTurns,
   fetchMathProposals,
@@ -31,6 +33,8 @@ import type {
   ProposalSummary,
   ProposalDetail,
   AuditEvent,
+  RunSummary,
+  RunDetail,
   TurnJournalEntry,
   TurnJournalSummary,
   EvalLaneSummary,
@@ -137,6 +141,25 @@ export function useAuditEvents(limit?: number, offset?: number) {
   return useQuery<{ items: AuditEvent[] }, WorkbenchApiError>({
     queryKey: ["api", "audit", "events", limit ?? null, offset ?? null],
     queryFn: () => fetchAuditEvents(limit, offset),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useRuns(limit?: number, offset?: number) {
+  return useQuery<RunSummary[], WorkbenchApiError>({
+    queryKey: ["api", "runs", limit ?? null, offset ?? null],
+    queryFn: () => fetchRuns(limit, offset),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useRun(sessionId?: string | null, turnLimit?: number) {
+  return useQuery<RunDetail, WorkbenchApiError>({
+    queryKey: ["api", "run", sessionId ?? null, turnLimit ?? null],
+    queryFn: () => fetchRun(sessionId as string, turnLimit),
+    enabled: typeof sessionId === "string" && sessionId.length > 0,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });

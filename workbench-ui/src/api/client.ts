@@ -11,6 +11,8 @@ import type {
   ProposalState,
   ProposalSummary,
   AuditEvent,
+  RunSummary,
+  RunDetail,
   TurnJournalEntry,
   TurnJournalSummary,
   MathProposalSummary,
@@ -137,6 +139,28 @@ export async function fetchAuditEvents(
   if (offset !== undefined) params.set("offset", String(offset));
   const query = params.toString();
   return apiFetch<ItemsEnvelope<AuditEvent>>(query ? `/audit/events?${query}` : "/audit/events");
+}
+
+export async function fetchRuns(limit?: number, offset?: number): Promise<RunSummary[]> {
+  const params = new URLSearchParams();
+  if (limit !== undefined) params.set("limit", String(limit));
+  if (offset !== undefined) params.set("offset", String(offset));
+  const query = params.toString();
+  const envelope = await apiFetch<ItemsEnvelope<RunSummary>>(query ? `/runs?${query}` : "/runs");
+  return envelope.items;
+}
+
+export async function fetchRun(
+  sessionId: string,
+  turnLimit?: number,
+  turnOffset?: number,
+): Promise<RunDetail> {
+  const params = new URLSearchParams();
+  if (turnLimit !== undefined) params.set("limit", String(turnLimit));
+  if (turnOffset !== undefined) params.set("offset", String(turnOffset));
+  const query = params.toString();
+  const path = `/runs/${encodeURIComponent(sessionId)}`;
+  return apiFetch<RunDetail>(query ? `${path}?${query}` : path);
 }
 
 export async function fetchMathProposals(): Promise<MathProposalSummary[]> {
