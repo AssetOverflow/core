@@ -6,6 +6,7 @@ import { createTestQueryClient } from "../test/createTestQueryClient";
 import { Shell } from "./Shell";
 import { ChatRoute } from "../routes/ChatRoute";
 import { ProposalsRoute } from "./proposals/ProposalsRoute";
+import { setWorkbenchPref } from "./workbenchPrefs";
 import type { RuntimeStatus } from "../types/api";
 
 // Mock the API queries module
@@ -52,6 +53,7 @@ function renderShell(initialPath = "/chat") {
 describe("Shell", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    localStorage.clear();
   });
 
   beforeEach(() => {
@@ -76,17 +78,25 @@ describe("Shell", () => {
     expect(document.querySelector('[data-region="statusfooter"]')).toBeInTheDocument();
   });
 
-  it("LeftNav has exactly 12 items in section-grouped order", () => {
+  it("applies the persisted density mode to the shell", () => {
+    setWorkbenchPref("densityMode", "compact");
+    renderShell();
+
+    expect(document.querySelector('[data-density="compact"]')).toBeInTheDocument();
+  });
+
+  it("LeftNav has exactly 13 items in section-grouped order", () => {
     renderShell();
     const nav = document.querySelector('[data-region="leftnav"]')!;
     const links = nav.querySelectorAll("a");
-    expect(links).toHaveLength(12);
+    expect(links).toHaveLength(13);
     const labels = Array.from(links).map((l) => l.textContent);
     // Grouped by section (Converse → Cognition → Determinism → Evidence →
     // Discipline → Substrate → Settings), derived from the route registry.
     expect(labels).toEqual([
       "Chat",
       "Trace",
+      "Contemplation",
       "Replay",
       "Demos",
       "Proposals",

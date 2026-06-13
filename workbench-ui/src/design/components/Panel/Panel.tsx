@@ -22,7 +22,7 @@ export function Panel({ title, toolbar, children }: PanelProps) {
       data-testid="panel"
     >
       <header
-        className="flex items-center justify-between gap-3 border-b px-3 py-2"
+        className="flex items-center justify-between gap-[var(--density-gap)] border-b px-[var(--density-panel-padding-x)] py-[var(--density-panel-header-padding-y)]"
         style={{ borderColor: "var(--color-border-subtle)" }}
       >
         <h2
@@ -31,9 +31,13 @@ export function Panel({ title, toolbar, children }: PanelProps) {
         >
           {title}
         </h2>
-        {toolbar ? <div className="flex items-center gap-2">{toolbar}</div> : null}
+        {toolbar ? (
+          <div className="flex items-center gap-[var(--density-control-gap)]">{toolbar}</div>
+        ) : null}
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto p-3">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-[var(--density-panel-padding)]">
+        {children}
+      </div>
     </section>
   );
 }

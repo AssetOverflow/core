@@ -533,12 +533,50 @@ Purpose:
 
 Return detail for a deterministic run projection. Unknown ids return
 `404 not_found`. Turn journal details include paginated `turns`, where each turn
-links to `/trace/{turn_id}`.
+links to `/trace/{turn_id}`. Run detail also includes `identity_continuity`
+when an engine-state manifest is available: a backend-owned projection of the
+stamped `engine_identity`, `parent_engine_identity`, current recomputed engine
+identity, lineage relation, and reboot-verification status. Legacy manifests
+that do not stamp identity return `missing_evidence`; the route does not
+synthesize continuity from absent fields.
 
 Query:
 
 - `limit`: non-negative integer for turn refs, default `100`
 - `offset`: non-negative integer for turn refs, default `0`
+
+---
+
+## GET /contemplation/runs
+
+Purpose:
+
+List committed contemplation process reports from `contemplation/runs/*.json`.
+The API does not execute contemplation and does not apply proposed actions.
+
+Query:
+
+- `limit`: non-negative integer, default `100`
+- `offset`: non-negative integer, default `0`
+
+Each item includes the report filename stem as `run_id`, source path/digest,
+prompt/cold-subject metadata when present, scene count, and the report-authored
+boolean gates (`learning_arc_closed`, `all_claims_supported`,
+`active_corpus_byte_identical`) as nullable evidence.
+
+---
+
+## GET /contemplation/runs/{run_id}
+
+Purpose:
+
+Return one persisted contemplation process trace. Unknown or unsafe ids return
+`404 not_found`. Detail includes `before`, `after`, the first engine/proposed
+chain found in the scene details, and ordered `scenes`.
+
+The route is an inspector over committed report evidence. It does not ratify
+findings, promote proposals, rerun contemplation, or synthesize a successful
+learning claim from absent scene fields.
 
 ---
 

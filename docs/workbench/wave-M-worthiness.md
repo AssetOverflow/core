@@ -38,8 +38,9 @@ the Replay Moment makes hash-equality felt. But it is blind to the two most
    it is invisible.
 2. **It shows outputs and evidence but not cognition itself.** The
    `CognitiveTurnPipeline` stages, the contemplation *process*, the CL(4,1)
-   field substrate, `versor_condition`, identity continuity — none are
-   legible. For an audience that lives inside opaque models, *legible
+   field substrate, `versor_condition`, identity continuity. C1 and a first
+   C4 run-level identity projection now exist; C2/C3 remain the major blind
+   spots. For an audience that lives inside opaque models, *legible
    deterministic cognition* is the wow.
 
 Everything below closes those two gaps on top of a mastery polish.
@@ -79,6 +80,10 @@ No new concepts; make the 11 routes undeniable.
   chains; wire the **PCCP proof-promotion 8 scenarios** and **entailment
   traces** (the other two the brief named). A primitive with one consumer is
   half-built.
+  **Implementation note (2026-06-13):** Demo Theater now renders backend-owned
+  `DemoEvidenceDag` projections for all proof-carrying promotion scenarios and
+  deductive-entailment traces. The shared DAG primitive now has proposal,
+  cognitive-pipeline, PCCP, and entailment consumers.
 - Command/keyboard completeness: a palette verb for every route action;
   registry-driven help stays the exhaustive contract.
 - Accessibility pass: focus-visible audit, SR labels on every evidence
@@ -133,9 +138,28 @@ Detailed brief pack: `docs/handoff/wave-M-phaseB-calibration-briefs-2026-06-13.m
   Schema-Defined Proof Obligations), and pre-widening turns show
   `missing_evidence`, not green. The replay-reconstruction fallback (Option B)
   recomputes rather than reads recorded state — fallback only, never primary.
+  **C1-a implementation note (2026-06-13):** new `/chat/turn` journal rows now
+  carry `CognitivePipelineRecord` with input → intent → PropositionGraph →
+  ArticulationTarget → realizer → walk telemetry → trace hash stages; `/trace`
+  renders it as a deterministic DAG and renders pre-widening rows as
+  `missing_evidence`. Full C1 still needs richer readers/inspection beyond
+  this first persisted substrate.
+  **C1-b/C1-c implementation note (2026-06-13):** `/trace/{turn_id}/pipeline`
+  is now the canonical read-only projection over the persisted record, and the
+  Trace route renders a deterministic stage rail + DAG + selected-stage detail
+  inspector. This completes the first usable pipeline visualizer over recorded
+  stage evidence; later C1 expansion should add new engine-owned stage facts
+  only by widening `CognitivePipelineRecord`, not by replay recomputation or UI
+  inference.
 - **C2 — Contemplation as a process, not just outputs:** the contemplation
   *loop* (attempt → gold-tether → ClassTally → propose), connecting
   Demos/Proposals/Calibration into one story.
+  **C2-a implementation note (2026-06-13):** Workbench now exposes persisted
+  `contemplation/runs/*.json` process reports through `/contemplation`: cold
+  attempt, checkpoint enrichment, engine-authored proposal boundary,
+  ratification boundary, and grounded-after scenes remain report-authored
+  evidence. This is the first process trace; the fuller Calibration/Proposal
+  integrated loop is still open.
 - **C3 — Field substrate (honest, read-only, hard):** `GET /field/state`
   over real `FieldState` + `versor_condition` for a turn, rendered as
   **inspectable exact numbers and invariant status** — `versor_condition <
@@ -145,7 +169,12 @@ Detailed brief pack: `docs/handoff/wave-M-phaseB-calibration-briefs-2026-06-13.m
   exact, it can't fake coherence."
 - **C4 — Identity continuity (L10/L11):** surface the engine-identity hash,
   lineage chain, reboot-verification status — "the same continuous life
-  across restart," the deepest telos, currently invisible.
+  across restart," the deepest telos.
+  **C4-a implementation note (2026-06-13):** `RunDetail` now carries a typed
+  `IdentityContinuity` projection from `engine_state/manifest.json` and the
+  current ratified substrate identity. Runs renders an Identity tab with
+  engine/current/parent digests, lineage relation, revision pair, verified vs
+  break vs missing-evidence status, and no frontend manifest inference.
 
 ### Phase D — The "they'd want to use it" layer (scope: M)
 - **Guided Determinism Tour** — elevate Demo Theater into a first-run
@@ -166,6 +195,10 @@ Detailed brief pack: `docs/handoff/wave-M-phaseB-calibration-briefs-2026-06-13.m
 - Performance budget (resolve the Vite chunk-size warning via route
   code-split), error-boundary discipline, golden-file regime for the
   pipeline/field visualizers.
+  **Route chunk-split implementation note (2026-06-13):** Workbench routes now
+  load through React lazy route elements while preserving the registry contract.
+  `pnpm build` emits route chunks and the entry bundle is below the 500 kB Vite
+  warning threshold without raising the budget.
 
 ## What's missing in the design (the second ask, distilled)
 
@@ -175,9 +208,9 @@ Detailed brief pack: `docs/handoff/wave-M-phaseB-calibration-briefs-2026-06-13.m
 | Serving-vs-learning regime frame | Names the two-regime architecture; without it the UI reads as a chatbot | No |
 | wrong=0 as a felt global presence | The thesis itself; today only per-eval-run | Partial (ledger) |
 | Cognitive pipeline visualizer | "Real replayable cognition" vs animated fake — the core wow | Trace exists; needs staging reader |
-| Contemplation-as-process | The learning flywheel, today only its outputs | Partial |
+| Contemplation-as-process | The learning flywheel, today only its outputs | Partial — persisted process reports |
 | Field substrate / versor_condition | The geometry that *can't fake coherence* — honest, exact | **No** — build first |
-| Identity continuity (L10/L11) | "One continuous life" — the deepest telos | No |
+| Identity continuity (L10/L11) | "One continuous life" — the deepest telos | Partial — run-level manifest projection |
 | Serving metrics reachable | The actual capability numbers (gsm8k) aren't viewable | No |
 
 ## Risks

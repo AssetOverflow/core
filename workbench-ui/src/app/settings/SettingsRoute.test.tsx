@@ -75,6 +75,17 @@ describe("SettingsRoute", () => {
     expect((screen.getByLabelText("Landing route") as HTMLSelectElement).value).toBe("vault");
   });
 
+  it("changing density persists immediately", async () => {
+    stubStatus();
+    const user = userEvent.setup();
+    renderRoute();
+
+    await user.selectOptions(screen.getByLabelText("Density"), "compact");
+
+    expect(getWorkbenchPrefs().densityMode).toBe("compact");
+    expect((screen.getByLabelText("Density") as HTMLSelectElement).value).toBe("compact");
+  });
+
   it("toggling inspector-open-by-default persists immediately", async () => {
     stubStatus();
     const user = userEvent.setup();

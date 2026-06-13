@@ -6,9 +6,11 @@ import { Panel } from "../../design/components/Panel/Panel";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
 import {
+  DENSITY_MODES,
   LANDING_ROUTES,
   useSetWorkbenchPref,
   useWorkbenchPrefs,
+  type DensityMode,
   type LandingRoute,
 } from "../workbenchPrefs";
 
@@ -50,8 +52,26 @@ function PreferencesPanel() {
   return (
     <Panel title="Workbench preferences">
       <p className="m-0 mb-1 text-xs text-[var(--color-text-muted)]">
-        Local to this browser. Applied on the next workbench load.
+        Local to this browser. Visual density applies immediately; startup preferences apply on the next workbench load.
       </p>
+      <PrefRow
+        label="Density"
+        hint="Adjust shell, panel, row, and control spacing."
+        control={
+          <select
+            aria-label="Density"
+            value={prefs.densityMode}
+            onChange={(e) => setPref("densityMode", e.target.value as DensityMode)}
+            className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] px-2 py-1 text-sm text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]"
+          >
+            {DENSITY_MODES.map((mode) => (
+              <option key={mode} value={mode}>
+                {mode}
+              </option>
+            ))}
+          </select>
+        }
+      />
       <PrefRow
         label="Landing route"
         hint="Where the workbench opens."

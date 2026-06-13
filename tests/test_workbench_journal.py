@@ -7,9 +7,57 @@ from pathlib import Path
 import pytest
 
 from workbench import api as workbench_api
+from workbench import readers
 from workbench.api import MAX_CHAT_PROMPT_CHARS, WorkbenchApi
 from workbench.journal import TurnJournal, TurnJournalEntry
-from workbench.schemas import ChatTurnResult, TurnVerdict
+from workbench.schemas import (
+    ChatTurnResult,
+    CognitivePipelineEdge,
+    CognitivePipelineRecord,
+    CognitivePipelineStage,
+    TurnVerdict,
+)
+
+
+def _pipeline_record(trace_hash: str = "sha256:trace") -> CognitivePipelineRecord:
+    stages = [
+        CognitivePipelineStage(
+            stage_id=stage_id,
+            label=stage_id,
+            status="recorded",
+            summary=stage_id,
+            detail={},
+        )
+        for stage_id in (
+            "input",
+            "intent",
+            "proposition_graph",
+            "articulation_target",
+            "realizer",
+            "walk_telemetry",
+            "trace_hash",
+        )
+    ]
+    edges = [
+        CognitivePipelineEdge(from_stage="input", to_stage="intent"),
+        CognitivePipelineEdge(from_stage="intent", to_stage="proposition_graph"),
+        CognitivePipelineEdge(
+            from_stage="proposition_graph", to_stage="articulation_target"
+        ),
+        CognitivePipelineEdge(from_stage="articulation_target", to_stage="realizer"),
+        CognitivePipelineEdge(from_stage="realizer", to_stage="walk_telemetry"),
+        CognitivePipelineEdge(from_stage="walk_telemetry", to_stage="trace_hash"),
+    ]
+    return CognitivePipelineRecord(
+        schema_version="cognitive_pipeline_record_v1",
+        status="recorded",
+        missing_reason=None,
+        trace_hash=trace_hash,
+        versor_condition=0.0,
+        field_digest=None,
+        stages=stages,
+        edges=edges,
+    )
 
 
 def _chat_result(prompt: str = "What is truth?") -> ChatTurnResult:
@@ -32,6 +80,7 @@ def _chat_result(prompt: str = "What is truth?") -> ChatTurnResult:
         proposal_candidates=[],
         turn_cost_ms=7,
         checkpoint_emitted=False,
+        pipeline_record=_pipeline_record(),
     )
 
 
@@ -84,6 +133,74 @@ def test_journal_ordering_and_pagination_are_sequential(tmp_path: Path) -> None:
     assert {item.trace_integrity for item in page} == {"pipeline_trace"}
 
 
+def test_run_detail_projects_verified_identity_continuity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    engine_state = tmp_path / "engine_state"
+    engine_state.mkdir()
+    (engine_state / "manifest.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 2,
+                "turn_count": 3,
+                "written_at_revision": "rev-current",
+                "engine_identity": "engine-abc",
+                "parent_engine_identity": "engine-abc",
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(readers, "ENGINE_STATE_ROOT", engine_state)
+    monkeypatch.setattr(readers, "get_git_revision", lambda: "rev-current")
+    monkeypatch.setattr(
+        readers, "engine_identity_for_config", lambda _config, _rev: "engine-abc"
+    )
+    journal = TurnJournal(tmp_path / "workbench_data")
+
+    detail = readers.read_run(readers.ENGINE_STATE_RUN_ID, journal)
+
+    assert detail.identity_continuity is not None
+    assert detail.identity_continuity.status == "verified"
+    assert detail.identity_continuity.engine_identity == "engine-abc"
+    assert detail.identity_continuity.current_engine_identity == "engine-abc"
+    assert detail.identity_continuity.lineage_relation == "self_parent"
+    assert detail.identity_continuity.evidence_gap is None
+
+
+def test_run_detail_projects_missing_identity_evidence_honestly(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    engine_state = tmp_path / "engine_state"
+    engine_state.mkdir()
+    (engine_state / "manifest.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "turn_count": 2,
+                "written_at_revision": "legacy-rev",
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(readers, "ENGINE_STATE_ROOT", engine_state)
+    monkeypatch.setattr(readers, "get_git_revision", lambda: "rev-current")
+    monkeypatch.setattr(
+        readers, "engine_identity_for_config", lambda _config, _rev: "engine-current"
+    )
+    journal = TurnJournal(tmp_path / "workbench_data")
+
+    detail = readers.read_run(readers.ENGINE_STATE_RUN_ID, journal)
+
+    assert detail.identity_continuity is not None
+    assert detail.identity_continuity.status == "missing_evidence"
+    assert detail.identity_continuity.engine_identity is None
+    assert detail.identity_continuity.current_engine_identity == "engine-current"
+    assert detail.identity_continuity.lineage_relation == "unavailable"
+    assert "predates L11" in (detail.identity_continuity.evidence_gap or "")
+
+
 def test_journal_classifies_old_hashless_rows_as_legacy(tmp_path: Path) -> None:
     journal = TurnJournal(tmp_path / "workbench_data")
     legacy = TurnJournalEntry.from_chat_turn(
@@ -91,9 +208,13 @@ def test_journal_classifies_old_hashless_rows_as_legacy(tmp_path: Path) -> None:
         turn_id=1,
         timestamp="2026-06-12T00:00:00+00:00",
     )
-    payload = {key: value for key, value in asdict(legacy).items() if key != "trace_integrity"}
+    payload = {
+        key: value for key, value in asdict(legacy).items() if key != "trace_integrity"
+    }
     journal.journal_dir.mkdir(parents=True, exist_ok=True)
-    journal.path.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
+    journal.path.write_text(
+        json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
     entry = journal.get_entry(1)
     summary = journal.list_summaries()[0]
@@ -226,6 +347,69 @@ def test_chat_turn_round_trips_through_trace_endpoint(
         "checkpoint_emitted",
     ]:
         assert trace.payload["data"][field] == chat.payload["data"][field]
+    assert trace.payload["data"]["pipeline_record"]["status"] == "recorded"
+
+
+def test_trace_pipeline_endpoint_projects_recorded_stage_evidence(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_run(prompt: str) -> ChatTurnResult:
+        return _chat_result(prompt)
+
+    monkeypatch.setattr(workbench_api, "_run_chat_turn", fake_run)
+    api = WorkbenchApi(journal_dir=tmp_path / "workbench_data")
+
+    chat = _request(api, "POST", "/chat/turn", {"prompt": "What is truth?"})
+    turn_id = chat.payload["data"]["turn_id"]
+    pipeline = _request(api, "GET", f"/trace/{turn_id}/pipeline")
+
+    assert pipeline.status == 200
+    data = pipeline.payload["data"]
+    assert data["schema_version"] == "cognitive_pipeline_record_v1"
+    assert data["status"] == "recorded"
+    assert [stage["stage_id"] for stage in data["stages"]] == [
+        "input",
+        "intent",
+        "proposition_graph",
+        "articulation_target",
+        "realizer",
+        "walk_telemetry",
+        "trace_hash",
+    ]
+
+
+def test_trace_pipeline_endpoint_marks_prewidening_rows_missing_evidence(
+    tmp_path: Path,
+) -> None:
+    journal = TurnJournal(tmp_path / "workbench_data")
+    legacy = replace(_entry(1), pipeline_record=None)
+    journal.append(legacy)
+    api = WorkbenchApi(journal=journal)
+
+    response = _request(api, "GET", "/trace/1/pipeline")
+
+    assert response.status == 200
+    assert response.payload["data"]["status"] == "missing_evidence"
+    assert response.payload["data"]["missing_reason"] == "pipeline_record_not_persisted"
+    assert response.payload["data"]["trace_hash"] == legacy.trace_hash
+
+
+def test_chat_turn_without_pipeline_record_is_not_journaled(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_run(prompt: str) -> ChatTurnResult:
+        return replace(_chat_result(prompt), pipeline_record=None)
+
+    monkeypatch.setattr(workbench_api, "_run_chat_turn", fake_run)
+    api = WorkbenchApi(journal_dir=tmp_path / "workbench_data")
+
+    response = _request(api, "POST", "/chat/turn", {"prompt": "What is truth?"})
+
+    assert response.status == 500
+    assert response.payload["error"]["code"] == "runtime_unavailable"
+    assert not api._journal.path.exists()  # noqa: SLF001 - verifies fail-closed journaling.
 
 
 def test_unknown_turn_returns_404(tmp_path: Path) -> None:

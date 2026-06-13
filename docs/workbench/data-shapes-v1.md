@@ -85,6 +85,7 @@ export type ChatTurnSummary = {
   proposal_state: "none" | "pending" | "accepted" | "rejected" | null;
   mutation_state: "none" | "transient" | "proposal_only" | "ratified";
   leeway_evidence?: LeewayEvidence | null;
+  pipeline_record?: CognitivePipelineRecord | null;
 };
 ```
 
@@ -110,11 +111,53 @@ export type TraceDetail = {
     rejected_attempts: number | null;
     exhausted: boolean | null;
   };
+  pipeline_record?: CognitivePipelineRecord | null;
   raw?: unknown;
 };
 ```
 
 The trace drawer may show `raw`, but only behind an explicit expand action.
+
+```ts
+export type CognitivePipelineStageKind =
+  | "input"
+  | "intent"
+  | "proposition_graph"
+  | "articulation_target"
+  | "realizer"
+  | "walk_telemetry"
+  | "trace_hash";
+
+export type CognitivePipelineRecord = {
+  schema_version: "cognitive_pipeline_record_v1";
+  status: "recorded" | "missing_evidence";
+  missing_reason: string | null;
+  trace_hash: string | null;
+  versor_condition: number | null;
+  field_digest: string | null;
+  stages: {
+    stage_id: CognitivePipelineStageKind;
+    label: string;
+    status: "recorded" | "missing_evidence";
+    summary: string;
+    detail: Record<string, unknown>;
+  }[];
+  edges: {
+    from_stage: CognitivePipelineStageKind;
+    to_stage: CognitivePipelineStageKind;
+    label: string | null;
+  }[];
+};
+```
+
+`pipeline_record` is required for newly journaled turns and nullable for
+pre-widening rows.  The UI must render `missing_evidence` when it is absent and
+must not reconstruct stage internals from replay as if they were persisted.
+The first-class read endpoint is `GET /trace/{turn_id}/pipeline`; it returns a
+`CognitivePipelineRecord` directly and uses `status: "missing_evidence"` for
+pre-widening rows.  The Trace route renders the record as a deterministic stage
+rail, DAG, and selected-stage detail inspector; those views are projections of
+`stages` and `edges` only, not replay-derived cognition.
 
 ---
 
@@ -193,6 +236,36 @@ disabled unless the backend proves the sealed-eval path is configured.
 
 ---
 
+# Demo Evidence DAG
+
+```ts
+export type DemoEvidenceDag = {
+  graph_id: string;
+  graph_kind: "proof_carrying_promotion" | "deductive_entailment";
+  title: string;
+  source_digest: string | null;
+  nodes: {
+    node_id: string;
+    label: string;
+    summary: string;
+    detail: Record<string, unknown>;
+  }[];
+  edges: {
+    from_node: string;
+    to_node: string;
+    label: string | null;
+  }[];
+};
+```
+
+`DemoScenarioRunResult.evidence_dag` is nullable.  It is populated by the
+backend reader for proof-carrying coherence promotion and deductive-entailment
+authority scenarios from the committed demo authority response.  The UI may
+render it with the deterministic DAG primitive but must not infer proof edges
+from raw response JSON.
+
+---
+
 # Calibration
 
 ```ts
@@ -225,6 +298,42 @@ export type ServingMetrics = {
 
 Reliability and license verdicts are engine-owned derivations from
 `core.reliability_gate`; the workbench mirrors the read model.
+
+---
+
+# Contemplation
+
+```ts
+export type ContemplationScene = {
+  scene_id: string;
+  claim: string;
+  detail: Record<string, unknown>;
+};
+
+export type ContemplationRunSummary = {
+  run_id: string;
+  source_path: string;
+  source_digest: string | null;
+  prompt: string | null;
+  cold_subject: string | null;
+  scene_count: number;
+  learning_arc_closed: boolean | null;
+  all_claims_supported: boolean | null;
+  active_corpus_byte_identical: boolean | null;
+};
+
+export type ContemplationRunDetail = ContemplationRunSummary & {
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+  engine_chain: Record<string, unknown> | null;
+  scenes: ContemplationScene[];
+};
+```
+
+Contemplation runs are read-only projections over committed
+`contemplation/runs/*.json` reports. `run_id` is the report filename stem,
+not a synthesized session id. Scene details remain report-authored evidence;
+the route must not promote speculative findings or apply proposals.
 
 ---
 
@@ -348,15 +457,38 @@ export type RunTurnRef = {
   surface_excerpt: string;
 };
 
+export type IdentityContinuity = {
+  status: "verified" | "break" | "missing_evidence";
+  engine_identity: string | null;
+  parent_engine_identity: string | null;
+  current_engine_identity: string | null;
+  written_at_revision: string | null;
+  current_revision: string;
+  lineage_relation:
+    | "self_parent"
+    | "descends_from_parent"
+    | "missing_parent"
+    | "unavailable";
+  verification_summary: string;
+  evidence_gap: string | null;
+};
+
 export type RunDetail = RunSummary & {
   turns: RunTurnRef[];
   manifest: Record<string, unknown> | null;
+  identity_continuity: IdentityContinuity | null;
 };
 ```
 
 When no durable per-session id exists, `session_id` names the artifact boundary
 (`workbench_turn_journal` or `engine_state_checkpoint`) and `evidence_gap`
 states the missing persisted fact.
+
+`identity_continuity` is backend-projected from `engine_state/manifest.json`
+plus the current ratified substrate identity. The UI must render this field
+directly; it must not infer continuity status by parsing raw manifest JSON.
+Legacy manifests that predate `engine_identity` return
+`status: "missing_evidence"` instead of a synthesized verdict.
 
 ```ts
 export type VaultSummary = {

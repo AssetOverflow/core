@@ -9,7 +9,55 @@ import pytest
 
 from workbench import api as workbench_api
 from workbench.api import WorkbenchApi
-from workbench.schemas import ChatTurnResult, TurnVerdict
+from workbench.schemas import (
+    ChatTurnResult,
+    CognitivePipelineEdge,
+    CognitivePipelineRecord,
+    CognitivePipelineStage,
+    TurnVerdict,
+)
+
+
+def _pipeline_record(trace_hash: str) -> CognitivePipelineRecord:
+    stages = [
+        CognitivePipelineStage(
+            stage_id=stage_id,
+            label=stage_id,
+            status="recorded",
+            summary=stage_id,
+            detail={},
+        )
+        for stage_id in (
+            "input",
+            "intent",
+            "proposition_graph",
+            "articulation_target",
+            "realizer",
+            "walk_telemetry",
+            "trace_hash",
+        )
+    ]
+    return CognitivePipelineRecord(
+        schema_version="cognitive_pipeline_record_v1",
+        status="recorded",
+        missing_reason=None,
+        trace_hash=trace_hash,
+        versor_condition=0.0,
+        field_digest=None,
+        stages=stages,
+        edges=[
+            CognitivePipelineEdge(from_stage="input", to_stage="intent"),
+            CognitivePipelineEdge(from_stage="intent", to_stage="proposition_graph"),
+            CognitivePipelineEdge(
+                from_stage="proposition_graph", to_stage="articulation_target"
+            ),
+            CognitivePipelineEdge(
+                from_stage="articulation_target", to_stage="realizer"
+            ),
+            CognitivePipelineEdge(from_stage="realizer", to_stage="walk_telemetry"),
+            CognitivePipelineEdge(from_stage="walk_telemetry", to_stage="trace_hash"),
+        ],
+    )
 
 
 @pytest.fixture()
@@ -58,7 +106,14 @@ def test_chat_turn_happy_path_real_prompt(api: WorkbenchApi) -> None:
     assert data["surface"]
     assert isinstance(data["trace_hash"], str)
     assert len(data["trace_hash"]) == 64
-    assert data["grounding_source"] in {"pack", "teaching", "vault", "partial", "oov", "none"}
+    assert data["grounding_source"] in {
+        "pack",
+        "teaching",
+        "vault",
+        "partial",
+        "oov",
+        "none",
+    }
     assert data["mutation_mode"] == "runtime_turn"
     assert isinstance(data["checkpoint_emitted"], bool)
     assert isinstance(data["turn_cost_ms"], int)
@@ -92,6 +147,7 @@ def test_chat_turn_requests_are_serialized(api: WorkbenchApi, monkeypatch) -> No
         events.append((prompt, "start", time.perf_counter()))
         time.sleep(0.05)
         events.append((prompt, "end", time.perf_counter()))
+        trace_hash = "0" * 64
         return ChatTurnResult(
             prompt=prompt,
             surface=f"surface {prompt}",
@@ -101,7 +157,7 @@ def test_chat_turn_requests_are_serialized(api: WorkbenchApi, monkeypatch) -> No
             epistemic_state="decoded",
             normative_clearance="cleared",
             normative_detail="",
-            trace_hash=("0" * 64),
+            trace_hash=trace_hash,
             refusal_emitted=False,
             hedge_injected=False,
             mutation_mode="runtime_turn",
@@ -111,6 +167,7 @@ def test_chat_turn_requests_are_serialized(api: WorkbenchApi, monkeypatch) -> No
             proposal_candidates=[],
             turn_cost_ms=0,
             checkpoint_emitted=True,
+            pipeline_record=_pipeline_record(trace_hash),
         )
 
     monkeypatch.setattr(workbench_api, "_run_chat_turn", fake_run)
@@ -170,7 +227,9 @@ def test_chat_turn_refusal_path_reports_suppression(api: WorkbenchApi) -> None:
     assert data["surface"].startswith("I don't know")
 
 
-def test_surface_and_walk_surface_are_distinct_contract_fields(api: WorkbenchApi) -> None:
+def test_surface_and_walk_surface_are_distinct_contract_fields(
+    api: WorkbenchApi,
+) -> None:
     response = _request(api, {"prompt": "What is truth?"})
 
     assert response.status == 200

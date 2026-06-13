@@ -57,7 +57,7 @@ export function MetadataTable({ rows }: MetadataTableProps) {
       {rows.map((row) => (
         <div
           key={row.key}
-          className="group flex items-baseline gap-3 border-b border-[var(--color-border-subtle)] px-1 py-2 last:border-b-0"
+          className="group flex items-baseline gap-[var(--density-metadata-gap)] border-b border-[var(--color-border-subtle)] px-1 py-[var(--density-row-padding-y)] last:border-b-0"
         >
           <dt
             className="m-0 w-36 shrink-0 text-xs text-[var(--color-text-secondary)]"
@@ -66,7 +66,7 @@ export function MetadataTable({ rows }: MetadataTableProps) {
             {row.key}
           </dt>
           <dd
-            className="m-0 flex items-center text-sm text-[var(--color-text-primary)] tabular-nums"
+            className="m-0 flex min-w-0 flex-1 flex-wrap items-center gap-1 text-sm text-[var(--color-text-primary)] tabular-nums"
             style={{
               fontSize: "var(--text-sm)",
               fontFamily: row.mono ? "var(--font-mono)" : undefined,

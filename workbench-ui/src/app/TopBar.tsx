@@ -45,7 +45,7 @@ export function TopBar({
   return (
     <header
       data-region="topbar"
-      className="flex items-center gap-4 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-4 py-2"
+      className="flex items-center gap-[var(--density-shell-gap)] border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-[var(--density-shell-padding-x)] py-[var(--density-topbar-padding-y)]"
     >
       <span className="shrink-0 font-mono text-sm font-semibold text-[var(--color-text-primary)]">
         CORE Workbench
@@ -54,7 +54,7 @@ export function TopBar({
       <div className="flex flex-1 justify-center">
         <button
           type="button"
-          className="flex items-center gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-surface-sunken)] px-3 py-1 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]"
+          className="flex items-center gap-[var(--density-control-gap)] rounded border border-[var(--color-border-subtle)] bg-[var(--color-surface-sunken)] px-[var(--density-control-padding-x)] py-[var(--density-control-padding-y)] text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]"
           onClick={() => onPaletteOpenChange(true)}
           aria-label="Open command palette (⌘K)"
         >

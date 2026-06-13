@@ -90,6 +90,36 @@ const runResult: DemoRunResult = {
       trace_hash: "abcd1234",
       problems: [],
       response: { status: "promoted" },
+      evidence_dag: {
+        graph_id: "proposer-status-ignored:proof-carrying-promotion",
+        graph_kind: "proof_carrying_promotion",
+        title: "Proof-carrying promotion DAG",
+        source_digest: "sha256:abc123",
+        nodes: [
+          {
+            node_id: "request",
+            label: "Request",
+            summary: "demo-pccp",
+            detail: { request_id: "demo-pccp" },
+          },
+          {
+            node_id: "certify",
+            label: "CORE Certifies",
+            summary: "certified_entailment",
+            detail: { decision_reason: "certified_entailment" },
+          },
+          {
+            node_id: "outcome",
+            label: "Outcome",
+            summary: "promoted",
+            detail: { status: "promoted" },
+          },
+        ],
+        edges: [
+          { from_node: "request", to_node: "certify", label: "evaluate" },
+          { from_node: "certify", to_node: "outcome", label: "apply" },
+        ],
+      },
     },
   ],
 };
@@ -203,5 +233,6 @@ describe("DemoTheaterRoute", () => {
     expect(await screen.findByText("All scenarios passed")).toBeInTheDocument();
     expect(screen.getByText("proposer-wrong")).toBeInTheDocument();
     expect(screen.getByText("certified_entailment")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Proof-carrying promotion DAG" })).toBeInTheDocument();
   });
 });

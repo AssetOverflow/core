@@ -9,7 +9,13 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from workbench.schemas import ChatTurnResult, TraceIntegrity, to_data, utc_now
+from workbench.schemas import (
+    ChatTurnResult,
+    CognitivePipelineRecord,
+    TraceIntegrity,
+    to_data,
+    utc_now,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -49,6 +55,7 @@ class TurnJournalEntry:
     turn_cost_ms: int
     checkpoint_emitted: bool
     leeway_evidence: dict[str, Any] | None = None
+    pipeline_record: CognitivePipelineRecord | dict[str, Any] | None = None
     trace_integrity: TraceIntegrity | None = None
     journal_digest: str = ""
 
@@ -88,6 +95,7 @@ class TurnJournalEntry:
             turn_cost_ms=result.turn_cost_ms,
             checkpoint_emitted=result.checkpoint_emitted,
             leeway_evidence=to_data(result.leeway_evidence),
+            pipeline_record=to_data(result.pipeline_record),
             trace_integrity=_trace_integrity_for_hash(result.trace_hash),
         )
 
@@ -99,7 +107,8 @@ class TurnJournalEntry:
             surface_excerpt=self.surface[:SURFACE_EXCERPT_CHARS],
             trace_hash=self.trace_hash,
             grounding_source=self.grounding_source,
-            trace_integrity=self.trace_integrity or _trace_integrity_for_hash(self.trace_hash),
+            trace_integrity=self.trace_integrity
+            or _trace_integrity_for_hash(self.trace_hash),
         )
 
 
@@ -139,7 +148,9 @@ class TurnJournal:
                 fh.write("\n")
             return sealed
 
-    def list_summaries(self, *, limit: int = 50, offset: int = 0) -> list[TurnJournalSummary]:
+    def list_summaries(
+        self, *, limit: int = 50, offset: int = 0
+    ) -> list[TurnJournalSummary]:
         if limit < 0:
             raise ValueError("limit must be non-negative")
         if offset < 0:
@@ -147,7 +158,9 @@ class TurnJournal:
         entries = self._read_entries()
         return [entry.summary() for entry in entries[offset : offset + limit]]
 
-    def list_entries(self, *, limit: int = 50, offset: int = 0) -> list[TurnJournalEntry]:
+    def list_entries(
+        self, *, limit: int = 50, offset: int = 0
+    ) -> list[TurnJournalEntry]:
         if limit < 0:
             raise ValueError("limit must be non-negative")
         if offset < 0:
@@ -182,7 +195,9 @@ def _validate_journal_dir(journal_dir: Path) -> Path:
 
 
 def _canonical_json(payload: dict[str, Any]) -> str:
-    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return json.dumps(
+        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
 
 
 def _trace_integrity_for_hash(trace_hash: str | None) -> TraceIntegrity:

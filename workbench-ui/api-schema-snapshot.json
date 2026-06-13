@@ -33,6 +33,34 @@
         "source_kind": "str"
       }
     },
+    "CognitivePipelineStage": {
+      "fields": {
+        "stage_id": "CognitivePipelineStageKind",
+        "label": "str",
+        "status": "PipelineEvidenceStatus",
+        "summary": "str",
+        "detail": "dict[str, Any]"
+      }
+    },
+    "CognitivePipelineEdge": {
+      "fields": {
+        "from_stage": "CognitivePipelineStageKind",
+        "to_stage": "CognitivePipelineStageKind",
+        "label": "str | None"
+      }
+    },
+    "CognitivePipelineRecord": {
+      "fields": {
+        "schema_version": "Literal['cognitive_pipeline_record_v1']",
+        "status": "PipelineEvidenceStatus",
+        "missing_reason": "str | None",
+        "trace_hash": "str | None",
+        "versor_condition": "float | None",
+        "field_digest": "str | None",
+        "stages": "list[CognitivePipelineStage]",
+        "edges": "list[CognitivePipelineEdge]"
+      }
+    },
     "ChatTurnResult": {
       "fields": {
         "prompt": "str",
@@ -54,6 +82,7 @@
         "turn_cost_ms": "int",
         "checkpoint_emitted": "bool",
         "leeway_evidence": "LeewayEvidence | None",
+        "pipeline_record": "CognitivePipelineRecord | None",
         "turn_id": "int | None"
       }
     },
@@ -88,7 +117,8 @@
         "checkpoint_emitted": "bool",
         "trace_integrity": "TraceIntegrity",
         "journal_digest": "str",
-        "leeway_evidence": "LeewayEvidence | None"
+        "leeway_evidence": "LeewayEvidence | None",
+        "pipeline_record": "CognitivePipelineRecord | None"
       }
     },
     "ArtifactRef": {
@@ -146,6 +176,31 @@
         "source_digest": "str | None"
       }
     },
+    "DemoDagNode": {
+      "fields": {
+        "node_id": "str",
+        "label": "str",
+        "summary": "str",
+        "detail": "dict[str, Any]"
+      }
+    },
+    "DemoDagEdge": {
+      "fields": {
+        "from_node": "str",
+        "to_node": "str",
+        "label": "str | None"
+      }
+    },
+    "DemoEvidenceDag": {
+      "fields": {
+        "graph_id": "str",
+        "graph_kind": "DemoEvidenceDagKind",
+        "title": "str",
+        "source_digest": "str | None",
+        "nodes": "list[DemoDagNode]",
+        "edges": "list[DemoDagEdge]"
+      }
+    },
     "DemoScenarioSummary": {
       "fields": {
         "scenario_id": "str",
@@ -178,7 +233,8 @@
         "decision_reason": "str | None",
         "trace_hash": "str | None",
         "problems": "list[str]",
-        "response": "Any"
+        "response": "Any",
+        "evidence_dag": "DemoEvidenceDag | None"
       }
     },
     "DemoRunResult": {
@@ -188,6 +244,34 @@
         "what_this_proves": "str",
         "what_this_does_not_prove": "str",
         "scenarios": "list[DemoScenarioRunResult]"
+      }
+    },
+    "ContemplationScene": {
+      "fields": {
+        "scene_id": "str",
+        "claim": "str",
+        "detail": "dict[str, Any]"
+      }
+    },
+    "ContemplationRunSummary": {
+      "fields": {
+        "run_id": "str",
+        "source_path": "str",
+        "source_digest": "str | None",
+        "prompt": "str | None",
+        "cold_subject": "str | None",
+        "scene_count": "int",
+        "learning_arc_closed": "bool | None",
+        "all_claims_supported": "bool | None",
+        "active_corpus_byte_identical": "bool | None"
+      }
+    },
+    "ContemplationRunDetail": {
+      "fields": {
+        "before": "dict[str, Any] | None",
+        "after": "dict[str, Any] | None",
+        "engine_chain": "dict[str, Any] | None",
+        "scenes": "list[ContemplationScene]"
       }
     },
     "TurnReplayDivergence": {
@@ -290,6 +374,19 @@
         "payload": "Any"
       }
     },
+    "IdentityContinuity": {
+      "fields": {
+        "status": "IdentityContinuityStatus",
+        "engine_identity": "str | None",
+        "parent_engine_identity": "str | None",
+        "current_engine_identity": "str | None",
+        "written_at_revision": "str | None",
+        "current_revision": "str",
+        "lineage_relation": "IdentityLineageRelation",
+        "verification_summary": "str",
+        "evidence_gap": "str | None"
+      }
+    },
     "RunSummary": {
       "fields": {
         "session_id": "str",
@@ -316,7 +413,8 @@
     "RunDetail": {
       "fields": {
         "turns": "list[RunTurnRef]",
-        "manifest": "dict[str, Any] | None"
+        "manifest": "dict[str, Any] | None",
+        "identity_continuity": "IdentityContinuity | None"
       }
     },
     "VaultSummary": {

@@ -59,12 +59,13 @@ successful proof.
 ## 4. Current Route Map
 
 The route registry in `workbench-ui/src/app/routes.ts` is the source of truth.
-Current route count: 12.
+Current route count: 13.
 
 | Section | Route | Path | Shortcut | Purpose |
 |---|---|---|---|---|
 | Converse | Chat | `/chat` | `⌘1` | Execute a normal CORE turn and journal evidence. |
 | Cognition | Trace | `/trace` | `⌘2` | Inspect turn surfaces, grounding, verdicts, and trace hashes. |
+| Cognition | Contemplation | `/contemplation` | Palette | Inspect persisted contemplation process traces. |
 | Determinism | Replay | `/replay` | `⌘3` | Re-execute journaled turns in a sealed fresh runtime and compare envelopes. |
 | Determinism | Demos | `/demos` | Palette | Run registered determinism demos. |
 | Evidence | Proposals | `/proposals` | `⌘4` | Review cognition and math proposal evidence. |
@@ -85,16 +86,17 @@ the command palette.
 |---|---|
 | Chat | The local runtime can produce a typed turn envelope and journal it. |
 | Trace | The journal carries user, articulation, walk, grounding, verdict, and hash evidence. |
+| Contemplation | Persisted contemplation process reports expose cold attempt, checkpoint enrichment, proposal boundary, and grounded-after scenes. |
 | Replay | A selected journaled prompt can be replayed through the sealed replay comparator; equivalence is leaf-based. |
-| Demos | Registered demo scenarios pass or fail with recorded scenario evidence. |
+| Demos | Registered demo scenarios pass or fail with recorded scenario evidence and proof/entailment DAGs where the demo emits them. |
 | Proposals | Proposal evidence, replay facts, and ratification commands are inspectable without applying mutation. |
-| Runs | Recorded run/session references are discoverable with explicit gaps. |
+| Runs | Recorded run/session references, checkpoint gaps, and identity-continuity verdicts are discoverable. |
 | Vault | Persisted vault metadata is inspectable when persistence is configured. |
 | Audit | Audit events are readable with payload digests and mutation-boundary flags. |
 | Evals | Allowlisted eval lanes and wrong/correct/refused metrics are visible. |
 | Calibration | Practice classes show engine-owned Wilson floor and PROPOSE/SERVE license verdicts. |
 | Packs | Pack manifests, checksums, and determinism metadata are visible. |
-| Settings | UI preferences are local-only; runtime status is read-only. |
+| Settings | UI preferences are local-only; density mode is consumed by shell/design tokens; runtime status is read-only. |
 
 ## 6. What Each Route Does Not Prove
 
@@ -102,10 +104,11 @@ the command palette.
 |---|---|
 | Chat | Does not prove replay equivalence until Replay verifies a journaled turn. |
 | Trace | Does not prove correctness; it exposes recorded state. |
+| Contemplation | Does not ratify findings or prove open-ended learning; it reads committed reports only. |
 | Replay | Does not distinguish nondeterminism from unrecorded origin-state influence. |
 | Demos | Does not generalize beyond registered scenarios. |
 | Proposals | Does not ratify unless an admitted handler path is explicitly invoked. |
-| Runs | Does not reconstruct missing checkpoints. |
+| Runs | Does not reconstruct missing checkpoints or synthesize identity continuity when manifest evidence is absent. |
 | Vault | Does not expose live in-process memory. |
 | Audit | Does not create a new event store. |
 | Evals | Does not run unsafe or sealed holdout lanes from the UI. |

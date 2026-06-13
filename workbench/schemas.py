@@ -20,6 +20,16 @@ ErrorCode = Literal[
 MutationMode = Literal["read_only", "runtime_turn"]
 GroundingSource = Literal["pack", "teaching", "vault", "partial", "oov", "none"]
 TraceIntegrity = Literal["pipeline_trace", "legacy_unhashed"]
+PipelineEvidenceStatus = Literal["recorded", "missing_evidence"]
+CognitivePipelineStageKind = Literal[
+    "input",
+    "intent",
+    "proposition_graph",
+    "articulation_target",
+    "realizer",
+    "walk_telemetry",
+    "trace_hash",
+]
 EpistemicStateValue = Literal[
     "perceived",
     "evidenced",
@@ -65,7 +75,9 @@ def ok(data: Any) -> dict[str, Any]:
     return {"ok": True, "generated_at": utc_now(), "data": to_data(data)}
 
 
-def error(code: ErrorCode, message: str, *, detail: Any | None = None) -> dict[str, Any]:
+def error(
+    code: ErrorCode, message: str, *, detail: Any | None = None
+) -> dict[str, Any]:
     payload: dict[str, Any] = {"code": code, "message": message}
     if detail is not None:
         payload["detail"] = to_data(detail)
@@ -106,6 +118,34 @@ class ProposalRef:
 
 
 @dataclass(frozen=True, slots=True)
+class CognitivePipelineStage:
+    stage_id: CognitivePipelineStageKind
+    label: str
+    status: PipelineEvidenceStatus
+    summary: str
+    detail: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class CognitivePipelineEdge:
+    from_stage: CognitivePipelineStageKind
+    to_stage: CognitivePipelineStageKind
+    label: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CognitivePipelineRecord:
+    schema_version: Literal["cognitive_pipeline_record_v1"]
+    status: PipelineEvidenceStatus
+    missing_reason: str | None
+    trace_hash: str | None
+    versor_condition: float | None
+    field_digest: str | None
+    stages: list[CognitivePipelineStage] = field(default_factory=list)
+    edges: list[CognitivePipelineEdge] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
 class ChatTurnResult:
     prompt: str
     surface: str
@@ -126,6 +166,7 @@ class ChatTurnResult:
     turn_cost_ms: int
     checkpoint_emitted: bool
     leeway_evidence: LeewayEvidence | None = None
+    pipeline_record: CognitivePipelineRecord | None = None
     turn_id: int | None = None
 
 
@@ -161,6 +202,7 @@ class TurnJournalEntrySchema:
     trace_integrity: TraceIntegrity
     journal_digest: str
     leeway_evidence: LeewayEvidence | None = None
+    pipeline_record: CognitivePipelineRecord | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -232,6 +274,35 @@ EvidenceClass = Literal[
     "simulation_only",
     "proposed",
 ]
+DemoEvidenceDagKind = Literal[
+    "proof_carrying_promotion",
+    "deductive_entailment",
+]
+
+
+@dataclass(frozen=True, slots=True)
+class DemoDagNode:
+    node_id: str
+    label: str
+    summary: str
+    detail: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class DemoDagEdge:
+    from_node: str
+    to_node: str
+    label: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class DemoEvidenceDag:
+    graph_id: str
+    graph_kind: DemoEvidenceDagKind
+    title: str
+    source_digest: str | None
+    nodes: list[DemoDagNode] = field(default_factory=list)
+    edges: list[DemoDagEdge] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
@@ -267,6 +338,7 @@ class DemoScenarioRunResult:
     trace_hash: str | None
     problems: list[str] = field(default_factory=list)
     response: Any = None
+    evidence_dag: DemoEvidenceDag | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -276,6 +348,34 @@ class DemoRunResult:
     what_this_proves: str
     what_this_does_not_prove: str
     scenarios: list[DemoScenarioRunResult] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class ContemplationScene:
+    scene_id: str
+    claim: str
+    detail: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class ContemplationRunSummary:
+    run_id: str
+    source_path: str
+    source_digest: str | None
+    prompt: str | None
+    cold_subject: str | None
+    scene_count: int
+    learning_arc_closed: bool | None
+    all_claims_supported: bool | None
+    active_corpus_byte_identical: bool | None
+
+
+@dataclass(frozen=True, slots=True)
+class ContemplationRunDetail(ContemplationRunSummary):
+    before: dict[str, Any] | None = None
+    after: dict[str, Any] | None = None
+    engine_chain: dict[str, Any] | None = None
+    scenes: list[ContemplationScene] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -415,6 +515,26 @@ class AuditEvent:
 
 
 RunSource = Literal["engine_state_manifest", "turn_journal"]
+IdentityContinuityStatus = Literal["verified", "break", "missing_evidence"]
+IdentityLineageRelation = Literal[
+    "self_parent",
+    "descends_from_parent",
+    "missing_parent",
+    "unavailable",
+]
+
+
+@dataclass(frozen=True, slots=True)
+class IdentityContinuity:
+    status: IdentityContinuityStatus
+    engine_identity: str | None
+    parent_engine_identity: str | None
+    current_engine_identity: str | None
+    written_at_revision: str | None
+    current_revision: str
+    lineage_relation: IdentityLineageRelation
+    verification_summary: str
+    evidence_gap: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -444,6 +564,7 @@ class RunTurnRef:
 class RunDetail(RunSummary):
     turns: list[RunTurnRef] = field(default_factory=list)
     manifest: dict[str, Any] | None = None
+    identity_continuity: IdentityContinuity | None = None
 
 
 @dataclass(frozen=True, slots=True)

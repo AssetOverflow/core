@@ -9,6 +9,7 @@ import { EvidenceProvider } from "./evidenceContext";
 import { ChatRoute } from "../routes/ChatRoute";
 import { ProposalsRoute } from "./proposals/ProposalsRoute";
 import { TraceRoute } from "./trace/TraceRoute";
+import { ContemplationRoute } from "./contemplation/ContemplationRoute";
 import { AuditRoute } from "./audit/AuditRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
@@ -129,6 +130,15 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
     loadingLabel: "Loading trace...",
     emptyStatement: "No turns recorded yet. Use Chat to create evidence.",
     emptyCommand: "core chat",
+  },
+  {
+    name: "Contemplation",
+    element: <ContemplationRoute />,
+    path: "/contemplation/:runId?",
+    initialEntry: "/contemplation",
+    loadingLabel: "Loading contemplation runs...",
+    emptyStatement: "No contemplation process reports recorded.",
+    emptyCommand: "core contemplate",
   },
   {
     name: "Proposals",
