@@ -111,8 +111,28 @@ Detailed brief pack: `docs/handoff/wave-M-phaseB-calibration-briefs-2026-06-13.m
   real `CognitiveTurnPipeline` stages (intent → PropositionGraph →
   ArticulationTarget → realizer → walk telemetry → trace hash) as a
   deterministic staged view (reuse the DAG primitive). *The* "real,
-  replayable path, not animated fake cognition" surface. Reader-first over
-  existing trace/walk telemetry.
+  replayable path, not animated fake cognition" surface.
+  **Persistence-first constraint (verified 2026-06-13):** this is NOT
+  reader-first over existing telemetry — the journal does not persist the
+  stage internals. `CognitiveTurnResult` carries ~25 fields (field_state,
+  proposition, proposition_graph, intent, admissibility_trace,
+  operator_invocation, dropped_compound_clauses, versor_condition, …) but
+  `TurnJournalEntry` persists only ~12 surface fields, and `_run_chat_turn`
+  discards the rest; there is no `/trace/{id}/pipeline` endpoint and the data
+  was never written. So **C1-a's real first deliverable is a persistence
+  change, not an API route**: persist a *curated* `CognitivePipelineRecord`
+  at turn-write time, then the endpoint is a trivial read-only projection.
+  Two hard constraints: (1) persist the cheap structured stage records +
+  `versor_condition` as a scalar (and at most a field *digest*) — **never the
+  raw `field_state_before/after` multivectors**, which would resurrect the
+  deferred per-turn O(n²) persistence cost and contradict the L10
+  discard-on-exit design; (2) it touches the runtime surface contract
+  (`CognitiveTurnResult → ChatTurnResult → TurnJournalEntry` is two narrowing
+  hops), so the PR updates `docs/runtime_contracts.md` + a **non-vacuous
+  fail-closed test** that a silently-dropped stage fails loudly (CLAUDE.md
+  Schema-Defined Proof Obligations), and pre-widening turns show
+  `missing_evidence`, not green. The replay-reconstruction fallback (Option B)
+  recomputes rather than reads recorded state — fallback only, never primary.
 - **C2 — Contemplation as a process, not just outputs:** the contemplation
   *loop* (attempt → gold-tether → ClassTally → propose), connecting
   Demos/Proposals/Calibration into one story.
