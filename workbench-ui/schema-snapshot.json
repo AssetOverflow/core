@@ -201,6 +201,22 @@
     "trace_hash",
     "grounding_source"
   ],
+  "TurnReplayComparison": [
+    "turn_id",
+    "comparison_basis",
+    "origin_state",
+    "original_trace_hash",
+    "replay_trace_hash",
+    "equivalent",
+    "replay_turn_cost_ms",
+    "divergences"
+  ],
+  "TurnReplayDivergence": [
+    "path",
+    "original",
+    "replay",
+    "severity"
+  ],
   "TurnVerdict": [
     "outcome",
     "runtime_detail"

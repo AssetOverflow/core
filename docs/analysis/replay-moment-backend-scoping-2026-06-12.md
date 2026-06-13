@@ -2,7 +2,32 @@
 
 Date: 2026-06-12
 Plan: `docs/workbench/wave-R-mastery-revamp.md` § Wave R3 (first item).
-Status: scoped; implementation is the first R3 PR.
+Status: implemented — with one design correction recorded below.
+
+## Amendment (implementation PR, same day)
+
+The "sealed genesis-prefix replay" decision below was **wrong** and was
+corrected before any code shipped.  This doc was written before reading the
+chat handler; implementation began by reading it, which surfaced the
+decisive fact: `workbench/api.py::_run_chat_turn` constructs a **fresh
+`ChatRuntime()` per turn**.  The journaled turns were never one continuous
+session, so feeding prompts `1..N` through a single runtime would
+accumulate session state the original turns never had — prefix replay
+would manufacture spurious divergence by construction.
+
+What shipped instead: **sealed fresh-runtime single-turn replay**
+(`comparison_basis: "sealed_fresh_runtime_single_turn"`), which matches
+the original per-turn execution shape and is O(1) instead of O(N).  The
+honesty consequence is unchanged in kind but renamed: the unknown is not
+prefix completeness but whether the original turn's fresh runtime loaded
+an engine-state checkpoint present at the time (`origin_state:
+"unrecorded"` — the journal does not record it).  `refused:
+prefix_too_long` is obsolete (no prefix); the contract section in
+`docs/workbench/api-contract-v1.md` § Replay is authoritative for the
+shipped shape.  The five proof obligations below survive, re-aimed at the
+single-turn model, and all execute in `tests/test_workbench_replay.py`.
+
+The original analysis is preserved unedited below as the decision record.
 
 ## What exists today
 

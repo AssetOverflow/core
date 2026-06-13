@@ -20,6 +20,7 @@ from core.epistemic_state import (
 from workbench import readers
 from workbench.journal import DEFAULT_JOURNAL_DIR, TurnJournal, TurnJournalEntry
 from workbench.readers import ArtifactTooLargeError, EvidenceUnavailableError
+from workbench.replay import replay_turn
 from workbench.schemas import ChatTurnResult, MathRatifyResult, ProposalRef, TurnVerdict, error, ok
 
 
@@ -255,7 +256,25 @@ class WorkbenchApi:
             except FileNotFoundError:
                 return ApiResponse(404, error("not_found", f"trace turn not found: {turn_id}"))
         if method == "GET" and path.startswith("/replay/"):
-            return ApiResponse(501, error("unsupported", "route is deferred beyond W-026"))
+            raw_turn_id = unquote(path.removeprefix("/replay/"))
+            try:
+                turn_id = int(raw_turn_id)
+            except ValueError:
+                return ApiResponse(404, error("not_found", f"replay turn not found: {raw_turn_id}"))
+            try:
+                entry = self._journal.get_entry(turn_id)
+            except FileNotFoundError:
+                return ApiResponse(404, error("not_found", f"replay turn not found: {turn_id}"))
+            # Replay executes a real runtime turn; serialize with live chat
+            # turns the same way POST /chat/turn does.
+            with _CHAT_TURN_LOCK:
+                try:
+                    comparison = replay_turn(entry, execute=_run_sealed_chat_turn)
+                except Exception as exc:  # no comparison may be fabricated
+                    return ApiResponse(
+                        500, error("runtime_unavailable", f"replay failed: {exc}")
+                    )
+            return ApiResponse(200, ok(comparison))
         return ApiResponse(404, error("not_found", f"route not found: {method} {path}"))
 
     def _math_ratify(self, proposal_id: str, body: bytes) -> ApiResponse:
@@ -445,8 +464,19 @@ def _proposal_refs(runtime: ChatRuntime, before_ids: set[str]) -> list[ProposalR
     return refs
 
 
-def _run_chat_turn(prompt: str) -> ChatTurnResult:
-    runtime = ChatRuntime()
+def _run_sealed_chat_turn(prompt: str) -> ChatTurnResult:
+    """Replay executor: same envelope assembly, sealed runtime.
+
+    ``no_load_state=True`` nulls the engine-state store by construction —
+    no checkpoint load, ``checkpoint_engine_state`` no-ops, no proposal-log
+    lineage — so a replay can neither read nor leave runtime state.
+    """
+    return _run_chat_turn(prompt, runtime=ChatRuntime(no_load_state=True))
+
+
+def _run_chat_turn(prompt: str, runtime: ChatRuntime | None = None) -> ChatTurnResult:
+    if runtime is None:
+        runtime = ChatRuntime()
     before_candidate_ids = {
         str(getattr(candidate, "candidate_id", "") or "")
         for candidate in getattr(runtime, "_pending_candidates", ()) or ()

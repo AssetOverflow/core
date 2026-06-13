@@ -232,6 +232,45 @@ class ReplayComparison:
 
 
 # ---------------------------------------------------------------------------
+# Wave R3 — sealed single-turn replay over the turn journal.
+# Scoping: docs/analysis/replay-moment-backend-scoping-2026-06-12.md.
+# The W-026 artifact-keyed pair above has no live consumer and is retired
+# when the frontend Replay Moment re-points to this turn-keyed shape.
+# ---------------------------------------------------------------------------
+
+TurnReplayDivergenceSeverity = Literal["critical", "informational"]
+# The only basis implemented: a fresh ChatRuntime(no_load_state=True) —
+# genesis substrate, no checkpoint load, no checkpoint write, no proposal
+# lineage — re-executes the recorded prompt once.
+TurnReplayBasis = Literal["sealed_fresh_runtime_single_turn"]
+# The journal does not record whether an engine-state checkpoint existed
+# when the original turn ran, so the origin state is honestly unrecorded:
+# a divergence means nondeterminism OR origin-state influence, and the
+# response must never claim to distinguish them.
+TurnReplayOriginState = Literal["unrecorded"]
+
+
+@dataclass(frozen=True, slots=True)
+class TurnReplayDivergence:
+    path: str
+    original: Any
+    replay: Any
+    severity: TurnReplayDivergenceSeverity
+
+
+@dataclass(frozen=True, slots=True)
+class TurnReplayComparison:
+    turn_id: int
+    comparison_basis: TurnReplayBasis
+    origin_state: TurnReplayOriginState
+    original_trace_hash: str | None
+    replay_trace_hash: str | None
+    equivalent: bool
+    replay_turn_cost_ms: int
+    divergences: list[TurnReplayDivergence] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
 # ADR-0172 W4 — Math proposal schemas
 # ---------------------------------------------------------------------------
 
