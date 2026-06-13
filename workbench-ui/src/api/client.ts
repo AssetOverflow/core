@@ -19,6 +19,8 @@ import type {
   PackDetail,
   VaultSummary,
   VaultEntry,
+  CalibrationClass,
+  ServingMetrics,
   TurnJournalEntry,
   TurnJournalSummary,
   MathProposalSummary,
@@ -258,5 +260,15 @@ export async function fetchVaultEntries(limit?: number, offset?: number): Promis
   const envelope = await apiFetch<ItemsEnvelope<VaultEntry>>(
     query ? `/vault/entries?${query}` : "/vault/entries",
   );
+  return envelope.items;
+}
+
+export async function fetchCalibrationClasses(): Promise<CalibrationClass[]> {
+  const envelope = await apiFetch<ItemsEnvelope<CalibrationClass>>("/calibration/classes");
+  return envelope.items;
+}
+
+export async function fetchServingMetrics(): Promise<ServingMetrics[]> {
+  const envelope = await apiFetch<ItemsEnvelope<ServingMetrics>>("/serving/metrics");
   return envelope.items;
 }

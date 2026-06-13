@@ -16,6 +16,7 @@ import { DemoTheaterRoute } from "./demos/DemoTheaterRoute";
 import { RunsRoute } from "./runs/RunsRoute";
 import { PacksRoute } from "./packs/PacksRoute";
 import { VaultRoute } from "./vault/VaultRoute";
+import { CalibrationRoute } from "./calibration/CalibrationRoute";
 import { SettingsRoute } from "./settings/SettingsRoute";
 
 /**
@@ -193,6 +194,17 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
     emptyStatement:
       "No persisted vault. Session memory is held in-process and discarded on exit; persistence is opt-in via RuntimeConfig.persist_session_state.",
     emptyCommand: "Set RuntimeConfig.persist_session_state = true",
+  },
+  {
+    name: "Calibration",
+    element: <CalibrationRoute />,
+    path: "/calibration",
+    initialEntry: "/calibration",
+    loadingLabel: "Loading calibration...",
+    // Fail-closed: an empty arena ledger is the honest primary state.
+    emptyStatement:
+      "No calibration evidence yet. The per-class arena ledger is populated by the sealed practice lane (ADR-0175).",
+    emptyCommand: "core eval math-contemplation",
   },
 ];
 
