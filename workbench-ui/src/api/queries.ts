@@ -22,6 +22,8 @@ import {
   fetchPack,
   fetchVaultSummary,
   fetchVaultEntries,
+  fetchCalibrationClasses,
+  fetchServingMetrics,
   fetchTraceTurn,
   fetchTraceTurns,
   fetchMathProposals,
@@ -47,6 +49,8 @@ import type {
   PackDetail,
   VaultSummary,
   VaultEntry,
+  CalibrationClass,
+  ServingMetrics,
   TurnJournalEntry,
   TurnJournalSummary,
   EvalLaneSummary,
@@ -340,6 +344,26 @@ export function useVaultEntries(enabled: boolean, limit?: number, offset?: numbe
     queryKey: ["api", "vault", "entries", limit ?? null, offset ?? null],
     queryFn: () => fetchVaultEntries(limit, offset),
     enabled,
+    retry: false,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useCalibrationClasses() {
+  return useQuery<CalibrationClass[], WorkbenchApiError>({
+    queryKey: ["api", "calibration", "classes"],
+    queryFn: () => fetchCalibrationClasses(),
+    retry: false,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useServingMetrics() {
+  return useQuery<ServingMetrics[], WorkbenchApiError>({
+    queryKey: ["api", "serving", "metrics"],
+    queryFn: () => fetchServingMetrics(),
     retry: false,
     staleTime: 30_000,
     refetchOnWindowFocus: false,

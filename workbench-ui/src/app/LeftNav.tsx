@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { label: "Demos", to: "/demos" },
   { label: "Proposals", to: "/proposals" },
   { label: "Evals", to: "/evals" },
+  { label: "Calibration", to: "/calibration" },
   { label: "Runs", to: "/runs" },
   { label: "Packs", to: "/packs" },
   { label: "Vault", to: "/vault" },

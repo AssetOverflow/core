@@ -13,6 +13,7 @@ import { EvalsRoute } from "./evals/EvalsRoute";
 import { RunsRoute } from "./runs/RunsRoute";
 import { PacksRoute } from "./packs/PacksRoute";
 import { VaultRoute } from "./vault/VaultRoute";
+import { CalibrationRoute } from "./calibration/CalibrationRoute";
 import { SettingsRoute } from "./settings/SettingsRoute";
 import { getWorkbenchPrefs } from "./workbenchPrefs";
 
@@ -32,6 +33,7 @@ export function App() {
             <Route path="runs/:sessionId?" element={<RunsRoute />} />
             <Route path="packs/:packId?" element={<PacksRoute />} />
             <Route path="vault" element={<VaultRoute />} />
+            <Route path="calibration" element={<CalibrationRoute />} />
             <Route path="audit" element={<AuditRoute />} />
             <Route path="settings" element={<SettingsRoute />} />
           </Route>
