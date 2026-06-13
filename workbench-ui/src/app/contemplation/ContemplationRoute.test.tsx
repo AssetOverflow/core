@@ -38,11 +38,21 @@ const detail: ContemplationRunDetail = {
       scene_id: "S1_cold_session",
       claim: "cold session refused",
       detail: { grounding_source: "none" },
+      stage_role: "cold_attempt",
+      proposal_id: null,
+      candidate_id: null,
+      proposal_state: null,
+      grounding_source: "none",
     },
     {
       scene_id: "S3_engine_authored_proposal",
       claim: "proposal remains pending",
-      detail: { state: "pending" },
+      detail: { state: "pending", proposal_id: "05e167163c1f22c1" },
+      stage_role: "engine_proposal",
+      proposal_id: "05e167163c1f22c1",
+      candidate_id: null,
+      proposal_state: "pending",
+      grounding_source: null,
     },
   ],
 };
@@ -120,6 +130,28 @@ describe("ContemplationRoute", () => {
     expect(screen.getByText("S3_engine_authored_proposal")).toBeInTheDocument();
     expect(screen.getByText("cold session refused")).toBeInTheDocument();
     expect(screen.getByText(/\"connective\":\"reveals\"/)).toBeInTheDocument();
+  });
+
+  it("renders the loop as a staged process with connective evidence, no dead link", async () => {
+    stubFetch();
+    const user = userEvent.setup();
+    renderRoute();
+
+    await user.click(await screen.findByText("Why does narrative exist?"));
+    await screen.findByText("Process Trace");
+
+    // Canonical stage roles are named, not raw scene ids alone.
+    expect(screen.getByText("Cold attempt")).toBeInTheDocument();
+    expect(screen.getByText("Engine-authored proposal")).toBeInTheDocument();
+    expect(
+      screen.getByText(/attempt → enrich → propose → ratify → grounded/),
+    ).toBeInTheDocument();
+
+    // The proposal id is surfaced as evidence with its state...
+    const evidence = screen.getByText(/05e167163c1f22c1 · pending/);
+    expect(evidence).toBeInTheDocument();
+    // ...but NOT as a clickable link (it does not resolve in the live log).
+    expect(evidence.closest("a")).toBeNull();
   });
 
   it("renders the honest absence state when no reports exist", async () => {

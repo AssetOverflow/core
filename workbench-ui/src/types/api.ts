@@ -412,10 +412,23 @@ export interface DemoRunResult {
   scenarios: DemoScenarioRunResult[];
 }
 
+export type ContemplationStageRole =
+  | "cold_attempt"
+  | "engine_enrichment"
+  | "engine_proposal"
+  | "operator_ratifies"
+  | "grounded"
+  | "other";
+
 export interface ContemplationScene {
   scene_id: string;
   claim: string;
   detail: Record<string, unknown>;
+  stage_role: ContemplationStageRole;
+  proposal_id: string | null;
+  candidate_id: string | null;
+  proposal_state: string | null;
+  grounding_source: string | null;
 }
 
 export interface ContemplationRunSummary {
