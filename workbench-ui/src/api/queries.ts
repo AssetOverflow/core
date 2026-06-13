@@ -6,11 +6,13 @@ import {
 } from "@tanstack/react-query";
 import {
   apiFetch,
+  fetchDemos,
   fetchEvalLanes,
   runEvalLane,
   fetchArtifacts,
   fetchArtifactDetail,
   fetchTurnReplay,
+  runDemo,
   fetchProposalDetail,
   fetchProposals,
   fetchAuditEvents,
@@ -32,6 +34,8 @@ import {
 import type { WorkbenchApiError } from "./client";
 import type {
   RuntimeStatus,
+  DemoRunResult,
+  DemoSummary,
   ArtifactRef,
   ArtifactDetail,
   ProposalSummary,
@@ -107,6 +111,25 @@ export function useTurnReplay(turnId?: number | null) {
     retry: false,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
+  });
+}
+
+export function useDemos() {
+  return useQuery<DemoSummary[], WorkbenchApiError>({
+    queryKey: ["api", "demos"],
+    queryFn: fetchDemos,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useDemoRun() {
+  return useMutation<DemoRunResult, WorkbenchApiError, { demoId: string }>({
+    mutationKey: ["demo-run"],
+    mutationFn: ({ demoId }) => runDemo(demoId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["api", "demo-run", variables.demoId] });
+    },
   });
 }
 
@@ -322,4 +345,3 @@ export function useVaultEntries(enabled: boolean, limit?: number, offset?: numbe
     refetchOnWindowFocus: false,
   });
 }
-

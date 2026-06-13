@@ -10,6 +10,7 @@ const PREFS_EVENT = "core-workbench-prefs-change";
 export const LANDING_ROUTES = [
   "chat",
   "trace",
+  "demos",
   "proposals",
   "evals",
   "runs",

@@ -7,8 +7,9 @@ import json
 import os
 import re
 import threading
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, get_args
+from typing import Any, Callable, get_args
 
 from engine_state import EngineStateStore, get_git_revision
 from evals.framework import discover_lanes, get_lane, run_lane
@@ -17,6 +18,10 @@ from workbench.schemas import (
     AuditEvent,
     ArtifactDetail,
     ArtifactRef,
+    DemoRunResult,
+    DemoScenarioRunResult,
+    DemoScenarioSummary,
+    DemoSummary,
     EvalLaneSummary,
     EvalRunResult,
     MathProposalDetail,
@@ -57,6 +62,7 @@ LANGUAGE_PACK_ROOT = REPO_ROOT / "language_packs" / "data"
 RUNTIME_PACK_ROOT = REPO_ROOT / "packs"
 WORKBENCH_TELEMETRY_ROOT = REPO_ROOT / "workbench_data"
 ENGINE_STATE_ROOT = REPO_ROOT / "engine_state"
+DEMOS_ROOT = REPO_ROOT / "demos"
 _DEFAULT_MATH_AUDIT_PATH = (
     REPO_ROOT
     / "evals"
@@ -72,6 +78,130 @@ _HANDLER_DISPATCH: dict[str, str] = {
     "vocabulary_addition": "LexicalClaim",
     "frame_reclassification": "FrameClaim",
     "composition_reclassification": "CompositionClaim",
+}
+
+
+@dataclass(frozen=True, slots=True)
+class _DemoSpec:
+    demo_id: str
+    title: str
+    description: str
+    root: Path
+    evidence_class: str
+    what_this_proves: str
+    what_this_does_not_prove: str
+    fixture_paths: Callable[[], list[Path]]
+    expected_path: Callable[[str], Path]
+    run_fixture: Callable[[Path], dict[str, Any]]
+
+
+def _pccp_fixture_paths() -> list[Path]:
+    from demos.proof_carrying_promotion import run_demo
+
+    return run_demo.fixture_paths()
+
+
+def _pccp_expected_path(scenario_id: str) -> Path:
+    from demos.proof_carrying_promotion import run_demo
+
+    return run_demo.expected_path(scenario_id)
+
+
+def _pccp_run_fixture(path: Path) -> dict[str, Any]:
+    from demos.proof_carrying_promotion import run_demo
+
+    return run_demo.run_fixture(path)
+
+
+def _deductive_fixture_paths() -> list[Path]:
+    from demos.deductive_entailment_authority import run_demo
+
+    return run_demo.fixture_paths()
+
+
+def _deductive_expected_path(scenario_id: str) -> Path:
+    from demos.deductive_entailment_authority import run_demo
+
+    return run_demo.expected_path(scenario_id)
+
+
+def _deductive_run_fixture(path: Path) -> dict[str, Any]:
+    from demos.deductive_entailment_authority import run_demo
+
+    return run_demo.run_fixture(path)
+
+
+def _truth_state_fixture_paths() -> list[Path]:
+    from demos.epistemic_truth_state import run_demo
+
+    return run_demo.fixture_paths()
+
+
+def _truth_state_expected_path(scenario_id: str) -> Path:
+    from demos.epistemic_truth_state import run_demo
+
+    return run_demo.expected_path(scenario_id)
+
+
+def _truth_state_run_fixture(path: Path) -> dict[str, Any]:
+    from demos.epistemic_truth_state import run_demo
+
+    return run_demo.run_fixture(path)
+
+
+DEMO_SPECS: dict[str, _DemoSpec] = {
+    "proof_carrying_promotion": _DemoSpec(
+        demo_id="proof_carrying_promotion",
+        title="Proof-Carrying Coherence Promotion",
+        description="Vault-owned certified promotion with proposer status ignored.",
+        root=DEMOS_ROOT / "proof_carrying_promotion",
+        evidence_class="substrate_capability",
+        what_this_proves=(
+            "CORE fresh-reads a curated local arena, recomputes entailment, "
+            "and lets the vault owner apply promotion only through a verified certificate."
+        ),
+        what_this_does_not_prove=(
+            "It does not prove broad natural-language reasoning, autonomous curation, "
+            "or model authority over epistemic status."
+        ),
+        fixture_paths=_pccp_fixture_paths,
+        expected_path=_pccp_expected_path,
+        run_fixture=_pccp_run_fixture,
+    ),
+    "deductive_entailment_authority": _DemoSpec(
+        demo_id="deductive_entailment_authority",
+        title="Deductive Entailment Authority",
+        description="Formal entailment decided by the pinned engine and an independent oracle.",
+        root=DEMOS_ROOT / "deductive_entailment_authority",
+        evidence_class="substrate_capability",
+        what_this_proves=(
+            "CORE serves entailed, refuted, unknown, and refused decisions only when "
+            "the pinned ROBDD engine and independent truth-table oracle agree."
+        ),
+        what_this_does_not_prove=(
+            "It does not claim open-domain theorem proving or acceptance of proposer-provided proofs."
+        ),
+        fixture_paths=_deductive_fixture_paths,
+        expected_path=_deductive_expected_path,
+        run_fixture=_deductive_run_fixture,
+    ),
+    "epistemic_truth_state": _DemoSpec(
+        demo_id="epistemic_truth_state",
+        title="Epistemic Truth-State Authority",
+        description="Evidence-bounded state assignment with invalid proposer smuggling refused.",
+        root=DEMOS_ROOT / "epistemic_truth_state",
+        evidence_class="substrate_capability",
+        what_this_proves=(
+            "CORE assigns truth-state from bounded evidence and rejects proposer attempts "
+            "to smuggle unsupported state."
+        ),
+        what_this_does_not_prove=(
+            "It does not prove universal factual coverage or mutate reviewed memory."
+        ),
+        fixture_paths=_truth_state_fixture_paths,
+        expected_path=_truth_state_expected_path,
+        run_fixture=_truth_state_run_fixture,
+    ),
 }
 
 
@@ -457,6 +587,153 @@ def read_eval_lane(lane_name: str) -> EvalLaneSummary:
         versions=list(lane.versions),
         read_only=lane.name in SAFE_EVAL_LANES,
         description=None,
+    )
+
+
+def _validate_demo_id(demo_id: str) -> str:
+    if not SAFE_PACK_ID_RE.fullmatch(demo_id):
+        raise ValueError("demo id contains unsafe characters")
+    return demo_id
+
+
+def _scenario_title(scenario_id: str) -> str:
+    return scenario_id.replace("-", " ").replace("_", " ").title()
+
+
+def _fixture_for_path(path: Path) -> dict[str, Any]:
+    _check_read_size(path)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"expected JSON object in {_display_path(path)}")
+    return payload
+
+
+def _scenario_id_from_fixture(fixture: dict[str, Any], path: Path) -> str:
+    args = fixture.get("arguments")
+    if isinstance(args, dict) and isinstance(args.get("scenario_id"), str):
+        return args["scenario_id"]
+    value = fixture.get("scenario_id")
+    if isinstance(value, str):
+        return value
+    raise ValueError(f"demo fixture has no scenario_id: {_display_path(path)}")
+
+
+def _proposer_wrong(scenario_id: str, fixture: dict[str, Any], response: Any | None = None) -> bool:
+    lowered = scenario_id.lower()
+    if "proposer" in lowered or "smuggling" in lowered:
+        return True
+    source = response if isinstance(response, dict) else fixture.get("arguments")
+    if isinstance(source, dict):
+        ignored = source.get("proposer_ignored_fields")
+        if isinstance(ignored, list) and ignored:
+            return True
+        trace_summary = source.get("trace_summary")
+        if isinstance(trace_summary, dict):
+            ignored = trace_summary.get("proposer_fields_ignored")
+            if isinstance(ignored, list) and ignored:
+                return True
+    return False
+
+
+def _render_demo_payload(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, sort_keys=True, indent=2) + "\n"
+
+
+def _demo_spec(demo_id: str) -> _DemoSpec:
+    safe_id = _validate_demo_id(demo_id)
+    spec = DEMO_SPECS.get(safe_id)
+    if spec is None:
+        raise FileNotFoundError(demo_id)
+    return spec
+
+
+def _demo_scenario_summaries(spec: _DemoSpec) -> list[DemoScenarioSummary]:
+    scenarios: list[DemoScenarioSummary] = []
+    for path in spec.fixture_paths():
+        fixture = _fixture_for_path(path)
+        scenario_id = _scenario_id_from_fixture(fixture, path)
+        scenarios.append(
+            DemoScenarioSummary(
+                scenario_id=scenario_id,
+                title=_scenario_title(scenario_id),
+                expected_status=str(fixture.get("expected_status") or "unknown"),
+                evidence_class=spec.evidence_class,  # type: ignore[arg-type]
+                proposer_wrong=_proposer_wrong(scenario_id, fixture),
+                what_this_proves=spec.what_this_proves,
+                what_this_does_not_prove=spec.what_this_does_not_prove,
+            )
+        )
+    return sorted(scenarios, key=lambda item: item.scenario_id)
+
+
+def list_demos() -> list[DemoSummary]:
+    demos: list[DemoSummary] = []
+    for spec in sorted(DEMO_SPECS.values(), key=lambda item: item.demo_id):
+        scenarios = _demo_scenario_summaries(spec)
+        demos.append(
+            DemoSummary(
+                demo_id=spec.demo_id,
+                title=spec.title,
+                description=spec.description,
+                evidence_class=spec.evidence_class,  # type: ignore[arg-type]
+                scenario_count=len(scenarios),
+                read_only=True,
+                scenarios=scenarios,
+            )
+        )
+    return demos
+
+
+def run_demo(demo_id: str) -> DemoRunResult:
+    spec = _demo_spec(demo_id)
+    results: list[DemoScenarioRunResult] = []
+    all_passed = True
+    for path in spec.fixture_paths():
+        fixture = _fixture_for_path(path)
+        scenario_id = _scenario_id_from_fixture(fixture, path)
+        expected_status = str(fixture.get("expected_status") or "")
+        response = spec.run_fixture(path)
+        problems: list[str] = []
+        status = str(response.get("status") if isinstance(response, dict) else "unknown")
+        if status != expected_status:
+            problems.append(f"status {status!r} != expected {expected_status!r}")
+        ref = spec.expected_path(scenario_id)
+        if not ref.exists():
+            problems.append("missing committed expected artifact")
+        else:
+            _check_read_size(ref)
+            if ref.read_text(encoding="utf-8") != _render_demo_payload(response):
+                problems.append("response drifted from committed expected artifact")
+        passed = not problems
+        all_passed = all_passed and passed
+        results.append(
+            DemoScenarioRunResult(
+                scenario_id=scenario_id,
+                status=status,
+                passed=passed,
+                proposer_wrong=_proposer_wrong(scenario_id, fixture, response),
+                evidence_class=spec.evidence_class,  # type: ignore[arg-type]
+                decision_reason=(
+                    str(response.get("decision_reason"))
+                    if isinstance(response, dict) and response.get("decision_reason") is not None
+                    else None
+                ),
+                trace_hash=(
+                    str(response.get("trace_hash"))
+                    if isinstance(response, dict) and response.get("trace_hash") is not None
+                    else None
+                ),
+                problems=problems,
+                response=response,
+            )
+        )
+    results.sort(key=lambda item: (item.passed, not item.proposer_wrong, item.scenario_id))
+    return DemoRunResult(
+        demo_id=spec.demo_id,
+        all_passed=all_passed,
+        what_this_proves=spec.what_this_proves,
+        what_this_does_not_prove=spec.what_this_does_not_prove,
+        scenarios=results,
     )
 
 
@@ -1068,6 +1345,7 @@ def read_run(
                 timestamp=str(entry.timestamp),
                 trace_path=f"/trace/{entry.turn_id}",
                 surface_excerpt=str(entry.surface)[:120],
+                trace_integrity=entry.trace_integrity,
             )
             for entry in _page(entries, limit=turn_limit, offset=turn_offset)
         ]

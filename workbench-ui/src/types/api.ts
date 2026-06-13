@@ -15,6 +15,7 @@ export type ErrorCode =
 export type Backend = "numpy" | "mlx" | "rust" | "unknown";
 export type MutationMode = "read_only" | "runtime_turn";
 export type GroundingSource = "pack" | "teaching" | "vault" | "partial" | "oov" | "none";
+export type TraceIntegrity = "pipeline_trace" | "legacy_unhashed";
 export type EpistemicState =
   | "perceived"
   | "evidenced"
@@ -90,6 +91,7 @@ export interface TurnJournalSummary {
   surface_excerpt: string;
   trace_hash: string | null;
   grounding_source: GroundingSource;
+  trace_integrity: TraceIntegrity;
 }
 
 export interface TurnJournalEntry {
@@ -109,6 +111,7 @@ export interface TurnJournalEntry {
   proposal_candidates: Record<string, unknown>[];
   turn_cost_ms: number;
   checkpoint_emitted: boolean;
+  trace_integrity: TraceIntegrity;
   journal_digest: string;
 }
 
@@ -134,6 +137,7 @@ export interface RunTurnRef {
   timestamp: string;
   trace_path: string;
   surface_excerpt: string;
+  trace_integrity: TraceIntegrity;
 }
 
 export interface RunDetail extends RunSummary {
@@ -245,6 +249,52 @@ export interface EvalRunResult {
   metrics: Record<string, unknown>;
   cases: unknown[];
   source_digest: string | null;
+}
+
+export type EvidenceClass =
+  | "substrate_capability"
+  | "interface_contract"
+  | "simulation_only"
+  | "proposed";
+
+export interface DemoScenarioSummary {
+  scenario_id: string;
+  title: string;
+  expected_status: string;
+  evidence_class: EvidenceClass;
+  proposer_wrong: boolean;
+  what_this_proves: string;
+  what_this_does_not_prove: string;
+}
+
+export interface DemoSummary {
+  demo_id: string;
+  title: string;
+  description: string;
+  evidence_class: EvidenceClass;
+  scenario_count: number;
+  read_only: boolean;
+  scenarios: DemoScenarioSummary[];
+}
+
+export interface DemoScenarioRunResult {
+  scenario_id: string;
+  status: string;
+  passed: boolean;
+  proposer_wrong: boolean;
+  evidence_class: EvidenceClass;
+  decision_reason: string | null;
+  trace_hash: string | null;
+  problems: string[];
+  response: unknown;
+}
+
+export interface DemoRunResult {
+  demo_id: string;
+  all_passed: boolean;
+  what_this_proves: string;
+  what_this_does_not_prove: string;
+  scenarios: DemoScenarioRunResult[];
 }
 
 // Wave R3 — sealed single-turn replay (turn-keyed; supersedes the W-026

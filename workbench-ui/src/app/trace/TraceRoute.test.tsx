@@ -22,6 +22,7 @@ const summaries: TurnJournalSummary[] = [
     surface_excerpt: "First response",
     trace_hash: "sha256:111111111111abcdef",
     grounding_source: "pack",
+    trace_integrity: "pipeline_trace",
   },
   {
     turn_id: 2,
@@ -30,6 +31,7 @@ const summaries: TurnJournalSummary[] = [
     surface_excerpt: "Second response",
     trace_hash: "sha256:222222222222abcdef",
     grounding_source: "teaching",
+    trace_integrity: "pipeline_trace",
   },
   {
     turn_id: 3,
@@ -38,6 +40,7 @@ const summaries: TurnJournalSummary[] = [
     surface_excerpt: "Third response",
     trace_hash: "sha256:333333333333abcdef",
     grounding_source: "vault",
+    trace_integrity: "pipeline_trace",
   },
 ];
 
@@ -64,6 +67,7 @@ function entry(id: number): TurnJournalEntry {
     proposal_candidates: [{ candidate_id: "candidate-1", source_kind: "discovery" }],
     turn_cost_ms: 17,
     checkpoint_emitted: true,
+    trace_integrity: summary.trace_integrity,
     journal_digest: `sha256:journal${summary.turn_id}abcdef`,
   };
 }
@@ -164,6 +168,23 @@ describe("TraceRoute", () => {
     expect(await screen.findByText("First prompt")).toBeInTheDocument();
     expect(screen.getByText("Second prompt")).toBeInTheDocument();
     expect(screen.getByText("sha256:111111111111...")).toBeInTheDocument();
+    expect(screen.getByText("3/3")).toBeInTheDocument();
+  });
+
+  it("classifies hashless journal rows as legacy, not trace proof", async () => {
+    stubTraceFetch([
+      summaries[0],
+      {
+        ...summaries[1],
+        trace_hash: null,
+        trace_integrity: "legacy_unhashed",
+      },
+    ]);
+    renderRoute();
+
+    expect(await screen.findByText("1/2")).toBeInTheDocument();
+    expect(screen.getAllByText("legacy_unhashed").length).toBeGreaterThan(0);
+    expect(screen.queryByText("no hash")).not.toBeInTheDocument();
   });
 
   it("selecting a turn writes /trace/<turnId> with replace and shows evidence", async () => {

@@ -8,6 +8,7 @@ import { EvalLaneCard } from "./EvalLaneCard";
 import { EvalRunButton } from "./EvalRunButton";
 import { EvalMetricGrid } from "./EvalMetricGrid";
 import { EvalFailureViewer } from "./EvalFailureViewer";
+import { EvalWrongZeroLedger, normalizeWrongZeroLedger } from "./EvalWrongZeroLedger";
 import { EvalsRoute } from "./EvalsRoute";
 import { runEvalLane, WorkbenchApiError } from "../../api/client";
 import type { EvalLaneSummary, EvalRunResult } from "../../types/api";
@@ -42,6 +43,26 @@ const mockResult: EvalRunResult = {
   source_digest: "abcdef1234567890",
 };
 
+const ledgerResult: EvalRunResult = {
+  lane: "deductive_logic",
+  version: "v1",
+  split: "public",
+  passed: true,
+  metrics: { correct: 2, refused: 1, wrong: 0, total: 3 },
+  cases: [
+    { case_id: "ok-2", passed: true },
+    { case_id: "refused-1", status: "refused", refusal_reason: "out_of_regime" },
+    { case_id: "ok-1", passed: true },
+  ],
+  source_digest: null,
+};
+
+const nullablePassedResult: EvalRunResult = {
+  ...ledgerResult,
+  passed: null,
+  metrics: { ...ledgerResult.metrics, all_passed: true },
+};
+
 function makeClient() {
   return createTestQueryClient();
 }
@@ -63,7 +84,12 @@ describe("W-030 Component Tests", () => {
       if (urlStr.endsWith("/evals")) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ ok: true, generated_at: "2026-05-26T00:00:00Z", data: mockLanes }),
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              generated_at: "2026-05-26T00:00:00Z",
+              data: { lanes: mockLanes },
+            }),
         });
       }
       if (urlStr.endsWith("/evals/run")) {
@@ -176,6 +202,16 @@ describe("W-030 Component Tests", () => {
       expect(cards1[2]).toContain("passed");
       expect(cards1[3]).toContain("total");
     });
+
+    it("formats fractional rate metrics as human percentages", () => {
+      const { container } = render(<EvalMetricGrid metrics={{ pass_rate: 1, error_rate: 0.125 }} />);
+      const cards = Array.from(container.querySelectorAll('[data-testid="metric-card"]')).map(
+        (el) => el.textContent,
+      );
+
+      expect(cards.join(" ")).toContain("pass rate100%");
+      expect(cards.join(" ")).toContain("error rate12.5%");
+    });
   });
 
   // 4. EvalFailureViewer
@@ -209,6 +245,24 @@ describe("W-030 Component Tests", () => {
   });
 
   // 5. EvalsRoute
+  describe("EvalWrongZeroLedger", () => {
+    it("renders the correct/refused/wrong triplet and refusal reasons", () => {
+      render(<EvalWrongZeroLedger result={ledgerResult} />);
+
+      expect(screen.getByTestId("ledger-correct")).toHaveTextContent("2");
+      expect(screen.getByTestId("ledger-refused")).toHaveTextContent("1");
+      expect(screen.getByTestId("ledger-wrong")).toHaveTextContent("0");
+      expect(screen.getAllByText("out_of_regime").length).toBeGreaterThan(0);
+    });
+
+    it("orders wrong cases first when deriving the ledger from case details", () => {
+      const ledger = normalizeWrongZeroLedger(mockResult);
+
+      expect(ledger.wrong).toBe(1);
+      expect(ledger.orderedCases[0]).toMatchObject({ id: "c2", kind: "wrong" });
+    });
+  });
+
   describe("EvalsRoute", () => {
     it("full happy-path with selection, running and result viewing", async () => {
       // Mock useEvalLanes query
@@ -262,6 +316,8 @@ describe("W-030 Component Tests", () => {
         expect(screen.getByText("Status:")).toBeInTheDocument();
       });
       expect(screen.getByText("accuracy")).toBeInTheDocument();
+      expect(screen.getByTestId("wrong-zero-ledger")).toBeInTheDocument();
+      expect(screen.getByTestId("ledger-wrong")).toHaveTextContent("1");
       expect(screen.getByText("Failures (1)")).toBeInTheDocument();
     });
 
@@ -288,6 +344,50 @@ describe("W-030 Component Tests", () => {
 
       expect(screen.getByText("Network Error")).toBeInTheDocument();
       expect(screen.getByText("Mutation status")).toBeInTheDocument();
+    });
+
+    it("derives a passed status from metrics when the top-level status is nullable", async () => {
+      vi.mocked(useEvalLanes).mockReturnValue({
+        data: mockLanes,
+        isLoading: false,
+        isError: false,
+        error: null,
+      } as any);
+
+      let mutateCallback: any;
+      vi.mocked(useEvalRun).mockReturnValue({
+        mutate: vi.fn((_req, options) => {
+          mutateCallback = options;
+        }),
+        isPending: false,
+        isError: false,
+        isSuccess: false,
+        error: null,
+      } as any);
+
+      render(
+        <QueryClientProvider client={makeClient()}>
+          <MemoryRouter initialEntries={["/evals/contemplation_quality"]}>
+            <EvidenceProvider>
+              <Routes>
+                <Route path="/evals/:laneId?" element={<EvalsRoute />} />
+              </Routes>
+            </EvidenceProvider>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      fireEvent.click(screen.getByTestId("run-button"));
+      act(() => {
+        mutateCallback.onSuccess(nullablePassedResult);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("All checks passed for eval lane contemplation_quality.")).toBeInTheDocument();
+      });
+      expect(screen.getAllByText("Passed").length).toBeGreaterThan(0);
+      expect(screen.queryByText("Failed")).not.toBeInTheDocument();
+      expect(screen.getByTestId("ledger-wrong")).toHaveTextContent("0");
     });
 
     it("verifies direct runEvalLane client-side refusal logic", async () => {

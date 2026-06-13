@@ -19,6 +19,7 @@ ErrorCode = Literal[
 
 MutationMode = Literal["read_only", "runtime_turn"]
 GroundingSource = Literal["pack", "teaching", "vault", "partial", "oov", "none"]
+TraceIntegrity = Literal["pipeline_trace", "legacy_unhashed"]
 EpistemicStateValue = Literal[
     "perceived",
     "evidenced",
@@ -125,6 +126,7 @@ class TurnJournalSummarySchema:
     surface_excerpt: str
     trace_hash: str | None
     grounding_source: GroundingSource
+    trace_integrity: TraceIntegrity
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,6 +147,7 @@ class TurnJournalEntrySchema:
     proposal_candidates: list[dict[str, Any]]
     turn_cost_ms: int
     checkpoint_emitted: bool
+    trace_integrity: TraceIntegrity
     journal_digest: str
 
 
@@ -208,6 +211,58 @@ class EvalRunResult:
     metrics: dict[str, Any]
     cases: list[Any]
     source_digest: str | None = None
+
+
+EvidenceClass = Literal[
+    "substrate_capability",
+    "interface_contract",
+    "simulation_only",
+    "proposed",
+]
+
+
+@dataclass(frozen=True, slots=True)
+class DemoScenarioSummary:
+    scenario_id: str
+    title: str
+    expected_status: str
+    evidence_class: EvidenceClass
+    proposer_wrong: bool
+    what_this_proves: str
+    what_this_does_not_prove: str
+
+
+@dataclass(frozen=True, slots=True)
+class DemoSummary:
+    demo_id: str
+    title: str
+    description: str
+    evidence_class: EvidenceClass
+    scenario_count: int
+    read_only: bool
+    scenarios: list[DemoScenarioSummary] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class DemoScenarioRunResult:
+    scenario_id: str
+    status: str
+    passed: bool
+    proposer_wrong: bool
+    evidence_class: EvidenceClass
+    decision_reason: str | None
+    trace_hash: str | None
+    problems: list[str] = field(default_factory=list)
+    response: Any = None
+
+
+@dataclass(frozen=True, slots=True)
+class DemoRunResult:
+    demo_id: str
+    all_passed: bool
+    what_this_proves: str
+    what_this_does_not_prove: str
+    scenarios: list[DemoScenarioRunResult] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -367,6 +422,7 @@ class RunTurnRef:
     timestamp: str
     trace_path: str
     surface_excerpt: str
+    trace_integrity: TraceIntegrity
 
 
 @dataclass(frozen=True, slots=True)

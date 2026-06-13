@@ -34,6 +34,10 @@ function digestPayload(value: string | null | undefined): string | null {
   return value.replace(/^sha256:/, "");
 }
 
+function isPipelineTrace(turn: TurnJournalSummary) {
+  return turn.trace_integrity === "pipeline_trace" && Boolean(digestPayload(turn.trace_hash));
+}
+
 function stringify(value: unknown): string {
   if (typeof value === "string") return value;
   return JSON.stringify(value);
@@ -215,14 +219,15 @@ export function ReplayRoute() {
   const replayQuery = useTurnReplay(selectedTurnId);
 
   const turns = turnsQuery.data ?? [];
+  const replayableTurns = useMemo(() => turns.filter(isPipelineTrace), [turns]);
   const filteredTurns = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return turns;
-    return turns.filter(
+    if (!q) return replayableTurns;
+    return replayableTurns.filter(
       (turn) =>
         turn.prompt_excerpt.toLowerCase().includes(q) || String(turn.turn_id).includes(q),
     );
-  }, [search, turns]);
+  }, [search, replayableTurns]);
 
   // Publish the turn subject for the inspector.
   useEffect(() => {
@@ -254,6 +259,15 @@ export function ReplayRoute() {
     return (
       <EmptyState
         statement="No turns recorded yet. Use Chat to create evidence."
+        nextAction={{ kind: "cli", command: "core chat" }}
+      />
+    );
+  }
+
+  if (replayableTurns.length === 0) {
+    return (
+      <EmptyState
+        statement="No pipeline-stamped turns are replayable yet."
         nextAction={{ kind: "cli", command: "core chat" }}
       />
     );

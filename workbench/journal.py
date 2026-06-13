@@ -9,7 +9,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from workbench.schemas import ChatTurnResult, to_data, utc_now
+from workbench.schemas import ChatTurnResult, TraceIntegrity, to_data, utc_now
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +27,7 @@ class TurnJournalSummary:
     surface_excerpt: str
     trace_hash: str | None
     grounding_source: str
+    trace_integrity: TraceIntegrity
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,7 +48,12 @@ class TurnJournalEntry:
     proposal_candidates: list[dict[str, Any]]
     turn_cost_ms: int
     checkpoint_emitted: bool
+    trace_integrity: TraceIntegrity | None = None
     journal_digest: str = ""
+
+    def __post_init__(self) -> None:
+        integrity = self.trace_integrity or _trace_integrity_for_hash(self.trace_hash)
+        object.__setattr__(self, "trace_integrity", integrity)
 
     @classmethod
     def from_chat_turn(
@@ -80,6 +86,7 @@ class TurnJournalEntry:
             ],
             turn_cost_ms=result.turn_cost_ms,
             checkpoint_emitted=result.checkpoint_emitted,
+            trace_integrity=_trace_integrity_for_hash(result.trace_hash),
         )
 
     def summary(self) -> TurnJournalSummary:
@@ -90,6 +97,7 @@ class TurnJournalEntry:
             surface_excerpt=self.surface[:SURFACE_EXCERPT_CHARS],
             trace_hash=self.trace_hash,
             grounding_source=self.grounding_source,
+            trace_integrity=self.trace_integrity or _trace_integrity_for_hash(self.trace_hash),
         )
 
 
@@ -173,6 +181,10 @@ def _validate_journal_dir(journal_dir: Path) -> Path:
 
 def _canonical_json(payload: dict[str, Any]) -> str:
     return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _trace_integrity_for_hash(trace_hash: str | None) -> TraceIntegrity:
+    return "pipeline_trace" if str(trace_hash or "").strip() else "legacy_unhashed"
 
 
 def _journal_digest(entry: TurnJournalEntry) -> str:

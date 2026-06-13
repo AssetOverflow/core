@@ -7,12 +7,13 @@ export function EvalMetricGrid({
 }) {
   const sortedKeys = Object.keys(metrics).sort();
 
-  function formatValue(value: unknown): string {
+  function formatValue(value: unknown, unit?: string): string {
     if (typeof value === "boolean") {
       return value ? "true" : "false";
     }
     if (typeof value === "number") {
-      return String(value);
+      const scaled = unit === "%" && Math.abs(value) <= 1 ? value * 100 : value;
+      return Number.isInteger(scaled) ? String(scaled) : String(Number(scaled.toFixed(2)));
     }
     if (typeof value === "object" && value !== null) {
       return JSON.stringify(value, null, 2);
@@ -71,7 +72,7 @@ export function EvalMetricGrid({
         const val = metrics[key];
         const unit = getUnit(key);
         const badge = renderPassFailBadge(key, val);
-        const formatted = formatValue(val);
+        const formatted = formatValue(val, unit);
         const isObj = typeof val === "object" && val !== null;
 
         return (

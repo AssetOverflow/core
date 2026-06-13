@@ -8,6 +8,7 @@ import { ProposalsRoute } from "./proposals/ProposalsRoute";
 import { TraceRoute } from "./trace/TraceRoute";
 import { AuditRoute } from "./audit/AuditRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
+import { DemoTheaterRoute } from "./demos/DemoTheaterRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { RunsRoute } from "./runs/RunsRoute";
 import { PacksRoute } from "./packs/PacksRoute";
@@ -25,6 +26,7 @@ export function App() {
             <Route path="chat" element={<ChatRoute />} />
             <Route path="trace/:turnId?" element={<TraceRoute />} />
             <Route path="replay/:turnId?" element={<ReplayRoute />} />
+            <Route path="demos/:demoId?" element={<DemoTheaterRoute />} />
             <Route path="proposals/:proposalId?" element={<ProposalsRoute />} />
             <Route path="evals/:laneId?" element={<EvalsRoute />} />
             <Route path="runs/:sessionId?" element={<RunsRoute />} />

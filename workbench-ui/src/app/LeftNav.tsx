@@ -4,6 +4,7 @@ const NAV_ITEMS = [
   { label: "Chat", to: "/chat" },
   { label: "Trace", to: "/trace" },
   { label: "Replay", to: "/replay" },
+  { label: "Demos", to: "/demos" },
   { label: "Proposals", to: "/proposals" },
   { label: "Evals", to: "/evals" },
   { label: "Runs", to: "/runs" },

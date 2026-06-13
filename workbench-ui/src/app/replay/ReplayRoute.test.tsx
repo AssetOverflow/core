@@ -22,6 +22,7 @@ const summaries: TurnJournalSummary[] = [
     surface_excerpt: "Truth is coherent.",
     trace_hash: "sha256:111111111111aaaa",
     grounding_source: "pack",
+    trace_integrity: "pipeline_trace",
   },
   {
     turn_id: 2,
@@ -30,6 +31,7 @@ const summaries: TurnJournalSummary[] = [
     surface_excerpt: "Beauty is form.",
     trace_hash: "sha256:222222222222bbbb",
     grounding_source: "teaching",
+    trace_integrity: "pipeline_trace",
   },
 ];
 
@@ -168,6 +170,34 @@ describe("ReplayRoute", () => {
     renderRoute();
     expect(await screen.findByText("What is truth?")).toBeInTheDocument();
     expect(screen.getByText("What is beauty?")).toBeInTheDocument();
+  });
+
+  it("excludes legacy-unhashed rows from the replayable list", async () => {
+    stubReplayFetch([
+      summaries[0],
+      {
+        ...summaries[1],
+        trace_hash: null,
+        trace_integrity: "legacy_unhashed",
+      },
+    ]);
+    renderRoute();
+
+    expect(await screen.findByText("What is truth?")).toBeInTheDocument();
+    expect(screen.queryByText("What is beauty?")).not.toBeInTheDocument();
+  });
+
+  it("shows an empty state when only legacy rows exist", async () => {
+    stubReplayFetch([
+      {
+        ...summaries[0],
+        trace_hash: null,
+        trace_integrity: "legacy_unhashed",
+      },
+    ]);
+    renderRoute();
+
+    expect(await screen.findByText("No pipeline-stamped turns are replayable yet.")).toBeInTheDocument();
   });
 
   it("renders the equivalence hero with the honesty card for a matching replay", async () => {

@@ -127,6 +127,28 @@ def test_no_comparison_without_real_execution(tmp_path, recorded, monkeypatch) -
     assert "data" not in response.payload or not response.payload.get("data")
 
 
+def test_hashless_legacy_turn_is_not_replayable(tmp_path, recorded, monkeypatch) -> None:
+    """A legacy row without a canonical trace hash is audit residue, not replay proof."""
+    entry, _ = recorded
+    legacy = replace(entry, trace_hash=None, trace_integrity=None)
+    api = _api_with_entry(tmp_path, legacy)
+    executed = False
+
+    def execute(_prompt: str):
+        nonlocal executed
+        executed = True
+        raise AssertionError("legacy rows must fail before execution")
+
+    monkeypatch.setattr(workbench_api, "_run_sealed_chat_turn", execute)
+
+    response = api.handle("GET", "/replay/1", b"")
+
+    assert response.status == 501
+    assert response.payload["error"]["code"] == "evidence_unavailable"
+    assert "canonical pipeline trace hash" in response.payload["error"]["message"]
+    assert executed is False
+
+
 def test_replay_leaves_no_trace(tmp_path, recorded) -> None:
     """Obligation 4: GET /replay writes nothing — journal and engine state."""
     entry, _ = recorded
