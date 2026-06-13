@@ -338,6 +338,33 @@ export interface VaultEntry {
   versor_digest: string | null;
 }
 
+// Wave M Phase B — calibrated-learning / serving-discipline read views.
+// reliability_floor + the license verdicts are computed by the engine
+// (core.reliability_gate), never the workbench.
+export interface CalibrationClass {
+  class_name: string;
+  correct: number;
+  wrong: number;
+  refused: number;
+  committed: number;
+  reliability_floor: number;
+  coverage: number;
+  propose_required: number;
+  propose_licensed: boolean;
+  serve_required: number;
+  serve_licensed: boolean;
+}
+
+export interface ServingMetrics {
+  lane: string;
+  correct: number;
+  refused: number;
+  wrong: number;
+  sample_count: number;
+  source_path: string;
+  source_digest: string;
+}
+
 // API envelope types
 export interface ApiOk<T> {
   ok: true;

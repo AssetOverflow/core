@@ -18,7 +18,7 @@ from core.epistemic_state import (
     epistemic_state_for_grounding_source,
     normative_detail_from_verdicts,
 )
-from workbench import readers
+from workbench import calibration, readers
 from workbench.journal import DEFAULT_JOURNAL_DIR, TurnJournal, TurnJournalEntry
 from workbench.readers import ArtifactTooLargeError, EvidenceUnavailableError
 from workbench.replay import replay_turn
@@ -205,6 +205,10 @@ class WorkbenchApi:
                     )
                 ),
             )
+        if method == "GET" and path == "/calibration/classes":
+            return ApiResponse(200, ok({"items": calibration.read_calibration_classes()}))
+        if method == "GET" and path == "/serving/metrics":
+            return ApiResponse(200, ok({"items": calibration.read_serving_metrics()}))
         if method == "GET" and path == "/vault/summary":
             return ApiResponse(200, ok(readers.read_vault_summary()))
         if method == "GET" and path == "/vault/entries":
