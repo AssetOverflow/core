@@ -84,6 +84,48 @@ Defines:
 
 ---
 
+## Proposal Artifact Substrate
+
+- `proposal-artifact-substrate-v1.md`
+
+Defines:
+
+- the universal proposal artifact envelope
+- subject-specific proposal adapters
+- proposal-only vs ratification-enabled capability levels
+- safety, validation, affected-artifact, and checksum-impact report shapes
+- the migration path for math, cognition, CORE-Logos, packs, and future modalities
+
+---
+
+## Wave M Consolidation / B3.5
+
+- `wave-m-consolidation-b3.5.md`
+
+Defines:
+
+- the route-registry unification plan
+- calibration as a first-class evidence subject
+- the B4 leeway-feasibility gate
+- the UI/UX guide requirement
+- the Phase A residue ledger before further complexity
+
+---
+
+## CORE-Logos Studio
+
+- `core-logos-studio-plan.md`
+
+Defines:
+
+- the `/logos` Studio route concept
+- pack identity, lexicon, glosses, morphology, alignment, holonomy, safety, and patch-forge tabs
+- CORE-Logos evidence subjects
+- read-only readers and proposal-only draft endpoint direction
+- the handler-family admission sequence for future ratification
+
+---
+
 ## UI Component Map
 
 - `ui-component-map.md`
@@ -218,39 +260,3 @@ The correct operator reaction to the workbench should be:
 not:
 
 > “Cool chatbot.”
-
----
-
-# W-027 Frontend Shell Runbook
-
-Start the full local workbench (API + frontend):
-
-```bash
-# Terminal 1 — API
-uv run core workbench api               # http://127.0.0.1:8765
-
-# Terminal 2 — Frontend
-cd workbench-ui
-pnpm install
-pnpm dev                                # http://127.0.0.1:5173
-```
-
-Use a custom API URL:
-
-```bash
-VITE_WORKBENCH_API_URL=http://127.0.0.1:9000 pnpm dev
-```
-
-View the Branch 1 design baseline:
-
-```bash
-cd workbench-ui
-pnpm preview   # Navigate to /preview
-```
-
-Detect TypeScript ↔ Python schema drift:
-
-```bash
-uv run python scripts/dump-api-schemas.py
-cd workbench-ui && pnpm test
-```
