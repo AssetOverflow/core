@@ -210,27 +210,6 @@ class EvalRunResult:
     source_digest: str | None = None
 
 
-ReplayDivergenceSeverity = Literal["info", "warning", "failure"]
-ReplayStatus = Literal["equivalent", "not_yet_replayed", "diverged", "evidence_unavailable"]
-
-
-@dataclass(frozen=True, slots=True)
-class ReplayDivergence:
-    path: str
-    original: Any
-    replay: Any
-    severity: ReplayDivergenceSeverity
-
-
-@dataclass(frozen=True, slots=True)
-class ReplayComparison:
-    artifact_id: str
-    original_hash: str | None
-    replay_hash: str | None
-    equivalent: bool
-    divergences: list[ReplayDivergence] = field(default_factory=list)
-
-
 # ---------------------------------------------------------------------------
 # Wave R3 — sealed single-turn replay over the turn journal.
 # Scoping: docs/analysis/replay-moment-backend-scoping-2026-06-12.md.

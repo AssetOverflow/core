@@ -158,11 +158,11 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
   {
     name: "Replay",
     element: <ReplayRoute />,
-    path: "/replay/:artifactId?",
+    path: "/replay/:turnId?",
     initialEntry: "/replay",
-    loadingLabel: "Loading artifacts...",
-    emptyStatement: "No artifacts available.",
-    emptyCommand: "core eval cognition",
+    loadingLabel: "Loading turns...",
+    emptyStatement: "No turns recorded yet. Use Chat to create evidence.",
+    emptyCommand: "core chat",
   },
   {
     name: "Packs",

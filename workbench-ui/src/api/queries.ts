@@ -10,7 +10,7 @@ import {
   runEvalLane,
   fetchArtifacts,
   fetchArtifactDetail,
-  fetchReplayComparison,
+  fetchTurnReplay,
   fetchProposalDetail,
   fetchProposals,
   fetchAuditEvents,
@@ -49,7 +49,7 @@ import type {
   EvalRunResult,
   ChatTurnResult,
   EvalRunRequest,
-  ReplayComparison,
+  TurnReplayComparison,
   MathProposalSummary,
   MathProposalDetail,
   MathRatifyResult,
@@ -99,11 +99,14 @@ export function useArtifactDetail(artifactId: string) {
   });
 }
 
-export function useReplayComparison(artifactId: string) {
-  return useQuery<ReplayComparison, WorkbenchApiError>({
-    queryKey: ["api", "replay", artifactId],
-    queryFn: () => fetchReplayComparison(artifactId),
-    enabled: !!artifactId,
+export function useTurnReplay(turnId?: number | null) {
+  return useQuery<TurnReplayComparison, WorkbenchApiError>({
+    queryKey: ["api", "replay", "turn", turnId ?? null],
+    queryFn: () => fetchTurnReplay(turnId as number),
+    enabled: typeof turnId === "number",
+    retry: false,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 }
 

@@ -55,8 +55,6 @@ snapshot = {
     "GroundingSource": literal_values(ROOT / "core" / "epistemic_state.py", "GroundingSource"),
     "NormativeClearance": enum_values(ROOT / "core" / "epistemic_state.py", "NormativeClearance"),
     "ReviewState": literal_values(ROOT / "teaching" / "proposals.py", "ReviewState"),
-    "ReplayDivergenceSeverity": literal_values(ROOT / "workbench" / "schemas.py", "ReplayDivergenceSeverity"),
-    "ReplayStatus": literal_values(ROOT / "workbench" / "schemas.py", "ReplayStatus"),
 }
 
 print(json.dumps(snapshot, indent=2, sort_keys=True))

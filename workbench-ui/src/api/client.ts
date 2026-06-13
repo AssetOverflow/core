@@ -6,7 +6,7 @@ import type {
   EvalRunResult,
   ArtifactRef,
   ArtifactDetail,
-  ReplayComparison,
+  TurnReplayComparison,
   ProposalDetail,
   ProposalState,
   ProposalSummary,
@@ -92,8 +92,8 @@ export async function fetchArtifactDetail(artifactId: string): Promise<ArtifactD
   return apiFetch<ArtifactDetail>(`/artifacts/${artifactId}`);
 }
 
-export async function fetchReplayComparison(artifactId: string): Promise<ReplayComparison> {
-  return apiFetch<ReplayComparison>(`/replay/${artifactId}`);
+export async function fetchTurnReplay(turnId: number): Promise<TurnReplayComparison> {
+  return apiFetch<TurnReplayComparison>(`/replay/${encodeURIComponent(String(turnId))}`);
 }
 
 export type ProposalStateFilter = ProposalState | "all";

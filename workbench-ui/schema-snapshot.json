@@ -130,19 +130,6 @@
     "created_at",
     "downstream_effect"
   ],
-  "ReplayComparison": [
-    "artifact_id",
-    "original_hash",
-    "replay_hash",
-    "equivalent",
-    "divergences"
-  ],
-  "ReplayDivergence": [
-    "path",
-    "original",
-    "replay",
-    "severity"
-  ],
   "RunDetail": [
     "turns",
     "manifest"
