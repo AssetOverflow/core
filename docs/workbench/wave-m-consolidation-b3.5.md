@@ -45,6 +45,8 @@ That means calibration is still partly a page-local experience, not fully part o
 
 **Addendum (review, 2026-06-13): the centerpiece currently undersells its own thesis.** The reader reads `evals/gsm8k_math/practice/v1/report.json` `per_class`, whose committed copy is a sub-`N_MIN` baseline (`additive` committed=0) — so on live data the route shows three classes, all "not yet licensed", with empty reliability bars. It never shows a class *crossing θ*, which is the entire point. Meanwhile the *earned* state (`additive` committed=100, measured 0.861, **PROPOSE-licensed**) lives in the separately-committed `ratification_queue.json`, and the two artifacts disagree (correct 3 vs 95, committed in different commits). An evaluator opening Calibration today sees the discipline's scaffolding but not its moment. The fix is data-side, not a re-derivation: make the committed practice artifacts coherent (regenerate from one deterministic practice run via the runner) so `report.json` `per_class` shows ≥1 earned class and matches the queue; the reader stays unchanged. Sealed-practice may carry wrong>0 (attempt-and-eliminate) — that is *not* the serving wrong=0; do not conflate. Folds into Deliverable 2.
 
+**Correction (review, 2026-06-13b) — coherence is necessary but NOT sufficient; the bar is runner-reproducibility.** A first attempt at this fix made `report.json` *agree with* the existing `ratification_queue.json` (both `95/50/5`, `additive` PROPOSE @0.861) — but verification showed those numbers are a **fossil**: the queue was committed back in `b82897a0` when the now-disabled `resolve_pooled` scorer was active (every new elimination record is tagged `reason: "resolve_pooled"`), and **no current runner path reproduces them**. The canonical `runner.py main()` (`build_report()` over the train sample) yields `6/44/0`; `build_practice_report()` over the 150 practice cases with the default candidate-graph scorer yields `0/1/149` — additive does **not** earn PROPOSE today. Making the report agree with a stale queue achieved artifact-to-artifact coherence while breaking artifact-to-runner coherence, surfacing an *earned PROPOSE license the engine cannot currently reproduce* — the precise false-epistemic-status the workbench exists to refuse. **D2 acceptance is therefore strengthened: the committed `report.json` MUST be byte-reproducible by a documented, deterministic runner entry point** (e.g. `python -m evals.gsm8k_math.practice.v1.runner` after repointing `main()` to `build_practice_report()`), and the queue must be regenerated from that *same* pass. Three admissible routes: (A) **honest floor** — commit the real candidate-graph practice output, let the route show "not yet licensed" until a class genuinely crosses θ; (B) **earn it for real** — stand up a reproducible, deterministic practice scorer that legitimately earns additive PROPOSE, wired into the runner, regenerating report+queue from one pass; (C) defer the "earned" demo and keep the route honest meanwhile. Take (A) now; file (B) as the follow-up that actually delivers the θ-crossing moment. Copying numbers between committed artifacts is **not** an admissible fix.
+
 ### 3. B4 is conceptually right but data-shape risky
 
 B4 wants the Replay/Proposals evidence rails to explain why approximation/leeway was granted: class, license, theta, disclosure, and relation to HITL ratification.
@@ -186,10 +188,14 @@ Show only fields carried by the backend read model:
 - RightInspector handles the subject without falling to raw unknown.
 - Evidence Chain Rail names calibration as serving-discipline evidence, not runtime truth.
 - Missing data renders as missing/unknown, not as green.
-- The committed practice artifacts are coherent (`report.json` `per_class`
-  agrees with `ratification_queue.json`) and the route shows ≥1 earned
-  (licensed) class — the centerpiece demonstrates "earns the right to guess",
-  not only the un-earned floor.
+- The committed `report.json` is **byte-reproducible by a documented,
+  deterministic runner entry point** (re-running it overwrites the file with
+  identical bytes) — coherence with `ratification_queue.json` alone is
+  insufficient; the queue is regenerated from the *same* pass, never copied
+  into the report. See the "runner-reproducibility" correction above.
+- If a class is shown as earned (licensed), the current runner reproduces that
+  earned state; the route never asserts a license the engine cannot currently
+  reproduce. (If none earns yet, the route honestly shows the un-earned floor.)
 
 ---
 
