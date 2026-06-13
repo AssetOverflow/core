@@ -15,6 +15,8 @@ import type {
   RunDetail,
   PackSummary,
   PackDetail,
+  VaultSummary,
+  VaultEntry,
   TurnJournalEntry,
   TurnJournalSummary,
   MathProposalSummary,
@@ -223,4 +225,19 @@ export async function fetchPacks(limit?: number, offset?: number): Promise<PackS
 
 export async function fetchPack(packId: string): Promise<PackDetail> {
   return apiFetch<PackDetail>(`/packs/${encodeURIComponent(packId)}`);
+}
+
+export async function fetchVaultSummary(): Promise<VaultSummary> {
+  return apiFetch<VaultSummary>("/vault/summary");
+}
+
+export async function fetchVaultEntries(limit?: number, offset?: number): Promise<VaultEntry[]> {
+  const params = new URLSearchParams();
+  if (limit !== undefined) params.set("limit", String(limit));
+  if (offset !== undefined) params.set("offset", String(offset));
+  const query = params.toString();
+  const envelope = await apiFetch<ItemsEnvelope<VaultEntry>>(
+    query ? `/vault/entries?${query}` : "/vault/entries",
+  );
+  return envelope.items;
 }

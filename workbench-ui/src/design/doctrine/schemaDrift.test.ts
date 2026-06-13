@@ -20,9 +20,6 @@ import { describe, expect, it } from "vitest";
  */
 
 const NOT_YET_MIRRORED = new Set([
-  // R2-B backend read substrate (#712) — TS mirrors land with each R2 route:
-  "VaultSummary",
-  "VaultEntry",
   // Wave R3 sealed turn replay backend — TS mirrors land with the frontend
   // Replay Moment PR (which also retires the W-026 artifact-keyed
   // ReplayComparison/ReplayDivergence pair on both sides):
