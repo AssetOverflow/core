@@ -1,19 +1,13 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRegisterShortcuts, type ShortcutEntry } from "./shortcutRegistry";
+import { ROUTE_DIGIT_MAP } from "./routes";
 
-const ROUTE_KEYS: Record<string, string> = {
-  "1": "/chat",
-  "2": "/trace",
-  "3": "/replay",
-  "4": "/proposals",
-  "5": "/evals",
-  "6": "/runs",
-  "7": "/packs",
-  "8": "/vault",
-  "9": "/audit",
-  "0": "/settings",
-};
+// digit → path for the ten pinned routes; derived from the single route
+// registry (routes.ts). Routes without a pinned digit (Demos, Calibration)
+// are reachable via the command palette, not a chord — and KeyboardHelp's
+// "global-routes" row stays honest about the 1–0 pinned set.
+const ROUTE_KEYS: Record<string, string> = ROUTE_DIGIT_MAP;
 
 interface GlobalKeyboardOptions {
   onTogglePalette: () => void;

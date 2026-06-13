@@ -76,24 +76,26 @@ describe("Shell", () => {
     expect(document.querySelector('[data-region="statusfooter"]')).toBeInTheDocument();
   });
 
-  it("LeftNav has exactly 12 items in order", () => {
+  it("LeftNav has exactly 12 items in section-grouped order", () => {
     renderShell();
     const nav = document.querySelector('[data-region="leftnav"]')!;
     const links = nav.querySelectorAll("a");
     expect(links).toHaveLength(12);
     const labels = Array.from(links).map((l) => l.textContent);
+    // Grouped by section (Converse → Cognition → Determinism → Evidence →
+    // Discipline → Substrate → Settings), derived from the route registry.
     expect(labels).toEqual([
       "Chat",
       "Trace",
       "Replay",
       "Demos",
       "Proposals",
-      "Evals",
-      "Calibration",
       "Runs",
-      "Packs",
       "Vault",
       "Audit",
+      "Evals",
+      "Calibration",
+      "Packs",
       "Settings",
     ]);
   });

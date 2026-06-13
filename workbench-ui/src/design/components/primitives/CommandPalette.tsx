@@ -10,32 +10,24 @@ import {
   type Command,
   type RecentItem,
 } from "../../../app/commandRegistry";
+import { PALETTE_ROUTES } from "../../../app/routes";
 
-const NAV_COMMANDS: Command[] = [
-  { id: "nav-chat", label: "Open Chat", section: "Navigate", kind: "navigate", shortcut: "⌘1", action: () => {} },
-  { id: "nav-trace", label: "Open Trace", section: "Navigate", kind: "navigate", shortcut: "⌘2", action: () => {} },
-  { id: "nav-replay", label: "Open Replay", section: "Navigate", kind: "navigate", shortcut: "⌘3", action: () => {} },
-  { id: "nav-proposals", label: "Open Proposals", section: "Navigate", kind: "navigate", shortcut: "⌘4", action: () => {} },
-  { id: "nav-evals", label: "Open Evals", section: "Navigate", kind: "navigate", shortcut: "⌘5", action: () => {} },
-  { id: "nav-runs", label: "Open Runs", section: "Navigate", kind: "navigate", shortcut: "⌘6", action: () => {} },
-  { id: "nav-packs", label: "Open Packs", section: "Navigate", kind: "navigate", shortcut: "⌘7", action: () => {} },
-  { id: "nav-vault", label: "Open Vault", section: "Navigate", kind: "navigate", shortcut: "⌘8", action: () => {} },
-  { id: "nav-audit", label: "Open Audit", section: "Navigate", kind: "navigate", shortcut: "⌘9", action: () => {} },
-  { id: "nav-settings", label: "Open Settings", section: "Navigate", kind: "navigate", shortcut: "⌘0", action: () => {} },
-];
+// Navigate commands derive from the single route registry (routes.ts), so
+// every palette-visible route is searchable here. The prior hand-maintained
+// list dropped Demos and Calibration; deriving makes that drift impossible.
+// Palette-only routes (no pinned ⌘-digit) appear with no chord — honest.
+const NAV_COMMANDS: Command[] = PALETTE_ROUTES.map((route) => ({
+  id: `nav-${route.id}`,
+  label: `Open ${route.label}`,
+  section: "Navigate",
+  kind: "navigate",
+  shortcut: route.keyboardDigit ? `⌘${route.keyboardDigit}` : undefined,
+  action: () => {},
+}));
 
-const NAV_PATHS: Record<string, string> = {
-  "nav-chat": "/chat",
-  "nav-trace": "/trace",
-  "nav-replay": "/replay",
-  "nav-proposals": "/proposals",
-  "nav-evals": "/evals",
-  "nav-runs": "/runs",
-  "nav-packs": "/packs",
-  "nav-vault": "/vault",
-  "nav-audit": "/audit",
-  "nav-settings": "/settings",
-};
+const NAV_PATHS: Record<string, string> = Object.fromEntries(
+  PALETTE_ROUTES.map((route) => [`nav-${route.id}`, route.path]),
+);
 
 interface DisplayItem {
   id: string;
