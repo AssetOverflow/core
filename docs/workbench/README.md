@@ -84,6 +84,20 @@ Defines:
 
 ---
 
+## Proposal Artifact Substrate
+
+- `proposal-artifact-substrate-v1.md`
+
+Defines:
+
+- the universal proposal artifact envelope
+- subject-specific proposal adapters
+- proposal-only vs ratification-enabled capability levels
+- safety, validation, affected-artifact, and checksum-impact report shapes
+- the migration path for math, cognition, CORE-Logos, packs, and future modalities
+
+---
+
 ## UI Component Map
 
 - `ui-component-map.md`
@@ -218,39 +232,3 @@ The correct operator reaction to the workbench should be:
 not:
 
 > “Cool chatbot.”
-
----
-
-# W-027 Frontend Shell Runbook
-
-Start the full local workbench (API + frontend):
-
-```bash
-# Terminal 1 — API
-uv run core workbench api               # http://127.0.0.1:8765
-
-# Terminal 2 — Frontend
-cd workbench-ui
-pnpm install
-pnpm dev                                # http://127.0.0.1:5173
-```
-
-Use a custom API URL:
-
-```bash
-VITE_WORKBENCH_API_URL=http://127.0.0.1:9000 pnpm dev
-```
-
-View the Branch 1 design baseline:
-
-```bash
-cd workbench-ui
-pnpm preview   # Navigate to /preview
-```
-
-Detect TypeScript ↔ Python schema drift:
-
-```bash
-uv run python scripts/dump-api-schemas.py
-cd workbench-ui && pnpm test
-```
