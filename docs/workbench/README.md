@@ -98,6 +98,34 @@ Defines:
 
 ---
 
+## Wave M Consolidation / B3.5
+
+- `wave-m-consolidation-b3.5.md`
+
+Defines:
+
+- the route-registry unification plan
+- calibration as a first-class evidence subject
+- the B4 leeway-feasibility gate
+- the UI/UX guide requirement
+- the Phase A residue ledger before further complexity
+
+---
+
+## CORE-Logos Studio
+
+- `core-logos-studio-plan.md`
+
+Defines:
+
+- the `/logos` Studio route concept
+- pack identity, lexicon, glosses, morphology, alignment, holonomy, safety, and patch-forge tabs
+- CORE-Logos evidence subjects
+- read-only readers and proposal-only draft endpoint direction
+- the handler-family admission sequence for future ratification
+
+---
+
 ## UI Component Map
 
 - `ui-component-map.md`
