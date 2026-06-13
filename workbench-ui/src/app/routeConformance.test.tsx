@@ -14,6 +14,7 @@ import { EvalsRoute } from "./evals/EvalsRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
 import { RunsRoute } from "./runs/RunsRoute";
 import { PacksRoute } from "./packs/PacksRoute";
+import { VaultRoute } from "./vault/VaultRoute";
 
 /**
  * ADR-0162 §6 route conformance — executable, not aspirational.
@@ -170,6 +171,17 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
     loadingLabel: "Loading packs...",
     emptyStatement: "No packs discovered.",
     emptyCommand: "core pack validate <path>",
+  },
+  {
+    name: "Vault",
+    element: <VaultRoute />,
+    path: "/vault",
+    initialEntry: "/vault",
+    loadingLabel: "Loading vault...",
+    // Fail-closed: absence of a persisted vault is the primary contract.
+    emptyStatement:
+      "No persisted vault. Session memory is held in-process and discarded on exit; persistence is opt-in via RuntimeConfig.persist_session_state.",
+    emptyCommand: "Set RuntimeConfig.persist_session_state = true",
   },
 ];
 

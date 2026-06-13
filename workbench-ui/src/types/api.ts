@@ -3,6 +3,7 @@
 
 export type ErrorCode =
   | "bad_request"
+  | "evidence_unavailable"
   | "not_found"
   | "unsupported"
   | "read_error"
@@ -261,6 +262,23 @@ export interface ReplayComparison {
   replay_hash: string | null;
   equivalent: boolean;
   divergences: ReplayDivergence[];
+}
+
+export interface VaultSummary {
+  source_path: string;
+  entry_count: number;
+  store_count: number;
+  reproject_interval: number;
+  max_entries: number | null;
+  persisted: boolean;
+}
+
+export interface VaultEntry {
+  entry_index: number;
+  epistemic_status: string;
+  epistemic_state: string;
+  metadata: Record<string, unknown>;
+  versor_digest: string | null;
 }
 
 // API envelope types

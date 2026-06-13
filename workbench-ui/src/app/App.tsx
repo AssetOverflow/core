@@ -11,7 +11,7 @@ import { ReplayRoute } from "./replay/ReplayRoute";
 import { EvalsRoute } from "./evals/EvalsRoute";
 import { RunsRoute } from "./runs/RunsRoute";
 import { PacksRoute } from "./packs/PacksRoute";
-import { VaultRoutePlaceholder } from "../routes/VaultRoutePlaceholder";
+import { VaultRoute } from "./vault/VaultRoute";
 import { SettingsRoutePlaceholder } from "../routes/SettingsRoutePlaceholder";
 
 export function App() {
@@ -28,7 +28,7 @@ export function App() {
             <Route path="evals/:laneId?" element={<EvalsRoute />} />
             <Route path="runs/:sessionId?" element={<RunsRoute />} />
             <Route path="packs/:packId?" element={<PacksRoute />} />
-            <Route path="vault" element={<VaultRoutePlaceholder />} />
+            <Route path="vault" element={<VaultRoute />} />
             <Route path="audit" element={<AuditRoute />} />
             <Route path="settings" element={<SettingsRoutePlaceholder />} />
           </Route>

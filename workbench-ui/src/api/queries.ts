@@ -18,6 +18,8 @@ import {
   fetchRun,
   fetchPacks,
   fetchPack,
+  fetchVaultSummary,
+  fetchVaultEntries,
   fetchTraceTurn,
   fetchTraceTurns,
   fetchMathProposals,
@@ -39,6 +41,8 @@ import type {
   RunDetail,
   PackSummary,
   PackDetail,
+  VaultSummary,
+  VaultEntry,
   TurnJournalEntry,
   TurnJournalSummary,
   EvalLaneSummary,
@@ -290,6 +294,27 @@ export function usePack(packId?: string | null) {
     queryKey: ["api", "pack", packId ?? null],
     queryFn: () => fetchPack(packId as string),
     enabled: typeof packId === "string" && packId.length > 0,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useVaultSummary() {
+  return useQuery<VaultSummary, WorkbenchApiError>({
+    queryKey: ["api", "vault", "summary"],
+    queryFn: () => fetchVaultSummary(),
+    retry: false,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useVaultEntries(enabled: boolean, limit?: number, offset?: number) {
+  return useQuery<VaultEntry[], WorkbenchApiError>({
+    queryKey: ["api", "vault", "entries", limit ?? null, offset ?? null],
+    queryFn: () => fetchVaultEntries(limit, offset),
+    enabled,
+    retry: false,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });
