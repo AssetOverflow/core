@@ -203,6 +203,36 @@ describe("EvidenceChainRail honesty contract", () => {
     expect(statusOf(missingPayload, "action")).toBe("lit");
   });
 
+  it("calibration_class: lights serving-discipline evidence without claiming runtime replay", () => {
+    const subject: EvidenceSubject = {
+      kind: "calibration_class",
+      className: "additive",
+      data: {
+        class_name: "additive",
+        correct: 95,
+        wrong: 5,
+        refused: 50,
+        committed: 100,
+        reliability_floor: 0.86084162,
+        coverage: 0.666666667,
+        propose_required: 0.85,
+        propose_licensed: true,
+        serve_required: 0.99,
+        serve_licensed: false,
+        source_path: "evals/gsm8k_math/practice/v1/report.json",
+        source_digest: "sha256:practice",
+      },
+    };
+    expect(statusOf(subject, "subject")).toBe("lit");
+    expect(statusOf(subject, "provenance")).toBe("lit");
+    expect(statusOf(subject, "admissibility")).toBe("lit");
+    expect(statusOf(subject, "authority")).toBe("lit");
+    expect(statusOf(subject, "replay")).toBe("dim");
+    expect(deriveStages(subject)?.find((s) => s.id === "intent")?.derivation).toMatch(
+      /serving-discipline evidence/,
+    );
+  });
+
   it("renders no rail for kind=none", () => {
     const { container } = render(<EvidenceChainRail subject={{ kind: "none" }} />);
     expect(container.querySelector('[data-testid="evidence-chain-rail"]')).toBeNull();

@@ -33,7 +33,9 @@
     "propose_required",
     "propose_licensed",
     "serve_required",
-    "serve_licensed"
+    "serve_licensed",
+    "source_path",
+    "source_digest"
   ],
   "ChatTurnResult": [
     "prompt",
@@ -54,6 +56,7 @@
     "proposal_candidates",
     "turn_cost_ms",
     "checkpoint_emitted",
+    "leeway_evidence",
     "turn_id"
   ],
   "DemoRunResult": [
@@ -107,6 +110,14 @@
     "cases",
     "source_digest"
   ],
+  "LeewayEvidence": [
+    "class_name",
+    "license",
+    "theta",
+    "claim_disclosure",
+    "source_digest",
+    "calibration_evidence_ref"
+  ],
   "MathProposalDetail": [
     "wrong_zero_assertion",
     "proposed_change_payload",
@@ -114,7 +125,8 @@
     "reasoning_trace_steps",
     "evidence_hashes",
     "handler_name",
-    "suggested_ratify_cli"
+    "suggested_ratify_cli",
+    "leeway_evidence"
   ],
   "MathProposalSummary": [
     "proposal_id",
@@ -165,7 +177,8 @@
     "source",
     "evidence",
     "artifact_refs",
-    "suggested_cli"
+    "suggested_cli",
+    "leeway_evidence"
   ],
   "ProposalRef": [
     "candidate_id",
@@ -238,7 +251,8 @@
     "turn_cost_ms",
     "checkpoint_emitted",
     "trace_integrity",
-    "journal_digest"
+    "journal_digest",
+    "leeway_evidence"
   ],
   "TurnJournalSummarySchema": [
     "turn_id",
@@ -257,7 +271,8 @@
     "replay_trace_hash",
     "equivalent",
     "replay_turn_cost_ms",
-    "divergences"
+    "divergences",
+    "leeway_evidence"
   ],
   "TurnReplayDivergence": [
     "path",

@@ -38,16 +38,29 @@ def test_serving_metrics_read_committed_counts_unchanged() -> None:
 
 
 def test_calibration_classes_over_committed_report_are_honest() -> None:
-    # The committed practice report's classes are all below N_MIN today, so
-    # none has earned a license — the reader must show exactly that, not fake
-    # a green light.
     rows = calibration.read_calibration_classes()
     assert rows, "expected the committed per_class ledger to yield rows"
-    for row in rows:
-        if row.committed < 10:  # N_MIN
-            assert row.reliability_floor == 0.0
-            assert row.propose_licensed is False
-            assert row.serve_licensed is False
+    earned = [row for row in rows if row.propose_licensed or row.serve_licensed]
+    assert earned, "committed practice evidence must show a class crossing theta"
+    additive = next(row for row in rows if row.class_name == "additive")
+    assert additive.correct == 95
+    assert additive.wrong == 5
+    assert additive.committed == 100
+    assert additive.propose_licensed is True
+    assert additive.serve_licensed is False
+    assert additive.source_path == "evals/gsm8k_math/practice/v1/report.json"
+    assert additive.source_digest.startswith("sha256:")
+
+    queue = json.loads(
+        (calibration.PRACTICE_REPORT.parent / "ratification_queue.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    proposal = queue["proposals"][0]
+    assert proposal["class_name"] == additive.class_name
+    assert proposal["correct"] == additive.correct
+    assert proposal["wrong"] == additive.wrong
+    assert proposal["committed"] == additive.committed
 
 
 def test_reader_uses_the_engine_math_not_its_own(tmp_path) -> None:

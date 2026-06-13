@@ -73,6 +73,16 @@ def error(code: ErrorCode, message: str, *, detail: Any | None = None) -> dict[s
 
 
 @dataclass(frozen=True, slots=True)
+class LeewayEvidence:
+    class_name: str
+    license: Literal["PROPOSE", "SERVE", "blocked", "unknown"]
+    theta: float | None
+    claim_disclosure: Literal["approximate", "verified", "proposal_only", "none"]
+    source_digest: str | None
+    calibration_evidence_ref: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class RuntimeStatus:
     backend: Literal["numpy", "mlx", "rust", "unknown"]
     git_revision: str
@@ -115,6 +125,7 @@ class ChatTurnResult:
     proposal_candidates: list[ProposalRef]
     turn_cost_ms: int
     checkpoint_emitted: bool
+    leeway_evidence: LeewayEvidence | None = None
     turn_id: int | None = None
 
 
@@ -149,6 +160,7 @@ class TurnJournalEntrySchema:
     checkpoint_emitted: bool
     trace_integrity: TraceIntegrity
     journal_digest: str
+    leeway_evidence: LeewayEvidence | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -192,6 +204,7 @@ class ProposalDetail(ProposalSummary):
     evidence: list[Any] = field(default_factory=list)
     artifact_refs: list[ArtifactRef] = field(default_factory=list)
     suggested_cli: str | None = None
+    leeway_evidence: LeewayEvidence | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -302,6 +315,7 @@ class TurnReplayComparison:
     equivalent: bool
     replay_turn_cost_ms: int
     divergences: list[TurnReplayDivergence] = field(default_factory=list)
+    leeway_evidence: LeewayEvidence | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -339,6 +353,7 @@ class MathProposalDetail(MathProposalSummary):
     evidence_hashes: list[str]
     handler_name: str | None
     suggested_ratify_cli: str | None
+    leeway_evidence: LeewayEvidence | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -473,6 +488,8 @@ class CalibrationClass:
     propose_licensed: bool
     serve_required: float  # θ for SERVE (0.99)
     serve_licensed: bool
+    source_path: str
+    source_digest: str
 
 
 @dataclass(frozen=True, slots=True)

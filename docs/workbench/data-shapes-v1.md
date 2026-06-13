@@ -84,6 +84,7 @@ export type ChatTurnSummary = {
   replay_available: boolean;
   proposal_state: "none" | "pending" | "accepted" | "rejected" | null;
   mutation_state: "none" | "transient" | "proposal_only" | "ratified";
+  leeway_evidence?: LeewayEvidence | null;
 };
 ```
 
@@ -136,11 +137,27 @@ export type ProposalDetail = ProposalSummary & {
   evidence: unknown[];
   artifact_refs: ArtifactRef[];
   suggested_cli?: string;
+  leeway_evidence?: LeewayEvidence | null;
 };
 ```
 
 V1 may include `suggested_cli` for copy-only operator review.  It must not
 execute it.
+
+```ts
+export type LeewayEvidence = {
+  class_name: string;
+  license: "PROPOSE" | "SERVE" | "blocked" | "unknown";
+  theta: number | null;
+  claim_disclosure: "approximate" | "verified" | "proposal_only" | "none";
+  source_digest: string | null;
+  calibration_evidence_ref: string | null;
+};
+```
+
+`LeewayEvidence` is nullable. The UI may render it when present, but must render
+explicit absence when it is null/missing and must never derive class/license/theta
+in the frontend.
 
 ---
 
@@ -173,6 +190,41 @@ export type EvalRunResult = {
 
 The API should initially allow only explicitly safe lanes.  `holdout` should be
 disabled unless the backend proves the sealed-eval path is configured.
+
+---
+
+# Calibration
+
+```ts
+export type CalibrationClass = {
+  class_name: string;
+  correct: number;
+  wrong: number;
+  refused: number;
+  committed: number;
+  reliability_floor: number;
+  coverage: number;
+  propose_required: number;
+  propose_licensed: boolean;
+  serve_required: number;
+  serve_licensed: boolean;
+  source_path: string;
+  source_digest: string;
+};
+
+export type ServingMetrics = {
+  lane: string;
+  correct: number;
+  refused: number;
+  wrong: number;
+  sample_count: number;
+  source_path: string;
+  source_digest: string;
+};
+```
+
+Reliability and license verdicts are engine-owned derivations from
+`core.reliability_gate`; the workbench mirrors the read model.
 
 ---
 

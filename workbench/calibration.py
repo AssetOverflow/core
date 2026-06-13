@@ -41,7 +41,13 @@ SERVING_LANES: tuple[tuple[str, Path], ...] = (
 _CEILINGS = Ceilings()
 
 
-def _calibration_class(class_name: str, counts: Mapping[str, Any]) -> CalibrationClass:
+def _calibration_class(
+    class_name: str,
+    counts: Mapping[str, Any],
+    *,
+    source_path: str,
+    source_digest: str,
+) -> CalibrationClass:
     tally = ClassTally(
         class_name,
         correct=int(counts.get("correct", 0)),
@@ -62,6 +68,8 @@ def _calibration_class(class_name: str, counts: Mapping[str, Any]) -> Calibratio
         propose_licensed=propose.licensed,
         serve_required=serve.required,
         serve_licensed=serve.licensed,
+        source_path=source_path,
+        source_digest=source_digest,
     )
 
 
@@ -78,8 +86,15 @@ def read_calibration_classes(report_path: Path = PRACTICE_REPORT) -> list[Calibr
         raise EvidenceUnavailableError(
             "calibration evidence unavailable: report has no per_class ledger"
         )
+    source_path = _display_path(report_path)
+    source_digest = _sha256_file(report_path)
     rows = [
-        _calibration_class(name, counts)
+        _calibration_class(
+            name,
+            counts,
+            source_path=source_path,
+            source_digest=source_digest,
+        )
         for name, counts in per_class.items()
         if isinstance(counts, dict)
     ]

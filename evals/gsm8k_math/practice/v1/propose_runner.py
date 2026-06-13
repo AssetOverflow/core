@@ -24,8 +24,10 @@ from typing import Any, Callable
 
 from core.reliability_gate import Action, Ceilings, propose_from_ledger
 from evals.gsm8k_math.practice.v1.runner import (
+    PracticeReport,
     _load_practice_cases,
     run_practice,
+    write_report,
 )
 
 _HERE = Path(__file__).resolve().parent
@@ -64,17 +66,18 @@ def resolve_pooled_scorer(adapted: dict[str, Any]) -> Any:
     )
 
 
-def build_ratification_queue(
+def build_queue_from_report(
+    report: PracticeReport,
     *,
     ceilings: Ceilings | None = None,
-    scorer: Callable[[dict[str, Any]], Any] | None = None,
-    cases: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Run practice, consult the PROPOSE gate, return the ratification queue."""
+    """Project a finished practice ``report`` into the HITL ratification queue.
+
+    Split out so report.json and the queue can be emitted from ONE practice
+    pass (see :func:`regenerate_practice_artifacts`) — guaranteeing they never
+    drift, since both are projections of the same ledger.
+    """
     ceilings = ceilings if ceilings is not None else Ceilings(())
-    report = run_practice(
-        cases if cases is not None else _load_practice_cases(), scorer=scorer
-    )
     proposals = propose_from_ledger(report.ledger, ceilings, action=Action.PROPOSE)
     return {
         "schema_version": 1,
@@ -87,15 +90,49 @@ def build_ratification_queue(
     }
 
 
+def build_ratification_queue(
+    *,
+    ceilings: Ceilings | None = None,
+    scorer: Callable[[dict[str, Any]], Any] | None = None,
+    cases: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Run practice, consult the PROPOSE gate, return the ratification queue."""
+    report = run_practice(
+        cases if cases is not None else _load_practice_cases(), scorer=scorer
+    )
+    return build_queue_from_report(report, ceilings=ceilings)
+
+
 def write_queue(queue: dict[str, Any], path: Path = _QUEUE_PATH) -> None:
     path.write_text(json.dumps(queue, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def main() -> int:
-    # Default the runnable demo to the aggressive sealed regime so the gate
-    # filters real wrong>0 — the point of attempt-and-eliminate.
-    queue = build_ratification_queue(scorer=resolve_pooled_scorer)
+def regenerate_practice_artifacts(
+    *,
+    ceilings: Ceilings | None = None,
+) -> tuple[PracticeReport, dict[str, Any]]:
+    """One sealed ``resolve_pooled`` practice pass → BOTH committed artifacts.
+
+    ``report.json`` (the per-class ledger the calibration reader consumes) and
+    ``ratification_queue.json`` (the HITL proposals) are two projections of the
+    SAME pass. Emitting them together makes them coherent by construction and
+    byte-reproducible by re-running this entry point — closing the gap where a
+    hand-copied report.json agreed with the queue but no runner produced it.
+    PROPOSE regime / proposal-only; ``resolve_pooled`` is the aggressive sealed
+    scorer (unsafe for *serving*, legitimate for attempt-and-eliminate here).
+    """
+    report = run_practice(_load_practice_cases(), scorer=resolve_pooled_scorer)
+    write_report(report)
+    queue = build_queue_from_report(report, ceilings=ceilings)
     write_queue(queue)
+    return report, queue
+
+
+def main() -> int:
+    # The aggressive sealed regime: report.json + ratification_queue.json are
+    # emitted from one pass so the gate filters real wrong>0 and the two
+    # artifacts cannot drift — the point of attempt-and-eliminate.
+    _, queue = regenerate_practice_artifacts()
     print(f"practice counts: {queue['practice_counts']}")
     print(f"ratifiable proposals: {queue['proposal_count']}")
     for p in queue["proposals"]:

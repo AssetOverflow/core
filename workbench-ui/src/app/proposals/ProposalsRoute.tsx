@@ -18,6 +18,7 @@ import { ProposalTable } from "./ProposalTable";
 import { Panel } from "../../design/components/Panel/Panel";
 import { ReplayEvidenceCard } from "./ReplayEvidenceCard";
 import { RatificationCommandPanel } from "./RatificationCommandPanel";
+import { LeewayEvidenceCard } from "../LeewayEvidenceCard";
 
 const filters: ProposalStateFilter[] = ["pending", "accepted", "rejected", "all"];
 
@@ -401,6 +402,8 @@ function MathProposalDetailView({
           </div>
         </dl>
       </section>
+
+      <LeewayEvidenceCard evidence={proposal.leeway_evidence} />
 
       {/* Wrong Zero Assertion Card */}
       <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-4">

@@ -12,6 +12,7 @@ import {
   type GroundingSource,
   type NormativeClearance,
 } from "../design/components/badges";
+import type { LeewayEvidence } from "../types/api";
 
 // Rendered when a subject was restored from a URL but its detail has not
 // loaded in this session yet.  An honest absence state, not a guess.
@@ -22,6 +23,16 @@ function DetailNotLoaded() {
       its evidence.
     </p>
   );
+}
+
+function pct(value: number): string {
+  return `${(value * 100).toFixed(1)}%`;
+}
+
+function leewaySummary(value?: LeewayEvidence | null): string {
+  if (!value) return "none recorded";
+  const theta = value.theta === null ? "" : ` θ ${pct(value.theta)}`;
+  return `${value.class_name} / ${value.license}${theta} / ${value.claim_disclosure}`;
 }
 
 function TurnInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "turn" }> }) {
@@ -61,6 +72,7 @@ function TurnInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: 
           { key: "cost", value: `${data.turn_cost_ms}ms`, mono: true },
           { key: "refusal", value: data.refusal_emitted ? "yes" : "no" },
           { key: "hedge", value: data.hedge_injected ? "yes" : "no" },
+          { key: "leeway", value: leewaySummary(data.leeway_evidence) },
         ]}
       />
     </div>
@@ -107,6 +119,72 @@ function ProposalInspector({ subject }: { subject: Extract<EvidenceSubject, { ki
           ...("suggested_ratify_cli" in data && data.suggested_ratify_cli
             ? [{ key: "CLI", value: data.suggested_ratify_cli, copyable: true, mono: true }]
             : []),
+          { key: "leeway", value: leewaySummary(data.leeway_evidence) },
+        ]}
+      />
+    </div>
+  );
+}
+
+function CalibrationInspector({
+  subject,
+}: {
+  subject: Extract<EvidenceSubject, { kind: "calibration_class" }>;
+}) {
+  const { data } = subject;
+  if (!data) {
+    return (
+      <div className="grid gap-3">
+        <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">
+          Calibration Class
+        </h3>
+        <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">
+          {subject.className}
+        </p>
+        <DetailNotLoaded />
+      </div>
+    );
+  }
+
+  const license = data.serve_licensed
+    ? "SERVE"
+    : data.propose_licensed
+      ? "PROPOSE"
+      : "blocked";
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">
+        Calibration Class
+      </h3>
+      <MetadataTable
+        rows={[
+          { key: "class", value: data.class_name, mono: true },
+          { key: "correct", value: String(data.correct), mono: true },
+          { key: "wrong", value: String(data.wrong), mono: true },
+          { key: "refused", value: String(data.refused), mono: true },
+          { key: "committed", value: String(data.committed), mono: true },
+          { key: "coverage", value: pct(data.coverage), mono: true },
+          { key: "Wilson floor", value: pct(data.reliability_floor), mono: true },
+          {
+            key: "PROPOSE",
+            value: `${data.propose_licensed ? "licensed" : "blocked"} at θ ${pct(
+              data.propose_required,
+            )}`,
+          },
+          {
+            key: "SERVE",
+            value: `${data.serve_licensed ? "licensed" : "blocked"} at θ ${pct(
+              data.serve_required,
+            )}`,
+          },
+          { key: "license", value: license, mono: true },
+          { key: "source", value: data.source_path, mono: true },
+          {
+            key: "digest",
+            value: data.source_digest,
+            mono: true,
+            copyable: true,
+          },
         ]}
       />
     </div>
@@ -298,6 +376,8 @@ function InspectorProjection({ subject }: { subject: EvidenceSubject }) {
       return <VaultEntryInspector subject={subject} />;
     case "audit_event":
       return <AuditEventInspector subject={subject} />;
+    case "calibration_class":
+      return <CalibrationInspector subject={subject} />;
     case "none":
       return <NoneInspector />;
   }

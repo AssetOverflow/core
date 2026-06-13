@@ -190,8 +190,24 @@ def write_report(report: PracticeReport, path: Path = _REPORT_PATH) -> None:
 
 
 def main() -> int:
-    """Run the practice lane. Never fails on wrong — practice records it."""
-    write_report(build_report())
+    """Regenerate the practice arena artifacts (report.json + ratification_queue.json).
+
+    Delegates to the PROPOSE runner so both artifacts come from ONE sealed
+    ``resolve_pooled`` practice pass and cannot drift — report.json (the
+    per-class ledger the calibration reader consumes) and the queue are two
+    projections of the same pass. The lazy import avoids the load-time cycle
+    (``propose_runner`` imports ``run_practice``/``write_report`` from here).
+
+    ``build_report()`` (the train-sample candidate-graph pass) is retained as
+    part of this module's public surface but is no longer the committed
+    ``report.json`` source: the arena reports over its dedicated practice cases
+    with the aggressive sealed scorer, which is what earns a PROPOSE license.
+    """
+    from evals.gsm8k_math.practice.v1.propose_runner import (
+        regenerate_practice_artifacts,
+    )
+
+    regenerate_practice_artifacts()
     return 0
 
 

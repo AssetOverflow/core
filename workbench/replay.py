@@ -50,6 +50,7 @@ CRITICAL_FIELDS = frozenset(
         "refusal_emitted",
         "hedge_injected",
         "proposal_candidates",
+        "leeway_evidence",
         "checkpoint_emitted",
         "trace_integrity",
     }
@@ -104,4 +105,5 @@ def replay_turn(
         equivalent=not any(d.severity == "critical" for d in divergences),
         replay_turn_cost_ms=elapsed_ms,
         divergences=divergences,
+        leeway_evidence=entry.leeway_evidence,
     )

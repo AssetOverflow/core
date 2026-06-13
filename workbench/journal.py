@@ -48,6 +48,7 @@ class TurnJournalEntry:
     proposal_candidates: list[dict[str, Any]]
     turn_cost_ms: int
     checkpoint_emitted: bool
+    leeway_evidence: dict[str, Any] | None = None
     trace_integrity: TraceIntegrity | None = None
     journal_digest: str = ""
 
@@ -86,6 +87,7 @@ class TurnJournalEntry:
             ],
             turn_cost_ms=result.turn_cost_ms,
             checkpoint_emitted=result.checkpoint_emitted,
+            leeway_evidence=to_data(result.leeway_evidence),
             trace_integrity=_trace_integrity_for_hash(result.trace_hash),
         )
 

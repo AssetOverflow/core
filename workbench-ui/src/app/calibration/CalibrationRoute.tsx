@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { WorkbenchApiError } from "../../api/client";
 import { useCalibrationClasses, useServingMetrics } from "../../api/queries";
 import { DigestBadge } from "../../design/components/DigestBadge/DigestBadge";
@@ -13,6 +13,7 @@ import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
 import type { CalibrationClass, ServingMetrics } from "../../types/api";
+import { useEvidenceSubject } from "../evidenceContext";
 
 const DETAIL_TABS: readonly Tab[] = [
   { id: "counts", label: "Counts" },
@@ -212,6 +213,8 @@ function ClassDetail({ c }: { c: CalibrationClass }) {
               { key: "refused", value: String(c.refused), mono: true },
               { key: "committed", value: String(c.committed), mono: true },
               { key: "coverage", value: pct(c.coverage), mono: true },
+              { key: "source", value: c.source_path, mono: true },
+              { key: "source_digest", value: c.source_digest, mono: true, copyable: true },
             ]}
           />
         ) : null}
@@ -225,6 +228,7 @@ function ClassDetail({ c }: { c: CalibrationClass }) {
 export function CalibrationRoute() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  const { subject, setSubject, setInspectorOpen } = useEvidenceSubject();
 
   const classesQuery = useCalibrationClasses();
   const metricsQuery = useServingMetrics();
@@ -237,6 +241,27 @@ export function CalibrationRoute() {
   }, [search, classes]);
 
   const selectedClass = classes.find((c) => c.class_name === selected) ?? null;
+
+  useEffect(() => {
+    if (subject.kind === "calibration_class" && subject.className !== selected) {
+      setSelected(subject.className);
+    }
+  }, [selected, subject]);
+
+  useEffect(() => {
+    if (!selectedClass) return;
+    setSubject({
+      kind: "calibration_class",
+      className: selectedClass.class_name,
+      data: selectedClass,
+    });
+  }, [selectedClass, setSubject]);
+
+  function selectClass(c: CalibrationClass) {
+    setSelected(c.class_name);
+    setSubject({ kind: "calibration_class", className: c.class_name, data: c });
+    setInspectorOpen(true);
+  }
 
   if (classesQuery.isLoading) {
     return <LoadingState label="Loading calibration..." />;
@@ -276,13 +301,13 @@ export function CalibrationRoute() {
               height="calc(100vh - 20rem)"
               initialRect={{ width: 520, height: 560 }}
               items={filtered}
-              onActivate={(c) => setSelected(c.class_name)}
+              onActivate={selectClass}
               renderItem={(c, _index, focused) => (
                 <ClassRow
                   c={c}
                   selected={c.class_name === selected}
                   focused={focused}
-                  onSelect={() => setSelected(c.class_name)}
+                  onSelect={() => selectClass(c)}
                 />
               )}
             />

@@ -13,6 +13,7 @@ import type {
   MathProposalDetail,
   ArtifactDetail,
   EvalRunResult,
+  CalibrationClass,
 } from "../types/api";
 
 export type ProposalSubjectDomain = "cognition" | "math";
@@ -61,6 +62,7 @@ export type EvidenceSubject =
   | { kind: "pack"; packId: string; data?: PackSubjectData }
   | { kind: "vault_entry"; entryIndex: number; data?: VaultEntrySubjectData }
   | { kind: "audit_event"; eventId: string; data?: AuditEventSubjectData }
+  | { kind: "calibration_class"; className: string; data?: CalibrationClass }
   | { kind: "none" };
 
 interface EvidenceContextValue {

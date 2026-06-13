@@ -81,6 +81,11 @@ const INSPECT_ONLY_KINDS: Array<{ name: string; subject: AddressableSubject; pat
     subject: { kind: "audit_event", eventId: "audit:event/1" },
     path: "/audit?inspect=audit%3Aaudit%3Aevent%2F1",
   },
+  {
+    name: "calibration_class",
+    subject: { kind: "calibration_class", className: "additive class" },
+    path: "/calibration?inspect=calibration%3Aadditive+class",
+  },
 ];
 
 describe("subjectToUrl", () => {

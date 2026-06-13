@@ -183,6 +183,30 @@ export function deriveStages(subject: EvidenceSubject): RailStage[] | null {
         stage("action", d ? evidenceOf(d.mutation_boundary) : "hollow", "mutation_boundary"),
       ];
     }
+    case "calibration_class": {
+      const d = subject.data;
+      return [
+        stage("intent", "dim", "not applicable — calibration is serving-discipline evidence, not runtime truth"),
+        stage("subject", "lit", "selected calibration class"),
+        stage(
+          "provenance",
+          d ? evidenceAny(d.source_digest, d.source_path) : "hollow",
+          "practice report source_digest / source_path",
+        ),
+        stage(
+          "admissibility",
+          d ? evidenceOf(d.reliability_floor) : "hollow",
+          "Wilson floor + theta gate from core.reliability_gate",
+        ),
+        stage("replay", "dim", "not a runtime replay claim"),
+        stage(
+          "authority",
+          d ? evidenceAny(d.propose_licensed, d.serve_licensed) : "hollow",
+          "PROPOSE/SERVE license verdict; read-only, not mutation authority",
+        ),
+        stage("action", "dim", "calibration view is read-only"),
+      ];
+    }
     case "artifact": {
       const d = subject.data;
       return [
