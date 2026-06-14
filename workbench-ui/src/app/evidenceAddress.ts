@@ -14,6 +14,7 @@ import type { EvidenceSubject } from "./evidenceContext";
 //   logos_entry -> /logos/<packId>?inspect=logos_entry:<packId>/<entryId>
 //   logos_gloss -> /logos/<packId>?inspect=logos_gloss:<packId>/<glossId>
 //   logos_morphology -> /logos/<packId>?inspect=logos_morphology:<packId>/<morphologyId>
+//   logos_alignment_edge -> /logos/<packId>?inspect=logos_alignment_edge:<packId>/<edgeId>
 //   vault_entry -> /vault?inspect=vault:<entryIndex>
 //   audit_event -> /audit?inspect=audit:<eventId>
 //   calibration_class -> /calibration?inspect=calibration:<className>
@@ -69,6 +70,12 @@ export function sameIdentity(a: EvidenceSubject, b: EvidenceSubject): boolean {
         b.packId === a.packId &&
         b.morphologyId === a.morphologyId
       );
+    case "logos_alignment_edge":
+      return (
+        b.kind === "logos_alignment_edge" &&
+        b.packId === a.packId &&
+        b.edgeId === a.edgeId
+      );
     case "vault_entry":
       return b.kind === "vault_entry" && b.entryIndex === a.entryIndex;
     case "audit_event":
@@ -115,6 +122,7 @@ function subjectAddress(subject: AddressableSubject): SubjectAddress {
     case "logos_entry":
     case "logos_gloss":
     case "logos_morphology":
+    case "logos_alignment_edge":
       {
         const params = emptyParams();
         params.set(INSPECT_PARAM, subjectToInspectValue(subject));
@@ -163,6 +171,8 @@ export function subjectToInspectValue(subject: AddressableSubject): string {
       return `logos_gloss:${subject.packId}/${subject.glossId}`;
     case "logos_morphology":
       return `logos_morphology:${subject.packId}/${subject.morphologyId}`;
+    case "logos_alignment_edge":
+      return `logos_alignment_edge:${subject.packId}/${subject.edgeId}`;
     case "vault_entry":
       return `vault:${subject.entryIndex}`;
     case "audit_event":
@@ -247,6 +257,16 @@ export function inspectValueToSubject(
             kind: "logos_morphology",
             packId: parts.packId,
             morphologyId: parts.subId,
+          };
+    }
+    case "logos_alignment_edge": {
+      const parts = splitPackScoped(id);
+      return parts === null
+        ? null
+        : {
+            kind: "logos_alignment_edge",
+            packId: parts.packId,
+            edgeId: parts.subId,
           };
     }
     case "vault": {

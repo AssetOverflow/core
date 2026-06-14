@@ -423,6 +423,48 @@ function LogosMorphologyInspector({
   );
 }
 
+function LogosAlignmentEdgeInspector({
+  subject,
+}: {
+  subject: Extract<EvidenceSubject, { kind: "logos_alignment_edge" }>;
+}) {
+  const { data } = subject;
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">
+        CORE-Logos Alignment Edge
+      </h3>
+      <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">
+        {subject.packId} · {subject.edgeId}
+      </p>
+      {data ? (
+        <MetadataTable
+          rows={[
+            { key: "source", value: data.source_id, mono: true },
+            { key: "target", value: data.target_id, mono: true },
+            { key: "relation", value: data.relation },
+            { key: "weight", value: data.weight.toFixed(2), mono: true },
+            {
+              key: "target_pack",
+              value: data.target_pack_id ?? "unresolved",
+              mono: data.target_pack_id !== null,
+            },
+            {
+              key: "target",
+              value: data.invalid_target ? "invalid (dangling)" : "resolved",
+            },
+            ...(data.evidence_ids.length > 0
+              ? [{ key: "evidence", value: data.evidence_ids.join(", "), mono: true }]
+              : []),
+          ]}
+        />
+      ) : (
+        <DetailNotLoaded />
+      )}
+    </div>
+  );
+}
+
 function VaultEntryInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "vault_entry" }> }) {
   const { data } = subject;
   return (
@@ -565,6 +607,8 @@ function InspectorProjection({ subject }: { subject: EvidenceSubject }) {
       return <LogosGlossInspector subject={subject} />;
     case "logos_morphology":
       return <LogosMorphologyInspector subject={subject} />;
+    case "logos_alignment_edge":
+      return <LogosAlignmentEdgeInspector subject={subject} />;
     case "vault_entry":
       return <VaultEntryInspector subject={subject} />;
     case "audit_event":

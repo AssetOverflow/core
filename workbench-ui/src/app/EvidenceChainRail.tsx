@@ -247,6 +247,30 @@ export function deriveStages(subject: EvidenceSubject): RailStage[] | null {
         stage("action", "dim", "proposal mode none"),
       ];
     }
+    case "logos_alignment_edge": {
+      const d = subject.data;
+      return [
+        stage("intent", "dim", "not applicable to read-only Logos alignment inspection"),
+        stage("subject", "lit", "selected CORE-Logos alignment edge"),
+        stage(
+          "provenance",
+          d ? evidenceAny(...d.evidence_ids) : "hollow",
+          "evidence_ids (cross-language attestations)",
+        ),
+        stage(
+          "admissibility",
+          d ? (d.invalid_target ? "hollow" : evidenceOf(d.target_pack_id)) : "hollow",
+          "target resolves to a declared lexicon entry (invalid_target = dangling)",
+        ),
+        stage(
+          "replay",
+          d ? evidenceOf(d.relation) : "hollow",
+          "relation + weight (deterministic resonance edge)",
+        ),
+        stage("authority", "dim", "read-only Logos Studio has no mutation authority"),
+        stage("action", "dim", "proposal mode none"),
+      ];
+    }
     case "vault_entry": {
       const d = subject.data;
       return [

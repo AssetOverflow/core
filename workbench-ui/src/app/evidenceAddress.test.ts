@@ -299,6 +299,10 @@ describe("logos sub-entity addresses (LG-3)", () => {
       subject: { kind: "logos_morphology", packId: PACK, morphologyId: "he-morph-001" },
       inspect: `logos_morphology:${PACK}/he-morph-001`,
     },
+    {
+      subject: { kind: "logos_alignment_edge", packId: PACK, edgeId: "a1b2c3d4e5f60718" },
+      inspect: `logos_alignment_edge:${PACK}/a1b2c3d4e5f60718`,
+    },
   ];
 
   it.each(subEntities)(

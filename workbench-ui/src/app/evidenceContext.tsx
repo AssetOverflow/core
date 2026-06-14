@@ -18,6 +18,7 @@ import type {
   LogosLexiconRow,
   LogosGlossRow,
   LogosMorphologyRow,
+  LogosAlignmentRow,
   SafetyVerdict,
 } from "../types/api";
 
@@ -104,6 +105,12 @@ export type EvidenceSubject =
       packId: string;
       morphologyId: string;
       data?: LogosMorphologyRow;
+    }
+  | {
+      kind: "logos_alignment_edge";
+      packId: string;
+      edgeId: string;
+      data?: LogosAlignmentRow;
     }
   | { kind: "vault_entry"; entryIndex: number; data?: VaultEntrySubjectData }
   | { kind: "audit_event"; eventId: string; data?: AuditEventSubjectData }

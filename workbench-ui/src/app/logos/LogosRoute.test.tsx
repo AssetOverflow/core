@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "../../test/createTestQueryClient";
 import type {
+  LogosAlignmentRow,
   LogosPackContents,
   LogosPackOverview,
   LogosPackSummary,
@@ -174,6 +175,34 @@ function contentsFor(packId: string): LogosPackContents {
   };
 }
 
+function alignmentFor(packId: string): LogosAlignmentRow[] {
+  const he = packId.includes("he");
+  return [
+    {
+      edge_id: "edge-1",
+      source_id: he ? "he-001" : "grc-001",
+      target_id: he ? "grc-001" : "en-024",
+      relation: "cross_lang.logos.utterance",
+      weight: 0.95,
+      evidence_ids: ["John1:1", "Gen1:1"],
+      target_pack_id: he ? "grc_logos_micro_v1" : "en_core_cognition_v1",
+      target_resolved: true,
+      invalid_target: false,
+    },
+    {
+      edge_id: "edge-collapse",
+      source_id: he ? "he-023" : "grc-023",
+      target_id: "en-collapse-breath",
+      relation: "cross_lang.no_english_collapse",
+      weight: 0.0,
+      evidence_ids: ["adr-0073c"],
+      target_pack_id: null,
+      target_resolved: false,
+      invalid_target: true,
+    },
+  ];
+}
+
 function okEnvelope(data: unknown) {
   return { ok: true, generated_at: "2026-06-14T00:00:00Z", data };
 }
@@ -200,6 +229,13 @@ function stubLogosFetch() {
       const packId = decodeURIComponent(contentsMatch[1]);
       return Promise.resolve({
         json: async () => okEnvelope(contentsFor(packId)),
+      });
+    }
+    const alignmentMatch = path.match(/^\/logos\/packs\/([^/]+)\/alignment$/);
+    if (alignmentMatch) {
+      const packId = decodeURIComponent(alignmentMatch[1]);
+      return Promise.resolve({
+        json: async () => okEnvelope({ items: alignmentFor(packId) }),
       });
     }
     const overviewMatch = path.match(/^\/logos\/packs\/([^/]+)$/);
@@ -298,7 +334,7 @@ describe("LogosRoute", () => {
     expect(screen.queryByText(/Draft proposal/i)).not.toBeInTheDocument();
   });
 
-  it("selects a pack, renders Overview, projects logos_pack evidence, and defers only the alignment endpoint", async () => {
+  it("selects a pack, renders Overview, projects logos_pack evidence, and fetches contents + alignment", async () => {
     const { paths } = stubLogosFetch();
     const user = userEvent.setup();
     renderRoute();
@@ -316,9 +352,9 @@ describe("LogosRoute", () => {
     expect(screen.queryByText(/proof card/i)).not.toBeInTheDocument();
     expect(screen.getByText("CORE-Logos Pack")).toBeInTheDocument();
     expect(screen.getByText("0 / missing_evidence")).toBeInTheDocument();
-    // LG-3 fetches contents eagerly on pack-select; /alignment stays deferred to LG-4.
+    // LG-3 + LG-4 fetch contents and alignment eagerly on pack-select.
     expect(paths).toContain("/logos/packs/he_logos_micro_v1/contents");
-    expect(paths).not.toContain("/logos/packs/he_logos_micro_v1/alignment");
+    expect(paths).toContain("/logos/packs/he_logos_micro_v1/alignment");
   });
 
   it("renders Identity passport fields and the raw live overview projection", async () => {
@@ -410,5 +446,45 @@ describe("LogosRoute", () => {
     expect(await screen.findByText("word, matter, or spoken thing")).toBeInTheDocument();
     await user.click(screen.getByText("word, matter, or spoken thing"));
     expect(await screen.findByText("CORE-Logos Gloss")).toBeInTheDocument();
+  });
+
+  it("renders the Alignment tab, surfaces invalid targets, and projects a logos_alignment_edge subject", async () => {
+    stubLogosFetch();
+    const user = userEvent.setup();
+    renderRoute("/logos/he_logos_micro_v1");
+
+    await user.click(await screen.findByRole("tab", { name: "Alignment" }));
+
+    // Real edges from /alignment, deterministic graph, honest invalid-target warning.
+    expect(
+      await screen.findByLabelText("CORE-Logos cross-language alignment graph"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("2 alignment edges")).toBeInTheDocument();
+    expect(screen.getByText("1 invalid target")).toBeInTheDocument();
+    expect(
+      screen.getByText(/invalid target — en-collapse-breath resolves to no declared lexicon entry/),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByText("cross_lang.logos.utterance"));
+
+    expect(await screen.findByText("CORE-Logos Alignment Edge")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).toHaveTextContent(
+        "inspect=logos_alignment_edge%3Ahe_logos_micro_v1%2Fedge-1",
+      ),
+    );
+  });
+
+  it("never renders a holonomy tab or proof/success element, even with alignment present", async () => {
+    stubLogosFetch();
+    const user = userEvent.setup();
+    renderRoute("/logos/he_logos_micro_v1");
+
+    await user.click(await screen.findByRole("tab", { name: "Alignment" }));
+    await screen.findByLabelText("CORE-Logos cross-language alignment graph");
+
+    expect(screen.queryByRole("tab", { name: /holonomy/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/proof card/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/holonomy proof/i)).not.toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { WorkbenchApiError } from "../../api/client";
 import {
+  useLogosPackAlignment,
   useLogosPackContents,
   useLogosPackOverview,
   useLogosPacks,
@@ -21,6 +22,7 @@ import {
   SafetyVerdictBadge,
 } from "../../design/components/badges";
 import type {
+  LogosAlignmentRow,
   LogosAlignmentTargetIssue,
   LogosGlossRow,
   LogosLexiconRow,
@@ -36,6 +38,7 @@ import { pushRecentItem } from "../commandRegistry";
 import { subjectToUrl } from "../evidenceAddress";
 import { useEvidenceSubject, type EvidenceSubject } from "../evidenceContext";
 import { GlossesTab, LexiconTab, MorphologyTab } from "./LogosContentsTabs";
+import { AlignmentTab } from "./LogosAlignmentTab";
 
 const LOGOS_TABS: readonly Tab[] = [
   { id: "overview", label: "Overview" },
@@ -43,6 +46,7 @@ const LOGOS_TABS: readonly Tab[] = [
   { id: "lexicon", label: "Lexicon" },
   { id: "glosses", label: "Glosses" },
   { id: "morphology", label: "Morphology" },
+  { id: "alignment", label: "Alignment" },
   { id: "safety", label: "Safety" },
 ];
 
@@ -586,10 +590,12 @@ interface ContentsSelection {
   entryId: string | null;
   glossId: string | null;
   morphologyId: string | null;
+  edgeId: string | null;
   danglingEntryIds: ReadonlySet<string>;
   onSelectEntry: (row: LogosLexiconRow) => void;
   onSelectGloss: (row: LogosGlossRow) => void;
   onSelectMorphology: (row: LogosMorphologyRow) => void;
+  onSelectEdge: (row: LogosAlignmentRow) => void;
 }
 
 function ContentsGate({
@@ -658,6 +664,9 @@ function Workspace({
   contents,
   contentsLoading,
   contentsError,
+  alignment,
+  alignmentLoading,
+  alignmentError,
   selection,
 }: {
   selectedPackId: string | null;
@@ -670,6 +679,9 @@ function Workspace({
   contents?: LogosPackContents;
   contentsLoading: boolean;
   contentsError: unknown;
+  alignment?: LogosAlignmentRow[];
+  alignmentLoading: boolean;
+  alignmentError: unknown;
   selection: ContentsSelection;
 }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -721,6 +733,24 @@ function Workspace({
             selection={selection}
           />
         ) : null}
+        {activeTab === "alignment" ? (
+          alignmentLoading ? (
+            <LoadingState label="Loading CORE-Logos alignment..." />
+          ) : alignmentError ? (
+            <ErrorState
+              whatFailed={errorMessage(alignmentError)}
+              mutationStatus="No Logos mutation occurred."
+              reproducer={`curl /logos/packs/${selectedPackId}/alignment`}
+              retrySafety="Retry: safe"
+            />
+          ) : alignment ? (
+            <AlignmentTab
+              rows={alignment}
+              selectedEdgeId={selection.edgeId}
+              onSelect={selection.onSelectEdge}
+            />
+          ) : null
+        ) : null}
         {activeTab === "safety" ? (
           safetyLoading ? (
             <LoadingState label="Loading CORE-Logos safety..." />
@@ -750,6 +780,7 @@ export function LogosRoute() {
   const overviewQuery = useLogosPackOverview(selectedPackId);
   const safetyQuery = useLogosPackSafety(selectedPackId);
   const contentsQuery = useLogosPackContents(selectedPackId);
+  const alignmentQuery = useLogosPackAlignment(selectedPackId);
 
   useEffect(() => {
     if (selectedPackId === null) return;
@@ -782,6 +813,7 @@ export function LogosRoute() {
     entryId: subject.kind === "logos_entry" ? subject.entryId : null,
     glossId: subject.kind === "logos_gloss" ? subject.glossId : null,
     morphologyId: subject.kind === "logos_morphology" ? subject.morphologyId : null,
+    edgeId: subject.kind === "logos_alignment_edge" ? subject.edgeId : null,
     danglingEntryIds: new Set(
       safetyQuery.data?.dangling_morphology_links.map((issue) => issue.entry_id) ?? [],
     ),
@@ -805,6 +837,17 @@ export function LogosRoute() {
               kind: "logos_morphology",
               packId: selectedPackId,
               morphologyId: row.morphology_id,
+              data: row,
+            },
+      ),
+    onSelectEdge: (row) =>
+      selectSubEntity(
+        selectedPackId === null
+          ? { kind: "none" }
+          : {
+              kind: "logos_alignment_edge",
+              packId: selectedPackId,
+              edgeId: row.edge_id,
               data: row,
             },
       ),
@@ -856,6 +899,9 @@ export function LogosRoute() {
               contents={contentsQuery.data}
               contentsLoading={contentsQuery.isLoading}
               contentsError={contentsQuery.isError ? contentsQuery.error : null}
+              alignment={alignmentQuery.data}
+              alignmentLoading={alignmentQuery.isLoading}
+              alignmentError={alignmentQuery.isError ? alignmentQuery.error : null}
               selection={selection}
             />
           </section>
