@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useIsMutating } from "@tanstack/react-query";
 import { useRuntimeStatus } from "../api/queries";
+import { useCopyToClipboard } from "../design/hooks/useCopyToClipboard";
 
 export function StatusFooter() {
   const { data, isError } = useRuntimeStatus();
   const chatTurnsPending = useIsMutating({ mutationKey: ["chat-turn"] }) > 0;
   const [revisionExpanded, setRevisionExpanded] = useState(false);
+  const { copied: shaCopied, copy: copySha } = useCopyToClipboard();
 
   if (isError) {
     return (
@@ -29,7 +31,8 @@ export function StatusFooter() {
     visibleMutationMode === "read_only" ? (
       <span
         data-testid="mutation-mode"
-        className="rounded border border-[var(--color-border-subtle)] px-2 py-0.5 text-[var(--color-text-secondary)]"
+        className="cursor-default rounded border border-[var(--color-border-subtle)] px-2 py-0.5 text-[var(--color-text-secondary)]"
+        title="Runtime mutation mode — read-only by design (status, not a toggle)"
         aria-label="Mutation mode: Read Only"
       >
         Read Only
@@ -54,12 +57,12 @@ export function StatusFooter() {
       <button
         type="button"
         className="font-mono text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]"
-        onClick={() => navigator.clipboard.writeText(git_revision).catch(() => {})}
-        title="Click to copy full SHA"
-        aria-label={`git revision: ${git_revision}`}
+        onClick={() => copySha(git_revision)}
+        title={shaCopied ? "Copied" : "Copy full git revision SHA"}
+        aria-label={`git revision: ${git_revision}. Click to copy.`}
         data-testid="git-revision"
       >
-        {shortSha(git_revision)}
+        {shaCopied ? "Copied" : shortSha(git_revision)}
       </button>
 
       <div className="flex flex-col">
@@ -73,6 +76,7 @@ export function StatusFooter() {
           ].join(" ")}
           onClick={() => setRevisionExpanded((v) => !v)}
           aria-expanded={revisionExpanded}
+          title={`Engine checkpoint revision (${checkpoint_revision}) — click to ${revisionExpanded ? "hide" : "show"} details`}
           aria-label={`checkpoint revision: ${checkpoint_revision}${revision_warning ? " (warning)" : ""}`}
           data-testid="checkpoint-revision"
           data-warning={revision_warning ? "true" : undefined}

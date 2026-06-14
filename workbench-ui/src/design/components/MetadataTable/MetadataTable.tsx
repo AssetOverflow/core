@@ -1,7 +1,6 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode } from "react";
 import { Copy, Check } from "lucide-react";
-import { copyText } from "../../lib";
-import { useManagedTimeout } from "../../hooks/useManagedTimeout";
+import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 
 export interface MetadataRow {
   key: string;
@@ -15,12 +14,12 @@ export interface MetadataTableProps {
 }
 
 function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const scheduleReset = useManagedTimeout();
+  const { copied, copy } = useCopyToClipboard();
 
   return (
     <button
       type="button"
+      title={copied ? "Copied" : `Copy ${text}`}
       aria-label={`Copy ${text}`}
       className="ml-1 inline-flex items-center opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]"
       style={{
@@ -32,12 +31,7 @@ function CopyButton({ text }: { text: string }) {
         color: "var(--color-text-muted)",
         padding: 0,
       }}
-      onClick={() => {
-        void copyText(text).then(() => {
-          setCopied(true);
-          scheduleReset(() => setCopied(false), 1500);
-        });
-      }}
+      onClick={() => copy(text)}
     >
       {copied ? (
         <Check size={12} aria-hidden />
