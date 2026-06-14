@@ -171,6 +171,39 @@ class FieldEvidence:
 
 
 @dataclass(frozen=True, slots=True)
+class EvidenceBundle:
+    """D3 shareable evidence bundle — a turn's deterministic evidence, citable.
+
+    Reproducibility as a deliverable: a content-addressed export of the
+    DETERMINISTIC subset of a turn (the wall-clock fields — timestamp,
+    turn_cost_ms — are deliberately omitted) so the same turn always yields the
+    same bytes and the same ``bundle_digest``.  Anyone can re-run the prompt
+    over a sealed runtime and check the trace_hash, then recompute the bundle
+    and check ``bundle_digest`` — the bundle is the citable claim, the
+    reproducer is how to verify it.  It composes the Phase-C evidence
+    (pipeline + field) with the trace and the calibration leeway verdict.
+    """
+
+    schema_version: Literal["evidence_bundle_v1"]
+    turn_id: int
+    generated_from: Literal["turn_journal"]
+    trace_hash: str | None
+    trace_integrity: TraceIntegrity
+    prompt: str
+    surface: str
+    grounding_source: GroundingSource
+    epistemic_state: EpistemicStateValue
+    normative_clearance: NormativeClearanceValue
+    refusal_emitted: bool
+    journal_digest: str
+    pipeline_record: CognitivePipelineRecord | None
+    field_evidence: FieldEvidence | None
+    leeway_evidence: LeewayEvidence | None
+    replay_reproducer: str
+    bundle_digest: str
+
+
+@dataclass(frozen=True, slots=True)
 class ChatTurnResult:
     prompt: str
     surface: str

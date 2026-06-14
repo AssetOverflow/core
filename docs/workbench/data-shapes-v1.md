@@ -190,6 +190,42 @@ first-class read endpoint is `GET /trace/{turn_id}/field`; it returns a
 measured value against the ceiling, the `cga_inner` transition, and the digests
 — inspectable exact numbers and invariant status, no decorative geometry.
 
+## EvidenceBundle (D3 shareable evidence bundle)
+
+```ts
+export type EvidenceBundle = {
+  schema_version: "evidence_bundle_v1";
+  turn_id: number;
+  generated_from: "turn_journal";
+  trace_hash: string | null;
+  trace_integrity: "pipeline_trace" | "legacy_unhashed";
+  prompt: string;
+  surface: string;
+  grounding_source: GroundingSource;
+  epistemic_state: EpistemicState;
+  normative_clearance: NormativeClearance;
+  refusal_emitted: boolean;
+  journal_digest: string;              // provenance — NOT in the content digest
+  pipeline_record: CognitivePipelineRecord | null;
+  field_evidence: FieldEvidence | null;
+  leeway_evidence: LeewayEvidence | null;
+  replay_reproducer: string;           // how to verify — NOT in the content digest
+  bundle_digest: string;               // sha256 content address of the evidence
+};
+```
+
+A turn's evidence exported as one citable artifact — *reproducibility as a
+deliverable*.  `bundle_digest` content-addresses the **deterministic cognitive
+evidence** only (prompt, surface, trace_hash, grounding/epistemic/normative
+state, pipeline + field evidence, leeway verdict).  Journal position and
+wall-clock metadata (`turn_id`, `journal_digest`, `replay_reproducer`,
+`generated_from`) are carried for provenance but **excluded** from the digest,
+so the same turn content always yields the same digest regardless of where it
+landed in a journal.  Read-only — a pure projection of a persisted journal
+entry, no engine execution.  Endpoint: `GET /trace/{turn_id}/bundle`.  The Trace
+route's **Bundle** tab shows the citable digest, a "what this proves / does not
+prove" honesty note, the reproducer, and a deterministic JSON download.
+
 ---
 
 # Proposal

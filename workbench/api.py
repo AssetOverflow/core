@@ -20,6 +20,7 @@ from core.epistemic_state import (
 )
 from workbench import calibration, readers
 from workbench.journal import DEFAULT_JOURNAL_DIR, TurnJournal, TurnJournalEntry
+from workbench.evidence_bundle import build_evidence_bundle
 from workbench.field_evidence import (
     field_evidence_from_journal_entry,
     field_evidence_from_result,
@@ -360,6 +361,24 @@ class WorkbenchApi:
                     404, error("not_found", f"trace field not found: {turn_id}")
                 )
             return ApiResponse(200, ok(field_evidence_from_journal_entry(entry)))
+        if method == "GET" and path.startswith("/trace/") and path.endswith("/bundle"):
+            raw_turn_id = unquote(
+                path.removeprefix("/trace/").removesuffix("/bundle").strip("/")
+            )
+            try:
+                turn_id = int(raw_turn_id)
+            except ValueError:
+                return ApiResponse(
+                    404,
+                    error("not_found", f"trace bundle not found: {raw_turn_id}"),
+                )
+            try:
+                entry = self._journal.get_entry(turn_id)
+            except FileNotFoundError:
+                return ApiResponse(
+                    404, error("not_found", f"trace bundle not found: {turn_id}")
+                )
+            return ApiResponse(200, ok(build_evidence_bundle(entry)))
         if method == "GET" and path.startswith("/trace/"):
             raw_turn_id = unquote(path.removeprefix("/trace/"))
             try:

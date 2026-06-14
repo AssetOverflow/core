@@ -27,6 +27,7 @@ import {
   fetchTraceTurn,
   fetchTracePipeline,
   fetchTraceField,
+  fetchTraceBundle,
   fetchTraceTurns,
   fetchContemplationRun,
   fetchContemplationRuns,
@@ -57,6 +58,7 @@ import type {
   ServingMetrics,
   CognitivePipelineRecord,
   FieldEvidence,
+  EvidenceBundle,
   TurnJournalEntry,
   TurnJournalSummary,
   EvalLaneSummary,
@@ -216,6 +218,16 @@ export function useTraceField(turnId?: number | null) {
   return useQuery<FieldEvidence, WorkbenchApiError>({
     queryKey: ["api", "trace", "field", turnId ?? null],
     queryFn: () => fetchTraceField(turnId as number),
+    enabled: typeof turnId === "number",
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useTraceBundle(turnId?: number | null) {
+  return useQuery<EvidenceBundle, WorkbenchApiError>({
+    queryKey: ["api", "trace", "bundle", turnId ?? null],
+    queryFn: () => fetchTraceBundle(turnId as number),
     enabled: typeof turnId === "number",
     staleTime: 30_000,
     refetchOnWindowFocus: false,

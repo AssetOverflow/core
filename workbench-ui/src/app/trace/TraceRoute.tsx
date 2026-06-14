@@ -3,6 +3,7 @@ import { Eye } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { WorkbenchApiError } from "../../api/client";
 import {
+  useTraceBundle,
   useTraceField,
   useTracePipeline,
   useTraceTurn,
@@ -34,6 +35,7 @@ import { LoadingState } from "../../design/components/states/LoadingState";
 import type {
   CognitivePipelineRecord,
   CognitivePipelineStage,
+  EvidenceBundle,
   FieldEvidence,
   TraceIntegrity,
   TurnJournalEntry,
@@ -46,6 +48,7 @@ import { useEvidenceSubject } from "../evidenceContext";
 const TRACE_TABS: readonly Tab[] = [
   { id: "pipeline", label: "Pipeline" },
   { id: "field", label: "Field" },
+  { id: "bundle", label: "Bundle" },
   { id: "surfaces", label: "Surfaces" },
   { id: "grounding", label: "Grounding" },
   { id: "verdicts", label: "Verdicts" },
@@ -442,6 +445,92 @@ function FieldTab({
   return <FieldInvariantCard record={record} />;
 }
 
+function BundleTab({
+  bundle,
+  isLoading,
+  error,
+  turnId,
+}: {
+  bundle?: EvidenceBundle | null;
+  isLoading: boolean;
+  error: unknown;
+  turnId: number;
+}) {
+  // Deterministic export: a stable object URL over the bundle JSON, revoked on
+  // unmount. The bundle is already content-addressed by the backend.
+  const downloadUrl = useMemo(() => {
+    if (!bundle) return null;
+    return URL.createObjectURL(
+      new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" }),
+    );
+  }, [bundle]);
+  useEffect(() => {
+    return () => {
+      if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    };
+  }, [downloadUrl]);
+
+  if (isLoading) {
+    return <LoadingState label="Assembling evidence bundle..." />;
+  }
+  if (error) {
+    return (
+      <ErrorState
+        whatFailed={errorMessage(error)}
+        mutationStatus="No trace mutation occurred."
+        reproducer={`curl /trace/${turnId}/bundle`}
+        retrySafety="Retry: safe"
+      />
+    );
+  }
+  if (!bundle) {
+    return <LoadingState label="Assembling evidence bundle..." />;
+  }
+
+  const digest = digestPayload(bundle.bundle_digest);
+  const fileName = `evidence-bundle-turn-${bundle.turn_id}-${(digest ?? "").slice(0, 12)}.json`;
+  return (
+    <section className="flex flex-col gap-3" data-testid="evidence-bundle">
+      <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+            citable digest
+          </span>
+          {digest ? <DigestBadge digest={digest} truncate={16} /> : null}
+        </div>
+        <p className="m-0 mt-2 text-xs text-[var(--color-text-secondary)] [text-wrap:balance]">
+          <span className="font-semibold text-[var(--color-text-primary)]">Proves:</span> this
+          exact evidence (trace, pipeline, field, leeway) is reproducible — re-run the prompt over a
+          sealed runtime, confirm the trace hash, recompute the bundle, and this digest matches.{" "}
+          <span className="font-semibold text-[var(--color-text-primary)]">Does not prove:</span>{" "}
+          anything about a different prompt, model, or runtime.
+        </p>
+        {downloadUrl ? (
+          <a
+            className="mt-3 inline-flex items-center gap-2 text-sm underline"
+            href={downloadUrl}
+            download={fileName}
+            data-testid="bundle-download"
+          >
+            Download evidence bundle
+          </a>
+        ) : null}
+      </div>
+      <div>
+        <div className="mb-1 text-xs font-semibold text-[var(--color-text-secondary)]">
+          reproducer
+        </div>
+        <code className="block overflow-auto rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2 font-mono text-xs text-[var(--color-text-primary)]">
+          {bundle.replay_reproducer}
+        </code>
+      </div>
+      <div className="max-h-[28rem] overflow-auto rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2">
+        <StableJsonViewer source={JSON.stringify(bundle, null, 2)} />
+      </div>
+    </section>
+  );
+}
+
 function TraceRow({
   turn,
   selected,
@@ -602,6 +691,9 @@ function TraceDetail({
   fieldEvidence,
   fieldLoading,
   fieldError,
+  bundle,
+  bundleLoading,
+  bundleError,
 }: {
   turn: TurnJournalEntry;
   pipelineRecord?: CognitivePipelineRecord | null;
@@ -610,6 +702,9 @@ function TraceDetail({
   fieldEvidence?: FieldEvidence | null;
   fieldLoading: boolean;
   fieldError: unknown;
+  bundle?: EvidenceBundle | null;
+  bundleLoading: boolean;
+  bundleError: unknown;
 }) {
   const [activeTab, setActiveTab] = useState("pipeline");
   return (
@@ -640,6 +735,14 @@ function TraceDetail({
             turnId={turn.turn_id}
           />
         ) : null}
+        {activeTab === "bundle" ? (
+          <BundleTab
+            bundle={bundle}
+            isLoading={bundleLoading}
+            error={bundleError}
+            turnId={turn.turn_id}
+          />
+        ) : null}
         {activeTab === "surfaces" ? <SurfacesTab turn={turn} /> : null}
         {activeTab === "grounding" ? <GroundingTab turn={turn} /> : null}
         {activeTab === "verdicts" ? <VerdictsTab turn={turn} /> : null}
@@ -661,6 +764,7 @@ export function TraceRoute() {
   const turnQuery = useTraceTurn(selectedTurnId);
   const pipelineQuery = useTracePipeline(selectedTurnId);
   const fieldQuery = useTraceField(selectedTurnId);
+  const bundleQuery = useTraceBundle(selectedTurnId);
 
   const turns = turnsQuery.data ?? [];
   const filteredTurns = useMemo(() => {
@@ -774,6 +878,9 @@ export function TraceRoute() {
               fieldEvidence={fieldQuery.data}
               fieldLoading={fieldQuery.isLoading}
               fieldError={fieldQuery.isError ? fieldQuery.error : null}
+              bundle={bundleQuery.data}
+              bundleLoading={bundleQuery.isLoading}
+              bundleError={bundleQuery.isError ? bundleQuery.error : null}
             />
           ) : null}
         </section>
