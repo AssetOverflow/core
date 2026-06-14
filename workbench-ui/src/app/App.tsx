@@ -21,6 +21,9 @@ const ContemplationRoute = lazy(() =>
 const ReplayRoute = lazy(() =>
   import("./replay/ReplayRoute").then((module) => ({ default: module.ReplayRoute })),
 );
+const TourRoute = lazy(() =>
+  import("./tour/TourRoute").then((module) => ({ default: module.TourRoute })),
+);
 const DemoTheaterRoute = lazy(() =>
   import("./demos/DemoTheaterRoute").then((module) => ({
     default: module.DemoTheaterRoute,
@@ -76,6 +79,7 @@ export const ROUTE_ELEMENTS: RouteElementMap = {
   chat: lazyRoute(<ChatRoute />),
   trace: lazyRoute(<TraceRoute />),
   contemplation: lazyRoute(<ContemplationRoute />),
+  tour: lazyRoute(<TourRoute />),
   replay: lazyRoute(<ReplayRoute />),
   demos: lazyRoute(<DemoTheaterRoute />),
   proposals: lazyRoute(<ProposalsRoute />),

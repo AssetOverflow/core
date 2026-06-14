@@ -166,6 +166,12 @@
     "read_only",
     "scenarios"
   ],
+  "DeterminismTour": [
+    "schema_version",
+    "title",
+    "thesis",
+    "steps"
+  ],
   "EvalLaneSummary": [
     "lane",
     "versions",
@@ -346,6 +352,18 @@
     "sample_count",
     "source_path",
     "source_digest"
+  ],
+  "TourStep": [
+    "step_id",
+    "order",
+    "kind",
+    "headline",
+    "narrative",
+    "demo_id",
+    "demo_title",
+    "what_this_proves",
+    "what_this_does_not_prove",
+    "route_hint"
   ],
   "TurnJournalEntrySchema": [
     "turn_id",

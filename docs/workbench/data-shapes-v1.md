@@ -226,6 +226,38 @@ entry, no engine execution.  Endpoint: `GET /trace/{turn_id}/bundle`.  The Trace
 route's **Bundle** tab shows the citable digest, a "what this proves / does not
 prove" honesty note, the reproducer, and a deterministic JSON download.
 
+## DeterminismTour (D1/D2 guided tour)
+
+```ts
+export type TourStepKind = "intro" | "demo" | "payoff";
+export type TourStep = {
+  step_id: string;
+  order: number;
+  kind: TourStepKind;
+  headline: string;                       // authored narrative
+  narrative: string;                      // authored framing
+  demo_id: string | null;                 // a real registered demo
+  demo_title: string | null;              // pulled from the demo spec
+  what_this_proves: string | null;        // pulled from the demo spec
+  what_this_does_not_prove: string | null;// pulled from the demo spec
+  route_hint: string | null;              // where to go deeper
+};
+export type DeterminismTour = {
+  schema_version: "determinism_tour_v1";
+  title: string;
+  thesis: string;                         // the provider-agnostic pitch
+  steps: TourStep[];
+};
+```
+
+The first-run, provider-agnostic narrative.  Authored headlines/narrative frame
+the story, but every demo step is **bound to a real demo**: the honesty cards
+(`what_this_proves` / `what_this_does_not_prove`) and `demo_title` are pulled
+from the demo spec, never re-authored, and a step referencing a missing demo
+fails closed.  Read-only.  Endpoint: `GET /tour`.  Surfaced as the `/tour` route
+(Determinism section) — thesis hero + ordered step cards with the honesty cards
+and links to the real demos / replay.
+
 ---
 
 # Proposal

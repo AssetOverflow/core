@@ -210,6 +210,19 @@ Detailed brief pack: `docs/handoff/wave-M-phaseB-calibration-briefs-2026-06-13.m
   your own model's claim; watch the deterministic engine decide, refuse, and
   replay it." The Tool-Authority / Hybrid-Verification demos already embody
   this; make it the tour's spine.
+  **D1+D2 implementation note (2026-06-13):** BUILT as the first-class `/tour`
+  route. `workbench/tour.py::determinism_tour()` is a curated, ordered narrative
+  bound to the **real** demo registry: intro (the provider-agnostic thesis) →
+  three demo steps (deductive entailment decides; epistemic truth-state refuses
+  a wrong proposer; proof-carrying promotion ignores proposer authority) →
+  payoff (replay-to-the-same-hash + the citable evidence bundle). **Honesty by
+  construction:** each demo step's `what_this_proves` / `what_this_does_not_prove`
+  cards are pulled from the real demo spec (never re-authored), and a step that
+  references a missing demo **fails closed** (`KeyError`) rather than becoming a
+  dead link — a test asserts both. The spine is the three substrate-capability
+  demos that exist today (the named Tool-Authority/Hybrid demos are not in the
+  registry); the thesis carries the bring-your-model framing. Read endpoint
+  `GET /tour`; route registered in the registry (Determinism section, 14 routes).
 - **Shareable evidence bundles** — deterministic export of a turn + its
   trace + replay + calibration verdict as a single citable artifact.
   Reproducibility *as a deliverable*.

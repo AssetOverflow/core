@@ -24,6 +24,7 @@ import type {
   CognitivePipelineRecord,
   FieldEvidence,
   EvidenceBundle,
+  DeterminismTour,
   TurnJournalEntry,
   TurnJournalSummary,
   ContemplationRunDetail,
@@ -198,6 +199,10 @@ export async function fetchTraceBundle(turnId: number): Promise<EvidenceBundle> 
   return apiFetch<EvidenceBundle>(
     `/trace/${encodeURIComponent(String(turnId))}/bundle`,
   );
+}
+
+export async function fetchTour(): Promise<DeterminismTour> {
+  return apiFetch<DeterminismTour>("/tour");
 }
 
 export async function fetchAuditEvents(

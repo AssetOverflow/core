@@ -21,6 +21,7 @@ from core.epistemic_state import (
 from workbench import calibration, readers
 from workbench.journal import DEFAULT_JOURNAL_DIR, TurnJournal, TurnJournalEntry
 from workbench.evidence_bundle import build_evidence_bundle
+from workbench.tour import determinism_tour
 from workbench.field_evidence import (
     field_evidence_from_journal_entry,
     field_evidence_from_result,
@@ -284,6 +285,8 @@ class WorkbenchApi:
             )
         if method == "GET" and path == "/demos":
             return ApiResponse(200, ok({"items": readers.list_demos()}))
+        if method == "GET" and path == "/tour":
+            return ApiResponse(200, ok(determinism_tour()))
         if method == "POST" and path.endswith("/run") and path.startswith("/demos/"):
             demo_id = unquote(path.removeprefix("/demos/").removesuffix("/run"))
             try:

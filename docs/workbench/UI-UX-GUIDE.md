@@ -59,13 +59,14 @@ successful proof.
 ## 4. Current Route Map
 
 The route registry in `workbench-ui/src/app/routes.ts` is the source of truth.
-Current route count: 13.
+Current route count: 14.
 
 | Section | Route | Path | Shortcut | Purpose |
 |---|---|---|---|---|
 | Converse | Chat | `/chat` | `⌘1` | Execute a normal CORE turn and journal evidence. |
 | Cognition | Trace | `/trace` | `⌘2` | Inspect turn surfaces, grounding, verdicts, and trace hashes. |
 | Cognition | Contemplation | `/contemplation` | Palette | Inspect persisted contemplation process traces. |
+| Determinism | Tour | `/tour` | Palette | Guided determinism tour: a curated narrative over the real demos with "what this proves / does not prove" honesty cards. |
 | Determinism | Replay | `/replay` | `⌘3` | Re-execute journaled turns in a sealed fresh runtime and compare envelopes. |
 | Determinism | Demos | `/demos` | Palette | Run registered determinism demos. |
 | Evidence | Proposals | `/proposals` | `⌘4` | Review cognition and math proposal evidence. |

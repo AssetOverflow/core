@@ -140,6 +140,33 @@ export interface EvidenceBundle {
   bundle_digest: string;
 }
 
+export type TourStepKind = "intro" | "demo" | "payoff";
+
+/**
+ * D1/D2 guided determinism tour — a curated narrative over the real demos.
+ * `headline`/`narrative` are authored framing; for demo steps the honesty cards
+ * are pulled from the real demo spec, never re-authored.
+ */
+export interface TourStep {
+  step_id: string;
+  order: number;
+  kind: TourStepKind;
+  headline: string;
+  narrative: string;
+  demo_id: string | null;
+  demo_title: string | null;
+  what_this_proves: string | null;
+  what_this_does_not_prove: string | null;
+  route_hint: string | null;
+}
+
+export interface DeterminismTour {
+  schema_version: "determinism_tour_v1";
+  title: string;
+  thesis: string;
+  steps: TourStep[];
+}
+
 export type LeewayLicense = "PROPOSE" | "SERVE" | "blocked" | "unknown";
 export type ClaimDisclosure = "approximate" | "verified" | "proposal_only" | "none";
 
