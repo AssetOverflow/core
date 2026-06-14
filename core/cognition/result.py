@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from core.cognition.leeway import LeewayRecord
 from field.state import FieldState
 from generate.articulation import ArticulationPlan
 from generate.dialogue import DialogueRole
@@ -138,3 +139,6 @@ class CognitiveTurnResult:
     # --- invariant bookkeeping ---
     versor_condition: float = 0.0   # must be < 1e-6
     trace_hash: str = ""            # SHA-256 over deterministic key fields
+
+    # --- response-governance leeway evidence (B4; observational, not in trace_hash) ---
+    leeway: LeewayRecord | None = None

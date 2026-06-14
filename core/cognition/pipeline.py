@@ -19,6 +19,7 @@ import json
 from collections import OrderedDict
 
 from field.state import FieldState
+from core.cognition.leeway import build_leeway_record
 from core.cognition.result import CognitiveTurnResult
 from core.cognition.surface_resolution import resolve_surface
 from core.cognition.trace import compute_trace_hash, hash_admissibility_trace
@@ -457,6 +458,19 @@ class CognitiveTurnPipeline:
         # ``source_turn_trace``.  See runtime.finalize_turn_trace_hash.
         self.runtime.finalize_turn_trace_hash(trace_hash)
 
+        # B4 producer: capture the leeway the response path already decided —
+        # observational only (reads the runtime's introspection-only accrual and
+        # the response's reach level; never alters the surface, never gates).
+        accrual = (
+            self.runtime.last_turn_accrual()
+            if hasattr(self.runtime, "last_turn_accrual")
+            else None
+        )
+        leeway = build_leeway_record(
+            reach_level=str(getattr(response, "reach_level", "strict") or "strict"),
+            license_decision=getattr(accrual, "license", None),
+        )
+
         return CognitiveTurnResult(
             input_text=text,
             input_tokens=raw_tokens,
@@ -489,6 +503,7 @@ class CognitiveTurnPipeline:
             dropped_compound_clauses=dropped_compound_clauses,
             versor_condition=response.versor_condition,
             trace_hash=trace_hash,
+            leeway=leeway,
         )
 
     # ------------------------------------------------------------------
