@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { SearchInput } from "../../design/components/SearchInput/SearchInput";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import { VirtualizedList } from "../../design/components/VirtualizedList/VirtualizedList";
 import type {
   LogosGlossRow,
@@ -159,9 +160,12 @@ export function LexiconTab({
         renderItem={(row, _index, focused) => (
           <RowShell selected={focused || row.entry_id === selectedEntryId} onSelect={() => onSelect(row)}>
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate font-mono text-sm text-[var(--color-text-primary)]">
-                {row.surface} · {row.lemma}
-              </span>
+              <TruncatedCell
+                value={`${row.surface} · ${row.lemma}`}
+                label="surface · lemma"
+                mono
+                className="text-sm text-[var(--color-text-primary)]"
+              />
               <span className="font-mono text-[10px] text-[var(--color-text-muted)]">{row.entry_id}</span>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -224,7 +228,12 @@ export function GlossesTab({
         renderItem={(row, _index, focused) => (
           <RowShell selected={focused || row.gloss_id === selectedGlossId} onSelect={() => onSelect(row)}>
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate font-mono text-sm text-[var(--color-text-primary)]">{row.lemma}</span>
+              <TruncatedCell
+                value={row.lemma}
+                label="lemma"
+                mono
+                className="text-sm text-[var(--color-text-primary)]"
+              />
               {row.pos ? <Tag>{row.pos}</Tag> : null}
             </div>
             <p className="m-0 text-xs text-[var(--color-text-secondary)] [text-wrap:balance]">{row.gloss}</p>
@@ -301,9 +310,12 @@ export function MorphologyTab({
               onSelect={() => onSelect(row)}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate font-mono text-sm text-[var(--color-text-primary)]">
-                  {row.surface} · {row.lemma}
-                </span>
+                <TruncatedCell
+                  value={`${row.surface} · ${row.lemma}`}
+                  label="surface · lemma"
+                  mono
+                  className="text-sm text-[var(--color-text-primary)]"
+                />
                 <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
                   {row.morphology_id}
                 </span>

@@ -1,4 +1,5 @@
 import { StableJsonViewer } from "../../design/components/StableJsonViewer";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import type { ProposalDetail } from "../../types/api";
 import { jsonSource } from "./proposalView";
 import { SuggestedCLIBox } from "./SuggestedCLIBox";
@@ -30,7 +31,11 @@ export function ProposalProvenanceViewer({ proposal }: { proposal: ProposalDetai
                 key={artifact.artifact_id}
               >
                 <span className="font-mono text-[var(--color-text-primary)]">{artifact.artifact_id}</span>
-                <span className="truncate text-[var(--color-text-secondary)]">{artifact.path}</span>
+                <TruncatedCell
+                  value={artifact.path}
+                  label="artifact path"
+                  className="text-[var(--color-text-secondary)]"
+                />
               </li>
             ))}
           </ul>
