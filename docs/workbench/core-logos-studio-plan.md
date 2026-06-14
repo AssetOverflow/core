@@ -5,6 +5,12 @@
 **Branch:** `docs/proposal-artifact-substrate-v1`  
 **No code changes in this document.**
 
+> **Dispatch (2026-06-14):** the first wave executes **L1–L5 as read-only** —
+> holonomy is rendered only as `missing_evidence` until a pack-level
+> `holonomy.jsonl` exists; Patch Forge (L6) / handlers (L7) are deferred behind
+> the universal `ProposalArtifact` envelope. Brief pack:
+> `docs/handoff/core-logos-studio-readonly-briefs-2026-06-14.md`.
+
 ---
 
 ## Purpose
