@@ -69,4 +69,25 @@ describe("Dag", () => {
 
     expect(screen.getByTestId("dag-viewer")).toBeInTheDocument();
   });
+
+  it("renders a tall, few-layer graph at natural height inside a bounded scroll box", () => {
+    // 12 sources -> 12 sinks: 2 layers, 24 rows — a tall sliver that the old
+    // fixed-320 viewport squished. The SVG should grow to the layout's natural
+    // height (legible, scale ~1), and the wrapper bounds + scrolls it.
+    const wideNodes = Array.from({ length: 24 }, (_, i) => ({ id: `n${i}` }));
+    const fanEdges = Array.from({ length: 12 }, (_, i) => ({
+      from: `n${i}`,
+      to: `n${i + 12}`,
+    }));
+    const layout = layoutDag(wideNodes, fanEdges);
+    expect(layout.height).toBeGreaterThan(320); // precondition: genuinely tall
+
+    render(<DagViewer nodes={wideNodes} edges={fanEdges} ariaLabel="Tall fan DAG" />);
+
+    const svg = screen.getByRole("img", { name: "Tall fan DAG" });
+    expect(svg).toHaveAttribute("height", String(layout.height));
+    const viewport = screen.getByTestId("dag-viewport");
+    expect(viewport.style.maxHeight).toBe("560px");
+    expect(viewport.className).toContain("overflow-auto");
+  });
 });

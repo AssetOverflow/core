@@ -12,6 +12,13 @@ export interface DagViewerProps {
   showInspector?: boolean;
 }
 
+// Tall, few-layer graphs (e.g. a 2-layer alignment fan of 50+ nodes) must not
+// be squished into a fixed short viewport by viewBox-meet — that produces an
+// unreadable sliver. Render at natural height (scale ~1) inside a bounded,
+// scrollable box instead. Small graphs (layout.height < the caller height) are
+// unaffected.
+const MAX_VIEWPORT_HEIGHT = 560;
+
 function clippedLabel(label: string) {
   return label.length > 22 ? `${label.slice(0, 19)}...` : label;
 }
@@ -31,6 +38,10 @@ export function DagViewer({
   showInspector = true,
 }: DagViewerProps) {
   const layout = useMemo(() => layoutDag(nodes, edges), [nodes, edges]);
+  // Grow the SVG to the graph's natural height so dense graphs render legibly;
+  // the wrapper bounds + scrolls it. Never shrinks below the caller's height.
+  const svgHeight = Math.max(height, layout.height);
+  const viewportMaxHeight = Math.max(height, MAX_VIEWPORT_HEIGHT);
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(
@@ -98,11 +109,16 @@ export function DagViewer({
         </div>
       </div>
 
+      <div
+        className="overflow-auto rounded-md"
+        style={{ maxHeight: viewportMaxHeight }}
+        data-testid="dag-viewport"
+      >
       <svg
         role="img"
         aria-label={ariaLabel}
         className="w-full cursor-grab rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]"
-        height={height}
+        height={svgHeight}
         viewBox={`0 0 ${layout.width} ${layout.height}`}
         tabIndex={0}
         onPointerDown={(event) => {
@@ -186,6 +202,7 @@ export function DagViewer({
           })}
         </g>
       </svg>
+      </div>
 
       {showInspector ? (
         <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3">

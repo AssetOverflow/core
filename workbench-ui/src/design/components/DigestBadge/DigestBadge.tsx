@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { copyText } from "../../lib";
-import { useManagedTimeout } from "../../hooks/useManagedTimeout";
+import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 
 export interface DigestBadgeProps {
   digest: string;
@@ -40,8 +38,7 @@ export function DigestBadge({
   // Wave R hash display standard: 12 visible chars + copy, everywhere.
   truncate = 12,
 }: DigestBadgeProps) {
-  const [copied, setCopied] = useState(false);
-  const scheduleReset = useManagedTimeout();
+  const { copied, copy } = useCopyToClipboard();
 
   const display = digest.length > truncate
     ? `${digest.slice(0, truncate)}...`
@@ -52,6 +49,7 @@ export function DigestBadge({
   return (
     <button
       type="button"
+      title={copied ? "Copied" : `Copy digest ${algorithm}:${digest}`}
       aria-label={`Digest ${algorithm}:${digest}. Click to copy.`}
       className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]"
       style={{
@@ -64,12 +62,7 @@ export function DigestBadge({
         transitionDuration: "var(--motion-duration-fast)",
         transitionTimingFunction: "var(--motion-ease-standard)",
       }}
-      onClick={() => {
-        void copyText(`${algorithm}:${digest}`).then(() => {
-          setCopied(true);
-          scheduleReset(() => setCopied(false), 1500);
-        });
-      }}
+      onClick={() => copy(`${algorithm}:${digest}`)}
       data-testid="digest-badge"
     >
       {verified !== undefined && <VerifiedDot verified={verified} />}
