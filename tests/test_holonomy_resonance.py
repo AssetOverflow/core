@@ -13,19 +13,32 @@ def _encode(manifold, tokens: list[str]) -> np.ndarray:
     return holonomy_encode([manifold.get_versor(t) for t in tokens])
 
 
-def test_aligned_clauses_have_higher_similarity_than_unrelated():
+def test_aligned_clause_holonomy_does_not_robustly_beat_misaligned():
+    """Honest sibling of the HolonomyAlignmentCase guard in
+    tests/test_alignment_graph.py: the cross-language holonomy-CLAUSE resonance
+    is NOT robust. The aligned Greek clause is itself FARTHER from the English
+    anchor than the misaligned (vitality) negative; the prior assertion passed
+    only by averaging in the close Hebrew distance (~1.3% margin) — decoration,
+    not proof. See docs/analysis/holonomy-resonance-proof-not-robust-2026-06-14.md.
+
+    NOTE: this is the holonomy-clause claim only. The token-pair cga_inner
+    resonance tests below assert a different, narrower property and are not
+    covered by that finding.
+    """
     _, en = load_pack("en_minimal_v1")
-    _, he = load_pack("he_logos_micro_v1")
     _, grc = load_pack("grc_logos_micro_v1")
 
     en_clause = _encode(en, ["word", "beginning", "with", "truth"])
-    he_clause = _encode(he, ["\u05d3\u05d1\u05e8", "\u05e8\u05d0\u05e9\u05d9\u05ea", "\u05d0\u05de\u05ea"])
-    grc_clause = _encode(grc, ["\u03bb\u03cc\u03b3\u03bf\u03c2", "\u1f00\u03c1\u03c7\u03ae", "\u1f00\u03bb\u03ae\u03b8\u03b5\u03b9\u03b1"])
-    grc_unrelated = _encode(grc, ["\u03bb\u03cc\u03b3\u03bf\u03c2", "\u1f00\u03c1\u03c7\u03ae", "\u03b6\u03c9\u03ae"])
+    grc_aligned = _encode(grc, ["\u03bb\u03cc\u03b3\u03bf\u03c2", "\u1f00\u03c1\u03c7\u03ae", "\u1f00\u03bb\u03ae\u03b8\u03b5\u03b9\u03b1"])
+    grc_misaligned = _encode(grc, ["\u03bb\u03cc\u03b3\u03bf\u03c2", "\u1f00\u03c1\u03c7\u03ae", "\u03b6\u03c9\u03ae"])
 
-    aligned = (np.linalg.norm(en_clause - he_clause) + np.linalg.norm(en_clause - grc_clause)) / 2.0
-    unrelated = np.linalg.norm(en_clause - grc_unrelated)
-    assert aligned < unrelated
+    aligned_dist = float(np.linalg.norm(en_clause - grc_aligned))
+    misaligned_dist = float(np.linalg.norm(en_clause - grc_misaligned))
+    assert aligned_dist > misaligned_dist, (
+        "Aligned Greek clause is now closer than the misaligned negative - the "
+        "holonomy-clause resonance may have become real; replace this guard with a "
+        "proof and update docs/analysis/holonomy-resonance-proof-not-robust-2026-06-14.md."
+    )
 
 
 def test_triple_alignment_closer_than_other_triples():

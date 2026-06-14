@@ -69,21 +69,32 @@ def _encode(manifold, tokens: list[str]) -> np.ndarray:
     return holonomy_encode([manifold.get_versor(t) for t in tokens])
 
 
-def test_holonomy_alignment_case_positive_closer_than_negative():
-    """
-    Crown proof case: positive aligned triple must be geometrically closer
-    than the negative (misaligned) triple.
+def test_holonomy_alignment_resonance_is_not_yet_a_robust_proof():
+    """Pins the *true* state of the holonomy tri-language resonance: it does
+    NOT robustly separate aligned from misaligned clauses under the current
+    encoding. See docs/analysis/holonomy-resonance-proof-not-robust-2026-06-14.md.
 
-    This wraps the geometry proven in test_holonomy_resonance.py into the
-    formal HolonomyAlignmentCase schema type, so the proof is both
-    machine-checkable and linked to the schema's contract.
+    The prior `..._positive_closer_than_negative` test asserted a "crown proof"
+    that passed only by averaging in the close Hebrew distance and comparing to a
+    single cherry-picked negative (a ~1.3% margin) — decoration, not proof
+    (CLAUDE.md, Schema-Defined Proof Obligations). This guard asserts the actual
+    geometry so the obligation is never silently green:
+
+      * the aligned Greek clause is itself FARTHER from the English anchor than
+        the misaligned negative, and
+      * the engine's own holonomy_similarity (CGA inner product) anti-correlates
+        (the misaligned clause scores as *more* similar).
+
+    A future encoding/metric that makes the resonance genuinely robust SHOULD
+    make this guard fail — then replace it with a real proof and update the doc.
+    Until then the Studio renders holonomy as missing_evidence.
     """
     case = HolonomyAlignmentCase(
         case_id="HAC-001",
         description=(
-            "Aligned Logos clause (word/דבר/λόγος + beginning/ראשית/ἀρχή + truth/אמת/ἀλήθεια) "
-            "produces closer holonomies across three languages than a misaligned clause "
-            "substituting ζωή (vitality) for ἀλήθεια (truth)."
+            "Aligned Logos clause; cross-language holonomy resonance is NOT yet a "
+            "robust proof - see "
+            "docs/analysis/holonomy-resonance-proof-not-robust-2026-06-14.md."
         ),
         source_refs=("Gen1:1", "John1:1", "John14:6"),
         pack_ids=("en_minimal_v1", "he_logos_micro_v1", "grc_logos_micro_v1"),
@@ -91,41 +102,33 @@ def test_holonomy_alignment_case_positive_closer_than_negative():
         negative_source_refs=("John1:4",),
         tolerance=0.0,
     )
-
-    # Validate the case schema itself
     assert case.case_id == "HAC-001"
     assert len(case.pack_ids) == 3
-    assert len(case.source_refs) >= 2
 
-    # Load packs
     _, en = load_pack("en_minimal_v1")
-    _, he = load_pack("he_logos_micro_v1")
     _, grc = load_pack("grc_logos_micro_v1")
 
-    # Positive triple: aligned canonical clause across all three languages
     en_h = _encode(en, ["word", "beginning", "with", "truth"])
-    he_h = _encode(he, ["\u05d3\u05d1\u05e8", "\u05e8\u05d0\u05e9\u05d9\u05ea", "\u05d0\u05de\u05ea"])
-    grc_h = _encode(grc, ["\u03bb\u03cc\u03b3\u03bf\u03c2", "\u1f00\u03c1\u03c7\u03ae", "\u1f00\u03bb\u03ae\u03b8\u03b5\u03b9\u03b1"])
+    grc_aligned = _encode(grc, ["\u03bb\u03cc\u03b3\u03bf\u03c2", "\u1f00\u03c1\u03c7\u03ae", "\u1f00\u03bb\u03ae\u03b8\u03b5\u03b9\u03b1"])
+    # Negative: replace truth with vitality - different semantic domain.
+    grc_negative = _encode(grc, ["\u03bb\u03cc\u03b3\u03bf\u03c2", "\u1f00\u03c1\u03c7\u03ae", "\u03b6\u03c9\u03ae"])
 
-    # Negative: replace ἀλήθεια with ζωή — different semantic domain
-    grc_neg_h = _encode(grc, ["\u03bb\u03cc\u03b3\u03bf\u03c2", "\u1f00\u03c1\u03c7\u03ae", "\u03b6\u03c9\u03ae"])
-
-    # Positive score: distance from the English anchor to aligned clauses.
-    positive_dist = (
-        np.linalg.norm(en_h - he_h) +
-        np.linalg.norm(en_h - grc_h)
-    ) / 2.0
-
-    # Negative score: distance from the English anchor to a Greek clause with
-    # the misaligned token.
-    negative_dist = np.linalg.norm(en_h - grc_neg_h)
-
-    # The formal case assertion: aligned closer than misaligned
-    assert positive_dist < negative_dist, (
-        f"HolonomyAlignmentCase {case.case_id} failed: "
-        f"positive_dist={positive_dist:.6f} >= negative_dist={negative_dist:.6f}. "
-        f"Case: {case.description}"
+    # Encoding is deterministic, so this finding is structural, not noise.
+    assert np.allclose(
+        grc_aligned,
+        _encode(grc, ["\u03bb\u03cc\u03b3\u03bf\u03c2", "\u1f00\u03c1\u03c7\u03ae", "\u1f00\u03bb\u03ae\u03b8\u03b5\u03b9\u03b1"]),
     )
+
+    aligned_dist = float(np.linalg.norm(en_h - grc_aligned))
+    negative_dist = float(np.linalg.norm(en_h - grc_negative))
+    # The honest contradiction: aligned is NOT closer than the misaligned negative.
+    assert aligned_dist > negative_dist, (
+        "Aligned Greek clause is now closer than the misaligned negative - the "
+        "resonance may have become real. Replace this guard with a proper proof "
+        "and update docs/analysis/holonomy-resonance-proof-not-robust-2026-06-14.md."
+    )
+    # The owned similarity metric anti-correlates (misaligned scores higher).
+    assert holonomy_similarity(en_h, grc_negative) > holonomy_similarity(en_h, grc_aligned)
 
 
 def test_holonomy_alignment_case_schema_validation():
