@@ -26,6 +26,8 @@ function routerParamsFor(url: string): Record<string, string | undefined> {
       return segment === undefined ? {} : { sessionId: segment };
     case "packs":
       return segment === undefined ? {} : { packId: segment };
+    case "logos":
+      return segment === undefined ? {} : { logosPackId: segment };
     case "evals":
       return segment === undefined ? {} : { laneId: segment };
     case "replay":
@@ -67,6 +69,11 @@ const KINDS: Array<{ name: string; subject: AddressableSubject; path: string }> 
     name: "pack",
     subject: { kind: "pack", packId: "en/core pack" },
     path: "/packs/en%2Fcore%20pack",
+  },
+  {
+    name: "logos_pack",
+    subject: { kind: "logos_pack", packId: "he_logos_micro_v1" },
+    path: "/logos/he_logos_micro_v1",
   },
 ];
 
@@ -192,6 +199,7 @@ describe("urlToSubject malformed input", () => {
     ["empty proposal id", { proposalId: "" }],
     ["empty session id", { sessionId: "" }],
     ["empty pack id", { packId: "" }],
+    ["empty logos pack id", { logosPackId: "" }],
     ["empty lane id", { laneId: "" }],
     ["empty artifact id", { artifactId: "" }],
     ["no params at all", {}],

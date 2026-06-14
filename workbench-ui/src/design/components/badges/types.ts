@@ -39,6 +39,13 @@ export enum GroundingSource {
   NONE = "none",
 }
 
+export enum SafetyVerdict {
+  CLEAR = "clear",
+  WARNING = "warning",
+  FAILED = "failed",
+  UNKNOWN = "unknown",
+}
+
 export type BadgeMeta<T extends string> = Record<
   T,
   {

@@ -14,6 +14,8 @@ import type {
   ArtifactDetail,
   EvalRunResult,
   CalibrationClass,
+  LogosPackOverview,
+  SafetyVerdict,
 } from "../types/api";
 
 export type ProposalSubjectDomain = "cognition" | "math";
@@ -31,6 +33,27 @@ export interface PackSubjectData {
   checksum?: string | null;
   manifest_digest?: string | null;
   determinism_class?: string | null;
+}
+
+export interface LogosPackSubjectData
+  extends Partial<
+    Pick<
+      LogosPackOverview,
+      | "pack_id"
+      | "language"
+      | "role"
+      | "script"
+      | "version"
+      | "determinism_class"
+      | "gate_engaged"
+      | "oov_policy"
+      | "safety_status"
+      | "manifest_digest"
+      | "manifest_path"
+      | "holonomy_case_count"
+    >
+  > {
+  checksum_status?: SafetyVerdict | null;
 }
 
 export interface VaultEntrySubjectData {
@@ -60,6 +83,7 @@ export type EvidenceSubject =
   | { kind: "eval_result"; lane: string; data?: EvalRunResult }
   | { kind: "run"; sessionId: string; data?: RunSubjectData }
   | { kind: "pack"; packId: string; data?: PackSubjectData }
+  | { kind: "logos_pack"; packId: string; data?: LogosPackSubjectData }
   | { kind: "vault_entry"; entryIndex: number; data?: VaultEntrySubjectData }
   | { kind: "audit_event"; eventId: string; data?: AuditEventSubjectData }
   | { kind: "calibration_class"; className: string; data?: CalibrationClass }

@@ -302,6 +302,7 @@ export interface AuditEvent {
 }
 
 export type PackSource = "language_pack" | "runtime_pack";
+export type SafetyVerdict = "clear" | "warning" | "failed" | "unknown";
 
 export interface PackSummary {
   pack_id: string;
@@ -318,6 +319,130 @@ export interface PackSummary {
 export interface PackDetail extends PackSummary {
   manifest_digest: string;
   manifest: Record<string, unknown>;
+}
+
+export interface LogosPackSummary {
+  pack_id: string;
+  language: string | null;
+  role: string | null;
+  script: string | null;
+  version: string | null;
+  determinism_class: string | null;
+  gate_engaged: boolean;
+  oov_policy: string | null;
+  lexicon_count: number;
+  gloss_count: number;
+  morphology_count: number;
+  frame_count: number;
+  composition_count: number;
+  alignment_edge_count: number;
+  holonomy_case_count: number;
+  safety_status: SafetyVerdict;
+  manifest_digest: string;
+  manifest_path: string;
+}
+
+export interface LogosPackOverview extends LogosPackSummary {
+  schema_version: "logos_pack_overview_v1";
+  normalization_policy: string | null;
+  source_manifest: string | null;
+  known_gaps: string[];
+}
+
+export interface LogosLexiconRow {
+  entry_id: string;
+  surface: string;
+  lemma: string;
+  language: string;
+  part_of_speech: string | null;
+  pos: string | null;
+  morphology_id: string | null;
+  morphology_tags: string[];
+  semantic_domains: string[];
+  provenance_ids: string[];
+  epistemic_status: string;
+}
+
+export interface LogosGlossRow {
+  gloss_id: string;
+  lemma: string;
+  gloss: string;
+  pos: string | null;
+  entry_ids: string[];
+  provenance_ids: string[];
+  epistemic_status: string | null;
+  raw: Record<string, unknown>;
+}
+
+export interface LogosMorphologyRow {
+  morphology_id: string;
+  surface: string;
+  lemma: string;
+  language: string;
+  root: string | null;
+  prefix_chain: string[];
+  stem: string | null;
+  inflection: Record<string, string>;
+  suffix_chain: string[];
+}
+
+export interface LogosAlignmentRow {
+  edge_id: string;
+  source_id: string;
+  target_id: string;
+  relation: string;
+  weight: number;
+  evidence_ids: string[];
+  target_pack_id: string | null;
+  target_resolved: boolean;
+  invalid_target: boolean;
+}
+
+export interface LogosPackContents {
+  schema_version: "logos_pack_contents_v1";
+  pack_id: string;
+  manifest: Record<string, unknown>;
+  lexicon: LogosLexiconRow[];
+  glosses: LogosGlossRow[];
+  morphology: LogosMorphologyRow[];
+  frames: Record<string, unknown>[];
+  compositions: Record<string, unknown>[];
+  alignment_edges: LogosAlignmentRow[];
+  holonomy_cases: Record<string, unknown>[];
+}
+
+export interface LogosMorphologyLinkIssue {
+  entry_id: string;
+  morphology_id: string;
+}
+
+export interface LogosAlignmentTargetIssue {
+  edge_id: string;
+  source_id: string;
+  target_id: string;
+  relation: string;
+  target_pack_id: string | null;
+}
+
+export interface LogosSafetyReport {
+  schema_version: "logos_safety_report_v1";
+  pack_id: string;
+  checksum_status: SafetyVerdict;
+  checksum_errors: string[];
+  domain_contract: Record<string, unknown>;
+  domain_contract_status: SafetyVerdict;
+  oov_policy_ok: boolean;
+  gate_policy_ok: boolean;
+  path_safety_ok: boolean;
+  dangling_morphology_links: LogosMorphologyLinkIssue[];
+  invalid_alignment_targets: LogosAlignmentTargetIssue[];
+  missing_holonomy_refs: SafetyVerdict;
+  epistemic_status_counts: Record<string, number>;
+  speculative_entries: string[];
+  contested_entries: string[];
+  falsified_entries: string[];
+  known_gaps: string[];
+  verdict: SafetyVerdict;
 }
 
 export type ArtifactKind =

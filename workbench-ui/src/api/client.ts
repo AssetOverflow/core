@@ -17,6 +17,9 @@ import type {
   RunDetail,
   PackSummary,
   PackDetail,
+  LogosPackSummary,
+  LogosPackOverview,
+  LogosSafetyReport,
   VaultSummary,
   VaultEntry,
   CalibrationClass,
@@ -296,6 +299,21 @@ export async function fetchPacks(limit?: number, offset?: number): Promise<PackS
 
 export async function fetchPack(packId: string): Promise<PackDetail> {
   return apiFetch<PackDetail>(`/packs/${encodeURIComponent(packId)}`);
+}
+
+export async function fetchLogosPacks(): Promise<LogosPackSummary[]> {
+  const envelope = await apiFetch<ItemsEnvelope<LogosPackSummary>>("/logos/packs");
+  return envelope.items;
+}
+
+export async function fetchLogosPackOverview(packId: string): Promise<LogosPackOverview> {
+  return apiFetch<LogosPackOverview>(`/logos/packs/${encodeURIComponent(packId)}`);
+}
+
+export async function fetchLogosPackSafety(packId: string): Promise<LogosSafetyReport> {
+  return apiFetch<LogosSafetyReport>(
+    `/logos/packs/${encodeURIComponent(packId)}/safety`,
+  );
 }
 
 export async function fetchVaultSummary(): Promise<VaultSummary> {

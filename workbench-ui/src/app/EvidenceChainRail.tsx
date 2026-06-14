@@ -159,6 +159,30 @@ export function deriveStages(subject: EvidenceSubject): RailStage[] | null {
         stage("action", "dim", "not applicable to pack metadata"),
       ];
     }
+    case "logos_pack": {
+      const d = subject.data;
+      return [
+        stage("intent", "dim", "not applicable to read-only Logos pack inspection"),
+        stage("subject", "lit", "selected CORE-Logos pack"),
+        stage(
+          "provenance",
+          d ? evidenceAny(d.manifest_digest, d.manifest_path) : "hollow",
+          "manifest_digest / manifest_path",
+        ),
+        stage(
+          "admissibility",
+          d ? evidenceAny(d.safety_status, d.checksum_status) : "hollow",
+          "safety_status / checksum_status",
+        ),
+        stage(
+          "replay",
+          d && d.holonomy_case_count && d.holonomy_case_count > 0 ? "lit" : "hollow",
+          "holonomy_case_count (0 means missing_evidence)",
+        ),
+        stage("authority", "dim", "read-only Logos Studio has no mutation authority"),
+        stage("action", "dim", "proposal mode none"),
+      ];
+    }
     case "vault_entry": {
       const d = subject.data;
       return [

@@ -5,6 +5,7 @@ import {
   groundingSourceMeta,
   normativeClearanceMeta,
   reviewStateMeta,
+  safetyVerdictMeta,
 } from "./mappings";
 
 function expectExactCoverage(name: string, engineValues: string[], uiValues: string[]) {
@@ -41,6 +42,14 @@ describe("build-time enum coverage", () => {
       "GroundingSource",
       snapshot.GroundingSource,
       Object.keys(groundingSourceMeta),
+    );
+  });
+
+  it("tracks every ratified SafetyVerdict value exactly once", () => {
+    expectExactCoverage(
+      "SafetyVerdict",
+      snapshot.SafetyVerdict,
+      Object.keys(safetyVerdictMeta),
     );
   });
 });

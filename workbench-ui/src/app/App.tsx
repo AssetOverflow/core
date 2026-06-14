@@ -54,6 +54,9 @@ const CalibrationRoute = lazy(() =>
 const PacksRoute = lazy(() =>
   import("./packs/PacksRoute").then((module) => ({ default: module.PacksRoute })),
 );
+const LogosRoute = lazy(() =>
+  import("./logos/LogosRoute").then((module) => ({ default: module.LogosRoute })),
+);
 const SettingsRoute = lazy(() =>
   import("./settings/SettingsRoute").then((module) => ({
     default: module.SettingsRoute,
@@ -89,6 +92,7 @@ export const ROUTE_ELEMENTS: RouteElementMap = {
   evals: lazyRoute(<EvalsRoute />),
   calibration: lazyRoute(<CalibrationRoute />),
   packs: lazyRoute(<PacksRoute />),
+  logos: lazyRoute(<LogosRoute />),
   settings: lazyRoute(<SettingsRoute />),
 };
 
