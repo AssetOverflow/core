@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from workbench.schemas import RuntimeStatus, error, ok
+from workbench.schemas import RuntimeStatus, SafetyVerdict, error, ok
 
 
 def test_ok_envelope_contains_generated_at_and_data() -> None:
@@ -25,3 +25,16 @@ def test_error_envelope_contains_generated_at_and_code() -> None:
     assert payload["ok"] is False
     assert isinstance(payload["generated_at"], str)
     assert payload["error"] == {"code": "not_found", "message": "missing"}
+
+
+def test_safety_verdict_values_and_json_projection() -> None:
+    assert {item.value for item in SafetyVerdict} == {
+        "clear",
+        "warning",
+        "failed",
+        "unknown",
+    }
+
+    payload = ok({"verdict": SafetyVerdict.WARNING})
+
+    assert payload["data"] == {"verdict": "warning"}

@@ -18,7 +18,7 @@ from core.epistemic_state import (
     epistemic_state_for_grounding_source,
     normative_detail_from_verdicts,
 )
-from workbench import calibration, readers
+from workbench import calibration, logos, readers
 from workbench.journal import DEFAULT_JOURNAL_DIR, TurnJournal, TurnJournalEntry
 from workbench.evidence_bundle import build_evidence_bundle
 from workbench.tour import determinism_tour
@@ -192,6 +192,10 @@ class WorkbenchApi:
         if method == "GET" and path.startswith("/math-proposals/"):
             proposal_id = unquote(path.removeprefix("/math-proposals/"))
             return ApiResponse(200, ok(readers.read_math_proposal(proposal_id)))
+        if method == "GET" and path == "/logos/packs":
+            return ApiResponse(200, ok({"items": logos.list_logos_packs()}))
+        if method == "GET" and path.startswith("/logos/packs/"):
+            return self._logos_read(path)
         if method == "GET" and path == "/packs":
             limit, offset = _pagination(query)
             return ApiResponse(
@@ -430,6 +434,44 @@ class WorkbenchApi:
                     )
             return ApiResponse(200, ok(comparison))
         return ApiResponse(404, error("not_found", f"route not found: {method} {path}"))
+
+    def _logos_read(self, path: str) -> ApiResponse:
+        tail = unquote(path.removeprefix("/logos/packs/"))
+        endpoint = "overview"
+        pack_id = tail
+        for suffix, name in (
+            ("/contents", "contents"),
+            ("/safety", "safety"),
+            ("/alignment", "alignment"),
+        ):
+            if tail.endswith(suffix):
+                endpoint = name
+                pack_id = tail.removesuffix(suffix)
+                break
+        if not pack_id or "/" in pack_id:
+            return ApiResponse(
+                404, error("not_found", f"logos pack not found: {pack_id or tail}")
+            )
+        try:
+            if endpoint == "contents":
+                return ApiResponse(200, ok(logos.logos_pack_contents(pack_id)))
+            if endpoint == "safety":
+                return ApiResponse(200, ok(logos.logos_pack_safety(pack_id)))
+            if endpoint == "alignment":
+                return ApiResponse(
+                    200,
+                    ok(
+                        {
+                            "pack_id": pack_id,
+                            "items": logos.logos_pack_alignment(pack_id),
+                        }
+                    ),
+                )
+            return ApiResponse(200, ok(logos.logos_pack_overview(pack_id)))
+        except (FileNotFoundError, ValueError):
+            return ApiResponse(
+                404, error("not_found", f"logos pack not found: {pack_id}")
+            )
 
     def _math_ratify(self, proposal_id: str, body: bytes) -> ApiResponse:
         """Route ratification by change_kind; in-process execution with allowlist checks."""

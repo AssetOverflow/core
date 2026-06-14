@@ -66,15 +66,21 @@ def _parse_entry(payload: dict) -> MorphologyEntry:
     )
 
 
-def load_morphology(pack_id: str) -> MorphologyRegistry:
+def load_morphology(
+    pack_id: str, *, data_root: Path | None = None
+) -> MorphologyRegistry:
     """
-    Load MorphologyEntry records from language_packs/data/<pack_id>/morphology.jsonl.
+    Load MorphologyEntry records from <data_root>/<pack_id>/morphology.jsonl.
+
+    ``data_root`` defaults to the committed ``language_packs/data`` tree; pass
+    an alternate root (e.g. a test-fixture copy) to read packs from elsewhere
+    without forking the parser.
 
     Packs without morphology data return an empty registry; packs that set
     LexicalEntry.morphology_id are validated by the compiler against this
     registry.
     """
-    morphology_path = _DATA_DIR / pack_id / "morphology.jsonl"
+    morphology_path = (data_root or _DATA_DIR) / pack_id / "morphology.jsonl"
     if not morphology_path.exists():
         return MorphologyRegistry([])
 

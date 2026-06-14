@@ -156,6 +156,52 @@ def test_eval_lane_detail_returns_read_only_flag() -> None:
     assert response.payload["data"]["read_only"] is True
 
 
+def test_logos_pack_routes_return_real_read_only_models() -> None:
+    listing = _request("GET", "/logos/packs")
+
+    assert listing.status == 200
+    assert [item["pack_id"] for item in listing.payload["data"]["items"]] == [
+        "grc_logos_cognition_v1",
+        "grc_logos_micro_v1",
+        "he_core_cognition_v1",
+        "he_logos_micro_v1",
+    ]
+
+    overview = _request("GET", "/logos/packs/he_logos_micro_v1")
+    assert overview.status == 200
+    assert overview.payload["data"]["pack_id"] == "he_logos_micro_v1"
+    assert overview.payload["data"]["holonomy_case_count"] == 0
+
+    contents = _request("GET", "/logos/packs/he_logos_micro_v1/contents")
+    assert contents.status == 200
+    assert contents.payload["data"]["holonomy_cases"] == []
+    assert contents.payload["data"]["lexicon"][0]["entry_id"] == "he-001"
+
+    safety = _request("GET", "/logos/packs/he_logos_micro_v1/safety")
+    assert safety.status == 200
+    assert safety.payload["data"]["missing_holonomy_refs"] == "unknown"
+    assert safety.payload["data"]["verdict"] == "unknown"
+
+    alignment = _request("GET", "/logos/packs/he_logos_micro_v1/alignment")
+    assert alignment.status == 200
+    assert alignment.payload["data"]["items"][0]["edge_id"]
+    assert alignment.payload["data"]["items"][0]["invalid_target"] is False
+
+
+def test_logos_routes_fail_closed_for_unsafe_or_non_logos_ids() -> None:
+    unsafe = _request("GET", "/logos/packs/../../pyproject.toml")
+    assert unsafe.status == 404
+    assert unsafe.payload["error"]["code"] == "not_found"
+
+    non_logos = _request("GET", "/logos/packs/en_core_relations_v3")
+    assert non_logos.status == 404
+    assert non_logos.payload["error"]["code"] == "not_found"
+
+    mutation = _request("POST", "/logos/packs/he_logos_micro_v1")
+    assert mutation.status == 404
+    assert mutation.payload["error"]["code"] == "not_found"
+
+
 def test_eval_run_rejects_unsafe_lane() -> None:
     response = _request(
         "POST",
@@ -252,6 +298,11 @@ def test_full_w026_route_table_preserves_teaching_and_pack_bytes() -> None:
             ("GET", "/proposals", None),
             ("GET", "/evals", None),
             ("GET", "/evals/contemplation_quality", None),
+            ("GET", "/logos/packs", None),
+            ("GET", "/logos/packs/he_logos_micro_v1", None),
+            ("GET", "/logos/packs/he_logos_micro_v1/contents", None),
+            ("GET", "/logos/packs/he_logos_micro_v1/safety", None),
+            ("GET", "/logos/packs/he_logos_micro_v1/alignment", None),
             (
                 "POST",
                 "/evals/run",

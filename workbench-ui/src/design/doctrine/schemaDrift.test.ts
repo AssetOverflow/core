@@ -19,10 +19,22 @@ import { describe, expect, it } from "vitest";
  * only shrink.
  */
 
-// Empty: every engine schema is now mirrored. New unmirrored schemas may be
-// allowlisted here as shrink-only debt (a class gaining a mirror while listed
-// fails the gate).
-const NOT_YET_MIRRORED = new Set<string>([]);
+// Shrink-only debt: backend schemas shipped ahead of their TS mirror. A class
+// gaining a TS interface while still listed here fails the gate.
+// CORE-Logos read models (LG-1): backend readers shipped without the /logos
+// frontend route; LG-2 adds the TS interfaces and removes each entry here.
+const NOT_YET_MIRRORED = new Set<string>([
+  "LogosPackSummary",
+  "LogosPackOverview",
+  "LogosPackContents",
+  "LogosLexiconRow",
+  "LogosGlossRow",
+  "LogosMorphologyRow",
+  "LogosAlignmentRow",
+  "LogosMorphologyLinkIssue",
+  "LogosAlignmentTargetIssue",
+  "LogosSafetyReport",
+]);
 
 const UI_ROOT = join(__dirname, "..", "..", "..");
 const snapshot: Record<string, string[]> = JSON.parse(
