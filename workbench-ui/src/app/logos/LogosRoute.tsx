@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { WorkbenchApiError } from "../../api/client";
 import {
+  useLogosPackAlignment,
+  useLogosPackContents,
   useLogosPackOverview,
   useLogosPacks,
   useLogosPackSafety,
@@ -20,8 +22,13 @@ import {
   SafetyVerdictBadge,
 } from "../../design/components/badges";
 import type {
+  LogosAlignmentRow,
   LogosAlignmentTargetIssue,
+  LogosGlossRow,
+  LogosLexiconRow,
   LogosMorphologyLinkIssue,
+  LogosMorphologyRow,
+  LogosPackContents,
   LogosPackOverview,
   LogosPackSummary,
   LogosSafetyReport,
@@ -29,11 +36,17 @@ import type {
 } from "../../types/api";
 import { pushRecentItem } from "../commandRegistry";
 import { subjectToUrl } from "../evidenceAddress";
-import { useEvidenceSubject } from "../evidenceContext";
+import { useEvidenceSubject, type EvidenceSubject } from "../evidenceContext";
+import { GlossesTab, LexiconTab, MorphologyTab } from "./LogosContentsTabs";
+import { AlignmentTab } from "./LogosAlignmentTab";
 
 const LOGOS_TABS: readonly Tab[] = [
   { id: "overview", label: "Overview" },
   { id: "identity", label: "Identity" },
+  { id: "lexicon", label: "Lexicon" },
+  { id: "glosses", label: "Glosses" },
+  { id: "morphology", label: "Morphology" },
+  { id: "alignment", label: "Alignment" },
   { id: "safety", label: "Safety" },
 ];
 
@@ -573,6 +586,73 @@ function StatusStrip({
   );
 }
 
+interface ContentsSelection {
+  entryId: string | null;
+  glossId: string | null;
+  morphologyId: string | null;
+  edgeId: string | null;
+  danglingEntryIds: ReadonlySet<string>;
+  onSelectEntry: (row: LogosLexiconRow) => void;
+  onSelectGloss: (row: LogosGlossRow) => void;
+  onSelectMorphology: (row: LogosMorphologyRow) => void;
+  onSelectEdge: (row: LogosAlignmentRow) => void;
+}
+
+function ContentsGate({
+  tab,
+  selectedPackId,
+  contents,
+  contentsLoading,
+  contentsError,
+  selection,
+}: {
+  tab: string;
+  selectedPackId: string;
+  contents?: LogosPackContents;
+  contentsLoading: boolean;
+  contentsError: unknown;
+  selection: ContentsSelection;
+}) {
+  if (contentsLoading) return <LoadingState label="Loading CORE-Logos contents..." />;
+  if (contentsError) {
+    return (
+      <ErrorState
+        whatFailed={errorMessage(contentsError)}
+        mutationStatus="No Logos mutation occurred."
+        reproducer={`curl /logos/packs/${selectedPackId}/contents`}
+        retrySafety="Retry: safe"
+      />
+    );
+  }
+  if (!contents) return null;
+  if (tab === "lexicon") {
+    return (
+      <LexiconTab
+        rows={contents.lexicon}
+        danglingEntryIds={selection.danglingEntryIds}
+        selectedEntryId={selection.entryId}
+        onSelect={selection.onSelectEntry}
+      />
+    );
+  }
+  if (tab === "glosses") {
+    return (
+      <GlossesTab
+        rows={contents.glosses}
+        selectedGlossId={selection.glossId}
+        onSelect={selection.onSelectGloss}
+      />
+    );
+  }
+  return (
+    <MorphologyTab
+      rows={contents.morphology}
+      selectedMorphologyId={selection.morphologyId}
+      onSelect={selection.onSelectMorphology}
+    />
+  );
+}
+
 function Workspace({
   selectedPackId,
   overview,
@@ -581,6 +661,13 @@ function Workspace({
   safety,
   safetyLoading,
   safetyError,
+  contents,
+  contentsLoading,
+  contentsError,
+  alignment,
+  alignmentLoading,
+  alignmentError,
+  selection,
 }: {
   selectedPackId: string | null;
   overview?: LogosPackOverview;
@@ -589,13 +676,20 @@ function Workspace({
   safety?: LogosSafetyReport;
   safetyLoading: boolean;
   safetyError: unknown;
+  contents?: LogosPackContents;
+  contentsLoading: boolean;
+  contentsError: unknown;
+  alignment?: LogosAlignmentRow[];
+  alignmentLoading: boolean;
+  alignmentError: unknown;
+  selection: ContentsSelection;
 }) {
   const [activeTab, setActiveTab] = useState("overview");
 
   if (selectedPackId === null) {
     return (
       <EmptyState
-        statement="Select a CORE-Logos pack to inspect overview, identity, and safety evidence."
+        statement="Select a CORE-Logos pack to inspect overview, identity, contents, and safety evidence."
         nextAction={{ kind: "cli", command: "core pack validate <path>" }}
       />
     );
@@ -618,6 +712,9 @@ function Workspace({
 
   if (!overview) return null;
 
+  const isContentsTab =
+    activeTab === "lexicon" || activeTab === "glosses" || activeTab === "morphology";
+
   return (
     <Panel
       title={overview.pack_id}
@@ -626,6 +723,34 @@ function Workspace({
       <TabBar tabs={LOGOS_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
         {activeTab === "overview" ? <OverviewTab overview={overview} /> : null}
         {activeTab === "identity" ? <IdentityTab overview={overview} /> : null}
+        {isContentsTab ? (
+          <ContentsGate
+            tab={activeTab}
+            selectedPackId={selectedPackId}
+            contents={contents}
+            contentsLoading={contentsLoading}
+            contentsError={contentsError}
+            selection={selection}
+          />
+        ) : null}
+        {activeTab === "alignment" ? (
+          alignmentLoading ? (
+            <LoadingState label="Loading CORE-Logos alignment..." />
+          ) : alignmentError ? (
+            <ErrorState
+              whatFailed={errorMessage(alignmentError)}
+              mutationStatus="No Logos mutation occurred."
+              reproducer={`curl /logos/packs/${selectedPackId}/alignment`}
+              retrySafety="Retry: safe"
+            />
+          ) : alignment ? (
+            <AlignmentTab
+              rows={alignment}
+              selectedEdgeId={selection.edgeId}
+              onSelect={selection.onSelectEdge}
+            />
+          ) : null
+        ) : null}
         {activeTab === "safety" ? (
           safetyLoading ? (
             <LoadingState label="Loading CORE-Logos safety..." />
@@ -649,11 +774,13 @@ export function LogosRoute() {
   const { logosPackId } = useParams();
   const selectedPackId = logosPackId && logosPackId.length > 0 ? logosPackId : null;
   const navigate = useNavigate();
-  const { setSubject } = useEvidenceSubject();
+  const { subject, setSubject } = useEvidenceSubject();
 
   const packsQuery = useLogosPacks();
   const overviewQuery = useLogosPackOverview(selectedPackId);
   const safetyQuery = useLogosPackSafety(selectedPackId);
+  const contentsQuery = useLogosPackContents(selectedPackId);
+  const alignmentQuery = useLogosPackAlignment(selectedPackId);
 
   useEffect(() => {
     if (selectedPackId === null) return;
@@ -670,11 +797,61 @@ export function LogosRoute() {
   }, [selectedPackId, setSubject, overviewQuery.data, safetyQuery.data]);
 
   function selectPack(pack: LogosPackSummary) {
-    const subject = { kind: "logos_pack" as const, packId: pack.pack_id };
-    const path = subjectToUrl(subject);
+    const next = { kind: "logos_pack" as const, packId: pack.pack_id };
+    const path = subjectToUrl(next);
     navigate(path, { replace: true });
     pushRecentItem({ label: pack.pack_id, path });
   }
+
+  function selectSubEntity(next: EvidenceSubject) {
+    if (next.kind === "none") return;
+    setSubject(next);
+    navigate(subjectToUrl(next), { replace: true });
+  }
+
+  const selection: ContentsSelection = {
+    entryId: subject.kind === "logos_entry" ? subject.entryId : null,
+    glossId: subject.kind === "logos_gloss" ? subject.glossId : null,
+    morphologyId: subject.kind === "logos_morphology" ? subject.morphologyId : null,
+    edgeId: subject.kind === "logos_alignment_edge" ? subject.edgeId : null,
+    danglingEntryIds: new Set(
+      safetyQuery.data?.dangling_morphology_links.map((issue) => issue.entry_id) ?? [],
+    ),
+    onSelectEntry: (row) =>
+      selectSubEntity(
+        selectedPackId === null
+          ? { kind: "none" }
+          : { kind: "logos_entry", packId: selectedPackId, entryId: row.entry_id, data: row },
+      ),
+    onSelectGloss: (row) =>
+      selectSubEntity(
+        selectedPackId === null
+          ? { kind: "none" }
+          : { kind: "logos_gloss", packId: selectedPackId, glossId: row.gloss_id, data: row },
+      ),
+    onSelectMorphology: (row) =>
+      selectSubEntity(
+        selectedPackId === null
+          ? { kind: "none" }
+          : {
+              kind: "logos_morphology",
+              packId: selectedPackId,
+              morphologyId: row.morphology_id,
+              data: row,
+            },
+      ),
+    onSelectEdge: (row) =>
+      selectSubEntity(
+        selectedPackId === null
+          ? { kind: "none" }
+          : {
+              kind: "logos_alignment_edge",
+              packId: selectedPackId,
+              edgeId: row.edge_id,
+              data: row,
+            },
+      ),
+  };
 
   if (packsQuery.isLoading) {
     return <LoadingState label="Loading CORE-Logos packs..." />;
@@ -719,6 +896,13 @@ export function LogosRoute() {
               safety={safetyQuery.data}
               safetyLoading={safetyQuery.isLoading}
               safetyError={safetyQuery.isError ? safetyQuery.error : null}
+              contents={contentsQuery.data}
+              contentsLoading={contentsQuery.isLoading}
+              contentsError={contentsQuery.isError ? contentsQuery.error : null}
+              alignment={alignmentQuery.data}
+              alignmentLoading={alignmentQuery.isLoading}
+              alignmentError={alignmentQuery.isError ? alignmentQuery.error : null}
+              selection={selection}
             />
           </section>
         </SplitPane>

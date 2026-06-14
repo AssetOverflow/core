@@ -11,6 +11,10 @@ import type { EvidenceSubject } from "./evidenceContext";
 //   run         -> /runs/<sessionId>
 //   pack        -> /packs/<packId>
 //   logos_pack  -> /logos/<packId> (?inspect uses logos:<packId>)
+//   logos_entry -> /logos/<packId>?inspect=logos_entry:<packId>/<entryId>
+//   logos_gloss -> /logos/<packId>?inspect=logos_gloss:<packId>/<glossId>
+//   logos_morphology -> /logos/<packId>?inspect=logos_morphology:<packId>/<morphologyId>
+//   logos_alignment_edge -> /logos/<packId>?inspect=logos_alignment_edge:<packId>/<edgeId>
 //   vault_entry -> /vault?inspect=vault:<entryIndex>
 //   audit_event -> /audit?inspect=audit:<eventId>
 //   calibration_class -> /calibration?inspect=calibration:<className>
@@ -48,6 +52,30 @@ export function sameIdentity(a: EvidenceSubject, b: EvidenceSubject): boolean {
       return b.kind === "pack" && b.packId === a.packId;
     case "logos_pack":
       return b.kind === "logos_pack" && b.packId === a.packId;
+    case "logos_entry":
+      return (
+        b.kind === "logos_entry" &&
+        b.packId === a.packId &&
+        b.entryId === a.entryId
+      );
+    case "logos_gloss":
+      return (
+        b.kind === "logos_gloss" &&
+        b.packId === a.packId &&
+        b.glossId === a.glossId
+      );
+    case "logos_morphology":
+      return (
+        b.kind === "logos_morphology" &&
+        b.packId === a.packId &&
+        b.morphologyId === a.morphologyId
+      );
+    case "logos_alignment_edge":
+      return (
+        b.kind === "logos_alignment_edge" &&
+        b.packId === a.packId &&
+        b.edgeId === a.edgeId
+      );
     case "vault_entry":
       return b.kind === "vault_entry" && b.entryIndex === a.entryIndex;
     case "audit_event":
@@ -91,6 +119,15 @@ function subjectAddress(subject: AddressableSubject): SubjectAddress {
       return { path: `/packs/${encodeURIComponent(subject.packId)}`, params: emptyParams() };
     case "logos_pack":
       return { path: `/logos/${encodeURIComponent(subject.packId)}`, params: emptyParams() };
+    case "logos_entry":
+    case "logos_gloss":
+    case "logos_morphology":
+    case "logos_alignment_edge":
+      {
+        const params = emptyParams();
+        params.set(INSPECT_PARAM, subjectToInspectValue(subject));
+        return { path: `/logos/${encodeURIComponent(subject.packId)}`, params };
+      }
     case "vault_entry":
       {
         const params = emptyParams();
@@ -128,6 +165,14 @@ export function subjectToInspectValue(subject: AddressableSubject): string {
       return `pack:${subject.packId}`;
     case "logos_pack":
       return `logos:${subject.packId}`;
+    case "logos_entry":
+      return `logos_entry:${subject.packId}/${subject.entryId}`;
+    case "logos_gloss":
+      return `logos_gloss:${subject.packId}/${subject.glossId}`;
+    case "logos_morphology":
+      return `logos_morphology:${subject.packId}/${subject.morphologyId}`;
+    case "logos_alignment_edge":
+      return `logos_alignment_edge:${subject.packId}/${subject.edgeId}`;
     case "vault_entry":
       return `vault:${subject.entryIndex}`;
     case "audit_event":
@@ -156,6 +201,17 @@ function parseTurnId(raw: string): number | null {
   return Number.isSafeInteger(value) ? value : null;
 }
 
+// Pack-scoped sub-entity ids encode as `<packId>/<subId>`. Neither a pack id
+// nor a lexicon/gloss/morphology/edge id contains "/", so the first slash is
+// the unambiguous separator. Returns null for malformed input (never throws).
+function splitPackScoped(
+  raw: string,
+): { packId: string; subId: string } | null {
+  const sep = raw.indexOf("/");
+  if (sep <= 0 || sep === raw.length - 1) return null;
+  return { packId: raw.slice(0, sep), subId: raw.slice(sep + 1) };
+}
+
 export function inspectValueToSubject(
   value: string | null,
 ): AddressableSubject | null {
@@ -181,6 +237,38 @@ export function inspectValueToSubject(
       return { kind: "pack", packId: id };
     case "logos":
       return { kind: "logos_pack", packId: id };
+    case "logos_entry": {
+      const parts = splitPackScoped(id);
+      return parts === null
+        ? null
+        : { kind: "logos_entry", packId: parts.packId, entryId: parts.subId };
+    }
+    case "logos_gloss": {
+      const parts = splitPackScoped(id);
+      return parts === null
+        ? null
+        : { kind: "logos_gloss", packId: parts.packId, glossId: parts.subId };
+    }
+    case "logos_morphology": {
+      const parts = splitPackScoped(id);
+      return parts === null
+        ? null
+        : {
+            kind: "logos_morphology",
+            packId: parts.packId,
+            morphologyId: parts.subId,
+          };
+    }
+    case "logos_alignment_edge": {
+      const parts = splitPackScoped(id);
+      return parts === null
+        ? null
+        : {
+            kind: "logos_alignment_edge",
+            packId: parts.packId,
+            edgeId: parts.subId,
+          };
+    }
     case "vault": {
       const entryIndex = parseTurnId(id);
       return entryIndex === null ? null : { kind: "vault_entry", entryIndex };

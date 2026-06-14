@@ -283,3 +283,57 @@ describe("isAddressable / sameIdentity", () => {
     expect(sameIdentity({ kind: "none" }, { kind: "none" })).toBe(true);
   });
 });
+
+describe("logos sub-entity addresses (LG-3)", () => {
+  const PACK = "he_logos_micro_v1";
+  const subEntities: Array<{ subject: AddressableSubject; inspect: string }> = [
+    {
+      subject: { kind: "logos_entry", packId: PACK, entryId: "he-001" },
+      inspect: `logos_entry:${PACK}/he-001`,
+    },
+    {
+      subject: { kind: "logos_gloss", packId: PACK, glossId: "gloss-1" },
+      inspect: `logos_gloss:${PACK}/gloss-1`,
+    },
+    {
+      subject: { kind: "logos_morphology", packId: PACK, morphologyId: "he-morph-001" },
+      inspect: `logos_morphology:${PACK}/he-morph-001`,
+    },
+    {
+      subject: { kind: "logos_alignment_edge", packId: PACK, edgeId: "a1b2c3d4e5f60718" },
+      inspect: `logos_alignment_edge:${PACK}/a1b2c3d4e5f60718`,
+    },
+  ];
+
+  it.each(subEntities)(
+    "addresses $subject.kind under the pack route with an inspect value",
+    ({ subject, inspect }) => {
+      expect(subjectToInspectValue(subject)).toBe(inspect);
+      const url = subjectToUrl(subject);
+      expect(url).toBe(`/logos/${PACK}?${INSPECT_PARAM}=${encodeURIComponent(inspect)}`);
+    },
+  );
+
+  it.each(subEntities)(
+    "round-trips $subject.kind: route resolves to the pack, inspect to the sub-entity",
+    ({ subject }) => {
+      const { route, inspect } = roundTrip(subject);
+      expect(route).toEqual({ kind: "logos_pack", packId: PACK });
+      expect(inspect).toEqual(subject);
+    },
+  );
+
+  it("rejects a malformed pack-scoped inspect value (no separator)", () => {
+    expect(inspectValueToSubject("logos_entry:onlypack")).toBeNull();
+    expect(inspectValueToSubject("logos_gloss:trailing/")).toBeNull();
+  });
+
+  it("distinguishes a logos_pack from a logos_entry sharing the pack id", () => {
+    expect(
+      sameIdentity(
+        { kind: "logos_pack", packId: PACK },
+        { kind: "logos_entry", packId: PACK, entryId: "he-001" },
+      ),
+    ).toBe(false);
+  });
+});

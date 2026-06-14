@@ -309,6 +309,162 @@ function LogosPackInspector({
   );
 }
 
+function LogosEntryInspector({
+  subject,
+}: {
+  subject: Extract<EvidenceSubject, { kind: "logos_entry" }>;
+}) {
+  const { data } = subject;
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">
+        CORE-Logos Entry
+      </h3>
+      <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">
+        {subject.packId} · {subject.entryId}
+      </p>
+      {data ? (
+        <MetadataTable
+          rows={[
+            { key: "surface", value: data.surface },
+            { key: "lemma", value: data.lemma },
+            { key: "language", value: data.language },
+            ...(data.pos ?? data.part_of_speech
+              ? [{ key: "pos", value: (data.pos ?? data.part_of_speech) as string }]
+              : []),
+            ...(data.morphology_id
+              ? [{ key: "morphology", value: data.morphology_id, mono: true }]
+              : []),
+            { key: "epistemic", value: data.epistemic_status },
+            ...(data.semantic_domains.length > 0
+              ? [{ key: "domains", value: data.semantic_domains.join(", ") }]
+              : []),
+          ]}
+        />
+      ) : (
+        <DetailNotLoaded />
+      )}
+    </div>
+  );
+}
+
+function LogosGlossInspector({
+  subject,
+}: {
+  subject: Extract<EvidenceSubject, { kind: "logos_gloss" }>;
+}) {
+  const { data } = subject;
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">
+        CORE-Logos Gloss
+      </h3>
+      <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">
+        {subject.packId} · {subject.glossId}
+      </p>
+      {data ? (
+        <MetadataTable
+          rows={[
+            { key: "lemma", value: data.lemma },
+            { key: "gloss", value: data.gloss },
+            ...(data.pos ? [{ key: "pos", value: data.pos }] : []),
+            ...(data.entry_ids.length > 0
+              ? [{ key: "entries", value: data.entry_ids.join(", "), mono: true }]
+              : []),
+            ...(data.epistemic_status
+              ? [{ key: "epistemic", value: data.epistemic_status }]
+              : []),
+          ]}
+        />
+      ) : (
+        <DetailNotLoaded />
+      )}
+    </div>
+  );
+}
+
+function LogosMorphologyInspector({
+  subject,
+}: {
+  subject: Extract<EvidenceSubject, { kind: "logos_morphology" }>;
+}) {
+  const { data } = subject;
+  // Render the operator chain in schema order — ordering is load-bearing for
+  // Semitic root / Koine grammar, never re-sorted.
+  const chain = data
+    ? [
+        ...data.prefix_chain,
+        ...(data.root ? [`√${data.root}`] : data.stem ? [data.stem] : []),
+        ...data.suffix_chain,
+      ].join(" · ")
+    : "";
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">
+        CORE-Logos Morphology
+      </h3>
+      <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">
+        {subject.packId} · {subject.morphologyId}
+      </p>
+      {data ? (
+        <MetadataTable
+          rows={[
+            { key: "surface", value: data.surface },
+            { key: "lemma", value: data.lemma },
+            { key: "language", value: data.language },
+            ...(data.root ? [{ key: "root", value: data.root, mono: true }] : []),
+            ...(chain ? [{ key: "chain", value: chain, mono: true }] : []),
+          ]}
+        />
+      ) : (
+        <DetailNotLoaded />
+      )}
+    </div>
+  );
+}
+
+function LogosAlignmentEdgeInspector({
+  subject,
+}: {
+  subject: Extract<EvidenceSubject, { kind: "logos_alignment_edge" }>;
+}) {
+  const { data } = subject;
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">
+        CORE-Logos Alignment Edge
+      </h3>
+      <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">
+        {subject.packId} · {subject.edgeId}
+      </p>
+      {data ? (
+        <MetadataTable
+          rows={[
+            { key: "source", value: data.source_id, mono: true },
+            { key: "target", value: data.target_id, mono: true },
+            { key: "relation", value: data.relation },
+            { key: "weight", value: data.weight.toFixed(2), mono: true },
+            {
+              key: "target_pack",
+              value: data.target_pack_id ?? "unresolved",
+              mono: data.target_pack_id !== null,
+            },
+            {
+              key: "target",
+              value: data.invalid_target ? "invalid (dangling)" : "resolved",
+            },
+            ...(data.evidence_ids.length > 0
+              ? [{ key: "evidence", value: data.evidence_ids.join(", "), mono: true }]
+              : []),
+          ]}
+        />
+      ) : (
+        <DetailNotLoaded />
+      )}
+    </div>
+  );
+}
+
 function VaultEntryInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "vault_entry" }> }) {
   const { data } = subject;
   return (
@@ -445,6 +601,14 @@ function InspectorProjection({ subject }: { subject: EvidenceSubject }) {
       return <PackInspector subject={subject} />;
     case "logos_pack":
       return <LogosPackInspector subject={subject} />;
+    case "logos_entry":
+      return <LogosEntryInspector subject={subject} />;
+    case "logos_gloss":
+      return <LogosGlossInspector subject={subject} />;
+    case "logos_morphology":
+      return <LogosMorphologyInspector subject={subject} />;
+    case "logos_alignment_edge":
+      return <LogosAlignmentEdgeInspector subject={subject} />;
     case "vault_entry":
       return <VaultEntryInspector subject={subject} />;
     case "audit_event":
