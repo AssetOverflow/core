@@ -113,7 +113,7 @@ function contentsFor(packId: string): LogosPackContents {
   return {
     schema_version: "logos_pack_contents_v1",
     pack_id: packId,
-    manifest: { pack_id: packId },
+    manifest: { pack_id: packId, role: he ? "depth_root" : "depth_relation", determinism_class: "D0" },
     lexicon: [
       {
         // grc's entry_id matches the warning safety report's dangling link.
@@ -357,18 +357,21 @@ describe("LogosRoute", () => {
     expect(paths).toContain("/logos/packs/he_logos_micro_v1/alignment");
   });
 
-  it("renders Identity passport fields and the raw live overview projection", async () => {
+  it("renders Identity passport fields and the real pack manifest", async () => {
     stubLogosFetch();
     const user = userEvent.setup();
     renderRoute("/logos/he_logos_micro_v1");
 
     await user.click(await screen.findByRole("tab", { name: "Identity" }));
 
+    // Passport fields (from the overview).
     expect(await screen.findByText("manifest_digest")).toBeInTheDocument();
     expect(screen.getByText("source_manifest")).toBeInTheDocument();
-    expect(screen.getByText("Raw overview projection")).toBeInTheDocument();
-    expect(screen.getByText(/\/manifest_digest/)).toBeInTheDocument();
-    expect(screen.getByText(/\/schema_version/)).toBeInTheDocument();
+    // The raw viewer now shows the actual manifest (from /contents), not a
+    // projection of the overview.
+    expect(screen.getByText("Raw manifest")).toBeInTheDocument();
+    expect(screen.getByText(/\/determinism_class/)).toBeInTheDocument();
+    expect(screen.getByText(/\/role/)).toBeInTheDocument();
   });
 
   it("renders Safety warnings and unknown holonomy without mapping either to clear", async () => {

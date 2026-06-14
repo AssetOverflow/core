@@ -330,7 +330,13 @@ function OverviewTab({ overview }: { overview: LogosPackOverview }) {
   );
 }
 
-function IdentityTab({ overview }: { overview: LogosPackOverview }) {
+function IdentityTab({
+  overview,
+  manifest,
+}: {
+  overview: LogosPackOverview;
+  manifest?: Record<string, unknown>;
+}) {
   return (
     <div className="grid gap-4">
       <MetadataTable
@@ -357,9 +363,14 @@ function IdentityTab({ overview }: { overview: LogosPackOverview }) {
       />
       <section>
         <h3 className="m-0 mb-2 text-xs font-semibold text-[var(--color-text-secondary)]">
-          Raw overview projection
+          {manifest ? "Raw manifest" : "Manifest (loading…)"}
         </h3>
-        <StableJsonViewer source={JSON.stringify(overview, null, 2)} />
+        {/* The real pack manifest from /contents — the actual passport, not a
+            projection. Falls back to the overview projection only while contents
+            is still loading. */}
+        <StableJsonViewer
+          source={JSON.stringify(manifest ?? overview, null, 2)}
+        />
       </section>
     </div>
   );
@@ -722,7 +733,9 @@ function Workspace({
     >
       <TabBar tabs={LOGOS_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
         {activeTab === "overview" ? <OverviewTab overview={overview} /> : null}
-        {activeTab === "identity" ? <IdentityTab overview={overview} /> : null}
+        {activeTab === "identity" ? (
+          <IdentityTab overview={overview} manifest={contents?.manifest} />
+        ) : null}
         {isContentsTab ? (
           <ContentsGate
             tab={activeTab}

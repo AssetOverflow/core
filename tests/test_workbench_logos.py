@@ -179,41 +179,39 @@ def test_invalid_alignment_target_is_listed_without_touching_engine_validators(
     ] == [("he-001", "ghost-target", "cross_lang.logos.utterance")]
 
 
-def test_collapse_anchor_target_validity_tracks_declared_lexicon_entries() -> None:
-    """A declared collapse anchor resolves; an undeclared one is dangling.
+def test_every_collapse_anchor_target_resolves_to_a_declared_entry() -> None:
+    """Every ``cross_lang.no_english_collapse`` target across the logos packs
+    resolves to a real declared lexicon entry — the substrate genuinely links,
+    not suppressed.
 
-    Regression for the removed relation/prefix carve-out: ``en-collapse-*``
-    targets are valid iff they are real declared lexicon entries (e.g.
-    ``en-collapse-love`` in ``en_collapse_anchors_v1``).  An ``en-collapse-*``
-    target declared nowhere must surface as an invalid alignment target, not be
-    silently passed by the safety reader.
+    Reconciliation fix: the anchor pack (``en_collapse_anchors_v1``) now declares
+    the full referenced anchor set (covenant_love/shalom/tzedek +
+    heart/soul/breath/holy/time), so no edge dangles. This is the geometry
+    resolving, not the check being bypassed — the relation/prefix carve-out
+    stays removed. See docs/handoff/logos-collapse-anchor-reconciliation-2026-06-14.md.
     """
+    for pack_id in ("grc_logos_cognition_v1", "he_core_cognition_v1"):
+        rows = logos.logos_pack_alignment(pack_id)
+        collapse = [r for r in rows if r.relation == "cross_lang.no_english_collapse"]
+        assert collapse, f"{pack_id} should declare collapse edges"
+        unresolved = [r.target_id for r in collapse if r.invalid_target]
+        assert unresolved == [], f"{pack_id} has unresolved collapse anchors: {unresolved}"
 
-    rows = logos.logos_pack_alignment("grc_logos_cognition_v1")
+        report = logos.logos_pack_safety(pack_id)
+        assert report.invalid_alignment_targets == []
+        # Resolved, but never CLEAR while holonomy proof is absent (honest ceiling).
+        assert report.verdict is not SafetyVerdict.CLEAR
+
+    # A previously-dangling anchor (breath) and a source-concept anchor
+    # (covenant_love) both resolve to the anchor pack now.
     by_target = {
-        row.target_id: row
-        for row in rows
-        if row.relation == "cross_lang.no_english_collapse"
+        r.target_id: r
+        for r in logos.logos_pack_alignment("he_core_cognition_v1")
+        if r.relation == "cross_lang.no_english_collapse"
     }
-
-    declared = by_target["en-collapse-love"]
-    assert declared.invalid_target is False
-    assert declared.target_resolved is True
-    assert declared.target_pack_id == "en_collapse_anchors_v1"
-
-    undeclared = by_target["en-collapse-breath"]
-    assert undeclared.invalid_target is True
-    assert undeclared.target_resolved is False
-    assert undeclared.target_pack_id is None
-
-    report = logos.logos_pack_safety("grc_logos_cognition_v1")
-    invalid_target_ids = {
-        issue.target_id for issue in report.invalid_alignment_targets
-    }
-    assert "en-collapse-breath" in invalid_target_ids
-    assert "en-collapse-love" not in invalid_target_ids
-    assert report.verdict is SafetyVerdict.WARNING
-    assert report.verdict is not SafetyVerdict.CLEAR
+    for anchor in ("en-collapse-breath", "en-collapse-covenant_love"):
+        assert by_target[anchor].invalid_target is False
+        assert by_target[anchor].target_pack_id == "en_collapse_anchors_v1"
 
 
 def test_no_algebra_imports_in_workbench_logos_module() -> None:

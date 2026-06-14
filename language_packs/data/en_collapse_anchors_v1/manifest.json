@@ -6,7 +6,7 @@
   "normalization_policy": "unitize_versor",
   "source_manifest": "en_collapse_anchors_v1.lexicon.jsonl",
   "determinism_class": "D0",
-  "checksum": "bd46462611c51b93a59630085553b858dec81646e55b2864c6f040b7646d0da5",
+  "checksum": "e7233855ba320089d0775fe58a024e611831aae1dcdfdc7276a3f09697089f9a",
   "version": "1.0.0",
   "gate_engaged": false,
   "oov_policy": "passthrough",
