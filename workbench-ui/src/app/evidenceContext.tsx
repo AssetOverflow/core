@@ -15,6 +15,9 @@ import type {
   EvalRunResult,
   CalibrationClass,
   LogosPackOverview,
+  LogosLexiconRow,
+  LogosGlossRow,
+  LogosMorphologyRow,
   SafetyVerdict,
 } from "../types/api";
 
@@ -84,6 +87,24 @@ export type EvidenceSubject =
   | { kind: "run"; sessionId: string; data?: RunSubjectData }
   | { kind: "pack"; packId: string; data?: PackSubjectData }
   | { kind: "logos_pack"; packId: string; data?: LogosPackSubjectData }
+  | {
+      kind: "logos_entry";
+      packId: string;
+      entryId: string;
+      data?: LogosLexiconRow;
+    }
+  | {
+      kind: "logos_gloss";
+      packId: string;
+      glossId: string;
+      data?: LogosGlossRow;
+    }
+  | {
+      kind: "logos_morphology";
+      packId: string;
+      morphologyId: string;
+      data?: LogosMorphologyRow;
+    }
   | { kind: "vault_entry"; entryIndex: number; data?: VaultEntrySubjectData }
   | { kind: "audit_event"; eventId: string; data?: AuditEventSubjectData }
   | { kind: "calibration_class"; className: string; data?: CalibrationClass }

@@ -23,6 +23,8 @@ import {
   fetchLogosPacks,
   fetchLogosPackOverview,
   fetchLogosPackSafety,
+  fetchLogosPackContents,
+  fetchLogosPackAlignment,
   fetchVaultSummary,
   fetchVaultEntries,
   fetchCalibrationClasses,
@@ -59,6 +61,8 @@ import type {
   LogosPackSummary,
   LogosPackOverview,
   LogosSafetyReport,
+  LogosPackContents,
+  LogosAlignmentRow,
   VaultSummary,
   VaultEntry,
   CalibrationClass,
@@ -428,6 +432,26 @@ export function useLogosPackSafety(packId?: string | null) {
   return useQuery<LogosSafetyReport, WorkbenchApiError>({
     queryKey: ["api", "logos", "pack", packId ?? null, "safety"],
     queryFn: () => fetchLogosPackSafety(packId as string),
+    enabled: typeof packId === "string" && packId.length > 0,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useLogosPackContents(packId?: string | null) {
+  return useQuery<LogosPackContents, WorkbenchApiError>({
+    queryKey: ["api", "logos", "pack", packId ?? null, "contents"],
+    queryFn: () => fetchLogosPackContents(packId as string),
+    enabled: typeof packId === "string" && packId.length > 0,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useLogosPackAlignment(packId?: string | null) {
+  return useQuery<LogosAlignmentRow[], WorkbenchApiError>({
+    queryKey: ["api", "logos", "pack", packId ?? null, "alignment"],
+    queryFn: () => fetchLogosPackAlignment(packId as string),
     enabled: typeof packId === "string" && packId.length > 0,
     staleTime: 30_000,
     refetchOnWindowFocus: false,

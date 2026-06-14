@@ -183,6 +183,70 @@ export function deriveStages(subject: EvidenceSubject): RailStage[] | null {
         stage("action", "dim", "proposal mode none"),
       ];
     }
+    case "logos_entry": {
+      const d = subject.data;
+      return [
+        stage("intent", "dim", "not applicable to read-only Logos entry inspection"),
+        stage("subject", "lit", "selected CORE-Logos lexical entry"),
+        stage(
+          "provenance",
+          d ? evidenceAny(...d.provenance_ids) : "hollow",
+          "provenance_ids",
+        ),
+        stage(
+          "admissibility",
+          d ? evidenceOf(d.epistemic_status) : "hollow",
+          "epistemic_status (ADR-0021 revision position)",
+        ),
+        stage("replay", "dim", "not applicable to a static lexicon row"),
+        stage("authority", "dim", "read-only Logos Studio has no mutation authority"),
+        stage("action", "dim", "proposal mode none"),
+      ];
+    }
+    case "logos_gloss": {
+      const d = subject.data;
+      return [
+        stage("intent", "dim", "not applicable to read-only Logos gloss inspection"),
+        stage("subject", "lit", "selected CORE-Logos gloss"),
+        stage(
+          "provenance",
+          d ? evidenceAny(...d.provenance_ids) : "hollow",
+          "provenance_ids",
+        ),
+        stage(
+          "admissibility",
+          d ? evidenceOf(d.epistemic_status) : "hollow",
+          "epistemic_status",
+        ),
+        stage(
+          "replay",
+          d ? evidenceAny(...d.entry_ids) : "hollow",
+          "linked entry_ids",
+        ),
+        stage("authority", "dim", "read-only Logos Studio has no mutation authority"),
+        stage("action", "dim", "proposal mode none"),
+      ];
+    }
+    case "logos_morphology": {
+      const d = subject.data;
+      return [
+        stage("intent", "dim", "not applicable to read-only Logos morphology inspection"),
+        stage("subject", "lit", "selected CORE-Logos morphology record"),
+        stage(
+          "provenance",
+          d ? evidenceAny(d.root, d.stem) : "hollow",
+          "root / stem",
+        ),
+        stage(
+          "admissibility",
+          d ? evidenceOf(d.morphology_id) : "hollow",
+          "morphology_id (lexicon link target)",
+        ),
+        stage("replay", "dim", "not applicable to a static morphology row"),
+        stage("authority", "dim", "read-only Logos Studio has no mutation authority"),
+        stage("action", "dim", "proposal mode none"),
+      ];
+    }
     case "vault_entry": {
       const d = subject.data;
       return [

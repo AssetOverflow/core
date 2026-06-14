@@ -20,6 +20,8 @@ import type {
   LogosPackSummary,
   LogosPackOverview,
   LogosSafetyReport,
+  LogosPackContents,
+  LogosAlignmentRow,
   VaultSummary,
   VaultEntry,
   CalibrationClass,
@@ -314,6 +316,23 @@ export async function fetchLogosPackSafety(packId: string): Promise<LogosSafetyR
   return apiFetch<LogosSafetyReport>(
     `/logos/packs/${encodeURIComponent(packId)}/safety`,
   );
+}
+
+export async function fetchLogosPackContents(
+  packId: string,
+): Promise<LogosPackContents> {
+  return apiFetch<LogosPackContents>(
+    `/logos/packs/${encodeURIComponent(packId)}/contents`,
+  );
+}
+
+export async function fetchLogosPackAlignment(
+  packId: string,
+): Promise<LogosAlignmentRow[]> {
+  const envelope = await apiFetch<ItemsEnvelope<LogosAlignmentRow>>(
+    `/logos/packs/${encodeURIComponent(packId)}/alignment`,
+  );
+  return envelope.items;
 }
 
 export async function fetchVaultSummary(): Promise<VaultSummary> {

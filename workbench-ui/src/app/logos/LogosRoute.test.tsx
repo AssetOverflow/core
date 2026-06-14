@@ -2,9 +2,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "../../test/createTestQueryClient";
 import type {
+  LogosPackContents,
   LogosPackOverview,
   LogosPackSummary,
   LogosSafetyReport,
@@ -106,6 +107,73 @@ function safetyFor(
   };
 }
 
+function contentsFor(packId: string): LogosPackContents {
+  const he = packId.includes("he");
+  return {
+    schema_version: "logos_pack_contents_v1",
+    pack_id: packId,
+    manifest: { pack_id: packId },
+    lexicon: [
+      {
+        // grc's entry_id matches the warning safety report's dangling link.
+        entry_id: he ? "he-001" : "logos.entry.1",
+        surface: he ? "דבר" : "logos",
+        lemma: he ? "דבר" : "logos",
+        language: he ? "he" : "grc",
+        part_of_speech: "NOUN",
+        pos: "NOUN",
+        morphology_id: he ? "he-morph-001" : "missing-morph",
+        morphology_tags: [],
+        semantic_domains: ["speech"],
+        provenance_ids: ["John1:1"],
+        epistemic_status: "speculative",
+      },
+      {
+        entry_id: he ? "he-002" : "grc-002",
+        surface: he ? "אמר" : "rhema",
+        lemma: he ? "אמר" : "rhema",
+        language: he ? "he" : "grc",
+        part_of_speech: "VERB",
+        pos: "VERB",
+        morphology_id: null,
+        morphology_tags: [],
+        semantic_domains: ["cognition"],
+        provenance_ids: [],
+        epistemic_status: "coherent",
+      },
+    ],
+    glosses: [
+      {
+        gloss_id: "gloss-1",
+        lemma: he ? "דבר" : "logos",
+        gloss: "word, matter, or spoken thing",
+        pos: "NOUN",
+        entry_ids: he ? ["he-001"] : ["logos.entry.1"],
+        provenance_ids: [],
+        epistemic_status: "speculative",
+        raw: {},
+      },
+    ],
+    morphology: [
+      {
+        morphology_id: he ? "he-morph-001" : "grc-morph-001",
+        surface: he ? "דברים" : "logoi",
+        lemma: he ? "דבר" : "logos",
+        language: he ? "he" : "grc",
+        root: he ? "דבר" : null,
+        prefix_chain: [],
+        stem: he ? null : "log",
+        inflection: {},
+        suffix_chain: he ? ["ים"] : ["oi"],
+      },
+    ],
+    frames: [],
+    compositions: [],
+    alignment_edges: [],
+    holonomy_cases: [],
+  };
+}
+
 function okEnvelope(data: unknown) {
   return { ok: true, generated_at: "2026-06-14T00:00:00Z", data };
 }
@@ -125,6 +193,13 @@ function stubLogosFetch() {
       const packId = decodeURIComponent(safetyMatch[1]);
       return Promise.resolve({
         json: async () => okEnvelope(safetyFor(packId)),
+      });
+    }
+    const contentsMatch = path.match(/^\/logos\/packs\/([^/]+)\/contents$/);
+    if (contentsMatch) {
+      const packId = decodeURIComponent(contentsMatch[1]);
+      return Promise.resolve({
+        json: async () => okEnvelope(contentsFor(packId)),
       });
     }
     const overviewMatch = path.match(/^\/logos\/packs\/([^/]+)$/);
@@ -176,7 +251,33 @@ function renderRoute(initialEntry = "/logos") {
   );
 }
 
+// happy-dom has no layout engine; the VirtualizedList virtualizer reads
+// offsetWidth/offsetHeight (0x0) and renders nothing. Give elements a
+// real-looking layout size so the contents-tab rows mount (same workaround
+// as VirtualizedList.test.tsx).
+const offsetDescriptors = {
+  offsetHeight: Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight"),
+  offsetWidth: Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth"),
+};
+
+beforeEach(() => {
+  Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+    configurable: true,
+    get: () => 360,
+  });
+  Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+    configurable: true,
+    get: () => 720,
+  });
+});
+
 afterEach(() => {
+  if (offsetDescriptors.offsetHeight) {
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", offsetDescriptors.offsetHeight);
+  }
+  if (offsetDescriptors.offsetWidth) {
+    Object.defineProperty(HTMLElement.prototype, "offsetWidth", offsetDescriptors.offsetWidth);
+  }
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   localStorage.clear();
@@ -197,7 +298,7 @@ describe("LogosRoute", () => {
     expect(screen.queryByText(/Draft proposal/i)).not.toBeInTheDocument();
   });
 
-  it("selects a pack, renders Overview, projects logos_pack evidence, and avoids deferred endpoints", async () => {
+  it("selects a pack, renders Overview, projects logos_pack evidence, and defers only the alignment endpoint", async () => {
     const { paths } = stubLogosFetch();
     const user = userEvent.setup();
     renderRoute();
@@ -215,7 +316,8 @@ describe("LogosRoute", () => {
     expect(screen.queryByText(/proof card/i)).not.toBeInTheDocument();
     expect(screen.getByText("CORE-Logos Pack")).toBeInTheDocument();
     expect(screen.getByText("0 / missing_evidence")).toBeInTheDocument();
-    expect(paths).not.toContain("/logos/packs/he_logos_micro_v1/contents");
+    // LG-3 fetches contents eagerly on pack-select; /alignment stays deferred to LG-4.
+    expect(paths).toContain("/logos/packs/he_logos_micro_v1/contents");
     expect(paths).not.toContain("/logos/packs/he_logos_micro_v1/alignment");
   });
 
@@ -248,5 +350,65 @@ describe("LogosRoute", () => {
     expect(screen.getAllByText("Warning").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Unknown").length).toBeGreaterThan(0);
     expect(screen.queryByText("Clear")).not.toBeInTheDocument();
+  });
+
+  it("renders the Lexicon tab and projects a logos_entry evidence subject on select", async () => {
+    stubLogosFetch();
+    const user = userEvent.setup();
+    renderRoute("/logos/he_logos_micro_v1");
+
+    await user.click(await screen.findByRole("tab", { name: "Lexicon" }));
+
+    // Real lexicon rows from /contents, not recomputed.
+    expect(await screen.findByText("דבר · דבר")).toBeInTheDocument();
+    expect(screen.getByText("he-001")).toBeInTheDocument();
+
+    await user.click(screen.getByText("דבר · דבר"));
+
+    // Selecting an entry publishes a pack-scoped logos_entry subject + address.
+    expect(await screen.findByText("CORE-Logos Entry")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).toHaveTextContent(
+        "inspect=logos_entry%3Ahe_logos_micro_v1%2Fhe-001",
+      ),
+    );
+  });
+
+  it("flags a lexicon entry whose morphology link is dangling per the safety report", async () => {
+    stubLogosFetch();
+    const user = userEvent.setup();
+    // grc safety reports entry logos.entry.1 -> missing-morph as dangling.
+    renderRoute("/logos/grc_logos_cognition_v1");
+
+    await user.click(await screen.findByRole("tab", { name: "Lexicon" }));
+
+    expect(await screen.findByText("logos · logos")).toBeInTheDocument();
+    expect(screen.getByText("dangling morphology")).toBeInTheDocument();
+  });
+
+  it("renders the Morphology tab chain in schema order (root then suffix)", async () => {
+    stubLogosFetch();
+    const user = userEvent.setup();
+    renderRoute("/logos/he_logos_micro_v1");
+
+    await user.click(await screen.findByRole("tab", { name: "Morphology" }));
+
+    expect(await screen.findByText("דברים · דבר")).toBeInTheDocument();
+    // Chain renders root (√דבר) before the suffix (ים), never re-sorted.
+    expect(screen.getByText("√דבר")).toBeInTheDocument();
+    expect(screen.getByText("ים")).toBeInTheDocument();
+    expect(screen.getByText("he-morph-001")).toBeInTheDocument();
+  });
+
+  it("renders the Glosses tab with linked entry ids", async () => {
+    stubLogosFetch();
+    const user = userEvent.setup();
+    renderRoute("/logos/he_logos_micro_v1");
+
+    await user.click(await screen.findByRole("tab", { name: "Glosses" }));
+
+    expect(await screen.findByText("word, matter, or spoken thing")).toBeInTheDocument();
+    await user.click(screen.getByText("word, matter, or spoken thing"));
+    expect(await screen.findByText("CORE-Logos Gloss")).toBeInTheDocument();
   });
 });
