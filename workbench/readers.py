@@ -1015,6 +1015,30 @@ def _contemplation_run_paths() -> list[Path]:
     )
 
 
+# scene-id token -> canonical loop stage role. Ordered: first match wins.
+_CONTEMPLATION_STAGE_TOKENS: tuple[tuple[str, str], ...] = (
+    ("cold", "cold_attempt"),
+    ("enrich", "engine_enrichment"),
+    ("checkpoint", "engine_enrichment"),
+    ("proposal", "engine_proposal"),
+    ("authored", "engine_proposal"),
+    ("ratif", "operator_ratifies"),
+    ("grounded", "grounded"),
+)
+
+
+def _contemplation_stage_role(scene_id: str) -> str:
+    low = scene_id.lower()
+    for token, role in _CONTEMPLATION_STAGE_TOKENS:
+        if token in low:
+            return role
+    return "other"
+
+
+def _opt_str(value: Any) -> str | None:
+    return value if isinstance(value, str) and value else None
+
+
 def _contemplation_scenes(report: dict[str, Any]) -> list[ContemplationScene]:
     scenes = report.get("scenes")
     if not isinstance(scenes, list):
@@ -1023,12 +1047,19 @@ def _contemplation_scenes(report: dict[str, Any]) -> list[ContemplationScene]:
     for index, scene in enumerate(scenes):
         if not isinstance(scene, dict):
             continue
-        detail = scene.get("detail")
+        raw_detail = scene.get("detail")
+        detail = raw_detail if isinstance(raw_detail, dict) else {}
+        scene_id = str(scene.get("scene") or f"scene_{index + 1}")
         out.append(
             ContemplationScene(
-                scene_id=str(scene.get("scene") or f"scene_{index + 1}"),
+                scene_id=scene_id,
                 claim=str(scene.get("claim") or ""),
-                detail=detail if isinstance(detail, dict) else {},
+                detail=detail,
+                stage_role=_contemplation_stage_role(scene_id),  # type: ignore[arg-type]
+                proposal_id=_opt_str(detail.get("proposal_id")),
+                candidate_id=_opt_str(detail.get("candidate_id")),
+                proposal_state=_opt_str(detail.get("state")),
+                grounding_source=_opt_str(detail.get("grounding_source")),
             )
         )
     return out

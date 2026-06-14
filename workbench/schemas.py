@@ -377,11 +377,33 @@ class DemoRunResult:
     scenarios: list[DemoScenarioRunResult] = field(default_factory=list)
 
 
+# Canonical ADR-0172 learning-arc stages (cold attempt → engine enrichment →
+# engine-authored proposal → operator ratifies → grounded). "other" is the
+# explicit fallback for any scene id outside the closed arc.
+ContemplationStageRole = Literal[
+    "cold_attempt",
+    "engine_enrichment",
+    "engine_proposal",
+    "operator_ratifies",
+    "grounded",
+    "other",
+]
+
+
 @dataclass(frozen=True, slots=True)
 class ContemplationScene:
     scene_id: str
     claim: str
     detail: dict[str, Any] = field(default_factory=dict)
+    # Typed projection of the contemplation *loop* — the role this scene plays
+    # and the connective ids that thread it to the proposal / candidate
+    # surfaces. ``proposal_id`` etc. are surfaced as evidence; cross-route
+    # navigation lights up only when the id resolves in the live log.
+    stage_role: ContemplationStageRole = "other"
+    proposal_id: str | None = None
+    candidate_id: str | None = None
+    proposal_state: str | None = None
+    grounding_source: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

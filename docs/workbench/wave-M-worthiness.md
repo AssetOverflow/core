@@ -160,6 +160,20 @@ Detailed brief pack: `docs/handoff/wave-M-phaseB-calibration-briefs-2026-06-13.m
   ratification boundary, and grounded-after scenes remain report-authored
   evidence. This is the first process trace; the fuller Calibration/Proposal
   integrated loop is still open.
+  **C2-b implementation note (2026-06-13):** the run detail is no longer a flat
+  JSON dump — each scene is now a typed loop stage. The reader
+  (`_contemplation_scenes`) projects every scene onto a canonical
+  `stage_role` (`cold_attempt`/`engine_enrichment`/`engine_proposal`/
+  `operator_ratifies`/`grounded`/`other`) and pulls the loop's connective ids
+  (`proposal_id`, `candidate_id`, `proposal_state`, `grounding_source`) out of
+  the raw detail; the UI renders the arc "attempt → enrich → propose → ratify →
+  grounded" with named stages, cold→grounded bookends, and the ids as evidence.
+  **Honest wrinkle (surfaced, not faked):** the fixture proposals do NOT resolve
+  in the live proposal log (source_kinds `exemplar_corpus`/`operator`, none
+  `contemplation`), so the proposal id is shown as evidence but is intentionally
+  NOT a clickable cross-route link — a dead link would be theater. Live
+  Proposals/Calibration navigation is deferred until real contemplation
+  proposals reach the log (reader-verified linking is the follow-up).
 - **C3 — Field substrate (honest, read-only, hard):** real `FieldState` +
   `versor_condition` for a turn, rendered as **inspectable exact numbers and
   invariant status** — `versor_condition < 1e-6` as a live "field is valid"

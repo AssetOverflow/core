@@ -103,7 +103,12 @@
   "ContemplationScene": [
     "scene_id",
     "claim",
-    "detail"
+    "detail",
+    "stage_role",
+    "proposal_id",
+    "candidate_id",
+    "proposal_state",
+    "grounding_source"
   ],
   "DemoDagEdge": [
     "from_node",

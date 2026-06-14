@@ -15,8 +15,20 @@ import type {
   ContemplationRunDetail,
   ContemplationRunSummary,
   ContemplationScene,
+  ContemplationStageRole,
 } from "../../types/api";
 import { pushRecentItem } from "../commandRegistry";
+
+// The contemplation loop made legible: attempt → enrich → propose → ratify →
+// grounded. Labels for the canonical ADR-0172 stage roles.
+const STAGE_LABEL: Record<ContemplationStageRole, string> = {
+  cold_attempt: "Cold attempt",
+  engine_enrichment: "Engine enrichment",
+  engine_proposal: "Engine-authored proposal",
+  operator_ratifies: "Operator ratifies",
+  grounded: "Grounded",
+  other: "Stage",
+};
 
 function errorMessage(error: unknown): string {
   return error instanceof WorkbenchApiError
@@ -74,7 +86,38 @@ function RunRow({
   );
 }
 
-function SceneCard({ scene, index }: { scene: ContemplationScene; index: number }) {
+function StageEvidence({ scene }: { scene: ContemplationScene }) {
+  // The loop's connective tissue, pulled out of the raw detail. Ids are
+  // surfaced as evidence (copyable); cross-route navigation is intentionally
+  // NOT a live link yet — these fixture proposals do not resolve in the live
+  // proposal log, and a dead link would be theater.
+  const rows: { label: string; value: string }[] = [];
+  if (scene.grounding_source) rows.push({ label: "grounding", value: scene.grounding_source });
+  if (scene.candidate_id) rows.push({ label: "candidate", value: scene.candidate_id });
+  if (scene.proposal_id) {
+    rows.push({
+      label: "proposal",
+      value: scene.proposal_state
+        ? `${scene.proposal_id} · ${scene.proposal_state}`
+        : scene.proposal_id,
+    });
+  }
+  if (rows.length === 0) return null;
+  return (
+    <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
+      {rows.map((row) => (
+        <div key={row.label} className="contents">
+          <dt className="text-[var(--color-text-secondary)]">{row.label}</dt>
+          <dd className="m-0 truncate font-mono text-[var(--color-text-primary)]" title={row.value}>
+            {row.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function ProcessStageCard({ scene, index }: { scene: ContemplationScene; index: number }) {
   return (
     <li className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3">
       <div className="flex justify-center">
@@ -83,17 +126,63 @@ function SceneCard({ scene, index }: { scene: ContemplationScene; index: number 
         </span>
       </div>
       <div className="min-w-0 border-l border-[var(--color-border-subtle)] pl-3">
-        <div className="font-mono text-xs text-[var(--color-text-muted)]">
-          {scene.scene_id}
+        <div className="flex flex-wrap items-baseline gap-2">
+          <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+            {STAGE_LABEL[scene.stage_role]}
+          </span>
+          <span className="font-mono text-xs text-[var(--color-text-muted)]">
+            {scene.scene_id}
+          </span>
         </div>
-        <p className="m-0 mt-1 text-sm text-[var(--color-text-primary)]">
+        <p className="m-0 mt-1 text-sm text-[var(--color-text-primary)] [text-wrap:balance]">
           {scene.claim}
         </p>
-        <div className="mt-2 max-h-80 overflow-auto rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2">
-          <StableJsonViewer source={JSON.stringify(scene.detail, null, 2)} />
-        </div>
+        <StageEvidence scene={scene} />
+        <details className="mt-2">
+          <summary className="cursor-pointer text-xs text-[var(--color-text-secondary)]">
+            raw detail
+          </summary>
+          <div className="mt-1 max-h-80 overflow-auto rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2">
+            <StableJsonViewer source={JSON.stringify(scene.detail, null, 2)} />
+          </div>
+        </details>
       </div>
     </li>
+  );
+}
+
+function Bookend({
+  label,
+  payload,
+}: {
+  label: string;
+  payload: Record<string, unknown> | null | undefined;
+}) {
+  const surface = typeof payload?.surface === "string" ? payload.surface : null;
+  const grounding =
+    typeof payload?.grounding_source === "string" ? payload.grounding_source : null;
+  return (
+    <div className="min-w-0 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2">
+      <div className="mb-1 flex items-baseline justify-between gap-2">
+        <span className="text-xs font-semibold text-[var(--color-text-secondary)]">{label}</span>
+        {grounding ? (
+          <span className="font-mono text-xs text-[var(--color-text-muted)]">{grounding}</span>
+        ) : null}
+      </div>
+      {surface ? (
+        <p className="m-0 text-sm text-[var(--color-text-primary)] [text-wrap:balance]">{surface}</p>
+      ) : (
+        <span className="text-xs text-[var(--color-text-secondary)]">not recorded</span>
+      )}
+      <details className="mt-2">
+        <summary className="cursor-pointer text-xs text-[var(--color-text-secondary)]">
+          raw
+        </summary>
+        <div className="mt-1 overflow-auto">
+          <StableJsonViewer source={JSON.stringify(payload ?? {}, null, 2)} />
+        </div>
+      </details>
+    </div>
   );
 }
 
@@ -127,24 +216,19 @@ function DetailPanel({ detail }: { detail: ContemplationRunDetail }) {
           ]}
         />
         <div className="grid gap-3 md:grid-cols-2">
-          <div className="min-w-0 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2">
-            <div className="mb-1 text-xs font-semibold text-[var(--color-text-secondary)]">
-              before
-            </div>
-            <StableJsonViewer source={JSON.stringify(detail.before ?? {}, null, 2)} />
-          </div>
-          <div className="min-w-0 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2">
-            <div className="mb-1 text-xs font-semibold text-[var(--color-text-secondary)]">
-              after
-            </div>
-            <StableJsonViewer source={JSON.stringify(detail.after ?? {}, null, 2)} />
-          </div>
+          <Bookend label="Cold session (before)" payload={detail.before} />
+          <Bookend label="Grounded session (after)" payload={detail.after} />
         </div>
-        <ol className="m-0 grid list-none gap-4 p-0">
-          {detail.scenes.map((scene, index) => (
-            <SceneCard key={`${scene.scene_id}-${index}`} scene={scene} index={index} />
-          ))}
-        </ol>
+        <div>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+            Learning loop · attempt → enrich → propose → ratify → grounded
+          </div>
+          <ol className="m-0 grid list-none gap-4 p-0">
+            {detail.scenes.map((scene, index) => (
+              <ProcessStageCard key={`${scene.scene_id}-${index}`} scene={scene} index={index} />
+            ))}
+          </ol>
+        </div>
       </div>
     </Panel>
   );
