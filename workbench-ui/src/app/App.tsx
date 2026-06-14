@@ -37,6 +37,11 @@ const ProposalsRoute = lazy(() =>
 const RunsRoute = lazy(() =>
   import("./runs/RunsRoute").then((module) => ({ default: module.RunsRoute })),
 );
+const LivedLifeRoute = lazy(() =>
+  import("./lived-life/LivedLifeRoute").then((module) => ({
+    default: module.LivedLifeRoute,
+  })),
+);
 const VaultRoute = lazy(() =>
   import("./vault/VaultRoute").then((module) => ({ default: module.VaultRoute })),
 );
@@ -87,6 +92,7 @@ export const ROUTE_ELEMENTS: RouteElementMap = {
   demos: lazyRoute(<DemoTheaterRoute />),
   proposals: lazyRoute(<ProposalsRoute />),
   runs: lazyRoute(<RunsRoute />),
+  "lived-life": lazyRoute(<LivedLifeRoute />),
   vault: lazyRoute(<VaultRoute />),
   audit: lazyRoute(<AuditRoute />),
   evals: lazyRoute(<EvalsRoute />),

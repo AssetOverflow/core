@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, cast, get_args
 
+from chat.always_on import LIVED_LIFE_FILENAME
 from core.config import RuntimeConfig
 from core.engine_identity import EngineIdentityError, engine_identity_for_config
 from engine_state import EngineStateStore, get_git_revision
@@ -35,6 +36,7 @@ from workbench.schemas import (
     IdentityContinuity,
     IdentityContinuityStatus,
     IdentityLineageRelation,
+    LivedLife,
     MathProposalDetail,
     MathProposalSummary,
     MathRatifyResult,
@@ -50,6 +52,7 @@ from workbench.schemas import (
     VaultEntry,
     VaultSummary,
 )
+from workbench.lived_life import lived_life_from_payload, missing_lived_life
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SAFE_EVAL_LANES = frozenset({"contemplation_quality"})
@@ -326,6 +329,8 @@ def _artifact_kind(path: Path) -> str:
     rel = _relative(path)
     if rel == "engine_state/manifest.json":
         return "engine_state_manifest"
+    if rel == f"engine_state/{LIVED_LIFE_FILENAME}":
+        return "lived_life"
     if rel.startswith("teaching/proposals/"):
         return "proposal"
     if rel.startswith("evals/") and "/results/" in rel:
@@ -1732,6 +1737,32 @@ def _identity_continuity_from_manifest(
         lineage_relation=lineage_relation,
         verification_summary=summary,
         evidence_gap=gap,
+    )
+
+
+def lived_life() -> LivedLife:
+    """Read the persisted always-on run (``engine_state/lived_life.json``) as the L10
+    lived-life surface.
+
+    Honest absence (``missing_evidence``) when no always-on run has been persisted yet —
+    the heartbeat (``chat.always_on.run_continuous`` + ``write_lived_life``) is what
+    produces the artifact; until a continuous-life run lands one, the surface says so
+    rather than fabricating a life."""
+    path = ENGINE_STATE_ROOT / LIVED_LIFE_FILENAME
+    if not path.exists():
+        return missing_lived_life("no always-on run has been persisted yet")
+    payload = _read_json_object(path)
+    artifact = _artifact_ref_for_path(path, "lived_life")
+    # The resume verdict: would a reboot resume THIS life? Recompute the current substrate
+    # identity with the canonical function (fail-soft -> "unknown", like IdentityContinuity).
+    try:
+        current_identity: str | None = engine_identity_for_config(
+            RuntimeConfig(), get_git_revision()
+        )
+    except EngineIdentityError:
+        current_identity = None
+    return lived_life_from_payload(
+        payload, artifact=artifact, current_identity=current_identity
     )
 
 

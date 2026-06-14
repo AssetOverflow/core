@@ -30,6 +30,7 @@ import type {
   FieldEvidence,
   EvidenceBundle,
   DeterminismTour,
+  LivedLife,
   TurnJournalEntry,
   TurnJournalSummary,
   ContemplationRunDetail,
@@ -208,6 +209,10 @@ export async function fetchTraceBundle(turnId: number): Promise<EvidenceBundle> 
 
 export async function fetchTour(): Promise<DeterminismTour> {
   return apiFetch<DeterminismTour>("/tour");
+}
+
+export async function fetchLivedLife(): Promise<LivedLife> {
+  return apiFetch<LivedLife>("/lived-life");
 }
 
 export async function fetchAuditEvents(

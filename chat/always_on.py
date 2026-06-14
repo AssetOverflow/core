@@ -36,13 +36,20 @@ the idle/heartbeat half.
 
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass
-from typing import Callable
+from pathlib import Path
+from typing import Any, Callable
 
 from algebra.versor import versor_condition
 from core.engine_identity import engine_identity_for_config
 from engine_state import get_git_revision
+
+# The name of the persisted lived-life artifact (one per always-on run) in the
+# engine-state dir, read-only, for the workbench Lived Life surface.
+LIVED_LIFE_FILENAME = "lived_life.json"
+LIVED_LIFE_SCHEMA_VERSION = "lived_life_v1"
 
 # The non-negotiable field invariant (CLAUDE.md). The heartbeat READS this as evidence;
 # it never repairs to keep it true — closure is owned by ``algebra/versor.py``.
@@ -88,6 +95,45 @@ class AlwaysOnReport:
         return len(self.records)
 
 
+def serialize_report(report: AlwaysOnReport) -> dict[str, Any]:
+    """Deterministic, JSON-able projection of an always-on run — the persisted lived-life
+    evidence the workbench reads."""
+    return {
+        "schema_version": LIVED_LIFE_SCHEMA_VERSION,
+        "identity": report.identity,
+        "heartbeats": report.heartbeats,
+        "closure_ceiling": CLOSURE_CEILING,
+        "closure_observed": report.closure_observed,
+        "closure_held": report.closure_held,
+        "final_checkpoint_ok": report.final_checkpoint_ok,
+        "total_facts_consolidated": report.total_facts_consolidated,
+        "total_proposals_created": report.total_proposals_created,
+        "records": [
+            {
+                "tick": r.tick,
+                "versor_condition": r.versor_condition,
+                "field_valid": r.field_valid,
+                "facts_consolidated": r.facts_consolidated,
+                "proposals_created": r.proposals_created,
+                "pending_proposals": r.pending_proposals,
+                "did_work": r.did_work,
+            }
+            for r in report.records
+        ],
+    }
+
+
+def write_lived_life(report: AlwaysOnReport, path: Path) -> None:
+    """Persist the lived-life evidence deterministically (sorted keys) so the workbench can
+    read it as a read-only artifact. Overwrites — the artifact is the latest always-on run
+    (a cumulative whole-life log is a future enhancement)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(serialize_report(report), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def _live_versor_condition(runtime) -> float | None:
     """Read the closure of the runtime's live field, or None if no turn built one yet.
 
@@ -106,6 +152,7 @@ def run_continuous(
     sleep_seconds: float = 0.0,
     on_heartbeat: Callable[[HeartbeatRecord], None] | None = None,
     stop: Callable[[], bool] | None = None,
+    report_path: Path | None = None,
 ) -> AlwaysOnReport:
     """Run the always-on heartbeat for up to ``heartbeats`` beats.
 
@@ -118,6 +165,13 @@ def run_continuous(
     Bounded for falsifiable soaks; a daemon passes a large ``heartbeats`` + a ``stop``
     predicate (and a real ``sleep_seconds`` cadence). ``stop`` is checked BEFORE each
     beat so a clean shutdown still persists the final state.
+
+    When ``report_path`` is given, the run's lived-life evidence is persisted there after
+    the loop exits — point it at ``<engine_state>/lived_life.json`` so the workbench Lived
+    Life surface reads the continuous life. A clean ``stop`` still writes the full report
+    (the report captures everything accumulated up to the stop). On a crash the engine
+    state is still checkpointed in ``finally`` for recovery, but the workbench report is
+    best-effort and simply not refreshed — the surface keeps the last good run.
     """
     if heartbeats < 0:
         raise ValueError("heartbeats must be >= 0")
@@ -161,7 +215,7 @@ def run_continuous(
             final_checkpoint_ok = False
 
     observed = [r.versor_condition for r in records if r.versor_condition is not None]
-    return AlwaysOnReport(
+    report = AlwaysOnReport(
         records=tuple(records),
         identity=identity,
         closure_observed=bool(observed),
@@ -170,3 +224,6 @@ def run_continuous(
         total_facts_consolidated=sum(r.facts_consolidated for r in records),
         total_proposals_created=sum(r.proposals_created for r in records),
     )
+    if report_path is not None:
+        write_lived_life(report, report_path)
+    return report

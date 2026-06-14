@@ -59,6 +59,7 @@ teaching/math_proposals/proposals.jsonl
 engine_state/manifest.json
 engine_state/recognizers.jsonl
 engine_state/discovery_candidates.jsonl
+engine_state/lived_life.json
 
 # Private outreach / personal packet — never tracked
 01_Anthropic/

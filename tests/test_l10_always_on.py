@@ -11,7 +11,9 @@ Wrong=0 / no-hot-path-repair are preserved by composition — the heartbeat only
 
 from __future__ import annotations
 
-from chat.always_on import CLOSURE_CEILING, run_continuous
+import json
+
+from chat.always_on import CLOSURE_CEILING, LIVED_LIFE_FILENAME, run_continuous
 from chat.runtime import ChatRuntime, RuntimeConfig
 from core.cognition.pipeline import CognitiveTurnPipeline
 from generate.meaning_graph.reader import comprehend
@@ -91,6 +93,30 @@ def test_life_survives_interruption_as_the_same_life(tmp_path) -> None:
     # merely re-derivable from the seeds: the consolidated member(socrates, mortal) is
     # recalled directly. (With consolidation off, this would NOT be stored — non-vacuous.)
     assert "mortal" in _stored_members(resumed._context, "socrates")
+
+
+def test_persisted_run_is_a_readable_lived_life_surface(tmp_path) -> None:
+    """run_continuous(report_path=...) leaves the workbench a readable, validated surface —
+    the persist seam the Lived Life route reads (engine_state/lived_life.json)."""
+    from workbench.lived_life import lived_life_from_payload
+
+    state_dir = tmp_path / "engine_state"
+    runtime = ChatRuntime(config=_RESUME_CONFIG, engine_state_path=state_dir)
+    _seed_continuous_life(runtime)
+
+    report_path = state_dir / LIVED_LIFE_FILENAME
+    report = run_continuous(runtime, heartbeats=4, report_path=report_path)
+
+    # The artifact exists where the workbench reads it, and round-trips through the
+    # read-model honesty gate (closure_held / totals consistent with the per-beat bytes).
+    assert report_path.exists()
+    raw = json.loads(report_path.read_text(encoding="utf-8"))
+    surface = lived_life_from_payload(raw)
+    assert surface.status == "recorded"
+    assert surface.heartbeats == report.heartbeats == 4
+    assert surface.closure_observed and surface.closure_held
+    assert surface.total_facts_consolidated == report.total_facts_consolidated >= 1
+    assert surface.converged is True  # the saturated life is at rest by the final beat
 
 
 def test_heartbeat_never_repairs_closure(tmp_path) -> None:

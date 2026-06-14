@@ -59,7 +59,7 @@ successful proof.
 ## 4. Current Route Map
 
 The route registry in `workbench-ui/src/app/routes.ts` is the source of truth.
-Current route count: 15.
+Current route count: 16.
 
 | Section | Route | Path | Shortcut | Purpose |
 |---|---|---|---|---|
@@ -71,6 +71,7 @@ Current route count: 15.
 | Determinism | Demos | `/demos` | Palette | Run registered determinism demos. |
 | Evidence | Proposals | `/proposals` | `⌘4` | Review cognition and math proposal evidence. |
 | Evidence | Runs | `/runs` | `⌘6` | Browse recorded run/session evidence. |
+| Evidence | Lived Life | `/lived-life` | Palette | Watch the always-on heartbeat hold one continuous life (closure read-not-repaired over uptime + learned-while-idle). |
 | Evidence | Vault | `/vault` | `⌘8` | Inspect persisted vault metadata when persistence exists. |
 | Evidence | Audit | `/audit` | `⌘9` | Read deterministic audit events. |
 | Discipline | Evals | `/evals` | `⌘5` | Run/read allowlisted eval lanes and wrong=0 ledgers. |
@@ -93,6 +94,7 @@ the command palette.
 | Demos | Registered demo scenarios pass or fail with recorded scenario evidence and proof/entailment DAGs where the demo emits them. |
 | Proposals | Proposal evidence, replay facts, and ratification commands are inspectable without applying mutation. |
 | Runs | Recorded run/session references, checkpoint gaps, and identity-continuity verdicts are discoverable. |
+| Lived Life | A persisted always-on run shows the engine living + learning over uptime, with closure (`versor_condition < 1e-6`) read as evidence each beat (never repaired); the surface's `closure_held` is consistency-checked against the per-beat measurements, so it can never paint a breached field as valid. |
 | Vault | Persisted vault metadata is inspectable when persistence is configured. |
 | Audit | Audit events are readable with payload digests and mutation-boundary flags. |
 | Evals | Allowlisted eval lanes and wrong/correct/refused metrics are visible. |
