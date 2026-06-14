@@ -115,6 +115,53 @@ export interface FieldEvidence {
 }
 
 /**
+ * One beat of the continuous life (read-only telemetry mirrored from
+ * `chat.always_on.HeartbeatRecord`): the closure of the live field that beat
+ * (`versor_condition`, READ never repaired), whether it held the `< ceiling`
+ * invariant, and what the life learned that beat.
+ */
+export interface LivedLifeHeartbeat {
+  tick: number;
+  versor_condition: number | null;
+  field_valid: boolean;
+  facts_consolidated: number;
+  proposals_created: number;
+  pending_proposals: number;
+  did_work: boolean;
+}
+
+/**
+ * L10 lived-life surface — evidence that CORE is ONE continuous life. A read-only
+ * projection of the persisted always-on run (`engine_state/lived_life.json`): the engine
+ * holds itself alive over uptime with no user turn, learns while idle (Step-D
+ * consolidation + proposal-only proposals), and holds closure BY CONSTRUCTION
+ * (`versor_condition` is READ as evidence each beat, never repaired). `closure_held` is
+ * consistency-checked against the per-beat measurements at construction (the wrong=0
+ * analogue for the continuity surface); `converged` is honest telemetry (a saturated life
+ * stops churning — the final beat did no work); `identity` is the life's content identity
+ * (the "same life" thread, not a continuity proof — that is owned by Runs).
+ */
+export interface LivedLife {
+  schema_version: "lived_life_v1";
+  status: PipelineEvidenceStatus;
+  missing_reason: string | null;
+  identity: string | null;
+  heartbeats: number;
+  closure_observed: boolean;
+  closure_held: boolean;
+  closure_ceiling: number;
+  final_checkpoint_ok: boolean;
+  converged: boolean;
+  total_facts_consolidated: number;
+  total_proposals_created: number;
+  current_identity: string | null;
+  resume_status: "would_resume" | "substrate_changed" | "unknown";
+  resume_summary: string;
+  records: LivedLifeHeartbeat[];
+  artifact: ArtifactRef | null;
+}
+
+/**
  * D3 shareable evidence bundle — a turn's deterministic evidence exported as one
  * content-addressed, citable artifact. `bundle_digest` content-addresses the
  * cognitive evidence only (journal position + wall-clock are carried but
@@ -452,6 +499,7 @@ export type ArtifactKind =
   | "contemplation_report"
   | "telemetry"
   | "engine_state_manifest"
+  | "lived_life"
   | "unknown";
 
 export type ContentType = "json" | "jsonl" | "text" | "unknown";

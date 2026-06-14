@@ -149,6 +149,8 @@ class WorkbenchApi:
             return ApiResponse(200, ok({"status": "ok"}))
         if method == "GET" and path == "/runtime/status":
             return ApiResponse(200, ok(readers.runtime_status()))
+        if method == "GET" and path == "/lived-life":
+            return ApiResponse(200, ok(readers.lived_life()))
         if method == "GET" and path == "/artifacts":
             limit = int(query.get("limit", ["100"])[0])
             return ApiResponse(200, ok({"items": readers.list_artifacts(limit=limit)}))

@@ -174,6 +174,67 @@ class FieldEvidence:
 
 
 @dataclass(frozen=True, slots=True)
+class LivedLifeHeartbeat:
+    """One beat of the continuous life (read-only telemetry).
+
+    Mirrors ``chat.always_on.HeartbeatRecord`` across the firewall: the closure of the
+    live field that beat (``versor_condition``, READ never repaired), whether it held the
+    ``< ceiling`` invariant, and what the life learned that beat (Step-D facts +
+    proposal-only proposals)."""
+
+    tick: int
+    versor_condition: float | None
+    field_valid: bool
+    facts_consolidated: int
+    proposals_created: int
+    pending_proposals: int
+    did_work: bool
+
+
+@dataclass(frozen=True, slots=True)
+class LivedLife:
+    """L10 lived-life surface — evidence that CORE is ONE continuous life.
+
+    A read-only projection of the persisted always-on run
+    (``chat.always_on.write_lived_life`` -> ``engine_state/lived_life.json``): the engine
+    holds itself alive over uptime with no user turn, learns while idle (Step-D
+    consolidation + proposal-only proposals), and holds closure BY CONSTRUCTION (the
+    heartbeat reads ``versor_condition`` as evidence, never repairs it).
+
+    ``closure_held`` is consistency-checked at construction against the per-beat
+    measurements (``workbench.lived_life.validate``) — the surface can NEVER claim the
+    field stayed valid while a beat breached the ceiling (the wrong=0 analogue for the
+    continuity surface). ``converged`` is honest telemetry: a saturated life stops
+    churning (the final beat did no work).
+
+    The two halves of "one continuous life" are both here: ``records`` are the lived
+    experience over uptime (T-experience), and ``resume_status`` is the resume guarantee
+    (T-resume) — it compares the life's content ``identity`` to the ``current_identity``
+    recomputed from the live substrate. That is exactly the check the runtime load guard
+    makes on reboot (``would_resume`` ⟺ a reboot resumes THIS life; ``substrate_changed``
+    ⟺ it would raise ``IdentityContinuityError``). The per-run lineage chain stays owned by
+    Runs ``IdentityContinuity``; this is the self-contained substrate verdict."""
+
+    schema_version: Literal["lived_life_v1"]
+    status: PipelineEvidenceStatus
+    missing_reason: str | None
+    identity: str | None
+    heartbeats: int
+    closure_observed: bool
+    closure_held: bool
+    closure_ceiling: float
+    final_checkpoint_ok: bool
+    converged: bool
+    total_facts_consolidated: int
+    total_proposals_created: int
+    current_identity: str | None
+    resume_status: Literal["would_resume", "substrate_changed", "unknown"]
+    resume_summary: str
+    records: list[LivedLifeHeartbeat] = field(default_factory=list)
+    artifact: ArtifactRef | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class EvidenceBundle:
     """D3 shareable evidence bundle — a turn's deterministic evidence, citable.
 

@@ -237,6 +237,34 @@
     "source_digest",
     "calibration_evidence_ref"
   ],
+  "LivedLife": [
+    "schema_version",
+    "status",
+    "missing_reason",
+    "identity",
+    "heartbeats",
+    "closure_observed",
+    "closure_held",
+    "closure_ceiling",
+    "final_checkpoint_ok",
+    "converged",
+    "total_facts_consolidated",
+    "total_proposals_created",
+    "current_identity",
+    "resume_status",
+    "resume_summary",
+    "records",
+    "artifact"
+  ],
+  "LivedLifeHeartbeat": [
+    "tick",
+    "versor_condition",
+    "field_valid",
+    "facts_consolidated",
+    "proposals_created",
+    "pending_proposals",
+    "did_work"
+  ],
   "LogosAlignmentRow": [
     "edge_id",
     "source_id",

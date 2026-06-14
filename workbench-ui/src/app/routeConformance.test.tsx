@@ -15,6 +15,12 @@ import { EvalsRoute } from "./evals/EvalsRoute";
 import { ReplayRoute } from "./replay/ReplayRoute";
 import { DemoTheaterRoute } from "./demos/DemoTheaterRoute";
 import { RunsRoute } from "./runs/RunsRoute";
+import {
+  LivedLifeRoute,
+  LIVED_LIFE_LOADING,
+  LIVED_LIFE_ABSENCE_STATEMENT,
+  LIVED_LIFE_ABSENCE_ACTION,
+} from "./lived-life/LivedLifeRoute";
 import { PacksRoute } from "./packs/PacksRoute";
 import { LogosRoute } from "./logos/LogosRoute";
 import { VaultRoute } from "./vault/VaultRoute";
@@ -167,6 +173,17 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
     loadingLabel: "Loading runs...",
     emptyStatement: "No runs recorded yet. Use Chat to create evidence.",
     emptyCommand: "core chat",
+  },
+  {
+    name: "Lived Life",
+    element: <LivedLifeRoute />,
+    path: "/lived-life",
+    initialEntry: "/lived-life",
+    loadingLabel: LIVED_LIFE_LOADING,
+    // Fail-closed: until an always-on run persists an artifact, honest absence
+    // is the primary state (no fabricated life).
+    emptyStatement: LIVED_LIFE_ABSENCE_STATEMENT,
+    emptyCommand: LIVED_LIFE_ABSENCE_ACTION,
   },
   {
     name: "Replay",

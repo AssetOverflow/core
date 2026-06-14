@@ -34,6 +34,7 @@ import {
   fetchTraceField,
   fetchTraceBundle,
   fetchTour,
+  fetchLivedLife,
   fetchTraceTurns,
   fetchContemplationRun,
   fetchContemplationRuns,
@@ -71,6 +72,7 @@ import type {
   FieldEvidence,
   EvidenceBundle,
   DeterminismTour,
+  LivedLife,
   TurnJournalEntry,
   TurnJournalSummary,
   EvalLaneSummary,
@@ -251,6 +253,16 @@ export function useTour() {
     queryKey: ["api", "tour"],
     queryFn: fetchTour,
     staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useLivedLife() {
+  return useQuery<LivedLife, WorkbenchApiError>({
+    queryKey: ["api", "lived-life"],
+    queryFn: fetchLivedLife,
+    // The life advances over uptime — keep it fresh without hammering.
+    refetchInterval: 30_000,
     refetchOnWindowFocus: false,
   });
 }
