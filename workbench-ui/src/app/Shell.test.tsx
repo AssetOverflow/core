@@ -85,11 +85,11 @@ describe("Shell", () => {
     expect(document.querySelector('[data-density="compact"]')).toBeInTheDocument();
   });
 
-  it("LeftNav has exactly 13 items in section-grouped order", () => {
+  it("LeftNav has exactly 14 items in section-grouped order", () => {
     renderShell();
     const nav = document.querySelector('[data-region="leftnav"]')!;
     const links = nav.querySelectorAll("a");
-    expect(links).toHaveLength(13);
+    expect(links).toHaveLength(14);
     const labels = Array.from(links).map((l) => l.textContent);
     // Grouped by section (Converse → Cognition → Determinism → Evidence →
     // Discipline → Substrate → Settings), derived from the route registry.
@@ -97,6 +97,7 @@ describe("Shell", () => {
       "Chat",
       "Trace",
       "Contemplation",
+      "Tour",
       "Replay",
       "Demos",
       "Proposals",

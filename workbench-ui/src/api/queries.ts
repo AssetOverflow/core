@@ -28,6 +28,7 @@ import {
   fetchTracePipeline,
   fetchTraceField,
   fetchTraceBundle,
+  fetchTour,
   fetchTraceTurns,
   fetchContemplationRun,
   fetchContemplationRuns,
@@ -59,6 +60,7 @@ import type {
   CognitivePipelineRecord,
   FieldEvidence,
   EvidenceBundle,
+  DeterminismTour,
   TurnJournalEntry,
   TurnJournalSummary,
   EvalLaneSummary,
@@ -230,6 +232,15 @@ export function useTraceBundle(turnId?: number | null) {
     queryFn: () => fetchTraceBundle(turnId as number),
     enabled: typeof turnId === "number",
     staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useTour() {
+  return useQuery<DeterminismTour, WorkbenchApiError>({
+    queryKey: ["api", "tour"],
+    queryFn: fetchTour,
+    staleTime: 60_000,
     refetchOnWindowFocus: false,
   });
 }

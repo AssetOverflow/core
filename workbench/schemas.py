@@ -203,6 +203,48 @@ class EvidenceBundle:
     bundle_digest: str
 
 
+TourStepKind = Literal["intro", "demo", "payoff"]
+
+
+@dataclass(frozen=True, slots=True)
+class TourStep:
+    """One step of the guided determinism tour.
+
+    ``headline`` / ``narrative`` are the authored, provider-agnostic framing.
+    For ``kind == "demo"`` steps the honesty cards (``what_this_proves`` /
+    ``what_this_does_not_prove``) and ``demo_title`` are pulled from the REAL
+    demo spec at build time — never re-authored — so the tour cannot claim more
+    than the demo it points at.  ``route_hint`` is where to go deeper.
+    """
+
+    step_id: str
+    order: int
+    kind: TourStepKind
+    headline: str
+    narrative: str
+    demo_id: str | None
+    demo_title: str | None
+    what_this_proves: str | None
+    what_this_does_not_prove: str | None
+    route_hint: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class DeterminismTour:
+    """D1/D2 guided determinism tour — a curated narrative over real demos.
+
+    The ``thesis`` is the provider-agnostic pitch: bring a claim from any model
+    and watch the deterministic engine decide, refuse, and replay it — proposer
+    authority ignored.  ``steps`` are ordered and each demo step is bound to a
+    real entry in the demo registry (fail-closed if a demo id is missing).
+    """
+
+    schema_version: Literal["determinism_tour_v1"]
+    title: str
+    thesis: str
+    steps: list[TourStep] = field(default_factory=list)
+
+
 @dataclass(frozen=True, slots=True)
 class ChatTurnResult:
     prompt: str
