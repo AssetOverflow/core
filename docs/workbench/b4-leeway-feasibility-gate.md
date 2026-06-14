@@ -1,7 +1,16 @@
 # Wave M B3.5-c — B4 Leeway Feasibility Gate
 
 Date: 2026-06-13
-Status: B4a read model created; full B4 annotations not yet admitted
+Status: **GATE CLEARED (2026-06-13)** — the engine-side producer now exists.
+`core/cognition/leeway.py::build_leeway_record` turns the reach-policy +
+`LicenseDecision` the response path already computes into an observational
+`LeewayRecord` on `CognitiveTurnResult`; `workbench/api.py::_leeway_evidence_from_result`
+maps it to `LeewayEvidence` (no `reliability_gate` import — firewall intact);
+the journal persists it and the existing B4a UI (Replay / Proposals /
+RightInspector) renders it. Every turn now carries an honest record (STRICT →
+"no latitude"; a licensed SERVE widening → the real class/θ/`[approximate]`).
+Scope + design: `b4-leeway-producer-scope-2026-06-13.md`. Original gate text
+below, kept for provenance.
 
 ## Finding
 

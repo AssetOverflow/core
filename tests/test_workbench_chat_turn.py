@@ -118,6 +118,13 @@ def test_chat_turn_happy_path_real_prompt(api: WorkbenchApi) -> None:
     assert isinstance(data["checkpoint_emitted"], bool)
     assert isinstance(data["turn_cost_ms"], int)
     assert "walk_surface" in data and "articulation_surface" in data
+    # B4 producer: every turn now carries an honest leeway record. A normal
+    # STRICT turn grants no latitude (no longer the null "No evidence recorded").
+    leeway = data["leeway_evidence"]
+    assert leeway is not None
+    assert leeway["license"] in {"unknown", "blocked", "PROPOSE", "SERVE"}
+    assert leeway["claim_disclosure"] in {"none", "approximate", "proposal_only"}
+    assert leeway["claim_disclosure"] != "verified"
 
 
 @pytest.mark.parametrize(

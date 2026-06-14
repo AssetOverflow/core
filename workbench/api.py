@@ -34,6 +34,7 @@ from workbench.readers import ArtifactTooLargeError, EvidenceUnavailableError
 from workbench.replay import replay_turn
 from workbench.schemas import (
     ChatTurnResult,
+    LeewayEvidence,
     MathRatifyResult,
     ProposalRef,
     TurnVerdict,
@@ -598,6 +599,36 @@ class WorkbenchApi:
             return ApiResponse(200, ok(result_with_cost))
 
 
+_VALID_LICENSES = frozenset({"PROPOSE", "SERVE", "blocked", "unknown"})
+_VALID_DISCLOSURES = frozenset({"approximate", "verified", "proposal_only", "none"})
+
+
+def _leeway_evidence_from_result(result: object) -> LeewayEvidence | None:
+    """Map the engine's observational ``LeewayRecord`` to ``LeewayEvidence``.
+
+    A pure projection of a plain dataclass off the turn result — no
+    ``reliability_gate`` import, so the read-only firewall holds. Returns ``None``
+    only for results predating the B4 producer (the UI then shows honest
+    absence). Unexpected enum values fall back to the safe ``unknown``/``none``.
+    """
+
+    record = getattr(result, "leeway", None)
+    if record is None:
+        return None
+    license = str(getattr(record, "license", "unknown"))
+    disclosure = str(getattr(record, "claim_disclosure", "none"))
+    return LeewayEvidence(
+        class_name=str(getattr(record, "class_name", "none")),
+        license=license if license in _VALID_LICENSES else "unknown",  # type: ignore[arg-type]
+        theta=getattr(record, "theta", None),
+        claim_disclosure=(  # type: ignore[arg-type]
+            disclosure if disclosure in _VALID_DISCLOSURES else "none"
+        ),
+        source_digest=getattr(record, "source_digest", None),
+        calibration_evidence_ref=getattr(record, "calibration_evidence_ref", None),
+    )
+
+
 def _with_turn_cost_and_id(
     result: ChatTurnResult,
     turn_cost_ms: int,
@@ -741,4 +772,5 @@ def _run_chat_turn(prompt: str, runtime: ChatRuntime | None = None) -> ChatTurnR
         checkpoint_emitted=checkpoint_emitted,
         pipeline_record=cognitive_pipeline_record_from_result(result),
         field_evidence=field_evidence_from_result(result),
+        leeway_evidence=_leeway_evidence_from_result(result),
     )
