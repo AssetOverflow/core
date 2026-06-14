@@ -121,12 +121,16 @@ Prerequisites the preflight checks for you: [`uv`](https://docs.astral.sh/uv/),
 Node ≥ 20, and `pnpm` (`corepack enable pnpm`). The UI is React 18 + Vite;
 the API is a stdlib HTTP server. Both bind to localhost only.
 
-Inside, eleven routes project one evidence model — Chat, **Trace** (the
-canonical turn record), **Replay** (re-run a turn, hash-for-hash), Demos,
-Proposals (human ratification), Evals (the `wrong=0` ledger), Runs, Packs,
-Vault, Audit, Settings — stitched by the Evidence Chain Rail and addressable
-by URL. See [`docs/workbench/`](docs/workbench/) for the design system,
-route map, and the mastery roadmap.
+Inside, fourteen routes project one evidence model — Chat, **Trace** (the
+canonical turn record, with per-turn pipeline / field-invariant / leeway /
+evidence-bundle tabs), **Contemplation** (the learning loop as a staged
+process), the guided **Tour** (a provider-agnostic determinism narrative),
+**Replay** (re-run a turn, hash-for-hash), Demos, Proposals (human
+ratification), Evals (the `wrong=0` ledger), **Calibration** (the gold-tether
+arena — where the engine earns the right to guess), Runs, Packs, Vault, Audit,
+Settings — stitched by the Evidence Chain Rail and addressable by URL. See
+[`docs/workbench/`](docs/workbench/) for the design system, route map, and the
+mastery roadmap.
 
 ### Watch the flywheel turn — one command
 

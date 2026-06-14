@@ -115,9 +115,34 @@ Supporting B3.5 deliverables:
 - `UI-UX-GUIDE.md` — operator/evaluator route map, evidence grammar, route
   proofs, boundaries, and absences.
 - `b4-leeway-feasibility-gate.md` — B4 source-tuple audit and B4a nullable
-  read model.
-- `phase-a-residue-ledger.md` — implemented/deferred/blocked residue before
-  Phase C.
+  read model (gate CLEARED 2026-06-13; the producer now exists).
+- `b4-leeway-producer-scope-2026-06-13.md` — the engine-side leeway producer
+  scope: the serving-path seam, the `LicenseDecision`→`LeewayEvidence` mapping,
+  and the two honest layers (STRICT / earned-`APPROXIMATE`).
+- `phase-a-residue-ledger.md` — implemented/deferred/blocked residue.
+
+---
+
+## Mastery & Worthiness Waves (1 / R / M)
+
+The plans that took the surface from read-only spine to "worthy of the
+deterministic engine":
+
+- `wave-1-evidence-spine.md` — the evidence-address model (URL = subject),
+  Evidence Chain Rail, and RightInspector.
+- `wave-R-mastery-revamp.md` — the 11 real routes, the Replay Moment, trace
+  integrity, and the DAG/Demo/wrong=0 surfaces.
+- `wave-M-worthiness.md` — the governing plan for the worthiness arc:
+  Phase B (calibrated-learning / serving discipline), Phase C (cognition
+  legibility), Phase D (guided tour + shareable evidence bundles), Phase E
+  (robustness). Per-deliverable implementation notes live inline.
+
+---
+
+## Design System
+
+- `design-system.md` — semantic token roles, density, primitives, and the
+  motion / calm-honesty discipline.
 
 ---
 
@@ -187,21 +212,40 @@ mutation capability.
 
 ---
 
-# Current Status
+# Current Status (2026-06-13)
 
-The planning package is merged on `main` via `404e694`
-(`docs(workbench): CORE Workbench v1 planning architecture (ADR-0160)`).
+The Workbench is shipped and well past the W-026…W-031 planning era. The
+read-only local API + React UI are real; W-026 (read-only API) through W-031
+(replay theater) all landed, followed by the Wave 1 evidence spine, the Wave R
+mastery revamp (11 routes + the Replay Moment), and the Wave M worthiness arc.
 
-The prototype branch `feat/w026-workbench-readonly-api` is superseded and must
-not be used as the implementation base.  It mixed W-026 with frontend and trace
-work, added auth and web-framework dependencies before the local read-only
-boundary was proven, and included placeholder replay/trace behavior that could
-be mistaken for evidence.
+**Wave M is complete** — Phase B (calibrated-learning surfaces), Phase C
+(cognition legibility), Phase D (guided tour + evidence bundles), and the B4
+leeway producer all merged. Phase E (robustness; continuous) and the parallel
+tracks (CORE-Logos Studio, the universal proposal envelope) remain.
 
-The next accepted implementation starts clean from `main` with W-026 only:
-dataclass schemas, repo-root-constrained readers, a standard-library local HTTP
-API, and route/read-model tests.  W-027 and later phases build on that boundary
-after it is accepted.
+Doctrine is unchanged: read-only first, allowlisted execution only
+(`/evals/run`, ratify, `/demos/{id}/run`), every surface a real backend reader
+(no theater), determinism over persuasion.
+
+## Shipped surfaces
+
+14 registry-driven routes (`src/app/routes.ts`), grouped by section:
+
+| Section | Routes |
+|---|---|
+| Converse | **Chat** |
+| Cognition | **Trace** (Pipeline / Field / Bundle / Surfaces / Grounding / Verdicts tabs), **Contemplation** (staged learning loop) |
+| Determinism | **Tour** (guided determinism narrative), **Replay** (hash-to-hash), **Demos** (Demo Theater) |
+| Evidence | **Proposals** (+ HITL ratification), **Runs** (+ identity continuity), **Vault**, **Audit** |
+| Discipline | **Evals** (wrong=0 ledger), **Calibration** (gold-tether arena, Wilson floor vs θ) |
+| Substrate | **Packs** |
+| Settings | **Settings** (landing / density / inspector prefs) |
+
+Cross-cutting: Evidence Address (URL = subject, `?inspect=`), Evidence Chain
+Rail, command palette + registry-driven keyboard help, per-turn pipeline /
+field / leeway / bundle evidence, doctrine gates (hexScan, schemaDrift,
+enumCoverage, route conformance, golden-file DAG layout).
 
 ---
 
@@ -247,16 +291,19 @@ core workbench api --host 0.0.0.0 --allow-nonlocal-bind
 
 ---
 
-# Initial Work Queue
+# Initial Work Queue (delivered)
 
-| Work Item | Goal |
-|---|---|
-| W-026 | Read-only API |
-| W-027 | Frontend shell |
-| W-028 | Chat + trace drawer |
-| W-029 | Proposal queue |
-| W-030 | Eval center |
-| W-031 | Replay theater |
+The original W-026…W-031 queue is complete; it is kept here as provenance.
+Current work is tracked in the Wave M worthiness plan and the residue ledger.
+
+| Work Item | Goal | Status |
+|---|---|---|
+| W-026 | Read-only API | done |
+| W-027 | Frontend shell | done |
+| W-028 | Chat + trace drawer | done |
+| W-029 | Proposal queue | done |
+| W-030 | Eval center | done |
+| W-031 | Replay theater | done |
 
 ---
 
