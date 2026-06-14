@@ -67,6 +67,10 @@ copyable pointer, `?inspect=` sync, chain-rail derivation. Round-trip tests in
 - `routes.test.tsx` / `schemaDrift` / `enumCoverage` stay green. **No new
   engine schemas** (LG-2 mirrored them) — `NOT_YET_MIRRORED` untouched.
 - `pnpm build` clean.
+- **Run the FULL `pnpm exec vitest run` before push — it must pass AND exit.**
+  The CI `workbench-ui` job gates on the whole suite; focused per-file runs miss
+  a PR's own new test files and cross-cutting tests (LG-2 lesson: stale
+  route-count assertions only surfaced in the full run, never the focused one).
 
 ## Out of scope (separate brief)
 - **LG-4** — Alignment tab + holonomy-absent confirmation.

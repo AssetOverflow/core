@@ -65,6 +65,10 @@ only `GET /logos/packs/{id}/alignment` (`list[LogosAlignmentRow]`).
 - `routes.test.tsx` / `schemaDrift` / `enumCoverage` stay green. **No new engine
   schemas** — `NOT_YET_MIRRORED` untouched.
 - `pnpm build` clean.
+- **Run the FULL `pnpm exec vitest run` before push — it must pass AND exit.**
+  The CI `workbench-ui` job gates on the whole suite; focused per-file runs miss
+  a PR's own new test files and cross-cutting tests (LG-2 lesson: stale
+  route-count assertions only surfaced in the full run, never the focused one).
 
 ## Out of scope (separate brief)
 - **LG-3** — Lexicon / Glosses / Morphology contents tabs.
