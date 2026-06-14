@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from generate.composition import LogicChainPlan, lower_logic_chain
 from generate.meaning_graph.reader import Comprehension, Refusal
 from generate.meaning_graph.relational import RELATIONAL_PREDICATES
 from generate.realize import RealizedRecord, recall_realized
@@ -244,60 +245,23 @@ def _verify_subsumption(
     # Soundness-by-construction (belt-and-suspenders): the propositional theory below
     # labels every ``subset_path`` fact ``S`` and the ``member_fact`` ``M``. Both callers
     # (``_determine_subsumption`` and ``consolidate``) build these from predicate-filtered
-    # recalls, so the labels match — but the theory would otherwise verify a smuggled
-    # member fact in ``subset_path`` as a (potentially unsound) subset edge. Refuse a
-    # mislabeled or wrong-arity chain here rather than trust two callers' discipline, so
-    # ``member ∘ member`` cannot be laundered through a corrupted path.
-    if member_fact is not None and (
-        member_fact.relation_predicate != "member"
-        or len(member_fact.relation_arguments) != 2
-    ):
+    # recalls, so the labels match — the lowering refuses a mislabeled / wrong-arity
+    # chain (``member ∘ member`` cannot be laundered through a corrupted path).
+    plan = LogicChainPlan(
+        predicate=predicate,
+        subject=subject,
+        target=target,
+        member_fact=member_fact,
+        subset_path=subset_path,
+    )
+    lowered = lower_logic_chain(plan)
+    if lowered is None:
         return None
-    if any(
-        f.relation_predicate != "subset" or len(f.relation_arguments) != 2
-        for f in subset_path
-    ):
-        return None
-
-    atoms: dict[tuple[str, str, str], str] = {}
-
-    def atom(p: str, a: str, b: str) -> str:
-        key = (p, a, b)
-        name = atoms.get(key)
-        if name is None:
-            name = f"x{len(atoms)}"
-            atoms[key] = name
-        return name
-
-    premises: list[str] = []
-    # Walk the subset path, asserting each edge and the sound rule that extends the chain.
-    if predicate == "member":
-        assert member_fact is not None
-        cur = member_fact.relation_arguments[1]
-        premises.append(atom("M", subject, cur))  # member(subject, b) is told
-        for fact in subset_path:
-            nxt = fact.relation_arguments[1]
-            premises.append(atom("S", cur, nxt))  # subset(cur, nxt) is told
-            premises.append(  # member ∘ subset → member
-                f"({atom('M', subject, cur)} & {atom('S', cur, nxt)}) -> {atom('M', subject, nxt)}"
-            )
-            cur = nxt
-        query_atom = atom("M", subject, target)
-    else:
-        cur = subject
-        for hop, fact in enumerate(subset_path):
-            nxt = fact.relation_arguments[1]
-            premises.append(atom("S", cur, nxt))  # subset(cur, nxt) is told
-            if hop > 0:  # the first told edge IS the accumulator S_subject_c1; extend it
-                premises.append(  # subset ∘ subset → subset
-                    f"({atom('S', subject, cur)} & {atom('S', cur, nxt)}) -> {atom('S', subject, nxt)}"
-                )
-            cur = nxt
-        query_atom = atom("S", subject, target)
+    premises, query_atom = lowered
 
     from generate.proof_chain.entail import Entailment, evaluate_entailment
 
-    if evaluate_entailment(tuple(premises), query_atom).outcome is not Entailment.ENTAILED:
+    if evaluate_entailment(premises, query_atom).outcome is not Entailment.ENTAILED:
         return None
 
     grounds = ((member_fact,) if member_fact is not None else ()) + subset_path
