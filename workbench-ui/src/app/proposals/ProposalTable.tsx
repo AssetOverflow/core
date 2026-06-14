@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { EmptyState } from "../../design/components/states/EmptyState";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import type { ProposalSummary } from "../../types/api";
 import { ProposalReplayBadge } from "./ProposalReplayBadge";
 import { ProposalStateBadge } from "./ProposalStateBadge";
@@ -71,14 +72,20 @@ export function ProposalTable({
                 }
               }}
             >
-              <span className="font-mono text-xs" title={proposal.proposal_id}>
-                {shortProposalId(proposal.proposal_id)}
-              </span>
+              <TruncatedCell
+                value={proposal.proposal_id}
+                display={shortProposalId(proposal.proposal_id)}
+                label="proposal_id"
+                mono
+                className="text-xs"
+              />
               <ProposalStateBadge value={proposal.state} />
               <ProposalReplayBadge value={proposal.replay_equivalent} />
-              <span className="truncate text-[var(--color-text-secondary)]">
-                {provenanceLabel(proposal)}
-              </span>
+              <TruncatedCell
+                value={provenanceLabel(proposal)}
+                label="source"
+                className="text-[var(--color-text-secondary)]"
+              />
               <span className="text-xs text-[var(--color-text-secondary)]">
                 {formatTimestamp(proposal.created_at)}
               </span>

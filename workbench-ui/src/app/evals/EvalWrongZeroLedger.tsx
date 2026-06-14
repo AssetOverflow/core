@@ -1,3 +1,4 @@
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import type { EvalRunResult } from "../../types/api";
 
 interface CaseRecord {
@@ -196,7 +197,12 @@ export function EvalWrongZeroLedger({ result }: { result: EvalRunResult }) {
           <ul className="m-0 mt-2 grid list-none gap-1 p-0">
             {ledger.refusalReasons.map((item) => (
               <li key={item.id} className="grid grid-cols-[minmax(0,10rem)_1fr] gap-2 text-xs">
-                <span className="truncate font-mono text-[var(--color-text-primary)]">{item.id}</span>
+                <TruncatedCell
+                  value={item.id}
+                  label="case id"
+                  mono
+                  className="text-[var(--color-text-primary)]"
+                />
                 <span className="text-[var(--color-text-secondary)]">{item.reason}</span>
               </li>
             ))}
@@ -214,7 +220,12 @@ export function EvalWrongZeroLedger({ result }: { result: EvalRunResult }) {
               key={item.id}
               className="grid grid-cols-[minmax(0,10rem)_5rem_1fr] gap-2 text-xs"
             >
-              <span className="truncate font-mono text-[var(--color-text-primary)]">{item.id}</span>
+              <TruncatedCell
+                value={item.id}
+                label="case id"
+                mono
+                className="text-[var(--color-text-primary)]"
+              />
               <span
                 className={
                   item.kind === "wrong"
@@ -226,7 +237,12 @@ export function EvalWrongZeroLedger({ result }: { result: EvalRunResult }) {
               >
                 {item.kind}
               </span>
-              <span className="truncate text-[var(--color-text-secondary)]">{item.reason}</span>
+              <TruncatedCell
+                value={item.reason}
+                label="reason"
+                wrap="pre-wrap"
+                className="text-[var(--color-text-secondary)]"
+              />
             </li>
           ))}
         </ol>
