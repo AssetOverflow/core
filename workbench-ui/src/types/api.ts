@@ -114,6 +114,32 @@ export interface FieldEvidence {
   transition_inner_product: number | null;
 }
 
+/**
+ * D3 shareable evidence bundle — a turn's deterministic evidence exported as one
+ * content-addressed, citable artifact. `bundle_digest` content-addresses the
+ * cognitive evidence only (journal position + wall-clock are carried but
+ * excluded from the digest), so the same turn reproduces the same digest.
+ */
+export interface EvidenceBundle {
+  schema_version: "evidence_bundle_v1";
+  turn_id: number;
+  generated_from: "turn_journal";
+  trace_hash: string | null;
+  trace_integrity: TraceIntegrity;
+  prompt: string;
+  surface: string;
+  grounding_source: GroundingSource;
+  epistemic_state: EpistemicState;
+  normative_clearance: NormativeClearance;
+  refusal_emitted: boolean;
+  journal_digest: string;
+  pipeline_record: CognitivePipelineRecord | null;
+  field_evidence: FieldEvidence | null;
+  leeway_evidence: LeewayEvidence | null;
+  replay_reproducer: string;
+  bundle_digest: string;
+}
+
 export type LeewayLicense = "PROPOSE" | "SERVE" | "blocked" | "unknown";
 export type ClaimDisclosure = "approximate" | "verified" | "proposal_only" | "none";
 

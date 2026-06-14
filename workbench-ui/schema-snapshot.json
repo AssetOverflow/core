@@ -181,6 +181,25 @@
     "cases",
     "source_digest"
   ],
+  "EvidenceBundle": [
+    "schema_version",
+    "turn_id",
+    "generated_from",
+    "trace_hash",
+    "trace_integrity",
+    "prompt",
+    "surface",
+    "grounding_source",
+    "epistemic_state",
+    "normative_clearance",
+    "refusal_emitted",
+    "journal_digest",
+    "pipeline_record",
+    "field_evidence",
+    "leeway_evidence",
+    "replay_reproducer",
+    "bundle_digest"
+  ],
   "FieldEvidence": [
     "schema_version",
     "status",

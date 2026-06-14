@@ -183,6 +183,36 @@ function stubTraceFetch(
           }),
       });
     }
+    const bundleMatch = path.match(/^\/trace\/(\d+)\/bundle$/);
+    if (bundleMatch) {
+      const id = Number(bundleMatch[1]);
+      return Promise.resolve({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            generated_at: "now",
+            data: {
+              schema_version: "evidence_bundle_v1",
+              turn_id: id,
+              generated_from: "turn_journal",
+              trace_hash: `sha256:trace${id}`,
+              trace_integrity: "pipeline_trace",
+              prompt: "p",
+              surface: "s",
+              grounding_source: "pack",
+              epistemic_state: "evidenced",
+              normative_clearance: "cleared",
+              refusal_emitted: false,
+              journal_digest: `sha256:journal${id}`,
+              pipeline_record: null,
+              field_evidence: null,
+              leeway_evidence: null,
+              replay_reproducer: `core replay turn ${id} # re-run sealed; expect trace_hash == sha256:trace${id}`,
+              bundle_digest: `sha256:bundle${id}abcdef0123456789`,
+            },
+          }),
+      });
+    }
     const match = path.match(/^\/trace\/(\d+)$/);
     if (match) {
       return Promise.resolve({
@@ -279,6 +309,36 @@ describe("TraceRoute", () => {
     expect(await screen.findByText("User Surface (response)")).toBeInTheDocument();
     expect(screen.getByText("Articulation Surface (realizer)")).toBeInTheDocument();
     expect(screen.getByText("Walk Surface (telemetry/evidence)")).toBeInTheDocument();
+  });
+
+  it("exports a citable, downloadable evidence bundle", async () => {
+    // Set only the two object-URL methods (jsdom lacks them); leave the URL
+    // constructor intact so the fetch mock's `new URL()` keeps working.
+    const createObjectURL = vi.fn(() => "blob:mock-bundle");
+    const revokeObjectURL = vi.fn();
+    const originalCreate = URL.createObjectURL;
+    const originalRevoke = URL.revokeObjectURL;
+    URL.createObjectURL = createObjectURL as typeof URL.createObjectURL;
+    URL.revokeObjectURL = revokeObjectURL as typeof URL.revokeObjectURL;
+    stubTraceFetch();
+    const user = userEvent.setup();
+    renderRoute("/trace/2");
+
+    await user.click(await screen.findByRole("tab", { name: "Bundle" }));
+
+    const bundle = await screen.findByTestId("evidence-bundle");
+    // The citable digest is shown (truncated form of the content address).
+    expect(within(bundle).getByText(/bundle2abcdef0123/)).toBeInTheDocument();
+    // "What this proves / does not prove" honesty is present.
+    expect(within(bundle).getByText(/Does not prove:/)).toBeInTheDocument();
+    // A deterministic download anchor is offered.
+    const download = within(bundle).getByTestId("bundle-download");
+    expect(download).toHaveAttribute("href", "blob:mock-bundle");
+    expect(download.getAttribute("download")).toContain("evidence-bundle-turn-2");
+    expect(createObjectURL).toHaveBeenCalled();
+
+    URL.createObjectURL = originalCreate;
+    URL.revokeObjectURL = originalRevoke;
   });
 
   it("renders the persisted cognitive pipeline as a deterministic DAG", async () => {

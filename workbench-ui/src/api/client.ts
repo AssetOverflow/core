@@ -23,6 +23,7 @@ import type {
   ServingMetrics,
   CognitivePipelineRecord,
   FieldEvidence,
+  EvidenceBundle,
   TurnJournalEntry,
   TurnJournalSummary,
   ContemplationRunDetail,
@@ -190,6 +191,12 @@ export async function fetchTracePipeline(turnId: number): Promise<CognitivePipel
 export async function fetchTraceField(turnId: number): Promise<FieldEvidence> {
   return apiFetch<FieldEvidence>(
     `/trace/${encodeURIComponent(String(turnId))}/field`,
+  );
+}
+
+export async function fetchTraceBundle(turnId: number): Promise<EvidenceBundle> {
+  return apiFetch<EvidenceBundle>(
+    `/trace/${encodeURIComponent(String(turnId))}/bundle`,
   );
 }
 

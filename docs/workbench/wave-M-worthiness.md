@@ -213,6 +213,21 @@ Detailed brief pack: `docs/handoff/wave-M-phaseB-calibration-briefs-2026-06-13.m
 - **Shareable evidence bundles** — deterministic export of a turn + its
   trace + replay + calibration verdict as a single citable artifact.
   Reproducibility *as a deliverable*.
+  **D3 implementation note (2026-06-13):** BUILT. `workbench/evidence_bundle.py`
+  assembles a turn journal entry into a content-addressed `EvidenceBundle`
+  composing the Phase-C evidence (pipeline + field) with the trace and the
+  calibration leeway verdict. The `bundle_digest` content-addresses the
+  **deterministic cognitive evidence only** — journal position + wall-clock
+  (`turn_id`, `journal_digest`, `replay_reproducer`) are carried for provenance
+  but excluded, so the same turn content reproduces the same digest (verified by
+  test: identical content → identical digest; different journal position → same
+  digest; any evidence change → different digest). Read endpoint
+  `GET /trace/{turn_id}/bundle`; surfaced as the Trace **Bundle** tab (citable
+  digest, "what this proves / does not prove" honesty note, reproducer command,
+  deterministic JSON download). Read-only, no engine execution. The bundle
+  carries the replay *reproducer* rather than a live-run replay so the artifact
+  itself stays deterministic — verification is the consumer's step. Phase D
+  remaining: guided determinism tour (D1) + provider-agnostic framing (D2).
 
 ### Phase E — Robustness pillars (scope: S; continuous)
 - Extend doctrine gates to every new surface; SHA-pin the calibration/field
