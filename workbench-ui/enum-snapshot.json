@@ -35,5 +35,11 @@
     "accepted",
     "rejected",
     "withdrawn"
+  ],
+  "SafetyVerdict": [
+    "clear",
+    "warning",
+    "failed",
+    "unknown"
   ]
 }

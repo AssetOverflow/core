@@ -3,6 +3,7 @@ import {
   GroundingSource,
   NormativeClearance,
   ReviewState,
+  SafetyVerdict,
   type BadgeMeta,
 } from "./types";
 
@@ -46,3 +47,10 @@ export const groundingSourceMeta = {
   [GroundingSource.OOV]: { label: "OOV", colorToken: "--color-grounding-oov", meaning: "Out-of-vocabulary grounding was encountered.", adr: "ADR-0160 / ADR-0162", evidence: "grounding_source is oov." },
   [GroundingSource.NONE]: { label: "None", colorToken: "--color-grounding-none", meaning: "No grounding source was present.", adr: "ADR-0160 / ADR-0162", evidence: "grounding_source is none." },
 } satisfies BadgeMeta<GroundingSource>;
+
+export const safetyVerdictMeta = {
+  [SafetyVerdict.CLEAR]: { label: "Clear", colorToken: "--color-state-verified", meaning: "The reported Logos safety check has no recorded warning or failure.", adr: "ADR-0162 / CORE-Logos LG-2", evidence: "SafetyVerdict is clear." },
+  [SafetyVerdict.WARNING]: { label: "Warning", colorToken: "--color-state-warning-text", meaning: "The reported Logos safety check found reviewable gaps or link issues; this is not clear.", adr: "ADR-0162 / CORE-Logos LG-2", evidence: "SafetyVerdict is warning." },
+  [SafetyVerdict.FAILED]: { label: "Failed", colorToken: "--color-state-danger-text", meaning: "The reported Logos safety check failed a blocking contract.", adr: "ADR-0162 / CORE-Logos LG-2", evidence: "SafetyVerdict is failed." },
+  [SafetyVerdict.UNKNOWN]: { label: "Unknown", colorToken: "--color-state-undetermined", meaning: "The reported Logos safety check lacks proof evidence; this is not clear.", adr: "ADR-0162 / CORE-Logos LG-2", evidence: "SafetyVerdict is unknown." },
+} satisfies BadgeMeta<SafetyVerdict>;

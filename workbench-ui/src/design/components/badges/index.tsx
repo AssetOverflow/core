@@ -3,6 +3,7 @@ import {
   groundingSourceMeta,
   normativeClearanceMeta,
   reviewStateMeta,
+  safetyVerdictMeta,
 } from "./mappings";
 import { InfoBadge } from "./Badge";
 import {
@@ -10,6 +11,7 @@ import {
   GroundingSource,
   NormativeClearance,
   ReviewState,
+  SafetyVerdict,
 } from "./types";
 
 export {
@@ -17,6 +19,7 @@ export {
   GroundingSource,
   NormativeClearance,
   ReviewState,
+  SafetyVerdict,
 };
 
 export function EpistemicStateBadge({ value }: { value: EpistemicState }) {
@@ -33,6 +36,10 @@ export function ReviewStateBadge({ value }: { value: ReviewState }) {
 
 export function GroundingSourceBadge({ value }: { value: GroundingSource }) {
   return <InfoBadge {...groundingSourceMeta[value]} />;
+}
+
+export function SafetyVerdictBadge({ value }: { value: SafetyVerdict }) {
+  return <InfoBadge {...safetyVerdictMeta[value]} />;
 }
 
 export function TraceHashBadge({

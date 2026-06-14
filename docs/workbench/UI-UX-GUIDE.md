@@ -59,7 +59,7 @@ successful proof.
 ## 4. Current Route Map
 
 The route registry in `workbench-ui/src/app/routes.ts` is the source of truth.
-Current route count: 14.
+Current route count: 15.
 
 | Section | Route | Path | Shortcut | Purpose |
 |---|---|---|---|---|
@@ -76,6 +76,7 @@ Current route count: 14.
 | Discipline | Evals | `/evals` | `⌘5` | Run/read allowlisted eval lanes and wrong=0 ledgers. |
 | Discipline | Calibration | `/calibration` | Palette | Inspect practice-class reliability and license verdicts. |
 | Substrate | Packs | `/packs` | `⌘7` | Browse language/runtime pack metadata. |
+| Substrate | CORE-Logos | `/logos` | Palette | Inspect CORE-Logos pack identity and safety. |
 | Settings | Settings | `/settings` | `⌘0` | Manage local UI preferences; engine config remains CLI-only. |
 
 Pinned route shortcuts cover Chat through Settings. All routes are searchable in

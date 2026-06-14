@@ -8,9 +8,11 @@ import {
   EpistemicStateBadge,
   GroundingSourceBadge,
   NormativeClearanceBadge,
+  SafetyVerdictBadge,
   type EpistemicState,
   type GroundingSource,
   type NormativeClearance,
+  type SafetyVerdict,
 } from "../design/components/badges";
 import type { LeewayEvidence } from "../types/api";
 
@@ -238,6 +240,75 @@ function PackInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: 
   );
 }
 
+function LogosPackInspector({
+  subject,
+}: {
+  subject: Extract<EvidenceSubject, { kind: "logos_pack" }>;
+}) {
+  const { data } = subject;
+  return (
+    <div className="grid gap-3">
+      <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">
+        CORE-Logos Pack
+      </h3>
+      <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">
+        {subject.packId}
+      </p>
+      {data ? (
+        <MetadataTable
+          rows={[
+            ...(data.safety_status
+              ? [
+                  {
+                    key: "safety",
+                    value: (
+                      <SafetyVerdictBadge value={data.safety_status as SafetyVerdict} />
+                    ),
+                  },
+                ]
+              : []),
+            ...(data.checksum_status
+              ? [
+                  {
+                    key: "checksum",
+                    value: (
+                      <SafetyVerdictBadge value={data.checksum_status as SafetyVerdict} />
+                    ),
+                  },
+                ]
+              : []),
+            ...(data.manifest_digest
+              ? [
+                  {
+                    key: "manifest",
+                    value: data.manifest_digest,
+                    mono: true,
+                    copyable: true,
+                  },
+                ]
+              : []),
+            ...(data.role ? [{ key: "role", value: data.role }] : []),
+            ...(data.language ? [{ key: "language", value: data.language }] : []),
+            ...(typeof data.holonomy_case_count === "number"
+              ? [
+                  {
+                    key: "holonomy",
+                    value:
+                      data.holonomy_case_count === 0
+                        ? "0 / missing_evidence"
+                        : String(data.holonomy_case_count),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      ) : (
+        <DetailNotLoaded />
+      )}
+    </div>
+  );
+}
+
 function VaultEntryInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "vault_entry" }> }) {
   const { data } = subject;
   return (
@@ -372,6 +443,8 @@ function InspectorProjection({ subject }: { subject: EvidenceSubject }) {
       return <RunInspector subject={subject} />;
     case "pack":
       return <PackInspector subject={subject} />;
+    case "logos_pack":
+      return <LogosPackInspector subject={subject} />;
     case "vault_entry":
       return <VaultEntryInspector subject={subject} />;
     case "audit_event":

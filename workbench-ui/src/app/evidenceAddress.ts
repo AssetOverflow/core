@@ -10,6 +10,7 @@ import type { EvidenceSubject } from "./evidenceContext";
 //   artifact    -> /replay/<artifactId>
 //   run         -> /runs/<sessionId>
 //   pack        -> /packs/<packId>
+//   logos_pack  -> /logos/<packId> (?inspect uses logos:<packId>)
 //   vault_entry -> /vault?inspect=vault:<entryIndex>
 //   audit_event -> /audit?inspect=audit:<eventId>
 //   calibration_class -> /calibration?inspect=calibration:<className>
@@ -45,6 +46,8 @@ export function sameIdentity(a: EvidenceSubject, b: EvidenceSubject): boolean {
       return b.kind === "run" && b.sessionId === a.sessionId;
     case "pack":
       return b.kind === "pack" && b.packId === a.packId;
+    case "logos_pack":
+      return b.kind === "logos_pack" && b.packId === a.packId;
     case "vault_entry":
       return b.kind === "vault_entry" && b.entryIndex === a.entryIndex;
     case "audit_event":
@@ -86,6 +89,8 @@ function subjectAddress(subject: AddressableSubject): SubjectAddress {
       return { path: `/runs/${encodeURIComponent(subject.sessionId)}`, params: emptyParams() };
     case "pack":
       return { path: `/packs/${encodeURIComponent(subject.packId)}`, params: emptyParams() };
+    case "logos_pack":
+      return { path: `/logos/${encodeURIComponent(subject.packId)}`, params: emptyParams() };
     case "vault_entry":
       {
         const params = emptyParams();
@@ -121,6 +126,8 @@ export function subjectToInspectValue(subject: AddressableSubject): string {
       return `run:${subject.sessionId}`;
     case "pack":
       return `pack:${subject.packId}`;
+    case "logos_pack":
+      return `logos:${subject.packId}`;
     case "vault_entry":
       return `vault:${subject.entryIndex}`;
     case "audit_event":
@@ -172,6 +179,8 @@ export function inspectValueToSubject(
       return { kind: "run", sessionId: id };
     case "pack":
       return { kind: "pack", packId: id };
+    case "logos":
+      return { kind: "logos_pack", packId: id };
     case "vault": {
       const entryIndex = parseTurnId(id);
       return entryIndex === null ? null : { kind: "vault_entry", entryIndex };
@@ -210,6 +219,11 @@ function routeParamsToSubject(
     return params.packId === ""
       ? null
       : { kind: "pack", packId: params.packId };
+  }
+  if (params.logosPackId !== undefined) {
+    return params.logosPackId === ""
+      ? null
+      : { kind: "logos_pack", packId: params.logosPackId };
   }
   if (params.laneId !== undefined) {
     return params.laneId === ""

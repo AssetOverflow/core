@@ -16,6 +16,7 @@ import { ReplayRoute } from "./replay/ReplayRoute";
 import { DemoTheaterRoute } from "./demos/DemoTheaterRoute";
 import { RunsRoute } from "./runs/RunsRoute";
 import { PacksRoute } from "./packs/PacksRoute";
+import { LogosRoute } from "./logos/LogosRoute";
 import { VaultRoute } from "./vault/VaultRoute";
 import { CalibrationRoute } from "./calibration/CalibrationRoute";
 import { SettingsRoute } from "./settings/SettingsRoute";
@@ -192,6 +193,15 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
     initialEntry: "/packs",
     loadingLabel: "Loading packs...",
     emptyStatement: "No packs discovered.",
+    emptyCommand: "core pack validate <path>",
+  },
+  {
+    name: "CORE-Logos",
+    element: <LogosRoute />,
+    path: "/logos/:logosPackId?",
+    initialEntry: "/logos",
+    loadingLabel: "Loading CORE-Logos packs...",
+    emptyStatement: "No CORE-Logos packs discovered.",
     emptyCommand: "core pack validate <path>",
   },
   {

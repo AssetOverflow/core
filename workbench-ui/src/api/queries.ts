@@ -20,6 +20,9 @@ import {
   fetchRun,
   fetchPacks,
   fetchPack,
+  fetchLogosPacks,
+  fetchLogosPackOverview,
+  fetchLogosPackSafety,
   fetchVaultSummary,
   fetchVaultEntries,
   fetchCalibrationClasses,
@@ -53,6 +56,9 @@ import type {
   RunDetail,
   PackSummary,
   PackDetail,
+  LogosPackSummary,
+  LogosPackOverview,
+  LogosSafetyReport,
   VaultSummary,
   VaultEntry,
   CalibrationClass,
@@ -393,6 +399,35 @@ export function usePack(packId?: string | null) {
   return useQuery<PackDetail, WorkbenchApiError>({
     queryKey: ["api", "pack", packId ?? null],
     queryFn: () => fetchPack(packId as string),
+    enabled: typeof packId === "string" && packId.length > 0,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useLogosPacks() {
+  return useQuery<LogosPackSummary[], WorkbenchApiError>({
+    queryKey: ["api", "logos", "packs"],
+    queryFn: fetchLogosPacks,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useLogosPackOverview(packId?: string | null) {
+  return useQuery<LogosPackOverview, WorkbenchApiError>({
+    queryKey: ["api", "logos", "pack", packId ?? null],
+    queryFn: () => fetchLogosPackOverview(packId as string),
+    enabled: typeof packId === "string" && packId.length > 0,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useLogosPackSafety(packId?: string | null) {
+  return useQuery<LogosSafetyReport, WorkbenchApiError>({
+    queryKey: ["api", "logos", "pack", packId ?? null, "safety"],
+    queryFn: () => fetchLogosPackSafety(packId as string),
     enabled: typeof packId === "string" && packId.length > 0,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
