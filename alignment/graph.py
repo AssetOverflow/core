@@ -68,15 +68,21 @@ def _parse_edge(payload: dict) -> AlignmentEdge:
     )
 
 
-def load_alignment(pack_id: str) -> AlignmentGraph:
+def load_alignment(
+    pack_id: str, *, data_root: Path | None = None
+) -> AlignmentGraph:
     """
-    Load AlignmentEdge records from language_packs/data/<pack_id>/alignment.jsonl.
+    Load AlignmentEdge records from <data_root>/<pack_id>/alignment.jsonl.
+
+    ``data_root`` defaults to the committed ``language_packs/data`` tree; pass
+    an alternate root (e.g. a test-fixture copy) to read packs from elsewhere
+    without forking the parser.
 
     Returns an empty AlignmentGraph if the file does not exist.
     This is intentional: operational_base packs (en_minimal_v1) do not
     currently carry cross-language alignment edges.
     """
-    alignment_path = _DATA_DIR / pack_id / "alignment.jsonl"
+    alignment_path = (data_root or _DATA_DIR) / pack_id / "alignment.jsonl"
     if not alignment_path.exists():
         return AlignmentGraph([])
 

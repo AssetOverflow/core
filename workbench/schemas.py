@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Any, Literal
 
 
@@ -60,10 +61,12 @@ def utc_now() -> str:
 
 
 def to_data(value: Any) -> Any:
+    if isinstance(value, Enum):
+        return value.value
     if hasattr(value, "as_dict") and callable(value.as_dict):
         return value.as_dict()
     if hasattr(value, "__dataclass_fields__"):
-        return asdict(value)
+        return to_data(asdict(value))
     if isinstance(value, dict):
         return {str(k): to_data(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
@@ -613,6 +616,147 @@ class PackSummary:
 class PackDetail(PackSummary):
     manifest_digest: str = ""
     manifest: dict[str, Any] = field(default_factory=dict)
+
+
+class SafetyVerdict(str, Enum):
+    CLEAR = "clear"
+    WARNING = "warning"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+
+
+@dataclass(frozen=True, slots=True)
+class LogosPackSummary:
+    pack_id: str
+    language: str | None
+    role: str | None
+    script: str | None
+    version: str | None
+    determinism_class: str | None
+    gate_engaged: bool
+    oov_policy: str | None
+    lexicon_count: int
+    gloss_count: int
+    morphology_count: int
+    frame_count: int
+    composition_count: int
+    alignment_edge_count: int
+    holonomy_case_count: int
+    safety_status: SafetyVerdict
+    manifest_digest: str
+    manifest_path: str
+
+
+@dataclass(frozen=True, slots=True)
+class LogosPackOverview(LogosPackSummary):
+    schema_version: Literal["logos_pack_overview_v1"] = "logos_pack_overview_v1"
+    normalization_policy: str | None = None
+    source_manifest: str | None = None
+    known_gaps: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class LogosLexiconRow:
+    entry_id: str
+    surface: str
+    lemma: str
+    language: str
+    part_of_speech: str | None
+    pos: str | None
+    morphology_id: str | None
+    morphology_tags: list[str]
+    semantic_domains: list[str]
+    provenance_ids: list[str]
+    epistemic_status: str
+
+
+@dataclass(frozen=True, slots=True)
+class LogosGlossRow:
+    gloss_id: str
+    lemma: str
+    gloss: str
+    pos: str | None
+    entry_ids: list[str]
+    provenance_ids: list[str]
+    epistemic_status: str | None
+    raw: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class LogosMorphologyRow:
+    morphology_id: str
+    surface: str
+    lemma: str
+    language: str
+    root: str | None
+    prefix_chain: list[str]
+    stem: str | None
+    inflection: dict[str, str]
+    suffix_chain: list[str]
+
+
+@dataclass(frozen=True, slots=True)
+class LogosAlignmentRow:
+    edge_id: str
+    source_id: str
+    target_id: str
+    relation: str
+    weight: float
+    evidence_ids: list[str]
+    target_pack_id: str | None
+    target_resolved: bool
+    invalid_target: bool
+
+
+@dataclass(frozen=True, slots=True)
+class LogosPackContents:
+    schema_version: Literal["logos_pack_contents_v1"]
+    pack_id: str
+    manifest: dict[str, Any]
+    lexicon: list[LogosLexiconRow] = field(default_factory=list)
+    glosses: list[LogosGlossRow] = field(default_factory=list)
+    morphology: list[LogosMorphologyRow] = field(default_factory=list)
+    frames: list[dict[str, Any]] = field(default_factory=list)
+    compositions: list[dict[str, Any]] = field(default_factory=list)
+    alignment_edges: list[LogosAlignmentRow] = field(default_factory=list)
+    holonomy_cases: list[dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class LogosMorphologyLinkIssue:
+    entry_id: str
+    morphology_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class LogosAlignmentTargetIssue:
+    edge_id: str
+    source_id: str
+    target_id: str
+    relation: str
+    target_pack_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class LogosSafetyReport:
+    schema_version: Literal["logos_safety_report_v1"]
+    pack_id: str
+    checksum_status: SafetyVerdict
+    checksum_errors: list[str]
+    domain_contract: dict[str, Any]
+    domain_contract_status: SafetyVerdict
+    oov_policy_ok: bool
+    gate_policy_ok: bool
+    path_safety_ok: bool
+    dangling_morphology_links: list[LogosMorphologyLinkIssue]
+    invalid_alignment_targets: list[LogosAlignmentTargetIssue]
+    missing_holonomy_refs: SafetyVerdict
+    epistemic_status_counts: dict[str, int]
+    speculative_entries: list[str]
+    contested_entries: list[str]
+    falsified_entries: list[str]
+    known_gaps: list[str]
+    verdict: SafetyVerdict
 
 
 AuditSource = Literal[
