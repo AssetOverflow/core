@@ -225,7 +225,7 @@ def test_distinct_relations_about_one_subject_stay_distinct(vocab_persona) -> No
 
 
 # --------------------------------------------------------------------------- #
-# wrong=0 BITE — direct entailment only; no fabricated inference
+# wrong=0 BITE — direct + DECLARED one-hop relational rules only; no fabrication
 # --------------------------------------------------------------------------- #
 
 
@@ -237,19 +237,28 @@ def test_present_but_non_entailing_refuses(vocab_persona) -> None:
     assert isinstance(res, Undetermined) and res.reason == "not_entailed"
 
 
-def test_symmetric_converse_is_not_faked(vocab_persona) -> None:
-    # sibling_of is symmetric in the world, but D0 does DIRECT reading only: the stored
-    # direction determines; the converse is a sound-but-incomplete refusal, NOT a faked
-    # assertion. (If this flips to Determined, symmetric inference was smuggled in.)
+def test_symmetric_converse_now_soundly_determines(vocab_persona) -> None:
+    # sibling_of IS symmetric (pack-declared ``graph.edge.symmetric``): the converse now
+    # SOUNDLY determines via the one-hop symmetric rule (mastery-v2 Step 3) — a DECLARED
+    # sound rule, not a fake. The stored direction still determines directly. (Was
+    # test_symmetric_converse_is_not_faked, which pinned the pre-rule direct-only floor.)
     ctx = _ctx(vocab_persona)
     _tell("Alice is the sibling of Bob.", ctx)
-    assert isinstance(_ask("Is Alice the sibling of Bob?", ctx), Determined)  # stored dir
+    direct = _ask("Is Alice the sibling of Bob?", ctx)
+    assert isinstance(direct, Determined) and direct.rule == "direct"  # stored dir
     converse = _ask("Is Bob the sibling of Alice?", ctx)
-    # The bite is that the converse does NOT assert. Its reason is "ungrounded" (no
-    # sibling_of fact has "bob" as subject) rather than "not_entailed" — either way it
-    # is a refusal, proving symmetric inference was not smuggled in.
+    assert isinstance(converse, Determined) and converse.answer is True
+    assert converse.rule == "symmetric"
+
+
+def test_asymmetric_converse_is_not_faked(vocab_persona) -> None:
+    # The wrong=0 bite, preserved: an ASYMMETRIC predicate's same-predicate converse is
+    # NEVER faked. parent_of is not symmetric — parent_of(alice, bob) does NOT entail
+    # parent_of(bob, alice). (Its sound converse is the DIFFERENT predicate child_of.)
+    ctx = _ctx(vocab_persona)
+    _tell("Alice is the parent of Bob.", ctx)
+    converse = _ask("Is Bob the parent of Alice?", ctx)
     assert isinstance(converse, Undetermined)
-    assert converse.reason in {"ungrounded", "not_entailed"}
 
 
 def test_ungrounded_relation_refuses(vocab_persona) -> None:

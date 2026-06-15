@@ -33,7 +33,11 @@ from dataclasses import dataclass
 
 from generate.composition import LogicChainPlan, lower_logic_chain
 from generate.meaning_graph.reader import Comprehension, Refusal
-from generate.meaning_graph.relational import RELATIONAL_PREDICATES
+from generate.meaning_graph.relational import (
+    INVERSE_OF,
+    RELATIONAL_PREDICATES,
+    SYMMETRIC_PREDICATES,
+)
 from generate.realize import RealizedRecord, recall_realized
 from session.context import SessionContext
 from teaching.epistemic import ADMISSIBLE_AS_EVIDENCE, EpistemicStatus
@@ -77,6 +81,12 @@ class Determined:
     subject: str
     object: str
     grounds: tuple[RealizedRecord, ...]
+    #: Which sound rule produced the answer — provenance for audit/replay. One of
+    #: ``direct`` (a stored fact of the asked predicate AND direction), ``inverse`` /
+    #: ``symmetric`` (a one-hop relational-algebra rule reading the stored edge in its
+    #: other lawful direction), or ``subsumption`` (transitive is-a chaining). It does
+    #: NOT affect the surface — ``render_determination`` reads only ``basis``.
+    rule: str = "direct"
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,6 +150,14 @@ def determine(
             grounds=(grounding,),
         )
 
+    # 1b. RELATIONAL one-hop entailment: a SOUND inverse/converse or symmetric rule
+    # reads a stored edge in its OTHER lawful direction. Open-world (asserts only True),
+    # ONE hop (no transitive chaining), structurally sound by construction — the same
+    # discipline as direct entailment; never False, never an undeclared rule.
+    relational = _relational_one_hop(ctx, predicate, subject, target)
+    if relational is not None:
+        return relational
+
     # 2. TRANSITIVE subsumption (C): when direct entailment misses, a member/subset
     # query may still hold by SOUND is-a chaining (member∘subset, subset∘subset) decided
     # by the sound+complete proof_chain ROBDD — NEVER member∘member.
@@ -151,6 +169,57 @@ def determine(
     # 3. Open-world refusal — absence (no direct fact, no sound chain) never asserts a
     # positive answer and never asserts False.
     return Undetermined("ungrounded" if not direct else "not_entailed")
+
+
+def _find_relational_edge(
+    ctx: SessionContext, predicate: str, a: str, b: str
+) -> RealizedRecord | None:
+    """A realized ``predicate(a, b)`` fact (exact structural recall, R1a), or ``None``."""
+    facts = recall_realized(ctx, subject=a, predicate=predicate)
+    return next((f for f in facts if f.relation_arguments == (a, b)), None)
+
+
+def _relational_one_hop(
+    ctx: SessionContext, predicate: str, subject: str, target: str
+) -> Determined | None:
+    """Answer ``predicate(subject, target)`` by ONE sound relational-algebra rule, or
+    ``None`` (the caller then refuses, open-world). Two rules, each reading a stored edge
+    in its OTHER lawful direction:
+
+      INVERSE/converse  ``p(subject, target)``  <=  stored ``inverse(p)(target, subject)``
+      SYMMETRIC         ``p(subject, target)``  <=  stored ``p(target, subject)``
+
+    NEVER transitive (one hop only), NEVER False (open-world), NEVER an undeclared rule:
+    inverse fires only for a declared converse pair and symmetric only for a pack-declared
+    symmetric predicate — so ``less_than`` is not self-inverse and ``parent_of`` is not
+    symmetric.
+    """
+    inverse = INVERSE_OF.get(predicate)
+    if inverse is not None:
+        edge = _find_relational_edge(ctx, inverse, target, subject)
+        if edge is not None:
+            return _relational_determined(predicate, subject, target, edge, "inverse")
+    if predicate in SYMMETRIC_PREDICATES:
+        edge = _find_relational_edge(ctx, predicate, target, subject)
+        if edge is not None:
+            return _relational_determined(predicate, subject, target, edge, "symmetric")
+    return None
+
+
+def _relational_determined(
+    predicate: str, subject: str, target: str, ground: RealizedRecord, rule: str
+) -> Determined:
+    """A one-hop relational ``Determined`` — answer True, basis from the ground's
+    standing (as_told today), the single stored edge as grounds, the rule recorded."""
+    return Determined(
+        answer=True,
+        basis=_basis((ground,)),
+        predicate=predicate,
+        subject=subject,
+        object=target,
+        grounds=(ground,),
+        rule=rule,
+    )
 
 
 def _subset_path(
@@ -272,4 +341,5 @@ def _verify_subsumption(
         subject=subject,
         object=target,
         grounds=grounds,
+        rule="subsumption",
     )
