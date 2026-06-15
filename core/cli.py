@@ -375,7 +375,7 @@ def _always_on_identity_break_message(
             "(leaves the old one untouched):",
             "       core always-on --engine-state ./engine_state_<name>",
             "  3. Start fresh in place — clear ONLY the runtime files in",
-            f"       {state_dir}",
+            f"       {state_dir or '<engine_state_dir>'}",
             "     (manifest.json, the 'current' pointer + gen-*/ dirs, "
             "recognizers.jsonl, discovery_candidates.jsonl,",
             "      session_state.json, proposals.jsonl) — never the directory "

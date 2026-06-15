@@ -282,8 +282,27 @@ def test_identity_break_message_is_safe_and_revision_aware(tmp_path) -> None:
 
 
 def test_identity_break_message_without_manifest_uses_placeholder(tmp_path) -> None:
-    # No readable manifest -> placeholder revision, still structured, still safe.
+    # No readable manifest -> placeholder revision, still structured, still safe,
+    # and never degrades the path line to a bare "None".
     msg = _always_on_identity_break_message(tmp_path / "empty", RuntimeError("x"))
     assert "<checkpoint_revision>" in msg
     assert "mv engine_state" not in msg
     assert "rm -rf engine_state" not in msg
+    assert "None" not in msg
+
+
+def test_identity_break_message_handles_unresolvable_state_dir(monkeypatch) -> None:
+    # Edge: no --engine-state given AND store resolution fails -> the path line must
+    # fall back to a placeholder, never print a bare "None" (Gemini review nit).
+    import engine_state as es_mod
+
+    def _boom(*_a, **_k):
+        raise RuntimeError("no store")
+
+    # The helper does `from engine_state import EngineStateStore` at call time, so
+    # patching the module attribute reaches it.
+    monkeypatch.setattr(es_mod, "EngineStateStore", _boom)
+    msg = _always_on_identity_break_message(None, RuntimeError("x"))
+    assert "<engine_state_dir>" in msg  # path fell back, not None
+    assert "<checkpoint_revision>" in msg  # rev fell back too
+    assert "None" not in msg
