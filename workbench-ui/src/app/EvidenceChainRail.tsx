@@ -272,15 +272,32 @@ export function deriveStages(subject: EvidenceSubject): RailStage[] | null {
       ];
     }
     case "vault_entry": {
+      // A persisted snapshot entry: subject -> provenance/metadata -> epistemic
+      // standing -> digest evidence. The dim stages each carry a specific,
+      // honest reason rather than a repeated "not applicable". replay lights on
+      // the recorded versor_digest exactly as a turn lights on its trace_hash —
+      // a recorded content fingerprint, NOT a verified-replay claim.
       const d = subject.data;
       return [
-        stage("intent", "dim", "not applicable to vault entries"),
+        stage("intent", "dim", "a stored field carries no originating user intent"),
         stage("subject", "lit", "selected vault entry"),
-        stage("provenance", d ? evidenceOf(d.versor_digest) : "hollow", "versor_digest"),
-        stage("admissibility", d ? evidenceOf(d.epistemic_state) : "hollow", "epistemic_state"),
-        stage("replay", "dim", "not applicable to vault entries"),
-        stage("authority", "dim", "not applicable to vault entries"),
-        stage("action", "dim", "not applicable to vault entries"),
+        stage(
+          "provenance",
+          d ? evidenceOf(d.versor_digest) : "hollow",
+          "versor_digest (content fingerprint) + stored metadata",
+        ),
+        stage(
+          "admissibility",
+          d ? evidenceOf(d.epistemic_state) : "hollow",
+          "epistemic_state / epistemic_status",
+        ),
+        stage(
+          "replay",
+          d ? evidenceOf(d.versor_digest) : "hollow",
+          "versor digest recorded — content-addressable, not a verified replay",
+        ),
+        stage("authority", "dim", "vault recall is read-only — no mutation authority"),
+        stage("action", "dim", "no action emitted by a stored entry"),
       ];
     }
     case "audit_event": {
