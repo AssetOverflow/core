@@ -26,7 +26,12 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-from evals.l10_continuity.runner import ProbeRecord, SoakResult, TurnRecord
+from evals.l10_continuity.runner import (
+    InterruptionCutPoint,
+    ProbeRecord,
+    SoakResult,
+    TurnRecord,
+)
 
 VERSOR_CEILING: float = 1e-6
 
@@ -285,6 +290,94 @@ def evaluate_p4_commit_point(
             "recovered_turn_count": recovered_turn_count,
             "expected_turn_count": expected_turn_count,
         },
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class CutPointEvidence:
+    """Evidence for one ADR-0219 interruption cut-point (W2-R arbitrary-interruption predicate).
+
+    Each entry names the cut-point, the turn count recovered from the committed
+    generation (what the loader reports after the injection), the expected count
+    (what the committed generation holds), and the post-reboot trace-hash tails
+    from two independent recovery soaks (determinism check).
+    ``all_versor_conditions`` spans both recovery soaks — every entry must be
+    below ``VERSOR_CEILING``.
+    """
+
+    cut_point: str                     # InterruptionCutPoint value
+    recovered_turn_count: int | None   # read_recovered_turn_count after injection
+    expected_turn_count: int
+    tail_hashes_a: tuple[str, ...]     # post-reboot trace_hashes from recovery_a
+    tail_hashes_b: tuple[str, ...]     # post-reboot trace_hashes from recovery_b
+    all_versor_conditions: tuple[float, ...]  # every turn across both soaks
+
+
+def evaluate_p4_arbitrary_interruption(
+    evidence: tuple[CutPointEvidence, ...], *, ceiling: float = VERSOR_CEILING
+) -> PredicateOutcome:
+    """P4 (W2-R extension) — arbitrary-interruption recovery proves the ADR-0219 gate bullets.
+
+    For each cut-point in ``evidence`` the predicate checks:
+
+    1. **Prior-gen load:** ``recovered_turn_count == expected_turn_count`` —
+       a kill before the ``current`` pointer swap leaves the prior committed
+       generation intact and readable.
+    2. **Recovery determinism:** two independent recoveries from the same
+       committed checkpoint produce byte-identical post-reboot tails.
+    3. **Closure:** ``versor_condition < ceiling`` for every turn across both
+       recovery soaks.
+
+    The ``AFTER_SWAP`` cut-point is the clean-commit control case: no orphan is
+    injected, so it degenerates to the existing P4 recovery_determinism gate
+    (confirming the implementation is correct at the baseline).
+    """
+    failures: list[str] = []
+    metrics: dict = {}
+
+    for ev in evidence:
+        cp = ev.cut_point
+        # Gate 1: prior-gen load (PARTIAL_GEN and FULL_BEFORE_SWAP) /
+        #         committed-gen load (AFTER_SWAP).
+        if ev.recovered_turn_count != ev.expected_turn_count:
+            failures.append(
+                f"{cp}: recovered_turn_count={ev.recovered_turn_count} "
+                f"!= expected={ev.expected_turn_count}"
+            )
+
+        # Gate 2: recovery determinism — two soaks converge.
+        div = _first_divergence(ev.tail_hashes_a, ev.tail_hashes_b)
+        if div is not None or len(ev.tail_hashes_a) == 0:
+            failures.append(
+                f"{cp}: recovery tails diverged at index {div} "
+                f"(|a|={len(ev.tail_hashes_a)}, |b|={len(ev.tail_hashes_b)})"
+            )
+
+        # Gate 3: closure throughout.
+        bad_vc = [vc for vc in ev.all_versor_conditions if vc >= ceiling]
+        if bad_vc:
+            failures.append(
+                f"{cp}: {len(bad_vc)} versor_condition violations (max={max(bad_vc):.2e})"
+            )
+
+        metrics[cp] = {
+            "recovered_tc": ev.recovered_turn_count,
+            "expected_tc": ev.expected_turn_count,
+            "tail_len": len(ev.tail_hashes_a),
+            "vc_violations": len(bad_vc),
+        }
+
+    passed = not failures
+    detail = (
+        f"arbitrary-interruption gate: {len(evidence)} cut-points all pass"
+        if passed
+        else "; ".join(failures)
+    )
+    return PredicateOutcome(
+        name="P4_arbitrary_interruption",
+        passed=passed,
+        detail=detail,
+        metrics=metrics,
     )
 
 
