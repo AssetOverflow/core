@@ -548,7 +548,10 @@ class IdleTickResult:
     facts_consolidated: int = 0
     #: ADR-0080 — SPECULATIVE frontier findings autonomously mined + persisted this tick
     #: (0 unless ``config.contemplate_frontier_during_idle`` AND a NOT-yet-mined frontier;
-    #: a mined frontier converges to 0). Reviewable via the HITL path; never ratified here.
+    #: a mined frontier converges to 0). Persisted as a reviewable artifact under
+    #: ``<engine_state>/contemplation_runs/`` for later review tooling — NOT yet surfaced in
+    #: the existing HITL queue / workbench contemplation reader (those scan
+    #: ``<repo>/contemplation/runs``; wiring that discovery is a follow-up). Never ratified here.
     frontier_findings: int = 0
     #: IT — read-only proposal-review summary (None unless ``config.review_pending_proposals``).
     #: Surfaces pending comprehension-failure proposals for review; mutates nothing.
@@ -939,26 +942,47 @@ class ChatRuntime:
         #     frontier (an already-mined frontier is NOT re-persisted → the life converges, no
         #     churn); SPECULATIVE-only (ADR-0080: never COHERENT/ratified → the HITL path is
         #     untouched). Persists per-life under the engine-state dir.
+        #
+        #     This is an OPTIONAL background pass on an indefinite-uptime life: a malformed
+        #     frontier report (parse error) or a transient filesystem fault must DEGRADE to
+        #     "no findings this beat", never crash the continuous loop. So the whole pass is
+        #     best-effort (the exit-checkpoint boundary idiom) — on failure it warns, leaves
+        #     did_work untouched, and a later beat retries (the run-cache stays unset on a
+        #     mining failure; a write failure simply re-attempts while the target is absent).
         frontier_findings = 0
         if (
             self.config.contemplate_frontier_during_idle
             and self._engine_state_store is not None
         ):
-            from core.contemplation.runner import run_contemplation, write_contemplation_run
+            try:
+                from core.contemplation.runner import (
+                    run_contemplation,
+                    write_contemplation_run,
+                )
 
-            # Mine once per session (the frontier is static within a run); a reboot re-mines.
-            if self._frontier_run_cache is None:
-                self._frontier_run_cache = run_contemplation()
-            run = self._frontier_run_cache
-            target = (
-                self._engine_state_store.path
-                / "contemplation_runs"
-                / f"idle_{run.substrate_hash}.json"
-            )
-            if run.findings and not target.exists():
-                write_contemplation_run(run, target)
-                frontier_findings = len(run.findings)
-                did_work = True
+                # Mine once per session (the frontier is static within a run); a reboot re-mines.
+                if self._frontier_run_cache is None:
+                    self._frontier_run_cache = run_contemplation()
+                run = self._frontier_run_cache
+                target = (
+                    self._engine_state_store.path
+                    / "contemplation_runs"
+                    / f"idle_{run.substrate_hash}.json"
+                )
+                if run.findings and not target.exists():
+                    write_contemplation_run(run, target)
+                    frontier_findings = len(run.findings)
+                    did_work = True
+            except Exception as exc:  # noqa: BLE001 — optional idle pass is best-effort
+                # An optional frontier mine must never crash the always-on life. Degrade to
+                # "no findings this beat" and surface the cause; the loop, its closure
+                # evidence, and the rest of idle_tick continue uninterrupted.
+                warnings.warn(
+                    "idle frontier-contemplation pass skipped "
+                    f"(degraded to 0 findings): {exc!r}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
 
         # 3. Proposal-review sub-pass (IT) — READ-ONLY. Surfaces pending comprehension-failure
         #    proposals (the contemplation pass's N5 artifacts) for review. It NEVER mutates an

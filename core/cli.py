@@ -375,8 +375,8 @@ def cmd_always_on(args: argparse.Namespace) -> int:
     if getattr(args, "contemplate_frontier", False):
         import dataclasses
 
-        # A learning daemon: autonomously mine the frontier into reviewable findings each
-        # idle beat (ADR-0080, SPECULATIVE + HITL). Opt-in — the default daemon stays idle.
+        # A learning daemon: autonomously mine the frontier into persisted SPECULATIVE
+        # findings each idle beat (ADR-0080). Opt-in — the default daemon stays idle.
         daemon_config = dataclasses.replace(
             daemon_config, contemplate_frontier_during_idle=True
         )
@@ -4277,8 +4277,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         dest="contemplate_frontier",
         help=(
-            "learning daemon: autonomously mine the frontier into reviewable SPECULATIVE "
-            "findings each idle beat (ADR-0080; never ratified, HITL-reviewed). Default off."
+            "learning daemon: autonomously mine the frontier into persisted SPECULATIVE "
+            "findings under <engine_state>/contemplation_runs/ each idle beat (ADR-0080; "
+            "never ratified — reviewable artifact, not yet in the HITL queue). Default off."
         ),
     )
     always_on.set_defaults(func=cmd_always_on)

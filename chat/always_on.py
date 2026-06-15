@@ -112,6 +112,7 @@ class AlwaysOnReport:
     final_checkpoint_ok: bool
     total_facts_consolidated: int
     total_proposals_created: int
+    total_frontier_findings: int = 0  # ADR-0080 SPECULATIVE findings mined across the run
     # The identity-determining pack ids of the run's config, so a reader can recompute the
     # SAME identity (the resume verdict) instead of assuming default packs. Empty = default.
     identity_pack_ids: dict[str, str] = field(default_factory=dict)
@@ -134,6 +135,7 @@ def serialize_report(report: AlwaysOnReport) -> dict[str, Any]:
         "final_checkpoint_ok": report.final_checkpoint_ok,
         "total_facts_consolidated": report.total_facts_consolidated,
         "total_proposals_created": report.total_proposals_created,
+        "total_frontier_findings": report.total_frontier_findings,
         "identity_pack_ids": dict(report.identity_pack_ids),
         "records": [
             {
@@ -144,6 +146,9 @@ def serialize_report(report: AlwaysOnReport) -> dict[str, Any]:
                 "proposals_created": r.proposals_created,
                 "pending_proposals": r.pending_proposals,
                 "did_work": r.did_work,
+                # Durable explanation of did_work when the beat's only work was a frontier
+                # mine (facts/proposals both 0) — else did_work has no persisted cause.
+                "frontier_findings": r.frontier_findings,
             }
             for r in report.records
         ],
@@ -268,6 +273,7 @@ def run_continuous(
         final_checkpoint_ok=final_checkpoint_ok,
         total_facts_consolidated=sum(r.facts_consolidated for r in records),
         total_proposals_created=sum(r.proposals_created for r in records),
+        total_frontier_findings=sum(r.frontier_findings for r in records),
         identity_pack_ids=identity_pack_ids,
     )
     if report_path is not None:

@@ -327,8 +327,10 @@ class RuntimeConfig:
     # autonomously MINES its frontier-compare reports into persisted SPECULATIVE reviewable
     # findings (core.contemplation), so the always-on life proposes its own frontier without
     # a user turn. Idempotent per frontier (a mined frontier converges → no churn); the
-    # findings are SPECULATIVE-only (ADR-0080: never COHERENT, never self-ratify) and reviewed
-    # via the existing HITL path. OFF by default — a deliberate learning-daemon mode.
+    # findings are SPECULATIVE-only (ADR-0080: never COHERENT, never self-ratify), persisted
+    # under <engine_state>/contemplation_runs/ as a reviewable artifact for later review
+    # tooling — NOT yet surfaced in the existing HITL queue (a follow-up). OFF by default —
+    # a deliberate learning-daemon mode.
     contemplate_frontier_during_idle: bool = False
 
     # Step E (ESTIMATION) — when on, a converse query the engine would otherwise REFUSE
