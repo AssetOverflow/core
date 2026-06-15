@@ -161,7 +161,7 @@ describe("EvidenceChainRail honesty contract", () => {
     expect(statusOf(missingDeterminism, "provenance")).toBe("lit");
   });
 
-  it("MEANINGFULLY FAILS vault_entry: removing versor_digest hollows exactly provenance", () => {
+  it("MEANINGFULLY FAILS vault_entry: versor_digest drives provenance+replay, epistemic_state drives admissibility", () => {
     const full: EvidenceSubject = {
       kind: "vault_entry",
       entryIndex: 3,
@@ -172,13 +172,19 @@ describe("EvidenceChainRail honesty contract", () => {
       },
     };
     expect(statusOf(full, "provenance")).toBe("lit");
+    expect(statusOf(full, "replay")).toBe("lit");
     expect(statusOf(full, "admissibility")).toBe("lit");
+    // A stored, read-only entry has no mutation authority and emits no action.
+    expect(statusOf(full, "authority")).toBe("dim");
+    expect(statusOf(full, "action")).toBe("dim");
 
     const missingVersor: EvidenceSubject = {
       ...full,
       data: { ...full.data, versor_digest: null },
     };
+    // versor_digest drives BOTH provenance and replay; epistemic_state is independent.
     expect(statusOf(missingVersor, "provenance")).toBe("hollow");
+    expect(statusOf(missingVersor, "replay")).toBe("hollow");
     expect(statusOf(missingVersor, "admissibility")).toBe("lit");
   });
 
