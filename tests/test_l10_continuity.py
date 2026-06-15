@@ -27,10 +27,12 @@ from evals.l10_continuity.predicates import (
     evaluate_p3_bounded_resources,
     evaluate_p4_commit_point,
     evaluate_p4_recovery_determinism,
+    evaluate_p5a_recall_precision,
     evaluate_p5b_anchor_stability,
     evaluate_p5c_coherence,
 )
 from evals.l10_continuity.runner import (
+    ProbeRecord,
     SoakResult,
     TurnRecord,
     read_recovered_turn_count,
@@ -68,8 +70,17 @@ def _rec(
     )
 
 
-def _synthetic(records: list[TurnRecord], reboot_at: tuple[int, ...] = ()) -> SoakResult:
-    return SoakResult(n_turns=len(records), reboot_at=reboot_at, records=tuple(records))
+def _synthetic(
+    records: list[TurnRecord],
+    reboot_at: tuple[int, ...] = (),
+    probe_records: tuple[ProbeRecord, ...] = (),
+) -> SoakResult:
+    return SoakResult(
+        n_turns=len(records),
+        reboot_at=reboot_at,
+        records=tuple(records),
+        probe_records=probe_records,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -295,6 +306,68 @@ def test_p4_recovery_bites_on_corrupt_checkpoint(tmp_path: Path) -> None:
 # --------------------------------------------------------------------------- #
 # P5 — semantic quality over the horizon (the T-experience gate)                #
 # --------------------------------------------------------------------------- #
+
+# P5a — vault recall precision (cross-reboot)
+
+def test_p5a_recall_precision_holds_on_real_soak(tmp_path: Path) -> None:
+    """P5a *holds*: a probe registered pre-reboot is recalled at rank ≤ top_k
+    after a reboot, confirming the float32 serialisation round-trip preserves
+    the exact-match guarantee in ``_exact_index``."""
+    n = _SOAK_N
+    reboot_turn = 3
+    result = run_soak(
+        n,
+        engine_state_dir=tmp_path / "es",
+        reboot_at=(reboot_turn,),
+        probe_at=(1,),
+        verify_probes_at=(n - 1,),
+    )
+    assert result.probe_records, "run_soak must collect at least one ProbeRecord"
+    outcome = evaluate_p5a_recall_precision(result.probe_records)
+    assert outcome.passed, outcome.detail
+    # Every probe must be found within top_k.
+    assert all(p.rank is not None and p.rank <= p.top_k for p in result.probe_records)
+    # At least one probe crosses the reboot boundary.
+    assert any(p.across_reboot for p in result.probe_records)
+
+
+def test_p5a_recall_precision_bites_on_missing_entry() -> None:
+    """P5a *bites*: a ProbeRecord with rank=None (entry not found in vault)
+    makes the predicate fail — it is not decoration."""
+    missing = ProbeRecord(
+        registered_at=1,
+        verified_at=5,
+        rank=None,
+        top_k=5,
+        across_reboot=True,
+    )
+    outcome = evaluate_p5a_recall_precision((missing,))
+    assert not outcome.passed
+    assert outcome.metrics["failures"]
+
+
+def test_p5a_recall_precision_bites_on_no_reboot_probe() -> None:
+    """P5a *bites*: if all probes are same-segment (no reboot crossed), the
+    predicate fails — cross-reboot verification is the primary claim."""
+    same_segment = ProbeRecord(
+        registered_at=0,
+        verified_at=2,
+        rank=1,
+        top_k=5,
+        across_reboot=False,   # no reboot between registration and verification
+    )
+    outcome = evaluate_p5a_recall_precision((same_segment,))
+    assert not outcome.passed
+    assert "cross-reboot" in outcome.detail
+
+
+def test_p5a_recall_precision_bites_on_empty_probe_records() -> None:
+    """P5a *bites*: an empty probe_records tuple fails rather than trivially
+    passing — the runner must be configured to collect evidence."""
+    outcome = evaluate_p5a_recall_precision(())
+    assert not outcome.passed
+
+
 def test_p5b_anchor_stability_holds_on_real_soak(tmp_path: Path) -> None:
     result = run_soak(12, engine_state_dir=tmp_path / "es")
     outcome = evaluate_p5b_anchor_stability(result)
@@ -356,14 +429,20 @@ def test_report_panel_passes_and_records_not_covered(tmp_path: Path) -> None:
     assert report.all_gates_pass(), [
         (p.name, p.detail) for p in report.predicates if not p.passed
     ]
-    # Every spec leg the lane does NOT cover is recorded explicitly (no silent skip).
-    assert ("P5a_recall_stability", NOT_COVERED[0][1]) in report.not_covered
+    # P5a is now a live predicate — NOT_COVERED is empty.
+    assert NOT_COVERED == ()
+    assert report.not_covered == ()
+    # P5a must appear in the predicate panel and pass.
+    p5a = next((p for p in report.predicates if p.name == "P5a_recall_precision"), None)
+    assert p5a is not None, "P5a_recall_precision must be in the predicate panel"
+    assert p5a.passed, p5a.detail
     # The deterministic digest is a 64-hex SHA-256.
     assert len(report.deterministic_digest) == 64
     # The report serializes cleanly (for the on-disk artifact).
     d = report.to_dict()
     assert d["all_gates_pass"] is True
     assert any(p["name"] == "P2b_reboot_transparency" for p in d["predicates"])
+    assert any(p["name"] == "P5a_recall_precision" for p in d["predicates"])
 
 
 def test_report_digest_is_pure_and_bites() -> None:

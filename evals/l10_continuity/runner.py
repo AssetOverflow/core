@@ -60,12 +60,33 @@ class TurnRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class ProbeRecord:
+    """One P5a vault-recall probe: a field state registered at one turn, then
+    queried against the vault at a later turn.
+
+    The probe field bytes are stored as float32 (matching the vault's internal
+    dtype so the recall can exercise the ``_exact_index`` path).  ``rank`` is the
+    1-based position of the probe entry in the top-k recall results, or ``None``
+    if the entry was not found within top-k.  ``across_reboot`` is True when the
+    query turn falls after at least one reboot — the cross-reboot case is the
+    primary claim P5a checks.
+    """
+
+    registered_at: int    # turn whose field state was captured as the probe
+    verified_at: int      # turn when vault.recall was issued with that field
+    rank: int | None      # 1-based rank in recall results (None = not found)
+    top_k: int
+    across_reboot: bool   # a reboot occurred between registered_at and verified_at
+
+
+@dataclass(frozen=True, slots=True)
 class SoakResult:
     """The full ordered evidence of one soak run."""
 
     n_turns: int
     reboot_at: tuple[int, ...]
     records: tuple[TurnRecord, ...]
+    probe_records: tuple[ProbeRecord, ...] = ()  # P5a vault-recall probes
 
     def trace_hashes(self) -> tuple[str, ...]:
         return tuple(r.trace_hash for r in self.records)
@@ -163,6 +184,9 @@ def run_soak(
     reboot_at: tuple[int, ...] = (),
     config: RuntimeConfig | None = None,
     inject_orphan_tmp_at_reboot: bool = False,
+    probe_at: tuple[int, ...] = (),
+    verify_probes_at: tuple[int, ...] = (),
+    probe_top_k: int = 5,
 ) -> SoakResult:
     """Run ``n_turns`` of the deterministic corpus, optionally rebooting.
 
@@ -172,17 +196,27 @@ def run_soak(
     ``inject_orphan_tmp_at_reboot`` is set, a torn-write orphan temp file is left
     in the checkpoint dir immediately before each reconstruct, so the reboot
     exercises ADR-0156 crash recovery rather than a clean restart.
+
+    P5a vault-recall probes: ``probe_at`` names turns at which the current field
+    state is captured as a probe query (float32 bytes, matching the vault's
+    storage dtype).  ``verify_probes_at`` names turns at which every registered
+    probe is recalled against the vault and its rank recorded.  A probe
+    registered before the reboot and verified after is the cross-reboot case.
     """
     if n_turns < 0:
         raise ValueError(f"n_turns must be non-negative, got {n_turns}")
     config = config or RuntimeConfig()
     reboot_set = {i for i in reboot_at if i > 0}
+    probe_set = set(probe_at)
+    verify_set = set(verify_probes_at)
 
     runtime = _new_runtime(config, engine_state_dir)
     pipe = CognitiveTurnPipeline(runtime=runtime)
     segment = 0
     prev_field: np.ndarray | None = None
     records: list[TurnRecord] = []
+    probe_registry: dict[int, bytes] = {}  # registered_at → float32 field bytes
+    probe_records: list[ProbeRecord] = []
 
     for i in range(n_turns):
         if i in reboot_set:
@@ -217,8 +251,36 @@ def run_soak(
         )
         prev_field = field
 
+        # P5a: register probe after this turn's vault entries are committed.
+        if i in probe_set and field is not None:
+            probe_registry[i] = field.astype(np.float32).tobytes()
+
+        # P5a: verify all registered probes against the live vault.
+        if i in verify_set and probe_registry:
+            vault = runtime._context.vault
+            for reg_turn, probe_bytes in probe_registry.items():
+                across_reboot = any(reg_turn < r <= i for r in reboot_set)
+                probe_arr = np.frombuffer(probe_bytes, dtype=np.float32).copy()
+                hits = vault.recall(probe_arr, top_k=probe_top_k)
+                rank: int | None = None
+                for j, hit in enumerate(hits, start=1):
+                    stored = np.asarray(hit["versor"], dtype=np.float32)
+                    if stored.tobytes() == probe_bytes:
+                        rank = j
+                        break
+                probe_records.append(
+                    ProbeRecord(
+                        registered_at=reg_turn,
+                        verified_at=i,
+                        rank=rank,
+                        top_k=probe_top_k,
+                        across_reboot=across_reboot,
+                    )
+                )
+
     return SoakResult(
         n_turns=n_turns,
         reboot_at=tuple(sorted(reboot_set)),
         records=tuple(records),
+        probe_records=tuple(probe_records),
     )

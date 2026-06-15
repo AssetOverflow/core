@@ -26,7 +26,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-from evals.l10_continuity.runner import SoakResult, TurnRecord
+from evals.l10_continuity.runner import ProbeRecord, SoakResult, TurnRecord
 
 VERSOR_CEILING: float = 1e-6
 
@@ -360,6 +360,81 @@ def evaluate_p5b_anchor_stability(
             "min_steady_dist_to_anchor": min_dist,
             "median_steady_movement": median_move,
             "n_steady": len(dists),
+        },
+    )
+
+
+def evaluate_p5a_recall_precision(
+    probe_records: tuple[ProbeRecord, ...],
+) -> PredicateOutcome:
+    """P5a — vault recall finds each probe entry at rank ≤ top_k, including across
+    a reboot.
+
+    The probe is an exact-match query: the field state F captured at registration
+    turn T was stored in the vault as float32 during that same turn.  At
+    verification, ``vault.recall(F_float32, top_k=k)`` issues an exact-match
+    lookup via ``_exact_index`` and must return the registered entry at rank 1.
+    After a reboot the vault is restored from disk (float32 bytes preserved
+    bit-exactly by ``encode_array``/``decode_array``), so the ``_exact_index`` is
+    rebuilt and the exact-match guarantee holds — confirming that the
+    serialisation round-trip does not lose precision.
+
+    ``passed`` requires every probe to be found within its configured top-k, with
+    at least one probe in the cross-reboot case.  A run with no probe records
+    (``probe_at`` and ``verify_probes_at`` left empty) fails rather than trivially
+    passing — it signals that the runner was not configured to collect evidence.
+    """
+    if not probe_records:
+        return PredicateOutcome(
+            name="P5a_recall_precision",
+            passed=False,
+            detail=(
+                "no probe records collected — run_soak must be called with "
+                "probe_at and verify_probes_at to exercise this predicate"
+            ),
+            metrics={"n_probes": 0},
+        )
+    failures = [p for p in probe_records if p.rank is None or p.rank > p.top_k]
+    reboot_probes = [p for p in probe_records if p.across_reboot]
+    has_reboot_probe = bool(reboot_probes)
+    passed = not failures and has_reboot_probe
+    if passed:
+        worst_rank = max(p.rank for p in probe_records if p.rank is not None)
+        detail = (
+            f"all {len(probe_records)} probes found at rank ≤ top_k "
+            f"(worst rank {worst_rank}, {len(reboot_probes)} cross-reboot)"
+        )
+    elif not has_reboot_probe:
+        detail = (
+            "no cross-reboot probe recorded — configure probe_at before the "
+            "reboot turn and verify_probes_at after it"
+        )
+    else:
+        detail = (
+            f"{len(failures)} of {len(probe_records)} probe(s) not found within top-k: "
+            + ", ".join(
+                f"registered@{p.registered_at}→verified@{p.verified_at} "
+                f"rank={p.rank} top_k={p.top_k}"
+                for p in failures[:5]
+            )
+        )
+    return PredicateOutcome(
+        name="P5a_recall_precision",
+        passed=passed,
+        detail=detail,
+        metrics={
+            "n_probes": len(probe_records),
+            "n_reboot_probes": len(reboot_probes),
+            "failures": [
+                {
+                    "registered_at": p.registered_at,
+                    "verified_at": p.verified_at,
+                    "rank": p.rank,
+                    "top_k": p.top_k,
+                    "across_reboot": p.across_reboot,
+                }
+                for p in failures
+            ],
         },
     )
 
