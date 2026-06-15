@@ -1,6 +1,10 @@
 # ADR-0170 — Recognizer Injector Contract Widening
 
-**Status:** Proposed (scoping ADR; no runtime change in this PR)
+**Status:** Accepted — W1 (type widening) + W2 (DCS-S1 acquisition →
+`CandidateOperation(add)`) shipped to serving (`_INJECTORS`, PR #377; wrong=0,
+train_sample 4/0/46). W3–W5 deferred (need `CandidateRate` / `apply_rate`,
+ADR-0171). Status reconciled 2026-06-15 (mastery-v2 Step 2; was the stale
+"Proposed / no runtime change in this PR", which never tracked W1/W2 landing).
 **Date:** 2026-05-27
 **Author:** Shay
 **Parent:** ADR-0163.D.2 (parsed_anchors → MathProblemGraph)
@@ -164,7 +168,18 @@ identical to what the parser already enforces.
 
 ## Implementation outline (subsequent PRs, not this one)
 
-**ADR-0170-impl-W1** — Type widening, no behavior change:
+> **Shipped-status reconciliation (2026-06-15, mastery-v2 Step 2).** This
+> section was authored as a forward plan; parts have since landed. **W1 (type
+> widening) and W2 (DCS-S1 acquisition → `CandidateOperation(add)`) are SHIPPED
+> to serving** (`_INJECTORS`, PR #377; wrong=0 held, train_sample 4/0/46 — 6
+> committed cases exercise the acquisition path). The multiplicative-aggregation
+> injector also shipped (WAVE-A). The **rate/currency and temporal categories
+> remain DEFERRED** — they need the `CandidateRate` / `apply_rate` schema work
+> (ADR-0171). The sealed-injector lane (ADR-0186, PR #487) **post-dates W2** and
+> hosts *future* sealed capabilities only — W2 was never in it (the
+> `recognizer_anchor_inject.py` lane comment is reconciled to match).
+
+**ADR-0170-impl-W1** *(SHIPPED)* — Type widening, no behavior change:
 - Change `inject_from_match` return type to
   `tuple[CandidateInitial | CandidateOperation, ...]`
 - Update `_INJECTORS` value type
@@ -173,7 +188,8 @@ identical to what the parser already enforces.
 - Pinning test: existing `inject_discrete_count_statement` still
   emits only `CandidateInitial`; behavior byte-identical pre/post.
 
-**ADR-0170-impl-W2** — First operation-emitting injector (DCS-S1):
+**ADR-0170-impl-W2** *(SHIPPED — PR #377, serving `_INJECTORS`, wrong=0)* —
+First operation-emitting injector (DCS-S1):
 - Extend matcher's `_POSSESSION_VERBS` to accept acquisition verbs OR
   add a separate `_ACQUISITION_VERBS` set
 - Injector emits `CandidateInitial` for `has/have/had` (existing) AND

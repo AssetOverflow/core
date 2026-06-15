@@ -581,8 +581,12 @@ _INJECTORS: Mapping[ShapeCategory, "type"] = {
 }
 
 
-# ADR-0186 — the sealed injector lane (resume ADR-0170 W2-W5 under the
-# ADR-0175 serving seal). Entries here are consulted **only** when
+# ADR-0186 — the sealed injector lane (resume ADR-0170 W3-W5 under the
+# ADR-0175 serving seal). Note: W2 (DCS-S1 acquisition verbs) is NOT sealed —
+# it shipped directly to serving ``_INJECTORS`` in PR #377, *before* this lane
+# existed (ADR-0186 = PR #487), and holds wrong=0 on train_sample (4/0/46). The
+# lane hosts the *future* sealed capabilities (W3-W5) only.
+# Entries here are consulted **only** when
 # ``inject_from_match(..., sealed=True)`` — i.e. by the sealed eval runner,
 # never by the frozen serving path or the ``train_sample`` runner (both pass
 # ``sealed=False``). This keeps the ratified serving metric byte-identical
