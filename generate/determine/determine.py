@@ -9,11 +9,12 @@ what I was told (unverified)". Until COHERENT promotion exists (out of scope), D
 produces only ``as_told`` assertions or ``Undetermined`` refusals. No estimation, no
 corpus mutation (teaching stays HITL proposal-only).
 
-wrong=0 / soundness (open-world): D0 asserts an answer ONLY when the asked relation
-is DIRECTLY entailed by a realized fact. Absence of a fact never refutes it
-(open-world), so D0 never asserts an answer from missing knowledge — it refuses
-(``Undetermined``). It asserts only ``answer=True`` on a direct hit; it never asserts
-False.
+wrong=0 / soundness (open-world): D0 asserts an answer ONLY when the asked relation is
+SOUNDLY entailed by realized facts — directly, by ONE-HOP relational algebra
+(inverse/converse + pack-declared symmetric), or by transitive member/subset
+subsumption. Absence of a fact never refutes it (open-world), so D0 never asserts an
+answer from missing knowledge — it refuses (``Undetermined``). It asserts only
+``answer=True``; it never asserts False.
 
 Supported predicates are a CLOSED set for which DIRECT entailment is sound — a
 realized ground fact ``p(subject, target)`` answers the asked ``p(subject, target)``:
@@ -22,9 +23,12 @@ predicates of ``en_core_relational_predicates_v1`` (``parent_of``, ``less_than``
 ``left_of``, ``before_event`` …; see ``generate.meaning_graph.relational``). The
 categorical (``subset``/``disjoint`` …) and propositional (``implies``/``or`` …)
 predicates are deliberately EXCLUDED — their truth is not a stored-pair lookup, so
-admitting them would be unsound. Negated questions, symmetric-converse questions, and
-any predicate outside the closed set are an honest ``Undetermined`` — D0 ships no
-entailment path it cannot exercise (no transitive/symmetric/rule inference).
+admitting them would be unsound. Negated questions and any predicate outside the closed
+set are an honest ``Undetermined``. Beyond direct entailment, D0 applies two SOUND
+extensions over the realized facts — ONE-HOP relational algebra (inverse/converse +
+pack-declared symmetric; see ``generate.meaning_graph.relational``) and transitive
+member/subset SUBSUMPTION — each search-then-verified, never closed-world, never
+``answer=False``.
 """
 
 from __future__ import annotations

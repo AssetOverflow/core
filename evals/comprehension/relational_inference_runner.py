@@ -64,8 +64,8 @@ def run(path: Path = _CASES) -> dict[str, Any]:
         if not isinstance(res, Determined):
             refused += 1  # coverage miss, not a wrong
             continue
-        got = [res.answer, res.predicate, res.subject, res.object]
-        gold = [True, case["predicate"], case["subject"], case["object"]]
+        got = [res.answer, res.predicate, res.subject, res.object, res.rule]
+        gold = [True, case["predicate"], case["subject"], case["object"], case["rule"]]
         if got == gold:
             correct += 1
         else:

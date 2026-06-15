@@ -23,10 +23,12 @@ Fail-closed (wrong=0 at the comprehension layer):
     ("north station") canonicalizes per the join contract; an argument that still holds
     relational structure refuses rather than fabricate a compound entity.
 
-Scope — ground binary relations, DIRECT reading only. NO transitive/symmetric/rule
-inference: a symmetric lemma (``sibling_of``, ``equal_to``, ``adjacent_to`` …) reads
-ONLY the stated direction; the converse is a sound-but-incomplete refusal at DETERMINE,
-never a fabricated assertion. Negation is out of grammar (a negated surface refuses).
+Scope — this reader grounds stated binary relations in the STATED DIRECTION only; it
+performs no inference itself. DETERMINE then applies declared ONE-HOP relational algebra
+over the realized facts — inverse/converse pairs and pack-declared symmetric predicates
+(``INVERSE_OF`` / ``SYMMETRIC_PREDICATES``) — so a symmetric lemma's converse and an
+inverse pair NOW determine soundly. Transitive relational closure, negation (out of
+grammar — a negated surface refuses), and closed-world falsehood remain out of scope.
 
 This reader is invoked EXPLICITLY (the pack is loaded by the caller, not default-mounted);
 it does not perturb ``comprehend``'s templates or their wrong=0 tests.
