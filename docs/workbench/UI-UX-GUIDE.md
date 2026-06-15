@@ -73,7 +73,7 @@ Current route count: 16.
 | Evidence | Proposals | `/proposals` | `⌘4` | Review cognition and math proposal evidence. |
 | Evidence | Runs | `/runs` | `⌘6` | Browse recorded run/session evidence. |
 | Evidence | Lived Life | `/lived-life` | Palette | Watch the always-on heartbeat hold one continuous life (closure read-not-repaired over uptime + learned-while-idle). |
-| Evidence | Vault | `/vault` | `⌘8` | Inspect persisted vault metadata when persistence exists. |
+| Evidence | Vault | `/vault` | `⌘8` | Inspect persisted vault entries when persistence exists — entry-inspector depth, status/facet/text filters, evidence rail, and opt-in exact-CGA recall evidence. Read-only (no runtime controls). |
 | Evidence | Audit | `/audit` | `⌘9` | Read deterministic audit events. |
 | Discipline | Evals | `/evals` | `⌘5` | Run/read allowlisted eval lanes and wrong=0 ledgers. |
 | Discipline | Calibration | `/calibration` | Palette | Inspect practice-class reliability and license verdicts. |
