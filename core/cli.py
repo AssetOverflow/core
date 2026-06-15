@@ -364,11 +364,12 @@ def _always_on_identity_break_message(
         pass
     return "\n".join(
         [
-            "this engine state belongs to a different life (substrate identity "
-            f"or build revision changed): {exc}",
+            "this engine state belongs to a different life (the ratified identity "
+            f"packs changed): {exc}",
             "",
             "Recovery options:",
-            "  1. Resume the old life — run the build that wrote it:",
+            "  1. Resume the old life — restore the ratified packs it was written "
+            "under (e.g. run the build that wrote them):",
             f"       git checkout {rev}",
             "       core always-on",
             "  2. Start a fresh persisted life under a separate state dir "

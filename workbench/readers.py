@@ -13,7 +13,12 @@ from typing import Any, Callable, cast, get_args
 
 from chat.always_on import LIVED_LIFE_FILENAME
 from core.config import RuntimeConfig
-from core.engine_identity import EngineIdentityError, engine_identity_for_config
+from core.engine_identity import (
+    EngineIdentityError,
+    IdentityReconciliation,
+    engine_identity_for_config,
+    reconcile_loaded_identity,
+)
 from engine_state import EngineStateStore, get_git_revision
 from evals.framework import discover_lanes, get_lane, run_lane
 from teaching.proposals import DEFAULT_PROPOSAL_LOG_PATH, ProposalLog, ReviewState
@@ -1690,9 +1695,7 @@ def _identity_continuity_from_manifest(
     evidence_gap = None
 
     try:
-        current_engine_identity = engine_identity_for_config(
-            RuntimeConfig(), current_revision
-        )
+        current_engine_identity = engine_identity_for_config(RuntimeConfig())
     except EngineIdentityError as exc:
         current_engine_identity = None
         evidence_gap = f"current engine identity unavailable: {exc}"
@@ -1723,14 +1726,36 @@ def _identity_continuity_from_manifest(
             evidence_gap=evidence_gap,
         )
 
-    if engine_identity == current_engine_identity:
-        summary = "checkpoint identity matches the current ratified substrate"
-        status = cast(IdentityContinuityStatus, "verified")
-        gap = None
-    else:
+    # ADR-0220 — reconcile via the same helper the runtime load guard uses, so a
+    # legacy (code_revision-folded) stamp whose ratified packs verify identical
+    # reads as the SAME identity (migrated on reboot), not a phantom break, and a
+    # build-revision-only change never reads as a break.
+    try:
+        stored_scheme = int(manifest.get("identity_scheme", 1))
+    except (TypeError, ValueError):
+        stored_scheme = 1
+    reconciliation = reconcile_loaded_identity(
+        RuntimeConfig(),
+        current_engine_identity,
+        stored_identity=engine_identity,
+        stored_scheme=stored_scheme,
+        stored_revision=written_at_revision,
+    )
+    if reconciliation is IdentityReconciliation.DIVERGED:
         summary = "checkpoint identity differs from the current ratified substrate"
         status = cast(IdentityContinuityStatus, "break")
         gap = "runtime would surface identity_continuity_break on reboot"
+    elif reconciliation is IdentityReconciliation.MIGRATED:
+        summary = (
+            "checkpoint identity matches the current ratified substrate after a "
+            "legacy stamp-scheme migration (build revision is provenance, not identity)"
+        )
+        status = cast(IdentityContinuityStatus, "verified")
+        gap = None
+    else:  # MATCH
+        summary = "checkpoint identity matches the current ratified substrate"
+        status = cast(IdentityContinuityStatus, "verified")
+        gap = None
 
     return IdentityContinuity(
         status=status,
@@ -1770,9 +1795,7 @@ def lived_life() -> LivedLife:
             register_pack_id=pack_ids.get("register_pack_id") or None,
             anchor_lens_id=pack_ids.get("anchor_lens_id") or None,
         )
-        current_identity: str | None = engine_identity_for_config(
-            recompute_config, get_git_revision()
-        )
+        current_identity: str | None = engine_identity_for_config(recompute_config)
     except EngineIdentityError:
         current_identity = None
     return lived_life_from_payload(

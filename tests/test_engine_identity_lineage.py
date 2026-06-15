@@ -10,17 +10,19 @@ the resumed life's checkpoint descends from the pre-reboot identity.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
-from chat.runtime import ChatRuntime, get_git_revision
+from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.config import RuntimeConfig
 from core.engine_identity import engine_identity_for_config
+from engine_state import EngineStateStore
 
 
 def _manifest(state_dir: Path) -> dict:
-    return json.loads((state_dir / "manifest.json").read_text(encoding="utf-8"))
+    # Resolve via the store so the ADR-0219 generation-dir manifest is found
+    # (the committed manifest lives in gen-NNNN/, not at the flat root).
+    return EngineStateStore(state_dir).load_manifest() or {}
 
 
 def _drive(state_dir: Path, n: int, config: RuntimeConfig | None = None) -> ChatRuntime:
@@ -36,10 +38,8 @@ def test_manifest_stamps_content_derived_engine_identity(tmp_path: Path) -> None
     rt = _drive(state_dir, 1)
     m = _manifest(state_dir)
     assert m["engine_identity"] == rt._engine_identity
-    # It IS the content-derived identity of the ratified substrate.
-    assert m["engine_identity"] == engine_identity_for_config(
-        RuntimeConfig(), get_git_revision()
-    )
+    # It IS the content-derived identity of the ratified substrate (packs only).
+    assert m["engine_identity"] == engine_identity_for_config(RuntimeConfig())
 
 
 def test_lineage_is_stable_across_a_continuous_run(tmp_path: Path) -> None:

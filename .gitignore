@@ -61,6 +61,12 @@ engine_state/recognizers.jsonl
 engine_state/discovery_candidates.jsonl
 engine_state/lived_life.json
 engine_state/always_on.lock
+# ADR-0219 generation-dir checkpoint layout (the committed gen dir + pointer)
+# and the CL proposal log — also runtime-generated, not source.
+engine_state/current
+engine_state/gen-*/
+engine_state/session_state.json
+engine_state/proposals.jsonl
 # per-life idle frontier-contemplation runs — any engine-state root (incl. CORE_ENGINE_STATE_DIR).
 contemplation_runs/
 

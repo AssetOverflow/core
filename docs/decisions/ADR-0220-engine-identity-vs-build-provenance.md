@@ -1,6 +1,8 @@
 # ADR-0220 — Engine identity vs. build provenance (`code_revision` in the identity hash)
 
-Status: proposed (brief only — no code change; awaiting architect ratification)
+Status: Accepted (ratified 2026-06-15 by repository owner). PR A merged; PR B
+merged (#772); PR C — identity/provenance split — implemented on
+`feat/identity-substrate-hash-split`.
 Date: 2026-06-15
 Relates: ADR-0146 (engine-state persistence), ADR-0156 (atomic checkpoint),
 ADR-0157 (revision-mismatch warning), ADR-0219 (generation-dir atomic checkpoint),
@@ -157,20 +159,25 @@ first-class way to carry a life across an intended identity change
 (`engine-state fork`), instead of manual file surgery. Complements whichever of
 O2/O3 is chosen.
 
-## Proposed decision (pending ratification)
+## Decision (ratified 2026-06-15)
 
-Adopt **O3 (split)** as the direction, with the **resume policy defaulting to
-warn-and-resume (O2 semantics) and strict-mode requiring explicit operator
-intent.** Sequence the work so the doctrine change lands *after* this decision is
-accepted:
+Adopt **O3 (split)**, with the **resume policy defaulting to warn-and-resume (O2
+semantics) and strict-mode requiring explicit operator intent** for a
+build-provenance-only divergence. A genuine *substrate* divergence (different
+ratified packs) still refuses under strict — that is the real "different
+identity". Sequence:
 
-- **PR A — this brief.** No code.
-- **PR B — safe operator ergonomics (no identity-semantics change).** Shippable
-  immediately; see below.
-- **PR C — identity/provenance semantics.** Only after A is accepted. Splits the
-  hash, re-points the continuity guard at `identity_substrate_hash`, adds a
-  `build_provenance` manifest field (or reuses `written_at_revision`), and
-  updates the proof surface.
+- **PR A — this brief.** No code. *(merged)*
+- **PR B — safe operator ergonomics (no identity-semantics change).** *(merged, #772)*
+- **PR C — identity/provenance semantics.** *(this branch)* Splits the hash so
+  `engine_identity` = ratified packs only (NO `code_revision`); re-points the
+  continuity guard at that substrate hash; records `code_revision` as
+  provenance only (the manifest already carries `written_at_revision`); adds an
+  identity-scheme marker so pre-split checkpoints (which folded `code_revision`
+  in) migrate via warn-and-re-stamp rather than a flag-day strict break; and
+  updates the L11 lineage / L10 soak proof surface — including a new test that a
+  behavior-neutral commit (same packs, different rev) no longer breaks
+  continuity, while keeping "distinct packs ⇒ distinct identity" green.
 
 ### Honesty note on the split
 

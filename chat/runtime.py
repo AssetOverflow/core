@@ -54,8 +54,13 @@ from teaching.discovery import (
     format_candidate_jsonl,
 )
 from teaching.discovery_sink import DiscoveryCandidateSink
-from engine_state import EngineStateStore, get_git_revision
-from core.engine_identity import engine_identity_for_config
+from engine_state import EngineStateStore
+from core.engine_identity import (
+    ENGINE_IDENTITY_SCHEME,
+    IdentityReconciliation,
+    engine_identity_for_config,
+    reconcile_loaded_identity,
+)
 from recognition.anti_unifier import derive_recognizer
 from recognition.outcome import FeatureBundle
 from recognition.registry import RecognizerRegistry
@@ -746,9 +751,9 @@ class ChatRuntime:
         # L11 — the engine's content-derived identity (who am I), and the
         # identity stamped in the loaded checkpoint (the lineage parent for the
         # next checkpoint). ``_loaded_engine_identity`` stays "" at genesis.
-        self._engine_identity: str = engine_identity_for_config(
-            self.config, get_git_revision()
-        )
+        # ADR-0220: identity is the ratified PACKS only — the build revision is
+        # provenance (manifest written_at_revision), not an identity input.
+        self._engine_identity: str = engine_identity_for_config(self.config)
         self._loaded_engine_identity: str = ""
         # CL — the persistent reviewed-learning proposal log. ``idle_tick()``
         # advances it during idle (proposal-only); it lives alongside the engine
@@ -779,29 +784,51 @@ class ChatRuntime:
         self._recognizer_registry = RecognizerRegistry.from_recognizers(recognizers)
         self._pending_candidates = store.load_discovery_candidates()
         self._turn_count = int(manifest.get("turn_count", 0))
-        # L11 — the identity this checkpoint was written under becomes the lineage
-        # parent of the next checkpoint we write. If it differs from the identity
-        # we recomputed at boot, the ratified substrate changed during downtime:
-        # we would resume the lived state under a DIFFERENT identity. Surface it
-        # (warn + flag); refuse only under strict_identity_continuity.
+        # L11 / ADR-0220 — the identity this checkpoint was written under becomes
+        # the lineage parent of the next checkpoint. Reconcile it against the
+        # identity we recomputed at boot (packs-only). A genuine ratified-PACK
+        # divergence is a different identity (refuse under strict / warn+flag); a
+        # legacy (code_revision-folded) stamp whose packs verify identical is the
+        # SAME identity under an old stamp scheme (migrate + re-stamp, no break);
+        # a build-revision-only change is not a divergence at all (packs-only
+        # hash is rev-independent → MATCH). reconcile_loaded_identity is the
+        # single source of truth shared with the workbench continuity reader.
         self._loaded_engine_identity = str(manifest.get("engine_identity", ""))
-        if (
-            self._loaded_engine_identity
-            and self._loaded_engine_identity != self._engine_identity
-        ):
-            self.identity_continuity_break = True
-            message = (
-                "engine identity continuity break: checkpoint was written under "
-                f"{self._loaded_engine_identity[:12]}… but this build computes "
-                f"{self._engine_identity[:12]}… — the ratified identity substrate "
-                "changed while the engine was down. Resuming would carry the lived "
-                "state into a different identity."
+        if self._loaded_engine_identity:
+            reconciliation = reconcile_loaded_identity(
+                self.config,
+                self._engine_identity,
+                stored_identity=self._loaded_engine_identity,
+                stored_scheme=int(manifest.get("identity_scheme", 1)),
+                stored_revision=str(manifest.get("written_at_revision", "")),
             )
-            if self.config.strict_identity_continuity:
-                from core.engine_identity import IdentityContinuityError
+            if reconciliation is IdentityReconciliation.DIVERGED:
+                self.identity_continuity_break = True
+                message = (
+                    "engine identity continuity break: checkpoint was written under "
+                    f"{self._loaded_engine_identity[:12]}… but this build computes "
+                    f"{self._engine_identity[:12]}… — the ratified identity substrate "
+                    "(packs) changed while the engine was down. Resuming would carry "
+                    "the lived state into a different identity."
+                )
+                if self.config.strict_identity_continuity:
+                    from core.engine_identity import IdentityContinuityError
 
-                raise IdentityContinuityError(message)
-            warnings.warn(message, RuntimeWarning, stacklevel=2)
+                    raise IdentityContinuityError(message)
+                warnings.warn(message, RuntimeWarning, stacklevel=2)
+            elif reconciliation is IdentityReconciliation.MIGRATED:
+                # Same identity, legacy stamp scheme — resume and migrate the
+                # lineage parent to the packs-only hash so the chain stays
+                # coherent (the next checkpoint re-stamps under scheme 2).
+                warnings.warn(
+                    "migrating engine-identity stamp scheme (1→2): re-stamping the "
+                    "packs-only identity. Same identity — the build revision is "
+                    "provenance (written_at_revision), not identity.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                self._loaded_engine_identity = self._engine_identity
+            # IdentityReconciliation.MATCH → clean same-identity resume, no-op.
         # Shape B+ (schema v2): restore the lived session state into the live
         # context so a reboot resumes the SAME life (field/vault/anchor/graph/
         # referents/dialogue). Opt-in (config.persist_session_state); None for a
@@ -862,6 +889,7 @@ class ChatRuntime:
             self._turn_count,
             engine_identity=self._engine_identity,
             parent_engine_identity=self._loaded_engine_identity,
+            identity_scheme=ENGINE_IDENTITY_SCHEME,
         )
         store.commit_generation(gen_num)
         self._loaded_engine_identity = self._engine_identity

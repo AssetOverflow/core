@@ -111,7 +111,7 @@ def test_reader_resume_verdict_uses_persisted_pack_ids_not_default(
 
     # Echo the config's identity_pack so the test can see WHICH config the reader recomputed with.
     monkeypatch.setattr(
-        readers, "engine_identity_for_config", lambda cfg, rev: f"id:{cfg.identity_pack}"
+        readers, "engine_identity_for_config", lambda cfg: f"id:{cfg.identity_pack}"
     )
     state_dir = tmp_path / "engine_state"
     state_dir.mkdir(parents=True)
