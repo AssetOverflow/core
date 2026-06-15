@@ -103,6 +103,7 @@ from persona.motor import PersonaMotor
 from session.context import SessionContext
 from session.correction import CorrectionPass
 from vault.decompose import default_decomposer, default_gate
+from core.cognition.backpressure import BackpressureRecord, build_backpressure_record
 
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 # ADR-0073d (L1.4) — extracts the engaged ``cognitive_mode_label`` from a
@@ -556,6 +557,10 @@ class IdleTickResult:
     #: IT — read-only proposal-review summary (None unless ``config.review_pending_proposals``).
     #: Surfaces pending comprehension-failure proposals for review; mutates nothing.
     proposal_review: ProposalReviewIdleSummary | None = None
+    #: Observational backpressure telemetry — backlog depth, headroom, inflow vs drain.
+    #: None only when the tick was never called (not possible in normal use); always
+    #: present on a completed tick. Never gates or refuses; see ADR-0161 for that.
+    backpressure: BackpressureRecord | None = None
 
 
 class ChatRuntime:
@@ -1009,13 +1014,50 @@ class ChatRuntime:
         # idle engine with nothing to learn does not churn the checkpoint.
         if did_work:
             self.checkpoint_engine_state()
+
+        # Backpressure telemetry — observational only, never gates, never alters
+        # trace_hash.  Built from counts already computed above; the cap is resolved
+        # from the env exactly as ADR-0161 does in teaching.proposals.
+        pending_count = self._count_pending_proposals()
+        bp_record = build_backpressure_record(
+            pending_proposals=pending_count,
+            candidate_backlog=len(self._pending_candidates),
+            contemplated_this_tick=contemplated_count,
+            created_this_tick=created,
+            did_work=did_work,
+        )
+        # Append-only telemetry line in the engine-state dir so backpressure
+        # history survives reboot.  Best-effort: a write failure must not crash
+        # the continuous life.
+        if self._engine_state_store is not None:
+            try:
+                telem_path = self._engine_state_store.path / "idle_telemetry.jsonl"
+                line = json.dumps(
+                    {
+                        "pending_proposals": bp_record.pending_proposals,
+                        "candidate_backlog": bp_record.candidate_backlog,
+                        "cap": bp_record.cap,
+                        "headroom": bp_record.headroom,
+                        "contemplated_this_tick": bp_record.contemplated_this_tick,
+                        "created_this_tick": bp_record.created_this_tick,
+                        "at_fixed_point": bp_record.at_fixed_point,
+                        "did_work": bp_record.did_work,
+                    },
+                    separators=(",", ":"),
+                )
+                with open(telem_path, "a", encoding="utf-8") as fh:
+                    fh.write(line + "\n")
+            except Exception:  # noqa: BLE001 — telemetry write must never crash the life
+                pass
+
         return IdleTickResult(
             candidates_contemplated=contemplated_count,
             proposals_created=created,
-            pending_proposals=self._count_pending_proposals(),
+            pending_proposals=pending_count,
             facts_consolidated=facts_consolidated,
             frontier_findings=frontier_findings,
             proposal_review=proposal_review,
+            backpressure=bp_record,
         )
 
     def record_recognition_example(
