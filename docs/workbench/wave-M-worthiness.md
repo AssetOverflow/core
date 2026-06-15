@@ -1,5 +1,11 @@
 # Wave M — CORE Workbench: Mastery & Worthiness
 
+> **Historical record — superseded.** This is the planning doc for its wave and
+> records that wave, not current state. Wave M is complete (Phase B/C/D + B4
+> leeway producer all merged). For the live surface see [`README.md`](./README.md)
+> (Current Status), [`UI-UX-GUIDE.md`](./UI-UX-GUIDE.md), and the route registry
+> `workbench-ui/src/app/routes.ts` (16 routes).
+
 Date: 2026-06-13
 Status: approved plan (Shay, 2026-06-13). Predecessor: Wave R complete
 (#702–#723; 11 routes real, Replay Moment, trace integrity, DAG/Demo/wrong=0).

@@ -1,5 +1,10 @@
 # Wave R — Mastery Revamp: Determinism Made Felt
 
+> **Historical record — superseded.** This is the planning doc for its wave and
+> records that wave, not current state. Wave M is complete. For the live surface
+> see [`README.md`](./README.md) (Current Status), [`UI-UX-GUIDE.md`](./UI-UX-GUIDE.md),
+> and the route registry `workbench-ui/src/app/routes.ts` (16 routes).
+
 Status: approved plan
 Date: 2026-06-12
 Refines: `wave-1-evidence-spine.md` — keeps its spine and Wave-1 deliverables
