@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import resource
 from dataclasses import dataclass, replace
+from enum import Enum
 from pathlib import Path
 
 import numpy as np
@@ -125,6 +126,73 @@ def _new_runtime(config: RuntimeConfig, engine_state_dir: Path) -> ChatRuntime:
     return ChatRuntime(config=config, engine_state_path=engine_state_dir)
 
 
+class InterruptionCutPoint(str, Enum):
+    """Enumeration of the three ADR-0219 checkpoint sub-steps where a kill can occur.
+
+    Used by ``run_soak`` to inject the correct orphan shape and by the
+    ``evaluate_p4_arbitrary_interruption`` predicate to check the gate bullets.
+    """
+
+    PARTIAL_GEN = "partial_gen"           # kill after gen-N+1 dir exists but only partially written
+    FULL_GEN_BEFORE_SWAP = "full_gen_before_swap"  # kill after all files written but before current swap
+    AFTER_SWAP = "after_swap"             # kill after current swap (the committed state); control case
+
+
+def _inject_partial_gen_dir(engine_state_dir: Path) -> None:
+    """Inject: gen-9997/ with only one file, ``current`` unchanged.
+
+    Simulates a kill between ``begin_generation`` and the last ``_atomic_write_text``
+    call in the generation dir: the directory exists with partial content, but
+    ``current`` still names the prior committed generation.  The loader follows
+    ``current`` and never reads the partial dir.
+    """
+    orphan = engine_state_dir / "gen-9997"
+    orphan.mkdir(exist_ok=True)
+    (orphan / "manifest.json").write_text(
+        '{"PARTIAL_WRITE":true,"note":"kill before all files written"}',
+        encoding="utf-8",
+    )
+
+
+def _inject_full_gen_dir_before_swap(engine_state_dir: Path) -> None:
+    """Inject: gen-9997/ with all four files, ``current`` unchanged.
+
+    Simulates a kill after all generation files are written and fsynced but
+    before the atomic ``os.replace`` of ``current`` (step 2 of
+    ``commit_generation``).  The complete gen dir exists but is unreferenced;
+    ``current`` still names the prior committed generation.
+    """
+    orphan = engine_state_dir / "gen-9997"
+    orphan.mkdir(exist_ok=True)
+    for fname in (
+        "recognizers.jsonl",
+        "discovery_candidates.jsonl",
+        "session_state.json",
+        "manifest.json",
+    ):
+        (orphan / fname).write_text(
+            f'{{"FULL_WRITE_BEFORE_SWAP":true,"file":"{fname}"}}',
+            encoding="utf-8",
+        )
+
+
+def _inject_at_cutpoint(
+    engine_state_dir: Path, cut_point: InterruptionCutPoint
+) -> None:
+    """Dispatch to the appropriate injection function for ``cut_point``.
+
+    ``AFTER_SWAP`` is the normal clean-commit case — no orphan is injected;
+    the loader reads the committed generation as expected.
+    """
+    match cut_point:
+        case InterruptionCutPoint.PARTIAL_GEN:
+            _inject_partial_gen_dir(engine_state_dir)
+        case InterruptionCutPoint.FULL_GEN_BEFORE_SWAP:
+            _inject_full_gen_dir_before_swap(engine_state_dir)
+        case InterruptionCutPoint.AFTER_SWAP:
+            pass  # no injection: the committed generation is the expected state
+
+
 def _inject_orphan_tmp(engine_state_dir: Path) -> None:
     """Simulate a kill mid-checkpoint-write under the generation-dir model (ADR-0219).
 
@@ -184,6 +252,7 @@ def run_soak(
     reboot_at: tuple[int, ...] = (),
     config: RuntimeConfig | None = None,
     inject_orphan_tmp_at_reboot: bool = False,
+    cutpoint_at_reboot: InterruptionCutPoint | None = None,
     probe_at: tuple[int, ...] = (),
     verify_probes_at: tuple[int, ...] = (),
     probe_top_k: int = 5,
@@ -196,6 +265,12 @@ def run_soak(
     ``inject_orphan_tmp_at_reboot`` is set, a torn-write orphan temp file is left
     in the checkpoint dir immediately before each reconstruct, so the reboot
     exercises ADR-0156 crash recovery rather than a clean restart.
+
+    W2-R arbitrary-interruption injection: when ``cutpoint_at_reboot`` is given,
+    the corresponding ADR-0219 orphan shape is injected at each reboot boundary
+    (in addition to any ``inject_orphan_tmp_at_reboot`` injection).  The three
+    cut-points model kills at each checkpoint sub-step; ``AFTER_SWAP`` is the
+    clean-commit control case and injects nothing.
 
     P5a vault-recall probes: ``probe_at`` names turns at which the current field
     state is captured as a probe query (float32 bytes, matching the vault's
@@ -222,6 +297,8 @@ def run_soak(
         if i in reboot_set:
             if inject_orphan_tmp_at_reboot:
                 _inject_orphan_tmp(engine_state_dir)
+            if cutpoint_at_reboot is not None:
+                _inject_at_cutpoint(engine_state_dir, cutpoint_at_reboot)
             runtime = _new_runtime(config, engine_state_dir)
             pipe = CognitiveTurnPipeline(runtime=runtime)
             segment += 1

@@ -23,11 +23,13 @@ from pathlib import Path
 from core.config import RuntimeConfig
 
 from evals.l10_continuity.predicates import (
+    CutPointEvidence,
     PredicateOutcome,
     evaluate_p1_closure,
     evaluate_p2a_determinism,
     evaluate_p2b_reboot_transparency,
     evaluate_p3_bounded_resources,
+    evaluate_p4_arbitrary_interruption,
     evaluate_p4_commit_point,
     evaluate_p4_recovery_determinism,
     evaluate_p5a_recall_precision,
@@ -35,7 +37,9 @@ from evals.l10_continuity.predicates import (
     evaluate_p5c_coherence,
 )
 from evals.l10_continuity.runner import (
+    InterruptionCutPoint,
     SoakResult,
+    _inject_at_cutpoint,
     _inject_orphan_tmp,
     read_recovered_turn_count,
     run_soak,
@@ -139,6 +143,49 @@ def build_report(
     _inject_orphan_tmp(probe_dir)
     recovered = read_recovered_turn_count(probe_dir)
 
+    # W2-R arbitrary-interruption soaks: two cut-points × two recovery runs each.
+    # Each pair exercises one ADR-0219 gate bullet empirically through the real
+    # turn loop.  AFTER_SWAP is the clean-commit case covered by rec_a/rec_b above.
+    w2r_evidence: list[CutPointEvidence] = []
+    for cp in (InterruptionCutPoint.PARTIAL_GEN, InterruptionCutPoint.FULL_GEN_BEFORE_SWAP):
+        # Commit-probe: run reboot_turn turns, inject cut-point, read committed gen.
+        cp_probe_dir = root / f"cp_probe_{cp.value}"
+        run_soak(reboot_turn, engine_state_dir=cp_probe_dir, config=config)
+        _inject_at_cutpoint(cp_probe_dir, cp)
+        cp_recovered = read_recovered_turn_count(cp_probe_dir)
+
+        # Two independent recovery soaks for the determinism gate.
+        cp_rec_a = run_soak(
+            n_turns,
+            engine_state_dir=root / f"cp_{cp.value}_a",
+            reboot_at=(reboot_turn,),
+            cutpoint_at_reboot=cp,
+            config=config,
+        )
+        cp_rec_b = run_soak(
+            n_turns,
+            engine_state_dir=root / f"cp_{cp.value}_b",
+            reboot_at=(reboot_turn,),
+            cutpoint_at_reboot=cp,
+            config=config,
+        )
+        w2r_evidence.append(
+            CutPointEvidence(
+                cut_point=cp.value,
+                recovered_turn_count=cp_recovered,
+                expected_turn_count=reboot_turn,
+                tail_hashes_a=tuple(
+                    r.trace_hash for r in cp_rec_a.post_reboot_records()
+                ),
+                tail_hashes_b=tuple(
+                    r.trace_hash for r in cp_rec_b.post_reboot_records()
+                ),
+                all_versor_conditions=(
+                    cp_rec_a.versor_conditions() + cp_rec_b.versor_conditions()
+                ),
+            )
+        )
+
     p2b_outcome, _ = evaluate_p2b_reboot_transparency(reboot, baseline)
     predicates: tuple[PredicateOutcome, ...] = (
         evaluate_p1_closure(baseline),
@@ -147,6 +194,7 @@ def build_report(
         evaluate_p3_bounded_resources(baseline),
         evaluate_p4_recovery_determinism(rec_a, rec_b),
         evaluate_p4_commit_point(recovered, expected_turn_count=reboot_turn),
+        evaluate_p4_arbitrary_interruption(tuple(w2r_evidence)),
         evaluate_p5a_recall_precision(reboot.probe_records),
         evaluate_p5b_anchor_stability(baseline),
         evaluate_p5c_coherence(baseline),
