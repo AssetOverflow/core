@@ -55,6 +55,10 @@ from workbench.schemas import (
 from workbench.lived_life import lived_life_from_payload, missing_lived_life
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+# The engine-state dir the RUNTIME actually uses — honors CORE_ENGINE_STATE_DIR exactly as
+# EngineStateStore / the always-on daemon do, so the workbench can never be split-brained
+# (reading REPO_ROOT/engine_state while the daemon writes to the env dir).
+ENGINE_STATE_ROOT = EngineStateStore().path
 SAFE_EVAL_LANES = frozenset({"contemplation_quality"})
 MAX_ARTIFACT_BYTES = 16 * 1024 * 1024
 READ_CHUNK_BYTES = 64 * 1024
@@ -64,7 +68,7 @@ ENGINE_STATE_RUN_ID = "engine_state_checkpoint"
 _EVAL_RUN_LOCK = threading.Lock()
 _REVIEW_STATES = frozenset(get_args(ReviewState))
 ALLOWED_ARTIFACT_ROOTS = (
-    REPO_ROOT / "engine_state",
+    ENGINE_STATE_ROOT,
     REPO_ROOT / "teaching" / "proposals",
     REPO_ROOT / "teaching" / "math_proposals",
     REPO_ROOT / "evals",
@@ -75,7 +79,6 @@ MATH_PROPOSALS_JSONL = REPO_ROOT / "teaching" / "math_proposals" / "proposals.js
 LANGUAGE_PACK_ROOT = REPO_ROOT / "language_packs" / "data"
 RUNTIME_PACK_ROOT = REPO_ROOT / "packs"
 WORKBENCH_TELEMETRY_ROOT = REPO_ROOT / "workbench_data"
-ENGINE_STATE_ROOT = REPO_ROOT / "engine_state"
 DEMOS_ROOT = REPO_ROOT / "demos"
 CONTEMPLATION_RUNS_ROOT = REPO_ROOT / "contemplation" / "runs"
 _DEFAULT_MATH_AUDIT_PATH = (
@@ -1754,10 +1757,19 @@ def lived_life() -> LivedLife:
     payload = _read_json_object(path)
     artifact = _artifact_ref_for_path(path, "lived_life")
     # The resume verdict: would a reboot resume THIS life? Recompute the current substrate
-    # identity with the canonical function (fail-soft -> "unknown", like IdentityContinuity).
+    # identity with the SAME pack config the run used (persisted in the artifact) — not a
+    # default config, which would falsely read as substrate_changed for a non-default-pack
+    # life. Fail-soft -> "unknown", like IdentityContinuity.
+    pack_ids = payload.get("identity_pack_ids") or {}
     try:
+        recompute_config = RuntimeConfig(
+            identity_pack=pack_ids.get("identity_pack", "") or "",
+            ethics_pack=pack_ids.get("ethics_pack", "") or "",
+            register_pack_id=pack_ids.get("register_pack_id") or None,
+            anchor_lens_id=pack_ids.get("anchor_lens_id") or None,
+        )
         current_identity: str | None = engine_identity_for_config(
-            RuntimeConfig(), get_git_revision()
+            recompute_config, get_git_revision()
         )
     except EngineIdentityError:
         current_identity = None

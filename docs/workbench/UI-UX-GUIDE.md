@@ -94,7 +94,7 @@ the command palette.
 | Demos | Registered demo scenarios pass or fail with recorded scenario evidence and proof/entailment DAGs where the demo emits them. |
 | Proposals | Proposal evidence, replay facts, and ratification commands are inspectable without applying mutation. |
 | Runs | Recorded run/session references, checkpoint gaps, and identity-continuity verdicts are discoverable. |
-| Lived Life | A persisted always-on run shows the engine living + learning over uptime, with closure (`versor_condition < 1e-6`) read as evidence each beat (never repaired); the surface's `closure_held` is consistency-checked against the per-beat measurements, so it can never paint a breached field as valid. |
+| Lived Life | A persisted always-on run (produced by the `core always-on` daemon) shows the engine living + learning over uptime, with closure (`versor_condition < 1e-6`) read as evidence each beat (never repaired); the surface's `closure_held` is consistency-checked against the per-beat measurements, so it can never paint a breached field as valid, and its resume verdict shows whether a reboot resumes this life. |
 | Vault | Persisted vault metadata is inspectable when persistence is configured. |
 | Audit | Audit events are readable with payload digests and mutation-boundary flags. |
 | Evals | Allowlisted eval lanes and wrong/correct/refused metrics are visible. |

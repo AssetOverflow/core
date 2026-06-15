@@ -324,6 +324,89 @@ def cmd_chat(args: argparse.Namespace) -> int:
     return 0
 
 
+# How often (in beats) the always-on daemon logs an "alive" line when idle, so the
+# operator sees a living process without per-beat spam on a saturated (converged) life.
+_ALWAYS_ON_ALIVE_EVERY = 60
+
+
+def cmd_always_on(args: argparse.Namespace) -> int:
+    """Run the continuous-life heartbeat daemon (T-experience) until SIGINT/SIGTERM.
+
+    The thin shell over ``chat.always_on_daemon.run_daemon``: it forces the continuous-life
+    config on, takes the single-instance lock, and ticks ``idle_tick`` on a cadence so the
+    engine LIVES and LEARNS with no user turn — persisting ``lived_life.json`` (the
+    workbench Lived Life surface) and resuming the SAME life on the next start."""
+    from chat.always_on_daemon import AlwaysOnLockedError, run_daemon
+    from core.engine_identity import IdentityContinuityError
+    from engine_state import IncompatibleEngineStateError
+
+    max_beats = getattr(args, "max_beats", None)
+    if max_beats is not None and max_beats < 0:
+        _die("--max-beats must be >= 0", code=2)
+    interval = float(getattr(args, "interval", 1.0))
+    if interval < 0:
+        _die("--interval must be >= 0", code=2)
+    quiet = bool(getattr(args, "quiet", False))
+
+    def _log(record) -> None:
+        if quiet:
+            return
+        vc = "—" if record.versor_condition is None else f"{record.versor_condition:.2e}"
+        if record.did_work:
+            print(
+                f"[beat {record.tick}] learned +{record.facts_consolidated} facts "
+                f"+{record.proposals_created} proposals · closure {vc}",
+                file=sys.stderr,
+            )
+        elif record.tick % _ALWAYS_ON_ALIVE_EVERY == 0:
+            print(
+                f"[beat {record.tick}] alive · closure {vc} · valid={record.field_valid}",
+                file=sys.stderr,
+            )
+
+    bound = "unbounded (until SIGINT/SIGTERM)" if max_beats is None else f"{max_beats} beats"
+    print(
+        f"core always-on: continuous-life heartbeat · interval {interval}s · {bound}",
+        file=sys.stderr,
+    )
+    try:
+        result = run_daemon(
+            config=_runtime_config_from_args(args),
+            interval=interval,
+            max_beats=max_beats,
+            no_load_state=bool(getattr(args, "no_load_state", False)),
+            on_record=_log,
+        )
+    except AlwaysOnLockedError as exc:
+        _die(f"always-on already running for this engine state: {exc}", code=2)
+    except IdentityContinuityError as exc:
+        _die(
+            "this engine state belongs to a different life (substrate identity "
+            f"changed): {exc}",
+            code=2,
+        )
+    except IncompatibleEngineStateError as exc:
+        _die(f"this engine state was written by a newer build: {exc}", code=2)
+
+    report = result.report
+    how = "signal" if result.stopped_by_signal else "completed"
+    if not report.closure_observed:
+        closure = "no field observed"
+    elif report.closure_held:
+        closure = "held"
+    else:
+        closure = "BREACHED"
+    print(
+        f"core always-on: stopped ({how}) after {report.heartbeats} heartbeats · "
+        f"learned {report.total_facts_consolidated} facts · "
+        f"{report.total_proposals_created} proposals · closure {closure} · "
+        f"checkpoint {'ok' if report.final_checkpoint_ok else 'FAILED'} · "
+        f"life {report.identity}",
+        file=sys.stderr,
+    )
+    return 0
+
+
 def _pytest_args_for_suite(suite: str, extra_args: Sequence[str]) -> list[str]:
     paths = _TEST_SUITES[suite]
     forwarded = list(extra_args)
@@ -4142,6 +4225,42 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     chat.set_defaults(func=cmd_chat)
+
+    always_on = subparsers.add_parser(
+        "always-on",
+        help="run the continuous-life heartbeat daemon (T-experience) until SIGINT/SIGTERM",
+    )
+    _add_runtime_policy_args(always_on)
+    always_on.add_argument(
+        "--interval",
+        type=float,
+        default=1.0,
+        metavar="SECONDS",
+        help="seconds between heartbeats (the idle-learning cadence); default: 1.0",
+    )
+    always_on.add_argument(
+        "--max-beats",
+        type=int,
+        default=None,
+        metavar="N",
+        help="stop after N heartbeats; default: unbounded (run until SIGINT/SIGTERM)",
+    )
+    always_on.add_argument(
+        "--no-load-state",
+        action="store_true",
+        default=False,
+        help=(
+            "run a fresh EPHEMERAL life (do not load or persist engine_state); "
+            "default: load + persist + resume the SAME life across restarts"
+        ),
+    )
+    always_on.add_argument(
+        "--quiet",
+        action="store_true",
+        default=False,
+        help="suppress per-beat logging; print only the final summary",
+    )
+    always_on.set_defaults(func=cmd_always_on)
 
     test = subparsers.add_parser("test", help="run pytest with curated suite aliases or direct passthrough")
     test.add_argument("--suite", choices=sorted(_TEST_SUITES), help="curated suite alias to run")
