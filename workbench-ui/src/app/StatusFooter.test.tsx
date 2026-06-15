@@ -3,14 +3,14 @@ import userEvent from "@testing-library/user-event";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "../test/createTestQueryClient";
-import type { RuntimeStatus } from "../types/api";
+import type { HealthStatus, RuntimeStatus } from "../types/api";
 
 vi.mock("../api/queries", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../api/queries")>();
-  return { ...actual, useRuntimeStatus: vi.fn() };
+  return { ...actual, useRuntimeStatus: vi.fn(), useHealth: vi.fn() };
 });
 
-import { useRuntimeStatus } from "../api/queries";
+import { useHealth, useRuntimeStatus } from "../api/queries";
 import { StatusFooter } from "./StatusFooter";
 
 const status: RuntimeStatus = {
@@ -22,6 +22,17 @@ const status: RuntimeStatus = {
   active_session_id: null,
   mutation_mode: "read_only",
 };
+
+function mockHealth(
+  value: Partial<ReturnType<typeof useHealth>> & { data?: HealthStatus },
+) {
+  vi.mocked(useHealth).mockReturnValue({
+    data: undefined,
+    isError: false,
+    isLoading: false,
+    ...value,
+  } as unknown as ReturnType<typeof useHealth>);
+}
 
 function renderFooter() {
   return render(
@@ -36,6 +47,7 @@ beforeEach(() => {
     data: status,
     isError: false,
   } as unknown as ReturnType<typeof useRuntimeStatus>);
+  mockHealth({ data: { status: "ok" } });
 });
 
 afterEach(() => {
@@ -75,5 +87,51 @@ describe("StatusFooter", () => {
     const checkpoint = screen.getByTestId("checkpoint-revision");
     expect(checkpoint.getAttribute("title")).toMatch(/checkpoint revision/i);
     expect(checkpoint.getAttribute("title")).toMatch(/unknown/);
+  });
+
+  it("shows a healthy liveness indicator when GET /health reports ok", () => {
+    renderFooter();
+    const health = screen.getByTestId("health-indicator");
+    expect(health).toHaveAttribute("data-health", "healthy");
+    expect(health).toHaveTextContent("Healthy");
+  });
+
+  it("marks the server unhealthy when /health errors", () => {
+    mockHealth({ isError: true });
+    renderFooter();
+    const health = screen.getByTestId("health-indicator");
+    expect(health).toHaveAttribute("data-health", "unhealthy");
+    expect(health).toHaveTextContent("Unhealthy");
+  });
+
+  it("marks the server unhealthy when /health returns a non-ok status", () => {
+    mockHealth({ data: { status: "degraded" } });
+    renderFooter();
+    expect(screen.getByTestId("health-indicator")).toHaveAttribute(
+      "data-health",
+      "unhealthy",
+    );
+  });
+
+  it("shows a checking state before the first probe resolves", () => {
+    mockHealth({ isLoading: true });
+    renderFooter();
+    const health = screen.getByTestId("health-indicator");
+    expect(health).toHaveAttribute("data-health", "checking");
+    expect(health).toHaveTextContent("Checking");
+  });
+
+  it("still reports health when runtime status is unavailable", () => {
+    vi.mocked(useRuntimeStatus).mockReturnValue({
+      data: undefined,
+      isError: true,
+    } as unknown as ReturnType<typeof useRuntimeStatus>);
+    mockHealth({ data: { status: "ok" } });
+    renderFooter();
+    expect(screen.getByText("Status unavailable")).toBeInTheDocument();
+    expect(screen.getByTestId("health-indicator")).toHaveAttribute(
+      "data-health",
+      "healthy",
+    );
   });
 });

@@ -50,6 +50,10 @@ export type AuditSource =
   | "reboot_telemetry"
   | "teaching_proposal_log";
 
+export interface HealthStatus {
+  status: string;
+}
+
 export interface RuntimeStatus {
   backend: Backend;
   git_revision: string;

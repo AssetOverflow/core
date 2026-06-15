@@ -38,6 +38,7 @@ import type {
   MathProposalSummary,
   MathProposalDetail,
   MathRatifyResult,
+  HealthStatus,
 } from "../types/api";
 
 export class WorkbenchApiError extends Error {
@@ -70,6 +71,12 @@ export async function apiFetch<T>(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function fetchHealth(): Promise<HealthStatus> {
+  // Cheap liveness probe — keep the timeout short so an unresponsive server
+  // surfaces as "Unhealthy" quickly rather than blocking the footer poll.
+  return apiFetch<HealthStatus>("/health", { timeoutMs: 3000 });
 }
 
 export async function fetchEvalLanes(): Promise<EvalLaneSummary[]> {
