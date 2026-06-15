@@ -7,6 +7,7 @@ import { Panel } from "../../design/components/Panel/Panel";
 import { SearchInput } from "../../design/components/SearchInput/SearchInput";
 import { SplitPane } from "../../design/components/SplitPane/SplitPane";
 import { Timestamp } from "../../design/components/Timestamp/Timestamp";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import { VirtualizedList } from "../../design/components/VirtualizedList/VirtualizedList";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
@@ -75,8 +76,13 @@ function TurnRow({
         <span className="block text-xs text-[var(--color-text-secondary)]">
           <Timestamp iso={turn.timestamp} format="relative" />
         </span>
-        <span className="mt-1 block truncate text-sm text-[var(--color-text-primary)]">
-          {turn.prompt_excerpt || `Turn #${turn.turn_id}`}
+        <span className="mt-1 block min-w-0">
+          <TruncatedCell
+            value={turn.prompt_excerpt || `Turn #${turn.turn_id}`}
+            label="prompt"
+            wrap="pre-wrap"
+            className="text-sm text-[var(--color-text-primary)]"
+          />
         </span>
       </span>
       <span className="justify-self-end font-mono text-xs text-[var(--color-text-muted)]">

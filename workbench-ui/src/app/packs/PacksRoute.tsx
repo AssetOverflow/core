@@ -9,6 +9,7 @@ import { Panel } from "../../design/components/Panel/Panel";
 import { SearchInput } from "../../design/components/SearchInput/SearchInput";
 import { SplitPane } from "../../design/components/SplitPane/SplitPane";
 import { StableJsonViewer } from "../../design/components/StableJsonViewer";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import { TabBar, type Tab } from "../../design/components/TabBar/TabBar";
 import { TreeView } from "../../design/components/TreeView/TreeView";
 import { VirtualizedList } from "../../design/components/VirtualizedList/VirtualizedList";
@@ -81,8 +82,13 @@ function PackRow({
       }`}
     >
       <span className="min-w-0">
-        <span className="block truncate text-sm text-[var(--color-text-primary)]">
-          {pack.pack_id}
+        <span className="block min-w-0">
+          <TruncatedCell
+            value={pack.pack_id}
+            label="pack id"
+            mono
+            className="text-sm text-[var(--color-text-primary)]"
+          />
         </span>
         <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-secondary)]">
           <span>{sourceLabel(pack.source)}</span>

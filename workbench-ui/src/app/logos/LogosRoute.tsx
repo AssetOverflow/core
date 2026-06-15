@@ -14,6 +14,7 @@ import { Panel } from "../../design/components/Panel/Panel";
 import { SplitPane } from "../../design/components/SplitPane/SplitPane";
 import { StableJsonViewer } from "../../design/components/StableJsonViewer";
 import { TabBar, type Tab } from "../../design/components/TabBar/TabBar";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
@@ -165,8 +166,13 @@ function PackRow({
       }`}
     >
       <span className="min-w-0">
-        <span className="block truncate font-mono text-sm text-[var(--color-text-primary)]">
-          {pack.pack_id}
+        <span className="block min-w-0">
+          <TruncatedCell
+            value={pack.pack_id}
+            label="pack id"
+            mono
+            className="text-sm text-[var(--color-text-primary)]"
+          />
         </span>
         <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-secondary)]">
           <span>{roleLabel(pack.role)}</span>

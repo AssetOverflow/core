@@ -1,4 +1,5 @@
 import { StableJsonViewer } from "../../design/components/StableJsonViewer";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import { DagViewer, type DagEdgeInput, type DagNodeInput } from "../../design/components/Dag";
 import type { ProposalDetail } from "../../types/api";
 import { chainRecords, isRecord, jsonSource, stringField } from "./proposalView";
@@ -68,9 +69,12 @@ export function ProposalChainViewer({ proposal }: { proposal: ProposalDetail }) 
                     {index + 1}. {nodeLabel(record, index)}
                   </span>
                   {provenance(record) ? (
-                    <span className="truncate text-xs text-[var(--color-text-muted)]">
-                      {provenance(record)}
-                    </span>
+                    <TruncatedCell
+                      value={provenance(record) as string}
+                      label="provenance"
+                      align="end"
+                      className="text-xs text-[var(--color-text-muted)]"
+                    />
                   ) : null}
                 </div>
                 <StableJsonViewer source={jsonSource(record)} />

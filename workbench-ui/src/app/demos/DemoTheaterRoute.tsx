@@ -8,6 +8,7 @@ import { DigestBadge } from "../../design/components/DigestBadge/DigestBadge";
 import { Button } from "../../design/components/primitives/Button";
 import { Panel } from "../../design/components/Panel/Panel";
 import { SearchInput } from "../../design/components/SearchInput/SearchInput";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import { VirtualizedList } from "../../design/components/VirtualizedList/VirtualizedList";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
@@ -63,9 +64,11 @@ function DemoRow({
             : "border-l-2 border-l-transparent pl-[10px]"
       }`}
     >
-      <span className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
-        {demo.title}
-      </span>
+      <TruncatedCell
+        value={demo.title}
+        label="demo title"
+        className="text-sm font-semibold text-[var(--color-text-primary)]"
+      />
       <span className="font-mono text-xs text-[var(--color-text-muted)]">
         {demo.scenario_count} scenarios
       </span>
@@ -225,9 +228,12 @@ function ResultRow({ scenario }: { scenario: DemoScenarioRunResult }) {
         </p>
       ) : null}
       {scenario.trace_hash ? (
-        <code className="truncate font-mono text-xs text-[var(--color-text-muted)]">
-          {scenario.trace_hash}
-        </code>
+        <TruncatedCell
+          value={scenario.trace_hash}
+          label="trace hash"
+          mono
+          className="text-xs text-[var(--color-text-muted)]"
+        />
       ) : null}
       {scenario.problems.length > 0 ? (
         <ul className="m-0 grid list-none gap-1 p-0">
