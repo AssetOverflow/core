@@ -84,13 +84,22 @@ def comprehension_relational_predicate_result() -> DomainResult:
     return DomainResult("comprehension_relational_predicate", c, w, r)
 
 
+def comprehension_relational_inference_result() -> DomainResult:
+    from evals.comprehension.relational_inference_runner import run
+
+    c, w, r = _counts(run())
+    return DomainResult("comprehension_relational_inference", c, w, r)
+
+
 #: The reasoning domains currently composed into the index (self-loading lanes).
 #: The six ``comprehension_*`` lanes score the GENERAL comprehension reader; the
 #: relational_metric one reads arithmetic prose into the binding-graph quantity
 #: substrate (admissibility-checked) and projects to the arithmetic oracle, and the
 #: relational_predicate one (#596) reads binary-relation prose into pack-named
-#: predicates — so the index now measures comprehension breadth across categorical,
-#: ordering, propositional, quantitative, AND relational reasoning.
+#: predicates, and the relational_inference one DETERMINES one-hop inverse/symmetric
+#: entailments (mastery-v2 Step 3) — so the index measures comprehension breadth across
+#: categorical, ordering, propositional, quantitative, relational-reading, AND
+#: relational-inference reasoning.
 ADAPTERS = (
     deductive_logic_result,
     relational_metric_result,
@@ -101,6 +110,7 @@ ADAPTERS = (
     comprehension_propositional_result,
     comprehension_relational_metric_result,
     comprehension_relational_predicate_result,
+    comprehension_relational_inference_result,
 )
 
 

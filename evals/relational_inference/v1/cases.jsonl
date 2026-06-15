@@ -1,0 +1,13 @@
+{"id": "rinf-001", "facts": ["Bob is less than Alice."], "query": "Is Alice greater than Bob?", "predicate": "greater_than", "subject": "alice", "object": "bob", "rule": "inverse"}
+{"id": "rinf-002", "facts": ["Alice is greater than Bob."], "query": "Is Bob less than Alice?", "predicate": "less_than", "subject": "bob", "object": "alice", "rule": "inverse"}
+{"id": "rinf-003", "facts": ["Alice is the parent of Bob."], "query": "Is Bob the child of Alice?", "predicate": "child_of", "subject": "bob", "object": "alice", "rule": "inverse"}
+{"id": "rinf-004", "facts": ["Bob is the child of Alice."], "query": "Is Alice the parent of Bob?", "predicate": "parent_of", "subject": "alice", "object": "bob", "rule": "inverse"}
+{"id": "rinf-005", "facts": ["The box is left of the cup."], "query": "Is the cup right of the box?", "predicate": "right_of", "subject": "cup", "object": "box", "rule": "inverse"}
+{"id": "rinf-006", "facts": ["The cup is right of the box."], "query": "Is the box left of the cup?", "predicate": "left_of", "subject": "box", "object": "cup", "rule": "inverse"}
+{"id": "rinf-007", "facts": ["Dawn is before noon."], "query": "Is noon after dawn?", "predicate": "after_event", "subject": "noon", "object": "dawn", "rule": "inverse"}
+{"id": "rinf-008", "facts": ["Noon is after dawn."], "query": "Is dawn before noon?", "predicate": "before_event", "subject": "dawn", "object": "noon", "rule": "inverse"}
+{"id": "rinf-009", "facts": ["Alice is the sibling of Bob."], "query": "Is Bob the sibling of Alice?", "predicate": "sibling_of", "subject": "bob", "object": "alice", "rule": "symmetric"}
+{"id": "rinf-010", "facts": ["Alice is the spouse of Bob."], "query": "Is Bob the spouse of Alice?", "predicate": "spouse_of", "subject": "bob", "object": "alice", "rule": "symmetric"}
+{"id": "rinf-011", "facts": ["Gold is equal to silver."], "query": "Is silver equal to gold?", "predicate": "equal_to", "subject": "silver", "object": "gold", "rule": "symmetric"}
+{"id": "rinf-012", "facts": ["Gold is distinct from silver."], "query": "Is silver distinct from gold?", "predicate": "distinct_from", "subject": "silver", "object": "gold", "rule": "symmetric"}
+{"id": "rinf-013", "facts": ["The room is adjacent to the hall."], "query": "Is the hall adjacent to the room?", "predicate": "adjacent_to", "subject": "hall", "object": "room", "rule": "symmetric"}

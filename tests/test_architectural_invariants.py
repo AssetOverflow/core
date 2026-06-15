@@ -2137,18 +2137,20 @@ class TestINV30OpenWorldDetermineNeverAssertsFalse:
         )
 
     def test_determine_construction_sites_are_visible(self):
-        """30c — the scan actually sees the open-world gear's two `Determined`
-        sites (direct entailment + transitive subsumption), and both assert
-        True. If the count drops the scan went blind, not clean; if `ok` drops
-        the firewall was breached at its own source."""
+        """30c — the scan actually sees the open-world gear's three `Determined`
+        sites (direct entailment, one-hop relational inverse/symmetric, and
+        transitive subsumption), and all assert True. If the count drops the scan
+        went blind, not clean; if `ok` drops the firewall was breached at its own
+        source. (Grew 2 -> 3 when one-hop relational inference landed; both new
+        rules share the single `_relational_determined` constructor.)"""
         determine_path = (
             PROJECT_ROOT_FOR_INV21 / "generate" / "determine" / "determine.py"
         )
         constructions = _determined_constructions(
             ast.parse(determine_path.read_text())
         )
-        assert len(constructions) == 2, (
-            "Expected exactly the two open-world `Determined(answer=True)` "
+        assert len(constructions) == 3, (
+            "Expected exactly the three open-world `Determined(answer=True)` "
             f"construction sites in determine.py; saw {len(constructions)}. "
             "If the gear legitimately changed shape, update this count — but "
             "confirm every site still asserts only `answer=True`."
