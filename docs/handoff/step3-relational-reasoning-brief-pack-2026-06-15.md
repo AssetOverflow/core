@@ -16,7 +16,7 @@ boundary doctrine are on `main`. Relational *breadth* (16 predicates) and one-ho
 *inference* are done; what remains is **deeper sound entailment**, a **refusal floor**,
 a **reader-surface gap**, and the **two-sided design**.
 
-## DAG (sequence + parallelism)
+## DAG (sequence + integration)
 
 ```mermaid
 graph LR
@@ -29,7 +29,11 @@ graph LR
 
 - **B1 first** (safety): hardens the open-world refusal floor that B2 and later
   closed-world work would otherwise stress. Measure-only — lowest risk.
-- **B2, B3 parallel-safe** (file-disjoint; dispatch concurrently once B1 is dispatched).
+- **B2, B3 are parallel-development safe, not conflict-free.** They may be built in
+  separate worktrees, but both can touch `generate/meaning_graph/relational.py`,
+  `evals/relational_inference/v1/`, and capability-index baseline artifacts. Dispatch
+  concurrently only with the expectation that one branch rebases after the other lands;
+  the second merger owns the final baseline re-freeze.
 - **B4 is DESIGN ONLY**, gated: do not implement until B1 is landed *and* the design
   is ratified. Drafting it in parallel is fine.
 
@@ -59,8 +63,8 @@ capability-index domain** (a refusal floor has low coverage and would drag
 
 **Why.** `determine()` asserts `answer=True` only on entailment, never `False`, never
 from absence (open-world). ProofWriter's **OWA split** has a genuine `Unknown` label —
-the only dataset semantics matching open-world soundness. An item `determine()` asserts
-that gold marks `Unknown`/`False` is a **wrong=0 breach**. This lane makes that breach
+the dataset semantics matching open-world soundness. An item `determine()` asserts
+that gold marks `Unknown` is a **wrong=0 breach**. This lane makes that breach
 *findable* against an independent symbolic oracle, hardening "unknown ≠ false" **before**
 transitive chains (B2) and closed-world work (B4) can stress it. (This is the never-landed
 Brief 1 from `docs/handoff/proofwriter-owa-and-relational-reader-briefs-2026-06-06.md`.)
@@ -90,7 +94,7 @@ inference step, or import `generate.derivation` / `core.reliability_gate`.
 
 ---
 
-## Brief 2 — Transitive relational chains *(parallel-safe)*
+## Brief 2 — Transitive relational chains *(parallel-development safe; sequential integration)*
 
 **Open with:** `git fetch origin main && git worktree add ../core-rel-trans origin/main -b feat/relational-transitive`
 
@@ -114,8 +118,9 @@ reasoning increment, not template spam.
 
 **wrong=0 bite (must bite).** Non-transitive predicates MUST refuse the chain: `sibling_of`
 is not transitive; `parent_of` is not transitive (`parent∘parent = grandparent ≠ parent`);
-spatial `left_of`/`right_of` are **not** generally transitive (only in a total order — out
-of scope). A confuser lane proves each of these refuses; a `Determined` on any is a breach.
+spatial `left_of`/`right_of` are **not** admitted here because they require an explicit
+shared-frame/total-order proof that this slice does not have. A confuser lane proves each
+of these refuses; a `Determined` on any is a breach.
 
 **Do NOT:** declare any non-strict-order predicate transitive; build a new inference engine
 (reuse the ROBDD); assert False; touch the GSM8K serving path.
@@ -127,7 +132,7 @@ adapter, baseline re-freeze, a lane test + unit tests. **Budget:** ~30–40 tool
 
 ---
 
-## Brief 3 — `overlaps_event` finite-verb reader surface *(parallel-safe)*
+## Brief 3 — `overlaps_event` finite-verb reader surface *(parallel-development safe; sequential integration)*
 
 **Open with:** `git fetch origin main && git worktree add ../core-rel-finite origin/main -b feat/relational-finite-verb-surface`
 
@@ -139,7 +144,8 @@ refuses (`no_relational_template`) and `is overlaps` is ungrammatical. So `overl
 
 **Scope.**
 1. Extend `comprehend_relational` to ALSO accept a **finite-verb surface** `<A> <verb> <B>`
-   (no copula) for a CLOSED finite-verb connective set (`overlaps`, plus any future ones).
+   (no copula) for a CLOSED finite-verb connective set. This brief should add `overlaps`
+   only; future finite verbs require their own closed table entries and mounted pack lemmas.
    **Fail-closed:** emit only when the verb maps to a mounted pack lemma AND both argument
    slots are free of connective/reserved tokens; otherwise refuse. Reuse the existing
    argument-slot guard (the `_CONNECTIVE_TOKENS` fabrication net) — extend it to the new form.
@@ -202,13 +208,14 @@ to ground the design).
 
 ### Dispatch summary
 
-| # | Brief | Kind | Parallelism | Risk |
+| # | Brief | Kind | Integration | Risk |
 |---|-------|------|-------------|------|
 | 1 | ProofWriter-OWA refusal floor | measure-only | first | low |
-| 2 | Transitive relational chains | capability | parallel w/ 3 | medium (scope to strict orders) |
-| 3 | `overlaps_event` finite-verb surface | reader | parallel w/ 2 | low–medium |
+| 2 | Transitive relational chains | capability | develop parallel; integrate sequentially | medium (scope to strict orders) |
+| 3 | `overlaps_event` finite-verb surface | reader | develop parallel; integrate sequentially | low–medium |
 | 4 | FrameVerdict closed-world | design only | after 1 lands | n/a (no code) |
 
 Each operator runs `python -m pytest` **in its own worktree** (the `core` script resolves to
 the main checkout — see [[feedback-env-core-rs-build-and-public-demo-flake]]). Merge order:
-land **B1** before B4 impl; B2/B3 independently.
+land **B1** before B4 impl; land B2/B3 in either order, with the second merger rebasing and
+owning the final baseline re-freeze.
