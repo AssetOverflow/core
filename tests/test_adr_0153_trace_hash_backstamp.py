@@ -109,8 +109,11 @@ def test_pipeline_back_stamps_pending_discovery_candidates(
 def test_persisted_candidates_jsonl_carries_trace_hash(
     tmp_path: Path,
 ) -> None:
-    """The on-disk ``discovery_candidates.jsonl`` checkpoint reflects the
-    back-stamped trace_hash (not the empty default)."""
+    """The persisted discovery candidates carry the back-stamped trace_hash.
+
+    Uses the store's public load interface (load_discovery_candidates) rather
+    than reading file paths directly, so the test is layout-agnostic.
+    """
     subject = _pick_cold_cause_subject()
     state_path = tmp_path / "engine_state"
     runtime = ChatRuntime(
@@ -121,25 +124,24 @@ def test_persisted_candidates_jsonl_carries_trace_hash(
     result = pipe.run(f"What causes {subject}?")
     runtime.checkpoint_engine_state()
 
-    candidates_path = state_path / "discovery_candidates.jsonl"
-    if not candidates_path.exists():
+    from engine_state import EngineStateStore
+    loaded = EngineStateStore(state_path).load_discovery_candidates()
+    if not loaded:
         pytest.skip("checkpoint did not write candidates this turn")
 
-    lines = [
-        json.loads(line)
-        for line in candidates_path.read_text("utf-8").splitlines()
-        if line.strip()
-    ]
     cold = [
-        ln
-        for ln in lines
-        if ln["proposed_chain"]["subject"] == subject
-        and ln["proposed_chain"]["intent"] == "cause"
+        c
+        for c in loaded
+        if c.proposed_chain.get("subject") == subject
+        and c.proposed_chain.get("intent") == "cause"
     ]
     if not cold:
         pytest.skip("discovery did not fire under default config; fixture stale")
-    for ln in cold:
-        assert ln["source_turn_trace"] == result.trace_hash
+    for c in cold:
+        assert c.source_turn_trace == result.trace_hash, (
+            f"persisted candidate source_turn_trace must equal the trace_hash; "
+            f"got {c.source_turn_trace!r} vs {result.trace_hash!r}"
+        )
 
 
 def test_finalize_is_noop_for_empty_trace_hash(tmp_path: Path) -> None:

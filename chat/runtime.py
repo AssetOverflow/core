@@ -829,7 +829,6 @@ class ChatRuntime:
             recognizer = derive_recognizer(tuple(self._pending_recognizer_examples))
             self._recognizer_registry.register(recognizer)
             self._pending_recognizer_examples.clear()
-        store.save_recognizers(self._recognizer_registry.all())
         candidates_to_save = self._pending_candidates
         if self.config.auto_contemplate and candidates_to_save:
             from teaching.contemplation import contemplate
@@ -838,22 +837,28 @@ class ChatRuntime:
                 contemplate(c, vault_probe=vault_probe)
                 for c in candidates_to_save
             ]
-        store.save_discovery_candidates(candidates_to_save)
+        # ADR-0219 — generation-dir atomic checkpoint.  All files are written
+        # into a fresh gen-NNNN/ directory; the commit is the atomic pointer
+        # swap in commit_generation.  A kill before the swap leaves the prior
+        # committed generation intact.  The manifest is the last file written
+        # into the gen dir (audit convention); the pointer swap is the true
+        # commit boundary.
+        gen_num, gen_dir = store.begin_generation()
+        gen_store = EngineStateStore(gen_dir)
+        gen_store.save_recognizers(self._recognizer_registry.all())
+        gen_store.save_discovery_candidates(candidates_to_save)
         # Shape B+ (schema v2): persist the lived session state (field, vault,
-        # anchor, graph, referents, dialogue) BEFORE the manifest, so the
-        # manifest stays the last durable act — the commit marker for the turn.
-        # Opt-in (config.persist_session_state): a deliberate resume mode, off by
-        # default so one-shot runtimes don't pay the per-turn snapshot cost.
+        # anchor, graph, referents, dialogue) BEFORE the manifest.
+        # Opt-in (config.persist_session_state): off by default.
         if self._context is not None and self.config.persist_session_state:
-            store.save_session_state(self._context.snapshot())
-        # L11 — stamp the engine's identity and its lineage parent (the identity
-        # of the prior checkpoint). Same substrate -> identity == parent (a stable
-        # life); a ratified substrate change -> identity != parent (the bump).
-        store.save_manifest(
+            gen_store.save_session_state(self._context.snapshot())
+        # L11 — stamp the engine's identity and its lineage parent.
+        gen_store.save_manifest(
             self._turn_count,
             engine_identity=self._engine_identity,
             parent_engine_identity=self._loaded_engine_identity,
         )
+        store.commit_generation(gen_num)
         self._loaded_engine_identity = self._engine_identity
 
     def _count_pending_proposals(self) -> int:
@@ -1027,10 +1032,13 @@ class ChatRuntime:
         ``compute_trace_hash`` produces the turn's canonical
         SHA-256.  Stamps the trace_hash onto the most recent
         TurnEvent and any DiscoveryCandidate emitted during this
-        turn (i.e., the unstamped tail of ``_pending_candidates``),
-        then re-persists the candidates checkpoint so the on-disk
-        audit trail names the originating turn instead of the
-        prior empty-string default.
+        turn (i.e., the unstamped tail of ``_pending_candidates``).
+
+        The stamped candidates are held in memory and persisted at the
+        next ``checkpoint_engine_state`` call (ADR-0219: only
+        ``checkpoint_engine_state`` writes to the checkpoint dir, so the
+        trace-hash back-stamp is always part of a coherent committed
+        generation rather than a mid-turn partial write).
 
         No-op when ``trace_hash`` is empty (pre-pipeline call sites,
         refusal stub path).  Idempotent: stamping a tail whose
@@ -1043,18 +1051,12 @@ class ChatRuntime:
             last_event = self.turn_log[-1]
             if not last_event.trace_hash:
                 self.turn_log[-1] = replace(last_event, trace_hash=trace_hash)
-        stamped = False
         for idx in range(len(self._pending_candidates) - 1, -1, -1):
             cand = self._pending_candidates[idx]
             if cand.source_turn_trace:
                 break
             self._pending_candidates[idx] = replace(
                 cand, source_turn_trace=trace_hash
-            )
-            stamped = True
-        if stamped and self._engine_state_store is not None:
-            self._engine_state_store.save_discovery_candidates(
-                self._pending_candidates
             )
 
     def first_admitted_recognizer(self):

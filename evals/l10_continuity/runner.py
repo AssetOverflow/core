@@ -105,17 +105,33 @@ def _new_runtime(config: RuntimeConfig, engine_state_dir: Path) -> ChatRuntime:
 
 
 def _inject_orphan_tmp(engine_state_dir: Path) -> None:
-    """Simulate a kill mid-checkpoint-write: leave an orphan temp file.
+    """Simulate a kill mid-checkpoint-write under the generation-dir model (ADR-0219).
 
-    ADR-0156 writes ``content`` to a ``.<name>.<rand>.tmp`` file, fsyncs, then
-    ``os.replace``s it into place. A SIGKILL between fsync and replace leaves
-    exactly such an orphan with the *real* target fully intact. The loader reads
-    only the canonical filenames, so the orphan must be ignored. We write a
-    deliberately-corrupt orphan to prove the loader never reads it.
+    Two orphan shapes, both harmless to a correct loader:
+
+    1. An unreferenced generation directory (kill before the ``current`` pointer
+       swap): ``gen-9999/`` exists with content, but ``current`` still names the
+       prior committed generation.  The loader follows ``current``; the
+       unreferenced gen dir is invisible to it.
+
+    2. A torn ``current`` temp file (kill during the ``os.replace`` of
+       ``current``): ``.current.deadbeef.tmp`` exists, but ``os.replace`` is
+       atomic so ``current`` is either the old or the new value — never the temp.
+       The loader reads only the canonical ``current`` filename.
+
+    Neither orphan is reachable from a consistent load path.
     """
     engine_state_dir.mkdir(parents=True, exist_ok=True)
-    orphan = engine_state_dir / ".manifest.json.deadbeef.tmp"
-    orphan.write_text("{ this is a torn, half-written checkpoint <<<", encoding="utf-8")
+    # Orphan 1: unreferenced gen dir (kill before pointer swap)
+    orphan_gen = engine_state_dir / "gen-9999"
+    orphan_gen.mkdir(exist_ok=True)
+    (orphan_gen / "manifest.json").write_text(
+        '{ "TORN": true, "note": "this gen was never committed via current" }',
+        encoding="utf-8",
+    )
+    # Orphan 2: torn current temp file (kill during pointer swap)
+    torn_current = engine_state_dir / ".current.deadbeef.tmp"
+    torn_current.write_text("gen-9999", encoding="utf-8")
 
 
 def read_recovered_turn_count(engine_state_dir: Path) -> int | None:
