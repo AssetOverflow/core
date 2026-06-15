@@ -15,6 +15,7 @@ import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 
 import pytest
 
@@ -25,6 +26,11 @@ from chat.always_on_daemon import (
     _SingleInstanceLock,
     continuous_life_config,
     run_daemon,
+)
+from core.cli import (
+    _always_on_identity_break_message,
+    build_parser,
+    cmd_always_on,
 )
 from core.config import RuntimeConfig
 from workbench.lived_life import lived_life_from_payload
@@ -210,3 +216,74 @@ def test_interruptible_sleep_without_stop_is_a_plain_sleep() -> None:
     start = time.monotonic()
     _sleep_until_stop(0.05, None)
     assert time.monotonic() - start >= 0.04  # actually waited (no stop predicate)
+
+
+# --- PR B (ADR-0220): operator ergonomics — per-life state dir + safe recovery ---
+
+
+def test_always_on_engine_state_flag_defaults_to_none() -> None:
+    # Default: fall back to $CORE_ENGINE_STATE_DIR / the in-repo dir (engine_state_path=None).
+    args = build_parser().parse_args(["always-on"])
+    assert args.engine_state is None
+
+
+def test_always_on_engine_state_flag_parses_to_path() -> None:
+    args = build_parser().parse_args(["always-on", "--engine-state", "/tmp/es_x"])
+    assert args.engine_state == Path("/tmp/es_x")
+
+
+def test_always_on_threads_engine_state_to_run_daemon(tmp_path, monkeypatch) -> None:
+    # The wiring obligation: --engine-state must reach run_daemon(engine_state_path=...),
+    # not be silently dropped. Capture the kwargs and short-circuit before the heartbeat.
+    import chat.always_on_daemon as daemon_mod
+
+    class _Stop(Exception):
+        pass
+
+    captured: dict = {}
+
+    def _fake_run_daemon(**kwargs):
+        captured.update(kwargs)
+        raise _Stop()  # stop before cmd_always_on's (un-mockable) summary epilogue
+
+    monkeypatch.setattr(daemon_mod, "run_daemon", _fake_run_daemon)
+    target = tmp_path / "branch_life"
+    args = build_parser().parse_args(
+        ["always-on", "--engine-state", str(target), "--max-beats", "0"]
+    )
+    with pytest.raises(_Stop):
+        cmd_always_on(args)
+    assert captured["engine_state_path"] == target
+
+
+def test_identity_break_message_is_safe_and_revision_aware(tmp_path) -> None:
+    # The humane recovery message: revision-aware option 1, the --engine-state escape
+    # hatch, the underlying refusal preserved — and NEVER the mv/rm footgun (which would
+    # destroy the engine_state Python package under the default dir; ADR-0220).
+    state = tmp_path / "engine_state"
+    state.mkdir()
+    (state / "manifest.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 2,
+                "turn_count": 7,
+                "written_at_revision": "deadbeefcafe",
+                "engine_identity": "a" * 64,
+            }
+        ),
+        encoding="utf-8",
+    )
+    msg = _always_on_identity_break_message(state, RuntimeError("boom"))
+    assert "git checkout deadbeefcafe" in msg  # copy-pasteable originating revision
+    assert "--engine-state" in msg  # the safe per-life escape hatch
+    assert "boom" in msg  # the original refusal is preserved
+    assert "mv engine_state" not in msg  # the footgun is never suggested
+    assert "rm -rf engine_state" not in msg
+
+
+def test_identity_break_message_without_manifest_uses_placeholder(tmp_path) -> None:
+    # No readable manifest -> placeholder revision, still structured, still safe.
+    msg = _always_on_identity_break_message(tmp_path / "empty", RuntimeError("x"))
+    assert "<checkpoint_revision>" in msg
+    assert "mv engine_state" not in msg
+    assert "rm -rf engine_state" not in msg

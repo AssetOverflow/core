@@ -329,6 +329,61 @@ def cmd_chat(args: argparse.Namespace) -> int:
 _ALWAYS_ON_ALIVE_EVERY = 60
 
 
+def _always_on_identity_break_message(
+    engine_state_path: Path | None, exc: Exception
+) -> str:
+    """Operator recovery guidance for an always-on identity-continuity refusal.
+
+    Safe by construction (ADR-0220): it never tells the operator to ``mv``/``rm``
+    the engine-state directory — under the default that directory IS the tracked
+    ``engine_state`` Python package, so moving it breaks ``import engine_state``
+    across the codebase (including this very command). It steers to: re-run the
+    originating revision, a separate ``--engine-state`` dir, or clearing ONLY the
+    runtime files. The checkpoint revision is read from the manifest so option 1
+    is copy-pasteable (placeholder when no readable manifest is present)."""
+    import warnings as _warnings
+
+    from engine_state import EngineStateStore
+
+    rev = "<checkpoint_revision>"
+    state_dir: Path | None = engine_state_path
+    try:
+        store = EngineStateStore(engine_state_path)
+        state_dir = store.path
+        with _warnings.catch_warnings():
+            # Reading the manifest re-triggers ADR-0157's revision-mismatch
+            # RuntimeWarning; this is a message formatter, not a load path, so
+            # don't re-warn the operator as a side effect of building the string.
+            _warnings.simplefilter("ignore")
+            manifest = store.load_manifest() or {}
+        rev = str(manifest.get("written_at_revision") or rev)
+    except Exception:
+        # Best-effort: this is a display helper on an error path. If the manifest
+        # can't be read we degrade to the placeholder rev/dir — never let
+        # message-building mask the refusal that brought us here.
+        pass
+    return "\n".join(
+        [
+            "this engine state belongs to a different life (substrate identity "
+            f"or build revision changed): {exc}",
+            "",
+            "Recovery options:",
+            "  1. Resume the old life — run the build that wrote it:",
+            f"       git checkout {rev}",
+            "       core always-on",
+            "  2. Start a fresh persisted life under a separate state dir "
+            "(leaves the old one untouched):",
+            "       core always-on --engine-state ./engine_state_<name>",
+            "  3. Start fresh in place — clear ONLY the runtime files in",
+            f"       {state_dir}",
+            "     (manifest.json, the 'current' pointer + gen-*/ dirs, "
+            "recognizers.jsonl, discovery_candidates.jsonl,",
+            "      session_state.json, proposals.jsonl) — never the directory "
+            "itself (it holds the engine_state package).",
+        ]
+    )
+
+
 def cmd_always_on(args: argparse.Namespace) -> int:
     """Run the continuous-life heartbeat daemon (T-experience) until SIGINT/SIGTERM.
 
@@ -383,6 +438,7 @@ def cmd_always_on(args: argparse.Namespace) -> int:
     try:
         result = run_daemon(
             config=daemon_config,
+            engine_state_path=getattr(args, "engine_state", None),
             interval=interval,
             max_beats=max_beats,
             no_load_state=bool(getattr(args, "no_load_state", False)),
@@ -392,8 +448,9 @@ def cmd_always_on(args: argparse.Namespace) -> int:
         _die(f"always-on already running for this engine state: {exc}", code=2)
     except IdentityContinuityError as exc:
         _die(
-            "this engine state belongs to a different life (substrate identity "
-            f"changed): {exc}",
+            _always_on_identity_break_message(
+                getattr(args, "engine_state", None), exc
+            ),
             code=2,
         )
     except IncompatibleEngineStateError as exc:
@@ -4263,6 +4320,19 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "run a fresh EPHEMERAL life (do not load or persist engine_state); "
             "default: load + persist + resume the SAME life across restarts"
+        ),
+    )
+    always_on.add_argument(
+        "--engine-state",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        dest="engine_state",
+        help=(
+            "engine-state directory (the per-life state root) for this life; "
+            "default: $CORE_ENGINE_STATE_DIR or the in-repo engine_state/ dir. "
+            "Point at a dedicated path to run a separate persisted life without "
+            "touching another (and without moving the engine_state package dir)."
         ),
     )
     always_on.add_argument(
