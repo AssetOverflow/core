@@ -267,6 +267,13 @@ Failures should be easier to inspect than successes.
 - `DigestValue`
 - `MetadataTable`
 - `Timestamp`
+- `TruncatedCell` — every truncated table/rail cell. Keeps the compact display
+  but attaches one hover/focus-revealed trigger that opens an accessible popover
+  with the full value (selectable) + copy, and "Open full view" → modal for long
+  values. `stopPropagation` keeps the reveal independent of row selection. Used
+  across proposal queue, eval case ledger, CORE-Logos contents, proposal
+  artifacts, trace propagation edges, and the single-column selection rails.
+  Digests keep `DigestBadge` (already copy + full-value title).
 
 ## UX Principle
 
