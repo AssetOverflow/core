@@ -62,7 +62,13 @@ export interface LogosPackSubjectData
 
 export interface VaultEntrySubjectData {
   entry_index?: number;
+  epistemic_status?: string;
   epistemic_state?: string;
+  // The full open metadata dict the reader passes through. Already carried at
+  // runtime (selectEntry sets the complete VaultEntry); typed here so the
+  // inspector can surface it. Curated rows key off fields that actually exist;
+  // the raw drawer renders the rest.
+  metadata?: Record<string, unknown>;
   versor_digest?: string | null;
 }
 
