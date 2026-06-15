@@ -374,6 +374,29 @@ not directly rewrite language packs, frames, identity axes, or operator code.
 
 Identity manifold mutation by user prompt or correction is forbidden.
 
+### Provisional vs durable standing (the typed learning boundary)
+
+The boundary is between **durable** and **provisional** standing, not between
+"reviewed" and "everything else". Provisional state — session memory, idle
+SPECULATIVE consolidation, sealed practice ledgers, reliability counts, emitted
+proposals, disclosed licensed estimates — may update autonomously *iff* it is
+typed (carries its standing), isolated (same `VaultStore.store` path, no
+parallel memory), replayable (no clock, no LLM, no sampling), and cannot
+masquerade as ratified truth (written SPECULATIVE; rendered `as_told` /
+`[approximate]` / "proposal"). Durable standing — corpus/pack/policy/identity
+mutation, and any promotion to COHERENT/verified — stays reviewed
+(`teaching/*`, proposal-only) or proof-carrying (ADR-0218
+`apply_certified_promotion`, re-verified from a curator-certified coherent
+base).
+
+This is enforced by failing-when-violated invariants, not convention: INV-21
+(vault-writer allowlist), INV-22/INV-23 (default SPECULATIVE), INV-24 (recall
+categorization; user-facing evidence is COHERENT-only), INV-29 (only
+`vault/store.py` transitions `epistemic_status`; the certificate gate is the
+only default-reachable COHERENT producer), and INV-30 (the open-world
+`determine()` gear asserts only `answer=True` or refuses — never `False`;
+closed-world entailed-negation must be a distinct, lane-scoped type).
+
 ## Environmental falsification contract (ADR-0211)
 
 `sensorium.environment.falsification` compares expected afferent evidence with

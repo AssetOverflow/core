@@ -1993,3 +1993,167 @@ class TestINV29EpistemicStatusTransitionSites:
             "the ADR-0218 apply_certified_promotion site in "
             "vault/store.py to be visible to the INV-29 scan."
         )
+
+
+# ===========================================================================
+# INV-30  Open-world DETERMINE never asserts False
+# ===========================================================================
+#
+# Claim (generate/determine/determine.py §"wrong=0 / soundness (open-world)";
+# ADR-0206; mastery-v2 reviewer Amendment 3):
+# The open-world determination gear answers a question ONLY from what the held
+# self has realized, under the OPEN-WORLD assumption — absence never refutes.
+# It asserts only `answer=True` (a direct or sound-transitive POSITIVE
+# entailment) or refuses (`Undetermined`). It must NEVER construct a
+# `Determined` with `answer=False`: a False from absence would be an
+# unsound, wrong=0-class assertion (closed-world falsehood imported into an
+# open-world path, where "not stored" ≠ "false").
+#
+# This matters because the next planned capability (DEEPEN / Step 2b) adds
+# CLOSED-WORLD entailed-negation — `answer=False` for ProofWriter-CWA and
+# FOLIO two-sided labels. That capability is sound ONLY inside an explicit
+# closed-world / proof-backed context. It must therefore use a DISTINCT
+# closed-world result type and a DISTINCT entry point — never the open-world
+# `Determined` constructed here — so closed-world falsehood cannot leak into
+# the runtime session-memory determination path. This invariant is that
+# firewall: it is mechanically impossible to emit `Determined(answer=False)`
+# from anywhere, so a closed-world assert-False has to be lane-scoped by
+# construction rather than by reviewer vigilance.
+#
+# `Determined` is a single named type (generate/determine/determine.py); the
+# disclosed-estimate path uses the separately-named `ConverseEstimate`, so a
+# project-wide scan for `Determined(answer=...)` is exact and unambiguous.
+
+
+def _determined_constructions(tree: ast.AST) -> list[tuple[int, bool]]:
+    """Every ``Determined(...)`` construction in ``tree``, paired with whether
+    its ``answer`` is the constant ``True``.
+
+    ``answer`` is read from the ``answer=`` keyword or, failing that, the first
+    positional argument (the dataclass field order is
+    ``answer, basis, predicate, subject, object, grounds``). A non-``True``
+    constant, a computed expression, or a missing answer all count as
+    "not provably True" — i.e. a potential closed-world False.
+
+    Uses AST so comments/docstrings/strings cannot trigger false positives.
+    """
+    out: list[tuple[int, bool]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = (
+            func.id if isinstance(func, ast.Name)
+            else func.attr if isinstance(func, ast.Attribute)
+            else ""
+        )
+        if name != "Determined":
+            continue
+        answer: ast.expr | None = None
+        for kw in node.keywords:
+            if kw.arg == "answer":
+                answer = kw.value
+                break
+        if answer is None and node.args:
+            answer = node.args[0]
+        is_true = isinstance(answer, ast.Constant) and answer.value is True
+        out.append((node.lineno, is_true))
+    return out
+
+
+def _determined_false_construction_sites(path: Path) -> list[int]:
+    try:
+        tree = ast.parse(path.read_text())
+    except (OSError, SyntaxError):
+        return []
+    return [ln for ln, ok in _determined_constructions(tree) if not ok]
+
+
+class TestINV30OpenWorldDetermineNeverAssertsFalse:
+    """
+    Claim: no production module may construct a `Determined` whose `answer` is
+    not the constant `True`. The open-world gear asserts only positive direct
+    or sound-transitive entailment, or refuses. A closed-world assert-False
+    capability must use a distinct result type and entry point, never this one.
+    """
+
+    def test_no_determined_asserts_false(self):
+        offenders: list[str] = []
+        for path in _enumerate_project_py_files():
+            for ln in _determined_false_construction_sites(path):
+                rel = str(path.relative_to(PROJECT_ROOT_FOR_INV21))
+                offenders.append(f"{rel}:{ln}")
+        assert not offenders, (
+            "Open-world DETERMINE constructed `Determined(answer=...)` with a "
+            "non-`True` answer at:\n  " + "\n  ".join(offenders)
+            + "\n\nThe open-world gear may assert only `answer=True` or refuse "
+            "(`Undetermined`); absence never refutes (open-world). If you are "
+            "adding a CLOSED-WORLD entailed-negation capability (ProofWriter-"
+            "CWA / FOLIO two-sided labels), route assert-False through a "
+            "DISTINCT closed-world result type and entry point — not the "
+            "open-world `Determined` — so closed-world falsehood cannot reach "
+            "the runtime session-memory determination path (determine.py "
+            "§soundness; mastery-v2 reviewer Amendment 3)."
+        )
+
+    def test_detector_is_non_vacuous(self):
+        """30b — prove 30a can fail: the predicate flags every `answer`-not-True
+        construction shape (False constant, computed expr, positional False,
+        unary negation), whether keyword or positional."""
+        flagged = (
+            "Determined(answer=False, basis='b', predicate='p', subject='s', object='o', grounds=())",
+            "Determined(answer=flag, basis='b', predicate='p', subject='s', object='o', grounds=())",
+            "Determined(False, 'b', 'p', 's', 'o', ())",
+            "Determined(answer=not hit, basis='b', predicate='p', subject='s', object='o', grounds=())",
+        )
+        missed = [
+            s for s in flagged
+            if not [ln for ln, ok in _determined_constructions(ast.parse(s)) if not ok]
+        ]
+        assert not missed, (
+            "INV-30 predicate failed to flag a non-True `Determined` answer "
+            "shape:\n  " + "\n  ".join(missed)
+            + "\n— the assert-False firewall has gone partially blind."
+        )
+
+    def test_detector_ignores_true_and_reads(self):
+        """30b' — no false positives: `answer=True` (keyword or positional) and
+        reads of `.answer` stay clean, so the firewall does not train people to
+        route around it."""
+        clean = (
+            "Determined(answer=True, basis='b', predicate='p', subject='s', object='o', grounds=())",
+            "Determined(True, 'b', 'p', 's', 'o', ())",
+            "x = d.answer",
+            "if result.answer:\n    pass",
+        )
+        noisy = [
+            s for s in clean
+            if [ln for ln, ok in _determined_constructions(ast.parse(s)) if not ok]
+        ]
+        assert not noisy, (
+            "INV-30 predicate flagged an `answer=True` construction or a read "
+            "of `.answer`:\n  " + "\n  ".join(noisy)
+            + "\n— false positives would train people to allowlist reflexively."
+        )
+
+    def test_determine_construction_sites_are_visible(self):
+        """30c — the scan actually sees the open-world gear's two `Determined`
+        sites (direct entailment + transitive subsumption), and both assert
+        True. If the count drops the scan went blind, not clean; if `ok` drops
+        the firewall was breached at its own source."""
+        determine_path = (
+            PROJECT_ROOT_FOR_INV21 / "generate" / "determine" / "determine.py"
+        )
+        constructions = _determined_constructions(
+            ast.parse(determine_path.read_text())
+        )
+        assert len(constructions) == 2, (
+            "Expected exactly the two open-world `Determined(answer=True)` "
+            f"construction sites in determine.py; saw {len(constructions)}. "
+            "If the gear legitimately changed shape, update this count — but "
+            "confirm every site still asserts only `answer=True`."
+        )
+        assert all(ok for _, ok in constructions), (
+            "A `Determined` site in determine.py no longer asserts the constant "
+            "`True` — the open-world soundness firewall was breached at source."
+        )
