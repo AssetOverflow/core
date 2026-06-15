@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useEvidenceSubject, type EvidenceSubject } from "./evidenceContext";
 import { EvidenceChainRail } from "./EvidenceChainRail";
-import { MetadataTable } from "../design/components/MetadataTable/MetadataTable";
+import { MetadataTable, type MetadataRow } from "../design/components/MetadataTable/MetadataTable";
 import { DigestBadge } from "../design/components/DigestBadge/DigestBadge";
 import { Timestamp } from "../design/components/Timestamp/Timestamp";
 import {
@@ -465,24 +465,115 @@ function LogosAlignmentEdgeInspector({
   );
 }
 
+// Honest absence for a core identity field that every session entry should
+// carry — shown rather than silently dropped.
+const NOT_RECORDED = "not recorded";
+
+// Read one metadata field as a display string, or null when genuinely absent.
+// The vault metadata dict is open; values are strings/numbers/booleans (turn,
+// role, energy_*, corrected, propositional_form, ...).
+function vaultMetaValue(
+  metadata: Record<string, unknown> | undefined,
+  key: string,
+): string | null {
+  if (!metadata) return null;
+  const value = metadata[key];
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return JSON.stringify(value);
+}
+
+// Deterministic, recursively key-sorted JSON for the raw drawer — same bytes
+// every render regardless of backend key order, so the drawer never churns.
+function stableJson(value: unknown): string {
+  return JSON.stringify(
+    value,
+    (_key, val) =>
+      val && typeof val === "object" && !Array.isArray(val)
+        ? Object.fromEntries(
+            Object.keys(val as Record<string, unknown>)
+              .sort()
+              .map((k) => [k, (val as Record<string, unknown>)[k]]),
+          )
+        : val,
+    2,
+  );
+}
+
+// Optional rows surfaced only when the (open) metadata actually carries them —
+// these don't exist on every entry, so absence is correct, not "not recorded".
+const VAULT_OPTIONAL_FIELDS: { key: string; mono?: boolean; copyable?: boolean }[] = [
+  { key: "corrected" },
+  { key: "energy_class" },
+  { key: "energy_raw", mono: true },
+  { key: "coherence_residual", mono: true },
+  { key: "promotion_certificate_digest", mono: true, copyable: true },
+];
+
 function VaultEntryInspector({ subject }: { subject: Extract<EvidenceSubject, { kind: "vault_entry" }> }) {
   const { data } = subject;
+  const handle = `vault:${subject.entryIndex}`;
+  if (!data) {
+    return (
+      <div className="grid gap-3">
+        <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Vault Entry</h3>
+        <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">#{subject.entryIndex}</p>
+        <DetailNotLoaded />
+      </div>
+    );
+  }
+
+  const metadata = data.metadata;
+  // Headline only a string propositional_form; structured forms stay in the drawer.
+  const propositionalForm =
+    metadata && typeof metadata.propositional_form === "string"
+      ? metadata.propositional_form
+      : null;
+
+  // Core identity rows — always shown, with honest "not recorded" when absent.
+  // epistemic_status (storage tier) and epistemic_state (trust display) are
+  // distinct fields and must read distinctly.
+  const coreRows: MetadataRow[] = [
+    { key: "epistemic_status", value: data.epistemic_status ?? NOT_RECORDED },
+    { key: "epistemic_state", value: data.epistemic_state ?? NOT_RECORDED },
+    { key: "turn", value: vaultMetaValue(metadata, "turn") ?? NOT_RECORDED, mono: true },
+    { key: "role", value: vaultMetaValue(metadata, "role") ?? NOT_RECORDED },
+  ];
+
+  const optionalRows: MetadataRow[] = VAULT_OPTIONAL_FIELDS.flatMap(({ key, mono, copyable }) => {
+    const value = vaultMetaValue(metadata, key);
+    return value === null ? [] : [{ key, value, mono, copyable }];
+  });
+
+  // Copyable handles: the evidence address and the versor digest.
+  const handleRows: MetadataRow[] = [
+    { key: "handle", value: handle, mono: true, copyable: true },
+    ...(data.versor_digest
+      ? [{ key: "versor_digest", value: data.versor_digest, mono: true, copyable: true } as const]
+      : []),
+  ];
+
   return (
     <div className="grid gap-3">
       <h3 className="text-xs font-semibold text-[var(--color-text-secondary)]">Vault Entry</h3>
       <p className="m-0 font-mono text-xs text-[var(--color-text-primary)]">#{subject.entryIndex}</p>
-      {data ? (
-        <MetadataTable
-          rows={[
-            ...(data.epistemic_state ? [{ key: "epistemic", value: data.epistemic_state }] : []),
-            ...(data.versor_digest
-              ? [{ key: "versor", value: data.versor_digest, mono: true, copyable: true }]
-              : []),
-          ]}
-        />
-      ) : (
-        <DetailNotLoaded />
-      )}
+      {propositionalForm ? (
+        <p className="m-0 text-sm text-[var(--color-text-primary)] [text-wrap:balance]">
+          {propositionalForm}
+        </p>
+      ) : null}
+      <MetadataTable rows={[...coreRows, ...optionalRows, ...handleRows]} />
+      {metadata && Object.keys(metadata).length > 0 ? (
+        <details className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)]">
+          <summary className="cursor-pointer px-3 py-2 text-xs text-[var(--color-text-secondary)]">
+            Raw metadata
+          </summary>
+          <pre className="m-0 max-h-80 overflow-auto border-t border-[var(--color-border-subtle)] px-3 py-2 font-mono text-xs text-[var(--color-text-primary)]">
+            {stableJson(metadata)}
+          </pre>
+        </details>
+      ) : null}
     </div>
   );
 }

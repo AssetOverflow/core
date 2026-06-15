@@ -126,6 +126,85 @@ describe("RightInspector", () => {
     expect(screen.getByText("sha256:practice")).toBeInTheDocument();
   });
 
+  it("shows vault entry depth: distinct status/state, curated metadata, handle, raw drawer", () => {
+    function SetVaultEntry() {
+      const { setSubject } = useEvidenceSubject();
+      useEffect(() => {
+        setSubject({
+          kind: "vault_entry",
+          entryIndex: 7,
+          data: {
+            entry_index: 7,
+            epistemic_status: "coherent",
+            epistemic_state: "decoded",
+            versor_digest: "sha256:vvvvvvvvvvvv",
+            metadata: {
+              turn: 3,
+              role: "assistant",
+              energy_class: "warm",
+              coherence_residual: 0.01,
+              propositional_form: "alpha causes beta",
+              promotion_certificate_digest: "sha256:certcertcert",
+            },
+          },
+        });
+      }, [setSubject]);
+      return <RightInspector />;
+    }
+    render(
+      <EvidenceProvider>
+        <SetVaultEntry />
+      </EvidenceProvider>,
+    );
+
+    expect(screen.getByText("Vault Entry")).toBeInTheDocument();
+    expect(screen.getByText("#7")).toBeInTheDocument();
+    // epistemic_status (tier) and epistemic_state (trust display) are distinct
+    expect(screen.getByText("epistemic_status")).toBeInTheDocument();
+    expect(screen.getByText("epistemic_state")).toBeInTheDocument();
+    expect(screen.getByText("coherent")).toBeInTheDocument();
+    expect(screen.getByText("decoded")).toBeInTheDocument();
+    // core + present-only metadata rows
+    expect(screen.getByText("role")).toBeInTheDocument();
+    expect(screen.getByText("assistant")).toBeInTheDocument();
+    expect(screen.getByText("energy_class")).toBeInTheDocument();
+    expect(screen.getByText("promotion_certificate_digest")).toBeInTheDocument();
+    // propositional_form headline
+    expect(screen.getByText("alpha causes beta")).toBeInTheDocument();
+    // copyable evidence-address handle
+    expect(screen.getByText("vault:7")).toBeInTheDocument();
+    // raw metadata drawer present
+    expect(screen.getByText("Raw metadata")).toBeInTheDocument();
+    // exact-recall doctrine: never a similarity/relevance proxy
+    expect(screen.queryByText(/similarity|relevance|score/i)).not.toBeInTheDocument();
+  });
+
+  it("renders 'not recorded' for absent core vault fields, not silent disappearance", () => {
+    function SetSparseVaultEntry() {
+      const { setSubject } = useEvidenceSubject();
+      useEffect(() => {
+        setSubject({
+          kind: "vault_entry",
+          entryIndex: 9,
+          data: { entry_index: 9, versor_digest: null },
+        });
+      }, [setSubject]);
+      return <RightInspector />;
+    }
+    render(
+      <EvidenceProvider>
+        <SetSparseVaultEntry />
+      </EvidenceProvider>,
+    );
+
+    expect(screen.getByText("Vault Entry")).toBeInTheDocument();
+    // epistemic_status, epistemic_state, turn, role all absent → 4 "not recorded"
+    expect(screen.getAllByText("not recorded").length).toBe(4);
+    // handle still present; no raw drawer when metadata is absent
+    expect(screen.getByText("vault:9")).toBeInTheDocument();
+    expect(screen.queryByText("Raw metadata")).not.toBeInTheDocument();
+  });
+
   it("shows a transient Copied confirmation after an address copy", () => {
     vi.useFakeTimers();
     try {
