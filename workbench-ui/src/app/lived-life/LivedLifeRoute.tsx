@@ -18,9 +18,8 @@ import type { LivedLife, LivedLifeHeartbeat } from "../../types/api";
 // always-on run lands an artifact (fail-closed, like Vault/Calibration).
 export const LIVED_LIFE_LOADING = "Loading lived life...";
 export const LIVED_LIFE_ABSENCE_STATEMENT =
-  "No always-on run recorded yet. The continuous-life heartbeat persists its evidence here when it runs.";
-export const LIVED_LIFE_ABSENCE_ACTION =
-  "Run the always-on heartbeat to persist engine_state/lived_life.json";
+  "No always-on run recorded yet. Run the continuous-life heartbeat and it persists its evidence here.";
+export const LIVED_LIFE_ABSENCE_ACTION = "core always-on";
 
 function errorMessage(error: unknown): string {
   return error instanceof WorkbenchApiError
@@ -338,7 +337,7 @@ export function LivedLifeRoute() {
     return (
       <EmptyState
         statement={LIVED_LIFE_ABSENCE_STATEMENT}
-        nextAction={LIVED_LIFE_ABSENCE_ACTION}
+        nextAction={{ kind: "cli", command: LIVED_LIFE_ABSENCE_ACTION }}
       />
     );
   }

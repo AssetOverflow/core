@@ -36,9 +36,10 @@ the idle/heartbeat half.
 
 from __future__ import annotations
 
+import itertools
 import json
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
@@ -54,6 +55,27 @@ LIVED_LIFE_SCHEMA_VERSION = "lived_life_v1"
 # The non-negotiable field invariant (CLAUDE.md). The heartbeat READS this as evidence;
 # it never repairs to keep it true — closure is owned by ``algebra/versor.py``.
 CLOSURE_CEILING = 1e-6
+
+# Granularity of the interruptible inter-beat wait. A daemon's clean-shutdown latency is
+# bounded by THIS, not by the (possibly long) cadence interval — a SIGTERM mid-wait is
+# honored within a slice instead of waiting out the whole interval.
+_SLEEP_SLICE_SECONDS = 0.25
+
+
+def _sleep_until_stop(seconds: float, stop: Callable[[], bool] | None) -> None:
+    """Sleep up to ``seconds``, returning early the moment ``stop`` fires.
+
+    Without a ``stop`` predicate this is a plain ``time.sleep``. With one, the wait is
+    sliced so a long cadence interval never delays a clean shutdown beyond one slice."""
+    if stop is None:
+        time.sleep(seconds)
+        return
+    deadline = time.monotonic() + seconds
+    while not stop():
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return
+        time.sleep(min(remaining, _SLEEP_SLICE_SECONDS))
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,6 +111,9 @@ class AlwaysOnReport:
     final_checkpoint_ok: bool
     total_facts_consolidated: int
     total_proposals_created: int
+    # The identity-determining pack ids of the run's config, so a reader can recompute the
+    # SAME identity (the resume verdict) instead of assuming default packs. Empty = default.
+    identity_pack_ids: dict[str, str] = field(default_factory=dict)
 
     @property
     def heartbeats(self) -> int:
@@ -108,6 +133,7 @@ def serialize_report(report: AlwaysOnReport) -> dict[str, Any]:
         "final_checkpoint_ok": report.final_checkpoint_ok,
         "total_facts_consolidated": report.total_facts_consolidated,
         "total_proposals_created": report.total_proposals_created,
+        "identity_pack_ids": dict(report.identity_pack_ids),
         "records": [
             {
                 "tick": r.tick,
@@ -148,13 +174,13 @@ def _live_versor_condition(runtime) -> float | None:
 def run_continuous(
     runtime,
     *,
-    heartbeats: int,
+    heartbeats: int | None,
     sleep_seconds: float = 0.0,
     on_heartbeat: Callable[[HeartbeatRecord], None] | None = None,
     stop: Callable[[], bool] | None = None,
     report_path: Path | None = None,
 ) -> AlwaysOnReport:
-    """Run the always-on heartbeat for up to ``heartbeats`` beats.
+    """Run the always-on heartbeat for up to ``heartbeats`` beats (``None`` = until ``stop``).
 
     Each beat: advance continuous learning (``idle_tick``), then record the closure +
     learning evidence. ``idle_tick`` self-checkpoints on real work; this loop also
@@ -162,9 +188,10 @@ def run_continuous(
     over the same engine-state dir resumes the SAME life (with Shape B+ persistence on,
     and the load-time identity guard enforcing it).
 
-    Bounded for falsifiable soaks; a daemon passes a large ``heartbeats`` + a ``stop``
-    predicate (and a real ``sleep_seconds`` cadence). ``stop`` is checked BEFORE each
-    beat so a clean shutdown still persists the final state.
+    A finite ``heartbeats`` bounds a falsifiable soak; ``heartbeats=None`` runs unbounded
+    until ``stop`` fires — the daemon contract (``chat.always_on_daemon``), where ``stop``
+    is wired to SIGINT/SIGTERM. ``stop`` is checked BEFORE each beat AND interrupts the
+    inter-beat wait, so a clean shutdown is prompt and still persists the final state.
 
     When ``report_path`` is given, the run's lived-life evidence is persisted there after
     the loop exits — point it at ``<engine_state>/lived_life.json`` so the workbench Lived
@@ -173,15 +200,25 @@ def run_continuous(
     state is still checkpointed in ``finally`` for recovery, but the workbench report is
     best-effort and simply not refreshed — the surface keeps the last good run.
     """
-    if heartbeats < 0:
-        raise ValueError("heartbeats must be >= 0")
+    if heartbeats is not None and heartbeats < 0:
+        raise ValueError("heartbeats must be >= 0 or None")
 
     git_revision = get_git_revision()
-    identity = engine_identity_for_config(runtime.config, git_revision)
+    config = runtime.config
+    identity = engine_identity_for_config(config, git_revision)
+    # The identity-determining pack ids (empty == default) — persisted so a reader recomputes
+    # the SAME identity for the resume verdict instead of assuming default packs.
+    identity_pack_ids = {
+        "identity_pack": getattr(config, "identity_pack", "") or "",
+        "ethics_pack": getattr(config, "ethics_pack", "") or "",
+        "register_pack_id": getattr(config, "register_pack_id", "") or "",
+        "anchor_lens_id": getattr(config, "anchor_lens_id", "") or "",
+    }
     records: list[HeartbeatRecord] = []
     final_checkpoint_ok = True
     try:
-        for tick in range(heartbeats):
+        ticks = itertools.count() if heartbeats is None else range(heartbeats)
+        for tick in ticks:
             if stop is not None and stop():
                 break
             result = runtime.idle_tick()
@@ -202,9 +239,14 @@ def run_continuous(
             )
             records.append(record)
             if on_heartbeat is not None:
-                on_heartbeat(record)
+                try:
+                    on_heartbeat(record)
+                except OSError:
+                    # Telemetry is best-effort like the checkpoint: a broken stderr/log
+                    # pipe (BrokenPipeError) must NOT kill an indefinite-uptime life.
+                    pass
             if sleep_seconds:
-                time.sleep(sleep_seconds)
+                _sleep_until_stop(sleep_seconds, stop)
     finally:
         # Final checkpoint even on a mid-beat interruption — the life persists and resumes
         # as the SAME life. Best-effort so a checkpoint failure cannot mask the original
@@ -223,6 +265,7 @@ def run_continuous(
         final_checkpoint_ok=final_checkpoint_ok,
         total_facts_consolidated=sum(r.facts_consolidated for r in records),
         total_proposals_created=sum(r.proposals_created for r in records),
+        identity_pack_ids=identity_pack_ids,
     )
     if report_path is not None:
         write_lived_life(report, report_path)

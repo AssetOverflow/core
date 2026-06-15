@@ -99,6 +99,40 @@ def test_resume_verdict_tracks_identity_vs_substrate() -> None:
     assert unknown.resume_status == "unknown"
 
 
+def test_reader_resume_verdict_uses_persisted_pack_ids_not_default(
+    tmp_path, monkeypatch
+) -> None:
+    # A life that ran with a NON-default identity pack must read as would_resume, because the
+    # reader recomputes the current identity from the PERSISTED pack config — not a default
+    # config (which would echo a different identity and falsely read substrate_changed).
+    import json
+
+    from workbench import readers
+
+    # Echo the config's identity_pack so the test can see WHICH config the reader recomputed with.
+    monkeypatch.setattr(
+        readers, "engine_identity_for_config", lambda cfg, rev: f"id:{cfg.identity_pack}"
+    )
+    state_dir = tmp_path / "engine_state"
+    state_dir.mkdir(parents=True)
+    monkeypatch.setattr(readers, "ENGINE_STATE_ROOT", state_dir)
+
+    payload = serialize_report(_report())
+    payload["identity"] = "id:custom_pack_v1"  # the run's persisted identity (non-default pack)
+    payload["identity_pack_ids"] = {
+        "identity_pack": "custom_pack_v1",
+        "ethics_pack": "",
+        "register_pack_id": "",
+        "anchor_lens_id": "",
+    }
+    (state_dir / "lived_life.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    surface = readers.lived_life()
+    # Rebuilt RuntimeConfig(identity_pack="custom_pack_v1") -> "id:custom_pack_v1" == persisted.
+    # A default-config recompute would echo "id:" -> substrate_changed: the bug this guards.
+    assert surface.resume_status == "would_resume"
+
+
 def test_reader_reads_persisted_artifact(tmp_path, monkeypatch) -> None:
     state_dir = tmp_path / "engine_state"
     state_dir.mkdir()
