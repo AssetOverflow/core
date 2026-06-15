@@ -25,11 +25,14 @@ Transitive (direct + through-inverse), asymmetric self-converse (`less_than`,
 `equal_to`), object mismatch, and ungrounded. A `Determined` on any of these is a
 wrong=0 breach — the lane test fails loudly.
 
-## Known coverage gap (honest)
+## Resolved coverage gap (B3)
 
-`overlaps_event` (symmetric, pack-declared `graph.edge.symmetric`) is **excluded** from
-the positive gold: the relational reader requires a copula ("X is _connective_ Y"), but
-`overlaps` is a finite verb — "The meeting overlaps the lunch" refuses
-(`no_relational_template`) and "is overlaps" is ungrammatical. This is a **reader
-surface limitation, not a determination gap** (the symmetric rule would fire if a fact
-were stored). A finite-verb relational surface is brief-pack follow-up work.
+`overlaps_event` (symmetric, pack-declared `graph.edge.symmetric`) was previously
+**excluded** from the positive gold: the relational reader required a copula
+("X is _connective_ Y"), but `overlaps` is a finite verb. The closed finite-verb reader
+surface (B3 — `<A> overlaps <B>` / `Does <A> overlap <B>?`, see
+`generate/meaning_graph/relational.py::_read_finite_verb_clause`) now reads it, so a
+stored overlap and its symmetric converse determine (proven in
+`tests/test_relational_finite_verb.py`). The reader-surface coverage lives in
+`evals/relational`; adding a symmetric `overlaps_event` case to THIS inference lane is
+optional follow-up.

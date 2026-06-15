@@ -15,3 +15,4 @@
 {"id": "rel-015", "text": "Recess is during morning.", "predicate": "during_event", "subject": "recess", "object": "morning"}
 {"id": "rel-016", "text": "Zorptak is the parent of Quxley.", "predicate": "parent_of", "subject": "zorptak", "object": "quxley"}
 {"id": "rel-017", "text": "Glarn is less than Brimble.", "predicate": "less_than", "subject": "glarn", "object": "brimble"}
+{"id": "rel-018", "text": "Sunrise overlaps dawn.", "predicate": "overlaps_event", "subject": "sunrise", "object": "dawn"}

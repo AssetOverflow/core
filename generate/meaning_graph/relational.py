@@ -11,13 +11,18 @@ relational set for DIRECT entailment.
 
 Fail-closed (wrong=0 at the comprehension layer):
 
-  - a clause is read ONLY when it matches ``<A> is [the] <connective> <B>`` with the
-    copula sitting STRUCTURALLY adjacent to the connective, AND the connective's lemma
-    is present in the LOADED pack (``pack_lemmas``), AND neither argument slot carries
-    leftover relational/reserved vocabulary. A non-matching surface, a dangling copula,
-    a negated form, an argument slot holding a connective token (a trailing qualifier
-    like "… of Dan during school" — unparsed structure, NOT an entity), or a lemma
-    absent from the pack all REFUSE — never guess, never field-vote. Deterministic.
+  - a clause is read ONLY by one of two CLOSED surfaces: the copula-connective grammar
+    ``<A> is [the] <connective> <B>`` (the copula sitting STRUCTURALLY adjacent to the
+    connective), OR the closed finite-verb surface ``<A> overlaps <B>`` /
+    ``Does <A> overlap <B>?`` (no copula; ``overlaps_event`` ONLY — see
+    ``_read_finite_verb_clause``). In BOTH the lemma must be present in the LOADED pack
+    (``pack_lemmas``) AND neither argument slot may carry leftover relational/reserved
+    vocabulary or an adverb modifier. A non-matching surface, a dangling copula, a
+    connective WITHOUT its copula ("Monday before Friday."), a negated form, an
+    adverb-modified overlap ("A nearly overlaps B"), an argument slot holding a connective
+    token (a trailing qualifier like "… of Dan during school" — unparsed structure, NOT an
+    entity), or a lemma absent from the pack all REFUSE — never guess, never field-vote.
+    Deterministic.
   - only the PREDICATE is closed-vocabulary; the two arguments may be OOV (arbitrary
     identifiers), grounded downstream by the OOV substrate. A clean multi-word entity
     ("north station") canonicalizes per the join contract; an argument that still holds
@@ -174,6 +179,32 @@ _CONNECTIVE_TOKENS = frozenset(tok for key in _CONNECTIVE_TO_LEMMA for tok in ke
 
 _MAX_CONNECTIVE_LEN = max(len(k) for k in _CONNECTIVE_TO_LEMMA)
 
+# --------------------------------------------------------------------------- #
+# Finite-verb surface (B3) — a verb-form relation with NO copula. CLOSED and
+# default-off, kept SEPARATE from the copula-connective grammar above: the ONLY
+# finite verb admitted is ``overlaps`` (``overlaps_event``). The other connectives
+# (before / after / during / inside / adjacent …) are UNCHANGED — they still REQUIRE
+# the copula, so "Monday before Friday." stays a refusal (no connective bypass).
+# --------------------------------------------------------------------------- #
+
+#: Declarative finite-verb token: ``<A> overlaps <B>``.
+_FINITE_VERB_DECLARATIVE = "overlaps"
+#: Interrogative finite-verb token (base form, with the ``does`` auxiliary):
+#: ``Does <A> overlap <B>?``.
+_FINITE_VERB_INTERROGATIVE = "overlap"
+#: The pack lemma the finite-verb surface mints. Already in ``RELATIONAL_PREDICATES`` via
+#: the ``("overlaps",)`` connective entry, so the predicate universe is UNCHANGED.
+_FINITE_VERB_LEMMA = "overlaps_event"
+
+#: Adverb / sequencing tokens that must NEVER be absorbed into a finite-verb argument
+#: slot. A finite-verb GUARD, not a general grammar: an adverb-modified or sequenced
+#: overlap REFUSES rather than fabricate an entity (``a_nearly``, ``b_then_c``). These are
+#: NOT in ``reader._RESERVED``, so ``_chunk`` would otherwise silently absorb them — the
+#: exact wrong=0 hazard the adversarial audit flagged.
+_FINITE_VERB_MODIFIERS = frozenset(
+    {"nearly", "completely", "partially", "mostly", "barely", "then"}
+)
+
 
 def load_relational_pack_lemmas() -> frozenset[str]:
     """The lemma set of the loaded relational-predicates pack — the fail-closed
@@ -264,6 +295,88 @@ def comprehend_relational(
     return Comprehension(meaning_graph=graph, queries=tuple(queries))
 
 
+def _read_finite_verb_clause(
+    toks: list[str],
+    question: bool,
+    pack_lemmas: frozenset[str],
+    span: MeaningSpan,
+    claim,
+    relations: list[tuple[str, tuple[str, ...], MeaningSpan, bool]],
+    queries: list[Query],
+) -> bool:
+    """Read the closed finite-verb surface (``overlaps_event`` ONLY), or return ``False``
+    when the clause is NOT a finite-verb form (the caller then tries the copula grammar).
+
+    Two surfaces: declarative ``<A> overlaps <B>`` and interrogative
+    ``Does <A> overlap <B>?`` (base form + the ``does`` auxiliary). Once a clause IS
+    recognized as a finite-verb form it EMITS or REFUSES — it never falls through, so a
+    malformed overlap cannot reach the copula grammar. Fail-closed: emits only when the
+    lemma is in the loaded pack AND each argument slot is, after article stripping, EXACTLY
+    ONE content token. That single-token gate is the load-bearing backstop — it closes the
+    UNBOUNDED adverb / negation / trailing-qualifier / second-verb class a blocklist
+    cannot (so ``meeting never overlaps lunch`` does NOT become a positive
+    ``overlaps_event(meeting_never, lunch)``). The ``_FINITE_VERB_MODIFIERS`` and
+    ``_CONNECTIVE_TOKENS`` checks add precise refusal reasons for the common bare-modifier
+    / second-verb slots; ``_chunk`` then validates the token. Scoped to ``overlaps`` only,
+    so the other connectives keep requiring the copula.
+    """
+    if question:
+        # interrogative ``does <A> overlap <B>`` (the '?' terminator is already stripped).
+        if not toks or toks[0] != "does" or _FINITE_VERB_INTERROGATIVE not in toks[1:]:
+            return False  # not the finite-verb query form — fall through
+        verb_idx = toks.index(_FINITE_VERB_INTERROGATIVE, 1)
+        left, right = toks[1:verb_idx], toks[verb_idx + 1 :]
+    else:
+        # declarative ``<A> overlaps <B>``.
+        if _FINITE_VERB_DECLARATIVE not in toks:
+            return False  # not the finite-verb declarative form — fall through
+        verb_idx = toks.index(_FINITE_VERB_DECLARATIVE)
+        left, right = toks[:verb_idx], toks[verb_idx + 1 :]
+
+    # From here the clause IS a finite-verb form — emit or REFUSE, never fall through.
+    if _FINITE_VERB_LEMMA not in pack_lemmas:
+        raise _Reject("relational_lemma_not_in_pack", _FINITE_VERB_LEMMA)
+
+    subject_toks = _strip_article_edges(left)
+    object_toks = _strip_article_edges(right)
+    if not subject_toks or not object_toks:
+        raise _Reject("incomplete_relation", " ".join(toks))
+
+    slot_toks = (*subject_toks, *object_toks)
+    # adverb / sequencing guard — a precise refusal for the common modifiers when one is a
+    # BARE slot ("Nearly overlaps dawn."); these are NOT in reader._RESERVED.
+    if any(t in _FINITE_VERB_MODIFIERS for t in slot_toks):
+        raise _Reject("finite_verb_modifier", " ".join(toks))
+    # leftover relational structure (a second finite verb / any connective token), reusing
+    # the copula path's fabrication net: "A overlaps B overlaps C", trailing qualifiers.
+    if any(t in _CONNECTIVE_TOKENS for t in slot_toks):
+        raise _Reject("extra_relational_structure", " ".join(toks))
+
+    # POSITIVE fail-closed slot gate — the backstop a blocklist cannot provide. Each
+    # finite-verb slot must be EXACTLY ONE content token (after article stripping). An
+    # enumerated adverb/negation list is UNBOUNDED and leaks ("almost", "sometimes",
+    # "never", a trailing qualifier "lunch today", a second verb "overlap"): the
+    # adversarial audit found each glued silently into a fabricated id (e.g.
+    # ``overlaps_event(meeting_never, lunch)`` — a negated sentence committed as a POSITIVE
+    # belief). Requiring a single token closes the whole class — any extra token leaves a
+    # 2+-token slot and REFUSES. Multi-word entities in the finite-verb surface are
+    # deferred (they need a positive content lexicon, which OOV entities preclude).
+    if len(subject_toks) != 1 or len(object_toks) != 1:
+        raise _Reject("finite_verb_unclean_slot", " ".join(toks))
+
+    # _chunk canonicalizes and validates the single token (rejects a non-identifier).
+    subject = _chunk(subject_toks, " ".join(toks))
+    obj = _chunk(object_toks, " ".join(toks))
+    claim(subject, span)
+    claim(obj, span)
+
+    if question:
+        queries.append(Query(_FINITE_VERB_LEMMA, (subject, obj), span))
+    else:
+        relations.append((_FINITE_VERB_LEMMA, (subject, obj), span, False))
+    return True
+
+
 def _read_relational_clause(
     clause: str,
     question: bool,
@@ -273,10 +386,21 @@ def _read_relational_clause(
     relations: list[tuple[str, tuple[str, ...], MeaningSpan, bool]],
     queries: list[Query],
 ) -> None:
-    """Read one ``<A> is [the] <connective> <B>`` clause; mutate accumulators or REFUSE."""
+    """Read one clause into accumulators or REFUSE. Two SEPARATE branches: the closed
+    finite-verb surface (``<A> overlaps <B>`` / ``Does <A> overlap <B>?``) is tried first;
+    everything else falls to the copula-connective grammar (``<A> is [the] <connective>
+    <B>``), which is unchanged — the other connectives still require the copula."""
     toks = clause.strip().lower().split()
     if not toks:
         raise _Reject("empty_clause", clause)
+
+    # B3 finite-verb branch (closed: overlaps_event only). Handles the no-copula
+    # finite-verb surfaces with strict fail-closed guards, and returns False (fall
+    # through to the copula grammar below) ONLY when the clause is not a finite-verb form.
+    if _read_finite_verb_clause(
+        toks, question, pack_lemmas, span, claim, relations, queries
+    ):
+        return
 
     split = _split_around_connective(toks)
     if split is None:

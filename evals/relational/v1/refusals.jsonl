@@ -6,4 +6,19 @@
 {"id": "ref-006", "text": "Alice is not the parent of Bob.", "why": "negation is out of grammar — never reads as a positive"}
 {"id": "ref-007", "text": "Alice greets Bob.", "why": "no relational connective / no copula"}
 {"id": "ref-008", "text": "The weather is nice today.", "why": "no relational template at all"}
-{"id": "ref-009", "text": "Sunrise overlaps dawn.", "why": "verb-form relation, no copula — the honest overlaps_event coverage gap"}
+{"id": "ref-010", "text": "Alice overlaps with the team and Bob.", "why": "finite-verb overlap with coordinated/leftover structure (with … and …) — must not fabricate a compound entity"}
+{"id": "ref-011", "text": "A overlaps B and C.", "why": "coordinated object slot — 'and' is a parse leak, must refuse"}
+{"id": "ref-012", "text": "A nearly overlaps B.", "why": "adverb-modified overlap — 'nearly' must not be absorbed into a fabricated entity a_nearly"}
+{"id": "ref-013", "text": "A completely overlaps B.", "why": "adverb-modified overlap — 'completely' is a finite-verb modifier, must refuse"}
+{"id": "ref-014", "text": "Does A nearly overlap B?", "why": "adverb-modified overlap in the query form — must refuse"}
+{"id": "ref-015", "text": "A does not overlap B.", "why": "negation is out of grammar — never reads as a positive overlap"}
+{"id": "ref-016", "text": "A borders B.", "why": "finite verb not in the closed table — only 'overlaps' is admitted"}
+{"id": "ref-017", "text": "Monday before Friday.", "why": "connective without copula — admitting the finite verb must NOT let other connectives bypass the copula"}
+{"id": "ref-018", "text": "The cat inside the house.", "why": "connective without copula — inside_of still requires the copula"}
+{"id": "ref-019", "text": "The room adjacent the hall.", "why": "connective without copula — adjacent_to still requires the copula"}
+{"id": "ref-020", "text": "A overlaps B overlaps C.", "why": "a second finite verb — leftover relational structure, must refuse"}
+{"id": "ref-021", "text": "A overlaps B then C.", "why": "sequencing modifier 'then' must not be absorbed into a fabricated entity b_then_c"}
+{"id": "ref-022", "text": "Meeting never overlaps lunch.", "why": "negation 'never' (NOT a reserved word) must not be glued into meeting_never and committed as a POSITIVE overlaps_event — the worst wrong=0 breach the audit found"}
+{"id": "ref-023", "text": "Alice almost overlaps Bob.", "why": "an adverb outside the enumerated modifier set — the single-token slot gate must refuse, not fabricate alice_almost"}
+{"id": "ref-024", "text": "Meeting overlaps lunch today.", "why": "trailing temporal qualifier must not be glued into lunch_today — a 2-token slot refuses"}
+{"id": "ref-025", "text": "Does A overlap B overlap C?", "why": "interrogative double-verb — the base form 'overlap' is not in the connective net; the single-token slot gate refuses b_overlap_c"}
