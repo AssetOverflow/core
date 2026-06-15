@@ -95,14 +95,22 @@ def run(path: Path = _FIXTURES) -> dict[str, Any]:
 def main() -> int:
     r = run()
     print(json.dumps({k: v for k, v in r.items() if k != "wrongs"}, indent=2, sort_keys=True))
+    failed = False
     if r["wrong"]:
         print(
             "WRONG > 0 — determine asserted True on a non-True OWA gold (soundness breach):",
             file=sys.stderr,
         )
         print(json.dumps(r["wrongs"], indent=2), file=sys.stderr)
-        return 1
-    return 0
+        failed = True
+    if r["coverage_gaps"]:
+        print(
+            "COVERAGE GAPS — serving-supported gold-True items refused (acceptance breach):",
+            file=sys.stderr,
+        )
+        print(json.dumps(r["coverage_gaps"], indent=2), file=sys.stderr)
+        failed = True
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
