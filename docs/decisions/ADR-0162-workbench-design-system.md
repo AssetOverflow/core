@@ -375,8 +375,12 @@ Settings / Runtime
 
 No giant sidebar.  No collapsible sub-trees in v1.
 
-StatusFooter surfaces three signals at all times:
+StatusFooter surfaces four signals at all times:
 
+- `status` from `GET /health` (`Healthy` / `Unhealthy` / `Checking`) —
+  a liveness dot polled independently of `/runtime/status` so a live
+  server still reads healthy when runtime metadata is degraded; any
+  non-`ok` status fails safe to `Unhealthy`
 - `mutation_mode` from `GET /runtime/status` (`read_only` or
   `runtime_turn`) — color-encoded **and** labeled
 - `git_revision` (short SHA, mono)
