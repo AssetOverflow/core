@@ -238,6 +238,25 @@ def test_unsupported_predicate_still_undetermined(vocab_persona, pack) -> None:
     assert isinstance(res, Undetermined)  # ungrounded — absence never asserts
 
 
+def test_edge_budget_exhaustion_refuses(vocab_persona, pack, monkeypatch) -> None:
+    # Above the edge budget the transitive search declines (a safe COVERAGE refusal —
+    # never an unsound answer): the SAME chain that determines under the normal budget
+    # refuses when the predicate's realized-edge count exceeds the cap. (Patch the module
+    # object, not the dotted path — `generate.determine.determine` resolves to the
+    # re-exported function, not the submodule.)
+    import importlib
+
+    det_mod = importlib.import_module("generate.determine.determine")
+    monkeypatch.setattr(det_mod, "_TRANSITIVE_EDGE_BUDGET", 1)
+    res = _scenario(
+        ["Alice is less than Bob.", "Bob is less than Carol."],
+        "Is Alice less than Carol?",
+        vocab_persona,
+        pack,
+    )
+    assert isinstance(res, Undetermined)  # 2 edges > budget(1) → coverage refusal, not a proof
+
+
 # --------------------------------------------------------------------------- #
 # Regression — one-hop inverse/symmetric and direct entailment are intact
 # --------------------------------------------------------------------------- #

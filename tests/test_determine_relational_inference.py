@@ -22,6 +22,7 @@ from generate.meaning_graph.relational import (
     INVERSE_OF,
     RELATIONAL_PREDICATES,
     SYMMETRIC_PREDICATES,
+    TRANSITIVE_PREDICATES,
     comprehend_relational,
     load_relational_pack_lemmas,
     load_relational_pack_symmetric,
@@ -184,3 +185,35 @@ def test_inverse_is_an_involution() -> None:
     for lemma, other in INVERSE_OF.items():
         assert lemma != other
         assert INVERSE_OF[other] == lemma
+
+
+def test_transitive_predicates_closed_and_excludes() -> None:
+    """TRANSITIVE_PREDICATES is CLOSED, default-off, and exactly the four strict orders —
+    every member is a real reader predicate, and every predicate that is symmetric,
+    asymmetric-kinship, spatial, or containment STAYS OUT (admitting any would be unsound
+    or needs a shared-frame proof this slice lacks)."""
+    assert TRANSITIVE_PREDICATES == {
+        "less_than",
+        "greater_than",
+        "before_event",
+        "after_event",
+    }
+    # every transitive lemma is a real reader predicate (a typo cannot mint an unknown one)
+    for lemma in TRANSITIVE_PREDICATES:
+        assert lemma in RELATIONAL_PREDICATES
+    # the deliberately-excluded predicates are explicitly absent (default-off)
+    excluded = {
+        "sibling_of",
+        "spouse_of",
+        "parent_of",
+        "child_of",
+        "left_of",
+        "right_of",
+        "inside_of",
+        "during_event",
+        "overlaps_event",
+    }
+    assert excluded.isdisjoint(TRANSITIVE_PREDICATES)
+    # the excluded set names real reader predicates (so the exclusion is meaningful)
+    for lemma in excluded:
+        assert lemma in RELATIONAL_PREDICATES
