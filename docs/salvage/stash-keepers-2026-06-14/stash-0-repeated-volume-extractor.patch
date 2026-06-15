@@ -1,0 +1,106 @@
+diff --git a/generate/math_candidate_parser.py b/generate/math_candidate_parser.py
+index d65b07c5..ef17b4d8 100644
+--- a/generate/math_candidate_parser.py
++++ b/generate/math_candidate_parser.py
+@@ -542,6 +542,8 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
+     out.extend(_embedded_quantifier_candidates(sentence))
+     # ADR-0189a — day-of-week count enumeration → summed initial.
+     out.extend(_day_enumeration_candidates(sentence))
++    # ADR-0190 — repeated-volume distinct-unit product (V1*V2*V3).
++    out.extend(_repeated_volume_candidates(sentence))
+ 
+     # ADR-0136.S.3 — compound initial-mutation: "Entity had N unit, but then verb M"
+     out.extend(_init_mutation_candidates(sentence))
+@@ -1676,6 +1678,92 @@ def _embedded_quantifier_candidates(sentence: str) -> list[CandidateInitial]:
+         return []
+ 
+ 
++# ADR-0190 — repeated-volume distinct-unit product.
++# Shape: "<entity> … <V1> <U1> for <V2> <U2> and does <V3> <U3>"
++#   → InitialPossession(value=V1*V2*V3, unit=U1).
++# A base quantity repeated across two DISTINCT count dimensions
++# (reps × sets, batches × rounds). The "for … and does …" cue scaffold is
++# the narrowness: a bare "for N hours" duration with no leading "<V> <U>"
++# base (e.g. "studies for 3 hours and buys 5 pencils") cannot match.
++_REPEATED_VOLUME_RE: Final[re.Pattern[str]] = re.compile(
++    rf"(?P<entity>{_ENTITY})\b.*?"
++    rf"(?P<v1>{_VALUE})\s+(?P<u1>\w+)\s+for\s+"
++    rf"(?P<v2>{_VALUE})\s+(?P<u2>\w+)\s+and\s+does\s+"
++    rf"(?P<v3>{_VALUE})\s+(?P<u3>\w+)",
++    flags=re.IGNORECASE,
++)
++
++
++def _repeated_volume_candidates(sentence: str) -> list[CandidateInitial]:
++    """Repeated-volume distinct-unit product (ADR-0190).
++
++    "<entity> … <V1> <U1> for <V2> <U2> and does <V3> <U3>"
++        → InitialPossession(value=V1*V2*V3, unit=U1).
++
++    The first metric flip delivered by the unify-on-serving-injection
++    arc: the derivation reader (``resolve_pooled``) already reads case
++    0021 correctly (``15 pounds × 10 reps × 3 sets = 450``); this teaches
++    the serving candidate-graph organ to read the same distinct-unit
++    product, so the two readers agree (the cross-reader wrong=0 evidence).
++
++    wrong=0 discipline:
++      - all three units must be DISTINCT and non-empty (distinct-unit
++        rule, ADR-0184 §3 — a repeated unit forms a meaningless squared
++        dimension and almost never answers the question);
++      - the "for … and does …" cue scaffold refuses bare-duration
++        ``for`` adjuncts with no leading ``<V> <U>`` base;
++      - indefinite quantifiers refuse;
++      - the product is a parser-committed derivation whose provenance
++        anchors on V1's surface form (same discipline as
++        ``_embedded_quantifier_candidates``), so the round-trip filter
++        passes on a grounded token.
++    """
++    s = sentence.strip().rstrip(".")
++    m = _REPEATED_VOLUME_RE.search(s)
++    if m is None:
++        return []
++    v1_raw, v2_raw, v3_raw = m.group("v1"), m.group("v2"), m.group("v3")
++    if (
++        _is_indefinite_quantifier(v1_raw)
++        or _is_indefinite_quantifier(v2_raw)
++        or _is_indefinite_quantifier(v3_raw)
++    ):
++        return []
++    u1, u2, u3 = m.group("u1").lower(), m.group("u2").lower(), m.group("u3").lower()
++    # Distinct-unit guard (ADR-0184): three independent dimensions.
++    if len({u1, u2, u3}) != 3:
++        return []
++    rv1, rv2, rv3 = (
++        _resolve_value(v1_raw),
++        _resolve_value(v2_raw),
++        _resolve_value(v3_raw),
++    )
++    if rv1 is None or rv2 is None or rv3 is None:
++        return []
++    total = rv1.value * rv2.value * rv3.value
++    entity = _normalize_entity(m.group("entity"))
++    unit = _canonicalize_unit(m.group("u1"))
++    try:
++        return [
++            CandidateInitial(
++                initial=InitialPossession(
++                    entity=entity,
++                    quantity=Quantity(value=total, unit=unit),
++                ),
++                source_span=sentence,
++                # "does" is the whitelisted anchor verb (ADR-0189a) the
++                # round-trip filter grounds against; the base value token
++                # V1 carries the product's provenance.
++                matched_anchor="does",
++                matched_value_token=v1_raw,
++                matched_unit_token=m.group("u1"),
++                matched_entity_token=m.group("entity"),
++            )
++        ]
++    except Exception:
++        return []
++
++
+ # ---------------------------------------------------------------------------
+ # Per-shape admitted-only wrappers (used by the G4 runner).
+ # Each filters its extractor's output through _initial_admissible from
