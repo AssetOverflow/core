@@ -915,6 +915,46 @@ class VaultEntry:
     versor_digest: str | None
 
 
+@dataclass(frozen=True, slots=True)
+class VaultRecallHit:
+    """One result of CORE's exact CGA recall scan over the persisted vault.
+
+    ``cga_inner`` is the genuine, finite exact inner product (never a
+    similarity proxy). ``exact_self_match`` flags an entry recalled by exact
+    byte-identity (``recall`` promotes those ahead of metric ranking — stored
+    versors are CGA null vectors, so their self inner-product is ~0; identity
+    is established by byte-equality, not a maximal value). The raw versor never
+    crosses the boundary — only its content-addressed ``versor_digest``.
+    """
+
+    entry_index: int
+    rank: int
+    cga_inner: float
+    exact_self_match: bool
+    epistemic_status: str
+    epistemic_state: str
+    versor_digest: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class VaultRecall:
+    """Read-only proof that a persisted vault entry is recallable by CORE's
+    actual exact CGA machinery (``VaultStore.recall`` over rehydrated, bit-exact
+    versors). ``exact_cga`` is always True / ``approximate`` always False — this
+    surface is the exact ``cga_inner`` scan, never ANN / cosine / approximate.
+    """
+
+    entry_index: int
+    query_versor_digest: str | None
+    top_k: int
+    hits: list[VaultRecallHit]
+    self_hit_rank: int | None
+    self_hit_found: bool
+    exact_cga: bool
+    approximate: bool
+    source_path: str
+
+
 # ---------------------------------------------------------------------------
 # Wave M Phase B — calibrated-learning / serving-discipline read views.
 # The workbench computes none of these numbers: reliability_floor and the

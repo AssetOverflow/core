@@ -290,6 +290,24 @@ class WorkbenchApi:
                     }
                 ),
             )
+        if (
+            method == "GET"
+            and path.startswith("/vault/entries/")
+            and path.endswith("/recall")
+        ):
+            raw_index = unquote(
+                path.removeprefix("/vault/entries/").removesuffix("/recall").strip("/")
+            )
+            try:
+                recall_index = int(raw_index)
+            except ValueError:
+                return ApiResponse(
+                    404, error("not_found", f"vault entry not found: {raw_index}")
+                )
+            # An out-of-range index raises FileNotFoundError -> 404; an absent
+            # persisted snapshot raises EvidenceUnavailableError -> 501 (both via
+            # handle()). Read-only: the live runtime and the file are untouched.
+            return ApiResponse(200, ok(readers.vault_entry_recall(recall_index)))
         if method == "GET" and path == "/demos":
             return ApiResponse(200, ok({"items": readers.list_demos()}))
         if method == "GET" and path == "/tour":

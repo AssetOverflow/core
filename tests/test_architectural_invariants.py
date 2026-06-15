@@ -935,6 +935,12 @@ VAULT_RECALL_SITES: dict[str, str] = {
     "generate/stream.py": "EVIDENCE_TELEMETRY",
     "session/context.py": "RECOGNITION",  # generic delegate; callers categorize
     "vault/store.py":    "RECOGNITION",  # self-references in helpers/docstrings
+    # Vault P2: the workbench rehydrates the persisted vault and runs the real
+    # recall purely as read-only OPERATOR inspection evidence (the "Exact CGA
+    # Recall" inspector panel). It is not CORE's user-facing articulation
+    # surface and shapes no claims, so unfiltered recall is correct and
+    # faithful (each hit's epistemic_status is shown verbatim).
+    "workbench/readers.py": "EVIDENCE_TELEMETRY",
 }
 
 VALID_RECALL_ROLES: frozenset[str] = frozenset({
@@ -962,7 +968,16 @@ def _file_has_vault_recall_call(path: Path) -> bool:
                 func.attr if isinstance(func, ast.Attribute) else
                 func.id if isinstance(func, ast.Name) else ""
             )
-            if func_name == "VaultStore":
+            # Factory classmethods (e.g. ``VaultStore.from_dict(...)``) construct
+            # a real VaultStore too — bind the target so a later ``.recall`` on it
+            # is still detected. Without this, recall on a rehydrated store would
+            # silently escape the registry (Vault P2 read-substrate addition).
+            is_vaultstore_factory = (
+                isinstance(func, ast.Attribute)
+                and isinstance(func.value, ast.Name)
+                and func.value.id == "VaultStore"
+            )
+            if func_name == "VaultStore" or is_vaultstore_factory:
                 for target in node.targets:
                     if isinstance(target, ast.Name):
                         vault_bindings.add(target.id)
