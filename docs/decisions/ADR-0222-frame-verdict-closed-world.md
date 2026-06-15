@@ -20,6 +20,9 @@ INV-30 (open-world `determine` never asserts False), and the merged Step-3 brief
 **Authors:** drafted by agent for architect review (Joshua Shay ratifies). This draft
 incorporates an adversarial review pass (6 independent skeptics against real source);
 the soundness corrections it produced are folded in and flagged inline as **[adv]**.
+The architect approved the direction and resolved §14's two open questions; those
+resolutions and the requested precision patches (explicit `positive_refutation_kind`
+discriminator; PR-1-scoped `Determined`-count wording) are applied and flagged **[ratify]**.
 
 ---
 
@@ -148,6 +151,13 @@ class ClosedWorldProof:
     proof_keys: tuple[str, ...]  # entail: (conjunction_key, query_key, refutation_check_key)
                                  # perception: (FalsificationRun.trace_hash,)  -- the FULL run witness
     proof_sha256: str            # sha256_json over the canonical proof payload
+    positive_refutation_kind: str | None = None
+    # [adv/ratify] entailed_false ONLY: "robdd_refutation" (text) | "perception_changed_slot"
+    # (perception). None for EVERY non-entailed_false verdict. This is the explicit
+    # discriminator the ratifier required: a GENERIC FALSIFIED (missing / unexpected /
+    # whole-frame-missing — i.e. absence or over-observation) leaves this None and therefore
+    # CANNOT satisfy entailed_false's admissibility invariant (FrameVerdict.__post_init__).
+    # The perception adapter sets it to "perception_changed_slot" only when changed != ().
 
 @dataclass(frozen=True, slots=True)
 class FrameVerdict:
@@ -170,12 +180,28 @@ class FrameVerdict:
     trace_hash: str                # sha256_json deterministic replay digest of the whole verdict
 
     def __post_init__(self) -> None:
-        # [adv] Admissibility invariant — makes §12 obligation 2 non-vacuous: entailed_false
-        # may exist ONLY with a positive-refutation proof. A mismatched (verdict, proof) pair
-        # fails loudly at construction, so a mutation test can trip it.
+        # [adv/ratify] Admissibility invariant — makes §12 obligation 2 non-vacuous: entailed_false
+        # may exist ONLY with a positive-refutation proof, and the proof must name WHICH positive
+        # refutation it is. A generic FALSIFIED (which ADR-0211 also emits for missing / unexpected /
+        # whole-frame-missing — i.e. absence) cannot satisfy this; only an ROBDD refutation or a
+        # perceptual changed-slot contradiction can. A mismatched (verdict, proof) pair fails loudly
+        # at construction, so a mutation test can trip it.
         if self.verdict is FrameVerdictKind.ENTAILED_FALSE:
-            if self.proof.outcome not in {"REFUTED", "FALSIFIED"} or not self.proof.proof_sha256:
-                raise ValueError("entailed_false requires a positive-refutation proof")
+            p = self.proof
+            ok = (
+                (p.producer == "proof_chain.entail"
+                    and p.outcome == "REFUTED"
+                    and p.positive_refutation_kind == "robdd_refutation")
+                or (p.producer == "sensorium.falsification"
+                    and p.outcome == "FALSIFIED"
+                    and p.positive_refutation_kind == "perception_changed_slot")
+            )
+            if not ok or not p.proof_sha256:
+                raise ValueError(
+                    "entailed_false requires a positive-refutation proof: an ROBDD refutation "
+                    "(robdd_refutation) or a perceptual changed-slot contradiction "
+                    "(perception_changed_slot) — never a generic FALSIFIED"
+                )
 ```
 
 Notes binding the shape to existing contracts:
@@ -245,9 +271,15 @@ CLOSED WORLD (new):       evaluate_frame_verdict(frame: ClosedFrame, query: str)
 
 Hard rules (enforced by INV-31, §8):
 
-- `determine()` and `generate/determine/determine.py` are **untouched**. The function's
-  return union stays `Determined | Undetermined`; its three `Determined(answer=True)`
-  sites stay exactly three. No `answer=False` branch is ever added anywhere.
+- For **FrameVerdict PR-1**, `determine()` and `generate/determine/determine.py` are
+  **untouched**: the return union stays `Determined | Undetermined` and its current
+  `Determined(answer=True)` construction count is unchanged. **[ratify]** This is a PR-1
+  *scope* rule, **not** a permanent ban on the number: future open-world True-only
+  capabilities may add legitimate `Determined(answer=True)` sites **only if** INV-30 is
+  updated with a *visible* count change (`test_determine_construction_sites_are_visible`)
+  and **every** new site is a literal `answer=True`. What is permanent is the *firewall*,
+  not the count: no `answer=False` branch is ever added anywhere, and FrameVerdict adds no
+  `Determined` site of its own.
 - `evaluate_frame_verdict` is the **only** constructor of `FrameVerdict`, and lives in a
   package the open-world runtime spine does **not** transitively import.
 - The two paths share the **front-end reader** (`comprehend` → `realize`, the same
@@ -283,7 +315,8 @@ query)`:
 | `REFUSED(OUT_OF_REGIME_OR_MALFORMED)` | `scope_boundary` | ungrounded ∀/predicate — not decidable here |
 
 The `EntailmentTrace` (with `refutation_check_key` — the ROBDD key of `(⋀prem)→¬query`)
-becomes the `ClosedWorldProof`; `producer="proof_chain.entail"`, `outcome="REFUTED"`.
+becomes the `ClosedWorldProof`; `producer="proof_chain.entail"`, `outcome="REFUTED"`,
+`positive_refutation_kind="robdd_refutation"`.
 *(Adversarial review confirmed `REFUTED` is a genuine `(⋀prem)→¬query` tautology — a
 real positive proof — and that `UNKNOWN`/`INCONSISTENT_PREMISES` stay strictly out of
 `entailed_false`.)*
@@ -309,9 +342,10 @@ proposition, the residual decomposes (it is **not** a bare `SUPPORTED/FALSIFIED`
 | `_canonical_refs` conflicting-slot raise (`ExpectedObservationFrame` ill-formed) | `scope_boundary` | the frame is not a licensed complete expectation |
 
 `ClosedWorldProof` for an `entailed_false`: `producer="sensorium.falsification"`,
-`outcome="FALSIFIED"`, `proof_keys=(FalsificationRun.trace_hash,)`, and the adapter
-asserts `changed ≠ ()` before emitting `entailed_false` (the `__post_init__` invariant of
-§3 is the backstop). Perception is **binary-native** (ADR-0211 v1 emits only
+`outcome="FALSIFIED"`, `proof_keys=(FalsificationRun.trace_hash,)`,
+`positive_refutation_kind="perception_changed_slot"` — which the adapter sets **only**
+when `changed ≠ ()` (the `__post_init__` invariant of §3 is the backstop: a generic
+`FALSIFIED` leaves `positive_refutation_kind=None` and cannot become `entailed_false`). Perception is **binary-native** (ADR-0211 v1 emits only
 `SUPPORTED`/`FALSIFIED`), so in v1 it inhabits the subset
 `{entailed_true, entailed_false, undetermined, scope_boundary}` of the verdict alphabet;
 a query the expected frame under-determines is routed to `scope_boundary`, never forced.
@@ -382,15 +416,18 @@ Two distinct axes carry standing and must not be conflated:
   `_basis(grounds)`. This is the *grounds' standing*.
 - **`EpistemicState`** (`core.epistemic_state`, the 15-member governance taxonomy). For
   the *limitation* verdicts, a `FrameVerdict` is lowered to a `LimitationAssessment` whose
-  state is derived by the **existing** `limitation.py::_KIND_TO_STATE`. `_basis` does
-  **not** produce an `EpistemicState`; the two enums are orthogonal.
+  state is derived by the **existing** `limitation.py::_KIND_TO_STATE`. For the *committed*
+  verdicts (`entailed_true`/`entailed_false`), **[ratify]** the default produced state is
+  `EpistemicState.INFERRED` with `DisclosureClaim.NONE` — a frame-derived conclusion, not
+  `EVIDENCED` (`RECONCILE` drift) and not `VERIFIED` (which has its own protected producer).
+  `_basis` does **not** produce an `EpistemicState`; the two enums are orthogonal.
 
 Mapping onto the **existing** closed sets (no fourth taxonomy):
 
 | `FrameVerdict.verdict` | Is it a limitation? | `LimitationKind` / `ResolutionAction` | `ServedDisposition` | Notes |
 |---|---|---|---|---|
-| `entailed_true` | no — a committed **answer** ("Yes") | — | `COMMIT` | surface carries the `as_told`/`verified` basis honestly; produced `EpistemicState` is a PR-4 reconcile obligation (do **not** stamp `EVIDENCED`, which is `RECONCILE`/un-produced drift) |
-| `entailed_false` | **no — a committed answer ("No")**, not a block | — | `COMMIT` | **[adv]** the genuinely-missing piece is a *grounded-negative renderer* (PR-4); `render_determination` only renders affirmations. It is **not** a `contradiction` and must **not** reuse `LimitationKind=contradiction` |
+| `entailed_true` | no — a committed **answer** ("Yes") | — | `COMMIT` | **[ratify]** `EpistemicState.INFERRED` + `DisclosureClaim.NONE` by default; surface carries the `as_told`/`verified` basis honestly. Do **not** stamp `EVIDENCED` (`RECONCILE` drift) or `VERIFIED` (no producer) |
+| `entailed_false` | **no — a committed answer ("No")**, not a block | — | `COMMIT` | **[ratify]** `COMMIT`-with-negative-surface: `EpistemicState.INFERRED` + `DisclosureClaim.NONE`; PR-4 adds a grounded-negative renderer (`render_determination` only renders affirmations). It is **not** a `contradiction` and must **not** add or reuse a `LimitationKind` |
 | `contradiction` (inconsistent frame) | yes | `contradiction` / `report_contradiction` → `CONTRADICTED` | `REPORT` | the **only** verdict that is a real contradiction; carries `blocking_reason="frame_inconsistent"` |
 | `undetermined` | yes | `hard_boundary` / `refuse_known_boundary` → `UNDETERMINED` | `REFUSE` | within-frame refusal |
 | `scope_boundary` | yes | `scope_boundary` / `refuse_known_boundary` → `SCOPE_BOUNDARY` | `EXPLAIN` | out-of-regime / unlicensed frame |
@@ -399,9 +436,11 @@ This resolves the two governance findings from review: `entailed_false` (a prove
 no longer collapses onto the `contradiction` triple (they were colliding on every typed
 field of `LimitationAssessment`), and a proven negative is correctly typed as a *committed
 answer* rather than a `CONTRADICTED` *block*. The closed `LimitationKind` set has no
-"soundly-refuted" member **because `entailed_false` is not a limitation** — the open
-question for ratification (§14) is only whether the grounded-negative answer is served as
-`COMMIT`-with-negative-surface (recommended) or warrants a new closed-set member.
+"soundly-refuted" member **because `entailed_false` is not a limitation**. **[ratify]
+RESOLVED:** the grounded-negative answer is served as `COMMIT`-with-negative-surface — a
+PR-4 *renderer*, **no** new `LimitationKind`/`EpistemicState` member. `ServedDisposition.COMMIT`
+already means "serve a fully-grounded answer as-is"; `REPORT` stays reserved for the
+inconsistent-frame `contradiction`.
 
 Binding rules:
 
@@ -486,7 +525,7 @@ INV-29's parallel trio, every scan gets an anchor so a blind/mis-rooted scan fai
 
 | Test | Fails when |
 |---|---|
-| `test_inv31_determine_is_visible_and_clean` (anchors A1) | the scan does **not** see `determine.py`'s real 3 `Determined` sites, or sees a `FrameVerdict` ref there |
+| `test_inv31_determine_is_visible_and_clean` (anchors A1) | the scan does **not** see `determine.py`'s real `Determined` sites (the count INV-30c pins, whatever it is at the time), or sees a `FrameVerdict` ref there |
 | `test_inv31_construction_allowlist` (anchors A2) | any `FrameVerdict`/factory/`replace` construction occurs outside the exact allowlist |
 | `test_inv31_construction_detector_is_non_vacuous` | a fixture constructing `FrameVerdict` (and each alternate-constructor shape) in a forbidden location is **not** flagged |
 | `test_inv31_spine_imports_resolve_and_exclude` (anchors A3) | a spine module's transitive import set is empty (mis-rooted/typo'd scan), **or** it does include `generate.frame_verdict` |
@@ -533,7 +572,7 @@ test covers the construction scan alone.
 | **PR-1** | Lift `_basis` → `generate/epistemic_basis.py`; add `generate/frame_verdict/` (the `FrameVerdict`/`ClosedFrame`/`ClosedWorldProof` types incl. the `__post_init__` admissibility invariant + `evaluate_frame_verdict` for the **text** frame, delegating to `entail`) + serialization + **INV-31 Part A & B** with all six non-vacuity anchors. No serving wire. | PR-0 ratified |
 | **PR-2** | `evals/proofwriter_cwa/` — independent CWA oracle + hand-authored CWA fixtures + scorer (`correct_false` / `wrong_false` columns) + `capability_index` adapter. Measure-only. | PR-1 merged |
 | **PR-3** | `sensorium/environment/` → `FrameVerdict` adapter (the **conservative** §5.2 residual decomposition: only `changed`→`entailed_false`; missing/unexpected/whole-missing→undetermined/scope_boundary; frame-conformance query; full-run `trace_hash` proof). Perception-NAF stays deferred. | PR-1 merged |
-| **PR-4** | `core/epistemic_disclosure` integration — map `FrameVerdict` → `ServedDisposition` per §7, incl. a grounded-**negative** renderer for `entailed_false`, **default-dark** (no live `shape_surface` flip). | PR-2/3 merged + a ratified producer |
+| **PR-4** | `core/epistemic_disclosure` integration — map `FrameVerdict` → `ServedDisposition` per §7 (committed verdicts → `COMMIT` at `EpistemicState.INFERRED` + `DisclosureClaim.NONE`), incl. a grounded-**negative** renderer for `entailed_false`, **default-dark** (no live `shape_surface` flip). | PR-2/3 merged + a ratified producer |
 
 Sequencing rule: **INV-31 ships with the type (PR-1), never after.** The firewall must
 exist the moment a `FrameVerdict` can be constructed.
@@ -563,8 +602,10 @@ names. Obligations PR-1+ must discharge:
    meaningful-failure test; the construction detector is exercised against every alternate
    constructor shape).
 2. **`entailed_false` is proof-backed (now non-vacuous)** — the §3 `__post_init__` raises
-   on `verdict==ENTAILED_FALSE` with a non-`{REFUTED,FALSIFIED}` proof; a test constructs
-   that mismatch and asserts the raise.
+   on `verdict==ENTAILED_FALSE` unless the proof is a *named* positive refutation
+   (`robdd_refutation` from `proof_chain.entail`/`REFUTED`, or `perception_changed_slot`
+   from `sensorium.falsification`/`FALSIFIED`); a test constructs each mismatch — including
+   a **generic `FALSIFIED` with `positive_refutation_kind=None`** — and asserts the raise.
 3. **`contradiction ≠ entailed_false`** — inconsistent premises → `contradiction`, never
    `entailed_false`; and (§7) the two carry distinct `LimitationKind` so they stay
    distinguishable at the disclosure layer, not only upstream.
@@ -596,8 +637,8 @@ regression.
   alphabet in v1; under-determined queries → `scope_boundary`. This is the honest cost of
   not laundering set-inequality into entailment.
 - **Grounded-negative renderer is new (PR-4).** `entailed_false` is a committed "No" with
-  no existing renderer; the open question (§14) is `COMMIT`-with-negative-surface vs a new
-  closed-set member.
+  no existing renderer; **[ratify] resolved** as `COMMIT`-with-negative-surface (no new
+  closed-set member), served at `EpistemicState.INFERRED` + `DisclosureClaim.NONE`.
 - **`_basis` lift** (PR-1) is a small, mechanical refactor that removes the open/closed
   package coupling the review flagged; INV-31's directional scan depends on it.
 - **INV-31 import scans** must use the project-wide source walk with the maintained
@@ -634,12 +675,16 @@ regression.
 - [ ] **INV-31's two-part shape** (§8 — transitive import containment + typed data-flow
       firewall) with all six non-vacuity anchors is accepted, shipping in PR-1.
 - [ ] The `_basis` lift to `generate/epistemic_basis.py` (PR-1) is authorized.
-- [ ] The §7 governance mapping — `entailed_false` as a committed "No" (not a `contradiction`
-      block), STRICT, default-dark, no `VERIFIED` self-cert — is correct. **Open question:**
-      grounded-negative answer as `COMMIT`-with-negative-surface (recommended) vs a new
-      closed-set `LimitationKind`/`EpistemicState` member.
-- [ ] The `entailed_true` produced-`EpistemicState` reconcile (do not stamp `EVIDENCED`)
-      is accepted as a PR-4 obligation.
+- [x] **RESOLVED (ratify):** the §7 governance mapping — `entailed_false` as a committed
+      "No" (not a `contradiction` block), STRICT, default-dark, no `VERIFIED` self-cert.
+      Grounded-negative answer = `COMMIT`-with-negative-surface (a PR-4 renderer), **no**
+      new `LimitationKind`/`EpistemicState` member.
+- [x] **RESOLVED (ratify):** `entailed_true`/`entailed_false` produced `EpistemicState` =
+      `INFERRED` with `DisclosureClaim.NONE` by default; never `EVIDENCED`, never `VERIFIED`
+      unless a later canonical verified producer earns it.
+- [x] **APPLIED (ratify):** the explicit `positive_refutation_kind` discriminator (§3) so a
+      generic `FALSIFIED` cannot satisfy `entailed_false`; and the PR-1-scoped wording for
+      the `Determined`-count rule (§4, no permanent ban on future visible-count additions).
 - [ ] The PR sequence (§10) and the "INV-31 ships with the type" rule are authorized.
 - [ ] The new invariant number **INV-31** is free / correctly assigned (review confirmed
       no existing `INV-31` reference).
