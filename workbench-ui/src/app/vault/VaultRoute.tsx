@@ -12,11 +12,30 @@ import { LoadingState } from "../../design/components/states/LoadingState";
 import type { VaultEntry, VaultSummary } from "../../types/api";
 import { useEvidenceSubject } from "../evidenceContext";
 
-// Vault persistence is opt-in; absence is the common, honest state. This is
-// the fail-closed primary contract, not an error.
-const FAIL_CLOSED_STATEMENT =
-  "No persisted vault. Session memory is held in-process and discarded on exit; persistence is opt-in via RuntimeConfig.persist_session_state.";
-const FAIL_CLOSED_ACTION = "Set RuntimeConfig.persist_session_state = true";
+// Vault persistence is opt-in; absence of a snapshot is the common, honest
+// primary state — the fail-closed contract, not an error.
+//
+// The next action must be TRUE and runnable: `core always-on` is the daemon
+// that forces persist_session_state=True (chat/always_on_daemon.py) and writes
+// engine_state/session_state.json. There is no `core chat --persist-session-state`
+// flag today, so we do not invent one — that would be the same dishonesty as a
+// dead button. Exported so route-conformance asserts the exact contract string.
+export const VAULT_ABSENCE_STATEMENT =
+  "No persisted vault snapshot is available. Session memory is held in-process " +
+  "and discarded on exit; persistence is opt-in (RuntimeConfig.persist_session_state). " +
+  "The always-on daemon writes the snapshot.";
+export const VAULT_ABSENCE_ACTION = "core always-on";
+const VAULT_PERSIST_CLI = { kind: "cli", command: VAULT_ABSENCE_ACTION } as const;
+
+// A persisted snapshot that holds zero entries is a DIFFERENT honest state from
+// absence: the vault exists, it just has not stored anything yet.
+const VAULT_EMPTY_STATEMENT =
+  "Vault snapshot exists, but no entries have been stored yet.";
+
+// Filtering is the operator's own action; the remedy is to relax the filter,
+// not to enable persistence. Static guidance, not a command.
+const VAULT_FILTER_EMPTY_STATEMENT = "No vault entries match this filter.";
+const VAULT_FILTER_EMPTY_ACTION = "Clear the filter to see all entries.";
 
 function errorMessage(error: unknown) {
   return error instanceof WorkbenchApiError ? error.message : "Vault request failed.";
@@ -103,9 +122,29 @@ function VaultSummaryStrip({ summary }: { summary: VaultSummary }) {
   );
 }
 
-function FailClosed() {
+// Route identity must survive every data state. The success path was the only
+// branch that painted "Vault" chrome, so loading/absent/empty/error read as a
+// context-free card floating in a blank surface ("nothing comes up"). Wrapping
+// every branch in the same Panel keeps the route legible regardless of state.
+function VaultFrame({
+  toolbar,
+  children,
+}: {
+  toolbar?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <EmptyState statement={FAIL_CLOSED_STATEMENT} nextAction={FAIL_CLOSED_ACTION} />
+    <Panel title="Vault" toolbar={toolbar}>
+      {children}
+    </Panel>
+  );
+}
+
+function EntryCountToolbar({ count }: { count: number }) {
+  return (
+    <span className="font-mono text-xs text-[var(--color-text-muted)]">
+      {count} entries
+    </span>
   );
 }
 
@@ -148,37 +187,69 @@ export function VaultRoute() {
   }
 
   if (summaryQuery.isLoading) {
-    return <LoadingState label="Loading vault..." />;
-  }
-
-  // Fail-closed: no persisted vault is the expected primary state, not an error.
-  if (summaryQuery.isError) {
-    if (summaryQuery.error.code === "evidence_unavailable") {
-      return <FailClosed />;
-    }
     return (
-      <ErrorState
-        whatFailed={errorMessage(summaryQuery.error)}
-        mutationStatus="No vault mutation occurred."
-        reproducer="curl /vault/summary"
-        retrySafety="Retry: safe"
-      />
+      <VaultFrame>
+        <LoadingState label="Loading vault..." />
+      </VaultFrame>
     );
   }
 
-  if (!hasEntries) {
-    return <FailClosed />;
+  // Fail-closed: no persisted vault snapshot is the expected primary state, not
+  // an error. The summary reader returns evidence_unavailable when the snapshot
+  // is absent (persistence is opt-in).
+  if (summaryQuery.isError) {
+    if (summaryQuery.error.code === "evidence_unavailable") {
+      return (
+        <VaultFrame>
+          <EmptyState statement={VAULT_ABSENCE_STATEMENT} nextAction={VAULT_PERSIST_CLI} />
+        </VaultFrame>
+      );
+    }
+    return (
+      <VaultFrame>
+        <ErrorState
+          whatFailed={errorMessage(summaryQuery.error)}
+          mutationStatus="No vault mutation occurred."
+          reproducer="curl /vault/summary"
+          retrySafety="Retry: safe"
+        />
+      </VaultFrame>
+    );
+  }
+
+  // react-query guarantees data is present once the query is neither loading
+  // nor errored, but the `summary` alias was captured before that narrowing.
+  // Guard explicitly — a missing summary is treated as honest absence, framed.
+  if (!summary) {
+    return (
+      <VaultFrame>
+        <EmptyState statement={VAULT_ABSENCE_STATEMENT} nextAction={VAULT_PERSIST_CLI} />
+      </VaultFrame>
+    );
+  }
+
+  // summary is defined past this point. A snapshot whose `persisted` flag is not
+  // set is treated as absence — the same honest fail-closed card.
+  if (!summary.persisted) {
+    return (
+      <VaultFrame>
+        <EmptyState statement={VAULT_ABSENCE_STATEMENT} nextAction={VAULT_PERSIST_CLI} />
+      </VaultFrame>
+    );
+  }
+
+  // A persisted snapshot with zero entries is a DISTINCT state from absence: the
+  // vault exists, it just has not stored anything yet.
+  if (summary.entry_count === 0) {
+    return (
+      <VaultFrame toolbar={<EntryCountToolbar count={0} />}>
+        <EmptyState statement={VAULT_EMPTY_STATEMENT} nextAction={VAULT_PERSIST_CLI} />
+      </VaultFrame>
+    );
   }
 
   return (
-    <Panel
-      title="Vault"
-      toolbar={
-        <span className="font-mono text-xs text-[var(--color-text-muted)]">
-          {summary.entry_count} entries
-        </span>
-      }
-    >
+    <VaultFrame toolbar={<EntryCountToolbar count={summary.entry_count} />}>
       <div className="grid min-h-0 gap-3">
         <VaultSummaryStrip summary={summary} />
         <SearchInput
@@ -197,8 +268,8 @@ export function VaultRoute() {
           />
         ) : filteredEntries.length === 0 ? (
           <EmptyState
-            statement="No vault entries match this filter."
-            nextAction={FAIL_CLOSED_ACTION}
+            statement={VAULT_FILTER_EMPTY_STATEMENT}
+            nextAction={VAULT_FILTER_EMPTY_ACTION}
           />
         ) : (
           <VirtualizedList
@@ -220,6 +291,6 @@ export function VaultRoute() {
           />
         )}
       </div>
-    </Panel>
+    </VaultFrame>
   );
 }

@@ -6,10 +6,15 @@ import { ErrorState } from "./ErrorState";
 import { LoadingState } from "./LoadingState";
 
 describe("state components", () => {
-  it("requires empty-state statement and next action", () => {
+  it("renders a string nextAction as static guidance, not a dead button", () => {
     render(<EmptyState statement="No trace selected." nextAction="Select a trace." />);
     expect(screen.getByText("No trace selected.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Select a trace." })).toBeInTheDocument();
+    // a plain-string action is guidance, not an interactive control — a
+    // click-dead button reads as "I clicked and nothing happened"
+    expect(screen.getByText("Select a trace.")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Select a trace." }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders cli-form nextAction as mono command row with copy button", async () => {
