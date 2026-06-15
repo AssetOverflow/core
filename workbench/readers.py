@@ -1739,7 +1739,7 @@ def _identity_continuity_from_manifest(
         current_engine_identity,
         stored_identity=engine_identity,
         stored_scheme=stored_scheme,
-        stored_revision=written_at_revision,
+        stored_revision=written_at_revision or "",
     )
     if reconciliation is IdentityReconciliation.DIVERGED:
         summary = "checkpoint identity differs from the current ratified substrate"

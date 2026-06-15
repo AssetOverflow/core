@@ -795,12 +795,20 @@ class ChatRuntime:
         # single source of truth shared with the workbench continuity reader.
         self._loaded_engine_identity = str(manifest.get("engine_identity", ""))
         if self._loaded_engine_identity:
+            # A malformed identity_scheme (non-int) falls back to the legacy
+            # scheme — the verifying migration then reconciles it safely rather
+            # than crashing the load. A null/absent revision becomes "" so the
+            # legacy branch treats it as unverifiable (conservative DIVERGED).
+            try:
+                stored_scheme = int(manifest.get("identity_scheme", 1))
+            except (TypeError, ValueError):
+                stored_scheme = 1
             reconciliation = reconcile_loaded_identity(
                 self.config,
                 self._engine_identity,
                 stored_identity=self._loaded_engine_identity,
-                stored_scheme=int(manifest.get("identity_scheme", 1)),
-                stored_revision=str(manifest.get("written_at_revision", "")),
+                stored_scheme=stored_scheme,
+                stored_revision=str(manifest.get("written_at_revision") or ""),
             )
             if reconciliation is IdentityReconciliation.DIVERGED:
                 self.identity_continuity_break = True

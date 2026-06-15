@@ -180,3 +180,71 @@ def test_legacy_checkpoint_with_different_packs_breaks_without_strict(
     with pytest.warns(RuntimeWarning, match="identity continuity break"):
         runtime = ChatRuntime(config=RuntimeConfig(), engine_state_path=state_dir)
     assert runtime.identity_continuity_break is True
+
+
+# --- malformed / missing manifest fields must not crash the guard or reader ---
+
+
+def test_malformed_identity_scheme_does_not_crash_the_load_guard(tmp_path: Path) -> None:
+    # A non-int identity_scheme must fall back to the legacy scheme (verifying
+    # migration), not raise on int() while loading the checkpoint.
+    state_dir = tmp_path / "es"
+    state_dir.mkdir(parents=True)
+    legacy_id = compute_legacy_engine_identity(_DEFAULT_PACKS, "old-rev")
+    (state_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 2,
+                "turn_count": 4,
+                "written_at_revision": "old-rev",
+                "engine_identity": legacy_id,
+                "identity_scheme": "not-an-int",  # malformed
+            },
+            sort_keys=True,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    with pytest.warns(RuntimeWarning, match="migrating engine-identity stamp scheme"):
+        runtime = ChatRuntime(
+            config=RuntimeConfig(strict_identity_continuity=True),
+            engine_state_path=state_dir,
+        )
+    assert runtime.identity_continuity_break is False
+
+
+def test_reader_malformed_identity_scheme_falls_back_to_legacy() -> None:
+    from workbench.readers import _identity_continuity_from_manifest
+
+    # A legacy stamp of the CURRENT default packs, but identity_scheme is garbage:
+    # the reader must fall back to legacy and verify-migrate -> "verified", not crash.
+    legacy = compute_legacy_engine_identity(_DEFAULT_PACKS, "r1")
+    result = _identity_continuity_from_manifest(
+        {
+            "schema_version": 2,
+            "turn_count": 1,
+            "written_at_revision": "r1",
+            "engine_identity": legacy,
+            "identity_scheme": "not-an-int",
+        }
+    )
+    assert result is not None
+    assert result.status == "verified"
+
+
+def test_reader_missing_revision_is_a_conservative_break() -> None:
+    from workbench.readers import _identity_continuity_from_manifest
+
+    # A legacy stamp with NO written_at_revision can't be verified -> DIVERGED ->
+    # "break" (never blindly "verified"); and it must not crash on a None revision.
+    legacy = compute_legacy_engine_identity(_DEFAULT_PACKS, "r1")
+    result = _identity_continuity_from_manifest(
+        {
+            "schema_version": 2,
+            "turn_count": 1,
+            "engine_identity": legacy,
+            # no written_at_revision, no identity_scheme
+        }
+    )
+    assert result is not None
+    assert result.status == "break"
