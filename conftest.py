@@ -28,8 +28,11 @@ import pytest
 import engine_state
 
 
+_USES_DEFAULT_ENGINE_STATE_MARKER = "uses_default_engine_state"
+
+
 @pytest.fixture(autouse=True)
-def _isolate_engine_state_default(tmp_path_factory, monkeypatch):
+def _isolate_engine_state_default(request, tmp_path_factory, monkeypatch):
     """Isolate the default engine-state checkpoint dir per test.
 
     A bare ``ChatRuntime()`` (no ``engine_state_path``) falls back to
@@ -41,9 +44,27 @@ def _isolate_engine_state_default(tmp_path_factory, monkeypatch):
     boots under a different identity over the same dir). Point the default at a
     fresh per-test temp dir. Tests passing an explicit ``engine_state_path`` are
     unaffected; within one test, repeated ``ChatRuntime()`` share this dir.
+
+    Two redirections, both pointed at the same per-test dir:
+
+    1. ``engine_state._DEFAULT_DIR`` is monkeypatched directly. It is bound at
+       import (``engine_state/__init__.py``), so an env var alone would NOT
+       redirect an already-imported in-process runtime.
+    2. ``CORE_ENGINE_STATE_DIR`` is set in the environment so subprocess / CLI
+       tests that re-import ``engine_state`` in a child process inherit the same
+       isolation. A child that sets its own ``CORE_ENGINE_STATE_DIR`` (e.g.
+       ``tests/test_l10_always_on_daemon.py::test_real_sigterm_stops_the_daemon_cleanly``)
+       still overrides this and wins.
+
+    A test that intentionally exercises the real process-default dir (default-dir
+    semantics, CLI fallback, legacy-flat migration) can opt out with
+    ``@pytest.mark.uses_default_engine_state``; it then sees neither redirection.
     """
+    if request.node.get_closest_marker(_USES_DEFAULT_ENGINE_STATE_MARKER):
+        return
     isolated = tmp_path_factory.mktemp("engine_state_default")
     monkeypatch.setattr(engine_state, "_DEFAULT_DIR", isolated)
+    monkeypatch.setenv("CORE_ENGINE_STATE_DIR", str(isolated))
 
 
 QUARANTINE: frozenset[str] = frozenset()

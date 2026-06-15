@@ -61,4 +61,5 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = [
     "quarantine: pre-existing failure tracked in conftest.py QUARANTINE registry; excluded from full-pytest CI gate. See docs/test-debt-quarantine.md.",
+    "uses_default_engine_state: test intentionally exercises the process default engine-state directory; opt out of per-test default isolation. See docs/issues/default-engine-state-test-hygiene.md.",
 ]
