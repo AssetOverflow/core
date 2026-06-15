@@ -45,7 +45,6 @@ from typing import Any, Callable
 
 from algebra.versor import versor_condition
 from core.engine_identity import engine_identity_for_config
-from engine_state import get_git_revision
 
 # The name of the persisted lived-life artifact (one per always-on run) in the
 # engine-state dir, read-only, for the workbench Lived Life surface.
@@ -209,9 +208,8 @@ def run_continuous(
     if heartbeats is not None and heartbeats < 0:
         raise ValueError("heartbeats must be >= 0 or None")
 
-    git_revision = get_git_revision()
     config = runtime.config
-    identity = engine_identity_for_config(config, git_revision)
+    identity = engine_identity_for_config(config)
     # The identity-determining pack ids (empty == default) — persisted so a reader recomputes
     # the SAME identity for the resume verdict instead of assuming default packs.
     identity_pack_ids = {

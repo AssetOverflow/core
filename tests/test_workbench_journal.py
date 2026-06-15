@@ -146,6 +146,7 @@ def test_run_detail_projects_verified_identity_continuity(
                 "written_at_revision": "rev-current",
                 "engine_identity": "engine-abc",
                 "parent_engine_identity": "engine-abc",
+                "identity_scheme": 2,
             },
             sort_keys=True,
         ),
@@ -154,7 +155,7 @@ def test_run_detail_projects_verified_identity_continuity(
     monkeypatch.setattr(readers, "ENGINE_STATE_ROOT", engine_state)
     monkeypatch.setattr(readers, "get_git_revision", lambda: "rev-current")
     monkeypatch.setattr(
-        readers, "engine_identity_for_config", lambda _config, _rev: "engine-abc"
+        readers, "engine_identity_for_config", lambda _config: "engine-abc"
     )
     journal = TurnJournal(tmp_path / "workbench_data")
 
@@ -187,7 +188,7 @@ def test_run_detail_projects_missing_identity_evidence_honestly(
     monkeypatch.setattr(readers, "ENGINE_STATE_ROOT", engine_state)
     monkeypatch.setattr(readers, "get_git_revision", lambda: "rev-current")
     monkeypatch.setattr(
-        readers, "engine_identity_for_config", lambda _config, _rev: "engine-current"
+        readers, "engine_identity_for_config", lambda _config: "engine-current"
     )
     journal = TurnJournal(tmp_path / "workbench_data")
 

@@ -24,7 +24,6 @@ from chat.runtime import ChatRuntime
 from core.cognition.pipeline import CognitiveTurnPipeline
 from core.config import RuntimeConfig
 from core.engine_identity import engine_identity_for_config
-from engine_state import get_git_revision
 from evals.l10_continuity.runner import run_soak
 
 _PRECISION = RuntimeConfig(identity_pack="precision_first_v1")
@@ -45,11 +44,10 @@ def test_resumed_life_is_byte_identical_and_same_identity(tmp_path: Path) -> Non
 
 def test_identity_is_load_bearing_distinct_packs_distinct_identity() -> None:
     # Leg 2: three identity packs -> three distinct engine identities.
-    rev = get_git_revision()
-    default_id = engine_identity_for_config(RuntimeConfig(), rev)
-    precision_id = engine_identity_for_config(_PRECISION, rev)
+    default_id = engine_identity_for_config(RuntimeConfig())
+    precision_id = engine_identity_for_config(_PRECISION)
     generosity_id = engine_identity_for_config(
-        RuntimeConfig(identity_pack="generosity_first_v1"), rev
+        RuntimeConfig(identity_pack="generosity_first_v1")
     )
     assert len({default_id, precision_id, generosity_id}) == 3
 
