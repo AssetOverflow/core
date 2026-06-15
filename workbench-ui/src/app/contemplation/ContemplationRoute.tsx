@@ -8,6 +8,7 @@ import { Panel } from "../../design/components/Panel/Panel";
 import { SearchInput } from "../../design/components/SearchInput/SearchInput";
 import { SplitPane } from "../../design/components/SplitPane/SplitPane";
 import { StableJsonViewer } from "../../design/components/StableJsonViewer";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
@@ -57,10 +58,17 @@ function RunRow({
   onSelect: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       aria-current={selected ? "true" : undefined}
       onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
       className={`grid w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-[var(--color-border-subtle)] px-3 py-2 text-left transition-colors hover:bg-[var(--color-surface-inset)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[var(--color-focus-ring)] ${
         selected
           ? "border-l-2 border-l-[var(--color-selected-border)] bg-[var(--color-selected-bg)] pl-[10px]"
@@ -68,8 +76,13 @@ function RunRow({
       }`}
     >
       <span className="min-w-0">
-        <span className="block truncate font-mono text-xs text-[var(--color-text-muted)]">
-          {run.run_id}
+        <span className="block min-w-0">
+          <TruncatedCell
+            value={run.run_id}
+            label="run id"
+            mono
+            className="text-xs text-[var(--color-text-muted)]"
+          />
         </span>
         <span className="mt-1 block text-sm text-[var(--color-text-primary)]">
           {run.prompt ?? "Prompt not recorded"}
@@ -82,7 +95,7 @@ function RunRow({
       <span className="justify-self-end text-xs text-[var(--color-text-secondary)]">
         {boolLabel(run.learning_arc_closed)}
       </span>
-    </button>
+    </div>
   );
 }
 
@@ -108,8 +121,13 @@ function StageEvidence({ scene }: { scene: ContemplationScene }) {
       {rows.map((row) => (
         <div key={row.label} className="contents">
           <dt className="text-[var(--color-text-secondary)]">{row.label}</dt>
-          <dd className="m-0 truncate font-mono text-[var(--color-text-primary)]" title={row.value}>
-            {row.value}
+          <dd className="m-0 min-w-0">
+            <TruncatedCell
+              value={row.value}
+              label={row.label}
+              mono
+              className="text-[var(--color-text-primary)]"
+            />
           </dd>
         </div>
       ))}

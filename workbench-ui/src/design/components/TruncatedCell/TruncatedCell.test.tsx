@@ -45,6 +45,12 @@ describe("TruncatedCell", () => {
     expect(screen.getByRole("dialog", { name: "source" })).toBeInTheDocument();
   });
 
+  it("right-justifies content when align is end", () => {
+    render(<TruncatedCell value="to_stage" label="to stage" align="end" />);
+    const display = screen.getByText("to_stage");
+    expect(display).toHaveClass("text-right");
+  });
+
   it("does not bubble clicks to a surrounding row handler", async () => {
     const onRowClick = vi.fn();
     render(

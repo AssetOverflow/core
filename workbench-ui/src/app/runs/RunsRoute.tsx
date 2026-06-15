@@ -11,6 +11,7 @@ import { SplitPane } from "../../design/components/SplitPane/SplitPane";
 import { StableJsonViewer } from "../../design/components/StableJsonViewer";
 import { TabBar, type Tab } from "../../design/components/TabBar/TabBar";
 import { Timestamp } from "../../design/components/Timestamp/Timestamp";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import { VirtualizedList } from "../../design/components/VirtualizedList/VirtualizedList";
 import { Button } from "../../design/components/primitives/Button";
 import { EmptyState } from "../../design/components/states/EmptyState";
@@ -155,8 +156,13 @@ function RunRow({
         <span className="block text-sm text-[var(--color-text-primary)]">
           {sourceLabel(run.source)}
         </span>
-        <span className="mt-1 block truncate font-mono text-xs text-[var(--color-text-muted)]">
-          {run.session_id}
+        <span className="mt-1 block min-w-0">
+          <TruncatedCell
+            value={run.session_id}
+            label="session id"
+            mono
+            className="text-xs text-[var(--color-text-muted)]"
+          />
         </span>
         <span className="mt-1 flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
           <span>{run.turn_count} turns</span>

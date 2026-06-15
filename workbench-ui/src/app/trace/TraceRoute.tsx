@@ -19,6 +19,7 @@ import { SplitPane } from "../../design/components/SplitPane/SplitPane";
 import { StableJsonViewer } from "../../design/components/StableJsonViewer";
 import { TabBar, type Tab } from "../../design/components/TabBar/TabBar";
 import { Timestamp } from "../../design/components/Timestamp/Timestamp";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import { VirtualizedList } from "../../design/components/VirtualizedList/VirtualizedList";
 import {
   EpistemicStateBadge,
@@ -212,7 +213,9 @@ function PipelineStageRail({
       {stages.map((stage, index) => {
         const selected = stage.stage_id === selectedStageId;
         return (
-          <button
+          <div
+            role="button"
+            tabIndex={0}
             aria-pressed={selected}
             className={`grid min-h-16 grid-cols-[2rem_minmax(0,1fr)] gap-2 rounded border px-2 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)] ${
               selected
@@ -221,23 +224,36 @@ function PipelineStageRail({
             }`}
             key={stage.stage_id}
             onClick={() => onSelect(stage.stage_id)}
-            type="button"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onSelect(stage.stage_id);
+              }
+            }}
           >
             <span className="font-mono text-xs text-[var(--color-text-muted)]">
               {String(index + 1).padStart(2, "0")}
             </span>
             <span className="min-w-0">
               <span className="flex items-center justify-between gap-2">
-                <span className="truncate font-mono text-xs font-semibold text-[var(--color-text-primary)]">
-                  {stage.label}
-                </span>
+                <TruncatedCell
+                  value={stage.label}
+                  label="stage"
+                  mono
+                  className="text-xs font-semibold text-[var(--color-text-primary)]"
+                />
                 <PipelineStageStatus status={stage.status} />
               </span>
-              <span className="mt-1 block truncate text-xs text-[var(--color-text-secondary)]">
-                {stage.summary}
+              <span className="mt-1 block min-w-0">
+                <TruncatedCell
+                  value={stage.summary}
+                  label="summary"
+                  wrap="pre-wrap"
+                  className="text-xs text-[var(--color-text-secondary)]"
+                />
               </span>
             </span>
-          </button>
+          </div>
         );
       })}
     </section>
@@ -259,11 +275,20 @@ function PipelineTransitionList({ record }: { record: CognitivePipelineRecord })
             className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] px-2 py-1 font-mono text-[11px]"
             key={`${edge.from_stage}:${edge.to_stage}`}
           >
-            <span className="truncate text-[var(--color-text-secondary)]">{edge.from_stage}</span>
+            <TruncatedCell
+              value={edge.from_stage}
+              label="from stage"
+              mono
+              className="text-[var(--color-text-secondary)]"
+            />
             <span className="text-[var(--color-text-muted)]">{edge.label ?? "propagate"}</span>
-            <span className="truncate text-right text-[var(--color-text-primary)]">
-              {edge.to_stage}
-            </span>
+            <TruncatedCell
+              value={edge.to_stage}
+              label="to stage"
+              mono
+              align="end"
+              className="text-[var(--color-text-primary)]"
+            />
           </li>
         ))}
       </ol>
@@ -563,11 +588,21 @@ function TraceRow({
         <span className="block text-xs text-[var(--color-text-secondary)]">
           <Timestamp iso={turn.timestamp} format="relative" />
         </span>
-        <span className="mt-1 block truncate text-sm text-[var(--color-text-primary)]">
-          {firstLine(turn.prompt_excerpt) || `Turn #${turn.turn_id}`}
+        <span className="mt-1 block min-w-0">
+          <TruncatedCell
+            value={firstLine(turn.prompt_excerpt) || `Turn #${turn.turn_id}`}
+            label="prompt"
+            wrap="pre-wrap"
+            className="text-sm text-[var(--color-text-primary)]"
+          />
         </span>
-        <span className="mt-1 block truncate text-xs text-[var(--color-text-muted)]">
-          {turn.surface_excerpt}
+        <span className="mt-1 block min-w-0">
+          <TruncatedCell
+            value={turn.surface_excerpt}
+            label="surface"
+            wrap="pre-wrap"
+            className="text-xs text-[var(--color-text-muted)]"
+          />
         </span>
       </span>
       <span className="justify-self-end">

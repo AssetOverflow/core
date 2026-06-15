@@ -44,6 +44,12 @@ export interface TruncatedCellProps {
   wrap?: "break-all" | "pre-wrap";
   /** Class applied to the inline display span. */
   className?: string;
+  /**
+   * Horizontal alignment of the cell content. `end` hugs the right edge (for
+   * right-aligned table columns) and right-justifies the display text.
+   * Defaults to `start`.
+   */
+  align?: "start" | "end";
 }
 
 function shouldOfferModal(value: string) {
@@ -94,6 +100,7 @@ export function TruncatedCell({
   mono,
   wrap = "break-all",
   className,
+  align = "start",
 }: TruncatedCellProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const offerModal = shouldOfferModal(value);
@@ -101,8 +108,17 @@ export function TruncatedCell({
   const stop = (event: { stopPropagation: () => void }) => event.stopPropagation();
 
   return (
-    <span className={cn("group/cell flex min-w-0 items-center gap-1", mono && "font-mono")}>
-      <span className={cn("truncate", className)} title={value}>
+    <span
+      className={cn(
+        "group/cell flex min-w-0 items-center gap-1",
+        align === "end" && "justify-end",
+        mono && "font-mono",
+      )}
+    >
+      <span
+        className={cn("truncate", align === "end" && "text-right", className)}
+        title={value}
+      >
         {display ?? value}
       </span>
       <Popover.Root>

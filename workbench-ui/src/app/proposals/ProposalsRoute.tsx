@@ -8,6 +8,7 @@ import type { ProposalSummary, MathProposalDetail, ProposalState, DownstreamEffe
 import { Button } from "../../design/components/primitives/Button";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { SearchInput } from "../../design/components/SearchInput/SearchInput";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import { useListNavigation } from "../../design/hooks/useListNavigation";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
@@ -396,8 +397,13 @@ function MathProposalDetailView({
           </div>
           <div>
             <dt className="text-[var(--color-text-muted)]">Replay Equivalence Hash</dt>
-            <dd className="m-0 text-[var(--color-text-primary)] font-mono truncate mt-0.5" title={proposal.replay_equivalence_hash}>
-              {proposal.replay_equivalence_hash}
+            <dd className="m-0 mt-0.5 min-w-0">
+              <TruncatedCell
+                value={proposal.replay_equivalence_hash}
+                label="replay equivalence hash"
+                mono
+                className="text-[var(--color-text-primary)]"
+              />
             </dd>
           </div>
         </dl>
@@ -454,9 +460,14 @@ function MathProposalDetailView({
           {hashes.map((hash: string, i: number) => (
             <div key={i} className="flex items-center gap-2">
               <span className="text-xs text-[var(--color-text-muted)] font-mono">#{i + 1}</span>
-              <code className="bg-[var(--color-surface-inset)] px-2 py-1 rounded font-mono text-xs text-[var(--color-text-primary)] truncate flex-1">
-                {hash}
-              </code>
+              <span className="min-w-0 flex-1 rounded bg-[var(--color-surface-inset)] px-2 py-1">
+                <TruncatedCell
+                  value={hash}
+                  label={`evidence hash #${i + 1}`}
+                  mono
+                  className="text-xs text-[var(--color-text-primary)]"
+                />
+              </span>
             </div>
           ))}
         </div>

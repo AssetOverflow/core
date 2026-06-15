@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { DagViewer } from "../../design/components/Dag/Dag";
 import type { DagEdgeInput, DagNodeInput } from "../../design/components/Dag/layout";
+import { TruncatedCell } from "../../design/components/TruncatedCell";
 import type { LogosAlignmentRow } from "../../types/api";
 
 // Read-only CORE-Logos alignment tab (LG-4). The trilingual resonance graph
@@ -70,9 +71,16 @@ function EdgeCard({
       }`}
     >
       <div className="flex items-center justify-between gap-2 font-mono text-xs text-[var(--color-text-primary)]">
-        <span className="truncate">
-          {row.source_id} <span aria-hidden className="text-[var(--color-text-muted)]">→</span> {row.target_id}
-        </span>
+        <TruncatedCell
+          value={`${row.source_id} → ${row.target_id}`}
+          display={
+            <>
+              {row.source_id}{" "}
+              <span aria-hidden className="text-[var(--color-text-muted)]">→</span> {row.target_id}
+            </>
+          }
+          label="alignment edge"
+        />
         <span className="text-[var(--color-text-secondary)]">{row.weight.toFixed(2)}</span>
       </div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--color-text-secondary)]">
