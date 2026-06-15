@@ -1,8 +1,10 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { EvidenceProvider, useEvidenceSubject } from "./evidenceContext";
 import { RightInspector } from "./RightInspector";
-import type { ChatTurnResult, ProposalDetail } from "../types/api";
+import { createTestQueryClient } from "../test/createTestQueryClient";
+import type { ChatTurnResult, ProposalDetail, VaultRecall } from "../types/api";
 
 const MOCK_TURN: ChatTurnResult = {
   prompt: "What is alpha?",
@@ -236,5 +238,119 @@ describe("RightInspector", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+const RECALL_FIXTURE: VaultRecall = {
+  entry_index: 7,
+  query_versor_digest: "sha256:qqqqqqqqqqqq",
+  top_k: 5,
+  hits: [
+    {
+      entry_index: 7,
+      rank: 0,
+      cga_inner: 1.2e-7,
+      exact_self_match: true,
+      epistemic_status: "coherent",
+      epistemic_state: "decoded",
+      versor_digest: "sha256:qqqqqqqqqqqq",
+    },
+    {
+      entry_index: 3,
+      rank: 1,
+      cga_inner: 0.4212,
+      exact_self_match: false,
+      epistemic_status: "coherent",
+      epistemic_state: "decoded",
+      versor_digest: "sha256:zzzzzzzzzzzz",
+    },
+  ],
+  self_hit_rank: 0,
+  self_hit_found: true,
+  exact_cga: true,
+  approximate: false,
+  source_path: "engine_state/session_state.json",
+};
+
+function stubRecallFetch() {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: unknown) => {
+      const path = new URL(String(input)).pathname;
+      if (path === "/vault/entries/7/recall") {
+        return Promise.resolve({
+          json: () => Promise.resolve({ ok: true, generated_at: "now", data: RECALL_FIXTURE }),
+        });
+      }
+      return Promise.resolve({
+        json: () =>
+          Promise.resolve({
+            ok: false,
+            generated_at: "now",
+            error: { code: "not_found", message: `unexpected ${path}` },
+          }),
+      });
+    }),
+  );
+}
+
+function renderVaultInspector() {
+  function SetVaultEntry() {
+    const { setSubject } = useEvidenceSubject();
+    useEffect(() => {
+      setSubject({
+        kind: "vault_entry",
+        entryIndex: 7,
+        data: {
+          entry_index: 7,
+          epistemic_status: "coherent",
+          epistemic_state: "decoded",
+          versor_digest: "sha256:qqqqqqqqqqqq",
+          metadata: { turn: 3, role: "assistant" },
+        },
+      });
+    }, [setSubject]);
+    return <RightInspector />;
+  }
+  return render(
+    <QueryClientProvider client={createTestQueryClient()}>
+      <EvidenceProvider>
+        <SetVaultEntry />
+      </EvidenceProvider>
+    </QueryClientProvider>,
+  );
+}
+
+describe("VaultEntryInspector — exact CGA recall", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps recall opt-in: collapsed by default, no fetch, no banned language", () => {
+    stubRecallFetch();
+    renderVaultInspector();
+    // The disclosure is present but the recall body has not mounted.
+    expect(screen.getByText("Show exact CGA recall")).toBeInTheDocument();
+    expect(screen.queryByText(/recalls itself/)).not.toBeInTheDocument();
+    expect(fetch).not.toHaveBeenCalled();
+    // Exact-recall doctrine holds on the collapsed surface too.
+    expect(screen.queryByText(/similarity|relevance|cosine|approximat|score/i)).not.toBeInTheDocument();
+  });
+
+  it("expands to show exact CGA recall evidence — self-recall proof, never a similarity proxy", async () => {
+    stubRecallFetch();
+    renderVaultInspector();
+
+    fireEvent.click(screen.getByText("Show exact CGA recall"));
+
+    // The self-recall proof: the entry recalls itself at rank 0 as an exact match.
+    expect(await screen.findByText(/recalls itself at rank 0/)).toBeInTheDocument();
+    expect(screen.getByText(/exact match/)).toBeInTheDocument();
+    // The exact primitive is named; no fabricated similarity/relevance/score.
+    expect(screen.getAllByText(/cga_inner/).length).toBeGreaterThan(0);
+    expect(screen.getByText("query_versor")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/similarity|relevance|cosine|approximat|score|\bann\b/i),
+    ).not.toBeInTheDocument();
   });
 });

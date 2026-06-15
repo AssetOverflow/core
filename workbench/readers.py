@@ -50,6 +50,8 @@ from workbench.schemas import (
     RunTurnRef,
     RuntimeStatus,
     VaultEntry,
+    VaultRecall,
+    VaultRecallHit,
     VaultSummary,
 )
 from workbench.lived_life import lived_life_from_payload, missing_lived_life
@@ -1956,6 +1958,104 @@ def list_vault_entries(*, limit: int = 100, offset: int = 0) -> list[VaultEntry]
             )
         )
     return _page(entries, limit=limit, offset=offset)
+
+
+# Fixed recall breadth: a small, deterministic top-k is enough to prove a
+# persisted entry is recallable by exact CGA inner product. Not a tunable knob
+# — keeps the read endpoint deterministic and its surface minimal.
+VAULT_RECALL_TOP_K = 5
+
+
+def vault_entry_recall(entry_index: int, *, top_k: int = VAULT_RECALL_TOP_K) -> VaultRecall:
+    """Prove a persisted vault entry is recallable by CORE's exact CGA machinery.
+
+    Read-only evidence: rehydrates the persisted ``VaultStore`` from
+    ``engine_state/session_state.json`` (bit-exact versors via the array codec;
+    the load path performs no reprojection / normalization — restoring bytes is
+    not a normalization site, per ``VaultStore.from_dict``) and runs the real
+    ``VaultStore.recall`` using the selected entry's own stored versor as the
+    query. Recall is the exact ``cga_inner`` scan — never approximate, never an
+    ANN index.
+
+    The persisted file is never written and the live runtime is never touched.
+    The raw versor never crosses the boundary: only content-addressed digests
+    and the finite exact ``cga_inner`` value per hit are emitted. ``recall``'s
+    exact-self-match sentinel (``+inf``) is replaced here by the genuine,
+    finite, JSON-safe ``cga_inner`` plus an ``exact_self_match`` flag.
+
+    Trust boundary: ``entry_index`` is caller-controlled (URL path). A
+    non-integer / out-of-range index raises ``FileNotFoundError`` (404); an
+    absent persisted snapshot raises ``EvidenceUnavailableError`` (501).
+    """
+    import math
+
+    from algebra import cga_inner
+    from core.array_codec import decode_array
+    from vault.store import VaultStore
+
+    path, vault = _load_vault_snapshot()
+    versors_raw = vault.get("versors")
+    metadata_raw = vault.get("metadata")
+    if not isinstance(versors_raw, list) or not isinstance(metadata_raw, list):
+        raise EvidenceUnavailableError(
+            "vault evidence unavailable: snapshot has no recallable versors"
+        )
+    entry_count = min(len(versors_raw), len(metadata_raw))
+    if (
+        isinstance(entry_index, bool)
+        or not isinstance(entry_index, int)
+        or not (0 <= entry_index < entry_count)
+    ):
+        raise FileNotFoundError(f"vault entry not found: {entry_index}")
+
+    def _digest_for(index: int) -> str | None:
+        if 0 <= index < len(versors_raw):
+            return _sha256_bytes(_canonical_json_bytes(versors_raw[index]))
+        return None
+
+    store = VaultStore.from_dict(vault)
+    query = decode_array(versors_raw[entry_index])
+    raw_hits = store.recall(query, top_k=top_k)
+
+    hits: list[VaultRecallHit] = []
+    self_hit_rank: int | None = None
+    for rank, hit in enumerate(raw_hits):
+        idx = int(hit["index"])
+        # The genuine exact inner product — finite and JSON-safe. recall promotes
+        # exact byte-identical matches with a +inf sentinel; the real cga_inner
+        # (≈0 for null-vector self inner-products) is reported instead, and the
+        # exact_self_match flag carries the byte-identity fact.
+        inner = float(cga_inner(query, hit["versor"]))
+        meta = (
+            metadata_raw[idx]
+            if 0 <= idx < len(metadata_raw) and isinstance(metadata_raw[idx], dict)
+            else {}
+        )
+        hits.append(
+            VaultRecallHit(
+                entry_index=idx,
+                rank=rank,
+                cga_inner=inner,
+                exact_self_match=math.isinf(hit["score"]),
+                epistemic_status=str(meta.get("epistemic_status") or "unknown"),
+                epistemic_state=str(meta.get("epistemic_state") or "unknown"),
+                versor_digest=_digest_for(idx),
+            )
+        )
+        if idx == entry_index and self_hit_rank is None:
+            self_hit_rank = rank
+
+    return VaultRecall(
+        entry_index=entry_index,
+        query_versor_digest=_digest_for(entry_index),
+        top_k=top_k,
+        hits=hits,
+        self_hit_rank=self_hit_rank,
+        self_hit_found=self_hit_rank is not None,
+        exact_cga=True,
+        approximate=False,
+        source_path=_display_path(path),
+    )
 
 
 def run_safe_eval_lane(

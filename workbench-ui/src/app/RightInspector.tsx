@@ -15,6 +15,7 @@ import {
   type SafetyVerdict,
 } from "../design/components/badges";
 import type { LeewayEvidence } from "../types/api";
+import { useVaultEntryRecall } from "../api/queries";
 
 // Rendered when a subject was restored from a URL but its detail has not
 // loaded in this session yet.  An honest absence state, not a guess.
@@ -574,6 +575,98 @@ function VaultEntryInspector({ subject }: { subject: Extract<EvidenceSubject, { 
           </pre>
         </details>
       ) : null}
+      <VaultRecallSection entryIndex={subject.entryIndex} />
+    </div>
+  );
+}
+
+function formatCgaInner(value: number): string {
+  if (!Number.isFinite(value)) return "—";
+  return Math.abs(value) < 1e-4 ? value.toExponential(2) : value.toPrecision(5);
+}
+
+// Exact-CGA recall evidence for a selected vault entry. Collapsed by default so
+// the read-only recall fetch is opt-in (the hook lives in VaultRecallBody, which
+// only mounts when expanded). Doctrine: "exact CGA recall" / cga_inner only —
+// never similarity / relevance / cosine / ANN / approximate.
+function VaultRecallSection({ entryIndex }: { entryIndex: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="grid gap-2">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        className="justify-self-start rounded-md border border-[var(--color-border-subtle)] px-2 py-1 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+      >
+        {open ? "Hide exact CGA recall" : "Show exact CGA recall"}
+      </button>
+      {open ? <VaultRecallBody entryIndex={entryIndex} /> : null}
+    </div>
+  );
+}
+
+function VaultRecallBody({ entryIndex }: { entryIndex: number }) {
+  const recall = useVaultEntryRecall(entryIndex);
+
+  if (recall.isPending) {
+    return <p className="m-0 text-xs text-[var(--color-text-muted)]">Running exact CGA recall…</p>;
+  }
+  if (recall.isError || !recall.data) {
+    return (
+      <p className="m-0 text-xs text-[var(--color-text-muted)] [text-wrap:balance]">
+        {recall.error?.message ?? "Exact CGA recall evidence is unavailable for this entry."}
+      </p>
+    );
+  }
+
+  const data = recall.data;
+  const handleRows: MetadataRow[] = [
+    ...(data.query_versor_digest
+      ? [{ key: "query_versor", value: data.query_versor_digest, mono: true, copyable: true } as const]
+      : []),
+    {
+      key: "self_recall",
+      value: data.self_hit_found
+        ? `recalls itself at rank ${data.self_hit_rank}`
+        : "not within top results",
+    },
+    { key: "exact_cga", value: data.exact_cga ? "yes" : "no" },
+  ];
+
+  return (
+    <div className="grid gap-2 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] p-3">
+      <p className="m-0 text-xs text-[var(--color-text-secondary)] [text-wrap:balance]">
+        CORE&apos;s exact <span className="font-mono">cga_inner</span> recall over the persisted
+        vault snapshot, querying with this entry&apos;s own stored versor. Read-only — the live
+        runtime is untouched.
+      </p>
+      <MetadataTable rows={handleRows} />
+      <p className="m-0 text-[11px] italic text-[var(--color-text-muted)] [text-wrap:balance]">
+        Rank is CORE&apos;s actual recall order. An exact byte-identical self-match is promoted to
+        the front — stored versors are CGA null vectors, so the self{" "}
+        <span className="font-mono">cga_inner</span> is ~0; identity is proven by exact
+        byte-equality, not a maximal value.
+      </p>
+      <ul className="m-0 grid list-none gap-1 p-0">
+        {data.hits.map((hit) => (
+          <li
+            key={hit.rank}
+            className="grid grid-cols-[auto_1fr_auto] items-center gap-2 font-mono text-xs text-[var(--color-text-primary)]"
+          >
+            <span className="text-[var(--color-text-muted)]">#{hit.rank}</span>
+            <span>
+              vault:{hit.entry_index}
+              {hit.exact_self_match ? (
+                <span className="ml-1 text-[var(--color-text-secondary)]">(exact match)</span>
+              ) : null}
+            </span>
+            <span className="text-[var(--color-text-secondary)]">
+              cga_inner {formatCgaInner(hit.cga_inner)}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -28,6 +28,7 @@ import {
   fetchLogosPackAlignment,
   fetchVaultSummary,
   fetchVaultEntries,
+  fetchVaultEntryRecall,
   fetchCalibrationClasses,
   fetchServingMetrics,
   fetchTraceTurn,
@@ -68,6 +69,7 @@ import type {
   LogosAlignmentRow,
   VaultSummary,
   VaultEntry,
+  VaultRecall,
   CalibrationClass,
   ServingMetrics,
   CognitivePipelineRecord,
@@ -498,6 +500,17 @@ export function useVaultEntries(enabled: boolean, limit?: number, offset?: numbe
     queryKey: ["api", "vault", "entries", limit ?? null, offset ?? null],
     queryFn: () => fetchVaultEntries(limit, offset),
     enabled,
+    retry: false,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useVaultEntryRecall(entryIndex?: number | null) {
+  return useQuery<VaultRecall, WorkbenchApiError>({
+    queryKey: ["api", "vault", "recall", entryIndex ?? null],
+    queryFn: () => fetchVaultEntryRecall(entryIndex as number),
+    enabled: typeof entryIndex === "number",
     retry: false,
     staleTime: 30_000,
     refetchOnWindowFocus: false,

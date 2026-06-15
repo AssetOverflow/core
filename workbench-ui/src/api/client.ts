@@ -24,6 +24,7 @@ import type {
   LogosAlignmentRow,
   VaultSummary,
   VaultEntry,
+  VaultRecall,
   CalibrationClass,
   ServingMetrics,
   CognitivePipelineRecord,
@@ -360,6 +361,12 @@ export async function fetchVaultEntries(limit?: number, offset?: number): Promis
     query ? `/vault/entries?${query}` : "/vault/entries",
   );
   return envelope.items;
+}
+
+export async function fetchVaultEntryRecall(entryIndex: number): Promise<VaultRecall> {
+  return apiFetch<VaultRecall>(
+    `/vault/entries/${encodeURIComponent(String(entryIndex))}/recall`,
+  );
 }
 
 export async function fetchCalibrationClasses(): Promise<CalibrationClass[]> {
