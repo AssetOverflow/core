@@ -61,6 +61,8 @@ engine_state/recognizers.jsonl
 engine_state/discovery_candidates.jsonl
 engine_state/lived_life.json
 engine_state/always_on.lock
+# per-life idle frontier-contemplation runs — any engine-state root (incl. CORE_ENGINE_STATE_DIR).
+contemplation_runs/
 
 # Private outreach / personal packet — never tracked
 01_Anthropic/

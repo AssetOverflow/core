@@ -353,9 +353,11 @@ def cmd_always_on(args: argparse.Namespace) -> int:
             return
         vc = "—" if record.versor_condition is None else f"{record.versor_condition:.2e}"
         if record.did_work:
+            findings = getattr(record, "frontier_findings", 0)
+            findings_part = f" +{findings} findings" if findings else ""
             print(
                 f"[beat {record.tick}] learned +{record.facts_consolidated} facts "
-                f"+{record.proposals_created} proposals · closure {vc}",
+                f"+{record.proposals_created} proposals{findings_part} · closure {vc}",
                 file=sys.stderr,
             )
         elif record.tick % _ALWAYS_ON_ALIVE_EVERY == 0:
@@ -369,9 +371,18 @@ def cmd_always_on(args: argparse.Namespace) -> int:
         f"core always-on: continuous-life heartbeat · interval {interval}s · {bound}",
         file=sys.stderr,
     )
+    daemon_config = _runtime_config_from_args(args)
+    if getattr(args, "contemplate_frontier", False):
+        import dataclasses
+
+        # A learning daemon: autonomously mine the frontier into persisted SPECULATIVE
+        # findings each idle beat (ADR-0080). Opt-in — the default daemon stays idle.
+        daemon_config = dataclasses.replace(
+            daemon_config, contemplate_frontier_during_idle=True
+        )
     try:
         result = run_daemon(
-            config=_runtime_config_from_args(args),
+            config=daemon_config,
             interval=interval,
             max_beats=max_beats,
             no_load_state=bool(getattr(args, "no_load_state", False)),
@@ -4259,6 +4270,17 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         default=False,
         help="suppress per-beat logging; print only the final summary",
+    )
+    always_on.add_argument(
+        "--contemplate-frontier",
+        action="store_true",
+        default=False,
+        dest="contemplate_frontier",
+        help=(
+            "learning daemon: autonomously mine the frontier into persisted SPECULATIVE "
+            "findings under <engine_state>/contemplation_runs/ each idle beat (ADR-0080; "
+            "never ratified — reviewable artifact, not yet in the HITL queue). Default off."
+        ),
     )
     always_on.set_defaults(func=cmd_always_on)
 

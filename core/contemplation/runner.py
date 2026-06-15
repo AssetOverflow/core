@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 from typing import Iterable
 
@@ -177,12 +178,16 @@ def contemplate_contradiction_reports(
 
 
 def write_contemplation_run(run: ContemplationRun, path: str | Path) -> None:
+    # Atomic write (temp + os.replace): the always-on life is an indefinite-uptime process
+    # where a SIGKILL/crash mid-write is expected, and the idle-pass skip-guard would NEVER
+    # repair a torn canonical file. A crash leaves only the orphan .tmp; the canonical path
+    # is either absent (re-mined next boot) or complete — never a half-written artifact.
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
-        json.dumps(run.as_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    payload = json.dumps(run.as_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    tmp = target.with_name(f".{target.name}.{os.getpid()}.tmp")
+    tmp.write_text(payload, encoding="utf-8")
+    os.replace(tmp, target)
 
 
 __all__ = [
