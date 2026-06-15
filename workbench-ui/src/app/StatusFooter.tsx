@@ -1,7 +1,37 @@
 import { useState } from "react";
 import { useIsMutating } from "@tanstack/react-query";
-import { useRuntimeStatus } from "../api/queries";
+import { useHealth, useRuntimeStatus } from "../api/queries";
 import { useCopyToClipboard } from "../design/hooks/useCopyToClipboard";
+
+function HealthIndicator() {
+  const { data, isError, isLoading } = useHealth();
+  const healthy = !isError && data?.status === "ok";
+  const pending = isLoading && !data && !isError;
+
+  const label = pending ? "Checking" : healthy ? "Healthy" : "Unhealthy";
+  const dotColor = pending
+    ? "var(--color-state-neutral-text)"
+    : healthy
+      ? "var(--color-state-success-text)"
+      : "var(--color-state-danger-text)";
+
+  return (
+    <span
+      data-testid="health-indicator"
+      data-health={pending ? "checking" : healthy ? "healthy" : "unhealthy"}
+      className="flex items-center gap-1.5 text-[var(--color-text-secondary)]"
+      title="Server liveness probe (GET /health)"
+      aria-label={`Server health: ${label}`}
+    >
+      <span
+        aria-hidden="true"
+        className="inline-block h-2 w-2 rounded-full"
+        style={{ backgroundColor: dotColor }}
+      />
+      {label}
+    </span>
+  );
+}
 
 export function StatusFooter() {
   const { data, isError } = useRuntimeStatus();
@@ -13,8 +43,9 @@ export function StatusFooter() {
     return (
       <footer
         data-region="statusfooter"
-        className="flex items-center border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-[var(--density-shell-padding-x)] py-[var(--density-footer-padding-y)] text-xs"
+        className="flex items-center gap-[var(--density-shell-gap)] border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-[var(--density-shell-padding-x)] py-[var(--density-footer-padding-y)] text-xs"
       >
+        <HealthIndicator />
         <span className="text-[var(--color-state-danger-text)]">Status unavailable</span>
       </footer>
     );
@@ -52,6 +83,8 @@ export function StatusFooter() {
       data-region="statusfooter"
       className="flex items-center gap-[var(--density-shell-gap)] border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-[var(--density-shell-padding-x)] py-[var(--density-footer-padding-y)] text-xs"
     >
+      <HealthIndicator />
+
       {mutationModeEl}
 
       <button

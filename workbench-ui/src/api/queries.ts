@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import {
   apiFetch,
+  fetchHealth,
   fetchDemos,
   fetchEvalLanes,
   runEvalLane,
@@ -46,6 +47,7 @@ import {
 } from "./client";
 import type { WorkbenchApiError } from "./client";
 import type {
+  HealthStatus,
   RuntimeStatus,
   DemoRunResult,
   DemoSummary,
@@ -101,6 +103,17 @@ export function useRuntimeStatus() {
     queryKey: ["api", "runtime-status"],
     queryFn: () => apiFetch<RuntimeStatus>("/runtime/status"),
     refetchInterval: 30_000,
+  });
+}
+
+export function useHealth() {
+  // Liveness probe — polled faster than runtime status and isolated from it so
+  // a healthy server still reads green even if /runtime/status is degraded.
+  return useQuery<HealthStatus, WorkbenchApiError>({
+    queryKey: ["api", "health"],
+    queryFn: fetchHealth,
+    refetchInterval: 15_000,
+    retry: false,
   });
 }
 
