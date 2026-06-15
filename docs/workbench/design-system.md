@@ -48,6 +48,18 @@ object keys in deterministic lexicographic order, copies JSON Pointer paths,
 renders a source-byte SHA-256 badge, supports side-by-side leaf diffs, and
 refuses inline rendering above 16 MiB.
 
+## Truncated Cell Reveal
+
+`TruncatedCell` (`workbench-ui/src/design/components/TruncatedCell/`) is the
+shared affordance for any table or rail cell that truncates a dense value (post
+Branch-1; it composes the Radix popover/dialog primitives the later waves added).
+The compact display is kept, with one hover/focus-revealed trigger that opens an
+accessible popover showing the full value (selectable) plus one-click copy;
+long/multiline values also offer "Open full view" into a modal. The trigger
+calls `stopPropagation`, so revealing a value never selects the surrounding row.
+Digests keep `DigestBadge`, which already copies the full value and shows it in
+`title`.
+
 ## Motion And Keyboard
 
 All motion uses tokenized durations/easing.  `prefers-reduced-motion: reduce`

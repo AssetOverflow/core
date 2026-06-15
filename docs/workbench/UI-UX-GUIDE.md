@@ -1,7 +1,8 @@
 # CORE Workbench UI/UX Guide
 
-Date: 2026-06-13
-Status: Wave M B3.5 guide
+Date: 2026-06-14
+Status: Wave M B3.5 guide (post-Wave-M reconciliation: Lived Life, CORE-Logos
+reader, trace Field reader, and the truncated-cell reveal)
 
 ## 1. What Workbench Is And Is Not
 
@@ -179,17 +180,44 @@ non-zero wrong.
 Today, Packs exposes manifest/checksum/determinism metadata. It is the current
 Substrate neighborhood for language/runtime pack inspection.
 
-The planned CORE-Logos Studio is not built yet. It should enter as read-only
-readers and proposal-only draft artifacts before any ratification-enabled
-handler family is admitted.
+A read-only **CORE-Logos** route (`/logos`) is now built: Overview, Identity,
+Lexicon, Glosses, Morphology, Alignment, and Safety tabs over CORE-Logos pack
+evidence. The fuller CORE-Logos *Studio* — proposal-only draft artifacts and a
+patch-forge / holonomy handler family — is not built; it must enter as
+proposal-only drafts before any ratification-enabled handler family is admitted.
 
 ## 13. Known Absences And Follow-Up Items
 
-- Full Phase C cognitive pipeline visualizer is absent.
-- Field substrate / `versor_condition` reader is absent.
-- Identity continuity route is absent.
 - Full B4 leeway annotations are not admitted; B4a nullable
   `LeewayEvidence` read models exist first.
-- CORE-Logos Studio route is not built.
+- The CORE-Logos *Studio* (proposal-only draft + patch-forge / holonomy
+  handlers) is not built; only the read-only `/logos` reader exists.
 - Universal proposal artifact envelope is designed, not implemented as a UI
   substrate.
+- Phase E (robustness; continuous) is ongoing.
+
+Reconciled (previously listed as absent, now shipped):
+
+- Cognitive pipeline visualizer — the Trace **Pipeline** tab renders the stage
+  rail, propagation edges, and per-stage detail.
+- Field substrate / `versor_condition` reader — the Trace **Field** tab and the
+  **Lived Life** surface read per-beat closure as evidence (never repaired).
+- Identity continuity — the **Lived Life** route plus Runs identity-continuity
+  verdicts.
+
+## 14. Table / Rail Cell Full-Content Reveal
+
+Every cell that truncates a dense value (ids, digests, sources, paths, prompts,
+stage names) uses the shared `TruncatedCell` component. It keeps the compact
+display but attaches one hover/focus-revealed trigger that opens an accessible
+popover with the full value (selectable) plus one-click copy; long/multiline
+values also offer "Open full view" into a modal. The trigger calls
+`stopPropagation`, so revealing a value never selects the surrounding row.
+
+Applies across the proposal queue, eval wrong=0 case ledger, CORE-Logos
+contents, proposal artifacts, trace propagation edges, and the single-column
+selection rails. Digests keep `DigestBadge` (already copy + full-value `title`).
+A row that is an `<a>`/`<Link>` (e.g. Runs `TurnRefRow`) keeps its anchor
+semantics and is reached by navigation rather than nesting an interactive
+trigger. See `../handoff/workbench-truncated-cell-visual-evidence-2026-06-14.md`
+for captured evidence.

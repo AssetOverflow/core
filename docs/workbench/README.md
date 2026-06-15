@@ -187,6 +187,15 @@ Defines:
 
 ---
 
+## Visual Evidence / Handoff
+
+- `../handoff/workbench-truncated-cell-visual-evidence-2026-06-14.md` — captured
+  screenshots confirming the `TruncatedCell` full-content reveal (popover +
+  copy + modal) across the proposal queue, the trace propagation edges, and the
+  single-column selection rails.
+
+---
+
 # Core Principles
 
 ## Replay before persuasion
@@ -212,7 +221,7 @@ mutation capability.
 
 ---
 
-# Current Status (2026-06-13)
+# Current Status (2026-06-14)
 
 The Workbench is shipped and well past the W-026…W-031 planning era. The
 read-only local API + React UI are real; W-026 (read-only API) through W-031
@@ -220,9 +229,13 @@ read-only local API + React UI are real; W-026 (read-only API) through W-031
 mastery revamp (11 routes + the Replay Moment), and the Wave M worthiness arc.
 
 **Wave M is complete** — Phase B (calibrated-learning surfaces), Phase C
-(cognition legibility), Phase D (guided tour + evidence bundles), and the B4
-leeway producer all merged. Phase E (robustness; continuous) and the parallel
-tracks (CORE-Logos Studio, the universal proposal envelope) remain.
+(cognition legibility, incl. the trace Field reader), Phase D (guided tour +
+evidence bundles), and the B4 leeway producer all merged. Since then the
+always-on heartbeat has added a continuous **Lived Life** surface and a
+read-only **CORE-Logos** reader (identity / lexicon / glosses / morphology /
+alignment / safety). Phase E (robustness; continuous) and the parallel tracks
+(the CORE-Logos *Studio* mutation/patch-forge path, the universal proposal
+envelope) remain.
 
 Doctrine is unchanged: read-only first, allowlisted execution only
 (`/evals/run`, ratify, `/demos/{id}/run`), every surface a real backend reader
@@ -230,22 +243,23 @@ Doctrine is unchanged: read-only first, allowlisted execution only
 
 ## Shipped surfaces
 
-14 registry-driven routes (`src/app/routes.ts`), grouped by section:
+16 registry-driven routes (`src/app/routes.ts`), grouped by section:
 
 | Section | Routes |
 |---|---|
 | Converse | **Chat** |
-| Cognition | **Trace** (Pipeline / Field / Bundle / Surfaces / Grounding / Verdicts tabs), **Contemplation** (staged learning loop) |
+| Cognition | **Trace** (Pipeline / Field / Bundle / Surfaces / Grounding / Verdicts / Metadata / Raw tabs), **Contemplation** (staged learning loop) |
 | Determinism | **Tour** (guided determinism narrative), **Replay** (hash-to-hash), **Demos** (Demo Theater) |
-| Evidence | **Proposals** (+ HITL ratification), **Runs** (+ identity continuity), **Vault**, **Audit** |
+| Evidence | **Proposals** (+ HITL ratification), **Runs** (+ identity continuity), **Lived Life** (always-on heartbeat), **Vault**, **Audit** |
 | Discipline | **Evals** (wrong=0 ledger), **Calibration** (gold-tether arena, Wilson floor vs θ) |
-| Substrate | **Packs** |
+| Substrate | **Packs**, **CORE-Logos** (read-only pack reader) |
 | Settings | **Settings** (landing / density / inspector prefs) |
 
 Cross-cutting: Evidence Address (URL = subject, `?inspect=`), Evidence Chain
 Rail, command palette + registry-driven keyboard help, per-turn pipeline /
-field / leeway / bundle evidence, doctrine gates (hexScan, schemaDrift,
-enumCoverage, route conformance, golden-file DAG layout).
+field / leeway / bundle evidence, full-content reveal for truncated table cells
+(`TruncatedCell` — hover/focus popover + copy + modal), doctrine gates (hexScan,
+schemaDrift, enumCoverage, route conformance, golden-file DAG layout).
 
 ---
 
