@@ -22,7 +22,6 @@ from chat.always_on_daemon import continuous_life_config
 from chat.runtime import ChatRuntime
 from core.config import RuntimeConfig
 from core.engine_identity import IdentityContinuityError, engine_identity_for_config
-from engine_state import get_git_revision
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,7 +109,7 @@ def run_heartbeat_soak(
     runtime = ChatRuntime(config=config, engine_state_path=engine_state_dir)
     if seed:
         _seed_life(runtime)
-    identity = engine_identity_for_config(config, get_git_revision())
+    identity = engine_identity_for_config(config)
     records: list[BeatRecord] = []
     resumed_cleanly = True
     learned_fact_survived: bool | None = None

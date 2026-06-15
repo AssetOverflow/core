@@ -331,6 +331,7 @@ class EngineStateStore:
         *,
         engine_identity: str = "",
         parent_engine_identity: str = "",
+        identity_scheme: int = 2,
     ) -> None:
         """Write the checkpoint manifest.
 
@@ -343,6 +344,15 @@ class EngineStateStore:
         engine was running under when this checkpoint was written.
         ``parent_engine_identity`` links it to the identity of the prior
         checkpoint, forming a lineage chain.  Both are additive-optional.
+
+        ``identity_scheme`` (ADR-0220) records WHICH formula produced
+        ``engine_identity``: ``2`` = packs-only (current);
+        absent / ``< 2`` on an old manifest = the legacy packs+code_revision
+        hash, recognised by the load guard for a verifying migration. Stamped
+        only when ``engine_identity`` is. Additive-optional — does NOT bump
+        ``schema_version`` (``core.engine_identity.ENGINE_IDENTITY_SCHEME`` is
+        the canonical value; the literal default mirrors it to avoid an import
+        cycle).
         """
         manifest: dict = {
             "schema_version": _SCHEMA_VERSION,
@@ -351,6 +361,7 @@ class EngineStateStore:
         }
         if engine_identity:
             manifest["engine_identity"] = engine_identity
+            manifest["identity_scheme"] = identity_scheme
         if parent_engine_identity:
             manifest["parent_engine_identity"] = parent_engine_identity
         _atomic_write_text(
