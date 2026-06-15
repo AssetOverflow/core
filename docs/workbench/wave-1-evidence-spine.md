@@ -1,5 +1,10 @@
 # Wave 1 — Evidence Spine
 
+> **Historical record — superseded.** This is the planning doc for its wave and
+> records that wave, not current state. Wave M is complete. For the live surface
+> see [`README.md`](./README.md) (Current Status), [`UI-UX-GUIDE.md`](./UI-UX-GUIDE.md),
+> and the route registry `workbench-ui/src/app/routes.ts` (16 routes).
+
 Status: approved plan (Wave 1 shipped: PRs #702, #703, #704, #706);
 Wave 2 / Wave 3 sequencing below is superseded by
 [wave-R-mastery-revamp.md](./wave-R-mastery-revamp.md)

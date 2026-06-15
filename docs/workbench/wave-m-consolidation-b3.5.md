@@ -1,5 +1,10 @@
 # Wave M Consolidation / B3.5 — Workbench Mastery Before Next Complexity
 
+> **Historical record — superseded.** This is the planning doc for its wave and
+> records that wave, not current state. Wave M is complete. For the live surface
+> see [`README.md`](./README.md) (Current Status), [`UI-UX-GUIDE.md`](./UI-UX-GUIDE.md),
+> and the route registry `workbench-ui/src/app/routes.ts` (16 routes).
+
 **Status:** Proposed planning slice  
 **Scope:** Workbench UI/UX architecture, route substrate, evidence subjects, calibration discipline, B4 readiness  
 **Branch:** `docs/proposal-artifact-substrate-v1`  
