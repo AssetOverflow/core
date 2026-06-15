@@ -148,9 +148,54 @@ function EntryCountToolbar({ count }: { count: number }) {
   );
 }
 
+// True when an entry's open metadata carries a non-empty value at `key`.
+function metaPresent(entry: VaultEntry, key: string): boolean {
+  const value = entry.metadata?.[key];
+  return value !== undefined && value !== null && value !== "";
+}
+
+// Flatten an entry's metadata to a searchable string (keys + values), so the
+// text filter reaches stored content, not just the epistemic labels.
+function metadataText(metadata: Record<string, unknown> | undefined): string {
+  if (!metadata) return "";
+  return Object.entries(metadata)
+    .map(([k, v]) => `${k} ${v !== null && typeof v === "object" ? JSON.stringify(v) : String(v)}`)
+    .join(" ");
+}
+
+function FacetToggle({
+  label,
+  active,
+  onToggle,
+}: {
+  label: string;
+  active: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={label}
+      onClick={onToggle}
+      className={`inline-flex h-6 items-center rounded-md border px-2 text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)] ${
+        active
+          ? "border-[var(--color-selected-border)] bg-[var(--color-selected-bg)] text-[var(--color-text-primary)]"
+          : "border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] text-[var(--color-text-secondary)]"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 export function VaultRoute() {
   const { subject, setSubject, setInspectorOpen } = useEvidenceSubject();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [hasPropForm, setHasPropForm] = useState(false);
+  const [hasPromotionDigest, setHasPromotionDigest] = useState(false);
 
   const summaryQuery = useVaultSummary();
   const summary = summaryQuery.data;
@@ -161,16 +206,26 @@ export function VaultRoute() {
     subject.kind === "vault_entry" ? subject.entryIndex : null;
 
   const entries = entriesQuery.data ?? [];
+
+  // Status options are derived from the loaded entries, never a hardcoded set —
+  // the epistemic_status vocabulary is engine-owned.
+  const statusOptions = useMemo(() => {
+    const present = new Set(entries.map((entry) => entry.epistemic_status));
+    return ["all", ...Array.from(present).sort()];
+  }, [entries]);
+
   const filteredEntries = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return entries;
-    return entries.filter(
-      (entry) =>
-        entry.epistemic_status.toLowerCase().includes(q) ||
-        entry.epistemic_state.toLowerCase().includes(q) ||
-        String(entry.entry_index).includes(q),
-    );
-  }, [search, entries]);
+    return entries.filter((entry) => {
+      if (statusFilter !== "all" && entry.epistemic_status !== statusFilter) return false;
+      if (hasPropForm && !metaPresent(entry, "propositional_form")) return false;
+      if (hasPromotionDigest && !metaPresent(entry, "promotion_certificate_digest")) return false;
+      if (!q) return true;
+      const haystack =
+        `${entry.epistemic_status} ${entry.epistemic_state} ${entry.entry_index} ${metadataText(entry.metadata)}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [search, statusFilter, hasPropForm, hasPromotionDigest, entries]);
 
   // Hydrate a URL-restored (identity-only) vault_entry subject with its data.
   useEffect(() => {
@@ -253,10 +308,34 @@ export function VaultRoute() {
       <div className="grid min-h-0 gap-3">
         <VaultSummaryStrip summary={summary} />
         <SearchInput
-          placeholder="Filter by epistemic status, state, or index"
+          placeholder="Filter by status, state, index, or metadata"
           value={search}
           onChange={setSearch}
         />
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            aria-label="Filter by epistemic status"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] px-2 py-1 text-sm text-[var(--color-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]"
+          >
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>
+                {status === "all" ? "all statuses" : status}
+              </option>
+            ))}
+          </select>
+          <FacetToggle
+            label="Has proposition"
+            active={hasPropForm}
+            onToggle={() => setHasPropForm((value) => !value)}
+          />
+          <FacetToggle
+            label="Has promotion digest"
+            active={hasPromotionDigest}
+            onToggle={() => setHasPromotionDigest((value) => !value)}
+          />
+        </div>
         {entriesQuery.isLoading ? (
           <LoadingState label="Loading vault entries..." />
         ) : entriesQuery.isError ? (
