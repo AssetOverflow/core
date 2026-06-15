@@ -614,6 +614,32 @@ Query:
 - `limit`: non-negative integer, default `100`
 - `offset`: non-negative integer, default `0`
 
+## GET /vault/entries/{index}/recall
+
+Purpose:
+
+Read-only proof that a persisted vault entry is recallable by CORE's *actual*
+exact CGA machinery. Rehydrates the persisted `VaultStore`
+(`VaultStore.from_dict` — bit-exact versors, no reprojection) and runs the real
+`VaultStore.recall` using the selected entry's own stored versor as the query.
+The exact `cga_inner` scan — never ANN / cosine / approximate.
+
+`recall`'s exact-self-match `+inf` sentinel never crosses the boundary: each hit
+reports the genuine finite `cga_inner` plus an `exact_self_match` flag. The raw
+versor never leaves the engine — only content-addressed digests. The persisted
+file is never written and the live runtime is never touched.
+
+Path parameter:
+
+- `index`: the entry's `entry_index` (live deque position).
+
+Errors:
+
+- Non-integer / out-of-range `index` → `404 not_found`.
+- Absent persisted snapshot → `501 evidence_unavailable`.
+
+See `VaultRecall` in [data-shapes-v1.md](./data-shapes-v1.md).
+
 ---
 
 # Evals

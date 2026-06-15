@@ -237,6 +237,14 @@ alignment / safety). Phase E (robustness; continuous) and the parallel tracks
 (the CORE-Logos *Studio* mutation/patch-forge path, the universal proposal
 envelope) remain.
 
+The **Vault** evidence surface is likewise complete end to end: **P0** honest
+empty/unavailable framing (every state framed as the Vault; absence vs
+persisted-empty split; #760), **P1** entry-inspector depth + status/facet/text
+filters + an honest evidence-rail progression (#762/#763/#764), and **P2**
+read-only exact-CGA recall evidence (`GET /vault/entries/{index}/recall`; #766).
+It stays a read-only evidence surface — no runtime controls, no persistence
+toggle, no approximate recall.
+
 Doctrine is unchanged: read-only first, allowlisted execution only
 (`/evals/run`, ratify, `/demos/{id}/run`), every surface a real backend reader
 (no theater), determinism over persuasion.
@@ -250,7 +258,7 @@ Doctrine is unchanged: read-only first, allowlisted execution only
 | Converse | **Chat** |
 | Cognition | **Trace** (Pipeline / Field / Bundle / Surfaces / Grounding / Verdicts / Metadata / Raw tabs), **Contemplation** (staged learning loop) |
 | Determinism | **Tour** (guided determinism narrative), **Replay** (hash-to-hash), **Demos** (Demo Theater) |
-| Evidence | **Proposals** (+ HITL ratification), **Runs** (+ identity continuity), **Lived Life** (always-on heartbeat), **Vault**, **Audit** |
+| Evidence | **Proposals** (+ HITL ratification), **Runs** (+ identity continuity), **Lived Life** (always-on heartbeat), **Vault** (honest empty/unavailable framing · inspector depth + status/facet/text filters · evidence-rail progression · exact-CGA recall), **Audit** |
 | Discipline | **Evals** (wrong=0 ledger), **Calibration** (gold-tether arena, Wilson floor vs θ) |
 | Substrate | **Packs**, **CORE-Logos** (read-only pack reader) |
 | Settings | **Settings** (landing / density / inspector prefs) |

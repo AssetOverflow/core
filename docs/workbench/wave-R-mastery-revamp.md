@@ -222,9 +222,16 @@ versor-condition strip (see journal note below), and the conformance test.
   primitive); mutation-boundary events visually weighted above routine events.
 - **Packs** — `GET /packs`, `GET /packs/{pack_id}`; new `TreeView` primitive;
   manifest checksum displayed with `DigestBadge` (verify affordance).
-- **Vault** — `GET /vault/summary`, `GET /vault/entries`; epistemic-state
-  badges; exact-recall provenance (`cga_inner` evidence shown, never an
-  approximate score — runtime recall is exact by doctrine).
+- **Vault** — `GET /vault/summary`, `GET /vault/entries`,
+  `GET /vault/entries/{index}/recall`; epistemic-state badges; exact-recall
+  provenance (`cga_inner` evidence shown, never an approximate score — runtime
+  recall is exact by doctrine). **Vault P0/P1/P2 complete** (post-wave-R
+  follow-on): P0 honest empty/unavailable framing (#760); P1 entry-inspector
+  depth, status/facet/text filters, evidence-rail progression (#762/#763/#764);
+  P2 read-only exact-CGA recall evidence (#766) — rehydrates the persisted vault
+  and runs the real `VaultStore.recall`, reporting the genuine finite
+  `cga_inner` + an `exact_self_match` flag (the `+inf` self-match sentinel never
+  crosses the boundary). Read-only throughout; no runtime controls.
 - **Settings** — localStorage prefs + read-only runtime config display; no
   engine mutation (CLI-only, stated in the UI).
 

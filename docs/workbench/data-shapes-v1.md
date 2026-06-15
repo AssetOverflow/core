@@ -606,6 +606,35 @@ export type VaultEntry = {
   metadata: Record<string, unknown>;
   versor_digest: string | null;
 };
+
+// One result of CORE's exact CGA recall scan over the persisted vault.
+// `cga_inner` is the genuine, finite exact inner product (never a similarity
+// proxy). `exact_self_match` flags a byte-identical entry, promoted ahead of
+// metric ranking (stored versors are CGA null vectors → ~0 self inner-product).
+export type VaultRecallHit = {
+  entry_index: number;
+  rank: number;
+  cga_inner: number;
+  exact_self_match: boolean;
+  epistemic_status: string;
+  epistemic_state: string;
+  versor_digest: string | null;
+};
+
+// Read-only proof that a persisted vault entry is recallable by CORE's actual
+// exact CGA machinery. `exact_cga` is always true / `approximate` always false:
+// this is the exact `cga_inner` scan, never ANN / cosine / approximate ranking.
+export type VaultRecall = {
+  entry_index: number;
+  query_versor_digest: string | null;
+  top_k: number;
+  hits: VaultRecallHit[];
+  self_hit_rank: number | null;
+  self_hit_found: boolean;
+  exact_cga: boolean;
+  approximate: boolean;
+  source_path: string;
+};
 ```
 
 Vault shapes are available only from persisted `engine_state/session_state.json`
