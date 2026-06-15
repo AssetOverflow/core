@@ -22,6 +22,7 @@ from generate.meaning_graph.relational import (
     INVERSE_OF,
     RELATIONAL_PREDICATES,
     SYMMETRIC_PREDICATES,
+    TRANSITIVE_PREDICATES,
     comprehend_relational,
     load_relational_pack_lemmas,
     load_relational_pack_symmetric,
@@ -116,12 +117,15 @@ def test_greater_than_does_not_imply_equal(vocab_persona, pack) -> None:
     assert isinstance(res, Undetermined)
 
 
-def test_no_transitive_chain_direct(vocab_persona, pack) -> None:
-    """One hop only: a<b and b<c must NOT entail a<c (transitive is a later slice)."""
+def test_no_one_hop_chaining_of_nontransitive_predicate(vocab_persona, pack) -> None:
+    """One-hop rules never silently chain a NON-transitive predicate: parent_of is not
+    transitive, so ``a parent_of b`` + ``b parent_of c`` must refuse. (A same-predicate
+    STRICT-ORDER chain like ``a<b<c`` now determines via the transitive rule — that moved
+    to the B2 capability; see ``test_determine_relational_transitive``.)"""
     ctx = _ctx(vocab_persona)
-    _tell("Alice is less than Bob.", ctx, pack)
-    _tell("Bob is less than Carol.", ctx, pack)
-    res = _ask("Is Alice less than Carol?", ctx, pack)
+    _tell("Alice is the parent of Bob.", ctx, pack)
+    _tell("Bob is the parent of Carol.", ctx, pack)
+    res = _ask("Is Alice the parent of Carol?", ctx, pack)
     assert isinstance(res, Undetermined)
 
 
@@ -181,3 +185,35 @@ def test_inverse_is_an_involution() -> None:
     for lemma, other in INVERSE_OF.items():
         assert lemma != other
         assert INVERSE_OF[other] == lemma
+
+
+def test_transitive_predicates_closed_and_excludes() -> None:
+    """TRANSITIVE_PREDICATES is CLOSED, default-off, and exactly the four strict orders —
+    every member is a real reader predicate, and every predicate that is symmetric,
+    asymmetric-kinship, spatial, or containment STAYS OUT (admitting any would be unsound
+    or needs a shared-frame proof this slice lacks)."""
+    assert TRANSITIVE_PREDICATES == {
+        "less_than",
+        "greater_than",
+        "before_event",
+        "after_event",
+    }
+    # every transitive lemma is a real reader predicate (a typo cannot mint an unknown one)
+    for lemma in TRANSITIVE_PREDICATES:
+        assert lemma in RELATIONAL_PREDICATES
+    # the deliberately-excluded predicates are explicitly absent (default-off)
+    excluded = {
+        "sibling_of",
+        "spouse_of",
+        "parent_of",
+        "child_of",
+        "left_of",
+        "right_of",
+        "inside_of",
+        "during_event",
+        "overlaps_event",
+    }
+    assert excluded.isdisjoint(TRANSITIVE_PREDICATES)
+    # the excluded set names real reader predicates (so the exclusion is meaningful)
+    for lemma in excluded:
+        assert lemma in RELATIONAL_PREDICATES

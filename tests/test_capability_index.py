@@ -87,10 +87,12 @@ def test_empty_index_is_well_defined() -> None:
 
 
 def test_real_lanes_compose_into_the_index_with_wrong_zero() -> None:
-    # The baseline: three structured-input reasoning lanes PLUS the six
-    # comprehension lanes (prose -> MeaningGraph -> projection -> independent
-    # oracle / pack-named predicate) compose into the cross-domain index with zero
-    # wrong commits. The relational_predicate lane (#596) is the 9th domain.
+    # The baseline: three structured-input reasoning lanes PLUS the comprehension lanes
+    # (prose -> MeaningGraph -> projection -> independent oracle / pack-named predicate)
+    # compose into the cross-domain index with zero wrong commits. The one-hop
+    # relational_inference lane (#775) is the 10th domain; the transitive
+    # relational_transitive lane (B2) is the 11th. (This assertion was stale at 9 from
+    # the #596 era — #775's 10th domain was never added here; corrected with B2.)
     from evals.capability_index.adapters import collect_domain_results
 
     collection = collect_domain_results()
@@ -98,7 +100,7 @@ def test_real_lanes_compose_into_the_index_with_wrong_zero() -> None:
     idx = aggregate(list(collection.results))
     assert idx.wrong_total == 0
     assert idx.assert_mode_valid
-    assert idx.breadth == 9
+    assert idx.breadth == 11
     assert {d.domain for d in idx.domains} == {
         "deductive_logic",
         "dimensional",
@@ -109,6 +111,8 @@ def test_real_lanes_compose_into_the_index_with_wrong_zero() -> None:
         "comprehension_propositional",
         "comprehension_relational_metric",
         "comprehension_relational_predicate",
+        "comprehension_relational_inference",
+        "comprehension_relational_transitive",
     }
     assert idx.capability_score > 0.5  # real, non-trivial cross-domain capability
 

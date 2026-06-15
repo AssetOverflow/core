@@ -24,7 +24,7 @@ from session.context import SessionContext
 
 _V1 = Path(__file__).resolve().parent.parent / "evals" / "relational_inference" / "v1"
 _CASES_SHA = "03310ecc3ab7b7bf26f0a1779709bf468e888bbca1e53a71cba1d269b5c1dd71"
-_REFUSALS_SHA = "f137bbe03b91301d9aa802ab9274c7d43ff9c3966207a8ba5e5f8fc19f0f7243"
+_REFUSALS_SHA = "35cf8369ec0ba80a4e90ecc88de73dafac660ac5982288f49c3aeeb3e5123a16"
 _HIGH = 10**9
 
 
@@ -57,8 +57,10 @@ def test_positive_lane_wrong_zero_and_covers() -> None:
 
 def test_confusers_all_refuse(vocab_persona, pack) -> None:
     # wrong=0 BITE: a Determined on ANY confuser means the one-hop rule over-fired
-    # (a transitive chain, an asymmetric self-converse, a cross-predicate, an object
-    # mismatch, or an ungrounded guess). All must refuse.
+    # (an asymmetric self-converse, a cross-predicate, an object mismatch, transitive-
+    # through-inverse, or an ungrounded guess). All must refuse. (The same-predicate
+    # strict-order transitive chain that used to live here MIGRATED to a determination
+    # under B2 — see evals/relational_transitive — so it is no longer a confuser.)
     vocab, persona = vocab_persona
     asserted = []
     for case in _load_cases(_V1 / "refusals.jsonl"):
