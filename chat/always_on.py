@@ -89,6 +89,7 @@ class HeartbeatRecord:
     proposals_created: int  # reviewable proposals emitted this beat (proposal-only)
     pending_proposals: int
     did_work: bool
+    frontier_findings: int = 0  # ADR-0080 SPECULATIVE findings mined this beat (0 unless enabled)
 
 
 @dataclass(frozen=True, slots=True)
@@ -227,6 +228,7 @@ def run_continuous(
                 result.facts_consolidated > 0
                 or result.proposals_created > 0
                 or result.candidates_contemplated > 0
+                or getattr(result, "frontier_findings", 0) > 0
             )
             record = HeartbeatRecord(
                 tick=tick,
@@ -236,6 +238,7 @@ def run_continuous(
                 proposals_created=result.proposals_created,
                 pending_proposals=result.pending_proposals,
                 did_work=did_work,
+                frontier_findings=getattr(result, "frontier_findings", 0),
             )
             records.append(record)
             if on_heartbeat is not None:

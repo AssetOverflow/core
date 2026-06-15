@@ -323,6 +323,14 @@ class RuntimeConfig:
     # OFF by default — idle ticks don't pay for the scan unless a deployment wants the surface.
     review_pending_proposals: bool = False
 
+    # Autonomous frontier contemplation (ADR-0080 into the idle loop) — when on, idle_tick
+    # autonomously MINES its frontier-compare reports into persisted SPECULATIVE reviewable
+    # findings (core.contemplation), so the always-on life proposes its own frontier without
+    # a user turn. Idempotent per frontier (a mined frontier converges → no churn); the
+    # findings are SPECULATIVE-only (ADR-0080: never COHERENT, never self-ratify) and reviewed
+    # via the existing HITL path. OFF by default — a deliberate learning-daemon mode.
+    contemplate_frontier_during_idle: bool = False
+
     # Step E (ESTIMATION) — when on, a converse query the engine would otherwise REFUSE
     # (told p(a,b), asked p(b,a)) may be answered with a DISCLOSED [approximate] estimate
     # IF the predicate-class has earned the SERVE license on the ratified, committed

@@ -546,6 +546,10 @@ class IdleTickResult:
     #: Step D — derived facts consolidated into the held self this tick (0 unless
     #: ``config.consolidate_determinations`` and the closure had a new layer to add).
     facts_consolidated: int = 0
+    #: ADR-0080 — SPECULATIVE frontier findings autonomously mined + persisted this tick
+    #: (0 unless ``config.contemplate_frontier_during_idle`` AND a NOT-yet-mined frontier;
+    #: a mined frontier converges to 0). Reviewable via the HITL path; never ratified here.
+    frontier_findings: int = 0
     #: IT — read-only proposal-review summary (None unless ``config.review_pending_proposals``).
     #: Surfaces pending comprehension-failure proposals for review; mutates nothing.
     proposal_review: ProposalReviewIdleSummary | None = None
@@ -718,6 +722,10 @@ class ChatRuntime:
             None if no_load_state else EngineStateStore(engine_state_path)
         )
         self._recognizer_registry: RecognizerRegistry = RecognizerRegistry()
+        # Memoized frontier mine (ADR-0080 idle pass): the frontier reports are static within
+        # a session, so a converged life mines once instead of re-reading every idle beat. A
+        # reboot re-mines (a fresh runtime), picking up any frontier change across downtime.
+        self._frontier_run_cache: Any = None
         self._turn_count: int = 0
         self._pending_candidates: list[DiscoveryCandidate] = []
         self._pending_recognizer_examples: list[
@@ -925,6 +933,33 @@ class ChatRuntime:
             facts_consolidated = consolidate_once(self._context).consolidated
             did_work = True
 
+        # 2b. Frontier-contemplation pass (ADR-0080 into the idle loop) — autonomously MINE
+        #     the frontier-compare reports into persisted SPECULATIVE reviewable findings, so
+        #     the always-on life proposes its OWN frontier with no user turn. Idempotent per
+        #     frontier (an already-mined frontier is NOT re-persisted → the life converges, no
+        #     churn); SPECULATIVE-only (ADR-0080: never COHERENT/ratified → the HITL path is
+        #     untouched). Persists per-life under the engine-state dir.
+        frontier_findings = 0
+        if (
+            self.config.contemplate_frontier_during_idle
+            and self._engine_state_store is not None
+        ):
+            from core.contemplation.runner import run_contemplation, write_contemplation_run
+
+            # Mine once per session (the frontier is static within a run); a reboot re-mines.
+            if self._frontier_run_cache is None:
+                self._frontier_run_cache = run_contemplation()
+            run = self._frontier_run_cache
+            target = (
+                self._engine_state_store.path
+                / "contemplation_runs"
+                / f"idle_{run.substrate_hash}.json"
+            )
+            if run.findings and not target.exists():
+                write_contemplation_run(run, target)
+                frontier_findings = len(run.findings)
+                did_work = True
+
         # 3. Proposal-review sub-pass (IT) — READ-ONLY. Surfaces pending comprehension-failure
         #    proposals (the contemplation pass's N5 artifacts) for review. It NEVER mutates an
         #    artifact, NEVER sets ``did_work`` (no state change → no checkpoint), NEVER ratifies
@@ -950,6 +985,7 @@ class ChatRuntime:
             proposals_created=created,
             pending_proposals=self._count_pending_proposals(),
             facts_consolidated=facts_consolidated,
+            frontier_findings=frontier_findings,
             proposal_review=proposal_review,
         )
 
