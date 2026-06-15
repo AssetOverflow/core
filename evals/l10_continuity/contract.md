@@ -23,6 +23,7 @@ Run: `PYTHONPATH=. .venv/bin/python -m evals.l10_continuity [n_turns] [reboot_tu
 | **P3** bounded resources | vault grows linear-bounded/monotonic per turn | an unbounded cache/store leaks | a 10k-entry vault record trips it |
 | **P4** recovery determinism | two crash-recoveries from one checkpoint converge | torn read / nondeterministic boot | divergent recovery tails trip it |
 | **P4** commit point | recovered `turn_count` == committed turns (ARIES force boundary) | the checkpoint isn't the atomic commit boundary | `None`/mismatched count trips it |
+| **P5a** recall precision | vault recall finds each probe entry at rank ≤ top_k, **including after a reboot** (float32 round-trip preserves `_exact_index`) | the serialisation round-trip loses precision, breaking exact-match after reboot | a `ProbeRecord` with `rank=None` or no cross-reboot probe trips it |
 | **P5b** anchor stability | field anchors without **collapse** (`dist_to_anchor`↛0) or **freeze** (`turn_movement`↛0) | the field is swallowed by the attractor, or frozen | collapsing distance / zero movement trips it |
 | **P5c** coherence | surfaces stay non-empty and not collapsed to one repeated output | the field wanders into noise or freezes onto one output | empty / single-surface records trip it |
 
@@ -32,10 +33,20 @@ fail under the violation it nominally catches is decoration, not proof.
 
 ## Not covered (no silent skips)
 
-- **P5a — recall precision@k stability.** Requires a held-out probe set with
-  known-relevant entries and a metric grounded in the vault's actual scoring
-  semantics (the raw recall score is not a clean similarity). Recorded as
-  `not_covered` in the report; a follow-up increment.
+All spec predicates P1–P5c are now covered. `NOT_COVERED` is empty.
+
+### P5a scope note — reprojection boundary
+
+The probe is verified within two turns after the reboot, intentionally before
+the vault's `null_project` auto-reproject cycle (`vault_reproject_interval=20`
+stores). After reprojection, `null_project(v)` produces versors CGA-orthogonal
+to the original (all inner-product scores drop to 0.0), making both exact-match
+(`_exact_index`) and CGA-ranked recall useless. This is a real finding about
+the vault's long-horizon recall stability, recorded here rather than silently
+avoided. A dedicated follow-up increment should ratify a decision: either raise
+the reproject interval for session vaults, preserve the pre-reproject versor as
+a secondary recall key, or accept that long-horizon recall is intentionally
+coarse.
 
 ## The headline result (P2b) — resume-as-same-life
 

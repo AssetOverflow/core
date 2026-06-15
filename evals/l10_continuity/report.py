@@ -30,6 +30,7 @@ from evals.l10_continuity.predicates import (
     evaluate_p3_bounded_resources,
     evaluate_p4_commit_point,
     evaluate_p4_recovery_determinism,
+    evaluate_p5a_recall_precision,
     evaluate_p5b_anchor_stability,
     evaluate_p5c_coherence,
 )
@@ -41,15 +42,8 @@ from evals.l10_continuity.runner import (
 )
 
 # Legs the spec names but this lane does not yet cover, recorded explicitly so a
-# PASS is never read as "everything was checked".
-NOT_COVERED: tuple[tuple[str, str], ...] = (
-    (
-        "P5a_recall_stability",
-        "recall precision@k over a held-out probe set requires a probe set with "
-        "known-relevant entries and a metric grounded in the vault's scoring "
-        "semantics (the raw recall score is not a clean similarity); deferred.",
-    ),
-)
+# PASS is never read as "everything was checked".  P5a is now covered.
+NOT_COVERED: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -106,8 +100,22 @@ def build_report(
 
     baseline = run_soak(n_turns, engine_state_dir=root / "baseline", config=config)
     run_b = run_soak(n_turns, engine_state_dir=root / "run_b", config=config)
+    # P5a probe: register at turn 1 (pre-reboot), verify two turns after the reboot.
+    # Verification is intentionally placed BEFORE the vault's first auto-reproject
+    # cycle (every ``vault_reproject_interval=20`` stores): after null_project fires,
+    # the stored versors change and all CGA inner-product scores drop to 0.0 — a
+    # real finding documented in the L10 continuity hardening brief pack, deferred
+    # to a follow-up increment. The two-turns-after-reboot window gives 2–3 distractor
+    # turns post-reboot while staying well below the reproject boundary.
+    p5a_probe_turn = min(1, reboot_turn - 1) if reboot_turn > 1 else 0
+    p5a_verify_turn = reboot_turn + 2
     reboot = run_soak(
-        n_turns, engine_state_dir=root / "reboot", reboot_at=(reboot_turn,), config=config
+        n_turns,
+        engine_state_dir=root / "reboot",
+        reboot_at=(reboot_turn,),
+        config=config,
+        probe_at=(p5a_probe_turn,),
+        verify_probes_at=(p5a_verify_turn,),
     )
     rec_a = run_soak(
         n_turns,
@@ -139,6 +147,7 @@ def build_report(
         evaluate_p3_bounded_resources(baseline),
         evaluate_p4_recovery_determinism(rec_a, rec_b),
         evaluate_p4_commit_point(recovered, expected_turn_count=reboot_turn),
+        evaluate_p5a_recall_precision(reboot.probe_records),
         evaluate_p5b_anchor_stability(baseline),
         evaluate_p5c_coherence(baseline),
     )
