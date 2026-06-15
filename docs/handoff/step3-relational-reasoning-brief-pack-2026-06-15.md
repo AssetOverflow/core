@@ -63,8 +63,9 @@ capability-index domain** (a refusal floor has low coverage and would drag
 
 **Why.** `determine()` asserts `answer=True` only on entailment, never `False`, never
 from absence (open-world). ProofWriter's **OWA split** has a genuine `Unknown` label —
-the dataset semantics matching open-world soundness. An item `determine()` asserts
-that gold marks `Unknown` is a **wrong=0 breach**. This lane makes that breach
+the dataset semantics matching open-world soundness. An item `determine()` asserts True
+that gold marks `Unknown` — or `False`, where the negation is entailed — is a **wrong=0
+breach**. This lane makes that breach
 *findable* against an independent symbolic oracle, hardening "unknown ≠ false" **before**
 transitive chains (B2) and closed-world work (B4) can stress it. (This is the never-landed
 Brief 1 from `docs/handoff/proofwriter-owa-and-relational-reader-briefs-2026-06-06.md`.)
@@ -72,13 +73,16 @@ Brief 1 from `docs/handoff/proofwriter-owa-and-relational-reader-briefs-2026-06-
 **Scope (exactly this).**
 1. Curate a **SMALL** OWA fixture — a few dozen items, NOT the corpus (no bulk-ingest).
    Only items expressible as DETERMINE input: a set of `X is a Y` / binary-relation facts
-   + one yes/no query, gold ∈ {True, Unknown}. Deterministic selection (sort by ProofWriter
-   id, fixed slice). Commit `fixtures.jsonl` + a pinned SHA.
+   + one yes/no query, gold ∈ {True, Unknown, **False**}. Include some gold-`False` items
+   (negation entailed): `determine()` is True-or-refuse, so it MUST refuse every non-True
+   gold — asserting True on a gold `Unknown` OR a gold `False` is the breach (flagged by
+   gemini-code-assist). Deterministic selection (sort by ProofWriter id, fixed slice).
+   Commit `fixtures.jsonl` + a pinned SHA.
 2. `provenance.md`: cite AllenAI ProofWriter V2020.12.3 (arXiv:2012.13048) + the
    deterministic selection rule (reproducible). Attribution only.
 3. `score.py`: per item `comprehend` → `realize` each fact → `determine(query)`; tally
-   `{correct: asserted-True ∧ gold-True, refused: Undetermined, wrong: asserted ∧
-   contradicts gold}`.
+   `{correct: asserted-True ∧ gold-True, refused: Undetermined, wrong: asserted-True ∧
+   gold-not-True}` — a True assertion on a gold `Unknown` OR `False` is `wrong`.
 4. `tests/test_proofwriter_owa_lane.py`: assert **`wrong == 0`**, pin the fixture SHA,
    print coverage. This is a standalone gate — do **not** add it to the capability index.
 
@@ -105,8 +109,12 @@ reasoning increment, not template spam.
 
 **Scope.**
 1. Declare a CLOSED `_TRANSITIVE_PREDICATES` table in `generate/meaning_graph/relational.py`
-   — **strict orders ONLY**: `less_than`, `greater_than`, `before_event`, `after_event`.
-   A predicate is transitive **only if explicitly declared** (default off).
+   — start with the **strict orders**: `less_than`, `greater_than`, `before_event`,
+   `after_event`. `inside_of` and `during_event` are ALSO genuinely transitive (containment),
+   but are **deferred from this slice's first cut** — admit them only with their own confuser
+   fixtures proving containment reads correctly (an easy follow-up); do not silently widen.
+   A predicate is transitive **only if explicitly declared** (default off). (Containment-
+   transitivity flagged by gemini-code-assist.)
 2. Extend `determine()` with a transitive relational step that **REUSES the existing
    search-then-verify pattern** — reachability over the predicate's realized edges, then
    `proof_chain` ROBDD verification (mirror `_determine_subsumption`; do NOT hand-roll a
@@ -149,7 +157,14 @@ refuses (`no_relational_template`) and `is overlaps` is ungrammatical. So `overl
    **Fail-closed:** emit only when the verb maps to a mounted pack lemma AND both argument
    slots are free of connective/reserved tokens; otherwise refuse. Reuse the existing
    argument-slot guard (the `_CONNECTIVE_TOKENS` fabrication net) — extend it to the new form.
-2. `overlaps_event` then reads → add it to `evals/relational/v1/cases.jsonl` (reader gold)
+2. **Handle the finite-verb QUERY surface too, not just the declarative** (flagged by
+   gemini-code-assist). `_read_relational_clause` currently rejects a question unless
+   `left[0] == "is"`, so an `overlaps_event` determination query is unparseable today.
+   Decide and PIN one interrogative form — e.g. `Does <A> overlap <B>?` (needs the base
+   form `overlap` mapped alongside `overlaps`, and the auxiliary `does` stripped) — and
+   fail-closed on anything else. The `relational_inference` symmetric case for
+   `overlaps_event` must use that pinned query form (else it refuses → no coverage gain).
+3. `overlaps_event` then reads → add it to `evals/relational/v1/cases.jsonl` (reader gold)
    and the symmetric case to `evals/relational_inference/v1/cases.jsonl`; re-freeze baseline.
 
 **wrong=0 bite.** The finite-verb form must NOT over-read: `Alice overlaps with the team
