@@ -167,7 +167,7 @@ def test_never_asserts_false(vocab_persona, pack) -> None:
 # --------------------------------------------------------------------------- #
 
 
-def test_symmetric_table_matches_pack_ontology(pack) -> None:
+def test_symmetric_table_matches_pack_ontology() -> None:
     """SYMMETRIC_PREDICATES MUST equal the pack's graph.edge.symmetric declarations —
     the pack is the source of truth; the constant is the runtime-cheap mirror."""
     assert SYMMETRIC_PREDICATES == load_relational_pack_symmetric()
