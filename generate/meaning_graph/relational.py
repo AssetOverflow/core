@@ -24,11 +24,14 @@ Fail-closed (wrong=0 at the comprehension layer):
     relational structure refuses rather than fabricate a compound entity.
 
 Scope — this reader grounds stated binary relations in the STATED DIRECTION only; it
-performs no inference itself. DETERMINE then applies declared ONE-HOP relational algebra
-over the realized facts — inverse/converse pairs and pack-declared symmetric predicates
-(``INVERSE_OF`` / ``SYMMETRIC_PREDICATES``) — so a symmetric lemma's converse and an
-inverse pair NOW determine soundly. Transitive relational closure, negation (out of
-grammar — a negated surface refuses), and closed-world falsehood remain out of scope.
+performs no inference itself. DETERMINE then applies declared relational algebra over the
+realized facts — ONE-HOP inverse/converse pairs and pack-declared symmetric predicates
+(``INVERSE_OF`` / ``SYMMETRIC_PREDICATES``), AND SOUND TRANSITIVE CLOSURE over the
+declared strict-order predicates (``TRANSITIVE_PREDICATES`` — ``less_than`` /
+``greater_than`` / ``before_event`` / ``after_event``) — so a symmetric lemma's converse,
+an inverse pair, and a same-predicate strict-order chain NOW determine soundly. Negation
+(out of grammar — a negated surface refuses) and closed-world falsehood remain out of
+scope.
 
 This reader is invoked EXPLICITLY (the pack is loaded by the caller, not default-mounted);
 it does not perturb ``comprehend``'s templates or their wrong=0 tests.
@@ -136,6 +139,23 @@ def load_relational_pack_symmetric() -> frozenset[str]:
         for entry in load_pack_entries(RELATIONAL_PACK_ID)
         if _SYMMETRIC_DOMAIN_TAG in entry.semantic_domains
     )
+
+
+#: TRANSITIVE strict-order predicates: ``p(a, b) ∧ p(b, c) ⊨ p(a, c)``. DETERMINE may
+#: close these — and ONLY these — transitively over their OWN realized edges (never
+#: composing with inverse/symmetric/other-predicate edges; that mixing stays one-hop).
+#: CLOSED and default-OFF: a predicate is transitive ONLY if listed here. Restricted to
+#: STRICT ORDERS whose transitivity is sound by their order semantics — numeric comparison
+#: (``less_than`` / ``greater_than``) and event precedence (``before_event`` /
+#: ``after_event``). DELIBERATELY EXCLUDED (each would be UNSOUND or needs a proof this
+#: slice lacks): ``sibling_of`` / ``spouse_of`` (symmetric, NOT transitive),
+#: ``parent_of`` / ``child_of`` (``parent ∘ parent`` = grandparent ≠ parent), the spatial
+#: ``left_of`` / ``right_of`` and containment ``inside_of`` / ``during_event`` (need an
+#: explicit shared-frame / total-order proof). A test pins every member to
+#: ``RELATIONAL_PREDICATES`` AND asserts the excluded predicates stay out.
+TRANSITIVE_PREDICATES: frozenset[str] = frozenset({
+    "less_than", "greater_than", "before_event", "after_event",
+})
 
 
 #: The article stripped from an argument slot's edges ("the box" -> "box"). The

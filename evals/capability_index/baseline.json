@@ -1,13 +1,13 @@
 {
-  "capability_score": 0.949483,
-  "coverage_geomean": 0.949483,
-  "coverage_micro": 0.993932,
+  "capability_score": 0.953968,
+  "coverage_geomean": 0.953968,
+  "coverage_micro": 0.993983,
   "accuracy_micro": 1.0,
-  "breadth": 10,
+  "breadth": 11,
   "min_domain_coverage": 0.833333,
   "wrong_total": 0,
   "assert_mode_valid": true,
-  "deterministic_digest": "35dea2b23084de9d56bd97225ccee6d9c07e650551559dd26c4fed7324806ffc",
+  "deterministic_digest": "c064abc9d13780682632423756a7fab58c8f043ad752f6e136edd305f31ab8b1",
   "domains": [
     {
       "domain": "comprehension_propositional",
@@ -36,6 +36,14 @@
     {
       "domain": "comprehension_relational_predicate",
       "correct": 17,
+      "wrong": 0,
+      "refused": 0,
+      "coverage": 1.0,
+      "accuracy": 1.0
+    },
+    {
+      "domain": "comprehension_relational_transitive",
+      "correct": 7,
       "wrong": 0,
       "refused": 0,
       "coverage": 1.0,

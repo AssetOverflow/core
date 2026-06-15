@@ -116,12 +116,15 @@ def test_greater_than_does_not_imply_equal(vocab_persona, pack) -> None:
     assert isinstance(res, Undetermined)
 
 
-def test_no_transitive_chain_direct(vocab_persona, pack) -> None:
-    """One hop only: a<b and b<c must NOT entail a<c (transitive is a later slice)."""
+def test_no_one_hop_chaining_of_nontransitive_predicate(vocab_persona, pack) -> None:
+    """One-hop rules never silently chain a NON-transitive predicate: parent_of is not
+    transitive, so ``a parent_of b`` + ``b parent_of c`` must refuse. (A same-predicate
+    STRICT-ORDER chain like ``a<b<c`` now determines via the transitive rule — that moved
+    to the B2 capability; see ``test_determine_relational_transitive``.)"""
     ctx = _ctx(vocab_persona)
-    _tell("Alice is less than Bob.", ctx, pack)
-    _tell("Bob is less than Carol.", ctx, pack)
-    res = _ask("Is Alice less than Carol?", ctx, pack)
+    _tell("Alice is the parent of Bob.", ctx, pack)
+    _tell("Bob is the parent of Carol.", ctx, pack)
+    res = _ask("Is Alice the parent of Carol?", ctx, pack)
     assert isinstance(res, Undetermined)
 
 

@@ -1,4 +1,3 @@
-{"id": "rinf-ref-001", "facts": ["Alice is less than Bob.", "Bob is less than Carol."], "query": "Is Alice less than Carol?", "why": "transitive chain — out of scope (one hop only); must refuse"}
 {"id": "rinf-ref-002", "facts": ["Bob is less than Alice.", "Carol is less than Bob."], "query": "Is Alice greater than Carol?", "why": "transitive through the inverse rule — must refuse (one hop)"}
 {"id": "rinf-ref-003", "facts": ["Alice is less than Bob."], "query": "Is Bob less than Alice?", "why": "less_than is asymmetric — a<b does NOT entail b<a; must refuse"}
 {"id": "rinf-ref-004", "facts": ["Alice is the parent of Bob."], "query": "Is Bob the parent of Alice?", "why": "parent_of is not symmetric (its converse is child_of); must refuse"}

@@ -11,10 +11,10 @@ corpus mutation (teaching stays HITL proposal-only).
 
 wrong=0 / soundness (open-world): D0 asserts an answer ONLY when the asked relation is
 SOUNDLY entailed by realized facts — directly, by ONE-HOP relational algebra
-(inverse/converse + pack-declared symmetric), or by transitive member/subset
-subsumption. Absence of a fact never refutes it (open-world), so D0 never asserts an
-answer from missing knowledge — it refuses (``Undetermined``). It asserts only
-``answer=True``; it never asserts False.
+(inverse/converse + pack-declared symmetric), by SOUND TRANSITIVE CLOSURE over a declared
+strict-order predicate, or by transitive member/subset subsumption. Absence of a fact
+never refutes it (open-world), so D0 never asserts an answer from missing knowledge — it
+refuses (``Undetermined``). It asserts only ``answer=True``; it never asserts False.
 
 Supported predicates are a CLOSED set for which DIRECT entailment is sound — a
 realized ground fact ``p(subject, target)`` answers the asked ``p(subject, target)``:
@@ -24,11 +24,12 @@ predicates of ``en_core_relational_predicates_v1`` (``parent_of``, ``less_than``
 categorical (``subset``/``disjoint`` …) and propositional (``implies``/``or`` …)
 predicates are deliberately EXCLUDED — their truth is not a stored-pair lookup, so
 admitting them would be unsound. Negated questions and any predicate outside the closed
-set are an honest ``Undetermined``. Beyond direct entailment, D0 applies two SOUND
+set are an honest ``Undetermined``. Beyond direct entailment, D0 applies three SOUND
 extensions over the realized facts — ONE-HOP relational algebra (inverse/converse +
-pack-declared symmetric; see ``generate.meaning_graph.relational``) and transitive
-member/subset SUBSUMPTION — each search-then-verified, never closed-world, never
-``answer=False``.
+pack-declared symmetric; see ``generate.meaning_graph.relational``), SOUND TRANSITIVE
+CLOSURE over the declared strict-order predicates (``TRANSITIVE_PREDICATES``;
+``p ∘ p → p`` over the predicate's OWN edges), and transitive member/subset SUBSUMPTION —
+each search-then-verified, never closed-world, never ``answer=False``.
 """
 
 from __future__ import annotations
@@ -36,11 +37,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from generate.composition import LogicChainPlan, lower_logic_chain
+from generate.composition.lower_transitive import lower_transitive_chain
 from generate.meaning_graph.reader import Comprehension, Refusal
 from generate.meaning_graph.relational import (
     INVERSE_OF,
     RELATIONAL_PREDICATES,
     SYMMETRIC_PREDICATES,
+    TRANSITIVE_PREDICATES,
 )
 from generate.realize import RealizedRecord, recall_realized
 from session.context import SessionContext
@@ -68,6 +71,12 @@ _SUBSUMPTION_PREDICATES = frozenset({"member", "subset"})
 #: (O(V+E) reachability), so this is a generous backstop, not a tight grounding budget.
 _SUBSUMPTION_SUBSET_FACT_BUDGET = 4096
 
+#: Bound on the realized edge count the transitive RELATIONAL search will consider for a
+#: given strict-order predicate. Above it, transitive closure declines (a safe,
+#: deterministic COVERAGE refusal — never an unsound answer); direct and one-hop
+#: entailment are unaffected. Reachability is O(V+E), so this is a generous backstop.
+_TRANSITIVE_EDGE_BUDGET = 4096
+
 
 @dataclass(frozen=True, slots=True)
 class Determined:
@@ -88,8 +97,10 @@ class Determined:
     #: Which sound rule produced the answer — provenance for audit/replay. One of
     #: ``direct`` (a stored fact of the asked predicate AND direction), ``inverse`` /
     #: ``symmetric`` (a one-hop relational-algebra rule reading the stored edge in its
-    #: other lawful direction), or ``subsumption`` (transitive is-a chaining). It does
-    #: NOT affect the surface — ``render_determination`` reads only ``basis``.
+    #: other lawful direction), ``transitive`` (a same-predicate strict-order chain
+    #: ``p ∘ p → p`` over the predicate's own edges), or ``subsumption`` (transitive is-a
+    #: chaining). It does NOT affect the surface — ``render_determination`` reads only
+    #: ``basis``.
     rule: str = "direct"
 
 
@@ -162,6 +173,17 @@ def determine(
     if relational is not None:
         return relational
 
+    # 1c. TRANSITIVE relational entailment (B2): a DECLARED strict-order predicate
+    # (``TRANSITIVE_PREDICATES``) may hold by SOUND transitive closure over its OWN
+    # realized edges (``p ∘ p → p``), search-then-verified by the proof_chain ROBDD.
+    # Open-world (asserts only True), never False, never composes another predicate's
+    # edges (no transitive-through-inverse). Only fires for the declared strict orders;
+    # every other predicate falls through unchanged.
+    if predicate in TRANSITIVE_PREDICATES:
+        transitive = _relational_transitive(ctx, predicate, subject, target)
+        if transitive is not None:
+            return transitive
+
     # 2. TRANSITIVE subsumption (C): when direct entailment misses, a member/subset
     # query may still hold by SOUND is-a chaining (member∘subset, subset∘subset) decided
     # by the sound+complete proof_chain ROBDD — NEVER member∘member.
@@ -202,36 +224,106 @@ def _relational_one_hop(
     if inverse is not None:
         edge = _find_relational_edge(ctx, inverse, target, subject)
         if edge is not None:
-            return _relational_determined(predicate, subject, target, edge, "inverse")
+            return _relational_determined(predicate, subject, target, (edge,), "inverse")
     if predicate in SYMMETRIC_PREDICATES:
         edge = _find_relational_edge(ctx, predicate, target, subject)
         if edge is not None:
-            return _relational_determined(predicate, subject, target, edge, "symmetric")
+            return _relational_determined(predicate, subject, target, (edge,), "symmetric")
     return None
 
 
 def _relational_determined(
-    predicate: str, subject: str, target: str, ground: RealizedRecord, rule: str
+    predicate: str,
+    subject: str,
+    target: str,
+    grounds: tuple[RealizedRecord, ...],
+    rule: str,
 ) -> Determined:
-    """A one-hop relational ``Determined`` — answer True, basis from the ground's
-    standing (as_told today), the single stored edge as grounds, the rule recorded."""
+    """A relational ``Determined`` — answer True, basis from the grounds' standing
+    (as_told today), the grounding edge(s) recorded, the rule recorded. The SINGLE
+    construction site shared by the one-hop rules (inverse/symmetric — a single stored
+    edge, passed as ``(edge,)``) and the transitive rule (a chain of same-predicate
+    edges), so the INV-30 scan still sees exactly ONE relational ``answer=True`` site for
+    all relational rules."""
     return Determined(
         answer=True,
-        basis=_basis((ground,)),
+        basis=_basis(grounds),
         predicate=predicate,
         subject=subject,
         object=target,
-        grounds=(ground,),
+        grounds=grounds,
         rule=rule,
     )
+
+
+def _relational_transitive(
+    ctx: SessionContext, predicate: str, subject: str, target: str
+) -> Determined | None:
+    """Decide ``predicate(subject, target)`` by SOUND transitive closure over the
+    predicate's OWN realized edges (``p(a, b) ∧ p(b, c) ⊨ p(a, c)``), or ``None`` (the
+    caller then refuses, open-world).
+
+    Restricted to the declared strict-order predicates (``TRANSITIVE_PREDICATES``).
+    Search-then-verify, mirroring ``_determine_subsumption``: BFS reachability over the
+    realized ``predicate`` edges finds a simple chain ``subject → … → target`` (reusing
+    ``_subset_path``'s generic BFS), then the sound+complete proof_chain ROBDD VERIFIES
+    the transitive entailment. Asserts only ``answer=True``; never ``answer=False``;
+    composes ONLY same-predicate edges (inverse/symmetric mixing stays one-hop). wrong=0
+    is structural: only same-predicate edges are traversed AND the decider confirms it.
+    """
+    if predicate not in TRANSITIVE_PREDICATES:
+        return None  # closed, default-off — defence in depth (the caller already gates)
+
+    edges = recall_realized(ctx, predicate=predicate)
+    if len(edges) > _TRANSITIVE_EDGE_BUDGET:
+        return None  # bounded — a safe coverage refusal, never an unsound answer
+
+    # predicate adjacency: a → [(b, fact)] over the realized ``predicate`` edges.
+    adjacency: dict[str, list[tuple[str, RealizedRecord]]] = {}
+    for f in edges:
+        adjacency.setdefault(f.relation_arguments[0], []).append(
+            (f.relation_arguments[1], f)
+        )
+
+    # ``_subset_path`` is generic BFS reachability over an adjacency map; reused here for
+    # the predicate's edges. ``()`` (subject == target — strict orders are irreflexive)
+    # or ``None`` (unreachable) both refuse: no fabricated reflexive / disconnected chain.
+    path = _subset_path(subject, target, adjacency)
+    if not path:
+        return None
+    return _verify_relational_transitive(predicate, subject, target, path)
+
+
+def _verify_relational_transitive(
+    predicate: str, subject: str, target: str, path: tuple[RealizedRecord, ...]
+) -> Determined | None:
+    """Verify a found transitive chain with the proof_chain ROBDD and, on ENTAILED,
+    return the ``Determined`` (``rule="transitive"``). The propositional theory is LINEAR
+    in the path (each edge as a true atom + ``p ∘ p → p`` instantiated per hop), so it
+    scales. Returns ``None`` if the lowering refuses a corrupted path OR the decider does
+    not confirm entailment (defence in depth: a path-construction bug cannot produce a
+    wrong assertion)."""
+    lowered = lower_transitive_chain(predicate, subject, target, path)
+    if lowered is None:
+        return None
+    premises, query_atom = lowered
+
+    from generate.proof_chain.entail import Entailment, evaluate_entailment
+
+    if evaluate_entailment(premises, query_atom).outcome is not Entailment.ENTAILED:
+        return None
+    return _relational_determined(predicate, subject, target, path, "transitive")
 
 
 def _subset_path(
     start: str, target: str, supers: dict[str, list[tuple[str, RealizedRecord]]]
 ) -> tuple[RealizedRecord, ...] | None:
-    """The realized ``subset`` facts on a path ``start → … → target`` (≥1 edge), or
-    ``None`` if ``target`` is not reachable from ``start`` over the subset edges. BFS,
-    so the path is shortest; deterministic (neighbours are visited in sorted order)."""
+    """The realized edge facts on a path ``start → … → target`` (≥1 edge) over the given
+    adjacency map, or ``None`` if ``target`` is not reachable from ``start``. Generic BFS
+    reachability — used for ``subset`` is-a edges (subsumption) AND a strict-order
+    predicate's OWN edges (transitive closure). BFS, so the path is shortest; ``()`` is
+    returned when ``start == target`` (the caller treats it as a non-chain); deterministic
+    (neighbours are visited in sorted order)."""
     if start == target:
         return ()
     frontier: list[str] = [start]
