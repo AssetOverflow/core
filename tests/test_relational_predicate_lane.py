@@ -45,14 +45,14 @@ def test_positive_lane_is_green() -> None:
     report = run()
     assert report["wrong"] == 0
     assert report["refused"] == 0  # every clean case reads
-    assert report["correct"] == report["total"] == 17
+    assert report["correct"] == report["total"] == 18  # +1: overlaps_event finite-verb (B3)
 
 
 def test_lane_is_composed_into_capability_index() -> None:
     results = {d.domain: d for d in collect_domain_results().results}
     dom = results.get("comprehension_relational_predicate")
     assert dom is not None, "relational-predicate domain missing from the index"
-    assert dom.wrong == 0 and dom.correct == 17 and dom.coverage == 1.0
+    assert dom.wrong == 0 and dom.correct == 18 and dom.coverage == 1.0
 
 
 # --------------------------------------------------------------------------- #
@@ -63,7 +63,12 @@ def test_lane_is_composed_into_capability_index() -> None:
 def test_adversarial_inputs_all_refuse() -> None:
     pack = load_relational_pack_lemmas()
     cases = _refusal_cases()
-    assert len(cases) >= 9  # the #596 hazard family + negation + non-template + the verb gap
+    # the #596 fabrication family + negation + non-template + the B3 finite-verb confuser
+    # family (adverb absorption incl. non-enumerated 'almost'/'never', coordination,
+    # second-verb, trailing qualifier, connective-without-copula). The overlaps verb-gap
+    # (old ref-009) MIGRATED to a positive, replaced by finite-verb confusers — the refusal
+    # floor RISES, never drops.
+    assert len(cases) >= 24
     for case in cases:
         comp = comprehend_relational(case["text"], pack)
         assert isinstance(comp, Refusal), (
