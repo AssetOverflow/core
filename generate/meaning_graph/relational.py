@@ -23,10 +23,12 @@ Fail-closed (wrong=0 at the comprehension layer):
     ("north station") canonicalizes per the join contract; an argument that still holds
     relational structure refuses rather than fabricate a compound entity.
 
-Scope — ground binary relations, DIRECT reading only. NO transitive/symmetric/rule
-inference: a symmetric lemma (``sibling_of``, ``equal_to``, ``adjacent_to`` …) reads
-ONLY the stated direction; the converse is a sound-but-incomplete refusal at DETERMINE,
-never a fabricated assertion. Negation is out of grammar (a negated surface refuses).
+Scope — this reader grounds stated binary relations in the STATED DIRECTION only; it
+performs no inference itself. DETERMINE then applies declared ONE-HOP relational algebra
+over the realized facts — inverse/converse pairs and pack-declared symmetric predicates
+(``INVERSE_OF`` / ``SYMMETRIC_PREDICATES``) — so a symmetric lemma's converse and an
+inverse pair NOW determine soundly. Transitive relational closure, negation (out of
+grammar — a negated surface refuses), and closed-world falsehood remain out of scope.
 
 This reader is invoked EXPLICITLY (the pack is loaded by the caller, not default-mounted);
 it does not perturb ``comprehend``'s templates or their wrong=0 tests.
@@ -85,6 +87,56 @@ _CONNECTIVE_TO_LEMMA: dict[tuple[str, ...], str] = {
 #: The closed set of predicates this reader can mint — the universe DETERMINE admits
 #: for direct relational entailment. (The realized fact's predicate is one of these.)
 RELATIONAL_PREDICATES = frozenset(_CONNECTIVE_TO_LEMMA.values())
+
+# --------------------------------------------------------------------------- #
+# Relational algebra — the SOUND one-hop rules DETERMINE may apply. Each rule
+# reads a stored fact in its OTHER lawful direction; open-world (asserts only
+# True), ONE hop (no transitive chaining), structurally sound by construction.
+# --------------------------------------------------------------------------- #
+
+#: INVERSE/converse pairs: ``p(a, b)`` holds iff ``q(b, a)`` holds. The pack carries
+#: no inverse metadata (only the ``graph.edge.symmetric`` tag), so the converse edges
+#: are declared here as a closed table; a test pins every member to
+#: ``RELATIONAL_PREDICATES`` so a typo cannot mint an unknown predicate.
+_INVERSE_PAIRS: frozenset[frozenset[str]] = frozenset({
+    frozenset({"parent_of", "child_of"}),
+    frozenset({"less_than", "greater_than"}),
+    frozenset({"left_of", "right_of"}),
+    frozenset({"before_event", "after_event"}),
+})
+
+#: ``lemma -> its converse lemma`` (both directions), derived from ``_INVERSE_PAIRS``.
+#: A predicate NOT in this map has no converse — so ``less_than`` is never self-inverse.
+INVERSE_OF: dict[str, str] = {
+    lemma: other
+    for pair in _INVERSE_PAIRS
+    for lemma, other in (tuple(pair), tuple(pair)[::-1])
+}
+
+#: The semantic-domain tag the relational pack uses to mark a symmetric predicate.
+_SYMMETRIC_DOMAIN_TAG = "graph.edge.symmetric"
+
+#: SYMMETRIC predicates: ``p(a, b)`` holds iff ``p(b, a)`` holds. This MIRRORS the pack
+#: ontology (the ``graph.edge.symmetric`` tag, see ``load_relational_pack_symmetric``);
+#: a test pins the two equal so the table can never silently diverge from the pack. A
+#: predicate NOT here is asymmetric — so ``parent_of`` is never read in both directions.
+SYMMETRIC_PREDICATES: frozenset[str] = frozenset({
+    "sibling_of", "spouse_of", "equal_to",
+    "distinct_from", "adjacent_to", "overlaps_event",
+})
+
+
+def load_relational_pack_symmetric() -> frozenset[str]:
+    """The symmetric-predicate lemmas as DECLARED by the loaded pack ontology (the
+    ``graph.edge.symmetric`` semantic-domain tag). ``SYMMETRIC_PREDICATES`` is pinned
+    equal to this by a test — the pack is the source of truth, the constant is the
+    runtime-cheap mirror (no per-determination pack load)."""
+    return frozenset(
+        entry.lemma
+        for entry in load_pack_entries(RELATIONAL_PACK_ID)
+        if _SYMMETRIC_DOMAIN_TAG in entry.semantic_domains
+    )
+
 
 #: The article stripped from an argument slot's edges ("the box" -> "box"). The
 #: copula ("is") is NOT stripped here — it is enforced STRUCTURALLY (adjacent to the
