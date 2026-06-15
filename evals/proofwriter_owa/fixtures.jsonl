@@ -1,0 +1,19 @@
+{"id": "owa-001", "facts": ["Rex is a dog.", "All dogs are mammals."], "query": "Is Rex a mammal?", "expected": "True", "serving_support": true, "note": "member then subset (member o subset)"}
+{"id": "owa-002", "facts": ["Rex is a dog.", "All dogs are mammals.", "All mammals are animals."], "query": "Is Rex an animal?", "expected": "True", "serving_support": true, "note": "member o subset o subset"}
+{"id": "owa-003", "facts": ["All dogs are mammals."], "query": "Are all dogs mammals?", "expected": "True", "serving_support": true, "note": "direct subset"}
+{"id": "owa-004", "facts": ["All dogs are mammals.", "All mammals are animals."], "query": "Are all dogs animals?", "expected": "True", "serving_support": true, "note": "subset o subset"}
+{"id": "owa-005", "facts": ["Truth is a concept."], "query": "Is truth a concept?", "expected": "True", "serving_support": true, "note": "direct member"}
+{"id": "owa-006", "facts": ["Alice is the parent of Bob."], "query": "Is Alice the parent of Bob?", "expected": "True", "serving_support": true, "note": "relational direct"}
+{"id": "owa-007", "facts": ["Bob is the child of Alice."], "query": "Is Alice the parent of Bob?", "expected": "True", "serving_support": true, "note": "relational inverse one-hop (#775)"}
+{"id": "owa-008", "facts": ["Alice is the sibling of Bob."], "query": "Is Bob the sibling of Alice?", "expected": "True", "serving_support": true, "note": "relational symmetric one-hop (#775)"}
+{"id": "owa-009", "facts": ["Bob is less than Alice."], "query": "Is Alice greater than Bob?", "expected": "True", "serving_support": true, "note": "relational inverse order one-hop (#775)"}
+{"id": "owa-010", "facts": ["All dogs are mammals."], "query": "Are all mammals dogs?", "expected": "Unknown", "serving_support": false, "note": "reverse subset is not entailed"}
+{"id": "owa-011", "facts": ["Rex is a dog.", "All cats are mammals."], "query": "Is Rex a mammal?", "expected": "Unknown", "serving_support": false, "note": "no chain: dog has no superclass given"}
+{"id": "owa-012", "facts": ["Alice is the sibling of Bob."], "query": "Is Alice the parent of Bob?", "expected": "Unknown", "serving_support": false, "note": "cross-predicate: sibling does not imply parent"}
+{"id": "owa-013", "facts": ["Alice is less than Bob."], "query": "Is Bob less than Alice?", "expected": "Unknown", "serving_support": false, "note": "asymmetric: a<b does not give b<a"}
+{"id": "owa-014", "facts": [], "query": "Is Alice the sibling of Bob?", "expected": "Unknown", "serving_support": false, "note": "ungrounded: no told fact"}
+{"id": "owa-015", "facts": ["Rex is a dog."], "query": "Is Spot a dog?", "expected": "Unknown", "serving_support": false, "note": "unrelated subject: Spot ungrounded"}
+{"id": "owa-016", "facts": ["Socrates is a man.", "Man is a species."], "query": "Is Socrates a species?", "expected": "Unknown", "serving_support": false, "note": "member o member fallacy: instance-of is not transitive"}
+{"id": "owa-017", "facts": ["Felix is a cat.", "All cats are mammals.", "No mammal is a reptile."], "query": "Is Felix a reptile?", "expected": "False", "serving_support": false, "note": "negation entailed via subset + disjointness"}
+{"id": "owa-018", "facts": ["Tweety is a bird.", "No bird is a mammal."], "query": "Is Tweety a mammal?", "expected": "False", "serving_support": false, "note": "negation entailed: direct disjoint membership"}
+{"id": "owa-019", "facts": ["All sparrows are birds.", "No bird is a mammal."], "query": "Are all sparrows mammals?", "expected": "False", "serving_support": false, "note": "negation entailed: subset into a disjoint class"}
