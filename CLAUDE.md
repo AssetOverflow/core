@@ -231,6 +231,53 @@ Learning must be reviewed and auditable.
 
 Do not create a parallel correction/learning path.
 
+### The learning boundary is typed, not "everything is proposal-only"
+
+A common misreading treats *all* learning as proposal-only.  That is a false
+bottleneck.  The real boundary is between **durable** standing and
+**provisional** standing, and it is already mechanically enforced — the rule
+below names what each invariant guarantees, it does not loosen any of them.
+
+- **Durable mutation stays reviewed or proof-carrying.**  Corpus / pack /
+  policy / identity changes, and any promotion to COHERENT/verified standing,
+  go through the reviewed teaching loop (`teaching/*`, proposal-only) or the
+  proof-carrying promotion gate (ADR-0218 `apply_certified_promotion`, which
+  re-verifies the entailment from a curator-certified coherent base before the
+  flip).
+- **Provisional state may update autonomously — iff typed, isolated,
+  replayable, and unable to masquerade as ratified truth.**  This covers
+  session memory, sealed practice ledgers, SPECULATIVE idle consolidation of
+  soundly-derived facts, reliability-ledger counts, proposal emission, and
+  disclosed licensed estimates.  Each is written SPECULATIVE (never COHERENT),
+  through the same `VaultStore.store` path (no parallel memory), deterministically
+  (no clock, no LLM, no sampling), and carries its standing honestly
+  (`basis="as_told"`, `[approximate]`, "proposal", …).
+
+This boundary is a set of failing-when-violated invariants, not a convention:
+
+- **INV-21** — only allowlisted modules may call `VaultStore.store(...)`.
+- **INV-22 / INV-23** — an unmarked pack row and an unmarked `store()` default
+  to SPECULATIVE; COHERENT requires an explicit stamp.
+- **INV-24** — every `vault.recall` callsite is categorized; user-facing
+  evidence must pass `min_status=COHERENT`.
+- **INV-29** — only `vault/store.py` may transition an `epistemic_status`; the
+  only *default-reachable* COHERENT producer is the certificate-gated
+  `apply_certified_promotion`.  (Honest wrinkle: ADR-0148
+  `promote_eligible_entries` is a second, non-certificate COHERENT path, but it
+  is opt-in — it fires only when a caller passes a promotion policy — and is
+  off by default.)
+- **INV-30** — the open-world `determine()` gear constructs only
+  `Determined(answer=True)` or refuses; it can never assert `answer=False`.
+  Closed-world entailed-negation (assert-False) must use a distinct
+  closed-world type and entry point, never the open-world path.
+
+When you add an autonomous learning surface, it must land inside this boundary
+(SPECULATIVE, same store path, replayable) and the relevant invariant above must
+*fail loudly* if it does not.  An autonomous path that can reach COHERENT, emit
+verified without a replayed certificate, persist non-replayably, or assert a
+closed-world False into the open-world runtime is a boundary breach, not a
+feature.
+
 ## Semantic Pack Discipline
 
 Prefer compact, curated packs.  Do not bulk-ingest corpora into runtime.
