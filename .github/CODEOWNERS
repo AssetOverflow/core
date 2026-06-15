@@ -1,7 +1,14 @@
-# Global code ownership for AssetOverflow/core.
+# Code ownership for AssetOverflow/core — ADVISORY ONLY (see ADR-0221).
 #
-# This repository is public, but changes to protected branches must remain
-# review-gated by the repository owner. Pair this file with GitHub branch
-# protection requiring CODEOWNERS review on `main`.
+# This repository is public with a single maintainer. Public exclusion is
+# provided by repository WRITE ACCESS — non-collaborators can open PRs but can
+# never merge — NOT by a review requirement. Per ADR-0221, branch protection on
+# `main` is required-status-checks-only: required_approving_review_count = 0 and
+# require_code_owner_reviews = false. This file therefore only auto-requests
+# review / assigns ownership; it does NOT gate merges.
+#
+# Do NOT re-enable required code-owner review on this solo-maintainer repo: every
+# PR is authored by the only owner, and GitHub forbids self-approval, so it
+# creates an unsatisfiable deadlock that forces --admin on every merge (ADR-0221).
 
 * @AssetOverflow
