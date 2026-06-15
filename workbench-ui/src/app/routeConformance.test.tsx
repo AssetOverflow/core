@@ -23,7 +23,7 @@ import {
 } from "./lived-life/LivedLifeRoute";
 import { PacksRoute } from "./packs/PacksRoute";
 import { LogosRoute } from "./logos/LogosRoute";
-import { VaultRoute } from "./vault/VaultRoute";
+import { VaultRoute, VAULT_ABSENCE_STATEMENT, VAULT_ABSENCE_ACTION } from "./vault/VaultRoute";
 import { CalibrationRoute } from "./calibration/CalibrationRoute";
 import { SettingsRoute } from "./settings/SettingsRoute";
 
@@ -227,10 +227,10 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
     path: "/vault",
     initialEntry: "/vault",
     loadingLabel: "Loading vault...",
-    // Fail-closed: absence of a persisted vault is the primary contract.
-    emptyStatement:
-      "No persisted vault. Session memory is held in-process and discarded on exit; persistence is opt-in via RuntimeConfig.persist_session_state.",
-    emptyCommand: "Set RuntimeConfig.persist_session_state = true",
+    // Fail-closed: absence of a persisted vault snapshot is the primary contract.
+    // The next action is the real daemon command, not a fake config-flag button.
+    emptyStatement: VAULT_ABSENCE_STATEMENT,
+    emptyCommand: VAULT_ABSENCE_ACTION,
   },
   {
     name: "Calibration",

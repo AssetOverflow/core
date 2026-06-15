@@ -33,9 +33,13 @@ export function EmptyState({
       </svg>
       <p className="m-0 text-sm text-[var(--color-text-primary)] [text-wrap:balance]">{statement}</p>
       {typeof nextAction === "string" ? (
-        <Button className="mt-3" variant="quiet" type="button">
+        // A plain-string action is non-runnable guidance, not a command, so it
+        // renders as static text — never an interactive control. A click-dead
+        // button reads as "I clicked and nothing happened"; runnable steps use
+        // the { kind: "cli", command } form below (code + Copy).
+        <p className="mt-3 text-sm text-[var(--color-text-secondary)] [text-wrap:balance]">
           {nextAction}
-        </Button>
+        </p>
       ) : (
         <div className="mt-3 flex items-center gap-2">
           <code className="flex-1 rounded bg-[var(--color-surface-sunken)] px-2 py-1 font-mono text-xs text-[var(--color-text-primary)]">

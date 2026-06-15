@@ -96,6 +96,26 @@ function stubVault({ persisted = true }: { persisted?: boolean } = {}) {
   );
 }
 
+// A persisted snapshot that holds zero entries — distinct from absence. The
+// entries query stays disabled (entry_count === 0), so /vault/entries is never
+// hit; an unexpected hit fails the stub loudly.
+function stubVaultPersistedEmpty() {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: unknown) => {
+      const path = new URL(String(input)).pathname;
+      if (path === "/vault/summary") {
+        return Promise.resolve({
+          json: () => Promise.resolve(okBody({ ...summary, entry_count: 0 })),
+        });
+      }
+      return Promise.resolve({
+        json: () => Promise.resolve(evidenceUnavailable(`unexpected ${path}`)),
+      });
+    }),
+  );
+}
+
 const offsetDescriptors = {
   offsetHeight: Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight"),
   offsetWidth: Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth"),
@@ -124,18 +144,37 @@ describe("VaultRoute", () => {
     localStorage.clear();
   });
 
-  it("fail-closed: an unpersisted vault renders the honest absence card, not an error", async () => {
+  it("fail-closed: an absent vault renders the honest absence card inside Vault chrome, not an error", async () => {
     stubVault({ persisted: false });
     renderRoute();
 
     expect(
-      await screen.findByText(/No persisted vault\./),
+      await screen.findByText(/No persisted vault snapshot is available\./),
     ).toBeInTheDocument();
-    // both the statement and the config-pointer action name the opt-in flag
-    expect(
-      screen.getAllByText(/RuntimeConfig\.persist_session_state/).length,
-    ).toBeGreaterThan(0);
+    // framed as the Vault route, not a context-free card floating in a blank
+    // surface (the "nothing comes up" symptom)
+    expect(screen.getByRole("heading", { name: "Vault" })).toBeInTheDocument();
+    // the statement still names the opt-in flag
+    expect(screen.getByText(/RuntimeConfig\.persist_session_state/)).toBeInTheDocument();
+    // the next action is a real, runnable command (copyable), not a dead button
+    expect(screen.getByText("core always-on")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
     // it is NOT the generic error contract
+    expect(screen.queryByText("What failed")).not.toBeInTheDocument();
+  });
+
+  it("persisted-but-empty: distinguishes 'no entries yet' from absence, still framed as Vault", async () => {
+    stubVaultPersistedEmpty();
+    renderRoute();
+
+    expect(
+      await screen.findByText(/Vault snapshot exists, but no entries have been stored yet\./),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Vault" })).toBeInTheDocument();
+    // it is a DIFFERENT statement from absence, and not the generic error
+    expect(
+      screen.queryByText(/No persisted vault snapshot is available\./),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("What failed")).not.toBeInTheDocument();
   });
 
