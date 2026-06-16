@@ -1,4 +1,4 @@
-"""Yardstick for CLOSE derived climb (PR-3 after #788+#789).
+"""Yardstick for CLOSE derived climb (PR-3 after #788+#789), hardened for full Claim B.
 
 Deterministic proof that:
 
@@ -6,14 +6,16 @@ Deterministic proof that:
   monotonically to fixed point across idle_tick (with consolidate_determinations=True).
 - wrong_total == 0: excluded predicates (parent_of etc.) and member∨member canary
   never derive; negatives remain Undetermined.
-- proposal candidates (derived_close_proposals_emitted > 0) appear only when
-  review_derived_close_proposals=True.
-- All trajectories/replays stable (no clock/LLM).
+- proposal emission uses *real* ChatRuntime.idle_tick() + IdleTickResult.derived_close_proposals_emitted
+  (gated by review_derived_close_proposals).
+- Positive growth scored via semantic determine() calls on materialized facts (rule='direct' post-FP).
+- All trajectories/replays stable at *content* level (closures + proposal bodies) + aggregates (no clock/LLM).
 
 Uses real comprehend/realize/idle_tick path. Small fixed scenarios for is-a,
-less_than, before_event, negatives. Proposal flag checked explicitly.
+less_than, before_event, negatives. Proposal flag via lived idle_tick (not simulation).
 
-Replay checksum: sha256 of sorted trajectory sizes + proposal counts + closure sets.
+replay_checksum: aggregate sizes + wrong + flag (compatibility).
+content_replay_checksum: canonical closures (structure_key + Derivation/premises) + proposal bodies.
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ from dataclasses import replace
 from generate.determine import Determined, Undetermined, determine
 from generate.meaning_graph.reader import comprehend
 from generate.meaning_graph.relational import (
+    TRANSITIVE_PREDICATES,
     comprehend_relational,
     load_relational_pack_lemmas,
 )
@@ -102,6 +105,26 @@ def _count_answerable(ctx: SessionContext, asks: list[tuple[str, bool]]) -> int:
     return count
 
 
+def _get_closure_content(ctx: SessionContext) -> list[dict[str, Any]]:
+    """Project full closure for Claim B content checksum (structure_key + derivation with premises)."""
+    data: list[dict[str, Any]] = []
+    for p in ["member", "subset"] + sorted(TRANSITIVE_PREDICATES):
+        for r in recall_realized(ctx, predicate=p):
+            der = asdict(r.derivation) if r.derivation is not None else None
+            data.append(
+                {
+                    "predicate": p,
+                    "args": list(r.relation_arguments),
+                    "structure_key": r.structure_key,
+                    "derived": r.derived,
+                    "derivation": der,
+                    "epistemic_status": getattr(r, "epistemic_status", None),
+                }
+            )
+    data.sort(key=lambda x: (x["predicate"], tuple(x["args"])))
+    return data
+
+
 # --- Scenarios ---
 
 def _is_a_climb() -> dict[str, Any]:
@@ -139,6 +162,17 @@ def _is_a_climb() -> dict[str, Any]:
     if "kingdom" in [r.relation_arguments[1] for r in recall_realized(ctx, subject="rex", predicate="member")]:
         wrong_total += 1
 
+    # Semantic Answerability (Claim B): explicitly call determine on positives post-fixed-point
+    # and assert Determined(True) with rule='direct' (the materialized direct path).
+    positive_queries = [q for q in queries if "kingdom" not in q[0].lower()]
+    for q, is_rel in positive_queries:
+        det = _ask(ctx, q) if not is_rel else _ask_rel(ctx, q)
+        assert isinstance(det, Determined) and getattr(det, "answer", False) and getattr(det, "rule", None) == "direct", (
+            f"Claim B semantic answerability failed for {q}: got {det}"
+        )
+
+    closure = _get_closure_content(ctx)
+
     return {
         "scenario": "is_a_climb",
         "before": before,
@@ -148,6 +182,8 @@ def _is_a_climb() -> dict[str, Any]:
         "at_fixed_point": (fp.facts_consolidated == 0),
         "wrong_total": wrong_total,
         "proposals_emitted": 0,  # separate flag run below
+        "closure": closure,
+        "semantic_positives_determined_direct": len(positive_queries),
     }
 
 
@@ -176,12 +212,23 @@ def _relational_climb_less_than() -> dict[str, Any]:
     if isinstance(neg, Determined):
         wrong += 1
 
+    # Semantic Answerability (Claim B)
+    for q, is_rel in queries:
+        det = _ask_rel(ctx, q)
+        assert isinstance(det, Determined) and getattr(det, "answer", False) and getattr(det, "rule", None) == "direct", (
+            f"Claim B semantic answerability failed for {q}: got {det}"
+        )
+
+    closure = _get_closure_content(ctx)
+
     return {
         "scenario": "less_than_climb",
         "before": before,
         "after_tick_1": after1,
         "after_fixed_point": after_fp,
         "wrong_total": wrong,
+        "closure": closure,
+        "semantic_positives_determined_direct": len(queries),
     }
 
 
@@ -199,11 +246,22 @@ def _temporal_climb() -> dict[str, Any]:
     rt.idle_tick()
     after = _count_answerable(ctx, queries)
 
+    # Semantic Answerability (Claim B)
+    for q, is_rel in queries:
+        det = _ask_rel(ctx, q)
+        assert isinstance(det, Determined) and getattr(det, "answer", False) and getattr(det, "rule", None) == "direct", (
+            f"Claim B semantic answerability failed for {q}: got {det}"
+        )
+
+    closure = _get_closure_content(ctx)
+
     return {
         "scenario": "before_event_climb",
         "before": before,
         "after_fixed_point": after,
         "wrong_total": 0,
+        "closure": closure,
+        "semantic_positives_determined_direct": len(queries),
     }
 
 
@@ -231,36 +289,48 @@ def _negatives_refused() -> dict[str, Any]:
 
 
 def _proposal_flag_effect() -> dict[str, Any]:
-    """Measure proposal bridge: call emit only when "enabled" (simulating the runtime flag).
-    The runtime flag in idle_tick gates the call to this bridge."""
-    from generate.determine.consolidate import consolidate_once
-    from generate.determine.derived_close_proposals import emit_derived_close_proposals
+    """Measure proposal bridge via *lived* runtime flag path.
+    Uses real ChatRuntime.idle_tick() + IdleTickResult.derived_close_proposals_emitted
+    (the runtime flag in idle_tick gates the call to the bridge)."""
+    import generate.determine.derived_close_proposals as dcp
     import tempfile
 
-    # "without" : do not call emit
-    no_flag = 0
+    # "without" via real idle_tick with flag off (must emit 0)
+    ctx_off, rt_off = _fresh_ctx(consolidate=True, proposals=False)
+    _tell_rel(ctx_off, "A is less than B.")
+    _tell_rel(ctx_off, "B is less than C.")
+    res_off = rt_off.idle_tick()
+    emitted_without = res_off.derived_close_proposals_emitted
 
-    # "with" : consolidate then emit (as the bridge does when flag on)
-    ctx, _ = _fresh_ctx(consolidate=True, proposals=True)
-    _tell_rel(ctx, "A is less than B.")
-    _tell_rel(ctx, "B is less than C.")
-    consolidate_once(ctx)
+    # "with" via real idle_tick with flag on (captures from IdleTickResult; temp sink for isolation + content)
     with tempfile.TemporaryDirectory() as tmp:
         sink = Path(tmp)
-        counts = emit_derived_close_proposals(ctx, sink=sink)
-        with_flag = counts.get("emitted", 0)
+        orig_sink = dcp.DEFAULT_SINK
+        dcp.DEFAULT_SINK = sink
+        try:
+            ctx_on, rt_on = _fresh_ctx(consolidate=True, proposals=True)
+            _tell_rel(ctx_on, "A is less than B.")
+            _tell_rel(ctx_on, "B is less than C.")
+            res_on = rt_on.idle_tick()
+            emitted_with = res_on.derived_close_proposals_emitted
+            # capture full bodies for content checksum (lived emission path)
+            proposals = [json.loads(p.read_text()) for p in sorted(sink.glob("*.json"))]
+        finally:
+            dcp.DEFAULT_SINK = orig_sink
 
     return {
         "scenario": "proposal_flag",
-        "emitted_without_flag": no_flag,
-        "emitted_with_flag": with_flag,
-        "only_with_flag": with_flag > 0 and no_flag == 0,
+        "emitted_without_flag": emitted_without,
+        "emitted_with_flag": emitted_with,
+        "only_with_flag": emitted_with > 0 and emitted_without == 0,
+        "proposals": proposals,
     }
 
 
 def run() -> dict[str, Any]:
     """Run the full yardstick. Returns report with climb metrics, wrong_total=0,
-    proposal flag isolation, replay checksum."""
+    lived proposal flag isolation (via IdleTickResult), semantic determine() on positives,
+    replay_checksum (aggregates) + content_replay_checksum (closures + proposal bodies)."""
     is_a = _is_a_climb()
     less = _relational_climb_less_than()
     temporal = _temporal_climb()
@@ -294,7 +364,7 @@ def run() -> dict[str, Any]:
         },
     }
 
-    # Replay checksum: stable sizes + wrongs + flag effect
+    # Replay checksum: stable sizes + wrongs + flag effect (kept for compatibility)
     checksum_input = json.dumps(
         {
             "sizes": [report["aggregate"][k] for k in ("direct_answerable_before", "direct_answerable_after_tick_1", "direct_answerable_after_fixed_point")],
@@ -304,6 +374,19 @@ def run() -> dict[str, Any]:
         sort_keys=True,
     ).encode()
     report["replay_checksum"] = hashlib.sha256(checksum_input).hexdigest()
+
+    # Parallel full-content checksum for Claim B fidelity (canonical closures + proposal bodies)
+    # This aligns the yardstick with its documentation ("closure sets", "exact trajectories").
+    content = {
+        "closures": {
+            "is_a": is_a.get("closure", []),
+            "less_than": less.get("closure", []),
+            "before_event": temporal.get("closure", []),
+        },
+        "proposals": prop.get("proposals", []),
+    }
+    content_input = json.dumps(content, sort_keys=True).encode()
+    report["content_replay_checksum"] = hashlib.sha256(content_input).hexdigest()
 
     return report
 
