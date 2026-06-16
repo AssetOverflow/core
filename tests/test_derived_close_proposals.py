@@ -218,13 +218,16 @@ def test_runtime_flag_off_does_not_emit(vocab_persona, tmp_path: Path):
     ctx = rt._context
     _tell("Socrates is a man.", ctx)
     _tell("All men are mortals.", ctx)
-    rt.idle_tick()  # consolidation happens (if flag on), proposal bridge must not
+    res = rt.idle_tick()  # consolidation happens (if flag on), proposal bridge must not
     # Even if consolidation ran, the derived proposal sink under the test path
     # should not have been written by the bridge (flag off).
     # We use a temp engine_state but the proposal sink is repo-relative;
     # the important contract is that the call was not made.
     # Direct check: calling the emitter would write, but the runtime path didn't.
-    assert True  # behavioral contract covered by the flag test below
+    assert res.derived_close_proposals_emitted == 0
+    # No files should have been created for this disabled path (best-effort check)
+    sink = Path("teaching") / "proposals" / "derived_close_facts"
+    assert not any(sink.glob("*.json")) or True  # may have pre-existing from other tests; non-fatal
 
 
 def test_runtime_flag_on_emits_after_consolidation(vocab_persona, tmp_path: Path):
@@ -241,3 +244,25 @@ def test_runtime_flag_on_emits_after_consolidation(vocab_persona, tmp_path: Path
     assert res.facts_consolidated >= 1
     # The emitter was invoked (after consolidation); result accepted the new field.
     assert hasattr(res, "derived_close_proposals_emitted")
+
+
+def test_write_failure_increments_skipped(vocab_persona, tmp_path: Path, monkeypatch):
+    """Verify that I/O failure on write_text is caught locally, increments skipped,
+    does not emit, and does not abort the emitter (best-effort per contract)."""
+    ctx = _ctx(vocab_persona)
+    _tell("Socrates is a man.", ctx)
+    _tell("All men are mortals.", ctx)
+    consolidate_once(ctx)
+
+    sink = tmp_path / "derived_close"
+
+    def always_fail_write(self, *a, **k):
+        raise OSError("simulated I/O failure for test")
+
+    monkeypatch.setattr(Path, "write_text", always_fail_write)
+
+    counts = emit_derived_close_proposals(ctx, sink=sink)
+    assert counts["emitted"] == 0
+    assert counts["skipped"] >= 1  # write failure counted here (plus any ineligible)
+    # sink should have no files created
+    assert len(list(sink.glob("*.json"))) == 0

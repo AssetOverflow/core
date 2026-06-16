@@ -78,6 +78,10 @@ def emit_derived_close_proposals(
 
     Artifacts are written only for first sighting (deduped by stable key).
     Order is deterministic (sorted by (predicate, subject, object)).
+
+    Metric invariant (post-collection, pre-write):
+      considered == eligible + skipped
+    Write failures (I/O etc.) also increment skipped (best-effort).
     """
     sink = sink or DEFAULT_SINK
     sink.mkdir(parents=True, exist_ok=True)
@@ -99,6 +103,8 @@ def emit_derived_close_proposals(
                 candidates.append(
                     (p, rec.relation_arguments[0], rec.relation_arguments[1], rec)
                 )
+            else:
+                skipped += 1
 
     # deterministic global order
     candidates.sort(key=lambda t: (t[0], t[1], t[2]))
@@ -112,28 +118,32 @@ def emit_derived_close_proposals(
             duplicate += 1
             continue
 
-        artifact: dict[str, Any] = {
-            "source": "derived_close_fact",
-            "predicate": rec.relation_predicate,
-            "subject": subj,
-            "object": obj,
-            "relation_arguments": list(rec.relation_arguments),
-            "derivation": {
-                "rule": rec.derivation.rule,
-                "verdict": rec.derivation.verdict,
-                "premise_structure_keys": list(rec.derivation.premise_structure_keys),
-            },
-            "epistemic_status": rec.epistemic_status,
-            "structure_key": rec.structure_key,
-            "dedupe_key": dkey,
-            "status": "proposal_only",
-            "requires_review": True,
-            "mounted": False,
-        }
-        path.write_text(
-            json.dumps(artifact, indent=2, sort_keys=True), encoding="utf-8"
-        )
-        emitted += 1
+        try:
+            artifact: dict[str, Any] = {
+                "source": "derived_close_fact",
+                "predicate": rec.relation_predicate,
+                "subject": subj,
+                "object": obj,
+                "relation_arguments": list(rec.relation_arguments),
+                "derivation": {
+                    "rule": rec.derivation.rule,
+                    "verdict": rec.derivation.verdict,
+                    "premise_structure_keys": list(rec.derivation.premise_structure_keys),
+                },
+                "epistemic_status": rec.epistemic_status,
+                "structure_key": rec.structure_key,
+                "dedupe_key": dkey,
+                "status": "proposal_only",
+                "requires_review": True,
+                "mounted": False,
+            }
+            path.write_text(
+                json.dumps(artifact, indent=2, sort_keys=True), encoding="utf-8"
+            )
+            emitted += 1
+        except Exception:
+            skipped += 1
+            continue
 
     return {
         "considered": considered,
