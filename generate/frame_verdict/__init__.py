@@ -8,6 +8,9 @@ This package's own re-exports are its public API; it must NOT be re-exported thr
 """
 
 from generate.frame_verdict.evaluate import evaluate_frame_verdict
+from generate.frame_verdict.perception_adapter import (
+    frame_verdict_from_perception_falsification,
+)
 from generate.frame_verdict.types import (
     ClosedFrame,
     ClosedWorldProof,
@@ -27,4 +30,5 @@ __all__ = [
     "PositiveRefutationKind",
     "WorldAssumption",
     "evaluate_frame_verdict",
+    "frame_verdict_from_perception_falsification",
 ]

@@ -2168,11 +2168,13 @@ class TestINV30OpenWorldDetermineNeverAssertsFalse:
 # meaningful-failure anchor (non-vacuity), mirroring INV-30b / INV-30c.
 # =========================================================================== #
 
-#: Exact files allowed to CONSTRUCT a FrameVerdict (no glob). The isolated evaluator + the
-#: gated adapters (PR-3 perception, PR-4 governance). Never the open-world spine, never a
-#: convenience factory elsewhere. Tests construct freely and are not scanned.
+#: Exact files allowed to CONSTRUCT a FrameVerdict (no glob). Construction is funnelled
+#: through ONE builder (``_construct.build_frame_verdict``) that the text evaluator and the
+#: perception adapter both call — so the literal ``FrameVerdict(...)`` lives in exactly one
+#: file. Never the open-world spine, never a convenience factory elsewhere. Tests construct
+#: freely and are not scanned.
 ALLOWED_FRAME_VERDICT_SITES: frozenset[str] = frozenset({
-    "generate/frame_verdict/evaluate.py",
+    "generate/frame_verdict/_construct.py",
 })
 
 #: Dirs excluded from the FrameVerdict CONSTRUCTION scan. Unlike INV-30's
