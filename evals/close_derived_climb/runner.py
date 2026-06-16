@@ -74,11 +74,30 @@ def _ask_rel(ctx: SessionContext, text: str) -> Determined | Undetermined:
 
 
 def _count_answerable(ctx: SessionContext, asks: list[tuple[str, bool]]) -> int:
-    """Count how many asks return Determined(True). (query_text, is_relational)."""
+    """Count how many of the asked facts are directly realized in the vault (the 'direct answerable' from CLOSE)."""
     count = 0
     for q, is_rel in asks:
-        res = _ask_rel(ctx, q) if is_rel else _ask(ctx, q)
-        if isinstance(res, Determined) and res.answer:
+        q = q.lower().strip('?').strip()
+        if not q.startswith("is "):
+            continue
+        rest = q[3:].strip()
+        parts = rest.split()
+        if len(parts) < 2:
+            continue
+        subj = parts[0]
+        if "less than" in rest:
+            pred = "less_than"
+            obj = parts[-1]
+        elif "before" in rest:
+            pred = "before_event"
+            obj = parts[-1]
+        else:
+            # is-a "is a X" or "is an X"
+            pred = "member"
+            obj = parts[-1]
+        # check if the specific (pred, subj, obj) is realized
+        hits = [r for r in recall_realized(ctx, subject=subj, predicate=pred) if len(r.relation_arguments) > 1 and r.relation_arguments[1] == obj]
+        if hits:
             count += 1
     return count
 
@@ -95,19 +114,6 @@ def _is_a_climb() -> dict[str, Any]:
     # Canary: member(dog, kingdom) + member(rex, dog) should not derive member(rex, kingdom)
     _tell(ctx, "Dog is a kingdom.")
 
-    before = len(
-        [r for r in recall_realized(ctx, subject="rex", predicate="member")]
-    )
-    res1 = rt.idle_tick()
-    after1 = len(
-        [r for r in recall_realized(ctx, subject="rex", predicate="member")]
-    )
-    res2 = rt.idle_tick()
-    after2 = len(
-        [r for r in recall_realized(ctx, subject="rex", predicate="member")]
-    )
-    fp = rt.idle_tick()
-
     # Query set for answerable - used for live measurement at each stage
     queries = [
         ("Is Rex a dog?", False),
@@ -120,9 +126,13 @@ def _is_a_climb() -> dict[str, Any]:
     before = _count_answerable(ctx, queries)
     res1 = rt.idle_tick()
     after1 = _count_answerable(ctx, queries)
-    res2 = rt.idle_tick()
+    # continue ticking until fixed point (use facts_consolidated==0 as proxy, since IdleTickResult has no at_fixed_point)
+    fp = res1
+    for _ in range(10):  # safety bound
+        fp = rt.idle_tick()
+        if fp.facts_consolidated == 0:
+            break
     after_fp = _count_answerable(ctx, queries)
-    fp = rt.idle_tick()
 
     wrong_total = 0
     # Check canary not derived (still valid for wrong=0)
@@ -135,7 +145,7 @@ def _is_a_climb() -> dict[str, Any]:
         "after_tick_1": after1,
         "after_fixed_point": after_fp,
         "facts_consolidated_tick1": res1.facts_consolidated if hasattr(res1, 'facts_consolidated') else 0,
-        "at_fixed_point": fp.at_fixed_point if hasattr(fp, 'at_fixed_point') else True,
+        "at_fixed_point": (fp.facts_consolidated == 0),
         "wrong_total": wrong_total,
         "proposals_emitted": 0,  # separate flag run below
     }
@@ -259,10 +269,13 @@ def run() -> dict[str, Any]:
 
     # Aggregate
     before_sets = [is_a["before"], less["before"], temporal["before"]]
-    after1_sets = [is_a.get("after_tick_1", is_a["before"]), less["after_tick_1"], temporal["after_fixed_point"]]
+    after1_sets = [is_a["after_tick_1"], less["after_tick_1"], temporal["after_fixed_point"]]
     fp_sets = [is_a["after_fixed_point"], less["after_fixed_point"], temporal["after_fixed_point"]]
 
     total_wrong = is_a["wrong_total"] + less["wrong_total"] + temporal.get("wrong_total", 0) + neg["wrong_total"]
+
+    monotone_growth = all(a <= b for a, b in zip(before_sets, fp_sets))
+    strict_growth = sum(before_sets) < sum(fp_sets)
 
     report = {
         "is_a_climb": is_a,
@@ -274,7 +287,8 @@ def run() -> dict[str, Any]:
             "direct_answerable_before": sum(before_sets),
             "direct_answerable_after_tick_1": sum(after1_sets),
             "direct_answerable_after_fixed_point": sum(fp_sets),
-            "monotone_growth": all(a <= b for a, b in zip(before_sets, fp_sets)),
+            "monotone_growth": monotone_growth,
+            "strict_growth": strict_growth,
             "wrong_total": total_wrong,
             "proposals_only_with_flag": prop["only_with_flag"],
         },
