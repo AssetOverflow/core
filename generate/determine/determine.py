@@ -38,6 +38,7 @@ from dataclasses import dataclass
 
 from generate.composition import LogicChainPlan, lower_logic_chain
 from generate.composition.lower_transitive import lower_transitive_chain
+from generate.epistemic_basis import epistemic_basis as _basis
 from generate.meaning_graph.reader import Comprehension, Refusal
 from generate.meaning_graph.relational import (
     INVERSE_OF,
@@ -47,7 +48,6 @@ from generate.meaning_graph.relational import (
 )
 from generate.realize import RealizedRecord, recall_realized
 from session.context import SessionContext
-from teaching.epistemic import ADMISSIBLE_AS_EVIDENCE, EpistemicStatus
 
 #: The CLOSED set of query predicates with a SOUND DIRECT-entailment path: ``member``,
 #: ``subset`` (a told ``subset(a, b)`` — "all a are b" — directly answers the asked
@@ -109,12 +109,6 @@ class Undetermined:
     """No honest answer (refusal). ``reason`` is for audit, not control."""
 
     reason: str
-
-
-def _basis(grounds: tuple[RealizedRecord, ...]) -> str:
-    """Carry the grounds' epistemic standing forward — never overclaim "verified"."""
-    statuses = {EpistemicStatus(g.epistemic_status) for g in grounds}
-    return "verified" if statuses and statuses <= ADMISSIBLE_AS_EVIDENCE else "as_told"
 
 
 def determine(
