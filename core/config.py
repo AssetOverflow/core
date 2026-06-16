@@ -323,6 +323,15 @@ class RuntimeConfig:
     # OFF by default — idle ticks don't pay for the scan unless a deployment wants the surface.
     review_pending_proposals: bool = False
 
+    # PR-2 derived CLOSE proposal bridge — when on, after consolidation in idle_tick, scan
+    # realized derived facts (member/subset + TRANSITIVE_PREDICATES) that carry proof-gated
+    # Derivation (verdict="entailed", SPECULATIVE). Emit reviewable proposal-only artifacts
+    # (source="derived_close_fact") to teaching/proposals/derived_close_facts/. Default off;
+    # review-gated, no corpus mutation, no ratification, no COHERENT, no serving change.
+    # Deterministic dedupe by (predicate, args, derivation, structure_key). Best-effort;
+    # failures captured.
+    review_derived_close_proposals: bool = False
+
     # Autonomous frontier contemplation (ADR-0080 into the idle loop) — when on, idle_tick
     # autonomously MINES its frontier-compare reports into persisted SPECULATIVE reviewable
     # findings (core.contemplation), so the always-on life proposes its own frontier without

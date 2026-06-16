@@ -562,6 +562,11 @@ class IdleTickResult:
     #: IT — read-only proposal-review summary (None unless ``config.review_pending_proposals``).
     #: Surfaces pending comprehension-failure proposals for review; mutates nothing.
     proposal_review: ProposalReviewIdleSummary | None = None
+    #: PR-2 — count of new reviewable proposal artifacts emitted this tick from proof-gated
+    #: derived CLOSE facts (member/subset + TRANSITIVE_PREDICATES). Only non-zero when
+    #: ``config.review_derived_close_proposals``. Proposal-only, review-gated, SPECULATIVE;
+    #: does not set did_work or trigger engine checkpoint (lives in teaching/proposals sink).
+    derived_close_proposals_emitted: int = 0
     #: Observational backpressure telemetry — backlog depth, headroom, inflow vs drain.
     #: None only when the tick was never called (not possible in normal use); always
     #: present on a completed tick. Never gates or refuses; see ADR-0161 for that.
@@ -982,6 +987,28 @@ class ChatRuntime:
             facts_consolidated = consolidate_once(self._context).consolidated
             did_work = True
 
+        derived_close_proposals_emitted = 0
+        # PR-2 derived CLOSE proposal bridge — after consolidation so newly derived
+        # proof-gated facts (member/subset + relational transitive) can surface as
+        # reviewable proposal artifacts. Best-effort, proposal-only, review-gated.
+        # Never sets did_work (proposals live outside engine_state; no unrelated checkpoint).
+        # Gated by explicit config flag (default off).
+        if getattr(self.config, "review_derived_close_proposals", False):
+            try:
+                from generate.determine.derived_close_proposals import (
+                    emit_derived_close_proposals,
+                )
+
+                res = emit_derived_close_proposals(self._context)
+                derived_close_proposals_emitted = res.get("emitted", 0)
+            except Exception as exc:  # noqa: BLE001 — proposal emission must not crash idle
+                warnings.warn(
+                    f"derived close proposal emission skipped: {exc!r}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                derived_close_proposals_emitted = 0
+
         # 2b. Frontier-contemplation pass (ADR-0080 into the idle loop) — autonomously MINE
         #     the frontier-compare reports into persisted SPECULATIVE reviewable findings, so
         #     the always-on life proposes its OWN frontier with no user turn. Idempotent per
@@ -1093,6 +1120,7 @@ class ChatRuntime:
             facts_consolidated=facts_consolidated,
             frontier_findings=frontier_findings,
             proposal_review=proposal_review,
+            derived_close_proposals_emitted=derived_close_proposals_emitted,
             backpressure=bp_record,
         )
 
