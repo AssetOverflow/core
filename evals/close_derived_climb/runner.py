@@ -73,11 +73,11 @@ def _ask_rel(ctx: SessionContext, text: str) -> Determined | Undetermined:
     return determine(comprehend_relational(text, _PACK), ctx)
 
 
-def _count_answerable(asks: list[tuple[str, bool]]) -> int:
-    """Count how many asks return Determined(True). (query_text, is_relational)"""
+def _count_answerable(ctx: SessionContext, asks: list[tuple[str, bool]]) -> int:
+    """Count how many asks return Determined(True). (query_text, is_relational)."""
     count = 0
     for q, is_rel in asks:
-        res = _ask_rel(q) if is_rel else _ask(None, q)  # type: ignore  # ctx passed in caller
+        res = _ask_rel(ctx, q) if is_rel else _ask(ctx, q)
         if isinstance(res, Determined) and res.answer:
             count += 1
     return count
@@ -108,7 +108,7 @@ def _is_a_climb() -> dict[str, Any]:
     )
     fp = rt.idle_tick()
 
-    # Query set for answerable
+    # Query set for answerable - used for live measurement at each stage
     queries = [
         ("Is Rex a dog?", False),
         ("Is Rex a mammal?", False),
@@ -116,22 +116,24 @@ def _is_a_climb() -> dict[str, Any]:
         ("Is Rex a creature?", False),
         ("Is Rex a kingdom?", False),  # must stay refused
     ]
-    # Rebuild ctx? No, use same for simplicity; re-ask via determine on current
-    # But since no ctx in ask here, re-create simple asks
-    direct_answerable_before = 1  # only told dog
-    direct_answerable_after1 = 2  # + mammal
-    direct_answerable_after_fp = 4  # +animal +creature
+
+    before = _count_answerable(ctx, queries)
+    res1 = rt.idle_tick()
+    after1 = _count_answerable(ctx, queries)
+    res2 = rt.idle_tick()
+    after_fp = _count_answerable(ctx, queries)
+    fp = rt.idle_tick()
 
     wrong_total = 0
-    # Check canary not derived
+    # Check canary not derived (still valid for wrong=0)
     if "kingdom" in [r.relation_arguments[1] for r in recall_realized(ctx, subject="rex", predicate="member")]:
         wrong_total += 1
 
     return {
         "scenario": "is_a_climb",
-        "before": direct_answerable_before,
-        "after_tick_1": direct_answerable_after1,
-        "after_fixed_point": direct_answerable_after_fp,
+        "before": before,
+        "after_tick_1": after1,
+        "after_fixed_point": after_fp,
         "facts_consolidated_tick1": res1.facts_consolidated if hasattr(res1, 'facts_consolidated') else 0,
         "at_fixed_point": fp.at_fixed_point if hasattr(fp, 'at_fixed_point') else True,
         "wrong_total": wrong_total,
@@ -145,13 +147,20 @@ def _relational_climb_less_than() -> dict[str, Any]:
     _tell_rel(ctx, "B is less than C.")
     _tell_rel(ctx, "C is less than D.")
 
-    before = sum(1 for q in ["Is A less than D?"] if isinstance(_ask_rel(ctx, q), Determined))
-    res1 = rt.idle_tick()
-    after1 = sum(1 for q in ["Is A less than D?", "Is B less than D?"] if isinstance(_ask_rel(ctx, q), Determined))
-    res2 = rt.idle_tick()
-    after_fp = sum(1 for q in ["Is A less than D?"] if isinstance(_ask_rel(ctx, q), Determined))
+    # Consistent query set for all stages
+    queries = [
+        ("Is A less than C?", True),
+        ("Is B less than D?", True),
+        ("Is A less than D?", True),
+    ]
 
-    # Negative: no cross
+    before = _count_answerable(ctx, queries)
+    res1 = rt.idle_tick()
+    after1 = _count_answerable(ctx, queries)
+    res2 = rt.idle_tick()
+    after_fp = _count_answerable(ctx, queries)
+
+    # Negative: no cross (refused)
     neg = _ask_rel(ctx, "Is A less than E?")  # no E, but to test refused for non-chain
     wrong = 0
     if isinstance(neg, Determined):
@@ -171,9 +180,14 @@ def _temporal_climb() -> dict[str, Any]:
     _tell_rel(ctx, "Dawn is before noon.")
     _tell_rel(ctx, "Noon is before dusk.")
 
-    before = int(isinstance(_ask_rel(ctx, "Is Dawn before dusk?"), Determined))
+    # Consistent query set (single but via helper for uniformity)
+    queries = [
+        ("Is Dawn before dusk?", True),
+    ]
+
+    before = _count_answerable(ctx, queries)
     rt.idle_tick()
-    after = int(isinstance(_ask_rel(ctx, "Is Dawn before dusk?"), Determined))
+    after = _count_answerable(ctx, queries)
 
     return {
         "scenario": "before_event_climb",
@@ -211,7 +225,7 @@ def _proposal_flag_effect() -> dict[str, Any]:
     The runtime flag in idle_tick gates the call to this bridge."""
     from generate.determine.consolidate import consolidate_once
     from generate.determine.derived_close_proposals import emit_derived_close_proposals
-    import tempfile, shutil
+    import tempfile
 
     # "without" : do not call emit
     no_flag = 0
@@ -221,10 +235,10 @@ def _proposal_flag_effect() -> dict[str, Any]:
     _tell_rel(ctx, "A is less than B.")
     _tell_rel(ctx, "B is less than C.")
     consolidate_once(ctx)
-    sink = Path(tempfile.mkdtemp())
-    counts = emit_derived_close_proposals(ctx, sink=sink)
-    with_flag = counts.get("emitted", 0)
-    shutil.rmtree(sink)
+    with tempfile.TemporaryDirectory() as tmp:
+        sink = Path(tmp)
+        counts = emit_derived_close_proposals(ctx, sink=sink)
+        with_flag = counts.get("emitted", 0)
 
     return {
         "scenario": "proposal_flag",
