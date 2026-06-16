@@ -151,19 +151,66 @@ def test_valid_text_entailed_false_constructs() -> None:
     assert v.verdict is FrameVerdictKind.ENTAILED_FALSE
 
 
+def test_entailed_false_in_open_world_raises() -> None:
+    # Structural backstop (types.py §(0)): OPEN + entailed_false is illegal even WITH a valid
+    # ROBDD refutation proof — absence is never false. No producer may emit an OPEN negation.
+    with pytest.raises(ValueError):
+        FrameVerdict(
+            frame_id="f1", frame_kind=FrameKind.TEXT, world_assumption=WorldAssumption.OPEN,
+            query="b", verdict=FrameVerdictKind.ENTAILED_FALSE,
+            proof=_proof("proof_chain.entail", "REFUTED", PositiveRefutationKind.ROBDD_REFUTATION),
+            basis="as_told", trace_hash="th", provenance=(),
+        )
+
+
 @pytest.mark.parametrize(
     "kind",
     [
         FrameVerdictKind.UNDETERMINED,
         FrameVerdictKind.CONTRADICTION,
         FrameVerdictKind.SCOPE_BOUNDARY,
-        FrameVerdictKind.ENTAILED_TRUE,
     ],
 )
-def test_non_false_verdicts_need_no_positive_refutation(kind) -> None:
-    # a proofless / None-kind proof is fine for every NON-entailed_false verdict.
+def test_refusal_verdicts_need_no_positive_proof(kind) -> None:
+    # a proofless / None-kind proof is fine for every refusal/undetermined/contradiction verdict
+    # (only the two COMMITTED verdicts — entailed_true / entailed_false — are proof-gated).
     v = _make(kind, _proof("proof_chain.entail", "UNKNOWN", None, sha=""))
     assert v.verdict is kind
+
+
+# --------------------------------------------------------------------------- #
+# Symmetric admissibility — entailed_true needs a positive entailment/support proof
+# --------------------------------------------------------------------------- #
+
+
+def test_valid_text_entailed_true_constructs() -> None:
+    v = _make(FrameVerdictKind.ENTAILED_TRUE, _proof("proof_chain.entail", "ENTAILED", None))
+    assert v.verdict is FrameVerdictKind.ENTAILED_TRUE
+
+
+def test_valid_perception_entailed_true_constructs() -> None:
+    v = _make(FrameVerdictKind.ENTAILED_TRUE, _proof("sensorium.falsification", "SUPPORTED", None))
+    assert v.verdict is FrameVerdictKind.ENTAILED_TRUE
+
+
+def test_entailed_true_with_wrong_outcome_raises() -> None:
+    # an UNKNOWN/REFUTED outcome cannot back a committed "Yes." — symmetric with entailed_false.
+    with pytest.raises(ValueError):
+        _make(FrameVerdictKind.ENTAILED_TRUE, _proof("proof_chain.entail", "UNKNOWN", None))
+
+
+def test_entailed_true_with_missing_proof_sha_raises() -> None:
+    with pytest.raises(ValueError):
+        _make(FrameVerdictKind.ENTAILED_TRUE, _proof("proof_chain.entail", "ENTAILED", None, sha=""))
+
+
+def test_entailed_true_with_a_refutation_kind_raises() -> None:
+    # a "true" carrying a positive_refutation_kind is malformed (refutation kinds prove FALSE).
+    with pytest.raises(ValueError):
+        _make(
+            FrameVerdictKind.ENTAILED_TRUE,
+            _proof("proof_chain.entail", "ENTAILED", PositiveRefutationKind.ROBDD_REFUTATION),
+        )
 
 
 # --------------------------------------------------------------------------- #

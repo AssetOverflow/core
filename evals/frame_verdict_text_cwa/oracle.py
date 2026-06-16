@@ -9,10 +9,17 @@ engine's echo).
 
 Scope note (honest): the FRAME GATING (OPEN / undeclared closure / non-TEXT => SCOPE_BOUNDARY)
 is the frame CONTRACT, shared by both; independence is in the SOLVING (entailment), which is
-the wrong=0-critical part. The grammar is the closed propositional grammar of
-``proof_chain.entail`` (atoms, ``~``, ``&``, ``->``, parens); ``~`` > ``&`` > ``->`` (``->``
-right-assoc). Anything outside it is reported ``SCOPE_BOUNDARY`` (out of regime), matching the
-evaluator's refusal-first posture.
+the wrong=0-critical part.
+
+Grammar (honest): this oracle recognises a STRICT SUBSET of ``proof_chain.entail``'s grammar —
+atoms, ``~``, ``&``, ``->``, parens; ``~`` > ``&`` > ``->`` (``->`` right-assoc). It does NOT
+accept the engine's additional spellings (``|``/``||``/``or``, ``<->``/``↔``/``≡``,
+``&&``/``and``/``∧``, ``!``/``¬``/``not``, ``→``/``⊃``) nor the constants ``true``/``false``
+(which this oracle would mis-parse as free atoms). Anything outside the subset raises ``_Bad``
+=> ``SCOPE_BOUNDARY`` (out of regime). The committed ``v1/cases.jsonl`` is confined to this
+subset and a lane guard (``test_cases_use_only_the_oracle_grammar_subset``) keeps it there, so
+a future case that needs a wider construct fails the SHA-add review LOUDLY rather than letting
+the two solvers diverge silently.
 """
 
 from __future__ import annotations

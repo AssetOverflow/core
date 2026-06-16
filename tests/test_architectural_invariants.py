@@ -2185,9 +2185,25 @@ _FV_CONSTRUCTION_EXCLUDED: frozenset[str] = frozenset({
     "tests", "benchmarks", "scripts", "docs", "core-rs", ".venv", "__pycache__", ".claude",
 })
 
-#: The open-world runtime spine — barred (whole-file, transitively) from reaching
-#: generate.frame_verdict.
+#: The open-world runtime spine — barred (whole-file, transitively) from reaching the
+#: closed-world FrameVerdict path.
 _FV_SPINE_MODULES: tuple[str, ...] = ("chat.runtime", "session.context", "vault.store")
+
+#: Module prefixes the spine may NOT transitively reach. Both the closed-world TYPE/evaluator
+#: package AND the lowering-to-serving adapter are barred DIRECTLY — so the default-dark
+#: guarantee does not rest only on the indirect fact that the adapter happens to re-import the
+#: ``generate.frame_verdict`` types (adversarial review S4: bar the actual serving path itself).
+_FV_BARRED_PREFIXES: tuple[str, ...] = (
+    "generate.frame_verdict",
+    "core.response_governance.frame_verdict",
+)
+
+
+def _fv_barred_leaks(reachable: set[str]) -> list[str]:
+    return sorted(
+        m for m in reachable
+        if any(m == p or m.startswith(p + ".") for p in _FV_BARRED_PREFIXES)
+    )
 
 
 def _enumerate_fv_construction_files() -> list[Path]:
@@ -2201,20 +2217,33 @@ def _enumerate_fv_construction_files() -> list[Path]:
 
 
 def _frame_verdict_constructions(tree: ast.AST) -> list[int]:
-    """Line numbers of every ``FrameVerdict(...)`` construction (ast call-name
-    ``FrameVerdict`` via ``ast.Name.id`` / ``ast.Attribute.attr``). AST-based, so
-    docstrings/strings cannot false-positive and a ``.verdict`` read is ignored. PR-1 uses
-    no classmethod factory / ``dataclasses.replace`` into a FrameVerdict; a future slice that
-    adds one MUST extend this matcher and the allowlist."""
+    """Line numbers of every ``FrameVerdict`` construction. AST-based, so docstrings/strings
+    cannot false-positive and a ``.verdict`` read is ignored. Caught:
+
+      * direct construction ``FrameVerdict(...)`` (``ast.Name`` / module-qualified
+        ``mod.FrameVerdict(...)``);
+      * an alternate constructor / classmethod factory on the class
+        ``FrameVerdict.from_x(...)`` (``ast.Attribute`` whose ``.value`` is the name
+        ``FrameVerdict``) — so a future ``@classmethod`` factory cannot evade the allowlist.
+
+    RESIDUAL GAP (recorded, not faked — adversarial review S2): a ``dataclasses.replace(fv, ...)``
+    into a FrameVerdict is NOT flagged, because its first-arg type is only known by inference and
+    a blanket ``replace(...)`` match would false-positive on every other dataclass tree-wide. No
+    such call exists in non-test source today; the closed-world serving PR that wires this MUST
+    add a typed-replace guard before it lands (lookback 'build the defensive refusal NOW')."""
     lines: list[int] = []
     for node in ast.walk(tree):
-        if isinstance(node, ast.Call):
-            func = node.func
-            name = (
-                func.attr if isinstance(func, ast.Attribute)
-                else func.id if isinstance(func, ast.Name) else ""
-            )
-            if name == "FrameVerdict":
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == "FrameVerdict":
+            lines.append(node.lineno)
+        elif isinstance(func, ast.Attribute):
+            # FrameVerdict.from_x(...) — a factory on the class itself.
+            if isinstance(func.value, ast.Name) and func.value.id == "FrameVerdict":
+                lines.append(node.lineno)
+            # mod.FrameVerdict(...) — module-qualified direct construction.
+            elif func.attr == "FrameVerdict":
                 lines.append(node.lineno)
     return lines
 
@@ -2272,6 +2301,10 @@ class TestINV31FrameVerdictFirewall:
     def test_a2_construction_detector_is_non_vacuous(self):
         flagged = _frame_verdict_constructions(ast.parse("x = FrameVerdict(frame_id='f', verdict=v)\n"))
         assert flagged, "the construction detector failed to flag a FrameVerdict(...) call — it is blind."
+        factory = _frame_verdict_constructions(ast.parse("x = FrameVerdict.from_trace(t)\n"))
+        assert factory, "the detector misses a FrameVerdict.<factory>(...) classmethod construction."
+        qualified = _frame_verdict_constructions(ast.parse("x = types.FrameVerdict(frame_id='f')\n"))
+        assert qualified, "the detector misses a module-qualified mod.FrameVerdict(...) construction."
         clean = _frame_verdict_constructions(ast.parse("x = Determined(answer=True)\nif fv.verdict: pass\n"))
         assert not clean, "the detector false-positives on a non-FrameVerdict call or a `.verdict` read."
 
@@ -2284,14 +2317,28 @@ class TestINV31FrameVerdictFirewall:
                 f"spine module {spine} resolved to an EMPTY import closure — the scan is "
                 "mis-rooted and would pass vacuously (INV-31 A3 anchor)."
             )
-            leaked = [
-                m for m in reachable
-                if m == "generate.frame_verdict" or m.startswith("generate.frame_verdict.")
-            ]
+            leaked = _fv_barred_leaks(reachable)
             assert not leaked, (
                 f"the open-world spine {spine} transitively imports {leaked} — a closed-world "
-                "FrameVerdict path is reachable from the open-world runtime (INV-31 A3)."
+                "FrameVerdict / serving-adapter path is reachable from the open-world runtime "
+                "(INV-31 A3)."
             )
+
+    def test_a3_response_governance_init_is_default_dark(self):
+        # The adapter's own default-dark claim, proven (not just read): the response_governance
+        # PACKAGE __init__ does NOT re-export the closed-world adapter, so importing
+        # `core.response_governance` (as chat.runtime does) never pulls the lowering path. If a
+        # future edit re-exported it from __init__, this fails loudly (and A3 above would catch
+        # the resulting spine leak too).
+        reachable = _transitive_first_party_imports("core.response_governance")
+        assert reachable, (
+            "core.response_governance resolved to an EMPTY closure — the scan is mis-rooted "
+            "(INV-31 A3 anchor)."
+        )
+        assert "core.response_governance.frame_verdict" not in reachable, (
+            "core.response_governance.__init__ re-exports the closed-world adapter — the "
+            "default-dark serving path leaked into the package surface (INV-31 A3)."
+        )
 
     # --- B1: determine() structurally refuses a ClosedFrame ----------------- #
 

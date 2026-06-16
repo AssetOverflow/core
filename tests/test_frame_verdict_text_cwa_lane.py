@@ -12,6 +12,7 @@ Two obligations kept separate:
 from __future__ import annotations
 
 import hashlib
+import re
 from pathlib import Path
 
 from evals.frame_verdict_text_cwa.oracle import oracle_frame_verdict
@@ -74,3 +75,30 @@ def test_absence_and_open_are_never_false() -> None:
         if case["id"] in {"fvt-003", "fvt-006", "fvt-007", "fvt-008"}:
             v = evaluate_frame_verdict(_frame(case), case["query"])
             assert v.verdict is not FrameVerdictKind.ENTAILED_FALSE, case["id"]
+
+
+#: Constructs the engine's grammar accepts but the independent oracle does NOT (it would
+#: mis-parse ``false`` as a free atom, etc.). A committed case using any of these would make the
+#: two solvers diverge SILENTLY instead of by an honest disagreement — so forbid them outright.
+_OUTSIDE_ORACLE_SUBSET = re.compile(
+    r"\||<->|↔|≡|&&|→|⊃|¬|!|∧|∨|\b(?:or|and|not|true|false)\b"
+)
+
+
+def test_cases_use_only_the_oracle_grammar_subset() -> None:
+    # Guard the latent oracle/engine grammar gap (adversarial review S3): every premise/query in a
+    # DECIDED case must stay inside the oracle's SUBSET grammar (atoms, ~, &, ->, parens). A future
+    # decided case that adds OR / IFF / keyword ops / the literals true|false fails HERE, at the
+    # SHA-add review, with a CLEAR message — rather than as a confusing engine-vs-oracle red.
+    #
+    # SCOPE_BOUNDARY-gold cases are deliberately out-of-regime garbage that BOTH solvers reject
+    # (e.g. fvt-005 '@@ not grammar ???'); they carry no divergence hazard, so they are exempt —
+    # the subset law only binds formulae the engine actually decides.
+    for case in _load():
+        if case["gold"] == "SCOPE_BOUNDARY":
+            continue
+        for formula in (*case["propositions"], case["query"]):
+            assert not _OUTSIDE_ORACLE_SUBSET.search(formula), (
+                f"{case['id']}: {formula!r} uses a construct outside the oracle's subset grammar; "
+                "either extend the oracle to cover it (and re-prove independence) or rephrase."
+            )

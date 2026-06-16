@@ -22,6 +22,7 @@ from generate.frame_verdict.types import (
     FrameVerdict,
     FrameVerdictKind,
     PositiveRefutationKind,
+    WorldAssumption,
 )
 from sensorium.environment.falsification import FalsificationRun
 
@@ -34,6 +35,14 @@ def frame_verdict_from_perception_falsification(
 ) -> FrameVerdict:
     """Map an ADR-0211 falsification run to a perception ``FrameVerdict``."""
     if frame.frame_kind is not FrameKind.PERCEPTION:
+        return _verdict(frame, query, FrameVerdictKind.SCOPE_BOUNDARY, run, kind=None)
+
+    # Frame gating — the SAME negation law the text evaluator enforces (evaluate.py): a negation
+    # may be asserted ONLY for a declared-complete, non-OPEN frame. An OPEN / undeclared-closure
+    # perception frame refuses (scope_boundary); it can NEVER reach entailed_false. Without this
+    # the changed-slot branch below would emit an OPEN-world negation — a frame-invariant breach
+    # (types.py §(0) is the structural backstop; this is the graceful upstream refusal).
+    if frame.world_assumption is WorldAssumption.OPEN or not frame.closure_declared:
         return _verdict(frame, query, FrameVerdictKind.SCOPE_BOUNDARY, run, kind=None)
 
     # Whole actual frame missing — observed NOTHING (a coverage gap), never a refutation.

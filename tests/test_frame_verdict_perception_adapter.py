@@ -97,6 +97,24 @@ def test_non_perception_frame_is_scope_boundary() -> None:
     assert v.verdict is FrameVerdictKind.SCOPE_BOUNDARY
 
 
+@pytest.mark.parametrize(
+    "wa,closure",
+    [
+        (WorldAssumption.OPEN, True),       # OPEN world — absence is never false
+        (WorldAssumption.CLOSED, False),    # closure not declared — no completeness license
+        (WorldAssumption.OPEN, False),      # both
+    ],
+)
+def test_open_or_undeclared_perception_frame_refuses_even_on_changed_slot(wa, closure) -> None:
+    # The negation law is FRAME-GENERAL: a changed-slot contradiction in an OPEN / undeclared
+    # frame must REFUSE (scope_boundary), never entailed_false — mirroring the text evaluator.
+    frame = ClosedFrame("pf1", FrameKind.PERCEPTION, wa, (), closure, "test", ())
+    run = _run(_residual(changed=_CHANGED))
+    v = frame_verdict_from_perception_falsification(frame, run, "conforms?")
+    assert v.verdict is FrameVerdictKind.SCOPE_BOUNDARY
+    assert v.verdict is not FrameVerdictKind.ENTAILED_FALSE
+
+
 def test_changed_plus_missing_still_entailed_false_on_positive_contradiction() -> None:
     # a changed slot (positive contradiction) dominates even alongside a missing slot.
     run = _run(_residual(changed=_CHANGED, missing=("s9",)))

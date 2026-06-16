@@ -100,12 +100,31 @@ class FrameVerdict:
     provenance: tuple[str, ...] = ()  # content-addressed refs (premise keys) — never raw payloads
 
     def __post_init__(self) -> None:
-        # Admissibility invariant (ADR-0222 §3 / §12 obligation 2): ``entailed_false`` may
-        # exist ONLY with a positive-refutation proof that NAMES which positive refutation it
-        # is. A generic FALSIFIED (which ADR-0211 also emits for missing / unexpected /
-        # whole-frame-missing — i.e. absence) cannot satisfy this; only an ROBDD refutation or
-        # a perceptual changed-slot contradiction can. A mismatched (verdict, proof) pair fails
-        # loudly at construction, so a mutation test can trip it.
+        # Admissibility invariants (ADR-0222 §3 / §12 obligation 2). A mismatched
+        # (verdict, proof, world) triple fails LOUDLY at construction, so a mutation test can
+        # trip it. NOTE: these run at CONSTRUCTION only (frozen+slots) — a post-construction
+        # ``object.__setattr__`` bypass is out of scope; any future deserialization / codec
+        # path MUST re-construct through ``_construct.build_frame_verdict`` (which re-runs this),
+        # never reassign fields.
+
+        # (0) Frame-general negation law: ``entailed_false`` is ILLEGAL in an OPEN world
+        # (``WorldAssumption.OPEN`` — absence is never false). No producer (text, perception, or
+        # any future modality) may emit an OPEN-world negation. The text evaluator and the
+        # perception adapter both gate OPEN -> SCOPE_BOUNDARY upstream; this is the STRUCTURAL
+        # backstop that fires if any producer forgets the gate.
+        if (
+            self.verdict is FrameVerdictKind.ENTAILED_FALSE
+            and self.world_assumption is WorldAssumption.OPEN
+        ):
+            raise ValueError(
+                "entailed_false is illegal in an OPEN world (WorldAssumption.OPEN) — absence is "
+                "never false; an OPEN frame must refuse (scope_boundary), never assert a negation"
+            )
+
+        # (1) ``entailed_false`` may exist ONLY with a positive-refutation proof that NAMES which
+        # positive refutation it is. A generic FALSIFIED (which ADR-0211 also emits for missing /
+        # unexpected / whole-frame-missing — i.e. absence) cannot satisfy this; only an ROBDD
+        # refutation or a perceptual changed-slot contradiction can.
         if self.verdict is FrameVerdictKind.ENTAILED_FALSE:
             p = self.proof
             ok = (
@@ -121,4 +140,21 @@ class FrameVerdict:
                     "entailed_false requires a positive-refutation proof: an ROBDD refutation "
                     "(ROBDD_REFUTATION) or a perceptual changed-slot contradiction "
                     "(PERCEPTION_CHANGED_SLOT) — never a generic FALSIFIED"
+                )
+
+        # (2) SYMMETRIC guard: ``entailed_true`` is admissible ONLY with a matching positive
+        # entailment/support proof and NO refutation kind. Without this, a committed "Yes." would
+        # lean ENTIRELY on the INV-31-A2 construction allowlist; with it, a bogus positive proof
+        # fails loudly at construction too — a mutation test can trip a forged ENTAILED_TRUE.
+        if self.verdict is FrameVerdictKind.ENTAILED_TRUE:
+            p = self.proof
+            ok = (
+                (p.producer == "proof_chain.entail" and p.outcome == "ENTAILED")
+                or (p.producer == "sensorium.falsification" and p.outcome == "SUPPORTED")
+            )
+            if not ok or not p.proof_sha256 or p.positive_refutation_kind is not None:
+                raise ValueError(
+                    "entailed_true requires a positive entailment/support proof "
+                    "(proof_chain.entail/ENTAILED or sensorium.falsification/SUPPORTED) with a "
+                    "non-empty proof_sha256 and NO positive_refutation_kind"
                 )
