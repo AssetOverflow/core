@@ -2159,3 +2159,155 @@ class TestINV30OpenWorldDetermineNeverAssertsFalse:
             "A `Determined` site in determine.py no longer asserts the constant "
             "`True` — the open-world soundness firewall was breached at source."
         )
+
+
+# =========================================================================== #
+# INV-31 — a closed-world FrameVerdict cannot reach the open-world runtime (B4).
+# ADR-0222 §8. A TWO-PART firewall: (A) transitive import containment + an exact
+# construction allowlist; (B) typed data-flow containment. Each scan carries its own
+# meaningful-failure anchor (non-vacuity), mirroring INV-30b / INV-30c.
+# =========================================================================== #
+
+#: Exact files allowed to CONSTRUCT a FrameVerdict (no glob). The isolated evaluator + the
+#: gated adapters (PR-3 perception, PR-4 governance). Never the open-world spine, never a
+#: convenience factory elsewhere. Tests construct freely and are not scanned.
+ALLOWED_FRAME_VERDICT_SITES: frozenset[str] = frozenset({
+    "generate/frame_verdict/evaluate.py",
+})
+
+#: Dirs excluded from the FrameVerdict CONSTRUCTION scan. Unlike INV-30's
+#: ``_enumerate_project_py_files`` this does NOT exclude ``evals`` (an eval-lane adapter that
+#: constructs FrameVerdict must be allowlisted — ADR §8 A2) but DOES exclude ``tests``
+#: (tests legitimately construct any type).
+_FV_CONSTRUCTION_EXCLUDED: frozenset[str] = frozenset({
+    "tests", "benchmarks", "scripts", "docs", "core-rs", ".venv", "__pycache__", ".claude",
+})
+
+#: The open-world runtime spine — barred (whole-file, transitively) from reaching
+#: generate.frame_verdict.
+_FV_SPINE_MODULES: tuple[str, ...] = ("chat.runtime", "session.context", "vault.store")
+
+
+def _enumerate_fv_construction_files() -> list[Path]:
+    out: list[Path] = []
+    for path in PROJECT_ROOT_FOR_INV21.rglob("*.py"):
+        rel = path.relative_to(PROJECT_ROOT_FOR_INV21)
+        if any(part in _FV_CONSTRUCTION_EXCLUDED for part in rel.parts):
+            continue
+        out.append(path)
+    return out
+
+
+def _frame_verdict_constructions(tree: ast.AST) -> list[int]:
+    """Line numbers of every ``FrameVerdict(...)`` construction (ast call-name
+    ``FrameVerdict`` via ``ast.Name.id`` / ``ast.Attribute.attr``). AST-based, so
+    docstrings/strings cannot false-positive and a ``.verdict`` read is ignored. PR-1 uses
+    no classmethod factory / ``dataclasses.replace`` into a FrameVerdict; a future slice that
+    adds one MUST extend this matcher and the allowlist."""
+    lines: list[int] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            name = (
+                func.attr if isinstance(func, ast.Attribute)
+                else func.id if isinstance(func, ast.Name) else ""
+            )
+            if name == "FrameVerdict":
+                lines.append(node.lineno)
+    return lines
+
+
+def _fv_construction_sites(path: Path) -> list[int]:
+    try:
+        tree = ast.parse(path.read_text())
+    except (OSError, SyntaxError):
+        return []
+    return _frame_verdict_constructions(tree)
+
+
+class TestINV31FrameVerdictFirewall:
+    """A closed-world ``FrameVerdict`` can never be produced by, imported by, or fed into
+    the open-world runtime spine."""
+
+    # --- A1: determine.py neither imports nor constructs FrameVerdict -------- #
+
+    def test_a1_determine_does_not_reach_frame_verdict(self):
+        path = PROJECT_ROOT_FOR_INV21 / "generate" / "determine" / "determine.py"
+        assert not _imports_any_prefix(_module_imports(path), ("generate.frame_verdict",)), (
+            "determine.py imports generate.frame_verdict — the open-world gear must not "
+            "reach the closed-world package (INV-31 A1)."
+        )
+        assert not _fv_construction_sites(path), "determine.py constructs a FrameVerdict (INV-31 A1)."
+
+    def test_a1_determine_is_visible_and_clean(self):
+        # Anchor: the scan SEES determine.py (a mis-rooted scan would pass vacuously) — it has
+        # its real Determined sites and zero FrameVerdict refs.
+        src = (PROJECT_ROOT_FOR_INV21 / "generate" / "determine" / "determine.py").read_text()
+        assert len(_determined_constructions(ast.parse(src))) >= 1, (
+            "scan does not see determine.py's Determined sites — mis-rooted."
+        )
+        assert "FrameVerdict" not in src, "determine.py references FrameVerdict."
+
+    # --- A2: exact construction allowlist (evals-inclusive) ----------------- #
+
+    def test_a2_frame_verdict_construction_allowlist(self):
+        offenders: list[str] = []
+        for path in _enumerate_fv_construction_files():
+            rel = str(path.relative_to(PROJECT_ROOT_FOR_INV21)).replace("\\", "/")
+            if _fv_construction_sites(path) and rel not in ALLOWED_FRAME_VERDICT_SITES:
+                offenders.append(rel)
+        assert not offenders, (
+            f"FrameVerdict constructed outside ALLOWED_FRAME_VERDICT_SITES: {offenders}. "
+            "Add the sanctioned closed-world producer to the allowlist, or remove it."
+        )
+
+    def test_a2_allowlist_is_actually_used(self):
+        for rel in ALLOWED_FRAME_VERDICT_SITES:
+            assert _fv_construction_sites(PROJECT_ROOT_FOR_INV21 / rel), (
+                f"{rel} is allowlisted but constructs no FrameVerdict — tighten the allowlist."
+            )
+
+    def test_a2_construction_detector_is_non_vacuous(self):
+        flagged = _frame_verdict_constructions(ast.parse("x = FrameVerdict(frame_id='f', verdict=v)\n"))
+        assert flagged, "the construction detector failed to flag a FrameVerdict(...) call — it is blind."
+        clean = _frame_verdict_constructions(ast.parse("x = Determined(answer=True)\nif fv.verdict: pass\n"))
+        assert not clean, "the detector false-positives on a non-FrameVerdict call or a `.verdict` read."
+
+    # --- A3: transitive import containment (spine ↛ frame_verdict) ---------- #
+
+    def test_a3_spine_does_not_transitively_reach_frame_verdict(self):
+        for spine in _FV_SPINE_MODULES:
+            reachable = _transitive_first_party_imports(spine)
+            assert reachable, (
+                f"spine module {spine} resolved to an EMPTY import closure — the scan is "
+                "mis-rooted and would pass vacuously (INV-31 A3 anchor)."
+            )
+            leaked = [
+                m for m in reachable
+                if m == "generate.frame_verdict" or m.startswith("generate.frame_verdict.")
+            ]
+            assert not leaked, (
+                f"the open-world spine {spine} transitively imports {leaked} — a closed-world "
+                "FrameVerdict path is reachable from the open-world runtime (INV-31 A3)."
+            )
+
+    # --- B1: determine() structurally refuses a ClosedFrame ----------------- #
+
+    def test_b1_determine_refuses_a_closed_frame(self):
+        # A ClosedFrame is neither a Comprehension nor a Refusal, so determine() refuses it at
+        # the eligibility gate BEFORE touching ctx — a closed-world context cannot enter the
+        # open-world gear as a positive (never a FrameVerdict, never a Determined).
+        from generate.determine import Determined, Undetermined, determine
+        from generate.frame_verdict import ClosedFrame, FrameKind, WorldAssumption
+
+        frame = ClosedFrame("f1", FrameKind.TEXT, WorldAssumption.CLOSED, ("a",), True, "test", ())
+        res = determine(frame, None)  # type: ignore[arg-type]  # ctx unused — gate refuses first
+        assert isinstance(res, Undetermined), (
+            "determine() consumed a ClosedFrame as something other than a refusal (INV-31 B1)."
+        )
+        assert not isinstance(res, Determined)
+
+    # NOTE — INV-31 B2 (the open-world disposition/render path type-rejects a FrameVerdict
+    # absent an explicit closed-world tag) lands with the response-governance slice, where the
+    # FrameVerdict↔disposition contact point first exists. Until then there is no non-vacuous
+    # surface to anchor it (ADR §8 B2 permits this deferral); A1/A2/A3/B1 are the firm firewall.
