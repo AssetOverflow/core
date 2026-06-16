@@ -2309,7 +2309,18 @@ class TestINV31FrameVerdictFirewall:
         )
         assert not isinstance(res, Determined)
 
-    # NOTE — INV-31 B2 (the open-world disposition/render path type-rejects a FrameVerdict
-    # absent an explicit closed-world tag) lands with the response-governance slice, where the
-    # FrameVerdict↔disposition contact point first exists. Until then there is no non-vacuous
-    # surface to anchor it (ADR §8 B2 permits this deferral); A1/A2/A3/B1 are the firm firewall.
+    # --- B2: a forged / untagged object cannot reach a served disposition --- #
+
+    def test_b2_forged_object_cannot_widen_serving(self):
+        # The closed-world adapter is the SOLE FrameVerdict -> serving path and the TYPE is the
+        # closed-world tag: a forged dict / untagged object pretending to be a FrameVerdict is
+        # rejected, so it cannot ride the disposition tables (INV-31 B2). The genuine path lives
+        # in core/response_governance/frame_verdict.py, which the open-world spine never imports
+        # (proven by A3 above).
+        import pytest as _pytest
+
+        from core.response_governance.frame_verdict import disposition_for_frame_verdict
+
+        forged = {"verdict": "entailed_false", "proof": {"producer": "x"}, "trace_hash": "h"}
+        with _pytest.raises(TypeError):
+            disposition_for_frame_verdict(forged)  # type: ignore[arg-type]
