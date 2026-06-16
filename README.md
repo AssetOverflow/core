@@ -184,6 +184,9 @@ core demo pack-measurements                # ADR-0043 — pack-layer claims as p
 core demo long-context-comparison          # ADR-0045 — CORE NIAH recall + frozen transformer baselines
 core demo anti-regression                  # ADR-0057 — three-gate defense against learning harm
 core demo learning-loop                    # ADR-0055..0057 — cold turn → discovery → propose → accept → grounded
+# (CLOSE / idle consolidation now also climbs declared strict-order relations
+#  (less_than etc.); see docs/runtime_contracts.md § "Idle consolidation (Step D — CLOSE)"
+#  and the PR-1 analysis note for contracts + evidence)
 core demo phase6                           # 3-condition comparative table (CORE vs baseline)
 core demo phase5                           # stratified 5-family mechanism-isolation
 core demo all                              # both + combined summary

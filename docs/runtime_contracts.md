@@ -127,7 +127,18 @@ reaches it directly.  Across idle ticks the directly-answerable set climbs
 monotonically to the deductive-closure fixed point; a saturated tick consolidates
 nothing (`IdleTickResult.facts_consolidated == 0`).
 
-Contract:
+**Relational transitive extension (PR-1, 2026-06-16):** The same pass now also
+consolidates direct 2-hop (and, over subsequent ticks, multi-hop) conclusions for the
+four *declared* strict-order predicates in `TRANSITIVE_PREDICATES`
+(`less_than`, `greater_than`, `before_event`, `after_event`) using the identical
+mechanism: one-hop candidate collection (same-predicate only), mandatory verification
+via the Phase-C `_relational_transitive` searcher + proof_chain ROBDD, and
+`realize_derived(..., rule="transitive")`.  Non-transitive predicates (parent_of,
+sibling_of, left_of, etc.), inverse mixing, symmetric "promotion", cross-predicate
+composition, and reflexive conclusions remain refused.  The member/subset is-a rules
+and the `member ∘ member` fallacy bite are completely unchanged.
+
+Contract (applies uniformly to both the is-a and the declared relational transitive cases):
 
 - **SPECULATIVE / as-told.**  A fact derived from SPECULATIVE premises stays
   SPECULATIVE — a sound inference never upgrades the *standing* of its premises;
@@ -136,13 +147,18 @@ Contract:
   `generate.realize` session path — **not** corpus mutation and **not** coupled to
   proposals.  The teaching/review HITL path is untouched (no parallel learning path).
 - **wrong=0 by proof-gating.**  Only proof_chain-`ENTAILED` conclusions are written;
-  the `member ∘ member` fallacy is structurally unreachable.
+  the `member ∘ member` fallacy is structurally unreachable; relational candidates
+  are gated by the same verifier that DETERMINE already uses for the four predicates.
 - **Replayable provenance.**  Each derived record carries a `Derivation` (premise
   `structure_key`s + rule + the `entailed` verdict), so a replay re-derives and
   re-verifies — the soundness claim can meaningfully fail.
 - **No new normalization, no closure/repair.**  Writes reuse the INV-21 vault writer;
   `algebra/versor.py` keeps closure.  Off by default; the falsification lane is
   `evals.determination_closure`.
+
+See `docs/analysis/close-relational-transitive-pr1-2026-06-16.md` for the exact
+positives/negatives, multi-hop climb evidence, branch discipline, and the 3-PR
+sequence plan that governs the rest of this capability slice.
 
 ### Idle proposal review (read-only)
 

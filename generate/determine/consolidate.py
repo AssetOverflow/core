@@ -37,8 +37,10 @@ from dataclasses import dataclass
 from generate.determine.determine import (
     _SUBSUMPTION_SUBSET_FACT_BUDGET,
     Determined,
+    _relational_transitive,
     _verify_subsumption,
 )
+from generate.meaning_graph.relational import TRANSITIVE_PREDICATES
 from generate.realize import RealizedRecord, Realized, realize_derived, recall_realized
 from session.context import SessionContext
 
@@ -126,6 +128,41 @@ def _one_hop_candidates(
     return out
 
 
+def _relational_transitive_one_hop_candidates(
+    ctx: SessionContext,
+) -> list[tuple[str, str, str]]:
+    """Direct 2-hop candidates for declared TRANSITIVE_PREDICATES only.
+
+    For each p in TRANSITIVE_PREDICATES, scan realized p-edges for p(a,b) + p(b,c)
+    where p(a,c) is not yet realized and a != c. Returns sorted list of (p, a, c).
+    Same-predicate only (no inverse, no symmetric, no cross-predicate composition).
+    Reflexives excluded by construction. Collection is cheap; the caller still
+    invokes the full _relational_transitive verifier (search+proof_chain) before any
+    realize_derived — candidate shape is never trusted alone (wrong=0 defence).
+    """
+    out: list[tuple[str, str, str]] = []
+    for p in TRANSITIVE_PREDICATES:
+        facts = recall_realized(ctx, predicate=p)
+        have: set[tuple[str, str]] = {
+            (f.relation_arguments[0], f.relation_arguments[1])
+            for f in facts if len(f.relation_arguments) == 2
+        }
+        adj: dict[str, list[str]] = {}
+        for f in facts:
+            if len(f.relation_arguments) == 2:
+                a, b = f.relation_arguments
+                adj.setdefault(a, []).append(b)
+        for a, mids in adj.items():
+            for b in mids:
+                for c in adj.get(b, ()):
+                    if a == c:
+                        continue
+                    if (a, c) not in have:
+                        out.append((p, a, c))
+    out.sort(key=lambda t: (t[0], t[1], t[2]))
+    return out
+
+
 def consolidate_once(
     ctx: SessionContext, *, fact_budget: int = _SUBSUMPTION_SUBSET_FACT_BUDGET
 ) -> ConsolidationResult:
@@ -148,13 +185,40 @@ def consolidate_once(
             budget_exceeded=True,
         )
 
-    candidates = _one_hop_candidates(member_facts, subset_facts)
-    # Deterministic write order, independent of recall order.
+    is_a_cands = _one_hop_candidates(member_facts, subset_facts)
+    rel_cands = _relational_transitive_one_hop_candidates(ctx)
+    # Unify for deterministic global sort by (predicate, subject, object).
+    # Relational cands use dummy member/subset slots (dispatch below ignores them).
+    candidates = is_a_cands + [(p, s, o, None, ()) for (p, s, o) in rel_cands]
     candidates.sort(key=lambda c: (c[0], c[1], c[2]))
 
     consolidated = 0
     redundant = 0
     for predicate, subject, obj, member_fact, subset_path in candidates:
+        if predicate in TRANSITIVE_PREDICATES:
+            # Relational strict-order: reuse the Phase C sound verifier
+            # (BFS reachability over p-edges + proof_chain ROBDD). Must return
+            # Determined with rule="transitive" or we refuse the write.
+            det = _relational_transitive(ctx, predicate, subject, obj)
+            if not isinstance(det, Determined):
+                continue
+            premise_keys = tuple(g.structure_key for g in det.grounds)
+            outcome = realize_derived(
+                ctx,
+                predicate=predicate,
+                subject=subject,
+                obj=obj,
+                rule="transitive",
+                premise_structure_keys=premise_keys,
+            )
+            if isinstance(outcome, Realized):
+                if outcome.created:
+                    consolidated += 1
+                else:
+                    redundant += 1
+            continue
+
+        # is-a (member/subset) — unchanged from baseline
         verdict = _verify_subsumption(
             predicate, subject, obj, member_fact=member_fact, subset_path=subset_path
         )
