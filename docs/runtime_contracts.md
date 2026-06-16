@@ -180,6 +180,37 @@ Contract:
   unchanged for existing callers.  This is **not** a second idle loop and **not** the L10
   always-on heartbeat — it only surfaces existing review obligations.
 
+### Derived CLOSE proposal bridge (PR-2)
+
+When `review_derived_close_proposals` is enabled, `ChatRuntime.idle_tick` (after the
+consolidation pass) runs a deterministic scan over realized derived facts. A fact is
+eligible only if:
+
+- `derived is True`
+- `derivation is not None` and `derivation.verdict == "entailed"`
+- `epistemic_status == "speculative"`
+- `relation_predicate` is `"member"`, `"subset"`, or one of the four
+  `TRANSITIVE_PREDICATES` (`less_than`, `greater_than`, `before_event`, `after_event`)
+
+It emits reviewable proposal-only artifacts (source=`"derived_close_fact"`) carrying
+predicate, arguments, derivation (rule/verdict/premise keys), epistemic status, and
+structure/dedupe keys. Artifacts are written to `teaching/proposals/derived_close_facts/`
+and deduplicated by a stable key (predicate + arguments + derivation + structure_key).
+
+Contract:
+
+- **Proposal-only, review-gated.**  The artifacts are for human/HITL review. No corpus
+  mutation, no ratification, no COHERENT minted, no serving change, no determine change.
+- **Skips safely.**  Non-derived facts, malformed records, unsupported predicates, and
+  non-entailed derivations are counted and skipped (never crash, never emit).
+- **Deterministic.**  Emission order and dedupe are independent of recall order; repeated
+  ticks on the same state emit zero new proposals.
+- **Default off.**  Additive to the existing comprehension-failure proposal review. When
+  off, no derived-close proposals are emitted and `IdleTickResult` is unchanged.
+
+See `docs/analysis/close-derived-proposal-bridge-2026-06-16.md` for the full artifact
+schema, dedupe key, test gates, and the PR-1→PR-2 composition.
+
 ### Estimation surface (Step E — ESTIMATION)
 
 When `estimation_enabled` and a turn is a **converse query** DETERMINE refused (told
