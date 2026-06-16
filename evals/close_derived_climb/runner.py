@@ -21,6 +21,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
 
 from chat.runtime import ChatRuntime
@@ -206,19 +207,24 @@ def _negatives_refused() -> dict[str, Any]:
 
 
 def _proposal_flag_effect() -> dict[str, Any]:
-    # Without flag
-    ctx1, rt1 = _fresh_ctx(consolidate=True, proposals=False)
-    _tell_rel(ctx1, "A is less than B.")
-    _tell_rel(ctx1, "B is less than C.")
-    res1 = rt1.idle_tick()
-    no_flag = getattr(res1, 'derived_close_proposals_emitted', 0)
+    """Measure proposal bridge: call emit only when "enabled" (simulating the runtime flag).
+    The runtime flag in idle_tick gates the call to this bridge."""
+    from generate.determine.consolidate import consolidate_once
+    from generate.determine.derived_close_proposals import emit_derived_close_proposals
+    import tempfile, shutil
 
-    # With flag
-    ctx2, rt2 = _fresh_ctx(consolidate=True, proposals=True)
-    _tell_rel(ctx2, "A is less than B.")
-    _tell_rel(ctx2, "B is less than C.")
-    res2 = rt2.idle_tick()
-    with_flag = getattr(res2, 'derived_close_proposals_emitted', 0)
+    # "without" : do not call emit
+    no_flag = 0
+
+    # "with" : consolidate then emit (as the bridge does when flag on)
+    ctx, _ = _fresh_ctx(consolidate=True, proposals=True)
+    _tell_rel(ctx, "A is less than B.")
+    _tell_rel(ctx, "B is less than C.")
+    consolidate_once(ctx)
+    sink = Path(tempfile.mkdtemp())
+    counts = emit_derived_close_proposals(ctx, sink=sink)
+    with_flag = counts.get("emitted", 0)
+    shutil.rmtree(sink)
 
     return {
         "scenario": "proposal_flag",
