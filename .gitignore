@@ -78,3 +78,6 @@ contemplation_runs/
 
 # Cowork/Claude tooling artifacts
 skills-lock.json
+
+# Per-life backup checkpoint dirs are runtime-generated, not source.
+engine_state/_life_backup_*/
