@@ -2159,3 +2159,215 @@ class TestINV30OpenWorldDetermineNeverAssertsFalse:
             "A `Determined` site in determine.py no longer asserts the constant "
             "`True` — the open-world soundness firewall was breached at source."
         )
+
+
+# =========================================================================== #
+# INV-31 — a closed-world FrameVerdict cannot reach the open-world runtime (B4).
+# ADR-0222 §8. A TWO-PART firewall: (A) transitive import containment + an exact
+# construction allowlist; (B) typed data-flow containment. Each scan carries its own
+# meaningful-failure anchor (non-vacuity), mirroring INV-30b / INV-30c.
+# =========================================================================== #
+
+#: Exact files allowed to CONSTRUCT a FrameVerdict (no glob). Construction is funnelled
+#: through ONE builder (``_construct.build_frame_verdict``) that the text evaluator and the
+#: perception adapter both call — so the literal ``FrameVerdict(...)`` lives in exactly one
+#: file. Never the open-world spine, never a convenience factory elsewhere. Tests construct
+#: freely and are not scanned.
+ALLOWED_FRAME_VERDICT_SITES: frozenset[str] = frozenset({
+    "generate/frame_verdict/_construct.py",
+})
+
+#: Dirs excluded from the FrameVerdict CONSTRUCTION scan. Unlike INV-30's
+#: ``_enumerate_project_py_files`` this does NOT exclude ``evals`` (an eval-lane adapter that
+#: constructs FrameVerdict must be allowlisted — ADR §8 A2) but DOES exclude ``tests``
+#: (tests legitimately construct any type).
+_FV_CONSTRUCTION_EXCLUDED: frozenset[str] = frozenset({
+    "tests", "benchmarks", "scripts", "docs", "core-rs", ".venv", "__pycache__", ".claude",
+})
+
+#: The open-world runtime spine — barred (whole-file, transitively) from reaching the
+#: closed-world FrameVerdict path.
+_FV_SPINE_MODULES: tuple[str, ...] = ("chat.runtime", "session.context", "vault.store")
+
+#: Module prefixes the spine may NOT transitively reach. Both the closed-world TYPE/evaluator
+#: package AND the lowering-to-serving adapter are barred DIRECTLY — so the default-dark
+#: guarantee does not rest only on the indirect fact that the adapter happens to re-import the
+#: ``generate.frame_verdict`` types (adversarial review S4: bar the actual serving path itself).
+_FV_BARRED_PREFIXES: tuple[str, ...] = (
+    "generate.frame_verdict",
+    "core.response_governance.frame_verdict",
+)
+
+
+def _fv_barred_leaks(reachable: set[str]) -> list[str]:
+    return sorted(
+        m for m in reachable
+        if any(m == p or m.startswith(p + ".") for p in _FV_BARRED_PREFIXES)
+    )
+
+
+def _enumerate_fv_construction_files() -> list[Path]:
+    out: list[Path] = []
+    for path in PROJECT_ROOT_FOR_INV21.rglob("*.py"):
+        rel = path.relative_to(PROJECT_ROOT_FOR_INV21)
+        if any(part in _FV_CONSTRUCTION_EXCLUDED for part in rel.parts):
+            continue
+        out.append(path)
+    return out
+
+
+def _frame_verdict_constructions(tree: ast.AST) -> list[int]:
+    """Line numbers of every ``FrameVerdict`` construction. AST-based, so docstrings/strings
+    cannot false-positive and a ``.verdict`` read is ignored. Caught:
+
+      * direct construction ``FrameVerdict(...)`` (``ast.Name`` / module-qualified
+        ``mod.FrameVerdict(...)``);
+      * an alternate constructor / classmethod factory on the class
+        ``FrameVerdict.from_x(...)`` (``ast.Attribute`` whose ``.value`` is the name
+        ``FrameVerdict``) — so a future ``@classmethod`` factory cannot evade the allowlist.
+
+    RESIDUAL GAP (recorded, not faked — adversarial review S2): a ``dataclasses.replace(fv, ...)``
+    into a FrameVerdict is NOT flagged, because its first-arg type is only known by inference and
+    a blanket ``replace(...)`` match would false-positive on every other dataclass tree-wide. No
+    such call exists in non-test source today; the closed-world serving PR that wires this MUST
+    add a typed-replace guard before it lands (lookback 'build the defensive refusal NOW')."""
+    lines: list[int] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == "FrameVerdict":
+            lines.append(node.lineno)
+        elif isinstance(func, ast.Attribute):
+            # FrameVerdict.from_x(...) — a factory on the class itself.
+            if isinstance(func.value, ast.Name) and func.value.id == "FrameVerdict":
+                lines.append(node.lineno)
+            # mod.FrameVerdict(...) — module-qualified direct construction.
+            elif func.attr == "FrameVerdict":
+                lines.append(node.lineno)
+    return lines
+
+
+def _fv_construction_sites(path: Path) -> list[int]:
+    try:
+        tree = ast.parse(path.read_text())
+    except (OSError, SyntaxError):
+        return []
+    return _frame_verdict_constructions(tree)
+
+
+class TestINV31FrameVerdictFirewall:
+    """A closed-world ``FrameVerdict`` can never be produced by, imported by, or fed into
+    the open-world runtime spine."""
+
+    # --- A1: determine.py neither imports nor constructs FrameVerdict -------- #
+
+    def test_a1_determine_does_not_reach_frame_verdict(self):
+        path = PROJECT_ROOT_FOR_INV21 / "generate" / "determine" / "determine.py"
+        assert not _imports_any_prefix(_module_imports(path), ("generate.frame_verdict",)), (
+            "determine.py imports generate.frame_verdict — the open-world gear must not "
+            "reach the closed-world package (INV-31 A1)."
+        )
+        assert not _fv_construction_sites(path), "determine.py constructs a FrameVerdict (INV-31 A1)."
+
+    def test_a1_determine_is_visible_and_clean(self):
+        # Anchor: the scan SEES determine.py (a mis-rooted scan would pass vacuously) — it has
+        # its real Determined sites and zero FrameVerdict refs.
+        src = (PROJECT_ROOT_FOR_INV21 / "generate" / "determine" / "determine.py").read_text()
+        assert len(_determined_constructions(ast.parse(src))) >= 1, (
+            "scan does not see determine.py's Determined sites — mis-rooted."
+        )
+        assert "FrameVerdict" not in src, "determine.py references FrameVerdict."
+
+    # --- A2: exact construction allowlist (evals-inclusive) ----------------- #
+
+    def test_a2_frame_verdict_construction_allowlist(self):
+        offenders: list[str] = []
+        for path in _enumerate_fv_construction_files():
+            rel = str(path.relative_to(PROJECT_ROOT_FOR_INV21)).replace("\\", "/")
+            if _fv_construction_sites(path) and rel not in ALLOWED_FRAME_VERDICT_SITES:
+                offenders.append(rel)
+        assert not offenders, (
+            f"FrameVerdict constructed outside ALLOWED_FRAME_VERDICT_SITES: {offenders}. "
+            "Add the sanctioned closed-world producer to the allowlist, or remove it."
+        )
+
+    def test_a2_allowlist_is_actually_used(self):
+        for rel in ALLOWED_FRAME_VERDICT_SITES:
+            assert _fv_construction_sites(PROJECT_ROOT_FOR_INV21 / rel), (
+                f"{rel} is allowlisted but constructs no FrameVerdict — tighten the allowlist."
+            )
+
+    def test_a2_construction_detector_is_non_vacuous(self):
+        flagged = _frame_verdict_constructions(ast.parse("x = FrameVerdict(frame_id='f', verdict=v)\n"))
+        assert flagged, "the construction detector failed to flag a FrameVerdict(...) call — it is blind."
+        factory = _frame_verdict_constructions(ast.parse("x = FrameVerdict.from_trace(t)\n"))
+        assert factory, "the detector misses a FrameVerdict.<factory>(...) classmethod construction."
+        qualified = _frame_verdict_constructions(ast.parse("x = types.FrameVerdict(frame_id='f')\n"))
+        assert qualified, "the detector misses a module-qualified mod.FrameVerdict(...) construction."
+        clean = _frame_verdict_constructions(ast.parse("x = Determined(answer=True)\nif fv.verdict: pass\n"))
+        assert not clean, "the detector false-positives on a non-FrameVerdict call or a `.verdict` read."
+
+    # --- A3: transitive import containment (spine ↛ frame_verdict) ---------- #
+
+    def test_a3_spine_does_not_transitively_reach_frame_verdict(self):
+        for spine in _FV_SPINE_MODULES:
+            reachable = _transitive_first_party_imports(spine)
+            assert reachable, (
+                f"spine module {spine} resolved to an EMPTY import closure — the scan is "
+                "mis-rooted and would pass vacuously (INV-31 A3 anchor)."
+            )
+            leaked = _fv_barred_leaks(reachable)
+            assert not leaked, (
+                f"the open-world spine {spine} transitively imports {leaked} — a closed-world "
+                "FrameVerdict / serving-adapter path is reachable from the open-world runtime "
+                "(INV-31 A3)."
+            )
+
+    def test_a3_response_governance_init_is_default_dark(self):
+        # The adapter's own default-dark claim, proven (not just read): the response_governance
+        # PACKAGE __init__ does NOT re-export the closed-world adapter, so importing
+        # `core.response_governance` (as chat.runtime does) never pulls the lowering path. If a
+        # future edit re-exported it from __init__, this fails loudly (and A3 above would catch
+        # the resulting spine leak too).
+        reachable = _transitive_first_party_imports("core.response_governance")
+        assert reachable, (
+            "core.response_governance resolved to an EMPTY closure — the scan is mis-rooted "
+            "(INV-31 A3 anchor)."
+        )
+        assert "core.response_governance.frame_verdict" not in reachable, (
+            "core.response_governance.__init__ re-exports the closed-world adapter — the "
+            "default-dark serving path leaked into the package surface (INV-31 A3)."
+        )
+
+    # --- B1: determine() structurally refuses a ClosedFrame ----------------- #
+
+    def test_b1_determine_refuses_a_closed_frame(self):
+        # A ClosedFrame is neither a Comprehension nor a Refusal, so determine() refuses it at
+        # the eligibility gate BEFORE touching ctx — a closed-world context cannot enter the
+        # open-world gear as a positive (never a FrameVerdict, never a Determined).
+        from generate.determine import Determined, Undetermined, determine
+        from generate.frame_verdict import ClosedFrame, FrameKind, WorldAssumption
+
+        frame = ClosedFrame("f1", FrameKind.TEXT, WorldAssumption.CLOSED, ("a",), True, "test", ())
+        res = determine(frame, None)  # type: ignore[arg-type]  # ctx unused — gate refuses first
+        assert isinstance(res, Undetermined), (
+            "determine() consumed a ClosedFrame as something other than a refusal (INV-31 B1)."
+        )
+        assert not isinstance(res, Determined)
+
+    # --- B2: a forged / untagged object cannot reach a served disposition --- #
+
+    def test_b2_forged_object_cannot_widen_serving(self):
+        # The closed-world adapter is the SOLE FrameVerdict -> serving path and the TYPE is the
+        # closed-world tag: a forged dict / untagged object pretending to be a FrameVerdict is
+        # rejected, so it cannot ride the disposition tables (INV-31 B2). The genuine path lives
+        # in core/response_governance/frame_verdict.py, which the open-world spine never imports
+        # (proven by A3 above).
+        import pytest as _pytest
+
+        from core.response_governance.frame_verdict import disposition_for_frame_verdict
+
+        forged = {"verdict": "entailed_false", "proof": {"producer": "x"}, "trace_hash": "h"}
+        with _pytest.raises(TypeError):
+            disposition_for_frame_verdict(forged)  # type: ignore[arg-type]
