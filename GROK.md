@@ -25,14 +25,141 @@ Run these steps in order, using your tool-call chains, before writing a single l
 1. **Read this file in full.**
 2. **Read `AGENTS.md` in full.**
 3. **Read `docs/runtime_contracts.md` in full.**
-4. **Run the smoke suite and report pass/fail:**
+4. **Complete the [Workspace Hygiene + Branch/Worktree Protocol](#workspace-hygiene--branchworktree-protocol)** — confirm project root, inspect dirty state, classify loose files, fetch current refs, establish clean `main`, and create a fresh worktree for non-trivial work.
+5. **Run the smoke suite and report pass/fail:**
    ```bash
    core test --suite smoke -q
    ```
-5. **Check for a recent handoff doc** — if a `HANDOFF-*.md` file exists dated within the last 3 days, read it. It contains state you would otherwise have no way to recover.
-6. **State your task scope** — before editing, write one sentence naming the module(s) you intend to change and the invariant you will prove was not violated.
+   If the local environment does not expose `core`, report the exact failure and use the repo-native pytest lanes required by the task.
+6. **Check for a recent handoff doc** — if a `HANDOFF-*.md` file exists dated within the last 3 days, read it. It contains state you would otherwise have no way to recover.
+7. **State your task scope** — before editing, write one sentence naming the module(s) you intend to change and the invariant you will prove was not violated.
 
-Do not treat conversation history as a substitute for steps 1–5. History does not survive context resets. Ground yourself in the repo.
+Do not treat conversation history as a substitute for steps 1–6. History does not survive context resets. Ground yourself in the repo.
+
+---
+
+## Workspace Hygiene + Branch/Worktree Protocol
+
+Before any edit, branch switch, worktree creation, stash, or commit, establish the repository state. This protocol is mandatory for Grok 4.3 / Grok Build sessions on CORE.
+
+### 0. Confirm project root
+
+Run:
+
+```bash
+pwd
+git rev-parse --show-toplevel
+test -f GROK.md
+test -f AGENTS.md
+```
+
+If the current directory is not the repository root, run:
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+```
+
+Do not proceed from a parent directory, sibling worktree, nested package directory, or generated-output directory.
+
+### 1. Inspect local state before touching branches
+
+Run:
+
+```bash
+git status --short --branch
+git diff --stat
+git diff --name-status
+git diff --cached --name-status
+git stash list
+git worktree list
+```
+
+If the working tree is dirty, do **not** switch branches, pull, reset, overwrite, or stash blindly.
+
+Classify every changed or untracked file first:
+
+- Does it belong to the current task?
+- Does it appear to belong to a recent branch or PR?
+- Is it an accidental generated artifact?
+- Is it an evidence/report file that should be restored rather than deleted?
+- Is it unknown?
+
+For unknown changes, inspect before stashing:
+
+```bash
+git diff -- <path>
+git log --oneline --decorate --all -- <path>
+git branch --sort=-committerdate | head -20
+gh pr list --state open --limit 20
+gh pr status
+```
+
+If the origin remains unknown, preserve it with a descriptive stash instead of deleting it:
+
+```bash
+git stash push -m "WIP unknown before <task-slug>: <short file summary>" -- <paths>
+```
+
+Never use `git reset --hard`, broad `git checkout .`, broad `git restore .`, `git clean`, or destructive cleanup unless the user explicitly approves or every affected file has been classified as disposable.
+
+### 2. Establish a clean, current baseline
+
+After the tree is clean or unknown work is safely stashed:
+
+```bash
+git fetch origin --prune
+git switch main
+git pull --ff-only origin main
+git status --short --branch
+```
+
+If `main` cannot fast-forward, stop and report the exact state. Do not merge, rebase, or resolve conflicts unless explicitly instructed.
+
+### 3. Prefer a new worktree for non-trivial implementation
+
+For non-trivial runtime, reasoning, eval, teaching, pack, or multi-file work, create a fresh worktree from current `origin/main`:
+
+```bash
+git worktree add ../core-<task-slug> origin/main -b <branch-name>
+cd ../core-<task-slug>
+```
+
+Use a normal branch in the same worktree only for small docs/config work or when the user explicitly requests it. Do not reuse stale branches for new work unless the task is explicitly a continuation of that branch.
+
+### 4. Branch naming
+
+Use scope-bounded branch names:
+
+```text
+feat/gsm8k-workstream-a-gate-a1-comparative-injection
+docs/<area>-<purpose>
+fix/<area>-<specific-bug>
+chore/<area>-<specific-cleanup>
+```
+
+The branch name should encode the capability slice, not an agent name or vague intent.
+
+### 5. Completion protocol
+
+Before opening a PR:
+
+```bash
+git status --short
+git diff --check origin/main...HEAD
+git diff --name-status origin/main...HEAD
+git log --oneline --reverse origin/main..HEAD
+```
+
+Run the relevant focused tests and record exact outputs. For every PR summary include:
+
+- branch name;
+- commit list in order;
+- exact changed files;
+- exact tests/evals run;
+- whether `wrong_total == 0` applies and held;
+- known caveats;
+- explicit non-goals;
+- handoff content or handoff file path.
 
 ---
 
