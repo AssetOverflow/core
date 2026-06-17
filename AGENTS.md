@@ -4,6 +4,34 @@ This repository is building a deterministic cognitive engine, not a transformer
 wrapper and not a demo chatbot.  Every agent must preserve the geometric
 runtime while moving the system toward teachable cognitive chat.
 
+## Agent-Specific Instruction Files
+
+Different agents read a supplementary file alongside this one.  Read yours
+before touching any code:
+
+| Agent | Supplementary file | Key differences |
+|---|---|---|
+| **Claude** | `CLAUDE.md` | Deep context; self-restraining; read for semantic anchoring rule nuance |
+| **Grok 4.3 + Grok Build** | `GROK.md` | Stateless; requires high reasoning effort; Arena/parallel subagent rules; Plan Mode preferred; skills system; see also docs/core-rd-base-prompts.md for phase-specific prompts |
+| **GPT-5.5 (o3-class)** | `GPT55.md` | Stateless; fluency cautions; extended thinking for algebra/field work |
+
+If you are Grok 4.3 or GPT-5.5, complete the Session Start Checklist in your
+file before reading anything else in this file.
+
+## Grok 4.3 / Grok Build Hard Stops (Mastery Level)
+
+These apply to Grok 4.3 and Grok Build in addition to every rule below:
+
+1. **You are stateless.** Read `GROK.md` in full, `docs/runtime_contracts.md`, and the most recent `HANDOFF-*.md` (if dated within 3 days) before any edits.
+2. **High reasoning effort is mandatory** for all tasks touching `algebra/`, `field/`, `generate/realizer.py`, `generate/graph_planner.py`, `generate/intent.py`, `vault/store.py`, `calibration/`, `core/cognition/`, or `teaching/`.
+3. **Use Plan Mode** (Grok Build) for any non-trivial change in the above modules. Direct edits are discouraged.
+4. **Skills are the preferred mechanism** for repeated protocols. Use `/core-bootstrap`, `/versor-coherence-guardian`, `/pre-edit-sweep`, and `/claim-proposal-guardian` (or their auto-triggered versions).
+5. **Sweep before you edit.** Use tool-call chains to trace imports and call sites.
+6. **Write a handoff doc at session end** using `docs/handoff_template.md`.
+7. **Arena / parallel subagents:** each subagent independently satisfies `||F * reverse(F) - 1||_F < 1e-6` before reporting. Reconcile results before any merge. No mutable state sharing.
+
+---
+
 ## North Star
 
 CORE should become capable of:
