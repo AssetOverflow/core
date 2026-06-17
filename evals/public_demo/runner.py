@@ -180,7 +180,15 @@ def _fail(case_id: str, divergence: str) -> dict[str, Any]:
 
 
 def run() -> dict[str, Any]:
+    import os
+
     from core.demos.showcase import run_showcase
+
+    # Hermetic lane: demos must not load the developer's lived engine_state/.
+    os.environ.setdefault(
+        "CORE_ENGINE_STATE_DIR",
+        tempfile.mkdtemp(prefix="public_demo_engine_state_"),
+    )
 
     tmp_root = Path(tempfile.mkdtemp(prefix="public_demo_lane_"))
     try:

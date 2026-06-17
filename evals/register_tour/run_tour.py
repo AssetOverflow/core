@@ -92,7 +92,10 @@ def _print_header() -> None:
 
 def _run_one_register(register_id: str) -> list[dict[str, Any]]:
     """Run the prompt sequence under ``register_id`` and return per-cell records."""
-    runtime = ChatRuntime(config=RuntimeConfig(register_pack_id=register_id))
+    runtime = ChatRuntime(
+        config=RuntimeConfig(register_pack_id=register_id),
+        no_load_state=True,
+    )
     pipeline = CognitiveTurnPipeline(runtime=runtime)
     cells: list[dict[str, Any]] = []
     for prompt in _PROMPTS:

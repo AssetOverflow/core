@@ -164,7 +164,7 @@ class MultiHopTraceDemo:
             transitive_surface=True,
             composed_surface=True,
         )
-        runtime = ChatRuntime(config=config)
+        runtime = ChatRuntime(config=config, no_load_state=True)
         response = runtime.chat(self.prompt)
 
         surface = response.surface or ""
