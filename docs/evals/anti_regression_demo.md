@@ -45,14 +45,17 @@ This demo is part of the anti-regression / teaching demonstration surfaces and p
 
 As of the post-#791 / #792 work, `core demo anti-regression` (and `tests/test_anti_regression_demo.py`) executes the hardened `evals/close_derived_climb` yardstick. This adds the full Claim-B lived-runtime CLOSE autonomous-growth path (real `idle_tick()` + `IdleTickResult.derived_close_proposals_emitted` gating, explicit `determine(..., rule='direct')` semantic asserts on materialized derived facts, and `content_replay_checksum` over canonical closures + proposal bodies) with its own invariants (wrong_total=0, proposal-only/SPECULATIVE, hermetic, determinism).
 
+As of the review-visibility strengthening, the demo also surfaces structured `proposal_review_summary` (teaching gate review_states + ProposalLog transition counts) and the climb's `proposal_review_posture` (CLOSE-derived proposals' explicit review-gated birth state). See the ratification for scope and invariants.
+
 See:
 - `evals/close_derived_climb/contract.md`
-- `docs/testing-lanes.md` (Dedicated CLOSE Flywheel Regression Surface section + pillar alignment)
+- `docs/testing-lanes.md` (Dedicated CLOSE Flywheel Regression Surface section + "Review / Ratification Posture..." subsection + pillar alignment)
 - `docs/analysis/close-flywheel-dedicated-regression-surface-ratification-2026-06-16.md`
 - `docs/analysis/integrate-hardened-close-yardstick-determinism-teaching-regression-ratification-2026-06-16.md`
 - `docs/analysis/close-derived-climb-yardstick-claim-b-ratification-2026-06-16.md`
+- `docs/analysis/close-flywheel-proposal-review-visibility-ratification-2026-06-16.md` (this PR)
 
-The three reviewed-teaching gates (S1–S3) and the CLOSE derived-fact growth gates are complementary anti-regression surfaces; both must hold. Running the dedicated surface also verifies the integrated embedding.
+The three reviewed-teaching gates (S1–S3) and the CLOSE derived-fact growth + review-posture gates are complementary anti-regression surfaces; both must hold. Running the dedicated surface also verifies the integrated embedding.
 
 ## The synthetic regression in S2
 

@@ -240,6 +240,15 @@ class DemoReport:
     # See ratification + testing-lanes.md. Never mutates shared state.
     close_derived_climb: dict[str, Any] | None = None
 
+    # Additive instrumentation (this PR): structured visibility into the
+    # proposal review / ratification side of the CLOSE flywheel (and the
+    # teaching proposal gates exercised by this demo). Derived from
+    # SceneResult review_state values (already produced by the S1/S2/S3
+    # gate paths) + the embedded climb's proposal_review_posture (born
+    # review-gated posture of derived CLOSE proposals). No review logic
+    # paths are altered; no real corpus mutation or promotion occurs.
+    proposal_review_summary: dict[str, Any] | None = None
+
     def as_dict(self) -> dict[str, Any]:
         # ``all_claims_supported`` is the canonical cross-demo success
         # field — added as an alias so operator tooling (and the CI gate)
@@ -250,6 +259,7 @@ class DemoReport:
             "all_gates_held": self.all_gates_held,
             "active_corpus_byte_identical": self.active_corpus_byte_identical,
             "close_derived_climb": self.close_derived_climb,
+            "proposal_review_summary": self.proposal_review_summary,
             "all_claims_supported": (
                 self.all_gates_held and self.active_corpus_byte_identical
             ),
@@ -415,6 +425,46 @@ def run_demo(*, emit_json: bool = False) -> dict[str, Any]:
         s2 = _scene2_replay_auto_reject(log_path)
         s3 = _scene3_real_gate_pass_through(log_path)
 
+        # Inside the tmpdir (log still exists): capture additive review/ratification
+        # signals from the exact ProposalLog events written by the gate paths
+        # (S2 auto-reject produces a "transition" to rejected; S3 leaves pending).
+        # This gives structured visibility into review outcomes and transition
+        # events for the teaching proposal path without any change to review
+        # logic or any write to the live active corpus.
+        _log = ProposalLog(log_path)
+        _events = _log.events()
+        _transitions = [e for e in _events if e.get("event") == "transition"]
+        _by_to = {}
+        for e in _transitions:
+            to = e.get("to")
+            _by_to[to] = _by_to.get(to, 0) + 1
+        _accepted_corpus_appends = sum(1 for e in _events if e.get("event") == "accepted_corpus_append")
+
+        # Build the proposal review summary (additive). Includes both the
+        # teaching chain proposal gates exercised here and (via the embedded
+        # climb) the CLOSE-derived proposal review posture.
+        proposal_review_summary = {
+            "scenes": {
+                "count": 3,
+                "review_states": {
+                    s1.review_state: 1,
+                    s2.review_state: 1,
+                    s3.review_state: 1,
+                },
+                "outcomes": {
+                    s1.outcome: 1,
+                    s2.outcome: 1,
+                    s3.outcome: 1,
+                },
+            },
+            "log_transitions": {
+                "total_transitions": len(_transitions),
+                "by_to_state": _by_to,
+                "accepted_corpus_appends": _accepted_corpus_appends,
+            },
+            "note": "S2 exercises an auto-reject transition inside the replay gate; S3 demonstrates pending (operator review required). No real ratification mutates the active corpus in this demo.",
+        }
+
     active_bytes_after = _read_active_corpus_bytes()
 
     scenes = (s1, s2, s3)
@@ -433,11 +483,26 @@ def run_demo(*, emit_json: bool = False) -> dict[str, Any]:
     # `make test-close-flywheel`.
     close_derived_climb = run_close_derived_climb()
 
+    # Merge the climb's proposal_review_posture (CLOSE-specific emission-time
+    # review posture: all proposal_only/speculative/requires_review) into the
+    # demo's summary for a coherent view of the full flywheel's review side.
+    if close_derived_climb:
+        prp = close_derived_climb.get("proposal_review_posture") or {}
+        proposal_review_summary["close_derived"] = {
+            "emitted_count": prp.get("emitted_count", 0),
+            "all_proposal_only": prp.get("all_proposal_only"),
+            "all_speculative": prp.get("all_speculative"),
+            "all_requires_review": prp.get("all_requires_review"),
+            "review_eligible": prp.get("review_eligible", 0),
+            "none_accepted_or_promoted": prp.get("none_accepted_or_promoted"),
+        }
+
     report = DemoReport(
         scenes=scenes,
         all_gates_held=all_gates_held,
         active_corpus_byte_identical=(active_bytes_before == active_bytes_after),
         close_derived_climb=close_derived_climb,
+        proposal_review_summary=proposal_review_summary,
     )
 
     if _VERBOSE:
@@ -459,6 +524,20 @@ def run_demo(*, emit_json: bool = False) -> dict[str, Any]:
             f"  CLOSE Flywheel Regression Surface (Claim B): wrong_total={agg.get('wrong_total')}, "
             f"proposals_only_with_flag={propf.get('only_with_flag')}, "
             f"content_replay_checksum={(climb.get('content_replay_checksum') or '')[:12]}..."
+        )
+        # New (this PR): review/ratification posture and events for the
+        # previously weaker half of the CLOSE flywheel, plus the teaching
+        # proposal gates. All signals additive; no behavior or policy change.
+        prs = report.proposal_review_summary or {}
+        close_pr = prs.get("close_derived") or {}
+        _say(
+            f"  Proposal review (teaching gates): states={prs.get('scenes', {}).get('review_states')}, "
+            f"log_transitions={prs.get('log_transitions', {}).get('total_transitions')}"
+        )
+        _say(
+            f"  CLOSE proposal review posture: emitted={close_pr.get('emitted_count')}, "
+            f"all_requires_review={close_pr.get('all_requires_review')}, "
+            f"none_accepted_or_promoted={close_pr.get('none_accepted_or_promoted')}"
         )
         _say()
         _say(

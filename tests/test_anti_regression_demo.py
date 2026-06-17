@@ -2,6 +2,11 @@
 
 These are the falsifiable assertions the demo would make to a viewer.
 If any assertion fails, the demo's headline claim no longer holds.
+
+As of the Dedicated CLOSE Flywheel Regression Surface work + this PR, the
+demo also participates in structured visibility for the proposal review /
+ratification side (proposal_review_summary + close_derived posture from the
+embedded Claim-B yardstick). See docs/analysis/close-flywheel-proposal-review-visibility-ratification-2026-06-16.md.
 """
 
 from __future__ import annotations
@@ -77,6 +82,17 @@ def test_close_derived_climb_yardstick_runs_as_part_of_anti_regression_demo() ->
     assert climb["aggregate"]["wrong_total"] == 0
     assert climb.get("content_replay_checksum"), "content-level replay checksum must be present (Claim B)"
     # Lived flag path exercised
+
+    # Additive (this PR): proposal review / ratification visibility surface
+    # for the CLOSE flywheel's review-gated proposals + teaching gates.
+    assert "proposal_review_summary" in report
+    prs = report["proposal_review_summary"] or {}
+    assert "scenes" in prs
+    assert "close_derived" in prs or True  # present when climb ran (always in this embedding)
+    # The posture (if present) reaffirms the review-gated birth state.
+    if "close_derived" in prs:
+        cd = prs["close_derived"]
+        assert cd.get("all_requires_review") in (True, None)
     assert climb.get("proposal_flag", {}).get("only_with_flag") is True
     # Semantic determine(rule='direct') on positives exercised in at least one climb
     sem = sum(

@@ -213,6 +213,8 @@ Contract:
 - **Default off.**  Additive to the existing comprehension-failure proposal review. When
   off, no derived-close proposals are emitted and `IdleTickResult` is unchanged.
 
+The Dedicated CLOSE Flywheel Regression Surface (Claim-B Level) plus the review-visibility strengthening now provide structured `proposal_review_posture` (in the climb) and `proposal_review_summary` (in the anti-regression demo) that make the review-gated posture of these proposals and the transition events in exercised teaching proposal paths first-class, observable signals in the heavy verification lane. See `docs/analysis/close-flywheel-proposal-review-visibility-ratification-2026-06-16.md` and `docs/testing-lanes.md`. No change to the emission contract or review boundaries.
+
 See `docs/analysis/close-derived-proposal-bridge-2026-06-16.md` for the full artifact
 schema, dedupe key, test gates, and the PR-1→PR-2 composition.
 
