@@ -12,7 +12,7 @@ before touching any code:
 | Agent | Supplementary file | Key differences |
 |---|---|---|
 | **Claude** | `CLAUDE.md` | Deep context; self-restraining; read for semantic anchoring rule nuance |
-| **Grok 4.3 + Grok Build** | `GROK.md` | Stateless; requires high reasoning effort; Arena/parallel subagent rules; Plan Mode preferred; skills system |
+| **Grok 4.3 + Grok Build** | `GROK.md` | Stateless; requires high reasoning effort; Arena/parallel subagent rules; Plan Mode preferred; skills system; see also docs/core-rd-base-prompts.md for phase-specific prompts |
 | **GPT-5.5 (o3-class)** | `GPT55.md` | Stateless; fluency cautions; extended thinking for algebra/field work |
 
 If you are Grok 4.3 or GPT-5.5, complete the Session Start Checklist in your
@@ -177,7 +177,6 @@ Required approach:
 Never improve speed by:
 
 - weakening `versor_condition` thresholds
-
 - skipping closure checks at construction boundaries
 - adding hot-path repair/normalization
 - replacing exact CGA with cosine/ANN/HNSW
