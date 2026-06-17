@@ -196,13 +196,16 @@ Before opening or merging, answer:
 ```text
 What capability, performance property, or security boundary did this add/protect?
 Which invariant proves the field remains valid?
-Which CLI suite/eval proves the lane?
+Which CLI suite/eval proves the relevant lane?
 Did this avoid hidden normalization, stochastic fallback, approximate recall, and unreviewed mutation?
 If it touches user input, files, dynamic imports, or logs, what trust boundary was enforced?
 Was the smoke suite green before and after?
 ```
 
 Prefer small, load-bearing PRs.
+
+For runtime/algebra/cognition/teaching/pack changes: run full suite before merge.
+For docs/config-only agent-governance changes: smoke is sufficient unless the PR touches CLI, tests, generated docs, or executable scripts.
 
 ---
 
@@ -219,4 +222,6 @@ core test --suite full -q
 core eval cognition
 ```
 
-Run the smallest relevant suite first, then `full` before merge.
+Run the smallest relevant suite first.
+For runtime/algebra/cognition/teaching/pack changes, run full before merge.
+For docs/config-only agent-governance changes, smoke is sufficient unless the PR changes CLI, tests, generated docs, or executable scripts.
