@@ -85,3 +85,35 @@ it is deferred, not done here.
    long tail of 1–15s `ChatRuntime` constructions, not outliers.  A
    shared/session-scoped warm-runtime fixture for read-only tests would cut this
    further.
+
+## Recommended determinism / teaching regression invocation (post-Claim-B hardening of CLOSE yardstick)
+
+After any change touching CLOSE flywheel, idle_tick, realize_derived, consolidate_determinations, vault recall of realized facts, determine(), or the derived close proposal bridge, run the hardened yardstick as part of your determinism regression and anti-regression verification:
+
+```bash
+uv run python -m evals.close_derived_climb
+uv run python -m pytest tests/test_derived_close_proposals.py tests/test_architectural_invariants.py -q
+```
+
+(Also available via `core demo anti-regression` which now embeds the yardstick — see below.)
+
+This is the canonical "standard verification story" invocation for the CLOSE autonomous growth surface. It is the direct follow-up to the Claim-B hardening (#791) and makes the improved measurement recurring rather than isolated.
+
+**What the hardened yardstick now exercises and measures (Claim B):**
+- Real `ChatRuntime.idle_tick()` + `IdleTickResult.derived_close_proposals_emitted` (proposal flag gating via the lived runtime path, not a simulation).
+- Explicit `determine()` calls on the post-fixed-point positive probes, asserting `Determined(True, rule='direct')` ("semantic_positives_determined_direct").
+- `content_replay_checksum` covering canonical closure sets (with structure_key, Derivation, and premise_structure_keys) and full proposal bodies for exact-trajectory fidelity.
+- Retained Claim A guarantees: strict/monotone growth (1/5/8), wrong_total == 0, negatives and excluded predicates refused, full determinism, hermetic (no serving, no ratification, SPECULATIVE/proposal_only only, all INV-30/31 etc. preserved).
+
+See:
+- `evals/close_derived_climb/contract.md` (metrics, scenarios, "no side effects")
+- `docs/analysis/close-derived-climb-yardstick-claim-b-ratification-2026-06-16.md` (the hardening ratification)
+- `docs/analysis/integrate-hardened-close-yardstick-determinism-teaching-regression-ratification-2026-06-16.md` (this integration ratification + "why only correct path")
+- `docs/runtime_contracts.md` (determination surface contract exercised by the semantic asserts)
+- `docs/evals/anti_regression_demo.md` (the anti-regression demo now runs the yardstick)
+- `tests/test_anti_regression_demo.py` (contract test that pins the embedding)
+- `Makefile` (comments under test lanes point here)
+
+The yardstick itself remains hermetic per the rules in this document (fresh runtimes, internal temps only for proposal sink during flag test). It introduces no new writers to engine_state/, teaching/proposals/, or evals reports.
+
+This integration (documentation promotion into the lanes + hermetic execution inside the anti-regression demo) is the highest-leverage way to ensure the project actually benefits from the hardened Claim-B measurement surface on every relevant regression run.

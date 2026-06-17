@@ -61,3 +61,24 @@ def test_active_corpus_never_touched_across_full_demo() -> None:
     assert report["active_corpus_byte_identical"] is True
     for scene in report["scenes"]:
         assert scene["corpus_byte_identical"] is True
+
+
+def test_close_derived_climb_yardstick_runs_as_part_of_anti_regression_demo() -> None:
+    """Integration pin: the hardened CLOSE yardstick (Claim B) is now executed
+    inside the anti-regression demo flow. Asserts key invariants from the
+    lived flag + semantic determine + content checksum surface without
+    affecting the three reviewed-teaching gate claims."""
+    report = run_demo(emit_json=True)
+    assert "close_derived_climb" in report
+    climb = report["close_derived_climb"] or {}
+    assert "aggregate" in climb
+    assert climb["aggregate"]["wrong_total"] == 0
+    assert climb.get("content_replay_checksum"), "content-level replay checksum must be present (Claim B)"
+    # Lived flag path exercised
+    assert climb.get("proposal_flag", {}).get("only_with_flag") is True
+    # Semantic determine(rule='direct') on positives exercised in at least one climb
+    sem = sum(
+        (climb.get(k, {}) or {}).get("semantic_positives_determined_direct", 0)
+        for k in ("is_a_climb", "less_than_climb", "before_event_climb")
+    )
+    assert sem >= 1, "expected at least one positive scored via direct determine (Claim B)"
