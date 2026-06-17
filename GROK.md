@@ -8,6 +8,16 @@ CORE is a deterministic cognitive engine — not a transformer wrapper, not a ge
 
 ---
 
+## Phase-Specific Prompt Library
+
+For detailed, phase-oriented guardrails that are tightly coupled to CORE’s architecture, invariants, ADRs, and epistemic model, see:
+
+**`docs/core-rd-base-prompts.md`**
+
+These prompts are designed to be used as standing prefixes **in addition to** this file. The "Session Entry / Context Load" prompt is especially recommended at the start of most sessions. The "Standing Loop Axiom Check" is highly effective as a final self-audit before committing.
+
+---
+
 ## Session Start Checklist
 
 Run these steps in order, using your tool-call chains, before writing a single line of code:
@@ -175,7 +185,7 @@ Key modules:
 - `vault/store.py` — epistemic store with INV-21/22/23/24/29 guards
 - `evals/*` — deterministic eval harness
 - `calibration/*` — bounded replay-based calibration
-- `docs/runtime_contracts.md` — runtime response, memory, identity, testing
+- `docs/runtime_contracts.md` — runtime response, memory, identity, and testing
 
 ---
 
