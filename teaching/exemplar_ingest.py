@@ -61,6 +61,8 @@ _SUPPORTED_CATEGORIES: frozenset[ShapeCategory] = frozenset({
     ShapeCategory.DISCRETE_COUNT_STATEMENT,
     ShapeCategory.MULTIPLICATIVE_AGGREGATION,
     ShapeCategory.CURRENCY_AMOUNT,
+    # Gate A1 (Workstream A) — multiplicative comparative injection.
+    ShapeCategory.COMPARATIVE_WITH_UNIT,
 })
 
 
@@ -266,6 +268,45 @@ def _validate_multiplicative_aggregation(ctx: str, graph: Mapping[str, Any]) -> 
         raise ExemplarIngestError(f"{ctx} outcome must be 'admissible'")
 
 
+def _validate_comparative_with_unit(ctx: str, graph: Mapping[str, Any]) -> None:
+    anchors = graph["quantity_anchors"]
+    if not isinstance(anchors, list) or not anchors:
+        raise ExemplarIngestError(f"{ctx} comparative_with_unit needs ≥1 anchor")
+    for a in anchors:
+        if not isinstance(a, Mapping):
+            raise ExemplarIngestError(f"{ctx} anchor must be a mapping")
+        _require_keys(ctx, a, frozenset({
+            "kind",
+            "subject_role",
+            "factor_token",
+            "factor_kind",
+            "direction",
+            "unit_token",
+            "reference_actor_token",
+        }))
+        if a["kind"] != "comparative_multiplicative":
+            raise ExemplarIngestError(
+                f"{ctx} anchor kind must be 'comparative_multiplicative'"
+            )
+        if a["factor_kind"] not in {"anchor", "numeric"}:
+            raise ExemplarIngestError(
+                f"{ctx} factor_kind {a['factor_kind']!r} must be 'anchor' or 'numeric'"
+            )
+        if a["direction"] not in {"times", "fraction"}:
+            raise ExemplarIngestError(
+                f"{ctx} direction {a['direction']!r} must be 'times' or 'fraction'"
+            )
+        for fld in (
+            "subject_role", "factor_token", "unit_token", "reference_actor_token",
+        ):
+            if not isinstance(a[fld], str) or not a[fld]:
+                raise ExemplarIngestError(f"{ctx} {fld} must be non-empty str")
+    if graph["graph_intent"] != "compare":
+        raise ExemplarIngestError(f"{ctx} graph_intent must be 'compare'")
+    if graph["outcome"] != "admissible":
+        raise ExemplarIngestError(f"{ctx} outcome must be 'admissible'")
+
+
 def _validate_currency_amount(ctx: str, graph: Mapping[str, Any]) -> None:
     anchors = graph["quantity_anchors"]
     if not isinstance(anchors, list) or not anchors:
@@ -306,6 +347,7 @@ _CATEGORY_VALIDATORS = {
     ShapeCategory.DISCRETE_COUNT_STATEMENT: _validate_discrete_count_statement,
     ShapeCategory.MULTIPLICATIVE_AGGREGATION: _validate_multiplicative_aggregation,
     ShapeCategory.CURRENCY_AMOUNT: _validate_currency_amount,
+    ShapeCategory.COMPARATIVE_WITH_UNIT: _validate_comparative_with_unit,
 }
 
 

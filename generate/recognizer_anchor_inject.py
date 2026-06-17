@@ -48,7 +48,11 @@ from __future__ import annotations
 from typing import Mapping, Union
 
 from evals.refusal_taxonomy.shape_categories import ShapeCategory
-from generate.math_candidate_parser import CandidateInitial, CandidateOperation
+from generate.math_candidate_parser import (
+    CandidateInitial,
+    CandidateOperation,
+    _build_compare_multiplicative,
+)
 from generate.math_problem_graph import (
     InitialPossession,
     MathGraphError,
@@ -56,6 +60,7 @@ from generate.math_problem_graph import (
     Quantity,
     Rate,
 )
+from generate.math_roundtrip import roundtrip_admissible
 from generate.recognizer_match import (
     RecognizerMatch,
     extract_proper_noun_subject,
@@ -714,6 +719,66 @@ def inject_rate_with_currency(
     return tuple(out)
 
 
+# ---------------------------------------------------------------------------
+# Gate A1 — comparative_with_unit → compare_multiplicative (Workstream A)
+# ---------------------------------------------------------------------------
+
+
+def inject_comparative_multiplicative(
+    match: RecognizerMatch,
+    sentence: str,
+) -> tuple[InjectorEmission, ...]:
+    """Narrow injector for ShapeCategory.COMPARATIVE_WITH_UNIT.
+
+    Emits ``CandidateOperation(kind="compare_multiplicative")`` only when
+    the matcher published a fully grounded comparative anchor and
+    :func:`roundtrip_admissible` accepts the construction.
+    """
+    if not match.parsed_anchors or len(match.parsed_anchors) != 1:
+        return ()
+
+    anchor = match.parsed_anchors[0]
+    if not isinstance(anchor, dict):
+        return ()
+    if anchor.get("kind") != "comparative_multiplicative":
+        return ()
+
+    actor_token = anchor.get("actor_token")
+    reference_token = anchor.get("reference_actor_token")
+    unit_token = anchor.get("unit_token")
+    factor_token = anchor.get("factor_token")
+    matched_verb = anchor.get("matched_verb")
+    direction = anchor.get("direction")
+    factor = anchor.get("factor")
+
+    if not all(
+        isinstance(v, str) and v
+        for v in (actor_token, reference_token, unit_token, factor_token, matched_verb, direction)
+    ):
+        return ()
+    if not isinstance(factor, (int, float)) or factor <= 0:
+        return ()
+
+    # Narrow actor binding (mirror rate v1): ProperName subject only.
+    actor = extract_proper_noun_subject(sentence)
+    if not actor or actor != actor_token:
+        return ()
+
+    cand = _build_compare_multiplicative(
+        actor_raw=actor_token,
+        factor=float(factor),
+        matched_verb=matched_verb,
+        matched_value_token=factor_token,
+        unit_raw=unit_token,
+        reference_raw=reference_token,
+        source=sentence,
+        direction=direction,
+    )
+    if cand is None or not roundtrip_admissible(cand):
+        return ()
+    return (cand,)
+
+
 _INJECTORS: Mapping[ShapeCategory, "type"] = {
     ShapeCategory.DISCRETE_COUNT_STATEMENT: inject_discrete_count_statement,  # type: ignore[dict-item]
     # WAVE-A — multiplicative_aggregation now has a per-category
@@ -729,6 +794,10 @@ _INJECTORS: Mapping[ShapeCategory, "type"] = {
     # frontier for the currency-per-unit surfaces without touching
     # sealed lanes or any other category.
     ShapeCategory.RATE_WITH_CURRENCY: inject_rate_with_currency,  # type: ignore[dict-item]
+    # Gate A1 (Workstream A) — comparative_with_unit emits
+    # CandidateOperation(kind="compare_multiplicative") for the closed
+    # v1 multiplicative entity-comparison template family.
+    ShapeCategory.COMPARATIVE_WITH_UNIT: inject_comparative_multiplicative,  # type: ignore[dict-item]
     # All other recognizer categories continue to route to the
     # empty-tuple fallback (explicit "recognizer matched but produced
     # no injection" refusal in the candidate-graph).  That is the
@@ -764,4 +833,5 @@ __all__ = [
     "inject_from_match",
     "inject_discrete_count_statement",
     "inject_rate_with_currency",
+    "inject_comparative_multiplicative",
 ]

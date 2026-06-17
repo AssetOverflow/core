@@ -810,6 +810,10 @@ def _match_discrete_count_statement(
         return None
     if _has_temporal_quantifier(padded):
         return None
+    # Gate A1 — yield comparative multiplicative surfaces to
+    # COMPARATIVE_WITH_UNIT instead of detection-only DCS fallback.
+    if _is_comparative_multiplicative_v1_surface(statement):
+        return None
 
     anchor = _try_extract_discrete_count_anchor(statement, padded, spec)
     if anchor is not None:
@@ -1831,6 +1835,113 @@ def _match_currency_amount(
     return (tuple(), "amount")
 
 
+# ---------------------------------------------------------------------------
+# Gate A1 — comparative_with_unit → compare_multiplicative (Workstream A)
+# ---------------------------------------------------------------------------
+
+from generate.math_candidate_parser import (  # noqa: E402
+    _ANCHOR_TO_FACTOR,
+    _COMPARE_MULT_ANCHOR_RE,
+    _COMPARE_MULT_NTIMES_RE,
+    _is_indefinite_quantifier,
+    _resolve_value,
+)
+
+_DEFERRED_COMPARATIVE_FACTOR_SURFACES: Final[frozenset[str]] = frozenset({
+    "double", "triple", "quadruple", "one-third",
+})
+
+
+def _is_comparative_multiplicative_v1_surface(statement: str) -> bool:
+    """True when *statement* matches the Gate A1 closed comparative template."""
+    s = statement.strip()
+    if _COMPARE_MULT_ANCHOR_RE.match(s) is not None:
+        return True
+    return _COMPARE_MULT_NTIMES_RE.match(s) is not None
+
+
+def _try_extract_comparative_multiplicative_anchor(
+    statement: str,
+    spec: Mapping[str, Any],
+) -> Mapping[str, Any] | None:
+    """Extract one comparative_multiplicative anchor when narrowness holds."""
+    s = statement.strip()
+    observed_anchors = set(spec.get("observed_factor_anchors") or ())
+    allows_numeric = bool(spec.get("allows_numeric_factor"))
+
+    m = _COMPARE_MULT_ANCHOR_RE.match(s)
+    if m is not None:
+        anchor_word = m.group("anchor").lower()
+        if anchor_word in _DEFERRED_COMPARATIVE_FACTOR_SURFACES:
+            return None
+        if anchor_word not in observed_anchors:
+            return None
+        factor, direction = _ANCHOR_TO_FACTOR[anchor_word]
+        actor_token = m.group("actor")
+        unit_token = m.group("unit")
+        reference_token = m.group("reference")
+        phrase = f"{anchor_word} as many {unit_token}"
+        return {
+            "kind": "comparative_multiplicative",
+            "actor_token": actor_token,
+            "reference_actor_token": reference_token,
+            "unit_token": unit_token,
+            "factor_token": anchor_word,
+            "factor": factor,
+            "direction": direction,
+            "matched_verb": anchor_word,
+            "comparator_phrase": phrase,
+        }
+
+    m = _COMPARE_MULT_NTIMES_RE.match(s)
+    if m is not None:
+        if not allows_numeric:
+            return None
+        value_raw = m.group("value")
+        if _is_indefinite_quantifier(value_raw):
+            return None
+        rv = _resolve_value(value_raw)
+        if rv is None or rv.value <= 0:
+            return None
+        actor_token = m.group("actor")
+        unit_token = m.group("unit")
+        reference_token = m.group("reference")
+        phrase = f"{value_raw} times as many {unit_token}"
+        return {
+            "kind": "comparative_multiplicative",
+            "actor_token": actor_token,
+            "reference_actor_token": reference_token,
+            "unit_token": unit_token,
+            "factor_token": value_raw,
+            "factor": float(rv.value),
+            "direction": "times",
+            "matched_verb": "times",
+            "comparator_phrase": phrase,
+        }
+
+    return None
+
+
+def _match_comparative_with_unit(
+    statement: str, spec: Mapping[str, Any]
+) -> tuple[tuple[Mapping[str, Any], ...], Literal["compare"]] | None:
+    """Gate A1 — multiplicative entity comparison with explicit reference.
+
+    Strict match only: returns populated anchors on full v1 template
+    match, ``None`` otherwise (no detection-only fallback).
+    """
+    if spec.get("anchor_kind") != "comparative_multiplicative":
+        return None
+    anchor = _try_extract_comparative_multiplicative_anchor(statement, spec)
+    if anchor is None:
+        return None
+    cmin = int(spec.get("anchor_count_min", 1))
+    cmax = int(spec.get("anchor_count_max", 1))
+    if not (cmin <= 1 <= cmax):
+        return None
+    return ((anchor,), "compare")
+
+
 _MATCHERS: Final[dict[ShapeCategory, Any]] = {
     ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY: _match_descriptive_setup_no_quantity,
     ShapeCategory.TEMPORAL_AGGREGATION: _match_temporal_aggregation,
@@ -1838,6 +1949,7 @@ _MATCHERS: Final[dict[ShapeCategory, Any]] = {
     ShapeCategory.DISCRETE_COUNT_STATEMENT: _match_discrete_count_statement,
     ShapeCategory.MULTIPLICATIVE_AGGREGATION: _match_multiplicative_aggregation,
     ShapeCategory.CURRENCY_AMOUNT: _match_currency_amount,
+    ShapeCategory.COMPARATIVE_WITH_UNIT: _match_comparative_with_unit,
 }
 
 
