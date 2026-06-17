@@ -248,9 +248,7 @@ def inject_discrete_count_statement(
                 anchor, sentence
             )
         elif anchor_kind == "acquisition":
-            cand = _build_operation_from_discrete_count_acquisition(
-                anchor, sentence
-            )
+            cand = _build_operation_from_discrete_count_acquisition(anchor, sentence)
         else:
             # Unknown anchor_kind — under-admit. Future widenings (e.g.
             # "depletion" verbs as CandidateOperation(subtract)) extend
@@ -296,10 +294,13 @@ def _build_initial_from_discrete_count(
     counted_noun = anchor.get("counted_noun")
 
     if (
-        not isinstance(subject_role, str) or not subject_role
-        or not isinstance(count_token, str) or not count_token
+        not isinstance(subject_role, str)
+        or not subject_role
+        or not isinstance(count_token, str)
+        or not count_token
         or not isinstance(count_kind, str)
-        or not isinstance(counted_noun, str) or not counted_noun
+        or not isinstance(counted_noun, str)
+        or not counted_noun
     ):
         return None
 
@@ -390,11 +391,15 @@ def _build_operation_from_discrete_count_acquisition(
     verb_token = anchor.get("verb_token")
 
     if (
-        not isinstance(subject_role, str) or not subject_role
-        or not isinstance(count_token, str) or not count_token
+        not isinstance(subject_role, str)
+        or not subject_role
+        or not isinstance(count_token, str)
+        or not count_token
         or not isinstance(count_kind, str)
-        or not isinstance(counted_noun, str) or not counted_noun
-        or not isinstance(verb_token, str) or not verb_token
+        or not isinstance(counted_noun, str)
+        or not counted_noun
+        or not isinstance(verb_token, str)
+        or not verb_token
     ):
         return None
 
@@ -461,10 +466,7 @@ def _count_token_followed_by_times(sentence: str, count_token: str) -> bool:
     admitting path.
     """
     target = count_token.lower()
-    tokens = [
-        raw.strip(".,;:!?\"'()[]{}").lower()
-        for raw in sentence.split()
-    ]
+    tokens = [raw.strip(".,;:!?\"'()[]{}").lower() for raw in sentence.split()]
     for i, tok in enumerate(tokens[:-1]):
         if tok == target and tokens[i + 1] == "times":
             return True
@@ -520,9 +522,11 @@ def _locate_possession_verb(sentence: str) -> str | None:
 # registers its injector.  No global state, no side effects.
 # ---------------------------------------------------------------------------
 
-_WAVE_A_INJECTABLE_ANCHOR_KINDS: frozenset[str] = frozenset({
-    "multiplicative_aggregate_each_weighing",
-})
+_WAVE_A_INJECTABLE_ANCHOR_KINDS: frozenset[str] = frozenset(
+    {
+        "multiplicative_aggregate_each_weighing",
+    }
+)
 
 
 def inject_multiplicative_aggregation(
@@ -591,7 +595,7 @@ def _locate_rate_verb(sentence: str) -> str | None:
     apply_rate. The literal form is required so CandidateOperation
     post-init + roundtrip_admissible grounding checks pass.
     """
-    rate_verbs = ("per", "each", "every", "a", "an")
+    rate_verbs = ("per", "each", "every", "a", "an", "one")
     for raw in sentence.split():
         tok = raw.strip(".,;:!?\"'()[]{}").lower()
         if tok in rate_verbs:
@@ -670,11 +674,17 @@ def inject_rate_with_currency(
         # No whole-sentence fallback is allowed, because _locate_rate_verb
         # can still pick an unrelated earlier "a".
         rate_anchor_token = anchor.get("rate_anchor_token")
-        if not rate_anchor_token or rate_anchor_token not in ("per", "each", "every", "a", "an"):
-            # Missing or invalid connector for this rate surface (e.g. "one"
-            # from "for one cup", or absent token). Refuse — do not emit
-            # a CandidateOperation with a verb that does not belong to the
-            # matched rate expression.
+        if not rate_anchor_token or rate_anchor_token not in (
+            "per",
+            "each",
+            "every",
+            "a",
+            "an",
+            "one",
+        ):
+            # Missing or invalid connector for this rate surface (e.g. absent
+            # token). "one" (from "for one cup") is now supported (Inc 3).
+            # Refuse on anything else.
             return ()
         verb_token = rate_anchor_token
 

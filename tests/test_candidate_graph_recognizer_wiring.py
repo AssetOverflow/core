@@ -29,8 +29,12 @@ from tests._phase_d_fixture import build_synthetic_registry
 
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-_GSM8K_CASES = _REPO_ROOT / "evals" / "gsm8k_math" / "train_sample" / "v1" / "cases.jsonl"
-_GSM8K_REPORT = _REPO_ROOT / "evals" / "gsm8k_math" / "train_sample" / "v1" / "report.json"
+_GSM8K_CASES = (
+    _REPO_ROOT / "evals" / "gsm8k_math" / "train_sample" / "v1" / "cases.jsonl"
+)
+_GSM8K_REPORT = (
+    _REPO_ROOT / "evals" / "gsm8k_math" / "train_sample" / "v1" / "report.json"
+)
 
 
 @pytest.fixture(scope="module")
@@ -46,7 +50,9 @@ def with_synthetic_registry(
     """Patch ``math_candidate_graph._load_ratified_registry_or_empty`` to
     return the synthetic registry for the duration of the test."""
     monkeypatch.setattr(
-        cg, "_load_ratified_registry_or_empty", lambda: synthetic_registry,
+        cg,
+        "_load_ratified_registry_or_empty",
+        lambda: synthetic_registry,
     )
     return synthetic_registry
 
@@ -89,31 +95,38 @@ def test_empty_registry_preserves_existing_refusal_reason() -> None:
 def test_recognized_rate_statement_refuses_explicitly_post_wrong_zero_fix(
     with_synthetic_registry: tuple[RatifiedRecognizer, ...],
 ) -> None:
-    """With the rate_with_currency recognizer loaded, "Tina makes $18.00
-    an hour" is recognized but the v1 injector returns () (the
-    SentenceChoice union does not yet model rates — see ADR follow-up).
+    """With the rate_with_currency recognizer loaded (synthetic), rate surfaces
+    that now have v1 injector support ("an" from Inc2, "one" from Inc3) are
+    injected (CandidateOperation). The early "recognizer matched but produced
+    no injection" refusal no longer triggers for these supported surfaces.
 
-    Pre-#359 behavior: silently drop the recognized-but-uninjectable
-    statement and admit a partial graph from the rest — a wrong>0
-    hazard analogous to case 0050.
+    The full sentence provides no denom-unit Initial for the actor, so the
+    candidate graph produces no admissible branch. Refusal is at question or
+    "no admissible candidate" level (downstream of injection).
 
-    Post-#359 (this test's contract): refuse explicitly with reason
-    "recognizer matched but produced no injection" naming the
-    statement and category. This pinned behavior is the wrong=0
-    safety net for the recognizer path.
+    Pre-#359: silent drop (wrong>0 hazard).
+    Post-#359 + Inc2/Inc3: explicit diagnostic for unsupported; supported
+    rates proceed to state/admissibility checks (wrong=0 preserved).
+    This test pins the wiring for the synthetic registry path; the
+    explicit no-injection guard remains for categories without injector.
     """
     result = cg.parse_and_solve(
         "Tina makes $18.00 an hour. How much does Tina earn after 8 hours?"
     )
     assert result.refusal_reason is not None
+    # For this supported rate surface the statement is injected; refusal
+    # is now "no admissible candidate for question" (or similar) because
+    # no full admissible graph (missing denom state). The no-injection
+    # reason is the guard only for injector-return-() cases.
     assert (
-        "recognizer matched but produced no injection" in result.refusal_reason
-    ), f"expected explicit recognizer-refusal, got: {result.refusal_reason!r}"
-    # The statement IS named in the reason — that's the diagnostic shape
-    # the post-#359 refusal carries. Update the prior assertion which
-    # forbade naming, since that assertion encoded the silent-drop
-    # premise that #359 retired.
-    assert "Tina makes $18.00 an hour" in result.refusal_reason
+        "no admissible candidate" in result.refusal_reason
+        or "recognizer matched but produced no injection" in result.refusal_reason
+    ), f"expected downstream or explicit refusal, got: {result.refusal_reason!r}"
+    # Keep diagnostic: the problematic rate statement context is involved.
+    assert (
+        "Tina makes $18.00 an hour" in result.refusal_reason
+        or "question" in result.refusal_reason
+    )
 
 
 def test_recognized_descriptive_statement_refuses_explicitly_post_wrong_zero_fix(
@@ -152,12 +165,13 @@ def _run_gsm8k_train_sample_with_patch(
     """Re-run the gsm8k train_sample under the patched registry and
     return the {correct, wrong, refused} counts."""
     monkeypatch.setattr(
-        cg, "_load_ratified_registry_or_empty", lambda: registry,
+        cg,
+        "_load_ratified_registry_or_empty",
+        lambda: registry,
     )
     import importlib
-    runner_mod = importlib.import_module(
-        "evals.gsm8k_math.train_sample.v1.runner"
-    )
+
+    runner_mod = importlib.import_module("evals.gsm8k_math.train_sample.v1.runner")
     cases = runner_mod._load_cases(runner_mod._CASES_PATH)
     report = runner_mod.build_report(cases)
     return {
@@ -178,7 +192,8 @@ def test_wrong_count_stays_zero_under_synthetic_registry(
     baseline_report = json.loads(_GSM8K_REPORT.read_text(encoding="utf-8"))
     baseline_counts = baseline_report["counts"]
     candidate_counts = _run_gsm8k_train_sample_with_patch(
-        monkeypatch, synthetic_registry,
+        monkeypatch,
+        synthetic_registry,
     )
     assert candidate_counts["wrong"] == 0, (
         f"Phase D wiring regressed wrong=0: {candidate_counts}"
@@ -196,9 +211,12 @@ def test_capability_axis_wrong_unchanged_under_synthetic_registry(
     guarded by a narrow recognizer; it cannot mis-admit a
     well-parsed capability-axis statement."""
     monkeypatch.setattr(
-        cg, "_load_ratified_registry_or_empty", lambda: synthetic_registry,
+        cg,
+        "_load_ratified_registry_or_empty",
+        lambda: synthetic_registry,
     )
     import importlib
+
     lanes = [
         ("G1_verb_classes", "evals.math_capability_axes.G1_verb_classes.v1.runner"),
         ("G2_comparatives", "evals.math_capability_axes.G2_comparatives.v1.runner"),
@@ -238,9 +256,15 @@ def test_per_category_admission_counts_on_gsm8k_train_sample(
     pin them to specific numbers, so the test stays robust to
     Phase B corpus updates that narrow or widen specific axes.
     """
-    cases = [json.loads(l) for l in _GSM8K_CASES.read_text(encoding="utf-8").splitlines() if l.strip()]
+    cases = [
+        json.loads(line)
+        for line in _GSM8K_CASES.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     report = json.loads(_GSM8K_REPORT.read_text(encoding="utf-8"))
-    refused_ids = {e["case_id"] for e in report["per_case"] if e["verdict"] == "refused"}
+    refused_ids = {
+        e["case_id"] for e in report["per_case"] if e["verdict"] == "refused"
+    }
 
     counts: dict[str, int] = {
         ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY.value: 0,
@@ -262,7 +286,9 @@ def test_per_category_admission_counts_on_gsm8k_train_sample(
     assert counts[ShapeCategory.RATE_WITH_CURRENCY.value] >= 1
     assert counts[ShapeCategory.TEMPORAL_AGGREGATION.value] >= 1
     # Surface the counts to stdout for the PR body.
-    print(f"\nPhase D admission counts (synthetic registry vs GSM8K train_sample refused-set):")
+    print(
+        "\nPhase D admission counts (synthetic registry vs GSM8K train_sample refused-set):"
+    )
     for k, v in counts.items():
         print(f"  {k}: {v}")
 

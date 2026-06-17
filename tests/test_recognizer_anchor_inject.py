@@ -10,6 +10,7 @@ Covers the exact acceptance cases from the Workstream A Inc 2 brief:
 - zero amount refuses
 - matched_*_token values are literal substrings from the source sentence
 """
+
 from __future__ import annotations
 
 import types
@@ -32,7 +33,9 @@ def _stub_recognizer(category: ShapeCategory) -> types.SimpleNamespace:
     return types.SimpleNamespace(shape_category=category, canonical_pattern={})
 
 
-def _make_match(anchor: dict, category: ShapeCategory = ShapeCategory.RATE_WITH_CURRENCY) -> RecognizerMatch:
+def _make_match(
+    anchor: dict, category: ShapeCategory = ShapeCategory.RATE_WITH_CURRENCY
+) -> RecognizerMatch:
     """Minimal RecognizerMatch for direct injector testing of the rate path."""
     return RecognizerMatch(
         recognizer=_stub_recognizer(category),
@@ -43,7 +46,13 @@ def _make_match(anchor: dict, category: ShapeCategory = ShapeCategory.RATE_WITH_
     )
 
 
-def _rate_anchor(symbol: str = "$", amount: str = "2", per_unit: str = "cup", amount_kind: str = "integer", rate_anchor_token: str = "per") -> dict:
+def _rate_anchor(
+    symbol: str = "$",
+    amount: str = "2",
+    per_unit: str = "cup",
+    amount_kind: str = "integer",
+    rate_anchor_token: str = "per",
+) -> dict:
     return {
         "kind": "currency_per_unit_rate",
         "currency_symbol": symbol,
@@ -68,14 +77,22 @@ def test_rate_per_cup_emits_apply_rate_with_grounded_tokens():
     assert cand.matched_actor_token == "Tina"
     assert cand.matched_value_token == "2"
     assert cand.matched_unit_token == "dollars"
-    assert cand.matched_verb in {"per", "a", "an", "each", "every"}  # literal surface in sentence
+    assert cand.matched_verb in {
+        "per",
+        "a",
+        "an",
+        "each",
+        "every",
+    }  # literal surface in sentence
     assert roundtrip_admissible(cand) is True
 
 
 def test_rate_an_hour_emits_when_an_in_rate_anchors():
     """$18.00 an hour is a major proxy case. With 'an' in RATE_ANCHORS the
     literal verb token must ground."""
-    m = _make_match(_rate_anchor("$", "18.00", "hour", "decimal", rate_anchor_token="an"))
+    m = _make_match(
+        _rate_anchor("$", "18.00", "hour", "decimal", rate_anchor_token="an")
+    )
     emitted = inject_rate_with_currency(m, "Tina makes $18.00 an hour.")
     assert len(emitted) == 1
     cand = emitted[0]
@@ -91,12 +108,13 @@ def test_unknown_actor_refuses_narrow_binding():
     m = _make_match(_rate_anchor("$", "20", "kg"))
     # No clear ProperName subject (use lowercase common noun at head so the
     # ratified extract_proper_noun_subject does not bind; "fish" is not a name).
-    emitted = inject_rate_with_currency(m, "fish are sold for $20 per kg at the market.")
+    emitted = inject_rate_with_currency(
+        m, "fish are sold for $20 per kg at the market."
+    )
     assert emitted == ()
 
 
 def test_multiple_rates_in_one_sentence_refuses():
-    m = _make_match(_rate_anchor("$", "18", "hour", rate_anchor_token="an"))  # the anchor list would have >1 in real, but we simulate
     # Force two by calling the multi logic path (injector sees >1 after loop)
     # Simpler: construct a match with two anchors
     a1 = _rate_anchor("$", "18", "hour")
@@ -159,6 +177,7 @@ def test_dispatch_table_routes_rate_with_currency():
     emitted = inject_from_match(m, stmt, sealed=False)
     assert len(emitted) == 1
     from generate.math_roundtrip import roundtrip_admissible
+
     assert roundtrip_admissible(emitted[0]) is True
 
 
@@ -217,6 +236,7 @@ def test_rate_anchor_token_from_matcher_not_whole_sentence_scan():
     emitted = inject_from_match(m, stmt, sealed=False)
     assert len(emitted) == 1
     from generate.math_roundtrip import roundtrip_admissible
+
     cand = emitted[0]
     assert isinstance(cand, CandidateOperation)
     assert cand.op.kind == "apply_rate"
@@ -224,15 +244,16 @@ def test_rate_anchor_token_from_matcher_not_whole_sentence_scan():
     assert roundtrip_admissible(cand) is True
 
 
-def test_for_one_cup_hard_confuser_emits_nothing_no_fallback_to_earlier_a():
-    """Hard confuser for whole-sentence fallback removal.
+def test_rate_for_one_cup_emits_apply_rate_with_matched_verb_one():
+    """Positive coverage for Inc3 "for one cup" connector support (rate_with_currency).
 
     "Alexa has a lemonade stand where she sells lemonade for $2 for one cup."
-    The live registry will match it as RATE_WITH_CURRENCY (from exemplars).
-    But rate_anchor_token will be None (from "one" in "for one"), which is
-    not in the allowed set. With no fallback to _locate_rate_verb, the
-    injector MUST return ().
-    This proves we do not bind the unrelated "a" from "a lemonade stand".
+    The live registry matches as RATE_WITH_CURRENCY.
+    rate_anchor_token == "one" (from the "for one X" group) is now allowed.
+    Injector must emit exactly one CandidateOperation with matched_verb="one",
+    using the rate surface (not falling back to earlier "a" from "a lemonade stand").
+    roundtrip_admissible must hold. This makes the rate no-injection bucket
+    actionable (downstream refusal for missing denom state, not injector ()).
     """
     registry = load_ratified_registry()
     stmt = "Alexa has a lemonade stand where she sells lemonade for $2 for one cup."
@@ -240,4 +261,14 @@ def test_for_one_cup_hard_confuser_emits_nothing_no_fallback_to_earlier_a():
     assert m is not None
     assert m.category is ShapeCategory.RATE_WITH_CURRENCY
     emitted = inject_from_match(m, stmt, sealed=False)
-    assert emitted == ()
+    assert len(emitted) == 1
+    from generate.math_roundtrip import roundtrip_admissible
+
+    cand = emitted[0]
+    assert isinstance(cand, CandidateOperation)
+    assert cand.op.kind == "apply_rate"
+    assert cand.matched_verb == "one"
+    assert cand.matched_actor_token == "Alexa"
+    assert roundtrip_admissible(cand) is True
+    # Explicitly no fallback to the distracting earlier "a"
+    assert "one" in stmt.lower()  # the token came from the rate span
