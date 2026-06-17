@@ -108,7 +108,7 @@ def test_post_inc3_live_runner_has_zero_rate_no_injection():
 
 
 def test_post_gate_a1_live_runner_has_zero_comparative_no_injection():
-    """Live train_sample: comparative_with_currency bucket closed at injector."""
+    """Live train_sample: comparative_with_unit bucket closed at injector."""
     import re
     from collections import Counter
 
