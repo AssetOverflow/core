@@ -93,7 +93,7 @@
 
 <!-- The single most important thing the next agent must know. Write it as if this is the only document they will read. -->
 
-**Prompt Library Reference**: See `docs/core-rd-base-prompts.md` for phase-specific prompts (especially Session Entry and the Standing Loop Axiom Check). Use them as standing prefixes alongside this handoff.
+**Prompt Library Reference**: See `docs/core-rd-base-prompts.md` (especially sections #7 Standing Loop Axiom Check, #8 PR Merge-Readiness Audit, and #9 Grok Build Implementation Session). Use them as standing prefixes.
 
 ---
 
