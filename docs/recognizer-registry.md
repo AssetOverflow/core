@@ -51,21 +51,32 @@ Widening happens through the corridor — wider exemplar corpus →
 Phase C synthesis on wider seeds → operator ratifies the wider
 proposal — never by editing the matcher's permissiveness.
 
-## Wiring point
+## Wiring point (current doctrine — post wrong=0 correction)
 
 `generate/math_candidate_graph.py:parse_and_solve` consults the
 registry at the per-statement choice loop, **before** the existing
-`no admissible candidate for statement` refusal.  When the registry
-recognizes the statement, the statement is dropped from
-`per_sentence_choices` and the loop continues.  Empty registry → the
-guard is a no-op and the existing behavior is preserved
-byte-identically.
+`no admissible candidate for statement` refusal.
 
-Skipping a recognized statement contributes ZERO math state to the
-solver, so the Cartesian product is identical to "this statement
-was never there."  This preserves `wrong = 0` by construction; the
-downstream solver still refuses if the remaining statements +
-question cannot produce a consistent answer.
+When the registry recognizes the statement:
+- the per-category injector (`generate/recognizer_anchor_inject.inject_from_match`)
+  is consulted;
+- if the injector emits one or more `CandidateInitial` / `CandidateOperation`
+  that survive admissibility, those candidates are added to the per-sentence
+  choice space exactly as parser output would be;
+- if the injector emits nothing (or all candidates are dropped by later
+  pronoun/lookback guards), the graph **refuses explicitly** with the
+  reason `"recognizer matched but produced no injection for statement: ... (category=...)"`.
+
+**Never silently drop** a recognized math statement as "zero state".
+The historical skip-only rule ("drop it, Cartesian product unchanged")
+was retired because it admitted incomplete graphs at the problem level
+(the solver could answer from the remaining statements and produce a
+number that was not the answer to the full input).  The current code
+and this document treat "recognized + no typed emission" as a refusal
+case.  Old skip-only language appears only in historical notes below.
+
+Empty registry → the guard is a no-op and the pre-registry refusal
+behavior is preserved byte-identically.
 
 ## Ratification boundary (ADR-0161 §5)
 
@@ -80,10 +91,24 @@ The operator's ratification path is the existing
 `core teaching review <proposal_id> --accept --review-date <YYYY-MM-DD>`
 — no new CLI surface lands with Phase D.
 
-## Phase E follow-up
+## Phase E / D.2 follow-up (historical note)
 
-Phase D wires the registry into the admission boundary; downstream
-consumption of `parsed_anchors` (turning recognized rate/temporal
-surfaces into solver state that produces concrete answers) is
-deferred to Phase E.  The wiring is in place; Phase E adds the
-math_candidate_parser handler that consumes the typed anchors.
+Early Phase D wiring (the registry + skip-only guard) was intentionally
+"skip-only by construction" so that adding recognizer categories could
+not regress wrong=0.  That doctrine was corrected once the "recognized
+but uninjected → incomplete graph" hazard was understood (see the
+explicit refusal branch and comments in `math_candidate_graph.py` and
+the ADR-0167 / Brief 11 lineage).
+
+Current follow-up work (Workstream A Inc 2 and successors) adds the
+per-category injectors that turn `parsed_anchors` for `rate_with_currency`
+(and later categories) into grounded `CandidateOperation` / `Rate` /
+`apply_rate` primitives that the existing solver already knows how to
+execute.  When an injector is present and emits, the statement
+contributes real solver state; when it cannot, refusal (not silent drop)
+is the outcome.
+
+Historical skip-only descriptions are preserved only as "rejected
+behavior" markers in this document and in code comments.  Grep for the
+old phrases on the active source surfaces should surface only such
+markers.

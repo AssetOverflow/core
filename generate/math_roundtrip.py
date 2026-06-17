@@ -143,10 +143,14 @@ COMPARE_MULTIPLICATIVE_ANCHORS: Final[frozenset[str]] = frozenset({
     "quadruple", "third", "quarter",
 })
 
-# Rate anchors (ADR-0122): "per", "each", "every", "a/an" (when followed
-# by unit and price).
+# Rate anchors (ADR-0122): "per", "each", "every", "a"/"an" (when followed
+# by a unit in a rate surface such as "$18 an hour" or "$2 a cup").
+# The literal surface token from the sentence is used for matched_verb
+# so that roundtrip_admissible / CandidateOperation post-init grounding
+# succeeds.  "a"/"an" were documented in the comment but missing from the
+# set; added here (Inc 2) with corresponding injector tests.
 RATE_ANCHORS: Final[frozenset[str]] = frozenset({
-    "per", "each", "every",
+    "per", "each", "every", "a", "an",
 })
 
 
@@ -304,6 +308,9 @@ def _unit_grounds(
         if "$" in source_span or "¢" in source_span:
             return True
         if "dollar" in haystack_tokens or "dollars" in haystack_tokens:
+            return True
+    if lower in ("dollar", "dollars"):
+        if "$" in source_span:
             return True
     if lower in ("euro", "euros"):
         if "€" in source_span:

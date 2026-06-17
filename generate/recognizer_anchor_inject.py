@@ -18,10 +18,13 @@ Doctrine
   enforces).
 - No LLM / embeddings / learned classifiers; the injection is rules-only
   same discipline as Phase A/C/D detection.
-- Per-category boundary: v1 implements only ``discrete_count_statement``.
-  Every other category routes to the empty-tuple fallback (skip-only,
-  identical to the round-2 Phase D wiring) and lands in follow-up
-  D.2.x PRs after the framework's empirical lift is operator-reviewed.
+- Per-category boundary: the serving _INJECTORS table grows one
+  narrow category at a time (discrete_count_statement in the base D.2
+  landing; rate_with_currency in Workstream A Inc 2).  Every category
+  without a registered injector still routes to the explicit-refusal
+  fallback ("recognizer matched but produced no injection").  This is
+  the current wrong=0 doctrine; the old silent skip-only drop is
+  historical only.
 
 Five-layer wrong=0 safety net (the Phase D.2 brief's load-bearing
 section) is preserved across this module:
@@ -51,8 +54,12 @@ from generate.math_problem_graph import (
     MathGraphError,
     Operation,
     Quantity,
+    Rate,
 )
-from generate.recognizer_match import RecognizerMatch
+from generate.recognizer_match import (
+    RecognizerMatch,
+    extract_proper_noun_subject,
+)
 
 # ADR-0170 — the widened injector emission type. Per-category injectors
 # may emit a tuple of ``CandidateInitial`` (existing) or
@@ -547,6 +554,165 @@ def inject_multiplicative_aggregation(
     return tuple(out)
 
 
+# ---------------------------------------------------------------------------
+# Inc 2 — rate_with_currency → apply_rate (Workstream A)
+# ---------------------------------------------------------------------------
+
+_CURRENCY_SYMBOL_TO_UNIT: dict[str, str] = {
+    "$": "dollars",
+    # Other symbols (pounds, euros, yen) deferred in Inc 2.
+    # Full support requires symmetric _unit_grounds entries + ratified observed sets + tests.
+}
+
+
+def _parse_amount_token(token: str, amount_kind: str) -> float | None:
+    """Parse the amount surface token.
+
+    Supports integer and decimal. Slash fractions (e.g. "3/4") are
+    deferred in v1 for rate_with_currency (return None → injector refuses).
+    The Rate constructor will still refuse <= 0.
+    """
+    if "/" in token:
+        return None  # unsupported in this increment per brief
+    try:
+        if amount_kind == "decimal" or "." in token:
+            val = float(token)
+        else:
+            val = float(int(token))
+    except (ValueError, TypeError):
+        return None
+    return val if val > 0 else None
+
+
+def _locate_rate_verb(sentence: str) -> str | None:
+    """Return the literal rate-anchor token found in the sentence surface.
+
+    We accept the tokens that are (or will be) in RATE_ANCHORS for
+    apply_rate. The literal form is required so CandidateOperation
+    post-init + roundtrip_admissible grounding checks pass.
+    """
+    rate_verbs = ("per", "each", "every", "a", "an")
+    for raw in sentence.split():
+        tok = raw.strip(".,;:!?\"'()[]{}").lower()
+        if tok in rate_verbs:
+            return tok  # preserve the surface case? but anchors are lower; use lower for consistency with other injectors
+    return None
+
+
+def inject_rate_with_currency(
+    match: RecognizerMatch,
+    sentence: str,
+) -> tuple[InjectorEmission, ...]:
+    """Narrow, refusal-preferring injector for ShapeCategory.RATE_WITH_CURRENCY.
+
+    When the matcher has produced one or more "currency_per_unit_rate"
+    anchors, attempt to emit a CandidateOperation(kind="apply_rate",
+    operand=Rate(...)) **only** when every slot is source-grounded and
+    the resulting object will pass downstream admissibility.
+
+    Actor binding (v1): only a ProperName extractable from the same
+    sentence (via the existing ratified extract_proper_noun_subject) or
+    a safe prior-subject path already exercised by the caller.  No
+    pronoun guessing ("he", "she", "they"), no "nearest entity".
+
+    Amount: integer or decimal only.  Slash fractions refuse in v1.
+    Zero/negative/NaN refuse (Rate post-init + explicit guard).
+
+    Multi-anchor sentence: refuse (ambiguity).
+
+    Unknown symbol or per_unit: the matcher already filtered these
+    (narrowness from the ratified spec); we still double-check.
+
+    On any failure to construct a fully admissible primitive we return
+    () so the candidate-graph will emit the explicit
+    "recognizer matched but produced no injection" refusal (the
+    current wrong=0 doctrine).
+
+    matched_verb is the literal surface token ("per", "an", ...) so
+    that KIND_TO_VERBS["apply_rate"] (RATE_ANCHORS) and the
+    CandidateOperation roundtrip filter accept it.
+    """
+    if not match.parsed_anchors:
+        return ()
+
+    out: list[InjectorEmission] = []
+    for anchor in match.parsed_anchors:
+        if not isinstance(anchor, dict):
+            return ()
+        if anchor.get("kind") != "currency_per_unit_rate":
+            continue
+
+        symbol = anchor.get("currency_symbol")
+        amount_token = anchor.get("amount")
+        amount_kind = anchor.get("amount_kind")
+        per_unit = anchor.get("per_unit")
+
+        if not isinstance(symbol, str) or symbol not in _CURRENCY_SYMBOL_TO_UNIT:
+            return ()
+        if not isinstance(amount_token, str) or not isinstance(amount_kind, str):
+            return ()
+        if not isinstance(per_unit, str) or not per_unit:
+            return ()
+
+        value = _parse_amount_token(amount_token, amount_kind)
+        if value is None or value <= 0:
+            return ()
+
+        numerator_unit = _CURRENCY_SYMBOL_TO_UNIT[symbol]
+
+        # Actor — narrow v1
+        actor = extract_proper_noun_subject(sentence)
+        if not actor:
+            return ()
+
+        # For currency_per_unit_rate, the rate_anchor_token from the matcher
+        # (localized to the rate span in _CURRENCY_AMOUNT_RE) is mandatory.
+        # No whole-sentence fallback is allowed, because _locate_rate_verb
+        # can still pick an unrelated earlier "a".
+        rate_anchor_token = anchor.get("rate_anchor_token")
+        if not rate_anchor_token or rate_anchor_token not in ("per", "each", "every", "a", "an"):
+            # Missing or invalid connector for this rate surface (e.g. "one"
+            # from "for one cup", or absent token). Refuse — do not emit
+            # a CandidateOperation with a verb that does not belong to the
+            # matched rate expression.
+            return ()
+        verb_token = rate_anchor_token
+
+        try:
+            rate = Rate(
+                value=value,
+                numerator_unit=numerator_unit,
+                denominator_unit=per_unit,
+            )
+            op = Operation(
+                actor=actor,
+                kind="apply_rate",
+                operand=rate,
+            )
+        except MathGraphError:
+            return ()
+
+        try:
+            cand = CandidateOperation(
+                op=op,
+                source_span=sentence,
+                matched_verb=verb_token,
+                matched_value_token=amount_token,
+                matched_unit_token=numerator_unit,  # per CandidateOperation docstring for Rate
+                matched_actor_token=actor,
+            )
+        except ValueError:
+            return ()
+
+        out.append(cand)
+
+    if len(out) > 1:
+        # Multiple rate anchors in one sentence — ambiguity.  Refuse.
+        return ()
+
+    return tuple(out)
+
+
 _INJECTORS: Mapping[ShapeCategory, "type"] = {
     ShapeCategory.DISCRETE_COUNT_STATEMENT: inject_discrete_count_statement,  # type: ignore[dict-item]
     # WAVE-A — multiplicative_aggregation now has a per-category
@@ -554,30 +720,22 @@ _INJECTORS: Mapping[ShapeCategory, "type"] = {
     # ``extract_values=True`` continue to return empty parsed_anchors
     # (detection-only) so the existing wrong=0 path is byte-identical.
     ShapeCategory.MULTIPLICATIVE_AGGREGATION: inject_multiplicative_aggregation,  # type: ignore[dict-item]
-    # All other recognizer categories route to the empty-tuple fallback
-    # in ``inject_from_match`` — `_INJECTORS.get(category)` returns
-    # ``None`` and the dispatcher returns ``()``, which the
-    # candidate-graph then treats as "recognizer matched but produced
-    # no injection" → explicit refusal (the wrong=0 fix from #359).
+    # Inc 2 (Workstream A) — rate_with_currency now emits
+    # CandidateOperation(kind="apply_rate", operand=Rate(...)) when
+    # all slots are source-grounded.  The solver already implements
+    # _apply_rate and refuses when the actor lacks denom-unit state.
+    # This closes the "recognizer matched but produced no injection"
+    # frontier for the currency-per-unit surfaces without touching
+    # sealed lanes or any other category.
+    ShapeCategory.RATE_WITH_CURRENCY: inject_rate_with_currency,  # type: ignore[dict-item]
+    # All other recognizer categories continue to route to the
+    # empty-tuple fallback (explicit "recognizer matched but produced
+    # no injection" refusal in the candidate-graph).  That is the
+    # current wrong=0 doctrine; the old skip-only drop is historical.
     #
-    # Categories deferred to follow-up PRs:
-    #
-    # ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY — by design (no quantity)
-    # ShapeCategory.RATE_WITH_CURRENCY           — needs CandidateRate
-    #                                              (SentenceChoice union
-    #                                              extension; ADR-0171)
-    # ShapeCategory.TEMPORAL_AGGREGATION         — needs apply_rate primitive
-    #                                              in the algebra
-    # ShapeCategory.MULTIPLICATIVE_AGGREGATION   — emits
-    #                                              CandidateInitial(product)
-    #                                              after ADR-0170 widens
-    #                                              return type
-    # ShapeCategory.CURRENCY_AMOUNT              — A1 currency_amount;
-    #                                              CandidateInitial-shaped,
-    #                                              ships after ADR-0170
-    #
-    # See docs/decisions/ADR-0170-injector-contract-widening.md for the
-    # contract widening that unblocks DCS-S1 / A1 / A3.
+    # Deferred (separate ratifications):
+    # ShapeCategory.TEMPORAL_AGGREGATION, CURRENCY_AMOUNT (pure amount),
+    # etc.
 }
 
 
@@ -604,4 +762,5 @@ __all__ = [
     "InjectorEmission",
     "inject_from_match",
     "inject_discrete_count_statement",
+    "inject_rate_with_currency",
 ]

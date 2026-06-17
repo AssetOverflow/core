@@ -55,20 +55,23 @@ _INDEFINITE_TOKENS: Final[tuple[str, ...]] = (
 
 
 # Currency-per-unit "amount" regex.  Matches "$18.00 an hour" /
-# "$2 per cup" / "$45/hour" / "$20 for one kg".  The captured
-# groups are (symbol, amount, _spacer, per_unit).
+# "$2 per cup" / "$45/hour" / "$20 for one kg".
+# Captures symbol, amount, and the rate connector (the word that will
+# become matched_verb for apply_rate) + per_unit.
+# The connector is localized to the rate surface span so that
+# _locate_rate_verb no longer does a dangerous whole-sentence scan
+# that could pick an unrelated "a" from earlier text.
 _CURRENCY_AMOUNT_RE: Final[re.Pattern[str]] = re.compile(
     r"""(?ix)
-    ([\$£€¥])                       # currency symbol
+    ([\$£€¥])                       # 1: currency symbol
     \s*
-    (\d+(?:\.\d+)?|\d+/\d+)         # amount (integer, decimal, or fraction)
+    (\d+(?:\.\d+)?|\d+/\d+)         # 2: amount
     \s*
     (?:
-        an?\s+([a-z]+)              # "$X an hour" / "$X a day"
-      | per\s+([a-z]+)              # "$X per hour"
-      | /\s*([a-z]+)                # "$X/hour"
-      | for\s+(?:one|each|every|a)\s+([a-z]+)
-                                    # "$X for one cup" / "for each X"
+        (an?)\s+([a-z]+)              # 3: a/an connector, 4: unit   ("$X an hour")
+      | (per)\s+([a-z]+)              # 5: per, 6: unit
+      | /\s*([a-z]+)                  # 7: unit (slash shorthand)
+      | for\s+(one|each|every|a)\s+([a-z]+)  # 8: the quant, 9: unit
     )
     """,
 )
@@ -319,11 +322,31 @@ def _match_rate_with_currency(
     for m in _CURRENCY_AMOUNT_RE.finditer(statement):
         symbol = m.group(1)
         amount_token = m.group(2)
-        # Per-unit is whichever group captured.
-        per_unit = next(
-            (g for g in m.groups()[2:] if g),
-            None,
-        )
+
+        # Determine the rate connector (the token that will serve as
+        # matched_verb) and the per_unit *from the matched rate span only*.
+        # This prevents the whole-sentence scan hazard in the injector.
+        connector = None
+        per_unit = None
+        if m.group(3):  # a/an case
+            connector = m.group(3)
+            per_unit = m.group(4)
+        elif m.group(5):  # per
+            connector = m.group(5)
+            per_unit = m.group(6)
+        elif m.group(7):  # slash
+            connector = "per"  # canonicalize / as per for apply_rate verb
+            per_unit = m.group(7)
+        elif m.group(8):
+            q = m.group(8).lower()
+            per_unit = m.group(9)
+            if q in ("each", "every", "a"):
+                connector = q
+            else:
+                # "one" in "for one X" is not a direct RATE_ANCHORS token;
+                # leave None so injector will refuse (narrow for Inc 2).
+                connector = None
+
         if not per_unit:
             continue
         per_unit_lc = per_unit.lower()
@@ -332,17 +355,19 @@ def _match_rate_with_currency(
         if per_unit_lc not in observed_per_units:
             continue
         if "/" in amount_token:
-            amount_kind = "word"  # fractional surface; Phase B labels as 'word'
+            amount_kind = "word"
         elif "." in amount_token:
             amount_kind = "decimal"
         else:
             amount_kind = "integer"
+
         anchors.append({
             "kind": "currency_per_unit_rate",
             "currency_symbol": symbol,
             "amount": amount_token,
             "amount_kind": amount_kind,
             "per_unit": per_unit_lc,
+            "rate_anchor_token": connector.lower() if connector else None,
         })
 
     if not anchors:

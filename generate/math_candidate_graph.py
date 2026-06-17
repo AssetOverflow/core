@@ -661,15 +661,23 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
 
     # Per-sentence choice spaces (after round-trip filter + tiebreaker).
     #
-    # ADR-0163 §Phase D — ratified-recognizer admission guard.
+    # ADR-0163 §Phase D + D.2 — ratified-recognizer admission guard.
     # Before refusing on an empty choice list, consult the ratified
     # RecognizerSpec registry.  When the registry recognizes the
-    # statement, drop it from per_sentence_choices entirely instead of
-    # refusing: a recognized statement contributes ZERO math state so
-    # the Cartesian product remains identical to "this statement was
-    # never there," preserving wrong=0 by construction.  Downstream
-    # consumption of parsed_anchors (turning recognized rate/temporal
-    # surfaces into solver state) is Phase E follow-up work.
+    # statement the per-category injector is tried.  If it emits
+    # grounded CandidateInitial / CandidateOperation values they
+    # participate in the Cartesian product exactly like parser output.
+    # If the injector returns () the graph refuses explicitly
+    # ("recognizer matched but produced no injection ... (category=...)").
+    #
+    # The old "drop it, contributes ZERO math state" skip-only rule
+    # (historical) was retired because silently omitting a recognized
+    # math statement is equivalent to feeding the solver an incomplete
+    # problem statement; the remaining sentences+question can still
+    # produce a numeric answer that is not the answer to the actual
+    # input.  See the refusal branch below and the corresponding
+    # updates in docs/recognizer-registry.md.  Only historical
+    # comments retain the old phrasing; current behavior is refusal.
     _ratified_registry = _load_ratified_registry_or_empty()
     per_sentence_choices: list[list[SentenceChoice]] = []
     # ME-2 — track a running proper-noun subject across sentences so the
@@ -709,11 +717,12 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
                     # product the same way the existing parser's output
                     # does — and every constructed candidate has already
                     # passed _initial_admissible upstream of this call.
-                    # When the injector returns () (skip-only fallback —
-                    # the round-2 default and the only path for v1
-                    # categories without an injector), the statement is
-                    # dropped from per_sentence_choices, preserving the
-                    # wrong=0 safety net by construction.
+                    # When the injector returns (), the graph continues to
+                    # the explicit-refusal branch below ("recognizer matched
+                    # but produced no injection ..."). This is the current
+                    # doctrine: recognized math statements are never silently
+                    # dropped (the old skip-only "zero state" reasoning was
+                    # retired because it could admit incomplete graphs).
                     from generate.recognizer_anchor_inject import (
                         inject_from_match,
                     )
