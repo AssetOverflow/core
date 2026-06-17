@@ -52,6 +52,13 @@ from teaching.proposals import (
     propose_from_candidate,
 )
 
+# Hermetic integration of the hardened CLOSE derived-climb yardstick (Claim B).
+# Executed as part of the anti-regression demo flow so that `core demo anti-regression`
+# (and its contract tests) provide recurring protection for the CLOSE flywheel
+# (lived idle_tick + IdleTickResult flag, semantic determine(rule='direct'),
+# content_replay_checksum). The climb runner is fully self-isolating.
+from evals.close_derived_climb import run as run_close_derived_climb
+
 
 _VERBOSE = True
 
@@ -227,6 +234,11 @@ class DemoReport:
     scenes: tuple[SceneResult, ...]
     all_gates_held: bool
     active_corpus_byte_identical: bool
+    # Additive: the hardened CLOSE derived climb yardstick (Claim B) is run
+    # inside this anti-regression demo as a complementary hermetic protection
+    # surface for autonomous derived-fact growth + gated proposal emission.
+    # See ratification + testing-lanes.md. Never mutates shared state.
+    close_derived_climb: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         # ``all_claims_supported`` is the canonical cross-demo success
@@ -237,6 +249,7 @@ class DemoReport:
             "scenes": [s.as_dict() for s in self.scenes],
             "all_gates_held": self.all_gates_held,
             "active_corpus_byte_identical": self.active_corpus_byte_identical,
+            "close_derived_climb": self.close_derived_climb,
             "all_claims_supported": (
                 self.all_gates_held and self.active_corpus_byte_identical
             ),
@@ -410,10 +423,20 @@ def run_demo(*, emit_json: bool = False) -> dict[str, Any]:
         and s2.outcome == "auto_rejected_on_regression"
         and s3.outcome == "pending_awaiting_operator"
     )
+
+    # Execute the hardened CLOSE derived-climb yardstick (Claim B) here.
+    # This integrates the yardstick into the anti-regression / teaching demo
+    # flows. The call is hermetic (climb uses only fresh runtimes + internal
+    # temps for proposal sink isolation during its flag test; zero production
+    # writes). Key Claim-B signals (lived IdleTickResult, semantic determine
+    # rule=direct, content_replay_checksum) are captured for the report.
+    close_derived_climb = run_close_derived_climb()
+
     report = DemoReport(
         scenes=scenes,
         all_gates_held=all_gates_held,
         active_corpus_byte_identical=(active_bytes_before == active_bytes_after),
+        close_derived_climb=close_derived_climb,
     )
 
     if _VERBOSE:
@@ -423,6 +446,17 @@ def run_demo(*, emit_json: bool = False) -> dict[str, Any]:
         _say("═" * 72)
         _say(f"  all three gates held       : {report.all_gates_held}")
         _say(f"  active corpus byte-eq      : {report.active_corpus_byte_identical}")
+        # CLOSE flywheel (Claim B) — now part of this anti-regression demo.
+        # Exercises real idle_tick + IdleTickResult.derived_close_proposals_emitted,
+        # semantic determine() with rule='direct', and content-level replay checksum.
+        climb = report.close_derived_climb or {}
+        agg = climb.get("aggregate", {})
+        propf = climb.get("proposal_flag", {})
+        _say(
+            f"  CLOSE derived climb (Claim B): wrong_total={agg.get('wrong_total')}, "
+            f"proposals_only_with_flag={propf.get('only_with_flag')}, "
+            f"content_replay_checksum={(climb.get('content_replay_checksum') or '')[:12]}..."
+        )
         _say()
         _say(
             "  Each gate is independent and fails closed.  Bad proposals "

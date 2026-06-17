@@ -8,6 +8,12 @@
 # until the suite is xdist-hermetic (shared repo engine_state/ + report.json +
 # teaching/proposals writers race under parallel workers).  See
 # docs/testing-lanes.md "Follow-up: xdist".
+#
+# CLOSE flywheel Claim-B determinism (post-#791 hardening): after any
+# CLOSE/idle_tick/realize_derived/consolidate/vault/determine change, also run
+#   uv run python -m evals.close_derived_climb
+#   uv run python -m pytest tests/test_derived_close_proposals.py tests/test_architectural_invariants.py -q
+# See docs/testing-lanes.md "Recommended determinism / teaching regression invocation".
 
 .PHONY: test-fast test-slow test-full
 

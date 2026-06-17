@@ -25,5 +25,7 @@ This lane measures the monotone growth in directly-answerable set enabled by:
 - Uses real idle_tick path with flags for consolidation and proposal emission.
 - All realization remains SPECULATIVE; proposals are proposal_only + requires_review.
 
-Run: python -m evals.close_derived_climb
+Run: uv run python -m evals.close_derived_climb
 Replays the exact trajectories (aggregates + full content) for audit. Now qualifies as full lived-runtime Claim B yardstick per post-merge hardening audit.
+
+Integrated into the project's standard determinism regression and teaching/anti-regression surfaces (see docs/testing-lanes.md "Recommended determinism / teaching regression invocation", docs/evals/anti_regression_demo.md, and the integration ratification docs/analysis/integrate-hardened-close-yardstick-determinism-teaching-regression-ratification-2026-06-16.md). The prior Claim-B hardening ratification is at docs/analysis/close-derived-climb-yardstick-claim-b-ratification-2026-06-16.md. Cross-references runtime determination surface in docs/runtime_contracts.md.

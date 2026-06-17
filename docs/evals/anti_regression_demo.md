@@ -39,6 +39,18 @@ Here, each gate has a different *kind* of refusal:
 
 A proposal that fails any one of these never reaches the next.
 
+## Complementary CLOSE flywheel protection (Claim B)
+
+This demo is part of the anti-regression / teaching demonstration surfaces. As of the post-#791 integration, `core demo anti-regression` (and `tests/test_anti_regression_demo.py`) also executes the hardened `evals/close_derived_climb` yardstick. This adds recurring execution of the lived-runtime CLOSE autonomous-growth path (real `idle_tick()` + `IdleTickResult.derived_close_proposals_emitted` gating, explicit `determine(..., rule='direct')` semantic asserts on materialized derived facts, and `content_replay_checksum` over canonical closures + proposal bodies) with its own invariants (wrong_total=0, proposal-only/SPECULATIVE, hermetic).
+
+See:
+- `evals/close_derived_climb/contract.md`
+- `docs/testing-lanes.md` (Recommended determinism / teaching regression invocation)
+- `docs/analysis/integrate-hardened-close-yardstick-determinism-teaching-regression-ratification-2026-06-16.md`
+- `docs/analysis/close-derived-climb-yardstick-claim-b-ratification-2026-06-16.md`
+
+The three reviewed-teaching gates (S1–S3) and the CLOSE derived-fact growth gates are complementary anti-regression surfaces; both must hold.
+
 ## The synthetic regression in S2
 
 Scene 2 needs to demonstrate the **rejection lifecycle** deterministically.
