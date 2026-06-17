@@ -23,13 +23,19 @@ Paste this at the start of any coding session:
 ```text
 You are working inside AssetOverflow/core. Before touching anything:
 
-1. Read CLAUDE.md and AGENTS.md fully. Do not infer the project structure — derive it.
-2. The field invariant is load-bearing: versor_condition(F) < 1e-6. Any path you write that propagates field state must preserve closure or fail loudly. Never silently downgrade.
-3. Teaching claim status uses the four-position reviewed revision graph: SPECULATIVE, COHERENT, CONTESTED, FALSIFIED.
+1. Run /core-bootstrap completely, including the Workspace Hygiene + Branch/Worktree Protocol from GROK.md.
+2. Confirm cwd and repository root with `pwd`, `git rev-parse --show-toplevel`, and the presence of GROK.md + AGENTS.md.
+3. Inspect dirty state before branch movement: `git status --short --branch`, `git diff --stat`, `git diff --name-status`, `git diff --cached --name-status`, `git stash list`, and `git worktree list`.
+4. If dirty, classify every loose file/change. If unknown, inspect git history, recent branches/worktrees, and open PRs. Preserve unknown work with a descriptive stash; do not destroy it.
+5. Establish a clean current baseline before new work: `git fetch origin --prune`, `git switch main`, `git pull --ff-only origin main`.
+6. For non-trivial implementation, create a fresh worktree from current `origin/main` and do the work there.
+7. Read CLAUDE.md, GROK.md, AGENTS.md, and docs/runtime_contracts.md fully. Do not infer the project structure — derive it.
+8. The field invariant is load-bearing: versor_condition(F) < 1e-6. Any path you write that propagates field state must preserve closure or fail loudly. Never silently downgrade.
+9. Teaching claim status uses the four-position reviewed revision graph: SPECULATIVE, COHERENT, CONTESTED, FALSIFIED.
 
    Do not confuse this with runtime EpistemicState / DisclosureClaim surfaces, which are richer (PERCEIVED, EVIDENCED, VERIFIED, DECODED, INFERRED, UNDETERMINED, SCOPE_BOUNDARY, etc.) and governed separately.
-4. Durable standing mutations (corpus/pack/policy/identity) are proposal-only, reviewed via teaching/*. Do not route around this.
-5. wrong == 0 is not a metric target — it is an architectural obligation. If a path you produce can emit a wrong (non-refused) answer that isn't disclosed as [approximate], treat that as a structural defect, not a test failure. Do not proceed until you have internalized the above.
+10. Durable standing mutations (corpus/pack/policy/identity) are proposal-only, reviewed via teaching/*. Do not route around this.
+11. wrong == 0 is not a metric target — it is an architectural obligation. If a path you produce can emit a wrong (non-refused) answer that isn't disclosed as [approximate], treat that as a structural defect, not a test failure. Do not proceed until you have internalized the above.
 ```
 
 ## 2. New Feature / ADR-Driven Work
@@ -149,21 +155,50 @@ Return:
 You are working inside AssetOverflow/core.
 
 First:
-- Read GROK.md, AGENTS.md, docs/runtime_contracts.md
-- Read the most recent HANDOFF-* if dated within 3 days
-- Run `core test --suite smoke -q`
-- State the exact scope and invariant you will preserve
+- Run /core-bootstrap completely, including the Workspace Hygiene + Branch/Worktree Protocol from GROK.md.
+- Confirm cwd and repo root:
+  - `pwd`
+  - `git rev-parse --show-toplevel`
+  - verify `GROK.md` and `AGENTS.md` exist
+- Read GROK.md, AGENTS.md, CLAUDE.md, and docs/runtime_contracts.md.
+- Inspect local state before branch movement:
+  - `git status --short --branch`
+  - `git diff --stat`
+  - `git diff --name-status`
+  - `git diff --cached --name-status`
+  - `git stash list`
+  - `git worktree list`
+- If dirty, classify every loose file/change before switching branches. If unknown, inspect git history, recent branches/worktrees, and open PRs. Preserve unknown work with a descriptive stash; do not destroy it.
+- Fetch and establish clean baseline:
+  - `git fetch origin --prune`
+  - `git switch main`
+  - `git pull --ff-only origin main`
+- For non-trivial implementation, create a new worktree from current `origin/main`.
+- Read the most recent HANDOFF-* if dated within 3 days.
+- Run `core test --suite smoke -q`; if unavailable, report the exact failure and use repo-native pytest lanes.
+- State the exact scope and invariant you will preserve.
 
 Then:
-- Do not edit until you have traced all imports/callers for the target path
-- Keep the PR small
-- Write failing tests before behavior changes
-- Prefer refusal over wrong
-- Never add hidden normalization, approximate recall, stochastic fallback, or direct mutation of claim/pack/policy/identity state
+- Do not edit until you have traced all imports/callers for the target path.
+- Keep the PR small.
+- Write failing tests before behavior changes.
+- Prefer refusal over wrong.
+- Never add hidden normalization, approximate recall, stochastic fallback, or direct mutation of claim/pack/policy/identity state.
+
+Before opening a PR:
+- `git status --short`
+- `git diff --check origin/main...HEAD`
+- `git diff --name-status origin/main...HEAD`
+- `git log --oneline --reverse origin/main..HEAD`
+- Record exact focused test/eval outputs.
 
 End with:
-- Exact files changed
-- Tests run with outputs
-- Invariants verified
-- Handoff doc content
+- Branch name.
+- Commit list in order.
+- Exact files changed.
+- Tests run with outputs.
+- Invariants verified.
+- Known caveats and explicit non-goals.
+- PR title/body draft.
+- Handoff doc content.
 ```
