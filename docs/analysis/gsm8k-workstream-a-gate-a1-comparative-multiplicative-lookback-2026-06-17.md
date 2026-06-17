@@ -1,11 +1,11 @@
 # GSM8K Workstream A Gate A1 — multiplicative comparative injection lookback
 
 **Date:** 2026-06-17 (post-implementation evidence closure)
-**Branch:** `feat/gsm8k-workstream-a-gate-a1-comparative-multiplicative-injection`
-**Head (implementation + patch):** `64ab58a7fa01ccfb1c707573b1be044296f5fe38`
-**Base implementation commit:** `e578ec72`
+**Branch:** `feat/gsm8k-workstream-a-gate-a1-comparative-multiplicative-injection` (merged #805)
+**Head (final PR #805):** `c37f97bec36a19bd60a3921c2e1a78b294e00e7b`
+**Merge commit on main:** `bb0830046aa4da23ae58eac8fe2368da5f0be6b5`
 **Governing ratification:** `docs/analysis/gsm8k-workstream-a-gate-a1-comparative-multiplicative-ratification-2026-06-17.md` (merged #803)
-**Scope:** **First subfamily only** — multiplicative entity comparison with explicit same-sentence reference. Additive comparative (Gate A2) deferred.
+**Scope:** **First subfamily only** — multiplicative entity comparison with explicit same-sentence reference. Additive comparative deferred to **Gate A1b / Comparative-A2** (roadmap **Gate A2** is partition/chunking).
 
 ## What shipped
 
@@ -95,7 +95,7 @@ Live `recognized_no_injection_by_category` (post-Gate A1):
 ## Explicit non-changes
 
 - No `report.json` rebaseline
-- No additive comparative (`compare_additive`) — Gate A2
+- No additive comparative (`compare_additive`) — Gate A1b / Comparative-A2
 - No `double` / `one-third` / hyphenated N-times factors
 - No sealed-lane movement
 - No solver `_apply_compare_multiplicative` semantic change
@@ -103,13 +103,13 @@ Live `recognized_no_injection_by_category` (post-Gate A1):
 
 ## Known caveats
 
-1. **Not full Gate A1 family** — multiplicative entity-comparison subfamily only; additive deferred to Gate A2.
+1. **Not full Gate A1 family** — multiplicative entity-comparison subfamily only; additive deferred to Gate A1b / Comparative-A2.
 2. **No guaranteed correct-count lift** — monotonic contract holds (`correct>=6`, `refused<=44`); primary deliverable is injector closure + reclassification visibility.
 3. **DCS/parser path for bare `Jerry has 3 times`** — standalone no-reference surface may still interact with parser initials on some question shapes; Gate A1 injector refuses; completeness guard covers multi-clause confabulation class. Not claimed solved in this slice.
 4. **Matcher regex vs factor narrowness** — `_COMPARE_MULT_NTIMES_RE` still uses broad `_VALUE` at template level; extraction refuses unsafe factors via `_parse_comparative_v1_count_factor`.
 5. **Pinned frontier tests** — historical `report.json` fixture unchanged; live behavior tested ephemerally.
 
-## Deferred work (Gate A1b / A2)
+## Deferred work (Gate A1b / Comparative-A2; roadmap Gate A2 = partition/chunking)
 
 - `double`, `one-third`, `as much`, unit ellipsis
 - Additive comparative injection
