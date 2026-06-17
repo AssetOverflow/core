@@ -560,9 +560,8 @@ def inject_multiplicative_aggregation(
 
 _CURRENCY_SYMBOL_TO_UNIT: dict[str, str] = {
     "$": "dollars",
-    "£": "pounds",
-    "€": "euros",
-    "¥": "yen",
+    # Other symbols (pounds, euros, yen) deferred in Inc 2.
+    # Full support requires symmetric _unit_grounds entries + ratified observed sets + tests.
 }
 
 
@@ -661,22 +660,27 @@ def inject_rate_with_currency(
 
         numerator_unit = _CURRENCY_SYMBOL_TO_UNIT[symbol]
 
-        # Actor — narrow v1: same-sentence ProperName (or the
-        # caller's prior_subject if the graph passed one through the
-        # matcher).  extract_proper_noun_subject is the ratified
-        # narrow extractor already used for discourse in the graph.
+        # Actor — narrow v1
         actor = extract_proper_noun_subject(sentence)
         if not actor:
-            # No unambiguous actor in this sentence.  v1 refuses rather
-            # than guess.  Cross-sentence safe priors are handled by
-            # the caller (ME-2 style) before or after this injector;
-            # if the anchor carried a subject_role from a composition
-            # path we could use it, but pure rate anchors do not.
             return ()
 
-        # Locate the literal verb surface for matched_verb (required
-        # for CandidateOperation + KIND_TO_VERBS["apply_rate"]).
-        verb_token = _locate_rate_verb(sentence)
+        # The rate connector (matched_verb) **must** come from the matched
+        # rate surface span, not a whole-sentence scan (which could pick
+        # an unrelated "a" from "a lemonade stand" before the "$2 per cup").
+        # The matcher now populates "rate_anchor_token" from the local
+        # _CURRENCY_AMOUNT_RE match groups.
+        rate_anchor_token = anchor.get("rate_anchor_token")
+        if rate_anchor_token:
+            if rate_anchor_token not in ("per", "each", "every", "a", "an"):
+                # Not a connector admissible for apply_rate in this scope.
+                # (e.g. "one" from "for one cup" in Inc 2.) Refuse this anchor.
+                continue
+            verb_token = rate_anchor_token
+        else:
+            # Fallback (for older anchors or composition paths). Still
+            # better than before because we only reach here for rate category.
+            verb_token = _locate_rate_verb(sentence)
         if verb_token is None:
             return ()
 

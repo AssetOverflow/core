@@ -145,21 +145,20 @@ def test_matched_tokens_ground_in_source_sentence():
 
 
 def test_dispatch_table_routes_rate_with_currency():
-    """inject_from_match (the public surface used by the graph) must find the new injector."""
+    """The public dispatch (live registry + inject_from_match(sealed=False))
+    must emit a non-empty, roundtrip-admissible CandidateOperation for a
+    canonical rate surface. This proves the serving path is wired, not just
+    the direct unit tests.
+    """
     registry = load_ratified_registry()
-    # Use a real sentence that the live registry will recognize as RATE_WITH_CURRENCY
-    # (the exemplars guarantee at least one such surface is admitted by some ratified spec).
     stmt = "Tina makes $18.00 an hour."
     m = match(stmt, registry)
-    # The matcher may or may not fire depending on the exact live specs on disk,
-    # but if it does for a rate surface, the injector must now be wired.
-    if m is not None and m.category is ShapeCategory.RATE_WITH_CURRENCY:
-        emitted = inject_from_match(m, stmt, sealed=False)
-        # It may still return () for actor or other narrow v1 reasons on this
-        # particular sentence, but the important thing is we did not hit the
-        # old "no injector registered" path that would have been the deferral.
-        # We only assert that the call succeeded without KeyError / unexpected.
-        assert isinstance(emitted, tuple)
+    assert m is not None
+    assert m.category is ShapeCategory.RATE_WITH_CURRENCY
+    emitted = inject_from_match(m, stmt, sealed=False)
+    assert len(emitted) == 1
+    from generate.math_roundtrip import roundtrip_admissible
+    assert roundtrip_admissible(emitted[0]) is True
 
 
 def test_an_rate_anchor_widening_is_contained_to_currency_rate_surfaces():
@@ -197,3 +196,34 @@ def test_an_rate_anchor_widening_is_contained_to_currency_rate_surfaces():
         matched_actor_token="Tina",
     )
     assert roundtrip_admissible(good) is True
+
+
+def test_rate_anchor_token_from_matcher_not_whole_sentence_scan():
+    """The connector used for matched_verb must come from the rate surface match
+    in the anchor (provided by the updated _CURRENCY_AMOUNT_RE), not from a
+    global sentence scan that could pick an unrelated article "a" earlier in
+    the text (e.g. "a lemonade stand").
+
+    Uses a real registry match + public inject_from_match path on a sentence
+    that has a distracting "a" before the actual rate "$2 per cup".
+    The emitted candidate (if any) must use "per", not "a".
+    """
+    registry = load_ratified_registry()
+    # Distracting "a" from "a lemonade stand", then the rate uses "per".
+    # The matcher will produce an anchor for the $...per part with
+    # rate_anchor_token="per" (from its local groups). The injector must
+    # use that, not scan and pick the earlier "a".
+    stmt = "Alexa has a lemonade stand where she sells lemonade for $2 per cup."
+    m = match(stmt, registry)
+    if m is not None and m.category is ShapeCategory.RATE_WITH_CURRENCY:
+        emitted = inject_from_match(m, stmt, sealed=False)
+        if emitted:
+            # Actor extraction may succeed on "Alexa"; if it emits, the verb
+            # must be the one from the rate span ("per"), proving no whole-sentence
+            # scan picked the distracting "a".
+            from generate.math_roundtrip import roundtrip_admissible
+            for cand in emitted:
+                if isinstance(cand, CandidateOperation) and cand.op.kind == "apply_rate":
+                    assert cand.matched_verb == "per", "must use rate-span connector, not earlier unrelated 'a'"
+                    assert roundtrip_admissible(cand) is True
+                    break

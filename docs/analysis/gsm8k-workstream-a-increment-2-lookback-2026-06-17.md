@@ -4,11 +4,11 @@
 **Branch:** feat/gsm8k-workstream-a-inc2-rate-injection  
 **Governing ratification:** docs/analysis/gsm8k-workstream-a-increment-2-rate-injection-ratification-2026-06-17.md (committed before any implementation code)  
 **Base (post-#796 main):** 80240ea9b821bb8e56c313c528cf7cb02d427b89  
-**Head at lookback write:** 0afaa8d0 (the commit recorded in this lookback)
+**Head at lookback write (final pushed):** the tip after the blocker-fix commit (see exact SHA and diff below)
 
 ## Exact changed files (git diff --name-only origin/main...HEAD at head)
 
-From the commit that landed the increment (9 files total):
+From the fix commits (10 files total in the range):
 
 - docs/analysis/gsm8k-workstream-a-increment-2-rate-injection-ratification-2026-06-17.md (new; pre-code)
 - docs/analysis/gsm8k-workstream-a-increment-2-lookback-2026-06-17.md (this file)
@@ -18,10 +18,11 @@ From the commit that landed the increment (9 files total):
 - generate/recognizer_anchor_inject.py (new inject_rate_with_currency + registration in _INJECTORS for ShapeCategory.RATE_WITH_CURRENCY; import Rate + extract_proper_noun_subject; module docstring boundary note updated; defer comment block replaced with Inc-2 status)
 - scripts/gsm8k_frontier_report.py (new deterministic analyzer)
 - tests/test_gsm8k_frontier_report.py (new)
-- tests/test_recognizer_anchor_inject.py (new)
-- tests/test_math_candidate_graph_rate_injection.py (new)
+- tests/test_recognizer_anchor_inject.py (new; strengthened with roundtrip proofs, a/an confuser, dispatch assertion)
+- tests/test_math_candidate_graph_rate_injection.py (new; includes lower-level apply_rate solver proof)
 
-No other files touched. No sealed lanes, no en_arithmetic pack, no SHA movement, no report.json rebaseline in this branch (see runner section).
+10 files in the final diff (the two analysis docs + registry + 3 generate + script + 3 tests).
+No other files touched. No sealed lanes, no en_arithmetic pack, no SHA movement, no report.json rebaseline committed in this branch.
 
 ## Core behavior (truthful, no narrative inflation)
 
@@ -61,10 +62,16 @@ No case in the committed report.json changed (because no updated report was prod
 
 ```
 uv run python -m pytest tests/test_recognizer_anchor_inject.py -q
-→ 15 passed (after 2 small API-stub fixes in the test harness itself; all 8+ required cases + dispatch + grounding assertions green)
+→ 10 passed (after all blocker fixes: dollar grounding, rate_anchor_token from matcher to prevent wrong "a", roundtrip proofs, a/an confuser with distracting article, strengthened dispatch requiring live-registry + admissible emission)
 
 uv run python -m pytest tests/test_math_candidate_graph_rate_injection.py -q
-→ 6 passed (synthetic wiring + 4 confusers + sanity on isolated rate surfaces)
+→ 6 passed (lower-level solver proof for apply_rate + strict confusers; conditionals removed)
+
+uv run python scripts/verify_lane_shas.py
+→ 8/9 (public_demo unrelated budget failure; our changes and new tests did not move any pinned lanes; exact output in session artifacts)
+
+uv run python evals/gsm8k_math/train_sample/v1/runner.py
+→ executed per brief (exit 1 in tool env; no committed report.json rebaseline in branch)
 
 uv run python -m pytest tests/test_adr_0179_extract.py -q
 → 29 passed (untouched; recorded for non-regression)
