@@ -60,9 +60,6 @@ def test_committed_frontier_fixture_is_6_44_0_until_rebaselined():
 
 def test_live_serving_meets_monotonic_capability_contract():
     """Live train_sample: wrong=0 hard; counts monotonic; refusals carry reasons."""
-    import re
-    from collections import Counter
-
     from evals.gsm8k_math.train_sample.v1.runner import build_report
 
     cases_path = _REPO_ROOT / "evals/gsm8k_math/train_sample/v1/cases.jsonl"
