@@ -1,15 +1,19 @@
 """ADR-0175 Phase 2 — sealed practice lane.
 
 A NEW lane (never the wrong=0-pinned train_sample serving runner) that runs the
-47 train cases in *practice* mode: scores correct/wrong/refused as practice
+train-sample cases in *practice* mode: scores correct/wrong/refused as practice
 metrics, feeds per-class counts into the Phase 1 ledger, diagnoses every refusal
 (§8 skill/knowledge/ambiguity), and emits elimination records for wrongs.
 
-On the current pipeline the engine still refuses rather than guesses, so the
-practice ledger mirrors serving (6 correct / 0 wrong / 44 refused, of 50) and
-zero eliminations fire live — the attempt-generating search is Phase 3. Phase 2
-proves the *regime*: the lane, the ledger wiring, the diagnosis, the elimination
-schema, and the seal.
+Live capability contract (monotonic, not frozen):
+- wrong == 0 is hard;
+- correct >= historical floor, refused <= historical ceiling;
+- total count fixed; every refusal diagnosed; eliminations track wrongs only.
+
+The historical floor/ceiling (6 correct / 44 refused / 0 wrong of 50) is the
+Inc1-era rebaseline snapshot — not a design target or ceiling on capability lift.
+Phase 2 proves the *regime*: lane, ledger wiring, diagnosis, elimination schema,
+and the seal. Attempt-generating search is Phase 3.
 
 Invariants exercised by failing-under-violation tests:
 - #1 seal           -> TestSealInvariant
@@ -23,6 +27,7 @@ import dataclasses
 import pytest
 
 from core.reliability_gate import conservative_floor
+from core.learning_arena.report import PracticeReport
 from evals.gsm8k_math.practice.v1.runner import (
     OPERATION_CLASSES,
     REFUSAL_DIAGNOSES,
@@ -32,6 +37,30 @@ from evals.gsm8k_math.practice.v1.runner import (
     diagnose_refusal,
     run_practice,
 )
+
+# Historical floor/ceiling from Inc1 rebaseline (2026-06-17). Monotonic contract:
+# correct may rise, refused may fall, wrong must stay 0. Not a capability ceiling.
+BASELINE_CORRECT = 6
+BASELINE_WRONG = 0
+BASELINE_REFUSED = 44
+TRAIN_SAMPLE_COUNT = 50
+
+
+def _assert_monotonic_capability_contract(rep: PracticeReport) -> None:
+    """CORE practice-lane live contract: wrong=0 hard; counts monotonic vs floor."""
+    counts = rep.counts
+    assert counts["wrong"] == BASELINE_WRONG
+    assert counts["correct"] >= BASELINE_CORRECT
+    assert counts["refused"] <= BASELINE_REFUSED
+    assert (
+        counts["correct"] + counts["wrong"] + counts["refused"]
+        == TRAIN_SAMPLE_COUNT
+    )
+    assert len(rep.elimination_records) == counts["wrong"]
+    assert len(rep.refusal_diagnoses) == counts["refused"]
+    assert all(d in REFUSAL_DIAGNOSES for d in rep.refusal_diagnoses.values())
+    diagnosis_counts = rep.as_dict()["diagnosis_counts"]
+    assert sum(diagnosis_counts.values()) == counts["refused"]
 
 
 # A stub CaseOutcome shape compatible with what the practice lane reads.
@@ -155,22 +184,22 @@ class TestRunPractice:
 
 
 # ---------------------------------------------------------------------------
-# Live lane over the real 47 — mirrors serving on the current pipeline
+# Live lane over train sample — monotonic capability contract
 # ---------------------------------------------------------------------------
 
 class TestLiveLane:
-    def test_live_practice_mirrors_serving_today(self) -> None:
-        # With the refuse-preferring engine, practice == serving (6/44/0 after
-        # the current serving lane lifted two additional cases).
-        # Attempts/eliminations go live in Phase 3.
+    def test_live_practice_meets_monotonic_capability_contract(self) -> None:
+        # Historical floor 6/44/0; future correct-count lift must not fail this test.
+        # Eliminations remain tied to wrong attempts only (zero at current baseline).
         rep = build_report()
-        assert rep.counts == {"correct": 6, "wrong": 0, "refused": 44}
-        assert len(rep.elimination_records) == 0  # no wrongs yet
+        _assert_monotonic_capability_contract(rep)
 
     def test_every_refusal_is_diagnosed(self) -> None:
         rep = build_report()
-        assert len(rep.refusal_diagnoses) == 44
-        assert all(d in REFUSAL_DIAGNOSES for d in rep.refusal_diagnoses.values())
+        _assert_monotonic_capability_contract(rep)
+        # Redundant pins kept explicit: no refusal silently drops from diagnostics.
+        assert len(rep.refusal_diagnoses) == rep.counts["refused"]
+        assert sum(rep.as_dict()["diagnosis_counts"].values()) == rep.counts["refused"]
 
 
 # ---------------------------------------------------------------------------
@@ -184,9 +213,14 @@ class TestSealInvariant:
             _load_cases,
             build_report as serving_build_report,
         )
-        build_report()  # run practice
-        serving = serving_build_report(_load_cases(_CASES_PATH))
-        assert serving["counts"] == {"correct": 6, "wrong": 0, "refused": 44}
+        cases = _load_cases(_CASES_PATH)
+        serving_before = serving_build_report(cases)
+        build_report()  # run practice over same cases
+        serving_after = serving_build_report(cases)
+        assert serving_before["counts"] == serving_after["counts"]
+        assert serving_after["counts"]["wrong"] == BASELINE_WRONG
+        assert serving_after["counts"]["correct"] >= BASELINE_CORRECT
+        assert serving_after["counts"]["refused"] <= BASELINE_REFUSED
 
     def test_no_serving_module_imports_the_practice_lane(self) -> None:
         import subprocess
