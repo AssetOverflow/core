@@ -347,6 +347,48 @@ def _synthesize_multiplicative_aggregation(
     return canonical_pattern, coverage
 
 
+def _synthesize_comparative_with_unit(
+    corpus: ExemplarCorpus,
+) -> tuple[Mapping[str, Any], Mapping[str, int]]:
+    """Gate A1 — multiplicative entity comparison seeds."""
+    exemplars = corpus.exemplars
+    factor_anchors: list[str] = []
+    anchor_counts: list[int] = []
+    coverage_factor: dict[str, int] = {}
+    has_numeric = False
+
+    for ex in exemplars:
+        anchors = ex.expected_graph["quantity_anchors"]
+        anchor_counts.append(len(anchors))
+        for a in anchors:
+            fk = a.get("factor_kind", "anchor")
+            if fk == "numeric":
+                has_numeric = True
+                coverage_factor["numeric"] = coverage_factor.get("numeric", 0) + 1
+            else:
+                token = a["factor_token"]
+                factor_anchors.append(token)
+                coverage_factor[token] = coverage_factor.get(token, 0) + 1
+
+    canonical_pattern: dict[str, Any] = {
+        "shape_category": ShapeCategory.COMPARATIVE_WITH_UNIT.value,
+        "graph_intent": "compare",
+        "outcome": "admissible",
+        "anchor_kind": "comparative_multiplicative",
+        "observed_factor_anchors": _sorted_unique(factor_anchors),
+        "allows_numeric_factor": has_numeric,
+        "anchor_count_min": min(anchor_counts),
+        "anchor_count_max": max(anchor_counts),
+        "unresolved_notes": _collect_author_notes(exemplars),
+    }
+    coverage: dict[str, int] = {
+        "anchors_comparative_multiplicative": sum(anchor_counts),
+    }
+    for token, n in sorted(coverage_factor.items()):
+        coverage[f"factor:{token}"] = n
+    return canonical_pattern, coverage
+
+
 def _synthesize_currency_amount(
     corpus: ExemplarCorpus,
 ) -> tuple[Mapping[str, Any], Mapping[str, int]]:
@@ -398,6 +440,7 @@ _SYNTHESIZERS = {
     ShapeCategory.DISCRETE_COUNT_STATEMENT: _synthesize_discrete_count_statement,
     ShapeCategory.MULTIPLICATIVE_AGGREGATION: _synthesize_multiplicative_aggregation,
     ShapeCategory.CURRENCY_AMOUNT: _synthesize_currency_amount,
+    ShapeCategory.COMPARATIVE_WITH_UNIT: _synthesize_comparative_with_unit,
 }
 
 

@@ -107,6 +107,35 @@ def test_post_inc3_live_runner_has_zero_rate_no_injection():
     assert cats.get("rate_with_currency", 0) == 0
 
 
+def test_post_gate_a1_live_runner_has_zero_comparative_no_injection():
+    """Live train_sample: comparative_with_unit bucket closed at injector."""
+    import re
+    from collections import Counter
+
+    from evals.gsm8k_math.train_sample.v1.runner import build_report
+    from tests.gsm8k_train_sample_baseline import assert_monotonic_serving_counts
+
+    cases_path = _REPO_ROOT / "evals/gsm8k_math/train_sample/v1/cases.jsonl"
+    cases = [
+        json.loads(line)
+        for line in cases_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    report = build_report(cases)
+    assert_monotonic_serving_counts(report["counts"])
+
+    cats: Counter[str] = Counter()
+    for row in report["per_case"]:
+        reason = row.get("reason", "")
+        if "produced no injection" not in reason:
+            continue
+        m = re.search(r"category=(\w+)", reason)
+        if m:
+            cats[m.group(1)] += 1
+
+    assert cats.get("comparative_with_unit", 0) == 0
+
+
 def test_classify_and_extract_category_logic():
     """Unit the internal classification on the exact reason strings the graph emits."""
     # We exercise via the public analyze path with a tiny synthetic report
