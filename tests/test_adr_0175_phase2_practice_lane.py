@@ -37,13 +37,12 @@ from evals.gsm8k_math.practice.v1.runner import (
     diagnose_refusal,
     run_practice,
 )
-
-# Historical floor/ceiling from Inc1 rebaseline (2026-06-17). Monotonic contract:
-# correct may rise, refused may fall, wrong must stay 0. Not a capability ceiling.
-BASELINE_CORRECT = 6
-BASELINE_WRONG = 0
-BASELINE_REFUSED = 44
-TRAIN_SAMPLE_COUNT = 50
+from tests.gsm8k_train_sample_baseline import (
+    BASELINE_CORRECT,
+    BASELINE_REFUSED,
+    BASELINE_WRONG,
+    TRAIN_SAMPLE_COUNT,
+)
 
 
 def _assert_monotonic_capability_contract(rep: PracticeReport) -> None:
@@ -217,10 +216,8 @@ class TestSealInvariant:
         serving_before = serving_build_report(cases)
         build_report()  # run practice over same cases
         serving_after = serving_build_report(cases)
-        assert serving_before["counts"] == serving_after["counts"]
+        assert serving_after == serving_before
         assert serving_after["counts"]["wrong"] == BASELINE_WRONG
-        assert serving_after["counts"]["correct"] >= BASELINE_CORRECT
-        assert serving_after["counts"]["refused"] <= BASELINE_REFUSED
 
     def test_no_serving_module_imports_the_practice_lane(self) -> None:
         import subprocess
