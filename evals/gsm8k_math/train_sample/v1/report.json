@@ -1,8 +1,8 @@
 {
   "adr": "0126",
   "counts": {
-    "correct": 4,
-    "refused": 46,
+    "correct": 6,
+    "refused": 44,
     "wrong": 0
   },
   "exit_criterion": {
@@ -153,8 +153,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0029",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The cost of the keyboard was three times greater than the cost of the mouse.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0030",
@@ -198,8 +198,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0038",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'There are three times that many girls at a party being held on the second floor of the building.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0039",
