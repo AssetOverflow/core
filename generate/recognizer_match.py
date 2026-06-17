@@ -39,51 +39,18 @@ from generate.recognizer_registry import RatifiedRecognizer
 # multipliers ("dozen").  Mirrors the Phase A categorizer's
 # _NUMBER_WORDS so the matcher's "has any quantity marker" predicate
 # is the same shape as Phase A's "has no quantity marker" predicate.
-_NUMBER_WORDS: Final[frozenset[str]] = frozenset(
-    {
-        "one",
-        "two",
-        "three",
-        "four",
-        "five",
-        "six",
-        "seven",
-        "eight",
-        "nine",
-        "ten",
-        "eleven",
-        "twelve",
-        "thirteen",
-        "fourteen",
-        "fifteen",
-        "sixteen",
-        "seventeen",
-        "eighteen",
-        "nineteen",
-        "twenty",
-        "thirty",
-        "forty",
-        "fifty",
-        "sixty",
-        "seventy",
-        "eighty",
-        "ninety",
-        "hundred",
-        "thousand",
-        "million",
-        "billion",
-        "dozen",
-        "dozens",
-    }
-)
+_NUMBER_WORDS: Final[frozenset[str]] = frozenset({
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+    "seventeen", "eighteen", "nineteen", "twenty", "thirty", "forty", "fifty",
+    "sixty", "seventy", "eighty", "ninety",
+    "hundred", "thousand", "million", "billion",
+    "dozen", "dozens",
+})
 
 _DIGIT_RE: Final[re.Pattern[str]] = re.compile(r"\d")
 _INDEFINITE_TOKENS: Final[tuple[str, ...]] = (
-    " some ",
-    " several ",
-    " a few ",
-    " many ",
-    " any ",
+    " some ", " several ", " a few ", " many ", " any ",
 )
 
 
@@ -160,13 +127,7 @@ _TEMPORAL_PATTERNS: Final[tuple[tuple[re.Pattern[str], str], ...]] = (
 # Day-of-week enumeration: at least two distinct day names with at
 # least one numeric count.  Matches "20 ... Monday, 36 ... Tuesday".
 _DAY_NAMES: Final[tuple[str, ...]] = (
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
 )
 _DAY_HIT_RE: Final[re.Pattern[str]] = re.compile(
     r"""(?ix)
@@ -267,13 +228,12 @@ def _match_temporal_aggregation(
         return None
 
     anchors: list[Mapping[str, Any]] = []
+    padded = " " + statement.lower() + " "
 
     # Pass 1 — day-of-week enumeration.  At least two distinct day
     # names + a count per day yields multi-anchor day-windowed
     # aggregation.
-    if "day" in observed_units and (
-        "each" in observed_quantifiers or "every" in observed_quantifiers
-    ):
+    if "day" in observed_units and ("each" in observed_quantifiers or "every" in observed_quantifiers):
         day_hits: list[tuple[str, str]] = []
         for m in _DAY_HIT_RE.finditer(statement):
             day_hits.append((m.group(1), m.group(2).lower()))
@@ -282,14 +242,12 @@ def _match_temporal_aggregation(
         if len(distinct_days) >= 2:
             quant = "each" if "each" in observed_quantifiers else "every"
             for count_token, _day in day_hits:
-                anchors.append(
-                    {
-                        "kind": "event_count_per_window",
-                        "count_token": count_token,
-                        "window_unit": "day",
-                        "window_quantifier": quant,
-                    }
-                )
+                anchors.append({
+                    "kind": "event_count_per_window",
+                    "count_token": count_token,
+                    "window_unit": "day",
+                    "window_quantifier": quant,
+                })
             if anchors:
                 return (tuple(anchors), "aggregate")
 
@@ -297,11 +255,7 @@ def _match_temporal_aggregation(
     for pat, kind in _TEMPORAL_PATTERNS:
         for m in pat.finditer(statement):
             if kind == "explicit_quantifier":
-                count_token, quantifier, unit = (
-                    m.group(1),
-                    m.group(2).lower(),
-                    m.group(3).lower(),
-                )
+                count_token, quantifier, unit = m.group(1), m.group(2).lower(), m.group(3).lower()
             elif kind == "in_window":
                 count_token, quantifier, unit = m.group(1), "per", m.group(2).lower()
             else:  # adverbial
@@ -309,11 +263,8 @@ def _match_temporal_aggregation(
                 adverb = m.group(2).lower()
                 # Map adverb → unit.
                 unit_map = {
-                    "daily": "day",
-                    "weekly": "week",
-                    "monthly": "month",
-                    "yearly": "year",
-                    "hourly": "hour",
+                    "daily": "day", "weekly": "week", "monthly": "month",
+                    "yearly": "year", "hourly": "hour",
                 }
                 unit = unit_map[adverb]
                 quantifier = "per"
@@ -321,14 +272,12 @@ def _match_temporal_aggregation(
                 continue
             if quantifier not in observed_quantifiers:
                 continue
-            anchors.append(
-                {
-                    "kind": "event_count_per_window",
-                    "count_token": count_token,
-                    "window_unit": unit,
-                    "window_quantifier": quantifier,
-                }
-            )
+            anchors.append({
+                "kind": "event_count_per_window",
+                "count_token": count_token,
+                "window_unit": unit,
+                "window_quantifier": quantifier,
+            })
 
     if not anchors:
         return None
@@ -410,16 +359,14 @@ def _match_rate_with_currency(
         else:
             amount_kind = "integer"
 
-        anchors.append(
-            {
-                "kind": "currency_per_unit_rate",
-                "currency_symbol": symbol,
-                "amount": amount_token,
-                "amount_kind": amount_kind,
-                "per_unit": per_unit_lc,
-                "rate_anchor_token": connector.lower() if connector else None,
-            }
-        )
+        anchors.append({
+            "kind": "currency_per_unit_rate",
+            "currency_symbol": symbol,
+            "amount": amount_token,
+            "amount_kind": amount_kind,
+            "per_unit": per_unit_lc,
+            "rate_anchor_token": connector.lower() if connector else None,
+        })
 
     if not anchors:
         return None
@@ -559,11 +506,7 @@ def _try_extract_currency_per_unit_composition_anchor(
     if composed_value_f != composed_value_f:  # NaN guard
         return None
     composed_value: int | float
-    if (
-        composed_value_f.is_integer()
-        and "." not in count_token
-        and "." not in amount_token
-    ):
+    if composed_value_f.is_integer() and "." not in count_token and "." not in amount_token:
         composed_value = int(composed_value_f)
     else:
         composed_value = composed_value_f
@@ -781,44 +724,23 @@ def try_extract_cross_sentence_composition_anchor(
 # ---------------------------------------------------------------------------
 
 _PER_UNIT_TOKENS: Final[tuple[str, ...]] = (
-    " per ",
-    "/",
-    " an hour",
-    " a hour",
-    " a day",
-    " a week",
-    " a month",
-    " a year",
-    " for one ",
-    " for each ",
-    " for every ",
+    " per ", "/", " an hour", " a hour", " a day", " a week", " a month",
+    " a year", " for one ", " for each ", " for every ",
     # RAT-1 — standalone per-item quantifiers. "$400 each" is per-unit
     # framing semantically equivalent to "$400 per item". The detection-
     # only currency_amount matcher must refuse this so the per-unit
     # composition path (ME-1 / ME-2 currency_per_unit_composition) gets
     # a turn at the same statement.
-    " each ",
-    " each.",
-    " apiece ",
-    " apiece.",
+    " each ", " each.", " apiece ", " apiece.",
 )
 
 _TEMPORAL_QUANTIFIER_TOKENS: Final[tuple[str, ...]] = (
-    " per ",
-    " each ",
-    " every ",
-    " daily",
-    " weekly",
-    " monthly",
-    " yearly",
-    " hourly",
+    " per ", " each ", " every ", " daily", " weekly", " monthly",
+    " yearly", " hourly",
 )
 
 _MULTIPLICATIVE_CONNECTIVES: Final[tuple[str, ...]] = (
-    " with ",
-    " each ",
-    " in each ",
-    " per each ",
+    " with ", " each ", " in each ", " per each ",
 )
 
 
@@ -921,13 +843,9 @@ def _match_discrete_count_statement(
 # CandidateInitial post-init whitelist.  Widening to owns/holds/contains
 # requires a coordinated CandidateInitial change and lands in a follow-up
 # PR after the framework's empirical lift is operator-reviewed.
-_POSSESSION_VERBS: Final[frozenset[str]] = frozenset(
-    {
-        "has",
-        "have",
-        "had",
-    }
-)
+_POSSESSION_VERBS: Final[frozenset[str]] = frozenset({
+    "has", "have", "had",
+})
 
 # ADR-0170 W2 — acquisition verbs: surface verbs that grammatically place
 # the actor as the *gainer* of the operand quantity, NOT as having the
@@ -948,60 +866,28 @@ _POSSESSION_VERBS: Final[frozenset[str]] = frozenset(
 #
 # Widening this set is operator-reviewable per the wrong=0 hazard
 # documented in feedback-wrong-zero-hazard-case-0050.
-_ACQUISITION_VERBS: Final[frozenset[str]] = frozenset(
-    {
-        "collected",
-        "collects",
-        "collect",
-        "received",
-        "receives",
-        "receive",
-        "bought",
-        "buys",
-        "buy",
-        "got",
-        "gets",
-        "get",
-    }
-)
+_ACQUISITION_VERBS: Final[frozenset[str]] = frozenset({
+    "collected", "collects", "collect",
+    "received", "receives", "receive",
+    "bought", "buys", "buy",
+    "got", "gets", "get",
+})
 
 # Pronoun subjects refused at extraction (ambiguous referent).  The
 # extractor requires a concrete proper-noun subject the source span can
 # ground.
-_REFUSED_SUBJECT_TOKENS: Final[frozenset[str]] = frozenset(
-    {
-        "he",
-        "she",
-        "they",
-        "it",
-        "we",
-        "you",
-        "i",
-        "him",
-        "her",
-        "them",
-        "us",
-    }
-)
+_REFUSED_SUBJECT_TOKENS: Final[frozenset[str]] = frozenset({
+    "he", "she", "they", "it", "we", "you", "i",
+    "him", "her", "them", "us",
+})
 
 # Clause-splitting / enumeration markers.  Their presence indicates a
 # second clause that may carry operations or additional anchors, so
 # v1 refuses extraction (skip-only fallback preserves wrong=0).
 _CLAUSE_SPLIT_TOKENS: Final[tuple[str, ...]] = (
-    " but ",
-    " then ",
-    " however ",
-    " before ",
-    " after ",
-    " and ",
-    " or ",
-    " while ",
-    " until ",
-    " unless ",
-    ", and ",
-    ", but ",
-    ", or ",
-    ", then ",
+    " but ", " then ", " however ", " before ", " after ",
+    " and ", " or ", " while ", " until ", " unless ",
+    ", and ", ", but ", ", or ", ", then ",
 )
 
 # Hyphenated compound cardinal: 'twenty-five', 'ninety-nine'.  These
@@ -1023,11 +909,11 @@ def _extract_discrete_count_re_for(counted_nouns: list[str]) -> re.Pattern[str]:
     noun_alt = "|".join(re.escape(n) for n in options)
     return re.compile(
         r"^\s*"
-        r"(?P<subject>(?-i:[A-Z][a-z]+))"  # case-sensitive proper noun
-        r"\s+(?P<verb>[A-Za-z]+)"  # any word; verified against whitelist
-        r"\s+(?P<count>\d+|[A-Za-z\-]+)"  # integer or word/hyphenated cardinal
+        r"(?P<subject>(?-i:[A-Z][a-z]+))"     # case-sensitive proper noun
+        r"\s+(?P<verb>[A-Za-z]+)"             # any word; verified against whitelist
+        r"\s+(?P<count>\d+|[A-Za-z\-]+)"      # integer or word/hyphenated cardinal
         r"\s+(?P<noun>" + noun_alt + r")"
-        r"(?:\b.*)?$",  # optional trailing content
+        r"(?:\b.*)?$",                        # optional trailing content
         flags=re.IGNORECASE,
     )
 
@@ -1065,8 +951,7 @@ def _extract_discrete_count_re_open(counted_nouns: list[str]) -> re.Pattern[str]
     open_tok = rf"(?-i:(?!(?:{_OPEN_NOUN_STOP})\b)[a-z]+)"
     open_noun = rf"{open_tok}(?:\s+{open_tok}){{0,2}}"
     noun_group = (
-        rf"(?P<noun>{closed_alt}|{open_noun})"
-        if closed_alt
+        rf"(?P<noun>{closed_alt}|{open_noun})" if closed_alt
         else rf"(?P<noun>{open_noun})"
     )
     return re.compile(
@@ -1074,7 +959,8 @@ def _extract_discrete_count_re_open(counted_nouns: list[str]) -> re.Pattern[str]
         r"(?P<subject>(?-i:[A-Z][a-z]+))"
         r"\s+(?P<verb>[A-Za-z]+)"
         r"\s+(?P<count>\d+|[A-Za-z\-]+)"
-        r"\s+" + noun_group + r"(?:\b.*)?$",
+        r"\s+" + noun_group +
+        r"(?:\b.*)?$",
         flags=re.IGNORECASE,
     )
 
@@ -1224,25 +1110,12 @@ def _try_extract_discrete_count_anchor(
 # appears in the sentence we refuse the compound extraction; the case
 # routes to a future phase that handles those shapes.
 _COMPOUND_REFUSE_SUBSTRINGS: Final[tuple[str, ...]] = (
-    " times ",
-    " times.",
-    " times,",
-    " as long",
-    " as many",
-    " as much",
-    " as old",
-    " greater than",
-    " less than",
-    " more than",
-    " fewer than",
-    " half as ",
-    " twice as ",
-    " thrice ",
-    "%",
-    " percent",
-    " half of ",
-    " quarter of ",
-    " third of ",
+    " times ", " times.", " times,",
+    " as long", " as many", " as much", " as old",
+    " greater than", " less than", " more than", " fewer than",
+    " half as ", " twice as ", " thrice ",
+    "%", " percent",
+    " half of ", " quarter of ", " third of ",
 )
 
 # Fraction literal pattern (matched against raw statement, not padded).
@@ -1292,7 +1165,10 @@ def _try_extract_compound_discrete_count_anchors(
         return None
 
     # Must have a conjunctive separator — otherwise this isn't compound
-    has_conjunctive = any(tok in padded_lower for tok in (", and ", " and ", ", "))
+    has_conjunctive = any(
+        tok in padded_lower
+        for tok in (", and ", " and ", ", ")
+    )
     if not has_conjunctive:
         return None
 
@@ -1404,7 +1280,6 @@ def _try_extract_compound_discrete_count_anchors(
 
     # HYPOTHESIS_CAP enforcement — refusal-preferring rather than truncate
     from generate.comprehension.state import HYPOTHESIS_CAP
-
     if len(anchors) > HYPOTHESIS_CAP:
         return None
 
@@ -1455,8 +1330,7 @@ def _match_multiplicative_aggregation(
     # two needed to admit a multiplicative shape.
     digit_hits = len(_DIGIT_RE.findall(statement))
     word_hits = sum(
-        1
-        for token in padded.split()
+        1 for token in padded.split()
         if token.strip(".,;:!?\"'()[]{}").lower() in _NUMBER_WORDS
     )
     if (digit_hits + word_hits) < 2:
@@ -1571,24 +1445,9 @@ def _try_extract_each_weighing_anchor(
 
     # matched_anchor must be in CandidateInitial post-init whitelist.
     outer_verb = m.group("outer_verb").lower()
-    matched_anchor = (
-        outer_verb
-        if outer_verb
-        in {
-            "has",
-            "had",
-            "made",
-            "makes",
-            "buys",
-            "bought",
-            "paid",
-            "earned",
-            "saved",
-            "got",
-            "received",
-        }
-        else "had"
-    )
+    matched_anchor = outer_verb if outer_verb in {
+        "has", "had", "made", "makes", "buys", "bought", "paid", "earned", "saved", "got", "received"
+    } else "had"
 
     composed_initial = CandidateInitial(
         initial=InitialPossession(
@@ -1716,10 +1575,7 @@ def _try_extract_additive_composition_anchor(
     if unit_a.rstrip("s") != unit_b.rstrip("s"):
         return None
     canonical_unit = unit_a
-    if (
-        canonical_unit not in observed_units
-        and canonical_unit.rstrip("s") not in observed_units
-    ):
+    if canonical_unit not in observed_units and canonical_unit.rstrip("s") not in observed_units:
         return None
 
     count_a_token = m.group("count_a")
@@ -1751,11 +1607,9 @@ def _try_extract_additive_composition_anchor(
     # Verb whitelist maps to a CandidateInitial.matched_anchor value
     # the post-init guard accepts (existing whitelist includes
     # has/have/had/saved/earned/got/received/bought/made/paid).
-    matched_anchor = (
-        verb
-        if verb in {"saved", "earned", "got", "received", "bought", "made", "paid"}
-        else "had"
-    )
+    matched_anchor = verb if verb in {
+        "saved", "earned", "got", "received", "bought", "made", "paid"
+    } else "had"
 
     composed_initial = CandidateInitial(
         initial=InitialPossession(
@@ -1787,22 +1641,10 @@ def _try_extract_additive_composition_anchor(
     return ((anchor,), "aggregate")
 
 
-_ADDITIVE_COMPOSITION_VERBS: Final[frozenset[str]] = frozenset(
-    {
-        "lost",
-        "gained",
-        "earned",
-        "saved",
-        "made",
-        "paid",
-        "spent",
-        "bought",
-        "sold",
-        "added",
-        "removed",
-        "received",
-    }
-)
+_ADDITIVE_COMPOSITION_VERBS: Final[frozenset[str]] = frozenset({
+    "lost", "gained", "earned", "saved", "made", "paid", "spent",
+    "bought", "sold", "added", "removed", "received",
+})
 
 
 # ---------------------------------------------------------------------------
@@ -1844,34 +1686,15 @@ _SUBTRACTIVE_TWO_QUANTITY_RE: Final[re.Pattern[str]] = re.compile(
 _SUBTRACTIVE_COMPOSITION_SHAPE: Final[str] = "bound(initial) − bound(removed)"
 
 
-_SUBTRACTIVE_INITIAL_VERBS: Final[frozenset[str]] = frozenset(
-    {
-        "had",
-        "has",
-        "got",
-        "owns",
-        "owned",
-        "earned",
-        "saved",
-        "made",
-        "received",
-        "bought",
-    }
-)
+_SUBTRACTIVE_INITIAL_VERBS: Final[frozenset[str]] = frozenset({
+    "had", "has", "got", "owns", "owned", "earned", "saved",
+    "made", "received", "bought",
+})
 
-_SUBTRACTIVE_REMOVAL_VERBS: Final[frozenset[str]] = frozenset(
-    {
-        "lost",
-        "spent",
-        "gave",
-        "donated",
-        "paid",
-        "removed",
-        "sold",
-        "used",
-        "consumed",
-    }
-)
+_SUBTRACTIVE_REMOVAL_VERBS: Final[frozenset[str]] = frozenset({
+    "lost", "spent", "gave", "donated", "paid", "removed",
+    "sold", "used", "consumed",
+})
 
 
 def _try_extract_subtractive_composition_anchor(
@@ -1944,22 +1767,9 @@ def _try_extract_subtractive_composition_anchor(
     from generate.math_candidate_parser import CandidateInitial
     from generate.math_problem_graph import InitialPossession, Quantity
 
-    matched_anchor = (
-        verb_a
-        if verb_a
-        in {
-            "has",
-            "had",
-            "saved",
-            "earned",
-            "got",
-            "received",
-            "bought",
-            "made",
-            "paid",
-        }
-        else "had"
-    )
+    matched_anchor = verb_a if verb_a in {
+        "has", "had", "saved", "earned", "got", "received", "bought", "made", "paid",
+    } else "had"
 
     composed_initial = CandidateInitial(
         initial=InitialPossession(
@@ -2111,76 +1921,25 @@ def match(
 # Cross-sentence subject resolution helper (ME-2).
 # ---------------------------------------------------------------------------
 
-_PROPER_NOUN_SUBJECT_RE: Final[re.Pattern[str]] = re.compile(r"^\s*([A-Z][a-zA-Z]+)\b")
+_PROPER_NOUN_SUBJECT_RE: Final[re.Pattern[str]] = re.compile(
+    r"^\s*([A-Z][a-zA-Z]+)\b"
+)
 
 
 _COMMON_DETERMINERS_AT_HEAD: Final[frozenset[str]] = frozenset(
     {
         # Articles + demonstratives
-        "the",
-        "a",
-        "an",
-        "this",
-        "that",
-        "these",
-        "those",
+        "the", "a", "an", "this", "that", "these", "those",
         # Possessives
-        "his",
-        "her",
-        "their",
-        "its",
-        "my",
-        "your",
-        "our",
+        "his", "her", "their", "its", "my", "your", "our",
         # Sentence-initial connectors / prepositions that get capitalized
-        "after",
-        "before",
-        "when",
-        "while",
-        "if",
-        "then",
-        "so",
-        "but",
-        "and",
-        "or",
-        "during",
-        "since",
-        "until",
-        "though",
-        "although",
-        "however",
-        "moreover",
-        "additionally",
-        "first",
-        "next",
-        "later",
-        "finally",
-        "now",
-        "soon",
-        "today",
-        "tomorrow",
-        "yesterday",
-        "every",
-        "all",
-        "some",
-        "many",
-        "each",
-        "another",
-        "other",
-        "in",
-        "on",
-        "at",
-        "by",
-        "for",
-        "from",
-        "with",
-        "without",
-        "how",
-        "why",
-        "what",
-        "where",
-        "who",
-        "when",
+        "after", "before", "when", "while", "if", "then", "so", "but",
+        "and", "or", "during", "since", "until", "though", "although",
+        "however", "moreover", "additionally", "first", "next", "later",
+        "finally", "now", "soon", "today", "tomorrow", "yesterday",
+        "every", "all", "some", "many", "each", "another", "other",
+        "in", "on", "at", "by", "for", "from", "with", "without",
+        "how", "why", "what", "where", "who", "when",
     }
 )
 
