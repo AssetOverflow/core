@@ -447,32 +447,24 @@ class TestPhase3WiringEndToEnd:
 
 
 class TestWrongZeroPreservation:
-    def test_train_sample_score_unchanged(self) -> None:
-        """Phase 3 substrate must preserve the current train_sample score.
+    def test_train_sample_serving_meets_monotonic_contract(self) -> None:
+        """Phase 3 substrate must not violate serving safety or regress below baseline.
 
-        Any change here would indicate the lookback path is firing on cases it
-        should not, or breaking cases it should not.
+        Capability lift (correct climbing, refusals falling) is allowed and
+        expected as injectors land; wrong answers and sub-baseline correct counts
+        indicate the lookback path is firing unsafely or breaking solved cases.
         """
         import json
         from pathlib import Path
         from evals.gsm8k_math.train_sample.v1.runner import (
             build_report, _CASES_PATH,
         )
+        from tests.gsm8k_train_sample_baseline import assert_monotonic_serving_counts
+
         cases = [
             json.loads(line)
             for line in Path(_CASES_PATH).open(encoding="utf-8")
             if line.strip()
         ]
         report = build_report(cases)
-        counts = report["counts"]
-        assert counts["wrong"] == 0, (
-            f"wrong=0 invariant violated: {counts}"
-        )
-        assert counts["correct"] == 6, (
-            f"correct count moved from 6 to {counts['correct']}; "
-            "Phase 3a substrate should not lift score on this corpus "
-            "(see PHASE-3.1 follow-up brief for what would lift it)"
-        )
-        assert counts["refused"] == 44, (
-            f"refused count moved from 44 to {counts['refused']}"
-        )
+        assert_monotonic_serving_counts(report["counts"])

@@ -1,13 +1,12 @@
 """Tests for the deterministic GSM8K frontier report analyzer (Inc 2 + Inc3 evidence).
 
-These tests pin:
-- Stable bucketing of the exact refusal reasons emitted by the candidate graph.
-- Correct extraction of category=... from "recognizer matched but produced no injection" strings.
-- **Pinned historical artifact:** committed report.json still encodes pre-Inc2/Inc3 rate
-  no-injection (Inc 2 measurement target); not rebaselined by policy.
-- **Live post-Inc3 behavior:** ephemeral train_sample runner shows rate_with_currency
-  no-injection = 0 after #799 connector support.
-- Fully deterministic output (sorted keys, no timestamps, repeatable across runs).
+Test classes:
+- **Historical fixture:** committed ``report.json`` exact-count pin until rebaselined.
+- **Live capability:** monotonic serving contract (wrong=0; correct may climb).
+- **Frontier diagnostics:** bucketing, category extraction, deterministic analyzer output.
+
+Score preservation and truth preservation are separate: frozen counts protect replay
+of committed measurement artifacts; live tests must not block capability lift.
 """
 
 from __future__ import annotations
@@ -20,13 +19,14 @@ from scripts.gsm8k_frontier_report import (
     analyze_report,
     render_markdown,
 )
+from tests.gsm8k_train_sample_baseline import assert_monotonic_serving_counts
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _REPORT = _REPO_ROOT / "evals/gsm8k_math/train_sample/v1/report.json"
 
 
-def test_pinned_report_json_is_historical_pre_inc3_artifact():
-    """Committed report.json is the stale Inc1-era measurement artifact.
+def test_committed_frontier_fixture_is_6_44_0_until_rebaselined():
+    """Historical artifact: committed report.json stays at 6/44/0 until rebaselined.
 
     Inc2 used this file to surface rate_with_currency no-injection (3 cases).
     Inc3 (#799) changed live code but did not rebaseline report.json — this test
@@ -58,6 +58,29 @@ def test_pinned_report_json_is_historical_pre_inc3_artifact():
     assert json.dumps(summary, sort_keys=True) == json.dumps(summary2, sort_keys=True)
 
 
+def test_live_serving_meets_monotonic_capability_contract():
+    """Live train_sample: wrong=0 hard; counts monotonic; refusals carry reasons."""
+    import re
+    from collections import Counter
+
+    from evals.gsm8k_math.train_sample.v1.runner import build_report
+
+    cases_path = _REPO_ROOT / "evals/gsm8k_math/train_sample/v1/cases.jsonl"
+    cases = [
+        json.loads(line)
+        for line in cases_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    report = build_report(cases)
+
+    assert_monotonic_serving_counts(report["counts"])
+
+    refused_rows = [r for r in report["per_case"] if r.get("verdict") == "refused"]
+    assert len(refused_rows) == report["counts"]["refused"]
+    for row in refused_rows:
+        assert row.get("reason"), f"refused case {row.get('case_id')} lacks reason"
+
+
 def test_post_inc3_live_runner_has_zero_rate_no_injection():
     """Live train_sample scoring on current code: rate bucket no longer at injector."""
     import re
@@ -73,9 +96,7 @@ def test_post_inc3_live_runner_has_zero_rate_no_injection():
     ]
     report = build_report(cases)
 
-    assert report["counts"]["correct"] == 6
-    assert report["counts"]["refused"] == 44
-    assert report["counts"]["wrong"] == 0
+    assert_monotonic_serving_counts(report["counts"])
 
     cats: Counter[str] = Counter()
     for row in report["per_case"]:
