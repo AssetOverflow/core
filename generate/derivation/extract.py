@@ -38,6 +38,17 @@ this module, so none of this can move the serving ``3/47/0``):
   group keeps numeric ranges (``3-5``) out and only the first hyphen segment is
   taken, so it stays clear of the deferred EX-3 multi-word-unit traps below.
 
+Workstream A (first increment, per ratified scope): additional conservative lexeme
+passes for fractional ("half of", "X/Y of") and comparative ("X more than Y unit",
+"X less than Y unit") surface forms. These passes surface only the component lexemes
+that appear in the input text (source_token is always a literal substring of the
+problem statement). For fractional surface factors, the visible factor is normalized
+to a numeric value (0.5 for "half", num/den for "X/Y") while preserving the exact
+surface source_token; comparative composition (more/less as relation on two grounded
+counts) is fully deferred. This is required by the module contract (lexeme extraction
+only for surface; combining is the search/compose job,
+gated by self-verification).
+
 EX-3 (multi-word units) is deliberately **not** integrated. Two distinct traps
 defeat the tightest lookahead-anchored rule the brief admits:
 
@@ -114,6 +125,27 @@ _HYPHEN_QTY_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w.])(\d+(?:\.\d+)?)-([a-zA-Z]+)"
 )
 
+# New for Workstream A increment: fractional "half of" or "X/Y of".
+# These are still lexeme-level (the surface words "half", "3/4" etc. are recognized), but we
+# normalize the visible factor to a numeric value for convenience while always preserving
+# the exact surface source_token from the input text. This limited normalization for factors
+# is explicitly documented; full relation composition remains in the graph/compose/search layer.
+_HALF_OF_RE: Final[re.Pattern[str]] = re.compile(r"(?i)\b(half|one half)\s+of\s+(?:the\s+|a\s+)?([a-zA-Z]+)")
+_FRACTION_OF_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?i)\b(\d+)/(\d+)\s+of\s+([a-zA-Z]+)"
+)
+
+# Comparative "X more than Y unit" and "X less than Y unit" surface forms.
+# The regex matches the surface lexemes; the code emits the two component numbers
+# (with unit) as separate lexeme quantities. No arithmetic (sum/diff) is performed
+# here. Helps "2 more than 5 miles", "3 less than 17 stop signs".
+_MORE_THAN_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w.])(\d+(?:\.\d+)?)\s+more\s+than\s+(\d+(?:\.\d+)?)\s+([a-zA-Z]+)"
+)
+_LESS_THAN_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w.])(\d+(?:\.\d+)?)\s+less\s+than\s+(\d+(?:\.\d+)?)\s+([a-zA-Z]+)"
+)
+
 
 # Function words that are never units. When the token immediately after a number
 # is one of these (``$0.75 each``, ``$40 to go``, ``3/4 of``), the single-word unit
@@ -126,7 +158,8 @@ _NON_UNIT_WORDS: Final[frozenset[str]] = frozenset(
     {
         "a", "an", "the", "of", "to", "for", "in", "on", "at", "as", "than",
         "per", "each", "every", "and", "or", "with", "by", "from", "more",
-        "less", "about", "that",
+        "less", "about", "that", "old", "young", "tall", "short", "long",
+        "wide", "deep", "high", "away", "apart", "ago", "early", "late",
     }
 )
 
@@ -186,6 +219,8 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
     3. digit + single unit word (skips numbers a list/hyphen pass already claimed);
     4. EX-1 word-number + unit word (alphabetic, disjoint from digit spans);
     5. EX-5 sentence-final bare number (skips any already-claimed digit).
+    6. New for Workstream A: _HALF_OF_RE / _FRACTION_OF_RE (fractional "half of" / "3/4 of");
+       _MORE_THAN_RE / _LESS_THAN_RE (comparative "X more/less than Y unit").
     """
     found: list[tuple[int, Quantity]] = []
     claimed: list[tuple[int, int]] = []
@@ -209,6 +244,72 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
         if quantity is not None:
             found.append((match.start(1), quantity))
             claimed.append(match.span(1))
+
+    # 1c. New EX for Workstream A increment: fractional "half of" / "X/Y of".
+    #     Lexeme-level only: surface the factor word or fraction string as it appears
+    #     in the input (per the module contract: extraction is lexeme-level; combining
+    #     and relation resolution belong to search/compose, gated by verify).
+    #     No synthesized decimal source_tokens; source_token is always surface text.
+    for match in _HALF_OF_RE.finditer(problem_text):
+        unit = match.group(2)
+        # "half" (or "one half") is the surface lexeme factor; value is interpretive
+        # convenience for downstream, but source is the word that appears in text.
+        quantity = Quantity(value=0.5, unit=_clean_unit(unit), source_token=match.group(1))
+        if quantity is not None:
+            pos = match.start(1)
+            if not _claimed(pos, claimed):
+                found.append((pos, quantity))
+                claimed.append((pos, pos + len(match.group(1))))
+
+    for match in _FRACTION_OF_RE.finditer(problem_text):
+        num, den, unit = match.group(1), match.group(2), match.group(3)
+        try:
+            val = float(num) / float(den)
+        except (ValueError, ZeroDivisionError):
+            continue
+        # "3/4" is the surface lexeme form in the text; keep it as source_token.
+        quantity = Quantity(value=val, unit=_clean_unit(unit), source_token=f"{num}/{den}")
+        pos = match.start(1)
+        if not _claimed(pos, claimed):
+            found.append((pos, quantity))
+            claimed.append(match.span(1))
+
+    # 1d. New EX for Workstream A: comparative "X more than Y unit", "X less than Y unit".
+    #     Lexeme-level only: surface the two component numbers that appear in the text
+    #     (with the unit). Do *not* synthesize a result value or non-surface source_token
+    #     here (e.g. never emit "7.0" for "2 more than 5 miles"). The "more/less" relation
+    #     and any composition are expressed via the recognizer graph (from exemplars) and
+    #     resolved in compose/search/verify (the module contract). This avoids creating
+    #     grounding hazards and keeps extraction strictly lexeme.
+    for match in _MORE_THAN_RE.finditer(problem_text):
+        x, y, unit = match.group(1), match.group(2), match.group(3)
+        qx = _quantity(x, unit)
+        if qx is not None:
+            pos = match.start(1)
+            if not _claimed(pos, claimed):
+                found.append((pos, qx))
+                claimed.append((pos, pos + len(x)))
+        qy = _quantity(y, unit)
+        if qy is not None:
+            pos = match.start(2)
+            if not _claimed(pos, claimed):
+                found.append((pos, qy))
+                claimed.append((pos, pos + len(y)))
+
+    for match in _LESS_THAN_RE.finditer(problem_text):
+        x, y, unit = match.group(1), match.group(2), match.group(3)
+        qx = _quantity(x, unit)
+        if qx is not None:
+            pos = match.start(1)
+            if not _claimed(pos, claimed):
+                found.append((pos, qx))
+                claimed.append((pos, pos + len(x)))
+        qy = _quantity(y, unit)
+        if qy is not None:
+            pos = match.start(2)
+            if not _claimed(pos, claimed):
+                found.append((pos, qy))
+                claimed.append((pos, pos + len(y)))
 
     # 2. digit + single unit word — the original base pattern.
     for match in _QTY_RE.finditer(problem_text):
@@ -245,4 +346,25 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
             found.append((match.start(1), quantity))
 
     found.sort(key=lambda item: item[0])
+
+    # Post-process for age postmodifier hygiene (e.g. "6 years old" in "when she was 6 years old").
+    # Prevents spurious "years" quantity in incidental age contexts (the motivating "8 pages when she
+    # was 6 years old" proxy refusal case) while *preserving* legitimate age-as-target quantities
+    # (pinned by TestEX3StillDeferred: "25 years old?" and "Rachel is 12 years old." must keep unit="years").
+    # Rule (lexeme + local, no grammar): if a year-unit has "old"/"young" nearby, treat as incidental
+    # (blank) *only if* there exists at least one *earlier* quantity in the list that carries a non-empty
+    # unit (i.e., this age phrase is trailing background to a primary claim that has its own grounded unit).
+    # Pure age statements or question targets remain "years" (satisfies the pinned tests and GSM8K age cases
+    # where age *is* the measured quantity).
+    if found:
+        has_prior_grounded = False
+        for i, (pos, q) in enumerate(found):
+            if q.unit and q.unit not in ("year", "years"):
+                has_prior_grounded = True
+            if q.unit in ("year", "years"):
+                snippet = problem_text[pos : pos + 30].lower()
+                if ("old" in snippet or "young" in snippet) and has_prior_grounded:
+                    found[i] = (pos, Quantity(value=q.value, unit="", source_token=q.source_token))
+                # else: keep "years" (sole/primary age target or no competing grounded unit yet)
+
     return tuple(quantity for _, quantity in found)

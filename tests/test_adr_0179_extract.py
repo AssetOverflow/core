@@ -230,3 +230,42 @@ class TestRealCase0024StillBlocked:
         units = [q.unit for q in qs]
         assert units[0] == "jumping"
         assert len(set(units)) > 1  # NOT a same-unit list -> compose refuses
+
+
+class TestWorkstreamAReaderLexemeOnly:
+    """Direct tests for the Workstream A lexeme-only passes (fraction/comparative).
+
+    Per CLAUDE.md schema-proof rule and the ratified scope: the new behavior
+    (surfacing component lexemes for "half of", "X/Y of", "X more/less than")
+    must be provably exercised by tests that would fail under violation
+    (e.g. synthesizing non-surface source_tokens or performing composition).
+    """
+
+    def test_half_of_surfaces_surface_lexeme_source(self) -> None:
+        # "half" is the surface lexeme; value 0.5 is convenience, source_token preserves the casing from the input text (as with other EX passes).
+        triples = _triples("Half of the kids are going to soccer camp.")
+        assert any(v == 0.5 and u == "kids" and s.lower() == "half" for (v, u, s) in triples)
+
+    def test_fraction_of_surfaces_surface_fraction_source(self) -> None:
+        # "3/4" is the surface form in the text.
+        triples = _triples('In one hour, Addison mountain\'s temperature will decrease to 3/4 of its temperature.')
+        assert any(v == 0.75 and "3/4" in s for (v, u, s) in triples)
+
+    def test_more_than_surfaces_two_components_no_synthesis(self) -> None:
+        # Must surface the two numbers that appear ("2", "5"); never a synthesized "7.0".
+        triples = _triples("On Rudolph's car trip across town, he traveled 2 more than 5 miles.")
+        sources = [s for (v, u, s) in triples]
+        assert "2" in sources and "5" in sources
+        assert "7.0" not in sources and "7" not in sources
+
+    def test_less_than_surfaces_components_no_clamp_synthesis(self) -> None:
+        triples = _triples('On Rudolph\'s car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs.')
+        sources = [s for (v, u, s) in triples]
+        assert "3" in sources and "17" in sources
+        assert all(s not in ("14.0", "14", "0") for s in sources)  # no synthesis or clamp in extract
+
+    def test_source_tokens_are_surface_text(self) -> None:
+        # All source_tokens for the new phrases must be literal substrings of the input.
+        text = "2 more than 5 miles and 3 less than 17 stop signs and half of the kids and 3/4 of the group."
+        for q in extract_quantities(text):
+            assert q.source_token in text or q.source_token == ""
