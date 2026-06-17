@@ -4,7 +4,7 @@
 **Branch:** feat/gsm8k-workstream-a-inc2-rate-injection  
 **Governing ratification:** docs/analysis/gsm8k-workstream-a-increment-2-rate-injection-ratification-2026-06-17.md (committed before any implementation code)  
 **Base (post-#796 main):** 80240ea9b821bb8e56c313c528cf7cb02d427b89  
-**Head at lookback write (final pushed):** e0f57b35233d877b61b79010e068f255040501bb
+**Head at lookback write (final pushed):** ae99882f72ca54cfdb4e15818b6cd3431e3badca
 
 ## Exact changed files (git diff --name-only origin/main...HEAD at head)
 
@@ -63,10 +63,10 @@ No case in the committed report.json changed (because no updated report was prod
 
 ```
 uv run python -m pytest tests/test_recognizer_anchor_inject.py -q
-→  (exact output after this commit will be reported with the new SHA; includes unconditional asserts for live-registry + "per" connector, hard "for one cup" refusal, and roundtrip proofs)
+→ 18 passed
 
 uv run python -m pytest tests/test_math_candidate_graph_rate_injection.py -q
-→  (exact output after this commit; lower-level apply_rate + strict confusers)
+→ 6 passed
 
 uv run python scripts/verify_lane_shas.py
 → 8/9 (public_demo unrelated; no pinned lane drift from our changes)
@@ -89,7 +89,7 @@ All new tests exercise rate_anchor_token path (no fallback), wrong=0 on confuser
 
 - No report.json committed in this branch (runner did not produce a visible updated artifact under the executed command). Lookback and PR body must not claim a rebaseline or specific correct-count lift beyond "frontier measurement now available and rate bucket is visible."
 
-- 9 files is the full surface. History has one conventional commit; if the reviewer prefers a single commit for the PR, squash-merge is recommended (as required by the brief).
+- 11 files is the actual diff surface from main (includes generate/recognizer_match.py for the rate_anchor_token extraction). Squash-merge recommended if history is noisy.
 
 ## Post-merge obligations (from ratification + CORE rules)
 
