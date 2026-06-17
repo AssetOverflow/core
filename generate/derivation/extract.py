@@ -125,6 +125,23 @@ _HYPHEN_QTY_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w.])(\d+(?:\.\d+)?)-([a-zA-Z]+)"
 )
 
+# New for Workstream A increment: fractional "half of" or "X/Y of" as 0.5 or fraction * unit.
+# Conservative, lexeme-level, to help "half of them", "3/4 of the kids" cases that currently
+# produce no admissible candidate or injection failure.
+_HALF_OF_RE: Final[re.Pattern[str]] = re.compile(r"(?i)\b(half|one half)\s+of\s+([a-zA-Z]+)")
+_FRACTION_OF_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?i)\b(\d+)/(\d+)\s+of\s+([a-zA-Z]+)"
+)
+
+# Comparative counts "X more than Y unit" -> (x+y) unit; "X less than Y unit" -> max(0, y-x) unit.
+# Helps "2 more than 5 miles", "3 less than 17 stop signs".
+_MORE_THAN_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w.])(\d+(?:\.\d+)?)\s+more\s+than\s+(\d+(?:\.\d+)?)\s+([a-zA-Z]+)"
+)
+_LESS_THAN_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w.])(\d+(?:\.\d+)?)\s+less\s+than\s+(\d+(?:\.\d+)?)\s+([a-zA-Z]+)"
+)
+
 
 # Function words that are never units. When the token immediately after a number
 # is one of these (``$0.75 each``, ``$40 to go``, ``3/4 of``), the single-word unit
@@ -137,7 +154,8 @@ _NON_UNIT_WORDS: Final[frozenset[str]] = frozenset(
     {
         "a", "an", "the", "of", "to", "for", "in", "on", "at", "as", "than",
         "per", "each", "every", "and", "or", "with", "by", "from", "more",
-        "less", "about", "that",
+        "less", "about", "that", "old", "young", "tall", "short", "long",
+        "wide", "deep", "high", "away", "apart", "ago", "early", "late",
     }
 )
 
@@ -197,6 +215,8 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
     3. digit + single unit word (skips numbers a list/hyphen pass already claimed);
     4. EX-1 word-number + unit word (alphabetic, disjoint from digit spans);
     5. EX-5 sentence-final bare number (skips any already-claimed digit).
+    6. New for Workstream A: _HALF_OF_RE / _FRACTION_OF_RE (fractional "half of" / "3/4 of");
+       _MORE_THAN_RE / _LESS_THAN_RE (comparative "X more/less than Y unit").
     """
     found: list[tuple[int, Quantity]] = []
     claimed: list[tuple[int, int]] = []
@@ -221,8 +241,6 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
             found.append((match.start(1), quantity))
             claimed.append(match.span(1))
 
-<<<<<<< Updated upstream
-=======
     # 1c. New EX for Workstream A increment: fractional "half of" / "X/Y of".
     #     Lexeme-level only: surface the factor word or fraction string as it appears
     #     in the input (per the module contract: extraction is lexeme-level; combining
@@ -289,7 +307,6 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
                 found.append((pos, qy))
                 claimed.append((pos, pos + len(y)))
 
->>>>>>> Stashed changes
     # 2. digit + single unit word — the original base pattern.
     for match in _QTY_RE.finditer(problem_text):
         if _claimed(match.start(1), claimed):
@@ -325,4 +342,25 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
             found.append((match.start(1), quantity))
 
     found.sort(key=lambda item: item[0])
+
+    # Post-process for age postmodifier hygiene (e.g. "6 years old" in "when she was 6 years old").
+    # Prevents spurious "years" quantity in incidental age contexts (the motivating "8 pages when she
+    # was 6 years old" proxy refusal case) while *preserving* legitimate age-as-target quantities
+    # (pinned by TestEX3StillDeferred: "25 years old?" and "Rachel is 12 years old." must keep unit="years").
+    # Rule (lexeme + local, no grammar): if a year-unit has "old"/"young" nearby, treat as incidental
+    # (blank) *only if* there exists at least one *earlier* quantity in the list that carries a non-empty
+    # unit (i.e., this age phrase is trailing background to a primary claim that has its own grounded unit).
+    # Pure age statements or question targets remain "years" (satisfies the pinned tests and GSM8K age cases
+    # where age *is* the measured quantity).
+    if found:
+        has_prior_grounded = False
+        for i, (pos, q) in enumerate(found):
+            if q.unit and q.unit not in ("year", "years"):
+                has_prior_grounded = True
+            if q.unit in ("year", "years"):
+                snippet = problem_text[pos : pos + 30].lower()
+                if ("old" in snippet or "young" in snippet) and has_prior_grounded:
+                    found[i] = (pos, Quantity(value=q.value, unit="", source_token=q.source_token))
+                # else: keep "years" (sole/primary age target or no competing grounded unit yet)
+
     return tuple(quantity for _, quantity in found)
