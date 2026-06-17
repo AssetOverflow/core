@@ -4,7 +4,7 @@
 **Branch:** feat/gsm8k-workstream-a-inc2-rate-injection  
 **Governing ratification:** docs/analysis/gsm8k-workstream-a-increment-2-rate-injection-ratification-2026-06-17.md (committed before any implementation code)  
 **Base (post-#796 main):** 80240ea9b821bb8e56c313c528cf7cb02d427b89  
-**Head at lookback write (final pushed):** ec1b5f32862ef0dd8c8e207226b015e10952aebb
+**Head at lookback write (final pushed):** 011e1e173826dbf0b4b9ce639c9a41dcbff9623b
 
 ## Exact changed files (git diff --name-only origin/main...HEAD at head)
 
