@@ -2,19 +2,20 @@
 
 **Status:** Living document (docs-only update)
 **Date:** 2026-06-17
-**Context:** Post PR #797 (rate injection) + #798; preparing Inc3 rate follow-up before Gate A1 comparative injection.
+**Context:** Post PR #797 (rate injection), #798 (Grok governance), #799 (Inc3 rate connector); Inc3 evidence closure is the current hygiene step before Gate A1 comparative injection.
 
 ## Overview
 
 This v2 roadmap refines the GSM8K Workstream A path and the broader capability sequencing after the rate injection delivered by PR #797.
 
-As of 2026-06-17, PR #797 is merged and #798 is merged.
+As of 2026-06-17: PR #797, #798, and #799 are merged.
 
 ## GSM8K Workstream A
 
 - Inc 1: reader/recognizer baseline lift (discrete etc.)
 - Inc 2: frontier measurement + stale doctrine repair + narrow rate injection (PR #797)
-- **Inc 3 (current seam):** Complete the post-#797 rate-follow-up evidence loop: run frontier report from current main, identify the remaining rate-family blocker, and ship at most one narrow Inc3 increment before comparative injection.
+- Inc 3: `"one"` connector for rate_with_currency (PR #799) — **shipped**
+- **Current hygiene step:** Inc3 evidence closure (lookback + frontier test semantics; pinned `report.json` remains historical; live ephemeral frontier shows `rate_with_currency` no-injection = 0)
 
 ### Recommended Inc3 target (narrow)
 
@@ -29,28 +30,24 @@ Inc3 selected #2 (connector for "for one cup"/"one" token) because live debug on
 
 "Complete and harden PR #797" is revised as: Complete the post-#797 rate-follow-up evidence loop: run frontier report from current main, identify the remaining rate-family blocker, and ship at most one narrow Inc3 increment before comparative injection.
 
-As of 2026-06-17, PR #797 is merged and #798 is merged.
-
-Explicitly: do not broaden to full rate language family, comparative injection, or non-rate categories in this increment.
+Explicitly: Inc3 did not broaden to full rate language family, comparative injection, or non-rate categories.
 
 ## Gate A1 / Comparative Injection
 
-Deferred until after the post-#797 rate follow-up loop is closed with Inc3 measurement.
+**Next** after Inc3 evidence closure merges. Ratify-first (docs/analysis gate-a1 ratification) before any comparative injector code.
 
-## Success Criteria for This Phase
+## Success Criteria (Inc3 — met on main; evidence closure completes governance)
 
-- Frontier report run on current main (train-sample proxy).
-- One narrow ratified Inc3 change.
-- Wrong=0 preserved on train_sample, practice, and relevant confusers.
-- Rate-family "recognized_no_injection" bucket reduced or its refusal mode made actionable (e.g. surfaces the true next blocker like denom reachability).
+- Inc3 ratified change merged (#799).
+- Live ephemeral frontier: `rate_with_currency` no-injection = 0; aggregate proxy 6/44/0, wrong=0.
+- Pinned `report.json` may remain historical; live measurement via ephemeral runner or synthetic frontier tests.
+- Inc3 lookback committed (docs/analysis/gsm8k-workstream-a-increment-3-lookback-2026-06-17.md).
 - No rebaseline of sealed lanes or SHA movement without separate ratification.
-- Documentation (this roadmap + Inc3 ratification) committed as docs-first.
 
-## Out of Scope (for Inc3)
+## Out of Scope (Inc3 — held)
 
 - Full comparative (Gate A1) implementation.
-- Broad recognizer anchor work or other shape categories.
-- Changes to serving sealed paths.
-- Any mutation of identity, policy, or algebra invariants.
+- Denominator-state production, report.json rebaseline, broad recognizer work.
+- Changes to serving sealed paths, identity, policy, or algebra invariants.
 
-Follow the ratified Inc3 doc for the exact bounded change.
+See Inc3 lookback for loop-closure criterion before Gate A1.
