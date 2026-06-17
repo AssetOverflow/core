@@ -237,9 +237,7 @@ def test_for_one_cup_hard_confuser_emits_nothing_no_fallback_to_earlier_a():
     registry = load_ratified_registry()
     stmt = "Alexa has a lemonade stand where she sells lemonade for $2 for one cup."
     m = match(stmt, registry)
-    if m is not None and m.category is ShapeCategory.RATE_WITH_CURRENCY:
-        emitted = inject_from_match(m, stmt, sealed=False)
-        assert emitted == (), "must refuse for 'for one cup' without falling back to earlier 'a'"
-    # If m is None for some registry reason, the rate path is not taken,
-    # which is also refusal (no bogus emission). The key is no emission
-    # using a wrong verb.
+    assert m is not None
+    assert m.category is ShapeCategory.RATE_WITH_CURRENCY
+    emitted = inject_from_match(m, stmt, sealed=False)
+    assert emitted == ()
