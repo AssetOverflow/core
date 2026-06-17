@@ -8,9 +8,9 @@ If the exact "hours" denom state is not yet produced by discrete injection for t
 the test records the gap (per brief) and still proves the wiring when a covered denom unit is used,
 plus that the solver-level refusal for missing denom still works.
 """
+
 from __future__ import annotations
 
-import pytest
 
 from generate.math_candidate_graph import parse_and_solve
 from generate.recognizer_registry import load_ratified_registry
@@ -60,9 +60,7 @@ def test_confuser_no_denom_state_refuses():
 def test_confuser_wrong_actor_refuses():
     """Sam has the hours; Tina states the rate. Must not apply Sam's rate to Tina or vice-versa."""
     text = (
-        "Sam works 3 hours. "
-        "Tina makes $18.00 an hour. "
-        "How many dollars does Tina make?"
+        "Sam works 3 hours. Tina makes $18.00 an hour. How many dollars does Tina make?"
     )
     res = _run(text)
     assert res.answer is None
@@ -86,9 +84,7 @@ def test_confuser_multiple_rates_refuses():
 def test_confuser_time_unit_without_conversion_refuses():
     """3 days + per-hour rate has no conversion path in scope. Must refuse."""
     text = (
-        "Tina works 3 days. "
-        "Tina makes $18.00 an hour. "
-        "How many dollars does Tina make?"
+        "Tina works 3 days. Tina makes $18.00 an hour. How many dollars does Tina make?"
     )
     res = _run(text)
     assert res.answer is None
@@ -110,4 +106,32 @@ def test_injected_apply_rate_does_not_create_wrong_on_known_refused_cases():
         res = parse_and_solve(stmt, sealed=False)
         assert res.answer is None
         assert res.refusal_reason is not None
-        assert "no injection" in (res.refusal_reason or "") or "requires" in (res.refusal_reason or "").lower() or "question" in (res.refusal_reason or "").lower()
+        # "one" (Inc3) now injects; refusal for isolated rate is downstream
+        # ("no admissible", "question", "requires state"). Loose or keeps
+        # coverage of both pre/post connector cases while wrong=0.
+        assert (
+            "no injection" in (res.refusal_reason or "")
+            or "requires" in (res.refusal_reason or "").lower()
+            or "question" in (res.refusal_reason or "").lower()
+            or "no admissible" in (res.refusal_reason or "").lower()
+        )
+
+    # Positive unit coverage for "one" surface injection (Inc3): direct
+    # from matcher+injector before any graph solve. Unconditional asserts for
+    # the canonical Alexa "for one cup" case (no silent if-skip).
+    from generate.recognizer_match import match as _match
+    from generate.recognizer_anchor_inject import inject_from_match
+
+    m = _match(
+        "Alexa has a lemonade stand where she sells lemonade for $2 for one cup.",
+        load_ratified_registry(),
+    )
+    assert m is not None
+    assert m.category.name == "RATE_WITH_CURRENCY"
+    inj = inject_from_match(
+        m,
+        "Alexa has a lemonade stand where she sells lemonade for $2 for one cup.",
+        sealed=False,
+    )
+    assert len(inj) == 1
+    assert getattr(inj[0], "matched_verb", None) == "one"

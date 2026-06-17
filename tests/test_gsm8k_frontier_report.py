@@ -6,12 +6,12 @@ These tests pin:
 - rate_with_currency appears as a prominent recognized_no_injection category on the committed train-sample report (the measurement target of Inc 2).
 - Fully deterministic output (sorted keys, no timestamps, repeatable across runs).
 """
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-import pytest
 
 from scripts.gsm8k_frontier_report import (
     analyze_report,
@@ -54,9 +54,21 @@ def test_classify_and_extract_category_logic():
     # We exercise via the public analyze path with a tiny synthetic report
     fake = {
         "per_case": [
-            {"case_id": "c1", "verdict": "refused", "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Tina makes $18.00 an hour.' (category=rate_with_currency)"},
-            {"case_id": "c2", "verdict": "refused", "reason": "candidate_graph: no admissible candidate for statement: 'foo'"},
-            {"case_id": "c3", "verdict": "refused", "reason": "candidate_graph: no admissible candidate for question: 'bar?'"},
+            {
+                "case_id": "c1",
+                "verdict": "refused",
+                "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Tina makes $18.00 an hour.' (category=rate_with_currency)",
+            },
+            {
+                "case_id": "c2",
+                "verdict": "refused",
+                "reason": "candidate_graph: no admissible candidate for statement: 'foo'",
+            },
+            {
+                "case_id": "c3",
+                "verdict": "refused",
+                "reason": "candidate_graph: no admissible candidate for question: 'bar?'",
+            },
             {"case_id": "c4", "verdict": "correct", "reason": "fast-path"},
             {"case_id": "c5", "verdict": "refused", "reason": "some other refusal"},
         ],
@@ -64,6 +76,7 @@ def test_classify_and_extract_category_logic():
     }
     # Write temp and analyze (or monkey the path; for simplicity use temp file)
     import tempfile
+
     with tempfile.TemporaryDirectory() as td:
         rp = Path(td) / "fake_report.json"
         rp.write_text(json.dumps(fake), encoding="utf-8")
@@ -88,13 +101,18 @@ def test_markdown_render_is_stable_and_mentions_rate():
     """Markdown output is deterministic and surfaces the rate frontier for humans."""
     fake = {
         "per_case": [
-            {"case_id": "r1", "verdict": "refused", "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'X' (category=rate_with_currency)"},
+            {
+                "case_id": "r1",
+                "verdict": "refused",
+                "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'X' (category=rate_with_currency)",
+            },
             {"case_id": "c1", "verdict": "correct", "reason": ""},
         ],
         "sample_count": 2,
         "exit_criterion": {"correct_min": 10, "passed": False, "wrong_max": 0},
     }
     import tempfile
+
     with tempfile.TemporaryDirectory() as td:
         rp = Path(td) / "r.json"
         rp.write_text(json.dumps(fake), encoding="utf-8")
@@ -108,3 +126,41 @@ def test_markdown_render_is_stable_and_mentions_rate():
     assert "202" not in md and "T" not in md.split("\n", 5)[-1]  # rough
     # Re-render identical
     assert render_markdown(summary) == md
+
+
+def test_inc3_connector_makes_rate_no_injection_actionable():
+    """Inc3 effect: supporting 'one' (and prior 'an'/'per') means rate_with_currency
+    surfaces no longer contribute to recognized_no_injection bucket when injector
+    succeeds. Use synthetic report to show the reclassification without mutating
+    the pinned 6/44/0 artifact. rate bucket for no_inj goes to 0 for covered cases;
+    refusal becomes generic (no_admissible etc)."""
+    # Synthetic report where the rate stmt now injects (Inc3), so no "no injection"
+    # for rate; instead a later generic refusal for the case.
+    fake = {
+        "per_case": [
+            {
+                "case_id": "r1",
+                "verdict": "refused",
+                "reason": "candidate_graph: no admissible candidate for statement: 'Alexa ... for one cup'",
+            },
+            {
+                "case_id": "r2",
+                "verdict": "refused",
+                "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'unsupported' (category=temporal_aggregation)",
+            },
+        ],
+        "sample_count": 2,
+    }
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as td:
+        rp = Path(td) / "post_inc3_fake.json"
+        rp.write_text(json.dumps(fake), encoding="utf-8")
+        s = analyze_report(rp)
+    no_inj = s["recognized_no_injection_by_category"]
+    assert (
+        "rate_with_currency" not in no_inj or no_inj.get("rate_with_currency", 0) == 0
+    )
+    assert s["counts"]["recognized_no_injection"] == 1  # only the unsupported temporal
+    assert s["counts"].get("no_admissible_statement", 0) == 1

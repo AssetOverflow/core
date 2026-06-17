@@ -150,7 +150,7 @@ COMPARE_MULTIPLICATIVE_ANCHORS: Final[frozenset[str]] = frozenset({
 # succeeds.  "a"/"an" were documented in the comment but missing from the
 # set; added here (Inc 2) with corresponding injector tests.
 RATE_ANCHORS: Final[frozenset[str]] = frozenset({
-    "per", "each", "every", "a", "an",
+    "per", "each", "every", "a", "an", "one",
 })
 
 

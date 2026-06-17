@@ -340,11 +340,9 @@ def _match_rate_with_currency(
         elif m.group(8):
             q = m.group(8).lower()
             per_unit = m.group(9)
-            if q in ("each", "every", "a"):
+            if q in ("each", "every", "a", "one"):
                 connector = q
             else:
-                # "one" in "for one X" is not a direct RATE_ANCHORS token;
-                # leave None so injector will refuse (narrow for Inc 2).
                 connector = None
 
         if not per_unit:
