@@ -121,6 +121,7 @@ All six must be clean. If any is uncertain, surface it explicitly — do not sil
 
 ## 8. PR Merge-Readiness Audit
 
+```text
 You are auditing a CORE PR for merge readiness.
 
 Do not approve based on intent. Verify:
@@ -144,6 +145,7 @@ Return:
 
 ## 9. Grok Build Implementation Session
 
+```text
 You are working inside AssetOverflow/core.
 
 First:
@@ -164,3 +166,4 @@ End with:
 - Tests run with outputs
 - Invariants verified
 - Handoff doc content
+```
