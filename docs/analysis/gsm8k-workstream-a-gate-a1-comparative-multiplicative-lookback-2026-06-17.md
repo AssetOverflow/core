@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-17 (post-implementation evidence closure)
 **Branch:** `feat/gsm8k-workstream-a-gate-a1-comparative-multiplicative-injection`
-**Head (implementation + patch):** `11abb9d572e26cb8feb57063827eda39f9279bd7`
+**Head (implementation + patch):** `64ab58a7fa01ccfb1c707573b1be044296f5fe38`
 **Base implementation commit:** `e578ec72`
 **Governing ratification:** `docs/analysis/gsm8k-workstream-a-gate-a1-comparative-multiplicative-ratification-2026-06-17.md` (merged #803)
 **Scope:** **First subfamily only** — multiplicative entity comparison with explicit same-sentence reference. Additive comparative (Gate A2) deferred.
