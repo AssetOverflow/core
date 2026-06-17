@@ -424,12 +424,13 @@ def run_demo(*, emit_json: bool = False) -> dict[str, Any]:
         and s3.outcome == "pending_awaiting_operator"
     )
 
-    # Execute the hardened CLOSE derived-climb yardstick (Claim B) here.
-    # This integrates the yardstick into the anti-regression / teaching demo
-    # flows. The call is hermetic (climb uses only fresh runtimes + internal
-    # temps for proposal sink isolation during its flag test; zero production
-    # writes). Key Claim-B signals (lived IdleTickResult, semantic determine
-    # rule=direct, content_replay_checksum) are captured for the report.
+    # Execute the hardened CLOSE derived-climb yardstick (Claim B) here as part
+    # of the Dedicated CLOSE Flywheel Regression Surface (Claim-B Level).
+    # This cleanly embeds (additive, hermetic) the full surface into the
+    # anti-regression / teaching demo flows (building on #792). The call uses
+    # only fresh runtimes + internal temps; zero production writes.
+    # See docs/testing-lanes.md "Dedicated CLOSE Flywheel..." and
+    # `make test-close-flywheel`.
     close_derived_climb = run_close_derived_climb()
 
     report = DemoReport(
@@ -446,14 +447,16 @@ def run_demo(*, emit_json: bool = False) -> dict[str, Any]:
         _say("═" * 72)
         _say(f"  all three gates held       : {report.all_gates_held}")
         _say(f"  active corpus byte-eq      : {report.active_corpus_byte_identical}")
-        # CLOSE flywheel (Claim B) — now part of this anti-regression demo.
-        # Exercises real idle_tick + IdleTickResult.derived_close_proposals_emitted,
-        # semantic determine() with rule='direct', and content-level replay checksum.
+        # CLOSE Flywheel Regression Surface (Claim-B Level) — executed here as
+        # part of the anti-regression demo (see `make test-close-flywheel` and
+        # docs/testing-lanes.md "Dedicated CLOSE Flywheel...").
+        # Exercises lived idle_tick + IdleTickResult flag, semantic determine
+        # (rule='direct'), and content_replay_checksum.
         climb = report.close_derived_climb or {}
         agg = climb.get("aggregate", {})
         propf = climb.get("proposal_flag", {})
         _say(
-            f"  CLOSE derived climb (Claim B): wrong_total={agg.get('wrong_total')}, "
+            f"  CLOSE Flywheel Regression Surface (Claim B): wrong_total={agg.get('wrong_total')}, "
             f"proposals_only_with_flag={propf.get('only_with_flag')}, "
             f"content_replay_checksum={(climb.get('content_replay_checksum') or '')[:12]}..."
         )

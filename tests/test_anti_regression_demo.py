@@ -64,10 +64,12 @@ def test_active_corpus_never_touched_across_full_demo() -> None:
 
 
 def test_close_derived_climb_yardstick_runs_as_part_of_anti_regression_demo() -> None:
-    """Integration pin: the hardened CLOSE yardstick (Claim B) is now executed
-    inside the anti-regression demo flow. Asserts key invariants from the
-    lived flag + semantic determine + content checksum surface without
-    affecting the three reviewed-teaching gate claims."""
+    """Integration pin (Dedicated CLOSE Flywheel Regression Surface, Claim B):
+    the full hardened yardstick is executed inside the anti-regression demo flow
+    (via `make test-close-flywheel`). Asserts key invariants from the lived flag
+    + semantic determine + content checksum surface without affecting the three
+    reviewed-teaching gate claims. See docs/testing-lanes.md dedicated surface
+    section and the ratification."""
     report = run_demo(emit_json=True)
     assert "close_derived_climb" in report
     climb = report["close_derived_climb"] or {}

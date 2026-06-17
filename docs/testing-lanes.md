@@ -86,34 +86,64 @@ it is deferred, not done here.
    shared/session-scoped warm-runtime fixture for read-only tests would cut this
    further.
 
-## Recommended determinism / teaching regression invocation (post-Claim-B hardening of CLOSE yardstick)
+## Dedicated CLOSE Flywheel Regression Surface (Claim-B Level)
 
-After any change touching CLOSE flywheel, idle_tick, realize_derived, consolidate_determinations, vault recall of realized facts, determine(), or the derived close proposal bridge, run the hardened yardstick as part of your determinism regression and anti-regression verification:
+This is the **clearly named, intentional, high-signal regression surface** for the CLOSE flywheel at full Claim-B strength. It is positioned exclusively for heavier determinism regressions and teaching/anti-regression verification flows — **not** for fast local development or default CI runs.
 
+### Invocation (the dedicated surface)
 ```bash
-uv run python -m evals.close_derived_climb
-uv run python -m pytest tests/test_derived_close_proposals.py tests/test_architectural_invariants.py -q
+make test-close-flywheel
 ```
 
-(Also available via `core demo anti-regression` which now embeds the yardstick — see below.)
+Or the equivalent explicit commands (the make target is the canonical named surface):
+```bash
+uv run python -m evals.close_derived_climb
+uv run python -m pytest tests/test_derived_close_proposals.py tests/test_architectural_invariants.py tests/test_anti_regression_demo.py -q
+```
 
-This is the canonical "standard verification story" invocation for the CLOSE autonomous growth surface. It is the direct follow-up to the Claim-B hardening (#791) and makes the improved measurement recurring rather than isolated.
+The inclusion of the anti-regression test ensures the hermetic embedding of the yardstick (from #792) participates, so the surface exercises both the direct yardstick and the integrated teaching demo path.
 
-**What the hardened yardstick now exercises and measures (Claim B):**
-- Real `ChatRuntime.idle_tick()` + `IdleTickResult.derived_close_proposals_emitted` (proposal flag gating via the lived runtime path, not a simulation).
-- Explicit `determine()` calls on the post-fixed-point positive probes, asserting `Determined(True, rule='direct')` ("semantic_positives_determined_direct").
-- `content_replay_checksum` covering canonical closure sets (with structure_key, Derivation, and premise_structure_keys) and full proposal bodies for exact-trajectory fidelity.
-- Retained Claim A guarantees: strict/monotone growth (1/5/8), wrong_total == 0, negatives and excluded predicates refused, full determinism, hermetic (no serving, no ratification, SPECULATIVE/proposal_only only, all INV-30/31 etc. preserved).
+### Purpose
+Provide a coherent, auditable regression target that exercises the full lived CLOSE flywheel (comprehend → realize → determine → CLOSE consolidate → proposal emission under the review_derived_close_proposals flag → measured climb) using the hardened Claim-B yardstick (`evals/close_derived_climb`). This surface makes the improved measurement (post-#791) a first-class, recurring part of heavy verification without polluting fast or generic lanes.
 
-See:
-- `evals/close_derived_climb/contract.md` (metrics, scenarios, "no side effects")
-- `docs/analysis/close-derived-climb-yardstick-claim-b-ratification-2026-06-16.md` (the hardening ratification)
-- `docs/analysis/integrate-hardened-close-yardstick-determinism-teaching-regression-ratification-2026-06-16.md` (this integration ratification + "why only correct path")
-- `docs/runtime_contracts.md` (determination surface contract exercised by the semantic asserts)
-- `docs/evals/anti_regression_demo.md` (the anti-regression demo now runs the yardstick)
-- `tests/test_anti_regression_demo.py` (contract test that pins the embedding)
-- `Makefile` (comments under test lanes point here)
+### What the surface exercises and measures (Claim B)
+- Real `ChatRuntime.idle_tick()` + `IdleTickResult.derived_close_proposals_emitted` (proposal flag gating via the *lived* runtime path, not simulation).
+- Explicit `determine()` calls on post-fixed-point positive probes, asserting `Determined(True, rule='direct')` ("semantic_positives_determined_direct").
+- `content_replay_checksum` covering canonical closure sets (structure_key + Derivation with premise_structure_keys) and proposal bodies for exact-trajectory fidelity.
+- Retained Claim A guarantees: strict/monotone growth (1→5→8 on is-a + relational-transitive scenarios), `wrong_total == 0` (negatives and excluded predicates refused), full determinism and replayability, hermetic execution (no serving, no ratification, SPECULATIVE-only realization, proposal-only boundaries, all INV-21/29/30/31 etc. preserved).
 
-The yardstick itself remains hermetic per the rules in this document (fresh runtimes, internal temps only for proposal sink during flag test). It introduces no new writers to engine_state/, teaching/proposals/, or evals reports.
+Scenarios: is-a (member/subset) climb, less_than relational climb, before_event temporal climb, parent/sibling negatives refused.
 
-This integration (documentation promotion into the lanes + hermetic execution inside the anti-regression demo) is the highest-leverage way to ensure the project actually benefits from the hardened Claim-B measurement surface on every relevant regression run.
+### Expected runtime characteristics
+Heavyweight (~60s+ on 10-core macOS with CORE_BACKEND=numpy; driven by multiple real `ChatRuntime` constructions + idle_tick to fixed point + climbs). Comparable to other proof-scale fixtures (e.g. the 975s inner-loop phase2 outlier). Intended for deliberate, post-change verification in heavier determinism reruns and teaching/anti-regression flows — not for rapid iteration or every push.
+
+### Hermeticity guarantees
+- Fresh `ChatRuntime(no_load_state=True)` per scenario.
+- Internal `TemporaryDirectory` only for proposal sink isolation during the flag test (DEFAULT_SINK patch is restored).
+- Zero writes to `engine_state/`, active teaching corpus, `teaching/proposals/`, or shared evals reports.
+- All existing anti-regression demo guarantees (active corpus byte-identical pre/post) continue to hold.
+- Complies with the hermeticity rules in this document (see "Follow-ups (separate PRs)" and xdist notes). The surface itself introduces no new race surfaces.
+
+### Alignment with Engineering Pillars (Whitepaper.md §IV)
+- **Mechanical Sympathy**: Understands and respects the cost model. The surface does real runtime work (ChatRuntime turns, consolidation, derivation). It is kept out of fast paths, generic suites, and CI so the machine is not forced to pay the price for every build.
+- **Semantic Rigor**: The surface has a precise, non-negotiable name and contract. "CLOSE Flywheel (Claim-B)" means exactly the lived behaviors listed above — no approximations, no "good enough" inclusion, no silent embedding of the yardstick into unrelated lanes. Every term (IdleTickResult, rule='direct', content_replay_checksum, proposal_only, etc.) retains its defined meaning.
+- **Third Door**: The world offered two obvious doors — (1) add the yardstick to fast/full/slow or a generic "determinism" suite (violates positioning, mechanical sympathy, and out-of-scope rules), or (2) invent a new CLI command or heavy test infrastructure. This surface takes the third door: a minimal, composable `make test-close-flywheel` target (using the project's existing lane mechanism) + authoritative documentation that elevates the yardstick and the #792 embedding into a named, intentional regression surface built from first principles.
+
+See the ratification for the full justification of why this (and only this) approach satisfies the brief while aligning with the pillars:
+- `docs/analysis/close-flywheel-dedicated-regression-surface-ratification-2026-06-16.md`
+
+### References
+- Yardstick contract + implementation: `evals/close_derived_climb/contract.md` (run with `uv run python -m ...`; metrics, scenarios, "no side effects")
+- Claim-B hardening: `docs/analysis/close-derived-climb-yardstick-claim-b-ratification-2026-06-16.md` (#791)
+- Prior integration (foundation for the embedding): `docs/analysis/integrate-hardened-close-yardstick-determinism-teaching-regression-ratification-2026-06-16.md` (#792)
+- Anti-regression demo (the primary high-value teaching/anti-regression flow that now participates in the surface): `docs/evals/anti_regression_demo.md`, `evals/anti_regression/run_demo.py`, `tests/test_anti_regression_demo.py`
+- Determination surface exercised by the semantic asserts: `docs/runtime_contracts.md`
+- `Makefile` (the `test-close-flywheel` target is the named entry point)
+- Related heavy determinism context: the "Finding: the 975s `test_inner_loop_phase2` outlier" and inner-loop suite discussion above
+
+The surface remains hermetic and additive. All prior invariants and the #792 embedding are unchanged.
+
+### How the surface builds on prior work
+The #792 "recommended invocation" and hermetic embedding into the anti-regression demo provided the recurring protection. This dedicated surface gives that work a clear name, a primary make target, full pillar-aligned documentation, and explicit positioning as the heavy CLOSE flywheel regression lane. The anti-regression test is deliberately included in the surface so that running `make test-close-flywheel` also verifies the integrated teaching path.
+
+(Operators doing heavy CLOSE-related work after #788/#789/#791 should run this surface as part of their determinism and teaching verification.)
