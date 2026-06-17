@@ -1,9 +1,9 @@
 # GSM8K Workstream A Increment 3 — rate followup (post-#797) ratification
 
-**Date:** 2026-06-17  
-**Workstream:** A  
-**Increment:** 3 — post-#797 rate frontier evidence loop closure (narrow)  
-**Status:** Ratified for implementation (BEFORE code changes)  
+**Date:** 2026-06-17
+**Workstream:** A
+**Increment:** 3 — post-#797 rate frontier evidence loop closure (narrow)
+**Status:** Ratified for implementation (BEFORE code changes)
 **Scope lock:** Bounded to making the rate "recognized_no_injection" bucket produce actionable evidence by resolving the explicit remaining connector blocker left open in #797. One smallest change only.
 
 ## 1. Which exact refusal bucket is being attacked?

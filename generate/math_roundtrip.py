@@ -57,214 +57,91 @@ from generate.math_problem_graph import Comparison, Operation, Quantity, Rate
 
 # Surface verbs that grammatically place the actor as the *gainer* of the
 # operand quantity. Past tense and present tense both registered.
-ADD_VERBS: Final[frozenset[str]] = frozenset(
-    {
-        # acquisition
-        "buy",
-        "buys",
-        "bought",
-        "get",
-        "gets",
-        "got",
-        "find",
-        "finds",
-        "found",
-        "receive",
-        "receives",
-        "received",
-        "earn",
-        "earns",
-        "earned",
-        "add",
-        "adds",
-        "added",
-        "pick",
-        "picks",
-        "picked",  # "picks up N"
-        "collect",
-        "collects",
-        "collected",
-        "gather",
-        "gathers",
-        "gathered",
-        "catch",
-        "catches",
-        "caught",
-        "save",
-        "saves",
-        "saved",
-        # production (actor creates instances of the unit)
-        "bake",
-        "bakes",
-        "baked",
-        "make",
-        "makes",
-        "made",
-        "cook",
-        "cooks",
-        "cooked",
-        "slice",
-        "slices",
-        "sliced",
-        "pack",
-        "packs",
-        "packed",
-        "build",
-        "builds",
-        "built",
-        "grow",
-        "grows",
-        "grew",
-    }
-)
+ADD_VERBS: Final[frozenset[str]] = frozenset({
+    # acquisition
+    "buy", "buys", "bought",
+    "get", "gets", "got",
+    "find", "finds", "found",
+    "receive", "receives", "received",
+    "earn", "earns", "earned",
+    "add", "adds", "added",
+    "pick", "picks", "picked",      # "picks up N"
+    "collect", "collects", "collected",
+    "gather", "gathers", "gathered",
+    "catch", "catches", "caught",
+    "save", "saves", "saved",
+    # production (actor creates instances of the unit)
+    "bake", "bakes", "baked",
+    "make", "makes", "made",
+    "cook", "cooks", "cooked",
+    "slice", "slices", "sliced",
+    "pack", "packs", "packed",
+    "build", "builds", "built",
+    "grow", "grows", "grew",
+})
 
 # Surface verbs that grammatically place the actor as the *loser* of the
 # operand quantity.
-SUBTRACT_VERBS: Final[frozenset[str]] = frozenset(
-    {
-        "eat",
-        "eats",
-        "ate",
-        "lose",
-        "loses",
-        "lost",
-        "sell",
-        "sells",
-        "sold",
-        "donate",
-        "donates",
-        "donated",
-        "use",
-        "uses",
-        "used",
-        "spend",
-        "spends",
-        "spent",
-        "drop",
-        "drops",
-        "dropped",
-        "remove",
-        "removes",
-        "removed",
-        "break",
-        "breaks",
-        "broke",
-        "destroy",
-        "destroys",
-        "destroyed",
-        "throw",
-        "throws",
-        "threw",  # "throws out N"
-        "discard",
-        "discards",
-        "discarded",
-        "return",
-        "returns",
-        "returned",  # ambiguous — see TRANSFER_VERBS
-        "consume",
-        "consumes",
-        "consumed",
-        "give",
-        "gives",
-        "gave",  # ambiguous — see TRANSFER_VERBS
-        "send",
-        "sends",
-        "sent",  # ambiguous — see TRANSFER_VERBS
-    }
-)
+SUBTRACT_VERBS: Final[frozenset[str]] = frozenset({
+    "eat", "eats", "ate",
+    "lose", "loses", "lost",
+    "sell", "sells", "sold",
+    "donate", "donates", "donated",
+    "use", "uses", "used",
+    "spend", "spends", "spent",
+    "drop", "drops", "dropped",
+    "remove", "removes", "removed",
+    "break", "breaks", "broke",
+    "destroy", "destroys", "destroyed",
+    "throw", "throws", "threw",     # "throws out N"
+    "discard", "discards", "discarded",
+    "return", "returns", "returned",  # ambiguous — see TRANSFER_VERBS
+    "consume", "consumes", "consumed",
+    "give", "gives", "gave",        # ambiguous — see TRANSFER_VERBS
+    "send", "sends", "sent",        # ambiguous — see TRANSFER_VERBS
+})
 
 # Surface verbs that grammatically place the actor as the *sender* and a
 # named target as the *receiver*. These verbs ALSO appear in SUBTRACT_VERBS
 # because the same surface token can take a transfer reading (with target)
 # or a subtract reading (without target) — both candidates fire and the
 # decision rule picks based on whether a target slot was grounded.
-TRANSFER_VERBS: Final[frozenset[str]] = frozenset(
-    {
-        "give",
-        "gives",
-        "gave",
-        "send",
-        "sends",
-        "sent",
-        "hand",
-        "hands",
-        "handed",
-        "pass",
-        "passes",
-        "passed",
-        "mail",
-        "mails",
-        "mailed",
-        "deliver",
-        "delivers",
-        "delivered",
-        "return",
-        "returns",
-        "returned",
-    }
-)
+TRANSFER_VERBS: Final[frozenset[str]] = frozenset({
+    "give", "gives", "gave",
+    "send", "sends", "sent",
+    "hand", "hands", "handed",
+    "pass", "passes", "passed",
+    "mail", "mails", "mailed",
+    "deliver", "delivers", "delivered",
+    "return", "returns", "returned",
+})
 
-MULTIPLY_VERBS: Final[frozenset[str]] = frozenset(
-    {
-        "double",
-        "doubles",
-        "doubled",
-        "triple",
-        "triples",
-        "tripled",
-        "quadruple",
-        "quadruples",
-        "quadrupled",
-        "multiply",
-        "multiplies",
-        "multiplied",
-    }
-)
+MULTIPLY_VERBS: Final[frozenset[str]] = frozenset({
+    "double", "doubles", "doubled",
+    "triple", "triples", "tripled",
+    "quadruple", "quadruples", "quadrupled",
+    "multiply", "multiplies", "multiplied",
+})
 
-DIVIDE_VERBS: Final[frozenset[str]] = frozenset(
-    {
-        "halve",
-        "halves",
-        "halved",
-        "split",
-        "splits",
-        "split",
-        "divide",
-        "divides",
-        "divided",
-        "share",
-        "shares",
-        "shared",
-    }
-)
+DIVIDE_VERBS: Final[frozenset[str]] = frozenset({
+    "halve", "halves", "halved",
+    "split", "splits", "split",
+    "divide", "divides", "divided",
+    "share", "shares", "shared",
+})
 
 # Comparison "verbs" — the surface anchor for compare_additive /
 # compare_multiplicative is usually 'has'/'have' + comparator phrase
 # ('N more than', 'twice as many as', etc.). The matched_verb slot for
 # comparison candidates carries the comparator phrase head ('more',
 # 'fewer', 'twice', 'times', 'half').
-COMPARE_ADDITIVE_ANCHORS: Final[frozenset[str]] = frozenset(
-    {
-        "more",
-        "fewer",
-        "less",
-        "additional",
-        "extra",
-    }
-)
-COMPARE_MULTIPLICATIVE_ANCHORS: Final[frozenset[str]] = frozenset(
-    {
-        "twice",
-        "thrice",
-        "times",
-        "half",
-        "double",
-        "triple",
-        "quadruple",
-        "third",
-        "quarter",
-    }
-)
+COMPARE_ADDITIVE_ANCHORS: Final[frozenset[str]] = frozenset({
+    "more", "fewer", "less", "additional", "extra",
+})
+COMPARE_MULTIPLICATIVE_ANCHORS: Final[frozenset[str]] = frozenset({
+    "twice", "thrice", "times", "half", "double", "triple",
+    "quadruple", "third", "quarter",
+})
 
 # Rate anchors (ADR-0122): "per", "each", "every", "a"/"an" (when followed
 # by a unit in a rate surface such as "$18 an hour" or "$2 a cup").
@@ -272,16 +149,9 @@ COMPARE_MULTIPLICATIVE_ANCHORS: Final[frozenset[str]] = frozenset(
 # so that roundtrip_admissible / CandidateOperation post-init grounding
 # succeeds.  "a"/"an" were documented in the comment but missing from the
 # set; added here (Inc 2) with corresponding injector tests.
-RATE_ANCHORS: Final[frozenset[str]] = frozenset(
-    {
-        "per",
-        "each",
-        "every",
-        "a",
-        "an",
-        "one",
-    }
-)
+RATE_ANCHORS: Final[frozenset[str]] = frozenset({
+    "per", "each", "every", "a", "an", "one",
+})
 
 
 KIND_TO_VERBS: Final[Mapping[str, frozenset[str]]] = {
@@ -302,47 +172,21 @@ KIND_TO_VERBS: Final[Mapping[str, frozenset[str]]] = {
 # ---------------------------------------------------------------------------
 
 WORD_NUMBERS: Final[Mapping[str, int]] = {
-    "zero": 0,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-    "eleven": 11,
-    "twelve": 12,
-    "thirteen": 13,
-    "fourteen": 14,
-    "fifteen": 15,
-    "sixteen": 16,
-    "seventeen": 17,
-    "eighteen": 18,
-    "nineteen": 19,
-    "twenty": 20,
-    "thirty": 30,
-    "forty": 40,
-    "fifty": 50,
-    "sixty": 60,
-    "seventy": 70,
-    "eighty": 80,
-    "ninety": 90,
-    "hundred": 100,
-    "thousand": 1000,
+    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4,
+    "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
+    "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13,
+    "fourteen": 14, "fifteen": 15, "sixteen": 16, "seventeen": 17,
+    "eighteen": 18, "nineteen": 19, "twenty": 20, "thirty": 30,
+    "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70,
+    "eighty": 80, "ninety": 90, "hundred": 100, "thousand": 1000,
     # ordinals as factor-bearing forms ("a third", "a quarter")
-    "half": 2,
-    "third": 3,
-    "quarter": 4,
+    "half": 2, "third": 3, "quarter": 4,
 }
 
 
 # ---------------------------------------------------------------------------
 # Public dataclass — what the candidate-graph parser will emit per match.
 # ---------------------------------------------------------------------------
-
 
 @dataclass(frozen=True, slots=True)
 class CandidateOperation:
@@ -389,26 +233,29 @@ class CandidateOperation:
             raise ValueError("CandidateOperation.source_span must be non-empty")
         if not isinstance(self.matched_verb, str) or not self.matched_verb:
             raise ValueError("CandidateOperation.matched_verb must be non-empty")
-        if (
-            not isinstance(self.matched_actor_token, str)
-            or not self.matched_actor_token
-        ):
-            raise ValueError("CandidateOperation.matched_actor_token must be non-empty")
+        if not isinstance(self.matched_actor_token, str) or not self.matched_actor_token:
+            raise ValueError(
+                "CandidateOperation.matched_actor_token must be non-empty"
+            )
         if self.op.kind == "transfer":
             if not self.matched_target_token:
                 raise ValueError(
                     "matched_target_token required when op.kind='transfer'"
                 )
         elif self.matched_target_token is not None:
-            raise ValueError("matched_target_token only valid when op.kind='transfer'")
+            raise ValueError(
+                "matched_target_token only valid when op.kind='transfer'"
+            )
         if isinstance(self.op.operand, Comparison):
             if not self.matched_reference_actor_token:
                 raise ValueError(
-                    "matched_reference_actor_token required when operand is Comparison"
+                    "matched_reference_actor_token required when operand is "
+                    "Comparison"
                 )
         elif self.matched_reference_actor_token is not None:
             raise ValueError(
-                "matched_reference_actor_token only valid when operand is Comparison"
+                "matched_reference_actor_token only valid when operand is "
+                "Comparison"
             )
 
 
@@ -531,7 +378,6 @@ def _value_grounds(value_token: str, haystack_tokens: frozenset[str]) -> bool:
     if "-" in value_token and not value_token[0].isdigit():
         try:
             from language_packs.numerics_loader import parse_compound_cardinal
-
             parsed = parse_compound_cardinal(value_token)
             if parsed is not None:
                 components = [c for c in value_token.lower().split("-") if c]
@@ -551,7 +397,6 @@ def _value_grounds(value_token: str, haystack_tokens: frozenset[str]) -> bool:
     # through to the hard-coded table.
     try:
         from language_packs.loader import lookup_cardinal
-
         entry = lookup_cardinal(lowered)
         if entry is not None:
             digit = str(entry.numeric_value)
@@ -576,7 +421,6 @@ def _value_grounds(value_token: str, haystack_tokens: frozenset[str]) -> bool:
     # Pack-backed reverse lookup: digit -> cardinal surface in haystack
     try:
         from language_packs.loader import lookup_cardinal
-
         for tok in haystack_tokens:
             entry = lookup_cardinal(tok)
             if entry is not None and entry.numeric_value == n:
@@ -589,7 +433,6 @@ def _value_grounds(value_token: str, haystack_tokens: frozenset[str]) -> bool:
 # ---------------------------------------------------------------------------
 # The load-bearing primitive.
 # ---------------------------------------------------------------------------
-
 
 def roundtrip_admissible(c: CandidateOperation) -> bool:
     """True iff every content slot in ``c`` grounds in ``c.source_span``
@@ -619,10 +462,7 @@ def roundtrip_admissible(c: CandidateOperation) -> bool:
     #    Skipped only for multiplicative comparison anchors that carry
     #    the factor implicitly ("twice", "half", "thrice") — those use
     #    the anchor itself as the value token and pass via step (2).
-    if (
-        c.op.kind == "compare_multiplicative"
-        and c.matched_value_token == c.matched_verb
-    ):
+    if c.op.kind == "compare_multiplicative" and c.matched_value_token == c.matched_verb:
         pass  # anchor already grounded by verb check
     elif not _value_grounds(c.matched_value_token, haystack):
         return False

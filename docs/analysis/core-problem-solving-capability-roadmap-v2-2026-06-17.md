@@ -1,7 +1,7 @@
 # CORE Problem-Solving Capability Roadmap v2 — 2026-06-17
 
-**Status:** Living document (docs-only update)  
-**Date:** 2026-06-17  
+**Status:** Living document (docs-only update)
+**Date:** 2026-06-17
 **Context:** Post PR #797 (rate injection) + #798; preparing Inc3 rate follow-up before Gate A1 comparative injection.
 
 ## Overview
