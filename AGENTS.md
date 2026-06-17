@@ -12,31 +12,23 @@ before touching any code:
 | Agent | Supplementary file | Key differences |
 |---|---|---|
 | **Claude** | `CLAUDE.md` | Deep context; self-restraining; read for semantic anchoring rule nuance |
-| **Grok 4.3** | `GROK.md` | Stateless; requires high reasoning effort; Arena/parallel subagent rules |
+| **Grok 4.3 + Grok Build** | `GROK.md` | Stateless; requires high reasoning effort; Arena/parallel subagent rules; Plan Mode preferred; skills system |
 | **GPT-5.5 (o3-class)** | `GPT55.md` | Stateless; fluency cautions; extended thinking for algebra/field work |
 
 If you are Grok 4.3 or GPT-5.5, complete the Session Start Checklist in your
 file before reading anything else in this file.
 
-## Grok 4.3 / GPT-5.5 Hard Stops
+## Grok 4.3 / Grok Build Hard Stops (Mastery Level)
 
-These apply to all stateless agents in addition to every rule below:
+These apply to Grok 4.3 and Grok Build in addition to every rule below:
 
-1. **You have no memory of prior sessions.** Read `GROK.md` or `GPT55.md`,
-   `docs/runtime_contracts.md`, and the most recent `HANDOFF-*.md` (if dated
-   within 3 days) before any edits.
-2. **High reasoning effort is required** for all tasks touching `algebra/`,
-   `field/`, `generate/realizer.py`, `generate/graph_planner.py`,
-   `generate/intent.py`, `vault/store.py`, `calibration/`, `core/cognition/`,
-   or `teaching/`.  If you were invoked at low effort, stop and re-invoke.
-3. **Sweep before you edit.** Use tool-call chains to trace imports and call
-   sites for any module you intend to change before proposing edits.
-4. **Write a handoff doc at session end** using `docs/handoff_template.md`.
-   Name it `HANDOFF-[agent]-YYYY-MM-DD.md`.  This is the only continuity
-   mechanism across stateless sessions.
-5. **Arena / parallel subagents:** each subagent independently satisfies
-   `versor_condition < 1e-6` before reporting.  No mutable state shared
-   between subagents.  Treat results as independent proposals.
+1. **You are stateless.** Read `GROK.md` in full, `docs/runtime_contracts.md`, and the most recent `HANDOFF-*.md` (if dated within 3 days) before any edits.
+2. **High reasoning effort is mandatory** for all tasks touching `algebra/`, `field/`, `generate/realizer.py`, `generate/graph_planner.py`, `generate/intent.py`, `vault/store.py`, `calibration/`, `core/cognition/`, or `teaching/`.
+3. **Use Plan Mode** (Grok Build) for any non-trivial change in the above modules. Direct edits are discouraged.
+4. **Skills are the preferred mechanism** for repeated protocols. Use `/core-bootstrap`, `/versor-coherence-guardian`, `/pre-edit-sweep`, and `/claim-proposal-guardian` (or their auto-triggered versions).
+5. **Sweep before you edit.** Use tool-call chains to trace imports and call sites.
+6. **Write a handoff doc at session end** using `docs/handoff_template.md`.
+7. **Arena / parallel subagents:** each subagent independently satisfies `||F * reverse(F) - 1||_F < 1e-6` before reporting. Reconcile results before any merge. No mutable state sharing.
 
 ---
 
@@ -185,6 +177,7 @@ Required approach:
 Never improve speed by:
 
 - weakening `versor_condition` thresholds
+
 - skipping closure checks at construction boundaries
 - adding hot-path repair/normalization
 - replacing exact CGA with cosine/ANN/HNSW
