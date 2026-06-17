@@ -1,9 +1,12 @@
-"""Tests for the deterministic GSM8K frontier report analyzer (Inc 2).
+"""Tests for the deterministic GSM8K frontier report analyzer (Inc 2 + Inc3 evidence).
 
 These tests pin:
 - Stable bucketing of the exact refusal reasons emitted by the candidate graph.
 - Correct extraction of category=... from "recognizer matched but produced no injection" strings.
-- rate_with_currency appears as a prominent recognized_no_injection category on the committed train-sample report (the measurement target of Inc 2).
+- **Pinned historical artifact:** committed report.json still encodes pre-Inc2/Inc3 rate
+  no-injection (Inc 2 measurement target); not rebaselined by policy.
+- **Live post-Inc3 behavior:** ephemeral train_sample runner shows rate_with_currency
+  no-injection = 0 after #799 connector support.
 - Fully deterministic output (sorted keys, no timestamps, repeatable across runs).
 """
 
@@ -22,8 +25,13 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 _REPORT = _REPO_ROOT / "evals/gsm8k_math/train_sample/v1/report.json"
 
 
-def test_analyze_report_is_deterministic_and_has_expected_buckets():
-    """Run on the real post-Inc1 report; assert structure and rate frontier presence."""
+def test_pinned_report_json_is_historical_pre_inc3_artifact():
+    """Committed report.json is the stale Inc1-era measurement artifact.
+
+    Inc2 used this file to surface rate_with_currency no-injection (3 cases).
+    Inc3 (#799) changed live code but did not rebaseline report.json — this test
+    preserves the historical frontier pin for replayability of Inc2 evidence.
+    """
     assert _REPORT.exists(), "report.json must be present for frontier measurement"
 
     summary = analyze_report(_REPORT)
@@ -37,16 +45,48 @@ def test_analyze_report_is_deterministic_and_has_expected_buckets():
     c = summary["counts"]
     assert c["correct"] == 6
     assert c["refused"] == 44
+    assert c.get("wrong", 0) == 0
     assert c.get("recognized_no_injection", 0) > 0
 
-    # The Inc-2 target: rate_with_currency must be visible in the no-injection frontier
+    # Historical Inc-2 target: rate_with_currency visible in pinned no-injection frontier
     no_inj = summary["recognized_no_injection_by_category"]
     assert "rate_with_currency" in no_inj
-    assert no_inj["rate_with_currency"] >= 1  # at minimum the Tina case and peers
+    assert no_inj["rate_with_currency"] == 3
 
     # Determinism: re-running produces byte-identical structure (keys sorted)
     summary2 = analyze_report(_REPORT)
     assert json.dumps(summary, sort_keys=True) == json.dumps(summary2, sort_keys=True)
+
+
+def test_post_inc3_live_runner_has_zero_rate_no_injection():
+    """Live train_sample scoring on current code: rate bucket no longer at injector."""
+    import re
+    from collections import Counter
+
+    from evals.gsm8k_math.train_sample.v1.runner import build_report
+
+    cases_path = _REPO_ROOT / "evals/gsm8k_math/train_sample/v1/cases.jsonl"
+    cases = [
+        json.loads(line)
+        for line in cases_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    report = build_report(cases)
+
+    assert report["counts"]["correct"] == 6
+    assert report["counts"]["refused"] == 44
+    assert report["counts"]["wrong"] == 0
+
+    cats: Counter[str] = Counter()
+    for row in report["per_case"]:
+        reason = row.get("reason", "")
+        if "produced no injection" not in reason:
+            continue
+        m = re.search(r"category=(\w+)", reason)
+        if m:
+            cats[m.group(1)] += 1
+
+    assert cats.get("rate_with_currency", 0) == 0
 
 
 def test_classify_and_extract_category_logic():
