@@ -41,15 +41,18 @@ A proposal that fails any one of these never reaches the next.
 
 ## Complementary CLOSE flywheel protection (Claim B)
 
-This demo is part of the anti-regression / teaching demonstration surfaces. As of the post-#791 integration, `core demo anti-regression` (and `tests/test_anti_regression_demo.py`) also executes the hardened `evals/close_derived_climb` yardstick. This adds recurring execution of the lived-runtime CLOSE autonomous-growth path (real `idle_tick()` + `IdleTickResult.derived_close_proposals_emitted` gating, explicit `determine(..., rule='direct')` semantic asserts on materialized derived facts, and `content_replay_checksum` over canonical closures + proposal bodies) with its own invariants (wrong_total=0, proposal-only/SPECULATIVE, hermetic).
+This demo is part of the anti-regression / teaching demonstration surfaces and participates in the **Dedicated CLOSE Flywheel Regression Surface (Claim-B Level)** (see `make test-close-flywheel` and `docs/testing-lanes.md` "Dedicated CLOSE Flywheel Regression Surface...").
+
+As of the post-#791 / #792 work, `core demo anti-regression` (and `tests/test_anti_regression_demo.py`) executes the hardened `evals/close_derived_climb` yardstick. This adds the full Claim-B lived-runtime CLOSE autonomous-growth path (real `idle_tick()` + `IdleTickResult.derived_close_proposals_emitted` gating, explicit `determine(..., rule='direct')` semantic asserts on materialized derived facts, and `content_replay_checksum` over canonical closures + proposal bodies) with its own invariants (wrong_total=0, proposal-only/SPECULATIVE, hermetic, determinism).
 
 See:
 - `evals/close_derived_climb/contract.md`
-- `docs/testing-lanes.md` (Recommended determinism / teaching regression invocation)
+- `docs/testing-lanes.md` (Dedicated CLOSE Flywheel Regression Surface section + pillar alignment)
+- `docs/analysis/close-flywheel-dedicated-regression-surface-ratification-2026-06-16.md`
 - `docs/analysis/integrate-hardened-close-yardstick-determinism-teaching-regression-ratification-2026-06-16.md`
 - `docs/analysis/close-derived-climb-yardstick-claim-b-ratification-2026-06-16.md`
 
-The three reviewed-teaching gates (S1–S3) and the CLOSE derived-fact growth gates are complementary anti-regression surfaces; both must hold.
+The three reviewed-teaching gates (S1–S3) and the CLOSE derived-fact growth gates are complementary anti-regression surfaces; both must hold. Running the dedicated surface also verifies the integrated embedding.
 
 ## The synthetic regression in S2
 
@@ -145,8 +148,14 @@ Scenes 1 and 3 both use the real production replay function.
 ```bash
 core demo anti-regression                  # human output (preamble + scenes + result)
 core demo anti-regression --json           # machine-readable DemoReport
-python -m pytest tests/test_anti_regression_demo.py -q     # ~10s
+python -m pytest tests/test_anti_regression_demo.py -q     # ~60s+ (includes CLOSE yardstick)
 ```
+
+The demo participates in the Dedicated CLOSE Flywheel Regression Surface (Claim-B Level):
+```bash
+make test-close-flywheel
+```
+See `docs/testing-lanes.md` "Dedicated CLOSE Flywheel Regression Surface..." for the full surface definition, Claim-B capabilities, runtime, hermeticity, and pillar alignment.
 
 ## Falsifiable claims
 

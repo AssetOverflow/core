@@ -101,7 +101,8 @@ the user-facing `surface` is the rendered determination.  The hardened
 CLOSE derived-climb yardstick (`evals/close_derived_climb`) now exercises
 this path explicitly via `determine()` asserts with `rule='direct'` on
 materialized derived facts (see "semantic_positives_determined_direct" in
-its contract and the integration ratification in docs/analysis/).
+its contract and the Dedicated CLOSE Flywheel Regression Surface in
+docs/testing-lanes.md + docs/analysis/close-flywheel-dedicated-regression-surface-ratification-2026-06-16.md).
 (`generate.determine.render_determination`) — the engine answers *from what it
 accrued in the conversation*.  The basis is rendered **honestly**: SPECULATIVE
 grounds (today's only case) read as "as I was told", never "verified"; D0 only
