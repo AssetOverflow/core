@@ -127,7 +127,6 @@ _PRIMITIVE_BY_SUBFAMILY: dict[str, str] = {
     "numeric_expression_duration": "duration_multiplier",
     "numeric_expression_recurrence": "recurrence_frame",
     "partition_statement_parser_gap": "unit_partition",
-    "affine_equation_fraction_target": "fractional_delta",
     "unclassified": "diagnostic_hold",
     "inverse_residual_more": "inverse_residual_question",
     "ratio_times_entity": "ratio_question_frame",
