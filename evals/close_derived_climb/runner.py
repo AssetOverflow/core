@@ -330,7 +330,10 @@ def _proposal_flag_effect() -> dict[str, Any]:
 def run() -> dict[str, Any]:
     """Run the full yardstick. Returns report with climb metrics, wrong_total=0,
     lived proposal flag isolation (via IdleTickResult), semantic determine() on positives,
-    replay_checksum (aggregates) + content_replay_checksum (closures + proposal bodies)."""
+    replay_checksum (aggregates) + content_replay_checksum (closures + proposal bodies),
+    and proposal_review_posture (additive visibility into the review/ratification side:
+    emitted proposals are born proposal_only/SPECULATIVE/requires_review; the yardstick
+    exercises no acceptance, rejection, or promotion paths)."""
     is_a = _is_a_climb()
     less = _relational_climb_less_than()
     temporal = _temporal_climb()
@@ -362,6 +365,26 @@ def run() -> dict[str, Any]:
             "wrong_total": total_wrong,
             "proposals_only_with_flag": prop["only_with_flag"],
         },
+    }
+
+    # Additive review/ratification-posture instrumentation for the CLOSE flywheel
+    # (the previously weaker half). Computed purely from the proposal bodies
+    # already emitted and captured for content_replay_checksum. No review logic
+    # is invoked; the yardstick only observes the explicit review-gated posture
+    # that every derived CLOSE proposal is born with (proposal_only / SPECULATIVE
+    # / requires_review). This surfaces acceptance/rejection eligibility signals
+    # and documents that the yardstick itself performs no ratification.
+    _proposals = prop.get("proposals", []) or []
+    _all_status = [p.get("status") for p in _proposals]
+    _all_epist = [p.get("epistemic_status") for p in _proposals]
+    _all_req = [p.get("requires_review") for p in _proposals]
+    report["proposal_review_posture"] = {
+        "emitted_count": len(_proposals),
+        "all_proposal_only": all(s == "proposal_only" for s in _all_status) if _proposals else True,
+        "all_speculative": all(e == "speculative" for e in _all_epist) if _proposals else True,
+        "all_requires_review": all(r is True for r in _all_req) if _proposals else True,
+        "review_eligible": len(_proposals),
+        "none_accepted_or_promoted": True,  # yardstick is emission + semantic only; ratification is HITL / operator-gated outside this surface
     }
 
     # Replay checksum: stable sizes + wrongs + flag effect (kept for compatibility)

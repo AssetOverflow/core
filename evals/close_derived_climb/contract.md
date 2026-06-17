@@ -12,6 +12,7 @@ This lane measures the monotone growth in directly-answerable set enabled by:
 - semantic_positives_determined_direct (explicit determine() calls on positives post-fixed-point assert Determined(True) with rule='direct')
 - replay_checksum (aggregates for compatibility)
 - content_replay_checksum (canonical closure sets with structure_key + Derivation/premise_structure_keys + proposal bodies for exact-trajectory fidelity)
+- proposal_review_posture (additive Claim-B visibility on the review/ratification side of the CLOSE flywheel: emitted proposals carry explicit proposal_only / speculative / requires_review posture; review_eligible count; structural guarantee that the yardstick itself performs no acceptance/rejection/promotion — ratification remains operator/HITL gated. Computed from the same proposal bodies covered by content_replay_checksum.)
 
 ## Scenarios
 - is-a (member/subset) climb
@@ -31,3 +32,5 @@ Replays the exact trajectories (aggregates + full content) for audit. Now qualif
 **Dedicated surface:** `make test-close-flywheel` (or the equivalent python -m + pytest commands). This is the clearly named, intentional Claim-B regression surface for heavier determinism regressions and teaching/anti-regression verification flows. See the full definition, capabilities, runtime characteristics, hermeticity guarantees, and Engineering Pillars alignment in `docs/testing-lanes.md` "Dedicated CLOSE Flywheel Regression Surface (Claim-B Level)".
 
 Integrated into the project's standard determinism regression and teaching/anti-regression surfaces via the anti-regression demo embedding (see docs/evals/anti_regression_demo.md and `tests/test_anti_regression_demo.py`). See ratification docs/analysis/close-flywheel-dedicated-regression-surface-ratification-2026-06-16.md (this task), docs/analysis/integrate-hardened-close-yardstick-determinism-teaching-regression-ratification-2026-06-16.md (#792), and docs/analysis/close-derived-climb-yardstick-claim-b-ratification-2026-06-16.md (#791). Cross-references runtime determination surface in docs/runtime_contracts.md.
+
+This PR strengthens the *review/ratification* visibility half (proposal_review_posture + aggregates surfaced through the same dedicated surface and anti-regression demo). See docs/analysis/close-flywheel-proposal-review-visibility-ratification-2026-06-16.md for the full justification, scope lock, pillar alignment (Mechanical Sympathy, Semantic Rigor, Third Door), and invariant preservation.

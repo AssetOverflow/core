@@ -147,3 +147,23 @@ The surface remains hermetic and additive. All prior invariants and the #792 emb
 The #792 "recommended invocation" and hermetic embedding into the anti-regression demo provided the recurring protection. This dedicated surface gives that work a clear name, a primary make target, full pillar-aligned documentation, and explicit positioning as the heavy CLOSE flywheel regression lane. The anti-regression test is deliberately included in the surface so that running `make test-close-flywheel` also verifies the integrated teaching path.
 
 (Operators doing heavy CLOSE-related work after #788/#789/#791 should run this surface as part of their determinism and teaching verification.)
+
+### Review / Ratification Posture and Events (the previously weaker half)
+As of the work ratified in `docs/analysis/close-flywheel-proposal-review-visibility-ratification-2026-06-16.md`, this surface now also provides structured, first-class visibility into the proposal review and ratification side of the CLOSE flywheel (the half that takes emitted `proposal_only / speculative / requires_review` artifacts and moves them toward durable knowledge).
+
+Key signals surfaced (additive, no logic or policy changes):
+- In the embedded `evals/close_derived_climb` output: `proposal_review_posture` (emitted_count, all_proposal_only, all_speculative, all_requires_review, review_eligible, none_accepted_or_promoted). These are derived from the exact proposal bodies already covered by content_replay_checksum and assert the birth posture of every derived CLOSE proposal.
+- In the anti-regression demo (`DemoReport.proposal_review_summary` and `core demo anti-regression --json`): aggregated review_states and outcomes from the three teaching proposal gates (S1/S2/S3), transition counts from the temp ProposalLog events (including auto-reject transitions exercised by the replay gate), accepted_corpus_append counts (0 in the hermetic demo), and a `close_derived` subsection echoing the climb posture.
+- Human-visible in the demo's RESULT block and in the JSON for tooling.
+
+Purpose: make acceptance/rejection rates, review outcomes, and promotion-adjacent events (transitions, append events) observable and auditable as part of the same heavy, intentional lane — without moving review into autonomous code, without weakening proposal-only/SPECULATIVE boundaries, and without adding fast-path or CI obligations.
+
+Hermeticity and invariants: unchanged from the parent surface. The new fields observe *existing* states and events produced by the gate machinery (or the explicit flags on emitted artifacts). No `accept_proposal`, `reject_proposal`, `review_correction`, or vault promotion paths are called by the surface itself; operator ratification (the CLI review flow) remains the only way durable mutation occurs.
+
+References:
+- Full ratification, scope, pillar alignment, and "why only this path": `docs/analysis/close-flywheel-proposal-review-visibility-ratification-2026-06-16.md`
+- Climb contract: `evals/close_derived_climb/contract.md`
+- Anti-regression participation: `docs/evals/anti_regression_demo.md`, `evals/anti_regression/run_demo.py`
+- Proposal machinery (observed, not modified): `teaching/proposals.py` (ReviewState, ProposalLog events/transitions, accept/reject entrypoints), `chat/runtime.py` (IdleTickResult.derived_close_proposals_emitted and the review_derived_close_proposals gate)
+
+This extension follows the same Third Door / composable / Mechanical Sympathy discipline as the parent dedicated surface. It strengthens measurement of the review/ratification half while keeping the surface heavy, explicit, and outside fast/generic paths.
