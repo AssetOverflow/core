@@ -215,6 +215,25 @@ def test_markdown_render_is_stable_and_mentions_rate():
     assert render_markdown(summary) == md
 
 
+def test_frontier_report_aligns_with_post_gate_a1_microscope_structure():
+    """Live microscope stays structurally complete with closed injector buckets."""
+    from scripts.gsm8k_post_gate_a1_frontier_microscope import build_microscope_report
+
+    cases_path = _REPO_ROOT / "evals/gsm8k_math/train_sample/v1/cases.jsonl"
+    cases = [
+        json.loads(line)
+        for line in cases_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    microscope = build_microscope_report(cases)
+    assert_monotonic_serving_counts(microscope["counts"])
+    refused = microscope["counts"]["refused"]
+    assert len(microscope["refusal_table"]) == refused
+    assert sum(microscope["top_buckets"].values()) == refused
+    assert microscope["closed_injector_buckets"]["rate_with_currency_no_injection"] == 0
+    assert microscope["closed_injector_buckets"]["comparative_with_unit_no_injection"] == 0
+
+
 def test_inc3_connector_makes_rate_no_injection_actionable():
     """Inc3 effect: supporting 'one' (and prior 'an'/'per') means rate_with_currency
     surfaces no longer contribute to recognized_no_injection bucket when injector
