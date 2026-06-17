@@ -38,6 +38,17 @@ this module, so none of this can move the serving ``3/47/0``):
   group keeps numeric ranges (``3-5``) out and only the first hyphen segment is
   taken, so it stays clear of the deferred EX-3 multi-word-unit traps below.
 
+Workstream A (first increment, per ratified scope): additional conservative lexeme
+passes for fractional ("half of", "X/Y of") and comparative ("X more than Y unit",
+"X less than Y unit") surface forms. These passes surface only the component lexemes
+that appear in the input text (source_token is always a literal substring of the
+problem statement). No arithmetic is performed and no synthesized result value is
+ever used as a source_token. Any relation ("more than" as addition of two grounded
+counts, "half of" as a factor on a referent) is expressed in the recognizer graph
+(from Phase B exemplars) and resolved in compose/search/verify. This is required by
+the module contract (lexeme extraction only; combining is the search/compose job,
+gated by self-verification).
+
 EX-3 (multi-word units) is deliberately **not** integrated. Two distinct traps
 defeat the tightest lookahead-anchored rule the brief admits:
 
@@ -210,6 +221,75 @@ def extract_quantities(problem_text: str) -> tuple[Quantity, ...]:
             found.append((match.start(1), quantity))
             claimed.append(match.span(1))
 
+<<<<<<< Updated upstream
+=======
+    # 1c. New EX for Workstream A increment: fractional "half of" / "X/Y of".
+    #     Lexeme-level only: surface the factor word or fraction string as it appears
+    #     in the input (per the module contract: extraction is lexeme-level; combining
+    #     and relation resolution belong to search/compose, gated by verify).
+    #     No synthesized decimal source_tokens; source_token is always surface text.
+    for match in _HALF_OF_RE.finditer(problem_text):
+        unit = match.group(2)
+        # "half" (or "one half") is the surface lexeme factor; value is interpretive
+        # convenience for downstream, but source is the word that appears in text.
+        quantity = Quantity(value=0.5, unit=_clean_unit(unit), source_token=match.group(1))
+        if quantity is not None:
+            pos = match.start(1)
+            if not _claimed(pos, claimed):
+                found.append((pos, quantity))
+                claimed.append((pos, pos + len(match.group(1))))
+
+    for match in _FRACTION_OF_RE.finditer(problem_text):
+        num, den, unit = match.group(1), match.group(2), match.group(3)
+        try:
+            val = float(num) / float(den)
+        except (ValueError, ZeroDivisionError):
+            continue
+        # "3/4" is the surface lexeme form in the text; keep it as source_token.
+        quantity = Quantity(value=val, unit=_clean_unit(unit), source_token=f"{num}/{den}")
+        pos = match.start(1)
+        if not _claimed(pos, claimed):
+            found.append((pos, quantity))
+            claimed.append(match.span(1))
+
+    # 1d. New EX for Workstream A: comparative "X more than Y unit", "X less than Y unit".
+    #     Lexeme-level only: surface the two component numbers that appear in the text
+    #     (with the unit). Do *not* synthesize a result value or non-surface source_token
+    #     here (e.g. never emit "7.0" for "2 more than 5 miles"). The "more/less" relation
+    #     and any composition are expressed via the recognizer graph (from exemplars) and
+    #     resolved in compose/search/verify (the module contract). This avoids creating
+    #     grounding hazards and keeps extraction strictly lexeme.
+    for match in _MORE_THAN_RE.finditer(problem_text):
+        x, y, unit = match.group(1), match.group(2), match.group(3)
+        qx = _quantity(x, unit)
+        if qx is not None:
+            pos = match.start(1)
+            if not _claimed(pos, claimed):
+                found.append((pos, qx))
+                claimed.append((pos, pos + len(x)))
+        qy = _quantity(y, unit)
+        if qy is not None:
+            pos = match.start(2)
+            if not _claimed(pos, claimed):
+                found.append((pos, qy))
+                claimed.append((pos, pos + len(y)))
+
+    for match in _LESS_THAN_RE.finditer(problem_text):
+        x, y, unit = match.group(1), match.group(2), match.group(3)
+        qx = _quantity(x, unit)
+        if qx is not None:
+            pos = match.start(1)
+            if not _claimed(pos, claimed):
+                found.append((pos, qx))
+                claimed.append((pos, pos + len(x)))
+        qy = _quantity(y, unit)
+        if qy is not None:
+            pos = match.start(2)
+            if not _claimed(pos, claimed):
+                found.append((pos, qy))
+                claimed.append((pos, pos + len(y)))
+
+>>>>>>> Stashed changes
     # 2. digit + single unit word — the original base pattern.
     for match in _QTY_RE.finditer(problem_text):
         if _claimed(match.start(1), claimed):
