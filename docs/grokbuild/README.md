@@ -23,10 +23,8 @@ Grok Build is treated as a **bounded engineering laboratory**, not an autonomous
 
 1. Clone the repo and checkout `feat/grok43-agent-config` (or main once merged).
 2. Copy `docs/examples/grok43.env.example` to your local `.env` and fill in your `XAI_API_KEY`.
-3. Install Grok Build CLI (if not already):
-   ```bash
-   curl -fsSL https://x.ai/cli/install.sh | bash
-   ```
+3. Install Grok Build CLI using the current official xAI instructions.
+   Do not pipe installer scripts into a shell unless the source and any available checksum/signature have been verified.
 4. Run `grok inspect` inside the repo root to confirm skills are discovered.
 5. (Optional but recommended) Create a personal `skills/` override directory if you want local custom skills.
 
@@ -37,7 +35,7 @@ Grok Build is treated as a **bounded engineering laboratory**, not an autonomous
 Every productive session follows this pattern:
 
 ### Phase 0: Bootstrap (Mandatory)
-- Invoke `core-bootstrap` skill (or run it manually).
+- Invoke the `core-bootstrap` skill (or run it manually via the Grok Build interface).
 - Read `GROK.md` + `AGENTS.md` + `docs/runtime_contracts.md`.
 - Run smoke suite.
 - Read most recent relevant `HANDOFF-*.md`.
@@ -153,17 +151,14 @@ For docs/config/agent-governance PRs (like this one), smoke is usually sufficien
 
 ---
 
-## 9. Quick Reference Commands
+## 9. Quick Reference
 
-```bash
-# Bootstrap
-core-bootstrap
+```text
+# Bootstrap (in Grok Build TUI or via skill invocation)
+/core-bootstrap
 
 # Verify core invariant
 core test --suite algebra -q
-
-# Full relevant validation
-core test --suite smoke -q && core test --suite cognition -q && core test --suite teaching -q
 
 # Start Grok Build
 grok
