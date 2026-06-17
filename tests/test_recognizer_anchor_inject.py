@@ -12,13 +12,12 @@ Covers the exact acceptance cases from the Workstream A Inc 2 brief:
 """
 from __future__ import annotations
 
-from __future__ import annotations
-
 import types
 
 from evals.refusal_taxonomy.shape_categories import ShapeCategory
 from generate.math_candidate_parser import CandidateOperation
 from generate.math_problem_graph import Rate
+from generate.math_roundtrip import roundtrip_admissible
 from generate.recognizer_anchor_inject import (
     inject_from_match,
     inject_rate_with_currency,
@@ -69,6 +68,7 @@ def test_rate_per_cup_emits_apply_rate_with_grounded_tokens():
     assert cand.matched_value_token == "2"
     assert cand.matched_unit_token == "dollars"
     assert cand.matched_verb in {"per", "a", "an", "each", "every"}  # literal surface in sentence
+    assert roundtrip_admissible(cand) is True
 
 
 def test_rate_an_hour_emits_when_an_in_rate_anchors():
@@ -83,6 +83,7 @@ def test_rate_an_hour_emits_when_an_in_rate_anchors():
     assert cand.op.operand.denominator_unit == "hour"
     assert cand.matched_verb == "an"  # literal from sentence
     assert cand.matched_value_token == "18.00"
+    assert roundtrip_admissible(cand) is True
 
 
 def test_unknown_actor_refuses_narrow_binding():
@@ -159,3 +160,40 @@ def test_dispatch_table_routes_rate_with_currency():
         # old "no injector registered" path that would have been the deferral.
         # We only assert that the call succeeded without KeyError / unexpected.
         assert isinstance(emitted, tuple)
+
+
+def test_an_rate_anchor_widening_is_contained_to_currency_rate_surfaces():
+    """ "a"/"an" in RATE_ANCHORS must not open broad/generic apply_rate outside
+    actual currency-rate surfaces (containment/confuser for the widening).
+
+    Even if matched_verb="a", a "dollars" unit_token only grounds (via the
+    explicit $ branch we added) when the source actually contains "$".
+    """
+    from generate.math_problem_graph import Operation, Rate
+    from generate.math_candidate_parser import CandidateOperation
+    from generate.math_roundtrip import roundtrip_admissible
+
+    rate = Rate(2.0, "dollars", "cup")
+    op = Operation(actor="Tina", kind="apply_rate", operand=rate)
+
+    # Confuser: "a" verb + dollars unit, but no "$" symbol in source → unit fails to ground
+    bogus = CandidateOperation(
+        op=op,
+        source_span="Tina makes a 2 cup thing.",
+        matched_verb="a",
+        matched_value_token="2",
+        matched_unit_token="dollars",
+        matched_actor_token="Tina",
+    )
+    assert roundtrip_admissible(bogus) is False
+
+    # Good rate surface with "a" + "$" → admissible
+    good = CandidateOperation(
+        op=op,
+        source_span="Tina sells for $2 a cup.",
+        matched_verb="a",
+        matched_value_token="2",
+        matched_unit_token="dollars",
+        matched_actor_token="Tina",
+    )
+    assert roundtrip_admissible(good) is True

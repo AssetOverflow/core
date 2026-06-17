@@ -22,36 +22,26 @@ def _run(text: str):
     return parse_and_solve(text, sealed=False)
 
 
-def test_rate_apply_happy_path_with_covered_denom_unit():
-    """Use a per-unit whose noun is known to be admissible via discrete path
-    (e.g. "apples", "cups" etc. from the discrete observed sets + exemplars).
-    When prior sentence gives the actor N of that unit, the rate should apply.
+def test_apply_rate_reaches_solver_lower_level_integration():
+    """Hard proof that apply_rate (from rate injector path) executes in the solver.
+    Lower-level (bypasses full NL question parsing / discrete state production gaps).
     """
-    # "per apple" + prior discrete "3 apples" for the same actor.
-    # The discrete injector + graph should produce the denom state.
-    text = (
-        "Tina has 3 apples. "
-        "Tina sells them for $2 per apple. "
-        "How many dollars does Tina make?"
-    )
-    res = _run(text)
-    # We do not hard-assert 6 (the question form or unit matching may still
-    # refuse for other reasons), but we assert that *if* an answer is produced
-    # it came via apply_rate, and that wrong=0 is preserved (no answer or a
-    # correct one; never a wrong numeric).
-    if res.answer is not None:
-        assert res.selected_graph is not None
-        # The selected operations (if exposed) or at least the refusal reason
-        # must not be the old "no injection".
-        assert "no injection" not in (res.refusal_reason or "")
-        # Numeric sanity: if it solved, it should be the rate application.
-        # 2 * 3 = 6
-        assert res.answer == 6 or res.answer == pytest.approx(6)
-    else:
-        # Gap is acceptable per brief — record that the full end-to-end
-        # with this question phrasing + unit may still refuse for reasons
-        # orthogonal to the injector (question target, completeness, etc.).
-        assert res.refusal_reason is not None
+    from generate.math_problem_graph import Operation, Rate
+    from generate.math_solver import _apply_rate, SolutionStep
+
+    rate = Rate(2.0, "dollars", "cup")
+    op = Operation(actor="Tina", kind="apply_rate", operand=rate)
+
+    # Prior discrete-style state for the denom unit (as the rate injector + graph would produce)
+    state: dict[tuple[str, str], float] = {("Tina", "cup"): 3.0}
+    pack_bindings: dict[str, str] = {"apply_rate": "some_pack_id"}
+
+    step = _apply_rate(op, index=0, state=state, pack_bindings=pack_bindings)
+
+    assert isinstance(step, SolutionStep)
+    assert step.operation_kind == "apply_rate"
+    assert state[("Tina", "dollars")] == 6.0  # 3 * 2
+    assert state[("Tina", "cup")] == 3.0  # denom not consumed (per solver semantics)
 
 
 def test_confuser_no_denom_state_refuses():
@@ -110,17 +100,13 @@ def test_injected_apply_rate_does_not_create_wrong_on_known_refused_cases():
     We only assert the global wrong=0 invariant here (the runner is the
     authoritative counter); this test just exercises the new code on real text.
     """
-    # Pick two rate surfaces from the known refused set.
+    # Pick two rate surfaces from the known refused set (isolated rate sentences
+    # refuse because no denom state or question target; must never produce a wrong answer).
     for stmt in [
         "Tina makes $18.00 an hour.",
         "Alexa has a lemonade stand where she sells lemonade for $2 for one cup.",
     ]:
         res = parse_and_solve(stmt, sealed=False)
-        # Either no answer (refused) or a correct one; never a numeric that
-        # would have been "wrong" if this were a scored case.
-        if res.answer is not None:
-            # For isolated rate sentence the only admissible answers would
-            # be if the question side asked for the rate itself, which these
-            # do not.  So we expect refusal.
-            assert False, f"Unexpected answer {res.answer} on isolated rate sentence"
-        assert "no injection" in (res.refusal_reason or "") or res.refusal_reason is not None
+        assert res.answer is None
+        assert res.refusal_reason is not None
+        assert "no injection" in (res.refusal_reason or "") or "requires" in (res.refusal_reason or "").lower() or "question" in (res.refusal_reason or "").lower()

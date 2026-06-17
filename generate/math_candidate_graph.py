@@ -717,11 +717,12 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
                     # product the same way the existing parser's output
                     # does — and every constructed candidate has already
                     # passed _initial_admissible upstream of this call.
-                    # When the injector returns () (skip-only fallback —
-                    # the round-2 default and the only path for v1
-                    # categories without an injector), the statement is
-                    # dropped from per_sentence_choices, preserving the
-                    # wrong=0 safety net by construction.
+                    # When the injector returns (), the graph continues to
+                    # the explicit-refusal branch below ("recognizer matched
+                    # but produced no injection ..."). This is the current
+                    # doctrine: recognized math statements are never silently
+                    # dropped (the old skip-only "zero state" reasoning was
+                    # retired because it could admit incomplete graphs).
                     from generate.recognizer_anchor_inject import (
                         inject_from_match,
                     )

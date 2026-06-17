@@ -309,6 +309,9 @@ def _unit_grounds(
             return True
         if "dollar" in haystack_tokens or "dollars" in haystack_tokens:
             return True
+    if lower in ("dollar", "dollars"):
+        if "$" in source_span:
+            return True
     if lower in ("euro", "euros"):
         if "€" in source_span:
             return True
