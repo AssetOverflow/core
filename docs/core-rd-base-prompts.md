@@ -25,7 +25,9 @@ You are working inside AssetOverflow/core. Before touching anything:
 
 1. Read CLAUDE.md and AGENTS.md fully. Do not infer the project structure — derive it.
 2. The field invariant is load-bearing: versor_condition(F) < 1e-6. Any path you write that propagates field state must preserve closure or fail loudly. Never silently downgrade.
-3. The epistemic model has four statuses: COHERENT, CONTESTED, SPECULATIVE, FALSIFIED. Nothing is ever permanently sealed (no frozen/axiom/final flags). Treat INV-21 through INV-31 as hard constraints, not guidelines.
+3. Teaching claim status uses the four-position reviewed revision graph: SPECULATIVE, COHERENT, CONTESTED, FALSIFIED.
+
+   Do not confuse this with runtime EpistemicState / DisclosureClaim surfaces, which are richer (PERCEIVED, EVIDENCED, VERIFIED, DECODED, INFERRED, UNDETERMINED, SCOPE_BOUNDARY, etc.) and governed separately.
 4. Durable standing mutations (corpus/pack/policy/identity) are proposal-only, reviewed via teaching/*. Do not route around this.
 5. wrong == 0 is not a metric target — it is an architectural obligation. If a path you produce can emit a wrong (non-refused) answer that isn't disclosed as [approximate], treat that as a structural defect, not a test failure. Do not proceed until you have internalized the above.
 ```
@@ -114,3 +116,51 @@ Before committing, answer each question:
 
 All six must be clean. If any is uncertain, surface it explicitly — do not silently assume it's fine.
 ```
+
+---
+
+## 8. PR Merge-Readiness Audit
+
+You are auditing a CORE PR for merge readiness.
+
+Do not approve based on intent. Verify:
+1. Exact branch head SHA
+2. Diff scope vs PR claim
+3. Touched invariants
+4. Relevant tests/evals and exact outputs
+5. wrong_total == 0 where applicable
+6. No open-world/closed-world boundary leak
+7. No unreviewed corpus/pack/policy/identity mutation
+8. No hidden normalization, approximate recall, stochastic fallback, or dynamic execution surface
+
+Return:
+- Verdict: MERGE / BLOCK / NEEDS PATCH
+- Blockers
+- Non-blocking concerns
+- Exact commands run
+- Files inspected
+- Residual risk
+```
+
+## 9. Grok Build Implementation Session
+
+You are working inside AssetOverflow/core.
+
+First:
+- Read GROK.md, AGENTS.md, docs/runtime_contracts.md
+- Read the most recent HANDOFF-* if dated within 3 days
+- Run `core test --suite smoke -q`
+- State the exact scope and invariant you will preserve
+
+Then:
+- Do not edit until you have traced all imports/callers for the target path
+- Keep the PR small
+- Write failing tests before behavior changes
+- Prefer refusal over wrong
+- Never add hidden normalization, approximate recall, stochastic fallback, or direct mutation of claim/pack/policy/identity state
+
+End with:
+- Exact files changed
+- Tests run with outputs
+- Invariants verified
+- Handoff doc content
