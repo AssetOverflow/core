@@ -42,11 +42,11 @@ Workstream A (first increment, per ratified scope): additional conservative lexe
 passes for fractional ("half of", "X/Y of") and comparative ("X more than Y unit",
 "X less than Y unit") surface forms. These passes surface only the component lexemes
 that appear in the input text (source_token is always a literal substring of the
-problem statement). No arithmetic is performed and no synthesized result value is
-ever used as a source_token. Any relation ("more than" as addition of two grounded
-counts, "half of" as a factor on a referent) is expressed in the recognizer graph
-(from Phase B exemplars) and resolved in compose/search/verify. This is required by
-the module contract (lexeme extraction only; combining is the search/compose job,
+problem statement). For fractional surface factors, the visible factor is normalized
+to a numeric value (0.5 for "half", num/den for "X/Y") while preserving the exact
+surface source_token; comparative composition (more/less as relation on two grounded
+counts) is fully deferred. This is required by the module contract (lexeme extraction
+only for surface; combining is the search/compose job,
 gated by self-verification).
 
 EX-3 (multi-word units) is deliberately **not** integrated. Two distinct traps
@@ -125,16 +125,20 @@ _HYPHEN_QTY_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w.])(\d+(?:\.\d+)?)-([a-zA-Z]+)"
 )
 
-# New for Workstream A increment: fractional "half of" or "X/Y of" as 0.5 or fraction * unit.
-# Conservative, lexeme-level, to help "half of them", "3/4 of the kids" cases that currently
-# produce no admissible candidate or injection failure.
-_HALF_OF_RE: Final[re.Pattern[str]] = re.compile(r"(?i)\b(half|one half)\s+of\s+([a-zA-Z]+)")
+# New for Workstream A increment: fractional "half of" or "X/Y of".
+# These are still lexeme-level (the surface words "half", "3/4" etc. are recognized), but we
+# normalize the visible factor to a numeric value for convenience while always preserving
+# the exact surface source_token from the input text. This limited normalization for factors
+# is explicitly documented; full relation composition remains in the graph/compose/search layer.
+_HALF_OF_RE: Final[re.Pattern[str]] = re.compile(r"(?i)\b(half|one half)\s+of\s+(?:the\s+|a\s+)?([a-zA-Z]+)")
 _FRACTION_OF_RE: Final[re.Pattern[str]] = re.compile(
     r"(?i)\b(\d+)/(\d+)\s+of\s+([a-zA-Z]+)"
 )
 
-# Comparative counts "X more than Y unit" -> (x+y) unit; "X less than Y unit" -> max(0, y-x) unit.
-# Helps "2 more than 5 miles", "3 less than 17 stop signs".
+# Comparative "X more than Y unit" and "X less than Y unit" surface forms.
+# The regex matches the surface lexemes; the code emits the two component numbers
+# (with unit) as separate lexeme quantities. No arithmetic (sum/diff) is performed
+# here. Helps "2 more than 5 miles", "3 less than 17 stop signs".
 _MORE_THAN_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w.])(\d+(?:\.\d+)?)\s+more\s+than\s+(\d+(?:\.\d+)?)\s+([a-zA-Z]+)"
 )
