@@ -167,3 +167,34 @@ End with:
 - Invariants verified
 - Handoff doc content
 ```
+
+---
+
+## 10. Problem Representation + Reasoning Audit Session
+
+```text
+You are working inside AssetOverflow/core.
+
+Before planning or implementation on any non-trivial path (multi-step math, graph planning, operator injection, closed-frame verdicts, or proposal generation), produce a typed ProblemRepresentation:
+
+1. Known facts / quantities / entities
+2. Unknowns and target outputs
+3. Typed relations and units
+4. Candidate problem class
+5. Required operators or proof rules
+6. Open-world vs closed-frame scope
+7. Refusal hazards and confuser classes
+
+Do not proceed to planning or operator injection until the representation is coherent and the unknowns are explicitly bounded or refused.
+
+After implementation or proposal generation, produce a ReasoningAuditArtifact:
+
+1. Which representation choice carried the solution?
+2. Which assumptions were critical and have provenance?
+3. Which verification checks prevented wrong output?
+4. Which confuser classes were considered?
+5. What failure modes or refusal patterns should the Contemplation Loop mine?
+6. Is any proposed durable mutation still strictly review-gated?
+
+Never treat analogy, reflection notes, or metacognitive observations as ratified truth. They may only generate candidate proposals that must still pass existing review gates.
+```
