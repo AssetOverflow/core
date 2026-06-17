@@ -4,6 +4,42 @@ This repository is building a deterministic cognitive engine, not a transformer
 wrapper and not a demo chatbot.  Every agent must preserve the geometric
 runtime while moving the system toward teachable cognitive chat.
 
+## Agent-Specific Instruction Files
+
+Different agents read a supplementary file alongside this one.  Read yours
+before touching any code:
+
+| Agent | Supplementary file | Key differences |
+|---|---|---|
+| **Claude** | `CLAUDE.md` | Deep context; self-restraining; read for semantic anchoring rule nuance |
+| **Grok 4.3** | `GROK.md` | Stateless; requires high reasoning effort; Arena/parallel subagent rules |
+| **GPT-5.5 (o3-class)** | `GPT55.md` | Stateless; fluency cautions; extended thinking for algebra/field work |
+
+If you are Grok 4.3 or GPT-5.5, complete the Session Start Checklist in your
+file before reading anything else in this file.
+
+## Grok 4.3 / GPT-5.5 Hard Stops
+
+These apply to all stateless agents in addition to every rule below:
+
+1. **You have no memory of prior sessions.** Read `GROK.md` or `GPT55.md`,
+   `docs/runtime_contracts.md`, and the most recent `HANDOFF-*.md` (if dated
+   within 3 days) before any edits.
+2. **High reasoning effort is required** for all tasks touching `algebra/`,
+   `field/`, `generate/realizer.py`, `generate/graph_planner.py`,
+   `generate/intent.py`, `vault/store.py`, `calibration/`, `core/cognition/`,
+   or `teaching/`.  If you were invoked at low effort, stop and re-invoke.
+3. **Sweep before you edit.** Use tool-call chains to trace imports and call
+   sites for any module you intend to change before proposing edits.
+4. **Write a handoff doc at session end** using `docs/handoff_template.md`.
+   Name it `HANDOFF-[agent]-YYYY-MM-DD.md`.  This is the only continuity
+   mechanism across stateless sessions.
+5. **Arena / parallel subagents:** each subagent independently satisfies
+   `versor_condition < 1e-6` before reporting.  No mutable state shared
+   between subagents.  Treat results as independent proposals.
+
+---
+
 ## North Star
 
 CORE should become capable of:
