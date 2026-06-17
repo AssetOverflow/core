@@ -11,6 +11,7 @@ import types
 import pytest
 
 from evals.refusal_taxonomy.shape_categories import ShapeCategory
+from generate.math_candidate_graph import parse_and_solve
 from generate.math_candidate_parser import CandidateOperation
 from generate.math_problem_graph import Comparison
 from generate.math_roundtrip import roundtrip_admissible
@@ -106,14 +107,47 @@ def test_positive_surfaces_emit_compare_multiplicative(
         "Alice has one-third as many apples as Bob.",
         "Alice has double as many apples as Bob.",
         "Jerry has 3 times",
+        "Alice has $2 times as many apples as Bob.",
+        "Alice has 3/4 times as many apples as Bob.",
+        "Alice has some times as many apples as Bob.",
+        "Alice has twenty-five times as many apples as Bob.",
     ],
 )
 def test_confuser_surfaces_refuse_injection(sentence: str):
     registry = load_ratified_registry()
     m = match(sentence, registry)
-    if m is None or m.category is not ShapeCategory.COMPARATIVE_WITH_UNIT:
+    if m is None:
         return
     assert inject_from_match(m, sentence, sealed=False) == ()
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "Alice has $2 times as many apples as Bob.",
+        "Alice has 3/4 times as many apples as Bob.",
+        "Alice has some times as many apples as Bob.",
+        "Alice has twenty-five times as many apples as Bob.",
+    ],
+)
+def test_ntimes_factor_confusers_do_not_match_comparative(sentence: str):
+    registry = load_ratified_registry()
+    m = match(sentence, registry)
+    assert m is None or m.category is not ShapeCategory.COMPARATIVE_WITH_UNIT
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Jerry has 3 times as many apples. How many apples does Jerry have?",
+        "Alice has $2 times as many apples as Bob. How many apples does Alice have?",
+        "Alice has 3 more apples than Bob. How many apples does Alice have?",
+    ],
+)
+def test_graph_confusers_refuse_without_compare_lift(text: str):
+    res = parse_and_solve(text, sealed=False)
+    assert res.answer is None
+    assert res.refusal_reason is not None
 
 
 def test_unknown_actor_refuses():

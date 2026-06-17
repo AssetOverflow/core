@@ -1844,12 +1844,41 @@ from generate.math_candidate_parser import (  # noqa: E402
     _COMPARE_MULT_ANCHOR_RE,
     _COMPARE_MULT_NTIMES_RE,
     _is_indefinite_quantifier,
-    _resolve_value,
 )
+from generate.math_roundtrip import WORD_NUMBERS  # noqa: E402
 
 _DEFERRED_COMPARATIVE_FACTOR_SURFACES: Final[frozenset[str]] = frozenset({
     "double", "triple", "quadruple", "one-third",
 })
+
+_COMPARATIVE_V1_CURRENCY_PREFIXES: Final[frozenset[str]] = frozenset({
+    "$", "£", "€", "¥", "¢", "₱",
+})
+
+
+def _parse_comparative_v1_count_factor(value_raw: str) -> float | None:
+    """Gate A1 v1 N-times factor narrowness: plain digit or single-word cardinal.
+
+    Refuses money, slash-fraction, hyphenated, decimal, and indefinite
+    quantifier surfaces that the broader parser ``_VALUE`` slot admits.
+    """
+    t = value_raw.strip()
+    if not t:
+        return None
+    if _is_indefinite_quantifier(t):
+        return None
+    if t[0] in _COMPARATIVE_V1_CURRENCY_PREFIXES:
+        return None
+    if "/" in t or "-" in t or "." in t:
+        return None
+    if t.isdigit():
+        v = int(t)
+        return float(v) if v > 0 else None
+    lower = t.lower()
+    if lower in WORD_NUMBERS:
+        v = WORD_NUMBERS[lower]
+        return float(v) if v > 0 else None
+    return None
 
 
 def _is_comparative_multiplicative_v1_surface(statement: str) -> bool:
@@ -1898,10 +1927,8 @@ def _try_extract_comparative_multiplicative_anchor(
         if not allows_numeric:
             return None
         value_raw = m.group("value")
-        if _is_indefinite_quantifier(value_raw):
-            return None
-        rv = _resolve_value(value_raw)
-        if rv is None or rv.value <= 0:
+        factor = _parse_comparative_v1_count_factor(value_raw)
+        if factor is None:
             return None
         actor_token = m.group("actor")
         unit_token = m.group("unit")
@@ -1913,7 +1940,7 @@ def _try_extract_comparative_multiplicative_anchor(
             "reference_actor_token": reference_token,
             "unit_token": unit_token,
             "factor_token": value_raw,
-            "factor": float(rv.value),
+            "factor": factor,
             "direction": "times",
             "matched_verb": "times",
             "comparator_phrase": phrase,
