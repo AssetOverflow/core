@@ -53,7 +53,7 @@
 ## Subagent / Arena Reconciliation (if applicable)
 
 <!-- If Arena/parallel subagents were used -->
-- Number of subagents spawned: 
+- Number of subagents spawned:
 - Each subagent independently verified versor closure? (Yes/No)
 - How were results reconciled before merge?
 
@@ -100,8 +100,8 @@
 ## Skills Used This Session
 
 <!-- List which Grok Build skills were invoked (manual or auto-triggered) -->
-- core-bootstrap: 
-- versor-coherence-guardian: 
-- pre-edit-sweep: 
-- claim-proposal-guardian: 
-- Other: 
+- core-bootstrap:
+- versor-coherence-guardian:
+- pre-edit-sweep:
+- claim-proposal-guardian:
+- Other:
